@@ -470,6 +470,28 @@ export const StatementSettingsSchema = object({
 	speakSeconds: optional(number()),
 	// join-class: turns at Proposals, everyone speaks once per turn (one of PROPOSALS_TURNS_CHOICES). Absent = DEFAULT_PROPOSALS_TURNS. Main statement only.
 	proposalsTurns: optional(number()),
+	// join-class: this main statement is a LESSON (a played game): one game of a lesson plan
+	// played with one class. Written only by the server (classStartLesson / the migration).
+	// `classId` null = no class (the lesson sits under the teacher home). Strings only, no
+	// picklists (strict-parse trap). Main statement only.
+	classLesson: optional(
+		object({
+			planId: string(),
+			gameId: string(),
+			classId: optional(nullable(string())),
+			className: string(),
+		}),
+	),
+	// join-class: this top-level group statement is a HOME holding lessons: kind 'class'
+	// (id jcClass_{classId}) or 'teacher' (id jcTeacher_{uid}). Written only by the server.
+	// Students never get() a home (firestore.rules). `kind` is a plain string on purpose.
+	classHome: optional(
+		object({
+			kind: string(),
+			classId: optional(string()),
+			uid: optional(string()),
+		}),
+	),
 	// join-class: the lesson's look, followed live by students and the projector. Absent = 'game'. Main statement only.
 	lessonLook: optional(LessonLookSchema),
 	// join-class: group size at the tables, a whole number MIN_TABLE_SIZE..MAX_TABLE_SIZE (2..8). Absent = DEFAULT_TABLE_SIZE (6). Main statement only.

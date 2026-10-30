@@ -1,65 +1,43 @@
 import {
-	Access,
-	StatementType,
-	createParagraphChildStatement,
-	createStatementObject,
-	proposalsTurnsOf,
-	speakSecondsOf,
-	tableSizeOf,
+	CLASS_GAME_MAX_PARAGRAPHS,
+	CLASS_GAME_MAX_QUESTIONS,
+	checkSnapshot,
+	isClassLesson,
+	lessonFromSnapshot,
+	snapshotFromLesson,
 } from '@freedi/shared-types';
 import type {
-	ListType,
-	ParagraphType,
+	ClassGameSnapshot,
+	ClassLessonLink,
+	LessonStatements,
 	Statement,
-	StatementSettings,
 	User,
 } from '@freedi/shared-types';
 import { ClassroomError } from './classroomErrors';
 
 /**
- * Pure mapper of `classCloneLesson`: what a new lesson takes from a source
- * lesson. An ALLOWLIST, never "copy everything then delete": a field the
- * mapper does not name does not travel (ballot, roundPhase, hide, counters,
- * selections, classTable, progress, old classCode, lastChildUpdate...).
- * No Firestore here; the callable reads the source and writes the result.
+ * Lesson copies (classCloneLesson, classStartLesson, classSnapshotGame, the
+ * migration). The allowlist itself lives in @freedi/shared-types
+ * (classGameSnapshot.ts: snapshotFromLesson / lessonFromSnapshot), shared with
+ * the join-class client. This file adds the server's errors, the caps and the
+ * class code generator. No Firestore here.
  */
 
+export {
+	LESSON_STEPS,
+	compareByManualOrder,
+	flattenLines,
+	isIntroParagraph,
+	isPlanQuestion,
+} from '@freedi/shared-types';
+
 /** Caps on what one copy may carry (the plan screen's own limits are lower). */
-export const CLONE_MAX_QUESTIONS = 50;
-export const CLONE_MAX_PARAGRAPHS = 30;
+export const CLONE_MAX_QUESTIONS = CLASS_GAME_MAX_QUESTIONS;
+export const CLONE_MAX_PARAGRAPHS = CLASS_GAME_MAX_PARAGRAPHS;
 
 /** Class code alphabet: six digits, leading zeros allowed (same as the client's generator). */
 export const CLASS_CODE_LENGTH = 6;
 const CLASS_CODE_RADIX = 10;
-
-/** The default flags `createSimpleQuestion` / `createSubQuestion` give a lesson's statements. */
-const DEFAULT_FLAGS: Pick<
-	StatementSettings,
-	| 'showEvaluation'
-	| 'enableAddEvaluationOption'
-	| 'enableAddVotingOption'
-	| 'enableSimilaritiesSearch'
-	| 'enableNavigationalElements'
-> = {
-	showEvaluation: true,
-	enableAddEvaluationOption: true,
-	enableAddVotingOption: true,
-	enableSimilaritiesSearch: true,
-	enableNavigationalElements: true,
-};
-
-/** A copy always gets the CURRENT steps (9, with "כל ההצעות"), whatever the source had (IA 19.8). */
-export const LESSON_STEPS = [
-	'waiting',
-	'opening',
-	'side',
-	'tables',
-	'tableTalk',
-	'proposals',
-	'allProposals',
-	'vote',
-	'summary',
-] as const;
 
 /** A random six-digit code. `random` returns [0, 1). */
 export function generateClassCode(random: () => number = Math.random): string {
@@ -71,54 +49,46 @@ export function generateClassCode(random: () => number = Math.random): string {
 	return code;
 }
 
-/** Line breaks become spaces, so `splitStatementIntoParagraphs` never splits a copy again. */
-export function flattenLines(text: string): string {
-	return text.replace(/\s*\r?\n\s*/g, ' ').trim();
-}
-
-/** Join's manual order: explicit `order`, then creation time (same rule as the client). */
-export function compareByManualOrder(a: Statement, b: Statement): number {
-	const ao = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
-	const bo = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
-	if (ao !== bo) return ao - bo;
-
-	return (a.createdAt ?? 0) - (b.createdAt ?? 0);
-}
-
-function paragraphOrder(p: Statement): number {
-	return p.order ?? p.doc?.order ?? Number.MAX_SAFE_INTEGER;
-}
-
-function compareParagraphs(a: Statement, b: Statement): number {
-	const diff = paragraphOrder(a) - paragraphOrder(b);
-
-	return diff !== 0 ? diff : (a.createdAt ?? 0) - (b.createdAt ?? 0);
-}
-
-/** True for the sub-questions a plan holds: not hidden, not a table's own question. */
-export function isPlanQuestion(s: Statement, mainId: string): boolean {
-	return (
-		s.parentId === mainId &&
-		s.statementType === StatementType.question &&
-		s.hide !== true &&
-		!s.classTable
-	);
-}
-
-/** True for the lesson's intro paragraphs: direct, visible paragraph children. */
-export function isIntroParagraph(s: Statement, mainId: string): boolean {
-	return s.parentId === mainId && s.statementType === StatementType.paragraph && s.hide !== true;
-}
-
-/** A lesson is a top-level statement with a lesson plan. */
+/**
+ * A join-class lesson, wherever it sits: a statement with a lesson plan that is
+ * not a home. No `parentId === 'top'` test, so old top-level lessons and lessons
+ * under a home both pass.
+ */
 export function isLesson(main: Statement): boolean {
-	return main.parentId === 'top' && !!main.statementSettings?.lessonPlan;
+	return isClassLesson(main);
+}
+
+/** A lesson's plan as a validated snapshot; refuses one over the caps. */
+export function lessonSnapshot(
+	source: Statement,
+	children: readonly Statement[],
+): ClassGameSnapshot {
+	const checked = checkSnapshot(snapshotFromLesson(source, children));
+	if (!checked.ok) {
+		throw new ClassroomError('resource-exhausted', 'This lesson is too big to copy');
+	}
+
+	return checked.snapshot;
+}
+
+/** A snapshot read from a game doc (client-written): shape and caps checked. */
+export function requireGameSnapshot(raw: unknown): ClassGameSnapshot {
+	const checked = checkSnapshot(raw);
+	if (!checked.ok) {
+		throw checked.problem === 'too-big'
+			? new ClassroomError('resource-exhausted', 'This game is too big to play')
+			: new ClassroomError('failed-precondition', 'This game is not valid');
+	}
+
+	return checked.snapshot;
 }
 
 export interface LessonCopyInput {
 	source: Statement;
 	/** Direct children of the source (any type); the mapper picks the plan's own. */
 	children: readonly Statement[];
+	/** The home the copy goes under. */
+	homeId: string;
 	newMainId: string;
 	/** Name of the new lesson; the source's title when empty. */
 	title?: string;
@@ -128,136 +98,53 @@ export interface LessonCopyInput {
 	now: number;
 	/** Ids for the new questions and paragraphs. */
 	newId: () => string;
+	classLesson?: ClassLessonLink;
 }
 
-export interface LessonCopy {
-	main: Statement;
-	questions: Statement[];
-	paragraphs: Statement[];
+export type LessonCopy = LessonStatements;
+
+/** Builds the lesson from a snapshot under a home; an internal error when it cannot. */
+export function buildLessonFromSnapshot(
+	args: Parameters<typeof lessonFromSnapshot>[0],
+): LessonStatements {
+	const built = lessonFromSnapshot(args);
+	if (!built) throw new ClassroomError('internal', 'Could not build the lesson');
+
+	return built;
 }
 
-function mainSettings(source: Statement, classCode: string, now: number): StatementSettings {
-	const s = source.statementSettings;
-	const videos = Array.isArray(s?.introVideos) ? s.introVideos : undefined;
-	const sideNames = s?.sideNames;
-	const sideClaims = s?.sideClaims;
+/**
+ * The same lesson as an OLD top-level lesson (parentId 'top', topParentId = itself,
+ * its questions and paragraphs `parents [lesson]`): what classCloneLesson made
+ * before lessons moved under homes. Used while CLONE_UNDER_HOME is false.
+ */
+export function asTopLevelLesson(lesson: LessonStatements): LessonStatements {
+	const lessonId = lesson.main.statementId;
+	const child = (s: Statement): Statement => ({ ...s, topParentId: lessonId, parents: [lessonId] });
 
 	return {
-		...DEFAULT_FLAGS,
-		classCode,
-		lessonPlan: { steps: [...LESSON_STEPS], stepIndex: 0, status: 'live', statusAt: now },
-		...(videos
-			? { introVideos: videos.map((v) => ({ id: v.id, title: v.title, url: v.url })) }
-			: {}),
-		...(typeof s?.videoUrl === 'string' && s.videoUrl ? { videoUrl: s.videoUrl } : {}),
-		...(sideNames && typeof sideNames.a === 'string' && typeof sideNames.b === 'string'
-			? { sideNames: { a: sideNames.a, b: sideNames.b } }
-			: {}),
-		...(typeof s?.sideQuestion === 'string' && s.sideQuestion
-			? { sideQuestion: s.sideQuestion }
-			: {}),
-		...(sideClaims && typeof sideClaims.a === 'string' && typeof sideClaims.b === 'string'
-			? { sideClaims: { a: sideClaims.a, b: sideClaims.b } }
-			: {}),
-		...(s?.speakSeconds !== undefined
-			? { speakSeconds: speakSecondsOf({ statementSettings: s }) }
-			: {}),
-		...(s?.proposalsTurns !== undefined
-			? { proposalsTurns: proposalsTurnsOf({ statementSettings: s }) }
-			: {}),
-		...(s?.tableSize !== undefined ? { tableSize: tableSizeOf({ statementSettings: s }) } : {}),
-		...(typeof s?.allowOwnQuestions === 'boolean'
-			? { allowOwnQuestions: s.allowOwnQuestions }
-			: {}),
-	} as StatementSettings;
-}
-
-function questionSettings(q: Statement): StatementSettings {
-	const role = q.statementSettings?.classRole;
-	const hint = q.statementSettings?.hint;
-
-	return {
-		...DEFAULT_FLAGS,
-		...(role === 'guiding' || role === 'challenge' ? { classRole: role } : {}),
-		...(typeof hint === 'string' && hint ? { hint: flattenLines(hint) } : {}),
-	} as StatementSettings;
-}
-
-function fail(what: string): never {
-	throw new ClassroomError('internal', `Could not build the copied ${what}`);
-}
-
-/** Builds the new lesson's main statement, its sub-questions and its intro paragraphs. */
-export function buildLessonCopy(input: LessonCopyInput): LessonCopy {
-	const { source, children, newMainId, creator, now } = input;
-	const sourceId = source.statementId;
-	const questionsIn = children
-		.filter((c) => isPlanQuestion(c, sourceId))
-		.sort(compareByManualOrder);
-	const paragraphsIn = children
-		.filter((c) => isIntroParagraph(c, sourceId))
-		.sort(compareParagraphs);
-	if (questionsIn.length > CLONE_MAX_QUESTIONS || paragraphsIn.length > CLONE_MAX_PARAGRAPHS) {
-		throw new ClassroomError('resource-exhausted', 'This lesson is too big to copy');
-	}
-
-	const title = flattenLines(input.title ?? '') || flattenLines(source.statement);
-	const built = createStatementObject({
-		statementId: newMainId,
-		statement: title,
-		statementType: StatementType.question,
-		parentId: 'top',
-		topParentId: newMainId,
-		creatorId: creator.uid,
-		creator,
-		statementSettings: mainSettings(source, input.classCode, now),
-	});
-	if (!built) fail('lesson');
-	const main: Statement = {
-		...built,
-		createdAt: now,
-		lastUpdate: now,
-		membership: { ...(built.membership ?? {}), access: Access.openToAll },
-		sourceLessonId: sourceId,
-		sourceLessonTitle: flattenLines(source.statement),
-		...(source.defaultLanguage
-			? { defaultLanguage: source.defaultLanguage, forceLanguage: source.forceLanguage === true }
-			: {}),
-		...(source.description ? { description: flattenLines(source.description) } : {}),
+		main: { ...lesson.main, parentId: 'top', topParentId: lessonId, parents: [] },
+		questions: lesson.questions.map(child),
+		paragraphs: lesson.paragraphs.map(child),
 	};
+}
 
-	const questions = questionsIn.map((q, index) => {
-		const copy = createStatementObject({
-			statementId: input.newId(),
-			statement: flattenLines(q.statement),
-			statementType: StatementType.question,
-			parentId: newMainId,
-			topParentId: newMainId,
-			parents: [newMainId],
-			creatorId: creator.uid,
-			creator,
-			statementSettings: questionSettings(q),
-		});
-		if (!copy) fail('question');
+/** A copy of a lesson's plan (snapshot then lesson) under `homeId`. */
+export function buildLessonCopy(input: LessonCopyInput): LessonCopy {
+	const { source } = input;
+	const snapshot = lessonSnapshot(source, input.children);
+	const title = (input.title ?? '').trim() ? (input.title as string) : source.statement;
 
-		return { ...copy, createdAt: now, lastUpdate: now, order: index };
+	return buildLessonFromSnapshot({
+		snapshot,
+		homeId: input.homeId,
+		lessonId: input.newMainId,
+		title,
+		creator: input.creator,
+		classCode: input.classCode,
+		now: input.now,
+		newId: input.newId,
+		classLesson: input.classLesson,
+		sourceLesson: { id: source.statementId, title: source.statement },
 	});
-
-	const paragraphs = paragraphsIn.map((p, index) => {
-		const copy = createParagraphChildStatement({
-			statementId: input.newId(),
-			content: flattenLines(p.statement),
-			host: { statementId: newMainId, topParentId: newMainId },
-			creator,
-			order: p.order ?? index,
-			blockType: (p.blockType ?? p.doc?.paragraphType) as ParagraphType | undefined,
-			listType: p.doc?.listType as ListType | undefined,
-			contentHtml: p.doc?.contentHtml === undefined ? undefined : flattenLines(p.doc.contentHtml),
-		});
-		if (!copy) fail('paragraph');
-
-		return { ...copy, createdAt: now, lastUpdate: now };
-	});
-
-	return { main, questions, paragraphs };
 }

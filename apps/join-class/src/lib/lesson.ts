@@ -17,9 +17,8 @@ import {
 	runTransaction,
 	writeBatch,
 } from './firebase';
-import { getLang, t } from './i18n';
+import { t } from './i18n';
 import {
-	createSimpleQuestion,
 	getMainStatement,
 	getQuestion,
 	loadQuestion,
@@ -29,11 +28,10 @@ import {
 } from './store';
 import { markOpenedInClass, waitForCreatorSubscription } from './joinSubscriptions';
 import { getUserState } from './user';
-import { classCloneLesson } from './classroom/api';
+import { classStartLesson } from './classroom/api';
 import {
 	CLASS_CODES_COLLECTION,
 	LessonStep,
-	buildNewLessonPlan,
 	generateClassCode,
 	isLessonStanding,
 	isValidStepIndex,
@@ -220,28 +218,6 @@ function remarkLater(statement: Statement): void {
 }
 
 /**
- * The teacher's "create" (IA 13.5), in one go: the main statement with its
- * lesson plan (step 0, live, so `/m/:mid` is a lesson from its first second)
- * and the teacher's current language as the lesson language, then the
- * `openedInClass` marker that lists it on the teacher's home, then the class code
- * (whose rule needs the teacher's admin subscription, which the marker's write
- * or the server's has created by then).
- * Returns the new lesson's id; throws when a step fails (the caller shows "try
- * again"; the typed name is kept).
- */
-export async function createLesson(title: string): Promise<string> {
-	const id = await createSimpleQuestion(title, {
-		statementSettings: { lessonPlan: buildNewLessonPlan(Date.now()) },
-		defaultLanguage: getLang(),
-		forceLanguage: true,
-	});
-	if (!id) throw new Error('createLesson: the statement was not created');
-	await settleNewLesson(id, () => ensureClassCode(id).then(() => undefined));
-
-	return id;
-}
-
-/**
  * What every new lesson goes through once its statement exists: load it, wait
  * for the server's creator subscription, write the `openedInClass` marker that
  * lists it on the teacher's home, then (if the server was slow) mark it again
@@ -270,19 +246,27 @@ export async function settleNewLesson(
 }
 
 /**
- * "New lesson with the same questions" (IA 13.15): the server copies the
- * source's plan into a new lesson (its own class code, no class work), then
- * the same settling as `createLesson`. `newMainId` is the id this attempt
- * owns: pass the same one on a retry and the server returns the lesson it
- * already made instead of a second one. Returns the new lesson's id; throws
- * when a step fails (the caller keeps the typed name and offers a retry).
+ * "+ שיעור עם כיתה" (docs/ia/join-class-lesson-plan.md 6.4): the server plays a prepared
+ * game with a class. It makes the home (`jcClass_{classId}`, or the teacher's own when
+ * `classId` is null), builds the lesson from the game's snapshot under it and gives it a
+ * class code, all in one transaction; then the same settling as any new lesson (the
+ * `openedInClass` marker that lists it). `newMainId` is the id this attempt owns: pass the
+ * same one on a retry and the server returns the lesson it already made instead of a
+ * second one. Returns the new lesson's id; throws when a step fails (the caller offers a
+ * retry with the same id).
  */
-export async function cloneLesson(
-	sourceId: string,
-	title: string,
-	newMainId: string = getRandomUID(),
-): Promise<string> {
-	const res = await classCloneLesson({ sourceMainId: sourceId, newMainId, title });
+export async function startLesson(input: {
+	planId: string;
+	gameId: string;
+	classId: string | null;
+	newMainId?: string;
+}): Promise<string> {
+	const res = await classStartLesson({
+		planId: input.planId,
+		gameId: input.gameId,
+		classId: input.classId,
+		newMainId: input.newMainId ?? getRandomUID(),
+	});
 	await settleNewLesson(res.mainId);
 
 	return res.mainId;

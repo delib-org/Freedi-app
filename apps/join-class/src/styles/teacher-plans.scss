@@ -1,0 +1,128 @@
+// =============================================================================
+// Lesson plans (docs/ia/join-class-lesson-plan.md): the home's two lists, the plan
+// screen's game sections and the inline class choice. Tokens only, BEM, logical
+// properties. Used from teacher.scss.
+// =============================================================================
+
+.teacher-home__section-title {
+  margin: var(--space-md) 0 var(--space-sm);
+  font-size: var(--font-size-md);
+  color: var(--ink-muted);
+}
+
+.teacher-home__row-link {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
+.teacher-home__counts {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--ink-muted);
+}
+
+// ---- plan screen ------------------------------------------------------------
+.plan-overview__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  margin-block-end: var(--space-md);
+}
+
+.plan-overview__title {
+  flex: 1 1 200px;
+  margin: 0;
+  font-size: var(--font-size-xl);
+}
+
+.plan-overview__rename {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+
+  .teacher-home__input {
+    flex: 1 1 200px;
+  }
+}
+
+.plan-overview__filter {
+  margin-block-end: var(--space-md);
+}
+
+.plan-overview__game {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-block-end: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+}
+
+.plan-overview__game-title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+
+.plan-overview__game-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.plan-overview__lesson {
+  background: var(--paper-soft);
+}
+
+// ---- inline class choice ----------------------------------------------------
+.class-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-block-end: var(--space-md);
+  padding: var(--space-md);
+  background: var(--paper-soft);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+}
+
+.class-form__choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.class-form__lead {
+  margin: 0;
+  font-weight: 600;
+}
+
+.class-form__choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-block-size: 44px;
+  cursor: pointer;
+}
+
+.class-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.class-form__error {
+  color: var(--error, var(--terra-700));
+}

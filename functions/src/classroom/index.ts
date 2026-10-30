@@ -23,3 +23,5 @@ export { classPostProposal } from './fn_classPostProposal';
 export { classEditProposal } from './fn_classEditProposal';
 export { classSetLessonStatus } from './fn_classSetLessonStatus';
 export { classCloneLesson } from './fn_classCloneLesson';
+export { classStartLesson } from './fn_classStartLesson';
+export { classSnapshotGame } from './fn_classSnapshotGame';

@@ -2,7 +2,10 @@ import m from 'mithril';
 import '@/styles/teacher.scss';
 import type { Statement } from '@freedi/shared-types';
 import { getAvailableLanguages, t } from '@/lib/i18n';
-import { getMainStatement, setFollowLessonLanguage } from '@/lib/store';
+import { setFollowLessonLanguage } from '@/lib/store';
+import { getPlanMain, isGameMode } from './planSource';
+import { ClassForm, closeClassForm, isClassFormOpen, openClassForm } from './ClassForm';
+import { planPathOf } from '@/lib/lessonLinks';
 import { NotYourLesson } from './NotYourLesson';
 import { WizColFooter } from '@/components/WizColFooter';
 import {
@@ -19,6 +22,7 @@ import {
 	getCreatingChallenge,
 	getFieldError,
 	getLoad,
+	getGamePlanTitle,
 	getMainId,
 	getNewCards,
 	getPlan,
@@ -29,6 +33,7 @@ import {
 	isSavedFlag,
 	moveQuestion,
 	onInput,
+	openGame,
 	openPlan,
 	removeNewCard,
 	reorder,
@@ -273,17 +278,37 @@ function renderDetails(): m.Vnode {
 				fieldError(PROPOSALS_TURNS_KEY),
 			]),
 		]),
-		renderCopiedFrom(),
+		renderLessonFrom(),
 	]);
 }
 
-/** One muted line on a lesson made from another: where its plan came from (plain text, not a link). */
-function renderCopiedFrom(): m.Children {
-	const source = getMainStatement()?.sourceLessonTitle;
-	if (!source) return null;
-	const [before, after = ''] = t('plan.copied_from', { name: '\u0001' }).split('\u0001');
+/**
+ * Under a lesson's plan: where it came from ("Game: ... · Class: ...") and that edits stay
+ * in this lesson (docs/ia/join-class-lesson-plan.md 3). Nothing under a game.
+ */
+function renderLessonFrom(): m.Children {
+	if (isGameMode()) return null;
+	const main = getPlanMain();
+	const link = main?.statementSettings?.classLesson;
+	// the game's name comes first in every language: split the line around both names
+	const [before, rest = ''] = t('plan.lesson_from', { game: '\u0001', class: '\u0002' }).split(
+		'\u0001',
+	);
+	const [mid = '', after = ''] = rest.split('\u0002');
+	const classLabel = link ? link.className || t('teacher.lesson.class_none') : '';
 
-	return m('p.plan__help.plan__copied-from', [before, m('bdi', { dir: 'auto' }, source), after]);
+	return [
+		link
+			? m('p.plan__help.plan__copied-from', [
+					before,
+					m('bdi', { dir: 'auto' }, main?.statement ?? ''),
+					mid,
+					m('bdi', { dir: 'auto' }, classLabel),
+					after,
+				])
+			: null,
+		m('p.plan__help.plan__lesson-only', t('plan.lesson_only')),
+	];
 }
 
 function renderTables(guiding: Statement[]): m.Vnode {
@@ -338,17 +363,30 @@ function renderBar(mainId: string): m.Vnode {
 				},
 				[saved ? m('span.plan__save-mark', { 'aria-hidden': 'true' }, '✓ ') : null, label],
 			),
-			m(
-				'button.btn.btn--secondary.plan__console',
-				{
-					type: 'button',
-					onclick: async () => {
-						await flushAll();
-						m.route.set(`/t/${mainId}`);
-					},
-				},
-				t('plan.to_console'),
-			),
+			isGameMode()
+				? m(
+						'button.btn.btn--secondary.plan__console',
+						{
+							type: 'button',
+							'data-action': 'new-lesson',
+							onclick: async () => {
+								await flushAll();
+								openClassForm(mainId);
+							},
+						},
+						t('teacher.lesson.new'),
+					)
+				: m(
+						'button.btn.btn--secondary.plan__console',
+						{
+							type: 'button',
+							onclick: async () => {
+								await flushAll();
+								m.route.set(`/t/${mainId}`);
+							},
+						},
+						t('plan.to_console'),
+					),
 			hasAnyError() ? m('span.plan__bar-error', { role: 'alert' }, t('plan.error.save')) : null,
 		]),
 	]);
@@ -363,7 +401,7 @@ function renderSkeleton(): m.Vnode {
 	]);
 }
 
-function renderBody(mainId: string): m.Children {
+function renderBody(mainId: string, game: { planId: string; gameId: string } | null): m.Children {
 	const state = getLoad();
 	if (state === 'loading') return renderSkeleton();
 	if (state === 'error') {
@@ -371,7 +409,10 @@ function renderBody(mainId: string): m.Children {
 			m('p', t('plan.error.load')),
 			m(
 				'button.btn.btn--primary',
-				{ type: 'button', onclick: () => void openPlan(mainId) },
+				{
+					type: 'button',
+					onclick: () => void (game ? openGame(game.planId, game.gameId) : openPlan(mainId)),
+				},
 				t('plan.error.retry'),
 			),
 		]);
@@ -390,9 +431,24 @@ function renderBody(mainId: string): m.Children {
 	];
 }
 
+/** The route names a game (`/t/plans/:planId/games/:gameId`) rather than a lesson. */
+function routeGame(): { planId: string; gameId: string } | null {
+	const planId = m.route.param('planId');
+	const gameId = m.route.param('gameId');
+
+	return planId && gameId ? { planId, gameId } : null;
+}
+
 export const PlanScreen: m.Component = {
 	oninit() {
 		setFollowLessonLanguage(false);
+		closeClassForm();
+		const game = routeGame();
+		if (game) {
+			void openGame(game.planId, game.gameId);
+
+			return;
+		}
 		const mid = m.route.param('mid');
 		if (!mid) {
 			m.route.set('/t');
@@ -404,23 +460,36 @@ export const PlanScreen: m.Component = {
 
 	onremove() {
 		teardownPlan();
+		closeClassForm();
 	},
 
 	view() {
-		const mid = m.route.param('mid') ?? getMainId();
+		const game = routeGame();
+		const mid = game ? game.gameId : (m.route.param('mid') ?? getMainId());
 		if (getLoad() === 'denied') return m(NotYourLesson);
 		const ready = getLoad() === 'ready';
+		const planTitle = getGamePlanTitle();
 
 		return m('.plan', [
 			m('header.plan__header', [
-				m(m.route.Link, { class: 'plan__back', href: `/t/${mid}` }, [
-					m('span.plan__back-chevron', { 'aria-hidden': 'true' }, '‹'),
-					m('span', t('plan.back')),
-				]),
+				game
+					? m(m.route.Link, { class: 'plan__back', href: planPathOf(game.planId) }, [
+							m('span.plan__back-chevron', { 'aria-hidden': 'true' }, '‹'),
+							m('bdi', { dir: 'auto' }, planTitle || t('classPlan.back')),
+						])
+					: m(m.route.Link, { class: 'plan__back', href: `/t/${mid}` }, [
+							m('span.plan__back-chevron', { 'aria-hidden': 'true' }, '‹'),
+							m('span', t('plan.back')),
+						]),
 				m('h1.plan__title', t('plan.title')),
 				ready && getTitle() ? m('p.plan__lesson', getTitle()) : null,
 			]),
-			m('main.plan__body', renderBody(mid)),
+			m('main.plan__body', [
+				game && ready && isClassFormOpen(game.gameId)
+					? m(ClassForm, { planId: game.planId, gameId: game.gameId })
+					: null,
+				renderBody(mid, game),
+			]),
 			ready ? renderBar(mid) : null,
 			m('.visually-hidden', { role: 'status', 'aria-live': 'polite' }, getAnnouncement()),
 			m(WizColFooter),

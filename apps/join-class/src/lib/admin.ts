@@ -146,6 +146,13 @@ export async function checkAdminStatus(questionId: string, creatorId: string): P
 	}
 }
 
+/** The caller owns a prepared game (a doc, not a statement): admin of it for the plan screen. */
+export function markAdminOf(id: string): void {
+	resetState(id);
+	isAdminFlag = true;
+	m.redraw();
+}
+
 /** Setter used by the live `joinDelegates/{qid--uid}` listener so a freshly
  *  accepted invite (or a revocation) takes effect without a refresh. */
 export function setCurrentDelegate(delegate: JoinDelegate | null, questionId: string): void {

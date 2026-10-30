@@ -127,8 +127,8 @@ export async function runStatusPhase({ check, teacher, student, mid, db, base, t
 	await teacher.click('[data-testid=console-end]');
 	await teacher.waitForSelector('dialog.end-choice[open]', { timeout });
 	await teacher.click('[data-choice=end]');
-	await teacher.waitForURL((u) => u.pathname === '/t', { timeout });
-	check('ending (the default) goes to the lesson list', true);
+	await teacher.waitForURL((u) => u.pathname.startsWith('/t/plans/'), { timeout });
+	check('ending (the default) goes back to the lesson\'s plan screen, where its row is', true);
 	check('the status is ended with endedAt', (await statusIs('ended')) && typeof (await plan())?.endedAt === 'number');
 	await teacher.waitForSelector('.teacher-home__row .status-chip--ended', { timeout });
 	check('the row says "הסתיים" and offers "פתיחה מחדש"', (await teacher.locator('.status-chip--ended').first().innerText()).includes('הסתיים') && (await teacher.locator('[data-action=reopen]').first().innerText()) === 'פתיחה מחדש');
@@ -151,7 +151,7 @@ export async function runStatusPhase({ check, teacher, student, mid, db, base, t
 	await teacher.click('[data-testid=console-end]');
 	await teacher.waitForSelector('dialog.end-choice[open]', { timeout });
 	await teacher.click('[data-choice=keepOpen]');
-	await teacher.waitForURL((u) => u.pathname === '/t', { timeout });
+	await teacher.waitForURL((u) => u.pathname.startsWith('/t/plans/'), { timeout });
 	check('keeping open writes status open', await statusIs('open'));
 	await teacher.waitForSelector('.teacher-home__row .status-chip--open', { timeout });
 	check('the row says "פתוח לתלמידים"', (await teacher.locator('.status-chip--open').first().innerText()).includes('פתוח לתלמידים'));

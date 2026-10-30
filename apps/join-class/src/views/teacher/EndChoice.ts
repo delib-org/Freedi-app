@@ -2,6 +2,7 @@ import m from 'mithril';
 import type { LessonStatus } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { classSetLessonStatus } from '@/lib/classroom/api';
+import { planBack } from './consoleBack';
 
 /**
  * "End the lesson?" (IA 13.6, UX 13.E): one native <dialog>, so focus is
@@ -38,7 +39,7 @@ async function choose(mainId: string, choice: Choice): Promise<void> {
 	try {
 		await classSetLessonStatus({ mainId, action: choice });
 		isOpen = false;
-		m.route.set('/t');
+		m.route.set(planBack().href);
 	} catch (err) {
 		console.error('[EndChoice] changing the lesson status failed:', err);
 		failed = choice;

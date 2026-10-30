@@ -55,6 +55,7 @@ import { consoleState, dismissFailure, isBusy, watchOptions } from './consoleSta
 import type { ConsoleView } from './consoleState';
 import { abortDrag } from './dragController';
 import { EndChoice, openEndChoice } from './EndChoice';
+import { planBack } from './consoleBack';
 import { LessonBanner } from './LessonBanner';
 import { ConfirmDialog } from './ConfirmDialog';
 import {
@@ -161,10 +162,12 @@ function header(
 	code: string | undefined,
 	status: LessonStatus | null,
 ): m.Vnode {
+	const back = planBack();
+
 	return m('header.console__bar', [
-		m(m.route.Link, { class: 'plan__back', href: '/t' }, [
+		m(m.route.Link, { class: 'plan__back', href: back.href }, [
 			m('span.plan__back-chevron', { 'aria-hidden': 'true' }, '‹'),
-			m('span', t('teacher.home.title')),
+			m('bdi', { dir: 'auto' }, back.label),
 		]),
 		m('h1.console__title', lessonName ?? t('teacher.console.title')),
 		code

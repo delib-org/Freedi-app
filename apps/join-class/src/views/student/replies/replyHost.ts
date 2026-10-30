@@ -109,7 +109,7 @@ export function startReplyHost(main: Statement): () => void {
 	};
 
 	const stop = uid
-		? listenRepliesToMe(main.topParentId || main.statementId, uid, onReplies, (error) =>
+		? listenRepliesToMe(main.statementId, uid, onReplies, (error) =>
 				console.error(
 					'[Replies] author listener error',
 					{ operation: 'replyHost.listen', uid, statementId: main.statementId },

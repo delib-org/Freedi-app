@@ -16,6 +16,7 @@ import { getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { BASE_URL as BASE, PROJECT_ID } from './e2e-env.mjs';
 import { signInTeacher, signInWithGooglePopup } from './e2e-auth.mjs';
+import { startLessonViaPlan } from './lib/startLessonViaPlan.mjs';
 import { runStatusPhase } from './e2e-entry-status.mjs';
 
 const TIMEOUT = 20000;
@@ -121,12 +122,20 @@ try {
 		check('the home names the account and offers sign-out', (await teacher.locator('.teacher-home__account').count()) === 1 && (await teacher.locator('.teacher-home__signout').count()) === 1);
 
 		await teacher.click('.teacher-home__form button[type=submit]');
-		check('an empty name is refused inline', (await teacher.locator('.teacher-home__error').innerText()) === 'כתבו שם לשיעור');
+		check('an empty name is refused inline', (await teacher.locator('.teacher-home__error').innerText()) === 'כתבו שם');
+		// the first-time home's form makes a plan and lands on its first game; a lesson comes from
+		// the game (see lib/startLessonViaPlan.mjs, which does the same walk for the other scripts)
 		await teacher.fill('#teacher-new-title', `Entry lesson ${Date.now()}`);
 		await teacher.click('.teacher-home__form button[type=submit]');
-		await teacher.waitForURL(/\/t\/[^/]+\/plan$/, { timeout: TIMEOUT });
-		mid = new URL(teacher.url()).pathname.split('/')[2];
-		check('creating a lesson opens its plan screen', !!mid);
+		await teacher.waitForURL(/\/t\/plans\/[^/]+\/games\/[^/]+$/, { timeout: TIMEOUT });
+		check('creating a plan opens its first game', true);
+		await teacher.goBack();
+		await teacher.waitForSelector('[data-plan]', { timeout: TIMEOUT });
+		({ mainId: mid } = await startLessonViaPlan(teacher, BASE, {
+			title: `Entry lesson ${Date.now()}`,
+			challenge: 'Should phones be banned?',
+		}));
+		check('starting a lesson from a game opens its plan screen', !!mid);
 
 		const main = (await db.doc(`statements/${mid}`).get()).data();
 		const plan = main?.statementSettings?.lessonPlan;

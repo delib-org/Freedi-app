@@ -1,8 +1,7 @@
 import m from 'mithril';
-import { getMainStatement } from '@/lib/store';
+import { getPlanMain } from './planSource';
 import { isAdmin } from '@/lib/admin';
 import { createDragReorder } from '@/lib/dragReorder';
-import { fetchIntroBlocks } from '@/lib/classroom/introData';
 import {
 	checkIntroText,
 	diffIntroBlocks,
@@ -29,7 +28,7 @@ import {
 	setDraft,
 } from './planController';
 import { applyIdOrder, moveId, orderConverged } from './planHelpers';
-import { saveIntroDiff, saveIntroVideos } from './planIntroApi';
+import { loadIntroBlocks, saveIntroDiff, saveIntroVideos } from './planIntroApi';
 
 /** State and actions of the plan screen's "הקדמה" section: the text (one
  *  textarea, saved on blur as a block diff) and the videos (one card each,
@@ -92,7 +91,7 @@ export interface VideoRow {
 
 /** Saved videos in the teacher's order, then the rows still being filled in. */
 export function videoRows(): VideoRow[] {
-	const saved = introVideosOf(getMainStatement()).filter((v) => !deletedIds.has(v.id));
+	const saved = introVideosOf(getPlanMain()).filter((v) => !deletedIds.has(v.id));
 	const rawIds = saved.map((v) => v.id);
 	if (localOrder && orderConverged(rawIds, localOrder)) localOrder = null;
 	const ordered = applyIdOrder(saved, localOrder, (v: IntroVideo) => v.id);
@@ -123,7 +122,7 @@ export async function openIntro(mainId: string): Promise<void> {
 	blocksLoad = 'loading';
 	m.redraw();
 	try {
-		savedBlocks = await fetchIntroBlocks(mainId);
+		savedBlocks = await loadIntroBlocks(mainId);
 		blocksLoad = 'ready';
 	} catch (err) {
 		console.error('[PlanScreen] load introduction text failed:', err);
@@ -140,7 +139,7 @@ export function onIntroTextInput(value: string): void {
 /** Blur of the textarea: save the changed blocks. Over the limit nothing is written. */
 export function commitIntroText(): void {
 	const draft = getDraft(TEXT_KEY);
-	const main = getMainStatement();
+	const main = getPlanMain();
 	if (draft === undefined || !main || blocksLoad !== 'ready') return;
 	const check = checkIntroText(draft);
 	if (!check.ok) return;
@@ -152,7 +151,7 @@ export function commitIntroText(): void {
 	}
 	runSave(TEXT_KEY, 'save introduction text', async () => {
 		await saveIntroDiff(main, diff);
-		savedBlocks = await fetchIntroBlocks(getMainId());
+		savedBlocks = await loadIntroBlocks(getMainId());
 		// show the saved (normalised) text, unless the teacher kept typing meanwhile
 		if (getDraft(TEXT_KEY) === draft) dropDraft(TEXT_KEY);
 	});

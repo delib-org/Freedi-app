@@ -35,6 +35,22 @@ export function autoEvaluationId(uid: string, optionId: string): string {
 	return `${uid}--${optionId}`;
 }
 
+/**
+ * Is the option inside lesson `mainId`? A lesson under a class home has the home
+ * as topParentId (IA docs/ia/join-class-lesson-plan.md 9.2), so the lesson is
+ * found in `parents`; an old top-level lesson is also its options' topParentId.
+ */
+export function isInLesson(
+	option: Pick<Statement, 'topParentId' | 'parents'>,
+	mainId: string,
+): boolean {
+	return (
+		!!mainId &&
+		(option.topParentId === mainId ||
+			(Array.isArray(option.parents) && option.parents.includes(mainId)))
+	);
+}
+
 /** The option's author: creatorId, falling back to creator.uid. */
 function authorOf(option: Statement): string | undefined {
 	return option.creatorId || option.creator?.uid || undefined;
@@ -53,7 +69,7 @@ export function autoEvaluatorUids(option: Statement, table: ClassTable | undefin
 	const author = authorOf(option);
 	if (!marker || !author) return [];
 	const validTable =
-		!!table && table.tableId === marker.tableId && table.mainId === option.topParentId;
+		!!table && table.tableId === marker.tableId && isInLesson(option, table.mainId);
 	if (!validTable || !table.memberUids.includes(author)) return [];
 	const members = table.memberUids;
 	const coAuthors = (marker.coAuthors ?? []).filter(
@@ -100,7 +116,7 @@ export function shouldLockWriting(table: ClassTable | undefined, option: Stateme
 	return (
 		!!table &&
 		!table.writingLocked &&
-		table.mainId === option.topParentId &&
+		isInLesson(option, table.mainId) &&
 		typeof table.questionId === 'string' &&
 		table.questionId === option.parentId
 	);
@@ -137,11 +153,13 @@ export async function onClassOptionCreated(db: Firestore, option: Statement): Pr
 	if (typeof marker.tableId !== 'string' || !marker.tableId || marker.tableId.includes('/'))
 		return 0;
 
-	const mainId = option.topParentId;
 	const tableDocRef = db.collection(CLASS_TABLES_COLLECTION).doc(marker.tableId);
 	const tableSnap = await tableDocRef.get();
 	const table = tableSnap.exists ? (tableSnap.data() as ClassTable) : undefined;
 	const uids = autoEvaluatorUids(option, table);
+	// The lesson comes from the (validated) table, never from topParentId: under a
+	// class home, topParentId is the home. No uids means no valid table.
+	const mainId = table?.mainId ?? '';
 	const now = Date.now();
 
 	const subSnaps =

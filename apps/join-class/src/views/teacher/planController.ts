@@ -4,11 +4,13 @@ import { ensureUser, getUserState } from '@/lib/user';
 import {
 	loadMainStatement,
 	getMainStatement,
-	getSubQuestions,
 	subscribeMainStatement,
 	subscribeSubQuestions,
 } from '@/lib/store';
-import { checkAdminStatus, isAdmin } from '@/lib/admin';
+import { checkAdminStatus, isAdmin, markAdminOf } from '@/lib/admin';
+import { captureException } from '@/lib/sentry';
+import { getPlanMain, getPlanSubQuestions, setGame } from './planSource';
+import { watchGame } from './planGameWatch';
 import { markOpenedInClass } from '@/lib/joinSubscriptions';
 import { createDragReorder } from '@/lib/dragReorder';
 import type { Unsubscribe } from '@/lib/firebase';
@@ -51,6 +53,8 @@ let mainId = '';
 let load: PlanLoad = 'loading';
 let subUnsub: Unsubscribe | null = null;
 let mainUnsub: Unsubscribe | null = null;
+let gameUnsub: Unsubscribe | null = null;
+let gamePlanTitle = '';
 let newCardCounter = 0;
 
 const drafts = new Map<string, string>();
@@ -86,7 +90,9 @@ export const hasAnyError = (): boolean => fieldErrors.size > 0;
 export const isSaving = (key: string): boolean => savingKeys.has(key);
 export const getCreatingChallenge = (): { text: string; startedAt: number } | null =>
 	creatingChallenge;
-export const getTitle = (): string => getMainStatement()?.statement ?? '';
+export const getTitle = (): string => getPlanMain()?.statement ?? '';
+/** On a game: the name of the plan it belongs to (the back link's label). */
+export const getGamePlanTitle = (): string => gamePlanTitle;
 
 /** The text to show in a field: what the teacher is typing, else what is saved.
  *  A draft that the snapshot has caught up with is dropped here. */
@@ -105,7 +111,7 @@ export function fieldValue(key: string, saved: string): string {
 /** Challenge and ordered guiding questions, hiding the optimistic duplicates
  *  that exist for a moment while a create round-trips. */
 export function getPlan(): PlanSplit {
-	const all = getSubQuestions().filter((s) => !deletedIds.has(s.statementId));
+	const all = getPlanSubQuestions().filter((s) => !deletedIds.has(s.statementId));
 	const split = splitPlan(all, roleOverrides);
 	let guiding = split.guiding;
 	if (creatingChallenge) {
@@ -178,7 +184,7 @@ export function runSave(key: string, label: string, task: () => Promise<void>): 
 			markSavedIfClean();
 		})
 		.catch((err: unknown) => {
-			console.error(`[PlanScreen] ${label} failed:`, err);
+			captureException(err, { operation: `planScreen.${label}` });
 			savingKeys.delete(key);
 			fieldErrors.set(key, () => runSave(key, label, task));
 		})
@@ -250,7 +256,7 @@ export function commitNewChallenge(): void {
 			markSavedIfClean();
 		})
 		.catch((err: unknown) => {
-			console.error('[PlanScreen] create challenge failed:', err);
+			captureException(err, { operation: 'planScreen.createChallenge', mainId });
 			creatingChallenge = null;
 			fieldErrors.set(CHALLENGE_NEW_KEY, commitNewChallenge);
 		})
@@ -304,7 +310,7 @@ export function commitNewCard(card: NewCard): void {
 			markSavedIfClean();
 		})
 		.catch((err: unknown) => {
-			console.error('[PlanScreen] add question failed:', err);
+			captureException(err, { operation: 'planScreen.addQuestion', mainId });
 			card.creating = false;
 			card.failed = true;
 		})
@@ -326,7 +332,7 @@ export function deleteQuestion(statementId: string): void {
 			announcement = '';
 		})
 		.catch((err: unknown) => {
-			console.error('[PlanScreen] delete question failed:', err);
+			captureException(err, { operation: 'planScreen.deleteQuestion', statementId });
 			deletedIds.delete(statementId);
 			fieldErrors.set(key, () => deleteQuestion(statementId));
 		})
@@ -342,7 +348,7 @@ function commitOrder(orderedIds: string[]): void {
 	const promise = persistQuestionOrder(orderedIds)
 		.then(() => markSavedIfClean())
 		.catch((err: unknown) => {
-			console.error('[PlanScreen] reorder failed:', err);
+			captureException(err, { operation: 'planScreen.reorder', mainId });
 			localOrder = null;
 			fieldErrors.set('order', () => commitOrder(orderedIds));
 		})
@@ -426,7 +432,7 @@ export async function openPlan(id: string): Promise<void> {
 		const user = getUserState().user;
 		if (user) {
 			void markOpenedInClass(main, user.uid, user.displayName ?? '').catch((err: unknown) => {
-				console.error('[PlanScreen] markOpenedInClass failed:', err);
+				captureException(err, { operation: 'planScreen.markOpenedInClass', mainId: id });
 			});
 		}
 		// Live main statement too: the details fields (video, names, language) compare
@@ -435,14 +441,53 @@ export async function openPlan(id: string): Promise<void> {
 		subUnsub = subscribeSubQuestions(id);
 		load = 'ready';
 	} catch (err) {
-		console.error('[PlanScreen] load failed:', err);
+		captureException(err, { operation: 'planScreen.openPlan', mainId: id });
 		load = 'error';
 	} finally {
 		m.redraw();
 	}
 }
 
+/**
+ * Open the screen for a prepared game (docs/ia/join-class-lesson-plan.md 7). The game doc is
+ * the owner's alone: a missing or foreign one gets the "not your lesson" state, like a lesson.
+ */
+function settle(next: PlanLoad): void {
+	load = next;
+	m.redraw();
+}
+
+export async function openGame(planId: string, gameId: string): Promise<void> {
+	teardownPlan();
+	resetState();
+	mainId = gameId;
+	gamePlanTitle = '';
+	load = 'loading';
+	m.redraw();
+	try {
+		await ensureUser();
+		gameUnsub = watchGame(planId, gameId, {
+			onPlanTitle: (title) => {
+				gamePlanTitle = title;
+				m.redraw();
+			},
+			onGame: () => {
+				if (load !== 'ready') markAdminOf(gameId);
+				settle('ready');
+			},
+			onDenied: () => settle('denied'),
+			onError: () => settle('error'),
+		});
+	} catch (err) {
+		captureException(err, { operation: 'planScreen.openGame', planId, gameId });
+		settle('error');
+	}
+}
+
 export function teardownPlan(): void {
+	gameUnsub?.();
+	gameUnsub = null;
+	setGame(null);
 	if (mainUnsub) {
 		mainUnsub();
 		mainUnsub = null;

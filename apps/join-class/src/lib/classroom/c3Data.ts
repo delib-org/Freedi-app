@@ -39,9 +39,14 @@ export function currentUid(): string | null {
 	return getUserState().user?.uid ?? null;
 }
 
-/** Every option under the workspace's questions (answers and proposals). */
+/**
+ * Every option under the lesson's questions (answers and proposals). Keyed on
+ * `parents array-contains <lessonId>`, not `topParentId`: since lessons sit under a
+ * class or teacher home the top parent is the home, and the same query still finds
+ * the descendants of an old top-level lesson (their `parents` hold the lesson id).
+ */
 export function listenClassOptions(
-	topParentId: string,
+	lessonId: string,
 	onData: (options: Statement[]) => void,
 	onError?: (error: Error) => void,
 ): Unsubscribe {
@@ -49,7 +54,7 @@ export function listenClassOptions(
 		LISTENER.options,
 		query(
 			collection(db, Collections.statements),
-			where('topParentId', '==', topParentId),
+			where('parents', 'array-contains', lessonId),
 			where('statementType', '==', StatementType.option),
 		),
 		(snap) => onData(snap.docs.map((d) => d.data() as Statement)),

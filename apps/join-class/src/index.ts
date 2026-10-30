@@ -100,6 +100,13 @@ i18nReady.then(() => {
 		'/m/:mid': MainHub,
 		// Teacher routes (classroom). Lazy, so students never download them.
 		'/t': teacherRoute(() => import('@/views/teacher/TeacherHome').then((mod) => mod.TeacherHome)),
+		// The plan screens come before '/t/:mid...', which would take 'plans' for a lesson id.
+		'/t/plans/:planId': teacherRoute(() =>
+			import('@/views/teacher/PlanOverview').then((mod) => mod.PlanOverview),
+		),
+		'/t/plans/:planId/games/:gameId': teacherRoute(() =>
+			import('@/views/teacher/PlanScreen').then((mod) => mod.PlanScreen),
+		),
 		'/t/:mid': teacherRoute(() =>
 			import('@/views/teacher/TeacherConsole').then((mod) => mod.TeacherConsole),
 		),

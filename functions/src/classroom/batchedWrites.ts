@@ -15,12 +15,14 @@ export function chunk<T>(items: readonly T[], size: number = BATCH_WRITE_LIMIT):
 	return runs;
 }
 
-/** Commits the writes in order, one batch per BATCH_WRITE_LIMIT. */
+/** Commits the writes in order, one batch per `size` (at most BATCH_WRITE_LIMIT). */
 export async function commitInBatches(
 	firestore: Firestore,
 	writes: readonly BatchedWrite[],
+	size: number = BATCH_WRITE_LIMIT,
 ): Promise<void> {
-	for (const run of chunk(writes)) {
+	const perBatch = Math.max(1, Math.min(BATCH_WRITE_LIMIT, Math.floor(size)));
+	for (const run of chunk(writes, perBatch)) {
 		const batch = firestore.batch();
 		run.forEach((w) => {
 			if (w.kind === 'delete') batch.delete(w.ref);

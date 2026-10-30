@@ -28,6 +28,7 @@ import { getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { BASE_URL as BASE, PROJECT_ID } from './e2e-env.mjs';
 import { signInTeacher } from './e2e-auth.mjs';
+import { startLessonViaPlan } from './lib/startLessonViaPlan.mjs';
 
 const TIMEOUT = 25000;
 const SLOW = 60000; // one onStatementCreated / newEvaluation round is ~6 s on the emulator
@@ -197,12 +198,9 @@ async function lowContrast(page) {
 // ---- 1. the teacher creates the lesson ----------------------------------------
 async function phasePlan() {
 	await signInTeacher(teacher.page, BASE, `teacher-three-${Date.now()}`);
-	await teacher.page.goto(`${BASE}/t`, { waitUntil: 'domcontentloaded' });
-	await teacher.page.waitForSelector('#teacher-new-title', { timeout: TIMEOUT });
-	await teacher.page.fill('#teacher-new-title', `Three browsers ${Date.now()}`);
-	await teacher.page.click('.teacher-home__form button[type=submit]');
-	await teacher.page.waitForURL(/\/t\/[^/]+\/plan$/, { timeout: TIMEOUT });
-	mid = new URL(teacher.page.url()).pathname.split('/')[2];
+	({ mainId: mid } = await startLessonViaPlan(teacher.page, BASE, {
+		title: `Three browsers ${Date.now()}`,
+	}));
 	const challenge = teacher.page.locator('.plan-card__text--challenge');
 	await teacher.page.waitForSelector('.plan__challenge', { timeout: TIMEOUT });
 	await challenge.fill(CHALLENGE_TEXT);
