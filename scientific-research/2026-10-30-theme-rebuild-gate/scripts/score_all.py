@@ -3,7 +3,9 @@ Score every live / rebuild pair under results/<tag>/<run>/ with the official
 score100.mjs and write results/summary.json plus a markdown table.
 
   usage: python3 -I scripts/score_all.py <tag> [<tag> ...]
-Gate: mean rebuild topic F1 >= 0.80 AND rebuild >= live in every run.
+Rules (both reported):
+  strict  mean rebuild topic F1 >= 0.80 AND rebuild >= live in every attempt
+  paired  mean rebuild topic F1 >= 0.80 AND mean of the repeats >= live in every run
 """
 import json
 import os
@@ -47,7 +49,8 @@ def main():
         rows.append(row)
 
     lines = ['| run | live topic F1 (themes) | ' + ' | '.join(f'{t} topic F1 (themes, Other)' for t in tags)
-             + ' | synth F1 live / rebuild |', '|' + '---|' * (len(tags) + 3)]
+             + ' | mean of repeats | synth F1 live / rebuild |', '|' + '---|' * (len(tags) + 4)]
+    paired_ok = True
     means = {t: [] for t in tags}
     every_ge = {t: True for t in tags}
     live_all = []
@@ -65,12 +68,20 @@ def main():
             every_ge[t] &= x['topic_f1'] >= live['topic_f1']
             synth_rb.add(x['synth_f1'])
             cells.append(f"{x['topic_f1']:.3f} ({x['themes']}, {x['other']})")
+        reps = [r['rebuild'][t]['topic_f1'] for t in tags if t in r['rebuild']]
+        cell_mean = sum(reps) / len(reps)
+        paired_ok &= cell_mean >= live['topic_f1']
         lines.append(f"| {r['run']} | {live['topic_f1']:.3f} ({live['themes']}) | " + ' | '.join(cells)
-                     + f" | {live['synth_f1']:.3f} / {'/'.join(f'{s:.3f}' for s in sorted(synth_rb))} |")
+                     + f" | {cell_mean:.3f} | {live['synth_f1']:.3f} / {'/'.join(f'{s:.3f}' for s in sorted(synth_rb))} |")
     mean = lambda xs: sum(xs) / len(xs) if xs else float('nan')
-    lines.append(f"| **mean** | **{mean(live_all):.3f}** | " + ' | '.join(f'**{mean(means[t]):.3f}**' for t in tags) + ' | |')
+    overall = mean([x for t in tags for x in means[t]])
+    lines.append(f"| **mean** | **{mean(live_all):.3f}** | " + ' | '.join(f'**{mean(means[t]):.3f}**' for t in tags)
+                 + f' | **{overall:.3f}** | |')
     gate = {t: dict(mean=round(mean(means[t]), 3), every_run_ge_live=every_ge[t],
                     passed=mean(means[t]) >= GATE_MEAN and every_ge[t]) for t in tags}
+    gate['strict_all'] = all(g['passed'] for g in gate.values())
+    gate['paired'] = dict(overall_mean=round(overall, 3), every_cell_mean_ge_live=paired_ok,
+                          passed=overall >= GATE_MEAN and all(mean(means[t]) >= GATE_MEAN for t in tags) and paired_ok)
     table = '\n'.join(lines)
     print(table)
     print(json.dumps(gate, indent=1))

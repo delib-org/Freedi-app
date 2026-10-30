@@ -235,6 +235,12 @@
    "mean": 0.866,
    "every_run_ge_live": true,
    "passed": true
+  },
+  "strict_all": false,
+  "paired": {
+   "overall_mean": 0.865,
+   "every_cell_mean_ge_live": false,
+   "passed": false
   }
  },
  "usd": 0.355

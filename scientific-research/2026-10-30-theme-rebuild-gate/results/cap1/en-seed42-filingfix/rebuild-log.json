@@ -1,0 +1,90 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed42-filingfix",
+ "atoms": 51,
+ "synthAtoms": 49,
+ "discovered": 9,
+ "themesWithMembers": 9,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  8,
+  6,
+  6,
+  6,
+  5,
+  5,
+  5,
+  5,
+  5
+ ],
+ "ms": 18386,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 2322,
+   "completion": 873
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 3253,
+   "completion": 680
+  }
+ },
+ "usd": 0.0165866,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Digital Civic Access",
+   "rule": "Proposals belong here if they improve residents’ access to municipal information or services through digital tools, in-person assistance for digital services, unified service channels, public connectivity, or open city data.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "Affordable and Efficient Housing",
+   "rule": "Proposals belong here if they create, preserve, regulate, make transparent, or improve the affordability, supply, or energy performance of homes.",
+   "size": 5
+  },
+  {
+   "key": "t3",
+   "name": "Schools and Youth Learning",
+   "rule": "Proposals belong here if they improve school staffing, facilities, class conditions, meals, tutoring, or children’s arts education.",
+   "size": 6
+  },
+  {
+   "key": "t4",
+   "name": "Public Culture and Recreation",
+   "rule": "Proposals belong here if they expand access to cultural events, museums, libraries, public art, playgrounds, dog areas, or other shared recreational amenities.",
+   "size": 6
+  },
+  {
+   "key": "t5",
+   "name": "Environmental Sustainability and Green Space",
+   "rule": "Proposals belong here if they reduce pollution or waste, produce clean energy, monitor environmental conditions, or add urban greenery and community growing spaces.",
+   "size": 8
+  },
+  {
+   "key": "t6",
+   "name": "Neighborhood Safety and Emergency Response",
+   "rule": "Proposals belong here if they prevent crime or injuries, improve street safety or lighting, strengthen community policing, or shorten fire and ambulance response times.",
+   "size": 5
+  },
+  {
+   "key": "t7",
+   "name": "Health and Care Access",
+   "rule": "Proposals belong here if they expand preventive, primary, specialist, mental-health, or at-home care services for residents.",
+   "size": 5
+  },
+  {
+   "key": "t8",
+   "name": "Public Transport and Cycling",
+   "rule": "Proposals belong here if they improve bus operations, transit fares or rider information, or safe cycling infrastructure.",
+   "size": 6
+  },
+  {
+   "key": "t9",
+   "name": "Local Jobs and Small Business",
+   "rule": "Proposals belong here if they build workers’ skills, require local hiring, support independent workers, simplify business permits, or finance small businesses.",
+   "size": 5
+  }
+ ]
+}

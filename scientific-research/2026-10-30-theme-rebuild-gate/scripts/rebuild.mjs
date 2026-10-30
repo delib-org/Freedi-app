@@ -18,8 +18,9 @@
  *
  *   usage: node rebuild.mjs (--run=<dir> | --state=<file>) --out=<dir>
  *   env:   OPENAI_API_KEY via functions/.env of this worktree
+ *          REBUILD_RAW_LOG=<file> appends every raw model answer (debugging)
  */
-import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync, appendFileSync } from 'node:fs';
 import { resolve, join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
@@ -70,6 +71,12 @@ client.chat.completions.create = async (body, opts) => {
 	u.calls++;
 	u.prompt += res.usage?.prompt_tokens ?? 0;
 	u.completion += res.usage?.completion_tokens ?? 0;
+	if (process.env.REBUILD_RAW_LOG) {
+		appendFileSync(
+			process.env.REBUILD_RAW_LOG,
+			`${JSON.stringify({ model: body.model, finish: res.choices[0]?.finish_reason, user: body.messages.at(-1)?.content, content: res.choices[0]?.message?.content })}\n`,
+		);
+	}
 
 	return res;
 };

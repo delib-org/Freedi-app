@@ -4,13 +4,67 @@
 `functions/src/synthesis/themeRebuild/`) produce better themes than the live
 theme layer, and leave syntheses alone?
 
-**Answer: it's much better on average, but it fails the strict gate.** Mean
-topic F1 goes from 0.757 (live) to 0.864 / 0.866 over two repeats, and
-syntheses don't change. In 15 of the 16 run × repeat pairs the rebuild is at
-least as good as live. The exception is he-seed42-large-judgedattach in
-repeat 1 (0.805 against a live 0.910). That state already had the best live
-theme layer of the eight. The gate requires mean ≥ 0.80 **and** rebuild ≥ live
-in every run, so the result is a **FAIL**, by one cell.
+**Answer, round 2 (scaled ceiling, on the branch): better again, but the gate
+still fails by a hair.** With the theme ceiling scaled to question size, mean
+topic F1 is 0.874 / 0.887 (0.880 overall) against 0.757 live and
+0.864 / 0.866 in round 1. Syntheses don't change. Both rules fail on a single
+state, he-seed42-large-recall:
+- Strict rule (every attempt ≥ live): repeat 1 scores 0.801 against a live 0.816.
+- Paired rule (mean of repeats ≥ live): the mean is 0.810 against 0.816, a gap
+  of 0.006.
+
+Round 1 used a fixed ceiling of 15. It failed the strict rule on
+he-judgedattach (0.805 vs 0.910) and fails the paired rule there too
+(mean 0.875).
+
+## Round 2: theme ceiling scales with question size
+
+`maxThemesFor(atoms) = clamp(round(atoms / 4), 5, 15)` is defined in
+`constants.ts` (commit `8a07b26e8`). It goes into the discovery prompt and is
+enforced after parsing:
+- An answer over the ceiling is retried once, with a reminder of the ceiling.
+- If the retry is still over, the first `max` themes are kept. Assignment runs
+  against the kept list only, so the ideas of a dropped theme are re-sorted
+  into the kept themes or go to Other.
+
+For the benchmark states (50–58 atoms) the ceiling is 12–14 instead of 15.
+Round 2 also includes `4c6f9440d`: the assignment parser now accepts ids and
+keys echoed in [brackets], and logs dropped answers (see below).
+
+| run | live (themes) | cap rep 1 (themes) | cap rep 2 (themes) | mean of repeats | strict | paired | synth F1 live / rebuild |
+|---|---|---|---|---|---|---|---|
+| en-seed42-themefix | 0.652 (16) | 0.830 (10) | 0.882 (10) | 0.856 | ok | ok | 1.000 / 1.000 |
+| en-seed42-consolidated | 0.775 (11) | 0.853 (11) | 0.953 (11) | 0.903 | ok | ok | 1.000 / 1.000 |
+| en-seed7-consolidated | 0.763 (10) | 0.882 (10) | 0.960 (10) | 0.921 | ok | ok | 1.000 / 1.000 |
+| en-seed1234-consolidated | 0.711 (17) | 0.960 (10) | 0.810 (9) | 0.885 | ok | ok | 1.000 / 1.000 |
+| en-seed42-filingfix | 0.770 (14) | 0.844 (9) | 0.882 (10) | 0.863 | ok | ok | 0.990 / 0.990 |
+| he-seed42-large-formulation | 0.658 (11) | 0.904 (13) | 0.863 (10) | 0.883 | ok | ok | 0.857 / 0.857 |
+| he-seed42-large-judgedattach | 0.910 (10) | 0.921 (10) | 0.924 (13) | 0.923 | ok | ok | 0.947 / 0.947 |
+| he-seed42-large-recall | 0.816 (12) | **0.801** (14) | 0.819 (10) | **0.810** | FAIL | FAIL | 0.882 / 0.882 |
+| **mean** | **0.757** | **0.874** | **0.887** | **0.880** | FAIL | FAIL | unchanged |
+
+- Other is 0–1 atoms per run.
+- Mean precision / recall: 0.881 / 0.871 and 0.886 / 0.890. Round 1 was
+  0.913 / 0.828 and 0.921 / 0.820, so the ceiling trades a little precision
+  for more recall.
+- The worst cell in round 1 (judgedattach, mean 0.875) is now 0.923. The
+  failing cell, recall, is 0.810 against 0.816. That is well inside the
+  run-to-run spread: repeats on one state still differ by up to 0.15
+  (seed1234: 0.960 / 0.810).
+- Bq proxy over 2 repeats: 10 / 12 themes, 2 / 34 statements in Other, largest
+  theme share 0.21 / 0.15, flagged statements split from their v3 core 0.80 /
+  0.95 (`results/bq-proxy-cap.txt`). In repeat 2, 19 of the 26 Other atoms
+  were *unanswered*, not judged NONE. Round 1 had the same symptom
+  (10 unanswered), and so did one of four extra diagnostic runs (10). In each
+  case a whole batch was dropped with no call error. The calls succeeded with
+  valid JSON, but `parseAssignments` matched no ids or keys. Three runs with
+  raw logging (`REBUILD_RAW_LOG`) didn't reproduce it. Each of those clean
+  runs left 5–6 atoms in Other. Fix `4c6f9440d` accepts bracketed ids and
+  keys, the likeliest cause since the prompt prints `[a1]` / `[t1]`. It also
+  logs a sample of every dropped answer. Whether the cause was brackets is
+  **unconfirmed**.
+- Cost of round 2: ≈ $0.52. That is the gate at $0.32, Bq × 2 at $0.06, and
+  four Bq diagnostic runs plus one debug call at $0.14.
 
 ## Method
 
@@ -31,7 +85,7 @@ The input is the same 8 saved end states the
 3-small and HE on 3-large, 100 statements, 10 true topics. Each state ran
 twice, because the LLM isn't deterministic.
 
-## Results (baseline prompt, as on the branch)
+## Round 1 results (fixed ceiling of 15)
 
 | run | live topic F1 (themes) | rebuild run 1 F1 (themes, Other) | rebuild run 2 F1 (themes, Other) | synth F1 live / rebuild |
 |---|---|---|---|---|

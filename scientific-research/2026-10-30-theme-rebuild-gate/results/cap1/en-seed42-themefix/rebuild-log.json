@@ -1,0 +1,97 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed42-themefix",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 10,
+ "themesWithMembers": 10,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  8,
+  6,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  4,
+  2
+ ],
+ "ms": 19206,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 2473,
+   "completion": 903
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 3459,
+   "completion": 877
+  }
+ },
+ "usd": 0.017526200000000002,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Housing Affordability and Upgrades",
+   "rule": "Proposals that create, preserve, make transparent, or improve affordable housing, including student housing, conversions, inclusionary requirements, rent information, and energy retrofits.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "Education and Youth Support",
+   "rule": "Proposals that improve schools or directly support children’s learning, nutrition, teachers, school facilities, or arts education.",
+   "size": 6
+  },
+  {
+   "key": "t3",
+   "name": "Healthcare and Aging Services",
+   "rule": "Proposals that expand medical access, preventive care, mental-health care, specialist access, or support for older residents living at home.",
+   "size": 5
+  },
+  {
+   "key": "t4",
+   "name": "Public Transit Services",
+   "rule": "Proposals that make bus or public-transit travel more frequent, affordable, available at more hours, or easier to track.",
+   "size": 4
+  },
+  {
+   "key": "t5",
+   "name": "Digital Civic Access",
+   "rule": "Proposals that improve residents’ access to municipal information, online services, service requests, public data, or public internet connectivity.",
+   "size": 5
+  },
+  {
+   "key": "t6",
+   "name": "Environmental Sustainability and Green Space",
+   "rule": "Proposals that reduce pollution or waste, expand renewable energy or recycling, monitor environmental conditions, or create urban greenery and food-growing spaces.",
+   "size": 8
+  },
+  {
+   "key": "t7",
+   "name": "Local Jobs and Small Business",
+   "rule": "Proposals that support employment, worker retraining, local hiring, business licensing, small-business finance, or workspaces for independent workers.",
+   "size": 5
+  },
+  {
+   "key": "t8",
+   "name": "Culture, Libraries, and Recreation",
+   "rule": "Proposals that expand cultural participation, public arts, festivals, museum access, library access, or recreational amenities such as dog areas.",
+   "size": 5
+  },
+  {
+   "key": "t9",
+   "name": "Public Safety and Emergency Response",
+   "rule": "Proposals that prevent crime or traffic danger, improve street lighting, strengthen neighborhood policing, add surveillance, or shorten fire and ambulance response times.",
+   "size": 5
+  },
+  {
+   "key": "t10",
+   "name": "Accessible Active Public Spaces",
+   "rule": "Proposals that make public outdoor facilities more accessible for people with disabilities or enable safe non-motorized travel, such as protected cycling infrastructure.",
+   "size": 2
+  }
+ ]
+}

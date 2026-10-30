@@ -1,0 +1,3 @@
+v3 (live): {"themes": 7, "unthemed": 26, "largest_share": 0.273}
+cap1 {"themes": 10, "other_statements": 2, "other_atoms": 2, "largest_share": 0.214, "core_kept": 0.382, "misfit_split": 0.803}
+cap2 {"themes": 12, "other_statements": 34, "other_atoms": 26, "largest_share": 0.15, "core_kept": 0.095, "misfit_split": 0.947}
