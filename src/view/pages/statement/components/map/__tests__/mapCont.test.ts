@@ -83,7 +83,6 @@ describe('resultsByParentId — retired clusters', () => {
 		expect(childIds(tree)).toEqual(['survivor']);
 		expect(findNode(tree, 'donor')).toBeNull();
 	});
-
 });
 
 describe('resultsByParentId — hidden options', () => {
@@ -123,7 +122,7 @@ describe('resultsByParentId — hidden options', () => {
 		expect(childIds(resultsByParentId(question, descendants))).toEqual(['o2']);
 	});
 
-	it("still nests a hidden original under the synth that lists it", () => {
+	it('still nests a hidden original under the synth that lists it', () => {
 		const descendants = [
 			make({
 				statementId: 'synth',

@@ -19,6 +19,8 @@ interface Props {
 	questionId: string;
 	/** The proposal to review. `null` keeps the dialog closed. */
 	preview: ThemeRebuildPreviewResponse | null;
+	/** Extra class on the dialog, e.g. to lift it above a drawer that opened it. */
+	className?: string;
 	onClose: () => void;
 	onApplied: (result: ThemeRebuildApplyResponse) => void;
 }
@@ -65,7 +67,7 @@ const ThemeCard: FC<ThemeCardProps> = ({ theme }) => {
  * question and lets the admin apply or discard them. Nothing is written until
  * Apply.
  */
-const ThemeRebuildPreview: FC<Props> = ({ questionId, preview, onClose, onApplied }) => {
+const ThemeRebuildPreview: FC<Props> = ({ questionId, preview, className, onClose, onApplied }) => {
 	const { t } = useTranslation();
 	const [applying, setApplying] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -102,6 +104,7 @@ const ThemeRebuildPreview: FC<Props> = ({ questionId, preview, onClose, onApplie
 			title={t('Proposed themes')}
 			titleId={TITLE_ID}
 			size="large"
+			className={className}
 			closeOnBackdrop={!applying}
 			closeOnEscape={!applying}
 			closeButtonLabel={t('Close')}

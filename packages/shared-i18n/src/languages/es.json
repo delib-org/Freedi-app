@@ -4500,5 +4500,6 @@
   "Ideas placed": "Ideas asignadas",
   "Apply": "Aplicar",
   "Ideas the AI could not sort": "Ideas que la IA no pudo clasificar",
-  "They are under Other ideas. Run the preview again to retry them.": "Están en Otras ideas. Vuelve a generar la vista previa para intentarlo de nuevo."
+  "They are under Other ideas. Run the preview again to retry them.": "Están en Otras ideas. Vuelve a generar la vista previa para intentarlo de nuevo.",
+  "Let AI regroup all ideas into themes. You'll see a preview before anything changes.": "La IA reagrupará todas las ideas en temas. Verás una vista previa antes de que algo cambie."
 }

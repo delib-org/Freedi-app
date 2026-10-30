@@ -4978,5 +4978,6 @@
   "Ideas placed": "ایده‌های جای‌گرفته",
   "Apply": "اعمال",
   "Ideas the AI could not sort": "ایده‌هایی که هوش مصنوعی نتوانست دسته‌بندی کند",
-  "They are under Other ideas. Run the preview again to retry them.": "آن‌ها زیر ایده‌های دیگر قرار دارند. برای تلاش دوباره، پیش‌نمایش را دوباره اجرا کنید."
+  "They are under Other ideas. Run the preview again to retry them.": "آن‌ها زیر ایده‌های دیگر قرار دارند. برای تلاش دوباره، پیش‌نمایش را دوباره اجرا کنید.",
+  "Let AI regroup all ideas into themes. You'll see a preview before anything changes.": "هوش مصنوعی همه ایده‌ها را دوباره در موضوع‌ها دسته‌بندی می‌کند. پیش از هر تغییری، پیش‌نمایش را می‌بینید."
 }
