@@ -1,0 +1,90 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed42-consolidated",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 9,
+ "themesWithMembers": 9,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  8,
+  7,
+  6,
+  5,
+  5,
+  5,
+  5,
+  5,
+  4
+ ],
+ "ms": 15734,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 999,
+   "completion": 843
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 1806,
+   "completion": 760
+  }
+ },
+ "usd": 0.0133872,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "School Learning and Support",
+   "rule": "Proposals that improve school education, student learning support, teaching conditions, or services provided directly to students.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "Affordable Housing and Homes",
+   "rule": "Proposals that increase housing supply or affordability, regulate rents, provide student housing, or improve the energy performance of homes.",
+   "size": 5
+  },
+  {
+   "key": "t3",
+   "name": "Sustainable Environment and Waste",
+   "rule": "Proposals that reduce pollution or waste, expand recycling or composting, monitor environmental conditions, produce clean energy, or add urban greenery and gardens.",
+   "size": 7
+  },
+  {
+   "key": "t4",
+   "name": "Arts, Recreation and Shared Spaces",
+   "rule": "Proposals that expand cultural access, public events, parks, libraries, playgrounds, or recreational spaces for residents.",
+   "size": 8
+  },
+  {
+   "key": "t5",
+   "name": "Digital City Access and Information",
+   "rule": "Proposals that use digital tools, internet access, service channels, or public information systems to make city services and data easier to access.",
+   "size": 6
+  },
+  {
+   "key": "t6",
+   "name": "Local Jobs and Business Support",
+   "rule": "Proposals that support workers, job seekers, local hiring, small businesses, coworking, business finance, or licensing.",
+   "size": 5
+  },
+  {
+   "key": "t7",
+   "name": "Transit and Street Mobility",
+   "rule": "Proposals that improve public transit, cycling, pedestrian or traffic safety, and residents’ ability to travel around the city.",
+   "size": 5
+  },
+  {
+   "key": "t8",
+   "name": "Health and Care Access",
+   "rule": "Proposals that expand medical, mental-health, preventive, primary-care, specialist-care, or in-home care services.",
+   "size": 5
+  },
+  {
+   "key": "t9",
+   "name": "Neighborhood Safety and Emergency Response",
+   "rule": "Proposals that prevent crime, improve street safety through policing or lighting, deploy surveillance, or shorten emergency response times.",
+   "size": 4
+  }
+ ]
+}

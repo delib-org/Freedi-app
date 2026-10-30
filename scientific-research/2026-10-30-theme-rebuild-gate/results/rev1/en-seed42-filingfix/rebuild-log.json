@@ -1,0 +1,90 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed42-filingfix",
+ "atoms": 51,
+ "synthAtoms": 49,
+ "discovered": 9,
+ "themesWithMembers": 9,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  10,
+  7,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  4
+ ],
+ "ms": 19765,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 2383,
+   "completion": 1191
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 3167,
+   "completion": 962
+  }
+ },
+ "usd": 0.020845799999999998,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Digital Municipal Access",
+   "rule": "Proposals that improve access to municipal information or services through digital channels, connectivity, assisted digital help, or public data.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "Affordable and Efficient Housing",
+   "rule": "Proposals that create, preserve, regulate, make transparent, or improve the affordability and energy performance of housing.",
+   "size": 5
+  },
+  {
+   "key": "t3",
+   "name": "Education and School Support",
+   "rule": "Proposals that improve school learning, teaching conditions, pupil support, school meals, or publicly funded education and training.",
+   "size": 5
+  },
+  {
+   "key": "t4",
+   "name": "Culture and Public Libraries",
+   "rule": "Proposals that expand residents' access to cultural events, arts, museums, or library services.",
+   "size": 5
+  },
+  {
+   "key": "t5",
+   "name": "Environmental Sustainability and Green Space",
+   "rule": "Proposals that reduce pollution or waste, conserve energy and resources, monitor environmental conditions, or create green public spaces.",
+   "size": 10
+  },
+  {
+   "key": "t6",
+   "name": "Public Transport and Active Travel",
+   "rule": "Proposals that improve transit affordability, frequency, information, late-night access, cycling infrastructure, or street safety for walking and travel.",
+   "size": 7
+  },
+  {
+   "key": "t7",
+   "name": "Neighborhood Safety and Emergency Response",
+   "rule": "Proposals that prevent crime, improve public-space security, strengthen community policing, improve safety lighting, or shorten emergency response times.",
+   "size": 4
+  },
+  {
+   "key": "t8",
+   "name": "Health and Care Access",
+   "rule": "Proposals that expand preventive, primary, specialist, mental-health, or in-home care services for residents.",
+   "size": 5
+  },
+  {
+   "key": "t9",
+   "name": "Local Jobs and Small Business",
+   "rule": "Proposals that develop workers' skills, promote local hiring, support independent workers, simplify business administration, or finance local businesses.",
+   "size": 5
+  }
+ ]
+}

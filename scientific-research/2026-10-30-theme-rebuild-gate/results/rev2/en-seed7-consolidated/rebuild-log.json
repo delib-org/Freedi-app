@@ -1,0 +1,97 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed7-consolidated",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 10,
+ "themesWithMembers": 10,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  6,
+  6,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  4,
+  4
+ ],
+ "ms": 23389,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 1002,
+   "completion": 1705
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 1831,
+   "completion": 658
+  }
+ },
+ "usd": 0.023619800000000003,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Digital Civic Access",
+   "rule": "Proposals that make municipal information or services easier to access through online systems, public connectivity, service channels, or assistance using those systems.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "Environmental Sustainability",
+   "rule": "Proposals that reduce pollution, waste, or resource use, expand clean energy, or improve the urban tree canopy rather than create recreational open spaces.",
+   "size": 6
+  },
+  {
+   "key": "t3",
+   "name": "Local Jobs and Business",
+   "rule": "Proposals that support employment, career transitions, local hiring, entrepreneurship, or the operation of small businesses.",
+   "size": 5
+  },
+  {
+   "key": "t4",
+   "name": "Crime Prevention and Response",
+   "rule": "Proposals that prevent crime or improve emergency response through policing, surveillance, safety lighting, or emergency facilities.",
+   "size": 4
+  },
+  {
+   "key": "t5",
+   "name": "Public Transport and Street Mobility",
+   "rule": "Proposals that improve transit service, fare access, rider information, cycling, or safer movement on streets.",
+   "size": 6
+  },
+  {
+   "key": "t6",
+   "name": "Housing Affordability and Quality",
+   "rule": "Proposals that increase housing supply, affordability, tenant market transparency, or the quality and efficiency of homes.",
+   "size": 5
+  },
+  {
+   "key": "t7",
+   "name": "Healthcare Access and Prevention",
+   "rule": "Proposals that expand medical, mental-health, home-care, specialist, or preventive health services for residents.",
+   "size": 5
+  },
+  {
+   "key": "t8",
+   "name": "School Quality and Student Support",
+   "rule": "Proposals that improve school facilities, teaching capacity, classroom learning, student meals, or academic and enrichment support.",
+   "size": 5
+  },
+  {
+   "key": "t9",
+   "name": "Arts, Culture, and Libraries",
+   "rule": "Proposals that expand access to arts, cultural events, museums, public art, or neighborhood library services.",
+   "size": 5
+  },
+  {
+   "key": "t10",
+   "name": "Neighborhood Green Recreation",
+   "rule": "Proposals that create or improve outdoor neighborhood spaces for gardening, play, recreation, or dog exercise.",
+   "size": 4
+  }
+ ]
+}

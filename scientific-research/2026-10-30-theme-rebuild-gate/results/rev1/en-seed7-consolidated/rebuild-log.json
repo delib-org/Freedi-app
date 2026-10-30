@@ -1,0 +1,90 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed7-consolidated",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 9,
+ "themesWithMembers": 9,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  7,
+  7,
+  6,
+  6,
+  5,
+  5,
+  5,
+  5,
+  4
+ ],
+ "ms": 19941,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 1002,
+   "completion": 1151
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 1793,
+   "completion": 875
+  }
+ },
+ "usd": 0.0172246,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Digital Civic Access",
+   "rule": "Proposals that provide digital connectivity, online or assisted access to city services, or public access to civic information and data.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "Housing Affordability and Quality",
+   "rule": "Proposals that increase housing supply or affordability, improve residential buildings, or make housing-market information more transparent.",
+   "size": 5
+  },
+  {
+   "key": "t3",
+   "name": "Public Safety and Response",
+   "rule": "Proposals that prevent crime or improve emergency response, including non-traffic safety measures in public spaces.",
+   "size": 4
+  },
+  {
+   "key": "t4",
+   "name": "Public and Active Transport",
+   "rule": "Proposals that improve bus service, transit affordability or rider information, cycling infrastructure, or traffic safety for people moving around the city.",
+   "size": 6
+  },
+  {
+   "key": "t5",
+   "name": "Health and Care Access",
+   "rule": "Proposals that expand medical, mental-health, preventive-health, or in-home care services.",
+   "size": 5
+  },
+  {
+   "key": "t6",
+   "name": "Schools and Student Support",
+   "rule": "Proposals that improve school facilities, staffing, classroom learning, student meals, or educational enrichment and tutoring.",
+   "size": 6
+  },
+  {
+   "key": "t7",
+   "name": "Environmental Sustainability",
+   "rule": "Proposals that reduce pollution, waste, or energy use, or support urban ecology through measures such as trees, gardens, monitoring, recycling, composting, or plastic reduction.",
+   "size": 7
+  },
+  {
+   "key": "t8",
+   "name": "Culture, Recreation, and Public Spaces",
+   "rule": "Proposals that expand cultural access and events or create neighborhood recreational, gathering, and play spaces, rather than environmental infrastructure.",
+   "size": 7
+  },
+  {
+   "key": "t9",
+   "name": "Local Economic Opportunity",
+   "rule": "Proposals that support workers, job training, local hiring, small businesses, coworking, business finance, or business licensing.",
+   "size": 5
+  }
+ ]
+}

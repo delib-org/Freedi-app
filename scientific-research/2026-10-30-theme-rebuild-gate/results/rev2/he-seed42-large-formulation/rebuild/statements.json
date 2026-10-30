@@ -1,0 +1,711 @@
+{
+  "test": "live-synth-accuracy-he-seed42",
+  "language": "he",
+  "question": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "questionId": "accuracy100he",
+  "corpus": "scripts/seedSynthBenchmark.accuracy100.he.json",
+  "corpusSha": "9a5191bece66",
+  "seed": 42,
+  "statements": [
+    {
+      "id": "34RCiosMbsD0",
+      "text": "להקים מוקד טלפוני מאוחד אחד לכל בקשת שירות עירונית.",
+      "groundTruthTopic": "digital-services",
+      "groundTruthSynth": "digital-services/single-service-hotline",
+      "arrivalIndex": 0
+    },
+    {
+      "id": "WRu6kgT21xT3",
+      "text": "להציע שירותי טיפול פסיכולוגי ללא עלות לציבור.",
+      "groundTruthTopic": "health",
+      "groundTruthSynth": "health/mental-health-services",
+      "arrivalIndex": 1
+    },
+    {
+      "id": "906DrMd7vuNE",
+      "text": "להוסיף שירות תחבורה בשעות הלילה המאוחרות בסופי שבוע עבור נוסעים אחרי חצות.",
+      "groundTruthTopic": "transport",
+      "groundTruthSynth": "transport/night-service",
+      "arrivalIndex": 2
+    },
+    {
+      "id": "Jnw2SvGIXhq8",
+      "text": "להציע אינטרנט אלחוטי בלי תשלום בכיכרות הציבוריות ובמרכזים הקהילתיים.",
+      "groundTruthTopic": "digital-services",
+      "groundTruthSynth": "digital-services/public-wifi",
+      "arrivalIndex": 3
+    },
+    {
+      "id": "RdBamwCYVP-Z",
+      "text": "לאפשר כניסה חינם למוזיאונים ביום אחד בשבוע.",
+      "groundTruthTopic": "culture",
+      "groundTruthSynth": "culture/free-museum-days",
+      "arrivalIndex": 4
+    },
+    {
+      "id": "DtCeYOaT75c2",
+      "text": "לשפר את תאורת הרחוב ברחובות ובשבילים החשוכים.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/street-lighting",
+      "arrivalIndex": 5
+    },
+    {
+      "id": "UkorMAdOnBl5",
+      "text": "לפתוח חללי עבודה משותפים מסובסדים לעצמאים.",
+      "groundTruthTopic": "jobs-and-economy",
+      "groundTruthSynth": "jobs-and-economy/coworking-spaces",
+      "arrivalIndex": 6
+    },
+    {
+      "id": "aBiHf9r90eOc",
+      "text": "לדרוש מהספקים העירוניים להעסיק אנשים מתוך העיר.",
+      "groundTruthTopic": "jobs-and-economy",
+      "groundTruthSynth": "jobs-and-economy/local-hiring",
+      "arrivalIndex": 7
+    },
+    {
+      "id": "0yQfqjX9rWlU",
+      "text": "לספק ייעוץ נפשי חינם לתושבים.",
+      "groundTruthTopic": "health",
+      "groundTruthSynth": "health/mental-health-services",
+      "arrivalIndex": 8
+    },
+    {
+      "id": "xCniclJFGxo5",
+      "text": "להפוך מבנים מסחריים לא מאוכלסים לשטחי מגורים.",
+      "groundTruthTopic": "housing",
+      "groundTruthSynth": "housing/convert-offices",
+      "arrivalIndex": 9
+    },
+    {
+      "id": "zsutoL4luCZ2",
+      "text": "לאסור כלים פלסטיים מתכלים בבתי מסחר ובבתי אוכל.",
+      "groundTruthTopic": "environment-and-waste",
+      "groundTruthSynth": "environment-and-waste/ban-single-use-plastic",
+      "arrivalIndex": 10
+    },
+    {
+      "id": "vQGiGqIkMjl3",
+      "text": "לשלם לאמנים מקומיים כדי שייצרו ציורי קיר ופסלים ברחבי העיר.",
+      "groundTruthTopic": "culture",
+      "groundTruthSynth": "culture/public-art-commissions",
+      "arrivalIndex": 11
+    },
+    {
+      "id": "Vw0qOXfg6FG8",
+      "text": "להקים איסוף נפרד של שאריות מזון מהמטבח לצורך קומפוסטציה.",
+      "groundTruthTopic": "environment-and-waste",
+      "groundTruthSynth": "environment-and-waste/compost-organic-waste",
+      "arrivalIndex": 12
+    },
+    {
+      "id": "YenLMgUDy7tG",
+      "text": "להציע הוראה מתקנת ללא עלות אחר הצהריים כדי שתלמידים מתקשים יקבלו סיוע במשימות.",
+      "groundTruthTopic": "education",
+      "groundTruthSynth": "education/homework-tutoring",
+      "arrivalIndex": 13
+    },
+    {
+      "id": "lVTZPJqevwAw",
+      "text": "להקים מגורי סטודנטים בעלות נמוכה בסמוך למוסדות הלימוד.",
+      "groundTruthTopic": "housing",
+      "groundTruthSynth": "housing/student-dorms",
+      "arrivalIndex": 14
+    },
+    {
+      "id": "vJ1S4MriQzJ5",
+      "text": "להגדיל את התגמול למורים כך שמחנכים מצוינים יישארו במקצוע.",
+      "groundTruthTopic": "education",
+      "groundTruthSynth": "education/teacher-pay",
+      "arrivalIndex": 15
+    },
+    {
+      "id": "jPfRCjMdz9n1",
+      "text": "לארגן פסטיבלים ציבוריים ומופעי מוזיקה באוויר הפתוח בתכיפות.",
+      "groundTruthTopic": "culture",
+      "groundTruthSynth": "culture/street-festivals",
+      "arrivalIndex": 16
+    },
+    {
+      "id": "l3-CNFCnCg2x",
+      "text": "ליצור גדרות כלבים מתוחמות בכל רובע.",
+      "groundTruthTopic": "parks-and-green-space",
+      "groundTruthSynth": "parks-and-green-space/dog-parks",
+      "arrivalIndex": 17
+    },
+    {
+      "id": "TYm-T6DbEgTZ",
+      "text": "לקבוע מכסה של דירות במחיר מופחת בכל הבנייה החדשה.",
+      "groundTruthTopic": "housing",
+      "groundTruthSynth": "housing/affordable-quota",
+      "arrivalIndex": 18
+    },
+    {
+      "id": "9bFRch1PdWbQ",
+      "text": "להפעיל אוטובוסי לילה בסופי שבוע כדי שאנשים יוכלו לחזור הביתה בשעה מאוחרת.",
+      "groundTruthTopic": "transport",
+      "groundTruthSynth": "transport/night-service",
+      "arrivalIndex": 19
+    },
+    {
+      "id": "kFOdl3T4ddQA",
+      "text": "לפתוח סניף ספרייה ציבורית בכל שכונה.",
+      "groundTruthTopic": "culture",
+      "groundTruthSynth": "culture/neighborhood-libraries",
+      "arrivalIndex": 20
+    },
+    {
+      "id": "0gvt17xayMfQ",
+      "text": "לתת לנוסעים מעקב חי אחר הרכבים באפליקציה כדי שידעו את זמני ההגעה.",
+      "groundTruthTopic": "transport",
+      "groundTruthSynth": "transport/real-time-arrivals",
+      "arrivalIndex": 21
+    },
+    {
+      "id": "X9De-Z2kN3gU",
+      "text": "להציע אשראי זול לעסקים שכונתיים קטנים.",
+      "groundTruthTopic": "jobs-and-economy",
+      "groundTruthSynth": "jobs-and-economy/small-business-loans",
+      "arrivalIndex": 22
+    },
+    {
+      "id": "ruNXEJam2rQV",
+      "text": "להפחית את הזמן שלוקח לשירותי החירום להגיע באמצעות הוספת תחנות קרובות יותר לשכונות.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/emergency-response-time",
+      "arrivalIndex": 23
+    },
+    {
+      "id": "LTl-8lg8Fv9o",
+      "text": "להקצות חלקות אדמה לגינות ירק קהילתיות.",
+      "groundTruthTopic": "parks-and-green-space",
+      "groundTruthSynth": "parks-and-green-space/community-gardens",
+      "arrivalIndex": 24
+    },
+    {
+      "id": "dNUny9cSV88w",
+      "text": "ליצור מספר טלפון אחד לכל פניות השירות בעיר.",
+      "groundTruthTopic": "digital-services",
+      "groundTruthSynth": "digital-services/single-service-hotline",
+      "arrivalIndex": 25
+    },
+    {
+      "id": "sFB12STjTxCF",
+      "text": "להקצות שוטרים מקומיים שבונים קשרים מתמשכים עם התושבים.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/community-policing",
+      "arrivalIndex": 26
+    },
+    {
+      "id": "qlzUC5uZ4kx1",
+      "text": "להתקין פאנלים סולאריים על גגות כל המבנים הציבוריים.",
+      "groundTruthTopic": "environment-and-waste",
+      "groundTruthSynth": "environment-and-waste/solar-on-public-roofs",
+      "arrivalIndex": 27
+    },
+    {
+      "id": "G-mEgNptUKCw",
+      "text": "להקטין את מספר התלמידים בכיתה כדי שהמורים יוכלו לתת תשומת לב אישית.",
+      "groundTruthTopic": "education",
+      "groundTruthSynth": "education/smaller-classes",
+      "arrivalIndex": 28
+    },
+    {
+      "id": "UtgVfzuUikhb",
+      "text": "ליצור זרם מוקדש של פסולת מזון שיהפוך לקומפוסט.",
+      "groundTruthTopic": "environment-and-waste",
+      "groundTruthSynth": "environment-and-waste/compost-organic-waste",
+      "arrivalIndex": 29
+    },
+    {
+      "id": "5sMnrI4DjHkX",
+      "text": "לספק אפליקציה עם זמני הגעה בזמן אמת שמראה בדיוק מתי האוטובוס מגיע.",
+      "groundTruthTopic": "transport",
+      "groundTruthSynth": "transport/real-time-arrivals",
+      "arrivalIndex": 30
+    },
+    {
+      "id": "hBp5bw7YWWaE",
+      "text": "לפרסם את תקציב העיר ואת נתוני העיר בפורטל פתוח.",
+      "groundTruthTopic": "digital-services",
+      "groundTruthSynth": "digital-services/open-data-portal",
+      "arrivalIndex": 31
+    },
+    {
+      "id": "9x5RuGJ-DEpo",
+      "text": "לשתול שדרות עצים על המדרכות כדי שההולכים ייהנו מצל.",
+      "groundTruthTopic": "parks-and-green-space",
+      "groundTruthSynth": "parks-and-green-space/street-trees",
+      "arrivalIndex": 32
+    },
+    {
+      "id": "d3RBRwceAiVq",
+      "text": "לממן קורסי הסבה מקצועית לאנשים שמחליפים עיסוק.",
+      "groundTruthTopic": "jobs-and-economy",
+      "groundTruthSynth": "jobs-and-economy/job-retraining",
+      "arrivalIndex": 33
+    },
+    {
+      "id": "xURB1MVRcXp5",
+      "text": "להתקין מנורות בהירות יותר בדרכים ובמעברים המוארים בצורה גרועה.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/street-lighting",
+      "arrivalIndex": 34
+    },
+    {
+      "id": "LoR0cfFhmq3r",
+      "text": "לפרוס מנטרי זיהום בכל רחבי העיר עם קריאות פומביות בזמן אמת.",
+      "groundTruthTopic": "environment-and-waste",
+      "groundTruthSynth": "environment-and-waste/air-quality-monitoring",
+      "arrivalIndex": 35
+    },
+    {
+      "id": "n3g9CQdImTO7",
+      "text": "לקיים מבצעי בדיקות סקר חינם לגילוי מוקדם של מחלות.",
+      "groundTruthTopic": "health",
+      "groundTruthSynth": "health/preventive-screening",
+      "arrivalIndex": 36
+    },
+    {
+      "id": "FBSn1oOS7Waw",
+      "text": "למקם ספרייה מקומית בכל רובע בעיר.",
+      "groundTruthTopic": "culture",
+      "groundTruthSynth": "culture/neighborhood-libraries",
+      "arrivalIndex": 37
+    },
+    {
+      "id": "LcBLMsDPQ1aC",
+      "text": "לספק איסוף שבועי של חומרים למיחזור מהמדרכה.",
+      "groundTruthTopic": "environment-and-waste",
+      "groundTruthSynth": "environment-and-waste/recycling-pickup",
+      "arrivalIndex": 38
+    },
+    {
+      "id": "dfbKjaUoPmzu",
+      "text": "לקיים פסטיבלי רחוב והופעות בחוץ באופן קבוע.",
+      "groundTruthTopic": "culture",
+      "groundTruthSynth": "culture/street-festivals",
+      "arrivalIndex": 39
+    },
+    {
+      "id": "AGl2gajdeLuF",
+      "text": "לאפשר לכל הילדים בגילי בית הספר לנסוע בתחבורה הציבורית בלי תשלום.",
+      "groundTruthTopic": "transport",
+      "groundTruthSynth": "transport/free-fares-youth",
+      "arrivalIndex": 40
+    },
+    {
+      "id": "6zezY1o1MbRe",
+      "text": "למקם מצלמות מעקב באזורים החמים מבחינת עבריינות.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/cameras-at-hotspots",
+      "arrivalIndex": 41
+    },
+    {
+      "id": "qlNRVgmfmVXx",
+      "text": "לבנות מעונות מסובסדים לסטודנטים בקרבת הקמפוסים.",
+      "groundTruthTopic": "housing",
+      "groundTruthSynth": "housing/student-dorms",
+      "arrivalIndex": 42
+    },
+    {
+      "id": "Pq5jgkG9ZefC",
+      "text": "להפחית את משך הזמן שמטופלים מחכים עד שהם יכולים לפגוש רופא מומחה.",
+      "groundTruthTopic": "health",
+      "groundTruthSynth": "health/specialist-wait-times",
+      "arrivalIndex": 43
+    },
+    {
+      "id": "k9pdMOTV9Np5",
+      "text": "לספק ארוחות חמות ללא עלות לכל התלמידים במהלך יום הלימודים.",
+      "groundTruthTopic": "education",
+      "groundTruthSynth": "education/school-meals",
+      "arrivalIndex": 44
+    },
+    {
+      "id": "q1FLRJcYHF5E",
+      "text": "לאסור פלסטיק חד-פעמי בחנויות ובמסעדות.",
+      "groundTruthTopic": "environment-and-waste",
+      "groundTruthSynth": "environment-and-waste/ban-single-use-plastic",
+      "arrivalIndex": 45
+    },
+    {
+      "id": "M6VSFAOhU4Wd",
+      "text": "לאפשר לבצע כל הליך עירוני באופן מקוון ברשת.",
+      "groundTruthTopic": "digital-services",
+      "groundTruthSynth": "digital-services/online-permits",
+      "arrivalIndex": 46
+    },
+    {
+      "id": "uER6z58oqZE2",
+      "text": "להגיש ארוחת צהריים חמה חינם לכל תלמיד בבית הספר.",
+      "groundTruthTopic": "education",
+      "groundTruthSynth": "education/school-meals",
+      "arrivalIndex": 47
+    },
+    {
+      "id": "wYllSWCDtAS2",
+      "text": "להוסיף פסי האטה ומעברי חצייה מוצרים בקרבת בתי הספר.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/traffic-calming",
+      "arrivalIndex": 48
+    },
+    {
+      "id": "7KDZYJA9ycAa",
+      "text": "לתקצב תוכניות הכשרה מחדש לעובדים המחליפים קריירה.",
+      "groundTruthTopic": "jobs-and-economy",
+      "groundTruthSynth": "jobs-and-economy/job-retraining",
+      "arrivalIndex": 49
+    },
+    {
+      "id": "5XrWQTAp4ths",
+      "text": "להוסיף מרפאות בריאות המשפחה מקומיות באזורים שחסרות בהם.",
+      "groundTruthTopic": "health",
+      "groundTruthSynth": "health/neighborhood-clinics",
+      "arrivalIndex": 50
+    },
+    {
+      "id": "Gf0uUWSSIIzw",
+      "text": "להגדיל את התמיכה בתוך הבית כדי שאנשים מבוגרים לא ייאלצו לעבור למוסדות.",
+      "groundTruthTopic": "health",
+      "groundTruthSynth": "health/elderly-home-care",
+      "arrivalIndex": 51
+    },
+    {
+      "id": "yuz1iZpttOhV",
+      "text": "לחייב את היזמים לכלול דירות בהישג יד בכל בניין חדש.",
+      "groundTruthTopic": "housing",
+      "groundTruthSynth": "housing/affordable-quota",
+      "arrivalIndex": 52
+    },
+    {
+      "id": "tmzELDFFAjrd",
+      "text": "לבנות מחדש את מתקני המשחק כך שילדים עם מוגבלויות יוכלו להשתמש בכל המתקנים.",
+      "groundTruthTopic": "parks-and-green-space",
+      "groundTruthSynth": "parks-and-green-space/accessible-playgrounds",
+      "arrivalIndex": 53
+    },
+    {
+      "id": "BSEB2nIMm3cf",
+      "text": "למודרניזציה של מתקני בית הספר המיושנים כולל המעבדות והכיתות.",
+      "groundTruthTopic": "education",
+      "groundTruthSynth": "education/school-buildings",
+      "arrivalIndex": 54
+    },
+    {
+      "id": "xQmtDrB38hhW",
+      "text": "להגביל את מספר התלמידים בכל כיתה כדי לאפשר יחס אישי.",
+      "groundTruthTopic": "education",
+      "groundTruthSynth": "education/smaller-classes",
+      "arrivalIndex": 55
+    },
+    {
+      "id": "UCtTBVDKyNb8",
+      "text": "לתקצב סבסוד לשדרוג דירות מיושנות כך שיצרכו פחות אנרגיה.",
+      "groundTruthTopic": "housing",
+      "groundTruthSynth": "housing/renovation-grants",
+      "arrivalIndex": 56
+    },
+    {
+      "id": "tSjgkWJl6WGY",
+      "text": "לספק משרדים משותפים בעלות נמוכה לעובדים עצמאיים.",
+      "groundTruthTopic": "jobs-and-economy",
+      "groundTruthSynth": "jobs-and-economy/coworking-spaces",
+      "arrivalIndex": 57
+    },
+    {
+      "id": "8UCBk7Z5qXfk",
+      "text": "להציע כניסה למוזיאונים בלי תשלום ביום אחד בכל שבוע.",
+      "groundTruthTopic": "culture",
+      "groundTruthSynth": "culture/free-museum-days",
+      "arrivalIndex": 58
+    },
+    {
+      "id": "hlET5tHzB8yq",
+      "text": "להסב בנייני משרדים ריקים לדירות מגורים.",
+      "groundTruthTopic": "housing",
+      "groundTruthSynth": "housing/convert-offices",
+      "arrivalIndex": 59
+    },
+    {
+      "id": "FNLP0TgyFT5M",
+      "text": "לקצר את זמני התגובה של אמבולנסים וכיבוי אש על ידי פתיחת תחנות מקומיות נוספות.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/emergency-response-time",
+      "arrivalIndex": 60
+    },
+    {
+      "id": "NrERy70zL0En",
+      "text": "להעמיד שוטרי שכונה שמכירים את התושבים בסיור קבוע.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/community-policing",
+      "arrivalIndex": 61
+    },
+    {
+      "id": "AMylAQ9rmVbk",
+      "text": "ליצור נתיבי רכיבה מופרדים פיזית כך שהרוכבים יהיו מוגנים מרכבים.",
+      "groundTruthTopic": "transport",
+      "groundTruthSynth": "transport/protected-bike-lanes",
+      "arrivalIndex": 62
+    },
+    {
+      "id": "mUlzCx5PPOQZ",
+      "text": "להזמין ציורי קיר ופסלים מאמנים מקומיים עבור הכיכרות הציבוריות.",
+      "groundTruthTopic": "culture",
+      "groundTruthSynth": "culture/public-art-commissions",
+      "arrivalIndex": 63
+    },
+    {
+      "id": "xujJV-r-xyL8",
+      "text": "להקים מכלאות פתוחות לכלבים ללא רצועה בכל שכונה.",
+      "groundTruthTopic": "parks-and-green-space",
+      "groundTruthSynth": "parks-and-green-space/dog-parks",
+      "arrivalIndex": 64
+    },
+    {
+      "id": "iBkJ8baO91Gx",
+      "text": "ליצור גינות כיס כך שלכל תושב יהיה שטח ירוק במרחק הליכה קצר.",
+      "groundTruthTopic": "parks-and-green-space",
+      "groundTruthSynth": "parks-and-green-space/neighborhood-parks",
+      "arrivalIndex": 65
+    },
+    {
+      "id": "8TgIIlWSJNuf",
+      "text": "לקצר את זמני ההמתנה לתורים אצל רופאים מומחים.",
+      "groundTruthTopic": "health",
+      "groundTruthSynth": "health/specialist-wait-times",
+      "arrivalIndex": 66
+    },
+    {
+      "id": "jjwtUoHSfYIP",
+      "text": "להתקין אמצעי מיתון תנועה כמו במפרים והרחבות מדרכה ליד בתי הספר.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/traffic-calming",
+      "arrivalIndex": 67
+    },
+    {
+      "id": "RsqkBNNY3pV3",
+      "text": "לספק רשת אלחוטית ציבורית חינם בכיכרות ובמרכזים הקהילתיים.",
+      "groundTruthTopic": "digital-services",
+      "groundTruthSynth": "digital-services/public-wifi",
+      "arrivalIndex": 68
+    },
+    {
+      "id": "VkOUdiQFIHCB",
+      "text": "להקים מרשם שכירות ציבורי כדי שהשוכרים יוכלו להשוות מחירים.",
+      "groundTruthTopic": "housing",
+      "groundTruthSynth": "housing/public-rent-registry",
+      "arrivalIndex": 69
+    },
+    {
+      "id": "KWhjteTRsY0J",
+      "text": "להגדיל את מספר האוטובוסים בשעות השיא כדי לקצר את זמן ההמתנה.",
+      "groundTruthTopic": "transport",
+      "groundTruthSynth": "transport/bus-frequency",
+      "arrivalIndex": 70
+    },
+    {
+      "id": "F8OrZ8lPZnA6",
+      "text": "לאסוף מיחזור מפתח כל בית פעם בשבוע.",
+      "groundTruthTopic": "environment-and-waste",
+      "groundTruthSynth": "environment-and-waste/recycling-pickup",
+      "arrivalIndex": 71
+    },
+    {
+      "id": "xq-6S7i60IDm",
+      "text": "לשחרר נתונים עירוניים ונתוני הוצאות באתר נתונים פתוחים לציבור.",
+      "groundTruthTopic": "digital-services",
+      "groundTruthSynth": "digital-services/open-data-portal",
+      "arrivalIndex": 72
+    },
+    {
+      "id": "bsWTVQFONGvF",
+      "text": "לפרסם מסד נתונים עירוני של דמי שכירות כדי שהשוכרים יראו את מחירי השוק האמיתיים.",
+      "groundTruthTopic": "housing",
+      "groundTruthSynth": "housing/public-rent-registry",
+      "arrivalIndex": 73
+    },
+    {
+      "id": "7xq4vJbd27Dl",
+      "text": "להתקין חיישני איכות אוויר בכל העיר ולפרסם את הנתונים.",
+      "groundTruthTopic": "environment-and-waste",
+      "groundTruthSynth": "environment-and-waste/air-quality-monitoring",
+      "arrivalIndex": 74
+    },
+    {
+      "id": "j21Q82GfNXuE",
+      "text": "לוודא שפארק ירוק קטן נמצא במרחק הליכה של חמש דקות מכל בית.",
+      "groundTruthTopic": "parks-and-green-space",
+      "groundTruthSynth": "parks-and-green-space/neighborhood-parks",
+      "arrivalIndex": 75
+    },
+    {
+      "id": "TEPFIZV1A8Au",
+      "text": "לסלול שבילי אופניים מוגנים המופרדים מתנועת המכוניות.",
+      "groundTruthTopic": "transport",
+      "groundTruthSynth": "transport/protected-bike-lanes",
+      "arrivalIndex": 76
+    },
+    {
+      "id": "ofsgiqtmQOeq",
+      "text": "לשפץ מבני בית ספר ותיקים ולהוסיף כיתות ומעבדות מודרניות.",
+      "groundTruthTopic": "education",
+      "groundTruthSynth": "education/school-buildings",
+      "arrivalIndex": 77
+    },
+    {
+      "id": "KyKBpAayRFWi",
+      "text": "להנהיג תחבורה ציבורית חינם לתלמידים מתחת לגיל שמונה עשרה.",
+      "groundTruthTopic": "transport",
+      "groundTruthSynth": "transport/free-fares-youth",
+      "arrivalIndex": 78
+    },
+    {
+      "id": "AZh0s9p4ngSY",
+      "text": "לחייב את קבלני העירייה להעסיק תושבים מקומיים.",
+      "groundTruthTopic": "jobs-and-economy",
+      "groundTruthSynth": "jobs-and-economy/local-hiring",
+      "arrivalIndex": 79
+    },
+    {
+      "id": "geh6fMqb1jnq",
+      "text": "להתקין מצלמות אבטחה במקומות שבהם מתרכזת הפשיעה.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/cameras-at-hotspots",
+      "arrivalIndex": 80
+    },
+    {
+      "id": "NIYaIseNDb9V",
+      "text": "להפעיל אוטובוסים בתדירות גבוהה יותר בשעות העומס כדי שאנשים לא יחכו זמן רב.",
+      "groundTruthTopic": "transport",
+      "groundTruthSynth": "transport/bus-frequency",
+      "arrivalIndex": 81
+    },
+    {
+      "id": "Axif7Jtuv3Fh",
+      "text": "לפתוח דלפקי סיוע ללא תור שבהם התושבים יקבלו עזרה בשימוש בשירותים המקוונים של העירייה.",
+      "groundTruthTopic": "digital-services",
+      "groundTruthSynth": "digital-services/walk-in-help-desks",
+      "arrivalIndex": 82
+    },
+    {
+      "id": "W4C6DCtinyov",
+      "text": "להציע תוכניות בדיקות ללא תשלום שמאתרות מחלות בשלב מוקדם.",
+      "groundTruthTopic": "health",
+      "groundTruthSynth": "health/preventive-screening",
+      "arrivalIndex": 83
+    },
+    {
+      "id": "179oDiGuYdmb",
+      "text": "לאפשר לתושבים למלא את כל הטפסים העירוניים באינטרנט.",
+      "groundTruthTopic": "digital-services",
+      "groundTruthSynth": "digital-services/online-permits",
+      "arrivalIndex": 84
+    },
+    {
+      "id": "fR9Jpt20dQ3j",
+      "text": "להציב עמדות תמיכה פרונטליות שיעזרו לאנשים להתמצא באתר האינטרנט העירוני.",
+      "groundTruthTopic": "digital-services",
+      "groundTruthSynth": "digital-services/walk-in-help-desks",
+      "arrivalIndex": 85
+    },
+    {
+      "id": "JCGJpPN0QqM6",
+      "text": "להנגיש כל גן שעשועים לילדים עם מוגבלויות.",
+      "groundTruthTopic": "parks-and-green-space",
+      "groundTruthSynth": "parks-and-green-space/accessible-playgrounds",
+      "arrivalIndex": 86
+    },
+    {
+      "id": "2ZrXx4YZ8C7i",
+      "text": "לצמצם את הבירוקרטיה בהוצאת רישיון עסק לבקשה מהירה אחת.",
+      "groundTruthTopic": "jobs-and-economy",
+      "groundTruthSynth": "jobs-and-economy/cut-permit-bureaucracy",
+      "arrivalIndex": 87
+    },
+    {
+      "id": "EXsJWmic0Qsf",
+      "text": "לתקצב שיעורי מוזיקה חינם לילדים.",
+      "groundTruthTopic": "culture",
+      "groundTruthSynth": "culture/youth-music-programs",
+      "arrivalIndex": 88
+    },
+    {
+      "id": "Mt8aIyjZgpJL",
+      "text": "לשתול הרבה יותר עצי צל לאורך הרחובות.",
+      "groundTruthTopic": "parks-and-green-space",
+      "groundTruthSynth": "parks-and-green-space/street-trees",
+      "arrivalIndex": 89
+    },
+    {
+      "id": "-WtqFQHnSasU",
+      "text": "להעלות את שכר המורים כדי למשוך ולשמר מחנכים טובים.",
+      "groundTruthTopic": "education",
+      "groundTruthSynth": "education/teacher-pay",
+      "arrivalIndex": 90
+    },
+    {
+      "id": "96zR3red-b5y",
+      "text": "לממן הוראת נגינה בכלים ללא עלות עבור ילדים.",
+      "groundTruthTopic": "culture",
+      "groundTruthSynth": "culture/youth-music-programs",
+      "arrivalIndex": 91
+    },
+    {
+      "id": "qGmJ6dwsTF91",
+      "text": "להרחיב את שירותי הטיפול בבית כדי שקשישים יוכלו להישאר בבתיהם.",
+      "groundTruthTopic": "health",
+      "groundTruthSynth": "health/elderly-home-care",
+      "arrivalIndex": 92
+    },
+    {
+      "id": "11uoJ8Y61Atg",
+      "text": "לתת לתושבים שטח שבו יוכלו לגדל ירקות יחד בגינות שיתופיות.",
+      "groundTruthTopic": "parks-and-green-space",
+      "groundTruthSynth": "parks-and-green-space/community-gardens",
+      "arrivalIndex": 93
+    },
+    {
+      "id": "tHpXUayv0sbK",
+      "text": "לפתוח מרפאות רפואה ראשונית בשכונות שאינן מקבלות מענה.",
+      "groundTruthTopic": "health",
+      "groundTruthSynth": "health/neighborhood-clinics",
+      "arrivalIndex": 94
+    },
+    {
+      "id": "z-UxOTo9kD8L",
+      "text": "להעניק מענקים לשיפוץ דירות ותיקות לצורך התייעלות באנרגיה.",
+      "groundTruthTopic": "housing",
+      "groundTruthSynth": "housing/renovation-grants",
+      "arrivalIndex": 95
+    },
+    {
+      "id": "0rcPZjgtsXDy",
+      "text": "לפשט את הליך רישוי העסקים לטופס קצר אחד.",
+      "groundTruthTopic": "jobs-and-economy",
+      "groundTruthSynth": "jobs-and-economy/cut-permit-bureaucracy",
+      "arrivalIndex": 96
+    },
+    {
+      "id": "kkvDqGUMF0hb",
+      "text": "להציב מערכות פוטו-וולטאיות על גגות המבנים העירוניים.",
+      "groundTruthTopic": "environment-and-waste",
+      "groundTruthSynth": "environment-and-waste/solar-on-public-roofs",
+      "arrivalIndex": 97
+    },
+    {
+      "id": "EICecDUAUuWJ",
+      "text": "לספק שיעורי עזר חינם בשיעורי הבית אחרי הלימודים לתלמידים שנשארים מאחור.",
+      "groundTruthTopic": "education",
+      "groundTruthSynth": "education/homework-tutoring",
+      "arrivalIndex": 98
+    },
+    {
+      "id": "dXDHQzR2surB",
+      "text": "להעניק הלוואות בריבית נמוכה לעסקים קטנים מקומיים.",
+      "groundTruthTopic": "jobs-and-economy",
+      "groundTruthSynth": "jobs-and-economy/small-business-loans",
+      "arrivalIndex": 99
+    }
+  ]
+}
