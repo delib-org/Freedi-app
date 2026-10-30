@@ -9,7 +9,13 @@ jest.mock('../../../config/openai-chat', () => ({
 
 import { WORKER_MODEL } from '../../../config/openai-chat';
 import { assignAtoms, parseAssignments } from '../assignAtoms';
-import { ASSIGN_BATCH_SIZE, NONE_KEY, RETRY_BATCH_SIZE } from '../constants';
+import {
+	ASSIGN_BATCH_SIZE,
+	ASSIGN_RETRY_ROUNDS,
+	MIN_RETRY_BATCH_SIZE,
+	NONE_KEY,
+	retryBatchSize,
+} from '../constants';
 import type { DiscoveredTheme, RebuildAtom } from '../types';
 
 const THEMES: DiscoveredTheme[] = [
@@ -90,22 +96,79 @@ describe('assignAtoms', () => {
 		expect(assignments.size).toBe(ASSIGN_BATCH_SIZE + 5);
 	});
 
-	it('retries missing atoms once in smaller batches, then sends the rest to NONE', async () => {
-		// First pass answers only the first atom of each batch; retries answer nothing.
+	it('a batch answered with unknown ids only is retried in halves and recovers', async () => {
+		// First call: every id is invented. Retries: answered properly.
+		const sizes: number[] = [];
 		callLLM.mockImplementation(async ({ user }: { user: string }) => {
 			const ids = offeredLocalIds(user);
-			const isRetry = ids.length <= RETRY_BATCH_SIZE;
+			sizes.push(ids.length);
+			const answer =
+				sizes.length === 1
+					? Object.fromEntries(ids.map((id) => [`x${id}`, 't1']))
+					: Object.fromEntries(ids.map((id) => [id, 't2']));
 
-			return JSON.stringify({ assignments: isRetry ? {} : { [ids[0]]: 't1' } });
+			return JSON.stringify({ assignments: answer });
+		});
+
+		const { assignments, unanswered } = await assignAtoms('Q', THEMES, atoms(ASSIGN_BATCH_SIZE));
+
+		expect(unanswered).toBe(0);
+		expect([...assignments.values()].every((k) => k === 't2')).toBe(true);
+		expect(sizes).toEqual([ASSIGN_BATCH_SIZE, retryBatchSize(1), retryBatchSize(1)]);
+		expect(retryBatchSize(1)).toBe(ASSIGN_BATCH_SIZE / 2);
+	});
+
+	it('answers with unknown theme keys count as missing and are retried', async () => {
+		callLLM
+			.mockImplementationOnce(async ({ user }: { user: string }) =>
+				JSON.stringify({
+					assignments: Object.fromEntries(offeredLocalIds(user).map((id) => [id, 'Funding'])),
+				}),
+			)
+			.mockImplementation(async ({ user }: { user: string }) =>
+				JSON.stringify({
+					assignments: Object.fromEntries(offeredLocalIds(user).map((id) => [id, NONE_KEY])),
+				}),
+			);
+
+		const { assignments, unanswered } = await assignAtoms('Q', THEMES, atoms(4));
+
+		expect(unanswered).toBe(0);
+		expect([...assignments.values()]).toEqual([NONE_KEY, NONE_KEY, NONE_KEY, NONE_KEY]);
+	});
+
+	it('persistent failure ends in Other with the unanswered count set, after every halving round', async () => {
+		const sizes: number[] = [];
+		callLLM.mockImplementation(async ({ user }: { user: string }) => {
+			const ids = offeredLocalIds(user);
+			sizes.push(ids.length);
+
+			// Only the very first atom is ever answered.
+			return JSON.stringify({
+				assignments: ids.includes('a1') && sizes.length === 1 ? { a1: 't1' } : {},
+			});
 		});
 
 		const { assignments, unanswered } = await assignAtoms('Q', THEMES, atoms(12));
 
-		// 1 first-pass call + ceil(11 / RETRY_BATCH_SIZE) retry calls, no third round.
-		expect(callLLM).toHaveBeenCalledTimes(1 + Math.ceil(11 / RETRY_BATCH_SIZE));
 		expect(assignments.get('atom0')).toBe('t1');
 		expect(unanswered).toBe(11);
-		expect(assignments.get('atom5')).toBe(NONE_KEY);
+		expect(assignments.get('atom11')).toBe(NONE_KEY);
+		// 1 first pass + one call per retry round at the halved sizes, floored at the minimum.
+		const expected = [12];
+		for (let round = 1; round <= ASSIGN_RETRY_ROUNDS; round++) {
+			let left = 11;
+			while (left > 0) {
+				expected.push(Math.min(left, retryBatchSize(round)));
+				left -= retryBatchSize(round);
+			}
+		}
+		expect(sizes).toEqual(expected);
+	});
+
+	it('halves the retry batch each round down to the minimum', () => {
+		expect([1, 2, 3].map(retryBatchSize)).toEqual([20, 10, 5]);
+		expect(retryBatchSize(10)).toBe(MIN_RETRY_BATCH_SIZE);
 	});
 
 	it('a retry fills what the first pass missed', async () => {

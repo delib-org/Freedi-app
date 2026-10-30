@@ -34,6 +34,11 @@ export interface ThemeRebuildPreviewResponse {
 	atomCount: number;
 	/** Atoms no theme claimed; shown under "Other ideas". */
 	otherCount: number;
+	/**
+	 * Part of `otherCount` the AI gave no valid answer for after every retry
+	 * (as opposed to judging "fits no theme"). Absent or 0 when all were sorted.
+	 */
+	unansweredCount?: number;
 	themes: ThemeRebuildPreviewTheme[];
 }
 

@@ -9,8 +9,21 @@
 /** Atoms sent to the assignment model per call. */
 export const ASSIGN_BATCH_SIZE = 40;
 
-/** Atoms per call when re-asking the ones a batch left out. */
-export const RETRY_BATCH_SIZE = 10;
+/**
+ * Retry rounds for atoms a batch left without a valid answer (missing, unknown
+ * id, unknown key, or a failed call). Each round halves the batch size:
+ * 40 → 20 → 10 → 5. Only atoms still unanswered after the last round go to
+ * "Other ideas", and they are counted apart from NONE answers.
+ */
+export const ASSIGN_RETRY_ROUNDS = 3;
+
+/** Smallest retry batch; halving stops here. */
+export const MIN_RETRY_BATCH_SIZE = 5;
+
+/** Batch size of retry round `round` (1-based): ASSIGN_BATCH_SIZE halved `round` times, floored at MIN_RETRY_BATCH_SIZE. */
+export function retryBatchSize(round: number): number {
+	return Math.max(MIN_RETRY_BATCH_SIZE, Math.floor(ASSIGN_BATCH_SIZE / 2 ** round));
+}
 
 /** Concurrent assignment calls (the shared LLM limiter caps globally too). */
 export const ASSIGN_CONCURRENCY = 5;

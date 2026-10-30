@@ -6,8 +6,9 @@ import {
 	ASSIGN_BATCH_SIZE,
 	ASSIGN_CONCURRENCY,
 	ASSIGN_MAX_TOKENS,
+	ASSIGN_RETRY_ROUNDS,
 	NONE_KEY,
-	RETRY_BATCH_SIZE,
+	retryBatchSize,
 } from './constants';
 import { ASSIGN_SYSTEM, assignUserPrompt } from './prompts';
 import type { DiscoveredTheme, RebuildAtom } from './types';
@@ -15,8 +16,9 @@ import type { DiscoveredTheme, RebuildAtom } from './types';
 /**
  * Sort every atom into the fixed theme list, in small batches on the worker
  * model. Ids and keys the model invents are dropped; atoms a batch did not
- * answer are asked once more in smaller batches; atoms still unanswered go to
- * NONE ("Other ideas"), never to a guessed theme.
+ * validly answer are re-asked in halving batches (up to ASSIGN_RETRY_ROUNDS);
+ * atoms still unanswered go to NONE ("Other ideas"), never to a guessed theme,
+ * and are counted as `unanswered`.
  */
 
 const AssignResponseSchema = v.object({
@@ -140,9 +142,18 @@ export async function assignAtoms(
 ): Promise<AssignResult> {
 	const assignments = await assignInBatches(question, themes, atoms, ASSIGN_BATCH_SIZE);
 
-	const missing = atoms.filter((a) => !assignments.has(a.id));
-	if (missing.length > 0) {
-		const retried = await assignInBatches(question, themes, missing, RETRY_BATCH_SIZE);
+	// An atom without a valid answer is never dropped silently: it is re-sent
+	// in ever smaller batches before it may land in "Other ideas".
+	for (let round = 1; round <= ASSIGN_RETRY_ROUNDS; round++) {
+		const missing = atoms.filter((a) => !assignments.has(a.id));
+		if (missing.length === 0) break;
+		const size = retryBatchSize(round);
+		logger.info('themeRebuild.assign: retrying atoms without a valid answer', {
+			round,
+			missing: missing.length,
+			batchSize: size,
+		});
+		const retried = await assignInBatches(question, themes, missing, size);
 		for (const [atomId, key] of retried) assignments.set(atomId, key);
 	}
 
@@ -153,9 +164,10 @@ export async function assignAtoms(
 		unanswered++;
 	}
 	if (unanswered > 0) {
-		logger.warn('themeRebuild.assign: atoms unanswered after retry, sent to Other', {
+		logger.warn('themeRebuild.assign: atoms unanswered after all retries, sent to Other', {
 			unanswered,
 			atoms: atoms.length,
+			rounds: ASSIGN_RETRY_ROUNDS,
 		});
 	}
 

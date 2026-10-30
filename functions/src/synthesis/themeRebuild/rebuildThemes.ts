@@ -9,7 +9,7 @@ import {
 	type ThemeRebuildRequest,
 	type ThemeRebuildResponse,
 } from '@freedi/shared-types';
-import { logError } from '../../utils/errorHandling';
+import { logError, ValidationError } from '../../utils/errorHandling';
 import { assertSynthesisAdmin } from '../admin/assertSynthesisAdmin';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { applyRebuild } from './applyRebuild';
@@ -101,10 +101,25 @@ async function runPreview(question: Statement, uid: string): Promise<ThemeRebuil
 		parentStatementId: questionId,
 	});
 
+	if (unanswered > 0) {
+		logError(
+			new ValidationError('Theme rebuild left atoms unanswered after all retries', {
+				unanswered,
+			}),
+			{
+				operation: `${OPERATION}.assign`,
+				userId: uid,
+				statementId: questionId,
+				metadata: { runId: proposal.runId, unanswered, atoms: atoms.length },
+			},
+		);
+	}
+
 	return {
 		runId: proposal.runId,
 		atomCount: atoms.length,
 		otherCount: grouped.otherIds.length,
+		unansweredCount: unanswered,
 		themes: toPreviewThemes(match.themes, new Map(atoms.map((a) => [a.id, a.title]))),
 	};
 }

@@ -13,7 +13,11 @@ import type {
 jest.mock('firebase-functions', () => ({
 	logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
-jest.mock('../../../utils/errorHandling', () => ({ logError: jest.fn() }));
+const logError = jest.fn();
+jest.mock('../../../utils/errorHandling', () => ({
+	...jest.requireActual('../../../utils/errorHandling'),
+	logError: (...a: unknown[]) => logError(...a),
+}));
 
 const QUESTION = { statementId: 'q1', statement: 'How?' } as Statement;
 const assertSynthesisAdmin = jest.fn();
@@ -52,6 +56,7 @@ jest.mock('../discoverThemes', () => ({
 		{ key: 't3', name: 'Unused', rule: 'nothing' },
 	],
 }));
+let unansweredInRun = 0;
 jest.mock('../assignAtoms', () => ({
 	assignAtoms: async () => ({
 		assignments: new Map([
@@ -60,7 +65,7 @@ jest.mock('../assignAtoms', () => ({
 			['c', 't2'],
 			['d', 'NONE'],
 		]),
-		unanswered: 0,
+		unanswered: unansweredInRun,
 	}),
 }));
 const applyRebuild = jest.fn();
@@ -202,6 +207,39 @@ describe('preview → apply', () => {
 			expect.objectContaining({ atomIds: ['a', 'b', 'c', 'd'], otherIds: ['d'], createdBy: 'u1' }),
 		);
 		expect(applyRebuild).not.toHaveBeenCalled();
+	});
+
+	it('preview reports unanswered atoms apart from NONE and logs them as an error', async () => {
+		unansweredInRun = 1;
+		try {
+			const preview = (await handleRebuildThemes('u1', {
+				questionId: 'q1',
+				mode: 'preview',
+			})) as ThemeRebuildPreviewResponse;
+
+			expect(preview.unansweredCount).toBe(1);
+			expect(preview.otherCount).toBe(1);
+			expect(logError).toHaveBeenCalledWith(
+				expect.any(Error),
+				expect.objectContaining({
+					operation: 'synthesis.rebuildThemes.assign',
+					statementId: 'q1',
+					metadata: expect.objectContaining({ unanswered: 1 }),
+				}),
+			);
+		} finally {
+			unansweredInRun = 0;
+		}
+	});
+
+	it('preview with every atom answered reports 0 unanswered and logs nothing', async () => {
+		const preview = (await handleRebuildThemes('u1', {
+			questionId: 'q1',
+			mode: 'preview',
+		})) as ThemeRebuildPreviewResponse;
+
+		expect(preview.unansweredCount).toBe(0);
+		expect(logError).not.toHaveBeenCalled();
 	});
 
 	it('apply writes the stored proposal and sends late arrivals to Other', async () => {
