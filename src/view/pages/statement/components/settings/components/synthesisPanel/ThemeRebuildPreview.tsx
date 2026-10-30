@@ -1,11 +1,11 @@
 import { FC, useState } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import {
-	applyThemeRebuild,
-	type ThemeRebuildApplyResponse,
-	type ThemeRebuildPreviewResponse,
-	type ThemeRebuildProposedTheme,
-} from '@/controllers/db/synthesis/synthesisOperations';
+import type {
+	ThemeRebuildApplyResponse,
+	ThemeRebuildPreviewResponse,
+	ThemeRebuildPreviewTheme,
+} from '@freedi/shared-types';
+import { applyThemeRebuild } from '@/controllers/db/synthesis/synthesisOperations';
 import Modal from '@/view/components/atomic/molecules/Modal/Modal';
 import Card from '@/view/components/atomic/molecules/Card/Card';
 import Button from '@/view/components/atomic/atoms/Button/Button';
@@ -24,7 +24,7 @@ interface Props {
 }
 
 interface ThemeCardProps {
-	theme: ThemeRebuildProposedTheme;
+	theme: ThemeRebuildPreviewTheme;
 }
 
 const ThemeCard: FC<ThemeCardProps> = ({ theme }) => {

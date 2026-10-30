@@ -7,16 +7,36 @@ import type { Statement } from '@freedi/shared-types';
  */
 
 const parentDocs = new Map<string, Statement>();
+const themeQueryDocs: Statement[] = [];
+const themeQueryWheres: Array<[string, string, unknown]> = [];
+const themeQueryLimits: number[] = [];
 
-jest.mock('firebase-admin/firestore', () => ({
-	getFirestore: jest.fn(() => ({
-		collection: jest.fn(() => ({
-			doc: (id: string) => ({
-				get: async () => ({ exists: parentDocs.has(id), data: () => parentDocs.get(id) }),
-			}),
+jest.mock('firebase-admin/firestore', () => {
+	const themeQuery = {
+		where: (field: string, op: string, value: unknown) => {
+			themeQueryWheres.push([field, op, value]);
+
+			return themeQuery;
+		},
+		limit: (n: number) => {
+			themeQueryLimits.push(n);
+
+			return themeQuery;
+		},
+		get: async () => ({ docs: themeQueryDocs.map((d) => ({ data: () => d })) }),
+	};
+
+	return {
+		getFirestore: jest.fn(() => ({
+			collection: jest.fn(() => ({
+				doc: (id: string) => ({
+					get: async () => ({ exists: parentDocs.has(id), data: () => parentDocs.get(id) }),
+				}),
+				where: themeQuery.where,
+			})),
 		})),
-	})),
-}));
+	};
+});
 
 jest.mock('firebase-functions', () => ({
 	logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
@@ -41,7 +61,9 @@ jest.mock('../scheduled/reJudgeSweepState', () => {
 
 import {
 	fileOnlyProcessParent,
+	loadLiveThemes,
 	selectFileOnlyParents,
+	THEME_QUERY_LIMIT,
 	sweepFileOnlyParents,
 } from '../scheduled/reJudgeFileOnly';
 import { computeParentFingerprint, DORMANT_AFTER_MS } from '../scheduled/reJudgeSweepState';
@@ -57,8 +79,31 @@ const theme = (id: string, parentId: string): Statement =>
 beforeEach(() => {
 	jest.clearAllMocks();
 	parentDocs.clear();
+	themeQueryDocs.length = 0;
+	themeQueryWheres.length = 0;
+	themeQueryLimits.length = 0;
 	loadSweepState.mockResolvedValue(null);
 	fileUnthemedAtoms.mockResolvedValue({ atoms: 2, filed: 1, refused: 1, skipped: 0, errors: 0 });
+});
+
+describe('loadLiveThemes', () => {
+	it('does not filter on hide in the query, so legacy themes without the field are found', async () => {
+		themeQueryDocs.push(
+			stmt('legacy', 'q1', { isCluster: true, derivedByPipeline: 'topic-cluster' }),
+			stmt('visible', 'q2', { isCluster: true, derivedByPipeline: 'topic-cluster', hide: false }),
+			stmt('hidden', 'q3', { isCluster: true, derivedByPipeline: 'topic-cluster', hide: true }),
+		);
+
+		const themes = await loadLiveThemes();
+
+		expect(themes.map((t) => t.statementId).sort()).toEqual(['legacy', 'visible']);
+		expect(themeQueryWheres).toEqual([
+			['derivedByPipeline', '==', 'topic-cluster'],
+			['isCluster', '==', true],
+		]);
+		expect(themeQueryWheres.some(([field]) => field === 'hide')).toBe(false);
+		expect(themeQueryLimits).toEqual([THEME_QUERY_LIMIT]);
+	});
 });
 
 describe('selectFileOnlyParents', () => {

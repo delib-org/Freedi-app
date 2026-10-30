@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ThemeRebuildPreview from '../ThemeRebuildPreview';
 import { applyThemeRebuild } from '@/controllers/db/synthesis/synthesisOperations';
-import type { ThemeRebuildPreviewResponse } from '@/controllers/db/synthesis/synthesisOperations';
+import type { ThemeRebuildPreviewResponse } from '@freedi/shared-types';
 import { themeRebuildAppliedMessage } from '../themeRebuildMessages';
 
 jest.mock('@/controllers/db/synthesis/synthesisOperations', () => ({

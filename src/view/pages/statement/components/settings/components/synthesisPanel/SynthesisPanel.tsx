@@ -1,6 +1,6 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import type { Statement } from '@freedi/shared-types';
+import type { Statement, ThemeRebuildPreviewResponse } from '@freedi/shared-types';
 import { saveSynthesisSettings } from '@/controllers/db/synthesis/saveSynthesisSettings';
 import { listenSynthesisProgress } from '@/controllers/db/synthesis/listenSynthesisProgress';
 import {
@@ -14,7 +14,6 @@ import {
 	triggerReEmbed,
 	triggerRejudgeGrayBand,
 	triggerSynthesizeNow,
-	type ThemeRebuildPreviewResponse,
 } from '@/controllers/db/synthesis/synthesisOperations';
 import { isDerivedDocsHaveVotesError } from '@/controllers/db/synthesis/derivedDocsVotesError';
 import {

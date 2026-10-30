@@ -2,7 +2,7 @@ import {
 	classifyThemeRebuildError,
 	type ThemeRebuildErrorKind,
 } from '@/controllers/db/synthesis/themeRebuildErrors';
-import type { ThemeRebuildApplyResponse } from '@/controllers/db/synthesis/synthesisOperations';
+import type { ThemeRebuildApplyResponse } from '@freedi/shared-types';
 
 type Translate = (text: string) => string;
 

@@ -28,12 +28,18 @@ function db() {
 	return getFirestore();
 }
 
-/** Live themes across all questions: the discovery source for file-only parents. */
+/**
+ * Live themes across all questions: the discovery source for file-only parents.
+ *
+ * Not filtered on `hide` in the query: legacy theme docs have no `hide` field
+ * at all, and `hide == false` would never match them. Hidden themes are
+ * dropped in memory instead.
+ */
 export async function loadLiveThemes(): Promise<Statement[]> {
 	const snap = await db()
 		.collection(Collections.statements)
 		.where('derivedByPipeline', '==', 'topic-cluster')
-		.where('hide', '==', false)
+		.where('isCluster', '==', true)
 		.limit(THEME_QUERY_LIMIT)
 		.get();
 

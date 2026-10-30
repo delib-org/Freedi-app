@@ -1,4 +1,9 @@
 import { httpsCallable } from 'firebase/functions';
+import type {
+	ThemeRebuildApplyResponse,
+	ThemeRebuildPreviewResponse,
+	ThemeRebuildRequest,
+} from '@freedi/shared-types';
 import { functions } from '../config';
 import { logError } from '@/utils/errorHandling';
 import { logger } from '@/services/logger';
@@ -257,44 +262,6 @@ export async function synthesisCancel(questionId: string): Promise<{ deletedItem
 		logError(error, { operation: 'synthesis.synthesisCancel', statementId: questionId });
 		throw error;
 	}
-}
-
-// TODO: import from @freedi/shared-types once server branch lands
-export type ThemeRebuildMode = 'preview' | 'apply';
-
-// TODO: import from @freedi/shared-types once server branch lands
-export interface ThemeRebuildRequest {
-	questionId: string;
-	mode: ThemeRebuildMode;
-	runId?: string;
-}
-
-// TODO: import from @freedi/shared-types once server branch lands
-export interface ThemeRebuildProposedTheme {
-	key: string;
-	name: string;
-	rule: string;
-	memberCount: number;
-	sampleTitles: string[];
-	reusesThemeId?: string;
-}
-
-// TODO: import from @freedi/shared-types once server branch lands
-export interface ThemeRebuildPreviewResponse {
-	runId: string;
-	atomCount: number;
-	otherCount: number;
-	themes: ThemeRebuildProposedTheme[];
-}
-
-// TODO: import from @freedi/shared-types once server branch lands
-export interface ThemeRebuildApplyResponse {
-	runId: string;
-	themesWritten: number;
-	themesHidden: number;
-	atomsPlaced: number;
-	atomsToOther: number;
-	lateArrivalsToOther: number;
 }
 
 const REBUILD_THEMES_CALLABLE = 'rebuildThemes';
