@@ -23,6 +23,20 @@ const AssignResponseSchema = v.object({
 	assignments: v.record(v.string(), v.string()),
 });
 
+/** Dropped answers quoted in the warning, for diagnosis. */
+const DROPPED_SAMPLE_SIZE = 3;
+
+/**
+ * The prompt shows ids and keys in [brackets]; a model that echoes "[a3]" or
+ * "[t2]" back means a3 / t2, not an invented id.
+ */
+export function unbracket(value: string): string {
+	return value
+		.trim()
+		.replace(/^\[(.*)\]$/, '$1')
+		.trim();
+}
+
 /** atomId → theme key or NONE_KEY. */
 export type AtomAssignments = Map<string, string>;
 
@@ -44,12 +58,20 @@ export function parseAssignments(
 ): AtomAssignments {
 	const parsed = v.parse(AssignResponseSchema, JSON.parse(extractJson(raw)));
 	const result: AtomAssignments = new Map();
-	for (const [localId, rawKey] of Object.entries(parsed.assignments)) {
-		const atomId = localToAtomId.get(localId.trim());
-		if (!atomId) continue;
-		const key = rawKey.trim();
-		if (key.toUpperCase() === NONE_KEY) result.set(atomId, NONE_KEY);
-		else if (themeKeys.has(key)) result.set(atomId, key);
+	const dropped: Array<[string, string]> = [];
+	for (const [rawId, rawKey] of Object.entries(parsed.assignments)) {
+		const atomId = localToAtomId.get(unbracket(rawId));
+		const key = unbracket(rawKey);
+		if (atomId && key.toUpperCase() === NONE_KEY) result.set(atomId, NONE_KEY);
+		else if (atomId && themeKeys.has(key)) result.set(atomId, key);
+		else dropped.push([rawId, rawKey]);
+	}
+	if (dropped.length > 0) {
+		logger.warn('themeRebuild.assign: answers dropped (unknown id or key)', {
+			dropped: dropped.length,
+			answered: Object.keys(parsed.assignments).length,
+			sample: dropped.slice(0, DROPPED_SAMPLE_SIZE),
+		});
 	}
 
 	return result;

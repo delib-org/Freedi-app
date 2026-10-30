@@ -53,6 +53,17 @@ describe('parseAssignments', () => {
 		]);
 	});
 
+	it('accepts ids and keys echoed in [brackets] as the prompt shows them', () => {
+		const raw = JSON.stringify({ assignments: { '[a1]': '[t2]', ' a2 ': '[NONE]' } });
+
+		const result = parseAssignments(raw, local, new Set(['t1', 't2']));
+
+		expect([...result]).toEqual([
+			['atomX', 't2'],
+			['atomY', NONE_KEY],
+		]);
+	});
+
 	it('rejects a response without an assignments object', () => {
 		expect(() => parseAssignments('{"foo": 1}', local, new Set(['t1']))).toThrow();
 	});
