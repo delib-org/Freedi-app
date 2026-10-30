@@ -1,4 +1,9 @@
 import { httpsCallable } from 'firebase/functions';
+import type {
+	ThemeRebuildApplyResponse,
+	ThemeRebuildPreviewResponse,
+	ThemeRebuildRequest,
+} from '@freedi/shared-types';
 import { functions } from '../config';
 import { logError } from '@/utils/errorHandling';
 import { logger } from '@/services/logger';
@@ -255,6 +260,68 @@ export async function synthesisCancel(questionId: string): Promise<{ deletedItem
 		return { deletedItems: result.data.deletedItems };
 	} catch (error) {
 		logError(error, { operation: 'synthesis.synthesisCancel', statementId: questionId });
+		throw error;
+	}
+}
+
+const REBUILD_THEMES_CALLABLE = 'rebuildThemes';
+
+/**
+ * "Re-theme with AI", step 1: the server groups every idea under the question
+ * into a fresh theme list and stores it as a proposal. Nothing is written to
+ * the question's themes yet — the admin reviews the proposal first.
+ */
+export async function previewThemeRebuild(
+	questionId: string,
+): Promise<ThemeRebuildPreviewResponse> {
+	try {
+		const call = httpsCallable<ThemeRebuildRequest, ThemeRebuildPreviewResponse>(
+			functions,
+			REBUILD_THEMES_CALLABLE,
+		);
+		const result = await call({ questionId, mode: 'preview' });
+		logger.info('Theme rebuild preview ready', {
+			questionId,
+			runId: result.data.runId,
+			atomCount: result.data.atomCount,
+			themeCount: result.data.themes.length,
+		});
+
+		return result.data;
+	} catch (error) {
+		logError(error, {
+			operation: 'synthesis.rebuildThemes',
+			statementId: questionId,
+			metadata: { mode: 'preview' },
+		});
+		throw error;
+	}
+}
+
+/**
+ * "Re-theme with AI", step 2: writes the proposal the admin approved. Ideas
+ * that arrived after the preview land in "Other ideas"; live filing picks them
+ * up later.
+ */
+export async function applyThemeRebuild(
+	questionId: string,
+	runId: string,
+): Promise<ThemeRebuildApplyResponse> {
+	try {
+		const call = httpsCallable<ThemeRebuildRequest, ThemeRebuildApplyResponse>(
+			functions,
+			REBUILD_THEMES_CALLABLE,
+		);
+		const result = await call({ questionId, mode: 'apply', runId });
+		logger.info('Theme rebuild applied', { questionId, ...result.data });
+
+		return result.data;
+	} catch (error) {
+		logError(error, {
+			operation: 'synthesis.rebuildThemes',
+			statementId: questionId,
+			metadata: { mode: 'apply', runId },
+		});
 		throw error;
 	}
 }

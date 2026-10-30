@@ -1206,3 +1206,15 @@ export type {
   ClassSetLessonStatusResponse,
   LessonStatusAction,
 } from './models/classroom/classroomCallables';
+
+// Theme rebuild ("Re-theme with AI") callable contract
+export type {
+  ThemeRebuildMode,
+  ThemeRebuildRequest,
+  ThemeRebuildPreviewTheme,
+  ThemeRebuildPreviewResponse,
+  ThemeRebuildApplyResponse,
+  ThemeRebuildResponse,
+  ThemeRebuildFailureReason,
+} from './models/themeRebuild/themeRebuildCallables';
+export { THEME_SOURCE_LLM_REBUILD } from './models/themeRebuild/themeRebuildCallables';

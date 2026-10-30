@@ -204,6 +204,14 @@ export const StatementSchema = object({
 	derivedFromStatementId: optional(string()), // origin statement when this option was synthesized by a pipeline (e.g. compound-response decomposition)
 	derivedByPipeline: optional(picklist(['topic-cluster', 'synthesis'])), // identifies the pipeline that created this synthetic option (used for idempotent rerun)
 	synthesisRunId: optional(string()), // id of the run that produced this derived option — enables surgical per-run cleanup & provenance
+	/**
+	 * Theme provenance, set by the admin "Re-theme with AI" batch rebuild.
+	 * Plain optional strings, NOT picklist values: a new picklist value breaks
+	 * strict parses of older clients. Known value of themeSource: 'llm-rebuild'.
+	 */
+	themeSource: optional(string()),
+	themeRule: optional(string()), // one-line inclusion criterion of a rebuilt theme
+	themeRebuildRunId: optional(string()), // run id of the rebuild that last wrote this theme
 	synthesisMechanism: optional(picklist(['bulk', 'live-spawn', 'live-attach'])), // which synthesis path created this derived option
 	titleLockedByCreator: optional(boolean()), // when true, the creator has manually edited the cluster title — suppress AI regeneration
 	condensationStatus: optional(

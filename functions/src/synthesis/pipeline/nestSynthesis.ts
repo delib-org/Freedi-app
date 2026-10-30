@@ -127,6 +127,77 @@ export function toThemeOption(theme: Statement, titleById: Map<string, string>):
 	};
 }
 
+/** Why an atomic append did not write. */
+export type AppendRefusal =
+	| 'theme-gone'
+	| 'already-member'
+	| 'already-owned'
+	| 'theme-update-failed';
+
+export type AppendOutcome =
+	| { applied: true; previous: string[]; next: string[] }
+	| { applied: false; reason: AppendRefusal };
+
+class AppendAbort extends Error {
+	constructor(readonly reason: AppendRefusal) {
+		super(reason);
+	}
+}
+
+/**
+ * Append `itemId` to a theme's `integratedOptions`, inside a transaction that
+ * re-reads the theme and the item's owners. The listing the judge saw is
+ * stale by the time its verdict returns (the queue worker, the cron and the
+ * triggers all file concurrently), so the write must not trust it: the theme
+ * must still be visible and the item must still belong to no visible cluster.
+ * Same rule as `fileUnthemed.applyFiling`.
+ *
+ * `replaceIds` are dropped from the theme in the same write (a synthesis
+ * replaces its own members sitting directly in the theme).
+ */
+export async function appendToThemeAtomically(
+	themeId: string,
+	itemId: string,
+	replaceIds: string[] = [],
+): Promise<AppendOutcome> {
+	const themeRef = db().collection(Collections.statements).doc(themeId);
+	const ownersQuery = db()
+		.collection(Collections.statements)
+		.where('integratedOptions', 'array-contains', itemId);
+
+	try {
+		return await db().runTransaction(async (tx) => {
+			const themeSnap = await tx.get(themeRef);
+			const ownersSnap = await tx.get(ownersQuery);
+			const theme = themeSnap.exists ? (themeSnap.data() as Statement) : null;
+			if (!theme || theme.hide === true) throw new AppendAbort('theme-gone');
+
+			const liveOwners = ownersSnap.docs
+				.map((d) => d.data() as Statement)
+				.filter((owner) => owner.hide !== true);
+			if (liveOwners.some((owner) => owner.statementId === themeId)) {
+				throw new AppendAbort('already-member');
+			}
+			if (liveOwners.length > 0) throw new AppendAbort('already-owned');
+
+			const previous = theme.integratedOptions ?? [];
+			const next = [...previous.filter((id) => !replaceIds.includes(id)), itemId];
+			tx.update(themeRef, { integratedOptions: next, lastUpdate: Date.now() });
+
+			return { applied: true as const, previous, next };
+		});
+	} catch (error) {
+		if (error instanceof AppendAbort) return { applied: false, reason: error.reason };
+		logger.warn('synthesis.nest: atomic theme append failed', {
+			themeId,
+			itemId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return { applied: false, reason: 'theme-update-failed' };
+	}
+}
+
 /**
  * Create a theme around a single synthesis.
  *
@@ -273,26 +344,11 @@ export async function nestSynthUnderTopic(input: NestInput): Promise<NestResult>
 	const theme = themes.find((t) => t.statementId === decision.themeId);
 	if (!theme) return { nested: false, reason: 'chosen-theme-vanished' };
 
-	const previous = theme.integratedOptions ?? [];
-	if (previous.includes(synthId)) return { nested: false, reason: 'already-member' };
 	// Any of the synthesis's members sitting directly in the theme are replaced by
 	// the synthesis itself, so nothing is claimed twice.
-	const next = [...previous.filter((id) => !memberIds.includes(id)), synthId];
-
-	try {
-		await db()
-			.collection(Collections.statements)
-			.doc(theme.statementId)
-			.update({ integratedOptions: next, lastUpdate: Date.now() });
-	} catch (error) {
-		logger.warn('synthesis.nest: theme update failed', {
-			synthId,
-			topicClusterId: theme.statementId,
-			error: error instanceof Error ? error.message : String(error),
-		});
-
-		return { nested: false, reason: 'theme-update-failed' };
-	}
+	const appended = await appendToThemeAtomically(theme.statementId, synthId, memberIds);
+	if (!appended.applied) return { nested: false, reason: appended.reason };
+	const { previous, next } = appended;
 
 	logger.info('synthesis.pipeline.nest', {
 		synthId,
@@ -366,26 +422,15 @@ export async function assignOptionToTheme(input: {
 	const theme = themes.find((t) => t.statementId === decision.themeId);
 	if (!theme) return { themeId: null, reason: 'chosen-theme-vanished' };
 
-	const previous = theme.integratedOptions ?? [];
-	if (previous.includes(option.statementId)) {
-		return { themeId: theme.statementId, reason: 'already-member' };
-	}
-	const next = [...previous, option.statementId];
+	const appended = await appendToThemeAtomically(theme.statementId, option.statementId);
+	if (!appended.applied) {
+		if (appended.reason === 'already-member') {
+			return { themeId: theme.statementId, reason: 'already-member' };
+		}
 
-	try {
-		await db()
-			.collection(Collections.statements)
-			.doc(theme.statementId)
-			.update({ integratedOptions: next, lastUpdate: Date.now() });
-	} catch (error) {
-		logger.warn('synthesis.nest: theme update failed for option', {
-			optionId: option.statementId,
-			topicClusterId: theme.statementId,
-			error: error instanceof Error ? error.message : String(error),
-		});
-
-		return { themeId: null, reason: 'theme-update-failed' };
+		return { themeId: null, reason: appended.reason };
 	}
+	const { previous, next } = appended;
 
 	logger.info('synthesis.pipeline.optionThemed', {
 		optionId: option.statementId,

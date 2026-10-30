@@ -1,0 +1,90 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed42-themefix",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 9,
+ "themesWithMembers": 9,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  8,
+  6,
+  6,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5
+ ],
+ "ms": 14680,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 2534,
+   "completion": 864
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 3385,
+   "completion": 668
+  }
+ },
+ "usd": 0.0169146,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Affordable Housing and Renovation",
+   "rule": "Proposals that increase, preserve, finance, make transparent, or improve the energy efficiency of residential housing, including student housing and tenant rent information.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "Education and Student Support",
+   "rule": "Proposals concerning school staffing, class conditions, facilities, academic support, meals, or extracurricular instruction for children and pupils.",
+   "size": 6
+  },
+  {
+   "key": "t3",
+   "name": "Healthcare and Care Services",
+   "rule": "Proposals that expand medical access, preventive health services, mental-health support, emergency medical response, or care for older residents.",
+   "size": 5
+  },
+  {
+   "key": "t4",
+   "name": "Public Transit and Active Travel",
+   "rule": "Proposals that improve bus availability, fares, rider information, cycling infrastructure, or other routine ways residents travel without private cars.",
+   "size": 5
+  },
+  {
+   "key": "t5",
+   "name": "Digital City Access",
+   "rule": "Proposals that make municipal information or services accessible through online tools, digital assistance, public internet, open data, or a unified service-contact channel.",
+   "size": 5
+  },
+  {
+   "key": "t6",
+   "name": "Environmental Sustainability and Green Space",
+   "rule": "Proposals focused on renewable energy, waste reduction and recycling, pollution monitoring, street trees, nearby green spaces, or community food-growing land.",
+   "size": 8
+  },
+  {
+   "key": "t7",
+   "name": "Local Jobs and Small Business",
+   "rule": "Proposals that support workers, require local hiring, reduce barriers for businesses, provide business finance, or supply workspace for independent workers.",
+   "size": 5
+  },
+  {
+   "key": "t8",
+   "name": "Culture, Recreation and Community Places",
+   "rule": "Proposals that provide cultural events or access, public art, libraries, playgrounds, dog areas, or other neighborhood recreation and gathering amenities.",
+   "size": 6
+  },
+  {
+   "key": "t9",
+   "name": "Neighborhood Safety and Protection",
+   "rule": "Proposals that reduce crime or physical danger through policing, surveillance, lighting, traffic calming, or faster fire and ambulance station coverage.",
+   "size": 5
+  }
+ ]
+}

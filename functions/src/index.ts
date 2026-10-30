@@ -1163,6 +1163,7 @@ export { synthesizeNow } from './synthesis/admin/fn_synthesizeNow';
 export { claimRegistryFirstRun } from './synthesis/admin/fn_claimRegistryFirstRun';
 export { reCluster } from './synthesis/admin/fn_reCluster';
 export { globalCluster } from './synthesis/admin/fn_globalCluster';
+export { rebuildThemes } from './synthesis/themeRebuild/fn_rebuildThemes';
 export { reEmbedQuestion } from './synthesis/admin/fn_reEmbedQuestion';
 export { synthesizeSelected } from './synthesis/admin/fn_synthesizeSelected';
 export { rejudgeGrayBand } from './synthesis/admin/fn_rejudgeGrayBand';

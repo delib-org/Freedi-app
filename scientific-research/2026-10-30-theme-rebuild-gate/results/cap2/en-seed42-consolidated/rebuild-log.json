@@ -1,0 +1,104 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed42-consolidated",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 11,
+ "themesWithMembers": 11,
+ "otherCount": 1,
+ "unanswered": 0,
+ "sizes": [
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  4,
+  3,
+  2
+ ],
+ "ms": 18506,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 938,
+   "completion": 884
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 1914,
+   "completion": 555
+  }
+ },
+ "usd": 0.013532800000000001,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "School Learning Support",
+   "rule": "Proposals that improve K–12 education through academic support, school facilities, teacher retention, class conditions, or student meals belong here.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "Housing Affordability and Supply",
+   "rule": "Proposals that make housing more affordable, improve existing homes, increase residential supply, or provide student housing belong here.",
+   "size": 5
+  },
+  {
+   "key": "t3",
+   "name": "Waste Reduction and Recycling",
+   "rule": "Proposals that reduce discarded materials through composting, recycling collection, or restrictions on disposable products belong here.",
+   "size": 3
+  },
+  {
+   "key": "t4",
+   "name": "Arts and Cultural Access",
+   "rule": "Proposals that provide public art, cultural events, museum access, or arts instruction belong here.",
+   "size": 4
+  },
+  {
+   "key": "t5",
+   "name": "Digital City Access",
+   "rule": "Proposals that improve access to city information or services through online tools, service channels, public connectivity, or digital assistance belong here.",
+   "size": 5
+  },
+  {
+   "key": "t6",
+   "name": "Small Business and Workforce Opportunity",
+   "rule": "Proposals that support businesses, independent workers, job seekers, or local hiring through finance, workspace, licensing, training, or contracting belong here.",
+   "size": 5
+  },
+  {
+   "key": "t7",
+   "name": "Transit and Active Travel",
+   "rule": "Proposals that improve public-transit service or make cycling and other everyday travel alternatives to driving more practical belong here.",
+   "size": 5
+  },
+  {
+   "key": "t8",
+   "name": "Parks, Trees and Recreation",
+   "rule": "Proposals that create or upgrade parks, playgrounds, community gardens, street trees, or neighborhood recreation spaces belong here.",
+   "size": 5
+  },
+  {
+   "key": "t9",
+   "name": "Health and Care Services",
+   "rule": "Proposals that expand medical care, mental-health support, preventive screening, or in-home support for residents belong here.",
+   "size": 5
+  },
+  {
+   "key": "t10",
+   "name": "Neighborhood Safety Response",
+   "rule": "Proposals that prevent or respond to physical harm through emergency services, policing, surveillance, street lighting, or traffic calming belong here.",
+   "size": 5
+  },
+  {
+   "key": "t11",
+   "name": "Clean Air and Municipal Energy",
+   "rule": "Proposals that monitor air pollution or reduce municipal energy emissions through clean-energy infrastructure belong here.",
+   "size": 2
+  }
+ ]
+}

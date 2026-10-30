@@ -4486,5 +4486,19 @@
   "Totals": "Totales",
   "Map scale": "Escala del mapa",
   "Fuller dot = more evaluators": "Punto más lleno = más evaluadores",
-  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "Esta pregunta ya tiene votos en sus ideas combinadas. Reconstruir los eliminaría, por eso está bloqueado."
+  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "Esta pregunta ya tiene votos en sus ideas combinadas. Reconstruir los eliminaría, por eso está bloqueado.",
+  "Re-theme with AI": "Reorganizar temas con IA",
+  "Rebuilds the themes from all ideas at once. Merged ideas are not changed.": "Reconstruye los temas a partir de todas las ideas a la vez. Las ideas fusionadas no cambian.",
+  "Proposed themes": "Temas propuestos",
+  "Review the proposed themes. Nothing changes until you apply.": "Revisa los temas propuestos. Nada cambia hasta que los apliques.",
+  "Keeps existing theme": "Mantiene un tema existente",
+  "Examples": "Ejemplos",
+  "Another clustering run is in progress. Try again when it finishes.": "Hay otro proceso de agrupación en curso. Vuelve a intentarlo cuando termine.",
+  "This preview expired. Run the preview again.": "Esta vista previa caducó. Vuelve a generarla.",
+  "There are no ideas to group yet.": "Todavía no hay ideas para agrupar.",
+  "Themes rebuilt": "Temas reconstruidos",
+  "Ideas placed": "Ideas asignadas",
+  "Apply": "Aplicar",
+  "Ideas the AI could not sort": "Ideas que la IA no pudo clasificar",
+  "They are under Other ideas. Run the preview again to retry them.": "Están en Otras ideas. Vuelve a generar la vista previa para intentarlo de nuevo."
 }

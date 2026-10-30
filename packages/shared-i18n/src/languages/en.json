@@ -5166,5 +5166,18 @@
   "Totals": "Totals",
   "Map scale": "Map scale",
   "Fuller dot = more evaluators": "Fuller dot = more evaluators",
-  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked."
+  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.",
+  "Re-theme with AI": "Re-theme with AI",
+  "Rebuilds the themes from all ideas at once. Merged ideas are not changed.": "Rebuilds the themes from all ideas at once. Merged ideas are not changed.",
+  "Proposed themes": "Proposed themes",
+  "Review the proposed themes. Nothing changes until you apply.": "Review the proposed themes. Nothing changes until you apply.",
+  "Keeps existing theme": "Keeps existing theme",
+  "Examples": "Examples",
+  "Another clustering run is in progress. Try again when it finishes.": "Another clustering run is in progress. Try again when it finishes.",
+  "This preview expired. Run the preview again.": "This preview expired. Run the preview again.",
+  "There are no ideas to group yet.": "There are no ideas to group yet.",
+  "Themes rebuilt": "Themes rebuilt",
+  "Ideas placed": "Ideas placed",
+  "Ideas the AI could not sort": "Ideas the AI could not sort",
+  "They are under Other ideas. Run the preview again to retry them.": "They are under Other ideas. Run the preview again to retry them."
 }

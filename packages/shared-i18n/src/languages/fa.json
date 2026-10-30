@@ -4964,5 +4964,19 @@
   "Totals": "مجموع‌ها",
   "Map scale": "مقیاس نقشه",
   "Fuller dot = more evaluators": "نقطهٔ پررنگ‌تر = ارزیابان بیشتر",
-  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "این پرسش از قبل روی ایده‌های ادغام‌شده‌اش رأی دارد. بازسازی آن‌ها را حذف می‌کند، بنابراین مسدود شده است."
+  "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.": "این پرسش از قبل روی ایده‌های ادغام‌شده‌اش رأی دارد. بازسازی آن‌ها را حذف می‌کند، بنابراین مسدود شده است.",
+  "Re-theme with AI": "بازچینی موضوع‌ها با هوش مصنوعی",
+  "Rebuilds the themes from all ideas at once. Merged ideas are not changed.": "موضوع‌ها را یک‌جا از همهٔ ایده‌ها از نو می‌سازد. ایده‌های ادغام‌شده تغییر نمی‌کنند.",
+  "Proposed themes": "موضوع‌های پیشنهادی",
+  "Review the proposed themes. Nothing changes until you apply.": "موضوع‌های پیشنهادی را بررسی کنید. تا زمانی که اعمال نکنید چیزی تغییر نمی‌کند.",
+  "Keeps existing theme": "موضوع موجود را نگه می‌دارد",
+  "Examples": "نمونه‌ها",
+  "Another clustering run is in progress. Try again when it finishes.": "یک فرایند گروه‌بندی دیگر در حال اجراست. پس از پایان آن دوباره تلاش کنید.",
+  "This preview expired. Run the preview again.": "این پیش‌نمایش منقضی شده است. پیش‌نمایش را دوباره اجرا کنید.",
+  "There are no ideas to group yet.": "هنوز ایده‌ای برای گروه‌بندی وجود ندارد.",
+  "Themes rebuilt": "موضوع‌ها از نو ساخته شدند",
+  "Ideas placed": "ایده‌های جای‌گرفته",
+  "Apply": "اعمال",
+  "Ideas the AI could not sort": "ایده‌هایی که هوش مصنوعی نتوانست دسته‌بندی کند",
+  "They are under Other ideas. Run the preview again to retry them.": "آن‌ها زیر ایده‌های دیگر قرار دارند. برای تلاش دوباره، پیش‌نمایش را دوباره اجرا کنید."
 }

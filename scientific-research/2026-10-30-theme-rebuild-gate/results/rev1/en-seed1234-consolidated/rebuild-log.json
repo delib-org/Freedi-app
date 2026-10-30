@@ -1,0 +1,90 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed1234-consolidated",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 9,
+ "themesWithMembers": 9,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  8,
+  7,
+  6,
+  6,
+  5,
+  5,
+  5,
+  4,
+  4
+ ],
+ "ms": 20439,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 1002,
+   "completion": 1283
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 1733,
+   "completion": 791
+  }
+ },
+ "usd": 0.0186958,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Affordable Housing and Rentals",
+   "rule": "Proposals that create, convert, subsidize, improve, or regulate housing and rental conditions.",
+   "size": 4
+  },
+  {
+   "key": "t2",
+   "name": "Schools and Learning Support",
+   "rule": "Proposals that improve schools, student services, educational enrichment, libraries, or learning opportunities.",
+   "size": 7
+  },
+  {
+   "key": "t3",
+   "name": "Public Spaces and Culture",
+   "rule": "Proposals that add or improve parks, gardens, trees, play and pet facilities, public art, museums, or community cultural events.",
+   "size": 8
+  },
+  {
+   "key": "t4",
+   "name": "Transit and Street Mobility",
+   "rule": "Proposals that improve public transit, cycling infrastructure, traffic calming, crossings, or safe movement on streets.",
+   "size": 6
+  },
+  {
+   "key": "t5",
+   "name": "Environmental Sustainability",
+   "rule": "Proposals that reduce environmental impacts through clean energy, waste reduction and collection, or environmental monitoring.",
+   "size": 6
+  },
+  {
+   "key": "t6",
+   "name": "Neighborhood Safety",
+   "rule": "Proposals that improve emergency response, crime prevention, policing, surveillance, or safety lighting in public areas.",
+   "size": 4
+  },
+  {
+   "key": "t7",
+   "name": "Health and Care Access",
+   "rule": "Proposals that expand medical, mental-health, preventive, specialist, or in-home care services.",
+   "size": 5
+  },
+  {
+   "key": "t8",
+   "name": "Municipal Access and Digital Services",
+   "rule": "Proposals that make city services, municipal information, government data, or public digital access easier to use.",
+   "size": 5
+  },
+  {
+   "key": "t9",
+   "name": "Local Jobs and Business Support",
+   "rule": "Proposals that support businesses, local hiring, workspaces, licensing, or workers' career reskilling.",
+   "size": 5
+  }
+ ]
+}

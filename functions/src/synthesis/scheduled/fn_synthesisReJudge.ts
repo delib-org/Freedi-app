@@ -12,6 +12,7 @@ import { consolidateThemes } from '../pipeline/consolidateThemes';
 import { splitOversizedThemes } from '../pipeline/splitThemes';
 import { fileUnthemedAtoms } from '../pipeline/fileUnthemed';
 import { loadSynthesisSettingsFromStatement } from '../pipeline/loadSynthesisSettings';
+import { loadLiveThemes, selectFileOnlyParents, sweepFileOnlyParents } from './reJudgeFileOnly';
 import { enqueueItem, ensureQueueRun } from '../queue/enqueue';
 import {
 	computeParentFingerprint,
@@ -969,15 +970,6 @@ export const fn_synthesisReJudge = onSchedule(
 				.where('hide', '==', false)
 				.limit(SYNTH_QUERY_LIMIT)
 				.get();
-			if (snap.empty) {
-				await saveGlobalState({
-					lastSeenStatementUpdate: highWaterMark,
-					lastFullSweepAt: startedAt,
-				});
-
-				return;
-			}
-
 			const byParent = new Map<string, Statement[]>();
 			for (const doc of snap.docs) {
 				const s = doc.data() as Statement;
@@ -985,6 +977,9 @@ export const fn_synthesisReJudge = onSchedule(
 				list.push(s);
 				byParent.set(s.parentId, list);
 			}
+			// Parents with a live theme but fewer than two syntheses: the loop
+			// below skips them, so they get the file-unthemed step on its own.
+			const fileOnlyParents = selectFileOnlyParents(byParent, await loadLiveThemes());
 
 			let totalMerges = 0;
 			let parentsProcessed = 0;
@@ -1020,6 +1015,13 @@ export const fn_synthesisReJudge = onSchedule(
 				}
 			}
 
+			// Same per-tick budget: file-only parents use what the full pass left.
+			const fileOnly = await sweepFileOnlyParents(
+				fileOnlyParents,
+				Math.max(0, MAX_PARENTS_PER_SWEEP - parentsProcessed),
+				startedAt,
+			);
+
 			await saveGlobalState({
 				lastSeenStatementUpdate: highWaterMark,
 				lastFullSweepAt: startedAt,
@@ -1029,6 +1031,9 @@ export const fn_synthesisReJudge = onSchedule(
 				parentsProcessed,
 				parentsSkipped,
 				parentsDormant,
+				fileOnlyProcessed: fileOnly.processed,
+				fileOnlySkipped: fileOnly.skipped,
+				fileOnlyDormant: fileOnly.dormant,
 				totalMerges,
 				durationMs: Date.now() - startedAt,
 			});

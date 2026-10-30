@@ -1,0 +1,1014 @@
+{
+  "synths": {
+    "items": [
+      {
+        "id": "-lmNJpTt4AAC",
+        "title": "התקינו תאורת רחוב בהירה יותר ברחובות ובמעברים חשוכים",
+        "description": "העירייה צריכה לשפר את תאורת הרחוב ברחובות, בדרכים, בשבילים ובמעברים שבהם התאורה חלשה או חסרה. יש להתקין מנורות בהירות יותר כדי להפוך אזורים אלה למוארים יותר ולצמצם את התחושה והקושי הנלווים להליכה או למעבר במרחבים חשוכים. המהלך יתמקד במקומות שהוגדרו כהולכים ונעשים חשוכים או מוארים באופן בלתי מספק, בלי להרחיבו מעבר להם.",
+        "members": [
+          {
+            "id": "mCbvcsXwzmWA"
+          },
+          {
+            "id": "OPL9DLpjnYu5"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "-mIN7OkVVIv8",
+        "title": "הקצו מענקים לשדרוג דירות ותיקות להתייעלות אנרגטית",
+        "description": "העירייה תקצה תקציב למענקים ולסבסוד שדרוגן של דירות ותיקות, כדי להפחית את צריכת האנרגיה בהן. התמיכה תכוון לשיפוצים ולשדרוגים המשפרים את היעילות האנרגטית של דירות מיושנות, ותאפשר לבעלי הדירות לבצע את ההתאמות הנדרשות. כך יתמקד התקצוב בהפיכת מלאי הדירות הוותיק לחסכוני יותר באנרגיה באמצעות סיוע עירוני ייעודי.",
+        "members": [
+          {
+            "id": "h66XEWkW0LiD"
+          },
+          {
+            "id": "rOoZVuU7KVxg"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "2VGhBRcz3iIB",
+        "title": "מימון תוכניות הכשרה והסבה מקצועית למחליפי קריירה",
+        "description": "העירייה תממן תוכניות הכשרה מחדש וקורסי הסבה מקצועית עבור אנשים המחליפים קריירה או עיסוק. המימון יאפשר למשתתפים לרכוש מיומנויות מקצועיות המתאימות למעבר לתחום עבודה חדש, באמצעות קורסים ותוכניות הכשרה ייעודיות.",
+        "members": [
+          {
+            "id": "JiL25v2C6H9k"
+          },
+          {
+            "id": "J9eH7jurCLMu"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "4TDJ5W62jGeV",
+        "title": "לאפשר ביצוע מלא של הליכים עירוניים באופן מקוון",
+        "description": "העירייה תאפשר לתושבים למלא טפסים עירוניים ולבצע הליכים עירוניים באופן מקוון ברשת. השירות המקוון יחליף את הצורך בהגשת טפסים ובביצוע הליכים באופן שאינו מקוון, כך שתושבים יוכלו להשלים את התהליך דרך האינטרנט.",
+        "members": [
+          {
+            "id": "XluqzpNOnsp9"
+          },
+          {
+            "id": "vaUGxOO0OI-4"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "5GovT3RAlH6J",
+        "title": "להסב מבני משרדים ומסחר ריקים לדירות מגורים",
+        "description": "העירייה תפעל להסבת מבני משרדים ריקים ומבנים מסחריים שאינם מאוכלסים לדירות מגורים. המהלך יתמקד בהעברת נכסים בלתי מנוצלים לשימוש מגורים, במקום להותירם ריקים, ויקדם התאמה של מבנים אלה למגורים. כך ניתן להרחיב את השימוש למגורים במבנים קיימים ולנצל טוב יותר שטחים בנויים שאינם מאוכלסים.",
+        "members": [
+          {
+            "id": "waraEPgCRPO8"
+          },
+          {
+            "id": "xHoGQGneiIcV"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "5TVuc6D2fMuj",
+        "title": "קצרו את זמני ההמתנה לפגישות עם רופאים מומחים",
+        "description": "העירייה תפעל לקיצור משך הזמן שמטופלים ממתינים עד לקביעת פגישה עם רופא מומחה. המהלך יתמקד בשיפור זמינות התורים לרופאים מומחים, כדי לאפשר לתושבים לקבל טיפול מקצועי בזמן סביר ולצמצם עיכובים בטיפול.",
+        "members": [
+          {
+            "id": "aiaEq1EgGiXa"
+          },
+          {
+            "id": "sj9xDu-sDFVp"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "7mtrMGizJbwK",
+        "title": "להפעיל איסוף שבועי של חומרי מיחזור מכל בית",
+        "description": "העירייה תספק שירות איסוף שבועי של חומרים למיחזור מכל בית, באמצעות איסוף מהמדרכה או מפתח הבית. השירות יאפשר לתושבים להעביר חומרים למיחזור באופן קבוע ונגיש, בלי להסתמך רק על הובלה עצמית לנקודות איסוף.",
+        "members": [
+          {
+            "id": "toQ1gTQoUciK"
+          },
+          {
+            "id": "wqxFAIdxZsi-"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "D0jtDn8CHQTj",
+        "title": "לתקצב לימודי נגינה חינם לילדים",
+        "description": "העירייה תממן שיעורי מוזיקה והוראת נגינה בכלים ללא עלות לילדים. המהלך יסיר את החסם הכלכלי להשתתפות בלימודי מוזיקה ויאפשר לילדים ללמוד נגינה ללא תשלום.",
+        "members": [
+          {
+            "id": "TwkTWsus5VgE"
+          },
+          {
+            "id": "Up9Ta0yz0elp"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "Df2ZMwnd6pBG",
+        "title": "לשתול שדרות עצי צל לאורך הרחובות והמדרכות",
+        "description": "העירייה תרחיב את נטיעת עצי הצל לאורך הרחובות ועל המדרכות, באמצעות יצירת שדרות עצים שיספקו צל להולכים. הפעולה תשפר את נוחות ההליכה במרחב הציבורי ותהפוך את הרחובות למוצלים יותר עבור תושבי העיר.",
+        "members": [
+          {
+            "id": "g2nskAqq41BC"
+          },
+          {
+            "id": "KvNU4QHKfE3w"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "Dp0r3ngDXjaN",
+        "title": "להפעיל תוכניות בדיקות סקר חינמיות לגילוי מוקדם של מחלות",
+        "description": "העירייה תפעיל תוכניות ומבצעי בדיקות סקר ללא תשלום, שנועדו לאתר מחלות בשלב מוקדם. ההצעה מתמקדת בהסרת העלות מן הנבדקים ובהעמדת בדיקות סקר כמנגנון לגילוי מוקדם, בלי לקבוע מראש אילו מחלות ייכללו, מי יבצע את הבדיקות או היכן יתקיימו. בעת היישום יש להגדיר את פרטי ההפעלה כך שיישמרו שני עקרונות היסוד: בדיקות סקר חינמיות ומיקוד באיתור מוקדם של מחלות.",
+        "members": [
+          {
+            "id": "p7ZPMxJiag4l"
+          },
+          {
+            "id": "WxNPLclHbncZ"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "G0oLtzMb01iB",
+        "title": "הגדילו את תגמול המורים כדי לשמר מחנכים מצוינים",
+        "description": "העירייה צריכה לפעול להגדלת התגמול למורים, כדי למשוך מחנכים טובים למקצוע ולסייע בשימורם לאורך זמן. תגמול משופר יחזק את יכולתן של מסגרות החינוך לשמור על מחנכים מצוינים ועל איכות ההוראה.",
+        "members": [
+          {
+            "id": "pz6dLWieytqd"
+          },
+          {
+            "id": "yXHIOaPFJgQU"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "GnG1C6NqMnVT",
+        "title": "להזמין ולממן אמנים מקומיים ליצירת אמנות במרחב הציבורי",
+        "description": "העירייה תזמין ותשלם לאמנים מקומיים כדי ליצור ציורי קיר ופסלים בכיכרות ציבוריות וברחבי העיר. המהלך יחזק את הנראות של אמנות מקומית במרחב הציבורי וייתן לאמנים מקומיים הזדמנויות עבודה ויצירה.",
+        "members": [
+          {
+            "id": "NAq9Wv8oDit0"
+          },
+          {
+            "id": "O5uaT1gRJ0jN"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "LMQbTQhv5vzq",
+        "title": "סללו שבילי אופניים מוגנים ומופרדים מתנועת המכוניות",
+        "description": "העירייה צריכה לסלול שבילי אופניים מוגנים, המופרדים פיזית מתנועת המכוניות, כדי לאפשר רכיבה בטוחה יותר. התכנון והביצוע צריכים להתמקד ביצירת הפרדה ממשית בין הרוכבים לכלי הרכב, ולא רק בסימון נתיב על הכביש.",
+        "members": [
+          {
+            "id": "ae7jJc3r7MTH"
+          },
+          {
+            "id": "TLguY47vNTWj"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "N8gniQH7wf8B",
+        "title": "הנהיגו נסיעה חינם בתחבורה הציבורית לכלל תלמידי בית הספר",
+        "description": "העירייה צריכה להנהיג נסיעה חינם בתחבורה הציבורית עבור ילדים בגילי בית הספר ותלמידים מתחת לגיל שמונה עשרה. ההצעה מתמקדת בהסרת תשלום הנסיעה עבור אוכלוסייה זו, ולא בשינוי אחר של שירותי התחבורה. היא מאחדת את שתי הנוסחאות לאותה מדיניות: ילדים ותלמידים בגיל הרלוונטי יוכלו להשתמש בתחבורה הציבורית בלי לשלם. פרטי התפעול, המימון והאחריות אינם מוגדרים בהצעות ולכן אינם חלק מההכרעה המוצעת.",
+        "members": [
+          {
+            "id": "Mny9MNmS1Ant"
+          },
+          {
+            "id": "9teRKQr-H7Jt"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "RJkrl3Xt8zJ9",
+        "title": "להעניק לתושבים ייעוץ וטיפול פסיכולוגי חינם באמצעות העירייה",
+        "description": "העירייה תעמיד לתושבים שירותי ייעוץ נפשי וטיפול פסיכולוגי ללא עלות. מטרת המהלך היא להסיר את המחסום הכספי לקבלת תמיכה מקצועית בתחום בריאות הנפש, כך שתושבים המבקשים סיוע יוכלו לקבלו בחינם. ההצעה מאחדת את הדרישה למתן ייעוץ נפשי חינם עם הדרישה לשירותי טיפול פסיכולוגי ללא עלות, כאותו מענה ציבורי נגיש.",
+        "members": [
+          {
+            "id": "4gMOhn-tMSEK"
+          },
+          {
+            "id": "oxgkbWJK0W9p"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "RQw3c72niJvm",
+        "title": "להקים רשת אלחוטית ציבורית חינמית בכיכרות ובמרכזים קהילתיים",
+        "description": "העירייה תספק גישה חינמית לאינטרנט אלחוטי בכיכרות הציבוריות ובמרכזים הקהילתיים. הרשת תאפשר לתושבים להתחבר במרחבים אלה ללא תשלום ותהפוך את השירות הדיגיטלי לנגיש יותר במוקדי מפגש קהילתיים.",
+        "members": [
+          {
+            "id": "-NmTzQ0iJCcW"
+          },
+          {
+            "id": "tZp5UZQyoHmC"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "SZalOAhucDCz",
+        "title": "להעמיד הלוואות בריבית נמוכה לעסקים קטנים מקומיים",
+        "description": "העירייה תציע מסלול אשראי זול לעסקים קטנים מקומיים ושכונתיים, באמצעות הלוואות בריבית נמוכה. המהלך נועד להקל על עסקים אלה לקבל מימון בתנאים נגישים יותר ולחזק את הפעילות הכלכלית המקומית.",
+        "members": [
+          {
+            "id": "UFh9eflTswa4"
+          },
+          {
+            "id": "cHt1oAChD1iD"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "TRZri14kkkAH",
+        "title": "להתקין מצלמות אבטחה באזורים בעלי ריכוז פשיעה",
+        "description": "העירייה תתקין מצלמות אבטחה באזורים שבהם מתרכזת הפשיעה, כדי לחזק את הבטיחות ואת תחושת הביטחון של התושבים. המיקוד יהיה באזורים החמים מבחינת עבריינות, בהתאם לצורך המקומי.",
+        "members": [
+          {
+            "id": "kk3rHh1LBGq7"
+          },
+          {
+            "id": "h4jhpZq5HvIB"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "TwT3Y9m12W2q",
+        "title": "הגדילו את תדירות האוטובוסים בשעות העומס",
+        "description": "העירייה צריכה להגדיל את מספר האוטובוסים המופעלים בשעות העומס, כך שהתדירות תהיה גבוהה יותר וזמני ההמתנה יתקצרו. המהלך יתמקד בהוספת שירות דווקא בשעות השיא, שבהן הביקוש לאוטובוסים גבוה וההמתנה עלולה להיות ממושכת. מטרתו היא לאפשר לתושבים להמתין פחות זמן לאוטובוס באמצעות תגבור ברור של ההיצע בשעות אלו, ולא באמצעות שינוי אחר בשירות.",
+        "members": [
+          {
+            "id": "FHifzzMSeXkP"
+          },
+          {
+            "id": "HZO9DI4m9fTk"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "U8-ZozUn2jrp",
+        "title": "הקמת מכלאות כלבים פתוחות ומגודרות בכל שכונה ורובע",
+        "description": "העירייה תקים בכל שכונה ורובע מתחמים פתוחים, מגודרים ומתוחמים שבהם כלבים יוכלו לשהות ולנוע ללא רצועה. המתחמים יספקו מקום ייעודי וברור לבעלי כלבים ולכלביהם, תוך הפרדה מהמרחב הציבורי הכללי באמצעות גידור ותיחום.",
+        "members": [
+          {
+            "id": "1fcvrSrEOk-2"
+          },
+          {
+            "id": "hSswtNAI9sYU"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "W2MBrRvF4rlS",
+        "title": "להפעיל שיעורי עזר והוראה מתקנת חינם אחר הצהריים",
+        "description": "העירייה תציע לתלמידים המתקשים בלימודים סיוע ללא עלות לאחר שעות הלימודים, הכולל שיעורי עזר והוראה מתקנת למשימות ולשיעורי בית. התוכנית תתמקד בתלמידים שנשארים מאחור ותספק להם מסגרת תמיכה נגישה שתסייע להם להשלים פערים לימודיים.",
+        "members": [
+          {
+            "id": "-x3SUJKJo0V5"
+          },
+          {
+            "id": "FQSBMwW9z4WW"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "WQC25nrpYBxx",
+        "title": "השיקו אפליקציה למעקב חי אחר זמני הגעת אוטובוסים",
+        "description": "העירייה תספק אפליקציה שתאפשר לנוסעים לעקוב בזמן אמת אחר האוטובוסים ולקבל מידע מדויק על זמני הגעתם. האפליקציה תציג את מיקום הרכב ואת זמן ההגעה הצפוי, כדי שנוסעים יוכלו לדעת מתי האוטובוס מגיע ולהתאים את הגעתם לתחנה. המהלך יתמקד בהנגשת מידע חי וברור לנוסעי האוטובוסים, במקום הסתמכות על זמני הגעה משוערים בלבד.",
+        "members": [
+          {
+            "id": "5Ahvj-98qchS"
+          },
+          {
+            "id": "6PcwZPyUcNOX"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "XdkFn-nTlWqs",
+        "title": "לפתוח סניף ספרייה ציבורית בכל שכונה ורובע בעיר",
+        "description": "העירייה תפתח ותמקם סניף ספרייה ציבורית מקומית בכל שכונה ורובע בעיר, כך שתושבים יוכלו להיעזר בשירותי ספרייה בקרבת מקום מגוריהם. המהלך יתמקד בהקמת נוכחות ספרייתית מקומית בכל יחידת אזור בעיר, ולא בהסתפקות בספרייה מרכזית אחת. פריסת הסניפים תיצור רשת ספריות שכונתית ורובעית שתהיה נגישה לאורך העיר ותענה על הצורך בספרייה ציבורית מקומית בכל אזור.",
+        "members": [
+          {
+            "id": "nRWLbvw2Iba9"
+          },
+          {
+            "id": "7zvqBwZ8gLjy"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "ZAc04h-0Md8v",
+        "title": "להקים מוקד טלפוני מאוחד לכל פניות השירות העירוניות",
+        "description": "העירייה תקים מספר טלפון אחד ומוקד טלפוני מאוחד לקבלת כל פניות השירות העירוניות. המוקד ירכז את הפניות במקום אחד, כך שהתושבים יוכלו לפנות בכתובת טלפונית ברורה ואחידה לכל בקשת שירות עירונית.",
+        "members": [
+          {
+            "id": "VKW2ZudnwJdF"
+          },
+          {
+            "id": "ziKfwAwEZ0ku"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "aKiENl3fsq4n",
+        "title": "להנגיש את כל מתקני המשחק בגני השעשועים לילדים עם מוגבלויות",
+        "description": "העירייה תפעל לכך שכל גן שעשועים וכל מתקן משחק יהיו נגישים וניתנים לשימוש גם בידי ילדים עם מוגבלויות. במסגרת זו ייבנו מחדש מתקני משחק שאינם מאפשרים שימוש נגיש, כדי שילדים עם מוגבלויות יוכלו ליהנות מכלל המתקנים ולא להיות מוגבלים למתקנים נפרדים או חלקיים.",
+        "members": [
+          {
+            "id": "p33T99jOVi0A"
+          },
+          {
+            "id": "mroR6HZSsxxN"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "b5q18ROIMx9o",
+        "title": "לקיים פסטיבלי רחוב ומופעי מוזיקה פתוחים באופן קבוע",
+        "description": "העירייה תקיים באופן קבוע פסטיבלי רחוב ומופעי מוזיקה באוויר הפתוח, כדי להרחיב את היצע התרבות הציבורית ולחזק את חוויית המרחב העירוני. התוכנית תתמקד באירועים פתוחים לקהל המתקיימים במרחב הציבורי.",
+        "members": [
+          {
+            "id": "QvrBUAfSZU3i"
+          },
+          {
+            "id": "ERAlrCTigMp0"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "cmjfKL7JZ1EC",
+        "title": "לפתוח חללי עבודה משותפים מסובסדים לעצמאים בעלות נמוכה",
+        "description": "יש לפתוח חללי עבודה משותפים מסובסדים, המציעים משרדים משותפים בעלות נמוכה לעובדים עצמאיים. המהלך יתמקד ביצירת אפשרות עבודה נגישה יותר לעצמאים באמצעות מרחב עבודה משותף, במקום להותיר את עלויות המשרד כנטל אישי. ההצעה דורשת פעולה עירונית מעשית לפתיחת החללים ולהעמדתם לרשות קהל היעד שהוגדר, תוך שמירה על אופי מסובסד ועל עלות נמוכה.",
+        "members": [
+          {
+            "id": "3mGKrsb-cEWS"
+          },
+          {
+            "id": "E4WZ876-2DaR"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "dcu5wScuJ1vZ",
+        "title": "שפצו ומודרניזו מבני בית ספר ותיקים, כיתות ומעבדות",
+        "description": "העירייה תוביל מהלך לשיפוץ ולמודרניזציה של מבני בית ספר ותיקים ומתקני בית ספר מיושנים. המהלך יכלול את הכיתות והמעבדות, וכן הוספת כיתות ומעבדות מודרניות, כדי לשלב בין חידוש התשתיות הקיימות לבין הרחבת מרחבי הלימוד המודרניים. כך השיפוץ לא יוגבל למעטפת המבנים, אלא יעסוק גם במתקני הלימוד שבתוכם וביצירת מרחבים מודרניים נוספים. ההצעה מתמקדת במבני בית הספר ובמתקנים שנזכרו בלבד.",
+        "members": [
+          {
+            "id": "EiiaOLf0D2Jt"
+          },
+          {
+            "id": "uGCw6c4HZbEQ"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "flb2uziISDuX",
+        "title": "להתקין מערכות פוטו־וולטאיות על גגות המבנים הציבוריים",
+        "description": "העירייה תתקין מערכות פוטו־וולטאיות, כלומר פאנלים סולאריים לייצור חשמל, על גגות המבנים הציבוריים והעירוניים. המהלך ינצל את שטחי הגג הקיימים לייצור אנרגיה סולארית ויהפוך את המבנים שבאחריות העירייה לחלק פעיל מתשתית האנרגיה המקומית.",
+        "members": [
+          {
+            "id": "0QoGVgsdQLcJ"
+          },
+          {
+            "id": "Zr215xdXZ6Zg"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "hgBRzjXqb2iv",
+        "title": "הרחיבו שירותי טיפול ותמיכה בבית עבור אנשים מבוגרים",
+        "description": "העירייה צריכה להרחיב את שירותי הטיפול והתמיכה הניתנים בבית לאנשים מבוגרים, כדי לאפשר להם להמשיך לחיות בבתיהם ככל האפשר. המהלך צריך להתמקד בחיזוק המענה הביתי עצמו, כך שהצורך במעבר למוסדות לא יהיה ברירת המחדל כאשר אדם מבוגר זקוק לעזרה, טיפול או תמיכה בחיי היומיום.",
+        "members": [
+          {
+            "id": "ZLTkckNJBY9x"
+          },
+          {
+            "id": "PTuGD8vxcm4q"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "i01wtcPKGzk-",
+        "title": "הקמת איסוף נפרד של פסולת מזון לקומפוסטציה",
+        "description": "העירייה תקים זרם איסוף נפרד לשאריות מזון מהמטבח, כדי להעבירן לקומפוסטציה במקום להשליכן עם יתר הפסולת. המהלך יהפוך פסולת מזון למשאב קומפוסט שימושי ויקדם טיפול ייעודי בפסולת אורגנית.",
+        "members": [
+          {
+            "id": "-Og940EgDY1I"
+          },
+          {
+            "id": "mfy4cqxPAeU0"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "i4WrWbN938qI",
+        "title": "התקינו אמצעי מיתון תנועה והגבירו בטיחות ליד בתי הספר",
+        "description": "העירייה צריכה להתקין אמצעי מיתון תנועה בקרבת בתי הספר, כדי לצמצם את מהירות כלי הרכב ולשפר את בטיחות ההליכה והחצייה באזור. המהלך יכלול פסי האטה, מעברי חצייה מוגבהים והרחבות מדרכה, בהתאם למאפייני כל מקום סמוך לבית ספר. שילוב אמצעים אלה ייצור סביבה רחובית בטוחה יותר עבור מי שמגיעים לבתי הספר ועוברים בקרבתם.",
+        "members": [
+          {
+            "id": "x29T-G771dfl"
+          },
+          {
+            "id": "veCqEd-YEidS"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "lhMphKclf3a4",
+        "title": "להקים פורטל פתוח לנתוני העירייה ולתקציבה",
+        "description": "העירייה תפרסם פורטל נתונים פתוחים לציבור, הכולל את תקציב העיר ונתוני עירייה רלוונטיים. הפורטל ירכז מידע נגיש על הוצאות העירייה ועל נתוני העיר, כדי לאפשר לתושבים לעיין בהם באופן פתוח.",
+        "members": [
+          {
+            "id": "JvsGFy9TqvWc"
+          },
+          {
+            "id": "QYttugqqDp11"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "m6swdKdMK-Vt",
+        "title": "לחייב דירות בהישג יד בכל פרויקט בנייה חדש",
+        "description": "העירייה תקבע כי יזמים ישלבו מכסה של דירות במחיר מופחת ובהישג יד בכל בניין חדש. כך תבטיח הבנייה החדשה גם אפשרויות מגורים נגישות יותר במחיר, לצד יתר הדירות בפרויקט.",
+        "members": [
+          {
+            "id": "YVxxAzvSzEGp"
+          },
+          {
+            "id": "Sbl0drhJnJN3"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "mN76gpX9S3lr",
+        "title": "להקים מרפאות רפואה ראשונית ובריאות המשפחה בשכונות חסרות מענה",
+        "description": "העירייה תפעל להוספת מרפאות מקומיות לרפואה ראשונית ולבריאות המשפחה בשכונות ובאזורים שאינם מקבלים כיום מענה. המהלך יתמקד בהנגשת שירותי בריאות בסיסיים קרוב למקום המגורים, כך שתושבים באזורים החסרים לא יישארו ללא מרפאה מקומית.",
+        "members": [
+          {
+            "id": "cQtxWfP5RQRF"
+          },
+          {
+            "id": "L1f75DbzFWoj"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "mVidOLgw72Kb",
+        "title": "להקים גינות כיס ופארקים ירוקים במרחק הליכה קצר",
+        "description": "העירייה תפעל להקמת גינות כיס ופארקים ירוקים קטנים כך שלכל בית תהיה גישה לשטח ירוק במרחק הליכה של כחמש דקות. המהלך יתמקד בהוספת מרחבים ירוקים קטנים ונגישים בתוך אזורי המגורים, כדי לחזק את איכות החיים היומיומית של התושבים.",
+        "members": [
+          {
+            "id": "YjEWdmoOZx0f"
+          },
+          {
+            "id": "hzjfbi9kC5PB"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "niDkSFTxUqED",
+        "title": "לקבוע יום שבועי של כניסה חינם למוזיאונים",
+        "description": "העירייה תקבע יום אחד בכל שבוע שבו הכניסה למוזיאונים תהיה ללא תשלום. המהלך יאפשר לתושבים ליהנות מתרבות וממוזיאונים ללא מחסום כספי ביום קבוע וברור.",
+        "members": [
+          {
+            "id": "2RVrB-wiYIEe"
+          },
+          {
+            "id": "oLhuuKardwec"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "oZKvEnGh6LdU",
+        "title": "הקמת מרשם ציבורי לנתוני דמי שכירות",
+        "description": "העירייה תקים ותפרסם מרשם ציבורי של נתוני דמי שכירות, שיאפשר לשוכרים לראות ולהשוות את מחירי השוק. המאגר יספק מידע נגיש ושקוף על מחירי שכירות, כדי לסייע לשוכרים להבין את רמות המחירים בעת חיפוש דירה או בחינת חוזה שכירות.",
+        "members": [
+          {
+            "id": "8Fw4EhQk8SLq"
+          },
+          {
+            "id": "v31JfQUUfSA3"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "qwLJrPkJOswX",
+        "title": "לחייב את ספקי וקבלני העירייה להעסיק תושבי העיר",
+        "description": "העירייה תחייב את ספקיה ואת קבלניה להעסיק אנשים מתוך העיר, כך שהעבודה הנעשית עבורה תיצור גם הזדמנויות תעסוקה לתושבי העיר. החובה תהפוך את העסקת תושבי העיר לדרישה ברורה מצד הרשות במסגרת התקשרויותיה עם הגופים המבצעים שירותים ועבודות עבורה. בכך תופנה ההוצאה העירונית גם ליצירת עבודה מקומית ולהעמדת התעסוקה של אנשים מתוך העיר במרכז דרישות העירייה.",
+        "members": [
+          {
+            "id": "7uydSp6GrOry"
+          },
+          {
+            "id": "ypFkHm0VvgxL"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "rn-NBXFDUfjL",
+        "title": "הגבילו את מספר התלמידים בכל כיתה לחיזוק היחס האישי",
+        "description": "העירייה צריכה להגביל את מספר התלמידים בכל כיתה, כך שלמורים יתאפשר להעניק לכל תלמיד ותלמידה תשומת לב ויחס אישי יותר. צמצום גודל הכיתות נועד להפוך את ההוראה לקרובה ומותאמת יותר, ולאפשר למורים להכיר טוב יותר את צורכי התלמידים במהלך הלמידה. ההצעה מתמקדת בגודל הכיתה כאמצעי ישיר לשיפור הקשר והליווי החינוכי בין המורה לתלמידים.",
+        "members": [
+          {
+            "id": "d3FZg9zcSYvn"
+          },
+          {
+            "id": "BRXt1J1huSVJ"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "tqUGTJOPZ3vF",
+        "title": "להגיש ארוחות צהריים חמות חינם לכל תלמיד במהלך יום הלימודים",
+        "description": "העירייה תפעל להגשת ארוחות צהריים חמות ללא עלות לכל תלמיד בבית הספר, כחלק מיום הלימודים. המהלך נועד להבטיח שכל התלמידים יקבלו ארוחה חמה בבית הספר ללא תשלום, באופן שוויוני ונגיש לכלל התלמידים.",
+        "members": [
+          {
+            "id": "tpGVy5VFr2t0"
+          },
+          {
+            "id": "DvOPqmqDIXkW"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "tx5cWCUY3Dif",
+        "title": "להקים מעונות סטודנטים מסובסדים בקרבת הקמפוסים",
+        "description": "העירייה תפעל להקמת מעונות סטודנטים בעלות נמוכה ובסבסוד, בסמוך לקמפוסים ולמוסדות הלימוד. המהלך נועד להגדיל את היצע המגורים הנגישים לסטודנטים הלומדים בקרבתם, באמצעות פתרון דיור ייעודי ולא באמצעות הרחבת פתרונות דיור כלליים.",
+        "members": [
+          {
+            "id": "8cGHGgE6s5B0"
+          },
+          {
+            "id": "e-OZPVurMABv"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "xoenmI80FD1p",
+        "title": "להפעיל שירות אוטובוסי לילה בסופי שבוע אחרי חצות",
+        "description": "העירייה תפעיל שירות אוטובוסי לילה בסופי שבוע עבור נוסעים הזקוקים לתחבורה בשעות הלילה המאוחרות, ובפרט אחרי חצות. השירות נועד לאפשר לאנשים לחזור הביתה בשעה מאוחרת במקום להישאר ללא מענה תחבורתי. יש למקד את ההפעלה בסופי שבוע ובשעות שלאחר חצות, בהתאם לצורך שהועלה בהצעות, ולשמור על מטרת השירות: נסיעה בטוחה ונגישה הביתה בלילה.",
+        "members": [
+          {
+            "id": "kAYF2Rf2XXIE"
+          },
+          {
+            "id": "vgMZHKdNv3Zv"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "yVku6Iu221Qy",
+        "title": "להקצות חלקות לגינות ירק קהילתיות לתושבים",
+        "description": "העירייה תקצה לתושבים שטחי אדמה וחלקות ייעודיות להקמת גינות ירק קהילתיות, שבהן יוכלו לגדל ירקות יחד. המהלך ייצור מרחבים משותפים לפעילות קהילתית מעשית סביב גידול מזון, תוך מתן אפשרות לתושבים לקחת חלק ישיר בטיפוח הגינות ובשימוש בהן.",
+        "members": [
+          {
+            "id": "eer01uwr3k-5"
+          },
+          {
+            "id": "zfm3D-IzNkdp"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "zD5n0Z8LjeOR",
+        "title": "להציב שוטרי שכונה לסיורים קבועים ולבניית קשרי תושבים",
+        "description": "העירייה תפעל להצבת שוטרי שכונה שיקיימו סיורים קבועים ויבנו קשרים מתמשכים עם התושבים. השוטרים יכירו את תושבי השכונות שבהן הם מסיירים, כדי לחזק נוכחות מקומית, היכרות הדדית ותקשורת רציפה בין התושבים למשטרה.",
+        "members": [
+          {
+            "id": "IvX6Ys0wEjgn"
+          },
+          {
+            "id": "mvz-2UcGVsLO"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      }
+    ]
+  },
+  "topicClusters": {
+    "items": [
+      {
+        "id": "4dBA44as8I3P",
+        "title": "שירותים עירוניים ופניות תושבים",
+        "description": "שיפור הנגישות, המענה והטיפול בפניות תושבים לשירותי העירייה.",
+        "members": [
+          {
+            "id": "2OXogEH8eGig"
+          },
+          {
+            "id": "WIn2BOLQx6bJ"
+          },
+          {
+            "id": "v-l52noahKJ9"
+          }
+        ],
+        "memberSynthIds": [
+          "ZAc04h-0Md8v",
+          "RQw3c72niJvm",
+          "lhMphKclf3a4",
+          "4TDJ5W62jGeV"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "8NcIsJ6imPyc",
+        "title": "שירותי בריאות ורווחה נפשית",
+        "description": "שיפור הגישה לשירותי רפואה וקיצור זמני ההמתנה לטיפול.",
+        "members": [],
+        "memberSynthIds": [
+          "5TVuc6D2fMuj",
+          "Dp0r3ngDXjaN",
+          "hgBRzjXqb2iv",
+          "mN76gpX9S3lr",
+          "RJkrl3Xt8zJ9"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "CCjPz8Yq2sXo",
+        "title": "תרבות, ספריות ואירועים קהילתיים",
+        "description": "הרחבת הגישה לשירותי ספרייה ציבורית זמינים בכל שכונות העיר.",
+        "members": [],
+        "memberSynthIds": [
+          "XdkFn-nTlWqs",
+          "b5q18ROIMx9o",
+          "niDkSFTxUqED",
+          "GnG1C6NqMnVT",
+          "D0jtDn8CHQTj"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "Hwx4ZGvCgAst",
+        "title": "תאורת רחוב ובטיחות לילית",
+        "description": "שיפור התאורה במרחבים ציבוריים להגברת הבטיחות והנוחות בשעות החשכה.",
+        "members": [],
+        "memberSynthIds": [
+          "-lmNJpTt4AAC",
+          "zD5n0Z8LjeOR",
+          "i4WrWbN938qI",
+          "TRZri14kkkAH"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "RByQMV63jBsu",
+        "title": "פארקים ומרחבים ירוקים",
+        "description": "הרחבת הנגישות למרחבים ירוקים, גינות ופארקים בקרבת אזורי המגורים.",
+        "members": [],
+        "memberSynthIds": [
+          "mVidOLgw72Kb",
+          "aKiENl3fsq4n",
+          "Df2ZMwnd6pBG",
+          "yVku6Iu221Qy",
+          "U8-ZozUn2jrp"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "SK1i9YnM-QIg",
+        "title": "חינוך ורווחת תלמידים",
+        "description": "שיפור תנאי הלמידה באמצעות כיתות קטנות יותר ויחס אישי לתלמידים.",
+        "members": [],
+        "memberSynthIds": [
+          "rn-NBXFDUfjL",
+          "dcu5wScuJ1vZ",
+          "W2MBrRvF4rlS",
+          "G0oLtzMb01iB",
+          "tqUGTJOPZ3vF"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "TlgDCLPmhaGJ",
+        "title": "תחבורה ציבורית בשעות הלילה",
+        "description": "שיפור זמינות התחבורה הציבורית בשעות הלילה ובסופי השבוע.",
+        "members": [],
+        "memberSynthIds": [
+          "xoenmI80FD1p",
+          "WQC25nrpYBxx",
+          "LMQbTQhv5vzq",
+          "N8gniQH7wf8B",
+          "TwT3Y9m12W2q"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "hr5jwUz6mktf",
+        "title": "ניהול פסולת וקיימות עירונית",
+        "description": "יוזמות לשיפור הטיפול בפסולת, מיחזור וקומפוסטציה לטובת סביבה עירונית נקייה ומקיימת.",
+        "members": [
+          {
+            "id": "0fmTmI6EWzLO"
+          },
+          {
+            "id": "Fs3Ws4uJamvs"
+          },
+          {
+            "id": "xj3KYb3kQoAQ"
+          }
+        ],
+        "memberSynthIds": [
+          "i01wtcPKGzk-",
+          "7mtrMGizJbwK",
+          "-mIN7OkVVIv8",
+          "flb2uziISDuX"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "keTGOorimnmD",
+        "title": "תעסוקה, עסקים וכלכלה מקומית",
+        "description": "יוזמות עירוניות המסייעות לעצמאים ולעסקים קטנים באמצעות תשתיות, שירותים ועלויות נגישות.",
+        "members": [
+          {
+            "id": "ENRDXTKfOzUv"
+          }
+        ],
+        "memberSynthIds": [
+          "cmjfKL7JZ1EC",
+          "SZalOAhucDCz",
+          "2VGhBRcz3iIB",
+          "qwLJrPkJOswX"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "m8OAJh6A7QLA",
+        "title": "דיור בר־השגה לתושבים",
+        "description": "הגדלת זמינותן של דירות במחיר נגיש לתושבים במסגרת פיתוח ובנייה עירוניים.",
+        "members": [],
+        "memberSynthIds": [
+          "m6swdKdMK-Vt",
+          "5GovT3RAlH6J",
+          "oZKvEnGh6LdU",
+          "tx5cWCUY3Dif"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      }
+    ]
+  },
+  "hiddenClusters": [
+    {
+      "id": "-UMk0txFKPoS",
+      "title": "מרחבים ייעודיים לכלבים",
+      "description": "הקמת ופיתוח אזורים בטוחים ונגישים לכלבים ולבעליהם במרחב הציבורי.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "RByQMV63jBsu"
+    },
+    {
+      "id": "48j70A0hHgeO",
+      "title": "תגמול ושימור מורים איכותיים",
+      "description": "מדיניות לשיפור תנאי התגמול של מורים כדי לשמר מחנכים מצוינים במערכת החינוך העירונית.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "SK1i9YnM-QIg"
+    },
+    {
+      "id": "Dz47V2oBC0Wv",
+      "title": "דיור סטודנטיאלי בר־השגה",
+      "description": "פתרונות דיור מסובסדים ונגישים לסטודנטים בקרבת מוסדות לימוד.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "m8OAJh6A7QLA"
+    },
+    {
+      "id": "QaA9sW4XhofX",
+      "title": "תזונה ורווחת תלמידים",
+      "description": "יוזמות לשיפור התזונה, הבריאות והרווחה של תלמידים במסגרת בתי הספר.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "SK1i9YnM-QIg"
+    },
+    {
+      "id": "gQMteJ9-fL73",
+      "title": "תרבות ואירועים קהילתיים",
+      "description": "פעילויות ציבוריות המחזקות חיי קהילה, פנאי ונגישות לתרבות בעיר.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "CCjPz8Yq2sXo"
+    },
+    {
+      "id": "nGWfTHp8MN2c",
+      "title": "שירותי בריאות נפש עירוניים",
+      "description": "הנגשת ייעוץ, טיפול ותמיכה נפשית לתושבים במסגרת שירותי העירייה.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "8NcIsJ6imPyc"
+    },
+    {
+      "id": "s9gRpJ65bxhs",
+      "title": "הכשרה והסבה מקצועית",
+      "description": "תמיכה בהכשרות מקצועיות ובמעברי קריירה לשיפור תעסוקת התושבים.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "keTGOorimnmD"
+    }
+  ],
+  "sourceOptions": {
+    "visible": 100,
+    "hidden": 0
+  },
+  "auditCounts": {
+    "review-queued": 37,
+    "spawn": 62,
+    "attach": 44,
+    "merge": 6
+  },
+  "parameters": {
+    "language": "he",
+    "corpus": "scripts/seedSynthBenchmark.accuracy100.he.json",
+    "corpusSha": "9a5191bece66",
+    "seed": 42,
+    "synthesisOverrides": {
+      "embeddingModel": "text-embedding-3-large"
+    },
+    "statementsFed": 100,
+    "pumpEvery": 10,
+    "rejudgeEvery": 5,
+    "minWaitMs": 4000,
+    "quietMs": 12000,
+    "maxWaitMs": 45000,
+    "settleTimeouts": 19,
+    "durationMs": 3981531,
+    "gitSha": "f85df7f12",
+    "models": {
+      "embedding": "text-embedding-3-small",
+      "heavy": "gpt-5.6-terra",
+      "fast": "gpt-5.6-luna"
+    }
+  }
+}
