@@ -1,4 +1,3 @@
-import { MIN_PROPOSALS_PER_THEME } from './constants';
 import type { DiscoveredTheme } from './types';
 
 const HEBREW_SCRIPT = /[֐-׿]/;
@@ -36,21 +35,12 @@ export const DISCOVERY_SYSTEM = `You organize the answers a community gave to on
 ${GROUPING_RULES}
 Return only JSON.`;
 
-/** Smallest theme to ask for: MIN_PROPOSALS_PER_THEME, relaxed when the question is too small. */
-export function minProposalsPerTheme(atomCount: number, minThemes: number): number {
-	return Math.max(
-		2,
-		Math.min(MIN_PROPOSALS_PER_THEME, Math.floor(atomCount / Math.max(1, minThemes))),
-	);
-}
-
 export function discoveryUserPrompt(
 	question: string,
 	atomTexts: string[],
 	bounds: { min: number; max: number },
 ): string {
 	const list = atomTexts.map((t, i) => `${i + 1}. ${t}`).join('\n');
-	const minPerTheme = minProposalsPerTheme(atomTexts.length, bounds.min);
 
 	return `QUESTION: "${question}"
 
@@ -63,10 +53,6 @@ of these proposals. Each theme has:
 - "rule": one line saying which proposals belong in it, precise enough that a
   reader could sort a new proposal by it.
 Themes must not overlap: a proposal should fit at most one rule.
-Each theme should cover at least ${minPerTheme} of the proposals above. Do not give one or
-two proposals a theme of their own when they share a domain with a larger theme:
-widen that theme's rule to include them instead. Fewer, well-separated themes are
-better than many thin ones.
 ${themeLanguageInstruction(question)}
 
 Return JSON:

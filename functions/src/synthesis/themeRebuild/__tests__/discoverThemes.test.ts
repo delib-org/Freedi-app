@@ -10,7 +10,7 @@ jest.mock('../../../config/openai-chat', () => ({
 import { TAXONOMY_MODEL } from '../../../config/openai-chat';
 import { MAX_THEMES } from '../constants';
 import { discoverThemes, parseDiscovery, sampleForDiscovery, themeBounds } from '../discoverThemes';
-import { discoveryUserPrompt, minProposalsPerTheme, themeLanguageInstruction } from '../prompts';
+import { themeLanguageInstruction } from '../prompts';
 import type { RebuildAtom } from '../types';
 
 const atom = (i: number, isSynth = false): RebuildAtom => ({
@@ -119,25 +119,5 @@ describe('themeLanguageInstruction', () => {
 	it('detects Arabic and falls back to the question language', () => {
 		expect(themeLanguageInstruction('كيف؟')).toContain('Arabic');
 		expect(themeLanguageInstruction('How?')).toContain('same language as the QUESTION');
-	});
-});
-
-describe('discoveryUserPrompt minimum theme size', () => {
-	it('asks for at least 3 proposals per theme on a normal question', () => {
-		const prompt = discoveryUserPrompt(
-			'Q?',
-			Array.from({ length: 50 }, (_, i) => `p${i}`),
-			{
-				min: 5,
-				max: 15,
-			},
-		);
-		expect(prompt).toContain('at least 3 of the proposals');
-	});
-
-	it('relaxes the minimum on a question too small to fill it', () => {
-		expect(minProposalsPerTheme(8, 4)).toBe(2);
-		expect(minProposalsPerTheme(3, 1)).toBe(3);
-		expect(minProposalsPerTheme(1, 1)).toBe(2);
 	});
 });
