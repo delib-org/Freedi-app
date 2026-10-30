@@ -28,7 +28,8 @@ export type LiveSynthAction =
 	| 'merge' // two synths combined into one via reJudge sweep (donor hidden)
 	| 'review-queued' // gray-band match logged to admin review, no action taken
 	| 'revisit' // left-behind option re-enqueued for a full pipeline re-run (reJudge sweep)
-	| 'split'; // an oversized theme divided into sub-topics (reJudge sweep; parent hidden)
+	| 'split' // an oversized theme divided into sub-topics (reJudge sweep; parent hidden)
+	| 'theme-rebuild'; // admin "Re-theme with AI": a theme written, or a preview/apply run logged
 
 export interface AuditEntry {
 	action: LiveSynthAction;
