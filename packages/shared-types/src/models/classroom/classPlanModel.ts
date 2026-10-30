@@ -32,6 +32,8 @@ export type ClassHomeKind = (typeof CLASS_HOME_KIND)[keyof typeof CLASS_HOME_KIN
 export const CLASS_PLAN_TITLE_MAX_LENGTH = 200;
 /** Longest class name kept on a lesson. */
 export const CLASS_NAME_MAX_LENGTH = 60;
+/** Longest name a teacher can give a lesson when starting it (classStartLesson `lessonName`). */
+export const LESSON_NAME_MAX_LENGTH = 80;
 /** Caps on one game (the plan screen's own limits are lower). */
 export const CLASS_GAME_MAX_QUESTIONS = 50;
 export const CLASS_GAME_MAX_PARAGRAPHS = 30;
@@ -123,6 +125,8 @@ export interface ClassLessonLink {
 	gameId: string;
 	classId?: string | null;
 	className: string;
+	/** The name the teacher gave this lesson when starting it; absent on older lessons. */
+	lessonName?: string;
 }
 
 /** `statementSettings.classHome` of a home. */
@@ -160,6 +164,13 @@ export function isClassHome(statement: SettingsHolder | null | undefined): boole
  */
 export function isClassLesson(statement: SettingsHolder | null | undefined): boolean {
 	return !!statement?.statementSettings?.lessonPlan && !isClassHome(statement);
+}
+
+/** What is stored as a lesson name: one line, trimmed, capped. '' = nothing usable. */
+export function cleanLessonName(raw: unknown): string {
+	if (typeof raw !== 'string') return '';
+
+	return raw.replace(/\s+/g, ' ').trim().slice(0, LESSON_NAME_MAX_LENGTH).trim();
 }
 
 /** What is stored as a class name: one line, trimmed, capped. */

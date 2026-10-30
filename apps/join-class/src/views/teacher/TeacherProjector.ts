@@ -29,6 +29,7 @@ import {
 } from './projector/ProjectorControls';
 import { projectorMode } from '@/lib/classroom/projectorScreen';
 import { readClassCode } from './planHelpers';
+import { linkOf } from '@/lib/lessonLinks';
 
 /**
  * Projector (/t/:mid/screen, UX section 6): one thing per step, smallest text
@@ -111,6 +112,7 @@ function body(): m.Children {
 	const joinUrl = code ? `${window.location.origin}/c/${code}` : undefined;
 	const step = lessonStepOf(main?.statementSettings?.lessonPlan);
 	const status = lessonStatusOfMain(main);
+	const lessonName = main ? linkOf(main).lessonName : '';
 
 	if (status === 'paused' || status === 'ended') {
 		const ended = status === 'ended';
@@ -126,6 +128,7 @@ function body(): m.Children {
 				stepName: t(ended ? 'lesson.ended.title' : 'lesson.paused.title'),
 				code: ended ? undefined : code,
 				joinUrl: ended ? undefined : joinUrl,
+				lessonName,
 			}),
 		];
 	}
@@ -135,7 +138,7 @@ function body(): m.Children {
 	return [
 		m('main.projector__stage', { 'data-step': step.key }, renderStep(step.key, { code, joinUrl })),
 		// video mode has its own strip instead of the code band (UX 15.C)
-		video ? null : m(ProjectorBand, { stepName: stepLabel(step.key), code, joinUrl }),
+		video ? null : m(ProjectorBand, { stepName: stepLabel(step.key), code, joinUrl, lessonName }),
 	];
 }
 

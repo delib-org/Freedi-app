@@ -74,14 +74,19 @@ interface BandAttrs {
 	stepName: string;
 	code: string | undefined;
 	joinUrl: string | undefined;
+	/** The name the teacher gave the lesson; shown before the step name. Absent on old lessons. */
+	lessonName?: string;
 }
 
 export const ProjectorBand: m.Component<BandAttrs> = {
 	view(vnode) {
-		const { stepName, code, joinUrl } = vnode.attrs;
+		const { stepName, code, joinUrl, lessonName } = vnode.attrs;
 
 		return m('footer.projector-band', [
-			m('p.projector-band__step', stepName),
+			m(
+				'p.projector-band__step',
+				lessonName ? [m('bdi', { dir: 'auto' }, lessonName), ' · ', stepName] : stepName,
+			),
 			code
 				? m('.projector-band__join', [
 						m('span.projector-band__label', t('projector.code')),

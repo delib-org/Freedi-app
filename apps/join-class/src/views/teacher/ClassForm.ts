@@ -6,6 +6,15 @@ import { getUserState } from '@/lib/user';
 import { loadTeacherClasses, type TeacherClass } from '@/lib/teacherClasses';
 import { startFailureOf, type StartFailure } from './startFailure';
 import { captureException } from '@/lib/sentry';
+import {
+	LESSON_NAME_MAX,
+	defaultLessonName,
+	freshDraft,
+	onChoiceChanged,
+	onTyped,
+	submittedName,
+	type LessonNameDraft,
+} from './lessonNameDraft';
 
 /**
  * "+ שיעור עם כיתה" (docs/ia/join-class-lesson-plan.md 5 and 6.4): an inline choice
@@ -26,11 +35,23 @@ let classesLoad: ClassesLoad = 'loading';
 /** undefined = nothing picked yet; null = "בלי כיתה"; a string = that class. */
 let picked: string | null | undefined;
 let newMainId = '';
+let openGameTitle = '';
+let nameDraft: LessonNameDraft = freshDraft('');
 let busy = false;
 let failure: StartFailure | null = null;
 
 export function isClassFormOpen(gameId: string): boolean {
 	return openGameId === gameId;
+}
+
+function joinGameAndClass(game: string, className: string): string {
+	return t('teacher.lesson.name_default', { game, class: className });
+}
+
+function suggestionFor(classId: string | null | undefined): string {
+	const cls = classId ? (classes.find((c) => c.classId === classId)?.name ?? null) : null;
+
+	return defaultLessonName(openGameTitle, cls, joinGameAndClass);
 }
 
 async function loadClasses(): Promise<void> {
@@ -53,9 +74,11 @@ async function loadClasses(): Promise<void> {
 	}
 }
 
-export function openClassForm(gameId: string): void {
+export function openClassForm(gameId: string, gameTitle: string): void {
 	if (openGameId === gameId) return;
 	openGameId = gameId;
+	openGameTitle = gameTitle;
+	nameDraft = freshDraft(defaultLessonName(gameTitle, null, joinGameAndClass));
 	picked = undefined;
 	newMainId = getRandomUID();
 	busy = false;
@@ -75,12 +98,13 @@ async function submit(planId: string, gameId: string): Promise<void> {
 	if (busy) return;
 	const noClasses = classesLoad === 'ready' && classes.length === 0;
 	const classId = noClasses ? null : picked;
-	if (classId === undefined) return;
+	const lessonName = submittedName(nameDraft);
+	if (classId === undefined || lessonName === null) return;
 	busy = true;
 	failure = null;
 	m.redraw();
 	try {
-		const id = await startLesson({ planId, gameId, classId, newMainId });
+		const id = await startLesson({ planId, gameId, classId, newMainId, lessonName });
 		closeClassForm();
 		m.route.set(`/t/${id}`);
 	} catch (err) {
@@ -103,9 +127,29 @@ function choice(id: string | null, label: string, value: string): m.Vnode {
 			'data-class': value,
 			onchange: () => {
 				picked = id;
+				nameDraft = onChoiceChanged(nameDraft, suggestionFor(id));
 			},
 		}),
 		m('bdi', { dir: 'auto' }, label),
+	]);
+}
+
+/** "שם השיעור": above the class choice, prefilled, kept once she types. */
+function nameField(): m.Vnode {
+	return m('.class-form__name', [
+		m('label.teacher-home__label', { for: 'class-form-name' }, t('teacher.lesson.name_label')),
+		m('input.teacher-home__input', {
+			id: 'class-form-name',
+			type: 'text',
+			value: nameDraft.text,
+			maxlength: LESSON_NAME_MAX,
+			required: true,
+			disabled: busy,
+			'data-field': 'lesson-name',
+			oninput: (e: Event) => {
+				nameDraft = onTyped((e.target as HTMLInputElement).value);
+			},
+		}),
 	]);
 }
 
@@ -126,7 +170,8 @@ export const ClassForm: m.Component<ClassFormAttrs> = {
 		if (openGameId !== gameId) return null;
 		const noClasses = classesLoad === 'ready' && classes.length === 0;
 		const ready = classesLoad === 'ready';
-		const canSubmit = !busy && ready && (noClasses || picked !== undefined);
+		const canSubmit =
+			!busy && ready && (noClasses || picked !== undefined) && submittedName(nameDraft) !== null;
 
 		return m(
 			'form.class-form',
@@ -157,6 +202,7 @@ export const ClassForm: m.Component<ClassFormAttrs> = {
 							),
 						])
 					: null,
+				ready ? nameField() : null,
 				ready && noClasses ? m('p.class-form__lead', t('teacher.lesson.no_classes')) : null,
 				ready && !noClasses
 					? m('fieldset.class-form__choices', [

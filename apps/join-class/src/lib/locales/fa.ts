@@ -565,6 +565,8 @@ const fa: Record<string, string> = {
 	'teacher.lesson.new': '+ درس با یک کلاس',
 	'teacher.lesson.class_label': 'کدام کلاس؟',
 	'teacher.lesson.class_none': 'بدون کلاس',
+	'teacher.lesson.name_label': 'نام درس',
+	'teacher.lesson.name_default': '{{game}} با {{class}}',
 	'teacher.lesson.no_classes':
 		'هنوز کلاسی به شما اختصاص داده نشده است. درس به نام خودتان ذخیره می‌شود.',
 	'teacher.lesson.row': '{{class}} · {{date}}',

@@ -6,10 +6,12 @@ import {
 	CLASS_GAME_MAX_QUESTIONS,
 	CLASS_GAME_MAX_TEXT_LENGTH,
 	CLASS_NAME_MAX_LENGTH,
+	LESSON_NAME_MAX_LENGTH,
 	ClassGameSchema,
 	ClassPlanSchema,
 	classHomeIdOf,
 	cleanClassName,
+	cleanLessonName,
 	isClassHome,
 	isClassLesson,
 	isHomeId,
@@ -367,5 +369,17 @@ describe('lessonFromSnapshot', () => {
 			lastUpdate: 1,
 		};
 		expect(() => parse(ClassGameSchema, game)).not.toThrow();
+	});
+});
+
+describe('cleanLessonName', () => {
+	it('trims and collapses to one line', () => {
+		expect(cleanLessonName('  a \n b  ')).toBe('a b');
+	});
+
+	it('caps at the limit and returns empty for non-strings', () => {
+		expect(cleanLessonName('a'.repeat(200))).toHaveLength(LESSON_NAME_MAX_LENGTH);
+		expect(cleanLessonName(undefined)).toBe('');
+		expect(cleanLessonName(5)).toBe('');
 	});
 });

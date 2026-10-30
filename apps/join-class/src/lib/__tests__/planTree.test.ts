@@ -35,6 +35,7 @@ function lesson(
 			gameId: 'g1',
 			classId: 'c1',
 			className: 'ט׳2',
+			lessonName: '',
 			legacy: false,
 			...link,
 		},
@@ -70,7 +71,14 @@ describe('linkOf', () => {
 					classLesson: { planId: 'p', gameId: 'g', classId: 'c', className: 'A' },
 				},
 			}),
-		).toEqual({ planId: 'p', gameId: 'g', classId: 'c', className: 'A', legacy: false });
+		).toEqual({
+			planId: 'p',
+			gameId: 'g',
+			classId: 'c',
+			className: 'A',
+			lessonName: '',
+			legacy: false,
+		});
 	});
 
 	it('an old lesson is its own plan and game, with no class', () => {
@@ -79,6 +87,7 @@ describe('linkOf', () => {
 			gameId: 'L',
 			classId: null,
 			className: '',
+			lessonName: '',
 			legacy: true,
 		});
 	});

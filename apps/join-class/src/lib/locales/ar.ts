@@ -568,6 +568,8 @@ const ar: Record<string, string> = {
 	'teacher.lesson.new': '+ درس مع صف',
 	'teacher.lesson.class_label': 'أي صف؟',
 	'teacher.lesson.class_none': 'بلا صف',
+	'teacher.lesson.name_label': 'اسم الدرس',
+	'teacher.lesson.name_default': '{{game}} مع {{class}}',
 	'teacher.lesson.no_classes': 'لم تُسنَد إليكم صفوف بعد. سيُحفظ الدرس باسمكم.',
 	'teacher.lesson.row': '{{class}} · {{date}}',
 	'teacher.lesson.busy': 'جارٍ تحضير الدرس...',

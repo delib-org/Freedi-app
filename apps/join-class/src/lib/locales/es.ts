@@ -579,6 +579,8 @@ const es: Record<string, string> = {
 	'teacher.lesson.new': '+ Clase con un grupo',
 	'teacher.lesson.class_label': '¿Qué grupo?',
 	'teacher.lesson.class_none': 'Sin grupo',
+	'teacher.lesson.name_label': 'Nombre de la clase',
+	'teacher.lesson.name_default': '{{game}} con {{class}}',
 	'teacher.lesson.no_classes': 'Aún no tienes grupos asignados. La clase se guardará a tu nombre.',
 	'teacher.lesson.row': '{{class}} · {{date}}',
 	'teacher.lesson.busy': 'Preparando la clase...',

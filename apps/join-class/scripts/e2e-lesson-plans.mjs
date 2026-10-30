@@ -151,7 +151,30 @@ try {
 	const offered = await page.$$eval('.class-form [data-class]', (els) => els.map((e) => e.getAttribute('data-class')));
 	check('class choice: the active class and "בלי כיתה", not the archived one', offered.length === 2 && offered.includes(classId) && offered.includes('__none'), offered.join(','));
 	check('"יצירה" waits for a choice', await page.locator('.class-form [data-action="start-lesson"]').isDisabled());
+	const nameField = page.locator('.class-form [data-field="lesson-name"]');
+	const customName = 'בריונות עם ט 3';
+	const waitName = (value) => page.waitForFunction((v) => document.querySelector('[data-field="lesson-name"]')?.value === v, value, { timeout: TIMEOUT }).catch(() => undefined);
+	check('lesson name: a field above the class choice, prefilled with the game title', (await nameField.inputValue()) === planTitle &&
+		(await page.evaluate(() => {
+			const name = document.querySelector('[data-field="lesson-name"]');
+			const choices = document.querySelector('.class-form__choices');
+
+			return !!(name.compareDocumentPosition(choices) & Node.DOCUMENT_POSITION_FOLLOWING);
+		})));
 	await page.check(`.class-form [data-class="${classId}"]`);
+	await waitName(`${planTitle} עם ט׳2`);
+	check('lesson name: picking the class re-fills "<game> עם <class>"', (await nameField.inputValue()) === `${planTitle} עם ט׳2`, await nameField.inputValue());
+	await page.check('.class-form [data-class="__none"]');
+	await waitName(planTitle);
+	check('lesson name: "בלי כיתה" re-fills just the game title', (await nameField.inputValue()) === planTitle);
+	await nameField.fill(customName);
+	await page.check('.class-form [data-class="__none"]');
+	await page.check(`.class-form [data-class="${classId}"]`);
+	check('lesson name: once she typed, a new class choice keeps her text', (await nameField.inputValue()) === customName);
+	await nameField.fill('   ');
+	await page.waitForFunction(() => document.querySelector('[data-action="start-lesson"]')?.disabled === true, null, { timeout: TIMEOUT });
+	check('lesson name: a blank name cannot be submitted', await page.locator('.class-form [data-action="start-lesson"]').isDisabled());
+	await nameField.fill(customName);
 	await page.click('.class-form [data-action="start-lesson"]');
 	await page.waitForURL((u) => /^\/t\/[^/]+$/.test(u.pathname) && !u.pathname.startsWith('/t/plans'), { timeout: TIMEOUT * 2 });
 	const lessonA = new URL(page.url()).pathname.split('/')[2];
@@ -164,24 +187,36 @@ try {
 	check('the class home exists, secret, classHome', home?.statementSettings?.classHome?.classId === classId && home.membership?.access === 'secret');
 	const codeA = a.statementSettings.classCode;
 	check('lesson A has a class code', /^\d{6}$/.test(codeA));
+	check('lesson A stores her lesson name; the statement keeps the game title', a.statementSettings.classLesson.lessonName === customName && a.statement === planTitle, `${a.statementSettings.classLesson.lessonName} / ${a.statement}`);
 	await page.waitForSelector('.console__bar', { timeout: TIMEOUT });
 	const back = page.locator('.console__bar .plan__back');
 	await page.waitForFunction((title) => document.querySelector('.console__bar .plan__back')?.textContent?.includes(title), planTitle, { timeout: TIMEOUT });
 	check('console: back link names the plan and goes to the plan screen', (await back.innerText()).includes(planTitle) && (await back.getAttribute('href')) === `/t/plans/${planId}`);
+	await page.waitForFunction((n) => document.querySelector('.console__title')?.textContent === n, customName, { timeout: TIMEOUT }).catch(() => undefined);
+	check('console header shows her lesson name', (await page.locator('.console__title').innerText()) === customName);
+	const screen = await context.newPage();
+	await screen.goto(`${BASE}/t/${lessonA}/screen`, { waitUntil: 'domcontentloaded' });
+	await screen.waitForFunction((n) => document.querySelector('.projector-band__step')?.textContent?.includes(n), customName, { timeout: TIMEOUT }).catch(() => undefined);
+	check('projector band shows her lesson name', ((await screen.locator('.projector-band__step').innerText().catch(() => '')) || '').includes(customName));
+	check('projector has no back bar', (await screen.locator('.back-bar, .plan__back').count()) === 0);
+	await screen.close();
 	await shot(page, '3-console');
 
 	// ---- 4. a lesson with no class; the plan screen ------------------------------------
 	await back.click();
 	await page.waitForSelector(`[data-game="${gameId}"]`, { timeout: TIMEOUT });
-	check('plan screen: lesson A listed under the game with the class name', (await page.locator(`[data-lesson="${lessonA}"]`).innerText()).includes('ט׳2'));
+	check('plan screen: lesson A is listed under the game by her lesson name', (await page.locator(`[data-lesson="${lessonA}"]`).innerText()).includes(customName));
 	await page.click(`[data-game="${gameId}"] [data-action="new-lesson"]`);
 	await page.waitForSelector('.class-form [data-class]', { timeout: TIMEOUT });
 	await page.check('.class-form [data-class="__none"]');
+	await page.waitForFunction((v) => document.querySelector('[data-field="lesson-name"]')?.value === v, planTitle, { timeout: TIMEOUT });
+	check('lesson name B: "בלי כיתה" prefill is the game title', (await page.locator('.class-form [data-field="lesson-name"]').inputValue()) === planTitle);
 	await page.click('.class-form [data-action="start-lesson"]');
 	await page.waitForURL((u) => /^\/t\/[^/]+$/.test(u.pathname) && !u.pathname.startsWith('/t/plans') && !u.pathname.endsWith(lessonA), { timeout: TIMEOUT * 2 });
 	const lessonB = new URL(page.url()).pathname.split('/')[2];
 	const b = (await db.doc(`statements/${lessonB}`).get()).data();
 	check('lesson B (no class) sits under the teacher home', b.parentId === `jcTeacher_${teacherUid}` && b.statementSettings.classLesson?.classId === null);
+	check('lesson B stores the prefilled name (the game title)', b.statementSettings.classLesson.lessonName === planTitle);
 	// stay in the app (no reload): the lesson's marker is re-written a few seconds after the server's own subscription lands
 	await page.waitForSelector('.console__bar .plan__back', { timeout: TIMEOUT });
 	await page.click('.console__bar .plan__back');
@@ -195,6 +230,7 @@ try {
 	await shot(page, '4-plan');
 	await page.goto(`${BASE}/t`, { waitUntil: 'domcontentloaded' });
 	await page.waitForSelector('[data-open-now]', { timeout: TIMEOUT });
+	check('home: the open row of lesson A reads her lesson name', (await page.locator(`[data-open-now="${lessonA}"] .teacher-home__row-title`).innerText()).includes(customName));
 	check('home: "פתוחים עכשיו" lists the live lessons', (await page.locator(`[data-open-now="${lessonA}"]`).count()) === 1 && (await page.locator(`[data-open-now="${lessonB}"]`).count()) === 1);
 	const counts = await page.locator(`[data-plan="${planId}"] .teacher-home__counts`).innerText();
 	check('home: plan row counts games and lessons', counts.includes('1') && counts.includes('2'), counts);
@@ -215,6 +251,7 @@ try {
 		(await db.doc(`classPlans/${oldId}`).get()).exists && new URL(page.url()).pathname.includes(`/plans/${oldId}/games/`));
 	await page.goto(`${BASE}/t/${oldId}`, { waitUntil: 'domcontentloaded' });
 	await page.waitForSelector('.console__bar', { timeout: TIMEOUT });
+	await page.waitForFunction((id) => document.querySelector('.console__bar .plan__back')?.getAttribute('href') === `/t/plans/${id}`, oldId, { timeout: TIMEOUT }).catch(() => undefined);
 	check('old lesson: the console opens and goes back to its own plan', (await page.locator('.console__bar .plan__back').getAttribute('href')) === `/t/plans/${oldId}`);
 
 	// ---- 6. a student on a phone ----------------------------------------------------------
@@ -265,6 +302,7 @@ try {
 	await student.waitForURL(new RegExp(`/m/${lessonA}`), { timeout: TIMEOUT });
 	await student.waitForFunction(() => document.body.innerText.trim().length > 20, null, { timeout: TIMEOUT });
 	check('student: the code of a home-based lesson opens the lesson', (await student.locator('.door__title').count()) === 0);
+	check('student: still sees the game title, never the teacher\'s lesson name', !(await student.locator('body').innerText()).includes(customName));
 	await shot(student, '6-student');
 	const studentUid = await student.evaluate(async () => (await import('/src/lib/user.ts')).getUserState().user.uid);
 

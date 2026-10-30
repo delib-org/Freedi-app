@@ -568,6 +568,8 @@ const he: Record<string, string> = {
 	'teacher.lesson.new': '+ שיעור עם כיתה',
 	'teacher.lesson.class_label': 'איזו כיתה?',
 	'teacher.lesson.class_none': 'בלי כיתה',
+	'teacher.lesson.name_label': 'שם השיעור',
+	'teacher.lesson.name_default': '{{game}} עם {{class}}',
 	'teacher.lesson.no_classes': 'עוד לא שויכו אליכם כיתות. השיעור יישמר תחת השם שלכם.',
 	'teacher.lesson.row': '{{class}} · {{date}}',
 	'teacher.lesson.busy': 'מכינים את השיעור...',

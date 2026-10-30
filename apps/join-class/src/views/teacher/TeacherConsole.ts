@@ -56,6 +56,7 @@ import type { ConsoleView } from './consoleState';
 import { abortDrag } from './dragController';
 import { EndChoice, openEndChoice } from './EndChoice';
 import { planBack } from './consoleBack';
+import { lessonNameOf } from '@/lib/lessonLinks';
 import { LessonBanner } from './LessonBanner';
 import { ConfirmDialog } from './ConfirmDialog';
 import {
@@ -320,7 +321,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 		// >>> allProposals END
 
 		return m('.console', { 'data-step': step.key }, [
-			header(mid, main.statement, code, status),
+			header(mid, lessonNameOf(main), code, status),
 			showQr
 				? m('section.console__qr', [
 						m(QRShare, { url: studentJoinUrl(window.location.origin, mid), title: main.statement }),

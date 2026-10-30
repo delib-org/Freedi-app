@@ -371,7 +371,7 @@ function renderBar(mainId: string): m.Vnode {
 							'data-action': 'new-lesson',
 							onclick: async () => {
 								await flushAll();
-								openClassForm(mainId);
+								openClassForm(mainId, getTitle());
 							},
 						},
 						t('teacher.lesson.new'),

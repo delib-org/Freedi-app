@@ -288,6 +288,8 @@ export interface ClassStartLessonRequest {
 	/** An `agoraClasses` id the caller teaches (active only), or null for "no class". */
 	classId: string | null;
 	newMainId: string;
+	/** The teacher's name for this lesson (trimmed and capped server-side); optional for old clients. */
+	lessonName?: string;
 }
 export interface ClassStartLessonResponse {
 	mainId: string;

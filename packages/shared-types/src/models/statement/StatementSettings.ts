@@ -480,6 +480,7 @@ export const StatementSettingsSchema = object({
 			gameId: string(),
 			classId: optional(nullable(string())),
 			className: string(),
+			lessonName: optional(string()),
 		}),
 	),
 	// join-class: this top-level group statement is a HOME holding lessons: kind 'class'

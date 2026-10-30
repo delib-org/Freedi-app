@@ -246,6 +246,7 @@ function lessonSettings(
 						gameId: classLesson.gameId,
 						classId: classLesson.classId ?? null,
 						className: classLesson.className,
+						...(classLesson.lessonName ? { lessonName: classLesson.lessonName } : {}),
 					},
 				}
 			: {}),
