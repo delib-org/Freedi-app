@@ -96,6 +96,18 @@
 	overflow-wrap: anywhere;
 }
 
+.themeRebuild__notice {
+	margin: 0;
+	padding-block: 0.65rem;
+	padding-inline: 0.875rem;
+	font-size: 0.88rem;
+	line-height: 1.45;
+	color: var(--text-body);
+	background: var(--bg-info-light);
+	border: 1px solid var(--border-light);
+	border-radius: 8px;
+}
+
 .themeRebuild__error {
 	margin: 0;
 	padding-block: 0.65rem;

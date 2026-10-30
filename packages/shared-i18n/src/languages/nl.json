@@ -4498,5 +4498,7 @@
   "There are no ideas to group yet.": "Er zijn nog geen ideeën om te groeperen.",
   "Themes rebuilt": "Thema's opnieuw opgebouwd",
   "Ideas placed": "Geplaatste ideeën",
-  "Apply": "Toepassen"
+  "Apply": "Toepassen",
+  "Ideas the AI could not sort": "Ideeën die de AI niet kon indelen",
+  "They are under Other ideas. Run the preview again to retry them.": "Ze staan onder Andere ideeën. Voer de voorvertoning opnieuw uit om het opnieuw te proberen."
 }

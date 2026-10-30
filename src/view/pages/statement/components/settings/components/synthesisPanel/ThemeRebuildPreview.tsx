@@ -143,6 +143,13 @@ const ThemeRebuildPreview: FC<Props> = ({ questionId, preview, onClose, onApplie
 					</div>
 				</dl>
 
+				{(preview.unansweredCount ?? 0) > 0 && (
+					<p className={styles.themeRebuild__notice} role="status">
+						{t('Ideas the AI could not sort')}: {preview.unansweredCount}.{' '}
+						{t('They are under Other ideas. Run the preview again to retry them.')}
+					</p>
+				)}
+
 				<ul className={styles.themeRebuild__list}>
 					{preview.themes.map((theme) => (
 						<li key={theme.key}>

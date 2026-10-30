@@ -4617,5 +4617,7 @@
   "This preview expired. Run the preview again.": "انتهت صلاحية هذه المعاينة. شغّل المعاينة مرة أخرى.",
   "There are no ideas to group yet.": "لا توجد أفكار لتجميعها بعد.",
   "Themes rebuilt": "تمت إعادة بناء المواضيع",
-  "Ideas placed": "الأفكار الموزعة"
+  "Ideas placed": "الأفكار الموزعة",
+  "Ideas the AI could not sort": "أفكار لم يتمكن الذكاء الاصطناعي من تصنيفها",
+  "They are under Other ideas. Run the preview again to retry them.": "إنها ضمن أفكار أخرى. شغّل المعاينة مرة أخرى لإعادة المحاولة."
 }

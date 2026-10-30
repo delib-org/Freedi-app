@@ -95,6 +95,21 @@ describe('ThemeRebuildPreview', () => {
 		expect(screen.getAllByText('Keeps existing theme')).toHaveLength(1);
 	});
 
+	it('says nothing about unsorted ideas when every idea was sorted', () => {
+		renderPreview({ preview: { ...PREVIEW, unansweredCount: 0 } });
+
+		expect(screen.queryByRole('status')).not.toBeInTheDocument();
+		expect(screen.queryByText(/Ideas the AI could not sort/)).not.toBeInTheDocument();
+	});
+
+	it('tells the admin how many ideas the AI could not sort', () => {
+		renderPreview({ preview: { ...PREVIEW, unansweredCount: 3 } });
+
+		const notice = screen.getByRole('status');
+		expect(notice).toHaveTextContent('Ideas the AI could not sort: 3.');
+		expect(notice).toHaveTextContent('Run the preview again to retry them.');
+	});
+
 	it('applies with the preview run id, reports the result and closes', async () => {
 		mockApply.mockResolvedValue(APPLIED);
 		const { onClose, onApplied } = renderPreview();

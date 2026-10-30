@@ -4498,5 +4498,7 @@
   "There are no ideas to group yet.": "Todavía no hay ideas para agrupar.",
   "Themes rebuilt": "Temas reconstruidos",
   "Ideas placed": "Ideas asignadas",
-  "Apply": "Aplicar"
+  "Apply": "Aplicar",
+  "Ideas the AI could not sort": "Ideas que la IA no pudo clasificar",
+  "They are under Other ideas. Run the preview again to retry them.": "Están en Otras ideas. Vuelve a generar la vista previa para intentarlo de nuevo."
 }

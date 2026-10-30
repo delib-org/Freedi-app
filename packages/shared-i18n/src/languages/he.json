@@ -5215,5 +5215,7 @@
   "This preview expired. Run the preview again.": "התצוגה המקדימה פגה. הריצו אותה שוב.",
   "There are no ideas to group yet.": "עדיין אין רעיונות לקבץ.",
   "Themes rebuilt": "הנושאים נבנו מחדש",
-  "Ideas placed": "רעיונות ששובצו"
+  "Ideas placed": "רעיונות ששובצו",
+  "Ideas the AI could not sort": "רעיונות שה-AI לא הצליח למיין",
+  "They are under Other ideas. Run the preview again to retry them.": "הם נמצאים תחת רעיונות אחרים. הריצו שוב את התצוגה המקדימה כדי לנסות שוב."
 }
