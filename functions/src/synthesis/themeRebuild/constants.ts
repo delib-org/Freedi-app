@@ -21,6 +21,13 @@ export const MAX_THEMES = 15;
 /** Lower bound on discovered themes, relaxed for very small questions. */
 export const MIN_THEMES = 5;
 
+/**
+ * Proposals a discovered theme should cover at least. Without it discovery
+ * split one domain into 1-2 member sub-themes and hit MAX_THEMES (Hebrew
+ * benchmark run: 15 themes against 10 true topics, topic F1 0.91 → 0.81).
+ */
+export const MIN_PROPOSALS_PER_THEME = 3;
+
 /** A new theme reuses an old theme doc when their member-Jaccard is at least this. */
 export const REUSE_JACCARD_MIN = 0.5;
 
