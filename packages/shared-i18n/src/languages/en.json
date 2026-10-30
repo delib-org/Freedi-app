@@ -5179,5 +5179,6 @@
   "Themes rebuilt": "Themes rebuilt",
   "Ideas placed": "Ideas placed",
   "Ideas the AI could not sort": "Ideas the AI could not sort",
-  "They are under Other ideas. Run the preview again to retry them.": "They are under Other ideas. Run the preview again to retry them."
+  "They are under Other ideas. Run the preview again to retry them.": "They are under Other ideas. Run the preview again to retry them.",
+  "Let AI regroup all ideas into themes. You'll see a preview before anything changes.": "Let AI regroup all ideas into themes. You'll see a preview before anything changes."
 }

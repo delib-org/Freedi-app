@@ -4619,5 +4619,6 @@
   "Themes rebuilt": "تمت إعادة بناء المواضيع",
   "Ideas placed": "الأفكار الموزعة",
   "Ideas the AI could not sort": "أفكار لم يتمكن الذكاء الاصطناعي من تصنيفها",
-  "They are under Other ideas. Run the preview again to retry them.": "إنها ضمن أفكار أخرى. شغّل المعاينة مرة أخرى لإعادة المحاولة."
+  "They are under Other ideas. Run the preview again to retry them.": "إنها ضمن أفكار أخرى. شغّل المعاينة مرة أخرى لإعادة المحاولة.",
+  "Let AI regroup all ideas into themes. You'll see a preview before anything changes.": "سيعيد الذكاء الاصطناعي تجميع كل الأفكار في مواضيع. ستظهر معاينة قبل أن يتغير أي شيء."
 }

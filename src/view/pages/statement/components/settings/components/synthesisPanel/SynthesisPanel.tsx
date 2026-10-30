@@ -1,10 +1,9 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import type { Statement, ThemeRebuildPreviewResponse } from '@freedi/shared-types';
+import type { Statement } from '@freedi/shared-types';
 import { saveSynthesisSettings } from '@/controllers/db/synthesis/saveSynthesisSettings';
 import { listenSynthesisProgress } from '@/controllers/db/synthesis/listenSynthesisProgress';
 import {
-	previewThemeRebuild,
 	runClaimRegistryFirstRun,
 	synthesisCancel,
 	synthesisPause,
@@ -25,8 +24,7 @@ import Button from '@/view/components/atomic/atoms/Button/Button';
 import Toggle from '@/view/components/atomic/atoms/Toggle/Toggle';
 import SynthesisProgressBar from './SynthesisProgressBar';
 import SelectiveOptionsList from './SelectiveOptionsList';
-import ThemeRebuildPreview from './ThemeRebuildPreview';
-import { themeRebuildAppliedMessage, themeRebuildErrorMessage } from './themeRebuildMessages';
+import ThemeRebuildButton from './ThemeRebuildButton';
 import styles from './SynthesisPanel.module.scss';
 
 interface Props {
@@ -167,7 +165,6 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 	const [toast, setToast] = useState<ToastState | null>(null);
 	const [dirty, setDirty] = useState(false);
 	const [advancedOpen, setAdvancedOpen] = useState(false);
-	const [themePreview, setThemePreview] = useState<ThemeRebuildPreviewResponse | null>(null);
 	// Last PERSISTED value of the claim-registry flag — the first-run pass must
 	// only fire on a saved false→true transition, not on every save while on.
 	const [savedClaimRegistryEnabled, setSavedClaimRegistryEnabled] = useState(
@@ -369,15 +366,6 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 				message: `${t('Re-embedded')} ${result.embedded} / ${result.total} ${t('options')}${result.failed ? ` · ${result.failed} ${t('failed')}` : ''}`,
 			});
 		}
-	}
-
-	async function handleReTheme(): Promise<void> {
-		const result = await withBusy(
-			'reTheme',
-			() => previewThemeRebuild(statement.statementId),
-			(error) => themeRebuildErrorMessage(error, t),
-		);
-		if (result) setThemePreview(result);
 	}
 
 	async function handleRejudge(): Promise<void> {
@@ -771,12 +759,11 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 					</p>
 
 					<div className={styles.onDemandActions}>
-						<Button
-							text={t('Re-theme with AI')}
-							variant="secondary"
-							onClick={handleReTheme}
+						<ThemeRebuildButton
+							questionId={statement.statementId}
 							disabled={isRunning || busyOp !== null || dirty}
-							loading={busyOp === 'reTheme'}
+							onBusyChange={(busy) => setBusyOp(busy ? 'reTheme' : null)}
+							onNotice={setToast}
 						/>
 					</div>
 					<p className={styles.card__subtitle}>
@@ -823,15 +810,6 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 					)}
 				</section>
 			</div>
-
-			<ThemeRebuildPreview
-				questionId={statement.statementId}
-				preview={themePreview}
-				onClose={() => setThemePreview(null)}
-				onApplied={(result) =>
-					setToast({ tone: 'success', message: themeRebuildAppliedMessage(result, t) })
-				}
-			/>
 
 			{toast && (
 				<div className={styles.toast} data-tone={toast.tone} role="status">
