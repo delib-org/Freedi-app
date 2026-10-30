@@ -1,0 +1,104 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed42-filingfix",
+ "atoms": 51,
+ "synthAtoms": 49,
+ "discovered": 11,
+ "themesWithMembers": 11,
+ "otherCount": 2,
+ "unanswered": 0,
+ "sizes": [
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  4,
+  3,
+  2
+ ],
+ "ms": 20659,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 2322,
+   "completion": 1269
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 3307,
+   "completion": 747
+  }
+ },
+ "usd": 0.021429800000000002,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Digital Civic Access",
+   "rule": "Proposals belong here if they improve residents’ digital access to municipal services, public internet connectivity, or city information and data.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "Affordable and Efficient Housing",
+   "rule": "Proposals belong here if they increase housing supply, improve housing affordability or transparency, or fund energy upgrades to homes.",
+   "size": 5
+  },
+  {
+   "key": "t3",
+   "name": "School Learning Support",
+   "rule": "Proposals belong here if they improve school facilities, teaching conditions, meals, tutoring, class sizes, or educational enrichment for pupils.",
+   "size": 5
+  },
+  {
+   "key": "t4",
+   "name": "Public Transit Service",
+   "rule": "Proposals belong here if they make bus and public-transit travel more frequent, available, trackable, or affordable for riders.",
+   "size": 5
+  },
+  {
+   "key": "t5",
+   "name": "Safe Streets and Cycling",
+   "rule": "Proposals belong here if they use street design or traffic-calming infrastructure to protect pedestrians, cyclists, or schoolchildren from traffic.",
+   "size": 2
+  },
+  {
+   "key": "t6",
+   "name": "Health and Care Access",
+   "rule": "Proposals belong here if they expand access to physical health care, mental-health treatment, preventive screening, or in-home care.",
+   "size": 5
+  },
+  {
+   "key": "t7",
+   "name": "Waste Reduction and Recycling",
+   "rule": "Proposals belong here if they reduce disposable waste or create collection and recycling systems for recyclable or organic materials.",
+   "size": 3
+  },
+  {
+   "key": "t8",
+   "name": "Neighborhood Green Spaces",
+   "rule": "Proposals belong here if they create or improve local parks, playgrounds, dog areas, community gardens, or street-tree greenery.",
+   "size": 5
+  },
+  {
+   "key": "t9",
+   "name": "Culture and Public Libraries",
+   "rule": "Proposals belong here if they support public arts, cultural events, museum access, or neighborhood library services.",
+   "size": 5
+  },
+  {
+   "key": "t10",
+   "name": "Community Safety Services",
+   "rule": "Proposals belong here if they improve crime prevention, neighborhood policing, emergency response, or safety lighting in public places.",
+   "size": 4
+  },
+  {
+   "key": "t11",
+   "name": "Local Jobs and Businesses",
+   "rule": "Proposals belong here if they support workers, local hiring, freelancers, or small businesses through training, workspace, simplified licensing, or finance.",
+   "size": 5
+  }
+ ]
+}

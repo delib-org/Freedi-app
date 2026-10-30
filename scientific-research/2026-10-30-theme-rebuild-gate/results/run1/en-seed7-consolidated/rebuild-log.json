@@ -1,0 +1,97 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed7-consolidated",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 10,
+ "themesWithMembers": 10,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  7,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  4,
+  4
+ ],
+ "ms": 23500,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 941,
+   "completion": 1382
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 1849,
+   "completion": 832
+  }
+ },
+ "usd": 0.0198342,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Digital Civic Access",
+   "rule": "Proposals that improve residents' access to city information, online connectivity, forms, service requests, or help using civic services, excluding business licensing.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "Housing Affordability and Buildings",
+   "rule": "Proposals that create, convert, regulate, finance, or improve homes and residential buildings, including housing-market transparency.",
+   "size": 5
+  },
+  {
+   "key": "t3",
+   "name": "Health and Care Access",
+   "rule": "Proposals that expand preventive, primary, specialist, mental-health, or in-home care for residents.",
+   "size": 5
+  },
+  {
+   "key": "t4",
+   "name": "School and Youth Support",
+   "rule": "Proposals that improve schools or provide education, meals, enrichment, tutoring, or travel benefits specifically for children and students.",
+   "size": 7
+  },
+  {
+   "key": "t5",
+   "name": "Public Transit and Streets",
+   "rule": "Proposals that improve transit service, cycling infrastructure, or the safety and operation of streets for travel.",
+   "size": 5
+  },
+  {
+   "key": "t6",
+   "name": "Community Safety Response",
+   "rule": "Proposals that prevent crime, improve perceived safety, or shorten emergency-response times through policing, surveillance, lighting, or emergency facilities.",
+   "size": 4
+  },
+  {
+   "key": "t7",
+   "name": "Environmental Sustainability",
+   "rule": "Proposals that reduce pollution, waste, emissions, or single-use materials, or monitor environmental conditions and municipal energy use.",
+   "size": 5
+  },
+  {
+   "key": "t8",
+   "name": "Neighborhood Green Recreation",
+   "rule": "Proposals that create or improve local green, outdoor recreation, gardening, playground, or pet spaces, including street-tree planting.",
+   "size": 5
+  },
+  {
+   "key": "t9",
+   "name": "Culture and Public Learning",
+   "rule": "Proposals that expand access to cultural events, libraries, museums, or public art outside the formal school system.",
+   "size": 4
+  },
+  {
+   "key": "t10",
+   "name": "Local Jobs and Businesses",
+   "rule": "Proposals that support workers, local hiring, skills training, independent work, small-business finance, or business regulation and licensing.",
+   "size": 5
+  }
+ ]
+}
