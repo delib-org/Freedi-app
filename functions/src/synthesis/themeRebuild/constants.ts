@@ -15,11 +15,25 @@ export const RETRY_BATCH_SIZE = 10;
 /** Concurrent assignment calls (the shared LLM limiter caps globally too). */
 export const ASSIGN_CONCURRENCY = 5;
 
-/** Upper bound on discovered themes. */
+/** Hard upper bound on discovered themes, for any question size. */
 export const MAX_THEMES = 15;
 
 /** Lower bound on discovered themes, relaxed for very small questions. */
 export const MIN_THEMES = 5;
+
+/**
+ * Atoms per theme the ceiling is scaled by. A fixed ceiling of 15 let
+ * discovery split ~50-atom questions into 1-2 member sub-themes (offline gate
+ * 2026-10-30: 15 themes against 10 true topics on a Hebrew benchmark state).
+ */
+export const ATOMS_PER_THEME_CEILING = 4;
+
+/** Theme ceiling for a question: round(atoms / 4), clamped to [MIN_THEMES, MAX_THEMES]. */
+export function maxThemesFor(atomCount: number): number {
+	const scaled = Math.round(atomCount / ATOMS_PER_THEME_CEILING);
+
+	return Math.min(MAX_THEMES, Math.max(MIN_THEMES, scaled));
+}
 
 /** A new theme reuses an old theme doc when their member-Jaccard is at least this. */
 export const REUSE_JACCARD_MIN = 0.5;

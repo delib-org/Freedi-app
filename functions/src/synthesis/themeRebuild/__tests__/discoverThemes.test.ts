@@ -8,8 +8,14 @@ jest.mock('../../../config/openai-chat', () => ({
 }));
 
 import { TAXONOMY_MODEL } from '../../../config/openai-chat';
-import { MAX_THEMES } from '../constants';
-import { discoverThemes, parseDiscovery, sampleForDiscovery, themeBounds } from '../discoverThemes';
+import { MAX_THEMES, MIN_THEMES, maxThemesFor } from '../constants';
+import {
+	discoverThemes,
+	overCeilingReminder,
+	parseDiscovery,
+	sampleForDiscovery,
+	themeBounds,
+} from '../discoverThemes';
 import { themeLanguageInstruction } from '../prompts';
 import type { RebuildAtom } from '../types';
 
@@ -26,8 +32,18 @@ const answer = (names: string[]): string =>
 beforeEach(() => jest.clearAllMocks());
 
 describe('themeBounds', () => {
-	it('asks for 5-15 themes on a normal question', () => {
+	it('scales the ceiling with question size: round(atoms / 4) within 5..15', () => {
 		expect(themeBounds(100)).toEqual({ min: 5, max: MAX_THEMES });
+		expect(themeBounds(50)).toEqual({ min: 5, max: 13 });
+		expect(themeBounds(40)).toEqual({ min: 5, max: 10 });
+		expect(themeBounds(12)).toEqual({ min: 5, max: MIN_THEMES });
+	});
+
+	it('never lets the ceiling fall below the floor', () => {
+		for (let n = 1; n <= 200; n++) {
+			const { min, max } = themeBounds(n);
+			expect(max).toBeGreaterThanOrEqual(min);
+		}
 	});
 
 	it('relaxes the minimum for a tiny question', () => {
@@ -36,9 +52,17 @@ describe('themeBounds', () => {
 	});
 });
 
+describe('maxThemesFor', () => {
+	it('clamps to MIN_THEMES and MAX_THEMES', () => {
+		expect(maxThemesFor(0)).toBe(MIN_THEMES);
+		expect(maxThemesFor(10_000)).toBe(MAX_THEMES);
+		expect(maxThemesFor(30)).toBe(8);
+	});
+});
+
 describe('parseDiscovery', () => {
 	it('assigns local keys and drops duplicate names', () => {
-		const themes = parseDiscovery(answer(['Funding', 'funding', 'Schools']), { min: 1, max: 15 });
+		const themes = parseDiscovery(answer(['Funding', 'funding', 'Schools']));
 		expect(themes).toEqual([
 			{ key: 't1', name: 'Funding', rule: 'about Funding' },
 			{ key: 't2', name: 'Schools', rule: 'about Schools' },
@@ -46,14 +70,12 @@ describe('parseDiscovery', () => {
 	});
 
 	it('rejects a theme without a rule', () => {
-		expect(() =>
-			parseDiscovery(JSON.stringify({ themes: [{ name: 'x' }] }), { min: 1, max: 15 }),
-		).toThrow();
+		expect(() => parseDiscovery(JSON.stringify({ themes: [{ name: 'x' }] }))).toThrow();
 	});
 
-	it('truncates to the maximum', () => {
+	it('does not cut to the ceiling (the caller retries instead)', () => {
 		const names = Array.from({ length: 20 }, (_, i) => `n${i}`);
-		expect(parseDiscovery(answer(names), { min: 1, max: 15 })).toHaveLength(15);
+		expect(parseDiscovery(answer(names))).toHaveLength(20);
 	});
 });
 
@@ -97,6 +119,31 @@ describe('discoverThemes', () => {
 		callLLM.mockResolvedValue(answer(['A', 'B']));
 
 		await expect(discoverThemes('How?', atoms(30))).resolves.toHaveLength(2);
+		expect(callLLM).toHaveBeenCalledTimes(2);
+	});
+
+	it('retries an over-ceiling answer once with a reminder of the ceiling', async () => {
+		const max = themeBounds(30).max;
+		const tooMany = Array.from({ length: max + 3 }, (_, i) => `n${i}`);
+		callLLM
+			.mockResolvedValueOnce(answer(tooMany))
+			.mockResolvedValueOnce(answer(['A', 'B', 'C', 'D', 'E']));
+
+		await expect(discoverThemes('How?', atoms(30))).resolves.toHaveLength(5);
+		expect(callLLM).toHaveBeenCalledTimes(2);
+		expect(callLLM.mock.calls[1][0].user).toContain(overCeilingReminder(max + 3, max));
+		expect(callLLM.mock.calls[0][0].user).not.toContain('REMINDER');
+	});
+
+	it('keeps the first max themes when the retry is still over the ceiling', async () => {
+		const max = themeBounds(30).max;
+		const tooMany = Array.from({ length: max + 3 }, (_, i) => `n${i}`);
+		callLLM.mockResolvedValue(answer(tooMany));
+
+		const themes = await discoverThemes('How?', atoms(30));
+
+		expect(themes).toHaveLength(max);
+		expect(themes[0].name).toBe('n0');
 		expect(callLLM).toHaveBeenCalledTimes(2);
 	});
 

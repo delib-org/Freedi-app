@@ -4,8 +4,8 @@ import { callLLM, extractJson, TAXONOMY_MODEL } from '../../config/openai-chat';
 import {
 	DISCOVERY_MAX_TOKENS,
 	DISCOVERY_WHOLE_INPUT_MAX,
-	MAX_THEMES,
 	MIN_THEMES,
+	maxThemesFor,
 } from './constants';
 import { DISCOVERY_SYSTEM, discoveryUserPrompt } from './prompts';
 import type { DiscoveredTheme, RebuildAtom } from './types';
@@ -35,11 +35,14 @@ export interface ThemeBounds {
 	max: number;
 }
 
-/** 5-15 themes, relaxed for a question too small to fill five. */
+/**
+ * Theme count bounds: the ceiling scales with question size (see
+ * `maxThemesFor`); the floor of 5 is relaxed for a question too small to fill it.
+ */
 export function themeBounds(atomCount: number): ThemeBounds {
 	const min = Math.max(1, Math.min(MIN_THEMES, Math.floor(atomCount / 2)));
 
-	return { min, max: MAX_THEMES };
+	return { min, max: maxThemesFor(atomCount) };
 }
 
 /**
@@ -64,8 +67,11 @@ export function sampleForDiscovery(
 	return [...synths, ...sampled];
 }
 
-/** Parse, dedupe by name and assign local keys t1..tN. Throws on a bad shape. */
-export function parseDiscovery(raw: string, bounds: ThemeBounds): DiscoveredTheme[] {
+/**
+ * Parse, dedupe by name and assign local keys t1..tN. Throws on a bad shape.
+ * Does NOT cut to the ceiling: an over-ceiling answer is the caller's to retry.
+ */
+export function parseDiscovery(raw: string): DiscoveredTheme[] {
 	const parsed = v.parse(DiscoveryResponseSchema, JSON.parse(extractJson(raw)));
 	const seen = new Set<string>();
 	const unique = parsed.themes.filter((t) => {
@@ -76,23 +82,41 @@ export function parseDiscovery(raw: string, bounds: ThemeBounds): DiscoveredThem
 		return true;
 	});
 
-	return unique
-		.slice(0, bounds.max)
-		.map((t, i) => ({ key: `t${i + 1}`, name: t.name, rule: t.rule }));
+	return unique.map((t, i) => ({ key: `t${i + 1}`, name: t.name, rule: t.rule }));
 }
 
+/** Appended to the prompt when the previous answer went over the ceiling. */
+export function overCeilingReminder(returned: number, max: number): string {
+	return `
+
+REMINDER: your previous answer had ${returned} themes, more than the allowed ${max}.
+Return at most ${max} themes: fold the narrowest ones into the closest broader theme.`;
+}
+
+/**
+ * One discovery call on the whole question, retried once when the answer is
+ * unparseable, below the floor, or above the ceiling (the retry carries an
+ * explicit reminder of the ceiling).
+ *
+ * If the retry is still over the ceiling, the first `max` themes are kept.
+ * That is safe because assignment runs after discovery against the kept list
+ * only: the ideas of a dropped theme are sorted into the kept themes, or go to
+ * "Other ideas", like any other idea. Failing closed instead would leave the
+ * admin with no rebuild at all for a soft limit.
+ */
 export async function discoverThemes(
 	question: string,
 	atoms: RebuildAtom[],
 ): Promise<DiscoveredTheme[]> {
 	const bounds = themeBounds(atoms.length);
 	const sample = sampleForDiscovery(atoms);
-	const user = discoveryUserPrompt(
+	const basePrompt = discoveryUserPrompt(
 		question,
 		sample.map((a) => a.text),
 		bounds,
 	);
 
+	let user = basePrompt;
 	let fallback: DiscoveredTheme[] | null = null;
 	for (let attempt = 1; attempt <= DISCOVERY_ATTEMPTS; attempt++) {
 		try {
@@ -104,7 +128,17 @@ export async function discoverThemes(
 				temperature: 0,
 				jsonMode: true,
 			});
-			const themes = parseDiscovery(raw, bounds);
+			const themes = parseDiscovery(raw);
+			if (themes.length > bounds.max) {
+				fallback = themes.slice(0, bounds.max);
+				user = basePrompt + overCeilingReminder(themes.length, bounds.max);
+				logger.warn('themeRebuild.discover: too many themes, retrying', {
+					attempt,
+					themes: themes.length,
+					max: bounds.max,
+				});
+				continue;
+			}
 			if (themes.length >= bounds.min) return themes;
 			if (themes.length > 0) fallback = themes;
 			logger.warn('themeRebuild.discover: too few themes, retrying', {
@@ -119,7 +153,7 @@ export async function discoverThemes(
 			});
 		}
 	}
-	// Fewer themes than asked is still a usable list; nothing at all is not.
+	// A cut or short list is still usable; nothing at all is not.
 	if (fallback) return fallback;
 	throw new Error('Theme discovery failed');
 }
