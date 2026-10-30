@@ -437,6 +437,51 @@ describe('join-class lesson plans and homes', () => {
 		});
 	});
 
+	describe('subscription identity on a home and a lesson', () => {
+		// The generic identity rules live in subscription-identity.test.mjs; these
+		// pin them on the join-class shapes, where a forged doc would mean admin of
+		// a home (every lesson in the class) or of a running lesson.
+		const FORGER = 'u-forger';
+		const FORGER_OWN = 'forger-own';
+		const STUDENT_OWN = 'student-own';
+		const ownStatement = (id, uid) => ({
+			statementId: id,
+			statement: id,
+			statementType: 'question',
+			parentId: 'top',
+			topParentId: id,
+			parents: [],
+			creatorId: uid,
+			creator: { uid, displayName: 'X' },
+			membership: { access: 'openToAll' },
+		});
+
+		before(async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'statements', FORGER_OWN), ownStatement(FORGER_OWN, FORGER));
+				await setDoc(doc(db, 'statements', STUDENT_OWN), ownStatement(STUDENT_OWN, STUDENT));
+			});
+		});
+
+		it('way A: refuses a home id holding the fields of a statement the writer owns', async () => {
+			await assertFails(
+				setDoc(doc(as(FORGER), 'statementsSubscribe', `${FORGER}--${HOME}`), {
+					...sub(FORGER, FORGER_OWN, 'admin'),
+					statementsSubscribeId: `${FORGER}--${HOME}`,
+				}),
+			);
+		});
+
+		it('way A on a lesson: a student cannot make their lesson doc admin via their own statement', async () => {
+			await assertFails(
+				setDoc(doc(as(STUDENT), 'statementsSubscribe', `${STUDENT}--${LESSON}`), {
+					...sub(STUDENT, STUDENT_OWN, 'admin'),
+					statementsSubscribeId: `${STUDENT}--${LESSON}`,
+				}),
+			);
+		});
+	});
+
 	describe('an old top-level lesson is unchanged', () => {
 		it('students read it, its question, and subscribe to both', async () => {
 			const db = as(STUDENT);
