@@ -1165,8 +1165,10 @@ service cloud.firestore {
       // participant may make on any statement get through; no client deletes it.
       function homeWriteBlocked() {
         return isClassHomeData(resource.data) &&
-               !request.resource.data.diff(resource.data).affectedKeys()
-                  .hasOnly(['lastUpdate', 'lastChildUpdate']);
+               !(request.resource.data.diff(resource.data).affectedKeys()
+                   .hasOnly(['lastUpdate', 'lastChildUpdate']) &&
+                 request.resource.data.get('lastUpdate', 0) is number &&
+                 request.resource.data.get('lastChildUpdate', 0) is number);
       }
 
       function changesClassReplyFields() {
@@ -1469,6 +1471,39 @@ service cloud.firestore {
       function homeSubscriptionUpdateOk() {
         return !isHomeSubscription() || (isSubscriber() && isRoleUnchanged());
       }
+
+      // IDENTITY OF A SUBSCRIPTION. Every admin check (statements isAdmin(),
+      // checkTopParentAdmin(), classCodes/classTables admins, the server's
+      // isWorkspaceAdmin) finds a subscription by its DOC ID, {uid}--{statementId};
+      // the access checks here and setupAdminsForStatement read its FIELDS. They
+      // must agree, or a doc judged against one statement grants admin over
+      // another. Every client builds the id as `${uid}--${statementId}`
+      // (getStatementSubscriptionId) and never moves statementId / userId on update.
+      function userUidOf(d) {
+        return d.get('user', null) is map ? d.user.get('uid', null) : null;
+      }
+      function createIdentityOk() {
+        let d = request.resource.data;
+        return d.get('statementId', null) is string &&
+               statementSubId == request.auth.uid + '--' + d.statementId &&
+               (d.get('user', null) == null || userUidOf(d) == request.auth.uid);
+      }
+      // A legacy doc missing statementId / userId may gain the one its id names
+      // (the main app writes statementId with every update for that reason).
+      function updateIdentityOk() {
+        let before = resource.data;
+        let after = request.resource.data;
+        let beforeStatement = before.get('statementId', null);
+        let afterStatement = after.get('statementId', null);
+        let beforeUser = before.get('userId', null);
+        let afterUser = after.get('userId', null);
+        return (afterStatement == beforeStatement ||
+                (beforeStatement == null && afterStatement is string &&
+                 statementSubId == (afterUser == null ? request.auth.uid : afterUser) + '--' + afterStatement)) &&
+               (afterUser == beforeUser ||
+                (beforeUser == null && afterUser is string && statementSubId.matches(afterUser + '--.+'))) &&
+               (userUidOf(after) == userUidOf(before) || userUidOf(after) == after.get('userId', null));
+      }
       
       function isOpenToAll() {
         return getAccess() == "openToAll";
@@ -1563,6 +1598,7 @@ service cloud.firestore {
       // and self-grant statement-admin (edit protected settings, delete, ban).
       allow create: if request.auth.uid != null &&
                      request.resource.data.userId == request.auth.uid &&
+                     createIdentityOk() &&
                      homeSubscriptionWriteOk() &&
                      (isAdminOrCreator() ||
                       (request.resource.data.role != 'admin' &&
@@ -1577,6 +1613,7 @@ service cloud.firestore {
       // For update
       allow update: if request.auth.uid != null &&
                      !isTryingToBanProtectedUser() &&
+                     updateIdentityOk() &&
                      homeSubscriptionUpdateOk() &&
                      (isAdminOrCreator() ||
                       (isSubscriber() &&

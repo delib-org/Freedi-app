@@ -349,6 +349,8 @@ describe('join-class lesson plans and homes', () => {
 			await assertFails(updateDoc(doc(as(OWNER), 'statements', HOME), { statement: 'ט׳2 (2026)' }));
 			await assertFails(deleteDoc(doc(as(OWNER), 'statements', HOME)));
 			await assertSucceeds(updateDoc(doc(as(OWNER), 'statements', HOME), { lastChildUpdate: T0 + 9 }));
+			await assertFails(updateDoc(doc(as(OWNER), 'statements', HOME), { lastChildUpdate: 'soon' }));
+			await assertFails(updateDoc(doc(as(OWNER), 'statements', HOME), { lastUpdate: null }));
 		});
 	});
 
