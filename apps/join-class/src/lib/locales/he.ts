@@ -570,6 +570,8 @@ const he: Record<string, string> = {
 	'teacher.lesson.class_none': 'בלי כיתה',
 	'teacher.lesson.name_label': 'שם השיעור',
 	'teacher.lesson.name_default': '{{game}} עם {{class}}',
+	'teacher.back.nav': 'חזרה',
+	'teacher.back.to': 'חזרה אל {{name}}',
 	'teacher.lesson.no_classes': 'עוד לא שויכו אליכם כיתות. השיעור יישמר תחת השם שלכם.',
 	'teacher.lesson.row': '{{class}} · {{date}}',
 	'teacher.lesson.busy': 'מכינים את השיעור...',

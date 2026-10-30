@@ -24,31 +24,6 @@
   padding-block: var(--space-sm);
 }
 
-.plan__back {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  min-height: var(--touch-target);
-  padding-inline-end: var(--space-md);
-  color: var(--teal-700);
-  font-weight: var(--font-weight-semibold);
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
-
-.plan__back-chevron {
-  font-size: var(--font-size-xl);
-  line-height: 1;
-  unicode-bidi: isolate;
-
-  [dir='rtl'] & {
-    transform: scaleX(-1);
-  }
-}
-
 .plan__title, .teacher-home__title {
   font-size: var(--font-size-2xl);
   line-height: var(--line-height-tight);

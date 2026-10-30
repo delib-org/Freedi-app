@@ -34,7 +34,6 @@ $tap: 44px;
     gap: var(--space-xs) var(--space-sm);
     padding-inline: var(--space-sm);
 
-    > .plan__back,
     > .console__link,
     > .btn,
     > .projector-menu,
@@ -43,7 +42,6 @@ $tap: 44px;
       min-block-size: $tap;
     }
 
-    > .plan__back,
     > .console__link {
       display: inline-flex;
       align-items: center;

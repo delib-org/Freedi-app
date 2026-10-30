@@ -576,6 +576,8 @@ const en: Record<string, string> = {
 	'teacher.lesson.class_none': 'No class',
 	'teacher.lesson.name_label': 'Lesson name',
 	'teacher.lesson.name_default': '{{game}} with {{class}}',
+	'teacher.back.nav': 'Back',
+	'teacher.back.to': 'Back to {{name}}',
 	'teacher.lesson.no_classes':
 		'No classes are assigned to you yet. The lesson will be kept under your name.',
 	'teacher.lesson.row': '{{class}} · {{date}}',

@@ -4,6 +4,8 @@ import type { Statement } from '@freedi/shared-types';
 import { getAvailableLanguages, t } from '@/lib/i18n';
 import { setFollowLessonLanguage } from '@/lib/store';
 import { getPlanMain, isGameMode } from './planSource';
+import { TeacherBackBar, type TeacherBackBarAttrs } from './TeacherBackBar';
+import { lessonNameOf } from '@/lib/lessonLinks';
 import { ClassForm, closeClassForm, isClassFormOpen, openClassForm } from './ClassForm';
 import { planPathOf } from '@/lib/lessonLinks';
 import { NotYourLesson } from './NotYourLesson';
@@ -439,6 +441,21 @@ function routeGame(): { planId: string; gameId: string } | null {
 	return planId && gameId ? { planId, gameId } : null;
 }
 
+/**
+ * One level up: a game goes to its plan (named after the plan); a lesson's own questions
+ * go to the lesson's console (named after the lesson, as the teacher called it).
+ */
+function backTarget(
+	game: { planId: string; gameId: string } | null,
+	mid: string,
+	planTitle: string,
+): TeacherBackBarAttrs {
+	if (game) return { href: planPathOf(game.planId), label: planTitle || t('classPlan.back') };
+	const main = getPlanMain();
+
+	return { href: `/t/${mid}`, label: main ? lessonNameOf(main) : t('plan.back') };
+}
+
 export const PlanScreen: m.Component = {
 	oninit() {
 		setFollowLessonLanguage(false);
@@ -471,16 +488,8 @@ export const PlanScreen: m.Component = {
 		const planTitle = getGamePlanTitle();
 
 		return m('.plan', [
+			m(TeacherBackBar, backTarget(game, mid, planTitle)),
 			m('header.plan__header', [
-				game
-					? m(m.route.Link, { class: 'plan__back', href: planPathOf(game.planId) }, [
-							m('span.plan__back-chevron', { 'aria-hidden': 'true' }, '‹'),
-							m('bdi', { dir: 'auto' }, planTitle || t('classPlan.back')),
-						])
-					: m(m.route.Link, { class: 'plan__back', href: `/t/${mid}` }, [
-							m('span.plan__back-chevron', { 'aria-hidden': 'true' }, '‹'),
-							m('span', t('plan.back')),
-						]),
 				m('h1.plan__title', t('plan.title')),
 				ready && getTitle() ? m('p.plan__lesson', getTitle()) : null,
 			]),

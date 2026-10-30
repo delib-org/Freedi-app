@@ -27,6 +27,7 @@ import {
 import { watchLibrary, type TeacherLibrary } from '@/lib/teacherLibrary';
 import { NotYourLesson } from './NotYourLesson';
 import { renderChip, renderLessonActions, renderLessonName, rowAriaName } from './LessonRow';
+import { TeacherBackBar } from './TeacherBackBar';
 import { ClassForm, closeClassForm, isClassFormOpen, openClassForm } from './ClassForm';
 import {
 	configureCreate,
@@ -450,12 +451,7 @@ export const PlanOverview: m.Component = {
 		if (isPicking && sourcesLoad === 'idle') void loadSources();
 
 		return m('.teacher-home.plan-overview', { onkeydown: (e: KeyboardEvent) => onPageEscape(e) }, [
-			m('header.teacher-home__header', [
-				m(m.route.Link, { class: 'plan__back', href: '/t' }, [
-					m('span.plan__back-chevron', { 'aria-hidden': 'true' }, '‹'),
-					m('span', t('classPlan.back')),
-				]),
-			]),
+			m(TeacherBackBar, { href: '/t', label: t('classPlan.back') }),
 			m('main.teacher-home__body', [
 				loaded
 					? m('.plan-overview__head', renderTitle(title))

@@ -570,6 +570,8 @@ const ar: Record<string, string> = {
 	'teacher.lesson.class_none': 'بلا صف',
 	'teacher.lesson.name_label': 'اسم الدرس',
 	'teacher.lesson.name_default': '{{game}} مع {{class}}',
+	'teacher.back.nav': 'رجوع',
+	'teacher.back.to': 'العودة إلى {{name}}',
 	'teacher.lesson.no_classes': 'لم تُسنَد إليكم صفوف بعد. سيُحفظ الدرس باسمكم.',
 	'teacher.lesson.row': '{{class}} · {{date}}',
 	'teacher.lesson.busy': 'جارٍ تحضير الدرس...',

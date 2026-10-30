@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { TeacherBackBar } from './TeacherBackBar';
 import type { ClassTable, Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import {
@@ -38,6 +39,8 @@ export interface TableSheetPanelAttrs {
 	plenum: boolean;
 	tableTalk: boolean;
 	onClose: () => void;
+	/** The lesson's name: the back bar at the top of the sheet goes up to the console. */
+	lessonName: string;
 }
 
 let showNoDevice = false;
@@ -162,6 +165,11 @@ export const TableSheetPanel: m.Component<TableSheetPanelAttrs> = {
 				'aside.table-sheet',
 				{ role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'table-sheet-title' },
 				[
+					m(TeacherBackBar, {
+						href: `/t/${attrs.mainId}`,
+						label: attrs.lessonName,
+						onActivate: attrs.onClose,
+					}),
 					m('header.table-sheet__head', [
 						m('h2.table-sheet__title#table-sheet-title', t('console.table_n', { n: attrs.n })),
 						m(

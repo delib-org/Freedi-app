@@ -56,6 +56,7 @@ import type { ConsoleView } from './consoleState';
 import { abortDrag } from './dragController';
 import { EndChoice, openEndChoice } from './EndChoice';
 import { planBack } from './consoleBack';
+import { TeacherBackBar } from './TeacherBackBar';
 import { lessonNameOf } from '@/lib/lessonLinks';
 import { LessonBanner } from './LessonBanner';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -157,19 +158,19 @@ function statusGroup(mid: string, status: LessonStatus | null): m.Children {
 	]);
 }
 
+function backBar(): m.Children {
+	const back = planBack();
+
+	return m(TeacherBackBar, { href: back.href, label: back.label });
+}
+
 function header(
 	mid: string,
 	lessonName: string | undefined,
 	code: string | undefined,
 	status: LessonStatus | null,
 ): m.Vnode {
-	const back = planBack();
-
 	return m('header.console__bar', [
-		m(m.route.Link, { class: 'plan__back', href: back.href }, [
-			m('span.plan__back-chevron', { 'aria-hidden': 'true' }, '‹'),
-			m('bdi', { dir: 'auto' }, back.label),
-		]),
 		m('h1.console__title', lessonName ?? t('teacher.console.title')),
 		code
 			? m('p.console__code', [
@@ -286,7 +287,8 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 
 		if (!ready) {
 			return m('.console', [
-				header(mid, main?.statement, undefined, null),
+				backBar(),
+				header(mid, main ? lessonNameOf(main) : undefined, undefined, null),
 				m(
 					'main.console__board',
 					session.status === 'failed'
@@ -321,6 +323,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 		// >>> allProposals END
 
 		return m('.console', { 'data-step': step.key }, [
+			backBar(),
 			header(mid, lessonNameOf(main), code, status),
 			showQr
 				? m('section.console__qr', [
@@ -428,6 +431,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 						questions,
 						plenum: isPlenum(challenge),
 						tableTalk: step.key === 'tableTalk',
+						lessonName: lessonNameOf(main),
 						onClose: () => {
 							consoleState.focusTableN = attrs.sheetN ?? null;
 							m.route.set(`/t/${mid}`);

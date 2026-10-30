@@ -567,6 +567,8 @@ const fa: Record<string, string> = {
 	'teacher.lesson.class_none': 'بدون کلاس',
 	'teacher.lesson.name_label': 'نام درس',
 	'teacher.lesson.name_default': '{{game}} با {{class}}',
+	'teacher.back.nav': 'بازگشت',
+	'teacher.back.to': 'بازگشت به {{name}}',
 	'teacher.lesson.no_classes':
 		'هنوز کلاسی به شما اختصاص داده نشده است. درس به نام خودتان ذخیره می‌شود.',
 	'teacher.lesson.row': '{{class}} · {{date}}',
