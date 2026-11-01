@@ -22,6 +22,10 @@ import {
 	BAYESIAN_PRIOR_K,
 } from '@freedi/shared-types';
 import { computeEffectiveClusterVote } from './clusterVoteRule';
+import { ClusterNode, collectTreeIds, computeEffectiveTreeVote } from './clusterTree';
+import { loadClusterTree } from './clusterTreeLoader';
+
+export { findClustersAffectedByEvaluation } from './clusterAncestors';
 
 // Lazy init to avoid calling getFirestore() before initializeApp()
 const db = () => getFirestore();
@@ -32,12 +36,15 @@ const db = () => getFirestore();
  * Computes the full StatementEvaluation object for a cluster statement by
  * reading evaluations from:
  *   (a) the cluster statement itself, AND
- *   (b) every statement listed in cluster.integratedOptions
+ *   (b) every statement listed in cluster.integratedOptions, and for members
+ *       that are clusters, THEIR integratedOptions, down the whole tree
  *
  * Deduplicates per evaluator: if a user evaluated the cluster and/or
  * multiple members, they are counted ONCE: a direct vote on the cluster
  * wins, then direct votes on absorbed clusters, else the AVERAGE of their
- * member votes (see `clusterVoteRule.ts`). This matches `fn_clusterAggregation`'s
+ * member votes. Members that are clusters themselves (theme -> synthesis ->
+ * options) are resolved the same way, recursively (see `clusterTree.ts`;
+ * `clusterVoteRule.ts` is its single-level form). This matches `fn_clusterAggregation`'s
  * framing-based dedup semantics but operates on the non-destructive
  * `integratedOptions` model (originals keep their own parentId and
  * independent evaluation).
@@ -65,12 +72,20 @@ interface AggregationOptions {
 	clusterStatementId?: string;
 	/** Clusters merged into this one; their direct votes count as direct-like. */
 	absorbedClusterIds?: readonly string[];
+	/**
+	 * The cluster's member tree. When present the nested rule applies per user
+	 * (`computeEffectiveTreeVote`) and `clusterStatementId` /
+	 * `absorbedClusterIds` are ignored (the tree carries them). When absent the
+	 * single-level behaviour above is unchanged.
+	 */
+	clusterTree?: ClusterNode;
 }
 
 /**
- * Every statement whose evaluations feed a cluster's score: the cluster
- * itself (direct votes), its members (`integratedOptions`) and the clusters
- * it absorbed (`absorbedClusterIds`, their direct votes).
+ * ONE-LEVEL source ids: the cluster itself (direct votes), its members
+ * (`integratedOptions`) and the clusters it absorbed (`absorbedClusterIds`).
+ * Use `collectTreeIds(tree)` instead wherever the member statements are at
+ * hand: members that are themselves clusters have members of their own.
  */
 export function clusterVoteSourceIds(
 	clusterId: string,
@@ -167,13 +182,18 @@ export function computeClusterEvaluationFromRawEvals(
 	let numberOfConEvaluators = 0;
 
 	byUser.forEach((userEvals, userId) => {
-		const effective = options.clusterStatementId
-			? (computeEffectiveClusterVote(
-					options.clusterStatementId,
-					userEvals,
-					options.absorbedClusterIds,
+		const effective = options.clusterTree
+			? (computeEffectiveTreeVote(
+					options.clusterTree,
+					new Map(userEvals.map((e) => [e.statementId, e])),
 				) ?? 0)
-			: userEvals.reduce((sum, e) => sum + e.evaluation, 0) / userEvals.length;
+			: options.clusterStatementId
+				? (computeEffectiveClusterVote(
+						options.clusterStatementId,
+						userEvals,
+						options.absorbedClusterIds,
+					) ?? 0)
+				: userEvals.reduce((sum, e) => sum + e.evaluation, 0) / userEvals.length;
 		perUserAverages.set(userId, effective);
 		sumEvaluations += effective;
 		sumSquaredEvaluations += effective * effective;
@@ -292,7 +312,10 @@ export async function recomputeClusterEvaluation(
 
 	const integrated = cluster.integratedOptions ?? [];
 	const absorbedClusterIds = cluster.absorbedClusterIds ?? [];
-	const evaluations = await fetchEvaluationsForIds(clusterVoteSourceIds(clusterId, cluster));
+	// Nested rule: members that are clusters (a synthesis under a theme) bring
+	// their own members' votes. One batched read per tree level.
+	const clusterTree = await loadClusterTree(clusterId, cluster);
+	const evaluations = await fetchEvaluationsForIds(collectTreeIds(clusterTree));
 
 	// Preserve any pre-existing evaluationRandomNumber so downstream writers
 	// (e.g. the main evaluation updater) don't trip over an undefined field,
@@ -306,7 +329,7 @@ export async function recomputeClusterEvaluation(
 
 	const { evaluation, byUser, perUserAverages } = computeClusterEvaluationFromRawEvals(
 		evaluations,
-		{ ...population, ...options, clusterStatementId: clusterId, absorbedClusterIds },
+		{ ...population, ...options, clusterStatementId: clusterId, absorbedClusterIds, clusterTree },
 		existingRandom,
 		existingViewed,
 	);
@@ -438,41 +461,4 @@ async function syncClusterEvaluationLinks(
 	} catch (error) {
 		logger.error('condensation.syncClusterEvaluationLinks failed', { clusterId, error });
 	}
-}
-
-/**
- * Given an evaluation write, find any cluster statements that need recompute.
- * Returns the cluster statement IDs that reference the target statement via
- * `integratedOptions`, plus the target itself if it is a cluster.
- */
-export async function findClustersAffectedByEvaluation(statementId: string): Promise<string[]> {
-	const affected = new Set<string>();
-
-	// Case 1: the evaluation was on the cluster statement itself.
-	const targetDoc = await db().collection(Collections.statements).doc(statementId).get();
-	if (targetDoc.exists) {
-		const target = targetDoc.data() as Statement;
-		if (target.isCluster === true) {
-			affected.add(statementId);
-		}
-	}
-
-	// Case 2: the evaluation was on an original that is part of one or more
-	// clusters. Look up clusters via `array-contains integratedOptions`.
-	const clustersSnap = await db()
-		.collection(Collections.statements)
-		.where('integratedOptions', 'array-contains', statementId)
-		.get();
-
-	clustersSnap.docs.forEach((doc) => affected.add(doc.id));
-
-	// Case 3: the evaluation was on a hidden cluster that was merged into
-	// another one. Its direct votes still count for the winner.
-	const absorbingSnap = await db()
-		.collection(Collections.statements)
-		.where('absorbedClusterIds', 'array-contains', statementId)
-		.get();
-	absorbingSnap.docs.forEach((doc) => affected.add(doc.id));
-
-	return Array.from(affected);
 }

@@ -15,10 +15,8 @@ import {
 	calcAgreement,
 	calcAgreementIndex,
 } from '@freedi/shared-types';
-import {
-	clusterVoteSourceIds,
-	computeClusterEvaluationFromRawEvals,
-} from '../condensation/aggregation';
+import { computeClusterEvaluationFromRawEvals } from '../condensation/aggregation';
+import { buildClusterTree, collectTreeIds } from '../condensation/clusterTree';
 import { calculateEvaluationStats } from './kAnonymity';
 import { DerivedPipeline, MergedOptionStats, OptionEvaluationSummary } from './types';
 
@@ -28,7 +26,8 @@ export const STATS_NOTES =
 	'count the evaluations whose statementId is this option. ' +
 	"Options with statsMethod 'direct+merged' are derived (a synthesis or a theme) and also carry merged* fields: " +
 	"one vote per user across the option and its member options, as shown in the app — the user's direct vote on the " +
-	'derived option wins, otherwise the average of their votes on its members. ' +
+	'derived option wins, otherwise the average of their votes on its members; members that are themselves derived ' +
+	'(a synthesis inside a theme) are resolved the same way, level by level. ' +
 	'When metadata.fpcApplied is true, agreement uses the finite-population correction with N = metadata.stakeholderCount.';
 
 /**
@@ -83,12 +82,29 @@ export function groupEvaluationsByStatement(evaluations: Evaluation[]): Map<stri
 	return byStatement;
 }
 
-/** Statement ids whose evaluations feed some cluster's merged stats. */
+/** Options keyed by statement id: the lookup the member trees are built from. */
+export function indexOptions(options: Statement[]): Map<string, Statement> {
+	return new Map(options.map((option) => [option.statementId, option]));
+}
+
+/** The cluster's member tree, expanded through the question's own options. */
+function treeFor(option: Statement, optionsById: ReadonlyMap<string, Statement>) {
+	return buildClusterTree(option.statementId, (id) =>
+		id === option.statementId ? option : optionsById.get(id),
+	);
+}
+
+/**
+ * Statement ids whose evaluations feed some cluster's merged stats, including
+ * the members of nested clusters (a synthesis inside a theme) found among the
+ * question's options.
+ */
 export function mergedSourceIds(options: Statement[]): Set<string> {
+	const optionsById = indexOptions(options);
 	const ids = new Set<string>();
 	for (const option of options) {
 		if (option.isCluster !== true) continue;
-		clusterVoteSourceIds(option.statementId, option).forEach((id) => ids.add(id));
+		collectTreeIds(treeFor(option, optionsById)).forEach((id) => ids.add(id));
 	}
 
 	return ids;
@@ -98,19 +114,19 @@ export function mergedSourceIds(options: Statement[]): Set<string> {
  * Merged stats for a cluster via the app's own aggregator. Agreement is
  * recomputed from the aggregator's sums with the question's N, so merged and
  * direct agreement use the same population; without N it equals the
- * aggregator's own value.
+ * aggregator's own value. `optionsById` lets nested members be expanded;
+ * without it only the cluster's direct members are known.
  */
 export function computeMergedStats(
 	option: Statement,
 	byStatement: Map<string, Evaluation[]>,
 	stakeholderCount: number | undefined,
+	optionsById: ReadonlyMap<string, Statement> = new Map(),
 ): MergedOptionStats {
-	const sourceEvals = clusterVoteSourceIds(option.statementId, option).flatMap(
-		(id) => byStatement.get(id) ?? [],
-	);
+	const clusterTree = treeFor(option, optionsById);
+	const sourceEvals = collectTreeIds(clusterTree).flatMap((id) => byStatement.get(id) ?? []);
 	const { evaluation } = computeClusterEvaluationFromRawEvals(sourceEvals, {
-		clusterStatementId: option.statementId,
-		absorbedClusterIds: option.absorbedClusterIds,
+		clusterTree,
 		targetPopulation: stakeholderCount,
 	});
 	const n = evaluation.numberOfEvaluators;
@@ -140,6 +156,7 @@ export function buildOptionSummary(
 	option: Statement,
 	byStatement: Map<string, Evaluation[]>,
 	stakeholderCount: number | undefined,
+	optionsById: ReadonlyMap<string, Statement> = new Map(),
 ): OptionEvaluationSummary {
 	const direct = byStatement.get(option.statementId) ?? [];
 	const stats = calculateEvaluationStats(direct.map((e) => e.evaluation));
@@ -174,7 +191,7 @@ export function buildOptionSummary(
 		derivedByPipeline: derived ? resolveDerivedPipeline(option) : undefined,
 		integratedOptions: derived ? option.integratedOptions : undefined,
 		statsMethod: isCluster ? 'direct+merged' : 'direct',
-		...(isCluster ? computeMergedStats(option, byStatement, stakeholderCount) : {}),
+		...(isCluster ? computeMergedStats(option, byStatement, stakeholderCount, optionsById) : {}),
 	};
 }
 
@@ -184,6 +201,9 @@ export function buildOptionSummaries(
 	stakeholderCount: number | undefined,
 ): OptionEvaluationSummary[] {
 	const byStatement = groupEvaluationsByStatement(evaluations);
+	const optionsById = indexOptions(options);
 
-	return options.map((option) => buildOptionSummary(option, byStatement, stakeholderCount));
+	return options.map((option) =>
+		buildOptionSummary(option, byStatement, stakeholderCount, optionsById),
+	);
 }
