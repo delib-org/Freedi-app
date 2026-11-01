@@ -53,6 +53,16 @@ function isSynthesis(node: IdeaNode): boolean {
 	return node.isCluster === true && node.derivedByPipeline === SYNTHESIS_PIPELINE;
 }
 
+/**
+ * A theme is a cluster that is not a synthesis (the pipeline writes
+ * 'topic-cluster'; legacy docs may lack derivedByPipeline). Themes are
+ * navigation containers: their numbers are roll-ups of their members and
+ * they are never voted on directly.
+ */
+export function isTheme(node: Pick<IdeaNode, 'isCluster' | 'derivedByPipeline'>): boolean {
+	return node.isCluster === true && node.derivedByPipeline !== SYNTHESIS_PIPELINE;
+}
+
 /** Theme sharing the most members with the synthesis; ties go to the earlier theme. */
 function bestThemeByMembers(
 	synthesis: IdeaNode,
@@ -77,7 +87,7 @@ function bestThemeByMembers(
  */
 export function computeOtherIdeas<T extends IdeaNode>(siblings: T[]): OtherIdeasResult<T> {
 	const visible = siblings.filter(isVisibleOption);
-	const themes = visible.filter((s) => s.isCluster === true && !isSynthesis(s));
+	const themes = visible.filter(isTheme);
 	const syntheses = visible.filter(isSynthesis);
 
 	const synthesisMemberIds = new Set<string>();

@@ -17,6 +17,8 @@ jest.mock('@freedi/shared-types', () => ({
 		clustering: 'clustering',
 	},
 	EvaluationSchema: {},
+	isTheme: (n: { isCluster?: boolean; derivedByPipeline?: string }) =>
+		n.isCluster === true && n.derivedByPipeline !== 'synthesis',
 	StatementType: {
 		statement: 'statement',
 		option: 'option',
@@ -308,6 +310,31 @@ describe('setEvaluation', () => {
 
 			expect(mockSetDoc).not.toHaveBeenCalled();
 			expect(logger.error).toHaveBeenCalled();
+		});
+
+		it('writes nothing for a theme', async () => {
+			const theme = {
+				...mockStatement,
+				isCluster: true,
+				derivedByPipeline: 'topic-cluster',
+			} as Statement;
+
+			await setEvaluationToDB(theme, mockUser, 0.5);
+
+			expect(mockSetDoc).not.toHaveBeenCalled();
+			expect(mockUpdateDoc).not.toHaveBeenCalled();
+		});
+
+		it('still writes for a synthesis', async () => {
+			const synthesis = {
+				...mockStatement,
+				isCluster: true,
+				derivedByPipeline: 'synthesis',
+			} as Statement;
+
+			await setEvaluationToDB(synthesis, mockUser, 0.5);
+
+			expect(mockSetDoc).toHaveBeenCalled();
 		});
 
 		it('should log info on successful save', async () => {

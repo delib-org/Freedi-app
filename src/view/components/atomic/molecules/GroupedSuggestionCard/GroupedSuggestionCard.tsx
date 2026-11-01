@@ -1,7 +1,7 @@
 import React, { useId, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import clsx from 'clsx';
-import { Statement } from '@freedi/shared-types';
+import { Statement, isTheme } from '@freedi/shared-types';
 import {
 	Layers,
 	ChevronDown,
@@ -100,6 +100,8 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	const pipeline = cluster.derivedByPipeline;
 	const isSynthesis = pipeline === 'synthesis';
 	const isTopicCluster = pipeline === 'topic-cluster';
+	// Themes are navigation containers: roll-up numbers only, never a vote control.
+	const showEvaluationSlot = !!evaluationSlot && !isTheme(cluster);
 	// Effective pipeline tint — explicit prop wins so the parent can flag
 	// 'semantic' (hybrid-auto framing) or 'custom' (admin framing). Falls back
 	// to detection from cluster.derivedByPipeline.
@@ -460,7 +462,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 					</div>
 				)}
 
-				{evaluationSlot && <div className="grouped-suggestion__body">{evaluationSlot}</div>}
+				{showEvaluationSlot && <div className="grouped-suggestion__body">{evaluationSlot}</div>}
 
 				{/* Synthesis: proposal-first layout. The title + description above
 				    are the dominant element; the single source of provenance is the

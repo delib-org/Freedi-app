@@ -73,3 +73,27 @@ describe('GroupedSuggestionCard (synthesis)', () => {
 		expect(screen.getByText('evaluators', { exact: false })).toBeTruthy();
 	});
 });
+
+describe('GroupedSuggestionCard (theme)', () => {
+	it('renders no evaluation control for a theme', () => {
+		const theme = {
+			...SYNTHESIS,
+			statementId: 'theme1',
+			isCluster: true,
+			derivedByPipeline: 'topic-cluster',
+		} as unknown as Statement;
+		render(
+			<MemoryRouter>
+				<GroupedSuggestionCard
+					cluster={theme}
+					mode="both"
+					allowDrillToOriginals
+					pipeline="topic"
+					evaluationSlot={<div data-testid="evaluation-control" />}
+				/>
+			</MemoryRouter>,
+		);
+
+		expect(screen.queryByTestId('evaluation-control')).toBeNull();
+	});
+});

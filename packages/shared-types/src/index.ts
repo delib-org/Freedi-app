@@ -1229,6 +1229,7 @@ export {
 export type { DerivedPipeline } from './utils/derivedStatement';
 export {
 	computeOtherIdeas,
+	isTheme,
 	OTHER_IDEAS_EXPORT_ID,
 	OTHER_IDEAS_ID,
 } from './utils/otherIdeas';
