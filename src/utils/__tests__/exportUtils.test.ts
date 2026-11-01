@@ -4,47 +4,16 @@
  * Tests JSON/CSV export formatting, object flattening, and CSV escaping.
  */
 
-jest.mock('@freedi/shared-types', () => ({
-	StatementType: {
-		option: 'option',
-		question: 'question',
-		statement: 'statement',
-	},
-}));
-
-jest.mock('@/types/export', () => ({
-	extractExportableData: jest.fn((statement: Record<string, unknown>) => {
-		const {
-			statement: text,
-			statementId,
-			parentId,
-			topParentId,
-			createdAt,
-			lastUpdate,
-			consensus,
-			pro,
-			con,
-		} = statement;
-
-		return {
-			statement: text,
-			statementId,
-			parentId,
-			topParentId,
-			createdAt,
-			lastUpdate,
-			consensus,
-			pro,
-			con,
-		};
-	}),
-}));
-
 jest.mock('@/utils/errorHandling', () => ({
 	logError: jest.fn(),
 }));
 
-import { flattenObject, createJSONExport, createCSVExport } from '../exportUtils';
+import {
+	flattenObject,
+	createJSONExport,
+	createCSVExport,
+	createJSONExportFromRows,
+} from '../exportUtils';
 
 interface MockStatement {
 	statement: string;
@@ -291,6 +260,24 @@ describe('exportUtils', () => {
 
 			expect(header?.split(',')).toContain('themeId');
 			expect(csv).toContain('# themeId (string)');
+		});
+	});
+
+	describe('server-built rows', () => {
+		it('marks the metadata as a server export that includes hidden rows', () => {
+			const row = { statementId: 'x', statement: 'x', parentId: 'p', isDerived: false };
+			const json = createJSONExportFromRows(
+				{ mainStatement: row as never, subStatements: [row as never] },
+				{ total: 1, hiddenCount: 0, skippedEmptyThemes: 3, exportedAt: 1700000000000 },
+			);
+			const meta = JSON.parse(json).exportMetadata;
+
+			expect(meta).toMatchObject({
+				source: 'server',
+				includesHidden: true,
+				skippedEmptyThemes: 3,
+				totalRecords: 2,
+			});
 		});
 	});
 });
