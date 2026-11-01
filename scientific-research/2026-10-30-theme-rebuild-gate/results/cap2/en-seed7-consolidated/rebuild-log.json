@@ -1,0 +1,97 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed7-consolidated",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 10,
+ "themesWithMembers": 10,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  6,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  4
+ ],
+ "ms": 24937,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 941,
+   "completion": 1201
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 1845,
+   "completion": 834
+  }
+ },
+ "usd": 0.0176638,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Digital Civic Access",
+   "rule": "Proposals that improve residents' connectivity to, access to, navigation of, or transparency around municipal information and services, including online and in-person assistance.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "Affordable Housing",
+   "rule": "Proposals that increase affordable housing supply, improve housing conditions, or make housing costs and rental markets more accessible or transparent.",
+   "size": 5
+  },
+  {
+   "key": "t3",
+   "name": "Public Safety and Response",
+   "rule": "Proposals focused on preventing crime, improving personal safety in public places, policing, or speeding emergency response.",
+   "size": 4
+  },
+  {
+   "key": "t4",
+   "name": "Transit and Street Mobility",
+   "rule": "Proposals that improve public transit, cycling, or the safety and ease of moving along streets and roads.",
+   "size": 6
+  },
+  {
+   "key": "t5",
+   "name": "Health and Care Services",
+   "rule": "Proposals that expand medical, mental-health, preventive-health, or in-home care services for residents.",
+   "size": 5
+  },
+  {
+   "key": "t6",
+   "name": "Schools and Student Support",
+   "rule": "Proposals that improve school facilities, teaching, class conditions, student meals, or children's learning support and instruction.",
+   "size": 5
+  },
+  {
+   "key": "t7",
+   "name": "Parks and Outdoor Recreation",
+   "rule": "Proposals that create, green, or make accessible public outdoor spaces for recreation, play, gardening, or pets.",
+   "size": 5
+  },
+  {
+   "key": "t8",
+   "name": "Waste, Energy, and Pollution",
+   "rule": "Proposals that reduce waste or pollution, improve environmental monitoring, or shift city operations and consumption toward cleaner energy and materials.",
+   "size": 5
+  },
+  {
+   "key": "t9",
+   "name": "Culture and Public Arts",
+   "rule": "Proposals that expand access to libraries, museums, public art, performances, festivals, or other cultural activities.",
+   "size": 5
+  },
+  {
+   "key": "t10",
+   "name": "Local Jobs and Business Support",
+   "rule": "Proposals that help residents find or prepare for work, support local businesses, or make it easier to start and operate a business.",
+   "size": 5
+  }
+ ]
+}

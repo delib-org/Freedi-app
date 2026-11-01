@@ -1,14 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useGame } from '../state/GameContext';
+import { useT } from '../i18n/useT';
 import { voyageSteps, type VoyageStep } from '../lib/voyageSteps';
 
 /** What each state means, said out loud for anyone who cannot see the strip. */
-const STATUS_TEXT: Record<VoyageStep['status'], string> = {
-	done: 'הושלם',
-	current: 'כאן אנחנו',
-	open: 'פתוח',
-	locked: 'עוד לא נפתח',
+const STATUS_KEY: Record<VoyageStep['status'], string> = {
+	done: 'progress.status.done',
+	current: 'progress.status.current',
+	open: 'progress.status.open',
+	locked: 'progress.status.locked',
 };
 
 /**
@@ -17,12 +18,15 @@ const STATUS_TEXT: Record<VoyageStep['status'], string> = {
  * A player deep in the islands could not tell what was left, and one who put
  * the compass down half-answered had nothing telling them so. The strip says
  * both at a glance: a ✓ for each leg behind you, a count inside the leg you
- * are in ("3/5 איים"), and the legs ahead dimmed until the way to them is
+ * are in ("3/5 islands"), and the legs ahead dimmed until the way to them is
  * clear. Finished legs are links, so it doubles as the way back.
  */
 export default function VoyageProgress() {
 	const location = useLocation();
 	const { content, journey, attitudes } = useGame();
+	// `lang` is read so the strip re-renders, and voyageSteps re-labels, on a
+	// language change — the steps themselves are computed through t().
+	const { t, lang } = useT();
 	const steps = voyageSteps({ content, journey, attitudes, pathname: location.pathname });
 	const currentStep = useRef<HTMLLIElement>(null);
 
@@ -42,7 +46,8 @@ export default function VoyageProgress() {
 
 	// On a phone the strip scrolls sideways: the leg you are standing on is the
 	// one that must be on screen, whatever the width — including after a turn
-	// of the phone, which changes how much of the strip fits.
+	// of the phone, which changes how much of the strip fits, and after a
+	// language change, which changes the width of every leg.
 	useEffect(() => {
 		const centre = (): void => {
 			currentStep.current?.scrollIntoView({ inline: 'center', block: 'nearest' });
@@ -51,12 +56,12 @@ export default function VoyageProgress() {
 		window.addEventListener('resize', centre);
 
 		return () => window.removeEventListener('resize', centre);
-	}, [location.pathname, steps.length]);
+	}, [location.pathname, steps.length, lang]);
 
 	if (!visible) return null;
 
 	return (
-		<ol className="voyage-steps" aria-label="שלבי המסע">
+		<ol className="voyage-steps" aria-label={t('progress.aria')}>
 			{steps.map((step, index) => {
 				const mark = step.isDestination ? '⚓' : step.status === 'done' ? '✓' : String(index + 1);
 				const className = `voyage-step voyage-step--${step.status}`;
@@ -69,7 +74,7 @@ export default function VoyageProgress() {
 						{step.detail && step.status !== 'locked' ? (
 							<span className="voyage-step__detail">{step.detail}</span>
 						) : null}
-						<span className="sr-only"> — {STATUS_TEXT[step.status]}</span>
+						<span className="sr-only"> — {t(STATUS_KEY[step.status])}</span>
 					</>
 				);
 

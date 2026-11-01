@@ -19,6 +19,7 @@ import { logError } from '../utils/errorHandling';
 import { buildQuestionStatement } from './questionStage';
 import { sanitizeStagePlan } from './stagePlanInput';
 import { loadTeacherPrompts } from './teacherPrompts';
+import { verifyPlanLinks } from './stationLink';
 
 interface Request {
 	sessionId: string;
@@ -62,6 +63,21 @@ export const agoraUpdateStagePlan = onCall(
 			// is the teacher's own doc and nothing in here races it.
 			const teacherPrompts = await loadTeacherPrompts(uid);
 			const sessionRef = db.collection(Collections.agoraSessions).doc(sessionId);
+			// Linked stations are checked against their questions before the
+			// transaction: each check is a few reads outside this session's tree.
+			// Only the session's teacher gets that far.
+			const before = await sessionRef.get();
+			const storedSession = before.data() as AgoraSession | undefined;
+			if (!storedSession) throw new HttpsError('not-found', 'Session not found');
+			if (storedSession.teacherId !== uid) {
+				throw new HttpsError('permission-denied', 'Only the session teacher can edit the plan');
+			}
+			const linkedPlan = await verifyPlanLinks(
+				parsed.output,
+				uid,
+				storedSession.stagePlan ?? [],
+				Date.now(),
+			);
 			const token = request.auth?.token as Record<string, unknown> | undefined;
 			const creator = {
 				uid,
@@ -89,7 +105,7 @@ export const agoraUpdateStagePlan = onCall(
 				const hasCharacters = topic?.kind !== 'quick';
 
 				const clean = applyTeacherPrompts(
-					sanitizeStagePlan(parsed.output, { hasCharacters }),
+					sanitizeStagePlan(linkedPlan, { hasCharacters }),
 					teacherPrompts,
 				);
 

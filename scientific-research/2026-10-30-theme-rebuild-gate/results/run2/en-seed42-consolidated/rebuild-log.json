@@ -1,0 +1,111 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed42-consolidated",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 12,
+ "themesWithMembers": 12,
+ "otherCount": 1,
+ "unanswered": 0,
+ "sizes": [
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  4,
+  4,
+  3,
+  3,
+  3,
+  2
+ ],
+ "ms": 19333,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 938,
+   "completion": 917
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 1942,
+   "completion": 864
+  }
+ },
+ "usd": 0.0143052,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "School Learning and Support",
+   "rule": "Proposals for K–12 school facilities, staffing, class instruction, academic help, or student meals belong here.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "Arts, Culture, and Libraries",
+   "rule": "Proposals that expand access to public art, cultural events, arts instruction, museums, or library branches belong here.",
+   "size": 5
+  },
+  {
+   "key": "t3",
+   "name": "Affordable Housing",
+   "rule": "Proposals that create, preserve, regulate, compare prices for, or improve the energy performance of housing and student accommodation belong here.",
+   "size": 5
+  },
+  {
+   "key": "t4",
+   "name": "Waste Reduction and Recycling",
+   "rule": "Proposals concerning household waste collection, recycling, composting, or reducing disposable materials belong here.",
+   "size": 3
+  },
+  {
+   "key": "t5",
+   "name": "Digital City Access",
+   "rule": "Proposals that provide digital connectivity, online government transactions, digital city information, or help using online city services belong here.",
+   "size": 4
+  },
+  {
+   "key": "t6",
+   "name": "Local Jobs and Small Business",
+   "rule": "Proposals that support workers’ career transitions, local hiring, coworking, small-business finance, or business licensing belong here.",
+   "size": 5
+  },
+  {
+   "key": "t7",
+   "name": "Public Transit Service",
+   "rule": "Proposals that improve bus or other public-transit fares, frequency, operating hours, or rider information belong here.",
+   "size": 4
+  },
+  {
+   "key": "t8",
+   "name": "Safe Streets and Cycling",
+   "rule": "Proposals that make streets safer for pedestrians and cyclists through traffic calming, protected cycling infrastructure, or street lighting belong here.",
+   "size": 3
+  },
+  {
+   "key": "t9",
+   "name": "Parks and Neighborhood Green Space",
+   "rule": "Proposals for parks, playgrounds, gardens, street trees, or dog recreation areas belong here.",
+   "size": 5
+  },
+  {
+   "key": "t10",
+   "name": "Healthcare and Prevention",
+   "rule": "Proposals that expand medical care, mental-health services, in-home care, specialist access, or disease screening belong here.",
+   "size": 5
+  },
+  {
+   "key": "t11",
+   "name": "Emergency and Crime Response",
+   "rule": "Proposals for emergency-response capacity, police neighborhood presence, or surveillance at crime locations belong here.",
+   "size": 3
+  },
+  {
+   "key": "t12",
+   "name": "Clean Air and Municipal Energy",
+   "rule": "Proposals that monitor air pollution or reduce municipal energy emissions through renewable power belong here.",
+   "size": 2
+  }
+ ]
+}

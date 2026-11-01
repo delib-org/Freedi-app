@@ -32,6 +32,8 @@ import {
 } from '@/controllers/db/subscriptions/setSubscriptions';
 import { getDeviceInfo, type PushPlatform } from './platformService';
 import { FIREBASE } from '@/constants/common';
+import { getCurrentTimestamp } from '@/utils/firebaseUtils';
+import { wasTokenSyncedRecently, markTokenSynced, clearTokenSyncMarker } from './tokenSyncMarker';
 import { logError } from '@/utils/errorHandling';
 
 /**
@@ -212,6 +214,13 @@ export const syncTokenWithSubscriptions = async (
 		return 0;
 	}
 
+	// Guard: this device already synced this token for this user recently
+	if (wasTokenSyncedRecently(userId, token)) {
+		console.info('[NotificationRepository] Skipping token sync - already synced recently');
+
+		return 0;
+	}
+
 	const subscriptionsQuery = query(
 		collection(DB, Collections.statementsSubscribe),
 		where('userId', '==', userId),
@@ -238,11 +247,17 @@ export const syncTokenWithSubscriptions = async (
 			continue;
 		}
 
+		// Already has the token: no write, no trigger
+		const existingTokens: unknown = subscription.tokens;
+		if (Array.isArray(existingTokens) && existingTokens.includes(token)) {
+			continue;
+		}
+
 		// Update the subscription with the token in the tokens array
 		const subscriptionRef = docSnapshot.ref;
 		currentBatch.update(subscriptionRef, {
 			tokens: arrayUnion(token),
-			lastTokenUpdate: new Date(),
+			lastTokenUpdate: getCurrentTimestamp(),
 		});
 
 		operationCount++;
@@ -262,6 +277,8 @@ export const syncTokenWithSubscriptions = async (
 	// Execute all batches
 	await Promise.all(batches);
 
+	markTokenSynced(userId, token);
+
 	console.info(`Synced token with ${operationCount} subscriptions in ${batches.length} batch(es)`);
 
 	return operationCount;
@@ -278,6 +295,9 @@ export const removeTokenFromAllSubscriptions = async (
 	if (!userId || !token) {
 		return;
 	}
+
+	// Next login must resync, even if the Firestore cleanup below is skipped
+	clearTokenSyncMarker();
 
 	// Guard: skip if user is no longer authenticated (prevents "Missing or insufficient permissions")
 	if (!auth.currentUser) {

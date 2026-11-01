@@ -15,7 +15,7 @@ import type { AddChoice } from '../../../lib/flows/stagePlanEditor';
  */
 
 /** The chip's colour family. Rounds share one; the fixed ends are quiet. */
-export type StepTone = 'question' | 'round' | 'talk' | 'vote' | 'scene' | 'fixed';
+export type StepTone = 'question' | 'round' | 'talk' | 'vote' | 'link' | 'scene' | 'fixed';
 
 export function questionKindLabel(kind: AgoraQuestionKind): string {
 	return kind === 'open' ? t('planb.kind_open') : t(`question.kind_${kind}`);
@@ -43,6 +43,8 @@ export function choiceTone(choice: AddChoice): StepTone {
 			return 'talk';
 		case AgoraStage.voting:
 			return 'vote';
+		case AgoraStage.linked:
+			return 'link';
 		case AgoraStage.lobby:
 		case AgoraStage.results:
 			return 'fixed';
@@ -64,6 +66,13 @@ export function choiceOf(item: AgoraStagePlanItem): AddChoice {
  * in one line what happens in it.
  */
 export function stepLine(item: AgoraStagePlanItem): { text: string; isDefault: boolean } {
+	// A linked station reads as where it goes: the teacher's label, else the linked question
+	if (item.stage === AgoraStage.linked) {
+		const own = (item.title ?? '').trim() || (item.link?.title ?? '').trim();
+		if (own) return { text: own, isDefault: false };
+
+		return { text: t('linked.needs_link'), isDefault: true };
+	}
 	if (item.stage !== AgoraStage.question)
 		return { text: choiceDescription(choiceOf(item)), isDefault: true };
 	const own = (item.title ?? '').trim();

@@ -68,7 +68,7 @@ export function buildFeedbackContext(): OdysseyFeedbackContext {
 export type FeedbackFailure = 'tooShort' | 'tooLong' | 'badEmail' | 'limited' | 'failed';
 
 /**
- * Firebase error codes → the one Hebrew line the panel shows.
+ * Firebase error codes → the one line the panel shows (see FEEDBACK_FAILURE_KEY).
  *
  * Keyed on the CODE, never on the server's message text: the server sends a
  * field path, not prose, precisely so the wording lives here.
@@ -86,12 +86,13 @@ export function toFeedbackFailure(error: unknown): FeedbackFailure {
 	return 'failed';
 }
 
-export const FEEDBACK_FAILURE_TEXT: Record<FeedbackFailure, string> = {
-	tooShort: 'ההודעה קצרה מדי — כתבו לנו עוד מעט.',
-	tooLong: 'ההודעה ארוכה מדי — קצרו מעט ונסו שוב.',
-	badEmail: 'הכתובת לא נראית תקינה. תקנו אותה, או מחקו אותה כדי לשלוח בלי מענה.',
-	limited: 'כמה מכתבים בזה אחר זה — כולם הגיעו ונקרא את כולם. אפשר לכתוב שוב בעוד שעה.',
-	failed: 'המכתב לא יצא — נסו שוב בעוד רגע. מה שכתבתם נשאר כאן.',
+/** Dictionary key of the one line the panel shows for each failure. */
+export const FEEDBACK_FAILURE_KEY: Record<FeedbackFailure, string> = {
+	tooShort: 'feedback.fail.tooShort',
+	tooLong: 'feedback.fail.tooLong',
+	badEmail: 'feedback.fail.badEmail',
+	limited: 'feedback.fail.limited',
+	failed: 'feedback.fail.failed',
 };
 
 /**

@@ -7,6 +7,7 @@ import { requestRecalculateEvaluations } from '@/controllers/db/evaluation/recal
 import { logError } from '@/utils/errorHandling';
 import styles from './EnhancedAdvancedSettings.module.scss';
 import ToggleSwitch from './ToggleSwitch';
+import EvaluationModeControls from './EvaluationModeControls';
 
 interface EvaluationSettingsProps {
 	statement: Statement;
@@ -92,6 +93,11 @@ const EvaluationSettings: FC<EvaluationSettingsProps> = ({
 			{/* The evaluation method / rating scale / show-results / enable-voting
 			    controls live in InstantSettings (the hero panel) — do not add
 			    duplicates here. */}
+			<EvaluationModeControls
+				statement={statement}
+				settings={settings}
+				handleSettingChange={handleSettingChange}
+			/>
 			{/* Vote Limiting */}
 			{(settings.evaluationType ?? evaluationType.range) === evaluationType.singleLike && (
 				<div className={styles.voteLimitSection}>

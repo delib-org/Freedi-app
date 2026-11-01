@@ -1,4 +1,5 @@
 import { proximityBandOf, type ProximityBandKey } from '../lib/seaLayout';
+import { useT } from '../i18n/useT';
 import ShipTag from './ShipTag';
 
 export interface ShipProximity {
@@ -23,7 +24,7 @@ interface Props {
 	 * Open this ship's card. Given, every chip becomes a button.
 	 *
 	 * Without it these were `<span>`s, and the voyage screen invited the player
-	 * to "הקישו על ספינה" a few lines above them. Off the canvas — the
+	 * to "tap a ship" a few lines above them. Off the canvas — the
 	 * direct-questionnaire route, and every screen reader — there was no
 	 * tappable ship anywhere on the page.
 	 */
@@ -41,16 +42,16 @@ interface Props {
 	caption?: string;
 }
 
-const BAND_TITLE: Record<ProximityBandKey, string> = {
-	near: 'קרובות למסלולך',
-	middle: 'באמצע הדרך',
-	far: 'רחוקות ממסלולך',
+const BAND_TITLE_KEY: Record<ProximityBandKey, string> = {
+	near: 'ships.band.near.title',
+	middle: 'ships.band.middle.title',
+	far: 'ships.band.far.title',
 };
 
-const BAND_WORD: Record<ProximityBandKey, string> = {
-	near: 'קרובה למסלולך',
-	middle: 'באמצע הדרך',
-	far: 'רחוקה ממסלולך',
+const BAND_WORD_KEY: Record<ProximityBandKey, string> = {
+	near: 'ships.band.near.word',
+	middle: 'ships.band.middle.word',
+	far: 'ships.band.far.word',
 };
 
 /**
@@ -60,7 +61,7 @@ const BAND_WORD: Record<ProximityBandKey, string> = {
  * same three rings — near, middle, far — as a list, with the same pennant on
  * each ship. Sorted by proximity within a row, because a list has to be in
  * some order and alphabetical would be a lie about what the reader is looking
- * for. The captions stay proximity language ("עגינה זמנית") — never a
+ * for. The captions stay proximity language ("a temporary berth") — never a
  * recommendation.
  */
 export default function NearbyShips({
@@ -70,12 +71,13 @@ export default function NearbyShips({
 	selectedId,
 	caption,
 }: Props) {
+	const { t } = useT();
 	const known = ships
 		.filter((ship) => ship.distance !== null)
 		.sort((a, b) => (a.distance ?? 1) - (b.distance ?? 1));
 
 	if (known.length === 0) {
-		return <p className="m-0 text-[13px] opacity-80">עדיין אין מספיק נתונים על מסלולי הספינות.</p>;
+		return <p className="m-0 text-[13px] opacity-80">{t('ships.noData')}</p>;
 	}
 
 	const groups = (['near', 'middle', 'far'] as const)
@@ -90,14 +92,14 @@ export default function NearbyShips({
 			{caption ? <p className="text-[13px] opacity-70 m-0 text-center">{caption}</p> : null}
 			{groups.map((group) => (
 				<div key={group.band} className="ship-row">
-					<span className="ship-row__band">{BAND_TITLE[group.band]}:</span>
+					<span className="ship-row__band">{t(BAND_TITLE_KEY[group.band])}:</span>
 					{group.ships.map((ship) => (
 						<ShipTag
 							key={ship.partyId}
 							name={ship.name}
 							color={ship.color}
 							lit={selectedId === ship.partyId}
-							ariaLabel={`${ship.name} — ${BAND_WORD[group.band]}`}
+							ariaLabel={`${ship.name} — ${t(BAND_WORD_KEY[group.band])}`}
 							onSelect={onSelect ? () => onSelect(ship.partyId) : undefined}
 						/>
 					))}

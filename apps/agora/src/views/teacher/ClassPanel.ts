@@ -43,6 +43,7 @@ export function progressFacts(
 function labelNode(label: ProgressLabel): m.Children {
 	if (label === 'check') return m(Icon, { name: 'check', size: 16 });
 	if (label === 'dash') return '—';
+	if (label === 'opened') return m('span', { title: t('linked.pip_opened') }, '↗');
 
 	return `${label.done}/${label.total}`;
 }

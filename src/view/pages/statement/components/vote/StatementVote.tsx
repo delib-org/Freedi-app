@@ -23,6 +23,7 @@ import { sortByConsensus } from '@/redux/utils/selectorFactories';
 import { useSelector } from 'react-redux';
 import { setVoteToStore } from '@/redux/vote/votesSlice';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { filterVotingOptions } from './votingOptionsFilter';
 
 let getVoteFromDB = false;
 
@@ -35,7 +36,11 @@ const StatementVote: FC = () => {
 	const inVotingGetOnlyResults = statement?.statementSettings?.inVotingGetOnlyResults;
 	const topOptionsCount = statement?.resultsSettings?.numberOfResults ?? 3;
 
-	const _subStatements = useSelector(statementSubsSelector(statement?.statementId));
+	const _allSubStatements = useSelector(statementSubsSelector(statement?.statementId));
+	const _subStatements = filterVotingOptions(
+		_allSubStatements,
+		statement?.statementSettings?.votingOptionsSource,
+	);
 
 	const subStatements = inVotingGetOnlyResults
 		? _subStatements.sort(sortByConsensus).slice(0, topOptionsCount)

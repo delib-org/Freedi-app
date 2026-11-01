@@ -1,0 +1,70 @@
+@use '../mixins' as *;
+
+// Agora guest bar — the one way back to the village for a student who came
+// from an Agora station (docs/ia/agora-linked-app-stations.md §5). Shown on
+// every guest screen, the gate's loading / expired / ended states included.
+.agora-guest-bar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem var(--padding, 1rem);
+  padding-block-start: calc(0.5rem + env(safe-area-inset-top, 0px));
+  background-color: var(--card-default);
+  border-block-end: 2px solid var(--btn-primary);
+  color: var(--text-body);
+
+  &__text {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-title);
+    overflow-wrap: anywhere;
+  }
+
+  &__back {
+    flex-shrink: 0;
+    min-height: 44px;
+  }
+
+  @include respect-motion-preference;
+}
+
+// The gate's own screens: opening, the account question, an expired or ended task
+.agora-guest-gate {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background-color: var(--card-default);
+
+  &__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem var(--padding, 1rem);
+    text-align: center;
+  }
+
+  &__message {
+    max-width: 28rem;
+    margin: 0;
+    font-size: 1.125rem;
+    line-height: var(--line-height-body, 1.5);
+    color: var(--text-body);
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 20rem;
+  }
+}

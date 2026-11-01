@@ -324,6 +324,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					])
 				: null,
 			m('textarea.text-input.chat-page__edit-input', {
+				dir: 'auto',
 				value: editDraft,
 				rows: 3,
 				maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
@@ -1028,6 +1029,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 								)
 							: null,
 						m('textarea.text-input.chat-page__input', {
+							dir: 'auto',
 							id: `chat-input-${proposal.statementId}`,
 							value: draft,
 							rows: 2,

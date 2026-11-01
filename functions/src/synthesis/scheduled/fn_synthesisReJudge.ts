@@ -5,11 +5,14 @@ import { Collections, functionConfig, StatementType, type Statement } from '@fre
 import { embeddingCache } from '../../services/embedding-cache-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
+import { absorbedClusterIdsUpdate, collectAbsorbedIds } from '../../condensation/absorbedClusters';
 import { generateSynthesizedProposal } from '../../services/integration-ai-service';
 import { judgeSemanticEquivalenceCachedDetailed } from '../../services/verdict-cache-service';
 import { consolidateThemes } from '../pipeline/consolidateThemes';
 import { splitOversizedThemes } from '../pipeline/splitThemes';
+import { fileUnthemedAtoms } from '../pipeline/fileUnthemed';
 import { loadSynthesisSettingsFromStatement } from '../pipeline/loadSynthesisSettings';
+import { loadLiveThemes, selectFileOnlyParents, sweepFileOnlyParents } from './reJudgeFileOnly';
 import { enqueueItem, ensureQueueRun } from '../queue/enqueue';
 import {
 	computeParentFingerprint,
@@ -123,7 +126,7 @@ const MAX_JUDGE_CALLS_PER_PARENT = 25;
  */
 const MAX_PAIR_EVALUATIONS_PER_PARENT = 200;
 
-interface CandidateSynth {
+export interface CandidateSynth {
 	doc: Statement;
 	members: string[];
 }
@@ -372,7 +375,7 @@ function pickMergePair(
 	return best;
 }
 
-async function mergeSynths(
+export async function mergeSynths(
 	recipient: CandidateSynth,
 	donor: CandidateSynth,
 	bestCosine: number,
@@ -385,6 +388,8 @@ async function mergeSynths(
 
 	await recipientRef.update({
 		integratedOptions: mergedMembers,
+		// The donor's direct votes keep counting for the recipient.
+		...absorbedClusterIdsUpdate(recipient.doc.statementId, [donor.doc]),
 		lastUpdate: now,
 	});
 	await donorRef.update({
@@ -412,6 +417,15 @@ async function mergeSynths(
 
 	// Update local cache so the next iteration sees the merged state.
 	recipient.members = mergedMembers;
+	recipient.doc = {
+		...recipient.doc,
+		absorbedClusterIds: [
+			...new Set([
+				...(recipient.doc.absorbedClusterIds ?? []),
+				...collectAbsorbedIds(recipient.doc.statementId, [donor.doc]),
+			]),
+		],
+	};
 	// Regenerate recipient title now that its membership grew.
 	try {
 		await enqueueClusterRecompute(
@@ -541,6 +555,21 @@ export async function reJudgeProcessParent(
 		}
 	} catch (error) {
 		logger.warn('synthesis.reJudge: theme split failed (non-fatal)', {
+			parentId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
+
+	// Last: re-offer atoms no theme claims (NONE at arrival, arrived before any
+	// theme existed, no neighbours). File-only: never creates a theme, never
+	// moves an atom that has one. Runs after split so it sees the final themes.
+	try {
+		const fileResult = await fileUnthemedAtoms(parentId, questionContext, 'reJudge');
+		if (fileResult.filed > 0 || fileResult.errors > 0) {
+			logger.info('synthesis.reJudge.unthemedFiled', { parentId, ...fileResult });
+		}
+	} catch (error) {
+		logger.warn('synthesis.reJudge: filing unthemed atoms failed (non-fatal)', {
 			parentId,
 			error: error instanceof Error ? error.message : String(error),
 		});
@@ -941,15 +970,6 @@ export const fn_synthesisReJudge = onSchedule(
 				.where('hide', '==', false)
 				.limit(SYNTH_QUERY_LIMIT)
 				.get();
-			if (snap.empty) {
-				await saveGlobalState({
-					lastSeenStatementUpdate: highWaterMark,
-					lastFullSweepAt: startedAt,
-				});
-
-				return;
-			}
-
 			const byParent = new Map<string, Statement[]>();
 			for (const doc of snap.docs) {
 				const s = doc.data() as Statement;
@@ -957,6 +977,9 @@ export const fn_synthesisReJudge = onSchedule(
 				list.push(s);
 				byParent.set(s.parentId, list);
 			}
+			// Parents with a live theme but fewer than two syntheses: the loop
+			// below skips them, so they get the file-unthemed step on its own.
+			const fileOnlyParents = selectFileOnlyParents(byParent, await loadLiveThemes());
 
 			let totalMerges = 0;
 			let parentsProcessed = 0;
@@ -992,6 +1015,13 @@ export const fn_synthesisReJudge = onSchedule(
 				}
 			}
 
+			// Same per-tick budget: file-only parents use what the full pass left.
+			const fileOnly = await sweepFileOnlyParents(
+				fileOnlyParents,
+				Math.max(0, MAX_PARENTS_PER_SWEEP - parentsProcessed),
+				startedAt,
+			);
+
 			await saveGlobalState({
 				lastSeenStatementUpdate: highWaterMark,
 				lastFullSweepAt: startedAt,
@@ -1001,6 +1031,9 @@ export const fn_synthesisReJudge = onSchedule(
 				parentsProcessed,
 				parentsSkipped,
 				parentsDormant,
+				fileOnlyProcessed: fileOnly.processed,
+				fileOnlySkipped: fileOnly.skipped,
+				fileOnlyDormant: fileOnly.dormant,
 				totalMerges,
 				durationMs: Date.now() - startedAt,
 			});

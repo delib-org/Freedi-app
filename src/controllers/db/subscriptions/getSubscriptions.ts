@@ -13,6 +13,8 @@ import {
 	where,
 	Unsubscribe,
 } from 'firebase/firestore';
+import type { QueryDocumentSnapshot, QuerySnapshot } from 'firebase/firestore';
+import { recordDiscussionsCursor } from './discussionsCursor';
 import { FireStore } from '../config';
 import { getStatementFromDB } from '../statements/getStatement';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
@@ -31,15 +33,24 @@ import {
 	User,
 	Collections,
 } from '@freedi/shared-types';
-import { parse } from 'valibot';
+import { parse, safeParse } from 'valibot';
 import { logError } from '@/utils/errorHandling';
 import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 import { NON_DOCUMENT_STATEMENT_TYPES } from '@/helpers/statementTypeHelpers';
-import { HOME } from '@/constants/common';
+import { FIREBASE, HOME } from '@/constants/common';
+import { listenerManager } from '@/controllers/utils/ListenerManager';
+import { firstLoadThenListen } from '@/controllers/utils/firstLoadThenListen';
 import {
 	createManagedCollectionListener,
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
+
+/** lastUpdate of the last doc of a lastUpdate-desc page (the discussions pager cursor). */
+function lastDocLastUpdate(docs: QueryDocumentSnapshot[]): number | undefined {
+	const last = docs[docs.length - 1]?.data().lastUpdate;
+
+	return typeof last === 'number' ? last : undefined;
+}
 
 // Helper to check if an error is IndexedDB-related
 function isIndexedDBError(error: unknown): boolean {
@@ -162,32 +173,55 @@ export function listenToStatementSubscriptions(
 			`${userId}-${numberOfStatements}`,
 		);
 
-		return createManagedCollectionListener(
+		const handleSnapshot = (subscriptionsDB: QuerySnapshot): void => {
+			subscriptionsDB.docChanges().forEach((change) => {
+				try {
+					const data = change.doc.data();
+					const statementSubscription = parse(
+						StatementSubscriptionSchema,
+						convertTimestampsToMillis(data),
+					) as StatementSubscription;
+
+					if (change.type === 'added' || change.type === 'modified') {
+						dispatch(setStatementSubscription(statementSubscription));
+					}
+
+					if (change.type === 'removed')
+						dispatch(deleteSubscribedStatement(statementSubscription.statementId));
+				} catch (error) {
+					logError(error, {
+						operation: 'subscriptions.getSubscriptions.listenToStatementSubscriptions',
+						metadata: { message: 'Listen to statement subscriptions each error' },
+					});
+				}
+			});
+		};
+
+		// Head start: first 10 spaces/topics reach Redux before the full snapshot.
+		const firstLoad =
+			numberOfStatements > FIREBASE.FIRST_LOAD_LIMIT && !listenerManager.hasListener(listenerKey)
+				? firstLoadThenListen({
+						queryRef: q,
+						onSnapshotNext: handleSnapshot,
+						onFirstDocs: (docs) => {
+							const parsed: StatementSubscription[] = [];
+							docs.forEach((d) => {
+								const result = safeParse(
+									StatementSubscriptionSchema,
+									convertTimestampsToMillis(d.data()),
+								);
+								if (result.success) parsed.push(result.output as StatementSubscription);
+							});
+							dispatch(setStatementsSubscription(parsed));
+						},
+						operation: 'subscriptions.listenToStatementSubscriptions',
+					})
+				: null;
+
+		const unsubscribe = createManagedCollectionListener(
 			q,
 			listenerKey,
-			(subscriptionsDB) => {
-				subscriptionsDB.docChanges().forEach((change) => {
-					try {
-						const data = change.doc.data();
-						const statementSubscription = parse(
-							StatementSubscriptionSchema,
-							convertTimestampsToMillis(data),
-						) as StatementSubscription;
-
-						if (change.type === 'added' || change.type === 'modified') {
-							dispatch(setStatementSubscription(statementSubscription));
-						}
-
-						if (change.type === 'removed')
-							dispatch(deleteSubscribedStatement(statementSubscription.statementId));
-					} catch (error) {
-						logError(error, {
-							operation: 'subscriptions.getSubscriptions.listenToStatementSubscriptions',
-							metadata: { message: 'Listen to statement subscriptions each error' },
-						});
-					}
-				});
-			},
+			firstLoad ? firstLoad.onNext : handleSnapshot,
 			(error) => {
 				// Handle IndexedDB errors
 				if (isIndexedDBError(error)) {
@@ -211,6 +245,11 @@ export function listenToStatementSubscriptions(
 			},
 			'query',
 		);
+
+		return () => {
+			firstLoad?.cancel();
+			unsubscribe();
+		};
 	} catch (error) {
 		logError(error, {
 			operation: 'subscriptions.getSubscriptions.unknown',
@@ -311,6 +350,7 @@ export async function fetchOlderDiscussionSubscriptions(
 		const snapshot = await getDocs(q);
 		const hasMore = snapshot.size > batchSize;
 		const docs = hasMore ? snapshot.docs.slice(0, batchSize) : snapshot.docs;
+		recordDiscussionsCursor(lastDocLastUpdate(docs));
 
 		docs.forEach((docSnap) => {
 			try {
@@ -530,6 +570,7 @@ export function getNewStatementsFromSubscriptions(
 			q,
 			listenerKey,
 			(subscriptionsDB) => {
+				recordDiscussionsCursor(lastDocLastUpdate(subscriptionsDB.docs));
 				subscriptionsDB.docChanges().forEach((change) => {
 					const data = change.doc.data();
 					const statementSubscription = parse(

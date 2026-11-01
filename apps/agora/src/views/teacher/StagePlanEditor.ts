@@ -46,6 +46,7 @@ export const PLAN_ERROR_KEYS: Record<StagePlanError, string> = {
 	voting_needs_source: 'startGame.plan_error_voting_needs_source',
 	stage_needs_characters: 'startGame.plan_error_stage_needs_characters',
 	question_needs_title: 'startGame.plan_error_question_needs_title',
+	linked_needs_link: 'startGame.plan_error_linked_needs_link',
 	unknown_stage: 'startGame.plan_error_unknown_stage',
 };
 
@@ -155,10 +156,15 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 				if (added) {
 					flipArmed = true;
 					movedItemId = added.itemId;
-					// A new question opens straight into its words — a new discussion into its rule
-					if (added.stage === AgoraStage.question || added.stage === AgoraStage.deliberation) {
+					// A new question opens straight into its words — a new discussion into
+					// its rule, a linked station into its link
+					if (
+						added.stage === AgoraStage.question ||
+						added.stage === AgoraStage.deliberation ||
+						added.stage === AgoraStage.linked
+					) {
 						openItemId = added.itemId;
-						focusItemId = added.stage === AgoraStage.question ? added.itemId : null;
+						focusItemId = added.stage !== AgoraStage.deliberation ? added.itemId : null;
 					}
 				}
 				onChange(next);
@@ -250,7 +256,9 @@ export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 				const editable = !frozen && !fixed;
 				const hasOptions =
 					editable &&
-					(item.stage === AgoraStage.question || item.stage === AgoraStage.deliberation);
+					(item.stage === AgoraStage.question ||
+						item.stage === AgoraStage.deliberation ||
+						item.stage === AgoraStage.linked);
 				const open = hasOptions && openItemId === item.itemId;
 				const problem = frozen ? undefined : problems.get(item.itemId);
 				const line = stepLine(item);

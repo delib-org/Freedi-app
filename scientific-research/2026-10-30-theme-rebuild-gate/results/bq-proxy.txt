@@ -1,0 +1,3 @@
+v3 (live): {"themes": 7, "unthemed": 26, "largest_share": 0.273}
+run1 {"themes": 12, "other_statements": 5, "other_atoms": 5, "largest_share": 0.147, "core_kept": 0.303, "misfit_split": 0.82}
+run2 {"themes": 10, "other_statements": 17, "other_atoms": 15, "largest_share": 0.175, "core_kept": 0.215, "misfit_split": 0.842}

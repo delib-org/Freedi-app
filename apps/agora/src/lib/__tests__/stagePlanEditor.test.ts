@@ -24,7 +24,11 @@ describe('planEditorReduce', () => {
 
 	it('offers each single-instance stage once, and character stages only with characters', () => {
 		const quick = stagePlanPreset('quickDecision');
-		expect(addableStages(quick, { hasCharacters: false })).toEqual([AgoraStage.question]);
+		// Questions and linked stations are never "already in the plan"
+		expect(addableStages(quick, { hasCharacters: false })).toEqual([
+			AgoraStage.question,
+			AgoraStage.linked,
+		]);
 
 		const noVote = quick.filter((item) => item.stage !== AgoraStage.voting);
 		expect(addableStages(noVote, { hasCharacters: true })).toEqual(
@@ -34,7 +38,10 @@ describe('planEditorReduce', () => {
 
 	it('a round is a question item of a kind: the kind switch clears or restores the cutoff', () => {
 		const wizcol = stagePlanPreset('wizcol');
-		expect(addableStages(wizcol, { hasCharacters: false })).toEqual([AgoraStage.question]);
+		expect(addableStages(wizcol, { hasCharacters: false })).toEqual([
+			AgoraStage.question,
+			AgoraStage.linked,
+		]);
 		// A fresh question is open, with a cutoff
 		let items = planEditorReduce(wizcol, { kind: 'add', stage: AgoraStage.question }, fresh);
 		const fresh1 = items.find((item) => item.itemId === 'question-1');

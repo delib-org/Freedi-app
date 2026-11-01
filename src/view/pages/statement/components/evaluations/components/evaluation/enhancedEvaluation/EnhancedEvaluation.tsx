@@ -6,7 +6,7 @@ import {
 	reactionEvaluationsThumbs,
 	EnhancedEvaluationThumb,
 } from './EnhancedEvaluationModel';
-import { buildFaceScale, FaceTone } from './faceScaleModel';
+import { buildFaceScale, FaceTone, shouldShowFaceLabels } from './faceScaleModel';
 import ConsensusBar from './ConsensusBar';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -17,7 +17,12 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
 import { useSelector } from 'react-redux';
-import { statementSelectorById } from '@/redux/statements/statementsSlice';
+import {
+	statementSelectorById,
+	statementSubscriptionSelector,
+} from '@/redux/statements/statementsSlice';
+import { isAdmin as isAdminRole } from '@/controllers/general/helpers';
+import { shouldShowResults, shouldShowRevealHint } from './resultsVisibility';
 import { ResultsStrip } from '@/view/components/atomic/molecules/ResultsStrip';
 import { FaceIcon } from '@/view/components/atomic/atoms/FaceIcon';
 
@@ -48,6 +53,12 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	const ratingMode = parentStatement?.statementSettings?.ratingMode;
 	const thumbs = ratingMode === 'reactions' ? reactionEvaluationsThumbs : enhancedEvaluationsThumbs;
 
+	// Admin of the space (top parent subscription), same check the cluster map uses.
+	const spaceSubscription = useAppSelector(
+		statementSubscriptionSelector(statement.topParentId ?? statement.parentId),
+	);
+	const isSpaceAdmin = isAdminRole(spaceSubscription?.role);
+
 	const evaluationScore = useAppSelector(evaluationSelector(statement.statementId));
 	const [optimisticScore, setOptimisticScore] = useState<number | undefined>(evaluationScore);
 
@@ -58,8 +69,13 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	// Explicit low→high order, selection and per-face tone live in the model.
 	const options = useMemo(() => buildFaceScale(thumbs, optimisticScore), [thumbs, optimisticScore]);
 
+	// Presses on this statement's faces, this session only. Re-taps count.
+	const [pressCount, setPressCount] = useState(0);
+	const showLabels = shouldShowFaceLabels(pressCount);
+
 	const handleEvaluate = useCallback((score: number) => {
 		setOptimisticScore(score);
+		setPressCount((count) => count + 1);
 	}, []);
 
 	const isCard = variant === 'card';
@@ -67,9 +83,16 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	const isOwnAnswer = isCard && !!creator?.uid && statement.creatorId === creator.uid;
 	// On a card, results wait for your own rating so they cannot anchor it —
 	// except where you cannot rate at all (your own answer, rating disabled).
-	const resultsUnlocked = !isCard || isOwnAnswer || hasRated || !enableEvaluation;
+	// Admins of the space see the score right away.
+	const visibilityInput = {
+		isCard,
+		isOwnAnswer,
+		hasRated,
+		evaluationDisabled: !enableEvaluation,
+		isSpaceAdmin,
+	};
 	const numberOfEvaluators = statement.evaluation?.numberOfEvaluators ?? 0;
-	const showResults = showEvaluation && resultsUnlocked;
+	const showResults = shouldShowResults(showEvaluation, visibilityInput);
 	// The bar is a consensus reading, so it honours the same minimum-evaluator
 	// gate as the consensus tile in the strip.
 	const showConsensusBar = isCard && showResults && numberOfEvaluators >= DEFAULT_MIN_EVALUATORS;
@@ -90,6 +113,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 							isActive={option.isSelected}
 							tone={option.tone}
 							labelKey={option.labelKey}
+							showLabel={showLabels}
 							statement={statement}
 							enableEvaluation={enableEvaluation}
 							onEvaluate={handleEvaluate}
@@ -101,7 +125,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 			{/* The three result numbers, spelled out. They used to live only in
 			    a hover tooltip on a colour bar, so touch users never saw them. */}
 			{showResults && <ResultsStrip statement={statement} />}
-			{showEvaluation && !resultsUnlocked && (
+			{shouldShowRevealHint(showEvaluation, visibilityInput) && (
 				<p className={styles['reveal-hint']} data-testid="results-reveal-hint">
 					{t('The result will be revealed after you rate')}
 				</p>
@@ -122,6 +146,8 @@ export interface EvaluationThumbProps {
 	tone?: FaceTone;
 	/** Visible label key. Defaults to the thumb's label, then its alt. */
 	labelKey?: string;
+	/** Render the visible text label. The aria-label is always kept. */
+	showLabel?: boolean;
 }
 
 export const EvaluationThumb: FC<EvaluationThumbProps> = ({
@@ -132,6 +158,7 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 	onEvaluate,
 	tone,
 	labelKey,
+	showLabel = true,
 }) => {
 	const { creator } = useAuthentication();
 	const { t } = useUserConfig();
@@ -160,6 +187,7 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 			className={clsx(
 				styles.face,
 				styles[`face--${effectiveTone}`],
+				!showLabel && styles['face--compact'],
 				!enableEvaluation && styles['face--disabled'],
 			)}
 			style={faceStyle}
@@ -179,9 +207,11 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 					<img src={evaluationThumb.svg} alt="" />
 				)}
 			</span>
-			<span className={styles['face__label']} aria-hidden="true">
-				{label}
-			</span>
+			{showLabel && (
+				<span className={styles['face__label']} aria-hidden="true">
+					{label}
+				</span>
+			)}
 		</button>
 	);
 

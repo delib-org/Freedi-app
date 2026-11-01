@@ -36,6 +36,7 @@ import {
 import { StageSelectionType } from '../stage/stageTypes';
 import { SimpleStatementSchema } from './SimpleStatement';
 import { StatementSettingsSchema } from './StatementSettings';
+import { ClassReplyStatementFieldsSchema, ClassTableMarkerSchema } from '../classroom/classroomModel';
 import { UserDataSchema } from '../user/UserSettings';
 import {
 	StatementEvaluationSchema,
@@ -177,6 +178,8 @@ export const StatementSchema = object({
 	consensusValid: optional(number()), // gives a combine number of the level of consensus and its validity
 	PopperHebbianScore: optional(PopperHebbianScoreSchema), // the Popper Hebbian score of the statement
 	order: optional(number()), // the order of the statement relative to its siblings
+	sourceLessonId: optional(string()), // join-class: the lesson this lesson's plan was copied from (main statement only)
+	sourceLessonTitle: optional(string()), // join-class: that lesson's title at copy time (survives renames and deletes)
 	mapSide: optional(picklist(['left', 'right'])), // which side of the mind-map root this branch sits on (first-level nodes only)
 	elementHight: optional(number()), // the height of the statement. It is used for animation purposes
 	top: optional(number()), // the top of the statement. It is used for animation purposes
@@ -189,10 +192,26 @@ export const StatementSchema = object({
 	isSelected: optional(boolean()), // if true, the statement is selected
 	isCluster: optional(boolean()),
 	integratedOptions: optional(array(string())), // source statement IDs merged into this cluster-option (many-to-many)
+	/**
+	 * Cluster statement IDs that were merged INTO this cluster and are now hidden.
+	 * Their direct votes keep counting for this cluster (one vote per user: this
+	 * cluster's own direct vote wins, then absorbed direct votes, then the member
+	 * average). NOT members: the UI must not treat these as `integratedOptions`.
+	 * Transitive: includes the absorbed cluster's own absorbedClusterIds.
+	 */
+	absorbedClusterIds: optional(array(string())),
 	integratedInto: optional(string()), // cluster statement ID this original was merged into (set with hide:true by performIntegration; cleared on reverse)
 	derivedFromStatementId: optional(string()), // origin statement when this option was synthesized by a pipeline (e.g. compound-response decomposition)
 	derivedByPipeline: optional(picklist(['topic-cluster', 'synthesis'])), // identifies the pipeline that created this synthetic option (used for idempotent rerun)
 	synthesisRunId: optional(string()), // id of the run that produced this derived option — enables surgical per-run cleanup & provenance
+	/**
+	 * Theme provenance, set by the admin "Re-theme with AI" batch rebuild.
+	 * Plain optional strings, NOT picklist values: a new picklist value breaks
+	 * strict parses of older clients. Known value of themeSource: 'llm-rebuild'.
+	 */
+	themeSource: optional(string()),
+	themeRule: optional(string()), // one-line inclusion criterion of a rebuilt theme
+	themeRebuildRunId: optional(string()), // run id of the rebuild that last wrote this theme
 	synthesisMechanism: optional(picklist(['bulk', 'live-spawn', 'live-attach'])), // which synthesis path created this derived option
 	titleLockedByCreator: optional(boolean()), // when true, the creator has manually edited the cluster title — suppress AI regeneration
 	condensationStatus: optional(
@@ -303,6 +322,10 @@ export const StatementSchema = object({
 		}),
 	),
 	votingSettings: optional(VotingSettingsSchema), // the settings of the voting of the statement
+	/** join-class: set on an answer / proposal written from a table (auto +1 for coAuthors). */
+	classTable: optional(ClassTableMarkerSchema),
+	/** join-class IA 22: replies on a proposal (marker on the reply, counters on the proposal). */
+	...ClassReplyStatementFieldsSchema,
 	questionSettings: optional(QuestionSettingsSchema), // the settings of the question of the statement
 	statementSettings: optional(StatementSettingsSchema), // the settings of the statement
 	/** Activists — users who joined this option to help it happen.

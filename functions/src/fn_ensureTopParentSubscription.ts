@@ -43,9 +43,14 @@ function isAlreadyExists(error: unknown): boolean {
 export async function ensureTopParentSubscription(event: SubscriptionCreatedEvent): Promise<void> {
 	if (!event.data) return;
 	const sub = event.data.data() as Partial<StatementSubscription> | undefined;
-	if (!sub?.statementId || !sub.user?.uid) return;
+	if (!sub?.statementId || !sub.userId) return;
 
-	const userId = sub.user.uid;
+	// The subscriber is `userId` (what the doc id is built from), never user.uid:
+	// the admin copies setupAdminsForStatement writes store the statement's
+	// creator as `user`.
+	const userId = sub.userId;
+	const user: StatementSubscription['user'] =
+		sub.user?.uid === userId ? sub.user : { uid: userId, displayName: '' };
 	const topParentId =
 		sub.topParentId ?? (sub.statement as Partial<Statement> | undefined)?.topParentId;
 	if (!topParentId || topParentId === TOP || topParentId === sub.statementId) return;
@@ -72,7 +77,7 @@ export async function ensureTopParentSubscription(event: SubscriptionCreatedEven
 			statementId: topParentId,
 			statementsSubscribeId: topSubId,
 			statement: statementToSimpleStatement(top),
-			user: sub.user,
+			user,
 			parentId: TOP,
 			statementType: top.statementType,
 			topParentId,

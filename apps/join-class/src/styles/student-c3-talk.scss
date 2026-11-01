@@ -1,0 +1,214 @@
+// Student C3: talk (screens down) + write. See student-c3.scss.
+$c3-count-size: clamp(6rem, 30vw, 8rem); // 96-128px, readable from 60cm
+
+// ---- talk (screens down) --------------------------------------------------------
+
+.talk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  text-align: center;
+
+  &__speaker {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold, 700);
+  }
+}
+
+.count {
+  width: 100%;
+  margin-block: var(--space-md);
+
+  &__num,
+  &__over {
+    margin: 0;
+    font-weight: var(--font-weight-bold, 700);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  &__num {
+    font-size: $c3-count-size;
+  }
+
+  &__over {
+    font-size: var(--font-size-3xl);
+  }
+
+  &--idle &__num {
+    opacity: 0.45;
+  }
+
+  &--warn &__num {
+    color: var(--terra-300);
+  }
+
+  &__bar {
+    display: block;
+    height: 6px;
+    margin-block-start: var(--space-md);
+    border-radius: var(--radius-full);
+    background: transparent;
+    overflow: hidden;
+  }
+
+  &__fill {
+    display: block;
+    height: 100%;
+    background: var(--paper);
+    transform-origin: left;
+    transition: transform 1s linear;
+
+    [dir='rtl'] & {
+      transform-origin: right;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  &--warn &__fill,
+  &--over &__fill {
+    background: var(--terra-300);
+  }
+}
+
+// ---- write ----------------------------------------------------------------------
+
+.write-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+
+  &__question {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold, 700);
+  }
+
+  &__note {
+    margin: 0;
+    color: var(--ink-muted);
+  }
+
+  &__broadcast {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-height: var(--touch-target);
+  }
+
+  &__live {
+    margin: 0;
+    color: var(--teal-700);
+    font-size: var(--font-size-sm);
+  }
+
+  // The send button stays pinned to the bottom of the scrolling content, so a long
+  // question can never push it off the screen.
+  &__footer {
+    position: sticky;
+    inset-block-end: calc(-1 * var(--space-lg));
+    z-index: 1;
+    margin-block-end: calc(-1 * var(--space-lg));
+    padding-block: var(--space-sm) var(--space-md);
+    background: var(--paper);
+    border-block-start: 1px solid var(--paper-line);
+  }
+
+  &__send {
+    width: 100%;
+    min-height: var(--touch-target, 48px);
+    font-weight: var(--font-weight-bold, 700);
+
+    &:disabled {
+      opacity: 0.55;
+    }
+  }
+}
+
+.mode {
+  display: flex;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+
+  &__option {
+    flex: 1;
+    min-height: var(--touch-target);
+    padding: 0 var(--space-sm);
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold, 700);
+    cursor: pointer;
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
+
+    &--on {
+      background: var(--ink);
+      color: var(--paper);
+    }
+  }
+}
+
+.write {
+  &__label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  &__eyebrow {
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold, 700);
+  }
+
+  &__area {
+    width: 100%;
+    min-height: 96px;
+    padding: var(--space-sm) var(--space-md);
+    border: 1.5px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--font-size-base);
+    resize: vertical;
+    // Focus scrolling keeps the box clear of the pinned send bar (button + padding).
+    scroll-margin-block-end: calc(var(--touch-target, 48px) + var(--space-xl, 32px) + var(--space-md));
+
+    &[readonly] {
+      background: var(--paper-soft);
+    }
+  }
+
+  &__count {
+    margin: var(--space-xs) 0 0;
+    color: var(--ink-soft);
+    font-size: var(--font-size-xs);
+  }
+
+  &__sent {
+    margin: var(--space-xs) 0 0;
+    color: var(--teal-700);
+    font-weight: var(--font-weight-bold, 700);
+  }
+
+  // The language check refused the words (IA 24.3).
+  &__refused {
+    margin: var(--space-xs) 0 0;
+    color: var(--warning);
+    font-weight: var(--font-weight-bold, 700);
+  }
+}
+

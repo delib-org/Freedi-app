@@ -104,6 +104,13 @@ export {
   EvaluationUI
 } from "./models/evaluation/Evaluation";
 
+// Per-question participation marker (server-only; backs the evaluator count)
+export type { EvaluationParticipant } from "./models/evaluation/EvaluationParticipant";
+export {
+  EvaluationParticipantSchema,
+  getEvaluationParticipantId,
+} from "./models/evaluation/EvaluationParticipant";
+
 // Invitation models
 export type { Invitation } from "./models/invitation/Invitation";
 export { InvitationSchema } from "./models/invitation/Invitation";
@@ -290,12 +297,19 @@ export type {
   MapSynthVisibility,
   MapDetailLevel,
   MapFilterMetric,
-  RatingMode
+  RatingMode,
+  VotingOptionsSource,
+  LessonStepKey,
+  LessonPlan,
+  LessonStatus,
+  LessonLook,
+  ClassRole
 } from "./models/statement/StatementSettings";
 
 export {
   StatementSettingsSchema,
   RatingModeSchema,
+  VotingOptionsSourceSchema,
   evaluationType,
   JoinFormFieldSchema,
   JoinFormFieldTypeSchema,
@@ -313,7 +327,12 @@ export {
   MapSettingsSchema,
   MapSynthVisibilitySchema,
   MapDetailLevelSchema,
-  MapFilterMetricSchema
+  MapFilterMetricSchema,
+  LessonStepKeySchema,
+  LessonPlanSchema,
+  LessonStatusSchema,
+  LessonLookSchema,
+  ClassRoleSchema
 } from "./models/statement/StatementSettings";
 
 export type {
@@ -962,6 +981,8 @@ export * from './models/covenant/deliberation';
 
 // Statement search — shared scorer and request/response types
 export * from './models/search/searchModel';
+// Question "search by meaning" (searchQuestionsByMeaning callable)
+export * from './models/search/questionSearchModel';
 export {
   normalizeSearchText,
   normalizeWithMap,
@@ -983,3 +1004,219 @@ export {
   isSearchCandidate,
 } from './utils/searchCandidates';
 export type { SearchableStatement, SearchableSubscription } from './utils/searchCandidates';
+
+// Home activity feed (server-written; replaces subscription lastUpdate stamps)
+export type { UserFeedItem, UserFeedThrottle } from './models/userFeed/UserFeed';
+export {
+  UserFeedItemSchema,
+  UserFeedThrottleSchema,
+  USER_FEED_ROLES,
+  getUserFeedId,
+  isUserFeedRole,
+  isTopLevelSubscription,
+} from './models/userFeed/UserFeed';
+
+// join-class: classroom lesson model, callables contract, pure logic
+export {
+  CLASS_TABLES_COLLECTION,
+  CLASS_PROPOSAL_MAX_LENGTH,
+  CLASS_LANGUAGE_FLAGS_COLLECTION,
+  CLASS_LANGUAGE_FLAGS_KEPT,
+  CLASS_LANGUAGE_FLAG_TTL_DAYS,
+  ClassLanguageFlagKindSchema,
+  ClassLanguageFlagSchema,
+  CLASS_BATCH_SIZE,
+  DEFAULT_SPEAK_SECONDS,
+  SPEAK_SECONDS_CHOICES,
+  DEFAULT_PROPOSALS_TURNS,
+  PROPOSALS_TURNS_CHOICES,
+  DEFAULT_GATE,
+  SIDE_MIN,
+  SIDE_MAX,
+  CAMP_A_BELOW,
+  CAMP_B_ABOVE,
+  SUPPORT_MIN,
+  SUPPORT_MAX,
+  MIN_TABLE_SIZE,
+  MAX_TABLE_SIZE,
+  DEFAULT_TABLE_SIZE,
+  TableStepSchema,
+  WritingModeSchema,
+  CampSchema,
+  RoundPhaseSchema,
+  NoDeviceMemberSchema,
+  ClassTableSchema,
+  ClassTableMarkerSchema,
+  ClassBallotSchema,
+  ClassVoteDisplaySchema,
+  ClassVoteOrderSchema,
+  ClassSubscriptionFieldsSchema,
+  CLASS_REPLY_MAX_LENGTH,
+  ClassReplyRoleSchema,
+  ClassReplyMarkerSchema,
+  ClassReplyStatementFieldsSchema,
+  SideValueSchema,
+  DecisionSupportSchema,
+  classTableId,
+} from './models/classroom/classroomModel';
+export type {
+  TableStep,
+  WritingMode,
+  Camp,
+  RoundPhase,
+  NoDeviceMember,
+  ClassTable,
+  ClassTableMarker,
+  ClassBallot,
+  ClassVoteDisplay,
+  ClassVoteOrder,
+  ClassReplyRole,
+  ClassReplyMarker,
+  ClassLanguageFlag,
+  ClassLanguageFlagKind,
+} from './models/classroom/classroomModel';
+export {
+  campOf,
+  supportBySide,
+  decideBallot,
+  lessonStatusOf,
+  planLessonStatus,
+  notAskedUids,
+  speakerTimeOver,
+  everyoneSpoke,
+  tableDone,
+  floorOpen,
+  othersAnswered,
+  askerMayAnswer,
+  choosing,
+  allowOwnQuestionsOf,
+  lessonLookOf,
+  tableSizeOf,
+  noQuestionsLeft,
+  speakSecondsOf,
+  proposalsTurnsOf,
+  proposalsTurnOf,
+  proposalsMaxTurns,
+  proposalsTurnOver,
+  proposalsDone,
+  spokeThisTurn,
+} from './models/classroom/classroomLogic';
+export type { LessonSettingsHolder } from './models/classroom/classroomLogic';
+export {
+  CLASS_PLANS_COLLECTION,
+  CLASS_GAMES_SUBCOLLECTION,
+  CLASS_HOME_PREFIX,
+  TEACHER_HOME_PREFIX,
+  CLASS_HOME_KIND,
+  CLASS_PLAN_TITLE_MAX_LENGTH,
+  CLASS_NAME_MAX_LENGTH,
+  LESSON_NAME_MAX_LENGTH,
+  cleanLessonName,
+  CLASS_GAME_MAX_QUESTIONS,
+  CLASS_GAME_MAX_PARAGRAPHS,
+  CLASS_GAME_MAX_VIDEOS,
+  CLASS_GAME_MAX_TEXT_LENGTH,
+  ClassPlanSchema,
+  ClassGameSchema,
+  ClassGameSnapshotSchema,
+  ClassGameQuestionSchema,
+  ClassGameParagraphSchema,
+  ClassGameSettingsSchema,
+  classHomeIdOf,
+  teacherHomeIdOf,
+  isHomeId,
+  isClassHome,
+  isClassLesson,
+  cleanClassName,
+} from './models/classroom/classPlanModel';
+export type {
+  ClassPlan,
+  ClassGame,
+  ClassGameSnapshot,
+  ClassGameQuestion,
+  ClassGameParagraph,
+  ClassLessonLink,
+  ClassHomeLink,
+  ClassHomeKind,
+} from './models/classroom/classPlanModel';
+export {
+  LESSON_STEPS,
+  flattenLines,
+  compareByManualOrder,
+  isPlanQuestion,
+  isIntroParagraph,
+  snapshotFromLesson,
+  checkSnapshot,
+  lessonFromSnapshot,
+} from './models/classroom/classGameSnapshot';
+export type {
+  SnapshotProblem,
+  LessonFromSnapshotInput,
+  LessonStatements,
+} from './models/classroom/classGameSnapshot';
+export {
+  MOVE_ON_PRESSES,
+  MOVE_ON_SMALL_TABLE,
+  moveOnNeeded,
+  moveOnPressers,
+  moveOnReached,
+} from './models/classroom/moveOnLogic';
+export type {
+  SupportSubscription,
+  CampSupport,
+  SupportVerdict,
+  SupportBySide,
+  LessonStatusChange,
+} from './models/classroom/classroomLogic';
+export type {
+  ClassAssignTablesRequest,
+  ClassAssignTablesResponse,
+  ClassMoveStudentRequest,
+  ClassMoveStudentResponse,
+  ClassAddNoDeviceRequest,
+  ClassAddNoDeviceResponse,
+  ClassTableAction,
+  ClassTableStepRequest,
+  ClassTableStepResponse,
+  ClassAllTablesToRequest,
+  ClassAllTablesToResponse,
+  ClassFreezeBallotRequest,
+  ClassFreezeBallotResponse,
+  ClassCloseBallotRequest,
+  ClassCloseBallotResponse,
+  ClassPauseBallotRequest,
+  ClassPauseBallotResponse,
+  ClassResetTurnsRequest,
+  ClassResetTurnsResponse,
+  ClassResetVoteRequest,
+  ClassResetVoteResponse,
+  ClassSetItemHiddenRequest,
+  ClassSetItemHiddenResponse,
+  ClassPostReplyRequest,
+  ClassPostReplyResponse,
+  ClassPostProposalRequest,
+  ClassPostProposalResponse,
+  ClassEditProposalRequest,
+  ClassEditProposalResponse,
+  ClassCloneLessonRequest,
+  ClassStartLessonRequest,
+  ClassStartLessonResponse,
+  ClassSnapshotGameRequest,
+  ClassSnapshotGameResponse,
+  ClassCloneLessonResponse,
+  ClassSetLessonStatusRequest,
+  ClassSetLessonStatusResponse,
+  LessonStatusAction,
+} from './models/classroom/classroomCallables';
+
+// Theme rebuild ("Re-theme with AI") callable contract
+export type {
+  ThemeRebuildMode,
+  ThemeRebuildRequest,
+  ThemeRebuildPreviewTheme,
+  ThemeRebuildPreviewResponse,
+  ThemeRebuildApplyResponse,
+  ThemeRebuildResponse,
+  ThemeRebuildFailureReason,
+} from './models/themeRebuild/themeRebuildCallables';
+export { THEME_SOURCE_LLM_REBUILD } from './models/themeRebuild/themeRebuildCallables';

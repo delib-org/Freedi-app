@@ -11,6 +11,12 @@ import { cosineSimilarity } from '../bulkCluster';
 import { pairKey } from '../completeLinkage';
 import { isLiveSynthEnabledForQuestion } from './featureGate';
 import { runSinglePipeline } from '../pipeline/runSinglePipeline';
+import {
+	ORPHANED_VOTES_COLLECTION,
+	RestoreSummary,
+	restoreDissolvedVotes,
+} from './restoreDissolvedVotes';
+import { logError } from '../../utils/errorHandling';
 
 /**
  * Live-synth edit invalidation.
@@ -31,7 +37,8 @@ import { runSinglePipeline } from '../pipeline/runSinglePipeline';
  * Auto-dissolve: when a cluster's `integratedOptions` count drops to <2,
  * the cluster is meaningless (a "cluster of one" is just an option). The
  * cluster doc is deleted and any direct evaluations on it are archived
- * to `_orphanedClusterVotes/`. Members revert to standalone options.
+ * to `_orphanedClusterVotes/` and, when exactly one visible member remains, re-created as that
+ * member's evaluations (see restoreDissolvedVotes.ts). Members revert to standalone options.
  *
  * Failure mode is fail-open at every step. The user's edit always
  * succeeds; this trigger is a safety net for the cluster integrity
@@ -39,7 +46,6 @@ import { runSinglePipeline } from '../pipeline/runSinglePipeline';
  */
 
 const EMBEDDING_DRIFT_FLOOR = 0.05;
-const ORPHANED_VOTES_COLLECTION = '_orphanedClusterVotes';
 
 function db() {
 	return getFirestore();
@@ -95,6 +101,8 @@ export function detectBecameOption(beforeRaw: unknown, afterRaw: unknown): State
 interface DissolveContext {
 	cluster: Statement;
 	remainingMember: string;
+	/** Every member option still in the cluster at dissolve time. */
+	remainingMembers: string[];
 }
 
 /**
@@ -104,7 +112,7 @@ interface DissolveContext {
  * drop them.
  */
 async function dissolveCluster(ctx: DissolveContext): Promise<void> {
-	const { cluster, remainingMember } = ctx;
+	const { cluster, remainingMember, remainingMembers } = ctx;
 	const clusterId = cluster.statementId;
 
 	// Archive direct synth votes (evaluations whose statementId equals
@@ -115,14 +123,42 @@ async function dissolveCluster(ctx: DissolveContext): Promise<void> {
 			.where('statementId', '==', clusterId)
 			.get();
 		if (!directEvalsSnap.empty) {
+			// Give the votes back to the single surviving option first (idempotent,
+			// never overrides a user's own vote), then archive with the outcome.
+			// A failed restore must never cost the audit trail: fall back to an
+			// empty summary (every vote archived as 'failed') and archive anyway.
+			let summary: RestoreSummary = {
+				clusterId,
+				survivorId: null,
+				memberOptionIds: remainingMembers,
+				outcomes: new Map(),
+			};
+			try {
+				summary = await restoreDissolvedVotes({
+					clusterId,
+					memberIds: remainingMembers,
+					votes: directEvalsSnap.docs.map((d) => ({ id: d.id, data: d.data() })),
+				});
+			} catch (error) {
+				logError(error, {
+					operation: 'liveSynth.dissolveCluster.restoreVotes',
+					statementId: clusterId,
+					metadata: { memberIds: remainingMembers, voteCount: directEvalsSnap.size },
+				});
+			}
 			const archiveBatch = db().batch();
 			directEvalsSnap.docs.forEach((doc) => {
+				const outcome = summary.outcomes.get(doc.id);
 				archiveBatch.set(db().collection(ORPHANED_VOTES_COLLECTION).doc(doc.id), {
 					...doc.data(),
 					originalCollection: Collections.evaluations,
 					archivedAt: Date.now(),
 					reason: 'cluster-dissolved',
 					clusterId,
+					restored: outcome === 'restored' || outcome === 'already-restored',
+					restoreOutcome: outcome ?? 'failed',
+					restoredToStatementId: summary.survivorId,
+					memberOptionIdsAtDissolve: remainingMembers,
 				});
 			});
 			await archiveBatch.commit();
@@ -226,6 +262,7 @@ async function unlinkOptionFromCluster(input: UnlinkInput): Promise<void> {
 		await dissolveCluster({
 			cluster,
 			remainingMember: newMembers[0] ?? '',
+			remainingMembers: newMembers,
 		});
 	} else {
 		// Member set still ≥ 2: recompute the cluster's aggregate without the

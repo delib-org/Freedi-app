@@ -1,0 +1,104 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed1234-consolidated",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 11,
+ "themesWithMembers": 11,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  6,
+  6,
+  6,
+  5,
+  5,
+  5,
+  4,
+  4,
+  4,
+  3,
+  2
+ ],
+ "ms": 20539,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 941,
+   "completion": 1172
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 1891,
+   "completion": 826
+  }
+ },
+ "usd": 0.017315399999999998,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Affordable Housing and Rentals",
+   "rule": "Proposals for creating, converting, subsidizing, improving, or regulating housing and rental conditions for residents belong here.",
+   "size": 4
+  },
+  {
+   "key": "t2",
+   "name": "School Learning and Support",
+   "rule": "Proposals concerning school facilities, teachers, class sizes, student learning, meals, or extracurricular educational support belong here.",
+   "size": 6
+  },
+  {
+   "key": "t3",
+   "name": "Transit Service and Fares",
+   "rule": "Proposals that improve public transport routes, schedules, rider information, or transit affordability belong here.",
+   "size": 4
+  },
+  {
+   "key": "t4",
+   "name": "Neighborhood Green Recreation",
+   "rule": "Proposals for parks, gardens, trees, playgrounds, dog areas, and other outdoor neighborhood recreation spaces belong here.",
+   "size": 5
+  },
+  {
+   "key": "t5",
+   "name": "Public Health and Care",
+   "rule": "Proposals that expand medical care, mental-health services, preventive screening, specialist access, or in-home care belong here.",
+   "size": 5
+  },
+  {
+   "key": "t6",
+   "name": "Community and Street Safety",
+   "rule": "Proposals addressing emergency response, crime prevention, street lighting, patrols, surveillance, or safer road crossings belong here.",
+   "size": 6
+  },
+  {
+   "key": "t7",
+   "name": "Sustainable Resource Management",
+   "rule": "Proposals to reduce emissions, pollution, single-use materials, or waste through energy, recycling, composting, or environmental monitoring belong here.",
+   "size": 6
+  },
+  {
+   "key": "t8",
+   "name": "Arts, Culture, and Libraries",
+   "rule": "Proposals for public art, festivals, museum access, libraries, or cultural programming belong here.",
+   "size": 4
+  },
+  {
+   "key": "t9",
+   "name": "Local Jobs and Business",
+   "rule": "Proposals that support local hiring, small businesses, workspaces, licensing, or worker reskilling belong here.",
+   "size": 5
+  },
+  {
+   "key": "t10",
+   "name": "Municipal Service Access",
+   "rule": "Proposals that make it easier for residents to request, complete, or receive city administrative services belong here.",
+   "size": 3
+  },
+  {
+   "key": "t11",
+   "name": "Digital Access and Transparency",
+   "rule": "Proposals providing public internet access or publishing city data, spending, and other government information belong here.",
+   "size": 2
+  }
+ ]
+}

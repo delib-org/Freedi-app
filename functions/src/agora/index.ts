@@ -53,3 +53,5 @@ export { agoraLibraryResolveReport } from './fn_agoraLibraryResolveReport';
 export { agoraLibraryMergeTags } from './fn_agoraLibraryMergeTags';
 export { onAgoraLibraryReportCreated } from './fn_onAgoraLibraryReportCreated';
 export { agoraTopicAccess } from './fn_agoraTopicAccess';
+export { agoraCheckStationLink } from './fn_agoraCheckStationLink';
+export { agoraMintStationHandoff } from './fn_agoraMintStationHandoff';

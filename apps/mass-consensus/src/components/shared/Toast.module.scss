@@ -91,6 +91,21 @@
     line-height: 1.4;
   }
 
+  &__action {
+    background: none;
+    border: none;
+    color: var(--btn-primary, #5f88e5);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0 0.25rem;
+    flex-shrink: 0;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
   &__close {
     background: none;
     border: none;

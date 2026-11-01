@@ -1,0 +1,90 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed42-themefix",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 9,
+ "themesWithMembers": 9,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  8,
+  6,
+  6,
+  6,
+  5,
+  5,
+  5,
+  5,
+  4
+ ],
+ "ms": 15440,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 2534,
+   "completion": 848
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 3379,
+   "completion": 840
+  }
+ },
+ "usd": 0.0169278,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Affordable and Efficient Housing",
+   "rule": "Includes proposals to create, preserve, make more affordable, improve the energy performance of, or increase transparency in residential housing.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "Education and Student Support",
+   "rule": "Includes proposals concerning schools, teachers, pupils, educational facilities, tutoring, school meals, or free learning and arts instruction for children.",
+   "size": 6
+  },
+  {
+   "key": "t3",
+   "name": "Health and Care Services",
+   "rule": "Includes proposals to improve access to medical care, preventive screening, mental-health services, emergency health response, or in-home support for older residents.",
+   "size": 5
+  },
+  {
+   "key": "t4",
+   "name": "Public Transport and Street Mobility",
+   "rule": "Includes proposals to improve bus access, fares, frequency, rider information, cycling infrastructure, or road safety for people traveling through the city.",
+   "size": 6
+  },
+  {
+   "key": "t5",
+   "name": "Digital and Municipal Access",
+   "rule": "Includes proposals to make city information, public internet, municipal procedures, service requests, or assistance using city services more accessible.",
+   "size": 5
+  },
+  {
+   "key": "t6",
+   "name": "Environmental Sustainability and Green Space",
+   "rule": "Includes proposals addressing clean energy, waste reduction, recycling, pollution monitoring, urban trees, parks, gardens, or other environmental improvements.",
+   "size": 8
+  },
+  {
+   "key": "t7",
+   "name": "Local Jobs and Small Business",
+   "rule": "Includes proposals to support residents' employment and retraining or to reduce barriers and provide finance, workspace, or local-hiring opportunities for businesses and workers.",
+   "size": 5
+  },
+  {
+   "key": "t8",
+   "name": "Culture, Recreation and Community Amenities",
+   "rule": "Includes proposals for cultural programming, arts access, libraries, playgrounds, dog areas, or other shared recreational and neighborhood gathering amenities.",
+   "size": 6
+  },
+  {
+   "key": "t9",
+   "name": "Public Safety and Emergency Protection",
+   "rule": "Includes proposals to prevent crime, improve street safety through lighting or policing, deploy security cameras, or expand fire and ambulance coverage.",
+   "size": 4
+  }
+ ]
+}

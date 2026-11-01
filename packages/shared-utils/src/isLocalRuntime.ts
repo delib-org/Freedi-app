@@ -35,6 +35,13 @@
 /** Hostnames that only ever mean "this machine". */
 const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]', '']);
 
+/**
+ * Suffixes that only resolve on a developer machine: mDNS `.local`, the
+ * reserved `.localhost`, and the reserved dev TLD `.test` (RFC 2606, e.g.
+ * `freedi.test`), which can never be a public deployment.
+ */
+const LOCAL_HOSTNAME_SUFFIXES = ['.local', '.localhost', '.test'] as const;
+
 /** Emulator variables. Any one of these means a Firebase emulator is in play. */
 const EMULATOR_ENV_VARS = [
 	'FUNCTIONS_EMULATOR',
@@ -87,7 +94,10 @@ export function isLocalRuntime(explicitOverride = false): boolean {
 	if (host !== null) {
 		// A browser: the address bar is the whole truth, and it cannot lie the
 		// way a build flag can.
-		return LOCAL_HOSTNAMES.has(host) || host.endsWith('.local') || host.endsWith('.localhost');
+		return (
+			LOCAL_HOSTNAMES.has(host) ||
+			LOCAL_HOSTNAME_SUFFIXES.some((suffix) => host === suffix.slice(1) || host.endsWith(suffix))
+		);
 	}
 
 	const vars = env();

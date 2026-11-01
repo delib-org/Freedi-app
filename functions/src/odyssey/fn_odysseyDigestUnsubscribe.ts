@@ -1,7 +1,8 @@
 /**
  * One-click unsubscribe for the Odyssey voyage-story digest — the link in
  * every digest footer AND the target of the List-Unsubscribe header. GET for
- * humans clicking from any mail client (RTL confirmation page); POST for the
+ * humans clicking from any mail client (a confirmation page in the reader's
+ * language, `?lang=`); POST for the
  * RFC 8058 one-click flow mail providers drive themselves. The token is an
  * HMAC of the uid so a guessed link can't silence someone else's digest.
  * Flips `notificationSettings/{uid}.odysseyDigest.enabled` off.
@@ -11,6 +12,12 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { createHmac } from 'node:crypto';
 import { Collections, functionConfig } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
+import {
+	DIGEST_STRINGS,
+	digestDir,
+	digestLang,
+	type DigestLang,
+} from './digest/odysseyDigestStrings';
 
 const getDb = () => getFirestore();
 
@@ -23,9 +30,9 @@ export function odysseyUnsubscribeToken(userId: string): string {
 	return createHmac('sha256', unsubscribeSecret()).update(userId).digest('hex').slice(0, 16);
 }
 
-const PAGE = (message: string): string => `<!DOCTYPE html>
-<html dir="rtl" lang="he"><body style="font-family:Arial,sans-serif;background:#04121f;color:#e6f2fb;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0">
-<div style="text-align:center;padding:24px"><h1 style="color:#fff4d3">⛵ אודיסיאה ישראלית</h1><p style="font-size:16px">${message}</p></div>
+const PAGE = (lang: DigestLang, message: string): string => `<!DOCTYPE html>
+<html dir="${digestDir(lang)}" lang="${lang}"><body style="font-family:Arial,sans-serif;background:#04121f;color:#e6f2fb;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0">
+<div style="text-align:center;padding:24px"><h1 style="color:#fff4d3">⛵ ${DIGEST_STRINGS[lang].defaultGameTitle}</h1><p style="font-size:16px">${message}</p></div>
 </body></html>`;
 
 export const odysseyDigestUnsubscribe = onRequest(
@@ -33,9 +40,12 @@ export const odysseyDigestUnsubscribe = onRequest(
 	async (req, res): Promise<void> => {
 		const userId = typeof req.query.userId === 'string' ? req.query.userId : '';
 		const token = typeof req.query.t === 'string' ? req.query.t : '';
+		// The digest footer carries the reader's language; a hand-typed link has none
+		const lang = digestLang(req.query.lang);
+		const strings = DIGEST_STRINGS[lang];
 
 		if (!userId || token !== odysseyUnsubscribeToken(userId)) {
-			res.status(400).send(PAGE('הקישור אינו תקין. אפשר לבטל את המייל גם מתוך המשחק עצמו.'));
+			res.status(400).send(PAGE(lang, strings.unsubscribeInvalid));
 
 			return;
 		}
@@ -52,10 +62,10 @@ export const odysseyDigestUnsubscribe = onRequest(
 
 				return;
 			}
-			res.send(PAGE('הוסרתם מרשימת התפוצה של סיפור המסע. מחכים לכם בים 🌊'));
+			res.send(PAGE(lang, strings.unsubscribeDone));
 		} catch (error) {
 			logError(error, { operation: 'odyssey.digestUnsubscribe', userId });
-			res.status(500).send(PAGE('משהו השתבש. נסו שוב מאוחר יותר.'));
+			res.status(500).send(PAGE(lang, strings.unsubscribeFailed));
 		}
 	},
 );

@@ -67,4 +67,22 @@ describe('HomeOverview', () => {
 
 		expect(onOpenStatement).toHaveBeenCalledWith('q-1');
 	});
+
+	it('labels the Questions-tab entry "Ask a question" and fires onCreateQuestion', () => {
+		const onCreateQuestion = jest.fn();
+		renderHome({ onCreateQuestion });
+
+		fireEvent.click(screen.getByRole('button', { name: 'Ask a question' }));
+
+		expect(onCreateQuestion).toHaveBeenCalledTimes(1);
+	});
+
+	it('labels the empty-state entry "Ask a question"', () => {
+		const onCreateQuestion = jest.fn();
+		renderHome({ spaces: [], questions: [], onCreateQuestion });
+
+		fireEvent.click(screen.getByRole('button', { name: 'Ask a question' }));
+
+		expect(onCreateQuestion).toHaveBeenCalledTimes(1);
+	});
 });

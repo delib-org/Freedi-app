@@ -1,0 +1,78 @@
+// =============================================================================
+// Projector video mode (UX 15.C). Imported by the lazy TeacherProjector view only.
+// =============================================================================
+
+$projector-min-text: 32px;
+$projector-band-height: 64px;
+
+// Video mode (UX 15.C): the chosen video fills the window on black. The player is
+// the largest box that fits above a 64 px strip (the dark twin of the code band),
+// centred, with black bars. The strip carries the video's label and is the one
+// place a mouse move still reaches the page (the iframe swallows pointer events).
+.projector--video {
+  overflow: hidden;
+  background: var(--video-letterbox);
+
+  .projector__stage,
+  .projector__stage[data-step='opening'] {
+    padding: 0;
+  }
+}
+
+.intro-stage {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) $projector-band-height;
+  gap: 0;
+  align-items: stretch;
+  min-inline-size: 0;
+  block-size: 100vh; // Safari before 15.4
+  block-size: 100dvh;
+  background: var(--video-letterbox);
+
+  &__screen {
+    display: grid;
+    place-items: center;
+    min-block-size: 0;
+    overflow: hidden;
+  }
+
+  &__player {
+    border: 0;
+    border-radius: 0;
+    background: var(--video-letterbox);
+
+    // YouTube letterboxes a 4:3 or vertical upload inside its own 16:9 frame
+    &--youtube {
+      inline-size: min(100vw, calc((100dvh - #{$projector-band-height}) * 16 / 9));
+      aspect-ratio: 16 / 9;
+    }
+
+    // the browser letterboxes a file to its own ratio
+    &--file {
+      inline-size: 100%;
+      block-size: 100%;
+      object-fit: contain;
+    }
+  }
+
+  &__strip {
+    display: flex;
+    align-items: center;
+    padding: 0 var(--space-xl);
+    border-block-start: 1px solid var(--video-rule);
+    color: var(--video-ink);
+    text-align: start;
+  }
+
+  &__title {
+    margin: 0;
+    max-inline-size: 100%;
+    overflow: hidden;
+    font-size: $projector-min-text;
+    font-weight: var(--font-weight-bold, 700);
+    line-height: var(--line-height-tight, 1.15);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+

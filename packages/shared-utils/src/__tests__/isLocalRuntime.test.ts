@@ -45,18 +45,25 @@ describe('isLocalRuntime', () => {
 			'[::1]',
 			'Tals-Mac-mini.local',
 			'app.localhost',
+			'freedi.test',
+			'test',
+			'a.b.test',
 		])('treats %s as local', (host) => {
 			inBrowser(host);
 			expect(isLocalRuntime()).toBe(true);
 		});
 
-		it.each(['freedi.app', 'wizcol-od.web.app', 'mc.wizcol.com', 'localhost.attacker.com'])(
-			'treats %s as deployed',
-			(host) => {
-				inBrowser(host);
-				expect(isLocalRuntime()).toBe(false);
-			},
-		);
+		it.each([
+			'freedi.app',
+			'wizcol-od.web.app',
+			'mc.wizcol.com',
+			'localhost.attacker.com',
+			'contest.com',
+			'freedi.test.example.com',
+		])('treats %s as deployed', (host) => {
+			inBrowser(host);
+			expect(isLocalRuntime()).toBe(false);
+		});
 
 		it('reports anyway when the app forwards an explicit override', () => {
 			inBrowser('localhost');

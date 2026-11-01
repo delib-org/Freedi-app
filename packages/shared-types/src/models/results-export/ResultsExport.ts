@@ -8,7 +8,8 @@
  * (new optional fields) keep the same major version.
  */
 
-export const RESULTS_EXPORT_SCHEMA_VERSION = "1.0.0";
+// 2.0.0: removed filteredOut.byReason.unassigned; added the final `other-ideas` TopicBlock.
+export const RESULTS_EXPORT_SCHEMA_VERSION = "2.0.0";
 
 export type AgreementShape =
   | "consensus"
@@ -95,6 +96,12 @@ export interface TopicBlock {
   agreement: TopicAgreement;
   synthesizedSolutions: SynthesizedSolutionEntry[];
   standaloneSolutions: StandaloneSolutionEntry[];
+  /**
+   * True only on the final `other-ideas` block: the ideas no visible theme holds
+   * (topicId 'other-ideas', topicTitle 'Other ideas'). Not counted in
+   * `summary.topicCount`. Emitted whenever such ideas exist, even with zero themes.
+   */
+  isOtherIdeas?: boolean;
 }
 
 export interface CoalitionEntry {
@@ -133,7 +140,8 @@ export interface FilteredOutBlock {
     belowConsensusFloor: number;
     lowEvaluators: number;
     hidden: number;
-    unassigned: number;             // options the topic-cluster pipeline didn't place
+    // `unassigned` was removed in 2.0.0: ideas no theme holds are exported, in
+    // the final `other-ideas` TopicBlock, not filtered out.
   };
 }
 

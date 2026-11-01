@@ -4,6 +4,7 @@ import { Collections, StatementType, type Statement } from '@freedi/shared-types
 import { groupEquivalentThemes, type ThemeOption } from '../../services/integration-ai-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
+import { absorbedClusterIdsUpdate } from '../../condensation/absorbedClusters';
 import { isTopicCluster } from './clusterOps';
 
 /**
@@ -250,6 +251,8 @@ export async function consolidateThemes(
 			batch.update(db().collection(Collections.statements).doc(survivor.statementId), {
 				statement: group.title,
 				integratedOptions: nextMembers,
+				// The donors' direct votes keep counting for the survivor.
+				...absorbedClusterIdsUpdate(survivor.statementId, donors),
 				lastUpdate: Date.now(),
 			});
 			for (const donor of donors) {

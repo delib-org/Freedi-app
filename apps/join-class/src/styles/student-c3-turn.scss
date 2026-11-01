@@ -1,0 +1,173 @@
+// =============================================================================
+// Table talk (UX 16 rev 3): one calm screen per state, and its footer.
+// Tokens only, BEM, logical properties (RTL-safe), opacity-only motion.
+// =============================================================================
+
+// ---- one state body: the whole body fades in when the state changes ----------
+
+.tt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  animation: tt-in var(--dur-base) var(--ease-out) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+
+  // The status line under the question: smaller than the question (frame__instruction--question).
+  &__status {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold, 600);
+    line-height: 1.3;
+    text-align: center;
+
+    &--big {
+      margin-block: var(--space-lg);
+      font-size: var(--font-size-xl);
+    }
+
+    // Proposals, every turn spoken (IA 25.6): a calm wait, never an error colour.
+    &--done {
+      margin-block: var(--space-lg);
+      opacity: 0.85;
+    }
+  }
+
+  // The clock states (S, L): status, digits, bar, then Finish or my footnote.
+  &__clock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+    text-align: center;
+  }
+
+  // My own status under the clock: a footnote, never louder than the clock.
+  &__note {
+    margin: 0;
+    color: var(--paper-line);
+    font-size: var(--font-size-base);
+    text-align: center;
+
+    .frame:not(.frame--down) & {
+      color: var(--ink-soft);
+    }
+  }
+
+  // "{{name}} was first": quiet, no error styling.
+  &__quiet {
+    margin: 0;
+    color: var(--paper-line);
+    font-size: var(--font-size-sm);
+    text-align: center;
+
+    .frame:not(.frame--down) & {
+      color: var(--ink-muted);
+    }
+  }
+
+  // "I want to pass" at Proposals (IA 25.6): a quiet text button under "I want to answer".
+  &__pass {
+    min-height: var(--touch-target, 48px);
+    color: var(--paper);
+
+    .frame:not(.frame--down) & {
+      color: var(--ink-soft);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+    }
+  }
+
+  // Finish: outline paper on the ink frame, at least 160 px wide, right under the clock.
+  &__finish {
+    min-width: 160px;
+    min-height: var(--touch-target, 48px);
+    border-color: var(--paper);
+    background: transparent;
+    color: var(--paper);
+
+    &:hover:not(:disabled) {
+      background: transparent;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+    }
+  }
+
+  // The footer fades in with its state (the Pick footer sits on paper, the others on ink).
+  &__footer {
+    animation: tt-in var(--dur-base) var(--ease-out) both;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+}
+
+@keyframes tt-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+// ---- footer: one primary and one real secondary under it --------------------------
+
+.turn-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+
+  &__primary,
+  &__secondary {
+    width: 100%;
+    min-height: var(--touch-target, 48px);
+  }
+
+  // Looks off, stays tappable: a tap explains why (turn.pick_first).
+  &__primary--dimmed {
+    opacity: 0.6;
+  }
+
+  // The secondary is an outline, never filled; on the ink frame it is paper-outlined.
+  &__secondary {
+    .frame--down & {
+      border-color: var(--paper);
+      background: transparent;
+      color: var(--paper);
+
+      &:hover:not(:disabled) {
+        background: transparent;
+      }
+    }
+  }
+
+  &__hint {
+    margin: 0;
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  // One inline confirm in place of the secondary (never a modal).
+  &__confirm {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-sm);
+  }
+
+  &__ask {
+    flex: 1 1 100%;
+    margin: 0;
+    color: var(--ink-muted);
+  }
+}

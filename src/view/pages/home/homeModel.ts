@@ -41,6 +41,8 @@ export interface HomeQuestion {
 	stage?: QuestionStage;
 	deadline?: number;
 	hosting: boolean;
+	/** Start of the newest reply, from the denormalized `statement.lastMessage`. */
+	lastReply?: { author: string; text: string };
 }
 
 export interface HomeModel {
@@ -126,6 +128,21 @@ export function formatQuestionMeta(
 		.join(' · ');
 }
 
+/** Newest reply under a question, or undefined when nobody has replied. */
+export function toLastReply(statement: Statement): HomeQuestion['lastReply'] {
+	const text = statement.lastMessage?.message?.trim();
+	if (!text) return undefined;
+
+	return { author: statement.lastMessage?.creator?.trim() ?? '', text };
+}
+
+/** "<author>: <text>" — the author is left out when it is unknown. */
+export function formatLastReply(reply: HomeQuestion['lastReply']): string {
+	if (!reply) return '';
+
+	return reply.author ? `${reply.author}: ${reply.text}` : reply.text;
+}
+
 const HIDDEN_TYPES: readonly StatementType[] = [
 	StatementType.document,
 	StatementType.paragraph,
@@ -209,6 +226,7 @@ export function buildHomeModel({
 			stage: stageForStep(statement.questionSettings?.currentStep),
 			deadline: statement.questionSettings?.deadline,
 			hosting: isHost(sub, statement, userId),
+			lastReply: toLastReply(statement),
 		});
 	}
 

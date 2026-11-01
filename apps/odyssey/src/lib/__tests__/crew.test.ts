@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import type { OdysseyElder } from '@freedi/shared-types';
 import {
+	CHIP_IN_TEXT_WEIGHT,
+	CHIP_IN_VALUES_WEIGHT,
 	CREW_MAX,
 	CREW_MIN,
 	crewIsComplete,
 	crewIsFull,
 	crewLimits,
 	rankEldersByWinds,
+	withDisplayElders,
 } from '../crew';
 
 function elder(elderId: string, labels: string[], sortOrder: number): OdysseyElder {
@@ -97,7 +100,76 @@ describe('rankEldersByWinds', () => {
 		expect(rankEldersByWinds(roster, ['אב']).every((entry) => !entry.matchesWinds)).toBe(true);
 	});
 
+	it('floats a sailor whose values or bio echo a wind chip, and names the chip', () => {
+		const women = {
+			...elder('henrietta', ['חינוך', 'שוויון האישה', 'חלוציות'], 5),
+			bio: 'פתחה משק לימוד',
+		};
+		const bioOnly = { ...elder('ben', ['מדינה'], 6), bio: 'נאבק למען זכות הבחירה לנשים' };
+		const ranked = rankEldersByWinds([...roster, bioOnly, women], [], ['נשים']);
+
+		expect(ranked.slice(0, 2).map((entry) => entry.elder.elderId)).toEqual(['henrietta', 'ben']);
+		expect(ranked[0].echoedChips).toEqual(['נשים']);
+		expect(ranked[2].echoedChips).toEqual([]);
+		expect(CHIP_IN_VALUES_WEIGHT).toBeGreaterThan(CHIP_IN_TEXT_WEIGHT);
+	});
+
+	it('matches whole words only — no false hits from prefixed look-alikes', () => {
+		const bios = ['לבנות את המדינה', 'קול של מצפון', 'הגדה המערבית', 'אנשים רבים'];
+		const decoys = bios.map((bio, i) => ({ ...elder(`d${i}`, ['מדינה'], i), bio }));
+		const ranked = rankEldersByWinds(decoys, [], ['נשים', 'תושבי הצפון', 'ערבים אזרחי ישראל']);
+
+		expect(ranked.every((entry) => !entry.matchesWinds)).toBe(true);
+
+		const real = { ...elder('real', ['מדינה'], 9), bio: 'עזרה לאישה בשדה' };
+		expect(rankEldersByWinds([real], [], ['נשים'])[0].echoedChips).toEqual(['נשים']);
+	});
+
+	it('adds chips to the value ranking instead of replacing it', () => {
+		const ranked = rankEldersByWinds(
+			[elder('a', ['חירות'], 1), { ...elder('b', ['מדינה'], 2), bio: 'דאג לנשים' }],
+			['חירות'],
+			['נשים'],
+		);
+
+		expect(ranked.map((entry) => entry.elder.elderId)).toEqual(['b', 'a']);
+		expect(ranked.every((entry) => entry.matchesWinds)).toBe(true);
+	});
+
+	it('counts a repeated chip once and ignores chips nobody echoes', () => {
+		const ranked = rankEldersByWinds(roster, [], ['נשים', 'נשים', ' ', 'מילואימניקים']);
+
+		expect(ranked.every((entry) => !entry.matchesWinds && entry.echoedChips.length === 0)).toBe(
+			true,
+		);
+	});
+
 	it('offers every sailor — ordering never drops anyone', () => {
 		expect(rankEldersByWinds(roster, ['ביטחון'])).toHaveLength(roster.length);
+	});
+});
+
+describe('withDisplayElders', () => {
+	it('swaps each ranked elder for its localized twin by id and keeps the order and flags', () => {
+		const roster = rankEldersByWinds(
+			[elder('a', ['חירות'], 1), elder('b', ['שוויון'], 2)],
+			['שוויון'],
+		);
+		const display = [
+			{ ...elder('a', ['Liberty'], 1), name: 'Elder A' },
+			{ ...elder('b', ['Equality'], 2), name: 'Elder B' },
+		];
+
+		const shown = withDisplayElders(roster, display);
+
+		expect(shown.map((entry) => entry.elder.name)).toEqual(['Elder B', 'Elder A']);
+		expect(shown.map((entry) => entry.matchesWinds)).toEqual([true, false]);
+	});
+
+	it('keeps the ranked elder when no twin exists and the roster when nothing is displayed', () => {
+		const roster = rankEldersByWinds([elder('a', [], 1)], []);
+
+		expect(withDisplayElders(roster, [elder('zzz', [], 9)])[0].elder.elderId).toBe('a');
+		expect(withDisplayElders(roster, [])).toBe(roster);
 	});
 });

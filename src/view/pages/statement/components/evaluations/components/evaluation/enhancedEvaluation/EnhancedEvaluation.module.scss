@@ -77,6 +77,11 @@
 	}
 }
 
+// Labels hidden after the second press: faces only, a little shorter.
+.face--compact {
+	min-height: 2.5rem;
+}
+
 .face--idle {
 	color: var(--rating-idle);
 }

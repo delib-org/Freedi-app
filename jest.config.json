@@ -1,6 +1,8 @@
 {
 	"preset": "ts-jest",
 	"testEnvironment": "jsdom",
+	"maxWorkers": "50%",
+	"workerIdleMemoryLimit": "1GB",
 	"setupFilesAfterEnv": [
 		"<rootDir>/src/setupTests.ts"
 	],

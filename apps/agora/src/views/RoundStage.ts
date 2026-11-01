@@ -372,7 +372,11 @@ export function RoundStage(): m.Component<RoundStageAttrs> {
 						mine?.hidden
 							? removedNotice()
 							: closed
-								? m('p.round__mine-text', mine ? mine.statement : t('round.no_text_given'))
+								? m(
+										'p.round__mine-text',
+										{ dir: 'auto' },
+										mine ? mine.statement : t('round.no_text_given'),
+									)
 								: m(RoundAnswer, {
 										kind,
 										text: pen.text,

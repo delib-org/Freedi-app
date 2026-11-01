@@ -1,0 +1,123 @@
+// =============================================================================
+// Vote bar: status chip + voted count, ballot buttons, order, reset
+// (views/teacher/VoteBar.ts). Logical properties only (RTL / LTR).
+// =============================================================================
+
+.console-icon {
+  flex: none;
+  inline-size: 1.15em;
+  block-size: 1.15em;
+}
+
+.vote-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  inline-size: 100%;
+
+  &__group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm);
+
+    // the reset sits at the end edge of the bar
+    &--reset {
+      margin-inline-start: auto;
+    }
+  }
+
+  &__action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    min-height: 40px;
+
+    &:focus-visible {
+      outline: 2px solid var(--terra-600);
+      outline-offset: 1px;
+    }
+  }
+
+  // the voted count: live text, but not announced (the chip announces the state)
+  &__progress {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin: 0;
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+    font-variant-numeric: tabular-nums;
+
+    &--done {
+      color: var(--teal-600);
+      font-weight: var(--font-weight-semibold);
+    }
+  }
+}
+
+.vote-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  border-radius: var(--radius-full);
+
+  &--notOpen {
+    color: var(--ink-muted);
+    background: var(--bg-muted);
+  }
+
+  &--open {
+    color: var(--text-inverse);
+    background: var(--teal-600);
+  }
+
+  &--paused {
+    color: var(--warning);
+    background: var(--terra-50);
+    box-shadow: inset 0 0 0 1px var(--warning);
+  }
+
+  &--closed {
+    color: var(--text-inverse);
+    background: var(--ink);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vote-bar__action,
+  .vote-status {
+    transition: none;
+  }
+}
+
+// phones: status, controls (primary full width), order, reset last
+@media (max-width: 767px) {
+  .vote-bar {
+    flex-direction: column;
+    align-items: stretch;
+
+    &__group {
+      inline-size: 100%;
+
+      &--controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      &--reset {
+        margin-inline-start: 0;
+      }
+    }
+
+    &__action {
+      inline-size: 100%;
+      min-height: 44px;
+    }
+  }
+}

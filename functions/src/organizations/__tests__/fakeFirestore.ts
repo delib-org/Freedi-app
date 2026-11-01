@@ -129,6 +129,8 @@ function matches(doc: Doc, filter: Filter): boolean {
 			return actual !== filter.value;
 		case 'in':
 			return Array.isArray(filter.value) && filter.value.includes(actual);
+		case 'array-contains':
+			return Array.isArray(actual) && actual.includes(filter.value);
 		case '<':
 			return actual !== undefined && compare(actual, filter.value) < 0;
 		case '<=':

@@ -29,7 +29,7 @@ jest.mock('../platformService', () => ({
 
 jest.mock('@/utils/errorHandling', () => ({ logError: jest.fn() }));
 
-import { getOrRefreshToken } from '../pushService';
+import { getOrRefreshToken, isPushServiceUnavailableError } from '../pushService';
 import { logError } from '@/utils/errorHandling';
 
 /** The exact DOMException the browser raises for a downgrade-shaped open. */
@@ -149,6 +149,16 @@ describe('getOrRefreshToken', () => {
 		);
 	});
 
+	it('treats a browser push-service AbortError as expected: no report, no token', async () => {
+		mockGetToken.mockRejectedValue(
+			new DOMException('Registration failed - push service error', 'AbortError'),
+		);
+
+		await expect(getOrRefreshToken()).resolves.toBeNull();
+		expect(mockGetToken).toHaveBeenCalledTimes(1);
+		expect(logError).not.toHaveBeenCalled();
+	});
+
 	it('does not clear databases for an unrelated failure', async () => {
 		mockGetToken.mockRejectedValue(new Error('messaging/token-subscribe-failed'));
 
@@ -161,5 +171,38 @@ describe('getOrRefreshToken', () => {
 				metadata: expect.objectContaining({ versionConflictSurvivedRepair: false }),
 			}),
 		);
+	});
+});
+
+describe('isPushServiceUnavailableError', () => {
+	it('matches the DOMException AbortError push-service failure', () => {
+		const error = new DOMException('Registration failed - push service error', 'AbortError');
+
+		expect(isPushServiceUnavailableError(error)).toBe(true);
+	});
+
+	it('matches an Error named AbortError with the push-service message', () => {
+		const error = new Error('Registration failed - push service error');
+		error.name = 'AbortError';
+
+		expect(isPushServiceUnavailableError(error)).toBe(true);
+	});
+
+	it('matches an error with legacy code 20 and the push-service message', () => {
+		const error = new DOMException('Registration failed - push service error');
+		Object.defineProperty(error, 'code', { value: 20 });
+
+		expect(isPushServiceUnavailableError(error)).toBe(true);
+	});
+
+	it('rejects unrelated errors and unrelated aborts', () => {
+		expect(isPushServiceUnavailableError(new Error('messaging/token-subscribe-failed'))).toBe(
+			false,
+		);
+		expect(isPushServiceUnavailableError(new DOMException('The user aborted', 'AbortError'))).toBe(
+			false,
+		);
+		expect(isPushServiceUnavailableError('push service error')).toBe(false);
+		expect(isPushServiceUnavailableError(null)).toBe(false);
 	});
 });

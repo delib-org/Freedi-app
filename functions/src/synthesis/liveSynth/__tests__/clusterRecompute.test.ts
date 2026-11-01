@@ -25,6 +25,8 @@ const mockFetchEvaluationsForIds = jest.fn();
 jest.mock('../../../condensation/aggregation', () => ({
 	computeClusterEvaluationFromRawEvals: jest.requireActual('../../../condensation/aggregation')
 		.computeClusterEvaluationFromRawEvals,
+	clusterVoteSourceIds: jest.requireActual('../../../condensation/aggregation')
+		.clusterVoteSourceIds,
 	fetchEvaluationsForIds: (...args: unknown[]) => mockFetchEvaluationsForIds(...args),
 	recomputeClusterEvaluation: (...args: unknown[]) => mockRecomputeClusterEvaluation(...args),
 }));
@@ -33,6 +35,7 @@ import {
 	computeEffectiveVote,
 	debugAggregatePreview,
 	enqueueClusterRecompute,
+	findClustersAffectedByVote,
 	findClustersContainingMember,
 	recomputeSynthCluster,
 } from '../clusterRecompute';
@@ -90,7 +93,7 @@ describe('computeEffectiveVote (live-synth direct-wins rule)', () => {
 });
 
 describe('debugAggregatePreview', () => {
-	it('matches computeClusterEvaluationFromRawEvals with directVoteWins=true', () => {
+	it('matches computeClusterEvaluationFromRawEvals under the unified rule', () => {
 		const evals: Evaluation[] = [
 			evalRec({ evaluatorId: 'A', statementId: 'cluster1', value: 1 }),
 			evalRec({ evaluatorId: 'A', statementId: 'X1', value: -1 }),
@@ -139,6 +142,26 @@ describe('enqueueClusterRecompute', () => {
 		mockGetFirestore.mockReturnValue({ collection: collMock });
 		await enqueueClusterRecompute('', 'evaluation:create');
 		expect(collMock).not.toHaveBeenCalled();
+	});
+});
+
+describe('findClustersAffectedByVote', () => {
+	it('returns clusters holding the id as a member and clusters that absorbed it, once each', async () => {
+		const byField: Record<string, Array<{ statementId: string }>> = {
+			integratedOptions: [{ statementId: 'cluster1' }, { statementId: 'cluster2' }],
+			absorbedClusterIds: [{ statementId: 'cluster2' }, { statementId: 'winnerA' }],
+		};
+		const whereMock = jest.fn((field: string) => ({
+			get: jest.fn().mockResolvedValue({
+				docs: (byField[field] ?? []).map((d) => ({ data: () => d })),
+			}),
+		}));
+		mockGetFirestore.mockReturnValue({ collection: jest.fn(() => ({ where: whereMock })) });
+
+		const clusters = await findClustersAffectedByVote('B');
+
+		expect(whereMock).toHaveBeenCalledWith('absorbedClusterIds', 'array-contains', 'B');
+		expect(clusters.map((c) => c.statementId).sort()).toEqual(['cluster1', 'cluster2', 'winnerA']);
 	});
 });
 
@@ -253,10 +276,7 @@ describe('recomputeSynthCluster', () => {
 
 		const result = await recomputeSynthCluster('cluster1');
 
-		expect(mockRecomputeClusterEvaluation).toHaveBeenCalledWith('cluster1', {
-			directVoteWins: true,
-			clusterStatementId: 'cluster1',
-		});
+		expect(mockRecomputeClusterEvaluation).toHaveBeenCalledWith('cluster1');
 		expect(mockFetchEvaluationsForIds).toHaveBeenCalledWith(['cluster1', 'X1', 'X2']);
 		// Two distinct evaluators contributed
 		expect(result.evaluatorCount).toBe(2);

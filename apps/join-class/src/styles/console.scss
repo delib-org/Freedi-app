@@ -1,0 +1,510 @@
+// =============================================================================
+// Teacher console (route /t/:mid and /t/:mid/table/:n). UX section 5 + 11.
+// Three fixed bands at 1280 px: step rail (96 px), switch (48 px), board.
+// Tokens only, BEM, logical properties (RTL needs no overrides), transform and
+// opacity for motion. Imported by the lazy console views, never from
+// global.scss, so a student's first load never downloads it.
+// =============================================================================
+
+.console {
+  --side-a: var(--terra-500);
+  --side-b: var(--indigo-500);
+  --side-center: var(--ink-soft);
+  --rail-done: var(--ink);
+  --rail-current: var(--terra-600);
+  --rail-upcoming: var(--border-medium);
+  --rail-height: 96px;
+  --switch-height: 48px;
+  --card-width: 236px;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--paper-soft);
+  color: var(--ink);
+}
+
+// ---- top bar ----------------------------------------------------------------
+.console__bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--paper);
+  border-block-end: 1px solid var(--paper-line);
+}
+
+.console__title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.console__code {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: var(--space-xs) var(--space-md);
+  background: var(--terra-50);
+  border-radius: var(--radius-full);
+}
+
+.console__code-value {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.console__link {
+  color: var(--teal-700);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.console__qr {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-md);
+  background: var(--paper);
+  border-block-end: 1px solid var(--paper-line);
+}
+
+// ---- band 1: step rail ------------------------------------------------------
+.step-rail {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  min-height: var(--rail-height);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--paper);
+  border-block-end: 1px solid var(--paper-line);
+}
+
+.step-rail__list {
+  display: flex;
+  flex: 1;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step-rail__item {
+  position: relative;
+  display: flex;
+  flex: 1;
+  justify-content: center;
+
+  // The joining line between two circles (to the end side of each circle).
+  &:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    inset-block-start: 20px;
+    inset-inline: calc(50% + 24px) calc(-50% + 24px);
+    height: 0;
+    border-block-start: 2px dotted var(--rail-upcoming);
+  }
+
+  &:has(.step-rail__step--done):not(:last-child)::after {
+    border-block-start: 2px solid var(--rail-done);
+  }
+}
+
+.step-rail__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0;
+  font: inherit;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: wait;
+  }
+
+  &--current {
+    color: var(--ink);
+    font-weight: var(--font-weight-bold);
+  }
+}
+
+.step-rail__dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-weight: var(--font-weight-bold);
+  background: var(--paper);
+  color: var(--ink-soft);
+  border: 2px solid var(--rail-upcoming);
+  border-radius: var(--radius-full);
+  transition: transform var(--dur-base) var(--ease-out);
+
+  .step-rail__step--done & {
+    color: var(--paper);
+    background: var(--rail-done);
+    border-color: var(--rail-done);
+  }
+
+  .step-rail__step--current & {
+    width: 40px;
+    height: 40px;
+    margin-block: -4px;
+    color: var(--paper);
+    background: var(--rail-current);
+    border-color: var(--rail-current);
+  }
+}
+
+.step-rail__name {
+  font-size: var(--font-size-sm);
+}
+
+.step-rail__side {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-xs);
+  flex: 0 0 320px;
+}
+
+.step-rail__next {
+  width: 320px;
+  min-height: 56px;
+
+  &.btn--danger-outline {
+    color: var(--danger);
+    background: var(--bg-card);
+    border-color: var(--danger);
+  }
+}
+
+.step-rail__status {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--ink-muted);
+}
+
+.step-rail__clock {
+  font-variant-numeric: tabular-nums;
+}
+
+// ---- settings popover (the gate slider) -------------------------------------
+.console__settings {
+  position: relative;
+}
+
+.console__settings-toggle {
+  cursor: pointer;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+}
+
+.console__settings-panel {
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline-end: 0;
+  z-index: var(--z-dropdown, 10);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  inline-size: min(320px, 90vw);
+  padding: var(--space-md);
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-lg);
+}
+
+.console__settings-label {
+  font-weight: var(--font-weight-bold);
+}
+
+.console__settings-slider {
+  inline-size: 100%;
+  accent-color: var(--terra-600);
+}
+
+.console__settings-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.console__settings-help {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--font-size-sm);
+}
+
+// ---- projector menu (IA 15.4, UX 15.A) ---------------------------------------
+.projector-menu {
+  position: relative;
+
+  &__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    cursor: pointer;
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+
+  &__chevron {
+    inline-size: 8px;
+    block-size: 8px;
+    border-inline-end: 2px solid currentColor;
+    border-block-end: 2px solid currentColor;
+    transform: translateY(-2px) rotate(45deg);
+    transition: transform var(--dur-quick) var(--ease-out, ease-out);
+  }
+
+  &[open] &__chevron {
+    transform: translateY(2px) rotate(225deg);
+  }
+
+  &__panel {
+    position: absolute;
+    inset-block-start: calc(100% + var(--space-xs));
+    inset-inline-start: 0;
+    z-index: var(--z-dropdown, 10);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    inline-size: min(340px, calc(100vw - 2 * var(--space-md)));
+    padding: var(--space-md);
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  &__item {
+    inline-size: 100%;
+    min-block-size: 48px;
+    justify-content: flex-start;
+    gap: var(--space-sm);
+  }
+
+  &__glyph {
+    flex: none;
+    inline-size: 16px;
+    block-size: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &__help {
+    margin: 0 0 var(--space-sm);
+    padding-inline-start: var(--space-md);
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  // an instruction, not a lesson failure: ink text, not the danger colour
+  &__blocked {
+    margin: 0 0 var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--terra-50);
+    border-inline-start: 3px solid var(--terra-300);
+    border-radius: var(--radius-sm);
+    color: var(--ink);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+  }
+}
+
+// ---- lesson status (IA 13.6, UX 13.E) ---------------------------------------
+.console__status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-inline-start: var(--space-md);
+  border-inline-start: 1px solid var(--paper-line);
+}
+
+.console__pause {
+  gap: var(--space-xs);
+}
+
+.lesson-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  min-block-size: 64px;
+  padding: var(--space-sm) var(--space-md);
+  border-block-end: 1px solid var(--paper-line);
+  color: var(--ink);
+  animation: lesson-banner-in var(--dur-base) var(--ease-out);
+
+  &__text {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+
+    .status-mark {
+      font-size: 18px;
+    }
+  }
+
+  &__action {
+    min-block-size: 56px;
+  }
+
+  &--paused,
+  &--ended {
+    background: var(--paper-deep);
+  }
+
+  &--open {
+    background: var(--teal-50);
+    border-block-end: 2px solid var(--teal-600);
+  }
+}
+
+@keyframes lesson-banner-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Held (paused or ended): the rail says "not now", not "busy".
+.step-rail--held {
+  .step-rail__step,
+  .step-rail__next {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.end-choice {
+  inline-size: min(440px, calc(100% - 32px));
+  margin: auto;
+  padding: var(--space-lg);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-lg);
+
+  // No blur: a backdrop filter is costly on the old laptops of a school.
+  &::backdrop {
+    background: var(--bg-overlay);
+  }
+
+  &[open] {
+    display: grid;
+    row-gap: var(--space-sm);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__option {
+    inline-size: 100%;
+    min-block-size: 56px;
+  }
+
+  &__help,
+  &__error {
+    margin: 0;
+    font-size: var(--font-size-sm);
+  }
+
+  &__help {
+    color: var(--ink-muted);
+  }
+
+  &__error {
+    color: var(--danger);
+  }
+
+  &__cancel {
+    justify-self: end;
+  }
+}
+
+// Confirm before going back or resetting (IA 18): same look as .end-choice.
+.confirm-dialog {
+  inline-size: min(440px, calc(100% - 32px));
+  margin: auto;
+  padding: var(--space-lg);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-lg);
+
+  &::backdrop {
+    background: var(--bg-overlay);
+  }
+
+  &[open] {
+    display: grid;
+    row-gap: var(--space-sm);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__body {
+    margin: 0;
+    font-size: var(--font-size-base);
+    color: var(--ink-muted);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+  }
+
+  &__cancel,
+  &__yes {
+    min-block-size: 48px;
+  }
+}
+
+// A reset or other destructive control: outlined, never filled (primary is the rail forward control).
+.btn--danger-outline {
+  color: var(--danger);
+  background: var(--bg-card);
+  border: 1.5px solid var(--danger);
+}

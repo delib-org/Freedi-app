@@ -133,9 +133,13 @@ export function resultsByParentId(parentStatement: Statement, subStatements: Sta
 		function buildNode(statement: Statement): Results {
 			visited.add(statement.statementId);
 
-			// Direct children by parentId, excluding any absorbed into a cluster.
+			// Direct children by parentId, excluding any absorbed into a cluster
+			// and any hidden statement. A hidden option is never a loose idea —
+			// the same rule as computeOtherIdeas, which skips every hidden
+			// sibling. Merged originals (`hide` + `mergedInto`) are still drawn
+			// when the surviving cluster lists them, through the nesting below.
 			const sub: Results[] = (childrenMap.get(statement.statementId) || [])
-				.filter((child) => !absorbedIds.has(child.statementId))
+				.filter((child) => !absorbedIds.has(child.statementId) && child.hide !== true)
 				.map((child) => buildNode(child));
 
 			// Nest this cluster's members (which may themselves be clusters).

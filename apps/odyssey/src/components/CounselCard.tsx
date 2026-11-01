@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from 'react';
 import type { OdysseyElder } from '@freedi/shared-types';
-import { AI_PERSONA_NOTE, SILENT_LINE, type CounselLean } from '../lib/counsel';
+import { aiPersonaNote, silentLine, type CounselLean } from '../lib/counsel';
+import { useT } from '../i18n/useT';
 
 export type CounselScope = 'island' | 'shore';
 
@@ -14,9 +15,9 @@ interface CounselCardProps {
 	onClose(): void;
 }
 
-const SCOPE_LABEL: Record<CounselScope, string> = {
-	island: 'התייעצות על האי',
-	shore: 'התייעצות על החוף',
+const SCOPE_KEY: Record<CounselScope, string> = {
+	island: 'counsel.scope.island',
+	shore: 'counsel.scope.shore',
 };
 
 /**
@@ -36,6 +37,8 @@ export default function CounselCard({
 	lineAboutIsland = false,
 	onClose,
 }: CounselCardProps) {
+	const { t } = useT();
+
 	function onCloseKeyDown(event: KeyboardEvent<HTMLButtonElement>): void {
 		if (event.key !== 'Escape') return;
 		event.preventDefault();
@@ -46,13 +49,13 @@ export default function CounselCard({
 		<div className="counsel-card">
 			<div className="counsel-card__head">
 				<p className="counsel-card__eyebrow">
-					{SCOPE_LABEL[scope]}
+					{t(SCOPE_KEY[scope])}
 					{elder.role ? ` · ${elder.role}` : ''}
 				</p>
 				<button
 					type="button"
 					className="counsel-card__close"
-					aria-label="סגירה"
+					aria-label={t('common.close')}
 					onClick={onClose}
 					onKeyDown={onCloseKeyDown}
 				>
@@ -61,11 +64,13 @@ export default function CounselCard({
 			</div>
 			<p className="counsel-card__name">{elder.name}</p>
 			{lean.kind === 'silent' ? (
-				<p className="counsel-card__line">{SILENT_LINE}</p>
+				<p className="counsel-card__line">{silentLine()}</p>
 			) : (
 				<p className="counsel-card__lean">
 					<span className="counsel-card__lean-label">
-						{lean.kind === 'here' ? 'נוטה אל החוף הזה' : `נוטה אל חוף ${lean.number}`}
+						{lean.kind === 'here'
+							? t('counsel.leanHere')
+							: t('counsel.leanShore', { number: lean.number })}
 						{scope === 'island' && lean.kind === 'shore' ? ':' : ''}
 					</span>
 					{scope === 'island' && lean.kind === 'shore' ? ` ${lean.text}` : null}
@@ -75,13 +80,13 @@ export default function CounselCard({
 				<p className="counsel-card__line">
 					{lineAboutIsland ? (
 						<>
-							<span className="counsel-card__lean-label">על האי כולו:</span>{' '}
+							<span className="counsel-card__lean-label">{t('counsel.aboutIsland')}</span>{' '}
 						</>
 					) : null}
 					{line}
 				</p>
 			) : null}
-			<p className="counsel-card__note">{AI_PERSONA_NOTE}</p>
+			<p className="counsel-card__note">{aiPersonaNote()}</p>
 		</div>
 	);
 }

@@ -10,6 +10,7 @@ import {
 } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 import { REDUX } from '@/constants/common';
+import { selectUserFeedActivity, type UserFeedState } from '@/redux/userFeed/userFeedSlice';
 import {
 	createStatementByIdSelector,
 	createStatementsByParentSelector,
@@ -540,12 +541,14 @@ export const statementsRoomSolutions =
  * - Statement's lastChildUpdate (from full Statement in Redux)
  * - Most recent timestamp from lastSubStatements
  * - Subscription's lastUpdate
+ * - The home activity feed (userFeed.lastActivity) for top-level discussions
  */
 function getLatestChildActivity(
 	sub: StatementSubscription,
 	statementsMap: Map<string, Statement>,
+	feedActivity: Record<string, number>,
 ): number {
-	let latest = sub.lastUpdate || 0;
+	let latest = Math.max(sub.lastUpdate || 0, feedActivity[sub.statementId] || 0);
 
 	const statement = statementsMap.get(sub.statementId);
 	if (statement?.lastChildUpdate) {
@@ -561,16 +564,21 @@ function getLatestChildActivity(
 	return latest;
 }
 
+type StateWithFeed = { statements: StatementsState } & Partial<{ userFeed: UserFeedState }>;
+
 export const statementsSubscriptionsSelector = createSelector(
 	[
-		(state: { statements: StatementsState }) => state.statements.statementSubscription,
-		(state: { statements: StatementsState }) => state.statements.statements,
+		(state: StateWithFeed) => state.statements.statementSubscription,
+		(state: StateWithFeed) => state.statements.statements,
+		(state: StateWithFeed) => selectUserFeedActivity(state),
 	],
-	(statementSubscription, statements) => {
+	(statementSubscription, statements, feedActivity) => {
 		const statementsMap = new Map(statements.map((s) => [s.statementId, s]));
 
 		return [...statementSubscription].sort(
-			(a, b) => getLatestChildActivity(b, statementsMap) - getLatestChildActivity(a, statementsMap),
+			(a, b) =>
+				getLatestChildActivity(b, statementsMap, feedActivity) -
+				getLatestChildActivity(a, statementsMap, feedActivity),
 		);
 	},
 );
@@ -590,17 +598,19 @@ export const statementSelector =
 
 export const topSubscriptionsSelector = createSelector(
 	[
-		(state: { statements: StatementsState }) => state.statements.statementSubscription,
-		(state: { statements: StatementsState }) => state.statements.statements,
+		(state: StateWithFeed) => state.statements.statementSubscription,
+		(state: StateWithFeed) => state.statements.statements,
+		(state: StateWithFeed) => selectUserFeedActivity(state),
 	],
-	(statementSubscription, statements) => {
+	(statementSubscription, statements, feedActivity) => {
 		const statementsMap = new Map(statements.map((s) => [s.statementId, s]));
 
 		return statementSubscription
 			.filter((sub: StatementSubscription) => (sub.parentId || sub.statement.parentId) === 'top')
 			.sort(
 				(a, b) =>
-					getLatestChildActivity(b, statementsMap) - getLatestChildActivity(a, statementsMap),
+					getLatestChildActivity(b, statementsMap, feedActivity) -
+					getLatestChildActivity(a, statementsMap, feedActivity),
 			);
 	},
 );

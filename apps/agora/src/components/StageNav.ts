@@ -44,6 +44,7 @@ const ICONS: Record<AgoraStage, IconName> = {
 	[AgoraStage.valueIdentification]: 'thought',
 	[AgoraStage.positioning]: 'bridge',
 	[AgoraStage.question]: 'talk',
+	[AgoraStage.linked]: 'target',
 	[AgoraStage.deliberation]: 'square',
 	[AgoraStage.voting]: 'scales',
 	[AgoraStage.results]: 'flag',
@@ -61,6 +62,9 @@ export function planItemLabel(item: AgoraStagePlanItem): string {
 		const kind = questionKindOf(item);
 
 		return kind === 'open' ? t('stage.question') : t(`question.kind_${kind}`);
+	}
+	if (item.stage === AgoraStage.linked) {
+		return item.title?.trim() || item.link?.title.trim() || t('stage.linked');
 	}
 
 	return t(`stage.${item.stage}`);

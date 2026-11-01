@@ -9,6 +9,7 @@ import { router } from './routes/router';
 import { UserConfigProvider } from './context/UserConfigContext';
 import { AuthStateProvider } from './context/AuthStateContext';
 import PWAWrapper from './view/components/pwa/PWAWrapper';
+import { AgoraGuestGate } from './view/components/atomic/organisms/AgoraGuestGate';
 import { initSentry } from './services/monitoring/sentry';
 import RootErrorBoundary from './components/ErrorBoundary/RootErrorBoundary';
 import { schedulePrefetchLazyRoutes } from './routes/prefetchRoutes';
@@ -84,9 +85,11 @@ createRoot(document.getElementById('root')!).render(
 			<Provider store={store}>
 				<UserConfigProvider>
 					<AuthStateProvider>
-						<PWAWrapper>
-							<RouterProvider router={router} />
-						</PWAWrapper>
+						<AgoraGuestGate router={router}>
+							<PWAWrapper>
+								<RouterProvider router={router} />
+							</PWAWrapper>
+						</AgoraGuestGate>
 					</AuthStateProvider>
 				</UserConfigProvider>
 			</Provider>

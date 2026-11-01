@@ -1,8 +1,9 @@
 /**
  * The Odyssey "voyage story" email digest — the async bridge of the game.
  *
- * A player who left the sea gets, at hours they chose, a short Hebrew
- * narrative of what actually changed since their last digest: new sailors
+ * A player who left the sea gets, at hours they chose, a short narrative —
+ * in the language they read the voyage in — of what actually changed since
+ * their last digest: new sailors
  * near their position, consensus shifts on islands they visited, islands
  * still waiting, and one standing challenge from an elder — with a single
  * call back to the map. When nothing changed, nothing is sent.
@@ -19,11 +20,45 @@ import {
 	type AttitudeMap,
 	type Evaluation,
 	type OdysseyGame,
+	type OdysseyGameTranslation,
 	type OdysseyJourney,
 } from '@freedi/shared-types';
-import { createOdysseyJourneyId } from '@freedi/shared-types';
+import { createOdysseyJourneyId, odysseyTranslationsPath } from '@freedi/shared-types';
+import {
+	DIGEST_STRINGS,
+	digestDir,
+	digestLang,
+	localizedUnsubscribeUrl,
+	type DigestLang,
+	type DigestStrings,
+} from './odysseyDigestStrings';
 
 const getDb = () => getFirestore();
+
+/**
+ * One run's translation overlays, keyed `${gameId}:${lang}` — a run mails
+ * many readers of the same game, and the overlay is one read per language,
+ * not one per reader. Null records a game that has none, so a miss is not
+ * re-read either.
+ */
+export type DigestTranslationCache = Map<string, OdysseyGameTranslation | null>;
+
+async function loadTranslationCached(
+	db: Firestore,
+	cache: DigestTranslationCache,
+	gameId: string,
+	lang: DigestLang,
+): Promise<OdysseyGameTranslation | null> {
+	if (lang === 'he') return null;
+	const key = `${gameId}:${lang}`;
+	const cached = cache.get(key);
+	if (cached !== undefined) return cached;
+	const snap = await db.collection(odysseyTranslationsPath(gameId)).doc(lang).get();
+	const translation = snap.exists ? (snap.data() as OdysseyGameTranslation) : null;
+	cache.set(key, translation);
+
+	return translation;
+}
 
 /** Sailors closer than this count as "near you" (0 = same course, 1 = opposite). */
 const NEARBY_DISTANCE = 0.35;
@@ -59,8 +94,12 @@ export interface OdysseyDigest {
 	subject: string;
 	/** Plain-text fallback carried on the queue item body */
 	bodyText: string;
-	/** Full RTL HTML for the email channel */
+	/** Full HTML for the email channel, in the reader's language and direction */
 	emailHtml: string;
+	/** The language the digest was written in — the journey's, Hebrew by default */
+	lang: DigestLang;
+	/** The footer/header unsubscribe link, carrying `lang` for the landing page */
+	unsubscribeUrl: string;
 }
 
 interface DigestSections {
@@ -130,8 +169,10 @@ export async function buildOdysseyDigest(input: {
 	gameId?: string;
 	appBaseUrl: string;
 	unsubscribeUrl: string;
+	/** Shared across one scheduler run; a fresh map when absent */
+	translations?: DigestTranslationCache;
 }): Promise<{ digest: OdysseyDigest; nextState: OdysseyDigestState } | null> {
-	const { userId, appBaseUrl, unsubscribeUrl } = input;
+	const { userId, appBaseUrl } = input;
 	const db = getDb();
 	const gameId = input.gameId ?? (await resolveDigestGameId(db, userId));
 
@@ -145,6 +186,15 @@ export async function buildOdysseyDigest(input: {
 	const game = gameSnap.data() as OdysseyGame;
 	const journey = journeySnap.exists ? (journeySnap.data() as OdysseyJourney) : null;
 	const state = stateSnap.exists ? (stateSnap.data() as OdysseyDigestState) : null;
+	const lang = digestLang(journey?.lang);
+	const translation = await loadTranslationCached(
+		db,
+		input.translations ?? new Map(),
+		gameId,
+		lang,
+	);
+	const islandTitle = (island: { statementId: string; title: string }): string =>
+		translation?.islands?.[island.statementId]?.title || island.title;
 	// This game's baseline: the per-game entry, or — for the default game
 	// only — the legacy flat fields written before per-game keying existed.
 	const gameState: OdysseyDigestGameState | null =
@@ -227,7 +277,7 @@ export async function buildOdysseyDigest(input: {
 		nextTopStances[island.statementId] = top;
 		const previous = gameState?.islandTopStances?.[island.statementId];
 		if (previous && previous !== top) {
-			shiftedStances.push({ islandTitle: island.title, stanceId: top });
+			shiftedStances.push({ islandTitle: islandTitle(island), stanceId: top });
 			stanceTextById.set(top, '');
 		}
 	}
@@ -241,7 +291,7 @@ export async function buildOdysseyDigest(input: {
 		);
 		for (const snap of snaps) {
 			const text = (snap.data() as { statement?: string } | undefined)?.statement;
-			if (text) stanceTextById.set(snap.id, text);
+			if (text) stanceTextById.set(snap.id, translation?.stances?.[snap.id] || text);
 		}
 		for (const shift of shiftedStances) {
 			const stanceText = stanceTextById.get(shift.stanceId);
@@ -257,7 +307,7 @@ export async function buildOdysseyDigest(input: {
 					(stanceId) => mine[stanceId] !== undefined,
 				),
 		)
-		.map((island) => island.title);
+		.map(islandTitle);
 
 	// --- Section 4: an elder's standing challenge ----------------------------
 	const elders =
@@ -299,10 +349,11 @@ export async function buildOdysseyDigest(input: {
 			}
 		}
 		if (bestIsland) {
+			const translated = translation?.elders?.[elder.elderId];
 			elderChallenge = {
-				elderName: elder.name,
-				elderRole: elder.role,
-				line: elder.challenges[bestIsland],
+				elderName: translated?.name || elder.name,
+				elderRole: translated?.role || elder.role,
+				line: translated?.challenges?.[bestIsland] || elder.challenges[bestIsland],
 			};
 		}
 	}
@@ -323,12 +374,16 @@ export async function buildOdysseyDigest(input: {
 		journey !== null && (sections.newSailorsTotal > 0 || sections.consensusShifts.length > 0);
 	if (!somethingChanged) return null;
 
-	const gameTitle = game.texts.gameTitle || 'אודיסיאה ישראלית';
+	const strings = DIGEST_STRINGS[lang];
+	const gameTitle =
+		translation?.texts?.gameTitle || game.texts.gameTitle || strings.defaultGameTitle;
 	const digest = renderDigest({
 		gameTitle,
 		sections,
 		mapUrl: `${appBaseUrl.replace(/\/$/, '')}/map`,
-		unsubscribeUrl,
+		unsubscribeUrl: localizedUnsubscribeUrl(input.unsubscribeUrl, lang),
+		lang,
+		strings,
 	});
 
 	const now = Date.now();
@@ -364,74 +419,81 @@ function renderDigest(input: {
 	sections: DigestSections;
 	mapUrl: string;
 	unsubscribeUrl: string;
+	lang: DigestLang;
+	strings: DigestStrings;
 }): OdysseyDigest {
-	const { gameTitle, sections, mapUrl, unsubscribeUrl } = input;
+	const { gameTitle, sections, mapUrl, unsubscribeUrl, lang, strings } = input;
 	const lines: string[] = [];
 
 	if (sections.newSailorsNear > 0) {
 		lines.push(
 			sections.newSailorsNear === 1
-				? 'מפליג/ה חדש/ה אחד/אחת שט/ה קרוב מאוד למסלול שלכם.'
-				: `${sections.newSailorsNear} מפליגים חדשים שטים קרוב למסלול שלכם.`,
+				? strings.newSailorNearOne
+				: strings.newSailorsNear(sections.newSailorsNear),
 		);
 	} else if (sections.newSailorsTotal > 0) {
-		lines.push(`${sections.newSailorsTotal} מפליגים סימנו עמדות חדשות בים מאז הביקור האחרון שלכם.`);
+		lines.push(strings.newSailorsTotal(sections.newSailorsTotal));
 	}
 	for (const shift of sections.consensusShifts) {
-		lines.push(`באי ${shift.islandTitle} הרוח התהפכה — החוף המוביל עכשיו: "${shift.stanceText}".`);
+		lines.push(strings.consensusShift(shift.islandTitle, shift.stanceText));
 	}
 	if (sections.unvisitedTitles.length > 0) {
-		const named = sections.unvisitedTitles.slice(0, 3).join(', ');
+		const named = sections.unvisitedTitles.slice(0, 3).join(strings.listSeparator);
 		lines.push(
 			sections.unvisitedTitles.length === 1
-				? `אי אחד עוד מחכה לכם: ${named}.`
-				: `${sections.unvisitedTitles.length} איים עוד מחכים לכם, ביניהם ${named}.`,
+				? strings.unvisitedOne(named)
+				: strings.unvisitedMany(sections.unvisitedTitles.length, named),
 		);
 	}
 
 	const subject =
 		sections.consensusShifts.length > 0
-			? `${gameTitle}: הרוח התהפכה באי ${sections.consensusShifts[0].islandTitle}`
+			? strings.subjectShift(gameTitle, sections.consensusShifts[0].islandTitle)
 			: sections.newSailorsNear > 0
-				? `${gameTitle}: מפליגים חדשים קרובים אליכם`
-				: `${gameTitle}: הים ממשיך לזוז`;
+				? strings.subjectNear(gameTitle)
+				: strings.subjectMoving(gameTitle);
 
 	const challenge = sections.elderChallenge;
 	const bodyText = [
 		...lines,
 		...(challenge ? [`${challenge.elderName}: "${challenge.line}"`] : []),
-		`חזרו אל המפה: ${mapUrl}`,
+		strings.backToMap(mapUrl),
 	].join('\n');
+
+	// The quote bar and the list indent sit on the reading-start side.
+	const dir = digestDir(lang);
+	const quoteBar = dir === 'rtl' ? 'border-right' : 'border-left';
+	const listPadding = dir === 'rtl' ? '0 18px 0 0' : '0 0 0 18px';
 
 	const listItems = lines
 		.map((line) => `<li style="margin:0 0 10px">${escapeHtml(line)}</li>`)
 		.join('');
 	const challengeHtml = challenge
-		? `<div style="margin:18px 0;padding:14px 16px;border-right:4px solid #e8b958;background:#0d2740;border-radius:10px">
+		? `<div style="margin:18px 0;padding:14px 16px;${quoteBar}:4px solid #e8b958;background:#0d2740;border-radius:10px">
 			<p style="margin:0 0 6px;font-weight:700">📜 ${escapeHtml(challenge.elderName)} · <span style="font-weight:400;opacity:.8">${escapeHtml(challenge.elderRole)}</span></p>
 			<p style="margin:0;font-style:italic">${escapeHtml(challenge.line)}</p>
-			<p style="margin:8px 0 0;font-size:11px;opacity:.6">דמות בינה מלאכותית בהשראת דמות היסטורית</p>
+			<p style="margin:8px 0 0;font-size:11px;opacity:.6">${strings.aiPersonaNote}</p>
 		</div>`
 		: '';
 
 	const emailHtml = `<!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html dir="${dir}" lang="${lang}">
 <body style="margin:0;padding:0;background:#04121f;font-family:Arial,'Segoe UI',sans-serif;color:#e6f2fb">
 	<div style="max-width:560px;margin:0 auto;padding:28px 20px">
 		<h1 style="margin:0 0 4px;font-size:22px;color:#fff4d3">⛵ ${escapeHtml(gameTitle)}</h1>
-		<p style="margin:0 0 18px;font-size:14px;opacity:.8">סיפור המסע שלכם — מה קרה בים מאז שירדתם לחוף</p>
-		<ul style="margin:0;padding:0 18px 0 0;font-size:15px;line-height:1.6">${listItems}</ul>
+		<p style="margin:0 0 18px;font-size:14px;opacity:.8">${strings.tagline}</p>
+		<ul style="margin:0;padding:${listPadding};font-size:15px;line-height:1.6">${listItems}</ul>
 		${challengeHtml}
 		<div style="text-align:center;margin:24px 0">
-			<a href="${mapUrl}" style="display:inline-block;background:#e8b958;color:#04121f;font-weight:700;font-size:16px;padding:12px 28px;border-radius:999px;text-decoration:none">חזרה אל הים ⛵</a>
+			<a href="${mapUrl}" style="display:inline-block;background:#e8b958;color:#04121f;font-weight:700;font-size:16px;padding:12px 28px;border-radius:999px;text-decoration:none">${strings.callToAction}</a>
 		</div>
 		<p style="margin:24px 0 0;font-size:11px;opacity:.55;text-align:center">
-			קיבלתם את המייל הזה כי ביקשתם עדכונים מהמסע.
-			<a href="${unsubscribeUrl}" style="color:#9fd7ff">להסרה מרשימת התפוצה</a>
+			${strings.footerReason}
+			<a href="${unsubscribeUrl}" style="color:#9fd7ff">${strings.unsubscribeLink}</a>
 		</p>
 	</div>
 </body>
 </html>`;
 
-	return { subject, bodyText, emailHtml };
+	return { subject, bodyText, emailHtml, lang, unsubscribeUrl };
 }

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { stageBus, type StageCommand } from '../lib/stageBus';
 import { TWEEN_FADE_MS } from '../lib/stageConstants';
+import { onLangChange } from '../i18n/i18n';
 import { applyToStageState, stageState } from './stageState';
 import { SCENE_KEY_MAP } from './sceneKeys';
 import { SeaScene } from './SeaScene';
@@ -77,8 +78,16 @@ export function createStage(parent: HTMLElement): Phaser.Game {
 	};
 	document.addEventListener('visibilitychange', onVisibility);
 
+	// A language change flips the stage's direction and every label on it.
+	// Scenes read both at create() from `stageState` (always hydrated), so the
+	// simplest correct reaction is to run the active scene's create() again.
+	const stopLangChanges = onLangChange(() => {
+		activeSeaScene()?.scene.restart();
+	});
+
 	game.events.once(Phaser.Core.Events.DESTROY, () => {
 		document.removeEventListener('visibilitychange', onVisibility);
+		stopLangChanges();
 		stageBus.detach();
 	});
 

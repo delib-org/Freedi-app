@@ -136,6 +136,7 @@ describe('addChoices', () => {
 			{ stage: AgoraStage.question, questionKind: 'needs' },
 			{ stage: AgoraStage.question, questionKind: 'vision' },
 			{ stage: AgoraStage.voting },
+			{ stage: AgoraStage.linked },
 		]);
 	});
 

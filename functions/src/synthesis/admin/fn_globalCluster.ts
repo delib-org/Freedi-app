@@ -215,6 +215,8 @@ export const globalCluster = onCall<GlobalClusterRequest>(
 		const settings = await loadSynthesisSettings(questionId);
 
 		// 1. Clean slate: dissolve any prior synthesis output (restores members).
+		// Refuses first (failed-precondition, reason 'derived-docs-have-votes'),
+		// before any write, when participants voted on the merged ideas.
 		const dissolve = await dissolveQuestionSynthesis(questionId, { reversedByUserId: uid });
 
 		// 2. Load eligible options (evaluator-count gate only — consensus does not

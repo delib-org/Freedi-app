@@ -1,3 +1,5 @@
+import { useT } from '../i18n/useT';
+
 /**
  * One indicator for all four winds of the compass: how far a wind is from
  * being answered, and when it is.
@@ -5,7 +7,7 @@
  * Three slots and a count say the target from the very first glance — a
  * player who has picked nothing sees "0/3" and knows what the wind wants
  * before touching a chip. Filling slots show the way there; the ✓ and the
- * words the screen has always used, "אפשר להמשיך", say when it is done.
+ * words the screen has always used, "you can continue", say when it is done.
  *
  * Two truths share it. The question winds ask for at least three chips and
  * may be given more; the values wind ranks exactly three. Both count up to the
@@ -30,14 +32,15 @@ export default function WindProgress({
 	/** The wind's own verdict — may be true on words alone, with count below target. */
 	done: boolean;
 }) {
+	const { t } = useT();
 	const filled = Math.min(count, target);
 	const byWords = done && count < target;
 
 	const label = done
 		? byWords
-			? 'עניתם במילים — אפשר להמשיך'
-			: 'אפשר להמשיך'
-		: `נבחרו ${count} מתוך ${target}`;
+			? t('wind.doneByWords')
+			: t('wind.done')
+		: t('wind.picked', { picked: count, target });
 
 	return (
 		<span className={`wind-progress ${done ? 'done' : ''}`} role="status" aria-label={label}>
@@ -49,7 +52,7 @@ export default function WindProgress({
 				</span>
 			)}
 			{done ? (
-				<span aria-hidden="true">✓ אפשר להמשיך</span>
+				<span aria-hidden="true">✓ {t('wind.done')}</span>
 			) : (
 				<strong aria-hidden="true">
 					{count}/{target}

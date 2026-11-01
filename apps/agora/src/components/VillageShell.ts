@@ -24,6 +24,7 @@ import { CastCards } from './CastCards';
 import { castFigures, isCastStage, planHasCast, type CastMember } from '../lib/flows/scenarioCast';
 import { openPlaceOf, placeNavTabs, type PlaceDestination } from '../lib/flows/placeNav';
 import { t } from '../lib/i18n';
+import { villageWorldStrings } from '../lib/flows/villageWorldStrings';
 import { isLightWorld, isVillageSoundOn, villagePalette } from '../lib/villagePrefs';
 
 interface VillageShellAttrs {
@@ -204,6 +205,10 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 							...villageDesk(item),
 							writable: attrs.writable,
 							text: attrs.papers.find((paper) => paper.own)?.text ?? '',
+							// "On the board" only once the server has it; until then "on its way"
+							confirmed: attrs.papers.find((paper) => paper.own)?.confirmed,
+							// The teacher watching has no note: the guide says the prompt, not "closed"
+							watcher: !!attrs.watcher,
 						}
 					: null,
 				paused: opened || communityOpen,
@@ -228,6 +233,8 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 				sound: isVillageSoundOn(),
 				quality: isLightWorld() ? 'low' : 'high',
 				palette: villagePalette(),
+				// Every word the world paints, in the student's language
+				strings: villageWorldStrings(),
 			},
 			window.location.origin,
 		);
@@ -421,7 +428,12 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			// A delayed arrival must not put away a paper the student already opened.
 			if (deskOpen || communityOpen) return;
 			if (villageDesk(item)) showStation();
-			else if (then === 'station' && place === 'council') enterCouncil();
+			// A task in another app: standing at its booth puts its card up
+			else if (item.stage === AgoraStage.linked) {
+				opened = true;
+				sync();
+				m.redraw();
+			} else if (then === 'station' && place === 'council') enterCouncil();
 			else if (isCastStage(item.stage) && (attrs.cast?.length ?? 0) > 0) frameView(place, 'table');
 
 			return;
@@ -652,6 +664,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 			const council = !!viewing && villagePlace(viewing) === 'council';
 			const deskHere = !!viewing && !!villageDesk(viewing) && !library && !council;
 			const study = !!viewing && villagePlace(viewing) === 'challenge';
+			const linkedHere = viewing?.stage === AgoraStage.linked;
 			const cast = attrs.cast ?? [];
 			// The two voices speak in a sheet over the study house, once the walk
 			// has ended and no paper or board is open
@@ -773,7 +786,7 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 							? `village-library${bookOpen ? ' village-library--reading' : ''}`
 							: deskOpen
 								? `village-desk village-bubble${waitingAnchor ? ' village-bubble--waiting' : ''}`
-								: council || study
+								: council || study || linkedHere
 									? 'village-council'
 									: '',
 					},
@@ -910,11 +923,11 @@ export function VillageShell(): m.Component<VillageShellAttrs> {
 												],
 											),
 										])
-									: council || study
+									: council || study || linkedHere
 										? m('.village-desk__header', [
 												m(
 													'h2',
-													study
+													study || linkedHere
 														? planItemLabel(viewing)
 														: viewing.stage === AgoraStage.voting
 															? t('village.council.ballot')

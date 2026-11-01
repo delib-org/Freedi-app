@@ -22,6 +22,7 @@ jest.mock('@freedi/shared-types', () => ({
 import {
 	createGroupedViewSelector,
 	createMembershipForOriginalSelector,
+	createOtherIdeasSelector,
 	createViewLayersDataSelector,
 	composeViewLayers,
 	deriveAvailableLayers,
@@ -423,5 +424,28 @@ describe('gateViewLayers', () => {
 				{ raw: false, synth: false, cluster: false },
 			),
 		).toEqual({ raw: false, synth: false, cluster: false });
+	});
+});
+
+describe('createOtherIdeasSelector', () => {
+	it('returns leftover atoms for the parent, highest consensus first', () => {
+		const state = buildState([
+			option('t', { isCluster: true, integratedOptions: ['a'] }),
+			option('a'),
+			option('low', { consensus: 0.1 }),
+			option('high', { consensus: 0.9 }),
+			option('other-question-child', { parentId: 'elsewhere' }),
+		]);
+		const result = createOtherIdeasSelector(selectStatements)(PARENT_ID)(state);
+
+		expect(result.hasThemes).toBe(true);
+		expect(result.otherAtoms.map((s) => s.statementId)).toEqual(['high', 'low']);
+	});
+
+	it('is memoized for unchanged state', () => {
+		const state = buildState([option('a')]);
+		const selector = createOtherIdeasSelector(selectStatements)(PARENT_ID);
+
+		expect(selector(state)).toBe(selector(state));
 	});
 });

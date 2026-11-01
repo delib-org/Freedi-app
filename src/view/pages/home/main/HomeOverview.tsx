@@ -128,7 +128,7 @@ export default function HomeOverview({
 								onClick={onCreateQuestion}
 								data-cy="add-statement"
 							>
-								{t('Start a conversation')}
+								{t('Ask a question')}
 							</button>
 							<button type="button" className={styles.dashedButton} onClick={onCreateGroup}>
 								+ {t('New space')}
@@ -153,14 +153,16 @@ export default function HomeOverview({
 								{shownSpaces.map((space) => (
 									<SpaceCard key={space.id} space={space} onOpen={openSpace} t={t} />
 								))}
-								<button
-									type="button"
-									className={styles.dashedButton}
-									onClick={onCreateGroup}
-									data-testid="home-new-space"
-								>
-									+ {t('New space')}
-								</button>
+								<div className={styles.stickyAction}>
+									<button
+										type="button"
+										className={`${styles.dashedButton} ${styles['dashedButton--solid']}`}
+										onClick={onCreateGroup}
+										data-testid="home-new-space"
+									>
+										+ {t('New space')}
+									</button>
+								</div>
 							</div>
 						) : (
 							<div className={styles.home__stack}>
@@ -198,7 +200,7 @@ export default function HomeOverview({
 										data-cy="add-statement"
 									>
 										<Plus size={16} aria-hidden="true" />
-										{t('Start something')}
+										{t('Ask a question')}
 									</button>
 								</div>
 								{shownQuestions.length > 0 && (

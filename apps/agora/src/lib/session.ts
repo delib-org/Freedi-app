@@ -21,6 +21,7 @@ import {
 import { applySessionTheme } from './theme';
 import { parse, safeParse } from 'valibot';
 import { emit } from './events';
+import { checkForAppUpdate } from './appUpdate';
 
 export interface SessionState {
 	session: AgoraSession | null;
@@ -206,9 +207,16 @@ export function listenToSession(sessionId: string, userId: string): void {
 				// — it is a newer server and an older tab. Adding a stage kind to
 				// the enum used to brick every open student tab the moment the
 				// teacher opened it; the tab now says "refresh" instead.
-				const unknownStage = parsed.issues.some((issue) => issue.path?.[0]?.key === 'stage');
+				// Anywhere in the doc: the plan's items carry a stage too, so a new
+				// kind of step (a linked station) reaches an old tab as
+				// `stagePlan[i].stage` long before `stage` itself.
+				const unknownStage = parsed.issues.some(
+					(issue) => issue.path?.some((step) => step.key === 'stage') === true,
+				);
 				console.error('[Session] Invalid session doc:', parsed.issues);
 				state.error = unknownStage ? 'outdated' : 'invalid';
+				// Ask for the new bundle now; the worker reloads the page once it takes over
+				if (unknownStage) checkForAppUpdate();
 				state.loading = false;
 			}
 			m.redraw();

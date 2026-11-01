@@ -1,0 +1,148 @@
+// =============================================================================
+// Projector teacher control + first-open hint (IA 15.4, UX 15.B / 15.D).
+// Imported by the lazy TeacherProjector view only. Opacity and transform only;
+// the --dur-* tokens are already 0 under prefers-reduced-motion.
+// =============================================================================
+
+$projector-band-height: 64px;
+$controls-narrow: 1100px;
+
+.projector {
+  // programmatic focus lands here when the control hides; never draw a ring on the wall
+  &:focus {
+    outline: none;
+  }
+
+  &[data-controls='off'] {
+    cursor: none;
+  }
+
+  // the control replaces the step name / video title while it shows
+  &[data-controls='on'] .projector-band__step,
+  &[data-controls='on'] .intro-stage__title {
+    opacity: 0;
+  }
+}
+
+.projector-band__step,
+.intro-stage__title {
+  transition: opacity var(--dur-quick) var(--ease-out, ease-out);
+}
+
+.projector-controls {
+  // ink pill on paper; the pair flips together in dark mode, so it always contrasts
+  --pc-bg: var(--ink);
+  --pc-fg: var(--paper);
+
+  position: fixed;
+  inset-block-end: var(--space-sm);
+  inset-inline-start: var(--space-xl);
+  z-index: 2;
+  display: flex;
+  gap: var(--space-sm);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-out, ease-out);
+
+  .projector[data-controls='on'] & {
+    opacity: 1;
+    pointer-events: auto;
+    transition-duration: var(--dur-quick);
+  }
+
+  .projector--video & {
+    --pc-bg: var(--video-ink);
+    --pc-fg: var(--video-letterbox);
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    min-block-size: 48px;
+    min-inline-size: 120px;
+    justify-content: center;
+    padding: 0 var(--space-lg);
+    border: 2px solid var(--pc-bg);
+    border-radius: var(--radius-full);
+    background: var(--pc-fg);
+    color: var(--pc-bg);
+    font: inherit;
+    font-size: 24px;
+    font-weight: var(--font-weight-bold, 700);
+    cursor: pointer;
+
+    // the ring keeps a filled pill visible on paper and on black
+    &--on {
+      background: var(--pc-bg);
+      color: var(--pc-fg);
+      box-shadow: 0 0 0 2px var(--pc-fg);
+    }
+
+    // the inverse colour: terra on black falls to about 3:1
+    &:focus-visible {
+      outline: var(--focus-ring-width) solid var(--pc-bg);
+      outline-offset: var(--focus-ring-offset);
+    }
+  }
+
+  &__chevron {
+    font-weight: var(--font-weight-bold, 700);
+  }
+
+  @media (max-width: $controls-narrow) {
+    &__btn {
+      min-block-size: 44px;
+      font-size: 20px;
+    }
+  }
+}
+
+// ---- first-open hint of the own window ---------------------------------------
+.projector-hint {
+  --pc-bg: var(--ink);
+  --pc-fg: var(--paper);
+
+  position: fixed;
+  inset-block-end: calc(#{$projector-band-height} + var(--space-md));
+  inset-inline-start: var(--space-xl);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  max-inline-size: min(18em, calc(100vw - 2 * var(--space-xl)));
+  margin: 0;
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-lg);
+  background: var(--pc-bg);
+  color: var(--pc-fg);
+  font-size: 32px;
+  font-weight: var(--font-weight-bold, 700);
+  line-height: var(--line-height-snug, 1.3);
+
+  // a triangle on the block-end edge, pointing down at the first control button
+  &::after {
+    content: '';
+    position: absolute;
+    inset-block-start: 100%;
+    inset-inline-start: var(--space-xl);
+    border-inline: 12px solid transparent;
+    border-block-start: 12px solid var(--pc-bg);
+  }
+
+  &__glyph {
+    flex: none;
+    inline-size: 64px;
+    block-size: 32px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .projector--video & {
+    --pc-bg: var(--video-ink);
+    --pc-fg: var(--video-letterbox);
+  }
+}

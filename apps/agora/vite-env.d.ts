@@ -13,6 +13,8 @@ interface ImportMetaEnv {
 	readonly VITE_ODYSSEY_ORIGIN?: string;
 	/** Origin of Studio, so the teacher menu can link to "My Agora classrooms" there */
 	readonly VITE_STUDIO_ORIGIN?: string;
+	/** Origin of the main WizCol app, where a linked station's question lives (default app.wizcol.com) */
+	readonly VITE_MAIN_ORIGIN?: string;
 }
 
 interface ImportMeta {

@@ -10,6 +10,7 @@ import {
 	toFeedbackFailure,
 	type FeedbackFailure,
 } from '../lib/feedback';
+import { useT } from '../i18n/useT';
 import FeedbackLetter, { type LetterDraft, type LetterStatus } from './FeedbackLetter';
 
 const EMPTY_DRAFT: LetterDraft = { message: '', email: '' };
@@ -30,6 +31,7 @@ const EMPTY_DRAFT: LetterDraft = { message: '', email: '' };
  * is not something to leave behind in localStorage.
  */
 export default function FeedbackDock() {
+	const { t } = useT();
 	const { user } = useUser();
 	const [open, setOpen] = useState(false);
 	const [draft, setDraft] = useState<LetterDraft>(EMPTY_DRAFT);
@@ -120,23 +122,23 @@ export default function FeedbackDock() {
 				className="letter-dock"
 				aria-haspopup="dialog"
 				aria-expanded={open}
-				title="מכתב לבוני הספינה"
-				aria-label="מכתב לבוני הספינה"
+				title={t('feedback.dock')}
+				aria-label={t('feedback.dock')}
 				onClick={() => setOpen(true)}
 			>
 				<span className="letter-dock__icon" aria-hidden="true">
 					🪶
 				</span>
-				<span className="letter-dock__label">מכתב לבוני הספינה</span>
+				<span className="letter-dock__label">{t('feedback.dock')}</span>
 			</button>
 
 			{/* Through a portal: useDialogMechanics marks #root inert, which would
-			    otherwise inert this dialog along with everything else. */}
+			    otherwise inert this dialog along with everything else. Direction is
+			    inherited from <html dir>, which the i18n module keeps current. */}
 			{open
 				? createPortal(
 						<div
 							className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4 pt-16"
-							dir="rtl"
 							onClick={(event) => {
 								if (event.target === event.currentTarget) close();
 							}}

@@ -17,6 +17,8 @@ import { onVoteCreatedStats } from './fn_adminStats';
 
 export async function updateVote(event: FirestoreEvent<Change<DocumentSnapshot> | undefined>) {
 	if (!event?.data) return;
+	// A deleted vote (a reset) never subtracts from the tally: classResetVote clears it itself.
+	if (!event.data.after.exists) return;
 
 	try {
 		const newVote = parse(VoteSchema, event.data.after.data());

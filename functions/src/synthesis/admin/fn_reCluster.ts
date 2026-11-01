@@ -75,6 +75,8 @@ export const reCluster = onCall<ReClusterRequest>(
 
 		// 1. Clean: dissolve all prior synthesis output so the rebuild is not
 		// contaminated by stale clusters / drifted membership.
+		// Refuses first (failed-precondition, reason 'derived-docs-have-votes'),
+		// before any write, when participants voted on the merged ideas.
 		const dissolve = await dissolveQuestionSynthesis(questionId, { reversedByUserId: uid });
 
 		// 2. Rebuild: enqueue every eligible option. After the dissolve, members

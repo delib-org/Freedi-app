@@ -42,6 +42,10 @@ import type {
 	SupervisorClassDetail,
 	SupervisorStudentDetail,
 	SupervisorSystemView,
+	CheckStationLinkRequest,
+	CheckStationLinkResponse,
+	MintStationHandoffRequest,
+	MintStationHandoffResponse,
 } from '@freedi/shared-types';
 
 /** A game started from a typed main question, with no scenario behind it */
@@ -473,6 +477,32 @@ export async function setBannedWords(
 	const call = httpsCallable<SetBannedWordsRequest, SetBannedWordsResponse>(
 		functions,
 		'agoraSetBannedWords',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The step editor's check of a pasted link: the question's words, or `details.reason` */
+export async function checkStationLink(
+	request: CheckStationLinkRequest,
+): Promise<CheckStationLinkResponse> {
+	const call = httpsCallable<CheckStationLinkRequest, CheckStationLinkResponse>(
+		functions,
+		'agoraCheckStationLink',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** A linked station's way in: a one-time deep link for this student */
+export async function mintStationHandoff(
+	request: MintStationHandoffRequest,
+): Promise<MintStationHandoffResponse> {
+	const call = httpsCallable<MintStationHandoffRequest, MintStationHandoffResponse>(
+		functions,
+		'agoraMintStationHandoff',
 	);
 	const result = await call(request);
 

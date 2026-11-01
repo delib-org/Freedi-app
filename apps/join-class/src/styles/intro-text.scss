@@ -1,0 +1,60 @@
+// =============================================================================
+// Introduction text (IA 14.2, UX 14.A / 14.G): the one block shared by the plan
+// screen's preview, the student Opening and the projector. Imported by
+// components/IntroText.ts so Vite ships it once, in the lazy chunk that uses it.
+// Tokens only, BEM, logical properties (RTL-safe).
+// =============================================================================
+
+.intro-text {
+  --intro-size: var(--font-size-lg);
+  color: var(--ink);
+  font-size: var(--intro-size);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.55;
+
+  &__p {
+    margin: 0;
+
+    & + & {
+      margin-block-start: 0.6em;
+    }
+  }
+
+  &__list {
+    margin: 0;
+    padding-inline-start: 1.4em;
+  }
+
+  ul#{&}__list { list-style: disc; }
+  ol#{&}__list { list-style: decimal; }
+
+  &__p + &__list,
+  &__list + &__p,
+  &__list + &__list {
+    margin-block-start: 0.6em;
+  }
+
+  &__item + &__item {
+    margin-block-start: 0.25em;
+  }
+
+  strong {
+    font-weight: var(--font-weight-bold);
+  }
+
+  &--preview {
+    --intro-size: var(--font-size-base);
+  }
+
+  // The projector's smallest text is 32 px (UX section 6); the view steps the
+  // size 48 -> 40 -> 32 until the stage fits. Start-aligned, never centred.
+  &--projector {
+    --intro-size: 48px;
+    max-inline-size: min(100%, 38em);
+    line-height: 1.3;
+    text-align: start;
+
+    &[data-fit='40'] { --intro-size: 40px; }
+    &[data-fit='32'] { --intro-size: 32px; }
+  }
+}

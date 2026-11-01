@@ -9,7 +9,14 @@ import {
 	type ProgressFacts,
 } from '../../lib/flows/classProgress';
 import { nowSentence } from '../../lib/teacherSteps';
-import { AgoraStage, type AgoraParticipant, type AgoraStagePlanItem } from '@freedi/shared-types';
+import { mainAppOrigin } from '../../lib/stationHandoff';
+import {
+	AgoraStage,
+	stationAppUrl,
+	stationVisitCounts,
+	type AgoraParticipant,
+	type AgoraStagePlanItem,
+} from '@freedi/shared-types';
 
 export interface NowCardAttrs {
 	item: AgoraStagePlanItem;
@@ -87,6 +94,7 @@ export function nowCard(attrs: NowCardAttrs): m.Children {
 
 	const { entries, doneCount } = classProgress(item, participants, facts);
 	const all = doneCount === entries.length;
+	const linkedLine = item.stage === AgoraStage.linked ? linkedProgress(item, participants) : null;
 	const pending = entries
 		.filter((entry) => !entry.done)
 		.map((entry) => ({ entry, idle: idleMs(entry.participant, now) }))
@@ -94,12 +102,13 @@ export function nowCard(attrs: NowCardAttrs): m.Children {
 
 	return m('.card.teacher-now', [
 		m('p.teacher-now__doing', nowSentence(item)),
+		linkedLine,
 		m('p.teacher-now__count', { class: all ? 'teacher-now__count--all' : undefined }, [
 			m('strong.teacher-now__n', String(doneCount)),
 			m(
 				'span.teacher-now__of',
 				all
-					? t('teacher.all_done')
+					? t(item.stage === AgoraStage.linked ? 'linked.all_back' : 'teacher.all_done')
 					: // The per-stage sentence ("of 4 answered") minus the number it starts with
 						t(progressCountKey(item), { n: doneCount, total: entries.length }).replace(
 							/^\s*\d+\s*/,
@@ -146,5 +155,34 @@ export function nowCard(attrs: NowCardAttrs): m.Children {
 						);
 					}),
 				),
+	]);
+}
+
+/**
+ * A linked station's extra line: how many opened the task (the count line
+ * below says how many came back), and the teacher's own way to the question
+ * — the app's plain page, no handoff, opened as the question's admin.
+ */
+function linkedProgress(
+	item: AgoraStagePlanItem,
+	participants: readonly AgoraParticipant[],
+): m.Children {
+	const { opened } = stationVisitCounts(
+		participants.map((participant) => participant.stationVisits?.[item.itemId]),
+	);
+
+	return m('p.linked-progress', [
+		m('span', opened === 0 ? t('linked.nobody_yet') : t('linked.progress_opened', { n: opened })),
+		item.link
+			? m(
+					'a.linked-progress__open',
+					{
+						href: stationAppUrl(item.link.app, mainAppOrigin(), item.link.statementId),
+						target: '_blank',
+						rel: 'noopener',
+					},
+					t('linked.teacher_open'),
+				)
+			: null,
 	]);
 }

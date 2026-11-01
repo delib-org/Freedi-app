@@ -3,6 +3,7 @@ import type { GameContent } from './game';
 import type { AttitudeMap } from './distance';
 import { activeElders } from './elders';
 import { crewIsComplete } from './crew';
+import { t } from '../i18n/i18n';
 
 /**
  * The voyage, as a list of legs.
@@ -16,7 +17,10 @@ import { crewIsComplete } from './crew';
  *
  * Every rule here mirrors the gate the screen itself enforces: the compass is
  * done when all its winds are lit, an island counts as sailed the moment one
- * stance on it is marked (which is exactly what "להמשך המסע" requires).
+ * stance on it is marked (which is exactly what "continue the voyage" requires).
+ *
+ * Labels and details are read through `t()` at call time — the strip renders
+ * on every language change, so the legs come back in the new language.
  */
 
 /** How many values the fourth wind ranks. Mirrors the compass screen's cap. */
@@ -36,7 +40,7 @@ export interface VoyageStep {
 	path: string;
 	label: string;
 	status: VoyageStepStatus;
-	/** what stands accomplished inside the leg — "2/4 רוחות", "5 איים" */
+	/** what stands accomplished inside the leg — "2/4 winds", "5 islands" */
 	detail?: string;
 	/** the homecoming: an arrival rather than a task, so it earns no ✓ */
 	isDestination: boolean;
@@ -90,12 +94,12 @@ export function voyageSteps({
 	const voyageDone = islands.length > 0 && sailed === islands.length;
 
 	const legs: Leg[] = [
-		{ path: '/', label: 'הקדמה', done: true },
+		{ path: '/', label: t('step.intro'), done: true },
 		{
 			path: '/compass',
-			label: 'המצפן',
+			label: t('step.compass'),
 			done: windsLit === winds,
-			detail: `${windsLit}/${winds} רוחות`,
+			detail: t('step.windsDetail', { done: windsLit, total: winds }),
 		},
 	];
 
@@ -104,29 +108,33 @@ export function voyageSteps({
 	if (crew.length > 0) {
 		legs.push({
 			path: '/elders',
-			label: 'המלחים',
+			label: t('step.elders'),
 			// The crew screen itself will not let the player on until the
 			// minimum is aboard, so the strip reports the same gate.
 			done: chosenCrew !== undefined && crewIsComplete(chosenCrew.length, crew.length),
 			// `undefined` is "not asked yet"; an array is a real answer.
-			detail: chosenCrew === undefined ? undefined : `${chosenCrew.length} מלחים`,
+			detail:
+				chosenCrew === undefined ? undefined : t('step.crewDetail', { count: chosenCrew.length }),
 		});
 	}
 
 	legs.push(
 		{
 			path: '/map',
-			label: 'המפה',
+			label: t('step.map'),
 			done: islands.length > 0,
-			detail: islands.length > 0 ? `${islands.length} איים` : undefined,
+			detail: islands.length > 0 ? t('step.islandsDetail', { count: islands.length }) : undefined,
 		},
 		{
 			path: '/voyage',
-			label: 'ההפלגה',
+			label: t('step.voyage'),
 			done: voyageDone,
-			detail: islands.length > 0 ? `${sailed}/${islands.length} איים` : undefined,
+			detail:
+				islands.length > 0
+					? t('step.sailedDetail', { done: sailed, total: islands.length })
+					: undefined,
 		},
-		{ path: '/summary', label: 'הסיכום', done: false, isDestination: true },
+		{ path: '/summary', label: t('step.summary'), done: false, isDestination: true },
 	);
 
 	// The frontier: everything up to the leg after the furthest one finished.

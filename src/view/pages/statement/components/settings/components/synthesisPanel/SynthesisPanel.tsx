@@ -14,6 +14,7 @@ import {
 	triggerRejudgeGrayBand,
 	triggerSynthesizeNow,
 } from '@/controllers/db/synthesis/synthesisOperations';
+import { isDerivedDocsHaveVotesError } from '@/controllers/db/synthesis/derivedDocsVotesError';
 import {
 	DEFAULT_SYNTHESIS_SETTINGS,
 	type SynthesisProgress,
@@ -23,6 +24,7 @@ import Button from '@/view/components/atomic/atoms/Button/Button';
 import Toggle from '@/view/components/atomic/atoms/Toggle/Toggle';
 import SynthesisProgressBar from './SynthesisProgressBar';
 import SelectiveOptionsList from './SelectiveOptionsList';
+import ThemeRebuildButton from './ThemeRebuildButton';
 import styles from './SynthesisPanel.module.scss';
 
 interface Props {
@@ -272,15 +274,25 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 		}
 	}
 
-	async function withBusy<T>(opLabel: string, fn: () => Promise<T>): Promise<T | undefined> {
+	async function withBusy<T>(
+		opLabel: string,
+		fn: () => Promise<T>,
+		knownErrorMessage?: (error: unknown) => string | undefined,
+	): Promise<T | undefined> {
 		setBusyOp(opLabel);
 		try {
 			return await fn();
 		} catch (error) {
-			setToast({
-				tone: 'error',
-				message: error instanceof Error ? error.message : t('Operation failed'),
-			});
+			const message =
+				knownErrorMessage?.(error) ??
+				(isDerivedDocsHaveVotesError(error)
+					? t(
+							'This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.',
+						)
+					: error instanceof Error
+						? error.message
+						: t('Operation failed'));
+			setToast({ tone: 'error', message });
 
 			return undefined;
 		} finally {
@@ -744,6 +756,18 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 						{t(
 							'Global cluster groups every option in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results.',
 						)}
+					</p>
+
+					<div className={styles.onDemandActions}>
+						<ThemeRebuildButton
+							questionId={statement.statementId}
+							disabled={isRunning || busyOp !== null || dirty}
+							onBusyChange={(busy) => setBusyOp(busy ? 'reTheme' : null)}
+							onNotice={setToast}
+						/>
+					</div>
+					<p className={styles.card__subtitle}>
+						{t('Rebuilds the themes from all ideas at once. Merged ideas are not changed.')}
 					</p>
 
 					<hr className={styles.onDemandCard__divider} />

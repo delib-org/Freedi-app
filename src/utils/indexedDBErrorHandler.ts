@@ -18,6 +18,7 @@ import { logError } from '@/utils/errorHandling';
 import { safeSessionStorage } from '@/utils/safeStorage';
 import {
 	clearIndexedDBErrorRecord,
+	isFirestoreAssertionError,
 	isPersistentCacheEnabled,
 	recordIndexedDBError,
 } from '@/utils/firestorePersistenceFallback';
@@ -135,17 +136,6 @@ function isIndexedDBError(error: unknown): boolean {
 		) ||
 		(errorCode !== undefined && firestoreErrorCodes.includes(errorCode))
 	);
-}
-
-/**
- * Check if this is a Firestore internal assertion error.
- * These are known bugs in the Firebase SDK's persistence/target layer.
- */
-function isFirestoreAssertionError(error: unknown): boolean {
-	if (!error) return false;
-	const errorMessage = error instanceof Error ? error.message : String(error);
-
-	return errorMessage.includes('INTERNAL ASSERTION FAILED');
 }
 
 /**

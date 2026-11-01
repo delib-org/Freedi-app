@@ -1,0 +1,170 @@
+{
+ "input": "scientific-research/2026-08-18-live-synth-accuracy/runs/he-seed42-large-formulation",
+ "passes": [
+  {
+   "pass": 1,
+   "calls": 56,
+   "keep": {
+    "moved": 1,
+    "filed": 5,
+    "themesEmptied": 0,
+    "themes": 11,
+    "sizes": [
+     11,
+     7,
+     6,
+     6,
+     6,
+     5,
+     5,
+     4,
+     4,
+     1,
+     1
+    ],
+    "unthemedAtoms": 0,
+    "atoms": 56
+   },
+   "evict": {
+    "moved": 1,
+    "filed": 5,
+    "evicted": 3,
+    "themes": 11,
+    "sizes": [
+     10,
+     6,
+     6,
+     6,
+     5,
+     5,
+     5,
+     4,
+     4,
+     1,
+     1
+    ],
+    "unthemedAtoms": 3,
+    "atoms": 56
+   },
+   "moves": [
+    {
+     "atomId": "KbIKrNHWLHyi",
+     "from": "dM49OaMxYAH5",
+     "to": "uMmF3y63Ju7q"
+    },
+    {
+     "atomId": "V4MSvGZ4WoH5",
+     "from": null,
+     "to": "BezGbqKL0l3W"
+    },
+    {
+     "atomId": "xCniclJFGxo5",
+     "from": null,
+     "to": "IJ2X9AeE1uAu"
+    },
+    {
+     "atomId": "zsutoL4luCZ2",
+     "from": null,
+     "to": "KpIXu5RLS4Uq"
+    },
+    {
+     "atomId": "BSEB2nIMm3cf",
+     "from": null,
+     "to": "uMmF3y63Ju7q"
+    },
+    {
+     "atomId": "hlET5tHzB8yq",
+     "from": null,
+     "to": "IJ2X9AeE1uAu"
+    }
+   ]
+  },
+  {
+   "pass": 2,
+   "calls": 56,
+   "keep": {
+    "moved": 2,
+    "filed": 0,
+    "themesEmptied": 0,
+    "themes": 11,
+    "sizes": [
+     11,
+     7,
+     6,
+     6,
+     5,
+     5,
+     5,
+     5,
+     4,
+     1,
+     1
+    ],
+    "unthemedAtoms": 0,
+    "atoms": 56
+   },
+   "moves": [
+    {
+     "atomId": "gBLB9HnIzJat",
+     "from": "BezGbqKL0l3W",
+     "to": "g0K5kSKLus8j"
+    },
+    {
+     "atomId": "2ZrXx4YZ8C7i",
+     "from": "nK7nq7WfbDeq",
+     "to": "lqCvrfShQSmJ"
+    }
+   ]
+  },
+  {
+   "pass": 3,
+   "calls": 56,
+   "keep": {
+    "moved": 1,
+    "filed": 0,
+    "themesEmptied": 0,
+    "themes": 11,
+    "sizes": [
+     11,
+     7,
+     6,
+     6,
+     6,
+     5,
+     5,
+     4,
+     4,
+     1,
+     1
+    ],
+    "unthemedAtoms": 0,
+    "atoms": 56
+   },
+   "moves": [
+    {
+     "atomId": "2ZrXx4YZ8C7i",
+     "from": "lqCvrfShQSmJ",
+     "to": "nK7nq7WfbDeq"
+    }
+   ]
+  }
+ ],
+ "start": {
+  "themes": 11,
+  "sizes": [
+   10,
+   6,
+   6,
+   6,
+   6,
+   4,
+   4,
+   4,
+   3,
+   1,
+   1
+  ],
+  "unthemedAtoms": 5,
+  "atoms": 56
+ }
+}

@@ -77,6 +77,17 @@ jest.mock('../pipeline/splitThemes', () => ({
 	splitOversizedThemes: (...args: unknown[]) => splitOversizedThemes(...(args as [])),
 }));
 
+const fileUnthemedAtoms = jest.fn(async () => ({
+	atoms: 0,
+	filed: 0,
+	refused: 0,
+	skipped: 0,
+	errors: 0,
+}));
+jest.mock('../pipeline/fileUnthemed', () => ({
+	fileUnthemedAtoms: (...args: unknown[]) => fileUnthemedAtoms(...(args as [])),
+}));
+
 jest.mock('../../services/integration-ai-service', () => ({
 	generateSynthesizedProposal: jest.fn(async () => ({ cannotSynthesize: true })),
 }));

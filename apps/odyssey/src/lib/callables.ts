@@ -5,6 +5,9 @@ import type {
 	MintAgoraHandoffResponse,
 	OdysseyFeedbackRequest,
 	OdysseyFeedbackResponse,
+	OdysseyTranslateGameRequest,
+	OdysseyTranslateGameResponse,
+	OdysseyTranslationLang,
 	ProvisionCivicSessionsRequest,
 	ProvisionCivicSessionsResponse,
 	UpdateCivicFlowRequest,
@@ -27,6 +30,9 @@ export type {
 	MintAgoraHandoffResponse,
 	OdysseyFeedbackRequest,
 	OdysseyFeedbackResponse,
+	OdysseyTranslateGameRequest,
+	OdysseyTranslateGameResponse,
+	OdysseyTranslationLang,
 	ProvisionCivicSessionsRequest,
 	ProvisionCivicSessionsResponse,
 	ProvisionedCivicSession,
@@ -89,6 +95,45 @@ export async function advanceCivicStage(sessionId: string, stage: AgoraStage): P
 		'agoraAdvanceStage',
 	);
 	await call({ sessionId, stage });
+}
+
+/**
+ * Admin action: (re)translate the game's Hebrew content into `lang`.
+ *
+ * The server hashes every Hebrew field and re-translates only the ones that
+ * changed since the last run, so pressing the button after an edit is cheap;
+ * `force` re-translates everything. The result counts fields, not screens.
+ */
+export async function translateGame(
+	gameId: string,
+	lang: OdysseyTranslationLang,
+	force = false,
+): Promise<OdysseyTranslateGameResponse> {
+	return callTranslateGame({ gameId, lang, force });
+}
+
+/**
+ * How many fields of `lang` are out of date — the admin status line. Calls
+ * no model and writes nothing; `translated` is the count that a press of the
+ * button would translate.
+ */
+export async function countStaleTranslations(
+	gameId: string,
+	lang: OdysseyTranslationLang,
+): Promise<OdysseyTranslateGameResponse> {
+	return callTranslateGame({ gameId, lang, dryRun: true });
+}
+
+async function callTranslateGame(
+	request: OdysseyTranslateGameRequest,
+): Promise<OdysseyTranslateGameResponse> {
+	const call = httpsCallable<OdysseyTranslateGameRequest, OdysseyTranslateGameResponse>(
+		functions,
+		'odysseyTranslateGame',
+	);
+	const result = await call(request);
+
+	return result.data;
 }
 
 /**

@@ -10,6 +10,9 @@ import { authedFetch } from '@/lib/api/authedFetch';
 import { Survey, CreateSurveyRequest, DEFAULT_SURVEY_SETTINGS, SuggestionMode, DisplayMode } from '@/types/survey';
 import QuestionPicker from './QuestionPicker';
 import UnifiedFlowEditor from './UnifiedFlowEditor';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
+import { useQuestionRemoval } from './useQuestionRemoval';
+import { dropRemovedQuestionIds } from './questionRemoval';
 import CompletionMessageEditor from './CompletionMessageEditor';
 import LanguageSelector from './LanguageSelector';
 import { CreateQuestionModal } from './CreateQuestionModal';
@@ -63,6 +66,9 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
   const [settings, setSettings] = useState(existingSurvey?.settings || DEFAULT_SURVEY_SETTINGS);
   const [questionSettings, setQuestionSettings] = useState<Record<string, QuestionOverrideSettings>>(
     existingSurvey?.questionSettings || {}
+  );
+  const [removedQuestionIds, setRemovedQuestionIds] = useState<string[]>(
+    existingSurvey?.removedQuestionIds || []
   );
   const [defaultLanguage, setDefaultLanguage] = useState(existingSurvey?.defaultLanguage || '');
   const [forceLanguage, setForceLanguage] = useState(existingSurvey?.forceLanguage ?? false);
@@ -211,6 +217,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       questionIds: [...new Set(selectedQuestions.map((q) => q.statementId))],
       settings,
       questionSettings: cleanedQuestionSettings,
+      removedQuestionIds: dropRemovedQuestionIds(removedQuestionIds, [...selectedIds]),
       defaultLanguage: defaultLanguage || undefined,
       forceLanguage: forceLanguage || undefined,
       demographicPages: demographicPages,
@@ -469,23 +476,21 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
 
   const handleQuestionsChange = (questions: Statement[]) => {
     setSelectedQuestions(questions);
+    // Re-adding a question (picker, suggestions, search) takes it off the removed list
+    setRemovedQuestionIds((prev) => dropRemovedQuestionIds(prev, questions.map((q) => q.statementId)));
   };
 
   const handleReorder = (reorderedQuestions: Statement[]) => {
     setSelectedQuestions(reorderedQuestions);
   };
 
-  const handleRemoveQuestion = (questionId: string) => {
-    setSelectedQuestions((prev) =>
-      prev.filter((q) => q.statementId !== questionId)
-    );
-    // Also remove any per-question settings for the removed question
-    setQuestionSettings((prev) => {
-      const updated = { ...prev };
-      delete updated[questionId];
-      return updated;
-    });
-  };
+  const { pendingQuestion, requestRemoval, confirmRemoval, cancelRemoval } = useQuestionRemoval({
+    selectedQuestions,
+    questionSettings,
+    setSelectedQuestions,
+    setQuestionSettings,
+    setRemovedQuestionIds,
+  });
 
   const handleQuestionSettingsChange = (
     questionId: string,
@@ -611,9 +616,24 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
           <QuestionPicker
             selectedQuestions={selectedQuestions}
             onQuestionsChange={handleQuestionsChange}
+            onRemoveQuestion={requestRemoval}
+            removedQuestionIds={dropRemovedQuestionIds(
+              removedQuestionIds,
+              selectedQuestions.map((q) => q.statementId)
+            )}
           />
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={pendingQuestion !== null}
+        title={t('removeQuestionFromSurvey')}
+        message={t('removeQuestionConfirmMessage')}
+        confirmLabel={t('remove')}
+        cancelLabel={t('cancel')}
+        onConfirm={confirmRemoval}
+        onCancel={cancelRemoval}
+      />
 
       {/* Create Question Modal */}
       <CreateQuestionModal
@@ -647,7 +667,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
             onCustomDemographicQuestionsChange={setCustomDemographicQuestions}
             onQuestionSettingsChange={handleQuestionSettingsChange}
             onQuestionTextChange={handleQuestionTextChange}
-            onRemoveQuestion={handleRemoveQuestion}
+            onRemoveQuestion={requestRemoval}
             surveyId={existingSurvey?.surveyId}
           />
           <CompletionMessageEditor

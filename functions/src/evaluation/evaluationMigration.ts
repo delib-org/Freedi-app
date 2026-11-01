@@ -10,7 +10,7 @@
 import { logger } from 'firebase-functions/v1';
 import { Collections, Evaluation, calcAgreement } from '@freedi/shared-types';
 import { db } from '../index';
-import { updateParentTotalEvaluators } from './updateChosenOptions';
+import { reconcileParentEvaluators } from './evaluatorParticipation';
 
 // ============================================================================
 // TYPES
@@ -212,7 +212,7 @@ export async function migrateEvaluationsToNewStatement(
 		);
 
 		// Update parent's total evaluator count to reflect the changes
-		await updateParentTotalEvaluators(parentId);
+		await reconcileParentEvaluators(parentId);
 
 		return result;
 	} catch (error) {

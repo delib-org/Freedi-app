@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import type { OdysseyElder, Statement } from '@freedi/shared-types';
 import type { IslandContent } from '../lib/game';
 import { shoreCounsel } from '../lib/counsel';
+import { useT } from '../i18n/useT';
 import CrewRow, { focusCrewChip } from './CrewRow';
 import CounselCard from './CounselCard';
 
@@ -9,7 +10,7 @@ interface ShoreCounselProps {
 	crew: OdysseyElder[];
 	island: IslandContent;
 	stance: Statement;
-	/** 0-based; shown to the player as חוף N */
+	/** 0-based; shown to the player as shore N */
 	stanceIndex: number;
 	open: boolean;
 	openElderId: string | null;
@@ -36,6 +37,7 @@ export default function ShoreCounsel({
 	onToggleRow,
 	onToggleElder,
 }: ShoreCounselProps) {
+	const { t } = useT();
 	const root = useRef<HTMLDivElement>(null);
 	const number = stanceIndex + 1;
 	const rowId = `shore-counsel-${stance.statementId}`;
@@ -58,9 +60,10 @@ export default function ShoreCounsel({
 				aria-controls={rowId}
 				onClick={onToggleRow}
 			>
-				<span>📜 להתייעץ על חוף {number}</span>
+				<span>{t('counsel.shoreLine', { number })}</span>
+				{/* the closed glyph points into the text, so it is a translation */}
 				<span className="shore-counsel__chevron" aria-hidden="true">
-					{open ? '▾' : '‹'}
+					{open ? t('counsel.chevronOpen') : t('counsel.chevronClosed')}
 				</span>
 			</button>
 			{open ? (
@@ -70,7 +73,7 @@ export default function ShoreCounsel({
 						openElderId={openElderId}
 						onToggle={onToggleElder}
 						onEscape={close}
-						ariaLabel={`הצוות — התייעצות על חוף ${number}`}
+						ariaLabel={t('counsel.shoreRowAria', { number })}
 						controlsId={cardId}
 					/>
 					<div id={cardId} className="counsel-slot" aria-live="polite" aria-atomic="true">

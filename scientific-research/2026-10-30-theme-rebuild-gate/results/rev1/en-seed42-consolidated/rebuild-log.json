@@ -1,0 +1,90 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed42-consolidated",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 9,
+ "themesWithMembers": 9,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  7,
+  7,
+  7,
+  5,
+  5,
+  5,
+  5,
+  5,
+  4
+ ],
+ "ms": 21401,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 999,
+   "completion": 1182
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 1872,
+   "completion": 891
+  }
+ },
+ "usd": 0.017625599999999998,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Education and Student Support",
+   "rule": "Proposals to improve school facilities, teaching, class conditions, or services and benefits delivered specifically to children or school-age students, excluding student housing.",
+   "size": 7
+  },
+  {
+   "key": "t2",
+   "name": "Affordable and Efficient Housing",
+   "rule": "Proposals that increase housing supply, affordability, price transparency, student accommodation, or the energy performance of homes.",
+   "size": 5
+  },
+  {
+   "key": "t3",
+   "name": "Public Transit and Active Travel",
+   "rule": "Proposals to improve the operation, information, availability, or physical infrastructure of public transit, cycling, walking, and road crossings, excluding school-targeted transit benefits.",
+   "size": 5
+  },
+  {
+   "key": "t4",
+   "name": "Environmental Sustainability",
+   "rule": "Proposals focused on waste reduction, recycling, pollution monitoring, renewable energy, energy-related environmental action, urban greening, or community food growing.",
+   "size": 7
+  },
+  {
+   "key": "t5",
+   "name": "Culture, Recreation, and Public Amenities",
+   "rule": "Proposals for cultural access and events or for shared recreational amenities such as parks, playgrounds, libraries, and dog-exercise spaces.",
+   "size": 7
+  },
+  {
+   "key": "t6",
+   "name": "Health and Care Access",
+   "rule": "Proposals that expand health care, mental-health support, preventive screening, primary or specialist care, or in-home support for residents.",
+   "size": 5
+  },
+  {
+   "key": "t7",
+   "name": "Community Safety and Emergency Response",
+   "rule": "Proposals aimed at preventing crime, improving street safety through lighting, strengthening neighborhood policing or surveillance, or reducing emergency-response times.",
+   "size": 4
+  },
+  {
+   "key": "t8",
+   "name": "Digital City Services and Access",
+   "rule": "Proposals that make city services, civic information, connectivity, or assistance with digital services easier to access through online tools, public Wi-Fi, or service channels.",
+   "size": 5
+  },
+  {
+   "key": "t9",
+   "name": "Local Jobs and Small Business",
+   "rule": "Proposals that support workers, job seekers, local hiring, business finance, shared workspaces, business regulation, or career reskilling.",
+   "size": 5
+  }
+ ]
+}

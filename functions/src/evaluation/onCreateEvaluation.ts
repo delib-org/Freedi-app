@@ -14,6 +14,7 @@ import { updateUserDemographicEvaluation } from '../fn_polarizationIndex';
 import { ActionTypes } from './evaluationTypes';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
+import { recordEvaluatorParticipation } from './evaluatorParticipation';
 import { trackEvaluationEngagement } from '../engagement/credits/trackEngagement';
 import { checkSocialProofMilestone } from '../engagement/notifications/socialProofTrigger';
 import { onEvaluationCreatedStats } from '../fn_adminStats';
@@ -28,14 +29,18 @@ import { recordParticipation } from '../progress/questionProgressWriter';
 import { synthesisFlags } from '../synthesis/featureFlags';
 import {
 	enqueueClusterRecompute,
-	findClustersContainingMember,
+	findClustersAffectedByVote,
 } from '../synthesis/liveSynth/clusterRecompute';
 
 export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Promise<void> {
 	try {
 		const eventId = event.id;
 
-		const evaluation = event.data.data() as Evaluation & { migratedAt?: number; source?: string };
+		const evaluation = event.data.data() as Evaluation & {
+			migratedAt?: number;
+			source?: string;
+			restoredFromClusterId?: string;
+		};
 		const { statementId, parentId } = evaluation;
 		const userId = evaluation.evaluator?.uid;
 
@@ -96,6 +101,8 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 			throw new Error('Failed to update statement');
 		}
 
+		// Counts the user once per question (1 read when already counted, no parent write)
+		await recordEvaluatorParticipation(statement.parentId, userId);
 		await updateParentStatementWithChosenOptions(statement.parentId);
 
 		// Update demographic evaluation (it will check if demographic question exists later on)
@@ -112,7 +119,7 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 		// Fail-open: any error here is logged and swallowed; the directly-
 		// evaluated statement's polarization compute above still happens.
 		if (synthesisFlags.clusterAwarePolarization) {
-			findClustersContainingMember(statement.statementId)
+			findClustersAffectedByVote(statement.statementId)
 				.then(async (containingClusters) => {
 					await Promise.all(
 						containingClusters.map((c) =>
@@ -128,32 +135,38 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 				);
 		}
 
-		// Track engagement (non-blocking)
-		trackEvaluationEngagement(statementId, userId, parentId, statement.topParentId).catch((err) =>
-			logger.warn('Engagement tracking failed:', err),
-		);
+		// A vote handed back after a synthesis was dissolved is not a new user
+		// action: counters above are already updated, so skip credits, admin
+		// stats, funnel events and social proof (the user already earned/was
+		// counted for this vote when they cast it on the synthesis).
+		if (!evaluation.restoredFromClusterId) {
+			// Track engagement (non-blocking)
+			trackEvaluationEngagement(statementId, userId, parentId, statement.topParentId).catch((err) =>
+				logger.warn('Engagement tracking failed:', err),
+			);
 
-		// Track admin stats (non-blocking)
-		onEvaluationCreatedStats(evaluation.updatedAt).catch((err) =>
-			logger.warn('Admin stats tracking failed:', err),
-		);
+			// Track admin stats (non-blocking)
+			onEvaluationCreatedStats(evaluation.updatedAt).catch((err) =>
+				logger.warn('Admin stats tracking failed:', err),
+			);
 
-		// Question progress funnel: unique evaluators + evaluation events (non-blocking)
-		if (parentId) {
-			recordParticipation({
-				statementId: parentId,
-				topParentId: statement.topParentId,
-				userId,
-				kind: 'evaluated',
-				eventCounter: 'evaluations',
-			}).catch((err) => logger.warn('Question progress tracking failed:', err));
+			// Question progress funnel: unique evaluators + evaluation events (non-blocking)
+			if (parentId) {
+				recordParticipation({
+					statementId: parentId,
+					topParentId: statement.topParentId,
+					userId,
+					kind: 'evaluated',
+					eventCounter: 'evaluations',
+				}).catch((err) => logger.warn('Question progress tracking failed:', err));
+			}
+
+			// Check social proof milestones (non-blocking)
+			const evaluatorCount = statement.evaluation?.numberOfEvaluators ?? 0;
+			checkSocialProofMilestone(statement, evaluatorCount).catch((err) =>
+				logger.warn('Social proof check failed:', err),
+			);
 		}
-
-		// Check social proof milestones (non-blocking)
-		const evaluatorCount = statement.evaluation?.numberOfEvaluators ?? 0;
-		checkSocialProofMilestone(statement, evaluatorCount).catch((err) =>
-			logger.warn('Social proof check failed:', err),
-		);
 
 		// Mark hybrid embedding as stale (non-blocking) — sweep checks setting before processing
 		markHybridEmbeddingStale(statementId).catch((err) =>

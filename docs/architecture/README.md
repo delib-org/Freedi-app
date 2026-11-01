@@ -11,6 +11,7 @@ These provide deeper detail on specific subsystems:
 - **[IN_APP_NOTIFICATIONS_ARCHITECTURE.md](./IN_APP_NOTIFICATIONS_ARCHITECTURE.md)** — Full technical reference for the notification system (data models, services, service worker, hooks, Cloud Functions)
 - **[ERROR_HANDLING_ROADMAP.md](./ERROR_HANDLING_ROADMAP.md)** — Task tracker for error handling improvements (what's done, what's remaining)
 - **[IMPORT_ORGANIZATION.md](./IMPORT_ORGANIZATION.md)** — Standard 10-group import order for TypeScript files
+- **[firebase-cost-2026-10/README.md](./firebase-cost-2026-10/README.md)** — Firebase cost reduction, Oct 2026: `userFeed` home feed, participant markers, token sync, hot-trigger memory (plus lane A-D designs)
 
 ## Cloud Functions
 

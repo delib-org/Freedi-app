@@ -1,6 +1,7 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { Statement, StatementType, CondensationSurfaceVisibility } from '@freedi/shared-types';
 import { sortByConsensus } from '@/redux/utils/selectorFactories';
+import { computeOtherIdeas, type OtherIdeasResult } from '@/helpers/otherIdeas';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type StateSelector<T> = (state: any) => T;
@@ -353,4 +354,22 @@ export function gateViewLayers(
 	if (gated.raw || gated.synth || gated.cluster) return gated;
 
 	return { raw: available.raw, synth: available.synth, cluster: available.cluster };
+}
+
+// ============================================================================
+// OTHER IDEAS — the atoms no visible theme holds (see src/helpers/otherIdeas.ts)
+// ============================================================================
+
+/**
+ * Memoized "Other ideas" for a question. `otherAtoms` and `themes` are sorted by
+ * consensus desc, the same order cards use inside themes.
+ */
+export function createOtherIdeasSelector(selectStatements: StateSelector<Statement[]>) {
+	return (parentId: string | undefined) =>
+		createSelector([selectStatements], (statements): OtherIdeasResult<Statement> => {
+			const siblings = statements.filter((s) => s.parentId === parentId);
+			const result = computeOtherIdeas([...siblings].sort(sortByConsensus));
+
+			return result;
+		});
 }

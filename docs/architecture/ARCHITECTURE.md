@@ -352,6 +352,8 @@ The original architecture embedded a full `SimpleStatement` in each subscription
 
 **Full normalization.** The `statement` field still exists on subscription documents (as a frozen snapshot). A future optimization could remove it entirely, reducing document size by ~1-2KB. This would save storage costs but requires all clients to handle the case where `subscription.statement` is undefined.
 
+**Update (2026-10):** the home screen now reads a server-written `userFeed` collection (one doc per subscription, fan-out throttled to one per minute per discussion) instead of ordering subscriptions by `lastUpdate`, and subscription activity stamping is off. Evaluator counts use `evaluationParticipants/{parentId}--{uid}` marker docs. Details and invariants: [firebase-cost-2026-10/README.md](./firebase-cost-2026-10/README.md). The paragraph below describes the earlier state; a legacy fallback still exists for users without a feed.
+
 **Firestore query ordering for power users.** The home screen query uses `orderBy('lastUpdate', 'desc'), limit(100)` on subscriptions. Since subscription `lastUpdate` is no longer kept fresh by fan-out, Firestore returns subscriptions ordered by the user's last personal interaction rather than by discussion activity. For users with fewer than 100 subscriptions this has zero impact (client-side sorting handles it). For users with 100+ subscriptions, a very active discussion the user hasn't visited recently might not appear in the initial Firestore result.
 
 **Evaluation trigger chains.** Evaluation triggers still create chains (evaluation → statement update → parent update). These are less costly now that subscription fan-out is removed, but could still be optimized with debouncing.

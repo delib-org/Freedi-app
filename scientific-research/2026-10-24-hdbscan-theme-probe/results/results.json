@@ -1,0 +1,1339 @@
+{
+ "versions": {
+  "hdbscan": "0.8.40",
+  "numpy": "2.5.4",
+  "python": "3.13.6"
+ },
+ "grid": {
+  "m": [
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10
+  ],
+  "s": "1..m",
+  "selection": [
+   "eom",
+   "leaf"
+  ]
+ },
+ "datasets": {
+  "en-3small/atoms": {
+   "n": 50,
+   "gridSeconds": 0.19,
+   "baselines": {
+    "medianCosSame": 0.742,
+    "medianCosDiff": 0.67,
+    "bestPairCut": {
+     "cut": 0.735,
+     "f1": 0.48
+    },
+    "agglomerativeK": {
+     "k": 10,
+     "p": 0.36,
+     "r": 0.54,
+     "f1": 0.432,
+     "ari": 0.37
+    }
+   },
+   "oracleBest": {
+    "m": 3,
+    "s": 1,
+    "method": "eom",
+    "k": 6,
+    "other": 14,
+    "otherShare": 0.28,
+    "largestShare": 0.16,
+    "sizes": [
+     8,
+     7,
+     7,
+     6,
+     4,
+     4
+    ],
+    "p": 0.392,
+    "r": 0.38,
+    "f1": 0.386,
+    "ari": 0.332,
+    "filed": {
+     "p": 0.32,
+     "r": 0.66,
+     "f1": 0.431,
+     "ari": 0.361
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.6,
+     "f1": 0.75,
+     "ari": 0.734,
+     "other": 20
+    }
+   },
+   "oracleBestFiled": {
+    "m": 3,
+    "s": 1,
+    "method": "eom",
+    "k": 6,
+    "other": 14,
+    "otherShare": 0.28,
+    "largestShare": 0.16,
+    "sizes": [
+     8,
+     7,
+     7,
+     6,
+     4,
+     4
+    ],
+    "p": 0.392,
+    "r": 0.38,
+    "f1": 0.386,
+    "ari": 0.332,
+    "filed": {
+     "p": 0.32,
+     "r": 0.66,
+     "f1": 0.431,
+     "ari": 0.361
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.6,
+     "f1": 0.75,
+     "ari": 0.734,
+     "other": 20
+    }
+   },
+   "perfectJudgeCeiling": {
+    "m": 2,
+    "s": 1,
+    "method": "eom",
+    "k": 11,
+    "other": 13,
+    "otherShare": 0.26,
+    "largestShare": 0.16,
+    "sizes": [
+     8,
+     6,
+     4,
+     4,
+     3,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2
+    ],
+    "p": 0.422,
+    "r": 0.27,
+    "f1": 0.329,
+    "ari": 0.284,
+    "filed": {
+     "p": 0.309,
+     "r": 0.5,
+     "f1": 0.382,
+     "ari": 0.312
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.8,
+     "f1": 0.889,
+     "ari": 0.88,
+     "other": 5
+    }
+   },
+   "orderStableWorstARI": 1.0
+  },
+  "en-3small/statements": {
+   "n": 100,
+   "gridSeconds": 0.34,
+   "baselines": {
+    "medianCosSame": 0.711,
+    "medianCosDiff": 0.634,
+    "bestPairCut": {
+     "cut": 0.7,
+     "f1": 0.512
+    },
+    "agglomerativeK": {
+     "k": 10,
+     "p": 0.409,
+     "r": 0.591,
+     "f1": 0.484,
+     "ari": 0.421
+    }
+   },
+   "oracleBest": {
+    "m": 5,
+    "s": 1,
+    "method": "leaf",
+    "k": 7,
+    "other": 34,
+    "otherShare": 0.34,
+    "largestShare": 0.14,
+    "sizes": [
+     14,
+     12,
+     12,
+     8,
+     8,
+     6,
+     6
+    ],
+    "p": 0.521,
+    "r": 0.358,
+    "f1": 0.424,
+    "ari": 0.378,
+    "filed": {
+     "p": 0.349,
+     "r": 0.664,
+     "f1": 0.458,
+     "ari": 0.384
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.564,
+     "f1": 0.722,
+     "ari": 0.702,
+     "other": 40
+    }
+   },
+   "oracleBestFiled": {
+    "m": 2,
+    "s": 2,
+    "method": "leaf",
+    "k": 16,
+    "other": 41,
+    "otherShare": 0.41,
+    "largestShare": 0.09,
+    "sizes": [
+     9,
+     7,
+     7,
+     4,
+     4,
+     4,
+     3,
+     3,
+     3,
+     3,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2
+    ],
+    "p": 0.737,
+    "r": 0.187,
+    "f1": 0.298,
+    "ari": 0.271,
+    "filed": {
+     "p": 0.56,
+     "r": 0.496,
+     "f1": 0.526,
+     "ari": 0.482
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.827,
+     "f1": 0.905,
+     "ari": 0.897,
+     "other": 0
+    }
+   },
+   "perfectJudgeCeiling": {
+    "m": 2,
+    "s": 2,
+    "method": "eom",
+    "k": 14,
+    "other": 39,
+    "otherShare": 0.39,
+    "largestShare": 0.09,
+    "sizes": [
+     9,
+     8,
+     7,
+     7,
+     4,
+     4,
+     4,
+     3,
+     3,
+     3,
+     3,
+     2,
+     2,
+     2
+    ],
+    "p": 0.669,
+    "r": 0.207,
+    "f1": 0.316,
+    "ari": 0.285,
+    "filed": {
+     "p": 0.426,
+     "r": 0.433,
+     "f1": 0.43,
+     "ari": 0.372
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.889,
+     "f1": 0.941,
+     "ari": 0.936,
+     "other": 0
+    }
+   },
+   "orderStableWorstARI": 1.0
+  },
+  "en-3large/atoms": {
+   "n": 50,
+   "gridSeconds": 0.17,
+   "baselines": {
+    "medianCosSame": 0.702,
+    "medianCosDiff": 0.622,
+    "bestPairCut": {
+     "cut": 0.695,
+     "f1": 0.535
+    },
+    "agglomerativeK": {
+     "k": 10,
+     "p": 0.423,
+     "r": 0.55,
+     "f1": 0.478,
+     "ari": 0.425
+    }
+   },
+   "oracleBest": {
+    "m": 3,
+    "s": 1,
+    "method": "eom",
+    "k": 7,
+    "other": 12,
+    "otherShare": 0.24,
+    "largestShare": 0.16,
+    "sizes": [
+     8,
+     7,
+     6,
+     5,
+     5,
+     4,
+     3
+    ],
+    "p": 0.441,
+    "r": 0.41,
+    "f1": 0.425,
+    "ari": 0.376,
+    "filed": {
+     "p": 0.318,
+     "r": 0.57,
+     "f1": 0.409,
+     "ari": 0.339
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.7,
+     "f1": 0.824,
+     "ari": 0.811,
+     "other": 15
+    }
+   },
+   "oracleBestFiled": {
+    "m": 3,
+    "s": 1,
+    "method": "eom",
+    "k": 7,
+    "other": 12,
+    "otherShare": 0.24,
+    "largestShare": 0.16,
+    "sizes": [
+     8,
+     7,
+     6,
+     5,
+     5,
+     4,
+     3
+    ],
+    "p": 0.441,
+    "r": 0.41,
+    "f1": 0.425,
+    "ari": 0.376,
+    "filed": {
+     "p": 0.318,
+     "r": 0.57,
+     "f1": 0.409,
+     "ari": 0.339
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.7,
+     "f1": 0.824,
+     "ari": 0.811,
+     "other": 15
+    }
+   },
+   "perfectJudgeCeiling": {
+    "m": 2,
+    "s": 1,
+    "method": "eom",
+    "k": 13,
+    "other": 11,
+    "otherShare": 0.22,
+    "largestShare": 0.14,
+    "sizes": [
+     7,
+     6,
+     4,
+     3,
+     3,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2
+    ],
+    "p": 0.554,
+    "r": 0.31,
+    "f1": 0.397,
+    "ari": 0.36,
+    "filed": {
+     "p": 0.402,
+     "r": 0.41,
+     "f1": 0.406,
+     "ari": 0.353
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.88,
+     "f1": 0.936,
+     "ari": 0.931,
+     "other": 0
+    }
+   },
+   "orderStableWorstARI": 1.0
+  },
+  "en-3large/statements": {
+   "n": 100,
+   "gridSeconds": 0.31,
+   "baselines": {
+    "medianCosSame": 0.679,
+    "medianCosDiff": 0.593,
+    "bestPairCut": {
+     "cut": 0.67,
+     "f1": 0.551
+    },
+    "agglomerativeK": {
+     "k": 10,
+     "p": 0.474,
+     "r": 0.6,
+     "f1": 0.529,
+     "ari": 0.476
+    }
+   },
+   "oracleBest": {
+    "m": 3,
+    "s": 1,
+    "method": "leaf",
+    "k": 13,
+    "other": 28,
+    "otherShare": 0.28,
+    "largestShare": 0.08,
+    "sizes": [
+     8,
+     6,
+     6,
+     6,
+     6,
+     6,
+     6,
+     6,
+     6,
+     4,
+     4,
+     4,
+     4
+    ],
+    "p": 0.628,
+    "r": 0.24,
+    "f1": 0.347,
+    "ari": 0.313,
+    "filed": {
+     "p": 0.512,
+     "r": 0.44,
+     "f1": 0.473,
+     "ari": 0.425
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.74,
+     "f1": 0.851,
+     "ari": 0.838,
+     "other": 10
+    }
+   },
+   "oracleBestFiled": {
+    "m": 2,
+    "s": 2,
+    "method": "leaf",
+    "k": 13,
+    "other": 42,
+    "otherShare": 0.42,
+    "largestShare": 0.09,
+    "sizes": [
+     9,
+     6,
+     5,
+     5,
+     5,
+     4,
+     4,
+     4,
+     4,
+     3,
+     3,
+     3,
+     3
+    ],
+    "p": 0.641,
+    "r": 0.167,
+    "f1": 0.265,
+    "ari": 0.236,
+    "filed": {
+     "p": 0.55,
+     "r": 0.467,
+     "f1": 0.505,
+     "ari": 0.46
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.74,
+     "f1": 0.851,
+     "ari": 0.838,
+     "other": 10
+    }
+   },
+   "perfectJudgeCeiling": {
+    "m": 2,
+    "s": 2,
+    "method": "leaf",
+    "k": 13,
+    "other": 42,
+    "otherShare": 0.42,
+    "largestShare": 0.09,
+    "sizes": [
+     9,
+     6,
+     5,
+     5,
+     5,
+     4,
+     4,
+     4,
+     4,
+     3,
+     3,
+     3,
+     3
+    ],
+    "p": 0.641,
+    "r": 0.167,
+    "f1": 0.265,
+    "ari": 0.236,
+    "filed": {
+     "p": 0.55,
+     "r": 0.467,
+     "f1": 0.505,
+     "ari": 0.46
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.74,
+     "f1": 0.851,
+     "ari": 0.838,
+     "other": 10
+    }
+   },
+   "orderStableWorstARI": 1.0
+  },
+  "he-3small/atoms": {
+   "n": 50,
+   "gridSeconds": 0.16,
+   "baselines": {
+    "medianCosSame": 0.861,
+    "medianCosDiff": 0.837,
+    "bestPairCut": {
+     "cut": 0.895,
+     "f1": 0.26
+    },
+    "agglomerativeK": {
+     "k": 10,
+     "p": 0.087,
+     "r": 0.5,
+     "f1": 0.147,
+     "ari": 0.01
+    }
+   },
+   "oracleBest": {
+    "m": 2,
+    "s": 1,
+    "method": "leaf",
+    "k": 6,
+    "other": 32,
+    "otherShare": 0.64,
+    "largestShare": 0.1,
+    "sizes": [
+     5,
+     4,
+     3,
+     2,
+     2,
+     2
+    ],
+    "p": 0.409,
+    "r": 0.09,
+    "f1": 0.148,
+    "ari": 0.122,
+    "filed": {
+     "p": 0.17,
+     "r": 0.55,
+     "f1": 0.259,
+     "ari": 0.154
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.46,
+     "f1": 0.63,
+     "ari": 0.61,
+     "other": 25
+    }
+   },
+   "oracleBestFiled": {
+    "m": 2,
+    "s": 1,
+    "method": "leaf",
+    "k": 6,
+    "other": 32,
+    "otherShare": 0.64,
+    "largestShare": 0.1,
+    "sizes": [
+     5,
+     4,
+     3,
+     2,
+     2,
+     2
+    ],
+    "p": 0.409,
+    "r": 0.09,
+    "f1": 0.148,
+    "ari": 0.122,
+    "filed": {
+     "p": 0.17,
+     "r": 0.55,
+     "f1": 0.259,
+     "ari": 0.154
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.46,
+     "f1": 0.63,
+     "ari": 0.61,
+     "other": 25
+    }
+   },
+   "perfectJudgeCeiling": {
+    "m": 2,
+    "s": 1,
+    "method": "leaf",
+    "k": 6,
+    "other": 32,
+    "otherShare": 0.64,
+    "largestShare": 0.1,
+    "sizes": [
+     5,
+     4,
+     3,
+     2,
+     2,
+     2
+    ],
+    "p": 0.409,
+    "r": 0.09,
+    "f1": 0.148,
+    "ari": 0.122,
+    "filed": {
+     "p": 0.17,
+     "r": 0.55,
+     "f1": 0.259,
+     "ari": 0.154
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.46,
+     "f1": 0.63,
+     "ari": 0.61,
+     "other": 25
+    }
+   },
+   "orderStableWorstARI": 1.0
+  },
+  "he-3small/statements": {
+   "n": 100,
+   "gridSeconds": 0.28,
+   "baselines": {
+    "medianCosSame": 0.806,
+    "medianCosDiff": 0.779,
+    "bestPairCut": {
+     "cut": 0.84,
+     "f1": 0.268
+    },
+    "agglomerativeK": {
+     "k": 10,
+     "p": 0.095,
+     "r": 0.556,
+     "f1": 0.162,
+     "ari": 0.007
+    }
+   },
+   "oracleBest": {
+    "m": 3,
+    "s": 1,
+    "method": "eom",
+    "k": 3,
+    "other": 41,
+    "otherShare": 0.41,
+    "largestShare": 0.53,
+    "sizes": [
+     53,
+     3,
+     3
+    ],
+    "p": 0.104,
+    "r": 0.32,
+    "f1": 0.157,
+    "ari": 0.023,
+    "filed": {
+     "p": 0.094,
+     "r": 0.911,
+     "f1": 0.17,
+     "ari": 0.006
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.164,
+     "f1": 0.282,
+     "ari": 0.264,
+     "other": 80
+    }
+   },
+   "oracleBestFiled": {
+    "m": 3,
+    "s": 1,
+    "method": "leaf",
+    "k": 6,
+    "other": 78,
+    "otherShare": 0.78,
+    "largestShare": 0.05,
+    "sizes": [
+     5,
+     5,
+     3,
+     3,
+     3,
+     3
+    ],
+    "p": 0.438,
+    "r": 0.031,
+    "f1": 0.058,
+    "ari": 0.047,
+    "filed": {
+     "p": 0.145,
+     "r": 0.418,
+     "f1": 0.216,
+     "ari": 0.093
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.344,
+     "f1": 0.512,
+     "ari": 0.489,
+     "other": 60
+    }
+   },
+   "perfectJudgeCeiling": {
+    "m": 2,
+    "s": 1,
+    "method": "eom",
+    "k": 26,
+    "other": 40,
+    "otherShare": 0.4,
+    "largestShare": 0.05,
+    "sizes": [
+     5,
+     3,
+     3,
+     3,
+     3,
+     3,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2
+    ],
+    "p": 0.644,
+    "r": 0.064,
+    "f1": 0.117,
+    "ari": 0.102,
+    "filed": {
+     "p": 0.218,
+     "r": 0.182,
+     "f1": 0.199,
+     "ari": 0.126
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.544,
+     "f1": 0.705,
+     "ari": 0.685,
+     "other": 0
+    }
+   },
+   "orderStableWorstARI": 1.0
+  },
+  "he-3large/atoms": {
+   "n": 50,
+   "gridSeconds": 0.16,
+   "baselines": {
+    "medianCosSame": 0.791,
+    "medianCosDiff": 0.747,
+    "bestPairCut": {
+     "cut": 0.805,
+     "f1": 0.41
+    },
+    "agglomerativeK": {
+     "k": 10,
+     "p": 0.251,
+     "r": 0.47,
+     "f1": 0.328,
+     "ari": 0.247
+    }
+   },
+   "oracleBest": {
+    "m": 2,
+    "s": 1,
+    "method": "leaf",
+    "k": 13,
+    "other": 13,
+    "otherShare": 0.26,
+    "largestShare": 0.12,
+    "sizes": [
+     6,
+     4,
+     4,
+     4,
+     3,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2
+    ],
+    "p": 0.5,
+    "r": 0.22,
+    "f1": 0.306,
+    "ari": 0.269,
+    "filed": {
+     "p": 0.368,
+     "r": 0.42,
+     "f1": 0.393,
+     "ari": 0.335
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.7,
+     "f1": 0.824,
+     "ari": 0.811,
+     "other": 5
+    }
+   },
+   "oracleBestFiled": {
+    "m": 2,
+    "s": 1,
+    "method": "leaf",
+    "k": 13,
+    "other": 13,
+    "otherShare": 0.26,
+    "largestShare": 0.12,
+    "sizes": [
+     6,
+     4,
+     4,
+     4,
+     3,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2
+    ],
+    "p": 0.5,
+    "r": 0.22,
+    "f1": 0.306,
+    "ari": 0.269,
+    "filed": {
+     "p": 0.368,
+     "r": 0.42,
+     "f1": 0.393,
+     "ari": 0.335
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.7,
+     "f1": 0.824,
+     "ari": 0.811,
+     "other": 5
+    }
+   },
+   "perfectJudgeCeiling": {
+    "m": 2,
+    "s": 1,
+    "method": "leaf",
+    "k": 13,
+    "other": 13,
+    "otherShare": 0.26,
+    "largestShare": 0.12,
+    "sizes": [
+     6,
+     4,
+     4,
+     4,
+     3,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2
+    ],
+    "p": 0.5,
+    "r": 0.22,
+    "f1": 0.306,
+    "ari": 0.269,
+    "filed": {
+     "p": 0.368,
+     "r": 0.42,
+     "f1": 0.393,
+     "ari": 0.335
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.7,
+     "f1": 0.824,
+     "ari": 0.811,
+     "other": 5
+    }
+   },
+   "orderStableWorstARI": 1.0
+  },
+  "he-3large/statements": {
+   "n": 100,
+   "gridSeconds": 0.3,
+   "baselines": {
+    "medianCosSame": 0.752,
+    "medianCosDiff": 0.699,
+    "bestPairCut": {
+     "cut": 0.76,
+     "f1": 0.42
+    },
+    "agglomerativeK": {
+     "k": 10,
+     "p": 0.262,
+     "r": 0.582,
+     "f1": 0.361,
+     "ari": 0.27
+    }
+   },
+   "oracleBest": {
+    "m": 3,
+    "s": 1,
+    "method": "leaf",
+    "k": 13,
+    "other": 41,
+    "otherShare": 0.41,
+    "largestShare": 0.06,
+    "sizes": [
+     6,
+     6,
+     6,
+     6,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     4,
+     3,
+     3
+    ],
+    "p": 0.714,
+    "r": 0.178,
+    "f1": 0.285,
+    "ari": 0.258,
+    "filed": {
+     "p": 0.382,
+     "r": 0.382,
+     "f1": 0.382,
+     "ari": 0.32
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.747,
+     "f1": 0.855,
+     "ari": 0.843,
+     "other": 10
+    }
+   },
+   "oracleBestFiled": {
+    "m": 2,
+    "s": 2,
+    "method": "leaf",
+    "k": 12,
+    "other": 55,
+    "otherShare": 0.55,
+    "largestShare": 0.06,
+    "sizes": [
+     6,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     3,
+     3,
+     3,
+     3,
+     2
+    ],
+    "p": 0.721,
+    "r": 0.109,
+    "f1": 0.189,
+    "ari": 0.169,
+    "filed": {
+     "p": 0.405,
+     "r": 0.404,
+     "f1": 0.405,
+     "ari": 0.345
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.929,
+     "f1": 0.963,
+     "ari": 0.96,
+     "other": 0
+    }
+   },
+   "perfectJudgeCeiling": {
+    "m": 2,
+    "s": 2,
+    "method": "leaf",
+    "k": 12,
+    "other": 55,
+    "otherShare": 0.55,
+    "largestShare": 0.06,
+    "sizes": [
+     6,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     3,
+     3,
+     3,
+     3,
+     2
+    ],
+    "p": 0.721,
+    "r": 0.109,
+    "f1": 0.189,
+    "ari": 0.169,
+    "filed": {
+     "p": 0.405,
+     "r": 0.404,
+     "f1": 0.405,
+     "ari": 0.345
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.929,
+     "f1": 0.963,
+     "ari": 0.96,
+     "other": 0
+    }
+   },
+   "orderStableWorstARI": 1.0
+  }
+ },
+ "transfer": {
+  "en-3small/atoms -> he-3large/atoms": {
+   "config": {
+    "m": 3,
+    "s": 1,
+    "method": "eom"
+   },
+   "result": {
+    "m": 3,
+    "s": 1,
+    "method": "eom",
+    "k": 2,
+    "other": 4,
+    "otherShare": 0.08,
+    "largestShare": 0.86,
+    "sizes": [
+     43,
+     3
+    ],
+    "p": 0.093,
+    "r": 0.84,
+    "f1": 0.167,
+    "ari": 0.023,
+    "filed": {
+     "p": 0.087,
+     "r": 0.94,
+     "f1": 0.159,
+     "ari": 0.011
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.2,
+     "f1": 0.333,
+     "ari": 0.315,
+     "other": 40
+    }
+   }
+  },
+  "he-3large/atoms -> en-3small/atoms": {
+   "config": {
+    "m": 2,
+    "s": 1,
+    "method": "leaf"
+   },
+   "result": {
+    "m": 2,
+    "s": 1,
+    "method": "leaf",
+    "k": 12,
+    "other": 14,
+    "otherShare": 0.28,
+    "largestShare": 0.16,
+    "sizes": [
+     8,
+     4,
+     4,
+     3,
+     3,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2
+    ],
+    "p": 0.453,
+    "r": 0.24,
+    "f1": 0.314,
+    "ari": 0.273,
+    "filed": {
+     "p": 0.279,
+     "r": 0.43,
+     "f1": 0.339,
+     "ari": 0.266
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.76,
+     "f1": 0.864,
+     "ari": 0.853,
+     "other": 5
+    }
+   }
+  },
+  "en-3large/atoms -> he-3large/atoms": {
+   "config": {
+    "m": 3,
+    "s": 1,
+    "method": "eom"
+   },
+   "result": {
+    "m": 3,
+    "s": 1,
+    "method": "eom",
+    "k": 2,
+    "other": 4,
+    "otherShare": 0.08,
+    "largestShare": 0.86,
+    "sizes": [
+     43,
+     3
+    ],
+    "p": 0.093,
+    "r": 0.84,
+    "f1": 0.167,
+    "ari": 0.023,
+    "filed": {
+     "p": 0.087,
+     "r": 0.94,
+     "f1": 0.159,
+     "ari": 0.011
+    },
+    "perfectJudge": {
+     "p": 1.0,
+     "r": 0.2,
+     "f1": 0.333,
+     "ari": 0.315,
+     "other": 40
+    }
+   }
+  }
+ },
+ "bq": {
+  "n": 114,
+  "v3": {
+   "k": 7,
+   "unthemed": 26
+  },
+  "cosine": {
+   "median": 0.709,
+   "p10": 0.618,
+   "p90": 0.8
+  },
+  "config from en-3small/atoms": {
+   "config": {
+    "m": 3,
+    "s": 1,
+    "method": "eom"
+   },
+   "k": 2,
+   "other": 86,
+   "otherShare": 0.754,
+   "largestShare": 0.193,
+   "sizes": [
+    22,
+    6
+   ],
+   "ariVsV3": 0.053
+  },
+  "config from he-3large/atoms": {
+   "config": {
+    "m": 2,
+    "s": 1,
+    "method": "leaf"
+   },
+   "k": 9,
+   "other": 75,
+   "otherShare": 0.658,
+   "largestShare": 0.193,
+   "sizes": [
+    22,
+    3,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "ariVsV3": 0.062
+  },
+  "config from en-3large/atoms": {
+   "config": {
+    "m": 3,
+    "s": 1,
+    "method": "eom"
+   },
+   "k": 2,
+   "other": 86,
+   "otherShare": 0.754,
+   "largestShare": 0.193,
+   "sizes": [
+    22,
+    6
+   ],
+   "ariVsV3": 0.053
+  },
+  "gridSummary": {
+   "configs": 108,
+   "usable": 0,
+   "usableDefinition": "k>=5 and Other<=30% and largest<=40% of all statements",
+   "examples": [],
+   "kRange": [
+    0,
+    9
+   ],
+   "minOtherShare": 0.658
+  },
+  "leastOther": {
+   "config": {
+    "m": 2,
+    "s": 1,
+    "method": "eom"
+   },
+   "k": 9,
+   "other": 75,
+   "otherShare": 0.658,
+   "largestShare": 0.193,
+   "sizes": [
+    22,
+    3,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "ariVsV3": 0.062
+  }
+ },
+ "digest": "03aef8cea83f"
+}

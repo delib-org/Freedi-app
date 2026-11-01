@@ -136,7 +136,7 @@ describe('voyageSteps', () => {
 		// One sailor on offer: one is the whole minimum.
 		expect(
 			byPath(steps({ ...compassFinished, selectedElderIds: ['ben-gurion'] }), '/elders'),
-		).toMatchObject({ status: 'done', detail: '1 מלחים' });
+		).toMatchObject({ status: 'done', detail: 'מלח אחד' });
 		// A fuller roster asks for two; an empty crew is an answer but not a crew.
 		const roster = content({ elders: ['ben-gurion', 'golda', 'begin'] });
 		expect(
@@ -147,7 +147,7 @@ describe('voyageSteps', () => {
 				steps({ ...compassFinished, selectedElderIds: ['golda', 'begin'] }, {}, '/map', roster),
 				'/elders',
 			),
-		).toMatchObject({ status: 'done', detail: '2 מלחים' });
+		).toMatchObject({ status: 'done', detail: 'שני מלחים' });
 	});
 
 	it('counts the islands chosen, and the ones already sailed', () => {
@@ -155,7 +155,7 @@ describe('voyageSteps', () => {
 		// standing on the water, so the map behind them reads as finished
 		expect(byPath(steps(chosen, {}, '/voyage'), '/map')).toMatchObject({
 			status: 'done',
-			detail: '2 איים',
+			detail: 'שני איים',
 		});
 		expect(byPath(steps(chosen), '/voyage')).toMatchObject({ status: 'open', detail: '0/2 איים' });
 
@@ -178,7 +178,8 @@ describe('voyageSteps', () => {
 			'/voyage',
 			game,
 		);
-		expect(byPath(all, '/map').detail).toBe('1 איים');
+		// one island: the singular form, not "1 islands"
+		expect(byPath(all, '/map').detail).toBe('אי אחד');
 		expect(byPath(all, '/voyage').detail).toBe('1/1 איים');
 	});
 

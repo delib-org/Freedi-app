@@ -1,6 +1,7 @@
 import React from 'react';
 import { Users } from 'lucide-react';
 import {
+	formatLastReply,
 	formatQuestionMeta,
 	formatSpaceMeta,
 	HomeQuestion,
@@ -56,6 +57,7 @@ export function QuestionRow({
 	t: Translate;
 }) {
 	const meta = formatQuestionMeta(question, now, locale, t);
+	const reply = formatLastReply(question.lastReply);
 
 	return (
 		<li>
@@ -70,6 +72,15 @@ export function QuestionRow({
 					<span className={styles.questionRow__title} dir="auto">
 						{question.title}
 					</span>
+					{reply && (
+						<span
+							className={styles.questionRow__reply}
+							dir="auto"
+							data-testid="home-question-reply"
+						>
+							{reply}
+						</span>
+					)}
 					{meta && <span className={styles.questionRow__meta}>{meta}</span>}
 				</span>
 				{question.hosting && (

@@ -5,6 +5,9 @@ import { t } from '../lib/i18n';
 import { getDeliberationState, rateStatement, type AgoraRating } from '../lib/proposals';
 import { noteReWeighed } from '../lib/improvementSignals';
 
+/** How long the acknowledgment stays before the scale is quiet again */
+const ACK_MS = 2600;
+
 /**
  * The five-level rating scale, ordered strongest-against → strongest-for.
  */
@@ -50,6 +53,16 @@ export interface RateScaleAttrs {
 }
 
 /**
+ * What the scale says after a press. A first rating is simply saved; only a
+ * press that changes a rating I had already given is the "updated, thanks
+ * for closing the loop" beat. Thanking a first rating as a re-rating told a
+ * student they had done something they had not.
+ */
+export function rateAckKey(previous: AgoraRating | undefined): string {
+	return previous === undefined ? 'rate.saved_ack' : 'delib.rerate_ack';
+}
+
+/**
  * The compact five-face scale, wherever a student weighs a proposal.
  *
  * It owns its own acknowledgment: the press used to change a ring and nothing
@@ -58,16 +71,17 @@ export interface RateScaleAttrs {
  * them having to remember to clear it.
  */
 export function RateScale(): m.Component<RateScaleAttrs> {
-	let acked = false;
+	/** The acknowledgment on screen, or '' once it has faded */
+	let ackKey = '';
 	let ackTimer: number | undefined;
 
-	function ack(): void {
-		acked = true;
+	function ack(key: string): void {
+		ackKey = key;
 		window.clearTimeout(ackTimer);
 		ackTimer = window.setTimeout(() => {
-			acked = false;
+			ackKey = '';
 			m.redraw();
-		}, 2600);
+		}, ACK_MS);
 	}
 
 	return {
@@ -91,8 +105,8 @@ export function RateScale(): m.Component<RateScaleAttrs> {
 
 			return [
 				// The cycle's final beat, answered in words, once, then it returns
-				acked
-					? m('p.helped__rerate-ack', { role: 'status' }, iconLabel('check', t('delib.rerate_ack')))
+				ackKey
+					? m('p.helped__rerate-ack', { role: 'status' }, iconLabel('check', t(ackKey)))
 					: null,
 				m(
 					'.rate-scale.rate-scale--compact',
@@ -120,7 +134,7 @@ export function RateScale(): m.Component<RateScaleAttrs> {
 									void rateStatement(session, parentId, proposalId, option.value);
 									// Whatever edit is on the table, this press answers it
 									noteReWeighed(proposalId);
-									ack();
+									ack(rateAckKey(previous));
 									onVote?.(option.value, previous);
 									if (previous === undefined) onFirstVote?.();
 								},

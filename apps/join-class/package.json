@@ -1,0 +1,42 @@
+{
+  "name": "@freedi/join-class",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "env:dev": "cd ../.. && npm run env:dev",
+    "dev": "npm run env:dev && vite --port 3017",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 3017",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "check-all": "npm run lint && npm run typecheck && npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e:lesson": "node scripts/e2e-lesson.mjs",
+    "e2e:plans": "node scripts/e2e-lesson-plans.mjs",
+    "e2e:projector": "node scripts/e2e-projector.mjs",
+    "e2e:opening-panel": "node scripts/e2e-opening-panel.mjs",
+    "e2e:entry": "node scripts/e2e-entry.mjs",
+    "e2e:three": "node scripts/e2e-three-browser.mjs",
+    "e2e:frame-fit": "node scripts/e2e-frame-fit.mjs",
+    "perf:gate": "node scripts/perf-gate.mjs",
+    "perf:throttle": "node scripts/perf-throttle.mjs"
+  },
+  "dependencies": {
+    "@freedi/shared-types": "file:../../packages/shared-types",
+    "@sentry/browser": "^9.42.1",
+    "@types/qrcode": "^1.5.6",
+    "firebase": "^12.18.0",
+    "mithril": "^2.2.8",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/mithril": "^2.2.7",
+    "sass": "^1.94.2",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7",
+    "vite-plugin-pwa": "^0.21.1",
+    "vitest": "^4.0.18"
+  }
+}

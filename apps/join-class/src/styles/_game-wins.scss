@@ -1,0 +1,107 @@
+// =============================================================================
+// Game look — small wins (brief §4): one sun stamp on a done state. Scoped by
+// $game (see _game-scope.scss); the overview is in _game.scss.
+// =============================================================================
+
+@use 'game-scope' as *;
+
+// ---- small wins: one sun stamp on a done state, once ---------------------------------
+// --sun is used only here. The stamp runs once (~600 ms, transform + opacity),
+// never loops, never blocks a tap, and is off under reduced motion.
+@keyframes game-stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.6) rotate(-24deg);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(0.92) rotate(-6deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-8deg);
+  }
+}
+
+@mixin game-stamp {
+  content: '✓';
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: var(--radius-full);
+  background: var(--sun);
+  color: var(--ink); // ~10:1 on sun ✓ AAA (the sun keeps its colour in every scheme)
+  font-weight: 800;
+  line-height: 1;
+  transform: rotate(-8deg);
+  animation: game-stamp var(--dur-stamp) var(--ease-out) 1 both;
+  @include no-motion;
+}
+
+// "נשלח" under the proposal box
+#{$game} .write__sent {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-block-size: 34px;
+  padding-inline: 4px 14px;
+  border-radius: var(--radius-full);
+  background: var(--teal-50);
+  color: var(--teal-ink);
+  font-weight: 800;
+
+  &::before {
+    @include game-stamp;
+    inline-size: 28px;
+    block-size: 28px;
+    font-size: 16px;
+  }
+}
+
+// "דירגתם את כל ההצעות. חכו למורה"
+#{$game} .all-proposals__done {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px var(--space-md);
+  border: 2px solid var(--sun);
+  border-radius: 18px;
+  background: var(--sun-soft);
+  @include edge(var(--sun-edge));
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: start;
+
+  &::before {
+    @include game-stamp;
+    inline-size: 44px;
+    block-size: 44px;
+    font-size: 24px;
+  }
+}
+
+// "ההצבעה נקלטה" in the vote footer
+#{$game} .vote__status--counted {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 12px var(--space-md);
+  border: 2px solid var(--sun);
+  border-radius: 22px;
+  background: var(--sun-soft);
+  @include edge(var(--sun-edge), 6px);
+  color: var(--ink);
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+
+  &::before {
+    @include game-stamp;
+    inline-size: 52px;
+    block-size: 52px;
+    font-size: 28px;
+  }
+}

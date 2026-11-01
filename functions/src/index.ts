@@ -11,10 +11,17 @@ import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
 // Import collection constants
-import { Collections, functionConfig } from '@freedi/shared-types';
+import { Collections, StatementType, functionConfig } from '@freedi/shared-types';
 
 // Structured error handling
 import { logError } from './utils/errorHandling';
+import {
+	createFirestoreFunction,
+	getTimestamp,
+	HOT_TRIGGER_MEMORY,
+} from './utils/createFirestoreFunction';
+
+export { getTimestamp };
 import { initFunctionsSentry } from './utils/sentry';
 
 // Before anything else, so a crash during cold start is reported too.
@@ -46,12 +53,12 @@ import {
 	// updateNumberOfNewSubStatements,
 } from './fn_statements';
 import { updateVote } from './fn_vote';
+import { onNewSubscription, onStatementDeletionDeleteSubscriptions } from './fn_subscriptions';
 import {
-	onNewSubscription,
-	onStatementDeletionDeleteSubscriptions,
-	validateRoleChange,
-	updateStatementMemberCount,
-} from './fn_subscriptions';
+	onSubscriptionCreated,
+	onSubscriptionDeleted,
+	onSubscriptionUpdated,
+} from './fn_subscriptionLifecycle';
 import { updateParentOnChildUpdate, updateParentOnChildDelete } from './fn_statement_updates';
 import {
 	getRandomStatements,
@@ -183,7 +190,9 @@ import {
 
 // Top Answers admin panel — on-demand recompute of statement.results / isChosen
 import { recomputeTopOptions } from './fn_recomputeTopOptions';
+import { reconcileEvaluatorCount } from './fn_reconcileEvaluatorCount';
 import { searchStatements } from './fn_searchStatements';
+import { searchQuestionsByMeaning } from './fn_searchQuestionsByMeaning';
 
 // Bulk Idea Synthesis (admin-triggered near-duplicate detection)
 import {
@@ -306,15 +315,6 @@ const isProduction =
 /**
  * Gets current timestamp in HH:MM:SS.mmm format
  */
-export const getTimestamp = (): string => {
-	const now = new Date();
-	const hours = String(now.getHours()).padStart(2, '0');
-	const minutes = String(now.getMinutes()).padStart(2, '0');
-	const seconds = String(now.getSeconds()).padStart(2, '0');
-	const ms = String(now.getMilliseconds()).padStart(3, '0');
-
-	return `${hours}:${minutes}:${seconds}.${ms}`;
-};
 
 console.info(`[${getTimestamp()}] Environment:`, isProduction ? 'Production' : 'Development');
 
@@ -469,65 +469,6 @@ const wrapAdminHttpFunction = (
 	);
 };
 
-/**
- * Creates a wrapper for Firestore triggers with standardized error handling.
- *
- * Note: Firebase trigger types (onDocumentCreated, onDocumentUpdated, onDocumentWritten,
- * onDocumentDeleted) have different event structures and incompatible generic parameters.
- * The callback's event type is preserved through the generic T, but we use a broad
- * function type for triggerType because the Firebase SDK types can't be unified.
- *
- * @param path - Document path pattern (e.g., '/statements/{statementId}')
- * @param triggerType - Firebase trigger function (onDocumentCreated, etc.)
- * @param callback - Handler function that receives the typed event
- * @param functionName - Name for logging purposes
- * @returns Configured Firebase Cloud Function
- */
-function createFirestoreFunction<T>(
-	path: string,
-	triggerType:
-		| typeof onDocumentCreated
-		| typeof onDocumentUpdated
-		| typeof onDocumentWritten
-		| typeof onDocumentDeleted,
-	callback: (event: T) => Promise<unknown>,
-	functionName: string,
-): ReturnType<typeof onDocumentCreated> {
-	// Cast to unknown first, then to a compatible function signature
-	// This is required because Firebase's trigger types have incompatible generic structures
-	const trigger = triggerType as unknown as (
-		opts: { document: string } & typeof functionConfig,
-		handler: (event: T) => Promise<void>,
-	) => ReturnType<typeof onDocumentCreated>;
-
-	return trigger(
-		{
-			document: path,
-			...functionConfig,
-		},
-		async (event: T) => {
-			const startTime = Date.now();
-			const startTimestamp = getTimestamp();
-			console.info(`[${startTimestamp}] ▶ Starting ${functionName}`);
-
-			try {
-				await callback(event);
-				const duration = Date.now() - startTime;
-				const endTimestamp = getTimestamp();
-				console.info(`[${endTimestamp}] ✓ Completed ${functionName} in ${duration}ms`);
-			} catch (error) {
-				const duration = Date.now() - startTime;
-				const endTimestamp = getTimestamp();
-				logError(error, {
-					operation: `firestoreTrigger.${functionName}`,
-					metadata: { duration, endTimestamp, path },
-				});
-				throw error;
-			}
-		},
-	);
-}
-
 // --------------------------
 // HTTP FUNCTIONS
 // --------------------------
@@ -602,6 +543,7 @@ exports.onStatementCreated = createFirestoreFunction(
 	onDocumentCreated,
 	onStatementCreated,
 	'onStatementCreated',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
 // ============================================
@@ -705,8 +647,18 @@ exports.onStatementDeletionTombstone = createFirestoreFunction(
 exports.onStatementDeletionEmbedding = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
 	onDocumentDeleted,
-	async (event: { params: { statementId: string } }) => {
-		await deleteEmbeddingDoc(event.params.statementId);
+	async (event: {
+		params: { statementId: string };
+		data?: { data: () => { statementType?: unknown } | undefined };
+	}) => {
+		const deleted = event.data?.data();
+		await Promise.all([
+			deleteEmbeddingDoc(event.params.statementId),
+			// A deleted question's search-by-meaning vector goes too.
+			deleted?.statementType === StatementType.question
+				? deleteQuestionEmbedding(event.params.statementId)
+				: Promise.resolve(),
+		]);
 	},
 	'onStatementDeletionEmbedding',
 );
@@ -718,22 +670,33 @@ exports.handleWaitingRoleSubscriptions = createFirestoreFunction(
 	onDocumentWritten,
 	onNewSubscription,
 	'handleWaitingRoleSubscriptions',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
-// Validate role changes to prevent banning admins or creators
+// Subscription updates: revert bans of admins/creators, then keep the user's
+// userFeed entry in step with role changes (deployed name kept for continuity).
 exports.validateRoleChange = createFirestoreFunction(
 	`/${Collections.statementsSubscribe}/{subscriptionId}`,
 	onDocumentUpdated,
-	validateRoleChange,
+	onSubscriptionUpdated,
 	'validateRoleChange',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
-// Update statement's numberOfMembers count when subscriptions are created/deleted
-exports.updateStatementMemberCount = createFirestoreFunction(
+// Membership lifecycle: numberOfMembers + userFeed entry. Split from the old
+// onDocumentWritten `updateStatementMemberCount`, which was also invoked by
+// every subscription UPDATE (activity stamps, read-state) only to return early.
+exports.onSubscriptionCreatedMembership = createFirestoreFunction(
 	`/${Collections.statementsSubscribe}/{subscriptionId}`,
-	onDocumentWritten,
-	updateStatementMemberCount,
-	'updateStatementMemberCount',
+	onDocumentCreated,
+	onSubscriptionCreated,
+	'onSubscriptionCreatedMembership',
+);
+exports.onSubscriptionDeletedMembership = createFirestoreFunction(
+	`/${Collections.statementsSubscribe}/{subscriptionId}`,
+	onDocumentDeleted,
+	onSubscriptionDeleted,
+	'onSubscriptionDeletedMembership',
 );
 
 // New v2 functions to update statements and subscriptions efficiently
@@ -782,6 +745,7 @@ exports.newEvaluation = createFirestoreFunction(
 	onDocumentCreated,
 	newEvaluation,
 	'newEvaluation',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
 exports.deleteEvaluation = createFirestoreFunction(
@@ -789,6 +753,7 @@ exports.deleteEvaluation = createFirestoreFunction(
 	onDocumentDeleted,
 	deleteEvaluation,
 	'deleteEvaluation',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
 exports.updateEvaluation = createFirestoreFunction(
@@ -796,6 +761,7 @@ exports.updateEvaluation = createFirestoreFunction(
 	onDocumentUpdated,
 	updateEvaluation,
 	'updateEvaluation',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
 // Results functions
@@ -901,9 +867,13 @@ exports.reverseIntegration = reverseIntegrationCallable;
 
 // Top Answers admin panel
 exports.recomputeTopOptions = recomputeTopOptions;
+exports.reconcileEvaluatorCount = reconcileEvaluatorCount;
 
 // Statement search (home, subscriptions, whole tree; lexical + semantic)
 exports.searchStatements = searchStatements;
+
+// Question "search by meaning" (MC survey question picker; admin scope only)
+exports.searchQuestionsByMeaning = searchQuestionsByMeaning;
 
 // Bulk Idea Synthesis
 exports.synthesizeIdeasPreview = synthesizeIdeasPreview;
@@ -1150,6 +1120,7 @@ exports.synthesisJobDispatch = createFirestoreFunction(
 // acting). See plans/synthesis-100k-living-synth.md, Ship 3 §"Trigger 3" /
 // "Debounced flusher".
 export { fn_clusterRecomputeFlush } from './synthesis/liveSynth/fn_clusterRecomputeFlush';
+export { fn_nightlyClusterReconcile } from './condensation/fn_nightlyClusterReconcile';
 
 // Ship 3b — live-synth attach/spawn/dissolve triggers.
 // Both are gated by the SYNTHESIS_LIVE_SYNTH_ENABLED flag and exit
@@ -1159,6 +1130,10 @@ export { fn_clusterRecomputeFlush } from './synthesis/liveSynth/fn_clusterRecomp
 import { liveSynthOnOptionCreate } from './synthesis/liveSynth/onOptionCreateLive';
 import { liveSynthOnOptionUpdate } from './synthesis/liveSynth/onOptionUpdateLive';
 import { deleteEmbeddingDoc, syncEmbeddingParent } from './services/statement-embedding-store';
+import {
+	deleteQuestionEmbedding,
+	syncQuestionEmbedding,
+} from './services/question-embedding-store';
 
 exports.liveSynthOnOptionCreate = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
@@ -1182,6 +1157,9 @@ exports.liveSynthOnOptionUpdate = createFirestoreFunction(
 			// rather than adding another per-update function: vector search
 			// pre-filters by parentId, so the embedding doc follows a moved statement.
 			syncEmbeddingParent(before, after),
+			// Same ride for question vectors (search by meaning): re-embed on a
+			// text edit, follow a move or hide. No reads unless a question changed.
+			syncQuestionEmbedding(before, after),
 			liveSynthOnOptionUpdate(before, after),
 		]);
 	},
@@ -1206,6 +1184,7 @@ export { synthesizeNow } from './synthesis/admin/fn_synthesizeNow';
 export { claimRegistryFirstRun } from './synthesis/admin/fn_claimRegistryFirstRun';
 export { reCluster } from './synthesis/admin/fn_reCluster';
 export { globalCluster } from './synthesis/admin/fn_globalCluster';
+export { rebuildThemes } from './synthesis/themeRebuild/fn_rebuildThemes';
 export { reEmbedQuestion } from './synthesis/admin/fn_reEmbedQuestion';
 export { synthesizeSelected } from './synthesis/admin/fn_synthesizeSelected';
 export { rejudgeGrayBand } from './synthesis/admin/fn_rejudgeGrayBand';
@@ -1329,7 +1308,12 @@ export {
 	onAgoraEvaluationWritten,
 	onAgoraProposalWritten,
 	onAgoraSessionFinished,
+	agoraCheckStationLink,
+	agoraMintStationHandoff,
 } from './agora';
+
+// Linked stations: a one-time code from Agora redeemed for a sign-in in another app
+export { redeemAppHandoff } from './handoff/fn_redeemAppHandoff';
 
 // Israeli Odyssey — the voyage that opens onto the civic Agora deliberations
 export {
@@ -1337,9 +1321,13 @@ export {
 	odysseyDigestUnsubscribe,
 	sendOdysseyDigests,
 	odysseyFeedbackSubmit,
+	odysseyTranslateGame,
 } from './odyssey';
 
 export { covenantWorkflow } from './fn_covenant';
+
+// join-class classroom engine (lane C1 adds its callables inside ./classroom only)
+export * from './classroom';
 
 export { deliberation, queueDeliberation, updateDeliberations } from './deliberation/functions';
 export { createAgreementHandoff, redeemAgreementHandoff } from './deliberation/handoff';

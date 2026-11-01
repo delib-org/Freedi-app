@@ -1,4 +1,5 @@
 import { canWritePlanItem } from './stageAccess';
+import { t } from '../i18n';
 import { AgoraStage, questionKindOf, type AgoraStagePlanItem } from '@freedi/shared-types';
 
 /**
@@ -11,7 +12,7 @@ import { AgoraStage, questionKindOf, type AgoraStagePlanItem } from '@freedi/sha
 export type VillagePlace = 'library' | 'challenge' | 'council' | `booth:${string}`;
 
 /** What a booth asks for — the writing desk's copy and the pavilion's colour follow it */
-export type VillageBoothKind = 'story' | 'needs' | 'vision' | 'open' | 'proposal';
+export type VillageBoothKind = 'story' | 'needs' | 'vision' | 'open' | 'proposal' | 'linked';
 
 export interface VillageBooth {
 	itemId: string;
@@ -128,6 +129,8 @@ export function calledItemIndex(
 export function villageBoothKind(item: AgoraStagePlanItem): VillageBoothKind | null {
 	if (item.stage === AgoraStage.question) return questionKindOf(item);
 	if (item.stage === AgoraStage.deliberation) return 'proposal';
+	// A task in another app stands as a booth too; it has no desk (`villageDesk` is null)
+	if (item.stage === AgoraStage.linked) return 'linked';
 
 	return null;
 }
@@ -203,28 +206,23 @@ export function acceptsVillageEntry(
 	);
 }
 
-/** The desk follows the item, so another question in the same building has its own paper. */
+/**
+ * The desk follows the item, so another question in the same building has its
+ * own paper. Its header and prompt are the student's language, addressed in
+ * the plural like the rest of the app (`village.desk.<kind>.label|prompt`).
+ */
 export function villageDesk(
 	item: AgoraStagePlanItem | undefined,
 ): { label: string; prompt: string } | null {
 	if (!item || (item.stage !== AgoraStage.question && item.stage !== AgoraStage.deliberation))
 		return null;
-	const kind = item.stage === AgoraStage.question ? questionKindOf(item) : 'proposal';
-	const copy = {
-		story: { label: 'הסיפור שלי', prompt: 'הפתק שלך מחכה על השולחן. איזה סיפור אישי תרצה לשתף?' },
-		needs: {
-			label: 'הצרכים שלי',
-			prompt: 'מה חשוב לך? כתוב על הפתק שלך את הצרכים שחשוב לך שנכיר.',
-		},
-		vision: { label: 'החזון שלי', prompt: 'איך היית רוצה שייראה העתיד? הפתק שלך מחכה על השולחן.' },
-		open: { label: 'התשובה שלי', prompt: 'מה דעתך? כתוב את התשובה שלך על הפתק שעל השולחן.' },
-		proposal: {
-			label: 'ההצעה שלי',
-			prompt: 'איזה פתרון אתה מציע? כתוב את ההצעה שלך על הפתק שעל השולחן.',
-		},
-	};
+	const kind: VillageBoothKind =
+		item.stage === AgoraStage.question ? questionKindOf(item) : 'proposal';
 
-	return copy[kind];
+	return {
+		label: t(`village.desk.${kind}.label`),
+		prompt: t(`village.desk.${kind}.prompt`),
+	};
 }
 
 export function acceptsVillageWrite(

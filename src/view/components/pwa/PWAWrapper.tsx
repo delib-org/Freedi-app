@@ -17,6 +17,7 @@ import { isBot } from '@/utils/botDetection';
 import { isTransientSwRegistrationError } from '@/utils/swErrors';
 import InstallPWA from './InstallPWA';
 import NotificationPrompt from '../notifications/NotificationPrompt';
+import { useAgoraGuest } from '@/context/AgoraGuestContext';
 
 interface PWAWrapperProps {
 	children: React.ReactNode;
@@ -30,6 +31,8 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 	const optionsCreated = useSelector(selectOptionsCreated);
 	const notificationPromptDiscussionId = useSelector(selectNotificationPromptDiscussionId);
 	const previousIntentRef = useRef({ hasCreatedGroup, optionsCreated });
+	// A student from an Agora station is here for one task: no install or notification asks
+	const agoraGuest = useAgoraGuest() !== null;
 
 	const getStoredTimestamp = (key: string): number => {
 		const value = localStorage.getItem(key);
@@ -389,7 +392,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 			{children}
 
 			{/* Extracted manual triggers for install and notifications contextually */}
-			{showNotificationPrompt && !checkIfInMassConsensus() && (
+			{showNotificationPrompt && !checkIfInMassConsensus() && !agoraGuest && (
 				<NotificationPrompt
 					isOpen={true}
 					onClose={(reason) => {
@@ -404,7 +407,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				/>
 			)}
 			<InstallPWA
-				isOpen={showInstallPrompt && !checkIfInMassConsensus()}
+				isOpen={showInstallPrompt && !checkIfInMassConsensus() && !agoraGuest}
 				onClose={() => setShowInstallPrompt(false)}
 			/>
 		</>

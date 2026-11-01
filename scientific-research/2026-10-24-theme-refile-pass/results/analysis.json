@@ -1,0 +1,104 @@
+{
+ "en-seed1234-consolidated": {
+  "themedMoves": 4,
+  "returnsToEarlierTheme": 0
+ },
+ "en-seed42-consolidated": {
+  "themedMoves": 5,
+  "returnsToEarlierTheme": 1
+ },
+ "en-seed42-filingfix": {
+  "themedMoves": 1,
+  "returnsToEarlierTheme": 0
+ },
+ "en-seed42-themefix": {
+  "themedMoves": 5,
+  "returnsToEarlierTheme": 2
+ },
+ "en-seed7-consolidated": {
+  "themedMoves": 10,
+  "returnsToEarlierTheme": 2
+ },
+ "he-seed42-large-formulation": {
+  "themedMoves": 4,
+  "returnsToEarlierTheme": 1
+ },
+ "he-seed42-large-judgedattach": {
+  "themedMoves": 5,
+  "returnsToEarlierTheme": 2
+ },
+ "he-seed42-large-recall": {
+  "themedMoves": 2,
+  "returnsToEarlierTheme": 1
+ },
+ "bq": {
+  "statementsByHumanFlag": {
+   "bothFit": 69,
+   "oneMisfit": 15,
+   "bothMisfit": 4
+  },
+  "movedInPass1ByHumanFlag": {
+   "bothMisfit": 2,
+   "bothFit": 14,
+   "oneMisfit": 4
+  },
+  "moveRate": {
+   "bothFit": 0.203,
+   "oneMisfit": 0.267,
+   "bothMisfit": 0.5
+  },
+  "unthemedStatements": 26,
+  "unthemedFiledInPass1": 23,
+  "passes": [
+   {
+    "p": 1,
+    "moved": 16,
+    "filed": 21,
+    "sizes": [
+     19,
+     19,
+     16,
+     16,
+     13,
+     5,
+     1
+    ],
+    "unthemedAtoms": 3
+   },
+   {
+    "p": 2,
+    "moved": 15,
+    "filed": 0,
+    "sizes": [
+     22,
+     18,
+     16,
+     15,
+     11,
+     6,
+     1
+    ],
+    "unthemedAtoms": 3
+   },
+   {
+    "p": 3,
+    "moved": 5,
+    "filed": 0,
+    "sizes": [
+     21,
+     18,
+     18,
+     15,
+     10,
+     6,
+     1
+    ],
+    "unthemedAtoms": 3
+   }
+  ],
+  "pingPong": {
+   "themedMoves": 36,
+   "returnsToEarlierTheme": 5
+  }
+ }
+}

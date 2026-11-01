@@ -15,7 +15,8 @@
 		justify-content: flex-start;
 		align-items: center;
 		gap: 0.7rem;
-		padding: 1rem;
+		// Compact: the counter is a caption, the columns below are the content.
+		padding: 0.5rem 1rem;
 
 		svg {
 			width: 17px;
@@ -38,6 +39,6 @@
 	background: var(--space-mint);
 	border-radius: 24px;
 	width: fit-content;
-	margin-block: 16px;
+	margin-block: 8px;
 	color: var(--space-ink);
 }

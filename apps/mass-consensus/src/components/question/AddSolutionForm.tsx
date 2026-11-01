@@ -112,7 +112,7 @@ export default function AddSolutionForm({
             disabled={!isValid || isSubmitting}
             className={`${styles.submitButton} ${!isValid || isSubmitting ? styles.disabled : ''}`}
           >
-            {isSubmitting ? t('Loading...') : t('Add Your Idea')}
+            {isSubmitting ? t('Loading...') : t('Add Your Answer')}
           </button>
         </div>
       </form>

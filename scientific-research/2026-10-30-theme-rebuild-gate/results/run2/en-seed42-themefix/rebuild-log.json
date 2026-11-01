@@ -1,0 +1,104 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed42-themefix",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 11,
+ "themesWithMembers": 11,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  6,
+  6,
+  5,
+  5,
+  5,
+  5,
+  4,
+  4,
+  4,
+  3,
+  3
+ ],
+ "ms": 23718,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 2473,
+   "completion": 1412
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 3435,
+   "completion": 846
+  }
+ },
+ "usd": 0.0235922,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Housing Affordability and Supply",
+   "rule": "Includes proposals that create, convert, regulate, renovate, subsidize, or make information available about residential housing, rents, and student accommodation.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "School Education Support",
+   "rule": "Includes proposals focused on school-age pupils, teachers, classrooms, school facilities, school meals, tutoring, or children's arts instruction.",
+   "size": 6
+  },
+  {
+   "key": "t3",
+   "name": "Health and Care Access",
+   "rule": "Includes proposals that expand healthcare, preventive screening, mental-health services, specialist access, or care for older residents.",
+   "size": 5
+  },
+  {
+   "key": "t4",
+   "name": "Public Transit Service",
+   "rule": "Includes proposals concerning bus operations, transit arrival information, service frequency, late-night service, or transit fares.",
+   "size": 4
+  },
+  {
+   "key": "t5",
+   "name": "Street Safety and Active Travel",
+   "rule": "Includes proposals that redesign or light streets, crossings, footpaths, or cycling routes to make walking and cycling safer.",
+   "size": 3
+  },
+  {
+   "key": "t6",
+   "name": "Municipal Access and Transparency",
+   "rule": "Includes proposals that make city services, municipal information, public internet access, or resident assistance easier to access through online, phone, or in-person channels.",
+   "size": 5
+  },
+  {
+   "key": "t7",
+   "name": "Local Jobs and Small Business",
+   "rule": "Includes proposals that support workers, local hiring, career retraining, business licensing, small-business finance, or workspaces for independent workers.",
+   "size": 5
+  },
+  {
+   "key": "t8",
+   "name": "Waste and Pollution Reduction",
+   "rule": "Includes proposals focused on recycling, composting, reducing disposable plastics, or monitoring air pollution.",
+   "size": 4
+  },
+  {
+   "key": "t9",
+   "name": "Green Infrastructure and Clean Energy",
+   "rule": "Includes proposals that add renewable energy, trees, nearby parks, or shared land for growing food.",
+   "size": 4
+  },
+  {
+   "key": "t10",
+   "name": "Culture and Recreation Amenities",
+   "rule": "Includes proposals providing cultural activities, public art, museums, libraries, playgrounds, or dog recreation areas.",
+   "size": 6
+  },
+  {
+   "key": "t11",
+   "name": "Emergency and Crime Safety",
+   "rule": "Includes proposals that improve emergency-service response, neighborhood policing, or surveillance for crime prevention.",
+   "size": 3
+  }
+ ]
+}

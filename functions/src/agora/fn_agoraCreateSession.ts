@@ -39,6 +39,7 @@ import { generateUniqueCode } from './joinCodes';
 import { requireApprovedTeacher } from './libraryAccess';
 import { buildQuestionStatement } from './questionStage';
 import { sanitizeStagePlan } from './stagePlanInput';
+import { verifyPlanLinks } from './stationLink';
 import { loadTeacherPrompts } from './teacherPrompts';
 import { mayOpenScenario } from './topicReaders';
 
@@ -340,7 +341,12 @@ export const agoraCreateSession = onCall(
 			// words here, on every round item they left blank — see agoraTeacherPrompts.
 			const teacherPrompts = plan ? await loadTeacherPrompts(uid) : undefined;
 			const cleanPlan: AgoraStagePlanItem[] | undefined = plan
-				? applyTeacherPrompts(sanitizeStagePlan(plan, { hasCharacters: !isQuick }), teacherPrompts)
+				? applyTeacherPrompts(
+						sanitizeStagePlan(await verifyPlanLinks(plan, uid, [], Date.now()), {
+							hasCharacters: !isQuick,
+						}),
+						teacherPrompts,
+					)
 				: undefined;
 			if (isQuick && !cleanPlan) {
 				throw new HttpsError('invalid-argument', 'A quick game needs a stage plan');

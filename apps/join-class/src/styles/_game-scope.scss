@@ -1,0 +1,32 @@
+// =============================================================================
+// Game look: the shared scope and helpers of the game-layer partials
+// (_game.scss, game-console.scss, game-projector.scss).
+//
+// The game look is the default; a lesson set to "solid" puts data-look="solid"
+// on <html> (lib/lessonLook.ts). Every game rule sits under $game, so the solid
+// look renders the original stylesheets untouched. The prefix also adds two
+// classes of specificity, which is what lets these rules win over the lazily
+// loaded per-screen files that arrive after the entry CSS.
+// =============================================================================
+
+$game: ':root:not([data-look="solid"])';
+
+/// A pressed-key edge: a solid shadow under the element, no blur.
+@mixin edge($color, $size: var(--edge-size)) {
+  box-shadow: 0 $size 0 $color;
+}
+
+/// The press: the element sinks onto its edge and the edge disappears.
+@mixin press($size: var(--edge-size)) {
+  transform: translateY($size);
+  box-shadow: 0 0 0 transparent;
+}
+
+/// One-shot motion is a transition or an animation on transform/opacity only;
+/// under reduced motion it is off entirely.
+@mixin no-motion {
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    transition: none;
+  }
+}

@@ -2,14 +2,15 @@ import { describe, expect, it } from 'vitest';
 import type { OdysseyElder } from '@freedi/shared-types';
 import type { IslandContent } from '../game';
 import {
-	AI_PERSONA_NOTE,
-	SILENT_LINE,
+	aiPersonaNote,
 	crewCounsel,
 	crewShoreCounsel,
 	islandCounsel,
 	islandLean,
 	shoreCounsel,
+	silentLine,
 } from '../counsel';
+import he from '../../i18n/locales/he';
 
 function island(statementId: string, stanceIds: string[]): IslandContent {
 	return {
@@ -42,9 +43,12 @@ const [s1, s2, s3] = i1.stances;
 
 describe('copy', () => {
 	it('names a lean, not a stance, and keeps the one persona note', () => {
-		expect(SILENT_LINE).toBe('אין לי נטייה מתועדת כאן. כאן אני מקשיב/ה, לא מדבר/ת.');
-		expect(SILENT_LINE).not.toContain('עמדה');
-		expect(AI_PERSONA_NOTE).toBe('📜 דמות בינה מלאכותית — שחזור משוער, לא ציטוט ולא המלצת הצבעה');
+		// Hebrew is the test language (no locale chunk is loaded here).
+		expect(silentLine()).toBe(he['counsel.silent']);
+		expect(silentLine()).toBe('אין לי נטייה מתועדת כאן. כאן אני מקשיב/ה, לא מדבר/ת.');
+		expect(silentLine()).not.toContain('עמדה');
+		expect(aiPersonaNote()).toBe(he['counsel.personaNote']);
+		expect(aiPersonaNote()).toBe('📜 דמות בינה מלאכותית — שחזור משוער, לא ציטוט ולא המלצת הצבעה');
 	});
 });
 
@@ -60,7 +64,7 @@ describe('islandCounsel', () => {
 	it('is silent where the sailor has no record', () => {
 		const counsel = islandCounsel(elder(), island('i9', ['x1']));
 		expect(counsel).toMatchObject({ silent: true, leansTo: null, shoreNumber: null, line: null });
-		expect(SILENT_LINE).toContain('מקשיב');
+		expect(silentLine()).toContain('מקשיב');
 	});
 
 	it('never uses the agree/oppose reactions — those answer a mark, not a question', () => {

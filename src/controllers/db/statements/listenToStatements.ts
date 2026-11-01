@@ -1,5 +1,9 @@
 import { Unsubscribe } from 'firebase/auth';
 import { and, getDocs, limit, or, orderBy, query, startAfter, where } from 'firebase/firestore';
+import type { QuerySnapshot } from 'firebase/firestore';
+import { FIREBASE } from '@/constants/common';
+import { listenerManager } from '@/controllers/utils/ListenerManager';
+import { firstLoadThenListen } from '@/controllers/utils/firstLoadThenListen';
 import { logError } from '@/utils/errorHandling';
 import { normalizeStatementData, convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 
@@ -270,52 +274,72 @@ export const listenToSubStatements = (
 
 		let isFirstCall = true;
 
-		return createManagedCollectionListener(
+		const handleSnapshot = (statementsDB: QuerySnapshot): void => {
+			// For the first call, batch process all statements at once
+			if (isFirstCall) {
+				const startStatements: Statement[] = [];
+
+				statementsDB.forEach((doc) => {
+					// Normalize data to remove non-serializable values (like VectorValue embeddings)
+					const statement = normalizeStatementData(doc.data()) as Statement;
+					startStatements.push(statement);
+				});
+
+				// Dispatch all statements at once instead of individually
+				if (startStatements.length > 0) {
+					dispatch(setStatements(startStatements));
+				}
+
+				isFirstCall = false;
+			} else {
+				// After initial load, handle individual changes
+				const changes = statementsDB.docChanges();
+
+				// When using a limited query, "removed" events may be window shifts
+				// (doc pushed out of the limit window by a new doc), not actual deletions.
+				// Only treat as deletion if no additions occur in the same snapshot batch.
+				const hasAdditions = numberOfOptions ? changes.some((c) => c.type === 'added') : false;
+
+				changes.forEach((change) => {
+					// Normalize data to remove non-serializable values (like VectorValue embeddings)
+					const statement = normalizeStatementData(change.doc.data()) as Statement;
+
+					if (change.type === 'added') {
+						dispatch(setStatement(statement));
+					} else if (change.type === 'modified') {
+						dispatch(setStatement(statement));
+					} else if (change.type === 'removed') {
+						// Skip removal if it's likely a window shift (limited query + additions in same batch)
+						if (!hasAdditions) {
+							dispatch(deleteStatement(statement.statementId));
+						}
+					}
+				});
+			}
+		};
+
+		// Head start: a bounded read of the first 10 reaches Redux before the full
+		// listener snapshot. Pointless when the live query is already that small.
+		// Also skipped when the key is already registered: the managed listener then
+		// ignores our handler, and the head start would overwrite fresher state.
+		const needsHeadStart =
+			(!numberOfOptions || numberOfOptions > FIREBASE.FIRST_LOAD_LIMIT) &&
+			!listenerManager.hasListener(listenerKey);
+		const firstLoad = needsHeadStart
+			? firstLoadThenListen({
+					queryRef: q,
+					onSnapshotNext: handleSnapshot,
+					onFirstDocs: (docs) => {
+						dispatch(setStatements(docs.map((d) => normalizeStatementData(d.data()) as Statement)));
+					},
+					operation: 'statements.listenToSubStatements',
+				})
+			: null;
+
+		const unsubscribe = createManagedCollectionListener(
 			q,
 			listenerKey,
-			(statementsDB) => {
-				// For the first call, batch process all statements at once
-				if (isFirstCall) {
-					const startStatements: Statement[] = [];
-
-					statementsDB.forEach((doc) => {
-						// Normalize data to remove non-serializable values (like VectorValue embeddings)
-						const statement = normalizeStatementData(doc.data()) as Statement;
-						startStatements.push(statement);
-					});
-
-					// Dispatch all statements at once instead of individually
-					if (startStatements.length > 0) {
-						dispatch(setStatements(startStatements));
-					}
-
-					isFirstCall = false;
-				} else {
-					// After initial load, handle individual changes
-					const changes = statementsDB.docChanges();
-
-					// When using a limited query, "removed" events may be window shifts
-					// (doc pushed out of the limit window by a new doc), not actual deletions.
-					// Only treat as deletion if no additions occur in the same snapshot batch.
-					const hasAdditions = numberOfOptions ? changes.some((c) => c.type === 'added') : false;
-
-					changes.forEach((change) => {
-						// Normalize data to remove non-serializable values (like VectorValue embeddings)
-						const statement = normalizeStatementData(change.doc.data()) as Statement;
-
-						if (change.type === 'added') {
-							dispatch(setStatement(statement));
-						} else if (change.type === 'modified') {
-							dispatch(setStatement(statement));
-						} else if (change.type === 'removed') {
-							// Skip removal if it's likely a window shift (limited query + additions in same batch)
-							if (!hasAdditions) {
-								dispatch(deleteStatement(statement.statementId));
-							}
-						}
-					});
-				}
-			},
+			firstLoad ? firstLoad.onNext : handleSnapshot,
 			(error) =>
 				logError(error, {
 					operation: 'statements.listenToStatements.unknown',
@@ -323,6 +347,11 @@ export const listenToSubStatements = (
 				}),
 			'query',
 		);
+
+		return () => {
+			firstLoad?.cancel();
+			unsubscribe();
+		};
 	} catch (error) {
 		logError(error, { operation: 'statements.listenToStatements.unknown' });
 

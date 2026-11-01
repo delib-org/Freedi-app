@@ -1,10 +1,12 @@
 import type { RefObject } from 'react';
 import {
-	FEEDBACK_FAILURE_TEXT,
+	FEEDBACK_FAILURE_KEY,
 	FEEDBACK_MAILTO,
 	ODYSSEY_FEEDBACK_MESSAGE_MAX,
 	type FeedbackFailure,
 } from '../lib/feedback';
+import { formatNumber } from '../i18n/i18n';
+import { useT } from '../i18n/useT';
 
 export type LetterStatus = 'idle' | 'sending' | 'sent';
 
@@ -53,6 +55,7 @@ export default function FeedbackLetter({
 	onClose,
 	onWriteAnother,
 }: FeedbackLetterProps) {
+	const { t } = useT();
 	const busy = status === 'sending';
 	const canSend = draft.message.trim().length > 0 && !busy;
 
@@ -60,13 +63,13 @@ export default function FeedbackLetter({
 		<div className="panel flex flex-col gap-3" data-testid="feedback-letter">
 			<div className="flex items-center gap-2">
 				<strong id={titleId} className="text-[15px] text-[var(--cream)]">
-					🪶 מכתב לבוני הספינה
+					{t('feedback.title')}
 				</strong>
 				<button
 					type="button"
-					className="mr-auto text-[13px] opacity-70 hover:opacity-100"
+					className="ms-auto text-[13px] opacity-70 hover:opacity-100"
 					onClick={onClose}
-					aria-label="סגירה"
+					aria-label={t('common.close')}
 				>
 					✕
 				</button>
@@ -75,36 +78,33 @@ export default function FeedbackLetter({
 			{status === 'sent' ? (
 				<>
 					<p ref={headingRef} tabIndex={-1} className="m-0 text-[15px] text-[var(--gold-strong)]">
-						המכתב יצא לדרך ⛵
+						{t('feedback.sent')}
 					</p>
 					<p className="m-0 text-[13px] opacity-85">
 						{sentTo
-							? `תודה. אם יהיה לנו מה לענות, נכתוב אל ${sentTo}.`
-							: 'תודה. כתבתם בלי כתובת, אז לא נוכל לענות — אבל המכתב הגיע אלינו.'}
+							? t('feedback.thanksWithEmail', { email: sentTo })
+							: t('feedback.thanksNoEmail')}
 					</p>
 					<div className="flex items-center gap-3">
 						<button type="button" className="btn-outline" onClick={onClose}>
-							חזרה למסע
+							{t('feedback.backToVoyage')}
 						</button>
 						<button
 							type="button"
 							className="text-[13px] underline opacity-80 hover:opacity-100"
 							onClick={onWriteAnother}
 						>
-							לכתוב עוד מכתב
+							{t('feedback.writeAnother')}
 						</button>
 					</div>
 				</>
 			) : (
 				<>
-					<p className="m-0 text-[13px] opacity-80">
-						משהו נשבר, משהו לא ברור, או רעיון לשיפור — ספרו לנו. אנחנו, הצוות שבונה את המשחק, קוראים
-						כל מכתב.
-					</p>
+					<p className="m-0 text-[13px] opacity-80">{t('feedback.intro')}</p>
 
 					<div>
 						<label className="block mb-1 text-[13px]" htmlFor="feedback-message">
-							מה תרצו לספר לנו?
+							{t('feedback.messageLabel')}
 						</label>
 						<textarea
 							id="feedback-message"
@@ -114,20 +114,19 @@ export default function FeedbackLetter({
 							disabled={busy}
 							value={draft.message}
 							aria-invalid={failure === 'tooShort' || failure === 'tooLong'}
-							placeholder="למשל: הכפתור לא הגיב, השאלה הזאת לא הייתה ברורה, חסר אי במפה…"
+							placeholder={t('feedback.messagePlaceholder')}
 							onChange={(event) => onDraftChange({ ...draft, message: event.target.value })}
 						/>
 						{draft.message.length >= COUNTER_FROM ? (
 							<p className="m-0 mt-1 text-[12px] opacity-60">
-								{draft.message.length.toLocaleString('he-IL')} /{' '}
-								{ODYSSEY_FEEDBACK_MESSAGE_MAX.toLocaleString('he-IL')}
+								{formatNumber(draft.message.length)} / {formatNumber(ODYSSEY_FEEDBACK_MESSAGE_MAX)}
 							</p>
 						) : null}
 					</div>
 
 					<div>
 						<label className="block mb-1 text-[13px]" htmlFor="feedback-email">
-							מייל למענה — לא חובה
+							{t('feedback.emailLabel')}
 						</label>
 						<input
 							id="feedback-email"
@@ -140,40 +139,35 @@ export default function FeedbackLetter({
 							onChange={(event) => onDraftChange({ ...draft, email: event.target.value })}
 						/>
 						<p className="m-0 mt-1 text-[13px] opacity-80">
-							{prefilled
-								? 'זו הכתובת שנכנסתם איתה. אפשר למחוק אותה — אז לא נוכל לענות, אבל המכתב יגיע.'
-								: 'נשתמש בכתובת רק כדי לענות על המכתב הזה. היא לא מצורפת לתשובות שלכם במסע, לא נשמרת איתן ולא נמסרת לאיש.'}
+							{prefilled ? t('feedback.emailPrefilled') : t('feedback.emailNote')}
 						</p>
 					</div>
 
 					{/* "Silently attached" means not a form field — not undisclosed.
 					    A hidden attachment someone discovers later in a reply is the
 					    kind of surprise that closes tabs in a political app. */}
-					<p className="m-0 text-[13px] opacity-70">
-						למכתב מצורפים פרטים טכניים — המסך שבו הייתם, הדפדפן, גודל החלון ומזהה המשתמש — כדי שנוכל
-						לשחזר תקלה. תשובות מהמסע לא מצורפות.
-					</p>
+					<p className="m-0 text-[13px] opacity-70">{t('feedback.diagnostics')}</p>
 
 					<div className="flex flex-wrap items-center gap-3">
 						<button type="button" className="btn" disabled={!canSend} onClick={onSubmit}>
-							{busy ? 'שולחים…' : 'לשלוח את המכתב'}
+							{busy ? t('feedback.sending') : t('feedback.send')}
 						</button>
 						<span
 							role="status"
 							aria-live="polite"
 							className="text-[13px] text-[var(--gold-strong)]"
 						>
-							{failure ? FEEDBACK_FAILURE_TEXT[failure] : ''}
+							{failure ? t(FEEDBACK_FAILURE_KEY[failure]) : ''}
 						</span>
 					</div>
 
 					{failure === 'failed' ? (
 						<p className="m-0 text-[13px] opacity-75">
-							אפשר גם{' '}
+							{t('feedback.alsoA')}{' '}
 							<a className="underline" href={FEEDBACK_MAILTO}>
-								לכתוב לנו ישירות במייל
+								{t('feedback.mailLink')}
 							</a>
-							.
+							{t('feedback.alsoB')}
 						</p>
 					) : null}
 				</>

@@ -238,4 +238,59 @@ describe('exportUtils', () => {
 			expect(result).toContain('""hello""');
 		});
 	});
+
+	describe('themeId column', () => {
+		type Row = Record<string, unknown>;
+		const question = { statementId: 'q', parentId: 'root', statementType: 'question' };
+		const idea = (id: string, extra: Row = {}): Row => ({
+			statementId: id,
+			parentId: 'q',
+			statementType: 'option',
+			...extra,
+		});
+		const theme = (id: string, members: string[]): Row =>
+			idea(id, { isCluster: true, derivedByPipeline: 'topic-cluster', integratedOptions: members });
+		const synthesis = (id: string, members: string[]): Row =>
+			idea(id, { isCluster: true, derivedByPipeline: 'synthesis', integratedOptions: members });
+		type Args = Parameters<typeof createJSONExport>;
+		const themeIds = (subs: Row[]): Record<string, string> => {
+			const parsed = JSON.parse(
+				createJSONExport(question as unknown as Args[0], subs as unknown as Args[1]),
+			) as { subStatements: { statementId: string; themeId: string }[] };
+
+			return Object.fromEntries(parsed.subStatements.map((s) => [s.statementId, s.themeId]));
+		};
+
+		it('is empty on every row when the question has no themes', () => {
+			expect(themeIds([idea('a'), idea('b')])).toEqual({ a: '', b: '' });
+		});
+
+		it('names the theme of a themed idea and marks leftovers as other-ideas', () => {
+			expect(themeIds([theme('t', ['a']), idea('a'), idea('b')])).toEqual({
+				t: '',
+				a: 't',
+				b: 'other-ideas',
+			});
+		});
+
+		it('leaves synthesis members empty and files the synthesis itself', () => {
+			expect(themeIds([theme('t', ['x']), synthesis('s', ['m']), idea('m'), idea('x')])).toEqual({
+				t: '',
+				s: 'other-ideas',
+				m: '',
+				x: 't',
+			});
+		});
+
+		it('writes a themeId column into the CSV header and documents it', () => {
+			const csv = createCSVExport(
+				question as unknown as Args[0],
+				[theme('t', ['a']), idea('a')] as unknown as Args[1],
+			);
+			const header = csv.split('\n').find((line) => !line.startsWith('#') && line.length > 0);
+
+			expect(header?.split(',')).toContain('themeId');
+			expect(csv).toContain('# themeId (string)');
+		});
+	});
 });

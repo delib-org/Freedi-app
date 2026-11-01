@@ -2,6 +2,7 @@ import {
 	AgoraStage,
 	roundProgress,
 	roundSpecOf,
+	stationVisitState,
 	type AgoraParticipant,
 	type AgoraStagePlanItem,
 } from '@freedi/shared-types';
@@ -21,9 +22,11 @@ export const PROGRESS_STAGES: ReadonlySet<AgoraStage> = new Set<AgoraStage>([
 	AgoraStage.question,
 	AgoraStage.deliberation,
 	AgoraStage.voting,
+	AgoraStage.linked,
 ]);
 
-export type ProgressLabel = 'check' | 'dash' | { done: number; total: number };
+/** `opened`: a linked station's task was opened and the student has not come back yet */
+export type ProgressLabel = 'check' | 'dash' | 'opened' | { done: number; total: number };
 
 export interface StageProgress {
 	done: boolean;
@@ -65,6 +68,13 @@ export function participantProgress(
 ): StageProgress {
 	const stage = item.stage;
 	if (stage === AgoraStage.voting) return facts.voterUids.has(participant.userId) ? DONE : NOT_DONE;
+	if (stage === AgoraStage.linked) {
+		// "Finished" is not knowable from here: came back is the most that is true
+		const visit = stationVisitState(participant.stationVisits?.[item.itemId]);
+		if (visit === 'back') return DONE;
+
+		return visit === 'opened' ? { done: false, label: 'opened' } : NOT_DONE;
+	}
 	if (stage === AgoraStage.positioning) {
 		return participant.campPosition !== undefined ? DONE : NOT_DONE;
 	}
@@ -116,6 +126,7 @@ export function progressCountKey(item: AgoraStagePlanItem): string {
 	const stage = item.stage;
 	if (stage === AgoraStage.positioning) return 'teacher.positioned_count';
 	if (stage === AgoraStage.voting) return 'teacher.voted_count';
+	if (stage === AgoraStage.linked) return 'linked.came_back_count';
 	if (stage === AgoraStage.question) {
 		return roundSpecOf(item) ? 'teacher.read_count' : 'teacher.answered_count';
 	}

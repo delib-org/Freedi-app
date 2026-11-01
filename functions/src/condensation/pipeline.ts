@@ -22,6 +22,7 @@ import {
 	reconcileGroups,
 } from './reconciler';
 import {
+	clusterVoteSourceIds,
 	computeClusterEvaluationFromRawEvals,
 	fetchEvaluationsForIds,
 	recomputeClusterEvaluation,
@@ -428,7 +429,7 @@ export async function runCondensationPipeline(
 	// (no per-group Firestore round-trip).
 	const evalSourceIds = [
 		...candidates.map((c) => c.id),
-		...existingClusters.map((c) => c.statementId),
+		...existingClusters.flatMap((c) => [c.statementId, ...(c.absorbedClusterIds ?? [])]),
 	];
 	const allFetchedEvals = await fetchEvaluationsForIds(evalSourceIds);
 	const preloadedEvals = new Map<string, Evaluation[]>();
@@ -480,17 +481,26 @@ export async function runCondensationPipeline(
 			// Compute the aggregated evaluation this cluster WOULD have — include
 			// direct evaluations on the existing cluster (for `update` kind) plus
 			// every member's evaluations.
+			const existingCluster = group.existingClusterId
+				? existingClusterById.get(group.existingClusterId)
+				: undefined;
 			const evalFetchIds =
-				group.kind === 'update' && group.existingClusterId
-					? [group.existingClusterId, ...group.sourceIds]
+				group.kind === 'update' && existingCluster
+					? clusterVoteSourceIds(existingCluster.statementId, {
+							integratedOptions: group.sourceIds,
+							absorbedClusterIds: existingCluster.absorbedClusterIds,
+						})
 					: group.sourceIds;
 			const memberEvals: Evaluation[] = evalFetchIds.flatMap((id) => preloadedEvals.get(id) ?? []);
-			const existingClusterEval = group.existingClusterId
-				? existingClusterById.get(group.existingClusterId)?.evaluation
-				: undefined;
+			const existingClusterEval = existingCluster?.evaluation;
 			const { evaluation: evaluationSnapshot } = computeClusterEvaluationFromRawEvals(
 				memberEvals,
-				{},
+				group.kind === 'update' && existingCluster
+					? {
+							clusterStatementId: existingCluster.statementId,
+							absorbedClusterIds: existingCluster.absorbedClusterIds,
+						}
+					: {},
 				existingClusterEval?.evaluationRandomNumber,
 				existingClusterEval?.viewed,
 			);
@@ -634,13 +644,20 @@ async function applyGroup({
 		// Pre-compute aggregated evaluation from the new member set + any
 		// direct evaluations on the existing cluster itself, so the cluster's
 		// `evaluation` / `consensus` update atomically with its `integratedOptions`.
-		const updateEvalIds = [existing.statementId, ...group.sourceIds];
+		// Same counting rule as every other cluster writer (clusterVoteRule.ts).
+		const updateEvalIds = clusterVoteSourceIds(existing.statementId, {
+			integratedOptions: group.sourceIds,
+			absorbedClusterIds: existing.absorbedClusterIds,
+		});
 		const updateMemberEvals: Evaluation[] = updateEvalIds.flatMap(
 			(id) => preloadedEvals.get(id) ?? [],
 		);
 		const { evaluation: updatedEvaluation } = computeClusterEvaluationFromRawEvals(
 			updateMemberEvals,
-			{},
+			{
+				clusterStatementId: existing.statementId,
+				absorbedClusterIds: existing.absorbedClusterIds,
+			},
 			existing.evaluation?.evaluationRandomNumber,
 			existing.evaluation?.viewed,
 		);

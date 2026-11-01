@@ -506,11 +506,9 @@ function MindElixirMap({
 				const targetScale = currentScale * (1 + delta);
 				const clampedScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, targetScale));
 				if (Math.abs(clampedScale - currentScale) < 0.001) return;
-				const containerRect = container.getBoundingClientRect();
-				mindRef.current.scale(clampedScale, {
-					x: e.clientX - containerRect.left,
-					y: e.clientY - containerRect.top,
-				});
+				// scale() wants viewport coordinates and subtracts the container
+				// offset itself.
+				mindRef.current.scale(clampedScale, { x: e.clientX, y: e.clientY });
 				setMapScale(clampedScale);
 			},
 			// Intercept operations before they happen
@@ -533,6 +531,9 @@ function MindElixirMap({
 		// Store reference
 		mindRef.current = mind;
 
+		let lastWidth = rect.width;
+		let lastHeight = rect.height;
+
 		// SIDE layout, but every first-level branch carries an explicit side (see
 		// `toMindElixirData`), so a map nobody has arranged still draws entirely
 		// to the right — SIDE's auto-balancing never gets a say. Then scale the
@@ -543,8 +544,35 @@ function MindElixirMap({
 				mindRef.current.initSide();
 				mindRef.current.scaleFit();
 				setMapScale(mindRef.current.scaleVal);
+				// The fit just used the current size; measure resizes from here.
+				const fitted = container.getBoundingClientRect();
+				lastWidth = fitted.width;
+				lastHeight = fitted.height;
 			}
 		}, 100);
+
+		// The canvas can change size after the first fit (side panel opening, the
+		// page below settling). Shift the map by half the size change so whatever
+		// the viewer is looking at stays centered, instead of sliding out of view.
+		const resizeObserver =
+			typeof ResizeObserver === 'undefined'
+				? undefined
+				: new ResizeObserver(() => {
+						const canvas = mindRef.current?.map;
+						if (!canvas) return;
+						const next = container.getBoundingClientRect();
+						const dx = (next.width - lastWidth) / 2;
+						const dy = (next.height - lastHeight) / 2;
+						lastWidth = next.width;
+						lastHeight = next.height;
+						if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+						canvas.style.transform = canvas.style.transform.replace(
+							/translate3d\(([-\d.]+)px,\s*([-\d.]+)px/,
+							(_match, x: string, y: string) =>
+								`translate3d(${parseFloat(x) + dx}px, ${parseFloat(y) + dy}px`,
+						);
+					});
+		resizeObserver?.observe(container);
 
 		// Event: Node selected
 		mind.bus.addListener('selectNewNode', (nodeObj: NodeObj) => {
@@ -996,13 +1024,10 @@ function MindElixirMap({
 
 			const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
 			const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-			const rect = container.getBoundingClientRect();
 
-			// scale() takes an ABSOLUTE target, zooming toward the pinch midpoint.
-			mindRef.current.scale(newScale, {
-				x: midX - rect.left,
-				y: midY - rect.top,
-			});
+			// scale() takes an ABSOLUTE target and viewport coordinates, zooming
+			// toward the pinch midpoint.
+			mindRef.current.scale(newScale, { x: midX, y: midY });
 			setMapScale(newScale);
 		};
 
@@ -1031,6 +1056,7 @@ function MindElixirMap({
 			container.removeEventListener('touchmove', handleTouchMove);
 			container.removeEventListener('touchend', handleTouchEnd);
 			removeNodeButtons();
+			resizeObserver?.disconnect();
 			mind.destroy();
 			mindRef.current = null;
 		};
@@ -1246,8 +1272,12 @@ function MindElixirMap({
 		const target = Math.min(SCALE_MAX, Math.max(SCALE_MIN, current * step));
 		if (Math.abs(target - current) < 0.001) return;
 		const rect = containerRef.current?.getBoundingClientRect();
-		// scale() takes an ABSOLUTE target; zoom around the viewport center.
-		mind.scale(target, rect ? { x: rect.width / 2, y: rect.height / 2 } : { x: 0, y: 0 });
+		// scale() takes an ABSOLUTE target and viewport coordinates (it subtracts
+		// the container offset itself); zoom around the container center.
+		mind.scale(
+			target,
+			rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : { x: 0, y: 0 },
+		);
 		setMapScale(target);
 	}, []);
 

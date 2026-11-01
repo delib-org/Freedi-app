@@ -39,6 +39,7 @@ jest.mock('firebase-admin/firestore', () => {
 	}));
 
 	return {
+		FieldValue: { arrayUnion: (...values: unknown[]) => ({ arrayUnion: values }) },
 		getFirestore: jest.fn(() => ({
 			collection,
 			batch: () => ({
@@ -217,6 +218,8 @@ describe('consolidateThemes — merge mechanics', () => {
 		const survivor = committed.find((c) => c.id === 't1');
 		const donor = committed.find((c) => c.id === 't2');
 		expect(survivor?.data.statement).toBe('Environment and waste');
+		// The donor's direct votes keep counting for the survivor.
+		expect(survivor?.data.absorbedClusterIds).toEqual({ arrayUnion: ['t2'] });
 		expect(survivor?.data.integratedOptions).toEqual(expect.arrayContaining(['s1', 'sX', 's2']));
 		expect(donor?.data.hide).toBe(true);
 		expect(donor?.data.mergedInto).toBe('t1');

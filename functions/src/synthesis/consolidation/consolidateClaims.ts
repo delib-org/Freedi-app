@@ -10,6 +10,7 @@ import {
 import { logError } from '../../utils/errorHandling';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
+import { absorbedClusterIdsUpdate } from '../../condensation/absorbedClusters';
 
 /**
  * Continuous claim-level consolidation (docs/architecture/CLAIM_REGISTRY.md §2.3).
@@ -159,7 +160,7 @@ async function proposeConsolidation(
  * target keeps its claim unchanged (merge means X ≡ Y — no meaning change, no
  * member re-validation needed).
  */
-async function mergeClusters(
+export async function mergeClusters(
 	targetId: string,
 	sourceId: string,
 	triggerSource: string,
@@ -180,12 +181,18 @@ async function mergeClusters(
 		const merged = [...targetMembers, ...sourceMembers.filter((m) => !targetMembers.includes(m))];
 		const now = Date.now();
 
-		await db().collection(Collections.statements).doc(targetId).update({
-			integratedOptions: merged,
-			lastUpdate: now,
-		});
+		await db()
+			.collection(Collections.statements)
+			.doc(targetId)
+			.update({
+				integratedOptions: merged,
+				// The source's direct votes keep counting for the target.
+				...absorbedClusterIdsUpdate(targetId, [source]),
+				lastUpdate: now,
+			});
 		await db().collection(Collections.statements).doc(sourceId).update({
 			hide: true,
+			mergedInto: targetId,
 			lastUpdate: now,
 		});
 

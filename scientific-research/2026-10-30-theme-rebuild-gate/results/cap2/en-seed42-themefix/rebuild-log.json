@@ -1,0 +1,97 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed42-themefix",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 10,
+ "themesWithMembers": 10,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  6,
+  6,
+  6,
+  5,
+  5,
+  5,
+  5,
+  4,
+  4,
+  4
+ ],
+ "ms": 19540,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 2473,
+   "completion": 874
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 3399,
+   "completion": 842
+  }
+ },
+ "usd": 0.0171242,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Affordable housing and rentals",
+   "rule": "Proposals about creating, converting, subsidizing, upgrading, or making information available for affordable housing and rental homes belong here.",
+   "size": 4
+  },
+  {
+   "key": "t2",
+   "name": "Schools and youth learning",
+   "rule": "Proposals about school staffing, class conditions, student meals, tutoring, school facilities, or free arts instruction for children belong here.",
+   "size": 6
+  },
+  {
+   "key": "t3",
+   "name": "Healthcare and home care",
+   "rule": "Proposals about access to medical appointments, clinics, preventive screenings, mental-health treatment, or care for older residents belong here.",
+   "size": 5
+  },
+  {
+   "key": "t4",
+   "name": "Public transit and street safety",
+   "rule": "Proposals about bus fares, bus schedules or rider information, cycling infrastructure, or traffic safety measures belong here.",
+   "size": 6
+  },
+  {
+   "key": "t5",
+   "name": "Digital civic access",
+   "rule": "Proposals about putting city services or information online, helping residents use digital services, public internet access, or unified municipal contact channels belong here.",
+   "size": 5
+  },
+  {
+   "key": "t6",
+   "name": "Waste, energy, and pollution",
+   "rule": "Proposals about renewable energy, recycling, composting, reducing disposable plastics, or monitoring air pollution belong here.",
+   "size": 6
+  },
+  {
+   "key": "t7",
+   "name": "Parks and outdoor amenities",
+   "rule": "Proposals about playgrounds, dog areas, trees, parks, community gardens, or other outdoor neighborhood recreation spaces belong here.",
+   "size": 5
+  },
+  {
+   "key": "t8",
+   "name": "Culture and public gathering",
+   "rule": "Proposals about museums, public art, festivals, music events, or neighborhood library branches belong here.",
+   "size": 4
+  },
+  {
+   "key": "t9",
+   "name": "Local jobs and small business",
+   "rule": "Proposals about workforce retraining, local-hiring requirements, business licensing, small-business credit, or coworking space belong here.",
+   "size": 5
+  },
+  {
+   "key": "t10",
+   "name": "Public safety and emergency response",
+   "rule": "Proposals about emergency-service stations, street lighting, neighborhood policing, or surveillance at crime hotspots belong here.",
+   "size": 4
+  }
+ ]
+}

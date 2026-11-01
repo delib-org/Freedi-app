@@ -83,7 +83,7 @@ export default function ThinkingSpace({
 				</button>
 				<div className={styles.space__sectionLabel}>
 					<span>{t('YOUR SPACES')}</span>
-					<button onClick={onCreate} aria-label={t('Start with a question.')}>
+					<button onClick={onCreate} aria-label={t('Ask a question')}>
 						<Plus size={17} />
 					</button>
 				</div>
@@ -113,7 +113,7 @@ export default function ThinkingSpace({
 				</div>
 				<button className={styles.space__create} onClick={onCreate}>
 					<Plus size={18} />
-					{t('Start with a question.')}
+					{t('Ask a question')}
 				</button>
 				<div className={styles.space__note}>
 					<span className={styles.space__noteFlower} aria-hidden="true">

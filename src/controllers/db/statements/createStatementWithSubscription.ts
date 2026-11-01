@@ -120,16 +120,13 @@ export async function createStatementWithSubscription({
 	logStatementCreation(statementId, _newStatement.parentId, _newStatement.topParentId);
 
 	// Create subscription in Firestore with push notifications enabled if user has granted permission
-	const pushNotificationsEnabled =
-		notificationService.isInitialized() && notificationService.safeGetPermission() === 'granted';
-
 	const subscriptionWrite = setStatementSubscriptionToDB({
 		statement: _newStatement,
 		creator: user,
 		role: Role.admin,
 		getInAppNotification: true,
 		getEmailNotification: false,
-		getPushNotification: pushNotificationsEnabled,
+		...notificationService.getPushSubscriptionFields(),
 	});
 	// setStatementSubscriptionToDB logs its own failures and never rejects.
 	if (!onServerWriteError) await subscriptionWrite;

@@ -26,7 +26,7 @@ export const RoundAnswer: m.Component<RoundAnswerAttrs> = {
 		const { kind, text, savedText, editing, saving, saveFailed, changed } = attrs;
 		if (savedText !== undefined && !editing && !saving && !saveFailed) {
 			return m('.round__saved', [
-				m('p.round__mine-text', savedText),
+				m('p.round__mine-text', { dir: 'auto' }, savedText),
 				m('.round__actions', [
 					m('span.round__saved-status', { role: 'status' }, [
 						m(Icon, { name: 'check', size: 18 }),
@@ -47,6 +47,7 @@ export const RoundAnswer: m.Component<RoundAnswerAttrs> = {
 		return m('.round__editor', [
 			kind === 'needs' ? m('p.round__lead', t('round.needs.lead')) : null,
 			m('textarea.round__textarea', {
+				dir: 'auto',
 				value: text,
 				rows: 4,
 				maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,

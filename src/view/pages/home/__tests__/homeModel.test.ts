@@ -10,10 +10,12 @@ import {
 	filterHomeQuestions,
 	filterHomeSpaces,
 	formatClosing,
+	formatLastReply,
 	formatQuestionMeta,
 	formatSpaceMeta,
 	HomeQuestion,
 	stageForStep,
+	toLastReply,
 	toneForIndex,
 } from '../homeModel';
 
@@ -270,5 +272,37 @@ describe('filterHomeQuestions / filterHomeSpaces', () => {
 		];
 		expect(filterHomeSpaces(spaces, 'nei').map((s) => s.id)).toEqual(['s1']);
 		expect(filterHomeSpaces(spaces, '')).toHaveLength(2);
+	});
+});
+
+describe('latest reply preview', () => {
+	const withReply = (message: string, creator: string) =>
+		statement({
+			statementId: 'q',
+			lastMessage: { message, creator, createdAt: 1 },
+		});
+
+	it('reads the denormalized lastMessage', () => {
+		expect(toLastReply(withReply(' Let us meet ', 'Dana'))).toEqual({
+			author: 'Dana',
+			text: 'Let us meet',
+		});
+	});
+
+	it('is absent when nobody replied or the reply is blank', () => {
+		expect(toLastReply(statement({ statementId: 'q' }))).toBeUndefined();
+		expect(toLastReply(withReply('   ', 'Dana'))).toBeUndefined();
+		expect(formatLastReply(undefined)).toBe('');
+	});
+
+	it('formats "<author>: <text>" and drops an unknown author', () => {
+		expect(formatLastReply({ author: 'Dana', text: 'Hi' })).toBe('Dana: Hi');
+		expect(formatLastReply({ author: '', text: 'Hi' })).toBe('Hi');
+	});
+
+	it('carries the reply onto the home question', () => {
+		const q = withReply('Hello', 'Dana');
+		const model = buildHomeModel({ subscriptions: [sub(q)], statements: [], userId: 'u1' });
+		expect(model.questions[0].lastReply).toEqual({ author: 'Dana', text: 'Hello' });
 	});
 });

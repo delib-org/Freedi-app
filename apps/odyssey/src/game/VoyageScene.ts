@@ -8,9 +8,12 @@ import {
 	BOAT_SCALE_NARROW,
 	NARROW_STAGE_WIDTH,
 	PARTICLES_SPLASH,
+	STAGE_FONT,
 	TWEEN_ISLAND_MS,
 	TWEEN_SHIP_MS,
 	TWEEN_STAMP_MS,
+	mirrorSign,
+	mirrorX,
 } from '../lib/stageConstants';
 import { dayPhaseForIsland, partyShipPlacement, rangeRings, seaFan } from '../lib/seaLayout';
 import type { StageCommand } from '../lib/stageBus';
@@ -119,10 +122,10 @@ export class VoyageScene extends SeaScene {
 		this.currentIslandId = info.islandId;
 
 		if (previous) {
-			// current island slides off to the right; the sea sails on
+			// current island slides off astern (to the right as composed); the sea sails on
 			this.tweens.add({
 				targets: previous,
-				x: this.W + 220,
+				x: mirrorX(this.W + 220, this.W),
 				alpha: 0.4,
 				duration: animate && !this.reducedMotion ? 700 : 0,
 				ease: 'Sine.in',
@@ -148,7 +151,7 @@ export class VoyageScene extends SeaScene {
 		}
 		const title = this.add
 			.text(0, titleY, info.title, {
-				fontFamily: 'Arial',
+				fontFamily: STAGE_FONT,
 				fontSize: '16px',
 				color: '#fff4d3',
 				fontStyle: 'bold',
@@ -158,11 +161,11 @@ export class VoyageScene extends SeaScene {
 			.setOrigin(0.5);
 		children.push(title);
 
-		// shore jetties on the lower arc, one per stance, 32° apart
+		// shore jetties on the lower arc, one per stance, 32° apart, in reading order
 		for (let i = 0; i < info.stanceCount; i++) {
 			const angle = this.jettyAngle(i, info.stanceCount);
 			const jetty = this.add
-				.image(Math.cos(angle) * 78, Math.sin(angle) * 78, 'jetty')
+				.image(mirrorSign() * Math.cos(angle) * 78, Math.sin(angle) * 78, 'jetty')
 				.setTint(COLOR_CREAM)
 				.setAlpha(0.9);
 			children.push(jetty);
@@ -185,8 +188,8 @@ export class VoyageScene extends SeaScene {
 			}
 		}
 		if (animate && !this.reducedMotion) {
-			// next island approaches from the left, growing
-			this.vignette.setX(-this.W * 0.2).setScale(0.4);
+			// next island approaches from ahead (the left as composed), growing
+			this.vignette.setX(mirrorX(-this.W * 0.2, this.W)).setScale(0.4);
 			this.tweens.add({
 				targets: this.vignette,
 				x: this.vignetteX(),
@@ -260,7 +263,8 @@ export class VoyageScene extends SeaScene {
 	): void {
 		if (!this.vignette) return;
 		const angle = this.jettyAngle(stanceIndex, stageState.voyage?.stanceCount ?? 1);
-		const x = this.vignette.x + Math.cos(angle) * 104;
+		// same side as its jetty (see showIsland)
+		const x = this.vignette.x + mirrorSign() * Math.cos(angle) * 104;
 		const y = this.vignette.y + Math.sin(angle) * 104;
 
 		const existing = this.buoys.get(stanceIndex);
@@ -365,8 +369,9 @@ export class VoyageScene extends SeaScene {
 		this.stamps.push(stamp);
 	}
 
+	/** The log strip fills from the corner the reader's eye ends on. */
 	private stampX(index: number): number {
-		return 30 + index * 30;
+		return mirrorX(30 + index * 30, this.W);
 	}
 
 	// ---------- reading the sea ----------
@@ -392,12 +397,13 @@ export class VoyageScene extends SeaScene {
 	}
 
 	/**
-	 * The island sits outside the fan, up the leading (left, in Hebrew) side —
-	 * the direction the voyage sails toward. Inside the rings it would read as
-	 * one more thing at a distance from the player, which it is not.
+	 * The island sits outside the fan, up the leading side — the left as
+	 * composed for Hebrew, the right for a left-to-right reader — the direction
+	 * the voyage sails toward. Inside the rings it would read as one more thing
+	 * at a distance from the player, which it is not.
 	 */
 	private vignetteX(): number {
-		return this.W * (this.narrow() ? 0.3 : 0.19);
+		return mirrorX(this.W * (this.narrow() ? 0.3 : 0.19), this.W);
 	}
 
 	private vignetteY(): number {

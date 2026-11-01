@@ -1192,6 +1192,42 @@ describe('runSinglePipeline', () => {
 		});
 		expect(result.action).toBe('seeded-singleton');
 		expect(result.llmCalled).toBe(false);
+		// The judge is still asked (and said no themes), so the option stays unthemed.
+		expect(assignOptionThemeMock).toHaveBeenCalledTimes(1);
+	});
+
+	it('files a no-neighbour option under an existing theme when the judge picks one', async () => {
+		const option = makeOption();
+		const parent = makeParent();
+		findSimilarMock.mockResolvedValue([]);
+		assignOptionThemeMock.mockResolvedValue({ themeId: 'theme-9', reason: 'judged' });
+		const result = await runSinglePipeline({
+			optionId: option.statementId,
+			source: 'onCreate',
+			option,
+			parent,
+		});
+		expect(result.action).toBe('attached');
+		expect(result.clusterId).toBe('theme-9');
+		expect(result.llmCalled).toBe(true);
+		expect(spawnMock).not.toHaveBeenCalled();
+	});
+
+	it('does not ask the theme judge for a no-neighbour option when llmThemeAssignment is off', async () => {
+		const option = makeOption();
+		const parent = { ...makeParent() } as Statement;
+		(parent as unknown as { statementSettings: unknown }).statementSettings = {
+			synthesis: { enabled: true, llmThemeAssignment: false },
+		};
+		findSimilarMock.mockResolvedValue([]);
+		const result = await runSinglePipeline({
+			optionId: option.statementId,
+			source: 'onCreate',
+			option,
+			parent,
+		});
+		expect(result.action).toBe('seeded-singleton');
+		expect(assignOptionThemeMock).not.toHaveBeenCalled();
 	});
 
 	it('skips an option that is already in a cluster', async () => {

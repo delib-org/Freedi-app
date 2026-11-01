@@ -43,7 +43,32 @@ export {
 	createOdysseyJourneyId,
 } from './odysseyJourney';
 
-export type { MintAgoraHandoffResponse } from './odysseyCallables';
+export type {
+	MintAgoraHandoffResponse,
+	OdysseyTranslateGameRequest,
+	OdysseyTranslateGameResponse,
+} from './odysseyCallables';
+
+export type {
+	OdysseyTranslationLang,
+	OdysseyCompassQuestionTranslation,
+	OdysseyIslandTranslation,
+	OdysseyPartyTranslation,
+	OdysseyElderTranslation,
+	OdysseyGameTranslation,
+} from './odysseyTranslation';
+export {
+	ODYSSEY_TRANSLATIONS_SUBCOLLECTION,
+	ODYSSEY_TRANSLATION_LANGS,
+	OdysseyTranslationLangSchema,
+	OdysseyCompassQuestionTranslationSchema,
+	OdysseyIslandTranslationSchema,
+	OdysseyPartyTranslationSchema,
+	OdysseyElderValueTranslationSchema,
+	OdysseyElderTranslationSchema,
+	OdysseyGameTranslationSchema,
+	odysseyTranslationsPath,
+} from './odysseyTranslation';
 
 export type {
 	OdysseyFeedbackContext,

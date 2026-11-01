@@ -1284,6 +1284,7 @@ export function Deliberation(
 		return m('.my-screen__paper', { class: dirty ? 'my-screen__paper--dirty' : undefined }, [
 			m('.my-screen__paper-row', [
 				m('textarea.my-screen__text', {
+					dir: 'auto',
 					value: mineDraft,
 					rows: 2,
 					maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
@@ -2559,6 +2560,7 @@ export function Deliberation(
 										)
 									: null,
 								m('textarea.my-lantern__textarea.write-desk__textarea', {
+									dir: 'auto',
 									id: 'write-desk-text',
 									value: draft,
 									rows: 4,

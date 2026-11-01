@@ -18,7 +18,9 @@ import {
 	islandFocusStance,
 	pickElderReaction,
 } from '../lib/elders';
-import { AI_PERSONA_NOTE } from '../lib/counsel';
+import { aiPersonaNote } from '../lib/counsel';
+import { ATTITUDE_KEY } from '../lib/attitudeLabels';
+import { useT } from '../i18n/useT';
 import {
 	isShoreRowOpen,
 	openIslandSailor,
@@ -38,12 +40,6 @@ import CrewReactions from '../components/CrewReactions';
 import { nextIslandIndex } from '../lib/voyageRoute';
 
 /**
- * What the captain's log asks when an island has no question of its own.
- * Islands carry a tailored `depthQuestion`; this is the floor.
- */
-const DEFAULT_LOG_PROMPT = 'מה חשוב לך במיוחד בסוגיה הזו, או איפה ההתלבטות?';
-
-/**
  * ההפלגה: one island (a `question` Statement) at a time. Each of its stances
  * is an `option` Statement; marking תומך/יכול לחיות עם/מתנגד writes a
  * standard Freedi evaluation on that option. In game mode the sea stage
@@ -61,6 +57,7 @@ export default function Voyage() {
 	const location = useLocation();
 	const mode = useMode();
 	const { content, journey, attitudes, text, setAttitude, updateJourney } = useGame();
+	const { t } = useT();
 
 	const selectedIslands = useMemo(() => {
 		if (!content || !journey) return [];
@@ -309,7 +306,7 @@ export default function Voyage() {
 
 	return (
 		<>
-			<GameChrome stage="ההפלגה" />
+			<GameChrome stage={t('step.voyage')} />
 			<div className="page">
 				<div className="w-full max-w-3xl flex flex-col gap-4">
 					<header className="text-center fade-in" key={`${island.statementId}-header`}>
@@ -323,7 +320,7 @@ export default function Voyage() {
 							/>
 						) : null}
 						<p className="eyebrow m-0">
-							אי {index + 1} מתוך {selectedIslands.length}
+							{t('voyage.islandCounter', { index: index + 1, total: selectedIslands.length })}
 						</p>
 						<h1 className="text-3xl font-bold text-[var(--cream)] mt-1 mb-1">{island.title}</h1>
 						<p className="text-[15px] text-[#cfe6f5] m-0">{island.issue}</p>
@@ -367,8 +364,7 @@ export default function Voyage() {
 							/>
 
 							<p className="text-[13px] opacity-75 m-0">
-								לפניכם {island.stances.length} חופים. סמנו את יחסכם לכל חוף — חובה לסמן לפחות אחד.
-								אין צורך לבחור תשובה אחת בלבד.
+								{t('voyage.shoresIntro', { count: island.stances.length })}
 							</p>
 
 							<div className="flex flex-col gap-3">
@@ -382,13 +378,13 @@ export default function Voyage() {
 										>
 											<p className="m-0 mb-2 text-[15px]">
 												<strong className="text-[var(--gold-strong)]">
-													חוף {stanceIndex + 1}:
+													{t('voyage.shore', { number: stanceIndex + 1 })}:
 												</strong>{' '}
 												{stance.statement}
 											</p>
 											{isEarlierAnswer(stance.statementId, attitudes, markedThisVisit) ? (
 												<p className="m-0 mb-2 text-[12px] opacity-75">
-													התשובה הקודמת שלך — אפשר לשנות
+													{t('voyage.earlierAnswer')}
 												</p>
 											) : null}
 											{/* text → consult → mark; nothing rendered with no crew */}
@@ -413,8 +409,10 @@ export default function Voyage() {
 											<div
 												className="flex flex-wrap gap-2"
 												role="group"
-												aria-label={`יחס לחוף ${stanceIndex + 1}`}
+												aria-label={t('voyage.attitudeGroup', { number: stanceIndex + 1 })}
 											>
+												{/* The label is ours, not shared-types': ODYSSEY_ATTITUDES[].label
+												    is Hebrew and stays so for every other app. */}
 												{ODYSSEY_ATTITUDES.map((attitude) => (
 													<button
 														key={attitude.key}
@@ -428,7 +426,7 @@ export default function Voyage() {
 															)
 														}
 													>
-														{attitude.label}
+														{t(ATTITUDE_KEY[attitude.key])}
 													</button>
 												))}
 											</div>
@@ -447,13 +445,15 @@ export default function Voyage() {
 							*/}
 							<div>
 								<p className="m-0 mb-2 text-[15px]">
-									<strong>📖 יומן קברניט:</strong> {island.depthQuestion || DEFAULT_LOG_PROMPT}
+									{/* Islands carry a tailored `depthQuestion`; the default is the floor. */}
+									<strong>{t('voyage.logLabel')}</strong>{' '}
+									{island.depthQuestion || t('voyage.defaultLogPrompt')}
 								</p>
 								<textarea
 									rows={3}
 									value={depth}
 									onChange={(event) => setDepth(event.target.value)}
-									placeholder="לא חובה — התלבטות, הסתייגות, או כל מה שעוד יש לכם לומר על הסוגיה"
+									placeholder={t('voyage.logPlaceholder')}
 								/>
 							</div>
 
@@ -464,10 +464,10 @@ export default function Voyage() {
 									disabled={answeredOnIsland === 0 || saving}
 									onClick={() => void submitIsland()}
 								>
-									{saving ? 'מפליגים…' : 'להמשך המסע ⛵'}
+									{saving ? t('common.sailing') : t('voyage.continue')}
 								</button>
 								{answeredOnIsland === 0 ? (
-									<p className="text-[13px] opacity-75 m-0">סמנו יחס לפחות לחוף אחד כדי להמשיך.</p>
+									<p className="text-[13px] opacity-75 m-0">{t('voyage.markOne')}</p>
 								) : null}
 							</div>
 						</section>
@@ -489,12 +489,14 @@ export default function Voyage() {
 									) : asked === 'all' ? (
 										<div className="panel !py-3 flex flex-col gap-2.5">
 											<div className="flex items-center gap-2">
-												<strong className="text-[15px] text-[var(--cream)]">הספינות סביבך</strong>
+												<strong className="text-[15px] text-[var(--cream)]">
+													{t('voyage.shipsAround')}
+												</strong>
 												<button
 													type="button"
-													className="mr-auto text-[13px] opacity-70 hover:opacity-100"
+													className="ms-auto text-[13px] opacity-70 hover:opacity-100"
 													onClick={() => setAsked(null)}
-													aria-label="סגירה"
+													aria-label={t('common.close')}
 												>
 													✕
 												</button>
@@ -512,22 +514,21 @@ export default function Voyage() {
 														compact
 														onSelect={setAsked}
 														selectedId={asked}
-														caption={AI_PERSONA_NOTE}
+														caption={aiPersonaNote()}
 													/>
 												</div>
 											) : null}
 											<p className="m-0 text-[12px] opacity-60 text-center">
-												עגינה זמנית — לא פסק דין ולא הוראת הצבעה.
+												{t('ships.temporaryBerth')}
 											</p>
 										</div>
 									) : (
 										<div className="panel !py-2.5 text-center text-[14px] text-[#d5ecf7] flex flex-col gap-1.5">
 											<p className="m-0">{text('voyageShipsNote')}</p>
 											<p className="m-0 text-[13px] opacity-80">
-												הספינה המוארת במרכז היא שלך. הקישו על ספינה כדי לראות כמה היא קרובה אליכם,
-												או{' '}
+												{t('voyage.litShipHint')}{' '}
 												<button type="button" className="underline" onClick={() => setAsked('all')}>
-													הציגו את כל הספינות
+													{t('voyage.showAllShips')}
 												</button>
 												.
 											</p>
@@ -537,11 +538,9 @@ export default function Voyage() {
 							) : (
 								<div className="panel flex flex-col gap-3">
 									<h2 className="text-lg font-bold text-[var(--cream)] m-0">
-										הים מגיב לבחירות שלך
+										{t('voyage.seaReacts')}
 									</h2>
-									<p className="m-0 text-[13px] opacity-80">
-										הקישו על ספינה כדי לראות כמה היא קרובה למסלול שלכם.
-									</p>
+									<p className="m-0 text-[13px] opacity-80">{t('voyage.tapShip')}</p>
 									{/* Parties only. A persona riding the same water as the parties reads as
 							    a claim that she is running — the reviewer who saw Golda there
 							    said so, which is why the personas keep to their own list. */}
@@ -563,13 +562,11 @@ export default function Voyage() {
 												ships={elderProximity}
 												onSelect={setAsked}
 												selectedId={asked}
-												caption={AI_PERSONA_NOTE}
+												caption={aiPersonaNote()}
 											/>
 										</div>
 									) : null}
-									<p className="m-0 text-[12px] opacity-65">
-										הקרבה היא עגינה זמנית — לא פסק דין ולא הוראת הצבעה.
-									</p>
+									<p className="m-0 text-[12px] opacity-65">{t('voyage.proximityNote')}</p>
 								</div>
 							)}
 							{/* The sea's reaction first, the crew's after it, before the way on.
@@ -577,7 +574,9 @@ export default function Voyage() {
 							<CrewReactions crew={elders} island={island} attitudes={attitudes} />
 							<div className="flex justify-center">
 								<button type="button" className="btn" onClick={() => nextIsland()}>
-									{nextTitle === null ? 'אל מפת ההפלגה שלך 🗺️' : `לאי הבא: ${nextTitle} ⚓`}
+									{nextTitle === null
+										? t('voyage.toSummary')
+										: t('voyage.nextIsland', { title: nextTitle })}
 								</button>
 							</div>
 						</section>

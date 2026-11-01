@@ -64,6 +64,24 @@ const isIndexedDbVersionError = (error: unknown): boolean => {
 	return message.includes('VersionError') || message.includes('less than the existing version');
 };
 
+/** DOMException code for AbortError (legacy ABORT_ERR). */
+const ABORT_ERR_CODE = 20;
+
+/**
+ * True when the browser's own push service refused the subscription
+ * ("AbortError: Registration failed - push service error"). That is the
+ * browser/network (GCM unreachable, push disabled in Brave, etc.), not an app
+ * bug: notifications are simply unavailable this session.
+ */
+export const isPushServiceUnavailableError = (error: unknown): boolean => {
+	const message = error instanceof Error ? error.message : String(error);
+	if (!message.toLowerCase().includes('push service error')) return false;
+
+	if (error instanceof Error && error.name === 'AbortError') return true;
+
+	return error instanceof DOMException && error.code === ABORT_ERR_CODE;
+};
+
 /**
  * Delete the FCM databases so the SDK can recreate them at the version it
  * expects. Resolves true only when every delete actually completed.
@@ -400,7 +418,10 @@ export const getOrRefreshToken = async (forceRefresh: boolean = false): Promise<
 		// permission-blocked is expected when users deny notifications — don't report to Sentry
 		const isPermissionBlocked =
 			error instanceof Error && error.message.includes('permission-blocked');
-		if (!isPermissionBlocked) {
+		if (isPushServiceUnavailableError(error)) {
+			// Expected: the browser's push service is unreachable or disabled.
+			console.info('[PushService] Push service unavailable; notifications off for this session');
+		} else if (!isPermissionBlocked) {
 			logError(error, {
 				operation: 'services.pushService.getOrRefreshToken',
 				metadata: {

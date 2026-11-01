@@ -5,8 +5,43 @@
 
 	&__spaces {
 		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	// Many spaces scroll; "No space" and "New space" stay visible below.
+	&__list {
+		display: flex;
 		flex-wrap: wrap;
 		gap: 6px;
+		max-height: 7.5rem;
+		overflow-y: auto;
+	}
+
+	&__pinned {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+
+	&__name {
+		min-height: 48px;
+		padding: var(--space-sm) 14px;
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--space-md);
+		background: var(--card-default);
+		color: var(--text-title);
+		font: inherit;
+		font-size: 0.9375rem;
+
+		&::placeholder {
+			color: var(--text-faint);
+		}
+
+		&:focus-visible {
+			outline: 3px solid var(--accent-violet);
+			outline-offset: 2px;
+		}
 	}
 
 	&__chip {
@@ -25,6 +60,11 @@
 			border-color: var(--tone-lilac-ink);
 			background: var(--tone-lilac-ink);
 			color: var(--tone-lilac);
+		}
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: default;
 		}
 
 		&:focus-visible {

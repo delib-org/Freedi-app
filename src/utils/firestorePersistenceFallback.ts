@@ -6,6 +6,7 @@
  * eagerly initialising — the Firebase app.
  */
 import { safeLocalStorage, safeSessionStorage } from '@/utils/safeStorage';
+import { logError } from '@/utils/errorHandling';
 
 const INDEXEDDB_ERROR_KEY = 'freedi_indexeddb_error';
 
@@ -85,6 +86,47 @@ export function shouldSkipIndexedDB(): boolean {
 	}
 
 	return record.count >= 1;
+}
+
+/**
+ * Is this the Firestore SDK's "INTERNAL ASSERTION FAILED" error?
+ *
+ * Once the SDK hits one, its async queue is permanently failed for this page
+ * load: every later call - including a listener's unsubscribe - throws the same
+ * error synchronously.
+ */
+export function isFirestoreAssertionError(error: unknown): boolean {
+	if (!error) return false;
+	const errorMessage = error instanceof Error ? error.message : String(error);
+
+	return errorMessage.includes('INTERNAL ASSERTION FAILED');
+}
+
+let reportedUnsubscribeAssertion = false;
+
+/**
+ * Wrap a Firestore unsubscribe so it never throws.
+ *
+ * Unsubscribes run in React effect cleanups. When the SDK queue has failed,
+ * the throw escapes the cleanup and the nearest error boundary replaces the
+ * whole screen. The listener is dead either way, so swallowing is safe; we
+ * record the failure so the next load starts in memory-cache mode.
+ */
+export function guardUnsubscribe(unsubscribe: () => void, operation: string): () => void {
+	return () => {
+		try {
+			unsubscribe();
+		} catch (error) {
+			const assertion = isFirestoreAssertionError(error);
+			if (assertion) recordIndexedDBError();
+
+			// The failed queue repeats the same assertion for every listener.
+			if (assertion && reportedUnsubscribeAssertion) return;
+			if (assertion) reportedUnsubscribeAssertion = true;
+
+			logError(error, { operation, metadata: { phase: 'unsubscribe', isAssertion: assertion } });
+		}
+	};
 }
 
 export function clearIndexedDBErrorRecord(): void {
