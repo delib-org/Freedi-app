@@ -43,6 +43,10 @@ jest.mock('firebase-functions', () => ({
 }));
 
 const fileUnthemedAtoms = jest.fn();
+const hideEmptyThemesSafely = jest.fn(async () => 0);
+jest.mock('../pipeline/hideEmptyThemes', () => ({
+	hideEmptyThemesSafely: (...args: unknown[]) => hideEmptyThemesSafely(...(args as [])),
+}));
 jest.mock('../pipeline/fileUnthemed', () => ({
 	fileUnthemedAtoms: (...args: unknown[]) => fileUnthemedAtoms(...args),
 }));
@@ -141,6 +145,11 @@ describe('fileOnlyProcessParent', () => {
 
 		expect(result.skipped).toBe(false);
 		expect(fileUnthemedAtoms).toHaveBeenCalledWith('q1', 'Question?', 'reJudge:fileOnly');
+		expect(hideEmptyThemesSafely).toHaveBeenCalledWith(
+			expect.anything(),
+			'q1',
+			'synthesis.reJudge.fileOnly.hideEmptyThemes',
+		);
 		expect(saveSweepState).toHaveBeenCalledWith('q1', expect.any(String), [], NOW);
 	});
 
@@ -157,6 +166,7 @@ describe('fileOnlyProcessParent', () => {
 
 		expect(result).toEqual({ skipped: true, skipReason: 'unchanged' });
 		expect(fileUnthemedAtoms).not.toHaveBeenCalled();
+		expect(hideEmptyThemesSafely).not.toHaveBeenCalled();
 	});
 
 	it('skips a dormant parent even when overdue', async () => {

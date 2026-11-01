@@ -11,6 +11,7 @@ import { judgeSemanticEquivalenceCachedDetailed } from '../../services/verdict-c
 import { consolidateThemes } from '../pipeline/consolidateThemes';
 import { splitOversizedThemes } from '../pipeline/splitThemes';
 import { fileUnthemedAtoms } from '../pipeline/fileUnthemed';
+import { hideEmptyThemesSafely } from '../pipeline/hideEmptyThemes';
 import { loadSynthesisSettingsFromStatement } from '../pipeline/loadSynthesisSettings';
 import { loadLiveThemes, selectFileOnlyParents, sweepFileOnlyParents } from './reJudgeFileOnly';
 import { enqueueItem, ensureQueueRun } from '../queue/enqueue';
@@ -559,6 +560,10 @@ export async function reJudgeProcessParent(
 			error: error instanceof Error ? error.message : String(error),
 		});
 	}
+
+	// Leftover empty themes from past runs are hidden before filing, so the
+	// question shows (and exports) only themes that hold something.
+	await hideEmptyThemesSafely(db(), parentId, 'synthesis.reJudge.hideEmptyThemes');
 
 	// Last: re-offer atoms no theme claims (NONE at arrival, arrived before any
 	// theme existed, no neighbours). File-only: never creates a theme, never
