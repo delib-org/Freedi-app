@@ -65,7 +65,14 @@ const PeopleSubsection: React.FC<PeopleSubsectionProps> = ({
 					onClick={() => onToggle(id)}
 				>
 					<span className="people-subsection__title">{title}</span>
-					{summary && <span className="people-subsection__summary">{summary}</span>}
+					{summary && (
+						<>
+							<span className="people-subsection__separator" aria-hidden="true">
+								·
+							</span>
+							<span className="people-subsection__summary">{summary}</span>
+						</>
+					)}
 					{hasAttention && (
 						<span className="badge badge--unread people-subsection__count">
 							<span aria-hidden="true">

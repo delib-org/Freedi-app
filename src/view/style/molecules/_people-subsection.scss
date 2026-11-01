@@ -64,6 +64,16 @@
 		color: var(--text-title);
 	}
 
+	// "Title · summary" on one line; on phones the summary wraps under the
+	// title and the dot would start a line, so it goes.
+	&__separator {
+		color: var(--text-meta);
+
+		@include mobile {
+			display: none;
+		}
+	}
+
 	&__summary {
 		flex: 1 1 0;
 		min-inline-size: 0;

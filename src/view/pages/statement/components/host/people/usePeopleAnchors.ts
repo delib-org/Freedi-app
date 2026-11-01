@@ -12,6 +12,8 @@ interface UsePeopleAnchorsOptions {
 export interface PeopleAnchorsState {
 	isOpen: (anchor: PeopleAnchor) => boolean;
 	toggle: (anchor: string) => void;
+	/** Jump strip: open (never close) one subsection, scroll to it, focus its header. */
+	jumpTo: (anchor: PeopleAnchor) => void;
 	/** Callback ref for a subsection's header button, so a deep link can focus it. */
 	registerToggle: (anchor: PeopleAnchor) => (element: HTMLButtonElement | null) => void;
 }
@@ -39,10 +41,7 @@ export function usePeopleAnchors({
 		hasInteracted.current = true;
 		setOpen((prev) => (prev.has(requested) ? prev : new Set(prev).add(requested)));
 		// After the hub's own effect, which scrolls to the People card.
-		const frame = window.requestAnimationFrame(() => {
-			document.getElementById(requested)?.scrollIntoView?.({ block: 'start' });
-			toggles.current.get(requested)?.focus({ preventScroll: true });
-		});
+		const frame = window.requestAnimationFrame(() => revealSubsection(requested, toggles.current));
 
 		return () => window.cancelAnimationFrame(frame);
 	}, [hash, key, availableKey]);
@@ -69,6 +68,13 @@ export function usePeopleAnchors({
 		[open],
 	);
 
+	const jumpTo = useCallback((anchor: PeopleAnchor) => {
+		hasInteracted.current = true;
+		setOpen((prev) => (prev.has(anchor) ? prev : new Set(prev).add(anchor)));
+		window.history.replaceState(window.history.state, '', `#${anchor}`);
+		window.requestAnimationFrame(() => revealSubsection(anchor, toggles.current));
+	}, []);
+
 	const isOpen = useCallback((anchor: PeopleAnchor) => open.has(anchor), [open]);
 
 	const registerToggle = useCallback(
@@ -79,5 +85,14 @@ export function usePeopleAnchors({
 		[],
 	);
 
-	return { isOpen, toggle, registerToggle };
+	return { isOpen, toggle, jumpTo, registerToggle };
+}
+
+/** Scrolls the subsection's heading to the top and focuses its header button. */
+function revealSubsection(
+	anchor: PeopleAnchor,
+	toggles: ReadonlyMap<PeopleAnchor, HTMLButtonElement>,
+): void {
+	document.getElementById(anchor)?.scrollIntoView?.({ block: 'start' });
+	toggles.get(anchor)?.focus({ preventScroll: true });
 }

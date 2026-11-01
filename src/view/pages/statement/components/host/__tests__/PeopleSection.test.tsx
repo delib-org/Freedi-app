@@ -5,7 +5,11 @@ import { MemoryRouter } from 'react-router';
 import { Access, Statement, StatementType, WaitingMember } from '@freedi/shared-types';
 import { useApproveMembership } from '@/view/components/approveMembers/WaitingListVM';
 import { renderWithProviders } from '@/test-utils/test-utils';
+import { countMembers } from '@/controllers/db/membership/membersPage';
+import { getUserDemographicResponses } from '@/controllers/db/userDemographic/getUserDemographic';
+import type { MemberReviewData } from '@/types/demographics';
 import PeopleSection from '../PeopleSection';
+import { useJoinQuestionCounts } from '../people/useJoinQuestionCounts';
 import { FORM_COMPOSITION } from '../../settings/components/statementSettingsForm/StatementSettingsForm';
 
 jest.mock('@/controllers/hooks/useTranslation', () => ({
@@ -22,6 +26,13 @@ jest.mock('@/services/membershipActions', () => ({
 }));
 
 const mockedUseApprove = useApproveMembership as jest.MockedFunction<typeof useApproveMembership>;
+const mockedQuestionCounts = useJoinQuestionCounts as jest.MockedFunction<
+	typeof useJoinQuestionCounts
+>;
+const mockedResponses = getUserDemographicResponses as jest.MockedFunction<
+	typeof getUserDemographicResponses
+>;
+const mockedCountMembers = countMembers as jest.MockedFunction<typeof countMembers>;
 
 function mockStub(testId: string) {
 	return {
@@ -40,8 +51,14 @@ jest.mock('../../settings/components/UserDemographicSettings/UserDemographicSett
 	mockStub('demographics'),
 );
 jest.mock('@/controllers/db/membership/membersPage', () => ({
-	countMembers: jest.fn().mockResolvedValue(0),
+	countMembers: jest.fn().mockResolvedValue(5),
 	loadMembersPage: () => jest.fn().mockResolvedValue(0),
+}));
+jest.mock('@/controllers/db/userDemographic/getUserDemographic', () => ({
+	getUserDemographicResponses: jest.fn().mockResolvedValue([]),
+}));
+jest.mock('../people/useJoinQuestionCounts', () => ({
+	useJoinQuestionCounts: jest.fn(() => ({ asked: 0, isSameAsGroup: false })),
 }));
 jest.mock('@/controllers/db/subscriptions/setSubscriptions', () => ({
 	updateMemberRole: jest.fn().mockResolvedValue(undefined),
@@ -53,12 +70,12 @@ jest.mock('../../settings/components/QuestionSettings/ConfidenceIndexSettings', 
 	mockStub('stakeholders-setting'),
 );
 
-function makeStatement(statementType: StatementType, access?: Access): Statement {
+function makeStatement(statementType: StatementType, access?: Access, parentId = 'top'): Statement {
 	return {
 		membership: access ? { access } : undefined,
 		statementId: 's1',
 		topParentId: 's1',
-		parentId: 'top',
+		parentId,
 		statement: 'S',
 		statementType,
 		creator: { uid: 'u', displayName: 'U' },
@@ -87,22 +104,90 @@ function waiting(id: string, statementId = 's1'): WaitingMember {
 	} as WaitingMember;
 }
 
+function review(userId: string, status: MemberReviewData['status']): MemberReviewData {
+	return {
+		userId,
+		user: { uid: userId, displayName: userId },
+		responses: [],
+		flags: [],
+		status,
+	} as unknown as MemberReviewData;
+}
+
+/** Each subsection's header button, by anchor. */
+const header = (anchor: string) =>
+	document.querySelector<HTMLButtonElement>(`#${anchor} .people-subsection__header`);
+const subsectionIds = () =>
+	Array.from(document.querySelectorAll('.people-subsection')).map((el) => el.id);
+
+beforeAll(() => {
+	Element.prototype.scrollIntoView = jest.fn();
+});
 beforeEach(() => {
 	mockedUseApprove.mockReturnValue({ waitingList: [] });
+	mockedQuestionCounts.mockReturnValue({ asked: 0, isSameAsGroup: false });
+	mockedResponses.mockResolvedValue([]);
+	mockedCountMembers.mockResolvedValue(5);
 });
 
-describe('PeopleSection stakeholders', () => {
-	it.each([StatementType.question, StatementType.group])(
-		'renders the stakeholder count once for a %s',
-		(type) => {
-			renderPeople(makeStatement(type));
+describe('PeopleSection › composition (IA §4)', () => {
+	it('a group: Who can join · Members · Questions · Stakeholders', async () => {
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.group, Access.openToAll));
+		});
 
-			expect(screen.getAllByTestId('stakeholders-setting')).toHaveLength(1);
-			expect(screen.getByText('host.people.stakeholders')).toBeTruthy();
-		},
-	);
+		expect(subsectionIds()).toEqual(['join', 'members', 'questions', 'stakeholders']);
+	});
 
-	it('Results & Decision group no longer composes it, and the hub list does not either', () => {
+	it('adds Waiting (By approval) and Entry check (questions exist) in their places', async () => {
+		mockedQuestionCounts.mockReturnValue({ asked: 2, isSameAsGroup: false });
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.group, Access.moderated));
+		});
+
+		expect(subsectionIds()).toEqual([
+			'join',
+			'waiting',
+			'members',
+			'questions',
+			'entry-check',
+			'stakeholders',
+		]);
+	});
+
+	it('a question adds Joining answers & rooms last', async () => {
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.question, Access.openToAll));
+		});
+
+		expect(subsectionIds()).toEqual(['join', 'members', 'questions', 'stakeholders', 'joining']);
+	});
+
+	it('every subsection is h3 > button[aria-expanded][aria-controls], collapsed by default', async () => {
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.question, Access.openToAll));
+		});
+
+		subsectionIds().forEach((id) => {
+			const button = header(id);
+			expect(button?.parentElement?.tagName).toBe('H3');
+			expect(button).toHaveAttribute('aria-expanded', 'false');
+			expect(button).toHaveAttribute('aria-controls', `${id}-body`);
+		});
+	});
+
+	it('renders the stakeholder count once, inside #stakeholders', async () => {
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.group), '#stakeholders');
+		});
+
+		expect(screen.getAllByTestId('stakeholders-setting')).toHaveLength(1);
+		expect(
+			document.querySelector('#stakeholders [data-testid="stakeholders-setting"]'),
+		).toBeTruthy();
+	});
+
+	it('Results & Decision group no longer composes the stakeholder count', () => {
 		const source = fs.readFileSync(
 			path.resolve(
 				__dirname,
@@ -112,25 +197,106 @@ describe('PeopleSection stakeholders', () => {
 		);
 		const start = source.indexOf("t('Results & Decision')");
 		const end = source.indexOf("t('AI & Smart Features')");
-		const resultsGroup = source.slice(start, end);
 
 		expect(start).toBeGreaterThan(-1);
-		expect(end).toBeGreaterThan(start);
-		expect(resultsGroup).not.toContain('ConfidenceIndexSettings');
-		// The form renders People through PeopleSection, which renders it once.
+		expect(source.slice(start, end)).not.toContain('ConfidenceIndexSettings');
 		expect(source.match(/<ConfidenceIndexSettings /g)).toBeNull();
 		expect(source.match(/<PeopleSection\b/g)).toHaveLength(1);
 		expect(FORM_COMPOSITION.hub.map((e) => e.component)).not.toContain('ConfidenceIndexSettings');
 	});
 });
 
-describe('PeopleSection › Waiting to join', () => {
+describe('PeopleSection › summary lines', () => {
+	it('Who can join names the level; a sub-space adds "same as the group"', async () => {
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.question, undefined, 'group-1'));
+		});
+
+		expect(header('join')).toHaveTextContent(
+			'people.whoCanJoin·people.access.openToAll · people.sameAsGroup',
+		);
+	});
+
+	it('a top-level space never says "same as the group"', async () => {
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.group, Access.moderated));
+		});
+
+		expect(header('join')).toHaveTextContent('people.access.byApproval');
+		expect(header('join')).not.toHaveTextContent('people.sameAsGroup');
+		expect(header('stakeholders')).toHaveTextContent('people.notSetAnywhere');
+	});
+
+	it('Questions: count, and "same as the group" when inherited as is', async () => {
+		mockedQuestionCounts.mockReturnValue({ asked: 2, isSameAsGroup: true });
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.question, undefined, 'group-1'));
+		});
+
+		expect(header('questions')).toHaveTextContent('people.summary.questions · people.sameAsGroup');
+	});
+
+	it('Entry check carries a count badge only when answers wait for review', async () => {
+		mockedQuestionCounts.mockReturnValue({ asked: 1, isSameAsGroup: false });
+		mockedResponses.mockResolvedValue([review('a', 'pending'), review('b', 'approved')]);
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.group, Access.openToAll));
+		});
+
+		expect(document.querySelector('#entry-check .people-subsection__count')).toHaveTextContent('1');
+		expect(document.querySelector('#members .people-subsection__count')).toBeNull();
+	});
+});
+
+describe('PeopleSection › default open (UX 4.1)', () => {
+	it('opens Waiting first when someone waits for this space only', async () => {
+		mockedUseApprove.mockReturnValue({ waitingList: [waiting('w1'), waiting('w2', 'elsewhere')] });
+		mockedQuestionCounts.mockReturnValue({ asked: 1, isSameAsGroup: false });
+		mockedResponses.mockResolvedValue([review('a', 'pending')]);
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.group, Access.moderated));
+		});
+
+		expect(header('waiting')).toHaveAttribute('aria-expanded', 'true');
+		expect(header('entry-check')).toHaveAttribute('aria-expanded', 'false');
+		expect(screen.getByTestId('waiting-row-w1')).toBeTruthy();
+		expect(screen.queryByTestId('waiting-row-w2')).toBeNull();
+	});
+
+	it('else Entry check when answers wait for review', async () => {
+		mockedQuestionCounts.mockReturnValue({ asked: 1, isSameAsGroup: false });
+		mockedResponses.mockResolvedValue([review('a', 'pending')]);
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.group, Access.openToAll));
+		});
+
+		expect(header('entry-check')).toHaveAttribute('aria-expanded', 'true');
+		expect(screen.getByTestId('validation')).toBeTruthy();
+	});
+
+	it('else Who can join on a brand-new space', async () => {
+		mockedCountMembers.mockResolvedValue(1);
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.group, Access.openToAll));
+		});
+
+		expect(header('join')).toHaveAttribute('aria-expanded', 'true');
+	});
+
+	it('else nothing', async () => {
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.group, Access.openToAll));
+		});
+
+		subsectionIds().forEach((id) => expect(header(id)).toHaveAttribute('aria-expanded', 'false'));
+	});
+});
+
+describe('PeopleSection › anchors', () => {
 	const scrollIntoView = jest.fn();
 
-	beforeAll(() => {
-		Element.prototype.scrollIntoView = scrollIntoView;
-	});
 	beforeEach(() => {
+		Element.prototype.scrollIntoView = scrollIntoView;
 		scrollIntoView.mockClear();
 		jest.spyOn(window, 'requestAnimationFrame').mockImplementation((cb: FrameRequestCallback) => {
 			cb(0);
@@ -140,31 +306,22 @@ describe('PeopleSection › Waiting to join', () => {
 	});
 	afterEach(() => jest.restoreAllMocks());
 
-	it('is hidden when nobody waits and access is not By approval', () => {
-		renderPeople(makeStatement(StatementType.group, Access.openToAll));
+	it('Waiting is hidden when nobody waits and access is not By approval', async () => {
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.group, Access.openToAll));
+		});
 
 		expect(document.getElementById('waiting')).toBeNull();
 	});
 
-	it('shows, collapsed and empty-handed, when access is By approval', () => {
-		renderPeople(makeStatement(StatementType.group, Access.moderated));
-		const header = screen.getByRole('button', { name: /people\.waiting/ });
+	it('Waiting shows, collapsed and empty-handed, when access is By approval', async () => {
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.group, Access.moderated));
+		});
 
-		expect(header).toHaveAttribute('aria-expanded', 'false');
-		fireEvent.click(header);
+		expect(header('waiting')).toHaveAttribute('aria-expanded', 'false');
+		fireEvent.click(header('waiting') as HTMLButtonElement);
 		expect(screen.getByText('people.waiting.empty')).toBeTruthy();
-	});
-
-	it('opens by default when someone waits for this space only', () => {
-		mockedUseApprove.mockReturnValue({ waitingList: [waiting('w1'), waiting('w2', 'elsewhere')] });
-		renderPeople(makeStatement(StatementType.group, Access.moderated));
-
-		expect(screen.getByRole('button', { name: /people\.waiting/ })).toHaveAttribute(
-			'aria-expanded',
-			'true',
-		);
-		expect(screen.getByTestId('waiting-row-w1')).toBeTruthy();
-		expect(screen.queryByTestId('waiting-row-w2')).toBeNull();
 	});
 
 	it('follows the #waiting deep link: opens, scrolls and focuses the heading', async () => {
@@ -172,54 +329,70 @@ describe('PeopleSection › Waiting to join', () => {
 		await act(async () => {
 			renderPeople(makeStatement(StatementType.question), '#waiting');
 		});
-		const header = screen.getByRole('button', { name: /people\.waiting/ });
 
-		expect(header).toHaveAttribute('aria-expanded', 'true');
+		expect(header('waiting')).toHaveAttribute('aria-expanded', 'true');
 		expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
-		expect(document.activeElement).toBe(header);
+		expect(document.activeElement).toBe(header('waiting'));
 	});
 
-	it('ignores a deep link to a subsection that is not shown', async () => {
-		await act(async () => {
-			renderPeople(makeStatement(StatementType.group, Access.openToAll), '#waiting');
-		});
-
-		expect(scrollIntoView).not.toHaveBeenCalled();
-	});
-});
-
-describe('PeopleSection › Members', () => {
-	beforeAll(() => {
-		Element.prototype.scrollIntoView = jest.fn();
-	});
-
-	it.each([StatementType.question, StatementType.group])(
-		'renders one Members subsection, collapsed, for a %s',
-		(type) => {
-			renderPeople(makeStatement(type, Access.openToAll));
-			const header = document.querySelector('#members .people-subsection__header');
-
-			expect(document.querySelectorAll('#members')).toHaveLength(1);
-			expect(header).toHaveAttribute('aria-expanded', 'false');
-		},
-	);
-
-	it('opens from the #members deep link', async () => {
+	it('opens Members from the #members deep link', async () => {
 		await act(async () => {
 			renderPeople(makeStatement(StatementType.group, Access.openToAll), '#members');
 		});
 
-		expect(document.querySelector('#members .people-subsection__header')).toHaveAttribute(
-			'aria-expanded',
-			'true',
-		);
+		expect(header('members')).toHaveAttribute('aria-expanded', 'true');
 		expect(screen.getByRole('group', { name: 'people.filterMembers' })).toBeTruthy();
 	});
 
-	it('Waiting comes before Members', () => {
-		renderPeople(makeStatement(StatementType.group, Access.moderated));
-		const ids = Array.from(document.querySelectorAll('.people-subsection')).map((el) => el.id);
+	it('ignores a deep link to a subsection that is not shown', async () => {
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.group, Access.openToAll), '#joining');
+		});
 
-		expect(ids).toEqual(['waiting', 'members']);
+		expect(scrollIntoView).not.toHaveBeenCalled();
+	});
+
+	it('the jump strip lists the visible subsections as buttons; a chip opens, scrolls and focuses', async () => {
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.group, Access.openToAll));
+		});
+		const strip = screen.getByRole('navigation', { name: 'people.sections' });
+		const chips = Array.from(strip.querySelectorAll('button')).map((b) => b.textContent);
+
+		expect(chips).toEqual([
+			'people.whoCanJoin',
+			'people.members5',
+			'people.joinQuestions0',
+			'host.people.stakeholders',
+		]);
+		fireEvent.click(screen.getByRole('button', { name: /^host\.people\.stakeholders$/ }));
+		expect(header('stakeholders')).toHaveAttribute('aria-expanded', 'true');
+		expect(document.activeElement).toBe(header('stakeholders'));
+	});
+});
+
+describe('PeopleSection › live region', () => {
+	it('is one polite region that announces a change in the waiting count', async () => {
+		mockedUseApprove.mockReturnValue({ waitingList: [waiting('w1')] });
+		const view = await act(async () =>
+			renderPeople(makeStatement(StatementType.group, Access.moderated)),
+		);
+
+		expect(document.querySelectorAll('[aria-live="polite"]')).toHaveLength(1);
+		expect(screen.getByTestId('people-live')).toHaveTextContent('');
+
+		mockedUseApprove.mockReturnValue({ waitingList: [waiting('w1'), waiting('w2')] });
+		await act(async () => {
+			view.rerender(
+				<MemoryRouter initialEntries={['/statement-screen/s1/settings?section=people']}>
+					<PeopleSection
+						statement={makeStatement(StatementType.group, Access.moderated)}
+						setStatementToEdit={jest.fn()}
+					/>
+				</MemoryRouter>,
+			);
+		});
+
+		expect(screen.getByTestId('people-live')).toHaveTextContent('people.waitingCount');
 	});
 });

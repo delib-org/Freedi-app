@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import { Statement, StatementSubscription, WaitingMember } from '@freedi/shared-types';
 import { Users } from 'lucide-react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -40,6 +40,8 @@ interface MembersSubsectionProps {
 	toaster: PeopleToaster;
 	/** Firestore total + older pages beyond the live listener's first page. */
 	paging: MembersPaging;
+	/** Speaks through People's one polite live region (UX §7). */
+	onAnnounce: (message: string) => void;
 	isOpen: boolean;
 	onToggle: (anchor: string) => void;
 	toggleRef: (element: HTMLButtonElement | null) => void;
@@ -73,6 +75,7 @@ const MembersSubsection: FC<MembersSubsectionProps> = ({
 	decisions,
 	toaster,
 	paging,
+	onAnnounce,
 	isOpen,
 	onToggle,
 	toggleRef,
@@ -100,6 +103,12 @@ const MembersSubsection: FC<MembersSubsectionProps> = ({
 		() => new Map(decisions.visible.map((m) => [m.statementsSubscribeId, m] as const)),
 		[decisions.visible],
 	);
+
+	const matchCount = list.matching.length;
+	const hasSearch = list.search !== '';
+	useEffect(() => {
+		if (hasSearch) onAnnounce(fillPlaceholders(t('people.matchCount'), { count: matchCount }));
+	}, [hasSearch, matchCount, onAnnounce, t]);
 
 	const [menuFor, setMenuFor] = useState<MemberEntry | null>(null);
 	const [blockFor, setBlockFor] = useState<MemberEntry | null>(null);
@@ -164,12 +173,6 @@ const MembersSubsection: FC<MembersSubsectionProps> = ({
 					))}
 				</div>
 			</div>
-
-			<p className={styles.liveRegion} aria-live="polite">
-				{list.search
-					? fillPlaceholders(t('people.matchCount'), { count: list.matching.length })
-					: ''}
-			</p>
 
 			{list.shown.length > 0 && (
 				<ul className={styles.list}>

@@ -1,56 +1,29 @@
-.memberValidation {
-	padding: 1rem;
-	max-width: 1200px;
-	margin: 0 auto;
+// Entry check (#entry-check) body — counts line and the Review button. The
+// review itself lives in the Modal molecule; only layout is set here.
+@use '@/view/style/mixins' as *;
 
-	h2 {
-		color: var(--text-title);
-		margin-bottom: 1.5rem;
-		font-size: 1.5rem;
-	}
+.entryCheck {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-xs);
+}
 
-	.filterTabs {
-		display: flex;
-		gap: 0.5rem;
-		margin-bottom: 1.5rem;
-		border-bottom: 2px solid var(--border-color);
-		padding-bottom: 0.5rem;
+.counts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2xs) var(--space-md);
+	margin: 0;
+	font-size: var(--font-size-sm);
+	color: var(--text-meta);
+}
 
-		button {
-			padding: 0.5rem 1rem;
-			background: transparent;
-			border: none;
-			color: var(--text-body);
-			cursor: pointer;
-			font-size: 0.9rem;
-			transition: all 0.2s;
-			position: relative;
+.count {
+	white-space: nowrap;
+}
 
-			&:hover {
-				color: var(--text-title);
-			}
-
-			&.active {
-				color: var(--btn-primary-default);
-				font-weight: 600;
-
-				&::after {
-					content: '';
-					position: absolute;
-					bottom: -0.5rem;
-					left: 0;
-					right: 0;
-					height: 2px;
-					background: var(--btn-primary-default);
-				}
-			}
-		}
-	}
-
-	.loading {
-		text-align: center;
-		padding: 3rem;
-		color: var(--text-body);
-		font-size: 1rem;
-	}
+.countNumber {
+	@include stat-number;
+	font-weight: var(--font-weight-semibold);
+	color: var(--text-body);
 }

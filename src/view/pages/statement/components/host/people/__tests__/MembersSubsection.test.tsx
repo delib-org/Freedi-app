@@ -83,6 +83,7 @@ function Harness({
 				decisions={decisions}
 				toaster={toaster}
 				paging={paging}
+				onAnnounce={jest.fn()}
 				isOpen
 				onToggle={jest.fn()}
 				toggleRef={jest.fn()}

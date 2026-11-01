@@ -1,5 +1,4 @@
 import { FC, useState, useEffect, useCallback } from 'react';
-import { Users } from 'lucide-react';
 import { Statement, StatementSettings } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
@@ -12,7 +11,6 @@ import {
 } from '@/controllers/db/joining/splitJoinedOption';
 import { logError } from '@/utils/errorHandling';
 import { JOINING } from '@/constants/common';
-import { SettingsSection } from '../settingsSection';
 import JoinBehaviorSettings from './JoinBehaviorSettings';
 import RoomSizeSettings from './RoomSizeSettings';
 import RoomDiversitySettings from './RoomDiversitySettings';
@@ -178,59 +176,48 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 	}, [options, statement.statementId, maxMembers, scrambleByQuestions, loadOptions]);
 
 	return (
-		<SettingsSection
-			title={t('Rooms')}
-			description={t('Configure how participants group around options')}
-			icon={Users}
-			priority="medium"
-			defaultExpanded={false}
-			tooltip={t(
-				'Help users join options and form optimal-sized, diverse groups for better deliberation',
+		<div className={styles.optionRooms}>
+			<JoinBehaviorSettings
+				joiningEnabled={joiningEnabled}
+				singleJoinOnly={singleJoinOnly}
+				onSingleJoinOnlyChange={handleSingleJoinOnlyChange}
+			/>
+
+			{joiningEnabled && (
+				<>
+					<RoomSizeSettings
+						minMembers={minMembers}
+						maxMembers={maxMembers}
+						onMinMembersChange={handleMinMembersChange}
+						onMaxMembersChange={handleMaxMembersChange}
+					/>
+
+					<RoomDiversitySettings
+						statementId={statement.statementId}
+						topParentId={topParentId}
+						selectedQuestionIds={scrambleByQuestions}
+						onQuestionToggle={handleQuestionToggle}
+					/>
+
+					<OptionsStatusList
+						options={options}
+						onAssignAllRooms={handleAssignAllRooms}
+						isAssigning={isSplitting}
+					/>
+
+					<CreatedRoomsDisplay statementId={statement.statementId} options={options} />
+
+					{splitResult && (
+						<div className={styles.optionRooms__splitResult}>
+							<p className={styles.optionRooms__splitResultText}>
+								{t('Successfully assigned')} {splitResult.totalParticipants} {t('participants')}{' '}
+								{t('into')} {splitResult.totalRooms} {t('rooms')}.
+							</p>
+						</div>
+					)}
+				</>
 			)}
-		>
-			<div className={styles.optionRooms}>
-				<JoinBehaviorSettings
-					joiningEnabled={joiningEnabled}
-					singleJoinOnly={singleJoinOnly}
-					onSingleJoinOnlyChange={handleSingleJoinOnlyChange}
-				/>
-
-				{joiningEnabled && (
-					<>
-						<RoomSizeSettings
-							minMembers={minMembers}
-							maxMembers={maxMembers}
-							onMinMembersChange={handleMinMembersChange}
-							onMaxMembersChange={handleMaxMembersChange}
-						/>
-
-						<RoomDiversitySettings
-							statementId={statement.statementId}
-							topParentId={topParentId}
-							selectedQuestionIds={scrambleByQuestions}
-							onQuestionToggle={handleQuestionToggle}
-						/>
-
-						<OptionsStatusList
-							options={options}
-							onAssignAllRooms={handleAssignAllRooms}
-							isAssigning={isSplitting}
-						/>
-
-						<CreatedRoomsDisplay statementId={statement.statementId} options={options} />
-
-						{splitResult && (
-							<div className={styles.optionRooms__splitResult}>
-								<p className={styles.optionRooms__splitResultText}>
-									{t('Successfully assigned')} {splitResult.totalParticipants} {t('participants')}{' '}
-									{t('into')} {splitResult.totalRooms} {t('rooms')}.
-								</p>
-							</div>
-						)}
-					</>
-				)}
-			</div>
-		</SettingsSection>
+		</div>
 	);
 };
 

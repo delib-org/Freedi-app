@@ -90,6 +90,17 @@ export function toMemberEntries(
 	});
 }
 
+/** Everyone the Members list counts under All (unsubscribed and unknown roles excluded). */
+export function countPeople(
+	subscriptions: ReadonlyArray<StatementSubscription>,
+	creatorUid: string | undefined,
+): number {
+	return subscriptions.filter(
+		(subscription) =>
+			!!subscription.user?.uid && kindOf(subscription.role, subscription.user.uid, creatorUid),
+	).length;
+}
+
 export function matchesFilter(kind: MemberKind, filter: MemberFilter): boolean {
 	return filter === 'all' || KINDS_BY_FILTER[filter].includes(kind);
 }

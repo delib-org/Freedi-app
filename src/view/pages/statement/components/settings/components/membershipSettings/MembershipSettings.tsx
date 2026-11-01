@@ -1,6 +1,5 @@
 import { FC, useState, useEffect } from 'react';
 import { Access, Statement } from '@freedi/shared-types';
-import SectionTitle from '../sectionTitle/SectionTitle';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { setStatementMembership } from '@/controllers/db/statements/setStatementMembership';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -111,7 +110,6 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 
 	return (
 		<div className={styles.membershipSettings}>
-			<SectionTitle title={t('people.whoCanJoin')} />
 			{isTopLevel ? (
 				picker
 			) : (

@@ -1,6 +1,5 @@
 import React, { FC, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import SectionTitle from '../sectionTitle/SectionTitle';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import SettingsModal from '../settingsModal/SettingsModal';
 import UserQuestionComp from './userQuestion/UserQuestionComp';
@@ -37,6 +36,7 @@ import CheckboxEmptyIcon from '@/assets/icons/checkboxEmptyIcon.svg?react';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import InlineNote from '@/view/components/atomic/atoms/InlineNote';
 import InheritedJoinQuestions from './InheritedJoinQuestions';
+import OwnJoinQuestions from './OwnJoinQuestions';
 import { useInheritedDemographics } from '@/controllers/hooks/userDemographic/useInheritedDemographics';
 import { setExcludedInheritedDemographics } from '@/controllers/db/userDemographic/excludedInheritedDemographics';
 import { logError } from '@/utils/errorHandling';
@@ -252,7 +252,6 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 
 	return (
 		<div>
-			<SectionTitle title={t('people.joinQuestions')} />
 			{!isTopParent && inheritedQuestions.length > 0 && (
 				<InheritedJoinQuestions
 					questions={inheritedQuestions}
@@ -262,11 +261,11 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 				/>
 			)}
 			{excludeSaveFailed && <InlineNote variant="error">{t('people.error.save')}</InlineNote>}
-			<div className="btns">
-				<button className="btn btn--secondary" onClick={() => setShowModal(true)}>
-					{t('Survey')}
-				</button>
-			</div>
+			<OwnJoinQuestions
+				questions={userQuestions}
+				hasInherited={!isTopParent && inheritedQuestions.length > 0}
+				onOpenEditor={() => setShowModal(true)}
+			/>
 			{showModal && (
 				<SettingsModal
 					closeModal={closeModal}
@@ -279,7 +278,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 							<div className={styles.spacer}></div>
 							<X className={styles.XBtn} onClick={closeModal} />
 						</div>
-						<h3>{t('Survey setting')}</h3>
+						<h3>{t('people.joinQuestions')}</h3>
 
 						{/* New Question Form */}
 						<form className={styles.newQuestionForm} onSubmit={handleAddNewQuestion}>
