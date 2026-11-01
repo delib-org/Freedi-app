@@ -1220,3 +1220,34 @@ export type {
   ThemeRebuildFailureReason,
 } from './models/themeRebuild/themeRebuildCallables';
 export { THEME_SOURCE_LLM_REBUILD } from './models/themeRebuild/themeRebuildCallables';
+
+// Statement data export (shared by the main app and the fullExport callable)
+export {
+	isDerivedStatement,
+	resolveDerivedPipeline,
+} from './utils/derivedStatement';
+export type { DerivedPipeline } from './utils/derivedStatement';
+export {
+	computeOtherIdeas,
+	OTHER_IDEAS_EXPORT_ID,
+	OTHER_IDEAS_ID,
+} from './utils/otherIdeas';
+export type { IdeaNode, OtherIdeasResult } from './utils/otherIdeas';
+export {
+	PROPERTY_DOCUMENTATION,
+	anonymizeSimpleStatement,
+	extractExportableData,
+	toExportRows,
+} from './utils/exportFormat';
+export type {
+	AnonymizedSimpleStatement,
+	ExportableStatementData,
+	ExportData,
+	ExportMetadata,
+	PropertyDoc,
+	PropertyDocumentation,
+	ExportFormat,
+	FullExportMeta,
+	FullExportRequest,
+	FullExportResponse,
+} from './utils/exportFormat';
