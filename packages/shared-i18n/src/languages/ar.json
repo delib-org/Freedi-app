@@ -4624,5 +4624,6 @@
   "removeQuestionFromSurvey": "إزالة هذا السؤال من الاستطلاع؟",
   "removeQuestionConfirmMessage": "ستفقد إعداداته.",
   "questionRemovedFromSurvey": "تمت إزالة السؤال من الاستطلاع",
-  "undo": "تراجع"
+  "undo": "تراجع",
+  "suggestedQuestions": "مقترحة (من السؤال الأصل نفسه)"
 }

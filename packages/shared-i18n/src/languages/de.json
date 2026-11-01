@@ -4505,5 +4505,6 @@
   "removeQuestionFromSurvey": "Diese Frage aus der Umfrage entfernen?",
   "removeQuestionConfirmMessage": "Ihre Einstellungen gehen verloren.",
   "questionRemovedFromSurvey": "Frage aus der Umfrage entfernt",
-  "undo": "Rückgängig"
+  "undo": "Rückgängig",
+  "suggestedQuestions": "Vorgeschlagen (vom selben Elternteil)"
 }

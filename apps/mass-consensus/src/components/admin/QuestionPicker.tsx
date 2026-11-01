@@ -7,6 +7,7 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { authedFetch } from '@/lib/api/authedFetch';
 import { logError, httpErrorFromResponse } from '@/lib/utils/errorHandling';
+import { useSuggestedQuestions } from './useSuggestedQuestions';
 import styles from './Admin.module.scss';
 
 interface QuestionPickerProps {
@@ -41,6 +42,7 @@ export default function QuestionPicker({
   const [searchQuery, setSearchQuery] = useState('');
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
+  const suggestedQuestions = useSuggestedQuestions(selectedQuestions);
 
   // Debounce timer ref
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -175,6 +177,29 @@ export default function QuestionPicker({
         value={searchQuery}
         onChange={(e) => handleSearchChange(e.target.value)}
       />
+
+      {!searchQuery && suggestedQuestions.length > 0 && (
+        <div className={styles.suggestedSection}>
+          <h3 className={styles.suggestedTitle}>{t('suggestedQuestions')}</h3>
+          <div className={styles.questionList}>
+            {suggestedQuestions.map((question) => (
+              <div
+                key={question.statementId}
+                className={styles.questionItem}
+                onClick={() => handleToggleQuestion(question)}
+              >
+                <input
+                  type="checkbox"
+                  className={styles.questionCheckbox}
+                  checked={false}
+                  onChange={() => handleToggleQuestion(question)}
+                />
+                <span className={styles.questionText}>{question.statement}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className={styles.loading}>

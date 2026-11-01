@@ -4505,5 +4505,6 @@
   "removeQuestionFromSurvey": "Deze vraag uit de enquête verwijderen?",
   "removeQuestionConfirmMessage": "De instellingen gaan verloren.",
   "questionRemovedFromSurvey": "Vraag uit de enquête verwijderd",
-  "undo": "Ongedaan maken"
+  "undo": "Ongedaan maken",
+  "suggestedQuestions": "Voorgesteld (van dezelfde bovenliggende vraag)"
 }

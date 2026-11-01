@@ -8,6 +8,13 @@ import { getFirestoreAdmin } from '../admin';
 import { Survey, SurveyStatus } from '@/types/survey';
 import { logger } from '@/lib/utils/logger';
 import { SURVEYS_COLLECTION } from './surveyHelpers';
+import { QUESTION_SEARCH } from '@/constants/common';
+import {
+  scanCreatorQuestions,
+  fetchCreatorQuestionsPage,
+  fetchAdminQuestions,
+  getAdminStatementIds,
+} from './questionSearchFetch';
 
 /**
  * Get questions created by an admin
@@ -130,15 +137,7 @@ export async function searchQuestions(
   const searchLower = search.toLowerCase().trim();
 
   // First, get all statement IDs user has access to via admin subscriptions
-  const subscriptionsSnapshot = await db
-    .collection(Collections.statementsSubscribe)
-    .where('userId', '==', userId)
-    .where('role', '==', Role.admin)
-    .get();
-
-  const adminStatementIds = new Set(
-    subscriptionsSnapshot.docs.map((doc) => doc.data().statementId as string)
-  );
+  const adminStatementIds = await getAdminStatementIds(db, userId);
 
   // Build the query for questions
   // We need to fetch questions where:
@@ -146,45 +145,18 @@ export async function searchQuestions(
   // 2. statementId is in adminStatementIds
   // Firestore doesn't support OR queries, so we'll query both and merge
 
-  // Strategy: Fetch a larger batch and filter client-side for search
-  // This is more efficient than multiple queries for text search
-  const fetchLimit = search ? limit * 3 : limit + 1; // Fetch more if searching
+  // Searching scans everything the admin can access, of any age: the match is an
+  // in-memory substring test, so a size-limited unordered fetch would miss old
+  // questions. Browsing without a search keeps the cheap limited fetch.
+  const creatorQuestions = searchLower
+    ? await scanCreatorQuestions(db, userId)
+    : await fetchCreatorQuestionsPage(db, userId, limit + 1, cursor);
 
-  // Query 1: Questions created by user
-  let creatorQuery = db
-    .collection(Collections.statements)
-    .where('creatorId', '==', userId)
-    .where('statementType', '==', StatementType.question)
-    .limit(fetchLimit);
-
-  if (cursor) {
-    const cursorDoc = await db.collection(Collections.statements).doc(cursor).get();
-    if (cursorDoc.exists) {
-      creatorQuery = creatorQuery.startAfter(cursorDoc);
-    }
-  }
-
-  const creatorSnapshot = await creatorQuery.get();
-  const creatorQuestions = creatorSnapshot.docs.map((doc) => doc.data() as Statement);
-
-  // Query 2: Questions from admin subscriptions (batch query)
-  const adminQuestions: Statement[] = [];
-  if (adminStatementIds.size > 0) {
-    const adminIds = Array.from(adminStatementIds);
-    const batchSize = 30; // Firestore 'in' query limit
-
-    for (let i = 0; i < Math.min(adminIds.length, batchSize * 3); i += batchSize) {
-      const batch = adminIds.slice(i, i + batchSize);
-      const adminSnapshot = await db
-        .collection(Collections.statements)
-        .where('statementId', 'in', batch)
-        .where('statementType', '==', StatementType.question)
-        .get();
-
-      const batchQuestions = adminSnapshot.docs.map((doc) => doc.data() as Statement);
-      adminQuestions.push(...batchQuestions);
-    }
-  }
+  const adminIdLimit = searchLower ? QUESTION_SEARCH.MAX_ADMIN_IDS : QUESTION_SEARCH.BROWSE_ADMIN_IDS;
+  const adminQuestions = await fetchAdminQuestions(
+    db,
+    Array.from(adminStatementIds).slice(0, adminIdLimit)
+  );
 
   // Merge and deduplicate
   const questionMap = new Map<string, Statement>();

@@ -35,6 +35,23 @@ export const UI = {
 } as const;
 
 /**
+ * Limits for the admin question-picker search. Search scans everything the
+ * admin can access (any age), so these only guard against runaway reads.
+ */
+export const QUESTION_SEARCH = {
+  /** Documents read per Firestore page while scanning the admin's own questions */
+  SCAN_PAGE_SIZE: 500,
+  /** Most of the admin's own questions a single search will scan */
+  MAX_CREATOR_DOCS: 5000,
+  /** Most admin-subscription statements a single search will look up */
+  MAX_ADMIN_IDS: 1500,
+  /** Admin-subscription statements looked up when browsing without a search */
+  BROWSE_ADMIN_IDS: 90,
+  /** Firestore 'in' query limit */
+  IN_QUERY_BATCH: 30,
+} as const;
+
+/**
  * Validation constants
  */
 export const VALIDATION = {

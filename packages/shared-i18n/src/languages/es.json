@@ -4505,5 +4505,6 @@
   "removeQuestionFromSurvey": "¿Quitar esta pregunta de la encuesta?",
   "removeQuestionConfirmMessage": "Se perderá su configuración.",
   "questionRemovedFromSurvey": "Pregunta quitada de la encuesta",
-  "undo": "Deshacer"
+  "undo": "Deshacer",
+  "suggestedQuestions": "Sugeridas (del mismo padre)"
 }
