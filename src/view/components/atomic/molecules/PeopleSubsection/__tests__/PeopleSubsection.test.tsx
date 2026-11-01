@@ -1,6 +1,6 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import PeopleSubsection from '../PeopleSubsection';
+import PeopleSubsection, { subsectionHeaderName } from '../PeopleSubsection';
 
 function renderSubsection(props: Partial<React.ComponentProps<typeof PeopleSubsection>> = {}) {
 	const onToggle = jest.fn();
@@ -86,5 +86,27 @@ describe('PeopleSubsection', () => {
 		renderSubsection({ summary: 'Open to all' });
 
 		expect(screen.getByText('Open to all')).toHaveClass('people-subsection__summary');
+	});
+
+	it('gives the header one clean name when the summary repeats the badge', () => {
+		renderSubsection({
+			id: 'entry-check',
+			title: 'Entry check',
+			summary: '3 to review',
+			count: 3,
+			countLabel: '3 to review',
+		});
+
+		expect(screen.getByRole('button')).toHaveAccessibleName('Entry check, 3 to review');
+	});
+});
+
+describe('subsectionHeaderName', () => {
+	it('joins title, summary and badge label, dropping repeats and blanks', () => {
+		expect(subsectionHeaderName('Waiting to join', '2 waiting', '2 waiting')).toBe(
+			'Waiting to join, 2 waiting',
+		);
+		expect(subsectionHeaderName('Members', '12 members', undefined)).toBe('Members, 12 members');
+		expect(subsectionHeaderName('Who can join', '', '1 waiting')).toBe('Who can join, 1 waiting');
 	});
 });

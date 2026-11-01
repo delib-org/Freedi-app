@@ -30,6 +30,19 @@ export interface PeopleSubsectionProps {
 
 const MAX_BADGE_COUNT = 99;
 
+/**
+ * One clean name for the header button: title, then summary, then the
+ * badge's spoken label unless the summary already says it ("Entry check,
+ * 3 to review" — not "Entry check · 3 to review 3 3 to review").
+ */
+export function subsectionHeaderName(title: string, summary?: string, countLabel?: string): string {
+	const parts = [title, summary, countLabel].filter(
+		(part): part is string => typeof part === 'string' && part.trim() !== '',
+	);
+
+	return [...new Set(parts)].join(', ');
+}
+
 const PeopleSubsection: React.FC<PeopleSubsectionProps> = ({
 	id,
 	title,
@@ -60,6 +73,7 @@ const PeopleSubsection: React.FC<PeopleSubsectionProps> = ({
 					ref={toggleRef}
 					type="button"
 					className="people-subsection__header"
+					aria-label={subsectionHeaderName(title, summary, hasAttention ? countLabel : undefined)}
 					aria-expanded={isOpen}
 					aria-controls={bodyId}
 					onClick={() => onToggle(id)}
@@ -74,11 +88,8 @@ const PeopleSubsection: React.FC<PeopleSubsectionProps> = ({
 						</>
 					)}
 					{hasAttention && (
-						<span className="badge badge--unread people-subsection__count">
-							<span aria-hidden="true">
-								{count > MAX_BADGE_COUNT ? `${MAX_BADGE_COUNT}+` : count}
-							</span>
-							{countLabel && <span className="people-subsection__count-label">{countLabel}</span>}
+						<span className="badge badge--unread people-subsection__count" aria-hidden="true">
+							{count > MAX_BADGE_COUNT ? `${MAX_BADGE_COUNT}+` : count}
 						</span>
 					)}
 					<ChevronDown className="people-subsection__chevron" aria-hidden="true" />
