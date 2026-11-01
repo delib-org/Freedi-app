@@ -31,6 +31,17 @@ jest.mock('../../../condensation/aggregation', () => ({
 	recomputeClusterEvaluation: (...args: unknown[]) => mockRecomputeClusterEvaluation(...args),
 }));
 
+// The member-tree loader reads Firestore docs; here every member is a plain option.
+jest.mock('../../../condensation/clusterTreeLoader', () => ({
+	loadClusterTree: async (
+		rootId: string,
+		root: import('../../../condensation/clusterTree').ClusterStatementLike,
+	) =>
+		jest
+			.requireActual('../../../condensation/clusterTree')
+			.buildClusterTree(rootId, (id: string) => (id === rootId ? root : undefined)),
+}));
+
 import {
 	computeEffectiveVote,
 	debugAggregatePreview,

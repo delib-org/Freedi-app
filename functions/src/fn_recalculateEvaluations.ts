@@ -14,28 +14,12 @@ import type { PopperHebbianScore } from '@freedi/shared-types';
 import { calculateConsensusValid } from './helpers/consensusValidCalculator';
 import { resolveQuestionPopulation } from './evaluation/resolveQuestionPopulation';
 import { hasCounterMismatch, recomputeOptionCounters } from './evaluation/recomputeOptionCounters';
+import { planClusterRecompute, type StatementFix } from './evaluation/planClusterRecompute';
+import { buildQuestionClusterTrees } from './evaluation/questionClusterTrees';
 
 interface RecalculateRequest {
 	statementId: string; // Parent statement ID (the question)
 	dryRun?: boolean; // If true, only report what would change without applying
-}
-
-interface StatementFix {
-	statementId: string;
-	statementText?: string; // First 50 chars of statement text for identification
-	isClusterOption?: boolean;
-	before: {
-		numberOfEvaluators: number;
-		numberOfProEvaluators: number;
-		numberOfConEvaluators: number;
-		consensus?: number;
-	};
-	after: {
-		numberOfEvaluators: number;
-		numberOfProEvaluators: number;
-		numberOfConEvaluators: number;
-		consensus?: number;
-	};
 }
 
 interface RecalculateResult {
@@ -152,6 +136,21 @@ export async function bulkRecalculateForParent(
 	}
 	const planned: PlannedUpdate[] = [];
 
+	// 3b. Member trees of the question's clusters (theme -> synthesis -> options),
+	//     so a cluster's score follows votes through nested clusters exactly like
+	//     recomputeClusterEvaluation does.
+	const isClusterDoc = (statement: Statement & { integratedOptions?: string[] }): boolean =>
+		(statement.integratedOptions ?? []).length > 0 || statement.isCluster === true;
+	const optionsById = new Map(
+		optionsSnapshot.docs.map((doc) => [doc.id, doc.data() as Statement] as const),
+	);
+	const clusterTrees = await buildQuestionClusterTrees(
+		parentId,
+		optionsById,
+		[...optionsById.entries()].filter(([, statement]) => isClusterDoc(statement)).map(([id]) => id),
+		evalsByStatementId,
+	);
+
 	for (const doc of optionsSnapshot.docs) {
 		result.statementsProcessed++;
 		try {
@@ -165,9 +164,11 @@ export async function bulkRecalculateForParent(
 				(statement.integratedOptions && statement.integratedOptions.length > 0) ||
 				statement.isCluster === true;
 
-			const plannedUpdate = isClusterOption
-				? planClusterRecompute(statement, doc.id, evalsByStatementId, populationSize)
-				: planOptionRecompute(statement, doc.id, evalsByStatementId, populationSize);
+			const clusterTree = clusterTrees.get(doc.id);
+			const plannedUpdate =
+				isClusterOption && clusterTree
+					? planClusterRecompute(statement, doc.id, clusterTree, evalsByStatementId, populationSize)
+					: planOptionRecompute(statement, doc.id, evalsByStatementId, populationSize);
 
 			if (plannedUpdate) {
 				planned.push({ ref: doc.ref, ...plannedUpdate });
@@ -313,138 +314,6 @@ function planOptionRecompute(
 			statementId,
 			statementText: statement.statement?.substring(0, 50),
 			isClusterOption: false,
-			before: { ...before, consensus: statement.consensus ?? 0 },
-			after: {
-				numberOfEvaluators: totalEvaluators,
-				numberOfProEvaluators: counters.numberOfProEvaluators,
-				numberOfConEvaluators: counters.numberOfConEvaluators,
-				consensus: agreement,
-			},
-		},
-	};
-}
-
-/**
- * Cluster-option recompute using pre-grouped evaluations. Direct evaluations
- * on the cluster OVERWRITE source-statement evaluations for the same user,
- * matching the legacy semantics.
- */
-function planClusterRecompute(
-	statement: Statement & { integratedOptions?: string[]; isCluster?: boolean },
-	clusterId: string,
-	evalsByStatementId: Map<string, Evaluation[]>,
-	populationSize: number | undefined,
-): { payload: Record<string, unknown>; fix: StatementFix } | null {
-	const sourceIds = statement.integratedOptions ?? [];
-	if (sourceIds.length === 0) return null;
-
-	interface UserEval {
-		evaluation: number;
-		isDirect: boolean;
-		sourceEvaluations: number[];
-	}
-	const userEvals = new Map<string, UserEval>();
-
-	// Source evaluations (averaged per user across their sources).
-	for (const sourceId of sourceIds) {
-		const evals = evalsByStatementId.get(sourceId) ?? [];
-		for (const e of evals) {
-			const uid = e.evaluator?.uid ?? e.evaluatorId;
-			if (!uid) continue;
-			const existing = userEvals.get(uid);
-			if (existing && !existing.isDirect) {
-				existing.sourceEvaluations.push(e.evaluation);
-				existing.evaluation =
-					existing.sourceEvaluations.reduce((a, b) => a + b, 0) / existing.sourceEvaluations.length;
-			} else if (!existing) {
-				userEvals.set(uid, {
-					evaluation: e.evaluation,
-					isDirect: false,
-					sourceEvaluations: [e.evaluation],
-				});
-			}
-		}
-	}
-
-	// Direct evaluations on the cluster itself OVERRIDE the source avg.
-	const directEvals = evalsByStatementId.get(clusterId) ?? [];
-	for (const e of directEvals as (Evaluation & { migratedAt?: number })[]) {
-		if (e.migratedAt) continue;
-		const uid = e.evaluator?.uid ?? e.evaluatorId;
-		if (!uid) continue;
-		userEvals.set(uid, {
-			evaluation: e.evaluation,
-			isDirect: true,
-			sourceEvaluations: [],
-		});
-	}
-
-	// One entry per distinct voter (zeros included), same rule as plain options.
-	const counters = recomputeOptionCounters(
-		[...userEvals.values()].map((data) => ({ evaluation: data.evaluation })),
-		populationSize,
-	);
-	const { agreement, numberOfEvaluators: totalEvaluators } = counters;
-
-	const currentEval: StatementEvaluation = statement.evaluation || {
-		numberOfEvaluators: 0,
-		numberOfProEvaluators: 0,
-		numberOfConEvaluators: 0,
-		sumEvaluations: 0,
-		sumPro: 0,
-		sumCon: 0,
-		sumSquaredEvaluations: 0,
-		averageEvaluation: 0,
-		agreement: 0,
-		evaluationRandomNumber: Math.random(),
-		viewed: 0,
-	};
-	const before = {
-		numberOfEvaluators: currentEval.numberOfEvaluators || 0,
-		numberOfProEvaluators: currentEval.numberOfProEvaluators || 0,
-		numberOfConEvaluators: currentEval.numberOfConEvaluators || 0,
-	};
-
-	const consensusValid = calculateConsensusValid(
-		agreement,
-		(statement as Statement & { popperHebbianScore?: PopperHebbianScore }).popperHebbianScore ??
-			undefined,
-	);
-
-	const updatedEvaluation: StatementEvaluation = {
-		...currentEval,
-		numberOfEvaluators: counters.numberOfEvaluators,
-		numberOfProEvaluators: counters.numberOfProEvaluators,
-		numberOfConEvaluators: counters.numberOfConEvaluators,
-		sumEvaluations: counters.sumEvaluations,
-		sumSquaredEvaluations: counters.sumSquaredEvaluations,
-		sumPro: counters.sumPro,
-		sumCon: counters.sumCon,
-		averageEvaluation: counters.averageEvaluation,
-		agreement,
-		agreementIndex: counters.agreementIndex,
-		evaluationRandomNumber: currentEval.evaluationRandomNumber ?? Math.random(),
-		viewed: currentEval.viewed ?? 0,
-	};
-	if (counters.stakeholderCount !== undefined) {
-		updatedEvaluation.stakeholderCount = counters.stakeholderCount;
-	} else {
-		delete updatedEvaluation.stakeholderCount;
-	}
-
-	return {
-		payload: {
-			evaluation: updatedEvaluation,
-			totalEvaluators,
-			consensus: agreement,
-			consensusValid,
-			proSum: counters.sumPro,
-			conSum: counters.sumCon,
-		},
-		fix: {
-			statementId: clusterId,
-			statementText: statement.statement?.substring(0, 50),
-			isClusterOption: true,
 			before: { ...before, consensus: statement.consensus ?? 0 },
 			after: {
 				numberOfEvaluators: totalEvaluators,
