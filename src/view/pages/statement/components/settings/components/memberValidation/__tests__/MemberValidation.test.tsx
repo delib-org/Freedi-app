@@ -68,9 +68,10 @@ describe('MemberValidation (Entry check)', () => {
 			/>,
 		);
 		fireEvent.click(screen.getByRole('button', { name: 'people.reviewAnswers' }));
-		const dialog = screen.getByRole('dialog');
+		const dialog = screen.getByRole('dialog', { name: 'people.entryCheck' });
 
-		expect(within(dialog).getByText('people.entryCheck')).toBeTruthy();
+		expect(dialog).toHaveAttribute('aria-labelledby');
+		expect(dialog).not.toHaveAttribute('aria-label');
 		expect(within(screen.getByTestId('review-list')).getAllByRole('listitem')).toHaveLength(1);
 		fireEvent.click(within(dialog).getByRole('tab', { name: /people\.filter\.all/ }));
 		expect(within(screen.getByTestId('review-list')).getAllByRole('listitem')).toHaveLength(2);

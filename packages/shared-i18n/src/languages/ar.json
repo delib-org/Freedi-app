@@ -4784,5 +4784,6 @@
   "people.rooms.assigned": "تم التوزيع على الغرف",
   "people.rooms.splitDone": "تم التوزيع على الغرف: {{rooms}}، {{people}}.",
   "people.rooms.replace.title_one": "استبدال الغرفة الموجودة؟",
-  "people.rooms.replace.title_other": "استبدال الغرف الموجودة وعددها {{count}}؟"
+  "people.rooms.replace.title_other": "استبدال الغرف الموجودة وعددها {{count}}؟",
+  "people.entry.answersOf": "إجابات {{name}}"
 }

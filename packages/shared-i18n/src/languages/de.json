@@ -4665,5 +4665,6 @@
   "people.rooms.assigned": "Räume zugeteilt",
   "people.rooms.splitDone": "{{people}} auf {{rooms}} aufgeteilt.",
   "people.rooms.replace.title_one": "Den bestehenden Raum ersetzen?",
-  "people.rooms.replace.title_other": "Die {{count}} bestehenden Räume ersetzen?"
+  "people.rooms.replace.title_other": "Die {{count}} bestehenden Räume ersetzen?",
+  "people.entry.answersOf": "Antworten von {{name}}"
 }

@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useId, useState } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import Button from '@/view/components/atomic/atoms/Button';
@@ -41,6 +41,7 @@ interface Props {
 const MemberValidation: FC<Props> = ({ statement, entryCheck }) => {
 	const { t } = useTranslation();
 	const [isReviewing, setIsReviewing] = useState(false);
+	const modalTitleId = useId();
 	const [filter, setFilter] = useState<EntryFilter>('pending');
 	const { members, counts, isLoading, reload, decide } = entryCheck;
 	const filtered = filter === 'all' ? members : members.filter((m) => m.status === filter);
@@ -67,6 +68,7 @@ const MemberValidation: FC<Props> = ({ statement, entryCheck }) => {
 				onClose={() => setIsReviewing(false)}
 				size="large"
 				title={t('people.entryCheck')}
+				titleId={modalTitleId}
 				closeButtonLabel={t('Close')}
 			>
 				<SegmentedControl
