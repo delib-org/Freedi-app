@@ -62,7 +62,6 @@ describe('OptionRooms (Joining answers & rooms)', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		roomSettings = [];
-		// Room size defaults to 7 (JOINING.DEFAULT_ROOM_SIZE): a full room joined.
 		mockedOptions.mockResolvedValue({ options: [answer('a', 7)] });
 		mockedClear.mockResolvedValue(undefined);
 		mockedSplit.mockResolvedValue({ totalRooms: 1, totalParticipants: 4 });
@@ -128,8 +127,8 @@ describe('OptionRooms (Joining answers & rooms)', () => {
 		);
 	});
 
-	it('Split is disabled until one answer has a room’s worth of people', async () => {
-		mockedOptions.mockResolvedValue({ options: [answer('a', 6)] });
+	it('Split is disabled until two people joined one answer', async () => {
+		mockedOptions.mockResolvedValue({ options: [answer('a', 1)] });
 		await act(async () => {
 			render(<OptionRooms statement={question({ joiningEnabled: true })} />);
 		});
@@ -138,17 +137,22 @@ describe('OptionRooms (Joining answers & rooms)', () => {
 		expect(screen.getByText('people.rooms.needTwo')).toBeTruthy();
 	});
 
-	it('the room size the host set is the bar, not the default', async () => {
-		mockedOptions.mockResolvedValue({ options: [answer('a', 3)] });
+	it('an answer smaller than a room is still split (into one smaller room)', async () => {
+		mockedOptions.mockResolvedValue({ options: [answer('b', 2), answer('a', 9)] });
 		await act(async () => {
-			render(<OptionRooms statement={question({ joiningEnabled: true, maxJoinMembers: 3 })} />);
+			render(<OptionRooms statement={question({ joiningEnabled: true })} />);
+		});
+		await act(async () => {
+			fireEvent.click(screen.getByRole('button', { name: 'people.rooms.split' }));
 		});
 
-		expect(screen.getByRole('button', { name: 'people.rooms.split' })).toBeEnabled();
+		await waitFor(() => expect(mockedSplit).toHaveBeenCalledTimes(2));
+		expect(mockedSplit).toHaveBeenCalledWith(expect.objectContaining({ optionStatementId: 'b' }));
+		expect(screen.queryByText('people.rooms.splitFailed')).toBeNull();
 	});
 
-	it('skips answers with fewer people than a room instead of failing the split', async () => {
-		mockedOptions.mockResolvedValue({ options: [answer('b', 2), answer('a', 9)] });
+	it('skips an answer only one person joined instead of failing the split', async () => {
+		mockedOptions.mockResolvedValue({ options: [answer('b', 1), answer('a', 3)] });
 		await act(async () => {
 			render(<OptionRooms statement={question({ joiningEnabled: true })} />);
 		});
@@ -158,7 +162,6 @@ describe('OptionRooms (Joining answers & rooms)', () => {
 
 		await waitFor(() => expect(mockedSplit).toHaveBeenCalledTimes(1));
 		expect(mockedSplit).toHaveBeenCalledWith(expect.objectContaining({ optionStatementId: 'a' }));
-		expect(screen.queryByText('people.rooms.splitFailed')).toBeNull();
 	});
 
 	it('a failed split says so inline', async () => {

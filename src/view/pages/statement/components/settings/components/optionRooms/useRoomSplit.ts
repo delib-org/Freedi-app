@@ -5,6 +5,7 @@ import {
 	splitJoinedOption,
 } from '@/controllers/db/joining/splitJoinedOption';
 import { logError } from '@/utils/errorHandling';
+import { JOINING } from '@/constants/common';
 
 interface RoomSplitInput {
 	questionId: string;
@@ -27,13 +28,12 @@ export interface RoomSplitState {
 }
 
 /**
- * The server refuses an answer with fewer people than one room holds
- * (`splitJoinedOption`: "Need at least {roomSize} members"), so only those
- * answers are split; the others are left as they are, not counted as a
- * failure.
+ * An answer needs two people to make a room (the server's own rule in
+ * `splitJoinedOption`); a smaller-than-full answer gets one smaller room.
+ * A lone person is left as they are, not counted as a failure.
  */
-export function canSplitAnswer(option: OptionWithMembers, roomSize: number): boolean {
-	return option.joinedCount >= roomSize;
+export function canSplitAnswer(option: OptionWithMembers): boolean {
+	return option.joinedCount >= JOINING.MIN_ROOM_SIZE;
 }
 
 /**
@@ -53,7 +53,7 @@ export function useRoomSplit({
 	const [result, setResult] = useState<RoomSplitSummary | null>(null);
 
 	async function run(): Promise<void> {
-		const eligible = options.filter((option) => canSplitAnswer(option, roomSize));
+		const eligible = options.filter(canSplitAnswer);
 		if (eligible.length === 0) return;
 		setIsSplitting(true);
 		setHasFailed(false);

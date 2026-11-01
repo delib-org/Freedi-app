@@ -22,8 +22,8 @@ interface RoomSplitControlsProps {
 }
 
 /**
- * "Split into rooms" (UX 4.7): disabled until one answer has at least a
- * room's worth of people (the server's own rule); "Splitting…" while it
+ * "Split into rooms" (UX 4.7): disabled until two people joined one answer
+ * (the server's own rule); "Splitting…" while it
  * runs; an inline error if it fails (existing rooms stay listed);
  * re-splitting asks before replacing the rooms.
  */
@@ -38,7 +38,7 @@ const RoomSplitControls: FC<RoomSplitControlsProps> = ({
 	const existingRooms = countActiveRooms(useAppSelector(selectAllRoomSettings), questionId);
 	const split = useRoomSplit({ questionId, options, roomSize, scrambleByQuestions, onSplit });
 	const [isConfirming, setIsConfirming] = useState(false);
-	const canSplit = options.some((option) => canSplitAnswer(option, roomSize));
+	const canSplit = options.some(canSplitAnswer);
 
 	function handleSplit(): void {
 		if (existingRooms > 0) setIsConfirming(true);
