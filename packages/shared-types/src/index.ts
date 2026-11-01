@@ -981,6 +981,8 @@ export * from './models/covenant/deliberation';
 
 // Statement search — shared scorer and request/response types
 export * from './models/search/searchModel';
+// Question "search by meaning" (searchQuestionsByMeaning callable)
+export * from './models/search/questionSearchModel';
 export {
   normalizeSearchText,
   normalizeWithMap,

@@ -24,6 +24,7 @@ import { recordDiscussionActivity } from './userFeed/recordDiscussionActivity';
 import { onClassOptionCreated } from './classroom/autoEvaluations';
 import { logError } from './utils/errorHandling';
 import { setupAdminsForStatement } from './setupAdminsForStatement';
+import { embedNewQuestion } from './services/question-embedding-store';
 import {
 	computeHybridVector,
 	isHybridClusteringEnabled,
@@ -87,6 +88,12 @@ export async function onStatementCreated(
 		// Task 6: Generate embedding for option statements (async, non-blocking)
 		if (statement.statementType === 'option') {
 			tasks.push(generateEmbeddingForStatement(statement));
+		}
+
+		// Task 6b: Question vector for admin "search by meaning" — every question,
+		// top-level ones included (questionEmbeddings; never throws)
+		if (statement.statementType === StatementType.question) {
+			tasks.push(embedNewQuestion(statement));
 		}
 
 		// Task 7: Track engagement (non-blocking)
