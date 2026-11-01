@@ -39,6 +39,9 @@
 	}
 
 	&__option {
+		// The visually-hidden input is absolutely positioned: anchor it to its
+		// own row, so focusing it scrolls to the option, not to somewhere else.
+		position: relative;
 		display: flex;
 		align-items: flex-start;
 		gap: var(--space-xs);

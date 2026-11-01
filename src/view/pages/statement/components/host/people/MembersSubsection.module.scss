@@ -52,3 +52,15 @@
 	flex-direction: column;
 	gap: var(--space-xs);
 }
+
+// Block is a danger action in an AA red: the global reject button's
+// --text-error is 3.5:1 on white, --error-text is 7.6:1 (axe: color-contrast).
+.dangerAction {
+	color: var(--error-text);
+	border-color: var(--error-text);
+
+	&:hover:not(:disabled) {
+		color: var(--error-text);
+		border-color: var(--error-text);
+	}
+}

@@ -2,7 +2,7 @@ import { FC } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import Button from '@/view/components/atomic/atoms/Button';
 import { Sheet } from '@/view/components/atomic/molecules/Sheet';
-import { MemberBadges } from './MemberRow';
+import { MemberBadges, memberActionClassName } from './MemberRow';
 import { MemberAction, MemberEntry } from './membersLogic';
 import { MEMBER_ACTION_LABEL, MEMBER_ACTION_VARIANT } from './memberActionLabels';
 import styles from './MembersSubsection.module.scss';
@@ -34,7 +34,7 @@ const MemberActionsSheet: FC<MemberActionsSheetProps> = ({ entry, actions, onAct
 						text={t(MEMBER_ACTION_LABEL[action])}
 						variant={MEMBER_ACTION_VARIANT[action]}
 						fullWidth
-						className="button--touch"
+						className={memberActionClassName(action, 'button--touch')}
 						onClick={() => {
 							onClose();
 							onAction(entry, action);

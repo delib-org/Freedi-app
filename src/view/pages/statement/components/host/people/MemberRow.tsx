@@ -7,6 +7,14 @@ import InlineNote from '@/view/components/atomic/atoms/InlineNote';
 import PersonRow, { RoleBadge, RoleBadgeKind } from '@/view/components/atomic/molecules/PersonRow';
 import { MemberAction, MemberEntry, MemberKind } from './membersLogic';
 import { MEMBER_ACTION_LABEL, MEMBER_ACTION_VARIANT } from './memberActionLabels';
+import styles from './MembersSubsection.module.scss';
+
+/** Block carries the AA danger ink on top of the reject variant. */
+export function memberActionClassName(action: MemberAction, base?: string): string | undefined {
+	const danger = action === 'block' ? styles.dangerAction : undefined;
+
+	return [base, danger].filter(Boolean).join(' ') || undefined;
+}
 
 interface MemberRowProps {
 	entry: MemberEntry;
@@ -71,6 +79,7 @@ const MemberRow: FC<MemberRowProps> = ({ entry, actions, onAction, onOpenMenu, h
 								ariaLabel={`${t(MEMBER_ACTION_LABEL[action])}: ${entry.name}`}
 								variant={MEMBER_ACTION_VARIANT[action]}
 								size="small"
+								className={memberActionClassName(action)}
 								onClick={() => onAction(entry, action)}
 							/>
 						))}

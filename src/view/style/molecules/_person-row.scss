@@ -186,8 +186,14 @@
 		}
 	}
 
-	&--blocked &__identity {
-		opacity: 0.7;
+	// A blocked row reads as set aside: the avatar fades, the name drops to
+	// meta ink. Text keeps full opacity so the badge and "joined …" stay ≥ 4.5:1.
+	&--blocked &__avatar {
+		opacity: 0.6;
+	}
+
+	&--blocked &__name {
+		color: var(--text-meta);
 	}
 
 	&--busy {
