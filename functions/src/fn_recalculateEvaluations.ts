@@ -9,10 +9,11 @@ import {
 	StatementType,
 	StatementEvaluation,
 	functionConfig,
-	calcAgreement,
 } from '@freedi/shared-types';
-import { calculateConsensusValid } from './helpers/consensusValidCalculator';
 import type { PopperHebbianScore } from '@freedi/shared-types';
+import { calculateConsensusValid } from './helpers/consensusValidCalculator';
+import { resolveQuestionPopulation } from './evaluation/resolveQuestionPopulation';
+import { hasCounterMismatch, recomputeOptionCounters } from './evaluation/recomputeOptionCounters';
 
 interface RecalculateRequest {
 	statementId: string; // Parent statement ID (the question)
@@ -46,10 +47,10 @@ interface RecalculateResult {
 	errors: string[];
 }
 
-// calcAgreement was a local copy of a superseded formula (no t-multiplier, a
-// hard 0.5 uncertainty floor). A "recalculate" tool that writes different
-// numbers from the live trigger is worse than no tool, so it now imports the
-// canonical one from @freedi/shared-types.
+// The counters come from recomputeOptionCounters, which follows the live
+// trigger's rule (every evaluation document is a participant, zeros included)
+// and the canonical agreement formula from @freedi/shared-types. A "recalculate"
+// tool that writes different numbers from the live trigger is worse than no tool.
 
 /**
  * Bulk recompute: fetch every evaluation under the parent in ONE query,
@@ -96,6 +97,10 @@ export async function bulkRecalculateForParent(
 
 		return result;
 	}
+
+	// 1b. The question's explicit N, resolved once and used for every option and
+	//     synthesis of this run (undefined = open population, no correction).
+	const populationSize = await resolveQuestionPopulation(db, parentId);
 
 	// 2. All evaluations under this parent, paginated by `evaluatorId` to
 	//    stream the result set instead of buffering the whole collection
@@ -161,8 +166,8 @@ export async function bulkRecalculateForParent(
 				statement.isCluster === true;
 
 			const plannedUpdate = isClusterOption
-				? planClusterRecompute(statement, doc.id, evalsByStatementId)
-				: planOptionRecompute(statement, doc.id, evalsByStatementId);
+				? planClusterRecompute(statement, doc.id, evalsByStatementId, populationSize)
+				: planOptionRecompute(statement, doc.id, evalsByStatementId, populationSize);
 
 			if (plannedUpdate) {
 				planned.push({ ref: doc.ref, ...plannedUpdate });
@@ -239,27 +244,10 @@ function planOptionRecompute(
 	statement: Statement,
 	statementId: string,
 	evalsByStatementId: Map<string, Evaluation[]>,
+	populationSize: number | undefined,
 ): { payload: Record<string, unknown>; fix: StatementFix } | null {
 	const evals = evalsByStatementId.get(statementId) ?? [];
-	let actualProCount = 0;
-	let actualConCount = 0;
-	let sumEvaluations = 0;
-	let sumSquaredEvaluations = 0;
-	let sumPro = 0;
-	let sumCon = 0;
-	for (const e of evals) {
-		const v = e.evaluation;
-		if (v > 0) {
-			actualProCount++;
-			sumPro += v;
-		} else if (v < 0) {
-			actualConCount++;
-			sumCon += Math.abs(v);
-		}
-		sumEvaluations += v;
-		sumSquaredEvaluations += v * v;
-	}
-	const totalWithNonZeroEval = actualProCount + actualConCount;
+	const counters = recomputeOptionCounters(evals, populationSize);
 
 	const currentEval: StatementEvaluation = statement.evaluation || {
 		numberOfEvaluators: 0,
@@ -280,13 +268,9 @@ function planOptionRecompute(
 		numberOfConEvaluators: currentEval.numberOfConEvaluators || 0,
 	};
 
-	const hasProMismatch = before.numberOfProEvaluators !== actualProCount;
-	const hasConMismatch = before.numberOfConEvaluators !== actualConCount;
-	const hasEvaluatorMismatch = before.numberOfEvaluators !== totalWithNonZeroEval;
-	if (!hasProMismatch && !hasConMismatch && !hasEvaluatorMismatch) return null;
+	if (!hasCounterMismatch(currentEval, counters)) return null;
 
-	const averageEvaluation = totalWithNonZeroEval > 0 ? sumEvaluations / totalWithNonZeroEval : 0;
-	const agreement = calcAgreement(sumEvaluations, sumSquaredEvaluations, totalWithNonZeroEval);
+	const { agreement, numberOfEvaluators: totalEvaluators } = counters;
 	const consensusValid = calculateConsensusValid(
 		agreement,
 		(statement as Statement & { popperHebbianScore?: PopperHebbianScore }).popperHebbianScore ??
@@ -295,27 +279,35 @@ function planOptionRecompute(
 
 	const updatedEvaluation: StatementEvaluation = {
 		...currentEval,
-		numberOfEvaluators: totalWithNonZeroEval,
-		numberOfProEvaluators: actualProCount,
-		numberOfConEvaluators: actualConCount,
-		sumEvaluations,
-		sumSquaredEvaluations,
-		sumPro,
-		sumCon,
-		averageEvaluation,
+		numberOfEvaluators: counters.numberOfEvaluators,
+		numberOfProEvaluators: counters.numberOfProEvaluators,
+		numberOfConEvaluators: counters.numberOfConEvaluators,
+		sumEvaluations: counters.sumEvaluations,
+		sumSquaredEvaluations: counters.sumSquaredEvaluations,
+		sumPro: counters.sumPro,
+		sumCon: counters.sumCon,
+		averageEvaluation: counters.averageEvaluation,
 		agreement,
+		agreementIndex: counters.agreementIndex,
 		evaluationRandomNumber: currentEval.evaluationRandomNumber ?? Math.random(),
 		viewed: currentEval.viewed ?? 0,
 	};
+	// `evaluation` is written whole, so dropping the key removes a stale
+	// snapshot the `...currentEval` spread would otherwise carry over.
+	if (counters.stakeholderCount !== undefined) {
+		updatedEvaluation.stakeholderCount = counters.stakeholderCount;
+	} else {
+		delete updatedEvaluation.stakeholderCount;
+	}
 
 	return {
 		payload: {
 			evaluation: updatedEvaluation,
-			totalEvaluators: totalWithNonZeroEval,
+			totalEvaluators: totalEvaluators,
 			consensus: agreement,
 			consensusValid,
-			proSum: sumPro,
-			conSum: sumCon,
+			proSum: counters.sumPro,
+			conSum: counters.sumCon,
 		},
 		fix: {
 			statementId,
@@ -323,9 +315,9 @@ function planOptionRecompute(
 			isClusterOption: false,
 			before: { ...before, consensus: statement.consensus ?? 0 },
 			after: {
-				numberOfEvaluators: totalWithNonZeroEval,
-				numberOfProEvaluators: actualProCount,
-				numberOfConEvaluators: actualConCount,
+				numberOfEvaluators: totalEvaluators,
+				numberOfProEvaluators: counters.numberOfProEvaluators,
+				numberOfConEvaluators: counters.numberOfConEvaluators,
 				consensus: agreement,
 			},
 		},
@@ -341,6 +333,7 @@ function planClusterRecompute(
 	statement: Statement & { integratedOptions?: string[]; isCluster?: boolean },
 	clusterId: string,
 	evalsByStatementId: Map<string, Evaluation[]>,
+	populationSize: number | undefined,
 ): { payload: Record<string, unknown>; fix: StatementFix } | null {
 	const sourceIds = statement.integratedOptions ?? [];
 	if (sourceIds.length === 0) return null;
@@ -386,25 +379,12 @@ function planClusterRecompute(
 		});
 	}
 
-	let sumEvaluations = 0;
-	let sumSquaredEvaluations = 0;
-	let sumPro = 0;
-	let sumCon = 0;
-	let proCount = 0;
-	let conCount = 0;
-	for (const [, data] of userEvals) {
-		const v = data.evaluation;
-		sumEvaluations += v;
-		sumSquaredEvaluations += v * v;
-		if (v > 0) {
-			proCount++;
-			sumPro += v;
-		} else if (v < 0) {
-			conCount++;
-			sumCon += Math.abs(v);
-		}
-	}
-	const totalEvaluators = proCount + conCount;
+	// One entry per distinct voter (zeros included), same rule as plain options.
+	const counters = recomputeOptionCounters(
+		[...userEvals.values()].map((data) => ({ evaluation: data.evaluation })),
+		populationSize,
+	);
+	const { agreement, numberOfEvaluators: totalEvaluators } = counters;
 
 	const currentEval: StatementEvaluation = statement.evaluation || {
 		numberOfEvaluators: 0,
@@ -425,8 +405,6 @@ function planClusterRecompute(
 		numberOfConEvaluators: currentEval.numberOfConEvaluators || 0,
 	};
 
-	const averageEvaluation = totalEvaluators > 0 ? sumEvaluations / totalEvaluators : 0;
-	const agreement = calcAgreement(sumEvaluations, sumSquaredEvaluations, totalEvaluators);
 	const consensusValid = calculateConsensusValid(
 		agreement,
 		(statement as Statement & { popperHebbianScore?: PopperHebbianScore }).popperHebbianScore ??
@@ -435,18 +413,24 @@ function planClusterRecompute(
 
 	const updatedEvaluation: StatementEvaluation = {
 		...currentEval,
-		numberOfEvaluators: totalEvaluators,
-		numberOfProEvaluators: proCount,
-		numberOfConEvaluators: conCount,
-		sumEvaluations,
-		sumSquaredEvaluations,
-		sumPro,
-		sumCon,
-		averageEvaluation,
+		numberOfEvaluators: counters.numberOfEvaluators,
+		numberOfProEvaluators: counters.numberOfProEvaluators,
+		numberOfConEvaluators: counters.numberOfConEvaluators,
+		sumEvaluations: counters.sumEvaluations,
+		sumSquaredEvaluations: counters.sumSquaredEvaluations,
+		sumPro: counters.sumPro,
+		sumCon: counters.sumCon,
+		averageEvaluation: counters.averageEvaluation,
 		agreement,
+		agreementIndex: counters.agreementIndex,
 		evaluationRandomNumber: currentEval.evaluationRandomNumber ?? Math.random(),
 		viewed: currentEval.viewed ?? 0,
 	};
+	if (counters.stakeholderCount !== undefined) {
+		updatedEvaluation.stakeholderCount = counters.stakeholderCount;
+	} else {
+		delete updatedEvaluation.stakeholderCount;
+	}
 
 	return {
 		payload: {
@@ -454,8 +438,8 @@ function planClusterRecompute(
 			totalEvaluators,
 			consensus: agreement,
 			consensusValid,
-			proSum: sumPro,
-			conSum: sumCon,
+			proSum: counters.sumPro,
+			conSum: counters.sumCon,
 		},
 		fix: {
 			statementId: clusterId,
@@ -464,8 +448,8 @@ function planClusterRecompute(
 			before: { ...before, consensus: statement.consensus ?? 0 },
 			after: {
 				numberOfEvaluators: totalEvaluators,
-				numberOfProEvaluators: proCount,
-				numberOfConEvaluators: conCount,
+				numberOfProEvaluators: counters.numberOfProEvaluators,
+				numberOfConEvaluators: counters.numberOfConEvaluators,
 				consensus: agreement,
 			},
 		},

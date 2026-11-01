@@ -8,9 +8,11 @@
  */
 
 import { logger } from 'firebase-functions/v1';
+import { FieldValue } from 'firebase-admin/firestore';
 import { Collections, Evaluation, calcAgreement } from '@freedi/shared-types';
 import { db } from '../index';
 import { reconcileParentEvaluators } from './evaluatorParticipation';
+import { resolveQuestionPopulation } from './resolveQuestionPopulation';
 
 // ============================================================================
 // TYPES
@@ -176,7 +178,15 @@ export async function migrateEvaluationsToNewStatement(
 		// rewriting integrated statements with a formula the rest of the app
 		// had already left behind.
 		const averageEvaluation = numberOfEvaluators > 0 ? sumEvaluations / numberOfEvaluators : 0;
-		const agreement = calcAgreement(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
+		// Same explicit-N walk as every other writer (question -> top group);
+		// undefined when nobody declared one, which is the uncorrected formula.
+		const declaredN = await resolveQuestionPopulation(db, parentId);
+		const agreement = calcAgreement(
+			sumEvaluations,
+			sumSquaredEvaluations,
+			numberOfEvaluators,
+			declaredN,
+		);
 
 		result.newEvaluationMetrics = {
 			sumEvaluations,
@@ -202,6 +212,8 @@ export async function migrateEvaluationsToNewStatement(
 			'evaluation.sumSquaredEvaluations': sumSquaredEvaluations,
 			'evaluation.averageEvaluation': averageEvaluation,
 			'evaluation.agreement': agreement,
+			'evaluation.stakeholderCount':
+				declaredN !== undefined ? Math.max(declaredN, numberOfEvaluators) : FieldValue.delete(),
 			consensus: agreement,
 			totalEvaluators: numberOfEvaluators,
 			lastUpdate: now,
@@ -221,8 +233,5 @@ export async function migrateEvaluationsToNewStatement(
 	}
 }
 
-// Migration-specific consensus helpers used to live here. They were a copy of
-// a superseded formula, so integration silently disagreed with every other
-// write path. Deleted in favour of calcAgreement from @freedi/shared-types —
-// if this file ever needs the population-aware variant, pass the stakeholder
-// count as the fourth argument rather than reintroducing a local copy.
+// Consensus comes from calcAgreement in @freedi/shared-types, with the question's
+// explicit N (if any) as the fourth argument. Do not reintroduce a local copy.

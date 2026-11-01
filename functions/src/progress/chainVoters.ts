@@ -2,11 +2,11 @@
  * The electorate of a question: how many distinct people have evaluated
  * anything under it or under a question above it.
  *
- * This is the number every option beneath a question uses as N when nobody has
- * declared a stakeholder count by hand (see `resolveStakeholderCount` in
- * shared-types). It replaced the subscriber count, which measured traffic
- * rather than participation — a browser auto-subscribes the moment it opens a
- * page, so a question with two voters was reporting an electorate of fifteen.
+ * This is a participation statistic only. It is NOT used as N for the
+ * finite-population correction: N is declared by an admin
+ * (`evaluationSettings.targetPopulation`) or absent, and nothing is inferred
+ * from who voted (see `resolveStakeholderCount` in shared-types). Turnout
+ * measures who showed up, not who the decision is about.
  *
  * ## Why the chain, and why only upward
  *

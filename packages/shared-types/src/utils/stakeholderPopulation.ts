@@ -9,23 +9,19 @@
  * bar for claiming there is nothing left to infer — see
  * `finitePopulationFactor` in ./consensusCalculation.
  *
- * Nothing declares this per option. A deliberation declares its stakeholders
- * once, on the group or the question, and every option beneath inherits it.
- * This module is the single place that walk happens, so the server trigger,
- * the recalculation tools and the client all agree on N by construction.
+ * N is declared by a human or it is absent. A deliberation declares its
+ * stakeholders once, on the group or the question, and every option beneath
+ * inherits it. This module is the single place that walk happens, so the
+ * server trigger, the recalculation tools and the client all agree on N by
+ * construction.
  *
- * When nobody has declared a number, N falls back to the people who have
- * actually VOTED in this question or in a question above it — never to the
- * subscriber count. Subscribing is what a browser does on your behalf the
- * moment you open a page (see useAuthorization's auto-subscribe), so member
- * counts measure traffic; a deliberation with 15 subscribers and 2 voters has
- * an electorate of 2, and calling it 15 quietly reports a 13% turnout the
- * process never actually had.
- *
- * Leaving it undeclared everywhere with nobody having voted is valid and means
- * "no bounded stakeholder set" — open participation, unknown population —
- * which yields the uncorrected formula. That is the safe default, and it is
- * why every accessor here returns `undefined` rather than guessing.
+ * Nothing is inferred. Not from subscribers (subscribing is what a browser does
+ * on your behalf the moment you open a page, so member counts measure traffic)
+ * and not from voters (turnout answers "who showed up", never "who this
+ * decision is about", and it understates N, which inflates the corrected
+ * score). Absent means open population — no bounded stakeholder set — and
+ * yields the uncorrected formula. That is the safe default, and it is why every
+ * accessor here returns `undefined` rather than guessing.
  */
 
 /**
@@ -35,27 +31,19 @@
  */
 export interface StakeholderScope {
 	evaluationSettings?: { targetPopulation?: number; samplingQuality?: number } | undefined;
-	/**
-	 * Questions only: distinct people who have evaluated something under this
-	 * question or a question above it. Maintained server-side by
-	 * functions/src/progress/chainVoters.ts.
-	 */
-	evaluation?: { chainEvaluators?: number | undefined } | undefined;
 }
 
 /** Where the resolved N came from — surface this, never just the number */
-export type StakeholderSource = 'self' | 'parent' | 'top' | 'parentVoters' | 'topVoters';
+export type StakeholderSource = 'self' | 'parent' | 'top';
 
 export interface StakeholderResolution {
 	/** N, or undefined when no bounded stakeholder set is known */
 	count?: number;
 	/** Which level supplied it. Undefined exactly when `count` is undefined. */
 	source?: StakeholderSource;
-	/** True when N was inferred from who voted rather than declared by a human */
-	inferred: boolean;
 }
 
-const NOT_RESOLVED: StakeholderResolution = { inferred: false };
+const NOT_RESOLVED: StakeholderResolution = {};
 
 /**
  * A stakeholder count has to be a real, positive, finite headcount. Zero is
@@ -75,34 +63,17 @@ function declared(scope?: StakeholderScope): number | undefined {
 	return validCount(scope?.evaluationSettings?.targetPopulation);
 }
 
-function voters(scope?: StakeholderScope): number | undefined {
-	return validCount(scope?.evaluation?.chainEvaluators);
-}
-
 /**
  * Resolve N for a statement from its own settings and its ancestors.
  *
  * Order, most specific first:
- *   1. self         — this statement overrides everything
- *   2. parent       — the question it belongs to
- *   3. top          — the group or deliberation it belongs to
- *   4. parentVoters — who has voted in that question, or in one above it
- *   5. topVoters    — the same reading taken at the top, as a floor
+ *   1. self   — this statement overrides everything
+ *   2. parent — the question it belongs to
+ *   3. top    — the group or deliberation it belongs to
  *
- * A human declaration at ANY level beats a count inferred from turnout,
- * because turnout answers "who showed up" and a stakeholder count answers
- * "who this decision is about" — the same number only by coincidence. An
- * inferred N therefore always UNDERSTATES the stakeholder body, and a smaller
- * N raises the corrected score, so `inferred` travels with the number and
- * every surface that shows it should say where it came from.
- *
- * The inferred rungs read from the PARENT, not from self. Self is typically
- * the option being voted on, and `chainEvaluators` is a question-level fact:
- * the option's electorate is everyone deliberating the question, not only the
- * subset that reached this one option. Rung 5 exists for the moment before the
- * parent's count has been written for the first time; it is a lower bound on
- * rung 4 (the chain at the parent contains the top's voters), never a
- * contradiction of it.
+ * Only a number a human typed into `evaluationSettings.targetPopulation`
+ * counts. When none of the three declares one, the result is empty and the
+ * caller uses the uncorrected formula.
  */
 export function resolveStakeholderCount(
 	self?: StakeholderScope,
@@ -111,27 +82,17 @@ export function resolveStakeholderCount(
 ): StakeholderResolution {
 	const selfDeclared = declared(self);
 	if (selfDeclared !== undefined) {
-		return { count: selfDeclared, source: 'self', inferred: false };
+		return { count: selfDeclared, source: 'self' };
 	}
 
 	const parentDeclared = declared(parent);
 	if (parentDeclared !== undefined) {
-		return { count: parentDeclared, source: 'parent', inferred: false };
+		return { count: parentDeclared, source: 'parent' };
 	}
 
 	const topDeclared = declared(top);
 	if (topDeclared !== undefined) {
-		return { count: topDeclared, source: 'top', inferred: false };
-	}
-
-	const parentVoters = voters(parent);
-	if (parentVoters !== undefined) {
-		return { count: parentVoters, source: 'parentVoters', inferred: true };
-	}
-
-	const topVoters = voters(top);
-	if (topVoters !== undefined) {
-		return { count: topVoters, source: 'topVoters', inferred: true };
+		return { count: topDeclared, source: 'top' };
 	}
 
 	return NOT_RESOLVED;
