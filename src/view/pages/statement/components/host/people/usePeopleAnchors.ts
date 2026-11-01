@@ -5,7 +5,7 @@ import { parsePeopleAnchor, PeopleAnchor } from '../hostHubLogic';
 interface UsePeopleAnchorsOptions {
 	/** Subsections rendered right now; a hash naming another one opens nothing. */
 	available: ReadonlyArray<PeopleAnchor>;
-	/** The first subsection with something to act on (UX 4.1), or null. */
+	/** The first subsection with something to act on (UX 4.1), or null; applied once. */
 	defaultOpen: PeopleAnchor | null;
 }
 
@@ -32,6 +32,7 @@ export function usePeopleAnchors({
 	const [open, setOpen] = useState<ReadonlySet<PeopleAnchor>>(() => new Set());
 	const toggles = useRef(new Map<PeopleAnchor, HTMLButtonElement>());
 	const hasInteracted = useRef(false);
+	const hasDefaulted = useRef(false);
 	const availableKey = available.join(',');
 
 	useEffect(() => {
@@ -46,8 +47,12 @@ export function usePeopleAnchors({
 		return () => window.cancelAnimationFrame(frame);
 	}, [hash, key, availableKey]);
 
+	// UX 4.1 applies the default on arrival only: the first default the
+	// loading data yields opens once, and later changes (Waiting emptying
+	// out mid-session) never pop another subsection open.
 	useEffect(() => {
-		if (hasInteracted.current || !defaultOpen) return;
+		if (hasInteracted.current || hasDefaulted.current || !defaultOpen) return;
+		hasDefaulted.current = true;
 		setOpen((prev) => (prev.has(defaultOpen) ? prev : new Set(prev).add(defaultOpen)));
 	}, [defaultOpen]);
 

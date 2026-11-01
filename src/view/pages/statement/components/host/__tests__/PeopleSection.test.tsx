@@ -283,6 +283,30 @@ describe('PeopleSection › default open (UX 4.1)', () => {
 		expect(header('join')).toHaveAttribute('aria-expanded', 'true');
 	});
 
+	it('applies the default once: Entry check stays shut when Waiting empties mid-session', async () => {
+		const statement = makeStatement(StatementType.group, Access.openToAll);
+		mockedUseApprove.mockReturnValue({ waitingList: [waiting('w1')] });
+		mockedQuestionCounts.mockReturnValue({ asked: 1, isSameAsGroup: false });
+		mockedResponses.mockResolvedValue([review('a', 'pending')]);
+		let view: ReturnType<typeof renderPeople> | undefined;
+		await act(async () => {
+			view = renderPeople(statement);
+		});
+		expect(header('waiting')).toHaveAttribute('aria-expanded', 'true');
+
+		mockedUseApprove.mockReturnValue({ waitingList: [] });
+		await act(async () => {
+			view?.rerender(
+				<MemoryRouter initialEntries={['/statement-screen/s1/settings?section=people']}>
+					<PeopleSection statement={statement} setStatementToEdit={jest.fn()} />
+				</MemoryRouter>,
+			);
+		});
+
+		expect(header('waiting')).toBeNull();
+		expect(header('entry-check')).toHaveAttribute('aria-expanded', 'false');
+	});
+
 	it('else nothing', async () => {
 		await act(async () => {
 			renderPeople(makeStatement(StatementType.group, Access.openToAll));
