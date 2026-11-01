@@ -40,12 +40,12 @@
   box-sizing: border-box;
   padding: var(--space-md);
   background-color: var(--card-default);
-  border: var(--hairline);
+  border: 1.5px solid var(--border-subtle);
 
   // Reserved lane for the C1 status rule. Always present at full width so a
   // card gaining or losing status does not change size and shift the list.
   border-inline-start: var(--rule-width) solid transparent;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   box-shadow: var(--elevation-0);
   overflow-x: hidden;
 
@@ -308,9 +308,11 @@
   line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  font-size: 0.96875rem;
+  // Join's card title: larger and heavier than body text.
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
   line-height: var(--line-height-card);
-  color: var(--text-body);
+  color: var(--text-title);
   overflow-wrap: break-word;
   word-wrap: break-word;
   width: 100%;
@@ -508,16 +510,55 @@
 // One quiet line (author · N rated) with the שיחה pill at its end, then the
 // full-width face scale and results under it.
 
-.byline {
+// Bottom row like Join: outline action pills at the start, the chat as a small
+// round outline button at the end.
+.actionRow {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  margin-block-start: var(--space-2xs);
+}
+
+.actions {
+  display: flex;
   flex-wrap: wrap;
-  gap: 0.625rem;
-  pointer-events: none;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+  pointer-events: auto;
+}
+
+// Outline pill (Join's edit / full-proposal button).
+.pillButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-height: 2.25rem;
+  padding: 0 var(--space-sm);
+  border: 1.5px solid var(--text-title);
+  border-radius: var(--radius-chip);
+  background-color: var(--card-default);
+  color: var(--text-title);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+
+  &:hover {
+    background-color: var(--text-title);
+    color: var(--card-default);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
 }
 
 .bylineText {
-  flex: 1;
   min-width: 0;
   font-size: 0.71875rem;
   color: var(--text-meta);
@@ -632,7 +673,7 @@
   width: 100%;
 
   p {
-    font-size: var(--font-size-md);
+    font-size: inherit;
   }
 }
 

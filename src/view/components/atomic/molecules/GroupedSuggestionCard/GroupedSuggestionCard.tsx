@@ -19,13 +19,9 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import type { RootState } from '@/redux/store';
 import { useGroupMembers } from '@/controllers/hooks/useGroupMembers';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
-import {
-	reverseIntegration,
-	regenerateSynthesisProposal,
-} from '@/controllers/db/integration/integrationController';
-import { logError } from '@/utils/errorHandling';
 import ScoreBreakdown from './ScoreBreakdown';
 import CollapsibleDetails from './CollapsibleDetails';
+import { useSynthesisAdminActions } from './useSynthesisAdminActions';
 
 /**
  * GroupedSuggestionCard — displays a cluster statement that represents
@@ -88,8 +84,6 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	const { t, dir } = useTranslation();
 	const [expanded, setExpanded] = useState(false);
 	const [mobileMetaOpen, setMobileMetaOpen] = useState(false);
-	const [isReversing, setIsReversing] = useState(false);
-	const [isRegenerating, setIsRegenerating] = useState(false);
 	const disclosureId = useId();
 	const regionId = `${disclosureId}-originals`;
 	// Authorize against the parent deliberation: a creator/admin of the
@@ -155,6 +149,9 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	);
 	const members = nestedSlot ? (explicitMembers ?? fetchedMembers) : fetchedMembers;
 	const isLoading = shouldFetch ? isFetching : false;
+
+	const { isReversing, isRegenerating, handleRegenerateProposal, handleReverseSynthesis } =
+		useSynthesisAdminActions(cluster.statementId, count);
 
 	const numberOfEvaluators = evaluation?.numberOfEvaluators ?? 0;
 	const isAwaiting = numberOfEvaluators === 0;
@@ -224,54 +221,6 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 		.replace('{title}', cluster.statement);
 
 	const countLabel = t('Represents {count} suggestions').replace('{count}', String(count));
-
-	const handleRegenerateProposal = async () => {
-		const confirmCopy = t(
-			'Regenerate this synthesized proposal? The AI will redraft the title, description, and sections from the {count} source ideas. Existing evaluations on the proposal stay intact.',
-		).replace('{count}', String(count));
-		if (!window.confirm(confirmCopy)) return;
-		setIsRegenerating(true);
-		try {
-			const result = await regenerateSynthesisProposal({
-				clusterStatementId: cluster.statementId,
-			});
-			if (result.cannotSynthesize) {
-				const reason = result.splitReason || t('The source ideas span incompatible directions.');
-				window.alert(
-					t(
-						'The AI declined to synthesize this group: {reason} Consider reversing this synthesis and re-running the pipeline so the group can be split.',
-					).replace('{reason}', reason),
-				);
-			}
-		} catch (error) {
-			logError(error, {
-				operation: 'GroupedSuggestionCard.handleRegenerateProposal',
-				statementId: cluster.statementId,
-			});
-			window.alert(t('Regenerating proposal failed. Please try again.'));
-		} finally {
-			setIsRegenerating(false);
-		}
-	};
-
-	const handleReverseSynthesis = async () => {
-		const confirmCopy = t(
-			'Reverse this synthesis? The {count} source ideas will be restored as separate proposals and the synthesized proposal will be hidden. Direct evaluations on the synthesis will be deleted; evaluations on each source idea remain intact.',
-		).replace('{count}', String(count));
-		if (!window.confirm(confirmCopy)) return;
-		setIsReversing(true);
-		try {
-			await reverseIntegration({ clusterStatementId: cluster.statementId });
-		} catch (error) {
-			logError(error, {
-				operation: 'GroupedSuggestionCard.handleReverseSynthesis',
-				statementId: cluster.statementId,
-			});
-			window.alert(t('Reversing synthesis failed. Please try again.'));
-		} finally {
-			setIsReversing(false);
-		}
-	};
 
 	const handleDrawerClick = () => {
 		if (isClustersOnly && allowDrillToOriginals && onDrillToOriginals) {
@@ -495,24 +444,6 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 					</div>
 				</div>
 
-				{/* Synthesis: proposal-first layout. The title + description above
-				    are the dominant element; the single source of provenance is
-				    the footer drawer ("N source ideas"). Here we surface only the
-				    primary CTA — read the full AI-authored proposal. Admin actions
-				    (Regenerate, Reverse) live inside the expanded drawer, in the
-				    context of the sources they act on. */}
-				{isSynthesis && (
-					<div className="grouped-suggestion__proposal-actions">
-						<Link
-							to={`/statement/${cluster.statementId}`}
-							className="grouped-suggestion__proposal-read"
-						>
-							<ExternalLink size={14} aria-hidden />
-							<span>{t('Read full proposal')}</span>
-						</Link>
-					</div>
-				)}
-
 				{/* Compact preview peek for non-synthesis clusters. */}
 				{previewMembers.length > 0 && !isSynthesis && (
 					<div className="grouped-suggestion__preview" aria-label={previewAriaLabel}>
@@ -530,6 +461,24 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 				)}
 
 				{evaluationSlot && <div className="grouped-suggestion__body">{evaluationSlot}</div>}
+
+				{/* Synthesis: proposal-first layout. The title + description above
+				    are the dominant element; the single source of provenance is the
+				    footer drawer ("N source ideas"). The bottom row, like Join's,
+				    holds the primary action as an outline pill — read the full
+				    AI-authored proposal. Admin actions (Regenerate, Reverse) live
+				    inside the expanded drawer, in the context of the sources. */}
+				{isSynthesis && (
+					<div className="grouped-suggestion__proposal-actions">
+						<Link
+							to={`/statement/${cluster.statementId}`}
+							className="grouped-suggestion__proposal-read"
+						>
+							<ExternalLink size={14} aria-hidden />
+							<span>{t('Read full proposal')}</span>
+						</Link>
+					</div>
+				)}
 
 				{isSynthesis ? <CollapsibleDetails>{detailsContent}</CollapsibleDetails> : detailsContent}
 			</div>

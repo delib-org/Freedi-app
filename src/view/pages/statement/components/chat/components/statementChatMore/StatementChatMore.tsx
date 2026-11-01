@@ -18,7 +18,7 @@ import UnreadBadge from '@/view/components/unreadBadge/UnreadBadge';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { AnswerChatSheet } from '@/view/components/atomic/molecules/AnswerChatSheet';
 
-export type StatementChatMoreVariant = 'bubble' | 'pill';
+export type StatementChatMoreVariant = 'bubble' | 'pill' | 'round';
 
 interface Props {
 	statement: Statement | SimpleStatement;
@@ -161,7 +161,8 @@ const StatementChatMore: FC<Props> = ({
 		return parts.join('. ');
 	}, [displayCount, hasUnread, unreadCount, t]);
 
-	const isPill = variant === 'pill';
+	const isRound = variant === 'round';
+	const isPill = variant === 'pill' || isRound;
 
 	// Determine container class based on state
 	const containerClass = useMemo(() => {
@@ -204,7 +205,11 @@ const StatementChatMore: FC<Props> = ({
 	// unread messages the whole pill turns yellow so it reads from across the list.
 	const pillContent = (
 		<span
-			className={clsx(styles.pill, hasUnread && styles['pill--unread'])}
+			className={clsx(
+				styles.pill,
+				isRound && styles['pill--round'],
+				hasUnread && styles['pill--unread'],
+			)}
 			data-unread={hasUnread ? 'true' : 'false'}
 			data-testid="statement-chat-more-pill"
 		>
@@ -224,7 +229,7 @@ const StatementChatMore: FC<Props> = ({
 					strokeLinejoin="round"
 				/>
 			</svg>
-			<span aria-hidden="true">{t('Conversation')}</span>
+			{!isRound && <span aria-hidden="true">{t('Conversation')}</span>}
 			{showMessageCount && displayCount > 0 && (
 				<span className={styles.pillCount} aria-hidden="true">
 					{displayCount}

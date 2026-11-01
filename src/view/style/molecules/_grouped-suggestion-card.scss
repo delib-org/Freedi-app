@@ -133,9 +133,9 @@
       padding: var(--space-md);
       background-color: color-mix(in srgb, var(--btn-primary) 3%, var(--card-default));
       background-image: none;
-      border: var(--hairline);
+      border: 1.5px solid var(--border-subtle);
       border-inline-start: var(--rule-width) solid var(--btn-primary);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-lg);
       box-shadow: var(--elevation-0);
 
       @include mobile {
@@ -151,8 +151,9 @@
 
     .grouped-suggestion__proposal-title {
       margin-bottom: var(--space-2xs);
-      font-size: 0.96875rem; // the plain card's statement text size
-      font-weight: var(--font-weight-semibold);
+      font-size: var(--font-size-lg); // the plain card's title size
+      font-weight: var(--font-weight-bold);
+      color: var(--text-title);
       line-height: var(--line-height-card);
     }
 
@@ -324,28 +325,32 @@
     }
   }
 
+  // Outline pill in the bottom row, like Join's edit / full-proposal button.
   &__proposal-read {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    padding: 0.3rem 0.7rem;
-    background: var(--btn-primary);
-    color: var(--btn-primary-text, #fff);
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 600;
+    gap: var(--space-2xs);
+    min-height: 2.25rem;
+    padding: 0 var(--space-sm);
+    background: var(--card-default);
+    color: var(--text-title);
+    border: 1.5px solid var(--text-title);
+    border-radius: var(--radius-chip);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
     text-decoration: none;
-    transition: filter 120ms ease;
+    transition:
+      background-color var(--motion-fast) var(--motion-ease),
+      color var(--motion-fast) var(--motion-ease);
 
-    &:hover,
-    &:focus-visible {
-      filter: brightness(1.05);
-      outline: none;
+    &:hover {
+      background: var(--text-title);
+      color: var(--card-default);
     }
 
     &:focus-visible {
       outline: 2px solid var(--btn-primary);
-      outline-offset: 1px;
+      outline-offset: 2px;
     }
   }
 
