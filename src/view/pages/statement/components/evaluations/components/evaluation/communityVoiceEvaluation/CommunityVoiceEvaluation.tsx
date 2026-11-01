@@ -12,22 +12,50 @@ import { Tooltip } from '@/view/components/tooltip/Tooltip';
 import { useSelector } from 'react-redux';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
 import { ResultsStrip } from '@/view/components/atomic/molecules/ResultsStrip';
+import { EvaluationCircle, EvaluationCircleRow } from '../shared/EvaluationCircle';
+import type { EvaluationVariant } from '../Evaluation';
 
 interface CommunityVoiceEvaluationProps {
 	statement: Statement;
 	enableEvaluation?: boolean;
+	/** 'card' = Join's look: centered filled circles, results as chips. */
+	variant?: EvaluationVariant;
 }
 
 const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 	statement,
 	enableEvaluation = true,
+	variant = 'default',
 }) => {
-	const { learning } = useUserConfig();
+	const { learning, t } = useUserConfig();
 
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
 
 	const evaluationScore = useAppSelector(evaluationSelector(statement.statementId));
+
+	const isCard = variant === 'card';
+
+	if (isCard) {
+		return (
+			<div className={styles.cardEvaluation}>
+				<EvaluationCircleRow hasSelection={Boolean(evaluationScore)} label={t('Rating scale')}>
+					{communityVoiceOptions.map((option) => (
+						<VoiceOptionButton
+							key={option.id}
+							option={option}
+							evaluationScore={evaluationScore}
+							statement={statement}
+							enableEvaluation={enableEvaluation}
+							showLabels={false}
+							variant={variant}
+						/>
+					))}
+				</EvaluationCircleRow>
+				{showEvaluation && <ResultsStrip statement={statement} variant="chips" />}
+			</div>
+		);
+	}
 
 	return (
 		<div className={styles.evaluation}>
@@ -62,6 +90,7 @@ interface VoiceOptionButtonProps {
 	option: CommunityVoiceOption;
 	enableEvaluation?: boolean;
 	showLabels: boolean;
+	variant?: EvaluationVariant;
 }
 
 const VoiceOptionButton: FC<VoiceOptionButtonProps> = ({
@@ -70,6 +99,7 @@ const VoiceOptionButton: FC<VoiceOptionButtonProps> = ({
 	statement,
 	enableEvaluation = true,
 	showLabels,
+	variant = 'default',
 }) => {
 	const { creator } = useAuthentication();
 	const { t } = useUserConfig();
@@ -100,20 +130,37 @@ const VoiceOptionButton: FC<VoiceOptionButtonProps> = ({
 		});
 	};
 
-	const button = (
-		<div className={styles['voice-option-wrapper']}>
-			<button
-				className={`${styles['voice-option']} ${isActive ? styles.active : ''} ${isPending ? styles.pending : ''} ${!enableEvaluation ? styles.disabled : ''}`}
-				onClick={enableEvaluation ? handleSetEvaluation : undefined}
+	const optionLabel = t(option.labelKey);
+	const disabledLabel = t('Voting disabled - view only');
+
+	const button =
+		variant === 'card' ? (
+			<EvaluationCircle
+				color={option.cardColor}
+				isActive={isActive}
 				disabled={isPending || !enableEvaluation}
-				aria-disabled={!enableEvaluation}
-				aria-label={enableEvaluation ? t(option.labelKey) : t('Voting disabled - view only')}
+				label={optionLabel}
+				disabledLabel={enableEvaluation ? optionLabel : disabledLabel}
+				onClick={handleSetEvaluation}
+				testId={`community-voice-${option.id}`}
+				monoGlyph
 			>
-				<img src={option.svg} alt={t(option.alt)} />
-			</button>
-			{showLabels && <span className={styles['voice-label']}>{t(option.labelKey)}</span>}
-		</div>
-	);
+				<img src={option.svg} alt="" />
+			</EvaluationCircle>
+		) : (
+			<div className={styles['voice-option-wrapper']}>
+				<button
+					className={`${styles['voice-option']} ${isActive ? styles.active : ''} ${isPending ? styles.pending : ''} ${!enableEvaluation ? styles.disabled : ''}`}
+					onClick={enableEvaluation ? handleSetEvaluation : undefined}
+					disabled={isPending || !enableEvaluation}
+					aria-disabled={!enableEvaluation}
+					aria-label={enableEvaluation ? t(option.labelKey) : t('Voting disabled - view only')}
+				>
+					<img src={option.svg} alt={t(option.alt)} />
+				</button>
+				{showLabels && <span className={styles['voice-label']}>{t(option.labelKey)}</span>}
+			</div>
+		);
 
 	if (!enableEvaluation) {
 		return (
