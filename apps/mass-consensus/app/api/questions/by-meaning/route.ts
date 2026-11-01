@@ -25,8 +25,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
     }
 
-    const body: { query?: unknown } = await request.json();
-    const query = typeof body.query === 'string' ? body.query.trim() : '';
+    let body: { query?: unknown } | null = null;
+    try {
+      body = await request.json();
+    } catch {
+      body = null;
+    }
+    const query = typeof body?.query === 'string' ? body.query.trim() : '';
     if (
       query.length < QUESTION_SEARCH_CONFIG.MIN_QUERY_LENGTH ||
       query.length > QUESTION_SEARCH_CONFIG.MAX_QUERY_LENGTH

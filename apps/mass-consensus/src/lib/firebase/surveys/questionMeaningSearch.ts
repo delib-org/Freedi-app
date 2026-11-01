@@ -9,6 +9,8 @@ import { getFirestoreAdmin } from '../admin';
 
 const FUNCTIONS_REGION = 'me-west1';
 const CALLABLE_NAME = 'searchQuestionsByMeaning';
+/** Longest the proxy waits for the callable (embedding + vector search) */
+export const MEANING_SEARCH_TIMEOUT_MS = 15000;
 
 /** Where the callable lives; override for the emulator or a non-default project */
 export function getMeaningSearchEndpoint(): string | null {
@@ -37,14 +39,28 @@ export async function callSearchQuestionsByMeaning(
   idToken: string,
   request: SearchQuestionsByMeaningRequest
 ): Promise<SearchQuestionsByMeaningResponse> {
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
-    body: JSON.stringify({ data: request }),
-    cache: 'no-store',
-  });
+  let response: Response;
+  try {
+    response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+      body: JSON.stringify({ data: request }),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(MEANING_SEARCH_TIMEOUT_MS),
+    });
+  } catch (error) {
+    if (error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError')) {
+      throw new Error(`searchQuestionsByMeaning timed out after ${MEANING_SEARCH_TIMEOUT_MS} ms`);
+    }
+    throw error;
+  }
 
-  const envelope = (await response.json()) as CallableEnvelope;
+  let envelope: CallableEnvelope;
+  try {
+    envelope = (await response.json()) as CallableEnvelope;
+  } catch {
+    throw new Error(`searchQuestionsByMeaning returned a non-JSON response (HTTP ${response.status})`);
+  }
   if (!response.ok || !envelope.result) {
     throw new Error(
       `searchQuestionsByMeaning failed: ${envelope.error?.status ?? response.status} ${envelope.error?.message ?? ''}`
