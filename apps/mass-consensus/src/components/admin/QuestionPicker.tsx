@@ -7,7 +7,10 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { authedFetch } from '@/lib/api/authedFetch';
 import { logError, httpErrorFromResponse } from '@/lib/utils/errorHandling';
+import { UI } from '@/constants/common';
 import { useSuggestedQuestions } from './useSuggestedQuestions';
+import { useAccessibleQuestions } from './useAccessibleQuestions';
+import { filterQuestionsBySearch } from './questionSearchFilter';
 import styles from './Admin.module.scss';
 
 interface QuestionPickerProps {
@@ -43,6 +46,8 @@ export default function QuestionPicker({
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const suggestedQuestions = useSuggestedQuestions(selectedQuestions);
+  const loadAccessibleQuestions = useAccessibleQuestions();
+  const loadedAllRef = useRef(false);
 
   // Debounce timer ref
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -111,6 +116,34 @@ export default function QuestionPicker({
     fetchQuestions();
   }, [fetchQuestions]);
 
+  // Search = one fetch of the accessible set per session, then a local filter
+  const runSearch = async (search: string) => {
+    if (!search.trim()) {
+      fetchQuestions();
+
+      return;
+    }
+
+    try {
+      setError(null);
+      if (!loadedAllRef.current) setLoading(true);
+      const all = await loadAccessibleQuestions();
+      loadedAllRef.current = true;
+      if (search !== currentSearchRef.current) return;
+
+      setQuestions(filterQuestionsBySearch(all, search));
+      setNextCursor(null);
+      setHasMore(false);
+    } catch (err) {
+      logError(err, { operation: 'QuestionPicker.runSearch', metadata: { searchQuery: search } });
+      if (search === currentSearchRef.current) {
+        setError(t('failedToFetchQuestions') || 'Failed to load questions');
+      }
+    } finally {
+      if (search === currentSearchRef.current) setLoading(false);
+    }
+  };
+
   // Debounced search
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -123,8 +156,8 @@ export default function QuestionPicker({
 
     // Debounce search by 300ms
     debounceRef.current = setTimeout(() => {
-      fetchQuestions(value);
-    }, 300);
+      runSearch(value);
+    }, UI.DEBOUNCE_DELAY);
   };
 
   // Load more handler

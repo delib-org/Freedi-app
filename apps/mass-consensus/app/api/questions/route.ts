@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { searchQuestions } from '@/lib/firebase/surveys';
+import { searchQuestions, getAllAccessibleQuestions } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { logger } from '@/lib/utils/logger';
 
@@ -40,6 +40,14 @@ export async function GET(request: NextRequest) {
 
     // Parse query params
     const searchParams = request.nextUrl.searchParams;
+
+    // scope=all: the whole accessible set, fetched once so the picker can search locally
+    if (searchParams.get('scope') === 'all') {
+      const questions = await getAllAccessibleQuestions(userId);
+
+      return NextResponse.json({ questions });
+    }
+
     const searchQuery = searchParams.get('search') || '';
     const limit = Math.min(
       parseInt(searchParams.get('limit') || String(DEFAULT_LIMIT), 10),

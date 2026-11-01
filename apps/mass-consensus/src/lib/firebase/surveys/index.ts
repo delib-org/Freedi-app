@@ -44,6 +44,7 @@ export {
   getQuestionsWithAdminAccess,
   getAvailableQuestions,
   searchQuestions,
+  getAllAccessibleQuestions,
   getSurveysByStatus,
 } from './surveyQueries';
 

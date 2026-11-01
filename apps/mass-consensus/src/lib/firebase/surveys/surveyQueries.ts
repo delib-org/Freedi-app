@@ -111,6 +111,26 @@ export async function getAvailableQuestions(adminId: string): Promise<Statement[
   return questions;
 }
 
+/**
+ * Every question the user can access (created, or admin of), newest first.
+ * Fetched once per picker session; the browser filters it locally.
+ */
+export async function getAllAccessibleQuestions(userId: string): Promise<Statement[]> {
+  const db = getFirestoreAdmin();
+  const adminStatementIds = await getAdminStatementIds(db, userId);
+  const [creatorQuestions, adminQuestions] = await Promise.all([
+    scanCreatorQuestions(db, userId),
+    fetchAdminQuestions(db, Array.from(adminStatementIds).slice(0, QUESTION_SEARCH.MAX_ADMIN_IDS)),
+  ]);
+
+  const byId = new Map<string, Statement>();
+  for (const q of [...creatorQuestions, ...adminQuestions]) {
+    if (!byId.has(q.statementId)) byId.set(q.statementId, q);
+  }
+
+  return Array.from(byId.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+}
+
 interface SearchQuestionsOptions {
   search?: string;
   limit?: number;

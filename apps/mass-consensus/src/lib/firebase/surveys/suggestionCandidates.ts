@@ -22,6 +22,7 @@ export async function fetchSuggestionCandidates(
       .collection(Collections.statements)
       .where('parentId', 'in', ids)
       .where('statementType', '==', StatementType.question)
+      .limit(QUESTION_SEARCH.MAX_SIBLING_DOCS)
       .get(),
     db.collection(Collections.statements).where('statementId', 'in', ids).get(),
     getAdminStatementIds(db, userId),
