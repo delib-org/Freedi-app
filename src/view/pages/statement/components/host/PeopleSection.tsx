@@ -7,7 +7,10 @@ import MemberValidation from '../settings/components/memberValidation/MemberVali
 import UserDemographicSetting from '../settings/components/UserDemographicSettings/UserDemographicSetting';
 import MembersManagement from '../settings/components/membership/MembersManagement';
 import { OptionRooms } from '../settings/components/optionRooms';
+import ConfidenceIndexSettings from '../settings/components/QuestionSettings/ConfidenceIndexSettings';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import advStyles from '../settings/components/advancedSettings/EnhancedAdvancedSettings.module.scss';
+import styles from './HostHub.module.scss';
 
 const groupWrapClass = `${advStyles.enhancedSettings} ${advStyles.flatGroup}`;
 
@@ -18,10 +21,11 @@ interface PeopleSectionProps {
 
 /**
  * Who can join, who is waiting, who hosts, who is banned, the entry check,
- * demographic questions, and breakout rooms — every people-shaped control the
+ * demographic questions, breakout rooms and the stakeholder count — every people-shaped control the
  * settings page used to spread over three groups.
  */
 const PeopleSection: FC<PeopleSectionProps> = ({ statement, setStatementToEdit }) => {
+	const { t } = useTranslation();
 	const isQuestion = statement.statementType === StatementType.question;
 
 	return (
@@ -33,6 +37,10 @@ const PeopleSection: FC<PeopleSectionProps> = ({ statement, setStatementToEdit }
 			<UserDemographicSetting statement={statement} />
 			<MembersManagement statement={statement} />
 			<OptionRooms statement={statement} />
+			<h3 className={styles.subheading}>{t('host.people.stakeholders')}</h3>
+			{/* Not gated to questions: a group declares its stakeholders once and
+			    every question beneath it inherits the number. */}
+			<ConfidenceIndexSettings statement={statement} />
 		</div>
 	);
 };

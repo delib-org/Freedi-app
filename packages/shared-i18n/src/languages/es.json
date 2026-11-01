@@ -3970,6 +3970,7 @@
   "host.liveDesc": "Modo presentador, PIN y QR, aceptar respuestas, resultados en vivo, fecha de cierre",
   "host.people": "Personas",
   "host.peopleDesc": "Quién puede unirse, lista de espera, anfitriones, control de entrada, preguntas sobre participantes, salas",
+  "host.people.stakeholders": "Partes interesadas",
   "host.answers": "Respuestas",
   "host.answersDesc": "Respuestas ocultas, fijadas, añadir en bloque, importar, curar grupos",
   "host.results": "Resultados",
