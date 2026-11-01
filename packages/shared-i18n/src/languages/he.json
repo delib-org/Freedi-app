@@ -4745,7 +4745,6 @@
   "host.researchDashboard": "לוח מחקר",
   "host.eventDashboard": "לוח אירוע",
   "host.showAdvanced": "הצגת הגדרות מתקדמות",
-  "host.joiningOffHint": "כדי להגדיר חדרים, הפעילו \"הצטרפות לתשובות\" תחת כללי ההשתתפות.",
   "improve.title": "לשפר את התשובה ביחד",
   "improve.body": "דונו בחששות למטה. הציעו ניסוח טוב יותר כתשובה חדשה, כדי שהדירוגים הקודמים יישארו עם המקור.",
   "improve.compareSource": "להשוות לתשובת המקור",
@@ -5364,5 +5363,10 @@
   "people.empty.inviteHint": "שתפו את קישור ההזמנה כדי לצרף אנשים.",
   "people.blocked.empty": "אין חסומים/ות",
   "people.hosts.empty": "אין עדיין מארחים/ות",
-  "people.setInGroup": "נקבע בקבוצה «{{name}}»"
+  "people.setInGroup": "נקבע בקבוצה «{{name}}»",
+  "people.activationThreshold.hint": "נדרש מינימום פעילים ומארגנים לפני שתשובה נכנסת לפעולה",
+  "people.minActivists": "מינימום פעילים",
+  "people.minOrganizers": "מינימום מארגנים",
+  "people.rooms.replace.body": "כל מי שהצטרף יחולק מחדש מההתחלה.",
+  "people.rooms.mirror": "חדרים: {{count}} · ניהול באנשים"
 }

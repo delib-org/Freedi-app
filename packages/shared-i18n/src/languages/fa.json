@@ -4506,7 +4506,6 @@
   "host.researchDashboard": "داشبورد پژوهش",
   "host.eventDashboard": "داشبورد رویداد",
   "host.showAdvanced": "نمایش تنظیمات پیشرفته",
-  "host.joiningOffHint": "برای تنظیم اتاق‌ها، «پیوستن به پاسخ‌ها» را در قوانین مشارکت فعال کنید.",
   "improve.title": "این پاسخ را با هم بهتر کنیم",
   "improve.body": "نگرانی‌ها را در پایین بحث کنید. عبارت بهتری را به‌عنوان پاسخی تازه پیشنهاد دهید تا امتیازهای پیشین با نسخهٔ اصلی بماند.",
   "improve.compareSource": "مقایسه با پاسخ مبدأ",
@@ -5125,5 +5124,10 @@
   "people.empty.inviteHint": "پیوند دعوت را به اشتراک بگذارید تا افراد وارد شوند.",
   "people.blocked.empty": "کسی مسدود نیست",
   "people.hosts.empty": "هنوز میزبانی نیست",
-  "people.setInGroup": "در گروه «{{name}}» تنظیم شده"
+  "people.setInGroup": "در گروه «{{name}}» تنظیم شده",
+  "people.activationThreshold.hint": "پیش از فعال شدن یک پاسخ، حداقل تعداد فعالان و سازمان‌دهندگان لازم است",
+  "people.minActivists": "حداقل فعالان",
+  "people.minOrganizers": "حداقل سازمان‌دهندگان",
+  "people.rooms.replace.body": "همه کسانی که پیوسته‌اند از نو تقسیم می‌شوند.",
+  "people.rooms.mirror": "اتاق‌ها: {{count}} · مدیریت در افراد"
 }

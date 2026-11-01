@@ -15,7 +15,10 @@ import {
 } from '../components/instantSettings/InstantSettings';
 import { ALLOW_ADD_ANSWERS_KEYS } from '../components/allowAddAnswers/AllowAddAnswersToggle';
 import { LIVE_NOW_SETTING_KEYS } from '../../host/hostHubLogic';
-import { PEOPLE_SECTION_COMPONENTS } from '../../host/people/peopleComposition';
+import {
+	PEOPLE_SECTION_COMPONENTS,
+	PEOPLE_SECTION_SOURCES,
+} from '../../host/people/peopleComposition';
 import { SettingsVariant } from '../settingsTypeHelpers';
 
 const COMPONENTS = path.resolve(__dirname, '../components');
@@ -41,6 +44,7 @@ const FILES: Record<string, string> = {
 	UserDemographicSetting: 'UserDemographicSettings/UserDemographicSetting.tsx',
 	EmailNotifications: 'emailNotifications/EmailNotifications.tsx',
 	OptionRooms: 'optionRooms/OptionRooms.tsx',
+	ActivationThresholdSettings: 'optionRooms/ActivationThresholdSettings.tsx',
 };
 
 /** Handlers that write one fixed field each. */
@@ -104,10 +108,9 @@ describe('settings pages render each setting key once', () => {
 	});
 
 	it('both pages render the one People section, and it composes what the guard reads', () => {
-		const peopleSource = fs.readFileSync(
-			path.resolve(__dirname, '../../host/PeopleSection.tsx'),
-			'utf8',
-		);
+		const peopleSource = PEOPLE_SECTION_SOURCES.map((file) =>
+			fs.readFileSync(path.resolve(__dirname, '../../host', file), 'utf8'),
+		).join('\n');
 		const formSource = fs.readFileSync(
 			path.join(COMPONENTS, 'statementSettingsForm/StatementSettingsForm.tsx'),
 			'utf8',
@@ -136,6 +139,30 @@ describe('settings pages render each setting key once', () => {
 			'GetVoters',
 			'GetEvaluators',
 		].forEach((name) => expect(formSource).not.toContain(name));
+	});
+
+	it('Joining answers & rooms lives in People, not in Participation rules', () => {
+		const participation = fs.readFileSync(
+			path.join(COMPONENTS, 'advancedSettings/ParticipationSettings.tsx'),
+			'utf8',
+		);
+		const formSource = fs.readFileSync(
+			path.join(COMPONENTS, 'statementSettingsForm/StatementSettingsForm.tsx'),
+			'utf8',
+		);
+
+		['joiningEnabled', 'activationThreshold', 'JoinFormCard', 'SubQuestionJoinFormsCard'].forEach(
+			(name) => expect(participation).not.toContain(name),
+		);
+		['JoinFormSettings', 'JoinResolutionSettings'].forEach((name) =>
+			expect(formSource).not.toContain(name),
+		);
+		(['legacy', 'hub'] as const).forEach((variant) => {
+			const owners = keysForVariant(variant);
+			expect(owners.get('joiningEnabled')).toEqual(['OptionRooms']);
+			expect(owners.get('singleJoinOnly')).toEqual(['OptionRooms']);
+			expect(owners.get('activationThreshold')).toEqual(['ActivationThresholdSettings']);
+		});
 	});
 
 	it('the scanner actually finds keys (sanity)', () => {

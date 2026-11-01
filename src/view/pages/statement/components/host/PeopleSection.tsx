@@ -3,12 +3,12 @@ import { Access, Statement, StatementType } from '@freedi/shared-types';
 import MembershipSettings from '../settings/components/membershipSettings/MembershipSettings';
 import MemberValidation from '../settings/components/memberValidation/MemberValidation';
 import UserDemographicSetting from '../settings/components/UserDemographicSettings/UserDemographicSetting';
-import { OptionRooms } from '../settings/components/optionRooms';
 import ConfidenceIndexSettings from '../settings/components/QuestionSettings/ConfidenceIndexSettings';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { fillPlaceholders } from '@/helpers/fillPlaceholders';
 import ActionToast from '@/view/components/atomic/molecules/ActionToast';
 import PeopleSubsection from '@/view/components/atomic/molecules/PeopleSubsection';
+import JoiningSubsection from './people/JoiningSubsection';
 import WaitingSubsection from './people/WaitingSubsection';
 import MembersSubsection from './people/MembersSubsection';
 import PeopleJumpStrip, { JumpTarget } from './people/PeopleJumpStrip';
@@ -152,9 +152,13 @@ const PeopleSection: FC<PeopleSectionProps> = ({ statement, setStatementToEdit }
 				<ConfidenceIndexSettings statement={statement} />
 			</PeopleSubsection>
 			{available.includes('joining') && (
-				<PeopleSubsection {...subsection('joining')} summary={summaries.joining}>
-					<OptionRooms statement={statement} />
-				</PeopleSubsection>
+				<JoiningSubsection
+					statement={statement}
+					summary={summaries.joining}
+					isOpen={anchors.isOpen('joining')}
+					onToggle={anchors.toggle}
+					toggleRef={anchors.registerToggle('joining')}
+				/>
 			)}
 
 			{toast && (

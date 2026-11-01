@@ -1,21 +1,15 @@
 import { FC } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { AlertTriangle, Check, Users, CheckCircle } from 'lucide-react';
-import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { OptionWithMembers } from '@/controllers/db/joining/splitJoinedOption';
 import styles from './OptionRooms.module.scss';
 
 interface OptionsStatusListProps {
 	options: OptionWithMembers[];
-	onAssignAllRooms: () => void;
-	isAssigning?: boolean;
 }
 
-const OptionsStatusList: FC<OptionsStatusListProps> = ({
-	options,
-	onAssignAllRooms,
-	isAssigning = false,
-}) => {
+/** How many people joined each answer and whether it is ready to split. */
+const OptionsStatusList: FC<OptionsStatusListProps> = ({ options }) => {
 	const { t } = useTranslation();
 
 	if (options.length === 0) {
@@ -64,8 +58,6 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({
 		}
 	};
 
-	// Check if any rooms are already assigned
-	const hasExistingRooms = options.some((opt) => opt.hasActiveRooms);
 	const totalParticipants = options.reduce((sum, opt) => sum + opt.joinedCount, 0);
 
 	return (
@@ -101,21 +93,6 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({
 						</div>
 					);
 				})}
-			</div>
-
-			<div className={styles.optionRooms__assignAllButton}>
-				<Button
-					text={
-						isAssigning
-							? t('Assigning...')
-							: hasExistingRooms
-								? t('Reassign all rooms')
-								: t('Assign all rooms')
-					}
-					buttonType={ButtonType.PRIMARY}
-					onClick={onAssignAllRooms}
-					disabled={isAssigning}
-				/>
 			</div>
 		</div>
 	);

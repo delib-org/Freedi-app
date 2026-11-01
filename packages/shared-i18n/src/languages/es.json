@@ -4001,7 +4001,6 @@
   "host.researchDashboard": "Panel de investigación",
   "host.eventDashboard": "Panel del evento",
   "host.showAdvanced": "Mostrar configuración avanzada",
-  "host.joiningOffHint": "Activa \"Permitir unirse a respuestas\" en Reglas de participación para configurar salas.",
   "improve.title": "Mejorar esta respuesta en común",
   "improve.body": "Comentad las preocupaciones abajo. Proponed una redacción mejor como nueva respuesta, para que las valoraciones anteriores sigan con la original.",
   "improve.compareSource": "Comparar con la respuesta de origen",
@@ -4648,5 +4647,10 @@
   "people.empty.inviteHint": "Comparte el enlace de invitación para que entre gente.",
   "people.blocked.empty": "No hay nadie bloqueado",
   "people.hosts.empty": "Aún no hay anfitriones",
-  "people.setInGroup": "Definido en el grupo «{{name}}»"
+  "people.setInGroup": "Definido en el grupo «{{name}}»",
+  "people.activationThreshold.hint": "Exigir un mínimo de activistas y organizadores antes de que una respuesta se active",
+  "people.minActivists": "Mín. activistas",
+  "people.minOrganizers": "Mín. organizadores",
+  "people.rooms.replace.body": "Todas las personas que se unieron se repartirán de nuevo desde cero.",
+  "people.rooms.mirror": "Salas: {{count}} · gestionar en Personas"
 }

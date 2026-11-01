@@ -4001,7 +4001,6 @@
   "host.researchDashboard": "Onderzoeksdashboard",
   "host.eventDashboard": "Evenementdashboard",
   "host.showAdvanced": "Geavanceerde instellingen tonen",
-  "host.joiningOffHint": "Zet \"Aansluiten bij antwoorden\" aan onder Deelnameregels om kamers in te stellen.",
   "improve.title": "Dit antwoord samen verbeteren",
   "improve.body": "Bespreek zorgen hieronder. Stel betere bewoording voor als nieuw antwoord, zodat eerdere beoordelingen bij het origineel blijven.",
   "improve.compareSource": "Vergelijk met het bronantwoord",
@@ -4648,5 +4647,10 @@
   "people.empty.inviteHint": "Deel de uitnodigingslink om mensen binnen te halen.",
   "people.blocked.empty": "Niemand is geblokkeerd",
   "people.hosts.empty": "Nog geen hosts",
-  "people.setInGroup": "Ingesteld in de groep «{{name}}»"
+  "people.setInGroup": "Ingesteld in de groep «{{name}}»",
+  "people.activationThreshold.hint": "Vereis een minimum aantal activisten en organisatoren voordat een antwoord actief wordt",
+  "people.minActivists": "Min. activisten",
+  "people.minOrganizers": "Min. organisatoren",
+  "people.rooms.replace.body": "Iedereen die zich heeft aangesloten wordt opnieuw verdeeld.",
+  "people.rooms.mirror": "Kamers: {{count}} · beheren bij Mensen"
 }

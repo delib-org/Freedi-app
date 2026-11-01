@@ -94,6 +94,8 @@ export const JOINING = {
 	DEFAULT_MIN_MEMBERS: 3,
 	DEFAULT_MAX_MEMBERS: 10,
 	MIN_ROOM_SIZE: 2,
+	/** Room size People > Joining answers & rooms starts with (a deliberation-sized group). */
+	DEFAULT_ROOM_SIZE: 7,
 } as const;
 
 /**

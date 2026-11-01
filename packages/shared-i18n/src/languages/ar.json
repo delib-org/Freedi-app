@@ -4121,7 +4121,6 @@
   "host.researchDashboard": "لوحة البحث",
   "host.eventDashboard": "لوحة الفعالية",
   "host.showAdvanced": "إظهار الإعدادات المتقدمة",
-  "host.joiningOffHint": "فعّل \"الانضمام إلى الإجابات\" ضمن قواعد المشاركة لإعداد الغرف.",
   "improve.title": "حسّنوا هذه الإجابة معًا",
   "improve.body": "ناقشوا المخاوف أدناه. اقترحوا صياغة أفضل كإجابة جديدة، لتبقى التقييمات السابقة مع الأصل.",
   "improve.compareSource": "قارن بالإجابة الأصلية",
@@ -4767,5 +4766,10 @@
   "people.empty.inviteHint": "شارك رابط الدعوة لإدخال الناس.",
   "people.blocked.empty": "لا يوجد محظورون",
   "people.hosts.empty": "لا يوجد مضيفون بعد",
-  "people.setInGroup": "محدد في المجموعة «{{name}}»"
+  "people.setInGroup": "محدد في المجموعة «{{name}}»",
+  "people.activationThreshold.hint": "يلزم حد أدنى من الناشطين والمنظمين قبل أن تصبح الإجابة فعّالة",
+  "people.minActivists": "الحد الأدنى من الناشطين",
+  "people.minOrganizers": "الحد الأدنى من المنظمين",
+  "people.rooms.replace.body": "سيُعاد توزيع كل من انضم من البداية.",
+  "people.rooms.mirror": "الغرف: {{count}} · الإدارة في الأشخاص"
 }

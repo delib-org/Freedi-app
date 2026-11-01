@@ -29,8 +29,6 @@ import LocalizationSettings from '../advancedSettings/LocalizationSettings';
 import ExportSettings from '../advancedSettings/ExportSettings';
 import SynthesisPanel from '../synthesisPanel/SynthesisPanel';
 import AnchoredSettings from '../QuestionSettings/AnchoredSettings';
-import JoinFormSettings from '../QuestionSettings/JoinFormSettings/JoinFormSettings';
-import JoinResolutionSettings from '../QuestionSettings/JoinResolutionSettings/JoinResolutionSettings';
 import DeadlineSettings from '../QuestionSettings/DeadlineSettings';
 
 // Hooks & Helpers
@@ -268,12 +266,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 									handleSettingChange={handlers.handleSettingChange}
 									showChatToggle={isHub}
 								/>
-								{isQuestion && (
-									<>
-										<JoinFormSettings statement={settingsStatement} />
-										<JoinResolutionSettings statement={settingsStatement} />
-									</>
-								)}
 							</div>
 						</SettingsSection>
 

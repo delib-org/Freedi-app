@@ -4707,7 +4707,6 @@
   "host.researchDashboard": "Research dashboard",
   "host.eventDashboard": "Event dashboard",
   "host.showAdvanced": "Show advanced settings",
-  "host.joiningOffHint": "Turn on \"Enable Joining Options\" under Participation rules to configure rooms.",
   "improve.title": "Improve this answer together",
   "improve.body": "Discuss concerns below. Offer better wording as a new answer, so earlier ratings stay with the original.",
   "improve.compareSource": "Compare the source answer",
@@ -5326,5 +5325,10 @@
   "people.empty.inviteHint": "Share the invite link to get people in.",
   "people.blocked.empty": "Nobody is blocked",
   "people.hosts.empty": "No hosts yet",
-  "people.setInGroup": "Set in the group «{{name}}»"
+  "people.setInGroup": "Set in the group «{{name}}»",
+  "people.activationThreshold.hint": "Require a minimum of activists and organizers before an answer is active",
+  "people.minActivists": "Min. activists",
+  "people.minOrganizers": "Min. organizers",
+  "people.rooms.replace.body": "Everyone who joined is split again from scratch.",
+  "people.rooms.mirror": "Rooms: {{count}} · manage in People"
 }
