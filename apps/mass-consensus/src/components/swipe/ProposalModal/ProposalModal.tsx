@@ -188,7 +188,7 @@ const ProposalModal: React.FC<ProposalModalProps> = ({
               onClick={handleSubmit}
               disabled={!isValid}
             >
-              {t('Add Your Idea')}
+              {t('Add Your Answer')}
             </button>
             <span className="proposal-modal__or-separator">— {t('or')} —</span>
             <button
