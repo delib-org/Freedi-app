@@ -2,8 +2,8 @@ import { FC, useState, useEffect } from 'react';
 import { Access, Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { setStatementMembership } from '@/controllers/db/statements/setStatementMembership';
-import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { statementSelector } from '@/redux/statements/statementsSlice';
+import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { clearStatementFields, statementSelector } from '@/redux/statements/statementsSlice';
 import { logError } from '@/utils/errorHandling';
 import { accessCopyKeys, SELECTABLE_ACCESS_LEVELS } from '@/helpers/peopleLabels';
 import { isAccessInherited, resolveEffectiveAccess } from '@/helpers/effectiveAccess';
@@ -32,6 +32,7 @@ interface AccessChoice {
  */
 const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 	const { t } = useTranslation();
+	const dispatch = useAppDispatch();
 	const topParent = useAppSelector(statementSelector(statement?.topParentId));
 	const isTopLevel = statement?.parentId === 'top';
 	const inheritedAccess = topParent?.membership?.access ?? Access.openToAll;
@@ -71,6 +72,12 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 				statement,
 				membershipAccess: next.isInherited ? null : next.access,
 			});
+			// The listener's merge keeps a deleted field alive; drop it here.
+			if (next.isInherited) {
+				dispatch(
+					clearStatementFields({ statementId: statement.statementId, fields: ['membership'] }),
+				);
+			}
 		} catch (error) {
 			logError(error, {
 				operation: OPERATION,

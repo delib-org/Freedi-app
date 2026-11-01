@@ -5,15 +5,18 @@ import { logError } from '@/utils/errorHandling';
 import MembershipSettings from '../MembershipSettings';
 
 const mockStatements: Record<string, Statement> = {};
+const mockDispatch = jest.fn();
 
 jest.mock('@/controllers/hooks/useTranslation', () => ({
 	useTranslation: () => ({ t: (k: string) => k, dir: 'ltr' }),
 }));
 jest.mock('@/controllers/hooks/reduxHooks', () => ({
 	useAppSelector: (selector: (state: unknown) => unknown) => selector({}),
+	useAppDispatch: () => mockDispatch,
 }));
 jest.mock('@/redux/statements/statementsSlice', () => ({
 	statementSelector: (id: string | undefined) => () => (id ? mockStatements[id] : undefined),
+	clearStatementFields: (payload: unknown) => ({ type: 'clearStatementFields', payload }),
 }));
 jest.mock('@/controllers/db/statements/setStatementMembership', () => ({
 	setStatementMembership: jest.fn(),
@@ -155,6 +158,12 @@ describe('MembershipSettings', () => {
 			);
 			expect(screen.getByRole('radio', { name: 'people.access.byApproval' })).toBeChecked();
 			expect(screen.getByRole('radio', { name: 'people.access.byApproval' })).toBeDisabled();
+			await waitFor(() =>
+				expect(mockDispatch).toHaveBeenCalledWith({
+					type: 'clearStatementFields',
+					payload: { statementId: 'q1', fields: ['membership'] },
+				}),
+			);
 		});
 	});
 
