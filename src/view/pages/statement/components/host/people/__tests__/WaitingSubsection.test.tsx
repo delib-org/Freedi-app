@@ -170,6 +170,43 @@ describe('WaitingSubsection', () => {
 		await act(async () => undefined);
 	});
 
+	it('lists a declined person again when they ask to join again', async () => {
+		const { rerender } = render(<Harness members={[dana, noam]} />);
+		fireEvent.click(screen.getByRole('button', { name: 'people.decline: Dana' }));
+		expect(rowOf('w1')).toBeNull();
+		await act(async () => undefined);
+
+		// The listener drops Dana (declined), then lists her again (asked again).
+		rerender(<Harness members={[noam]} />);
+		expect(rowOf('w1')).toBeNull();
+		rerender(<Harness members={[noam, dana]} />);
+
+		expect(rowOf('w1')).not.toBeNull();
+	});
+
+	it('moves focus to the heading when a bulk decision empties the list', async () => {
+		render(<Harness members={[dana, noam]} />);
+		fireEvent.click(screen.getByRole('checkbox', { name: 'people.selectAll' }));
+		const frame = jest
+			.spyOn(window, 'requestAnimationFrame')
+			.mockImplementation((callback: FrameRequestCallback) => {
+				callback(0);
+
+				return 0;
+			});
+
+		fireEvent.click(
+			within(screen.getByRole('group', { name: 'people.waiting' })).getByRole('button', {
+				name: 'people.letIn',
+			}),
+		);
+
+		expect(mockedApprove).toHaveBeenCalledWith([dana, noam]);
+		expect(document.activeElement).toBe(screen.getByRole('button', { name: /people\.waiting/ }));
+		frame.mockRestore();
+		await act(async () => undefined);
+	});
+
 	it('says nobody is waiting when the list is empty', () => {
 		render(<Harness members={[]} />);
 

@@ -54,10 +54,15 @@ const WaitingSubsection: FC<WaitingSubsectionProps> = ({
 		toggleRef(element);
 	}
 
-	/** Focus never lands on a removed row: next row's Let in, else the heading. */
-	function focusAfterLeaving(member: WaitingMember): void {
-		const index = visible.indexOf(member);
-		const next = visible[index + 1] ?? visible[index - 1];
+	/** Focus never lands on a removed row: a remaining row's Let in, else the heading. */
+	function focusAfterLeaving(leaving: ReadonlyArray<WaitingMember>): void {
+		const index = visible.indexOf(leaving[0]);
+		const after = visible.slice(index + 1).find((member) => !leaving.includes(member));
+		const before = visible
+			.slice(0, index)
+			.reverse()
+			.find((member) => !leaving.includes(member));
+		const next = after ?? before;
 		window.requestAnimationFrame(() => {
 			const target = next
 				? document.getElementById(letInButtonId(next.statementsSubscribeId))
@@ -67,11 +72,13 @@ const WaitingSubsection: FC<WaitingSubsectionProps> = ({
 	}
 
 	function decideOne(member: WaitingMember, decision: WaitingDecision): void {
-		focusAfterLeaving(member);
+		focusAfterLeaving([member]);
 		decide([member], decision);
 	}
 
+	/** The selection bar goes with the rows, so focus is placed before it does. */
 	function decideSelected(decision: WaitingDecision): void {
+		focusAfterLeaving(selection.selected);
 		decide(selection.selected, decision);
 		selection.clear();
 	}

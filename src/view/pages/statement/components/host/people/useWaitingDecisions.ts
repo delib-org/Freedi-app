@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { WaitingMember } from '@freedi/shared-types';
 import { UI } from '@/constants/common';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -41,6 +41,20 @@ export function useWaitingDecisions(
 	const [hiddenIds, setHiddenIds] = useState<ReadonlySet<string>>(() => new Set());
 	const [rowErrors, setRowErrors] = useState<ReadonlyMap<string, WaitingDecision>>(() => new Map());
 	const { show: setToast, clear: clearToast } = toaster;
+
+	// A hidden row stays hidden only while the listener still lists it (the
+	// write is in flight). Once the person is gone, forget them: a declined
+	// person who asks again comes back under the same subscription id and
+	// must show up, not stay hidden until the page reloads.
+	useEffect(() => {
+		setHiddenIds((prev) => {
+			if (prev.size === 0) return prev;
+			const listed = new Set(members.map(idOf));
+			const next = new Set([...prev].filter((id) => listed.has(id)));
+
+			return next.size === prev.size ? prev : next;
+		});
+	}, [members]);
 
 	const setHidden = useCallback((ids: ReadonlyArray<string>, isHidden: boolean) => {
 		setHiddenIds((prev) => {
