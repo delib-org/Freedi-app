@@ -22,15 +22,23 @@ export const EMPTY_THEME_HIDDEN_REASON = 'empty-theme';
 /** Firestore's hard limit of writes per batch. */
 const FIRESTORE_BATCH_LIMIT = 500;
 
-/** True for a visible pipeline theme with no members that no person locked. */
-export function isEmptyTheme(statement: Statement): boolean {
+/**
+ * True for a pipeline theme with no members that no person locked, hidden or
+ * not. Exports use this one: an empty theme is a leftover whether or not it
+ * has been flagged yet, so it is never exported.
+ */
+export function isMemberlessTheme(statement: Statement): boolean {
 	return (
 		statement.isCluster === true &&
 		statement.derivedByPipeline === 'topic-cluster' &&
 		(statement.integratedOptions ?? []).length === 0 &&
-		statement.hide !== true &&
 		statement.titleLockedByCreator !== true
 	);
+}
+
+/** True for a VISIBLE memberless theme: the ones still to be hidden. */
+export function isEmptyTheme(statement: Statement): boolean {
+	return isMemberlessTheme(statement) && statement.hide !== true;
 }
 
 /** The leftover empty themes among `statements`. Pure. */

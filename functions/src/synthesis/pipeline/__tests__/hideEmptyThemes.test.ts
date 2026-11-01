@@ -15,6 +15,7 @@ import {
 	hideEmptyThemes,
 	hideEmptyThemesSafely,
 	isEmptyTheme,
+	isMemberlessTheme,
 	selectEmptyThemes,
 } from '../hideEmptyThemes';
 
@@ -82,6 +83,13 @@ describe('selectEmptyThemes', () => {
 
 	it('ignores themes that are already hidden', () => {
 		expect(isEmptyTheme(theme('gone', { hide: true }))).toBe(false);
+	});
+
+	it('isMemberlessTheme (the export rule) matches hidden and visible leftovers alike', () => {
+		expect(isMemberlessTheme(theme('gone', { hide: true }))).toBe(true);
+		expect(isMemberlessTheme(theme('visible'))).toBe(true);
+		expect(isMemberlessTheme(theme('manual', { titleLockedByCreator: true }))).toBe(false);
+		expect(isMemberlessTheme(theme('full', { integratedOptions: ['o1'] }))).toBe(false);
 	});
 
 	it('ignores syntheses, themes with members, and plain options', () => {
