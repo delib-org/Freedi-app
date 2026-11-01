@@ -36,6 +36,19 @@ export function removeQuestionFromSurvey(
   };
 }
 
+/** Adds an id to the recently-removed list: newest first, deduped, capped */
+export function addRemovedQuestionId(removedIds: string[], questionId: string, max: number): string[] {
+  return [questionId, ...removedIds.filter((id) => id !== questionId)].slice(0, max);
+}
+
+/** Drops ids from the recently-removed list (undo, or re-adding a question) */
+export function dropRemovedQuestionIds(removedIds: string[], toDrop: string[]): string[] {
+  const drop = new Set(toDrop);
+  const next = removedIds.filter((id) => !drop.has(id));
+
+  return next.length === removedIds.length ? removedIds : next;
+}
+
 /** Puts a removed question back at its original position (no-op if already present) */
 export function restoreQuestionList(questions: Statement[], removed: RemovedQuestion): Statement[] {
   if (questions.some((q) => q.statementId === removed.question.statementId)) {

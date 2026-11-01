@@ -47,6 +47,9 @@ export async function createSurvey(
   };
 
   // Only add optional fields if they have values (Firestore doesn't accept undefined)
+  if (data.removedQuestionIds !== undefined && data.removedQuestionIds.length > 0) {
+    survey.removedQuestionIds = data.removedQuestionIds;
+  }
   if (data.defaultLanguage !== undefined) {
     survey.defaultLanguage = data.defaultLanguage;
   }
@@ -215,6 +218,9 @@ export async function updateSurvey(
       ...(survey.questionSettings || {}),
       ...data.questionSettings,
     };
+  }
+  if (data.removedQuestionIds !== undefined) {
+    updates.removedQuestionIds = data.removedQuestionIds;
   }
   if (data.defaultLanguage !== undefined) {
     updates.defaultLanguage = data.defaultLanguage;

@@ -1,7 +1,7 @@
 import { Statement, StatementType, Collections } from '@freedi/shared-types';
 import { getFirestoreAdmin } from '../admin';
 import { QUESTION_SEARCH } from '@/constants/common';
-import { getAdminStatementIds } from './questionSearchFetch';
+import { getAdminStatementIds, fetchAdminQuestions } from './questionSearchFetch';
 
 /**
  * Candidates for the picker's "Suggested" section: questions that share a
@@ -38,4 +38,24 @@ export async function fetchSuggestionCandidates(
   }
 
   return Array.from(byId.values());
+}
+
+/**
+ * The questions with these ids, limited to ones the user can access
+ * (created, or admin of). Used to show the "Recently removed" section.
+ */
+export async function fetchAccessibleQuestionsByIds(
+  userId: string,
+  questionIds: string[]
+): Promise<Statement[]> {
+  const ids = questionIds.slice(0, QUESTION_SEARCH.MAX_REMOVED_IDS);
+  if (ids.length === 0) return [];
+
+  const db = getFirestoreAdmin();
+  const [questions, adminIds] = await Promise.all([
+    fetchAdminQuestions(db, ids),
+    getAdminStatementIds(db, userId),
+  ]);
+
+  return questions.filter((q) => q.creatorId === userId || adminIds.has(q.statementId));
 }

@@ -254,6 +254,20 @@ describe('SurveyForm completion message', () => {
     });
   });
 
+  it('saves the recently removed question ids with the survey', async () => {
+    render(
+      <SurveyForm existingSurvey={{ ...SURVEY, removedQuestionIds: ['q9', 'q8'] }} onSurveyUpdate={jest.fn()} />
+    );
+    await act(async () => {
+      await jest.runOnlyPendingTimersAsync();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'stub-set-message' }));
+    await advancePastAutosaveDelay();
+
+    expect(JSON.parse(surveyPuts()[0][1].body).removedQuestionIds).toEqual(['q9', 'q8']);
+  });
+
   it('sends null when the admin removes the message', async () => {
     render(
       <SurveyForm

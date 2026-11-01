@@ -4507,5 +4507,6 @@
   "questionRemovedFromSurvey": "Vraag uit de enquête verwijderd",
   "undo": "Ongedaan maken",
   "cancel": "Annuleren",
-  "suggestedQuestions": "Voorgesteld (van dezelfde bovenliggende vraag)"
+  "suggestedQuestions": "Voorgesteld (van dezelfde bovenliggende vraag)",
+  "recentlyRemovedQuestions": "Onlangs verwijderd"
 }

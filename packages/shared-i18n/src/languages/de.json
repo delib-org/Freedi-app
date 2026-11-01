@@ -4507,5 +4507,6 @@
   "questionRemovedFromSurvey": "Frage aus der Umfrage entfernt",
   "undo": "Rückgängig",
   "cancel": "Abbrechen",
-  "suggestedQuestions": "Vorgeschlagen (vom selben Elternteil)"
+  "suggestedQuestions": "Vorgeschlagen (vom selben Elternteil)",
+  "recentlyRemovedQuestions": "Kürzlich entfernt"
 }

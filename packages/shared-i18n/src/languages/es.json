@@ -4507,5 +4507,6 @@
   "questionRemovedFromSurvey": "Pregunta quitada de la encuesta",
   "undo": "Deshacer",
   "cancel": "Cancelar",
-  "suggestedQuestions": "Sugeridas (del mismo padre)"
+  "suggestedQuestions": "Sugeridas (del mismo padre)",
+  "recentlyRemovedQuestions": "Eliminadas recientemente"
 }

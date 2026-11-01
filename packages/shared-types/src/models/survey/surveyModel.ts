@@ -336,6 +336,8 @@ export const SurveySchema = object({
   settings: SurveySettingsSchema,
   /** Per-question settings overrides (keyed by questionId) */
   questionSettings: optional(record(string(), QuestionOverrideSettingsSchema)),
+  /** Questions the admin removed from this survey (newest first) so they can be re-added from the picker */
+  removedQuestionIds: optional(array(string())),
   /** Survey lifecycle status */
   status: SurveyStatusSchema,
   /** Total responses started */

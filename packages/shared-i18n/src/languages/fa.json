@@ -2838,6 +2838,7 @@
   "searchGroups": "جستجوی گروه‌ها...",
   "searchQuestions": "جستجوی سؤالات...",
   "suggestedQuestions": "پیشنهادی (از همان پرسش والد)",
+  "recentlyRemovedQuestions": "اخیراً حذف‌شده",
   "removeQuestionFromSurvey": "این پرسش از نظرسنجی حذف شود؟",
   "removeQuestionConfirmMessage": "تنظیمات آن از بین می‌رود.",
   "questionRemovedFromSurvey": "پرسش از نظرسنجی حذف شد",

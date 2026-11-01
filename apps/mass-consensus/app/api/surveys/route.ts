@@ -123,6 +123,7 @@ export async function POST(request: NextRequest) {
       questionIds: body.questionIds || [],
       settings: body.settings,
       questionSettings: body.questionSettings,
+      removedQuestionIds: body.removedQuestionIds,
       defaultLanguage: body.defaultLanguage,
       forceLanguage: body.forceLanguage,
       demographicPages: body.demographicPages,

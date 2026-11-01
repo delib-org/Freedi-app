@@ -67,6 +67,8 @@ export interface CreateSurveyRequest {
   questionIds?: string[];
   settings?: Partial<SurveySettings>;
   questionSettings?: Record<string, QuestionOverrideSettings>;
+  /** Recently removed question ids (newest first), for the picker's "Recently removed" section */
+  removedQuestionIds?: string[];
   /** Default language for the survey (e.g., 'en', 'he', 'ar') */
   defaultLanguage?: string;
   /** When true, forces all participants to use defaultLanguage regardless of preferences */
@@ -104,6 +106,8 @@ export interface UpdateSurveyRequest {
   questionIds?: string[];
   settings?: Partial<SurveySettings>;
   questionSettings?: Record<string, QuestionOverrideSettings>;
+  /** Recently removed question ids (newest first), for the picker's "Recently removed" section */
+  removedQuestionIds?: string[];
   status?: 'draft' | 'active' | 'closed';
   /** Default language for the survey (e.g., 'en', 'he', 'ar') */
   defaultLanguage?: string;

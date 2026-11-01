@@ -3040,6 +3040,7 @@
   "searchParentQuestions": "Search questions...",
   "searchQuestions": "Search questions...",
   "suggestedQuestions": "Suggested (from the same parent)",
+  "recentlyRemovedQuestions": "Recently removed",
   "removeQuestionFromSurvey": "Remove this question from the survey?",
   "removeQuestionConfirmMessage": "Its settings will be lost.",
   "questionRemovedFromSurvey": "Question removed from the survey",

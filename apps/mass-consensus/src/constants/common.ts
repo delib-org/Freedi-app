@@ -47,6 +47,8 @@ export const QUESTION_SEARCH = {
   MAX_ADMIN_IDS: 1500,
   /** Admin-subscription statements looked up when browsing without a search */
   BROWSE_ADMIN_IDS: 90,
+  /** Most recently-removed question ids kept on a survey (newest first) */
+  MAX_REMOVED_IDS: 20,
   /** Most sibling questions read per suggestion lookup */
   MAX_SIBLING_DOCS: 200,
   /** Firestore 'in' query limit */

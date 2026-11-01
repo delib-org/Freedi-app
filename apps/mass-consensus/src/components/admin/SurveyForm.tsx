@@ -12,6 +12,7 @@ import QuestionPicker from './QuestionPicker';
 import UnifiedFlowEditor from './UnifiedFlowEditor';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import { useQuestionRemoval } from './useQuestionRemoval';
+import { dropRemovedQuestionIds } from './questionRemoval';
 import CompletionMessageEditor from './CompletionMessageEditor';
 import LanguageSelector from './LanguageSelector';
 import { CreateQuestionModal } from './CreateQuestionModal';
@@ -65,6 +66,9 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
   const [settings, setSettings] = useState(existingSurvey?.settings || DEFAULT_SURVEY_SETTINGS);
   const [questionSettings, setQuestionSettings] = useState<Record<string, QuestionOverrideSettings>>(
     existingSurvey?.questionSettings || {}
+  );
+  const [removedQuestionIds, setRemovedQuestionIds] = useState<string[]>(
+    existingSurvey?.removedQuestionIds || []
   );
   const [defaultLanguage, setDefaultLanguage] = useState(existingSurvey?.defaultLanguage || '');
   const [forceLanguage, setForceLanguage] = useState(existingSurvey?.forceLanguage ?? false);
@@ -213,6 +217,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       questionIds: [...new Set(selectedQuestions.map((q) => q.statementId))],
       settings,
       questionSettings: cleanedQuestionSettings,
+      removedQuestionIds: dropRemovedQuestionIds(removedQuestionIds, [...selectedIds]),
       defaultLanguage: defaultLanguage || undefined,
       forceLanguage: forceLanguage || undefined,
       demographicPages: demographicPages,
@@ -471,6 +476,8 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
 
   const handleQuestionsChange = (questions: Statement[]) => {
     setSelectedQuestions(questions);
+    // Re-adding a question (picker, suggestions, search) takes it off the removed list
+    setRemovedQuestionIds((prev) => dropRemovedQuestionIds(prev, questions.map((q) => q.statementId)));
   };
 
   const handleReorder = (reorderedQuestions: Statement[]) => {
@@ -482,6 +489,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
     questionSettings,
     setSelectedQuestions,
     setQuestionSettings,
+    setRemovedQuestionIds,
   });
 
   const handleQuestionSettingsChange = (
@@ -609,6 +617,10 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
             selectedQuestions={selectedQuestions}
             onQuestionsChange={handleQuestionsChange}
             onRemoveQuestion={requestRemoval}
+            removedQuestionIds={dropRemovedQuestionIds(
+              removedQuestionIds,
+              selectedQuestions.map((q) => q.statementId)
+            )}
           />
         )}
       </div>

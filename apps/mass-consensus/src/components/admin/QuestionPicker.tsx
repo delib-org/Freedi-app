@@ -9,6 +9,7 @@ import { authedFetch } from '@/lib/api/authedFetch';
 import { logError, httpErrorFromResponse } from '@/lib/utils/errorHandling';
 import { UI } from '@/constants/common';
 import { useSuggestedQuestions } from './useSuggestedQuestions';
+import { useRemovedQuestions } from './useRemovedQuestions';
 import { useAccessibleQuestions } from './useAccessibleQuestions';
 import { filterQuestionsBySearch } from './questionSearchFilter';
 import styles from './Admin.module.scss';
@@ -18,6 +19,8 @@ interface QuestionPickerProps {
   onQuestionsChange: (questions: Statement[]) => void;
   /** Called (instead of removing directly) when the admin un-ticks a selected question */
   onRemoveQuestion: (questionId: string) => void;
+  /** Questions the admin removed from this survey, newest first (not currently selected) */
+  removedQuestionIds: string[];
 }
 
 interface QuestionsResponse {
@@ -34,6 +37,7 @@ export default function QuestionPicker({
   selectedQuestions,
   onQuestionsChange,
   onRemoveQuestion,
+  removedQuestionIds,
 }: QuestionPickerProps) {
   const { t } = useTranslation();
   const router = useRouter();
@@ -45,7 +49,10 @@ export default function QuestionPicker({
   const [searchQuery, setSearchQuery] = useState('');
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
-  const suggestedQuestions = useSuggestedQuestions(selectedQuestions);
+  const removedQuestions = useRemovedQuestions(removedQuestionIds);
+  const suggestedQuestions = useSuggestedQuestions(selectedQuestions).filter(
+    (q) => !removedQuestionIds.includes(q.statementId)
+  );
   const loadAccessibleQuestions = useAccessibleQuestions();
   const loadedAllRef = useRef(false);
 
@@ -210,6 +217,29 @@ export default function QuestionPicker({
         value={searchQuery}
         onChange={(e) => handleSearchChange(e.target.value)}
       />
+
+      {!searchQuery && removedQuestions.length > 0 && (
+        <div className={styles.suggestedSection}>
+          <h3 className={styles.suggestedTitle}>{t('recentlyRemovedQuestions')}</h3>
+          <div className={styles.questionList}>
+            {removedQuestions.map((question) => (
+              <div
+                key={question.statementId}
+                className={styles.questionItem}
+                onClick={() => handleToggleQuestion(question)}
+              >
+                <input
+                  type="checkbox"
+                  className={styles.questionCheckbox}
+                  checked={false}
+                  onChange={() => handleToggleQuestion(question)}
+                />
+                <span className={styles.questionText}>{question.statement}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {!searchQuery && suggestedQuestions.length > 0 && (
         <div className={styles.suggestedSection}>

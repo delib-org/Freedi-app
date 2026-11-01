@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchQuestions, getAllAccessibleQuestions } from '@/lib/firebase/surveys';
+import { fetchAccessibleQuestionsByIds } from '@/lib/firebase/surveys/suggestionCandidates';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { logger } from '@/lib/utils/logger';
 
@@ -40,6 +41,15 @@ export async function GET(request: NextRequest) {
 
     // Parse query params
     const searchParams = request.nextUrl.searchParams;
+
+    // ids=a,b: just those questions (if accessible), for the "Recently removed" section
+    const idsParam = searchParams.get('ids');
+    if (idsParam) {
+      const ids = idsParam.split(',').map((id) => id.trim()).filter(Boolean);
+      const questions = await fetchAccessibleQuestionsByIds(userId, ids);
+
+      return NextResponse.json({ questions });
+    }
 
     // scope=all: the whole accessible set, fetched once so the picker can search locally
     if (searchParams.get('scope') === 'all') {

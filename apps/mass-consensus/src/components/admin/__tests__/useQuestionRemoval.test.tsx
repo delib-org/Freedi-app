@@ -7,6 +7,8 @@ import { renderHook, act } from '@testing-library/react';
 import type { Statement, QuestionOverrideSettings } from '@freedi/shared-types';
 import { useQuestionRemoval } from '../useQuestionRemoval';
 import {
+  addRemovedQuestionId,
+  dropRemovedQuestionIds,
   removeQuestionFromSurvey,
   restoreQuestionList,
   restoreQuestionSettings,
@@ -78,14 +80,16 @@ describe('useQuestionRemoval', () => {
       const [questionSettings, setQuestionSettings] = useState<QuestionSettingsMap>({
         b: settingsFor('b'),
       });
+      const [removedQuestionIds, setRemovedQuestionIds] = useState<string[]>(['old']);
       const removal = useQuestionRemoval({
         selectedQuestions,
         questionSettings,
         setSelectedQuestions,
         setQuestionSettings,
+        setRemovedQuestionIds,
       });
 
-      return { selectedQuestions, questionSettings, ...removal };
+      return { selectedQuestions, questionSettings, removedQuestionIds, ...removal };
     });
 
   it('asks first and keeps the question when the admin cancels', () => {
@@ -110,6 +114,7 @@ describe('useQuestionRemoval', () => {
 
     expect(result.current.selectedQuestions).toEqual([A, C]);
     expect(result.current.questionSettings).toEqual({});
+    expect(result.current.removedQuestionIds).toEqual(['b', 'old']);
     expect(mockShowToast).toHaveBeenCalledTimes(1);
 
     const toast = mockShowToast.mock.calls[0][0];
@@ -119,5 +124,28 @@ describe('useQuestionRemoval', () => {
     act(() => toast.action?.onClick());
     expect(result.current.selectedQuestions).toEqual([A, B, C]);
     expect(result.current.questionSettings).toEqual({ b: settingsFor('b') });
+    expect(result.current.removedQuestionIds).toEqual(['old']);
+  });
+
+  it('cancel leaves the removed list alone', () => {
+    const { result } = setup();
+
+    act(() => result.current.requestRemoval('b'));
+    act(() => result.current.cancelRemoval());
+
+    expect(result.current.removedQuestionIds).toEqual(['old']);
+  });
+});
+
+describe('recently removed list helpers', () => {
+  it('puts the newest first, dedupes and caps', () => {
+    expect(addRemovedQuestionId(['a', 'b'], 'b', 5)).toEqual(['b', 'a']);
+    expect(addRemovedQuestionId(['a', 'b', 'c'], 'x', 3)).toEqual(['x', 'a', 'b']);
+  });
+
+  it('drops re-added ids and keeps the same list when nothing matches', () => {
+    expect(dropRemovedQuestionIds(['a', 'b', 'c'], ['b', 'zzz'])).toEqual(['a', 'c']);
+    const list = ['a'];
+    expect(dropRemovedQuestionIds(list, ['q'])).toBe(list);
   });
 });

@@ -4626,5 +4626,6 @@
   "questionRemovedFromSurvey": "تمت إزالة السؤال من الاستطلاع",
   "undo": "تراجع",
   "cancel": "إلغاء",
-  "suggestedQuestions": "مقترحة (من السؤال الأصل نفسه)"
+  "suggestedQuestions": "مقترحة (من السؤال الأصل نفسه)",
+  "recentlyRemovedQuestions": "أُزيلت مؤخرًا"
 }

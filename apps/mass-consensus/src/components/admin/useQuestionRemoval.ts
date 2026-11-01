@@ -2,8 +2,10 @@ import { useState, useCallback, Dispatch, SetStateAction } from 'react';
 import type { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useToast } from '@/components/shared/Toast';
-import { UI } from '@/constants/common';
+import { UI, QUESTION_SEARCH } from '@/constants/common';
 import {
+  addRemovedQuestionId,
+  dropRemovedQuestionIds,
   removeQuestionFromSurvey,
   restoreQuestionList,
   restoreQuestionSettings,
@@ -16,6 +18,7 @@ interface UseQuestionRemovalArgs {
   questionSettings: QuestionSettingsMap;
   setSelectedQuestions: Dispatch<SetStateAction<Statement[]>>;
   setQuestionSettings: Dispatch<SetStateAction<QuestionSettingsMap>>;
+  setRemovedQuestionIds: Dispatch<SetStateAction<string[]>>;
 }
 
 interface UseQuestionRemovalResult {
@@ -35,6 +38,7 @@ export function useQuestionRemoval({
   questionSettings,
   setSelectedQuestions,
   setQuestionSettings,
+  setRemovedQuestionIds,
 }: UseQuestionRemovalArgs): UseQuestionRemovalResult {
   const { t } = useTranslation();
   const { showToast } = useToast();
@@ -48,8 +52,9 @@ export function useQuestionRemoval({
     (removed: RemovedQuestion) => {
       setSelectedQuestions((prev) => restoreQuestionList(prev, removed));
       setQuestionSettings((prev) => restoreQuestionSettings(prev, removed));
+      setRemovedQuestionIds((prev) => dropRemovedQuestionIds(prev, [removed.question.statementId]));
     },
-    [setSelectedQuestions, setQuestionSettings]
+    [setSelectedQuestions, setQuestionSettings, setRemovedQuestionIds]
   );
 
   const confirmRemoval = useCallback(() => {
@@ -62,6 +67,9 @@ export function useQuestionRemoval({
     const removed = result.removed;
     setSelectedQuestions(result.questions);
     setQuestionSettings(result.settings);
+    setRemovedQuestionIds((prev) =>
+      addRemovedQuestionId(prev, removed.question.statementId, QUESTION_SEARCH.MAX_REMOVED_IDS)
+    );
     showToast({
       type: 'info',
       message: t('questionRemovedFromSurvey'),
@@ -74,6 +82,7 @@ export function useQuestionRemoval({
     questionSettings,
     setSelectedQuestions,
     setQuestionSettings,
+    setRemovedQuestionIds,
     showToast,
     t,
     undoRemoval,
