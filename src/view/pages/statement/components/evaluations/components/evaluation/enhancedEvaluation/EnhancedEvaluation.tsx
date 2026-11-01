@@ -7,12 +7,11 @@ import {
 	EnhancedEvaluationThumb,
 } from './EnhancedEvaluationModel';
 import { buildFaceScale, FaceTone, shouldShowFaceLabels } from './faceScaleModel';
-import ConsensusBar from './ConsensusBar';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
-import { DEFAULT_MIN_EVALUATORS, Statement } from '@freedi/shared-types';
+import { Statement } from '@freedi/shared-types';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
@@ -24,6 +23,7 @@ import {
 import { isAdmin as isAdminRole } from '@/controllers/general/helpers';
 import { shouldShowResults, shouldShowRevealHint } from './resultsVisibility';
 import { ResultsStrip } from '@/view/components/atomic/molecules/ResultsStrip';
+import { Check } from 'lucide-react';
 import { FaceIcon } from '@/view/components/atomic/atoms/FaceIcon';
 
 export type EnhancedEvaluationVariant = 'default' | 'card';
@@ -91,17 +91,17 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 		evaluationDisabled: !enableEvaluation,
 		isSpaceAdmin,
 	};
-	const numberOfEvaluators = statement.evaluation?.numberOfEvaluators ?? 0;
 	const showResults = shouldShowResults(showEvaluation, visibilityInput);
-	// The bar is a consensus reading, so it honours the same minimum-evaluator
-	// gate as the consensus tile in the strip.
-	const showConsensusBar = isCard && showResults && numberOfEvaluators >= DEFAULT_MIN_EVALUATORS;
 
 	return (
 		<div className={clsx(styles.evaluation, isCard && styles['evaluation--card'])}>
 			{!isOwnAnswer && (
 				<div
-					className={styles.scale}
+					className={clsx(
+						styles.scale,
+						isCard && styles['scale--circles'],
+						isCard && hasRated && styles['scale--has-selection'],
+					)}
 					role="group"
 					aria-label={t('Rating scale')}
 					data-testid="face-scale"
@@ -114,6 +114,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 							tone={option.tone}
 							labelKey={option.labelKey}
 							showLabel={showLabels}
+							shape={isCard ? 'circle' : 'tile'}
 							statement={statement}
 							enableEvaluation={enableEvaluation}
 							onEvaluate={handleEvaluate}
@@ -121,10 +122,10 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 					))}
 				</div>
 			)}
-			{showConsensusBar && <ConsensusBar consensus={statement.consensus ?? 0} />}
-			{/* The three result numbers, spelled out. They used to live only in
-			    a hover tooltip on a colour bar, so touch users never saw them. */}
-			{showResults && <ResultsStrip statement={statement} />}
+			{/* The result numbers, spelled out. They used to live only in a hover
+			    tooltip on a colour bar, so touch users never saw them. On a card
+			    they are Join's compact chips row. */}
+			{showResults && <ResultsStrip statement={statement} variant={isCard ? 'chips' : 'tiles'} />}
 			{shouldShowRevealHint(showEvaluation, visibilityInput) && (
 				<p className={styles['reveal-hint']} data-testid="results-reveal-hint">
 					{t('The result will be revealed after you rate')}
@@ -148,6 +149,8 @@ export interface EvaluationThumbProps {
 	labelKey?: string;
 	/** Render the visible text label. The aria-label is always kept. */
 	showLabel?: boolean;
+	/** 'circle' (answer card): a big filled face, no box and no text label. */
+	shape?: 'tile' | 'circle';
 }
 
 export const EvaluationThumb: FC<EvaluationThumbProps> = ({
@@ -159,6 +162,7 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 	tone,
 	labelKey,
 	showLabel = true,
+	shape = 'tile',
 }) => {
 	const { creator } = useAuthentication();
 	const { t } = useUserConfig();
@@ -181,7 +185,48 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 	// The option's own ramp token drives border, fill and face colour.
 	const faceStyle = { '--face-color': evaluationThumb.colorSelected } as CSSProperties;
 
-	const button = (
+	const isCircle = shape === 'circle';
+	const glyph = evaluationThumb.emoji ? (
+		<span className={styles['face__emoji']}>{evaluationThumb.emoji}</span>
+	) : isCircle ? (
+		<img src={evaluationThumb.svg} alt="" />
+	) : evaluationThumb.face ? (
+		<FaceIcon face={evaluationThumb.face} />
+	) : (
+		<img src={evaluationThumb.svg} alt="" />
+	);
+
+	const circleButton = (
+		<button
+			type="button"
+			className={clsx(
+				styles.circle,
+				isActive && styles['circle--active'],
+				!enableEvaluation && styles['face--disabled'],
+			)}
+			style={faceStyle}
+			onClick={enableEvaluation ? handleSetEvaluation : undefined}
+			disabled={!enableEvaluation}
+			aria-disabled={!enableEvaluation}
+			aria-pressed={isActive}
+			aria-label={enableEvaluation ? label : `${label}. ${t('Voting disabled - view only')}`}
+			title={label}
+			data-testid={`face-scale-option-${evaluationThumb.id}`}
+		>
+			<span className={styles['circle__glyph']} aria-hidden="true">
+				{glyph}
+			</span>
+			{isActive && (
+				<span className={styles['circle__check']} aria-hidden="true">
+					<Check size={14} strokeWidth={3} />
+				</span>
+			)}
+		</button>
+	);
+
+	const button = isCircle ? (
+		circleButton
+	) : (
 		<button
 			type="button"
 			className={clsx(
@@ -199,13 +244,7 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 			data-testid={`face-scale-option-${evaluationThumb.id}`}
 		>
 			<span className={styles['face__glyph']} aria-hidden="true">
-				{evaluationThumb.emoji ? (
-					<span className={styles['face__emoji']}>{evaluationThumb.emoji}</span>
-				) : evaluationThumb.face ? (
-					<FaceIcon face={evaluationThumb.face} />
-				) : (
-					<img src={evaluationThumb.svg} alt="" />
-				)}
+				{glyph}
 			</span>
 			{showLabel && (
 				<span className={styles['face__label']} aria-hidden="true">

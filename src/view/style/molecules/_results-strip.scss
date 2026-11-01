@@ -90,4 +90,52 @@
 		color: var(--text-meta);
 		text-align: start;
 	}
+
+	// Join's compact chips row: small bordered chips sized to their content
+	// (value over a small label), agreement highlighted in the approve green.
+	&--chips {
+		.results-strip__items {
+			justify-content: flex-start;
+			flex-wrap: wrap;
+			gap: var(--space-2xs);
+		}
+
+		.results-strip__item {
+			flex: 0 0 auto;
+			min-inline-size: 3.5rem;
+			padding: 0.375rem 0.75rem;
+			border-radius: var(--radius-md);
+			background: transparent;
+			color: var(--text-meta);
+
+			&--primary {
+				background: var(--wash-approve);
+				border-color: var(--approve-ink);
+				color: var(--approve-ink);
+			}
+
+			&--negative {
+				color: var(--score-negative-ink);
+			}
+
+			// A negative headline is a caution, not an achievement.
+			&--primary.results-strip__item--negative {
+				background: var(--bg-sunken);
+				border-color: var(--score-negative-ink);
+			}
+		}
+
+		.results-strip__value {
+			font-weight: 600;
+			font-size: 0.9375rem;
+		}
+
+		.results-strip__item--primary .results-strip__value {
+			font-size: 1rem;
+		}
+
+		.results-strip__label {
+			color: inherit;
+		}
+	}
 }

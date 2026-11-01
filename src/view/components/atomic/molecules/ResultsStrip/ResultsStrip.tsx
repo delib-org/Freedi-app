@@ -10,6 +10,9 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 export type ResultsMetric = 'consensus' | 'average' | 'evaluators';
 
+/** 'tiles' = three equal boxes; 'chips' = Join's compact row, consensus highlighted. */
+export type ResultsStripVariant = 'tiles' | 'chips';
+
 export interface ResultsStripProps {
 	statement: Statement;
 	/** Which number is the headline — rendered larger on a sunken tile. */
@@ -17,6 +20,7 @@ export interface ResultsStripProps {
 	/** Consensus is meaningless on a handful of votes, so it stays hidden
 	 *  until this many people have evaluated. */
 	minEvaluators?: number;
+	variant?: ResultsStripVariant;
 	className?: string;
 }
 
@@ -32,10 +36,14 @@ const ResultsStrip: React.FC<ResultsStripProps> = ({
 	statement,
 	primary = 'consensus',
 	minEvaluators = DEFAULT_MIN_EVALUATORS,
+	variant = 'tiles',
 	className,
 }) => {
 	const { t } = useTranslation();
 
+	const isChips = variant === 'chips';
+	// Chips lead with the consensus, whatever the caller asked for.
+	const headline: ResultsMetric = isChips ? 'consensus' : primary;
 	const numberOfEvaluators = statement.evaluation?.numberOfEvaluators ?? 0;
 
 	// Nothing to report yet — an all-zeros strip reads as "everyone rejected
@@ -75,7 +83,7 @@ const ResultsStrip: React.FC<ResultsStripProps> = ({
 			key={metric}
 			className={clsx(
 				'results-strip__item',
-				primary === metric && 'results-strip__item--primary',
+				headline === metric && 'results-strip__item--primary',
 				isNegative && 'results-strip__item--negative',
 			)}
 			title={`${title}: ${value}`}
@@ -90,12 +98,12 @@ const ResultsStrip: React.FC<ResultsStripProps> = ({
 	);
 
 	return (
-		<div className={clsx('results-strip', className)}>
+		<div className={clsx('results-strip', isChips && 'results-strip--chips', className)}>
 			<div className="results-strip__items" role="group" aria-label={t('Results')}>
 				{showConsensus &&
 					item(
 						'consensus',
-						t('Consensus'),
+						isChips ? t('Agreement') : t('Consensus'),
 						t('Consensus score'),
 						`${consensusPct}%`,
 						consensusPct < 0,

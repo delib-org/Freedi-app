@@ -174,4 +174,24 @@ describe('ResultsStrip - stakeholder coverage', () => {
 
 		expect(screen.getByText('500 / 500')).toBeInTheDocument();
 	});
+
+	it('chips variant labels the highlighted consensus chip "Agreement"', () => {
+		const { container } = render(
+			<ResultsStrip
+				variant="chips"
+				statement={makeStatement(0.42, {
+					numberOfEvaluators: 10,
+					sumEvaluations: 6,
+					sumPro: 8,
+					sumCon: 2,
+				})}
+			/>,
+		);
+
+		expect(container.querySelector('.results-strip--chips')).not.toBeNull();
+		expect(screen.getByText('Agreement')).toBeInTheDocument();
+		expect(screen.getByText('Average')).toBeInTheDocument();
+		expect(screen.getByText('Evaluators')).toBeInTheDocument();
+		expect(container.querySelector('.results-strip__item--primary')).toHaveTextContent('42%');
+	});
 });
