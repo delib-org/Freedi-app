@@ -11,6 +11,7 @@ import styles from './MembershipSettings.module.scss';
 import { logError } from '@/utils/errorHandling';
 import { accessCopyKeys, SELECTABLE_ACCESS_LEVELS } from '@/helpers/peopleLabels';
 import { fillPlaceholders } from '@/helpers/fillPlaceholders';
+import InlineNote from '@/view/components/atomic/atoms/InlineNote';
 
 interface Props {
 	statement: Statement;
@@ -33,6 +34,7 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 	const isInheriting = isTopLevel ? false : !hasOwnMembership;
 
 	const [inheritAccess, setInheritAccess] = useState<boolean>(isInheriting);
+	const [saveFailed, setSaveFailed] = useState(false);
 	const [membershipAccess, setMembershipAccess] = useState<Access>(
 		// If it has deprecated 'open' and should inherit, use parent's access
 		hasDeprecatedOpen
@@ -74,6 +76,24 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 	// Get inherited access level
 	const inheritedAccess = topParentStatement?.membership?.access ?? Access.openToAll;
 
+	/** Writes the access level; on failure the picker shows what is really saved. */
+	async function saveAccess(access: Access | null): Promise<void> {
+		const previous = { inherit: inheritAccess, access: membershipAccess };
+		setSaveFailed(false);
+		try {
+			await setStatementMembership({ statement, membershipAccess: access });
+		} catch (error) {
+			logError(error, {
+				operation: 'membershipSettings.MembershipSettings.saveAccess',
+				statementId: statement.statementId,
+				metadata: { access },
+			});
+			setInheritAccess(previous.inherit);
+			setMembershipAccess(previous.access);
+			setSaveFailed(true);
+		}
+	}
+
 	const handleInheritChange = (checked: boolean) => {
 		setInheritAccess(checked);
 
@@ -89,7 +109,7 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 				setStatementToEdit(updatedStatement);
 			} else {
 				// Existing statement - clear membership access
-				setStatementMembership({ statement, membershipAccess: null });
+				void saveAccess(null);
 			}
 			// Update local state to show inherited access
 			setMembershipAccess(inheritedAccess);
@@ -105,14 +125,12 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 					},
 				});
 			} else {
-				setStatementMembership({ statement, membershipAccess: newAccess });
+				void saveAccess(newAccess);
 			}
 		}
 	};
 
 	const handleAccessChange = (newAccess: Access) => {
-		console.info('handleAccessChange called with:', newAccess, 'Access.public:', Access.public);
-
 		// Validate the new access value
 		if (!newAccess && newAccess !== Access.public) {
 			logError(newAccess, {
@@ -142,7 +160,7 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 			});
 		} else {
 			// Existing statement - update database
-			setStatementMembership({ statement, membershipAccess: newAccess });
+			void saveAccess(newAccess);
 		}
 	};
 
@@ -186,20 +204,12 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 							value: access as string,
 						}))}
 						currentValue={membershipAccess as string}
-						onClick={(newValue) => {
-							console.info('MultiSwitch onClick value:', newValue, 'type:', typeof newValue);
-							console.info('Access enum values:', {
-								public: Access.public,
-								openToAll: Access.openToAll,
-								openForRegistered: Access.openForRegistered,
-								moderated: Access.moderated,
-								secret: Access.secret,
-							});
-							handleAccessChange(newValue as Access);
-						}}
+						onClick={(newValue) => handleAccessChange(newValue as Access)}
 					/>
 				</div>
 			)}
+
+			{saveFailed && <InlineNote variant="error">{t('people.error.save')}</InlineNote>}
 		</div>
 	);
 };

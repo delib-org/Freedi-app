@@ -1,0 +1,17 @@
+// "Invite link → Live now": People points at the one invite control instead
+// of owning a second one (IA main-people-settings §5, defect 3).
+.inviteLink {
+	display: inline-flex;
+	align-items: center;
+	min-block-size: 2.75rem;
+	font-size: var(--font-size-sm);
+	color: var(--text-blue);
+	text-decoration: underline;
+	text-underline-offset: 0.15em;
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+		border-radius: var(--radius-xs);
+	}
+}

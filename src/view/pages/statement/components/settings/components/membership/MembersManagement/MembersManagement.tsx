@@ -8,8 +8,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { RootState } from '@/redux/store';
 import MemberFilters from '../MemberFilters/MemberFilters';
 import FilteredMembersList from '../FilteredMembersList/FilteredMembersList';
-import ShareIcon from '@/assets/icons/shareIcon.svg?react';
-import { logError } from '@/utils/errorHandling';
+import InviteLinkToLive from '../../../../host/InviteLinkToLive';
 import { fillPlaceholders } from '@/helpers/fillPlaceholders';
 
 interface MembersManagementProps {
@@ -67,39 +66,6 @@ const MembersManagement: FC<MembersManagementProps> = ({ statement }) => {
 		setRoleFilter(role);
 	}, []);
 
-	// Handle share functionality
-	const handleShare = useCallback(() => {
-		const baseUrl = window.location.origin;
-		const shareData = {
-			title: t('FreeDi: Empowering Agreements'),
-			text: t('Invited:') + ' ' + statement?.statement,
-			url: `${baseUrl}/statement-an/true/${statement?.statementId}/options`,
-		};
-
-		if (navigator.share) {
-			navigator.share(shareData).catch((error) => {
-				logError(error, {
-					operation: 'MembersManagement.MembersManagement.handleShare',
-					metadata: { message: 'Error sharing:' },
-				});
-			});
-		} else {
-			// Fallback: Copy to clipboard
-			navigator.clipboard.writeText(shareData.url).then(
-				() => {
-					// You could show a toast notification here
-					console.info('Link copied to clipboard');
-				},
-				(error) => {
-					logError(error, {
-						operation: 'MembersManagement.MembersManagement.handleShare',
-						metadata: { message: 'Failed to copy link:' },
-					});
-				},
-			);
-		}
-	}, [statement, t]);
-
 	if (!members) return null;
 
 	return (
@@ -113,14 +79,7 @@ const MembersManagement: FC<MembersManagementProps> = ({ statement }) => {
 					</p>
 				</div>
 
-				<button
-					className={styles.shareButton}
-					onClick={handleShare}
-					aria-label={t('people.inviteLink')}
-				>
-					<ShareIcon />
-					<span>{t('people.inviteLink')}</span>
-				</button>
+				<InviteLinkToLive statementId={statement.statementId} />
 			</div>
 
 			{/* Stats Cards */}
