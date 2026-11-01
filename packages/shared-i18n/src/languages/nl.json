@@ -4510,5 +4510,13 @@
   "suggestedQuestions": "Voorgesteld (van dezelfde bovenliggende vraag)",
   "recentlyRemovedQuestions": "Onlangs verwijderd",
   "similarByMeaning": "Vergelijkbaar qua betekenis",
-  "searchingBySimilarMeaning": "Zoeken naar vergelijkbare vragen..."
+  "searchingBySimilarMeaning": "Zoeken naar vergelijkbare vragen...",
+  "mc.addAnswer": "Antwoord toevoegen",
+  "mc.addYourAnswerFirst": "Voeg eerst je antwoord toe",
+  "mc.answerLabel": "Antwoord",
+  "mc.answersLabel": "Antwoorden",
+  "mc.answer": "antwoord",
+  "mc.answers": "antwoorden",
+  "mc.yourAnswer": "Jouw antwoord",
+  "mc.scoreBreakdownSummary": "{count} beoordelaars · {direct} direct + {inherited} geërfd van {originals} originelen"
 }

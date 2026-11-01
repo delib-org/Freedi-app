@@ -142,7 +142,7 @@ export default function SwipeCard({
       {/* Card Header */}
       <div className={styles.header}>
         <div className={styles.badge}>
-          {t('Proposal')}
+          {t('mc.answerLabel')}
         </div>
         {approvalRate > 0 && (
           <div className={styles.approvalBadge}>

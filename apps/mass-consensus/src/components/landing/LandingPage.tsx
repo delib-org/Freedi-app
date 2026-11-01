@@ -127,7 +127,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 </div>
               </div>
               <h3>{t('landingStep1Title') || 'Rate Ideas'}</h3>
-              <p>{t('landingStep1Text') || 'Rate proposals on a spectrum from -1 (strongly disagree) to +1 (strongly agree). Your nuanced opinion matters.'}</p>
+              <p>{t('landingStep1Text') || 'Rate answers on a spectrum from -1 (strongly disagree) to +1 (strongly agree). Your nuanced opinion matters.'}</p>
             </div>
           </div>
           <div className={styles.step}>
