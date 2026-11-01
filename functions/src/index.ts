@@ -11,7 +11,7 @@ import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
 // Import collection constants
-import { Collections, functionConfig } from '@freedi/shared-types';
+import { Collections, StatementType, functionConfig } from '@freedi/shared-types';
 
 // Structured error handling
 import { logError } from './utils/errorHandling';
@@ -192,6 +192,7 @@ import {
 import { recomputeTopOptions } from './fn_recomputeTopOptions';
 import { reconcileEvaluatorCount } from './fn_reconcileEvaluatorCount';
 import { searchStatements } from './fn_searchStatements';
+import { searchQuestionsByMeaning } from './fn_searchQuestionsByMeaning';
 
 // Bulk Idea Synthesis (admin-triggered near-duplicate detection)
 import {
@@ -646,8 +647,18 @@ exports.onStatementDeletionTombstone = createFirestoreFunction(
 exports.onStatementDeletionEmbedding = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
 	onDocumentDeleted,
-	async (event: { params: { statementId: string } }) => {
-		await deleteEmbeddingDoc(event.params.statementId);
+	async (event: {
+		params: { statementId: string };
+		data?: { data: () => { statementType?: unknown } | undefined };
+	}) => {
+		const deleted = event.data?.data();
+		await Promise.all([
+			deleteEmbeddingDoc(event.params.statementId),
+			// A deleted question's search-by-meaning vector goes too.
+			deleted?.statementType === StatementType.question
+				? deleteQuestionEmbedding(event.params.statementId)
+				: Promise.resolve(),
+		]);
 	},
 	'onStatementDeletionEmbedding',
 );
@@ -860,6 +871,9 @@ exports.reconcileEvaluatorCount = reconcileEvaluatorCount;
 
 // Statement search (home, subscriptions, whole tree; lexical + semantic)
 exports.searchStatements = searchStatements;
+
+// Question "search by meaning" (MC survey question picker; admin scope only)
+exports.searchQuestionsByMeaning = searchQuestionsByMeaning;
 
 // Bulk Idea Synthesis
 exports.synthesizeIdeasPreview = synthesizeIdeasPreview;
@@ -1116,6 +1130,10 @@ export { fn_nightlyClusterReconcile } from './condensation/fn_nightlyClusterReco
 import { liveSynthOnOptionCreate } from './synthesis/liveSynth/onOptionCreateLive';
 import { liveSynthOnOptionUpdate } from './synthesis/liveSynth/onOptionUpdateLive';
 import { deleteEmbeddingDoc, syncEmbeddingParent } from './services/statement-embedding-store';
+import {
+	deleteQuestionEmbedding,
+	syncQuestionEmbedding,
+} from './services/question-embedding-store';
 
 exports.liveSynthOnOptionCreate = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
@@ -1139,6 +1157,9 @@ exports.liveSynthOnOptionUpdate = createFirestoreFunction(
 			// rather than adding another per-update function: vector search
 			// pre-filters by parentId, so the embedding doc follows a moved statement.
 			syncEmbeddingParent(before, after),
+			// Same ride for question vectors (search by meaning): re-embed on a
+			// text edit, follow a move or hide. No reads unless a question changed.
+			syncQuestionEmbedding(before, after),
 			liveSynthOnOptionUpdate(before, after),
 		]);
 	},

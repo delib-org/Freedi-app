@@ -2278,6 +2278,40 @@
       ]
     },
     {
+      "collectionGroup": "questionEmbeddings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "creatorId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "embedding",
+          "vectorConfig": {
+            "dimension": 1536,
+            "flat": {}
+          }
+        }
+      ]
+    },
+    {
+      "collectionGroup": "questionEmbeddings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "topParentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "embedding",
+          "vectorConfig": {
+            "dimension": 1536,
+            "flat": {}
+          }
+        }
+      ]
+    },
+    {
       "collectionGroup": "questionDeliberations",
       "queryScope": "COLLECTION",
       "fields": [
