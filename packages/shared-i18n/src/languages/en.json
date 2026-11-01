@@ -4676,6 +4676,7 @@
   "host.liveDesc": "Presenter mode, PIN and QR, accepting answers, live results, close date",
   "host.people": "People",
   "host.peopleDesc": "Who can join, waiting list, hosts, entry check, questions about participants, breakout rooms",
+  "host.people.stakeholders": "Stakeholders",
   "host.answers": "Answers",
   "host.answersDesc": "Hidden answers, pinned answers, bulk add, import, curate groups",
   "host.results": "Results",

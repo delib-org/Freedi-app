@@ -39,6 +39,7 @@ import DeadlineSettings from '../QuestionSettings/DeadlineSettings';
 // Hooks & Helpers
 import styles from './StatementSettingsForm.module.scss';
 import advStyles from '../advancedSettings/EnhancedAdvancedSettings.module.scss';
+import hubStyles from '../../../host/HostHub.module.scss';
 import { useStatementSettingsHandlers } from '../../useStatementSettingsHandlers';
 import { defaultStatementSettings } from '../../emptyStatementModel';
 
@@ -102,7 +103,6 @@ export const FORM_COMPOSITION: Record<
 		{ component: 'DeadlineSettings' },
 		{ component: 'EvaluationSettings' },
 		{ component: 'AnchoredSettings' },
-		{ component: 'ConfidenceIndexSettings' },
 		{ component: 'AISettings' },
 		{ component: 'SynthesisPanel' },
 		{ component: 'DiscussionSettings' },
@@ -112,6 +112,7 @@ export const FORM_COMPOSITION: Record<
 		{ component: 'AdminsManagement' },
 		{ component: 'MemberValidation' },
 		{ component: 'UserDemographicSetting' },
+		{ component: 'ConfidenceIndexSettings' },
 		{ component: 'QuestionSettings' },
 		{ component: 'VisibilitySettings' },
 		{ component: 'NavigationSettings' },
@@ -125,7 +126,6 @@ export const FORM_COMPOSITION: Record<
 		{ component: 'ChoseBySettings' },
 		{ component: 'EvaluationSettings' },
 		{ component: 'AnchoredSettings' },
-		{ component: 'ConfidenceIndexSettings' },
 		{ component: 'AISettings' },
 		{ component: 'SynthesisPanel' },
 		{ component: 'DiscussionSettings' },
@@ -331,12 +331,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 									handleSettingChange={handlers.handleSettingChange}
 								/>
 								{isQuestion && <AnchoredSettings statement={settingsStatement} />}
-								{/* Deliberately NOT gated to questions: a settlement
-								    declares its stakeholders once on the group and every
-								    question beneath inherits it. Gating this was why the
-								    number had to be re-entered on every question, and why
-								    setting it on a group did nothing at all. */}
-								<ConfidenceIndexSettings statement={settingsStatement} />
 							</div>
 						</SettingsSection>
 
@@ -384,6 +378,10 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 									{isAdminOrCreator && <AdminsManagement statement={settingsStatement} />}
 									{isQuestion && <MemberValidation statement={settingsStatement} />}
 									<UserDemographicSetting statement={settingsStatement} />
+									<h3 className={hubStyles.subheading}>{t('host.people.stakeholders')}</h3>
+									{/* Not gated to questions: a group declares its stakeholders
+									    once and every question beneath it inherits the number. */}
+									<ConfidenceIndexSettings statement={settingsStatement} />
 								</div>
 							</SettingsSection>
 						)}

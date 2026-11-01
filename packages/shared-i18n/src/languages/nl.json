@@ -3970,6 +3970,7 @@
   "host.liveDesc": "Presentatiemodus, pincode en QR, antwoorden toestaan, live resultaten, sluitdatum",
   "host.people": "Mensen",
   "host.peopleDesc": "Wie mag meedoen, wachtlijst, hosts, toegangscontrole, vragen over deelnemers, breakoutruimtes",
+  "host.people.stakeholders": "Belanghebbenden",
   "host.answers": "Antwoorden",
   "host.answersDesc": "Verborgen antwoorden, vastgezette antwoorden, bulk toevoegen, importeren, groepen cureren",
   "host.results": "Resultaten",
