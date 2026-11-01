@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { getUserDemographicResponses } from '@/controllers/db/userDemographic/getUserDemographic';
 import { saveMemberValidationStatus } from '@/controllers/db/memberValidation/memberValidationStatus';
+import { UserDemographicQuestion } from '@freedi/shared-types';
 import type { MemberReviewData } from '@/types/demographics';
 import { useEntryCheck } from '../useEntryCheck';
 
@@ -63,5 +64,20 @@ describe('useEntryCheck', () => {
 		await act(async () => result.current.decide('a', 'ban'));
 
 		expect(result.current.counts.pending).toBe(1);
+	});
+
+	it('asks for the inherited group questions too, and reloads only when that set changes', async () => {
+		mockedLoad.mockResolvedValue([pending]);
+		const groupQuestion = { userQuestionId: 'gq1', statementId: 'g1' } as UserDemographicQuestion;
+		const { result, rerender } = renderHook(
+			({ inherited }) => useEntryCheck('s1', true, inherited),
+			{ initialProps: { inherited: [groupQuestion] } },
+		);
+		await waitFor(() => expect(result.current.members).toHaveLength(1));
+
+		expect(mockedLoad).toHaveBeenCalledWith('s1', [groupQuestion]);
+
+		rerender({ inherited: [{ ...groupQuestion }] });
+		expect(mockedLoad).toHaveBeenCalledTimes(1);
 	});
 });

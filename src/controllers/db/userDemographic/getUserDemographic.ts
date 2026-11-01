@@ -25,6 +25,10 @@ import {
 import { MemberReviewData } from '@/types/demographics';
 import { getAllMemberValidationStatuses } from '../memberValidation/memberValidationStatus';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
+import { getInheritedDemographicAnswers } from './getInheritedDemographicAnswers';
+
+/** An answer document: the question it answers, with who answered and when. */
+type AnswerDoc = UserDemographicQuestion & { user?: User; createdAt?: number };
 
 /**
  * Fetches user demographic questions from the database for a specific statement ID
@@ -174,6 +178,7 @@ export function listenToUserDemographicAnswers(statementId: string) {
  */
 export async function getUserDemographicResponses(
 	statementId: string,
+	inheritedQuestions: ReadonlyArray<UserDemographicQuestion> = [],
 ): Promise<MemberReviewData[]> {
 	try {
 		if (!statementId) {
@@ -199,10 +204,20 @@ export async function getUserDemographicResponses(
 			}
 		});
 
-		// Get all user responses for this statement
+		// Inherited group questions are asked here too; their answers live on the group.
+		questions.push(...inheritedQuestions);
+
+		// Get all user responses for this statement, plus its members' inherited answers
 		const responsesRef = createCollectionRef(Collections.usersData);
 		const responsesQuery = query(responsesRef, where('statementId', '==', statementId));
-		const responsesSnapshot = await getDocs(responsesQuery);
+		const [responsesSnapshot, inheritedAnswers] = await Promise.all([
+			getDocs(responsesQuery),
+			getInheritedDemographicAnswers(statementId, inheritedQuestions),
+		]);
+		const allResponses: AnswerDoc[] = [
+			...responsesSnapshot.docs.map((doc) => doc.data() as AnswerDoc),
+			...inheritedAnswers,
+		];
 
 		// Get all validation statuses for this statement
 		const validationStatuses = await getAllMemberValidationStatuses(statementId);
@@ -210,10 +225,7 @@ export async function getUserDemographicResponses(
 		// Group responses by user
 		const userResponsesMap = new Map<string, MemberReviewData>();
 
-		responsesSnapshot.forEach((doc) => {
-			const responseData = doc.data();
-			const response = responseData as UserDemographicQuestion;
-
+		allResponses.forEach((response) => {
 			if (!userResponsesMap.has(response.userId)) {
 				// Get the validation status for this user, default to 'pending' if not found
 				const validationStatus = validationStatuses.get(response.userId);
@@ -222,14 +234,14 @@ export async function getUserDemographicResponses(
 				userResponsesMap.set(response.userId, {
 					userId: response.userId,
 					user:
-						responseData.user ||
+						response.user ||
 						({
 							uid: response.userId,
 							displayName: getPseudoName(response.userId),
 						} as User),
 					role: undefined, // Will be fetched separately
 					responses: [],
-					joinedAt: responseData.createdAt,
+					joinedAt: response.createdAt,
 					flags: [],
 					status: validationStatus?.status || 'pending',
 				});
@@ -245,7 +257,7 @@ export async function getUserDemographicResponses(
 					questionId: response.userQuestionId,
 					question: question.question,
 					answer: response.answer || response.answerOptions || '',
-					answeredAt: responseData.createdAt,
+					answeredAt: response.createdAt,
 				});
 			}
 		});

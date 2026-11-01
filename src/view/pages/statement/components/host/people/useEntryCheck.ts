@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { UserDemographicQuestion } from '@freedi/shared-types';
 import { getUserDemographicResponses } from '@/controllers/db/userDemographic/getUserDemographic';
 import { saveMemberValidationStatus } from '@/controllers/db/memberValidation/memberValidationStatus';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -42,26 +43,41 @@ export function countEntryStatuses(members: ReadonlyArray<MemberReviewData>): En
 	return counts;
 }
 
+const NO_INHERITED: ReadonlyArray<UserDemographicQuestion> = [];
+
 /**
  * Entry check (#entry-check): everyone who answered the questions on joining
- * and where their review stands. Loads only when the space has questions, so
- * a space without them costs no reads.
+ * — this space's own and the group questions it still asks (the same set
+ * Questions on joining shows) — and where their review stands. Loads only
+ * when the space has questions, so a space without them costs no reads.
  */
-export function useEntryCheck(statementId: string, hasQuestions: boolean): EntryCheckState {
+export function useEntryCheck(
+	statementId: string,
+	hasQuestions: boolean,
+	inheritedQuestions: ReadonlyArray<UserDemographicQuestion> = NO_INHERITED,
+): EntryCheckState {
 	const reviewer = useAppSelector(creatorSelector);
 	const [members, setMembers] = useState<MemberReviewData[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
+	// Reload when the set of questions changes, not on every new array.
+	const inheritedKey = inheritedQuestions.map((q) => q.userQuestionId).join(',');
+	const inheritedRef = useRef(inheritedQuestions);
+	inheritedRef.current = inheritedQuestions;
 
 	const reload = useCallback(async (): Promise<void> => {
 		setIsLoading(true);
 		try {
-			setMembers(await getUserDemographicResponses(statementId));
+			setMembers(await getUserDemographicResponses(statementId, inheritedRef.current));
 		} catch (error) {
-			logError(error, { operation: `${OPERATION}.reload`, statementId });
+			logError(error, {
+				operation: `${OPERATION}.reload`,
+				statementId,
+				metadata: { inheritedQuestions: inheritedKey },
+			});
 		} finally {
 			setIsLoading(false);
 		}
-	}, [statementId]);
+	}, [statementId, inheritedKey]);
 
 	useEffect(() => {
 		if (hasQuestions) void reload();

@@ -25,6 +25,8 @@ export const FIREBASE = {
 	QUERY_LIMIT_DEFAULT: 50,
 	QUERY_LIMIT_MAX: 100,
 	FIRST_LOAD_LIMIT: 10,
+	/** Most values one `in` filter may hold. */
+	IN_QUERY_LIMIT: 30,
 } as const;
 
 /**

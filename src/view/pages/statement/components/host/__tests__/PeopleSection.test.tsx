@@ -58,7 +58,7 @@ jest.mock('@/controllers/db/userDemographic/getUserDemographic', () => ({
 	getUserDemographicResponses: jest.fn().mockResolvedValue([]),
 }));
 jest.mock('../people/useJoinQuestionCounts', () => ({
-	useJoinQuestionCounts: jest.fn(() => ({ asked: 0, isSameAsGroup: false })),
+	useJoinQuestionCounts: jest.fn(() => ({ asked: 0, isSameAsGroup: false, inheritedAsked: [] })),
 }));
 jest.mock('@/controllers/db/subscriptions/setSubscriptions', () => ({
 	updateMemberRole: jest.fn().mockResolvedValue(undefined),
@@ -125,7 +125,7 @@ beforeAll(() => {
 });
 beforeEach(() => {
 	mockedUseApprove.mockReturnValue({ waitingList: [] });
-	mockedQuestionCounts.mockReturnValue({ asked: 0, isSameAsGroup: false });
+	mockedQuestionCounts.mockReturnValue({ asked: 0, isSameAsGroup: false, inheritedAsked: [] });
 	mockedResponses.mockResolvedValue([]);
 	mockedCountMembers.mockResolvedValue(5);
 });
@@ -140,7 +140,7 @@ describe('PeopleSection › composition (IA §4)', () => {
 	});
 
 	it('adds Waiting (By approval) and Entry check (questions exist) in their places', async () => {
-		mockedQuestionCounts.mockReturnValue({ asked: 2, isSameAsGroup: false });
+		mockedQuestionCounts.mockReturnValue({ asked: 2, isSameAsGroup: false, inheritedAsked: [] });
 		await act(async () => {
 			renderPeople(makeStatement(StatementType.group, Access.moderated));
 		});
@@ -228,7 +228,7 @@ describe('PeopleSection › summary lines', () => {
 	});
 
 	it('Questions: count, and "same as the group" when inherited as is', async () => {
-		mockedQuestionCounts.mockReturnValue({ asked: 2, isSameAsGroup: true });
+		mockedQuestionCounts.mockReturnValue({ asked: 2, isSameAsGroup: true, inheritedAsked: [] });
 		await act(async () => {
 			renderPeople(makeStatement(StatementType.question, undefined, 'group-1'));
 		});
@@ -237,7 +237,7 @@ describe('PeopleSection › summary lines', () => {
 	});
 
 	it('Entry check carries a count badge only when answers wait for review', async () => {
-		mockedQuestionCounts.mockReturnValue({ asked: 1, isSameAsGroup: false });
+		mockedQuestionCounts.mockReturnValue({ asked: 1, isSameAsGroup: false, inheritedAsked: [] });
 		mockedResponses.mockResolvedValue([review('a', 'pending'), review('b', 'approved')]);
 		await act(async () => {
 			renderPeople(makeStatement(StatementType.group, Access.openToAll));
@@ -251,7 +251,7 @@ describe('PeopleSection › summary lines', () => {
 describe('PeopleSection › default open (UX 4.1)', () => {
 	it('opens Waiting first when someone waits for this space only', async () => {
 		mockedUseApprove.mockReturnValue({ waitingList: [waiting('w1'), waiting('w2', 'elsewhere')] });
-		mockedQuestionCounts.mockReturnValue({ asked: 1, isSameAsGroup: false });
+		mockedQuestionCounts.mockReturnValue({ asked: 1, isSameAsGroup: false, inheritedAsked: [] });
 		mockedResponses.mockResolvedValue([review('a', 'pending')]);
 		await act(async () => {
 			renderPeople(makeStatement(StatementType.group, Access.moderated));
@@ -264,7 +264,7 @@ describe('PeopleSection › default open (UX 4.1)', () => {
 	});
 
 	it('else Entry check when answers wait for review', async () => {
-		mockedQuestionCounts.mockReturnValue({ asked: 1, isSameAsGroup: false });
+		mockedQuestionCounts.mockReturnValue({ asked: 1, isSameAsGroup: false, inheritedAsked: [] });
 		mockedResponses.mockResolvedValue([review('a', 'pending')]);
 		await act(async () => {
 			renderPeople(makeStatement(StatementType.group, Access.openToAll));
@@ -286,7 +286,7 @@ describe('PeopleSection › default open (UX 4.1)', () => {
 	it('applies the default once: Entry check stays shut when Waiting empties mid-session', async () => {
 		const statement = makeStatement(StatementType.group, Access.openToAll);
 		mockedUseApprove.mockReturnValue({ waitingList: [waiting('w1')] });
-		mockedQuestionCounts.mockReturnValue({ asked: 1, isSameAsGroup: false });
+		mockedQuestionCounts.mockReturnValue({ asked: 1, isSameAsGroup: false, inheritedAsked: [] });
 		mockedResponses.mockResolvedValue([review('a', 'pending')]);
 		let view: ReturnType<typeof renderPeople> | undefined;
 		await act(async () => {
