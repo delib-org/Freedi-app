@@ -4510,5 +4510,13 @@
   "suggestedQuestions": "Vorgeschlagen (vom selben Elternteil)",
   "recentlyRemovedQuestions": "Kürzlich entfernt",
   "similarByMeaning": "Inhaltlich ähnlich",
-  "searchingBySimilarMeaning": "Suche ähnliche Fragen..."
+  "searchingBySimilarMeaning": "Suche ähnliche Fragen...",
+  "mc.addAnswer": "Antwort hinzufügen",
+  "mc.addYourAnswerFirst": "Fügen Sie zuerst Ihre Antwort hinzu",
+  "mc.answerLabel": "Antwort",
+  "mc.answersLabel": "Antworten",
+  "mc.answer": "Antwort",
+  "mc.answers": "Antworten",
+  "mc.yourAnswer": "Ihre Antwort",
+  "mc.scoreBreakdownSummary": "{count} Bewertende · {direct} direkt + {inherited} geerbt von {originals} Originalen"
 }

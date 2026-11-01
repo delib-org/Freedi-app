@@ -781,7 +781,7 @@ export default function SolutionPromptModal({
     setFlowState({
       step: 'success',
       action: 'created',
-      solutionText: `${added} ${added === 1 ? t('suggestion') : t('suggestions')}`,
+      solutionText: `${added} ${added === 1 ? t('mc.answer') : t('mc.answers')}`,
       note:
         added < suggestions.length
           ? tWithParams('Added {{added}} of {{total}} ideas — the rest could not be added.', {

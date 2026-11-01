@@ -752,7 +752,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
               <span className={styles.toggleSlider}></span>
             </label>
             <span className={styles.toggleLabel}>
-              {t('allowParticipantsToAddSuggestions') || 'Allow participants to add suggestions'}
+              {t('allowParticipantsToAddSuggestions') || 'Allow participants to add answers'}
             </span>
           </div>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
@@ -765,7 +765,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         <div className={styles.formGroup}>
           <label className={styles.groupLabel}>{t('suggestionMode') || 'Suggestion Mode'}</label>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-            {t('suggestionModeDescription') || 'Controls how easy it is for users to add new suggestions vs. merging with existing ones'}
+            {t('suggestionModeDescription') || 'Controls how easy it is for users to add new answers vs. merging with existing ones'}
           </p>
           <div className={styles.radioGroup}>
             <label className={styles.radioOption}>
@@ -834,7 +834,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
             </span>
           </div>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-            {t('autoSplitMultiSuggestionsHint') || 'When one submission holds several answers, add each as its own suggestion without asking the participant.'}
+            {t('autoSplitMultiSuggestionsHint') || 'When one submission holds several answers, add each as its own answer without asking the participant.'}
           </p>
         </div>
 
@@ -851,11 +851,11 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
               <span className={styles.toggleSlider}></span>
             </label>
             <span className={styles.toggleLabel}>
-              {t('autoMergeSimilar') || 'Merge similar suggestions automatically'}
+              {t('autoMergeSimilar') || 'Merge similar answers automatically'}
             </span>
           </div>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-            {t('autoMergeSimilarHint') || 'When a similar suggestion already exists, merge into it without asking and count the participant as agreeing (+1) with the merged suggestion.'}
+            {t('autoMergeSimilarHint') || 'When a similar answer already exists, merge into it without asking and count the participant as agreeing (+1) with the merged answer.'}
           </p>
         </div>
       </div>
@@ -913,11 +913,11 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
               <span className={styles.toggleSlider}></span>
             </label>
             <span className={styles.toggleLabel}>
-              {t('synthesisPremiumModel') || 'Use premium AI model for proposals'}
+              {t('synthesisPremiumModel') || 'Use premium AI model for answers'}
             </span>
           </div>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-            {t('synthesisPremiumModelNote') || 'Off (standard) by default — cheaper and merges proposals safely. Turn on for a high-stakes survey to use the premium model: tighter proposals and slightly better duplicate detection (mainly in Hebrew), at higher cost.'}
+            {t('synthesisPremiumModelNote') || 'Off (standard) by default — cheaper and merges answers safely. Turn on for a high-stakes survey to use the premium model: tighter answers and slightly better duplicate detection (mainly in Hebrew), at higher cost.'}
           </p>
         </div>
       </div>
@@ -926,7 +926,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       <div className={styles.formSection}>
         <h2 className={styles.sectionTitle}>{t('displayMode') || 'Display Mode'}</h2>
         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-          {t('displayModeDescription') || 'Choose how participants see and evaluate suggestions'}{' '}
+          {t('displayModeDescription') || 'Choose how participants see and evaluate answers'}{' '}
           {t('displayModeDefaultNote') || 'Default for all questions. Each question can override it.'}
         </p>
 
@@ -943,7 +943,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
               <div className={styles.radioContent}>
                 <span className={styles.radioLabel}>{t('displayModeSwipe') || 'Swipe (Tinder-style)'}</span>
                 <span className={styles.radioDescription}>
-                  {t('displayModeSwipeDesc') || 'One card at a time. Users swipe or tap buttons to rate each suggestion.'}
+                  {t('displayModeSwipeDesc') || 'One card at a time. Users swipe or tap buttons to rate each answer.'}
                 </span>
               </div>
             </label>

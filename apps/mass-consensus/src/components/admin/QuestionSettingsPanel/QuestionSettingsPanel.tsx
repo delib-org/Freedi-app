@@ -89,7 +89,7 @@ export default function QuestionSettingsPanel({
   const suggestionsAllowed = !blocked && !areSuggestionsClosed(surveySettings, questionSetting);
   const lockedHint = blocked
     ? t("Not used — participants can't add options to this question")
-    : t('suggestionsOffForQuestion') || 'Off because suggestions are turned off for this question.';
+    : t('suggestionsOffForQuestion') || 'Off because answers are turned off for this question.';
 
   // With no override yet, show the scale the question already carries (it may
   // have been set from another app) rather than claiming the default.
@@ -136,7 +136,7 @@ export default function QuestionSettingsPanel({
             />
             <span className={styles.toggleSlider}></span>
           </label>
-          <span className={styles.toggleLabel}>{t('allowParticipantsToAddSuggestionsQuestion') || 'Allow participants to add suggestions'}</span>
+          <span className={styles.toggleLabel}>{t('allowParticipantsToAddSuggestionsQuestion') || 'Allow participants to add answers'}</span>
         </div>
         {blocked && <span className={styles.settingHint}>{lockedHint}</span>}
       </div>
@@ -152,7 +152,7 @@ export default function QuestionSettingsPanel({
             />
             <span className={styles.toggleSlider}></span>
           </label>
-          <span className={styles.toggleLabel}>{t('askForSuggestionBeforeEvaluation') || 'Ask for suggestion before showing options'}</span>
+          <span className={styles.toggleLabel}>{t('askForSuggestionBeforeEvaluation') || 'Ask for an answer before showing options'}</span>
         </div>
         {!suggestionsAllowed && <span className={styles.settingHint}>{lockedHint}</span>}
       </div>
@@ -332,7 +332,7 @@ export default function QuestionSettingsPanel({
           <span className={styles.toggleLabel}>{t('autoSplitMultiSuggestions') || 'Split multi-answer submissions automatically'}</span>
         </div>
         <span className={styles.settingHint}>
-          {blocked ? lockedHint : t('autoSplitMultiSuggestionsHint') || 'When one submission holds several answers, add each as its own suggestion without asking the participant.'}
+          {blocked ? lockedHint : t('autoSplitMultiSuggestionsHint') || 'When one submission holds several answers, add each as its own answer without asking the participant.'}
         </span>
       </div>
 
@@ -347,10 +347,10 @@ export default function QuestionSettingsPanel({
             />
             <span className={styles.toggleSlider}></span>
           </label>
-          <span className={styles.toggleLabel}>{t('autoMergeSimilar') || 'Merge similar suggestions automatically'}</span>
+          <span className={styles.toggleLabel}>{t('autoMergeSimilar') || 'Merge similar answers automatically'}</span>
         </div>
         <span className={styles.settingHint}>
-          {blocked ? lockedHint : t('autoMergeSimilarHint') || 'When a similar suggestion already exists, merge into it without asking and count the participant as agreeing (+1) with the merged suggestion.'}
+          {blocked ? lockedHint : t('autoMergeSimilarHint') || 'When a similar answer already exists, merge into it without asking and count the participant as agreeing (+1) with the merged answer.'}
         </span>
       </div>
 

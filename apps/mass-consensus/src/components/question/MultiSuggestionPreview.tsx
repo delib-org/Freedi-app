@@ -82,7 +82,7 @@ const MultiSuggestionPreview: FC<MultiSuggestionPreviewProps> = ({
         <div className={styles.suggestionsSection}>
           <div className={styles.sectionLabel}>
             <span aria-hidden="true">&#x1F4A1;</span>
-            {t('Separated into')} {suggestions.length} {suggestions.length === 1 ? t('suggestion') : t('suggestions')}
+            {t('Separated into')} {suggestions.length} {suggestions.length === 1 ? t('mc.answer') : t('mc.answers')}
           </div>
 
           <div className={styles.suggestionsList} role="list">
@@ -91,7 +91,7 @@ const MultiSuggestionPreview: FC<MultiSuggestionPreviewProps> = ({
                 key={suggestion.id}
                 className={`${styles.suggestionCard} ${suggestion.isRemoved ? styles.removed : ''}`}
                 role="listitem"
-                aria-label={`${t('Suggestion')} ${index + 1}`}
+                aria-label={`${t('mc.answerLabel')} ${index + 1}`}
               >
                 <div className={styles.cardHeader}>
                   <div className={styles.cardNumberWrapper}>
@@ -99,7 +99,7 @@ const MultiSuggestionPreview: FC<MultiSuggestionPreviewProps> = ({
                       {index + 1}
                     </span>
                     <span className={styles.cardLabel}>
-                      {suggestion.isRemoved ? t('Removed') : t('Suggestion')}
+                      {suggestion.isRemoved ? t('Removed') : t('mc.answerLabel')}
                     </span>
                   </div>
 
@@ -109,8 +109,8 @@ const MultiSuggestionPreview: FC<MultiSuggestionPreviewProps> = ({
                     onClick={() => handleToggleRemove(suggestion.id)}
                     disabled={isSubmitting}
                     aria-label={suggestion.isRemoved
-                      ? `${t('Restore')} ${t('suggestion')} ${index + 1}`
-                      : `${t('Remove')} ${t('suggestion')} ${index + 1}`
+                      ? `${t('Restore')} ${t('mc.answer')} ${index + 1}`
+                      : `${t('Remove')} ${t('mc.answer')} ${index + 1}`
                     }
                   >
                     {suggestion.isRemoved ? (
@@ -217,10 +217,10 @@ const MultiSuggestionPreview: FC<MultiSuggestionPreviewProps> = ({
             ) : (
               <>
                 {t('Submit')}
-                <span className={styles.confirmCount} aria-label={`${activeSuggestionsCount} ${activeSuggestionsCount === 1 ? t('suggestion') : t('suggestions')}`}>
+                <span className={styles.confirmCount} aria-label={`${activeSuggestionsCount} ${activeSuggestionsCount === 1 ? t('mc.answer') : t('mc.answers')}`}>
                   {activeSuggestionsCount}
                 </span>
-                {activeSuggestionsCount === 1 ? t('Suggestion') : t('Suggestions')}
+                {activeSuggestionsCount === 1 ? t('mc.answerLabel') : t('mc.answersLabel')}
               </>
             )}
           </button>

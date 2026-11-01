@@ -69,7 +69,7 @@ export default function ScoreBreakdown({ clusterId }: { clusterId: string }) {
   if (stats.evaluators === 0) return null;
 
   const summary = t(
-    '{count} evaluators · {direct} direct + {inherited} inherited from {originals} originals',
+    'mc.scoreBreakdownSummary',
   )
     .replace('{count}', String(stats.evaluators))
     .replace('{direct}', String(stats.direct))
