@@ -45,6 +45,8 @@
     // status must be carried by its border and its text label, not a 7% tint
     // that reduces the contrast of everything sitting on top of it.
     --wash-approve: var(--card-default);
+    // Filled approve buttons darken to 7:1 with white.
+    --approve-solid: var(--approve-active);
     --wash-warning: var(--card-default);
     --wash-primary: var(--card-default);
     --wash-neutral: var(--card-default);

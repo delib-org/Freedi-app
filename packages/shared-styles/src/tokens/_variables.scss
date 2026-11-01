@@ -818,6 +818,9 @@
   // --approve (#57c6b2) is 2.75:1, below even the 3:1 non-text floor. These are
   // the darkened twins to use whenever the colour has to carry text.
   --approve-ink: #3a7e71; // 4.8:1 with white
+  // A filled approve surface that carries white text. Unlike --approve-ink it
+  // does not lighten in dark mode, where the teal ink would drop to 2.1:1.
+  --approve-solid: #3a7e71; // 4.8:1 with white
   --warning-ink: #9a4d00; // 5.6:1 on white
 
   // Meta text. --text-caption (#7484a9) is 3.7:1 on white and fails AA at the

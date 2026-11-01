@@ -114,10 +114,11 @@
     }
   }
 
+  // --approve itself is 2.07:1 with white; the solid twin reaches 4.8:1.
   &--approve {
-    background-color: var(--approve);
+    background-color: var(--approve-solid);
     color: var(--white);
-    border-color: var(--approve);
+    border-color: var(--approve-solid);
     width: 165px;
     height: 44px;
 
