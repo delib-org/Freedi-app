@@ -18,6 +18,7 @@ import {
 import { logError } from '@/utils/errorHandling';
 import { isDerivedStatement, resolveDerivedPipeline } from '@/utils/derivedStatement';
 import { downloadFile } from '@/utils/exportUtils';
+import { secureShuffle } from '@/utils/secureShuffle';
 import {
 	PRIVACY_CONFIG,
 	calculateEvaluationStats,
@@ -363,6 +364,10 @@ export function buildParticipationSummary(
 	};
 }
 
+/** Same sentence the server export adds to its privacy notice. */
+const SHUFFLED_ROWS_NOTICE =
+	'Anonymized individual evaluations are listed in random order, so no per-person sequence of votes survives.';
+
 /**
  * Build anonymized evaluations (individual evaluations without user identity)
  */
@@ -372,11 +377,15 @@ function buildAnonymizedEvaluations(
 ): AnonymizedEvaluation[] {
 	const optionMap = new Map(options.map((o) => [o.statementId, o.statement]));
 
-	return evaluations.map((evaluation) => ({
-		statementId: evaluation.statementId,
-		statementText: optionMap.get(evaluation.statementId) ?? 'Unknown',
-		evaluationValue: evaluation.evaluation,
-	}));
+	// Evaluations arrive in doc-id order (`${uid}--${statementId}`), grouped by
+	// person; shuffled so no one's ballot can be re-linked from row order.
+	return secureShuffle(
+		evaluations.map((evaluation) => ({
+			statementId: evaluation.statementId,
+			statementText: optionMap.get(evaluation.statementId) ?? 'Unknown',
+			evaluationValue: evaluation.evaluation,
+		})),
+	);
 }
 
 /**
@@ -468,7 +477,7 @@ export async function createPrivacyPreservingExport(
 			optionEvaluations: optionSummaries,
 			demographicBreakdowns: breakdowns,
 			anonymizedEvaluations,
-			privacyNotice: generatePrivacyNotice(kThreshold, suppressedCount),
+			privacyNotice: `${generatePrivacyNotice(kThreshold, suppressedCount)} ${SHUFFLED_ROWS_NOTICE}`,
 		};
 
 		return exportData;
@@ -501,6 +510,11 @@ function escapeCSV(value: string | number | undefined | null): string {
 /**
  * Convert export data to CSV format
  */
+/** Fixed 3-decimal number, or an empty cell when the field is absent. */
+function formatOptionalNumber(value: number | undefined): string {
+	return value === undefined ? '' : value.toFixed(3);
+}
+
 export function convertToCSV(data: PrivacyPreservingExportData): string {
 	const lines: string[] = [];
 
@@ -511,8 +525,18 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 	lines.push(`# Total Evaluators: ${data.metadata.totalEvaluators}`);
 	lines.push(`# Total Demographic Respondents: ${data.metadata.totalDemographicRespondents}`);
 	lines.push(`# Suppressed Groups: ${data.metadata.suppressedGroupCount}`);
+	if (data.metadata.skippedEmptyThemes !== undefined) {
+		lines.push(`# Skipped Empty Themes: ${data.metadata.skippedEmptyThemes}`);
+	}
+	if (data.metadata.fpcApplied !== undefined) {
+		lines.push(`# Finite-Population Correction: ${data.metadata.fpcApplied ? 'Yes' : 'No'}`);
+	}
+	if (data.metadata.stakeholderCount !== undefined) {
+		lines.push(`# Stakeholder Count (N): ${data.metadata.stakeholderCount}`);
+	}
 	lines.push('#');
 	lines.push(`# ${data.privacyNotice}`);
+	if (data.statsNotes) lines.push(`# ${data.statsNotes}`);
 	lines.push('#');
 	lines.push('');
 
@@ -541,7 +565,8 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 	// Section 2: Option Evaluation Summary
 	lines.push('# === OPTION EVALUATION SUMMARY ===');
 	lines.push(
-		'Option ID,Option Text,Total Evaluators,Average Evaluation,Pro Count,Con Count,Neutral Count,Sum Evaluations,Is Derived,Is Cluster,Derived By Pipeline,Integrated Options',
+		'Option ID,Option Text,Total Evaluators,Average Evaluation,Pro Count,Con Count,Neutral Count,Sum Evaluations,Is Derived,Is Cluster,Derived By Pipeline,Integrated Options,' +
+			'Agreement,Agreement Index,Hidden,Stats Method,Merged Total Evaluators,Merged Average Evaluation,Merged Pro Count,Merged Con Count,Merged Neutral Count,Merged Sum Evaluations,Merged Agreement,Merged Agreement Index',
 	);
 
 	data.optionEvaluations.forEach((opt) => {
@@ -559,6 +584,18 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 				opt.isCluster ? 'Yes' : 'No',
 				escapeCSV(opt.derivedByPipeline ?? ''),
 				escapeCSV(opt.integratedOptions?.join(' ') ?? ''),
+				formatOptionalNumber(opt.agreement),
+				formatOptionalNumber(opt.agreementIndex),
+				opt.hide === undefined ? '' : opt.hide ? 'Yes' : 'No',
+				escapeCSV(opt.statsMethod ?? ''),
+				opt.mergedTotalEvaluators ?? '',
+				formatOptionalNumber(opt.mergedAverageEvaluation),
+				opt.mergedProCount ?? '',
+				opt.mergedConCount ?? '',
+				opt.mergedNeutralCount ?? '',
+				formatOptionalNumber(opt.mergedSumEvaluations),
+				formatOptionalNumber(opt.mergedAgreement),
+				formatOptionalNumber(opt.mergedAgreementIndex),
 			].join(','),
 		);
 	});

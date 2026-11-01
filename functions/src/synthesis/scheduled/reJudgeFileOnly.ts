@@ -2,6 +2,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Collections, type Statement } from '@freedi/shared-types';
 import { fileUnthemedAtoms, type FileUnthemedResult } from '../pipeline/fileUnthemed';
+import { hideEmptyThemesSafely } from '../pipeline/hideEmptyThemes';
 import {
 	computeParentFingerprint,
 	FORCE_FULL_SWEEP_MS,
@@ -104,6 +105,7 @@ export async function fileOnlyProcessParent(
 		return { skipped: true, skipReason: dormant ? 'dormant' : 'unchanged' };
 	}
 
+	await hideEmptyThemesSafely(db(), parentId, 'synthesis.reJudge.fileOnly.hideEmptyThemes');
 	const filing = await fileUnthemedAtoms(
 		parentId,
 		parentDoc?.statement ?? parentId,

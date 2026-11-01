@@ -339,6 +339,13 @@ export const StatementSchema = object({
 	/** Post-resolve status. Undefined before resolve. Set by `fn_resolveJoinIntents`. */
 	joinStatus: optional(picklist(['activated', 'failed'])),
 	hide: optional(boolean()), // if true, the statement is hidden
+	/**
+	 * Why the system hid this statement, when it was not a person. Plain
+	 * optional string, NOT a picklist: a new picklist value breaks strict parses
+	 * of older docs and clients. Known value: 'empty-theme' (a pipeline theme
+	 * left with no members, hidden by `hideEmptyThemes`).
+	 */
+	hiddenReason: optional(string()),
 	/** If true, admin-promoted: always shown in Join app even if below resultsSettings cutoff. */
 	forceShow: optional(boolean()),
 	/** The role of the user who created this statement. Set to Role.admin for

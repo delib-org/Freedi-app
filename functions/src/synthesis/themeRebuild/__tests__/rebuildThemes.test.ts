@@ -73,6 +73,12 @@ jest.mock('../applyRebuild', () => ({
 	applyRebuild: (...a: unknown[]) => applyRebuild(...a),
 }));
 
+const hideEmptyThemesSafely = jest.fn();
+jest.mock('firebase-admin/firestore', () => ({ getFirestore: () => ({}) }));
+jest.mock('../../pipeline/hideEmptyThemes', () => ({
+	hideEmptyThemesSafely: (...a: unknown[]) => hideEmptyThemesSafely(...a),
+}));
+
 import { handleRebuildThemes } from '../rebuildThemes';
 import { PROPOSAL_TTL_MS } from '../constants';
 
@@ -169,6 +175,39 @@ describe('input and gates', () => {
 			'no-atoms',
 		);
 		expect(store.releaseLease).toHaveBeenCalledWith('q1', store.acquireLease.mock.calls[0][1]);
+	});
+
+	it('hides leftover empty themes before collecting atoms, under the lease', async () => {
+		const order: string[] = [];
+		hideEmptyThemesSafely.mockImplementation(async () => {
+			order.push('hide');
+
+			return 2;
+		});
+		collectAtoms.mockImplementation(async () => {
+			order.push('collect');
+
+			return { atoms: ['a', 'b'].map(atom), liveThemes: [] };
+		});
+
+		await handleRebuildThemes('u1', { questionId: 'q1', mode: 'preview' });
+
+		expect(hideEmptyThemesSafely).toHaveBeenCalledWith(
+			expect.anything(),
+			'q1',
+			'synthesis.rebuildThemes.hideEmptyThemes',
+		);
+		expect(order).toEqual(['hide', 'collect']);
+	});
+
+	it('does not hide anything when the lease is refused', async () => {
+		store.acquireLease.mockResolvedValue(false);
+
+		await expectHttpsError(
+			handleRebuildThemes('u1', { questionId: 'q1', mode: 'preview' }),
+			'already-exists',
+		);
+		expect(hideEmptyThemesSafely).not.toHaveBeenCalled();
 	});
 
 	it('wraps an unexpected failure as internal', async () => {

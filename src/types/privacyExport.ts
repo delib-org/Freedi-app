@@ -84,7 +84,27 @@ export interface OptionEvaluationSummary {
 	derivedByPipeline?: 'topic-cluster' | 'synthesis' | 'unknown-cluster';
 	/** IDs of the source options merged into this one, when derived */
 	integratedOptions?: string[];
+	/** Consensus score of the direct votes (finite-population corrected when N is known). Server export only. */
+	agreement?: number;
+	/** Agreement index of the direct votes, in [0, 1]. Server export only. */
+	agreementIndex?: number;
+	/** True when the option is hidden in the app. Hidden options are still exported. Server export only. */
+	hide?: boolean;
+	/** 'direct' = votes on this option only; 'direct+merged' adds the merged* fields. Server export only. */
+	statsMethod?: OptionStatsMethod;
+	/** Derived options: one vote per user across the option and its members, as shown in the app. */
+	mergedTotalEvaluators?: number;
+	mergedAverageEvaluation?: number;
+	mergedProCount?: number;
+	mergedConCount?: number;
+	mergedNeutralCount?: number;
+	mergedSumEvaluations?: number;
+	mergedAgreement?: number;
+	mergedAgreementIndex?: number;
 }
+
+/** How an option's stats were computed. */
+export type OptionStatsMethod = 'direct' | 'direct+merged';
 
 /**
  * Evaluation stats for a demographic breakdown (when k-anonymity is met)
@@ -159,6 +179,12 @@ export interface PrivacyExportMetadata extends ExportMetadata {
 	totalEvaluators: number;
 	/** Total demographic respondents */
 	totalDemographicRespondents: number;
+	/** Memberless themes (pipeline leftovers) left out of the export. Server export only. */
+	skippedEmptyThemes?: number;
+	/** N, the question's stakeholder count, when one is set. */
+	stakeholderCount?: number;
+	/** True when agreement values use the finite-population correction. Server export only. */
+	fpcApplied?: boolean;
 }
 
 /**
@@ -183,6 +209,8 @@ export interface PrivacyPreservingExportData {
 	anonymizedEvaluations?: AnonymizedEvaluation[];
 	/** Privacy notice */
 	privacyNotice: string;
+	/** How the per-option stats were computed (direct vs merged). Server export only. */
+	statsNotes?: string;
 }
 
 /**

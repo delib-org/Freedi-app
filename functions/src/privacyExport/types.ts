@@ -38,7 +38,25 @@ export interface AnonymizedEvaluation {
 	evaluationValue: number;
 }
 
-export interface OptionEvaluationSummary {
+/** 'direct' = votes on this option only; 'direct+merged' adds the merged* fields. */
+export type OptionStatsMethod = 'direct' | 'direct+merged';
+
+/**
+ * One vote per user across a derived option and its member options, as the
+ * app shows it. Flat (not nested) so CSV flattening stays one column each.
+ */
+export interface MergedOptionStats {
+	mergedTotalEvaluators: number;
+	mergedAverageEvaluation: number;
+	mergedProCount: number;
+	mergedConCount: number;
+	mergedNeutralCount: number;
+	mergedSumEvaluations: number;
+	mergedAgreement: number;
+	mergedAgreementIndex: number;
+}
+
+export interface OptionEvaluationSummary extends Partial<MergedOptionStats> {
 	statementId: string;
 	statementText: string;
 	totalEvaluators: number;
@@ -47,10 +65,17 @@ export interface OptionEvaluationSummary {
 	conCount: number;
 	neutralCount: number;
 	sumEvaluations: number;
+	/** Consensus score of the direct votes (finite-population corrected when N is known). */
+	agreement: number;
+	/** Agreement index of the direct votes, in [0, 1]. */
+	agreementIndex: number;
+	/** True when the option is hidden in the app. Hidden options are still exported. */
+	hide: boolean;
 	isDerived: boolean;
 	isCluster?: boolean;
 	derivedByPipeline?: DerivedPipeline;
 	integratedOptions?: string[];
+	statsMethod: OptionStatsMethod;
 }
 
 export interface DemographicEvaluationStats {
@@ -98,6 +123,12 @@ export interface PrivacyExportMetadata {
 	suppressedGroupCount: number;
 	totalEvaluators: number;
 	totalDemographicRespondents: number;
+	/** Memberless themes (pipeline leftovers) left out of the export. */
+	skippedEmptyThemes: number;
+	/** N, the question's stakeholder count, when one is set. */
+	stakeholderCount?: number;
+	/** True when agreement values use the finite-population correction (N is set). */
+	fpcApplied: boolean;
 }
 
 export interface PrivacyPreservingExportData {
@@ -108,6 +139,9 @@ export interface PrivacyPreservingExportData {
 	demographicStats: DemographicResponseStats[];
 	optionEvaluations: OptionEvaluationSummary[];
 	demographicBreakdowns: OptionWithDemographics[];
+	/** In random order: no per-person sequence of votes survives. */
 	anonymizedEvaluations?: AnonymizedEvaluation[];
 	privacyNotice: string;
+	/** How the per-option stats were computed (direct vs merged). */
+	statsNotes: string;
 }

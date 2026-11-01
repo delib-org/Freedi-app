@@ -20,14 +20,23 @@ import {
 	Evaluation,
 	UserDemographicQuestion,
 	UserDemographicQuestionType,
+	resolveStakeholderCount,
 } from '@freedi/shared-types';
+import { fetchEvaluationsForIds } from '../condensation/aggregation';
+import { isMemberlessTheme } from '../synthesis/pipeline/hideEmptyThemes';
 import {
 	PRIVACY_CONFIG,
-	calculateEvaluationStats,
 	filterEvaluationsForPrivacy,
 	generatePrivacyNotice,
 	generateSuppressionNote,
 } from './kAnonymity';
+import {
+	STATS_NOTES,
+	buildOptionSummaries,
+	isDerivedStatement,
+	mergedSourceIds,
+} from './optionStats';
+import { secureShuffle } from './shuffle';
 import {
 	PrivacyPreservingExportData,
 	PrivacyExportMetadata,
@@ -39,7 +48,6 @@ import {
 	AnonymizedEvaluation,
 	ExportDemographicScope,
 	ExportDemographicQuestionType,
-	DerivedPipeline,
 } from './types';
 
 /** Demographic answer document structure from Firestore (`usersData`). */
@@ -53,46 +61,6 @@ interface DemographicAnswer {
 	scope?: 'group' | 'statement';
 }
 
-/**
- * Back-compat provenance markers written by the synthesis pipeline via an
- * untyped cast, so they are absent from the Statement schema.
- */
-interface LegacyDerivedFields {
-	isSynthesis?: boolean;
-	liveSynthOrigin?: string;
-}
-
-/**
- * Pipeline-derived statement detection. Mirrors `isDerivedStatement` in
- * `src/utils/derivedStatement.ts` so participation counts label the same set.
- */
-function isDerivedStatement(statement: Statement): boolean {
-	const legacy = statement as Statement & LegacyDerivedFields;
-
-	return (
-		statement.isCluster === true ||
-		!!statement.derivedByPipeline ||
-		(Array.isArray(statement.integratedOptions) && statement.integratedOptions.length > 0) ||
-		!!statement.synthesisRunId ||
-		!!statement.synthesisMechanism ||
-		!!legacy.liveSynthOrigin ||
-		statement.statementType === StatementType.synthesis
-	);
-}
-
-/** Mirrors `resolveDerivedPipeline` in `src/utils/derivedStatement.ts`. */
-function resolveDerivedPipeline(statement: Statement): DerivedPipeline {
-	if (statement.derivedByPipeline) return statement.derivedByPipeline as DerivedPipeline;
-	if (statement.statementType === StatementType.synthesis) return 'synthesis';
-
-	const legacy = statement as Statement & LegacyDerivedFields;
-	if (typeof legacy.isSynthesis === 'boolean') {
-		return legacy.isSynthesis ? 'synthesis' : 'topic-cluster';
-	}
-
-	return 'unknown-cluster';
-}
-
 /** Load the parent statement; throws when it does not exist. */
 async function loadParentStatement(statementId: string): Promise<Statement> {
 	const db = getFirestore();
@@ -102,6 +70,28 @@ async function loadParentStatement(statementId: string): Promise<Statement> {
 	}
 
 	return snap.data() as Statement;
+}
+
+/** The question's top statement (N may be declared there); null when it is the question itself or missing. */
+async function loadTopStatement(question: Statement): Promise<Statement | null> {
+	const topId = question.topParentId;
+	if (!topId || topId === question.statementId) return null;
+	const snap = await getFirestore().collection(Collections.statements).doc(topId).get();
+
+	return snap.exists ? (snap.data() as Statement) : null;
+}
+
+/**
+ * Evaluations on merged-stats sources outside this question (a cluster can
+ * absorb one from elsewhere). Votes under the question are already loaded.
+ */
+async function fetchOutsideSourceEvaluations(
+	options: Statement[],
+	loadedStatementIds: Set<string>,
+): Promise<Evaluation[]> {
+	const missing = [...mergedSourceIds(options)].filter((id) => !loadedStatementIds.has(id));
+
+	return missing.length > 0 ? fetchEvaluationsForIds(missing) : [];
 }
 
 /** Fetch all evaluations for a parent statement. */
@@ -117,16 +107,20 @@ async function fetchEvaluations(parentId: string): Promise<Evaluation[]> {
  * `option` and `synthesis` docs; pipeline-derived options are stored as
  * `option` but synthesis docs carry `statementType: synthesis`.
  */
-async function fetchOptions(parentId: string): Promise<Statement[]> {
+async function fetchOptions(
+	parentId: string,
+): Promise<{ options: Statement[]; childIds: Set<string> }> {
 	const db = getFirestore();
 	const snap = await db.collection(Collections.statements).where('parentId', '==', parentId).get();
+	const children = snap.docs.map((doc) => doc.data() as Statement);
 
-	return snap.docs
-		.map((doc) => doc.data() as Statement)
-		.filter(
+	return {
+		options: children.filter(
 			(s) =>
 				s.statementType === StatementType.option || s.statementType === StatementType.synthesis,
-		);
+		),
+		childIds: new Set(children.map((c) => c.statementId)),
+	};
 }
 
 /** Fetch demographic questions for a statement (including group-level). */
@@ -229,34 +223,8 @@ function buildDemographicStats(
 		});
 }
 
-function buildOptionSummaries(
-	options: Statement[],
-	evaluations: Evaluation[],
-): OptionEvaluationSummary[] {
-	return options.map((option) => {
-		const optionEvaluations = evaluations.filter((e) => e.statementId === option.statementId);
-		const stats = calculateEvaluationStats(optionEvaluations.map((e) => e.evaluation));
-		const derived = isDerivedStatement(option);
-
-		return {
-			statementId: option.statementId,
-			statementText: option.statement,
-			totalEvaluators: stats.evaluatorCount,
-			averageEvaluation: stats.averageEvaluation,
-			proCount: stats.proCount,
-			conCount: stats.conCount,
-			neutralCount: stats.neutralCount,
-			sumEvaluations: stats.sumEvaluations,
-			isDerived: derived,
-			isCluster: option.isCluster,
-			derivedByPipeline: derived ? resolveDerivedPipeline(option) : undefined,
-			integratedOptions: derived ? option.integratedOptions : undefined,
-		};
-	});
-}
-
 function buildDemographicBreakdowns(
-	options: Statement[],
+	optionSummaries: OptionEvaluationSummary[],
 	evaluations: Evaluation[],
 	questions: UserDemographicQuestion[],
 	answers: DemographicAnswer[],
@@ -273,9 +241,10 @@ function buildDemographicBreakdowns(
 		userDemographics.get(ans.userId)?.set(ans.userQuestionId, answerValues);
 	});
 
-	const breakdowns: OptionWithDemographics[] = options.map((option) => {
-		const optionEvaluations = evaluations.filter((e) => e.statementId === option.statementId);
-		const optionSummary = buildOptionSummaries([option], optionEvaluations)[0];
+	const breakdowns: OptionWithDemographics[] = optionSummaries.map((optionSummary) => {
+		const optionEvaluations = evaluations.filter(
+			(e) => e.statementId === optionSummary.statementId,
+		);
 		const demographicBreakdowns: DemographicBreakdown[] = [];
 
 		questions
@@ -376,12 +345,15 @@ function buildAnonymizedEvaluations(
 	options: Statement[],
 ): AnonymizedEvaluation[] {
 	const optionMap = new Map(options.map((o) => [o.statementId, o.statement]));
-
-	return evaluations.map((evaluation) => ({
+	const rows = evaluations.map((evaluation) => ({
 		statementId: evaluation.statementId,
 		statementText: optionMap.get(evaluation.statementId) ?? 'Unknown',
 		evaluationValue: evaluation.evaluation,
 	}));
+
+	// Evaluations arrive in doc-id order (`${uid}--${statementId}`), i.e. grouped
+	// by person. Shuffled so no one's ballot can be re-linked from row order.
+	return secureShuffle(rows);
 }
 
 export interface BuildPrivacyExportParams {
@@ -402,26 +374,47 @@ export async function buildPrivacyExport(
 
 	const parentStatement = await loadParentStatement(statementId);
 
-	const [evaluations, options, questions] = await Promise.all([
+	const [evaluations, fetched, questions, topStatement] = await Promise.all([
 		fetchEvaluations(statementId),
 		fetchOptions(statementId),
 		fetchDemographicQuestions(statementId, parentStatement.topParentId),
+		loadTopStatement(parentStatement),
 	]);
+
+	// N once for the whole question; only `.count` is read.
+	const stakeholderCount = resolveStakeholderCount(
+		undefined,
+		parentStatement,
+		topStatement ?? undefined,
+	).count;
+
+	// Memberless themes are pipeline leftovers: never exported, hidden or not.
+	const options = fetched.options.filter((o) => !isMemberlessTheme(o));
+	const skippedEmptyThemes = fetched.options.length - options.length;
+	const exportedIds = new Set(options.map((o) => o.statementId));
+	const exportedEvaluations = evaluations.filter((e) => exportedIds.has(e.statementId));
+
+	const outsideEvaluations = await fetchOutsideSourceEvaluations(options, fetched.childIds);
 
 	const questionIds = questions.map((q) => q.userQuestionId).filter((id): id is string => !!id);
 
 	const answers = await fetchAllDemographicAnswers(questionIds);
 
 	const demographicStats = buildDemographicStats(questions, answers);
-	const optionSummaries = buildOptionSummaries(options, evaluations);
-	const { breakdowns, suppressedCount } = buildDemographicBreakdowns(
+	const optionSummaries = buildOptionSummaries(
 		options,
-		evaluations,
+		[...evaluations, ...outsideEvaluations],
+		stakeholderCount,
+	);
+	const { breakdowns, suppressedCount } = buildDemographicBreakdowns(
+		optionSummaries,
+		exportedEvaluations,
 		questions,
 		answers,
 		kThreshold,
 	);
-	const anonymizedEvaluations = buildAnonymizedEvaluations(evaluations, options);
+	const anonymizedEvaluations = buildAnonymizedEvaluations(exportedEvaluations, options);
+	// Participation counts people, so every vote cast under the question counts.
 	const participation = buildParticipationSummary(parentStatement, options, evaluations);
 
 	const uniqueEvaluators = participation.evaluatedCount;
@@ -436,6 +429,9 @@ export async function buildPrivacyExport(
 		suppressedGroupCount: suppressedCount,
 		totalEvaluators: uniqueEvaluators,
 		totalDemographicRespondents: uniqueRespondents,
+		skippedEmptyThemes,
+		...(stakeholderCount !== undefined ? { stakeholderCount } : {}),
+		fpcApplied: stakeholderCount !== undefined,
 	};
 
 	return {
@@ -464,5 +460,6 @@ export async function buildPrivacyExport(
 		demographicBreakdowns: breakdowns,
 		anonymizedEvaluations,
 		privacyNotice: generatePrivacyNotice(kThreshold, suppressedCount),
+		statsNotes: STATS_NOTES,
 	};
 }
