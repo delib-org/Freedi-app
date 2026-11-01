@@ -9,15 +9,10 @@
 
 import { logger } from 'firebase-functions/v1';
 import { FieldValue } from 'firebase-admin/firestore';
-import {
-	Collections,
-	Evaluation,
-	StakeholderScope,
-	calcAgreement,
-	resolveStakeholderCount,
-} from '@freedi/shared-types';
+import { Collections, Evaluation, calcAgreement } from '@freedi/shared-types';
 import { db } from '../index';
 import { reconcileParentEvaluators } from './evaluatorParticipation';
+import { resolveQuestionPopulation } from './resolveQuestionPopulation';
 
 // ============================================================================
 // TYPES
@@ -36,24 +31,6 @@ export interface MigrationResult {
 		averageEvaluation: number;
 		agreement: number;
 	};
-}
-
-// ============================================================================
-// HELPERS
-// ============================================================================
-
-async function resolveQuestionPopulation(parentId: string): Promise<{ count?: number }> {
-	const parentDoc = await db.collection(Collections.statements).doc(parentId).get();
-	const parent = parentDoc.data() as (StakeholderScope & { topParentId?: string }) | undefined;
-	const topId = parent?.topParentId;
-	const top =
-		topId && topId !== parentId
-			? ((await db.collection(Collections.statements).doc(topId).get()).data() as
-					| StakeholderScope
-					| undefined)
-			: parent;
-
-	return resolveStakeholderCount(undefined, parent, top);
 }
 
 // ============================================================================
@@ -203,7 +180,7 @@ export async function migrateEvaluationsToNewStatement(
 		const averageEvaluation = numberOfEvaluators > 0 ? sumEvaluations / numberOfEvaluators : 0;
 		// Same explicit-N walk as every other writer (question -> top group);
 		// undefined when nobody declared one, which is the uncorrected formula.
-		const { count: declaredN } = await resolveQuestionPopulation(parentId);
+		const declaredN = await resolveQuestionPopulation(db, parentId);
 		const agreement = calcAgreement(
 			sumEvaluations,
 			sumSquaredEvaluations,
