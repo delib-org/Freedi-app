@@ -12,6 +12,8 @@ import styles from './Admin.module.scss';
 interface QuestionPickerProps {
   selectedQuestions: Statement[];
   onQuestionsChange: (questions: Statement[]) => void;
+  /** Called (instead of removing directly) when the admin un-ticks a selected question */
+  onRemoveQuestion: (questionId: string) => void;
 }
 
 interface QuestionsResponse {
@@ -27,6 +29,7 @@ interface QuestionsResponse {
 export default function QuestionPicker({
   selectedQuestions,
   onQuestionsChange,
+  onRemoveQuestion,
 }: QuestionPickerProps) {
   const { t } = useTranslation();
   const router = useRouter();
@@ -135,9 +138,7 @@ export default function QuestionPicker({
     );
 
     if (isSelected) {
-      onQuestionsChange(
-        selectedQuestions.filter((q) => q.statementId !== question.statementId)
-      );
+      onRemoveQuestion(question.statementId);
     } else {
       onQuestionsChange([...selectedQuestions, question]);
     }

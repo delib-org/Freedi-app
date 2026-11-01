@@ -6,12 +6,19 @@ import styles from './Toast.module.scss';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 export interface Toast {
   id: string;
   type: ToastType;
   title?: string;
   message: string;
   duration?: number;
+  /** Optional button (e.g. Undo); pressing it runs onClick and dismisses the toast */
+  action?: ToastAction;
   removing?: boolean;
 }
 
@@ -133,6 +140,18 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
         {toast.title && <h4 className={styles['toast__title']}>{toast.title}</h4>}
         <p className={styles['toast__message']}>{toast.message}</p>
       </div>
+      {toast.action && (
+        <button
+          className={styles['toast__action']}
+          onClick={() => {
+            toast.action?.onClick();
+            onRemove(toast.id);
+          }}
+          type="button"
+        >
+          {toast.action.label}
+        </button>
+      )}
       <button
         className={styles['toast__close']}
         onClick={() => onRemove(toast.id)}

@@ -45,6 +45,7 @@ jest.mock('@/lib/api/authedFetch', () => ({
 }));
 
 // Children with their own data loading are irrelevant to the save behaviour.
+jest.mock('@/components/shared/Toast', () => ({ useToast: () => ({ showToast: jest.fn() }) }));
 jest.mock('../QuestionPicker', () => ({ __esModule: true, default: () => null }));
 jest.mock('../UnifiedFlowEditor', () => ({ __esModule: true, default: () => null }));
 jest.mock('../LanguageSelector', () => ({ __esModule: true, default: () => null }));

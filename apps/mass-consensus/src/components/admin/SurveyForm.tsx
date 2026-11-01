@@ -10,6 +10,8 @@ import { authedFetch } from '@/lib/api/authedFetch';
 import { Survey, CreateSurveyRequest, DEFAULT_SURVEY_SETTINGS, SuggestionMode, DisplayMode } from '@/types/survey';
 import QuestionPicker from './QuestionPicker';
 import UnifiedFlowEditor from './UnifiedFlowEditor';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
+import { useQuestionRemoval } from './useQuestionRemoval';
 import CompletionMessageEditor from './CompletionMessageEditor';
 import LanguageSelector from './LanguageSelector';
 import { CreateQuestionModal } from './CreateQuestionModal';
@@ -475,17 +477,12 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
     setSelectedQuestions(reorderedQuestions);
   };
 
-  const handleRemoveQuestion = (questionId: string) => {
-    setSelectedQuestions((prev) =>
-      prev.filter((q) => q.statementId !== questionId)
-    );
-    // Also remove any per-question settings for the removed question
-    setQuestionSettings((prev) => {
-      const updated = { ...prev };
-      delete updated[questionId];
-      return updated;
-    });
-  };
+  const { pendingQuestion, requestRemoval, confirmRemoval, cancelRemoval } = useQuestionRemoval({
+    selectedQuestions,
+    questionSettings,
+    setSelectedQuestions,
+    setQuestionSettings,
+  });
 
   const handleQuestionSettingsChange = (
     questionId: string,
@@ -611,9 +608,20 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
           <QuestionPicker
             selectedQuestions={selectedQuestions}
             onQuestionsChange={handleQuestionsChange}
+            onRemoveQuestion={requestRemoval}
           />
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={pendingQuestion !== null}
+        title={t('removeQuestionFromSurvey')}
+        message={t('removeQuestionConfirmMessage')}
+        confirmLabel={t('remove')}
+        cancelLabel={t('cancel')}
+        onConfirm={confirmRemoval}
+        onCancel={cancelRemoval}
+      />
 
       {/* Create Question Modal */}
       <CreateQuestionModal
@@ -647,7 +655,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
             onCustomDemographicQuestionsChange={setCustomDemographicQuestions}
             onQuestionSettingsChange={handleQuestionSettingsChange}
             onQuestionTextChange={handleQuestionTextChange}
-            onRemoveQuestion={handleRemoveQuestion}
+            onRemoveQuestion={requestRemoval}
             surveyId={existingSurvey?.surveyId}
           />
           <CompletionMessageEditor
