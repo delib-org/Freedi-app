@@ -2312,24 +2312,6 @@
       ]
     },
     {
-      "collectionGroup": "statementsSubscribe",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "role",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "lastUpdate",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
       "collectionGroup": "questionDeliberations",
       "queryScope": "COLLECTION",
       "fields": [

@@ -38,9 +38,9 @@ import { logError } from './utils/errorHandling';
  * it returns against the live statement (type, hide flag, creator / admin
  * scope), so a stale vector mirror can never leak a question.
  *
- * Worst-case reads per call: MAX_ADMIN_SUBSCRIPTIONS_SCANNED (50) admin
+ * Worst-case reads per call: MAX_ADMIN_SUBSCRIPTIONS_SCANNED (200) admin
  * subscriptions + (1 + MAX_ADMIN_TREES) × NEAREST_PER_SCOPE (11 × 20 = 220)
- * vector docs + (limit + VERIFY_SLACK) ≤ 60 statements = 330.
+ * vector docs + (limit + VERIFY_SLACK) ≤ 60 statements = 480.
  */
 
 const MAX_DISTANCE = 1 - QUESTION_SEARCH_LIMITS.MIN_SIMILARITY;

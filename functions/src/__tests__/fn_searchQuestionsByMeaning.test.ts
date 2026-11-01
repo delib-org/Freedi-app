@@ -239,6 +239,25 @@ describe('access scoping', () => {
 		expect(await search({ query: 'park budget' })).toEqual(['bobs']);
 	});
 
+	it('still searches a tree whose admin subscription has no lastUpdate', async () => {
+		seed('statementsSubscribe', `${ME}--g1`, {
+			userId: ME,
+			statementId: 'g1',
+			role: 'admin',
+			parentId: 'top',
+			topParentId: 'g1',
+		});
+		questionWithVector({
+			id: 'bobs',
+			creatorId: 'bob',
+			parentId: 'g1',
+			topParentId: 'g1',
+			vector: [1, 0, 0],
+		});
+
+		expect(await search({ query: 'park budget' })).toEqual(['bobs']);
+	});
+
 	it('limits a nested admin role to its own sub-tree', async () => {
 		// Admin of sub-question s1 inside g1 — not of g1 itself.
 		adminOf('s1', { parentId: 'g1', topParentId: 'g1' });

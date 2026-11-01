@@ -1,7 +1,6 @@
-jest.mock('../../utils/errorHandling', () => ({ logError: jest.fn() }));
-
 import type { Firestore } from 'firebase-admin/firestore';
 import {
+	QUESTION_SEARCH_LIMITS,
 	groupAdminTrees,
 	isQuestionInScope,
 	loadAdminTrees,
@@ -129,49 +128,67 @@ describe('isQuestionInScope', () => {
 });
 
 describe('loadAdminTrees', () => {
-	function fakeFirestore(ordered: () => Promise<unknown>, unordered: () => Promise<unknown>) {
+	type Docs = Array<Record<string, unknown>>;
+	type Snapshot = { docs: Array<{ data: () => unknown }> };
+
+	/** Only where → select → limit → get exists: an orderBy call would throw. */
+	function fakeFirestore(get: () => Promise<Snapshot>) {
 		const where = jest.fn();
-		const query = {
-			where,
-			select: () => ({
-				orderBy: () => ({ limit: () => ({ get: ordered }) }),
-				limit: () => ({ get: unordered }),
-			}),
-		};
+		const limit = jest.fn((_max: number) => ({ get }));
+		const query = { where, select: () => ({ limit }) };
 		where.mockReturnValue(query);
 
-		return { firestore: { collection: () => query } as unknown as Firestore, where };
+		return { firestore: { collection: () => query } as unknown as Firestore, where, limit };
 	}
 
-	const docs = { docs: [{ data: () => ({ statementId: 'g1', parentId: 'top', lastUpdate: 1 }) }] };
+	const snapshotOf = (docs: Docs): Promise<Snapshot> =>
+		Promise.resolve({ docs: docs.map((data) => ({ data: () => data })) });
 
-	it('filters by the caller and the admin role', async () => {
-		const { firestore, where } = fakeFirestore(
-			() => Promise.resolve(docs),
-			() => Promise.reject(new Error('unused')),
+	it('filters by the caller and the admin role, unordered and bounded', async () => {
+		const { firestore, where, limit } = fakeFirestore(() =>
+			snapshotOf([{ statementId: 'g1', parentId: 'top', lastUpdate: 1 }]),
 		);
 
 		const trees = await loadAdminTrees(firestore, 'me');
 
 		expect(where).toHaveBeenCalledWith('userId', '==', 'me');
 		expect(where).toHaveBeenCalledWith('role', '==', 'admin');
+		expect(limit).toHaveBeenCalledWith(QUESTION_SEARCH_LIMITS.MAX_ADMIN_SUBSCRIPTIONS_SCANNED);
 		expect(trees.map((t) => t.topParentId)).toEqual(['g1']);
 	});
 
-	it('falls back to an unordered read while the index is missing', async () => {
-		const { firestore } = fakeFirestore(
-			() => Promise.reject(Object.assign(new Error('index'), { code: 9 })),
-			() => Promise.resolve(docs),
+	it('includes a subscription without lastUpdate, ranked after dated ones', async () => {
+		const { firestore } = fakeFirestore(() =>
+			snapshotOf([
+				{ statementId: 'undated', parentId: 'top' },
+				{ statementId: 'old', parentId: 'top', lastUpdate: 1 },
+				{ statementId: 'new', parentId: 'top', lastUpdate: 9 },
+			]),
 		);
 
-		await expect(loadAdminTrees(firestore, 'me')).resolves.toHaveLength(1);
+		const trees = await loadAdminTrees(firestore, 'me');
+
+		expect(trees.map((t) => t.topParentId)).toEqual(['new', 'old', 'undated']);
 	});
 
-	it('rethrows any other failure', async () => {
-		const { firestore } = fakeFirestore(
-			() => Promise.reject(Object.assign(new Error('unavailable'), { code: 14 })),
-			() => Promise.resolve(docs),
-		);
+	it('keeps only the most recent MAX_ADMIN_TREES trees', async () => {
+		const max = QUESTION_SEARCH_LIMITS.MAX_ADMIN_TREES;
+		const docs: Docs = Array.from({ length: max + 3 }, (_, i) => ({
+			statementId: `g${i}`,
+			parentId: 'top',
+			lastUpdate: i,
+		}));
+		const { firestore } = fakeFirestore(() => snapshotOf(docs));
+
+		const trees = await loadAdminTrees(firestore, 'me');
+
+		expect(trees).toHaveLength(max);
+		expect(trees[0].topParentId).toBe(`g${max + 2}`);
+		expect(trees.map((t) => t.topParentId)).not.toContain('g0');
+	});
+
+	it('rethrows a failed read', async () => {
+		const { firestore } = fakeFirestore(() => Promise.reject(new Error('unavailable')));
 
 		await expect(loadAdminTrees(firestore, 'me')).rejects.toThrow('unavailable');
 	});

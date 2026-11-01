@@ -1,6 +1,5 @@
 import type { DocumentData, Firestore } from 'firebase-admin/firestore';
 import { Collections, Role } from '@freedi/shared-types';
-import { logError } from '../utils/errorHandling';
 
 /**
  * Who may see which questions in "search by meaning", and how hits are merged.
@@ -16,16 +15,13 @@ export const QUESTION_SEARCH_LIMITS = {
 	NEAREST_PER_SCOPE: 20,
 	/** Admin trees searched per call — the most recently active ones. */
 	MAX_ADMIN_TREES: 10,
-	/** Admin subscriptions read to choose those trees. */
-	MAX_ADMIN_SUBSCRIPTIONS_SCANNED: 50,
+	/** Admin subscriptions read (unordered) to choose those trees in memory. */
+	MAX_ADMIN_SUBSCRIPTIONS_SCANNED: 200,
 	/** Cosine similarity floor; below it a hit is noise. */
 	MIN_SIMILARITY: 0.3,
 	/** Hits re-checked against the live statement, beyond the requested limit. */
 	VERIFY_SLACK: 10,
 } as const;
-
-/** gRPC FAILED_PRECONDITION — typically a composite index not built yet. */
-const FAILED_PRECONDITION = 9;
 
 /** The caller's admin access inside one tree. */
 export interface AdminTreeScope {
@@ -126,40 +122,23 @@ const SUBSCRIPTION_FIELDS = [
 ] as const;
 
 /**
- * The trees the caller administers. Prefers the most recently active ones
- * (needs the userId+role+lastUpdate index); until that index exists it falls
- * back to an unordered read so the search still works.
+ * The trees the caller administers, most recently active first.
+ *
+ * Two equality filters only — no orderBy: Firestore serves this from the
+ * single-field indexes (no composite index), and an orderBy('lastUpdate')
+ * would silently drop subscriptions that have no lastUpdate field, hiding
+ * those trees. Recency is sorted in memory instead (missing = 0), so a
+ * subscription without lastUpdate still counts, it just ranks last.
  */
 export async function loadAdminTrees(firestore: Firestore, uid: string): Promise<AdminTreeScope[]> {
-	const base = firestore
+	const snap = await firestore
 		.collection(Collections.statementsSubscribe)
 		.where('userId', '==', uid)
-		.where('role', '==', Role.admin);
-	const max = QUESTION_SEARCH_LIMITS.MAX_ADMIN_SUBSCRIPTIONS_SCANNED;
-
-	let docs: DocumentData[];
-	try {
-		const snap = await base
-			.select(...SUBSCRIPTION_FIELDS)
-			.orderBy('lastUpdate', 'desc')
-			.limit(max)
-			.get();
-		docs = snap.docs.map((doc) => doc.data());
-	} catch (error) {
-		const code = (error as { code?: unknown } | null)?.code;
-		if (code !== FAILED_PRECONDITION) throw error;
-
-		logError(error, {
-			operation: 'questionSearchScopes.loadAdminTrees',
-			userId: uid,
-			metadata: { fallback: 'unordered admin subscriptions (index missing)' },
-		});
-		const snap = await base
-			.select(...SUBSCRIPTION_FIELDS)
-			.limit(max)
-			.get();
-		docs = snap.docs.map((doc) => doc.data());
-	}
+		.where('role', '==', Role.admin)
+		.select(...SUBSCRIPTION_FIELDS)
+		.limit(QUESTION_SEARCH_LIMITS.MAX_ADMIN_SUBSCRIPTIONS_SCANNED)
+		.get();
+	const docs: DocumentData[] = snap.docs.map((doc) => doc.data());
 
 	const subscriptions = docs
 		.map(toAdminSubscription)
