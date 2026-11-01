@@ -63,9 +63,15 @@ export async function setupAdminsForStatement(statement: Statement): Promise<voi
 				getPushNotification: true,
 			});
 			if (subscription?.statementsSubscribeId) {
+				// createSubscription() sets no createdAt, yet the Members list and
+				// its count query order by it: a subscription without one is never
+				// listed. The admins joined when the statement was created. Merge, so
+				// the client's own write of this subscription (createdAt included)
+				// is completed rather than replaced.
 				batch.set(
 					db.collection(Collections.statementsSubscribe).doc(subscription.statementsSubscribeId),
-					subscription,
+					{ ...subscription, createdAt: statement.createdAt },
+					{ merge: true },
 				);
 			}
 		}

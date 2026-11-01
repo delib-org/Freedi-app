@@ -67,6 +67,32 @@ describe('setupAdminsForStatement', () => {
 		}
 	});
 
+	it('dates every admin subscription from the statement, so the Members list (ordered by createdAt) shows them', async () => {
+		seedAdmin('top-admin', TOP);
+		await setupAdminsForStatement(newStatement({ createdAt: 42 }));
+
+		expect(subOf(CREATOR)).toMatchObject({ createdAt: 42 });
+		expect(subOf('top-admin')).toMatchObject({ createdAt: 42 });
+	});
+
+	it('completes the creator’s own subscription write instead of replacing it', async () => {
+		fake.seed(Collections.statementsSubscribe, `${CREATOR}--${NEW}`, {
+			userId: CREATOR,
+			statementId: NEW,
+			role: Role.member,
+			tokens: ['push-token'],
+			lastReadTimestamp: 7,
+		});
+		await setupAdminsForStatement(newStatement());
+
+		expect(subOf(CREATOR)).toMatchObject({
+			role: Role.admin,
+			tokens: ['push-token'],
+			lastReadTimestamp: 7,
+			createdAt: 1,
+		});
+	});
+
 	it('takes the admin uid from userId, never from user.uid', async () => {
 		seedAdmin('top-admin', TOP, { user: { uid: 'someone-else', displayName: 'S' } });
 		await setupAdminsForStatement(newStatement());
