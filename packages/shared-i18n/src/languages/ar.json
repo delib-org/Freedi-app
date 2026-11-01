@@ -4620,5 +4620,14 @@
   "Ideas placed": "الأفكار الموزعة",
   "Ideas the AI could not sort": "أفكار لم يتمكن الذكاء الاصطناعي من تصنيفها",
   "They are under Other ideas. Run the preview again to retry them.": "إنها ضمن أفكار أخرى. شغّل المعاينة مرة أخرى لإعادة المحاولة.",
-  "Let AI regroup all ideas into themes. You'll see a preview before anything changes.": "سيعيد الذكاء الاصطناعي تجميع كل الأفكار في مواضيع. ستظهر معاينة قبل أن يتغير أي شيء."
+  "Let AI regroup all ideas into themes. You'll see a preview before anything changes.": "سيعيد الذكاء الاصطناعي تجميع كل الأفكار في مواضيع. ستظهر معاينة قبل أن يتغير أي شيء.",
+  "removeQuestionFromSurvey": "إزالة هذا السؤال من الاستطلاع؟",
+  "removeQuestionConfirmMessage": "ستفقد إعداداته.",
+  "questionRemovedFromSurvey": "تمت إزالة السؤال من الاستطلاع",
+  "undo": "تراجع",
+  "cancel": "إلغاء",
+  "suggestedQuestions": "مقترحة (من السؤال الأصل نفسه)",
+  "recentlyRemovedQuestions": "أُزيلت مؤخرًا",
+  "similarByMeaning": "متشابهة في المعنى",
+  "searchingBySimilarMeaning": "جارٍ البحث عن أسئلة مشابهة..."
 }

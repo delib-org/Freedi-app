@@ -4501,5 +4501,14 @@
   "Apply": "Übernehmen",
   "Ideas the AI could not sort": "Ideen, die die KI nicht zuordnen konnte",
   "They are under Other ideas. Run the preview again to retry them.": "Sie stehen unter Weitere Ideen. Starte die Vorschau erneut, um es noch einmal zu versuchen.",
-  "Let AI regroup all ideas into themes. You'll see a preview before anything changes.": "Die KI ordnet alle Ideen neu in Themen. Sie sehen eine Vorschau, bevor sich etwas ändert."
+  "Let AI regroup all ideas into themes. You'll see a preview before anything changes.": "Die KI ordnet alle Ideen neu in Themen. Sie sehen eine Vorschau, bevor sich etwas ändert.",
+  "removeQuestionFromSurvey": "Diese Frage aus der Umfrage entfernen?",
+  "removeQuestionConfirmMessage": "Ihre Einstellungen gehen verloren.",
+  "questionRemovedFromSurvey": "Frage aus der Umfrage entfernt",
+  "undo": "Rückgängig",
+  "cancel": "Abbrechen",
+  "suggestedQuestions": "Vorgeschlagen (vom selben Elternteil)",
+  "recentlyRemovedQuestions": "Kürzlich entfernt",
+  "similarByMeaning": "Inhaltlich ähnlich",
+  "searchingBySimilarMeaning": "Suche ähnliche Fragen..."
 }

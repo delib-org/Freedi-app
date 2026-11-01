@@ -4501,5 +4501,14 @@
   "Apply": "Aplicar",
   "Ideas the AI could not sort": "Ideas que la IA no pudo clasificar",
   "They are under Other ideas. Run the preview again to retry them.": "Están en Otras ideas. Vuelve a generar la vista previa para intentarlo de nuevo.",
-  "Let AI regroup all ideas into themes. You'll see a preview before anything changes.": "La IA reagrupará todas las ideas en temas. Verás una vista previa antes de que algo cambie."
+  "Let AI regroup all ideas into themes. You'll see a preview before anything changes.": "La IA reagrupará todas las ideas en temas. Verás una vista previa antes de que algo cambie.",
+  "removeQuestionFromSurvey": "¿Quitar esta pregunta de la encuesta?",
+  "removeQuestionConfirmMessage": "Se perderá su configuración.",
+  "questionRemovedFromSurvey": "Pregunta quitada de la encuesta",
+  "undo": "Deshacer",
+  "cancel": "Cancelar",
+  "suggestedQuestions": "Sugeridas (del mismo padre)",
+  "recentlyRemovedQuestions": "Eliminadas recientemente",
+  "similarByMeaning": "Similares por significado",
+  "searchingBySimilarMeaning": "Buscando preguntas similares..."
 }
