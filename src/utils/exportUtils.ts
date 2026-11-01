@@ -1,3 +1,4 @@
+// The full export is built from server rows only (`fullExport` callable) and must never be fed Redux state.
 /**
  * Export Utilities
  *
@@ -5,13 +6,11 @@
  */
 
 import {
-	Statement,
 	ExportData,
 	ExportFormat,
 	ExportableStatementData,
 	FullExportMeta,
 	PROPERTY_DOCUMENTATION,
-	toExportRows,
 } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 
@@ -45,10 +44,6 @@ export function createJSONExportFromRows(rows: ExportRows, meta?: FullExportMeta
 	};
 
 	return JSON.stringify(exportData, null, 2);
-}
-
-export function createJSONExport(mainStatement: Statement, subStatements: Statement[]): string {
-	return createJSONExportFromRows(toExportRows(mainStatement, subStatements));
 }
 
 /**
@@ -153,10 +148,6 @@ export function createCSVExportFromRows(rows: ExportRows): string {
 	}
 }
 
-export function createCSVExport(mainStatement: Statement, subStatements: Statement[]): string {
-	return createCSVExportFromRows(toExportRows(mainStatement, subStatements));
-}
-
 /**
  * Trigger file download in browser
  */
@@ -178,35 +169,6 @@ export function downloadFile(content: string, filename: string, mimeType: string
 	anchor.click();
 	document.body.removeChild(anchor);
 	URL.revokeObjectURL(url);
-}
-
-/**
- * Main export function - exports statement data in specified format
- */
-export async function exportStatementData(
-	mainStatement: Statement,
-	subStatements: Statement[],
-	format: ExportFormat,
-): Promise<void> {
-	try {
-		const timestamp = new Date().toISOString().split('T')[0];
-		const safeTitle = mainStatement.statement.slice(0, 30).replace(/[^\p{L}\p{N}]/gu, '_');
-
-		if (format === 'json') {
-			const content = createJSONExport(mainStatement, subStatements);
-			downloadFile(content, `freedi_export_${safeTitle}_${timestamp}.json`, 'application/json');
-		} else {
-			const content = createCSVExport(mainStatement, subStatements);
-			downloadFile(content, `freedi_export_${safeTitle}_${timestamp}.csv`, 'text/csv');
-		}
-	} catch (error) {
-		logError(error, {
-			operation: 'exportUtils.exportStatementData',
-			statementId: mainStatement.statementId,
-			metadata: { format },
-		});
-		throw error;
-	}
 }
 
 /**
