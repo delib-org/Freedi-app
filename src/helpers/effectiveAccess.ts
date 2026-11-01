@@ -9,10 +9,19 @@ type AccessSource = Pick<Statement, 'parentId' | 'membership'> | null | undefine
  */
 export function resolveEffectiveAccess(statement: AccessSource, topParent: AccessSource): Access {
 	const own = statement?.membership?.access;
-	const isTopLevel = statement?.parentId === 'top';
-	const ownCounts = Boolean(own) && (isTopLevel || own !== Access.open);
 
-	if (ownCounts && own) return own;
+	if (own && !isAccessInherited(statement)) return own;
 
 	return topParent?.membership?.access ?? Access.openToAll;
+}
+
+/**
+ * True when a sub-space takes its access level from the group: it has none of
+ * its own, or only the deprecated `open`. A top-level space never inherits.
+ */
+export function isAccessInherited(statement: AccessSource): boolean {
+	if (statement?.parentId === 'top') return false;
+	const own = statement?.membership?.access;
+
+	return !own || own === Access.open;
 }

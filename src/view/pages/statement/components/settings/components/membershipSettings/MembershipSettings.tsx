@@ -1,217 +1,147 @@
 import { FC, useState, useEffect } from 'react';
+import { Access, Statement } from '@freedi/shared-types';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { Access, Statement } from '@freedi/shared-types';
-import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
-import Checkbox from '@/view/components/checkbox/Checkbox';
 import { setStatementMembership } from '@/controllers/db/statements/setStatementMembership';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSelector } from '@/redux/statements/statementsSlice';
-import styles from './MembershipSettings.module.scss';
 import { logError } from '@/utils/errorHandling';
 import { accessCopyKeys, SELECTABLE_ACCESS_LEVELS } from '@/helpers/peopleLabels';
+import { isAccessInherited, resolveEffectiveAccess } from '@/helpers/effectiveAccess';
 import { fillPlaceholders } from '@/helpers/fillPlaceholders';
 import InlineNote from '@/view/components/atomic/atoms/InlineNote';
+import InheritanceSwitch from '@/view/components/atomic/molecules/InheritanceSwitch';
+import AccessPicker from '@/view/components/atomic/molecules/AccessPicker';
+import styles from './MembershipSettings.module.scss';
+
+const OPERATION = 'membershipSettings.MembershipSettings.saveAccess';
 
 interface Props {
 	statement: Statement;
 	setStatementToEdit: (statement: Statement) => void;
 }
 
+interface AccessChoice {
+	isInherited: boolean;
+	access: Access;
+}
+
+/**
+ * Who can join (#join). A sub-space shows "Same as the group | Change for this
+ * question" above the access picker; a top-level space shows the picker alone.
+ * Writes `membership.access` (cleared to inherit) exactly as before.
+ */
 const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 	const { t } = useTranslation();
-
-	// Get the top parent statement to check its access level
-	const topParentStatement = useAppSelector(statementSelector(statement?.topParentId));
-
-	// Determine if this statement is inheriting access
-	// For non-top-level statements: inherit by default if no membership.access is defined
-	// For top-level statements: never inherit (always have their own access)
-	// Handle deprecated 'open' value - treat it as not having membership for sub-statements
+	const topParent = useAppSelector(statementSelector(statement?.topParentId));
 	const isTopLevel = statement?.parentId === 'top';
-	const hasDeprecatedOpen = statement?.membership?.access === 'open' && !isTopLevel;
-	const hasOwnMembership = Boolean(statement?.membership?.access) && !hasDeprecatedOpen;
-	const isInheriting = isTopLevel ? false : !hasOwnMembership;
+	const inheritedAccess = topParent?.membership?.access ?? Access.openToAll;
 
-	const [inheritAccess, setInheritAccess] = useState<boolean>(isInheriting);
+	const savedChoice = (): AccessChoice => ({
+		isInherited: isAccessInherited(statement),
+		access: resolveEffectiveAccess(statement, topParent),
+	});
+
+	const [choice, setChoice] = useState<AccessChoice>(savedChoice);
+	const [savingValue, setSavingValue] = useState<Access | null>(null);
 	const [saveFailed, setSaveFailed] = useState(false);
-	const [membershipAccess, setMembershipAccess] = useState<Access>(
-		// If it has deprecated 'open' and should inherit, use parent's access
-		hasDeprecatedOpen
-			? (topParentStatement?.membership?.access ?? Access.openToAll)
-			: (statement?.membership?.access ??
-					topParentStatement?.membership?.access ??
-					Access.openToAll),
-	);
 
-	// Update state when statement changes
 	useEffect(() => {
-		// Recalculate values to avoid stale closures
-		const currentIsTopLevel = statement?.parentId === 'top';
-		const isDeprecatedOpen = statement?.membership?.access === 'open' && !currentIsTopLevel;
-		const shouldInherit = currentIsTopLevel
-			? false
-			: !statement?.membership?.access || isDeprecatedOpen;
-
-		setInheritAccess(shouldInherit);
-
-		// Determine the correct membership access
-		let newMembershipAccess: Access;
-		if (statement?.membership?.access && !isDeprecatedOpen) {
-			// Statement has its own valid access level
-			newMembershipAccess = statement.membership.access as Access;
-		} else if (topParentStatement?.membership?.access) {
-			// Use inherited access from top parent
-			newMembershipAccess = topParentStatement.membership.access;
-		} else {
-			// Default fallback
-			newMembershipAccess = Access.openToAll;
-		}
-
-		setMembershipAccess(newMembershipAccess);
-	}, [statement?.parentId, statement?.membership?.access, topParentStatement?.membership?.access]);
+		setChoice(savedChoice());
+	}, [statement?.parentId, statement?.membership?.access, topParent?.membership?.access]);
 
 	if (!statement) return null;
 
-	// Get inherited access level
-	const inheritedAccess = topParentStatement?.membership?.access ?? Access.openToAll;
+	const isNewStatement = statement.statementId === '';
 
-	/** Writes the access level; on failure the picker shows what is really saved. */
-	async function saveAccess(access: Access | null): Promise<void> {
-		const previous = { inherit: inheritAccess, access: membershipAccess };
+	/** Writes the level (null = inherit); on failure the picker shows what is really saved. */
+	async function saveAccess(next: AccessChoice): Promise<void> {
+		const previous = choice;
+		setChoice(next);
 		setSaveFailed(false);
-		try {
-			await setStatementMembership({ statement, membershipAccess: access });
-		} catch (error) {
-			logError(error, {
-				operation: 'membershipSettings.MembershipSettings.saveAccess',
-				statementId: statement.statementId,
-				metadata: { access },
-			});
-			setInheritAccess(previous.inherit);
-			setMembershipAccess(previous.access);
-			setSaveFailed(true);
-		}
-	}
 
-	const handleInheritChange = (checked: boolean) => {
-		setInheritAccess(checked);
-
-		if (checked) {
-			// Clear the statement's own access to inherit from parent
-			if (statement.statementId === '') {
-				// New statement - ensure no membership is set
-				const updatedStatement = { ...statement };
-				// Explicitly remove membership field
-				if ('membership' in updatedStatement) {
-					delete updatedStatement.membership;
-				}
-				setStatementToEdit(updatedStatement);
-			} else {
-				// Existing statement - clear membership access
-				void saveAccess(null);
-			}
-			// Update local state to show inherited access
-			setMembershipAccess(inheritedAccess);
-		} else {
-			// Set a specific access level
-			const newAccess = membershipAccess || inheritedAccess || Access.openToAll;
-			if (statement.statementId === '') {
-				setStatementToEdit({
-					...statement,
-					membership: {
-						...statement.membership,
-						access: newAccess,
-					},
-				});
-			} else {
-				void saveAccess(newAccess);
-			}
-		}
-	};
-
-	const handleAccessChange = (newAccess: Access) => {
-		// Validate the new access value
-		if (!newAccess && newAccess !== Access.public) {
-			logError(newAccess, {
-				operation: 'membershipSettings.MembershipSettings.handleAccessChange',
-				metadata: { message: 'Invalid access value:' },
-			});
+		if (isNewStatement) {
+			setStatementToEdit(withAccess(statement, next.isInherited ? null : next.access));
 
 			return;
 		}
 
-		// First, automatically uncheck inherit if it was checked
-		if (inheritAccess) {
-			setInheritAccess(false);
-		}
-
-		setMembershipAccess(newAccess);
-
-		// Save the access level
-		if (statement.statementId === '') {
-			// New statement - set membership with specific access
-			setStatementToEdit({
-				...statement,
-				membership: {
-					...statement.membership,
-					access: newAccess,
-				},
+		setSavingValue(next.access);
+		try {
+			await setStatementMembership({
+				statement,
+				membershipAccess: next.isInherited ? null : next.access,
 			});
-		} else {
-			// Existing statement - update database
-			void saveAccess(newAccess);
+		} catch (error) {
+			logError(error, {
+				operation: OPERATION,
+				statementId: statement.statementId,
+				metadata: { access: next.access, isInherited: next.isInherited },
+			});
+			setChoice(previous);
+			setSaveFailed(true);
+		} finally {
+			setSavingValue(null);
 		}
+	}
+
+	const handleInheritChange = (isInherited: boolean): void => {
+		void saveAccess({ isInherited, access: isInherited ? inheritedAccess : choice.access });
 	};
 
-	const getAccessLabel = (access: Access): string => t(accessCopyKeys(access).label);
+	const handleAccessChange = (access: Access): void => {
+		void saveAccess({ isInherited: false, access });
+	};
+
+	const accessLabel = (access: Access): string => t(accessCopyKeys(access).label);
+	const picker = (
+		<AccessPicker
+			legend={t('people.whoCanJoin')}
+			options={SELECTABLE_ACCESS_LEVELS.map((access) => ({
+				value: access,
+				label: accessLabel(access),
+				hint: t(accessCopyKeys(access).hint),
+			}))}
+			value={choice.access === Access.open ? Access.openToAll : choice.access}
+			onChange={handleAccessChange}
+			isInherited={!isTopLevel && choice.isInherited}
+			savingValue={savingValue}
+		/>
+	);
 
 	return (
 		<div className={styles.membershipSettings}>
 			<SectionTitle title={t('people.whoCanJoin')} />
-
-			{!isTopLevel && (
-				<div className={styles.inheritSection}>
-					<Checkbox
-						label={t('people.sameAsGroup')}
-						isChecked={inheritAccess}
-						onChange={handleInheritChange}
-						className={styles.inheritCheckbox}
-					/>
-
-					{inheritAccess && (
-						<div className={styles.inheritedInfo}>
-							<span className={styles.value}>
-								{fillPlaceholders(t('people.groupIs'), { value: getAccessLabel(inheritedAccess) })}
-							</span>
-							{topParentStatement && (
-								<span className={styles.source}>
-									{fillPlaceholders(t('people.setInGroup'), { name: topParentStatement.statement })}
-								</span>
-							)}
-						</div>
-					)}
-				</div>
+			{isTopLevel ? (
+				picker
+			) : (
+				<InheritanceSwitch
+					isInherited={choice.isInherited}
+					onChange={handleInheritChange}
+					inheritLabel={t('people.sameAsGroup')}
+					overrideLabel={t('people.changeHere')}
+					groupLabel={t('people.whoCanJoin')}
+					isSaving={savingValue !== null}
+					caption={fillPlaceholders(t('people.groupIs'), { value: accessLabel(inheritedAccess) })}
+				>
+					{picker}
+				</InheritanceSwitch>
 			)}
-
-			{(isTopLevel || !inheritAccess) && (
-				<div className={styles.accessSelector}>
-					{!isTopLevel && <div className={styles.overrideLabel}>{t('people.changeHere')}</div>}
-					<MultiSwitch
-						options={SELECTABLE_ACCESS_LEVELS.map((access) => ({
-							label: t(accessCopyKeys(access).label),
-							toolTip: t(accessCopyKeys(access).hint),
-							value: access as string,
-						}))}
-						currentValue={membershipAccess as string}
-						onClick={(newValue) => handleAccessChange(newValue as Access)}
-					/>
-				</div>
-			)}
-
 			{saveFailed && <InlineNote variant="error">{t('people.error.save')}</InlineNote>}
 		</div>
 	);
 };
+
+/** A new (unsaved) statement carries its level on the draft; null drops it. */
+function withAccess(statement: Statement, access: Access | null): Statement {
+	if (access === null) {
+		const draft = { ...statement };
+		delete draft.membership;
+
+		return draft;
+	}
+
+	return { ...statement, membership: { ...statement.membership, access } };
+}
 
 export default MembershipSettings;

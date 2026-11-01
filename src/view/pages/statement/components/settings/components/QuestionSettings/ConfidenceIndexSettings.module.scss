@@ -1,0 +1,60 @@
+// Stakeholders (People › #stakeholders). Spec: docs/ux/main-people-settings-ux.md §3.8.
+.stakeholders {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2xs);
+
+	label {
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-medium);
+		color: var(--text-body);
+	}
+
+	input,
+	select {
+		inline-size: 100%;
+		max-inline-size: 20rem;
+		min-block-size: 2.75rem;
+		padding-inline: var(--space-xs);
+		border: var(--hairline);
+		border-radius: var(--radius-sm);
+		font-size: var(--font-size-md);
+		background-color: var(--card-default);
+		color: var(--text-body);
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary);
+			outline-offset: 2px;
+		}
+	}
+
+	input:read-only {
+		background-color: var(--surface-background);
+		cursor: default;
+	}
+}
+
+.hint {
+	margin: 0;
+	font-size: var(--font-size-sm);
+	color: var(--text-meta);
+}
+
+.groupLink {
+	color: inherit;
+	text-decoration: underline;
+	text-underline-offset: 0.15em;
+}
+
+.recalc {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-2xs);
+}
