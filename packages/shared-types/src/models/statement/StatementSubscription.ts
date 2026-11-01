@@ -97,8 +97,11 @@ export const WaitingMemberSchema = object({
 	// Spread all properties from the original schema
 	...StatementSubscriptionSchema.entries,
 
-	// Add your new property
-	adminId: string(), // or any other valibot validator
+	// Legacy entries named one admin; entries written since the N×M fix carry
+	// every admin of the top parent (fn_subscriptions). Both are optional so an
+	// entry of either shape parses.
+	adminId: optional(string()),
+	adminIds: optional(array(string())),
 });
 
 export type WaitingMember = InferOutput<

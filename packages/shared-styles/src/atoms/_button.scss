@@ -231,6 +231,14 @@
     // Default size - already set in base
   }
 
+  // Touch floor for small buttons in lists (row actions): 44 px on phones,
+  // where button--small alone is ~30 px. Desktop keeps the compact size.
+  &--touch {
+    @include mobile {
+      min-block-size: 2.75rem;
+    }
+  }
+
   &--large {
     font-size: 1.2rem;
     padding: 0.6rem 1.5rem;

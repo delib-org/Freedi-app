@@ -5,7 +5,8 @@
 interface MockWaitingMember {
 	statementsSubscribeId: string;
 	statementId: string;
-	adminId: string;
+	adminId?: string;
+	adminIds?: string[];
 	displayName: string;
 }
 
@@ -141,6 +142,21 @@ describe('subscriptionsSlice', () => {
 				const result = selectWaitingMember(mockState);
 				expect(result).toHaveLength(2);
 				expect(result.every((m: MockWaitingMember) => m.adminId === 'admin-1')).toBe(true);
+			});
+
+			it('includes entries that list the creator among adminIds (current server shape)', () => {
+				const current: MockWaitingMember = {
+					statementsSubscribeId: 'sub-4',
+					statementId: 'stmt-3',
+					adminIds: ['admin-2', 'admin-1'],
+					displayName: 'User D',
+				};
+				const mockState = {
+					subscriptions: { waitingList: [mockMember3, current] },
+					creator: { creator: { uid: 'admin-1' } },
+				};
+
+				expect(selectWaitingMember(mockState)).toEqual([current]);
 			});
 
 			it('should return empty array when creator is null', () => {

@@ -1,0 +1,114 @@
+// Person row Molecule — BEM
+// One person in a People list: avatar, name with text badges, one meta line,
+// actions at inline-end, and a note line for a row's own error.
+// React wrapper: atomic/molecules/PersonRow.
+// Spec: docs/ux/main-people-settings-design.md §3.5. Phase 3 ships the parts
+// Waiting to join needs (select, inline actions, busy); the Members ⋯ sheet
+// and the review answers come with phases 5–6.
+//
+// DOM:
+// <li class="person-row [--with-select] [--stacked-actions] [--busy]">
+//   [<span class="person-row__select">checkbox</span>]
+//   <span class="profile-avatar profile-avatar--medium person-row__avatar"/>
+//   <div class="person-row__identity"><span class="person-row__name" dir="auto"/>…<span class="person-row__meta"/></div>
+//   <div class="person-row__actions">buttons</div>
+//   [<div class="person-row__note">inline-note</div>]
+// </li>
+@use '../mixins' as *;
+
+.person-row {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	grid-template-areas:
+		'avatar identity actions'
+		'note note note';
+	column-gap: var(--space-xs);
+	row-gap: var(--space-2xs);
+	align-items: center;
+	min-block-size: 3.5rem;
+	padding-block: var(--space-xs);
+	border-block-end: var(--hairline);
+	list-style: none;
+
+	&--with-select {
+		grid-template-columns: auto auto 1fr auto;
+		grid-template-areas:
+			'select avatar identity actions'
+			'note note note note';
+	}
+
+	// Two short verbs that must stay one tap (Waiting): on phones they wrap
+	// under the name instead of squeezing it.
+	&--stacked-actions {
+		@include mobile {
+			grid-template-columns: auto 1fr;
+			grid-template-areas:
+				'avatar identity'
+				'actions actions'
+				'note note';
+		}
+	}
+
+	&--with-select#{&}--stacked-actions {
+		@include mobile {
+			grid-template-columns: auto auto 1fr;
+			grid-template-areas:
+				'select avatar identity'
+				'actions actions actions'
+				'note note note';
+		}
+	}
+
+	&__select {
+		grid-area: select;
+		display: inline-flex;
+	}
+
+	&__avatar {
+		grid-area: avatar;
+	}
+
+	&__identity {
+		grid-area: identity;
+		min-inline-size: 0;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-2xs) var(--space-xs);
+	}
+
+	&__name {
+		font-size: var(--font-size-md);
+		font-weight: var(--font-weight-medium);
+		color: var(--text-title);
+		overflow-wrap: anywhere;
+
+		@include mobile {
+			@include truncate;
+			max-inline-size: 100%;
+		}
+	}
+
+	&__meta {
+		flex-basis: 100%;
+		font-size: var(--font-size-xs);
+		color: var(--text-meta);
+	}
+
+	&__actions {
+		grid-area: actions;
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+		justify-content: flex-end;
+		flex-shrink: 0;
+	}
+
+	&__note {
+		grid-area: note;
+	}
+
+	&--busy {
+		cursor: progress;
+	}
+}

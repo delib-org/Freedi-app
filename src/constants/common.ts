@@ -66,6 +66,11 @@ export const UI = {
 	// discussion stays open. Each write to a subscription doc also fires
 	// three Cloud Functions triggers.
 	READ_MARK_THROTTLE_MS: 30 * 1000,
+	// How long a toast carrying Undo stays (UX main-people-settings §4.8);
+	// paused while hovered or focused.
+	UNDO_TOAST_DURATION: 6 * TIME.SECOND,
+	// How long the short "Undone" confirmation stays.
+	UNDONE_TOAST_DURATION: 2 * TIME.SECOND,
 } as const;
 
 /**

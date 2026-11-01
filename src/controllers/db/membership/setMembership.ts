@@ -3,6 +3,7 @@ import { parse } from 'valibot';
 import { DB } from '../config';
 import { doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { logError } from '@/utils/errorHandling';
+import { updateMemberRole } from '../subscriptions/setSubscriptions';
 
 export async function approveMembership(waitingMember: WaitingMember, accept: boolean) {
 	try {
@@ -30,5 +31,22 @@ export async function approveMembership(waitingMember: WaitingMember, accept: bo
 			metadata: { message: 'Error in approveMembership:' },
 		});
 		throw error; // Rethrow the error if needed
+	}
+}
+
+/**
+ * Puts a person back on the waiting list (Undo of Let in / Decline). The
+ * subscription trigger re-creates their awaitingUsers entry for every admin.
+ */
+export async function returnToWaiting(waitingMember: WaitingMember): Promise<void> {
+	try {
+		await updateMemberRole(waitingMember.statementId, waitingMember.userId, Role.waiting);
+	} catch (error) {
+		logError(error, {
+			operation: 'membership.setMembership.returnToWaiting',
+			userId: waitingMember.userId,
+			statementId: waitingMember.statementId,
+		});
+		throw error;
 	}
 }
