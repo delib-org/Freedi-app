@@ -6,7 +6,10 @@ import {
 	Evaluation,
 	Statement,
 	StatementEvaluation,
+	StakeholderScope,
 	getClusterEvaluationLinkId,
+	resolveStakeholderCount,
+	resolveSamplingQuality,
 } from '@freedi/shared-types';
 import {
 	calcAgreement,
@@ -45,8 +48,10 @@ const db = () => getFirestore();
  */
 
 interface AggregationOptions {
-	/** Target population for confidence index. Read from the cluster or its
-	 *  parent's evaluationSettings when available. */
+	/** Explicit, admin-declared N (resolveStakeholderCount). When > 0 it feeds
+	 *  the finite-population correction of agreement/agreementIndex, the
+	 *  confidence index and `stakeholderCount`, exactly like a plain option.
+	 *  Absent means open population: uncorrected formula, no stakeholderCount. */
 	targetPopulation?: number;
 	samplingQuality?: number;
 	/**
@@ -182,11 +187,23 @@ export function computeClusterEvaluationFromRawEvals(
 	});
 
 	const averageEvaluation = calcMeanSentiment(sumEvaluations, numberOfEvaluators);
-	const consensus = calcAgreement(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
+	// Same formula as a plain option (statementEvaluationUpdater): the explicit
+	// N, when there is one, is the 4th argument of both. No N -> 3-arg form.
+	const populationSize =
+		options.targetPopulation !== undefined && options.targetPopulation > 0
+			? options.targetPopulation
+			: undefined;
+	const consensus = calcAgreement(
+		sumEvaluations,
+		sumSquaredEvaluations,
+		numberOfEvaluators,
+		populationSize,
+	);
 	const agreementIndex = calcAgreementIndex(
 		sumEvaluations,
 		sumSquaredEvaluations,
 		numberOfEvaluators,
+		populationSize,
 	);
 	const likeMindedness = calcLikeMindedness(
 		sumEvaluations,
@@ -222,9 +239,41 @@ export function computeClusterEvaluationFromRawEvals(
 		confidenceIndex,
 		evaluationRandomNumber: existingRandom ?? Math.random(),
 		viewed: existingViewed ?? 0,
+		// N is never smaller than the people who actually voted
+		...(populationSize !== undefined && {
+			stakeholderCount: Math.max(populationSize, numberOfEvaluators),
+		}),
 	};
 
 	return { evaluation, byUser, perUserAverages };
+}
+
+/**
+ * The explicit N and sampling quality that apply to a cluster: the same walk a
+ * plain option gets (self -> question -> top group), declared values only.
+ * Both fields are undefined when no admin declared them.
+ */
+export async function resolveClusterPopulation(
+	cluster: Statement,
+): Promise<Pick<AggregationOptions, 'targetPopulation' | 'samplingQuality'>> {
+	const readScope = async (id: string | undefined): Promise<StakeholderScope | undefined> => {
+		if (!id) return undefined;
+		const doc = await db().collection(Collections.statements).doc(id).get();
+
+		return doc.exists ? (doc.data() as StakeholderScope) : undefined;
+	};
+
+	const parent = await readScope(cluster.parentId);
+	const top =
+		cluster.topParentId && cluster.topParentId !== cluster.parentId
+			? await readScope(cluster.topParentId)
+			: parent;
+	const self = cluster as StakeholderScope;
+
+	return {
+		targetPopulation: resolveStakeholderCount(self, parent, top).count,
+		samplingQuality: resolveSamplingQuality(self, parent, top),
+	};
 }
 
 /**
@@ -251,9 +300,13 @@ export async function recomputeClusterEvaluation(
 	const existingRandom = cluster.evaluation?.evaluationRandomNumber;
 	const existingViewed = cluster.evaluation?.viewed;
 
+	// The same N the cluster's plain siblings use, unless the caller pinned one.
+	const population =
+		options.targetPopulation === undefined ? await resolveClusterPopulation(cluster) : {};
+
 	const { evaluation, byUser, perUserAverages } = computeClusterEvaluationFromRawEvals(
 		evaluations,
-		{ ...options, clusterStatementId: clusterId, absorbedClusterIds },
+		{ ...population, ...options, clusterStatementId: clusterId, absorbedClusterIds },
 		existingRandom,
 		existingViewed,
 	);

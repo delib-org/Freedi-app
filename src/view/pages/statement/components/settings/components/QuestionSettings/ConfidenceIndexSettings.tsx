@@ -32,8 +32,6 @@ const SOURCE_LABEL: Record<StakeholderSource, string> = {
 	self: 'Set here',
 	parent: 'Inherited from the parent question',
 	top: 'Inherited from the group',
-	parentVoters: 'Using everyone who has voted here or above',
-	topVoters: 'Using everyone who has voted in the group',
 };
 
 const ConfidenceIndexSettings: FC<ConfidenceIndexSettingsProps> = ({ statement }) => {
@@ -127,13 +125,6 @@ const ConfidenceIndexSettings: FC<ConfidenceIndexSettingsProps> = ({ statement }
 							? t('Not set anywhere and nobody has voted yet — scores stay uncorrected')
 							: `${t(SOURCE_LABEL[effective.source as StakeholderSource])}: ${effective.count}`}
 					</span>
-					{effective.inferred && (
-						<span className={styles.confidenceIndex__inheritedNote}>
-							{t(
-								'Inferred from who has voted, which is everyone taking part rather than everyone with standing. Set a number to be explicit.',
-							)}
-						</span>
-					)}
 				</div>
 
 				<div className={styles.confidenceIndex__field}>

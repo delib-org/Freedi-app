@@ -6,6 +6,7 @@ import {
 	computeClusterEvaluationFromRawEvals,
 	fetchEvaluationsForIds,
 	recomputeClusterEvaluation,
+	resolveClusterPopulation,
 } from './aggregation';
 import { logError } from '../utils/errorHandling';
 
@@ -122,7 +123,11 @@ function nearlyEqual(a: number | undefined, b: number): boolean {
 /** True when the stored score differs from what the rule gives today. */
 async function hasDrifted(cluster: Statement): Promise<boolean> {
 	const evals = await fetchEvaluationsForIds(clusterVoteSourceIds(cluster.statementId, cluster));
+	// Same N as recomputeClusterEvaluation, or every cluster of a question with
+	// a declared N would look drifted on every pass.
+	const population = await resolveClusterPopulation(cluster);
 	const { evaluation } = computeClusterEvaluationFromRawEvals(evals, {
+		...population,
 		clusterStatementId: cluster.statementId,
 		absorbedClusterIds: cluster.absorbedClusterIds,
 	});

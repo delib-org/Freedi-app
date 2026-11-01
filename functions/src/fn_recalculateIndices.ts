@@ -94,9 +94,9 @@ export async function recalculateIndicesForQuestion(
 	parentData: DocumentData,
 ): Promise<RecalculateIndicesResult> {
 	{
-		// Bring the question's electorate up to date before reading it: this
-		// callable exists precisely for the case where the inputs to N changed
-		// after the votes came in, and the voter count is one of those inputs.
+		// Keep the question's participation stat (distinct voters along the
+		// chain) fresh while we are here. It does NOT feed N: N is only ever
+		// the number an admin declared (resolveStakeholderCount below).
 		await refreshChainVoters(statementId);
 
 		const topParentId = (parentData.topParentId as string | undefined) ?? statementId;
@@ -105,7 +105,7 @@ export async function recalculateIndicesForQuestion(
 				? (await db.collection(Collections.statements).doc(topParentId).get()).data()
 				: parentData;
 
-		// Same walk the evaluation trigger does, so a recalculation can never
+		// Same walk the evaluation trigger does (declared N only, else none), so a recalculation can never
 		// disagree with the number a fresh vote would have produced.
 		const parentScope = { ...parentData, evaluation: { ...parentData.evaluation } };
 		const { count: targetPopulation } = resolveStakeholderCount(

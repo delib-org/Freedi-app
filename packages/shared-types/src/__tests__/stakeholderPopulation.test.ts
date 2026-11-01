@@ -9,9 +9,11 @@ const withPopulation = (targetPopulation: number): StakeholderScope => ({
 	evaluationSettings: { targetPopulation },
 });
 
-const withVoters = (chainEvaluators: number): StakeholderScope => ({
-	evaluation: { chainEvaluators },
-});
+// chainEvaluators is a participation stat on real question docs. It is NOT part of
+// StakeholderScope any more, so the cast is deliberate: these tests prove that
+// real documents carrying it never leak into N.
+const withVoters = (chainEvaluators: number): StakeholderScope =>
+	({ evaluation: { chainEvaluators } }) as unknown as StakeholderScope;
 
 describe('resolveStakeholderCount', () => {
 	describe('when nothing is declared', () => {
@@ -19,12 +21,12 @@ describe('resolveStakeholderCount', () => {
 			// The safe default. No stakeholder set means open participation and
 			// an unbounded population, which is exactly the case the original
 			// uncorrected formula was built for.
-			expect(resolveStakeholderCount()).toEqual({ inferred: false });
-			expect(resolveStakeholderCount({}, {}, {})).toEqual({ inferred: false });
+			expect(resolveStakeholderCount()).toEqual({});
+			expect(resolveStakeholderCount({}, {}, {})).toEqual({});
 		});
 
 		it('ignores an empty evaluationSettings object', () => {
-			expect(resolveStakeholderCount({ evaluationSettings: {} })).toEqual({ inferred: false });
+			expect(resolveStakeholderCount({ evaluationSettings: {} })).toEqual({});
 		});
 	});
 
@@ -32,14 +34,13 @@ describe('resolveStakeholderCount', () => {
 		it('prefers the statement itself', () => {
 			expect(
 				resolveStakeholderCount(withPopulation(10), withPopulation(20), withPopulation(30)),
-			).toEqual({ count: 10, source: 'self', inferred: false });
+			).toEqual({ count: 10, source: 'self' });
 		});
 
 		it('falls back to the parent question', () => {
 			expect(resolveStakeholderCount({}, withPopulation(20), withPopulation(30))).toEqual({
 				count: 20,
 				source: 'parent',
-				inferred: false,
 			});
 		});
 
@@ -49,55 +50,30 @@ describe('resolveStakeholderCount', () => {
 			expect(resolveStakeholderCount({}, {}, withPopulation(500))).toEqual({
 				count: 500,
 				source: 'top',
-				inferred: false,
 			});
 		});
 	});
 
-	describe('inferring from who voted', () => {
-		it("uses the parent question's chain voter count when nothing is declared", () => {
-			expect(resolveStakeholderCount({}, withVoters(2), {})).toEqual({
-				count: 2,
-				source: 'parentVoters',
-				inferred: true,
-			});
+	describe('never inferring from who voted', () => {
+		it("does not use the parent question's chain voter count", () => {
+			expect(resolveStakeholderCount({}, withVoters(2), {}).count).toBeUndefined();
+			expect(resolveStakeholderCount({}, withVoters(2), {})).toEqual({});
 		});
 
-		it('prefers the question the option actually sits under', () => {
-			// chainEvaluators at the parent ALREADY contains the top's voters —
-			// that is what makes it a chain count — so the nearer number is the
-			// complete one, not the narrower one.
-			expect(resolveStakeholderCount({}, withVoters(9), withVoters(4))).toEqual({
-				count: 9,
-				source: 'parentVoters',
-				inferred: true,
-			});
+		it("does not use the top's voters either", () => {
+			expect(resolveStakeholderCount({}, withVoters(9), withVoters(4))).toEqual({});
+			expect(resolveStakeholderCount({}, {}, withVoters(4)).source).toBeUndefined();
 		});
 
-		it("falls back to the top's voters before giving up", () => {
-			// The window before a question's own count has ever been written.
-			expect(resolveStakeholderCount({}, {}, withVoters(4))).toEqual({
-				count: 4,
-				source: 'topVoters',
-				inferred: true,
-			});
-		});
-
-		it('lets a declaration anywhere beat an inferred count', () => {
-			// "Who showed up" and "who this decision is about" are the same
-			// number only by coincidence, so a human's answer always wins.
+		it('lets a declaration anywhere win over voter counts', () => {
 			expect(resolveStakeholderCount({}, withVoters(2), withPopulation(500))).toEqual({
 				count: 500,
 				source: 'top',
-				inferred: false,
 			});
 		});
 
 		it('never infers from the statement being voted on', () => {
-			// Self is typically the option, and chainEvaluators is a
-			// question-level fact. An option carrying one is stale data from
-			// when it was a question, not an electorate.
-			expect(resolveStakeholderCount(withVoters(3), {}, {})).toEqual({ inferred: false });
+			expect(resolveStakeholderCount(withVoters(3), {}, {})).toEqual({});
 		});
 
 		it('ignores the subscriber count entirely', () => {
@@ -105,21 +81,21 @@ describe('resolveStakeholderCount', () => {
 			// so members measure traffic. Fifteen subscribers and no votes is
 			// no electorate at all.
 			const subscribed = { numberOfMembers: 15 } as unknown as StakeholderScope;
-			expect(resolveStakeholderCount({}, subscribed, subscribed)).toEqual({ inferred: false });
+			expect(resolveStakeholderCount({}, subscribed, subscribed)).toEqual({});
 		});
 	});
 
 	describe('rejecting counts that are not real headcounts', () => {
 		it.each([0, -1, -500, NaN, Infinity, -Infinity])('rejects %p', (bad) => {
-			expect(resolveStakeholderCount(withPopulation(bad))).toEqual({ inferred: false });
-			expect(resolveStakeholderCount({}, withVoters(bad), {})).toEqual({ inferred: false });
+			expect(resolveStakeholderCount(withPopulation(bad))).toEqual({});
+			expect(resolveStakeholderCount({}, withVoters(bad), {})).toEqual({});
 		});
 
 		it('rejects a null left behind by clearing the settings field', () => {
 			const cleared = {
 				evaluationSettings: { targetPopulation: null as unknown as number },
 			};
-			expect(resolveStakeholderCount(cleared)).toEqual({ inferred: false });
+			expect(resolveStakeholderCount(cleared)).toEqual({});
 		});
 
 		it('keeps walking past an invalid declaration instead of stopping', () => {
@@ -129,7 +105,6 @@ describe('resolveStakeholderCount', () => {
 			expect(resolveStakeholderCount({}, withPopulation(0), withPopulation(500))).toEqual({
 				count: 500,
 				source: 'top',
-				inferred: false,
 			});
 		});
 	});
