@@ -890,7 +890,7 @@ export default function SolutionPromptModal({
                 onClick={handleCheckSimilar}
                 disabled={!isValid}
               >
-                {t('Add Your Idea')}
+                {t('Add Your Answer')}
               </button>
               <span className={styles.orSeparator}>— {t('or')} —</span>
               <button
