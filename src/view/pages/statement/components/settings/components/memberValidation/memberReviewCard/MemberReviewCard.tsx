@@ -31,7 +31,7 @@ const MemberReviewCard: FC<Props> = ({
 
 	const getRoleBadge = () => {
 		if (member.role === Role.admin) {
-			return <span className={`${styles.badge} ${styles.admin}`}>{t('Admin')}</span>;
+			return <span className={`${styles.badge} ${styles.admin}`}>{t('people.role.host')}</span>;
 		}
 		if (member.role === Role.creator || statement.creator?.uid === member.userId) {
 			return <span className={`${styles.badge} ${styles.creator}`}>{t('Creator')}</span>;
@@ -43,13 +43,27 @@ const MemberReviewCard: FC<Props> = ({
 	const getStatusBadge = () => {
 		switch (member.status) {
 			case 'approved':
-				return <span className={`${styles.badge} ${styles.approved}`}>✓ {t('Approved')}</span>;
+				return (
+					<span className={`${styles.badge} ${styles.approved}`}>
+						✓ {t('people.entry.approved')}
+					</span>
+				);
 			case 'flagged':
-				return <span className={`${styles.badge} ${styles.flagged}`}>⚠ {t('Flagged')}</span>;
+				return (
+					<span className={`${styles.badge} ${styles.flagged}`}>
+						⚠ {t('people.entry.flagged')}
+					</span>
+				);
 			case 'banned':
-				return <span className={`${styles.badge} ${styles.banned}`}>🚫 {t('Banned')}</span>;
+				return (
+					<span className={`${styles.badge} ${styles.banned}`}>🚫 {t('people.entry.blocked')}</span>
+				);
 			default:
-				return <span className={`${styles.badge} ${styles.pending}`}>⏳ {t('Pending')}</span>;
+				return (
+					<span className={`${styles.badge} ${styles.pending}`}>
+						⏳ {t('people.entry.waitingReview')}
+					</span>
+				);
 		}
 	};
 

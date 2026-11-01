@@ -363,7 +363,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						{/* Group 5 — People (the hub has its own People section) */}
 						{!isHub && (
 							<SettingsSection
-								title={t('Members & Access')}
+								title={t('host.people')}
 								description={t('Who can see this question and who runs it')}
 								icon={Shield}
 								priority="high"

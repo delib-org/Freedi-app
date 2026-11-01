@@ -49,10 +49,10 @@ const MemberFilters: FC<MemberFiltersProps> = ({
 	}, []);
 
 	const filterTabs = [
-		{ id: 'all', label: t('All'), count: memberCounts.all },
-		{ id: Role.admin, label: t('Admin'), count: memberCounts.admin },
-		{ id: Role.member, label: t('Member'), count: memberCounts.member },
-		{ id: Role.banned, label: t('Banned'), count: memberCounts.banned },
+		{ id: 'all', label: t('people.filter.all'), count: memberCounts.all },
+		{ id: Role.admin, label: t('people.hosts'), count: memberCounts.admin },
+		{ id: Role.member, label: t('people.members'), count: memberCounts.member },
+		{ id: Role.banned, label: t('people.role.banned'), count: memberCounts.banned },
 	];
 
 	return (
@@ -76,10 +76,10 @@ const MemberFilters: FC<MemberFiltersProps> = ({
 					id="memberSearch"
 					type="text"
 					className={styles.searchInput}
-					placeholder={t('Search members by name...')}
+					placeholder={t('people.searchMembers')}
 					value={searchTerm}
 					onChange={handleSearchChange}
-					aria-label={t('Search members')}
+					aria-label={t('people.searchMembers')}
 					aria-describedby="searchHelp"
 				/>
 
@@ -100,7 +100,7 @@ const MemberFilters: FC<MemberFiltersProps> = ({
 				</span>
 			</div>
 
-			<div className={styles.roleFilters} role="tablist" aria-label={t('Filter members by role')}>
+			<div className={styles.roleFilters} role="tablist" aria-label={t('people.filterMembers')}>
 				{filterTabs.map((tab) => (
 					<button
 						key={tab.id}

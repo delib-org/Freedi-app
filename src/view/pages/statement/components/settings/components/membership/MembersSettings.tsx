@@ -92,14 +92,14 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 	return (
 		<div className={styles.membersSettings}>
 			<button className={styles.linkAnonymous} onClick={() => handleShare(statement)}>
-				{t('Send a link to anonymous users')}
+				{t('people.inviteLink')}
 				<ShareIcon />
 			</button>
 			<div className="upload-waiting-list">
 				<SetWaitingList />
 			</div>
 			<div className="title">
-				{t('Joined members')} ({`${userCount}`})
+				{t('people.members')} ({`${userCount}`})
 			</div>
 			<div className={styles.membersBox}>
 				{joinedMembers.map((member) => (
@@ -108,7 +108,7 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 			</div>
 
 			<div className="title">
-				{t('Banned users')} ({bannedUser.length})
+				{t('people.role.banned')} ({bannedUser.length})
 			</div>
 			<div className={styles.membersBox}>
 				{bannedUser.map((member) => (

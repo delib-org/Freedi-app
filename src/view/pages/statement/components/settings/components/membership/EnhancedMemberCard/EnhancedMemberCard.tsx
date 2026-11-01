@@ -129,7 +129,7 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 		<article
 			className={`${styles.memberCard} ${isBanned ? styles['memberCard--banned'] : ''}`}
 			role="article"
-			aria-label={`${t('Member')}: ${displayName}, ${t('Role')}: ${role}`}
+			aria-label={displayName}
 		>
 			<div className={styles.avatar}>
 				{displayImg ? (
@@ -146,11 +146,12 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 			<div className={styles.info}>
 				<div className={styles.name}>{highlightedName}</div>
 				<div className={styles.metadata}>
-					<span
-						className={`${styles.roleBadge} ${styles[`roleBadge--${role}`]}`}
-						aria-label={`${t('Role')}: ${role}`}
-					>
-						{role === Role.admin ? t('Admin') : role === Role.banned ? t('Banned') : t('Member')}
+					<span className={`${styles.roleBadge} ${styles[`roleBadge--${role}`]}`}>
+						{role === Role.admin
+							? t('people.role.host')
+							: role === Role.banned
+								? t('people.entry.blocked')
+								: t('people.role.member')}
 					</span>
 					{joinDate && (
 						<span className={styles.joinDate}>
@@ -166,8 +167,8 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 						className={styles.unbanButton}
 						onClick={handleToggleBan}
 						disabled={isUpdating}
-						aria-label={t('Unban member')}
-						title={t('Unban member')}
+						aria-label={t('people.unblock')}
+						title={t('people.unblock')}
 					>
 						<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
 							<path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
@@ -179,8 +180,8 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 							className={`${styles.adminToggle} ${isAdmin ? styles['adminToggle--active'] : ''}`}
 							onClick={handleToggleRole}
 							disabled={isUpdating}
-							aria-label={isAdmin ? t('Remove admin') : t('Make admin')}
-							title={isAdmin ? t('Remove admin') : t('Make admin')}
+							aria-label={isAdmin ? t('people.removeHost') : t('people.makeHost')}
+							title={isAdmin ? t('people.removeHost') : t('people.makeHost')}
 							aria-pressed={isAdmin}
 						>
 							<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
@@ -196,8 +197,8 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 							className={styles.banToggle}
 							onClick={handleToggleBan}
 							disabled={!userCanBeBanned || isUpdating}
-							aria-label={t('Ban member')}
-							title={banDisabledReason || t('Ban member')}
+							aria-label={t('people.block')}
+							title={banDisabledReason || t('people.block')}
 						>
 							<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
 								<path

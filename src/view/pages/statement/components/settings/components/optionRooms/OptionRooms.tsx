@@ -179,7 +179,7 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 
 	return (
 		<SettingsSection
-			title={t('Option Rooms')}
+			title={t('Rooms')}
 			description={t('Configure how participants group around options')}
 			icon={Users}
 			priority="medium"

@@ -95,7 +95,7 @@ const AdminsManagement: FC<AdminsManagementProps> = ({ statement }) => {
 	return (
 		<div className={styles.adminsManagement}>
 			<h3 className={styles.adminsManagement__subtitle}>
-				{t('Current admins')} ({admins.length})
+				{t('people.hosts')} ({admins.length})
 			</h3>
 			<ul className={styles.adminsManagement__list}>
 				{admins.map((admin) => {
@@ -109,7 +109,9 @@ const AdminsManagement: FC<AdminsManagementProps> = ({ statement }) => {
 								{isCreatorRow && (
 									<span className={styles.adminsManagement__badge}>{t('Creator')}</span>
 								)}
-								{isSelf && <span className={styles.adminsManagement__badge}>{t('You')}</span>}
+								{isSelf && (
+									<span className={styles.adminsManagement__badge}>{t('people.role.you')}</span>
+								)}
 							</span>
 							{!isCreatorRow && !isSelf && (
 								<button
@@ -117,9 +119,9 @@ const AdminsManagement: FC<AdminsManagementProps> = ({ statement }) => {
 									className={styles['adminsManagement__button--demote']}
 									onClick={() => handleRoleChange(admin.user?.uid, Role.member)}
 									disabled={updatingUserId !== null}
-									aria-label={`${t('Remove admin')}: ${admin.user?.displayName}`}
+									aria-label={`${t('people.removeHost')}: ${admin.user?.displayName}`}
 								>
-									{t('Remove admin')}
+									{t('people.removeHost')}
 								</button>
 							)}
 						</li>
@@ -127,12 +129,9 @@ const AdminsManagement: FC<AdminsManagementProps> = ({ statement }) => {
 				})}
 			</ul>
 
-			<h3 className={styles.adminsManagement__subtitle}>{t('Promote a member to admin')}</h3>
+			<h3 className={styles.adminsManagement__subtitle}>{t('people.makeMemberHost')}</h3>
 			{regularMembers.length === 0 ? (
-				<p className={styles.adminsManagement__hint}>
-					{t('No members to promote yet')}.{' '}
-					{t('Share the invitation link so people can join, then promote them to admin here')}
-				</p>
+				<p className={styles.adminsManagement__hint}>{t('people.noOneToPromote')}</p>
 			) : (
 				<>
 					<input
@@ -140,8 +139,8 @@ const AdminsManagement: FC<AdminsManagementProps> = ({ statement }) => {
 						className={styles.adminsManagement__search}
 						value={searchTerm}
 						onChange={(e) => setSearchTerm(e.target.value)}
-						placeholder={t('Search members by name')}
-						aria-label={t('Search members by name')}
+						placeholder={t('people.searchMembers')}
+						aria-label={t('people.searchMembers')}
 					/>
 					{promotableMembers.length === 0 ? (
 						<p className={styles.adminsManagement__hint}>{t('No members match your search')}</p>
@@ -155,9 +154,9 @@ const AdminsManagement: FC<AdminsManagementProps> = ({ statement }) => {
 										className={styles['adminsManagement__button--promote']}
 										onClick={() => handleRoleChange(member.user?.uid, Role.admin)}
 										disabled={updatingUserId !== null}
-										aria-label={`${t('Make admin')}: ${member.user?.displayName}`}
+										aria-label={`${t('people.makeHost')}: ${member.user?.displayName}`}
 									>
-										{t('Make admin')}
+										{t('people.makeHost')}
 									</button>
 								</li>
 							))}

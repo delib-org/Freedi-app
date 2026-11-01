@@ -54,11 +54,11 @@ const WaitingList = () => {
 						<img src={closeList} alt="Close" />
 					</button>
 
-					<h3 className={styles.listTitle}>{t('Waiting List')}</h3>
+					<h3 className={styles.listTitle}>{t('people.waiting')}</h3>
 
 					<div className={styles.selectAllWrapper}>
 						<Checkbox
-							label={allSelected ? 'Deselect All' : 'Select All'}
+							label={t('people.selectAll')}
 							isChecked={allSelected}
 							onChange={toggleSelectAll}
 							className={styles.reverseCheckboxLayout}
@@ -68,10 +68,10 @@ const WaitingList = () => {
 					{selectedIds.length === waitingList.length && (
 						<div className={waitingStyles.actions}>
 							<button className={waitingStyles.approveBtn} onClick={handleApproveAll}>
-								{t('Approve All')}
+								{t('people.letIn')}
 							</button>
 							<button className={waitingStyles.rejectBtn} onClick={handleDenyAll}>
-								{t('Deny All')}
+								{t('people.decline')}
 							</button>
 						</div>
 					)}

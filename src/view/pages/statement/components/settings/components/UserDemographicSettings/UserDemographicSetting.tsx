@@ -252,7 +252,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 
 	return (
 		<div>
-			<SectionTitle title={t('Member Information')} />
+			<SectionTitle title={t('people.joinQuestions')} />
 			<div className="btns">
 				<button className="btn btn--secondary" onClick={() => setShowModal(true)}>
 					{t('Survey')}

@@ -3,6 +3,7 @@ import styles from './FilteredMembersList.module.scss';
 import { StatementSubscription, Role } from '@freedi/shared-types';
 import MemberCard from '../EnhancedMemberCard/EnhancedMemberCard';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { fillPlaceholders } from '@/helpers/fillPlaceholders';
 
 interface FilteredMembersListProps {
 	members: StatementSubscription[];
@@ -104,10 +105,10 @@ const FilteredMembersList: FC<FilteredMembersListProps> = ({
 					{searchTerm
 						? t('No members found')
 						: roleFilter === Role.banned
-							? t('No banned users')
+							? t('people.blocked.empty')
 							: roleFilter === Role.admin
-								? t('No admins')
-								: t('No members yet')}
+								? t('people.hosts.empty')
+								: t('people.members.empty')}
 				</h3>
 				<p className={styles.emptyDescription}>
 					{searchTerm
@@ -155,16 +156,20 @@ const FilteredMembersList: FC<FilteredMembersListProps> = ({
 						className={styles.loadMoreButton}
 						onClick={handleLoadMore}
 						disabled={isLoading}
-						aria-label={t('Load more members')}
+						aria-label={fillPlaceholders(t('people.showMore'), {
+							count: Math.min(loadMoreCount, remainingCount),
+						})}
 					>
 						{isLoading && <span className={styles.spinner} />}
 						<span>
 							{isLoading
 								? t('Loading...')
-								: `${t('Load More')} (${remainingCount} ${t('remaining')})`}
+								: fillPlaceholders(t('people.showMore'), {
+										count: Math.min(loadMoreCount, remainingCount),
+									})}
 						</span>
 					</button>
-					{isLoading && <p className={styles.loadingText}>{t('Loading more members...')}</p>}
+					{isLoading && <p className={styles.loadingText}>{t('people.loadingMore')}</p>}
 				</div>
 			)}
 		</div>

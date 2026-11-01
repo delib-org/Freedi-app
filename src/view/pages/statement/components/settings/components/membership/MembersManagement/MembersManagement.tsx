@@ -10,6 +10,7 @@ import MemberFilters from '../MemberFilters/MemberFilters';
 import FilteredMembersList from '../FilteredMembersList/FilteredMembersList';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
 import { logError } from '@/utils/errorHandling';
+import { fillPlaceholders } from '@/helpers/fillPlaceholders';
 
 interface MembersManagementProps {
 	statement: Statement;
@@ -106,17 +107,19 @@ const MembersManagement: FC<MembersManagementProps> = ({ statement }) => {
 			{/* Header Section */}
 			<div className={styles.header}>
 				<div className={styles.headerInfo}>
-					<h2 className={styles.title}>{t('Member Management')}</h2>
-					<p className={styles.memberCount}>{`${members.length} ${t('total members')}`}</p>
+					<h2 className={styles.title}>{t('people.members')}</h2>
+					<p className={styles.memberCount}>
+						{fillPlaceholders(t('people.summary.members'), { count: members.length })}
+					</p>
 				</div>
 
 				<button
 					className={styles.shareButton}
 					onClick={handleShare}
-					aria-label={t('Share invitation link')}
+					aria-label={t('people.inviteLink')}
 				>
 					<ShareIcon />
-					<span>{t('Invite')}</span>
+					<span>{t('people.inviteLink')}</span>
 				</button>
 			</div>
 
@@ -124,15 +127,15 @@ const MembersManagement: FC<MembersManagementProps> = ({ statement }) => {
 			<div className={styles.statsCards}>
 				<div className={styles.statCard}>
 					<div className={styles.statNumber}>{memberCounts.admin}</div>
-					<div className={styles.statLabel}>{t('Admins')}</div>
+					<div className={styles.statLabel}>{t('people.hosts')}</div>
 				</div>
 				<div className={styles.statCard}>
 					<div className={styles.statNumber}>{memberCounts.member}</div>
-					<div className={styles.statLabel}>{t('Members')}</div>
+					<div className={styles.statLabel}>{t('people.members')}</div>
 				</div>
 				<div className={styles.statCard}>
 					<div className={styles.statNumber}>{memberCounts.banned}</div>
-					<div className={styles.statLabel}>{t('Banned')}</div>
+					<div className={styles.statLabel}>{t('people.role.banned')}</div>
 				</div>
 			</div>
 

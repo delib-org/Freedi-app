@@ -74,10 +74,10 @@ const ApproveMember: FC<Props> = ({ wait, isChecked, onCheckChange }) => {
 
 					<div className={styles.actions}>
 						<button className={styles.approveBtn} onClick={handleApprove}>
-							{t('Approve')}
+							{t('people.letIn')}
 						</button>
 						<button className={styles.rejectBtn} onClick={handleReject}>
-							{t('Deny')}
+							{t('people.decline')}
 						</button>
 					</div>
 				</div>

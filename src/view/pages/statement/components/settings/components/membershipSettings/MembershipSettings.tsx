@@ -9,6 +9,8 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import styles from './MembershipSettings.module.scss';
 import { logError } from '@/utils/errorHandling';
+import { accessCopyKeys, SELECTABLE_ACCESS_LEVELS } from '@/helpers/peopleLabels';
+import { fillPlaceholders } from '@/helpers/fillPlaceholders';
 
 interface Props {
 	statement: Statement;
@@ -144,31 +146,16 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 		}
 	};
 
-	const getAccessLabel = (access: Access): string => {
-		switch (access) {
-			case Access.public:
-				return t('Public');
-			case Access.openToAll:
-				return t('Open to all');
-			case Access.openForRegistered:
-				return t('Open for registered members');
-			case Access.moderated:
-				return t('Moderated');
-			case Access.secret:
-				return t('Secret');
-			default:
-				return t('Open to all');
-		}
-	};
+	const getAccessLabel = (access: Access): string => t(accessCopyKeys(access).label);
 
 	return (
 		<div className={styles.membershipSettings}>
-			<SectionTitle title={t('Membership Settings')} />
+			<SectionTitle title={t('people.whoCanJoin')} />
 
 			{!isTopLevel && (
 				<div className={styles.inheritSection}>
 					<Checkbox
-						label={t('Inherit from parent group')}
+						label={t('people.sameAsGroup')}
 						isChecked={inheritAccess}
 						onChange={handleInheritChange}
 						className={styles.inheritCheckbox}
@@ -176,11 +163,12 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 
 					{inheritAccess && (
 						<div className={styles.inheritedInfo}>
-							<span className={styles.label}>{t('Inherited access level')}:</span>
-							<span className={styles.value}>{getAccessLabel(inheritedAccess)}</span>
+							<span className={styles.value}>
+								{fillPlaceholders(t('people.groupIs'), { value: getAccessLabel(inheritedAccess) })}
+							</span>
 							{topParentStatement && (
 								<span className={styles.source}>
-									{t('from')}: {topParentStatement.statement}
+									{fillPlaceholders(t('people.setInGroup'), { name: topParentStatement.statement })}
 								</span>
 							)}
 						</div>
@@ -190,39 +178,13 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 
 			{(isTopLevel || !inheritAccess) && (
 				<div className={styles.accessSelector}>
-					{!isTopLevel && (
-						<div className={styles.overrideLabel}>
-							{t('Set specific access level for this statement')}:
-						</div>
-					)}
+					{!isTopLevel && <div className={styles.overrideLabel}>{t('people.changeHere')}</div>}
 					<MultiSwitch
-						options={[
-							{
-								label: t('Public'),
-								toolTip: t('Anyone can view and interact without login'),
-								value: Access.public as string,
-							},
-							{
-								label: t('Open to all'),
-								toolTip: t('Anyone can join the group'),
-								value: Access.openToAll as string,
-							},
-							{
-								label: t('Registered'),
-								toolTip: t('Only registered members can join'),
-								value: Access.openForRegistered as string,
-							},
-							{
-								label: t('Moderated'),
-								toolTip: t('Requires approval to join'),
-								value: Access.moderated as string,
-							},
-							{
-								label: t('Secret'),
-								toolTip: t('Invitation only'),
-								value: Access.secret as string,
-							},
-						]}
+						options={SELECTABLE_ACCESS_LEVELS.map((access) => ({
+							label: t(accessCopyKeys(access).label),
+							toolTip: t(accessCopyKeys(access).hint),
+							value: access as string,
+						}))}
 						currentValue={membershipAccess as string}
 						onClick={(newValue) => {
 							console.info('MultiSwitch onClick value:', newValue, 'type:', typeof newValue);

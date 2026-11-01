@@ -9,6 +9,7 @@ import { getUserDemographicResponses } from '@/controllers/db/userDemographic/ge
 import { saveMemberValidationStatus } from '@/controllers/db/memberValidation/memberValidationStatus';
 import { store } from '@/redux/store';
 import { logError } from '@/utils/errorHandling';
+import { fillPlaceholders } from '@/helpers/fillPlaceholders';
 
 interface Props {
 	statement: Statement;
@@ -118,48 +119,49 @@ const MemberValidation: FC<Props> = ({ statement }) => {
 
 	return (
 		<div>
-			<SectionTitle title={t('Member Validation')} />
+			<SectionTitle title={t('people.entryCheck')} />
 			<div className="btns">
 				<button className="btn btn--secondary" onClick={() => setShowModal(true)}>
-					{t('Review Members')} ({counts.pending} pending)
+					{t('people.reviewAnswers')} ·{' '}
+					{fillPlaceholders(t('people.toReview'), { count: counts.pending })}
 				</button>
 			</div>
 
 			{showModal && (
 				<SettingsModal closeModal={closeModal} isFullScreen={true} customCloseWord={t('Close')}>
 					<div className={styles.memberValidation}>
-						<h2>{t('Member Validation & Review')}</h2>
+						<h2>{t('people.entryCheck')}</h2>
 
 						<div className={styles.filterTabs}>
 							<button
 								className={filter === 'all' ? styles.active : ''}
 								onClick={() => setFilter('all')}
 							>
-								{t('All')} ({counts.all})
+								{t('people.filter.all')} ({counts.all})
 							</button>
 							<button
 								className={filter === 'pending' ? styles.active : ''}
 								onClick={() => setFilter('pending')}
 							>
-								{t('Pending')} ({counts.pending})
+								{t('people.entry.waitingReview')} ({counts.pending})
 							</button>
 							<button
 								className={filter === 'flagged' ? styles.active : ''}
 								onClick={() => setFilter('flagged')}
 							>
-								{t('Flagged')} ({counts.flagged})
+								{t('people.entry.flagged')} ({counts.flagged})
 							</button>
 							<button
 								className={filter === 'approved' ? styles.active : ''}
 								onClick={() => setFilter('approved')}
 							>
-								{t('Approved')} ({counts.approved})
+								{t('people.entry.approved')} ({counts.approved})
 							</button>
 							<button
 								className={filter === 'banned' ? styles.active : ''}
 								onClick={() => setFilter('banned')}
 							>
-								{t('Banned')} ({counts.banned})
+								{t('people.entry.blocked')} ({counts.banned})
 							</button>
 						</div>
 
