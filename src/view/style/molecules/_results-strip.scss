@@ -119,7 +119,7 @@
 			}
 
 			// A negative headline is a caution, not an achievement.
-			&--primary#{&}--negative {
+			&--primary.results-strip__item--negative {
 				background: var(--bg-sunken);
 				border-color: var(--score-negative-ink);
 			}
