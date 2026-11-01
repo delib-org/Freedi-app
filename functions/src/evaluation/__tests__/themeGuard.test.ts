@@ -31,10 +31,11 @@ describe('dropEvaluationOnTheme', () => {
 		expect(mockDelete).toHaveBeenCalledTimes(1);
 	});
 
-	it('treats a legacy cluster without derivedByPipeline as a theme', async () => {
+	it('keeps a manual merge (cluster without derivedByPipeline) votable', async () => {
 		target({ isCluster: true });
 
-		await expect(dropEvaluationOnTheme(snapshot, 't1', 'ev-1')).resolves.toBe(true);
+		await expect(dropEvaluationOnTheme(snapshot, 't1', 'ev-1')).resolves.toBe(false);
+		expect(mockDelete).not.toHaveBeenCalled();
 	});
 
 	it('lets a synthesis through untouched', async () => {

@@ -96,4 +96,25 @@ describe('GroupedSuggestionCard (theme)', () => {
 
 		expect(screen.queryByTestId('evaluation-control')).toBeNull();
 	});
+
+	it('keeps the evaluation control for a merged answer (cluster without a pipeline)', () => {
+		const merged = {
+			...SYNTHESIS,
+			statementId: 'merged1',
+			isCluster: true,
+			derivedByPipeline: undefined,
+		} as unknown as Statement;
+		render(
+			<MemoryRouter>
+				<GroupedSuggestionCard
+					cluster={merged}
+					mode="both"
+					allowDrillToOriginals
+					evaluationSlot={<div data-testid="evaluation-control" />}
+				/>
+			</MemoryRouter>,
+		);
+
+		expect(screen.getByTestId('evaluation-control')).toBeTruthy();
+	});
 });

@@ -1,7 +1,7 @@
 /**
  * Defence in depth for "themes cannot be voted on".
  *
- * Themes (clusters that are not syntheses) are navigation containers; their
+ * Themes (clusters stamped derivedByPipeline "topic-cluster") are navigation containers; their
  * numbers are roll-ups of their members. The clients no longer offer a vote
  * on a theme, but a stale client or a direct write could still create one.
  * The evaluation triggers call this before anything is counted: a stray
