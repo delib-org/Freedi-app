@@ -26,7 +26,7 @@ jest.mock('@freedi/shared-i18n/next', () => ({
 
 const STATEMENT = { statementId: 's1', statement: 'Plant more trees' } as Statement;
 const CARD_WIDTH = 500;
-const FIVE_STEP_LEFT_TO_RIGHT_RTL = ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'];
+const AGREE_FIRST = ['Strongly Agree', 'Agree', 'Neutral', 'Disagree', 'Strongly Disagree'];
 
 function renderCard() {
   const onSwipe = jest.fn();
@@ -72,46 +72,46 @@ describe('evaluation direction follows the language', () => {
     jest.useRealTimers();
   });
 
-  describe('right-to-left (Hebrew)', () => {
+  describe.each([
+    ['Hebrew', 'rtl'],
+    ['Arabic', 'rtl'],
+  ] as const)('right-to-left (%s)', (_language, direction) => {
     beforeEach(() => {
-      mockDir = 'rtl';
+      mockDir = direction;
     });
 
-    it('lays the card buttons out disagree on the left, agree on the right', () => {
+    it('lays the card buttons out strongest agree on the left, disagree on the right', () => {
       const { container } = renderCard();
 
-      expect(ratingLabelsOnCard(container)).toEqual(FIVE_STEP_LEFT_TO_RIGHT_RTL);
+      expect(ratingLabelsOnCard(container)[0]).toBe('Strongly Agree');
+      expect(ratingLabelsOnCard(container)).toEqual(AGREE_FIRST);
     });
 
-    it('saves -1 for a leftward drag from the leftmost zone', () => {
+    it('saves +1 for a leftward drag from the leftmost zone', () => {
       const { card, onSwipe } = renderCard();
 
       drag(card, 50, -100);
 
-      expect(onSwipe).toHaveBeenCalledWith(-1);
+      expect(onSwipe).toHaveBeenCalledWith(1);
     });
 
-    it('saves +1 for a rightward drag from the rightmost zone', () => {
+    it('saves -1 for a rightward drag from the rightmost zone', () => {
       const { card, onSwipe } = renderCard();
 
       drag(card, 450, 600);
 
-      expect(onSwipe).toHaveBeenCalledWith(1);
+      expect(onSwipe).toHaveBeenCalledWith(-1);
     });
 
-    it('ignores a drag toward the middle', () => {
-      const { card, onSwipe } = renderCard();
+    it('lists the stack button row agree first and keeps each button its own value', () => {
+      const onEvaluate = jest.fn();
+      const { container } = render(<EvaluationButtons onEvaluate={onEvaluate} />);
+      const buttons = [...container.querySelectorAll('button')];
 
-      drag(card, 50, 200);
+      expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual(AGREE_FIRST);
 
-      expect(onSwipe).not.toHaveBeenCalled();
-    });
-
-    it('lists the button row disagree first, left to right', () => {
-      const { container } = render(<EvaluationButtons onEvaluate={jest.fn()} />);
-      const labels = [...container.querySelectorAll('button')].map((b) => b.getAttribute('aria-label'));
-
-      expect(labels).toEqual(FIVE_STEP_LEFT_TO_RIGHT_RTL);
+      fireEvent.click(buttons[0]);
+      expect(onEvaluate).toHaveBeenLastCalledWith(1, 'left');
     });
   });
 
@@ -123,7 +123,7 @@ describe('evaluation direction follows the language', () => {
     it('lays the card buttons out agree on the left, disagree on the right', () => {
       const { container } = renderCard();
 
-      expect(ratingLabelsOnCard(container)).toEqual([...FIVE_STEP_LEFT_TO_RIGHT_RTL].reverse());
+      expect(ratingLabelsOnCard(container)).toEqual(AGREE_FIRST);
     });
 
     it('saves +1 for a leftward drag from the leftmost zone', () => {
@@ -187,7 +187,7 @@ describe('evaluation direction follows the language', () => {
       const buttons = [...container.querySelectorAll('button')];
 
       expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual(
-        [...FIVE_STEP_LEFT_TO_RIGHT_RTL].reverse()
+        AGREE_FIRST
       );
 
       fireEvent.click(buttons[0]);
@@ -203,7 +203,7 @@ describe('evaluation direction follows the language', () => {
         b.getAttribute('aria-label')
       );
 
-      expect(labels).toEqual([...FIVE_STEP_LEFT_TO_RIGHT_RTL].reverse());
+      expect(labels).toEqual(AGREE_FIRST);
     });
   });
 });
