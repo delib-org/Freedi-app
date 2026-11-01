@@ -4627,5 +4627,7 @@
   "undo": "تراجع",
   "cancel": "إلغاء",
   "suggestedQuestions": "مقترحة (من السؤال الأصل نفسه)",
-  "recentlyRemovedQuestions": "أُزيلت مؤخرًا"
+  "recentlyRemovedQuestions": "أُزيلت مؤخرًا",
+  "similarByMeaning": "متشابهة في المعنى",
+  "searchingBySimilarMeaning": "جارٍ البحث عن أسئلة مشابهة..."
 }

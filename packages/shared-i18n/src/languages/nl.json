@@ -4508,5 +4508,7 @@
   "undo": "Ongedaan maken",
   "cancel": "Annuleren",
   "suggestedQuestions": "Voorgesteld (van dezelfde bovenliggende vraag)",
-  "recentlyRemovedQuestions": "Onlangs verwijderd"
+  "recentlyRemovedQuestions": "Onlangs verwijderd",
+  "similarByMeaning": "Vergelijkbaar qua betekenis",
+  "searchingBySimilarMeaning": "Zoeken naar vergelijkbare vragen..."
 }

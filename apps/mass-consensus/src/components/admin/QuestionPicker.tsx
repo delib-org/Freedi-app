@@ -10,6 +10,8 @@ import { logError, httpErrorFromResponse } from '@/lib/utils/errorHandling';
 import { UI } from '@/constants/common';
 import { useSuggestedQuestions } from './useSuggestedQuestions';
 import { useRemovedQuestions } from './useRemovedQuestions';
+import { useSimilarByMeaning } from './useSimilarByMeaning';
+import { selectMeaningSuggestions } from './suggestedQuestions';
 import { useAccessibleQuestions } from './useAccessibleQuestions';
 import { filterQuestionsBySearch } from './questionSearchFilter';
 import styles from './Admin.module.scss';
@@ -49,6 +51,8 @@ export default function QuestionPicker({
   const [searchQuery, setSearchQuery] = useState('');
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
+  const meaning = useSimilarByMeaning(searchQuery);
+  const meaningRows = selectMeaningSuggestions(meaning.questions, questions, selectedQuestions);
   const removedQuestions = useRemovedQuestions(removedQuestionIds);
   const suggestedQuestions = useSuggestedQuestions(selectedQuestions).filter(
     (q) => !removedQuestionIds.includes(q.statementId)
@@ -343,6 +347,33 @@ export default function QuestionPicker({
             </button>
           )}
         </>
+      )}
+
+      {!loading && (meaning.loading || meaningRows.length > 0) && (
+        <div className={styles.suggestedSection}>
+          <h3 className={styles.suggestedTitle}>{t('similarByMeaning')}</h3>
+          {meaning.loading ? (
+            <p className={styles.suggestedTitle}>{t('searchingBySimilarMeaning')}</p>
+          ) : (
+            <div className={styles.questionList}>
+              {meaningRows.map((question) => (
+                <div
+                  key={question.statementId}
+                  className={styles.questionItem}
+                  onClick={() => handleToggleQuestion(question)}
+                >
+                  <input
+                    type="checkbox"
+                    className={styles.questionCheckbox}
+                    checked={false}
+                    onChange={() => handleToggleQuestion(question)}
+                  />
+                  <span className={styles.questionText}>{question.statement}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--text-muted, #666)' }}>

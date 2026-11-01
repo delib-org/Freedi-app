@@ -4508,5 +4508,7 @@
   "undo": "Deshacer",
   "cancel": "Cancelar",
   "suggestedQuestions": "Sugeridas (del mismo padre)",
-  "recentlyRemovedQuestions": "Eliminadas recientemente"
+  "recentlyRemovedQuestions": "Eliminadas recientemente",
+  "similarByMeaning": "Similares por significado",
+  "searchingBySimilarMeaning": "Buscando preguntas similares..."
 }

@@ -3,6 +3,25 @@ import { Statement, StatementType } from '@freedi/shared-types';
 /** Parent id used by top-level statements; it is not a real statement to suggest */
 const TOP_PARENT_ID = 'top';
 
+/**
+ * "Similar by meaning" rows: the meaning matches minus anything already shown
+ * as a text match or already selected (deduped, rank order kept).
+ */
+export function selectMeaningSuggestions(
+  meaningMatches: Statement[],
+  textMatches: Statement[],
+  selectedQuestions: Statement[]
+): Statement[] {
+  const hidden = new Set([...textMatches, ...selectedQuestions].map((q) => q.statementId));
+
+  return meaningMatches.filter((q) => {
+    if (hidden.has(q.statementId)) return false;
+    hidden.add(q.statementId);
+
+    return true;
+  });
+}
+
 /** The distinct parent ids of the selected questions (what to look up siblings of) */
 export function getSuggestionParentIds(selectedQuestions: Statement[]): string[] {
   const ids = new Set<string>();

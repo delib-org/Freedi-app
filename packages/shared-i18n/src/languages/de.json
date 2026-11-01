@@ -4508,5 +4508,7 @@
   "undo": "Rückgängig",
   "cancel": "Abbrechen",
   "suggestedQuestions": "Vorgeschlagen (vom selben Elternteil)",
-  "recentlyRemovedQuestions": "Kürzlich entfernt"
+  "recentlyRemovedQuestions": "Kürzlich entfernt",
+  "similarByMeaning": "Inhaltlich ähnlich",
+  "searchingBySimilarMeaning": "Suche ähnliche Fragen..."
 }

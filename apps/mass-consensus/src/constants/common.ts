@@ -30,6 +30,8 @@ export const UI = {
   AUTOSAVE_DELAY: 800,
   /** How long the "participants can't add options" notice stays up */
   ADD_DISABLED_TOAST_MS: 5000,
+  /** Quiet time before the picker asks for "Similar by meaning" (each call costs an embedding) */
+  MEANING_SEARCH_DEBOUNCE: 600,
   /** How long the "Undo" toast stays up after a survey question is removed */
   UNDO_REMOVE_TOAST_MS: 10000,
 } as const;
