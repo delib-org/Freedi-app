@@ -4551,7 +4551,7 @@
   "people.nSelected": "{{count}} ausgewählt",
   "people.clearSelection": "Leeren",
   "people.declineN.title": "{{count}} Personen ablehnen?",
-  "people.declineN.body": "Sie werden für diesen Bereich gesperrt. Unter Mitglieder können Sie die Sperre aufheben.",
+  "people.declineN.body": "Sie können erneut um Beitritt bitten.",
   "people.declineN.confirm": "{{count}} ablehnen",
   "people.letInToast": "{{name}} hereingelassen",
   "people.declinedToast": "{{name}} abgelehnt",

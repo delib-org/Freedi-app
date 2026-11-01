@@ -4551,7 +4551,7 @@
   "people.nSelected": "{{count}} seleccionados",
   "people.clearSelection": "Borrar",
   "people.declineN.title": "¿Rechazar a {{count}} personas?",
-  "people.declineN.body": "Quedarán bloqueados en este espacio. Puedes desbloquearlos en Miembros.",
+  "people.declineN.body": "Pueden volver a pedir unirse.",
   "people.declineN.confirm": "Rechazar {{count}}",
   "people.letInToast": "{{name}} pudo entrar",
   "people.declinedToast": "{{name}} rechazado",

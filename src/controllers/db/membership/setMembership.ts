@@ -5,6 +5,12 @@ import { doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { logError } from '@/utils/errorHandling';
 import { updateMemberRole } from '../subscriptions/setSubscriptions';
 
+/**
+ * Let in (member) or Decline. Decline is not a block: the person becomes
+ * unsubscribed, so a later visit asks to join again (the role → waiting
+ * trigger re-creates their awaitingUsers entry). Block is the only path to
+ * Role.banned.
+ */
 export async function approveMembership(waitingMember: WaitingMember, accept: boolean) {
 	try {
 		parse(WaitingMemberSchema, waitingMember);
@@ -14,7 +20,7 @@ export async function approveMembership(waitingMember: WaitingMember, accept: bo
 			waitingMember.statementsSubscribeId,
 		);
 		await updateDoc(waitingMembersRef, {
-			role: accept ? Role.member : Role.banned, // Update the role to 'member' or whatever is appropriate
+			role: accept ? Role.member : Role.unsubscribed,
 			lastUpdate: Date.now(),
 		});
 

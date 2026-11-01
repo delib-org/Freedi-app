@@ -4551,7 +4551,7 @@
   "people.nSelected": "{{count}} geselecteerd",
   "people.clearSelection": "Wissen",
   "people.declineN.title": "{{count}} mensen weigeren?",
-  "people.declineN.body": "Ze worden geblokkeerd in deze ruimte. Je kunt ze deblokkeren onder Leden.",
+  "people.declineN.body": "Ze kunnen opnieuw vragen om lid te worden.",
   "people.declineN.confirm": "{{count}} weigeren",
   "people.letInToast": "{{name}} toegelaten",
   "people.declinedToast": "{{name}} geweigerd",

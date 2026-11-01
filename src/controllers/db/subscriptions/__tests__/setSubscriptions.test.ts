@@ -17,6 +17,7 @@ jest.mock('@freedi/shared-types', () => ({
 		member: 'member',
 		waiting: 'waiting',
 		banned: 'banned',
+		unsubscribed: 'unsubscribed',
 	},
 	ResultsBy: {
 		consensus: 'consensus',
@@ -49,6 +50,7 @@ enum Role {
 	member = 'member',
 	waiting = 'waiting',
 	banned = 'banned',
+	unsubscribed = 'unsubscribed',
 }
 
 enum ResultsBy {
@@ -232,6 +234,41 @@ describe('setSubscriptions', () => {
 				creator: mockCreator,
 			});
 
+			expect(mockSetDoc).not.toHaveBeenCalled();
+		});
+
+		it('lets a declined person ask to join again: unsubscribed → waiting', async () => {
+			mockGetDoc.mockResolvedValue({
+				exists: () => true,
+				data: () => ({ role: Role.unsubscribed }),
+			} as unknown as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+
+			await setStatementSubscriptionToDB({
+				statement: mockStatement,
+				creator: { ...mockCreator, uid: 'declined-user' },
+				role: Role.waiting,
+			});
+
+			expect(mockUpdateDoc).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({ role: Role.waiting, statementId: 'stmt-123' }),
+			);
+			expect(mockSetDoc).not.toHaveBeenCalled();
+		});
+
+		it('never lifts a block: a banned person asking again stays banned', async () => {
+			mockGetDoc.mockResolvedValue({
+				exists: () => true,
+				data: () => ({ role: Role.banned }),
+			} as unknown as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+
+			await setStatementSubscriptionToDB({
+				statement: mockStatement,
+				creator: { ...mockCreator, uid: 'blocked-user' },
+				role: Role.waiting,
+			});
+
+			expect(mockUpdateDoc).not.toHaveBeenCalled();
 			expect(mockSetDoc).not.toHaveBeenCalled();
 		});
 

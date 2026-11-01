@@ -4670,7 +4670,7 @@
   "people.nSelected": "تم تحديد {{count}}",
   "people.clearSelection": "مسح",
   "people.declineN.title": "رفض {{count}} أشخاص؟",
-  "people.declineN.body": "سيتم حظرهم من هذه المساحة. يمكنك إلغاء الحظر من قائمة الأعضاء.",
+  "people.declineN.body": "يمكنهم طلب الانضمام مرة أخرى.",
   "people.declineN.confirm": "رفض {{count}}",
   "people.letInToast": "تم قبول {{name}}",
   "people.declinedToast": "تم رفض {{name}}",

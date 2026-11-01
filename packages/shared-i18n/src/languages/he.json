@@ -5267,7 +5267,7 @@
   "people.nSelected": "נבחרו {{count}}",
   "people.clearSelection": "ניקוי",
   "people.declineN.title": "לדחות {{count}} אנשים?",
-  "people.declineN.body": "הם ייחסמו במרחב הזה. אפשר לבטל את החסימה תחת חברים/ות.",
+  "people.declineN.body": "הם יוכלו לבקש להצטרף שוב.",
   "people.declineN.confirm": "לדחות {{count}}",
   "people.letInToast": "{{name}} אושר/ה",
   "people.declinedToast": "{{name}} נדחה/תה",

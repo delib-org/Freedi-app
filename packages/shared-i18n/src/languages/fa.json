@@ -5028,7 +5028,7 @@
   "people.nSelected": "{{count}} انتخاب شد",
   "people.clearSelection": "پاک کردن",
   "people.declineN.title": "{{count}} نفر رد شوند؟",
-  "people.declineN.body": "آن‌ها در این فضا مسدود می‌شوند. می‌توانید در بخش اعضا مسدودیت را بردارید.",
+  "people.declineN.body": "آن‌ها می‌توانند دوباره درخواست پیوستن بدهند.",
   "people.declineN.confirm": "رد {{count}} نفر",
   "people.letInToast": "{{name}} پذیرفته شد",
   "people.declinedToast": "{{name}} رد شد",

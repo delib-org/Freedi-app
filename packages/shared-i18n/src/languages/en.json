@@ -5229,7 +5229,7 @@
   "people.nSelected": "{{count}} selected",
   "people.clearSelection": "Clear",
   "people.declineN.title": "Decline {{count}} people?",
-  "people.declineN.body": "They will be blocked from this space. You can unblock them under Members.",
+  "people.declineN.body": "They can ask to join again.",
   "people.declineN.confirm": "Decline {{count}}",
   "people.letInToast": "{{name}} let in",
   "people.declinedToast": "{{name}} declined",

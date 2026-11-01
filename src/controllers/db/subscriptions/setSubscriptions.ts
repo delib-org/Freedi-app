@@ -68,7 +68,20 @@ export async function setStatementSubscriptionToDB({
 
 		//check if user is already subscribed
 		const statementSubscription = await getDoc(statementsSubscribeRef);
-		if (statementSubscription.exists()) return;
+		if (statementSubscription.exists()) {
+			// A declined person (unsubscribed) coming back to a By-approval space
+			// asks to join again: back to waiting, and the server's role → waiting
+			// trigger re-creates their awaitingUsers entry for the hosts.
+			if (role === Role.waiting && statementSubscription.data()?.role === Role.unsubscribed) {
+				await updateDoc(statementsSubscribeRef, {
+					role: Role.waiting,
+					statementId,
+					...updateTimestamp(),
+				});
+			}
+
+			return;
+		}
 
 		//if not subscribed, subscribe
 		const { createdAt, lastUpdate } = createTimestamps();

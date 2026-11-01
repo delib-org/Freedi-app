@@ -21,7 +21,7 @@ export function approveMultiple(members: ReadonlyArray<WaitingMember>): Promise<
 	return settle(members, (member) => approveMembership(member, true));
 }
 
-/** Decline: the person is blocked in this space (role banned), as before. */
+/** Decline: off the waiting list, not blocked; they can ask to join again. */
 export function rejectMultiple(members: ReadonlyArray<WaitingMember>): Promise<WaitingMember[]> {
 	return settle(members, (member) => approveMembership(member, false));
 }
