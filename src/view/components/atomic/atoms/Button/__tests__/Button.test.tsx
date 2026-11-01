@@ -8,6 +8,14 @@ import Button from '../Button';
 
 describe('Button', () => {
 	describe('rendering', () => {
+		it('marks itself for the first focus of a dialog only when asked', () => {
+			const { rerender } = render(<Button text="Cancel" isInitialFocus />);
+			expect(screen.getByRole('button')).toHaveAttribute('data-autofocus', 'true');
+
+			rerender(<Button text="Cancel" />);
+			expect(screen.getByRole('button')).not.toHaveAttribute('data-autofocus');
+		});
+
 		it('should render button with text', () => {
 			render(<Button text="Click me" />);
 

@@ -43,23 +43,6 @@
 		margin: 0;
 	}
 
-	.getMembersArea {
-		height: fit-content;
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 1rem;
-		padding-block: 1rem;
-
-		.evaluatorsButton {
-			color: var(--text-blue);
-		}
-
-		.votersButton {
-			color: var(--text-blue);
-		}
-	}
-
 	.formButton {
 		display: flex;
 		padding: 0.40625rem var(--Spacing-16, 1rem);

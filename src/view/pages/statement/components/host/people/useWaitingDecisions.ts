@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { WaitingMember } from '@freedi/shared-types';
 import { UI } from '@/constants/common';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -8,17 +8,9 @@ import {
 	rejectMultiple,
 	returnMultipleToWaiting,
 } from '@/services/membershipActions';
+import { PeopleToaster } from './usePeopleToast';
 
 export type WaitingDecision = 'letIn' | 'decline';
-
-export interface WaitingToast {
-	/** New for every toast, so a replacing toast restarts its countdown. */
-	id: number;
-	message: string;
-	actionLabel?: string;
-	onAction?: () => void;
-	durationMs: number;
-}
 
 export interface WaitingDecisions {
 	/** Waiting people not optimistically removed by a decision in flight. */
@@ -26,8 +18,6 @@ export interface WaitingDecisions {
 	/** The decision that failed for a row, keyed by subscription id. */
 	rowErrors: ReadonlyMap<string, WaitingDecision>;
 	decide: (targets: ReadonlyArray<WaitingMember>, decision: WaitingDecision) => void;
-	toast: WaitingToast | null;
-	dismissToast: () => void;
 }
 
 const WRITE: Record<WaitingDecision, typeof approveMultiple> = {
@@ -43,21 +33,14 @@ const idOf = (member: WaitingMember): string => member.statementsSubscribeId;
  * error. Undo waits for the decision to land, then returns those people to
  * the waiting list.
  */
-export function useWaitingDecisions(members: ReadonlyArray<WaitingMember>): WaitingDecisions {
+export function useWaitingDecisions(
+	members: ReadonlyArray<WaitingMember>,
+	toaster: PeopleToaster,
+): WaitingDecisions {
 	const { t } = useTranslation();
 	const [hiddenIds, setHiddenIds] = useState<ReadonlySet<string>>(() => new Set());
 	const [rowErrors, setRowErrors] = useState<ReadonlyMap<string, WaitingDecision>>(() => new Map());
-	const [toast, setToastState] = useState<WaitingToast | null>(null);
-	const toastCount = useRef(0);
-	const setToast = useCallback((next: Omit<WaitingToast, 'id'> | null): number => {
-		toastCount.current += 1;
-		setToastState(next && { ...next, id: toastCount.current });
-
-		return toastCount.current;
-	}, []);
-	const clearToast = useCallback((id: number) => {
-		setToastState((current) => (current?.id === id ? null : current));
-	}, []);
+	const { show: setToast, clear: clearToast } = toaster;
 
 	const setHidden = useCallback((ids: ReadonlyArray<string>, isHidden: boolean) => {
 		setHiddenIds((prev) => {
@@ -143,7 +126,5 @@ export function useWaitingDecisions(members: ReadonlyArray<WaitingMember>): Wait
 		[members, hiddenIds],
 	);
 
-	const dismissToast = useCallback(() => setToast(null), [setToast]);
-
-	return { visible, rowErrors, decide, toast, dismissToast };
+	return { visible, rowErrors, decide };
 }

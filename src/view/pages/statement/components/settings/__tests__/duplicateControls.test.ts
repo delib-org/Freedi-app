@@ -15,6 +15,7 @@ import {
 } from '../components/instantSettings/InstantSettings';
 import { ALLOW_ADD_ANSWERS_KEYS } from '../components/allowAddAnswers/AllowAddAnswersToggle';
 import { LIVE_NOW_SETTING_KEYS } from '../../host/hostHubLogic';
+import { PEOPLE_SECTION_COMPONENTS } from '../../host/people/peopleComposition';
 import { SettingsVariant } from '../settingsTypeHelpers';
 
 const COMPONENTS = path.resolve(__dirname, '../components');
@@ -36,8 +37,6 @@ const FILES: Record<string, string> = {
 	SynthesisPanel: 'synthesisPanel/SynthesisPanel.tsx',
 	ModerationLog: 'moderationLog/ModerationLog.tsx',
 	MembershipSettings: 'membershipSettings/MembershipSettings.tsx',
-	MembersSettings: 'membership/MembersSettings.tsx',
-	AdminsManagement: 'membership/AdminsManagement/AdminsManagement.tsx',
 	MemberValidation: 'memberValidation/MemberValidation.tsx',
 	UserDemographicSetting: 'UserDemographicSettings/UserDemographicSetting.tsx',
 	EmailNotifications: 'emailNotifications/EmailNotifications.tsx',
@@ -69,7 +68,13 @@ function keysForVariant(variant: SettingsVariant): Map<string, string[]> {
 	const owners = new Map<string, string[]>();
 	const add = (key: string, owner: string) => owners.set(key, [...(owners.get(key) ?? []), owner]);
 
-	for (const entry of FORM_COMPOSITION[variant]) {
+	const entries = FORM_COMPOSITION[variant].flatMap((entry) =>
+		entry.component === 'PeopleSection'
+			? PEOPLE_SECTION_COMPONENTS.map((component) => ({ component, omit: entry.omit }))
+			: [entry],
+	);
+
+	for (const entry of entries) {
 		if (entry.component === 'InstantSettings') {
 			INSTANT_TOGGLES_BY_VARIANT[variant].forEach((key) => add(key, 'InstantSettings'));
 			add('ratingMode', 'InstantSettings');
@@ -96,6 +101,41 @@ describe('settings pages render each setting key once', () => {
 	it.each<SettingsVariant>(['legacy', 'hub'])('%s', (variant) => {
 		const duplicates = [...keysForVariant(variant)].filter(([, owners]) => owners.length > 1);
 		expect(duplicates).toEqual([]);
+	});
+
+	it('both pages render the one People section, and it composes what the guard reads', () => {
+		const peopleSource = fs.readFileSync(
+			path.resolve(__dirname, '../../host/PeopleSection.tsx'),
+			'utf8',
+		);
+		const formSource = fs.readFileSync(
+			path.join(COMPONENTS, 'statementSettingsForm/StatementSettingsForm.tsx'),
+			'utf8',
+		);
+
+		PEOPLE_SECTION_COMPONENTS.forEach((component) => {
+			expect(peopleSource).toMatch(new RegExp(`<${component}\\b`));
+			expect(formSource).not.toMatch(new RegExp(`<${component}\\b`));
+		});
+		expect(formSource.match(/<PeopleSection\b/g)).toHaveLength(1);
+		(['legacy', 'hub'] as const).forEach((variant) => {
+			expect(FORM_COMPOSITION[variant].map((e) => e.component)).toContain('PeopleSection');
+		});
+	});
+
+	it('the retired member lists and Get Voters / Evaluators are gone from the form', () => {
+		const formSource = fs.readFileSync(
+			path.join(COMPONENTS, 'statementSettingsForm/StatementSettingsForm.tsx'),
+			'utf8',
+		);
+
+		[
+			'MembersSettings',
+			'AdminsManagement',
+			'MembersManagement',
+			'GetVoters',
+			'GetEvaluators',
+		].forEach((name) => expect(formSource).not.toContain(name));
 	});
 
 	it('the scanner actually finds keys (sanity)', () => {

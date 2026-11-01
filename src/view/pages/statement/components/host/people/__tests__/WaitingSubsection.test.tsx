@@ -8,6 +8,7 @@ import {
 import ActionToast from '@/view/components/atomic/molecules/ActionToast';
 import WaitingSubsection from '../WaitingSubsection';
 import { useWaitingDecisions } from '../useWaitingDecisions';
+import { usePeopleToast } from '../usePeopleToast';
 
 jest.mock('@/controllers/hooks/useTranslation', () => ({
 	useTranslation: () => ({ t: (k: string) => k, dir: 'ltr', currentLanguage: 'en' }),
@@ -36,19 +37,21 @@ const dana = member('w1', 'Dana');
 const noam = member('w2', 'Noam');
 
 function Harness({ members }: { members: WaitingMember[] }) {
-	const decisions = useWaitingDecisions(members);
+	const toaster = usePeopleToast();
+	const decisions = useWaitingDecisions(members, toaster);
+	const { toast } = toaster;
 
 	return (
 		<>
 			<WaitingSubsection decisions={decisions} isOpen onToggle={jest.fn()} toggleRef={jest.fn()} />
-			{decisions.toast && (
+			{toast && (
 				<ActionToast
-					key={decisions.toast.id}
-					message={decisions.toast.message}
-					actionLabel={decisions.toast.actionLabel}
-					onAction={decisions.toast.onAction}
-					durationMs={decisions.toast.durationMs}
-					onDismiss={decisions.dismissToast}
+					key={toast.id}
+					message={toast.message}
+					actionLabel={toast.actionLabel}
+					onAction={toast.onAction}
+					durationMs={toast.durationMs}
+					onDismiss={toaster.dismiss}
 				/>
 			)}
 		</>

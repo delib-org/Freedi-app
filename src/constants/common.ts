@@ -71,6 +71,9 @@ export const UI = {
 	UNDO_TOAST_DURATION: 6 * TIME.SECOND,
 	// How long the short "Undone" confirmation stays.
 	UNDONE_TOAST_DURATION: 2 * TIME.SECOND,
+	// People › Members: rows shown first, and how many "Show more" adds (UX §4.4).
+	MEMBERS_INITIAL_COUNT: 10,
+	MEMBERS_LOAD_MORE_COUNT: 20,
 } as const;
 
 /**

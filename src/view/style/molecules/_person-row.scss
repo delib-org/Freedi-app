@@ -2,16 +2,17 @@
 // One person in a People list: avatar, name with text badges, one meta line,
 // actions at inline-end, and a note line for a row's own error.
 // React wrapper: atomic/molecules/PersonRow.
-// Spec: docs/ux/main-people-settings-design.md §3.5. Phase 3 ships the parts
-// Waiting to join needs (select, inline actions, busy); the Members ⋯ sheet
-// and the review answers come with phases 5–6.
+// Spec: docs/ux/main-people-settings-design.md §3.5. Waiting (select, inline
+// actions) and Members (role badges, ⋯ → Sheet on phones, blocked); the
+// review answers come with phase 6.
 //
 // DOM:
-// <li class="person-row [--with-select] [--stacked-actions] [--busy]">
+// <li class="person-row [--with-select] [--stacked-actions] [--menu-on-mobile] [--blocked] [--busy]">
 //   [<span class="person-row__select">checkbox</span>]
 //   <span class="profile-avatar profile-avatar--medium person-row__avatar"/>
 //   <div class="person-row__identity"><span class="person-row__name" dir="auto"/>…<span class="person-row__meta"/></div>
 //   <div class="person-row__actions">buttons</div>
+//   [<button class="person-row__more" aria-haspopup="dialog">⋯</button>]   ← --menu-on-mobile only
 //   [<div class="person-row__note">inline-note</div>]
 // </li>
 @use '../mixins' as *;
@@ -106,6 +107,87 @@
 
 	&__note {
 		grid-area: note;
+	}
+
+	// Text badges, never colour alone (UX §6.7; design §3.5 + §12 for Host ink).
+	&__badge {
+		display: inline-flex;
+		align-items: center;
+		min-block-size: 1.25rem;
+		padding-inline: var(--space-xs);
+		border-radius: var(--radius-pill);
+		border: 1px solid transparent;
+		font-size: var(--font-size-xs);
+		font-weight: var(--font-weight-semibold);
+		line-height: 1;
+		white-space: nowrap;
+
+		&--creator {
+			background: var(--surface-background);
+			color: var(--text-body);
+		}
+
+		&--host {
+			border-color: var(--btn-primary);
+			color: var(--text-blue);
+		}
+
+		&--you {
+			border-color: var(--text-caption);
+			color: var(--text-meta);
+		}
+
+		&--blocked {
+			background: var(--error-bg);
+			color: var(--error-text);
+		}
+
+		&--waiting {
+			border-color: var(--text-warning);
+			color: var(--warning-ink);
+		}
+	}
+
+	// ⋯ opens the row's Sheet on phones; from 601 px the labelled inline
+	// buttons show instead.
+	&__more {
+		@include hit-target;
+		grid-area: actions;
+		display: none;
+		padding: 0;
+		border: 0;
+		border-radius: var(--radius-pill);
+		background: transparent;
+		color: var(--text-meta);
+		cursor: pointer;
+
+		@include focus-visible;
+
+		&:hover {
+			background: var(--bg-hover);
+			color: var(--text-body);
+		}
+
+		svg {
+			inline-size: 1.25rem;
+			block-size: 1.25rem;
+		}
+	}
+
+	&--menu-on-mobile {
+		@include mobile {
+			.person-row__actions {
+				display: none;
+			}
+
+			.person-row__more {
+				display: inline-flex;
+			}
+		}
+	}
+
+	&--blocked &__identity {
+		opacity: 0.7;
 	}
 
 	&--busy {

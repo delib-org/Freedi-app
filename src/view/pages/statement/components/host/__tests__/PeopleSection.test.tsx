@@ -33,19 +33,15 @@ function mockStub(testId: string) {
 jest.mock('../../settings/components/membershipSettings/MembershipSettings', () =>
 	mockStub('membership'),
 );
-jest.mock('../../settings/components/membership/MembersSettings', () => mockStub('members'));
-jest.mock('../../settings/components/membership/AdminsManagement/AdminsManagement', () =>
-	mockStub('admins'),
-);
 jest.mock('../../settings/components/memberValidation/MemberValidation', () =>
 	mockStub('validation'),
 );
 jest.mock('../../settings/components/UserDemographicSettings/UserDemographicSetting', () =>
 	mockStub('demographics'),
 );
-jest.mock('../../settings/components/membership/MembersManagement', () =>
-	mockStub('members-management'),
-);
+jest.mock('@/controllers/db/subscriptions/setSubscriptions', () => ({
+	updateMemberRole: jest.fn().mockResolvedValue(undefined),
+}));
 jest.mock('../../settings/components/optionRooms', () => ({
 	OptionRooms: () => <div data-testid="rooms" />,
 }));
@@ -117,7 +113,9 @@ describe('PeopleSection stakeholders', () => {
 		expect(start).toBeGreaterThan(-1);
 		expect(end).toBeGreaterThan(start);
 		expect(resultsGroup).not.toContain('ConfidenceIndexSettings');
-		expect(source.match(/<ConfidenceIndexSettings /g)).toHaveLength(1);
+		// The form renders People through PeopleSection, which renders it once.
+		expect(source.match(/<ConfidenceIndexSettings /g)).toBeNull();
+		expect(source.match(/<PeopleSection\b/g)).toHaveLength(1);
 		expect(FORM_COMPOSITION.hub.map((e) => e.component)).not.toContain('ConfidenceIndexSettings');
 	});
 });
@@ -183,5 +181,41 @@ describe('PeopleSection › Waiting to join', () => {
 		});
 
 		expect(scrollIntoView).not.toHaveBeenCalled();
+	});
+});
+
+describe('PeopleSection › Members', () => {
+	beforeAll(() => {
+		Element.prototype.scrollIntoView = jest.fn();
+	});
+
+	it.each([StatementType.question, StatementType.group])(
+		'renders one Members subsection, collapsed, for a %s',
+		(type) => {
+			renderPeople(makeStatement(type, Access.openToAll));
+			const header = document.querySelector('#members .people-subsection__header');
+
+			expect(document.querySelectorAll('#members')).toHaveLength(1);
+			expect(header).toHaveAttribute('aria-expanded', 'false');
+		},
+	);
+
+	it('opens from the #members deep link', async () => {
+		await act(async () => {
+			renderPeople(makeStatement(StatementType.group, Access.openToAll), '#members');
+		});
+
+		expect(document.querySelector('#members .people-subsection__header')).toHaveAttribute(
+			'aria-expanded',
+			'true',
+		);
+		expect(screen.getByRole('group', { name: 'people.filterMembers' })).toBeTruthy();
+	});
+
+	it('Waiting comes before Members', () => {
+		renderPeople(makeStatement(StatementType.group, Access.moderated));
+		const ids = Array.from(document.querySelectorAll('.people-subsection')).map((el) => el.id);
+
+		expect(ids).toEqual(['waiting', 'members']);
 	});
 });

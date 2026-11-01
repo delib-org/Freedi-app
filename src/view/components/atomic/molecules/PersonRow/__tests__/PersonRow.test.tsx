@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import PersonRow from '../PersonRow';
+import RoleBadge from '../RoleBadge';
 
 function renderInList(row: React.ReactElement) {
 	return render(<ul>{row}</ul>);
@@ -46,6 +47,62 @@ describe('PersonRow', () => {
 			screen.getByRole('button', { name: 'Let in' }),
 		);
 		expect(item.querySelector('.person-row__note')).toHaveTextContent('Could not let in');
+	});
+
+	it.each([
+		['creator', 'Creator'],
+		['host', 'Host'],
+		['you', 'You'],
+		['blocked', 'Blocked'],
+		['waiting', 'Waiting'],
+	] as const)('renders the %s badge as a word with its modifier', (kind, label) => {
+		renderInList(<PersonRow name="Maya" badges={<RoleBadge kind={kind} label={label} />} />);
+
+		expect(screen.getByText(label)).toHaveClass('person-row__badge', `person-row__badge--${kind}`);
+	});
+
+	it('Members rows: inline actions plus a ⋯ button that names the person (shown below 601 px)', () => {
+		const onOpenMenu = jest.fn();
+		renderInList(
+			<PersonRow
+				name="Maya"
+				actions={<button type="button">Make host</button>}
+				onOpenMenu={onOpenMenu}
+				menuLabel="Actions for Maya"
+				testId="row"
+			/>,
+		);
+		const more = screen.getByRole('button', { name: 'Actions for Maya' });
+
+		expect(screen.getByTestId('row')).toHaveClass('person-row--menu-on-mobile');
+		expect(more).toHaveClass('person-row__more');
+		expect(more).toHaveAttribute('aria-haspopup', 'dialog');
+		expect(screen.getByRole('button', { name: 'Make host' })).toBeTruthy();
+		more.click();
+		expect(onOpenMenu).toHaveBeenCalledTimes(1);
+	});
+
+	it('has no ⋯ button when the row has no actions', () => {
+		renderInList(<PersonRow name="Tal" onOpenMenu={jest.fn()} menuLabel="Actions for Tal" />);
+
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(screen.getByRole('listitem')).not.toHaveClass('person-row--menu-on-mobile');
+	});
+
+	it('marks a blocked row and disables ⋯ while busy', () => {
+		renderInList(
+			<PersonRow
+				name="Roi"
+				isBlocked
+				isBusy
+				actions={<button type="button">Unblock</button>}
+				onOpenMenu={jest.fn()}
+				menuLabel="Actions for Roi"
+			/>,
+		);
+
+		expect(screen.getByRole('listitem')).toHaveClass('person-row--blocked');
+		expect(screen.getByRole('button', { name: 'Actions for Roi' })).toBeDisabled();
 	});
 
 	it('uses no inline left/right styles, so it mirrors under dir="rtl"', () => {

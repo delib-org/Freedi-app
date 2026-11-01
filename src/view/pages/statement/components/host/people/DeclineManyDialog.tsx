@@ -27,7 +27,7 @@ const DeclineManyDialog: FC<DeclineManyDialogProps> = ({ isOpen, count, onCancel
 			showCloseButton={false}
 			footer={
 				<>
-					<Button text={t('Cancel')} variant="secondary" onClick={onCancel} />
+					<Button text={t('Cancel')} variant="secondary" onClick={onCancel} isInitialFocus />
 					<Button
 						text={fillPlaceholders(t('people.declineN.confirm'), { count })}
 						variant="reject"
