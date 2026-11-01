@@ -4,13 +4,12 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { OptionWithMembers } from '@/controllers/db/joining/splitJoinedOption';
 import { fillPlaceholders } from '@/helpers/fillPlaceholders';
 import { selectAllRoomSettings } from '@/redux/roomAssignment/roomAssignmentSlice';
-import { JOINING } from '@/constants/common';
 import Button from '@/view/components/atomic/atoms/Button';
 import InlineNote from '@/view/components/atomic/atoms/InlineNote';
 import Modal from '@/view/components/atomic/molecules/Modal';
 import OptionsStatusList from './OptionsStatusList';
 import { countActiveRooms } from './roomsLogic';
-import { useRoomSplit } from './useRoomSplit';
+import { canSplitAnswer, useRoomSplit } from './useRoomSplit';
 import styles from './OptionRooms.module.scss';
 
 interface RoomSplitControlsProps {
@@ -23,9 +22,10 @@ interface RoomSplitControlsProps {
 }
 
 /**
- * "Split into rooms" (UX 4.7): disabled until at least two people joined an
- * answer; "Splitting…" while it runs; an inline error if it fails (existing
- * rooms stay listed); re-splitting asks before replacing the rooms.
+ * "Split into rooms" (UX 4.7): disabled until one answer has at least a
+ * room's worth of people (the server's own rule); "Splitting…" while it
+ * runs; an inline error if it fails (existing rooms stay listed);
+ * re-splitting asks before replacing the rooms.
  */
 const RoomSplitControls: FC<RoomSplitControlsProps> = ({
 	questionId,
@@ -38,7 +38,7 @@ const RoomSplitControls: FC<RoomSplitControlsProps> = ({
 	const existingRooms = countActiveRooms(useAppSelector(selectAllRoomSettings), questionId);
 	const split = useRoomSplit({ questionId, options, roomSize, scrambleByQuestions, onSplit });
 	const [isConfirming, setIsConfirming] = useState(false);
-	const canSplit = options.some((option) => option.joinedCount >= JOINING.MIN_ROOM_SIZE);
+	const canSplit = options.some((option) => canSplitAnswer(option, roomSize));
 
 	function handleSplit(): void {
 		if (existingRooms > 0) setIsConfirming(true);

@@ -27,6 +27,16 @@ export interface RoomSplitState {
 }
 
 /**
+ * The server refuses an answer with fewer people than one room holds
+ * (`splitJoinedOption`: "Need at least {roomSize} members"), so only those
+ * answers are split; the others are left as they are, not counted as a
+ * failure.
+ */
+export function canSplitAnswer(option: OptionWithMembers, roomSize: number): boolean {
+	return option.joinedCount >= roomSize;
+}
+
+/**
  * Splits everyone who joined the question's answers into rooms: clears the
  * old rooms, then splits answer by answer (most joined first, so they get
  * the lowest room numbers).
@@ -43,14 +53,15 @@ export function useRoomSplit({
 	const [result, setResult] = useState<RoomSplitSummary | null>(null);
 
 	async function run(): Promise<void> {
-		if (options.length === 0) return;
+		const eligible = options.filter((option) => canSplitAnswer(option, roomSize));
+		if (eligible.length === 0) return;
 		setIsSplitting(true);
 		setHasFailed(false);
 		setResult(null);
 		try {
 			await clearAllRoomsForParent(questionId);
 			const summary: RoomSplitSummary = { rooms: 0, participants: 0 };
-			const byJoined = [...options].sort((a, b) => b.joinedCount - a.joinedCount);
+			const byJoined = [...eligible].sort((a, b) => b.joinedCount - a.joinedCount);
 			for (const option of byJoined) {
 				const split = await splitJoinedOption({
 					optionStatementId: option.statementId,
