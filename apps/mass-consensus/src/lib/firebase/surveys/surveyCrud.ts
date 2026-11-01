@@ -19,6 +19,7 @@ import { cascadeMinResponseWords } from './cascadeMinResponseWords';
 import { cascadeRatingMode } from './cascadeRatingMode';
 import { cascadeAutoAiHandling } from './cascadeAutoAiHandling';
 import { deleteSurveyAdminRecords } from './surveyAdmins';
+import { sanitizeRemovedQuestionIds } from './removedQuestionIds';
 
 /**
  * Create a new survey
@@ -47,8 +48,9 @@ export async function createSurvey(
   };
 
   // Only add optional fields if they have values (Firestore doesn't accept undefined)
-  if (data.removedQuestionIds !== undefined && data.removedQuestionIds.length > 0) {
-    survey.removedQuestionIds = data.removedQuestionIds;
+  const removedIdsOnCreate = sanitizeRemovedQuestionIds(data.removedQuestionIds);
+  if (removedIdsOnCreate && removedIdsOnCreate.length > 0) {
+    survey.removedQuestionIds = removedIdsOnCreate;
   }
   if (data.defaultLanguage !== undefined) {
     survey.defaultLanguage = data.defaultLanguage;
@@ -219,8 +221,9 @@ export async function updateSurvey(
       ...data.questionSettings,
     };
   }
-  if (data.removedQuestionIds !== undefined) {
-    updates.removedQuestionIds = data.removedQuestionIds;
+  const removedIdsOnUpdate = sanitizeRemovedQuestionIds(data.removedQuestionIds);
+  if (removedIdsOnUpdate !== undefined) {
+    updates.removedQuestionIds = removedIdsOnUpdate;
   }
   if (data.defaultLanguage !== undefined) {
     updates.defaultLanguage = data.defaultLanguage;
