@@ -14,6 +14,7 @@ import WaitingSubsection from './people/WaitingSubsection';
 import MembersSubsection from './people/MembersSubsection';
 import { usePeopleAnchors } from './people/usePeopleAnchors';
 import { usePeopleToast } from './people/usePeopleToast';
+import { useMembersPaging } from './people/useMembersPaging';
 import { useStatementMembers } from './people/useStatementMembers';
 import { useStatementWaitingList } from './people/useStatementWaitingList';
 import { useWaitingDecisions } from './people/useWaitingDecisions';
@@ -42,6 +43,7 @@ const PeopleSection: FC<PeopleSectionProps> = ({ statement, setStatementToEdit }
 	const topParent = useAppSelector(statementSelector(statement.topParentId));
 	const waitingList = useStatementWaitingList(statement.statementId);
 	const members = useStatementMembers(statement.statementId);
+	const membersPaging = useMembersPaging(statement.statementId, members);
 	const toaster = usePeopleToast();
 	const decisions = useWaitingDecisions(waitingList, toaster);
 	const { toast } = toaster;
@@ -69,6 +71,7 @@ const PeopleSection: FC<PeopleSectionProps> = ({ statement, setStatementToEdit }
 				members={members}
 				decisions={decisions}
 				toaster={toaster}
+				paging={membersPaging}
 				isOpen={anchors.isOpen('members')}
 				onToggle={anchors.toggle}
 				toggleRef={anchors.registerToggle('members')}

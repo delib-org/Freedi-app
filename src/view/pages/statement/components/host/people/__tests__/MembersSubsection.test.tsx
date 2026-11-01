@@ -5,6 +5,7 @@ import { updateMemberRole } from '@/controllers/db/subscriptions/setSubscription
 import ActionToast from '@/view/components/atomic/molecules/ActionToast';
 import MembersSubsection from '../MembersSubsection';
 import { usePeopleToast } from '../usePeopleToast';
+import { MembersPaging } from '../useMembersPaging';
 import { WaitingDecisions } from '../useWaitingDecisions';
 
 jest.mock('@/controllers/hooks/useTranslation', () => ({
@@ -54,12 +55,22 @@ function decisionsFor(visible: WaitingMember[] = []): WaitingDecisions {
 	return { visible, rowErrors: new Map(), decide: jest.fn() };
 }
 
+const noPaging: MembersPaging = {
+	total: null,
+	hasMoreOnServer: false,
+	isLoadingMore: false,
+	loadFailed: false,
+	loadMore: jest.fn().mockResolvedValue(undefined),
+};
+
 function Harness({
 	members,
 	decisions = decisionsFor(),
+	paging = noPaging,
 }: {
 	members: StatementSubscription[];
 	decisions?: WaitingDecisions;
+	paging?: MembersPaging;
 }) {
 	const toaster = usePeopleToast();
 	const { toast } = toaster;
@@ -71,6 +82,7 @@ function Harness({
 				members={members}
 				decisions={decisions}
 				toaster={toaster}
+				paging={paging}
 				isOpen
 				onToggle={jest.fn()}
 				toggleRef={jest.fn()}
@@ -292,6 +304,35 @@ describe('MembersSubsection', () => {
 		fireEvent.click(screen.getByRole('button', { name: 'people.showMore' }));
 		expect(names()).toHaveLength(26);
 		expect(screen.queryByRole('button', { name: 'people.showMore' })).toBeNull();
+	});
+
+	it('when the loaded page runs out, Show more asks Firestore for the next page', () => {
+		const loadMore = jest.fn().mockResolvedValue(undefined);
+		const paging: MembersPaging = {
+			...noPaging,
+			total: 140,
+			hasMoreOnServer: true,
+			loadMore,
+		};
+		render(<Harness members={[tal, maya, dana]} paging={paging} />);
+
+		expect(names()).toHaveLength(3);
+		fireEvent.click(screen.getByRole('button', { name: 'people.showMore' }));
+		expect(loadMore).toHaveBeenCalledTimes(1);
+	});
+
+	it('a failed page load says so and offers Retry', () => {
+		const loadMore = jest.fn().mockResolvedValue(undefined);
+		render(
+			<Harness
+				members={[tal, maya, dana]}
+				paging={{ ...noPaging, total: 140, hasMoreOnServer: true, loadFailed: true, loadMore }}
+			/>,
+		);
+
+		expect(screen.getByText('people.error.load')).toBeTruthy();
+		fireEvent.click(screen.getByRole('button', { name: 'people.retry' }));
+		expect(loadMore).toHaveBeenCalledTimes(1);
 	});
 
 	it('search filters by name after the debounce', () => {

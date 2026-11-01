@@ -39,6 +39,10 @@ jest.mock('../../settings/components/memberValidation/MemberValidation', () =>
 jest.mock('../../settings/components/UserDemographicSettings/UserDemographicSetting', () =>
 	mockStub('demographics'),
 );
+jest.mock('@/controllers/db/membership/membersPage', () => ({
+	countMembers: jest.fn().mockResolvedValue(0),
+	loadMembersPage: () => jest.fn().mockResolvedValue(0),
+}));
 jest.mock('@/controllers/db/subscriptions/setSubscriptions', () => ({
 	updateMemberRole: jest.fn().mockResolvedValue(undefined),
 }));

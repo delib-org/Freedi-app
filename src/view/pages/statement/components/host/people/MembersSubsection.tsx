@@ -29,6 +29,7 @@ import {
 import { useMemberRoleActions } from './useMemberRoleActions';
 import { useMembersList } from './useMembersList';
 import { PeopleToaster } from './usePeopleToast';
+import { MembersPaging } from './useMembersPaging';
 import { WaitingDecisions } from './useWaitingDecisions';
 import styles from './MembersSubsection.module.scss';
 
@@ -37,6 +38,8 @@ interface MembersSubsectionProps {
 	members: ReadonlyArray<StatementSubscription>;
 	decisions: WaitingDecisions;
 	toaster: PeopleToaster;
+	/** Firestore total + older pages beyond the live listener's first page. */
+	paging: MembersPaging;
 	isOpen: boolean;
 	onToggle: (anchor: string) => void;
 	toggleRef: (element: HTMLButtonElement | null) => void;
@@ -69,6 +72,7 @@ const MembersSubsection: FC<MembersSubsectionProps> = ({
 	members,
 	decisions,
 	toaster,
+	paging,
 	isOpen,
 	onToggle,
 	toggleRef,
@@ -91,7 +95,7 @@ const MembersSubsection: FC<MembersSubsectionProps> = ({
 			}),
 		[members, creatorUid, self?.uid, roleActions.roleOverrides],
 	);
-	const list = useMembersList(entries);
+	const list = useMembersList(entries, paging);
 	const waitingById = useMemo(
 		() => new Map(decisions.visible.map((m) => [m.statementsSubscribeId, m] as const)),
 		[decisions.visible],
@@ -130,7 +134,7 @@ const MembersSubsection: FC<MembersSubsectionProps> = ({
 
 	const { counts } = list;
 	const hasNobodyJoined = counts.members + counts.waiting + counts.blocked === 0;
-	const memberCount = counts.all;
+	const memberCount = memberTotal(counts.all, paging);
 
 	return (
 		<PeopleSubsection
@@ -207,15 +211,31 @@ const MembersSubsection: FC<MembersSubsectionProps> = ({
 								text={fillPlaceholders(t('people.showMore'), { count: list.nextPageSize })}
 								variant="secondary"
 								fullWidth
+								loading={paging.isLoadingMore}
 								onClick={list.showMore}
 							/>
 							<InlineNote variant="info">
 								{fillPlaceholders(t('people.nOfM'), {
 									shown: list.shown.length,
-									total: list.matching.length,
+									total: list.total,
 								})}
 							</InlineNote>
 						</div>
+					)}
+					{paging.loadFailed && (
+						<InlineNote
+							variant="error"
+							action={
+								<Button
+									text={t('people.retry')}
+									variant="secondary"
+									size="small"
+									onClick={() => void paging.loadMore()}
+								/>
+							}
+						>
+							{t('people.error.load')}
+						</InlineNote>
 					)}
 					<InviteLinkToLive statementId={statementId} />
 				</>
@@ -235,5 +255,10 @@ const MembersSubsection: FC<MembersSubsectionProps> = ({
 		</PeopleSubsection>
 	);
 };
+
+/** Everyone in the space: Firestore's count while older pages are still unloaded. */
+function memberTotal(loadedCount: number, paging: MembersPaging): number {
+	return paging.hasMoreOnServer && paging.total !== null ? paging.total : loadedCount;
+}
 
 export default MembersSubsection;

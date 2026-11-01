@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { UI } from '@/constants/common';
 import { countByFilter, MemberEntry, MemberFilter, selectMembers } from './membersLogic';
+import { nextPageSize as pageSizeFor, planShowMore } from './membersPaging';
+import { MembersPaging } from './useMembersPaging';
 
 export interface MembersListState {
 	filter: MemberFilter;
@@ -8,17 +10,22 @@ export interface MembersListState {
 	search: string;
 	setSearch: (search: string) => void;
 	counts: Record<MemberFilter, number>;
-	/** Every row the chip and search match, in order. */
+	/** Every loaded row the chip and search match, in order. */
 	matching: MemberEntry[];
 	/** The first page of `matching`. */
 	shown: MemberEntry[];
 	/** How many the next "Show more" adds. */
 	nextPageSize: number;
+	/** "{shown} of {total}": Firestore's total while the unfiltered list is still paging. */
+	total: number;
 	showMore: () => void;
 }
 
 /** Chip, debounced search and paging over the Members rows (UX 4.4). */
-export function useMembersList(entries: ReadonlyArray<MemberEntry>): MembersListState {
+export function useMembersList(
+	entries: ReadonlyArray<MemberEntry>,
+	paging: MembersPaging,
+): MembersListState {
 	const [filter, setFilter] = useState<MemberFilter>('all');
 	const [search, setSearch] = useState('');
 	const [appliedSearch, setAppliedSearch] = useState('');
@@ -40,7 +47,17 @@ export function useMembersList(entries: ReadonlyArray<MemberEntry>): MembersList
 		[entries, filter, appliedSearch],
 	);
 	const shown = useMemo(() => matching.slice(0, displayCount), [matching, displayCount]);
-	const nextPageSize = Math.min(UI.MEMBERS_LOAD_MORE_COUNT, matching.length - shown.length);
+	const plan = {
+		shownCount: shown.length,
+		matchingCount: matching.length,
+		hasMoreOnServer: paging.hasMoreOnServer,
+	};
+	const isUnfiltered = filter === 'all' && appliedSearch === '';
+
+	function showMore(): void {
+		if (planShowMore(plan) === 'server') void paging.loadMore();
+		setDisplayCount((count) => count + UI.MEMBERS_LOAD_MORE_COUNT);
+	}
 
 	return {
 		filter,
@@ -50,7 +67,11 @@ export function useMembersList(entries: ReadonlyArray<MemberEntry>): MembersList
 		counts,
 		matching,
 		shown,
-		nextPageSize,
-		showMore: () => setDisplayCount((count) => count + UI.MEMBERS_LOAD_MORE_COUNT),
+		nextPageSize: pageSizeFor(plan),
+		total:
+			isUnfiltered && paging.hasMoreOnServer && paging.total !== null
+				? paging.total
+				: matching.length,
+		showMore,
 	};
 }
