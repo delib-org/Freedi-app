@@ -19,9 +19,6 @@ import { logError } from '../../utils/errorHandling';
 /** Why the statement was hidden; stored in `hiddenReason`. */
 export const EMPTY_THEME_HIDDEN_REASON = 'empty-theme';
 
-/** Firestore's hard limit of writes per batch. */
-const FIRESTORE_BATCH_LIMIT = 500;
-
 /**
  * True for a pipeline theme with no members that no person locked, hidden or
  * not. Exports use this one: an empty theme is a leftover whether or not it
@@ -51,38 +48,62 @@ export function emptyThemeHideUpdate(now: number): Partial<Statement> {
 	return {
 		hide: true,
 		hiddenReason: EMPTY_THEME_HIDDEN_REASON,
-		integratedOptions: [],
 		lastUpdate: now,
 	};
 }
 
 /**
+ * Hide one theme if it is STILL empty. A visible empty theme is a filing
+ * target, so a member may land between the selection read and this write;
+ * the transaction re-reads it and skips it then. `integratedOptions` is never
+ * written, so a concurrent filing can never be wiped. `fileUnthemed` files in
+ * a transaction that refuses a hidden theme, so the two serialise cleanly.
+ */
+async function hideIfStillEmpty(db: Firestore, themeId: string): Promise<boolean> {
+	const ref = db.collection(Collections.statements).doc(themeId);
+
+	return db.runTransaction(async (tx) => {
+		const snap = await tx.get(ref);
+		if (!snap.exists || !isEmptyTheme(snap.data() as Statement)) return false;
+		tx.update(ref, emptyThemeHideUpdate(Date.now()));
+
+		return true;
+	});
+}
+
+/**
  * Load the question's children, hide its empty themes, and return how many
- * were hidden. Throws on a read or write failure; callers decide whether that
- * is fatal.
+ * were hidden. Throws when the children cannot be read; a theme whose hide
+ * fails is logged and skipped so the others still go through.
  */
 export async function hideEmptyThemes(db: Firestore, parentId: string): Promise<number> {
-	const statements = db.collection(Collections.statements);
-	const snap = await statements.where('parentId', '==', parentId).get();
-	const empty = selectEmptyThemes(snap.docs.map((doc) => doc.data() as Statement));
-	if (empty.length === 0) return 0;
+	const snap = await db.collection(Collections.statements).where('parentId', '==', parentId).get();
+	const candidates = selectEmptyThemes(snap.docs.map((doc) => doc.data() as Statement));
+	if (candidates.length === 0) return 0;
 
-	const update = emptyThemeHideUpdate(Date.now());
-	for (let i = 0; i < empty.length; i += FIRESTORE_BATCH_LIMIT) {
-		const batch = db.batch();
-		for (const theme of empty.slice(i, i + FIRESTORE_BATCH_LIMIT)) {
-			batch.update(statements.doc(theme.statementId), update);
+	const hiddenIds: string[] = [];
+	const skippedIds: string[] = [];
+	for (const theme of candidates) {
+		try {
+			if (await hideIfStillEmpty(db, theme.statementId)) hiddenIds.push(theme.statementId);
+			else skippedIds.push(theme.statementId);
+		} catch (error) {
+			logError(error, {
+				operation: 'synthesis.hideEmptyThemes.hideOne',
+				statementId: theme.statementId,
+				metadata: { parentId },
+			});
 		}
-		await batch.commit();
 	}
 
 	logger.info('synthesis.hideEmptyThemes', {
 		parentId,
-		hidden: empty.length,
-		themeIds: empty.map((t) => t.statementId),
+		hidden: hiddenIds.length,
+		themeIds: hiddenIds,
+		skippedNoLongerEmpty: skippedIds,
 	});
 
-	return empty.length;
+	return hiddenIds.length;
 }
 
 /**

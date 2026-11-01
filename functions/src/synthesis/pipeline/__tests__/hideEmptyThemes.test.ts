@@ -31,34 +31,55 @@ const theme = (id: string, fields: Partial<Statement> = {}): Statement =>
 		...fields,
 	});
 
-interface Recorded {
-	updates: { id: string; data: Record<string, unknown> }[];
-	commits: number;
+interface FakeDbHooks {
+	/** Runs inside a transaction just before it reads `id` (simulates a concurrent write). */
+	beforeTxGet?: (id: string, store: Map<string, Statement>) => void;
+	/** Make the transaction for `id` throw. */
+	failTx?: (id: string) => boolean;
 }
 
-function fakeDb(docs: Statement[], recorded: Recorded): Firestore {
+interface FakeDb {
+	db: Firestore;
+	store: Map<string, Statement>;
+	updates: { id: string; data: Record<string, unknown> }[];
+}
+
+/** In-memory statements collection with read-then-write transactions. */
+function fakeDb(docs: Statement[], hooks: FakeDbHooks = {}): FakeDb {
+	const store = new Map(docs.map((d) => [d.statementId, { ...d }]));
+	const updates: FakeDb['updates'] = [];
 	const collection = {
 		where: (field: string, _op: string, value: string) => ({
 			get: async () => ({
-				docs: docs
+				docs: [...store.values()]
 					.filter((d) => (d as unknown as Record<string, unknown>)[field] === value)
-					.map((d) => ({ data: () => d })),
+					.map((d) => ({ data: () => ({ ...d }) })),
 			}),
 		}),
 		doc: (id: string) => ({ id }),
 	};
-
-	return {
+	const db = {
 		collection: () => collection,
-		batch: () => ({
-			update: (ref: { id: string }, data: Record<string, unknown>) => {
-				recorded.updates.push({ id: ref.id, data });
-			},
-			commit: async () => {
-				recorded.commits++;
-			},
-		}),
+		runTransaction: async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> => {
+			const tx = {
+				get: async (ref: { id: string }) => {
+					if (hooks.failTx?.(ref.id)) throw new Error(`tx failed for ${ref.id}`);
+					hooks.beforeTxGet?.(ref.id, store);
+					const doc = store.get(ref.id);
+
+					return { exists: !!doc, data: () => (doc ? { ...doc } : undefined) };
+				},
+				update: (ref: { id: string }, data: Record<string, unknown>) => {
+					updates.push({ id: ref.id, data });
+					store.set(ref.id, { ...(store.get(ref.id) as Statement), ...data });
+				},
+			};
+
+			return fn(tx);
+		},
 	} as unknown as Firestore;
+
+	return { db, store, updates };
 }
 
 beforeEach(() => {
@@ -106,57 +127,95 @@ describe('selectEmptyThemes', () => {
 
 describe('hideEmptyThemes', () => {
 	it('hides only the leftovers with the flag payload and returns the count', async () => {
-		const recorded: Recorded = { updates: [], commits: 0 };
-		const docs = [
+		const fake = fakeDb([
 			theme('t1'),
 			theme('t2'),
 			theme('t-full', { integratedOptions: ['o1'] }),
 			theme('t-manual', { titleLockedByCreator: true }),
 			theme('t-other-q', { parentId: 'q2' }),
-		];
+		]);
 		jest.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
 
-		const count = await hideEmptyThemes(fakeDb(docs, recorded), 'q1');
+		const count = await hideEmptyThemes(fake.db, 'q1');
 
 		expect(count).toBe(2);
-		expect(recorded.commits).toBe(1);
-		expect(recorded.updates.map((u) => u.id)).toEqual(['t1', 't2']);
-		expect(recorded.updates[0].data).toEqual({
+		expect(fake.updates.map((u) => u.id)).toEqual(['t1', 't2']);
+		expect(fake.updates[0].data).toEqual({
 			hide: true,
 			hiddenReason: EMPTY_THEME_HIDDEN_REASON,
-			integratedOptions: [],
 			lastUpdate: 1_700_000_000_000,
 		});
 		expect(EMPTY_THEME_HIDDEN_REASON).toBe('empty-theme');
 	});
 
-	it('writes nothing when no theme is empty', async () => {
-		const recorded: Recorded = { updates: [], commits: 0 };
+	it('never writes integratedOptions, so a concurrent filing cannot be wiped', async () => {
+		const fake = fakeDb([theme('t1')]);
 
-		const count = await hideEmptyThemes(
-			fakeDb([theme('t', { integratedOptions: ['o'] })], recorded),
-			'q1',
-		);
+		await hideEmptyThemes(fake.db, 'q1');
 
-		expect(count).toBe(0);
-		expect(recorded.commits).toBe(0);
+		expect(fake.updates[0].data).not.toHaveProperty('integratedOptions');
 	});
 
-	it('splits more than 500 hides into several batches', async () => {
-		const recorded: Recorded = { updates: [], commits: 0 };
-		const docs = Array.from({ length: 501 }, (_, i) => theme(`t${i}`));
+	it('skips a theme that gained a member after the selection read, keeping the member', async () => {
+		const fake = fakeDb([theme('t-filed'), theme('t-still-empty')], {
+			// The filer adds a member between our query and our transaction.
+			beforeTxGet: (id, store) => {
+				if (id !== 't-filed') return;
+				const current = store.get(id) as Statement;
+				store.set(id, { ...current, integratedOptions: ['late-atom'] });
+			},
+		});
 
-		const count = await hideEmptyThemes(fakeDb(docs, recorded), 'q1');
+		const count = await hideEmptyThemes(fake.db, 'q1');
 
-		expect(count).toBe(501);
-		expect(recorded.commits).toBe(2);
+		expect(count).toBe(1);
+		expect(fake.updates.map((u) => u.id)).toEqual(['t-still-empty']);
+		expect(fake.store.get('t-filed')?.hide).toBeUndefined();
+		expect(fake.store.get('t-filed')?.integratedOptions).toEqual(['late-atom']);
+		expect(fake.store.get('t-still-empty')?.hide).toBe(true);
+	});
+
+	it('skips a theme someone else hid or deleted in the meantime', async () => {
+		const fake = fakeDb([theme('t-hidden'), theme('t-deleted')], {
+			beforeTxGet: (id, store) => {
+				if (id === 't-hidden') store.set(id, { ...(store.get(id) as Statement), hide: true });
+				if (id === 't-deleted') store.delete(id);
+			},
+		});
+
+		await expect(hideEmptyThemes(fake.db, 'q1')).resolves.toBe(0);
+		expect(fake.updates).toEqual([]);
+	});
+
+	it('logs a failing theme and still hides the others', async () => {
+		const fake = fakeDb([theme('t-bad'), theme('t-good')], {
+			failTx: (id) => id === 't-bad',
+		});
+
+		const count = await hideEmptyThemes(fake.db, 'q1');
+
+		expect(count).toBe(1);
+		expect(fake.store.get('t-good')?.hide).toBe(true);
+		expect(logError).toHaveBeenCalledWith(
+			expect.any(Error),
+			expect.objectContaining({
+				operation: 'synthesis.hideEmptyThemes.hideOne',
+				statementId: 't-bad',
+			}),
+		);
+	});
+
+	it('writes nothing when no theme is empty', async () => {
+		const fake = fakeDb([theme('t', { integratedOptions: ['o'] })]);
+
+		await expect(hideEmptyThemes(fake.db, 'q1')).resolves.toBe(0);
+		expect(fake.updates).toEqual([]);
 	});
 
 	it('emptyThemeHideUpdate stamps the given time in milliseconds', () => {
 		expect(emptyThemeHideUpdate(42)).toEqual({
 			hide: true,
 			hiddenReason: 'empty-theme',
-			integratedOptions: [],
 			lastUpdate: 42,
 		});
 	});
