@@ -4,6 +4,7 @@ import { Users } from 'lucide-react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { fillPlaceholders } from '@/helpers/fillPlaceholders';
+import { translateCount } from '@/helpers/translateCount';
 import { isAdminRole } from '@/helpers/roleHelpers';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
@@ -107,7 +108,7 @@ const MembersSubsection: FC<MembersSubsectionProps> = ({
 	const matchCount = list.matching.length;
 	const hasSearch = list.search !== '';
 	useEffect(() => {
-		if (hasSearch) onAnnounce(fillPlaceholders(t('people.matchCount'), { count: matchCount }));
+		if (hasSearch) onAnnounce(translateCount(t, 'people.matchCount', matchCount));
 	}, [hasSearch, matchCount, onAnnounce, t]);
 
 	const [menuFor, setMenuFor] = useState<MemberEntry | null>(null);

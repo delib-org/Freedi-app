@@ -192,7 +192,7 @@ describe('OptionRooms (Joining answers & rooms)', () => {
 		});
 		fireEvent.click(screen.getByRole('button', { name: 'people.rooms.split' }));
 
-		expect(screen.getByText('people.rooms.replace.title')).toBeTruthy();
+		expect(screen.getByText('people.rooms.replace.title_other')).toBeTruthy();
 		expect(mockedClear).not.toHaveBeenCalled();
 		await act(async () => {
 			fireEvent.click(screen.getByRole('button', { name: 'Replace' }));

@@ -3,6 +3,8 @@ import { useSelector } from 'react-redux';
 import { RoomParticipant, RoomSettings } from '@freedi/shared-types';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { fillPlaceholders } from '@/helpers/fillPlaceholders';
+import { translateCount } from '@/helpers/translateCount';
 import {
 	selectAllRoomSettings,
 	setRoomsArray,
@@ -149,7 +151,10 @@ const CreatedRoomsDisplay: FC<CreatedRoomsDisplayProps> = ({ statementId, option
 		<div className={styles.optionRooms__subsection}>
 			<h3 className={styles.optionRooms__subsectionTitle}>{t('Created Rooms')}</h3>
 			<p className={styles.optionRooms__subsectionDescription}>
-				{rooms.length} {t('rooms')} {t('with')} {participants.length} {t('participants')}
+				{fillPlaceholders(t('people.rooms.roomsSummary'), {
+					rooms: translateCount(t, 'people.rooms.roomCount', rooms.length),
+					people: translateCount(t, 'people.personCount', participants.length),
+				})}
 			</p>
 
 			<div className={styles.roomsDisplay}>

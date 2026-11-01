@@ -3,6 +3,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { OptionWithMembers } from '@/controllers/db/joining/splitJoinedOption';
 import { fillPlaceholders } from '@/helpers/fillPlaceholders';
+import { translateCount } from '@/helpers/translateCount';
 import { selectAllRoomSettings } from '@/redux/roomAssignment/roomAssignmentSlice';
 import Button from '@/view/components/atomic/atoms/Button';
 import InlineNote from '@/view/components/atomic/atoms/InlineNote';
@@ -69,8 +70,10 @@ const RoomSplitControls: FC<RoomSplitControlsProps> = ({
 				)}
 				{split.result && (
 					<InlineNote variant="success">
-						{t('Successfully assigned')} {split.result.participants} {t('participants')} {t('into')}{' '}
-						{split.result.rooms} {t('rooms')}.
+						{fillPlaceholders(t('people.rooms.splitDone'), {
+							people: translateCount(t, 'people.personCount', split.result.participants),
+							rooms: translateCount(t, 'people.rooms.roomCount', split.result.rooms),
+						})}
 					</InlineNote>
 				)}
 			</div>
@@ -80,7 +83,7 @@ const RoomSplitControls: FC<RoomSplitControlsProps> = ({
 				onClose={() => setIsConfirming(false)}
 				size="small"
 				variant="warning"
-				title={fillPlaceholders(t('people.rooms.replace.title'), { count: existingRooms })}
+				title={translateCount(t, 'people.rooms.replace.title', existingRooms)}
 				showCloseButton={false}
 				footer={
 					<>

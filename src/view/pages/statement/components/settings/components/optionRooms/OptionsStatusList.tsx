@@ -2,6 +2,8 @@ import { FC } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { AlertTriangle, Check, Users, CheckCircle } from 'lucide-react';
 import { OptionWithMembers } from '@/controllers/db/joining/splitJoinedOption';
+import { fillPlaceholders } from '@/helpers/fillPlaceholders';
+import { translateCount } from '@/helpers/translateCount';
 import styles from './OptionRooms.module.scss';
 
 interface OptionsStatusListProps {
@@ -48,7 +50,7 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({ options }) => {
 	) => {
 		switch (status) {
 			case 'assigned':
-				return t('Rooms assigned');
+				return t('people.rooms.assigned');
 			case 'ok':
 				return t('Ready to assign');
 			case 'warning':
@@ -62,9 +64,12 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({ options }) => {
 
 	return (
 		<div className={styles.optionRooms__subsection}>
-			<h3 className={styles.optionRooms__subsectionTitle}>{t('Options with Participants')}</h3>
+			<h3 className={styles.optionRooms__subsectionTitle}>{t('people.rooms.answersJoined')}</h3>
 			<p className={styles.optionRooms__subsectionDescription}>
-				{options.length} {t('options')} {t('with')} {totalParticipants} {t('participants')}
+				{fillPlaceholders(t('people.rooms.answersSummary'), {
+					answers: translateCount(t, 'people.rooms.answerCount', options.length),
+					people: translateCount(t, 'people.personCount', totalParticipants),
+				})}
 			</p>
 
 			<div className={styles.optionRooms__statusList}>
@@ -83,7 +88,7 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({ options }) => {
 								</div>
 								<div className={styles.optionRooms__statusDetails}>
 									<span className={styles.optionRooms__memberCount}>
-										{option.joinedCount} {t('members')}
+										{translateCount(t, 'people.personCount', option.joinedCount)}
 									</span>
 									<span className={styles.optionRooms__statusBadge}>
 										{getStatusText(option, status)}
