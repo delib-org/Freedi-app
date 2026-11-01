@@ -23,7 +23,7 @@ import {
 import { isAdmin as isAdminRole } from '@/controllers/general/helpers';
 import { shouldShowResults, shouldShowRevealHint } from './resultsVisibility';
 import { ResultsStrip } from '@/view/components/atomic/molecules/ResultsStrip';
-import { Check } from 'lucide-react';
+import { EvaluationCircle, EvaluationCircleRow } from '../shared/EvaluationCircle';
 import { FaceIcon } from '@/view/components/atomic/atoms/FaceIcon';
 
 export type EnhancedEvaluationVariant = 'default' | 'card';
@@ -93,35 +93,42 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	};
 	const showResults = shouldShowResults(showEvaluation, visibilityInput);
 
+	const thumbNodes = options.map((option) => (
+		<EvaluationThumb
+			key={option.thumb.id}
+			evaluationThumb={option.thumb}
+			isActive={option.isSelected}
+			tone={option.tone}
+			labelKey={option.labelKey}
+			showLabel={showLabels}
+			shape={isCard ? 'circle' : 'tile'}
+			statement={statement}
+			enableEvaluation={enableEvaluation}
+			onEvaluate={handleEvaluate}
+		/>
+	));
+
 	return (
 		<div className={clsx(styles.evaluation, isCard && styles['evaluation--card'])}>
-			{!isOwnAnswer && (
-				<div
-					className={clsx(
-						styles.scale,
-						isCard && styles['scale--circles'],
-						isCard && hasRated && styles['scale--has-selection'],
-					)}
-					role="group"
-					aria-label={t('Rating scale')}
-					data-testid="face-scale"
-				>
-					{options.map((option) => (
-						<EvaluationThumb
-							key={option.thumb.id}
-							evaluationThumb={option.thumb}
-							isActive={option.isSelected}
-							tone={option.tone}
-							labelKey={option.labelKey}
-							showLabel={showLabels}
-							shape={isCard ? 'circle' : 'tile'}
-							statement={statement}
-							enableEvaluation={enableEvaluation}
-							onEvaluate={handleEvaluate}
-						/>
-					))}
-				</div>
-			)}
+			{!isOwnAnswer &&
+				(isCard ? (
+					<EvaluationCircleRow
+						hasSelection={hasRated}
+						label={t('Rating scale')}
+						testId="face-scale"
+					>
+						{thumbNodes}
+					</EvaluationCircleRow>
+				) : (
+					<div
+						className={styles.scale}
+						role="group"
+						aria-label={t('Rating scale')}
+						data-testid="face-scale"
+					>
+						{thumbNodes}
+					</div>
+				))}
 			{/* The result numbers, spelled out. They used to live only in a hover
 			    tooltip on a colour bar, so touch users never saw them. On a card
 			    they are Join's compact chips row. */}
@@ -197,31 +204,17 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 	);
 
 	const circleButton = (
-		<button
-			type="button"
-			className={clsx(
-				styles.circle,
-				isActive && styles['circle--active'],
-				!enableEvaluation && styles['face--disabled'],
-			)}
-			style={faceStyle}
-			onClick={enableEvaluation ? handleSetEvaluation : undefined}
+		<EvaluationCircle
+			color={evaluationThumb.colorSelected}
+			isActive={isActive}
 			disabled={!enableEvaluation}
-			aria-disabled={!enableEvaluation}
-			aria-pressed={isActive}
-			aria-label={enableEvaluation ? label : `${label}. ${t('Voting disabled - view only')}`}
-			title={label}
-			data-testid={`face-scale-option-${evaluationThumb.id}`}
+			label={label}
+			disabledLabel={`${label}. ${t('Voting disabled - view only')}`}
+			onClick={handleSetEvaluation}
+			testId={`face-scale-option-${evaluationThumb.id}`}
 		>
-			<span className={styles['circle__glyph']} aria-hidden="true">
-				{glyph}
-			</span>
-			{isActive && (
-				<span className={styles['circle__check']} aria-hidden="true">
-					<Check size={14} strokeWidth={3} />
-				</span>
-			)}
-		</button>
+			{glyph}
+		</EvaluationCircle>
 	);
 
 	const button = isCircle ? (

@@ -9,6 +9,10 @@ jest.mock('../EnhancedEvaluation.module.scss', () => ({
 	__esModule: true,
 	default: new Proxy({}, { get: (_target, key) => key }),
 }));
+jest.mock('../../shared/EvaluationCircle.module.scss', () => ({
+	__esModule: true,
+	default: new Proxy({}, { get: (_target, key) => key }),
+}));
 jest.mock('@/controllers/db/evaluation/setEvaluation', () => ({ setEvaluationToDB: jest.fn() }));
 jest.mock('@/controllers/hooks/useAuthentication', () => ({
 	useAuthentication: () => ({ creator: { uid: 'u1' } }),

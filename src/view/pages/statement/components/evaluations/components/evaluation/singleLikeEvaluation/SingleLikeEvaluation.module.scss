@@ -223,3 +223,11 @@
 		transform: translateY(0);
 	}
 }
+// Answer card (Join look): centered circles, chips row under them.
+.cardEvaluation {
+	display: flex;
+	flex-direction: column;
+	gap: 0.625rem;
+	inline-size: 100%;
+	min-width: 0;
+}

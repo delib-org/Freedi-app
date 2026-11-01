@@ -47,6 +47,7 @@ const Evaluation: FC<EvaluationProps> = ({ statement, variant = 'default' }) => 
 							parentStatement={parentStatement}
 							shouldDisplayScore={shouldDisplayScore}
 							enableEvaluation={enableEvaluation}
+							variant={variant}
 						/>
 					);
 				case 'range':
@@ -59,7 +60,11 @@ const Evaluation: FC<EvaluationProps> = ({ statement, variant = 'default' }) => 
 					);
 				case 'community-voice':
 					return (
-						<CommunityVoiceEvaluation statement={statement} enableEvaluation={enableEvaluation} />
+						<CommunityVoiceEvaluation
+							statement={statement}
+							enableEvaluation={enableEvaluation}
+							variant={variant}
+						/>
 					);
 				case 'like-dislike':
 				default:
@@ -68,6 +73,7 @@ const Evaluation: FC<EvaluationProps> = ({ statement, variant = 'default' }) => 
 							statement={statement}
 							shouldDisplayScore={shouldDisplayScore}
 							enableEvaluation={enableEvaluation}
+							variant={variant}
 						/>
 					);
 			}
@@ -89,6 +95,7 @@ const Evaluation: FC<EvaluationProps> = ({ statement, variant = 'default' }) => 
 				statement={statement}
 				shouldDisplayScore={shouldDisplayScore}
 				enableEvaluation={enableEvaluation}
+				variant={variant}
 			/>
 		);
 	} catch (error) {
