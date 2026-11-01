@@ -122,21 +122,65 @@
     margin-bottom: 0.75rem; // tighter than cluster cards (no stack to clear)
 
     .grouped-suggestion__card {
-      // Match the regular SuggestionCard visual treatment exactly: pale
-      // input background, small shadow, square 4px corners, white left
-      // accent strip. The Sparkles badge is the sole synthesis signal.
-      background-color: var(--inputBackground, #f5fcff) !important;
-      background-image: none !important;
-      border: none !important;
-      border-left: 8px solid white !important;
-      border-radius: 4px !important;
-      padding: 0.6rem 0.75rem !important;
-      box-shadow: 2px 2px 4px var(--shadow, rgba(0, 0, 0, 0.08)) !important;
+      // Same surface as the plain option card (SuggestionCard.module.scss):
+      // card colour, hairline, medium radius, flat elevation, a reserved
+      // inline-start rule. The only differences are the rule's accent, a
+      // faint wash, and the "Synthesized" badge.
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      box-sizing: border-box;
+      padding: var(--space-md);
+      background-color: color-mix(in srgb, var(--btn-primary) 3%, var(--card-default));
+      background-image: none;
+      border: var(--hairline);
+      border-inline-start: var(--rule-width) solid var(--btn-primary);
+      border-radius: var(--radius-md);
+      box-shadow: var(--elevation-0);
 
-      @include rtl {
-        border-left: none !important;
-        border-right: 8px solid white !important;
+      @include mobile {
+        padding: var(--space-sm);
+        gap: var(--space-2xs);
       }
+    }
+
+    .grouped-suggestion__header {
+      margin-bottom: 0;
+      padding-inline: 0;
+    }
+
+    .grouped-suggestion__proposal-title {
+      margin-bottom: var(--space-2xs);
+      font-size: 0.96875rem; // the plain card's statement text size
+      font-weight: var(--font-weight-semibold);
+      line-height: var(--line-height-card);
+    }
+
+    .grouped-suggestion__proposal-description {
+      margin: 0;
+      font-size: var(--font-size-sm);
+    }
+
+    .grouped-suggestion__proposal-actions {
+      margin: 0;
+    }
+
+    // The evaluation control sits in the same slot as on a plain card.
+    .grouped-suggestion__body {
+      margin-bottom: 0;
+    }
+
+    // The meta row lives inside the collapsed details, so it is always
+    // shown there (including on mobile, where cluster cards hide it).
+    .grouped-suggestion__meta {
+      display: flex;
+      margin-bottom: var(--space-xs);
+    }
+
+    .grouped-suggestion__drawer {
+      margin-top: var(--space-xs);
+      min-height: 44px;
+      border-radius: var(--radius-md);
     }
 
     // Hide the cluster corner count ribbon — it implies "stack of items"
@@ -346,6 +390,46 @@
       cursor: progress;
       opacity: 0.55;
     }
+  }
+
+  // ============================================================================
+  // DETAILS — the collapsed line that holds a synthesis card's provenance
+  // ============================================================================
+  &__details-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    align-self: flex-start;
+    min-height: 32px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary, #777);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    &[aria-expanded='true'] .grouped-suggestion__details-chevron {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__details-chevron {
+    transition: transform 150ms ease;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  &__details-body {
+    padding-top: var(--space-xs);
+    border-top: var(--hairline);
   }
 
   // ============================================================================

@@ -559,7 +559,7 @@ export default function SolutionFeedClient({
                     setShowSolutionPrompt(true);
                   }}
                 >
-                  {t('Add Solution')}
+                  {t('mc.addAnswer')}
                 </button>
               </>
             ) : (
@@ -695,7 +695,7 @@ export default function SolutionFeedClient({
                   setShowSolutionPrompt(true);
                 }}
               >
-                {t('Add Solution')}
+                {t('mc.addAnswer')}
               </button>
             )}
           </div>
@@ -715,7 +715,7 @@ export default function SolutionFeedClient({
             questionText={question.statement}
             questionNumber={questionNumber}
             questionDescription={getParagraphsText(question.paragraphs)}
-            title={requiresSolution && !hasCheckedUserSolutions ? t('Add Your Solution First') : t('Add Solution')}
+            title={requiresSolution && !hasCheckedUserSolutions ? t('mc.addYourAnswerFirst') : t('mc.addAnswer')}
             suggestionMode={mergedSettings?.suggestionMode}
             autoSplitMultiSuggestions={
               mergedSettings?.autoSplitMultiSuggestions ??

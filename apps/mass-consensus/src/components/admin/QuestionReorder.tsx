@@ -139,7 +139,7 @@ function SortableItem({
                   )
                 }
               />
-              <span>{t('allowParticipantsToAddSuggestionsQuestion') || 'Allow participants to add suggestions'}</span>
+              <span>{t('allowParticipantsToAddSuggestionsQuestion') || 'Allow participants to add answers'}</span>
             </label>
           </div>
 
@@ -153,7 +153,7 @@ function SortableItem({
                   handleSettingToggle('askUserForASolutionBeforeEvaluation', e.target.checked)
                 }
               />
-              <span>{t('askForSuggestionBeforeEvaluation') || 'Ask for suggestion before showing options'}</span>
+              <span>{t('askForSuggestionBeforeEvaluation') || 'Ask for an answer before showing options'}</span>
             </label>
           </div>
 

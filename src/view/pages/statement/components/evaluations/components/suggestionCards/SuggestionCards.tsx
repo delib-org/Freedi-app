@@ -16,6 +16,7 @@ import {
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 import SuggestionCard from './suggestionCard/SuggestionCard';
+import Evaluation from '../evaluation/Evaluation';
 import { applyManualOrder, sortStatements } from './suggestionOrdering';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
@@ -266,6 +267,7 @@ const SuggestionCards: FC = () => {
 									mode="both"
 									allowDrillToOriginals
 									pipeline="synthesis"
+									evaluationSlot={<Evaluation statement={synth} variant="card" />}
 									renderOriginal={renderRaw}
 								/>
 							</div>

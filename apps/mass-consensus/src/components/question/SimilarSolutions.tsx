@@ -100,7 +100,7 @@ export default function SimilarSolutions({
               onClick={() => onSelect(null)}
               className={`${styles.chooseButton} ${styles.primary}`}
             >
-              {t('addAsNewSolution') || 'Add as New Solution'} ✨
+              {t('addAsNewSolution') || 'Add as New Answer'} ✨
             </button>
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function SimilarSolutions({
       <div className={`${styles.container} ${styles.balancedMode}`}>
         {/* Header - Neutral */}
         <div className={styles.header}>
-          <h2>{t('similarSuggestionsFound') || 'We found similar suggestions'} 🔍</h2>
+          <h2>{t('similarSuggestionsFound') || 'We found similar answers'} 🔍</h2>
           <p>{t('chooseHowToProceed') || 'Choose how you\'d like to proceed'}</p>
         </div>
 
@@ -157,7 +157,7 @@ export default function SimilarSolutions({
           >
             <span className={styles.balancedIcon}>✨</span>
             <span className={styles.balancedLabel}>{t('addAsNew') || 'Add as New'}</span>
-            <span className={styles.balancedDesc}>{t('createUniqueSuggestion') || 'Create your unique suggestion'}</span>
+            <span className={styles.balancedDesc}>{t('createUniqueSuggestion') || 'Create your unique answer'}</span>
           </button>
           <button
             onClick={() => handleMerge(bestSimilar.statementId)}
@@ -171,13 +171,13 @@ export default function SimilarSolutions({
 
         {/* Your Suggestion Preview */}
         <div className={styles.suggestionPreview}>
-          <span className={styles.previewLabel}>{t('yourSuggestion') || 'Your suggestion:'}</span>
+          <span className={styles.previewLabel}>{t('yourSuggestion') || 'Your answer:'}</span>
           <p>{userSuggestion}</p>
         </div>
 
         {/* Similar Solutions List */}
         <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>{t('similarSolutions') || 'Similar solutions:'}</h3>
+          <h3 className={styles.sectionTitle}>{t('similarSolutions') || 'Similar answers:'}</h3>
           {topSimilar.map((solution) => (
             <div key={solution.statementId} className={styles.similarCard}>
               <div className={styles.similarMeta}>
@@ -222,7 +222,7 @@ export default function SimilarSolutions({
             </div>
             <div className={styles.modalContent}>
               <ul className={styles.benefitsList}>
-                <li>{t('voicePreserved') || 'Your voice is preserved in the merged proposal'}</li>
+                <li>{t('voicePreserved') || 'Your voice is preserved in the merged answer'}</li>
                 <li>{t('strongerTogether') || 'Stronger together = more impact'}</li>
                 <li>{t('avoidsVoteSplitting') || 'Avoids vote splitting between similar ideas'}</li>
               </ul>

@@ -68,7 +68,7 @@ export default function ResultCard({ statement, isUserStatement, totalParticipan
       <div className={styles.resultCard__content}>
         {isUserStatement && (
           <div className={styles.resultCard__badgeRow}>
-            <span className={styles.resultCard__userBadge}>{t('Your suggestion')}</span>
+            <span className={styles.resultCard__userBadge}>{t('mc.yourAnswer')}</span>
           </div>
         )}
         <div className={styles.resultCard__text}>

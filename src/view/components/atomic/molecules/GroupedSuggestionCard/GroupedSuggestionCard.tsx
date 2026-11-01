@@ -25,6 +25,7 @@ import {
 } from '@/controllers/db/integration/integrationController';
 import { logError } from '@/utils/errorHandling';
 import ScoreBreakdown from './ScoreBreakdown';
+import CollapsibleDetails from './CollapsibleDetails';
 
 /**
  * GroupedSuggestionCard — displays a cluster statement that represents
@@ -312,6 +313,155 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 		? t('Already counted in the synthesized proposal above')
 		: t('Already counted in the group above');
 
+	const detailsContent = (
+		<>
+			{evaluation && (
+				<>
+					<div
+						className={clsx(
+							'grouped-suggestion__meta',
+							isAwaiting && 'grouped-suggestion__meta--muted',
+						)}
+						aria-label={t('Aggregated evaluation')}
+					>
+						{isAwaiting ? (
+							<span className="grouped-suggestion__meta-item">
+								{t('Awaiting community feedback')}
+							</span>
+						) : (
+							<>
+								<span className="grouped-suggestion__meta-item">
+									<Users size={14} aria-hidden />
+									{numberOfEvaluators} {t('evaluators')}
+								</span>
+								{typeof evaluation.averageEvaluation === 'number' && (
+									<span className="grouped-suggestion__meta-item">
+										{t('Average')}: {evaluation.averageEvaluation.toFixed(2)}
+									</span>
+								)}
+								{typeof evaluation.agreement === 'number' && (
+									<span className="grouped-suggestion__meta-item">
+										{t('Agreement')}: {(evaluation.agreement * 100).toFixed(0)}%
+									</span>
+								)}
+								{typeof evaluation.confidenceIndex === 'number' && (
+									<span className="grouped-suggestion__meta-item">
+										{t('Confidence')}: {(evaluation.confidenceIndex * 100).toFixed(0)}%
+									</span>
+								)}
+							</>
+						)}
+					</div>
+					{/* Mobile-only toggle to reveal the meta row. A synthesis card keeps
+						    this row inside its collapsed details, so it needs no second toggle. */}
+					{!isSynthesis && (
+						<button
+							type="button"
+							className="grouped-suggestion__meta-toggle"
+							aria-expanded={mobileMetaOpen}
+							onClick={() => setMobileMetaOpen((v) => !v)}
+						>
+							<Info size={14} aria-hidden />
+							{mobileMetaOpen ? t('Hide details') : t('More info')}
+						</button>
+					)}
+				</>
+			)}
+
+			<ScoreBreakdown clusterId={cluster.statementId} />
+
+			{drawerVisible && (
+				<button
+					id={disclosureId}
+					type="button"
+					className="grouped-suggestion__drawer"
+					aria-expanded={mode === 'both' ? expanded : undefined}
+					aria-controls={mode === 'both' ? regionId : undefined}
+					onClick={handleDrawerClick}
+				>
+					<span className="grouped-suggestion__drawer-label">
+						{isSynthesis ? <Sparkles size={16} aria-hidden /> : <Layers size={16} aria-hidden />}
+						<span>
+							<strong>{count}</strong> {drawerInlineLabel}
+						</span>
+					</span>
+					<span className="grouped-suggestion__drawer-chevron" aria-hidden>
+						<ChevronDown size={18} />
+					</span>
+					<span className="sr-only">{drawerCountLabel}</span>
+				</button>
+			)}
+
+			{mode === 'both' && expanded && (
+				<div
+					id={regionId}
+					className="grouped-suggestion__originals"
+					role="region"
+					aria-live="polite"
+					aria-label={originalsRegionAriaLabel}
+				>
+					{isSynthesis && isAdmin && (
+						<div className="grouped-suggestion__proposal-actions grouped-suggestion__proposal-actions--admin">
+							<button
+								type="button"
+								className="grouped-suggestion__proposal-admin-btn"
+								onClick={handleRegenerateProposal}
+								disabled={isRegenerating}
+								title={t('Regenerate proposal (admin)')}
+								aria-label={t('Regenerate proposal (admin)')}
+							>
+								<RefreshCw size={12} aria-hidden />
+								<span>{isRegenerating ? t('Regenerating…') : t('Regenerate proposal')}</span>
+							</button>
+							<button
+								type="button"
+								className="grouped-suggestion__proposal-admin-btn grouped-suggestion__proposal-admin-btn--danger"
+								onClick={handleReverseSynthesis}
+								disabled={isReversing}
+								title={t('Reverse synthesis (admin)')}
+								aria-label={t('Reverse synthesis (admin)')}
+							>
+								<Undo2 size={12} aria-hidden />
+								<span>{isReversing ? t('Reversing…') : t('Reverse synthesis')}</span>
+							</button>
+						</div>
+					)}
+					{nestedSlot && <div className="grouped-suggestion__nested">{nestedSlot}</div>}
+					{isLoading && <p className="grouped-suggestion__original-note">{t('Loading…')}</p>}
+					{!isLoading && members.length === 0 && !nestedSlot && (
+						<p className="grouped-suggestion__original-note">{t('No originals found.')}</p>
+					)}
+					{members.map((original) => (
+						<div key={original.statementId} className="grouped-suggestion__original">
+							<div className="grouped-suggestion__original-row">
+								<div className="grouped-suggestion__original-text">
+									{renderOriginal ? (
+										renderOriginal(original)
+									) : (
+										<>
+											<span>{original.statement}</span>
+											<span className="grouped-suggestion__original-note">
+												{memberAlreadyCountedNote}
+											</span>
+										</>
+									)}
+								</div>
+								<Link
+									to={`/statement/${original.statementId}`}
+									className="grouped-suggestion__original-nav"
+									aria-label={t('Open original: {title}').replace('{title}', original.statement)}
+								>
+									<ExternalLink size={14} aria-hidden />
+									<span>{t('Open')}</span>
+								</Link>
+							</div>
+						</div>
+					))}
+				</div>
+			)}
+		</>
+	);
+
 	return (
 		<div className={classes} dir={dir} aria-label={cardAriaLabel}>
 			<span
@@ -379,149 +529,9 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 					</div>
 				)}
 
-				{evaluation && (
-					<>
-						<div
-							className={clsx(
-								'grouped-suggestion__meta',
-								isAwaiting && 'grouped-suggestion__meta--muted',
-							)}
-							aria-label={t('Aggregated evaluation')}
-						>
-							{isAwaiting ? (
-								<span className="grouped-suggestion__meta-item">
-									{t('Awaiting community feedback')}
-								</span>
-							) : (
-								<>
-									<span className="grouped-suggestion__meta-item">
-										<Users size={14} aria-hidden />
-										{numberOfEvaluators} {t('evaluators')}
-									</span>
-									{typeof evaluation.averageEvaluation === 'number' && (
-										<span className="grouped-suggestion__meta-item">
-											{t('Average')}: {evaluation.averageEvaluation.toFixed(2)}
-										</span>
-									)}
-									{typeof evaluation.agreement === 'number' && (
-										<span className="grouped-suggestion__meta-item">
-											{t('Agreement')}: {(evaluation.agreement * 100).toFixed(0)}%
-										</span>
-									)}
-									{typeof evaluation.confidenceIndex === 'number' && (
-										<span className="grouped-suggestion__meta-item">
-											{t('Confidence')}: {(evaluation.confidenceIndex * 100).toFixed(0)}%
-										</span>
-									)}
-								</>
-							)}
-						</div>
-						{/* Mobile-only toggle to reveal the meta row */}
-						<button
-							type="button"
-							className="grouped-suggestion__meta-toggle"
-							aria-expanded={mobileMetaOpen}
-							onClick={() => setMobileMetaOpen((v) => !v)}
-						>
-							<Info size={14} aria-hidden />
-							{mobileMetaOpen ? t('Hide details') : t('More info')}
-						</button>
-					</>
-				)}
-
 				{evaluationSlot && <div className="grouped-suggestion__body">{evaluationSlot}</div>}
 
-				<ScoreBreakdown clusterId={cluster.statementId} />
-
-				{drawerVisible && (
-					<button
-						id={disclosureId}
-						type="button"
-						className="grouped-suggestion__drawer"
-						aria-expanded={mode === 'both' ? expanded : undefined}
-						aria-controls={mode === 'both' ? regionId : undefined}
-						onClick={handleDrawerClick}
-					>
-						<span className="grouped-suggestion__drawer-label">
-							{isSynthesis ? <Sparkles size={16} aria-hidden /> : <Layers size={16} aria-hidden />}
-							<span>
-								<strong>{count}</strong> {drawerInlineLabel}
-							</span>
-						</span>
-						<span className="grouped-suggestion__drawer-chevron" aria-hidden>
-							<ChevronDown size={18} />
-						</span>
-						<span className="sr-only">{drawerCountLabel}</span>
-					</button>
-				)}
-
-				{mode === 'both' && expanded && (
-					<div
-						id={regionId}
-						className="grouped-suggestion__originals"
-						role="region"
-						aria-live="polite"
-						aria-label={originalsRegionAriaLabel}
-					>
-						{isSynthesis && isAdmin && (
-							<div className="grouped-suggestion__proposal-actions grouped-suggestion__proposal-actions--admin">
-								<button
-									type="button"
-									className="grouped-suggestion__proposal-admin-btn"
-									onClick={handleRegenerateProposal}
-									disabled={isRegenerating}
-									title={t('Regenerate proposal (admin)')}
-									aria-label={t('Regenerate proposal (admin)')}
-								>
-									<RefreshCw size={12} aria-hidden />
-									<span>{isRegenerating ? t('Regenerating…') : t('Regenerate proposal')}</span>
-								</button>
-								<button
-									type="button"
-									className="grouped-suggestion__proposal-admin-btn grouped-suggestion__proposal-admin-btn--danger"
-									onClick={handleReverseSynthesis}
-									disabled={isReversing}
-									title={t('Reverse synthesis (admin)')}
-									aria-label={t('Reverse synthesis (admin)')}
-								>
-									<Undo2 size={12} aria-hidden />
-									<span>{isReversing ? t('Reversing…') : t('Reverse synthesis')}</span>
-								</button>
-							</div>
-						)}
-						{nestedSlot && <div className="grouped-suggestion__nested">{nestedSlot}</div>}
-						{isLoading && <p className="grouped-suggestion__original-note">{t('Loading…')}</p>}
-						{!isLoading && members.length === 0 && !nestedSlot && (
-							<p className="grouped-suggestion__original-note">{t('No originals found.')}</p>
-						)}
-						{members.map((original) => (
-							<div key={original.statementId} className="grouped-suggestion__original">
-								<div className="grouped-suggestion__original-row">
-									<div className="grouped-suggestion__original-text">
-										{renderOriginal ? (
-											renderOriginal(original)
-										) : (
-											<>
-												<span>{original.statement}</span>
-												<span className="grouped-suggestion__original-note">
-													{memberAlreadyCountedNote}
-												</span>
-											</>
-										)}
-									</div>
-									<Link
-										to={`/statement/${original.statementId}`}
-										className="grouped-suggestion__original-nav"
-										aria-label={t('Open original: {title}').replace('{title}', original.statement)}
-									>
-										<ExternalLink size={14} aria-hidden />
-										<span>{t('Open')}</span>
-									</Link>
-								</div>
-							</div>
-						))}
-					</div>
-				)}
+				{isSynthesis ? <CollapsibleDetails>{detailsContent}</CollapsibleDetails> : detailsContent}
 			</div>
 		</div>
 	);

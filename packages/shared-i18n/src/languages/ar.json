@@ -4629,5 +4629,13 @@
   "suggestedQuestions": "مقترحة (من السؤال الأصل نفسه)",
   "recentlyRemovedQuestions": "أُزيلت مؤخرًا",
   "similarByMeaning": "متشابهة في المعنى",
-  "searchingBySimilarMeaning": "جارٍ البحث عن أسئلة مشابهة..."
+  "searchingBySimilarMeaning": "جارٍ البحث عن أسئلة مشابهة...",
+  "mc.addAnswer": "أضف إجابة",
+  "mc.addYourAnswerFirst": "أضف إجابتك أولاً",
+  "mc.answerLabel": "إجابة",
+  "mc.answersLabel": "الإجابات",
+  "mc.answer": "إجابة",
+  "mc.answers": "إجابات",
+  "mc.yourAnswer": "إجابتك",
+  "mc.scoreBreakdownSummary": "{count} مقيّمين · {direct} مباشر + {inherited} موروث من {originals} إجابات أصلية"
 }
