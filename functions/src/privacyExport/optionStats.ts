@@ -28,6 +28,7 @@ export const STATS_NOTES =
 	"one vote per user across the option and its member options, as shown in the app — the user's direct vote on the " +
 	'derived option wins, otherwise the average of their votes on its members; members that are themselves derived ' +
 	'(a synthesis inside a theme) are resolved the same way, level by level. ' +
+	"Themes are not voted on directly: a theme's numbers are roll-ups of its members and its agreement is indicative only. " +
 	'When metadata.fpcApplied is true, agreement uses the finite-population correction with N = metadata.stakeholderCount.';
 
 /**

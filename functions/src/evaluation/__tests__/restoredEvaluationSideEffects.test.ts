@@ -16,6 +16,10 @@ jest.mock('../evaluatorParticipation', () => ({
 jest.mock('../updateChosenOptions', () => ({
 	updateParentStatementWithChosenOptions: () => Promise.resolve(),
 }));
+const mockDropOnTheme = jest.fn<() => Promise<boolean>>();
+jest.mock('../themeGuard', () => ({
+	dropEvaluationOnTheme: () => mockDropOnTheme(),
+}));
 jest.mock('../statementEvaluationUpdater', () => ({
 	updateStatementEvaluation: () => mockUpdateStatement(),
 }));
@@ -73,6 +77,7 @@ describe('newEvaluation with a vote restored from a dissolved synthesis', () => 
 			(m) => m.mockReset().mockResolvedValue(undefined as never),
 		);
 		mockUpdateStatement.mockReset().mockResolvedValue({ statement, duplicate: false });
+		mockDropOnTheme.mockReset().mockResolvedValue(false);
 	});
 
 	it('still updates the option counters but triggers no credits, stats or notifications', async () => {
@@ -92,5 +97,18 @@ describe('newEvaluation with a vote restored from a dissolved synthesis', () => 
 		expect(mockSocialProof).toHaveBeenCalledTimes(1);
 		expect(mockAdminStats).toHaveBeenCalledTimes(1);
 		expect(mockProgress).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('newEvaluation on a theme', () => {
+	it('stops before any counter or side-effect when the guard drops the evaluation', async () => {
+		mockDropOnTheme.mockReset().mockResolvedValue(true);
+		mockUpdateStatement.mockReset();
+
+		await newEvaluation(eventFor({}));
+
+		expect(mockUpdateStatement).not.toHaveBeenCalled();
+		expect(mockEngagement).not.toHaveBeenCalled();
+		expect(mockAdminStats).not.toHaveBeenCalled();
 	});
 });

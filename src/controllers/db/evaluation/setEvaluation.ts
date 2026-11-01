@@ -7,6 +7,7 @@ import {
 	User,
 	EvaluationUI,
 	evaluationType,
+	isTheme,
 } from '@freedi/shared-types';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import { analyticsService } from '@/services/analytics';
@@ -28,6 +29,16 @@ export async function setEvaluationToDB(
 	evaluation: number,
 	demographicAnchorId?: string,
 ): Promise<void> {
+	// Themes are navigation containers; their numbers are roll-ups of their
+	// members. Nothing is written, whichever control called us.
+	if (isTheme(statement)) {
+		logger.info('Evaluation skipped: statement is a theme', {
+			statementId: statement.statementId,
+		});
+
+		return;
+	}
+
 	try {
 		parse(number(), evaluation);
 

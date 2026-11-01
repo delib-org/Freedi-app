@@ -23,7 +23,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import EditableStatement from '@/view/components/edit/EditableStatement';
 import { hasParagraphsContent } from '@/utils/paragraphUtils';
 import styles from './SuggestionCard.module.scss';
-import { StatementType, Statement } from '@freedi/shared-types';
+import { StatementType, Statement, isTheme } from '@freedi/shared-types';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import JoinButtons from '@/view/pages/statement/components/joining/JoinButtons';
 import Joined from '@/view/components/joined/Joined';
@@ -505,7 +505,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 
 				{/* Face circles, then (after you rate) the results chips. */}
 				<div className={styles['evolution-element']}>
-					<Evaluation statement={statement} variant="card" />
+					{!isTheme(statement) && <Evaluation statement={statement} variant="card" />}
 				</div>
 
 				{/* Bottom row like Join: action pills at the start, the chat as a

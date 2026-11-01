@@ -21,6 +21,7 @@ export const OTHER_IDEAS_ID = '__other_ideas__';
 
 const OPTION_TYPE = 'option';
 const SYNTHESIS_PIPELINE = 'synthesis';
+const TOPIC_CLUSTER_PIPELINE = 'topic-cluster';
 
 /** The minimal shape the function reads; Statement and export source rows both satisfy it. */
 export interface IdeaNode {
@@ -53,6 +54,26 @@ function isSynthesis(node: IdeaNode): boolean {
 	return node.isCluster === true && node.derivedByPipeline === SYNTHESIS_PIPELINE;
 }
 
+/**
+ * A theme, for voting purposes: a cluster the topic-cluster pipeline wrote
+ * (`derivedByPipeline === 'topic-cluster'`). Themes are navigation containers:
+ * their numbers are roll-ups of their members and they are never voted on
+ * directly.
+ *
+ * Deliberately strict and fail-open: a cluster without the field (a manual
+ * merge from `performIntegration`, or a legacy doc) is NOT a theme here.
+ * Manual merges carry migrated votes and are voted on, so they must stay
+ * votable. `computeOtherIdeas` keeps its own, broader grouping predicate.
+ */
+export function isTheme(node: Pick<IdeaNode, 'isCluster' | 'derivedByPipeline'>): boolean {
+	return node.isCluster === true && node.derivedByPipeline === TOPIC_CLUSTER_PIPELINE;
+}
+
+/** Grouping predicate of the Themes view: any cluster that is not a synthesis. */
+function isThemeLike(node: IdeaNode): boolean {
+	return node.isCluster === true && !isSynthesis(node);
+}
+
 /** Theme sharing the most members with the synthesis; ties go to the earlier theme. */
 function bestThemeByMembers(
 	synthesis: IdeaNode,
@@ -77,7 +98,7 @@ function bestThemeByMembers(
  */
 export function computeOtherIdeas<T extends IdeaNode>(siblings: T[]): OtherIdeasResult<T> {
 	const visible = siblings.filter(isVisibleOption);
-	const themes = visible.filter((s) => s.isCluster === true && !isSynthesis(s));
+	const themes = visible.filter(isThemeLike);
 	const syntheses = visible.filter(isSynthesis);
 
 	const synthesisMemberIds = new Set<string>();
