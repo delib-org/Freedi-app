@@ -76,12 +76,13 @@ describe('DraftFromResults', () => {
 
 	it('offers crowd surveys and live sessions as sources, closed ones pre-selected', () => {
 		renderSection();
-		expect(
-			screen.getByRole('checkbox', { name: 'Collect ideas' }).getAttribute('aria-checked'),
-		).toBe('true');
-		expect(screen.getByRole('checkbox', { name: 'Town hall' }).getAttribute('aria-checked')).toBe(
-			'false',
-		);
+		const collectIdeas = screen.getByRole('checkbox', {
+			name: /^Collect ideas/,
+		}) as HTMLInputElement;
+		const townHall = screen.getByRole('checkbox', { name: /^Town hall/ }) as HTMLInputElement;
+
+		expect(collectIdeas.checked).toBe(true);
+		expect(townHall.checked).toBe(false);
 		expect(screen.queryByRole('checkbox', { name: 'Deep dive' })).toBeNull();
 		expect(screen.queryByRole('checkbox', { name: 'The proposal' })).toBeNull();
 		expect(screen.getByRole('radio', { name: /best suggestions by consensus/i })).toBeTruthy();
@@ -95,7 +96,7 @@ describe('DraftFromResults', () => {
 			signAdminUrl: 'https://sign.test/doc/doc-1/admin/editor',
 		});
 		const { onDrafted } = renderSection();
-		fireEvent.click(screen.getByRole('checkbox', { name: 'Town hall' }));
+		fireEvent.click(screen.getByRole('checkbox', { name: /^Town hall/ }));
 		fireEvent.change(screen.getByLabelText(/what should the text be/i), {
 			target: { value: 'A one-page proposal.' },
 		});
@@ -163,7 +164,7 @@ describe('DraftFromResults', () => {
 
 	it('disables the button when no source is selected', () => {
 		renderSection();
-		fireEvent.click(screen.getByRole('checkbox', { name: 'Collect ideas' }));
+		fireEvent.click(screen.getByRole('checkbox', { name: /^Collect ideas/ }));
 		expect(screen.getByRole('button', { name: /write the draft/i }).hasAttribute('disabled')).toBe(
 			true,
 		);
