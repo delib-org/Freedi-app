@@ -394,7 +394,7 @@ try {
 	await signInTeacher(t360, BASE, teacherUid);
 	const backShots = process.env.E2E_NAV_SHOTS;
 	const screens = [
-		{ name: 'plan', path: `/t/plans/${planId}`, label: 'מערכי השיעור שלי', href: '/t' },
+		{ name: 'plan', path: `/t/plans/${planId}`, label: null, href: null }, // home only (IA 14.3)
 		{ name: 'game', path: `/t/plans/${planId}/games/${gameId}`, label: planTitle, href: `/t/plans/${planId}` },
 		{ name: 'console', path: `/t/${lessonA}`, label: planTitle, href: `/t/plans/${planId}` },
 		{ name: 'lesson-questions', path: `/t/${lessonA}/plan`, label: customName, href: `/t/${lessonA}` },
@@ -404,6 +404,7 @@ try {
 		await t360.goto(`${BASE}${sc.path}`, { waitUntil: 'domcontentloaded' });
 		const scope = sc.name === 'table-sheet' ? '.table-sheet ' : '';
 		await t360.waitForFunction(([label, href, sel]) => {
+			if (!href) return !!document.querySelector(`${sel}.back-bar__home`);
 			const a = document.querySelector(`${sel}.back-bar__link`);
 
 			return !!a && a.textContent.includes(label) && a.getAttribute('href') === href;
@@ -411,12 +412,21 @@ try {
 		await sleep(700);
 		const info = await t360.evaluate((sel) => {
 			const bars = document.querySelectorAll(`${sel}.back-bar`);
+			const home = document.querySelector(`${sel}.back-bar__home`);
+			const hr = home?.getBoundingClientRect();
+			const homeInfo = home && {
+				homeHref: home.getAttribute('href'), homeAria: home.getAttribute('aria-label'), homeW: hr.width, homeH: hr.height,
+				homeFirst: home === home.closest('.back-bar').firstElementChild, homeLeft: hr.left, homeRight: hr.right,
+				homeText: home.textContent.trim(), homeIcon: !!home.querySelector('svg.console-icon'),
+				homeFocusable: home.tabIndex >= 0, homeBorder: getComputedStyle(home).borderTopWidth, vw: window.innerWidth,
+			};
 			const a = document.querySelector(`${sel}.back-bar__link`);
-			if (!a) return null;
+			if (!a) return home ? { bars: bars.length, noBack: true, ...homeInfo } : null;
 			const r = a.getBoundingClientRect();
 			const chev = getComputedStyle(a.querySelector('.back-bar__chevron')).transform;
 
 			return {
+				...homeInfo,
 				bars: bars.length, text: a.textContent, href: a.getAttribute('href'), aria: a.getAttribute('aria-label'),
 				h: r.height, top: r.top, left: r.left, right: r.right, vw: window.innerWidth,
 				sticky: getComputedStyle(a.closest('.back-bar')).position, chev,
@@ -425,7 +435,13 @@ try {
 				focusable: a.tabIndex >= 0,
 			};
 		}, scope);
-		check(`back bar [${sc.name}]: one bar reading "‹ ${sc.label}" going to ${sc.href}`, !!info && info.bars === 1 && info.text.includes(sc.label) && info.href === sc.href, JSON.stringify(info));
+		check(`home [${sc.name}]: first in the bar, goes to /t, house icon, >= 44x44, named, focusable, inside 360px`, !!info && info.homeHref === '/t' && info.homeFirst && info.homeIcon && info.homeW >= 44 && info.homeH >= 44 && /חזרה אל מערכי השיעור שלי/.test(info.homeAria ?? '') && info.homeFocusable && info.homeBorder === '2px' && info.homeLeft >= 0 && info.homeRight <= info.vw, JSON.stringify(info));
+		if (!sc.href) {
+			check(`back bar [${sc.name}]: home only, with its visible text, no back link`, !!info && info.bars === 1 && info.noBack === true && info.homeText === 'מערכי השיעור שלי', JSON.stringify(info));
+			if (backShots) await t360.screenshot({ path: `${backShots}/back-${sc.name}.png` });
+			continue;
+		}
+		check(`back bar [${sc.name}]: one bar reading "‹ ${sc.label}" going to ${sc.href}, home icon only`, !!info && info.bars === 1 && info.text.includes(sc.label) && info.href === sc.href && info.homeText === '', JSON.stringify(info));
 		check(`back bar [${sc.name}]: >= 44px tall, at the top of a 360px phone, inside the width, sticky`, !!info && info.h >= 44 && info.top >= 0 && (sc.name === 'table-sheet' ? info.top - info.sheetTop < 2 : info.top < 64) && info.left >= 0 && info.right <= info.vw && info.sticky === 'sticky' && !info.overflowX, JSON.stringify(info));
 		check(`back bar [${sc.name}]: has an aria-label, is focusable, chevron flipped in RTL`, !!info && /חזרה אל/.test(info.aria ?? '') && info.focusable && info.chev !== 'none' && info.chev.startsWith('matrix(-1'), info?.chev);
 		if (backShots) await t360.screenshot({ path: `${backShots}/back-${sc.name}.png` });
@@ -437,7 +453,7 @@ try {
 		const root = document.querySelector('.plan');
 		const first = root.querySelector('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])');
 
-		return first?.classList.contains('back-bar__link') === true;
+		return first?.classList.contains('back-bar__home') === true;
 	}));
 	await t360.focus('.back-bar__link');
 	check('back bar: takes keyboard focus', await t360.evaluate(() => document.activeElement?.classList.contains('back-bar__link')));
@@ -457,6 +473,15 @@ try {
 		await t360.click(`${hop.from.includes('/table/') ? '.table-sheet ' : ''}.back-bar__link`);
 		await t360.waitForURL((u) => u.pathname === hop.to, { timeout: TIMEOUT }).catch(() => undefined);
 		check(`back bar: ${hop.from.replace(lessonA, '<lesson>').replace(planId, '<plan>')} -> ${hop.to.replace(lessonA, '<lesson>').replace(planId, '<plan>')}`, new URL(t360.url()).pathname === hop.to, new URL(t360.url()).pathname);
+	}
+	// the home icon goes straight to the list from every depth (1 tap; plain navigation in the sheet)
+	for (const from of [`/t/plans/${planId}`, `/t/plans/${planId}/games/${gameId}`, `/t/${lessonA}`, `/t/${lessonA}/plan`, `/t/${lessonA}/table/1`]) {
+		await t360.goto(`${BASE}${from}`, { waitUntil: 'domcontentloaded' });
+		const scope = from.includes('/table/') ? '.table-sheet ' : '';
+		await t360.waitForSelector(`${scope}.back-bar__home`, { timeout: TIMEOUT });
+		await t360.click(`${scope}.back-bar__home`);
+		await t360.waitForURL((u) => u.pathname === '/t', { timeout: TIMEOUT }).catch(() => undefined);
+		check(`home icon: ${from.replace(lessonA, '<lesson>').replace(planId, '<plan>').replace(gameId, '<game>')} -> /t in one tap`, new URL(t360.url()).pathname === '/t', new URL(t360.url()).pathname);
 	}
 	// an old lesson goes to its own plan screen
 	await t360.goto(`${BASE}/t/${oldId}`, { waitUntil: 'domcontentloaded' });

@@ -556,7 +556,7 @@ const he: Record<string, string> = {
 	'opening.name_save': 'שמירה',
 	'opening.name_saving_short': 'שומרים…',
 	'classPlan.counts': 'משחקים: {{games}} · שיעורים: {{lessons}}',
-	'classPlan.back': 'מערכי השיעור שלי',
+	'classPlan.parent': 'מערך השיעור',
 	'classPlan.rename': 'שינוי שם',
 	'classPlan.list_title': 'מערכי השיעור',
 	'classPlan.filter_all': 'כל הכיתות',

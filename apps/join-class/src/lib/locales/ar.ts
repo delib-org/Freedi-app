@@ -556,7 +556,7 @@ const ar: Record<string, string> = {
 	'opening.name_save': 'حفظ',
 	'opening.name_saving_short': 'جارٍ الحفظ…',
 	'classPlan.counts': 'الألعاب: {{games}} · الدروس: {{lessons}}',
-	'classPlan.back': 'خطط دروسي',
+	'classPlan.parent': 'خطة الدرس',
 	'classPlan.rename': 'تغيير الاسم',
 	'classPlan.list_title': 'خطط الدروس',
 	'classPlan.filter_all': 'كل الصفوف',

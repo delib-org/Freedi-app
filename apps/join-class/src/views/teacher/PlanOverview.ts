@@ -451,7 +451,7 @@ export const PlanOverview: m.Component = {
 		if (isPicking && sourcesLoad === 'idle') void loadSources();
 
 		return m('.teacher-home.plan-overview', { onkeydown: (e: KeyboardEvent) => onPageEscape(e) }, [
-			m(TeacherBackBar, { href: '/t', label: t('classPlan.back') }),
+			m(TeacherBackBar, {}),
 			m('main.teacher-home__body', [
 				loaded
 					? m('.plan-overview__head', renderTitle(title))

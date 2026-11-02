@@ -83,7 +83,9 @@ One name per concept. Every key goes in all 7 locale files (`apps/join-class/src
 | Empty home | No lesson plans yet. Name your first one: | עוד אין מערכי שיעור. תנו שם לראשון: | `teacher.home.empty` (value changes) | — | — | — |
 | How it works | 1. A lesson plan · 2. Games and their questions · 3. A lesson with a class: show them the code | 1. מערך שיעור · 2. משחקים ושאלות · 3. שיעור עם כיתה: מראים לה את הקוד (?) | `teacher.home.how` (value changes) | — | — | — |
 | Plan row counts | Games: {{games}} · Lessons: {{lessons}} | משחקים: {{games}} · שיעורים: {{lessons}} | NEW `classPlan.counts` | — | — | — |
-| Back to home | My lesson plans | מערכי השיעור שלי | NEW `classPlan.back` | → `/t` | — | — |
+| Destination (home icon) | My lesson plans | מערכי השיעור שלי | `teacher.home.title` | `/t` | `TeacherHome` | "רשימת השיעורים", "דף השיעורים", "השיעורים שלי" |
+| Home icon, accessible name | Back to My lesson plans | חזרה אל מערכי השיעור שלי | `teacher.back.to` + `teacher.home.title` | → `/t` | `.back-bar__home`, `data-action="home"` | Any UI word for "home" or "דף הבית" |
+| Plan name while loading or unreadable | Lesson plan | מערך השיעור | NEW `classPlan.parent` | — | — | `classPlan.back` (removed: same value as `teacher.home.title`) |
 | Rename plan | Rename | שינוי שם | NEW `classPlan.rename` | — | — | — |
 | New game | + New game | + משחק חדש | NEW `game.new` | — | — | — |
 | Game name field / example | Game name (the dilemma) / e.g. Report or keep quiet? | שם המשחק (הדילמה) / למשל: לדווח או לשתוק? | NEW `game.title_label`, `game.placeholder` | — | — | — |
@@ -131,11 +133,7 @@ Code-only names, accepted:
   3. "מערכי השיעור": one row per plan → `/t/plans/:planId`.
 - **Plan screen:** the title (rename in place). One section per game, in `order`. Each section shows "תכנון השאלות" (→ the game route), "+ שיעור עם כיתה", and the game's lessons, newest first, each with its status and "לשיעור" or "פתיחה מחדש". At the end, "+ משחק חדש" (today's `homeCreateFlow` machine: choose → nameNew | pick → nameCopy).
 - **"+ שיעור עם כיתה":** an inline choice "איזו כיתה?". It lists the teacher's active Studio classes (`agoraClasses` where `teacherMap.<uid> == true`) plus "בלי כיתה". With no classes it shows `teacher.lesson.no_classes` and one "יצירה". Then the teacher lands on the console.
-- **Back paths:**
-  - plan screen → "‹ מערכי השיעור שלי" → `/t`.
-  - game questions → "‹ <plan title>" → plan screen.
-  - console → "‹ <plan title>" → plan screen; "סיום השיעור" also returns there.
-  - `/t/:lessonId/plan` → "‹ השיעור" (unchanged).
+- **Back paths:** see section 14.2 (every teacher route, the home icon and the one-level-up back link).
 - **Redirects:** an unknown or foreign `planId` or `gameId` → the not-your-lesson state. Declare the `/t/plans/...` routes before `/t/:mid/...`.
 
 ## 6. Task flows (taps; typing excluded)
@@ -268,7 +266,7 @@ Fixed by this spec:
 - the order of the home;
 - each game section holds its lessons, "תכנון השאלות" and "+ שיעור עם כיתה";
 - the class is chosen from Studio's list, plus "בלי כיתה";
-- the back targets;
+- the back targets and the home icon (section 14.2);
 - no "פתיחה" in the new-lesson action.
 
 Yours to decide:
@@ -316,3 +314,166 @@ Script: `functions/src/migrations/moveClassLessonsHome.ts`. It uses `backfillRun
 5. join-class client (`parents` queries; this must be live before any lesson moves);
 6. on `freedi-test`: dry run → execute → sweep → check a moved lesson end to end (student by code, console, replies, auto-evaluations, vote);
 7. on prod: dry run → execute in the evening → sweep the next morning.
+
+## 14. Addendum: the teacher bar and the home icon (2026-11-02)
+
+Card: "למורה קשה למצוא איך חוזרים לרשימת השיעורים. השתמש באייקון של בית…"
+
+Replaces the "Back paths" list in §5. Changes the "Back to home" row in §3.
+
+Tal's decision: every teacher screen below the list gets one bar with a prominent home icon that goes straight to the list, plus the existing one-level-up back link. The projector has no bar. Nothing else is added.
+
+**Audience:** the teacher, on desktop or phone, Hebrew first, often mid-lesson. Goal: reach the list in one tap from anywhere.
+
+### 14.1 Cause and step counts
+§4 makes the plan the parent of the console, so a teacher who enters a lesson from "פתוחים עכשיו" on the list goes back to the plan, not to where they came from.
+
+| From | Taps to `/t` today | With the home icon |
+|---|---|---|
+| Plan | 1 | 1 |
+| Game questions | 2 | 1 |
+| Console | 2 | 1 |
+| Lesson questions | 3 | 1 |
+| Table sheet | 3 | 1 |
+
+The bar is not a breadcrumb. It has two fixed items, home and parent, and no middle levels.
+
+### 14.2 Every teacher route
+
+| Route | Screen | Bar | Home goes to | Back goes to | Back label |
+|---|---|---|---|---|---|
+| `/t` | `TeacherHome` | No, this is the destination | — | — | — |
+| `/t/plans/:planId` | `PlanOverview` | Yes, home only | `/t` | none (§14.3) | none |
+| `/t/plans/:planId/games/:gameId` | `PlanScreen`, game | Yes | `/t` | `/t/plans/:planId` | Plan title; `classPlan.parent` until it loads |
+| `/t/:mid` and `?view=texts` | `TeacherConsole` | Yes, the same bar in both views | `/t` | `/t/plans/:planId` | Plan title; `classPlan.parent` until it loads or if the read fails |
+| `/t/:mid`, old lesson | `TeacherConsole` | Yes | `/t` | `/t/plans/<its own id>` | The lesson's own title |
+| `/t/:mid/plan` and `?focus=challenge` | `PlanScreen`, lesson | Yes | `/t` | `/t/:mid` | `lessonNameOf`; `plan.back` until it loads |
+| `/t/:mid/table/:n` | `TableSheet` = console + `TableSheetPanel` | Yes, inside the sheet | `/t`, plain navigation | Closes the sheet, returns focus to the table card | `lessonNameOf` |
+| `/t/:mid/screen` | `TeacherProjector` | No, by decision | — | Window mode: its close control. `mode=here`: Esc or "חזרה לשיעור" → console | — |
+
+**States and views inside a route:**
+
+| Where | Bar | Note |
+|---|---|---|
+| Not your lesson (`NotYourLesson`, on console, plan, game and projector) | No | Unchanged. It already has a "מערכי השיעור שלי" link, "החלפת חשבון" and "יש לי קוד" |
+| Console or plan screen loading or failed | Yes | Home always works. With no lesson loaded, back collapses (§14.3) |
+| Inline flows: `HomeCreate` steps, pick list, plan rename, `ClassForm`, QR section | Stays | No bar of their own. The bar still leaves the screen; Esc steps back inside the flow |
+| Popovers: `ConsoleSettings`, `ProjectorMenu`, `ProjectorPick` | Stays | No bar of their own |
+| `EndChoice`, `ConfirmDialog` (native modal dialogs) | Unreachable while open | They must be answered first, so home cannot interrupt them |
+| Table sheet "סגירה" button | Stays | Duplicates back in the sheet today. Out of scope |
+
+`/m/:mid` is not a teacher screen: `MainHub` redirects the teacher to `/t/:mid`.
+
+### 14.3 When home and back go to the same place
+**Decision: show home only.**
+
+- Two controls for one destination make the teacher ask how they differ.
+- The rule lives in the component, not per screen: no back target, or a back target equal to `/t`, renders home only. This also covers the console while no lesson is loaded (`planBack` returns `/t`).
+- On the plan screen, home keeps the visible text "מערכי השיעור שלי" that the bar shows there today, so no information is lost.
+
+### 14.4 The destination's name
+`/t` holds both kinds of object: "פתוחים עכשיו" lists open **lessons**, "מערכי השיעור" lists **plans**.
+
+**Decision: keep "מערכי השיעור שלי"** (§3, agreed 2026-10-29). Plans are the permanent content and each plan row opens a plan. "רשימת השיעורים" would be false under §2, where a lesson is a played game with one class.
+
+| Concept | EN | HE | i18n key | Route | Code | Retire |
+|---|---|---|---|---|---|---|
+| Destination | My lesson plans | מערכי השיעור שלי | `teacher.home.title` | `/t` | `TeacherHome` | "רשימת השיעורים", "דף השיעורים", "השיעורים שלי" |
+| Home icon, accessible name | Back to My lesson plans | חזרה אל מערכי השיעור שלי | `teacher.back.to` + `teacher.home.title` | → `/t` | `.back-bar__home`, `data-action="home"` | Any UI word for "home" or "דף הבית" |
+| Plan name while loading or unreadable | Lesson plan | מערך השיעור | NEW `classPlan.parent` | — | — | `classPlan.back` used for this |
+| Duplicate of the destination | — | — | — | — | — | `classPlan.back`: same value as `teacher.home.title`, remove from all 7 files |
+
+**Synonym defects:**
+- **The card's two names:** "רשימת השיעורים" and "דף השיעורים" appear in no locale (only `he.ts` was searched for them). They are the card's wording. Do not add them.
+- **"השיעורים שלי":** survives in `docs/ia/agora-classroom.md` (lines 323, 358, 462, 482, 485, 677, 860, 1067), in passages this spec supersedes.
+- **Code comments say "the lesson list":** `EndChoice.ts` and `NotYourLesson.ts`. The `EndChoice.ts` comment is also wrong about the destination: it goes to the plan.
+- **"Home" has two meanings:** §2 uses it for the class or teacher home container, while `teacher.home.*` means `/t`. So the house icon has no visible or spoken word "home" in the UI. In code the word is accepted.
+
+**Home icon accessible name, all 7 languages.** No new key: these are the strings the plan screen's bar already produces.
+
+| Language | Accessible name |
+|---|---|
+| he | חזרה אל מערכי השיעור שלי |
+| en | Back to My lesson plans |
+| ar | العودة إلى خطط دروسي |
+| de | Zurück zu Meine Unterrichtspläne |
+| es | Volver a Mis planes de clase |
+| fa | بازگشت به طرح درس‌های من |
+| nl | Terug naar Mijn lesplannen |
+
+The German case is wrong. It stays because the composed name contains the visible label exactly, which WCAG 2.5.3 needs on the plan screen, and "meinen Unterrichtsplänen" would not.
+
+**NEW `classPlan.parent`:**
+
+| he | en | ar | de | es | fa | nl |
+|---|---|---|---|---|---|---|
+| מערך השיעור | Lesson plan | خطة الدرس | Unterrichtsplan | Plan de clase | طرح درس | Lesplan |
+
+### 14.5 Pressing home during a live lesson
+**The running lesson loses nothing, and no confirmation is needed.**
+
+- **Nothing is written on leaving:** `TeacherConsole.onremove` aborts a drag, stops rating listeners and releases the session. After 400 ms that closes local listeners and the tick. There is no status write and no teacher presence.
+- **Students and projector:** students keep working. The class stays on its step until the teacher moves it, as it does today when the teacher presses back. A projector in its own window has its own listeners and carries on.
+- **Returning takes one more tap:** the lesson is under "פתוחים עכשיו" if not ended and opened within 7 days; "לשיעור" reopens it. The lesson clock is kept in `localStorage`.
+- **Why no confirmation:** it would add a step to the exact path the card asks to shorten, and a mistaken press costs two taps to undo.
+- **Accepted, same as the back link today:**
+  - A console action that fails after the teacher left shows no failure banner.
+  - A `ClassForm` or create request still running when the teacher leaves routes them to its result when it finishes.
+
+**Unsaved edits on `PlanScreen` need handling, for both home and back.**
+
+Fields save on blur, and the bar's links do not run `flushAll` (the "לשיעור" button does). If the field has not blurred before navigation, the edit may be lost:
+- On a game, `teardownPlan` calls `setGame(null)`. A blur after that makes `saveQuestionText` take the lesson branch and call `updateQuestionTitle` with a question key that is not a statement.
+- Any draft left in `drafts` is cleared by `resetState` when the screen next opens.
+- Pointer clicks normally blur first. Tapping on a real iPhone was not tested.
+
+**Rule for both bar links on `PlanScreen`:**
+1. Run `flushAll` first. Its blur starts the save while the screen's state is still intact.
+2. Navigate when it finishes, or after a short named limit of about 2 s. `flushAll` waits on in-flight writes and could hang offline. A started save continues after navigation.
+3. If a save failed, stay. The existing `plan.error.save` shows with its retry. A second press leaves.
+
+Text typed in rename, `HomeCreate` or `ClassForm` is discarded on leaving, as with their cancel. Nothing has been written, so this is accepted.
+
+### 14.6 Navigation model
+- **Global:** the bar. `/t` keeps its own header.
+- **Reading order:** home first, then back. The back chevron points toward home.
+- **Back:** still exactly one level up (§4), never browser history.
+- **Home:** no attributes, always `/t`. It never uses `onActivate`.
+- **Deep links:** a link to any route shows the bar, so a teacher arriving from outside has a way to the list. Not signed in → `/login?next=…` as today.
+- **After "סיום השיעור":** still goes to the plan (§5), unchanged.
+
+### 14.7 What keeps it from being one component
+It is already one component (`TeacherBackBar`) with four callers. Items 1 to 5 are needed for the build; item 6 is noted only.
+
+1. **Label and destination can disagree (fix required).** `consoleBack.ts:47` and `PlanScreen.ts:453` use `classPlan.back` ("מערכי השיעור שלי") as the fallback while `href` is the plan.
+   - While the title loads, or forever if the read fails, the link says "my lesson plans" and lands on the plan. This may feed the card's complaint.
+   - Beside a home icon, two controls would name the list and go to different places.
+   - Fix: use `classPlan.parent`. Also correct the comment in `consoleBack.ts`, which claims a failed read falls back to the home.
+2. **`planBack` does not check which lesson is loaded (fix required).** It reads `getMainStatement()` with no comparison to the route's `mid`. Going from lesson A to lesson B, back can point to A's plan until B loads. Fix: treat a mismatch as not loaded. Found by reading, not reproduced.
+3. **The bar has no "before leaving" step.** `onActivate` only replaces the back link's navigation. `PlanScreen` needs one attribute that runs before either link navigates (§14.5). No other caller passes it.
+4. **`TeacherBackBar` is built for one link.**
+   - `.back-bar__link` must stay the back link only, with home as `.back-bar__home`.
+   - `apps/join-class/scripts/e2e-lesson-plans.mjs` reads `.back-bar__link` with single-element locators at lines 119, 192, 222, 255 and 407, so a shared class would break it.
+   - Its `plan` row (line 397) expects a back link on the plan screen and must change to expect home only. Add home checks on all five screens at 360x640.
+   - `ConsoleIcon` has no `home` glyph.
+   - Keeping the component name is accepted, code-only, to avoid churn.
+5. **Four parents, three layout rules.** The bar is edge to edge on all screens, handled per parent. `.plan` and `.teacher-home` (line 68 is really `PlanOverview`) have page padding; `.table-sheet` has its own rule; `.console` has no padding and needs none. This is not a blocker, but the second link must fit all four.
+6. **The sheet stacks two bars (noted only).** The console's bar stays in the DOM behind the scrim. `TableSheetPanel` sets `aria-modal` but its hooks show no focus trap, so Tab can likely reach the hidden bar, as with back today. Pass to the accessibility review.
+
+### 14.8 Doc changes when saving
+- §3: replace the "Back to home" row with the §14.4 rows.
+- §5: replace "Back paths" with a pointer to §14.2.
+- §12: "the back targets" now also covers the home icon.
+
+### 14.9 Handoff to UX
+**Fixed:** which screens have the bar, the destinations, home-only on the plan screen, reading order, names, no confirmation, no visible word "home".
+
+**Yours to decide:**
+- How the home icon stands out over the back link, including inside the 420 px sheet.
+- Whether home shows visible text on the deeper screens. The icon alone is the minimum, but a long plan or lesson name must stay readable at 360 px. The plan screen keeps its text (§14.3).
+- How the bar works beside the console's header.
+
+### 14.10 Open questions
+None.
+
+**Assumption:** the 2026-10-29 name "מערכי השיעור שלי" stands. If Tal prefers a "lessons" name for `/t`, the title and §3 change in all 7 locale files, and the screen's structure would no longer match its name.

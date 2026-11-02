@@ -7,8 +7,8 @@ import { BrandLogo } from '@/components/BrandLogo';
  * The state every `/t/:mid*` route shows when the signed-in account is not the
  * lesson's teacher (IA 13.1, UX 13.G). Never a redirect into the student view:
  * the teacher on a second computer needs to know WHICH account is signed in,
- * and has three ways out - switch account (back here after Google), the lesson
- * list, or the code box.
+ * and has three ways out - switch account (back here after Google), "מערכי השיעור שלי"
+ * (the teacher home), or the code box.
  */
 
 function accountName(): string {

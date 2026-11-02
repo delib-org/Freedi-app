@@ -553,7 +553,7 @@ const fa: Record<string, string> = {
 	'opening.name_save': 'ذخیره',
 	'opening.name_saving_short': 'در حال ذخیره…',
 	'classPlan.counts': 'بازی‌ها: {{games}} · درس‌ها: {{lessons}}',
-	'classPlan.back': 'طرح درس‌های من',
+	'classPlan.parent': 'طرح درس',
 	'classPlan.rename': 'تغییر نام',
 	'classPlan.list_title': 'طرح درس‌ها',
 	'classPlan.filter_all': 'همه کلاس‌ها',
