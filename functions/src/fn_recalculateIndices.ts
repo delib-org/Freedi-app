@@ -15,6 +15,7 @@ import {
 	DEFAULT_SAMPLING_QUALITY,
 	type StakeholderScope,
 } from '@freedi/shared-types';
+import { assertStatementAdmin } from './progress/assertStatementAdmin';
 import { refreshChainVoters } from './progress/chainVoters';
 import { calculateConsensusValid } from './helpers/consensusValidCalculator';
 
@@ -44,43 +45,33 @@ interface RecalculateIndicesResult {
  * evaluations have already been submitted — existing options won't have the
  * updated confidenceIndex until the next evaluation triggers a recalculation.
  * This function forces an immediate recalculation for all options.
+ *
+ * Who may call it is decided by assertStatementAdmin, the same check the other
+ * question-admin callables use: the question's creator, an admin of the question
+ * or of its top statement, or an owner/admin of the organization that holds it.
+ * It does not know about MC survey co-admins, who are recorded in `surveyAdmins`
+ * and hold no statement subscription.
  */
 export const recalculateIndices = onCall<RecalculateIndicesRequest>(
 	{ region: functionConfig.region },
 	async (request): Promise<RecalculateIndicesResult> => {
-		const { statementId } = request.data;
-
-		if (!statementId) {
-			throw new HttpsError('invalid-argument', 'statementId is required');
-		}
-
 		if (!request.auth) {
 			throw new HttpsError('unauthenticated', 'User must be authenticated');
 		}
 
-		// Read the parent question statement to get evaluationSettings
-		const parentRef = db.collection(Collections.statements).doc(statementId);
-		const parentDoc = await parentRef.get();
+		const { statementId } = request.data;
 
-		if (!parentDoc.exists) {
-			throw new HttpsError('not-found', 'Statement not found');
+		if (!statementId || typeof statementId !== 'string') {
+			throw new HttpsError('invalid-argument', 'statementId is required');
 		}
 
-		const parentData = parentDoc.data();
-		if (!parentData) {
-			throw new HttpsError('not-found', 'Statement data is empty');
-		}
+		const { statement } = await assertStatementAdmin(
+			request.auth.uid,
+			statementId,
+			'recalculateIndices',
+		);
 
-		// Verify the caller is the creator or has admin access
-		const userId = request.auth.uid;
-		if (parentData.creatorId !== userId) {
-			throw new HttpsError(
-				'permission-denied',
-				'Only the statement creator can recalculate indices',
-			);
-		}
-
-		return recalculateIndicesForQuestion(statementId, parentData);
+		return recalculateIndicesForQuestion(statementId, statement);
 	},
 );
 
