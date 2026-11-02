@@ -13,6 +13,7 @@ import { watchClass } from '@/lib/classroom/classState';
 import { watchLanguageFlags } from '@/lib/classroom/languageFlags';
 import type { Unsubscribe } from '@/lib/firebase';
 import { resetConsoleState, stopWatchingOptions } from './consoleState';
+import { showUnsavedClassSize } from './classSizeActions';
 
 /**
  * Opening and closing the console for one lesson (shared by the console and the
@@ -106,6 +107,8 @@ async function openConsole(mainId: string): Promise<void> {
 	closeConsole();
 	const mine = generation;
 	resetConsoleState(mainId);
+	// a number the new-lesson form could not write is told plainly, with a retry
+	showUnsavedClassSize(mainId);
 	session.status = 'loading';
 	session.mainId = mainId;
 	session.startedAt = readStartedAt(mainId);

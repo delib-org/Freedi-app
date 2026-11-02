@@ -117,6 +117,22 @@
   cursor: pointer;
 }
 
+.class-form__students {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.class-form__students-input {
+  inline-size: 6rem;
+}
+
+.class-form__help {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--font-size-sm);
+}
+
 .class-form__actions {
   display: flex;
   flex-wrap: wrap;

@@ -575,6 +575,13 @@ const ar: Record<string, string> = {
 	'teacher.lesson.no_classes': 'لم تُسنَد إليكم صفوف بعد. سيُحفظ الدرس باسمكم.',
 	'teacher.lesson.row': '{{class}} · {{date}}',
 	'teacher.lesson.busy': 'جارٍ تحضير الدرس...',
+	'teacher.lesson.students_label': 'كم عدد الطلاب في الصف؟',
+	'teacher.lesson.students_hint':
+		'احسبوا الصف كله، حتى الغائبين اليوم. إذا تركتموه فارغًا نحسب {{count}}.',
+	'console.class_size.save': 'حفظ',
+	'console.class_size.saved': 'تم الحفظ. أُعيد حساب الدرجات.',
+	'console.class_size.save_failed': 'لم يُحفظ العدد. حاولوا مرة أخرى.',
+	'console.class_size.recalc_failed': 'حُفظ العدد لكن لم تُعَد حسابات الدرجات. حاولوا مرة أخرى.',
 	'plan.lesson_only': 'التغييرات هنا لهذا الدرس فقط',
 	'plan.lesson_from': 'اللعبة: «{{game}}» · الصف: {{class}}',
 	'teacher.lesson.not_approved':

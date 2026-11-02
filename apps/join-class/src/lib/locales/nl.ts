@@ -585,6 +585,14 @@ const nl: Record<string, string> = {
 		'Er zijn nog geen klassen aan je toegewezen. De les wordt onder jouw naam bewaard.',
 	'teacher.lesson.row': '{{class}} · {{date}}',
 	'teacher.lesson.busy': 'De les wordt voorbereid...',
+	'teacher.lesson.students_label': 'Hoeveel leerlingen zitten in de klas?',
+	'teacher.lesson.students_hint':
+		'Tel de hele klas, ook wie vandaag afwezig is. Laat je dit leeg, dan rekenen we met {{count}}.',
+	'console.class_size.save': 'Opslaan',
+	'console.class_size.saved': 'Opgeslagen. Scores opnieuw berekend.',
+	'console.class_size.save_failed': 'Het aantal is niet opgeslagen. Probeer het opnieuw.',
+	'console.class_size.recalc_failed':
+		'Het aantal is opgeslagen, maar de scores zijn niet opnieuw berekend. Probeer het opnieuw.',
 	'plan.lesson_only': 'Wijzigingen hier gelden alleen voor deze les',
 	'plan.lesson_from': 'Spel: "{{game}}" · Klas: {{class}}',
 	'teacher.lesson.not_approved':

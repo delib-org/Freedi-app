@@ -12,6 +12,7 @@ import { getSubQuestions } from '@/lib/store';
 import { bindOutsideClose, popoverKeydown, unbindOutsideClose } from './barPopover';
 import { VoteDisplaySettings } from './VoteDisplaySettings';
 import { ConsoleTableSettings } from './ConsoleTableSettings';
+import { ConsoleClassSize } from './ConsoleClassSize';
 import { LessonLookSettings } from './LessonLookSettings';
 
 /**
@@ -51,6 +52,7 @@ export const ConsoleSettings: m.Component = {
 					t('console.gate.value', { value: gate.toFixed(GATE_DECIMALS) }),
 				),
 				m('p.console__settings-help#gate-slider-help', t('console.gate.help')),
+				m(ConsoleClassSize),
 				m(ConsoleTableSettings),
 				m(VoteDisplaySettings, { challenge: getChallengeQuestion(getSubQuestions()) }),
 				m(LessonLookSettings),

@@ -575,6 +575,13 @@ const he: Record<string, string> = {
 	'teacher.lesson.no_classes': 'עוד לא שויכו אליכם כיתות. השיעור יישמר תחת השם שלכם.',
 	'teacher.lesson.row': '{{class}} · {{date}}',
 	'teacher.lesson.busy': 'מכינים את השיעור...',
+	'teacher.lesson.students_label': 'כמה תלמידים בכיתה?',
+	'teacher.lesson.students_hint':
+		'סופרים את כל הכיתה, גם מי שלא הגיע היום. אם משאירים ריק, נחשב {{count}}.',
+	'console.class_size.save': 'שמירה',
+	'console.class_size.saved': 'נשמר. הציונים חושבו מחדש.',
+	'console.class_size.save_failed': 'המספר לא נשמר. אפשר לנסות שוב.',
+	'console.class_size.recalc_failed': 'המספר נשמר, אבל הציונים לא חושבו מחדש. אפשר לנסות שוב.',
 	'plan.lesson_only': 'השינויים כאן רק לשיעור הזה',
 	'plan.lesson_from': 'משחק: „{{game}}” · כיתה: {{class}}',
 	'teacher.lesson.not_approved': 'החשבון שלכם עוד לא אושר לעבודה עם כיתות. אפשר להתחיל בלי כיתה.',

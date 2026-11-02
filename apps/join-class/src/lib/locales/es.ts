@@ -586,6 +586,14 @@ const es: Record<string, string> = {
 	'teacher.lesson.no_classes': 'Aún no tienes grupos asignados. La clase se guardará a tu nombre.',
 	'teacher.lesson.row': '{{class}} · {{date}}',
 	'teacher.lesson.busy': 'Preparando la clase...',
+	'teacher.lesson.students_label': '¿Cuántos estudiantes hay en el grupo?',
+	'teacher.lesson.students_hint':
+		'Cuenta a todo el grupo, también a quienes faltan hoy. Si lo dejas vacío, contamos {{count}}.',
+	'console.class_size.save': 'Guardar',
+	'console.class_size.saved': 'Guardado. Puntuaciones recalculadas.',
+	'console.class_size.save_failed': 'No se guardó el número. Inténtalo de nuevo.',
+	'console.class_size.recalc_failed':
+		'El número se guardó, pero las puntuaciones no se recalcularon. Inténtalo de nuevo.',
 	'plan.lesson_only': 'Los cambios aquí son solo para esta clase',
 	'plan.lesson_from': 'Juego: «{{game}}» · Grupo: {{class}}',
 	'teacher.lesson.not_approved':
