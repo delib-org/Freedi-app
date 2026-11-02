@@ -8,6 +8,7 @@
 **Answer.**
 
 - **Criticism 1 is confirmed as a description of the machinery.** Nearly every theme came out of the size-triggered split sweep, the splitter never declined, and the fixed rule would split three of her own umbrella topics again. Content played no part in deciding *whether* to split. What is not shown is that splitting alone explains her merges: most pairs she merged were never split siblings.
+- **Changing the split rule isn't the answer we hoped for.** The proposed fix failed its preregistered test (Finding 6), and most historical splits divided parents that span several of her topics.
 - **Criticism 2 is confirmed for vocabulary, on her own definition.** By "semantic field" she means the professional vocabulary of community development and facilitation, such as "בינוי קהילה" and "חוסן קהילתי"; the AI used simpler terms. "בינוי קהילה" appears in no theme label, and "חוסן" in one final label, inside a list. The same model produces much of this vocabulary when asked to, so this looks like a prompt gap rather than a model limit. Asking for it did not reproduce her groupings, though.
 
 **Scope.** Diagnosis only. No pipeline code changed. One facilitator, two questions, five merge decisions, and hypotheses formed after seeing her edits. Treat this as a detailed case study.
@@ -147,6 +148,26 @@ Three repeats per arm through the compiled production rebuild, no prod writes, t
 - **The professional framing changes the words, not the structure.** Arm P joins pairs she joined at a rate between R and F on Q.A (25%), and the lowest of the three on Q.B (31%). So "use the professional concept and the umbrella follows" isn't supported: asking for professional terms does not produce her "בינוי קהילה" grouping.
 - **Do not compare these arms with the live list on ARI.** She edited the live list, so it wins by construction.
 
+## Finding 6: the proposed split change failed its own test
+
+After the first version we proposed removing the fixed 25-leaf rule and making the split judge decide coherence first. Criteria were fixed in advance (`split-test/PREREGISTRATION.md`). Offline, no production change, 552 calls, $0.64. Results: `results/split_test.json`.
+
+| Criterion | Needed | Shipped judge | Candidate judge | Verdict for candidate |
+|---|---|---|---|---|
+| P1: mixed true topics split | ≥90% | 98% | 96% | Pass |
+| P2: one true topic stays whole | ≥90% | **0%** | 75% (EN 100%, HE 50%) | **Fail** |
+| P3: Bq's documented catch-all splits | 3 of 3 | 3 of 3 | **0 of 3** | **Fail** |
+| P4: her 5 merged topics stay whole | ≥80% | 0% | 87% | Pass |
+| C1: shipped judge reproduces history | ≥90% | 100% of 27 decisions | | Inputs valid |
+
+- **The shipped judge doesn't discriminate.** It splits 100% of single true topics and 98% of real mixtures. In production the trigger is the only gate.
+- **The candidate is too reluctant on real questions.** It discriminates on the clean benchmark but split none of the 6 cases from the other questions, including the Bq catch-all, and kept 14 of 21 Korazim parents, many spanning several of her topics. "One area of concern" is easy to satisfy when every answer shares a subject, which is the failure that led to splitting in the first place.
+- **The HE/EN gap may be an artefact.** English cases had a topic-name heading and Hebrew ones a statement fragment.
+- **Removing the 25-leaf rule is too blunt.** It alone fired 14 of the 21 Korazim splits, at most (placed is an upper bound). Simulated on the lineage, themes fall from 16 to 4 and from 27 to 7, against her 12 and 20, with one theme holding 59 of 113 atoms. ARI against her falls from .51 to .30 and from .74 to .35. This ignores regrowth and later merges, so it is approximate.
+- **Most splits agree with her.** 20 of the 21 Korazim parents span at least 2 of her topics, and the 14 fired by the fixed rule alone span 2 to 7. So those parents were mixed by her standard too (partly because merges mixed them), and over-division sits lower down than the first version implied.
+
+**Conclusion:** neither change should ship. The first version's proposal 2 is withdrawn. Since themes are mostly clean subsets of her topics (precision .91 and .985), a better direction may be to leave themes fine-grained and group them into chapters at report-writing time. That has not been tested.
+
 ## What these data can't support
 
 - That the split sweep caused the mismatch with her structure, rather than contributing to it.
@@ -179,7 +200,7 @@ Three repeats per arm through the compiled production rebuild, no prod writes, t
 ## Proposals (none built)
 
 1. **Ask Sigal to rate Arm P's names and to list her field's core terms (20 minutes),** and say which kept labels she accepted vs. left for lack of time. Her list would replace the analyst's term list above.
-2. **Stop treating size as evidence of incoherence.** Scale or remove the 25-leaf rule, and make the splitter judge coherence first. Investigate why it never declines.
+2. **~~Stop treating size as evidence of incoherence: remove the 25-leaf rule and judge coherence first.~~ Tested and failed, see Finding 6.** Next candidate, untested: keep themes as they are and have the report step group them into chapters with professional names.
 3. **Keep two levels.** The split tree already records a hierarchy, so a large topic with sub-headings could serve both a report and browsing. This would need an IA spec first.
 4. **Offer a professional naming layer,** perhaps from a practitioner-vetted glossary and as an admin or report choice, and allow short names that aren't lists. Decide first which screens use which language.
 5. **Add a label measure to the gate,** with human ratings, since membership F1 can't see this.
