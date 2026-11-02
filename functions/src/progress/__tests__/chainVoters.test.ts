@@ -146,6 +146,30 @@ describe('refreshChainVoters', () => {
 		expect(await refreshChainVoters(SUB)).toBe(4);
 	});
 
+	it('leaves the statement alone when a counter moves but the union does not', async () => {
+		seedProgress(TOP, 1);
+		seedVoter(TOP, 'ada');
+		seedProgress(SUB, 1);
+		seedVoter(SUB, 'linus');
+		await refreshChainVoters(SUB);
+		const lastUpdateAfterFirstCount = 1;
+		fake.seed(Collections.statements, SUB, {
+			...fake.read(Collections.statements, SUB),
+			lastUpdate: lastUpdateAfterFirstCount,
+		});
+
+		// Ada, already counted up the chain, now votes in SUB as well.
+		fake.seed(Collections.questionProgress, SUB, {
+			...fake.read(Collections.questionProgress, SUB),
+			evaluated: 2,
+		});
+		seedVoter(SUB, 'ada');
+
+		expect(await refreshChainVoters(SUB)).toBe(2);
+		expect(fake.read(Collections.statements, SUB)?.lastUpdate).toBe(lastUpdateAfterFirstCount);
+		expect(fake.read(Collections.questionProgress, SUB)?.chainKey).toContain(`${SUB}:2`);
+	});
+
 	it('ignores markers for people who only entered or suggested', async () => {
 		seedProgress(TOP, 1);
 		seedVoter(TOP, 'ada');

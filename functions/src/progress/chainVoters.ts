@@ -157,10 +157,15 @@ export async function refreshChainVoters(questionId: string): Promise<number | u
 		// Mirrored onto the statement so the evaluation trigger reads it off the
 		// parent document it is already holding, at no extra cost, and so the
 		// settings screen can show the admin what N their options are using.
-		batch.update(db.collection(Collections.statements).doc(questionId), {
-			'evaluation.chainEvaluators': count > 0 ? count : FieldValue.delete(),
-			lastUpdate: now,
-		});
+		// The fingerprint can move while the union stays put (somebody who already
+		// voted up the chain votes here too): then the statement is left alone, so
+		// its lastUpdate does not move for a number that did not.
+		if (stored?.chainEvaluated !== count) {
+			batch.update(db.collection(Collections.statements).doc(questionId), {
+				'evaluation.chainEvaluators': count > 0 ? count : FieldValue.delete(),
+				lastUpdate: now,
+			});
+		}
 		await batch.commit();
 
 		return count;
