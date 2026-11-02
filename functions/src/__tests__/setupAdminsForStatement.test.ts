@@ -9,6 +9,11 @@ jest.mock('../db', () => ({
 	},
 }));
 
+const mockGetUsers = jest.fn();
+jest.mock('firebase-admin/auth', () => ({
+	getAuth: () => ({ getUsers: mockGetUsers }),
+}));
+
 import { MAX_INHERITED_ADMINS, setupAdminsForStatement } from '../setupAdminsForStatement';
 
 const TOP = 'group-1';
@@ -47,6 +52,8 @@ const subOf = (uid: string) => fake.read(Collections.statementsSubscribe, `${uid
 
 beforeEach(() => {
 	fake = createFakeDb();
+	mockGetUsers.mockReset();
+	mockGetUsers.mockResolvedValue({ users: [], notFound: [] });
 });
 
 describe('setupAdminsForStatement', () => {
@@ -129,6 +136,63 @@ describe('setupAdminsForStatement', () => {
 		);
 		expect(written).toHaveLength(MAX_INHERITED_ADMINS + 1);
 		expect(subOf(CREATOR)).toBeDefined();
+	});
+
+	describe('the identity on an inherited admin', () => {
+		it('holds the real person from usersV2, with no email or other personal field', async () => {
+			seedAdmin('top-admin', TOP);
+			fake.seed(Collections.users, 'top-admin', {
+				uid: 'top-admin',
+				displayName: 'Real Host',
+				photoURL: 'https://photo/host.png',
+				email: 'host@example.org',
+				systemAdmin: true,
+			});
+			await setupAdminsForStatement(newStatement());
+
+			expect(subOf('top-admin')?.user).toEqual({
+				uid: 'top-admin',
+				displayName: 'Real Host',
+				photoURL: 'https://photo/host.png',
+			});
+			expect(mockGetUsers).not.toHaveBeenCalled();
+		});
+
+		it('falls back to Auth when usersV2 has no name, keeping only the minimal fields', async () => {
+			seedAdmin('top-admin', TOP);
+			mockGetUsers.mockResolvedValue({
+				users: [{ uid: 'top-admin', displayName: 'From Auth', email: 'a@example.org' }],
+				notFound: [],
+			});
+			await setupAdminsForStatement(newStatement());
+
+			expect(subOf('top-admin')?.user).toEqual({ uid: 'top-admin', displayName: 'From Auth' });
+		});
+
+		it('never carries the creator: no profile anywhere leaves a nameless identity', async () => {
+			seedAdmin('top-admin', TOP);
+			await setupAdminsForStatement(newStatement());
+
+			expect(subOf('top-admin')?.user).toEqual({ uid: 'top-admin', displayName: '' });
+		});
+
+		it('still sets up the admin when the Auth lookup fails', async () => {
+			seedAdmin('top-admin', TOP);
+			mockGetUsers.mockRejectedValue(new Error('auth down'));
+			await setupAdminsForStatement(newStatement());
+
+			expect(subOf('top-admin')).toMatchObject({
+				role: Role.admin,
+				user: { uid: 'top-admin', displayName: '' },
+			});
+		});
+
+		it('leaves the creator their own identity, without a lookup', async () => {
+			await setupAdminsForStatement(newStatement());
+
+			expect(subOf(CREATOR)?.user).toEqual({ uid: CREATOR, displayName: 'Creator' });
+			expect(mockGetUsers).not.toHaveBeenCalled();
+		});
 	});
 
 	it('only the creator for a top-level statement', async () => {

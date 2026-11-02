@@ -19,6 +19,7 @@ export interface MemberEntry {
 	id: string;
 	uid: string;
 	name: string;
+	photoURL?: string | null;
 	kind: MemberKind;
 	isSelf: boolean;
 }
@@ -28,6 +29,8 @@ export interface MemberContext {
 	selfUid: string | undefined;
 	/** Optimistic roles by subscription id, while a write is in flight. */
 	roleOverrides?: ReadonlyMap<string, Role>;
+	/** Shown for someone whose name is not known (yet). */
+	unnamedLabel?: string;
 }
 
 const KIND_BY_ROLE: Partial<Record<Role, MemberKind>> = {
@@ -65,24 +68,36 @@ export function kindOf(
 	return role ? (KIND_BY_ROLE[role] ?? null) : null;
 }
 
+/**
+ * The person a subscription belongs to is `userId`, the field its doc id is
+ * built from. `user` may hold someone else: server-written admin subscriptions
+ * store the statement's creator there, so it only describes this person when
+ * its uid agrees. A doc with no `userId` is a legacy one: `user` is all it has.
+ */
+export function subscriberUid(subscription: StatementSubscription): string | undefined {
+	return subscription.userId || subscription.user?.uid;
+}
+
 export function toMemberEntries(
 	subscriptions: ReadonlyArray<StatementSubscription>,
-	{ creatorUid, selfUid, roleOverrides }: MemberContext,
+	{ creatorUid, selfUid, roleOverrides, unnamedLabel = '' }: MemberContext,
 ): MemberEntry[] {
 	return subscriptions.flatMap((subscription) => {
-		const uid = subscription.user?.uid;
+		const uid = subscriberUid(subscription);
 		if (!uid) return [];
 		const id = subscription.statementsSubscribeId;
 		const role = roleOverrides?.get(id) ?? subscription.role;
 		const kind = kindOf(role, uid, creatorUid);
 		if (!kind) return [];
+		const ownUser = subscription.user?.uid === uid ? subscription.user : undefined;
 
 		return [
 			{
 				subscription,
 				id,
 				uid,
-				name: subscription.user?.displayName ?? '',
+				name: ownUser?.displayName?.trim() || unnamedLabel,
+				photoURL: ownUser?.photoURL,
 				kind,
 				isSelf: uid === selfUid,
 			},
@@ -95,10 +110,11 @@ export function countPeople(
 	subscriptions: ReadonlyArray<StatementSubscription>,
 	creatorUid: string | undefined,
 ): number {
-	return subscriptions.filter(
-		(subscription) =>
-			!!subscription.user?.uid && kindOf(subscription.role, subscription.user.uid, creatorUid),
-	).length;
+	return subscriptions.filter((subscription) => {
+		const uid = subscriberUid(subscription);
+
+		return !!uid && kindOf(subscription.role, uid, creatorUid);
+	}).length;
 }
 
 export function matchesFilter(kind: MemberKind, filter: MemberFilter): boolean {

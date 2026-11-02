@@ -96,8 +96,9 @@ const MembersSubsection: FC<MembersSubsectionProps> = ({
 				creatorUid,
 				selfUid: self?.uid,
 				roleOverrides: roleActions.roleOverrides,
+				unnamedLabel: t('people.unnamed'),
 			}),
-		[members, creatorUid, self?.uid, roleActions.roleOverrides],
+		[members, creatorUid, self?.uid, roleActions.roleOverrides, t],
 	);
 	const list = useMembersList(entries, paging);
 	const waitingById = useMemo(

@@ -114,6 +114,25 @@ describe('MembersSubsection', () => {
 		fakeState = { creator: { uid: 'u-tal' }, selfSubscription: { role: Role.admin } };
 	});
 
+	it('shows an inherited host still holding the creator as user under a neutral name, and acts on the host', async () => {
+		const inherited = {
+			...sub('host', Role.admin, 'x'),
+			user: { uid: 'u-tal', displayName: 'Tal', photoURL: 'https://photo/tal.png' },
+		} as StatementSubscription;
+		render(<Harness members={[tal, inherited]} />);
+
+		expect(names()).toEqual(['Tal', 'people.unnamed']);
+		expect(rowOf('host').getByText('people.role.host')).toBeTruthy();
+		expect(rowOf('host').queryByText('Creator')).toBeNull();
+		expect(screen.getByTestId('member-row-host').querySelector('img')).toBeNull();
+
+		fireEvent.click(
+			rowOf('host').getByRole('button', { name: 'people.removeHost: people.unnamed' }),
+		);
+
+		await waitFor(() => expect(mockedUpdateRole).toHaveBeenCalledWith('s1', 'u-host', Role.member));
+	});
+
 	it('lists hosts first with Creator / You / Host / Blocked as words', () => {
 		render(<Harness members={[dana, roi, maya, tal]} />);
 
