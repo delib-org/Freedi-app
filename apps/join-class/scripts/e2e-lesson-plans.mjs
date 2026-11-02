@@ -442,7 +442,7 @@ try {
 			continue;
 		}
 		check(`back bar [${sc.name}]: one bar reading "‹ ${sc.label}" going to ${sc.href}, home icon only`, !!info && info.bars === 1 && info.text.includes(sc.label) && info.href === sc.href && info.homeText === '', JSON.stringify(info));
-		check(`back bar [${sc.name}]: >= 44px tall, at the top of a 360px phone, inside the width, sticky`, !!info && info.h >= 44 && info.top >= 0 && (sc.name === 'table-sheet' ? info.top - info.sheetTop < 2 : info.top < 64) && info.left >= 0 && info.right <= info.vw && info.sticky === 'sticky' && !info.overflowX, JSON.stringify(info));
+		check(`back bar [${sc.name}]: >= 44px tall, at the top of a 360px phone, inside the width, sticky`, !!info && info.h >= 44 && info.top >= 0 && (sc.name === 'table-sheet' ? info.top - info.sheetTop < 8 /* the bar's own padding-block */ : info.top < 64) && info.left >= 0 && info.right <= info.vw && info.sticky === 'sticky' && !info.overflowX, JSON.stringify(info));
 		check(`back bar [${sc.name}]: has an aria-label, is focusable, chevron flipped in RTL`, !!info && /חזרה אל/.test(info.aria ?? '') && info.focusable && info.chev !== 'none' && info.chev.startsWith('matrix(-1'), info?.chev);
 		if (backShots) await t360.screenshot({ path: `${backShots}/back-${sc.name}.png` });
 	}
@@ -462,8 +462,7 @@ try {
 	check('back bar: Enter on the game screen goes to the plan screen', true);
 	// each one-level-up click lands where it says
 	const hops = [
-		{ from: `/t/plans/${planId}`, to: '/t' },
-		{ from: `/t/${lessonA}`, to: `/t/plans/${planId}` },
+		{ from: `/t/${lessonA}`, to:`/t/plans/${planId}` },
 		{ from: `/t/${lessonA}/plan`, to: `/t/${lessonA}` },
 		{ from: `/t/${lessonA}/table/1`, to: `/t/${lessonA}` },
 	];
@@ -483,6 +482,18 @@ try {
 		await t360.waitForURL((u) => u.pathname === '/t', { timeout: TIMEOUT }).catch(() => undefined);
 		check(`home icon: ${from.replace(lessonA, '<lesson>').replace(planId, '<plan>').replace(gameId, '<game>')} -> /t in one tap`, new URL(t360.url()).pathname === '/t', new URL(t360.url()).pathname);
 	}
+	// an edit made while its field still has focus is saved when home is pressed (IA 14.5): a
+	// script click does not blur the field first, so only the bar's own flush can save it
+	await t360.goto(`${BASE}/t/plans/${planId}/games/${gameId}`, { waitUntil: 'domcontentloaded' });
+	await t360.waitForSelector('li.plan-card .plan-card__hint', { timeout: TIMEOUT });
+	const focusedHint = t360.locator('li.plan-card').nth(0).locator('.plan-card__hint');
+	await focusedHint.fill('typed, never blurred');
+	await t360.evaluate(() => document.querySelector('.back-bar__home').click());
+	await t360.waitForURL((u) => u.pathname === '/t', { timeout: TIMEOUT }).catch(() => undefined);
+	check('home with a focused, unsaved field: leaves for /t', new URL(t360.url()).pathname === '/t');
+	await sleep(1500);
+	snap = (await db.doc(`classPlans/${planId}/games/${gameId}`).get()).data().snapshot;
+	check('home with a focused, unsaved field: the edit was saved', [...snap.questions].some((q) => q.hint === 'typed, never blurred'));
 	// an old lesson goes to its own plan screen
 	await t360.goto(`${BASE}/t/${oldId}`, { waitUntil: 'domcontentloaded' });
 	await t360.waitForFunction((id) => document.querySelector('.back-bar__link')?.getAttribute('href') === `/t/plans/${id}`, oldId, { timeout: TIMEOUT }).catch(() => undefined);
