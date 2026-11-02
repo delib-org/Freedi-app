@@ -779,6 +779,71 @@
    "keptApart": 4998,
    "heldTogetherLive": 404
   },
+  "professionalTerms": {
+   "בינוי קהילה": {
+    "finalThemeLabels": 0,
+    "allThemeDocLabels": 0,
+    "splitEventTitles": 0,
+    "themeDescriptions": 0,
+    "synthTitles": 0,
+    "originalsAiForm": 0,
+    "originalsPlain": 0
+   },
+   "בניית קהילה": {
+    "finalThemeLabels": 0,
+    "allThemeDocLabels": 0,
+    "splitEventTitles": 0,
+    "themeDescriptions": 0,
+    "synthTitles": 0,
+    "originalsAiForm": 0,
+    "originalsPlain": 0
+   },
+   "חוסן (any)": {
+    "finalThemeLabels": 1,
+    "allThemeDocLabels": 1,
+    "splitEventTitles": 2,
+    "themeDescriptions": 0,
+    "synthTitles": 0,
+    "originalsAiForm": 1,
+    "originalsPlain": 0
+   },
+   "חוסן קהילתי": {
+    "finalThemeLabels": 0,
+    "allThemeDocLabels": 0,
+    "splitEventTitles": 1,
+    "themeDescriptions": 0,
+    "synthTitles": 0,
+    "originalsAiForm": 1,
+    "originalsPlain": 0
+   },
+   "לכידות (any)": {
+    "finalThemeLabels": 0,
+    "allThemeDocLabels": 0,
+    "splitEventTitles": 0,
+    "themeDescriptions": 0,
+    "synthTitles": 0,
+    "originalsAiForm": 1,
+    "originalsPlain": 0
+   },
+   "הון חברתי": {
+    "finalThemeLabels": 0,
+    "allThemeDocLabels": 0,
+    "splitEventTitles": 0,
+    "themeDescriptions": 0,
+    "synthTitles": 0,
+    "originalsAiForm": 0,
+    "originalsPlain": 0
+   },
+   "פיתוח קהילתי": {
+    "finalThemeLabels": 0,
+    "allThemeDocLabels": 0,
+    "splitEventTitles": 0,
+    "themeDescriptions": 0,
+    "synthTitles": 0,
+    "originalsAiForm": 0,
+    "originalsPlain": 0
+   }
+  },
   "replay": {
    "R": [
     {
@@ -973,6 +1038,139 @@
       "פיתוח מקומי"
      ]
     }
+   ],
+   "P": [
+    {
+     "joinRateSheJoined": 0.227,
+     "joinRateSheKeptApart": 0.054,
+     "keepsLivePairs": 0.532,
+     "themes": 11,
+     "other": 3,
+     "unanswered": 0,
+     "largest": 16,
+     "le3": 1,
+     "ariS1": 0.357,
+     "precisionS1": 0.542,
+     "recallS1": 0.364,
+     "f1S1": 0.435,
+     "ariS2": 0.388,
+     "attPlain": 0.5,
+     "compound": 2,
+     "usd": 0.0588686,
+     "labels": [
+      "הון חברתי",
+      "חוסן קהילתי",
+      "תרבות ופנאי קהילתיים",
+      "זהות ומורשת מקומית",
+      "ממשל קהילתי",
+      "פיתוח קהילתי רב־דורי",
+      "תשתיות קהילתיות",
+      "ניהול המרחב הציבורי",
+      "שימור נוף כפרי",
+      "קיימות סביבתית",
+      "כלכלה מקומית"
+     ]
+    },
+    {
+     "joinRateSheJoined": 0.262,
+     "joinRateSheKeptApart": 0.057,
+     "keepsLivePairs": 0.498,
+     "themes": 11,
+     "other": 2,
+     "unanswered": 0,
+     "largest": 16,
+     "le3": 1,
+     "ariS1": 0.359,
+     "precisionS1": 0.534,
+     "recallS1": 0.371,
+     "f1S1": 0.437,
+     "ariS2": 0.385,
+     "attPlain": 0.455,
+     "compound": 1,
+     "usd": 0.0504326,
+     "labels": [
+      "לכידות קהילתית",
+      "חוסן קהילתי",
+      "תרבות קהילתית",
+      "מורשת מקומית",
+      "מענים לאורך החיים",
+      "ממשל קהילתי",
+      "שירותים ומתקנים קהילתיים",
+      "תכנון מרחבי כפרי",
+      "ניהול המרחב הציבורי",
+      "קיימות סביבתית",
+      "פיתוח כלכלי מקומי"
+     ]
+    },
+    {
+     "joinRateSheJoined": 0.267,
+     "joinRateSheKeptApart": 0.055,
+     "keepsLivePairs": 0.51,
+     "themes": 12,
+     "other": 4,
+     "unanswered": 0,
+     "largest": 20,
+     "le3": 2,
+     "ariS1": 0.363,
+     "precisionS1": 0.54,
+     "recallS1": 0.376,
+     "f1S1": 0.443,
+     "ariS2": 0.361,
+     "attPlain": 0.347,
+     "compound": 7,
+     "usd": 0.0368276,
+     "labels": [
+      "הון חברתי קהילתי",
+      "תרבות ופנאי קהילתיים",
+      "מורשת מקומית",
+      "פלורליזם ותרבות אזרחית",
+      "רווחה וחוסן קהילתיים",
+      "פיתוח ילדים ונוער",
+      "ממשל קהילתי משתף",
+      "שירותים ומתקנים יישוביים",
+      "מרחב כפרי ונופי",
+      "טיפוח המרחב הציבורי",
+      "קיימות וניקיון סביבתי",
+      "פיתוח כלכלי מקומי"
+     ]
+    }
+   ]
+  },
+  "professionalTermsInArmP": {
+   "בינוי קהילה": [
+    0,
+    0,
+    0
+   ],
+   "בניית קהילה": [
+    0,
+    0,
+    0
+   ],
+   "חוסן (any)": [
+    1,
+    1,
+    1
+   ],
+   "חוסן קהילתי": [
+    1,
+    1,
+    1
+   ],
+   "לכידות (any)": [
+    0,
+    1,
+    0
+   ],
+   "הון חברתי": [
+    1,
+    0,
+    1
+   ],
+   "פיתוח קהילתי": [
+    1,
+    0,
+    0
    ]
   }
  },
@@ -1848,6 +2046,71 @@
    "keptApart": 12006,
    "heldTogetherLive": 581
   },
+  "professionalTerms": {
+   "בינוי קהילה": {
+    "finalThemeLabels": 0,
+    "allThemeDocLabels": 0,
+    "splitEventTitles": 0,
+    "themeDescriptions": 0,
+    "synthTitles": 0,
+    "originalsAiForm": 0,
+    "originalsPlain": 0
+   },
+   "בניית קהילה": {
+    "finalThemeLabels": 0,
+    "allThemeDocLabels": 0,
+    "splitEventTitles": 0,
+    "themeDescriptions": 0,
+    "synthTitles": 0,
+    "originalsAiForm": 0,
+    "originalsPlain": 0
+   },
+   "חוסן (any)": {
+    "finalThemeLabels": 0,
+    "allThemeDocLabels": 0,
+    "splitEventTitles": 0,
+    "themeDescriptions": 0,
+    "synthTitles": 0,
+    "originalsAiForm": 0,
+    "originalsPlain": 0
+   },
+   "חוסן קהילתי": {
+    "finalThemeLabels": 0,
+    "allThemeDocLabels": 0,
+    "splitEventTitles": 0,
+    "themeDescriptions": 0,
+    "synthTitles": 0,
+    "originalsAiForm": 0,
+    "originalsPlain": 0
+   },
+   "לכידות (any)": {
+    "finalThemeLabels": 0,
+    "allThemeDocLabels": 1,
+    "splitEventTitles": 1,
+    "themeDescriptions": 0,
+    "synthTitles": 1,
+    "originalsAiForm": 1,
+    "originalsPlain": 1
+   },
+   "הון חברתי": {
+    "finalThemeLabels": 0,
+    "allThemeDocLabels": 0,
+    "splitEventTitles": 0,
+    "themeDescriptions": 0,
+    "synthTitles": 0,
+    "originalsAiForm": 0,
+    "originalsPlain": 0
+   },
+   "פיתוח קהילתי": {
+    "finalThemeLabels": 0,
+    "allThemeDocLabels": 0,
+    "splitEventTitles": 0,
+    "themeDescriptions": 0,
+    "synthTitles": 0,
+    "originalsAiForm": 0,
+    "originalsPlain": 0
+   }
+  },
   "replay": {
    "R": [
     {
@@ -2054,6 +2317,144 @@
       "צביון מקומי"
      ]
     }
+   ],
+   "P": [
+    {
+     "joinRateSheJoined": 0.281,
+     "joinRateSheKeptApart": 0.08,
+     "keepsLivePairs": 0.511,
+     "themes": 14,
+     "other": 4,
+     "unanswered": 0,
+     "largest": 35,
+     "le3": 2,
+     "ariS1": 0.298,
+     "precisionS1": 0.284,
+     "recallS1": 0.476,
+     "f1S1": 0.356,
+     "ariS2": 0.298,
+     "attPlain": 0.524,
+     "compound": 2,
+     "usd": 0.054273,
+     "labels": [
+      "ממשל קהילתי משתף",
+      "לכידות קהילתית",
+      "תרבות שיח קהילתית",
+      "חינוך קהילתי",
+      "פנאי קהילתי",
+      "נגישות לשירותים",
+      "רווחה קהילתית",
+      "מרחב ציבורי איכותי",
+      "בטיחות וניידות יישובית",
+      "ניהול סביבתי מקיים",
+      "ביטחון קהילתי",
+      "תכנון מרחבי",
+      "פיתוח כלכלי מקומי",
+      "זהות ומורשת מקומית"
+     ]
+    },
+    {
+     "joinRateSheJoined": 0.368,
+     "joinRateSheKeptApart": 0.078,
+     "keepsLivePairs": 0.466,
+     "themes": 12,
+     "other": 1,
+     "unanswered": 0,
+     "largest": 29,
+     "le3": 1,
+     "ariS1": 0.296,
+     "precisionS1": 0.291,
+     "recallS1": 0.45,
+     "f1S1": 0.353,
+     "ariS2": 0.296,
+     "attPlain": 0.514,
+     "compound": 6,
+     "usd": 0.0478854,
+     "labels": [
+      "ממשל קהילתי",
+      "מעורבות אזרחית",
+      "לכידות חברתית",
+      "חינוך קהילתי",
+      "תרבות ופנאי",
+      "הזדקנות בקהילה",
+      "מורשת וזהות קהילתית",
+      "מרחב ציבורי ונוף",
+      "קיימות סביבתית",
+      "ניידות וביטחון",
+      "תכנון ופיתוח יישובי",
+      "שירותים וכלכלה מקומית"
+     ]
+    },
+    {
+     "joinRateSheJoined": 0.288,
+     "joinRateSheKeptApart": 0.052,
+     "keepsLivePairs": 0.497,
+     "themes": 13,
+     "other": 6,
+     "unanswered": 0,
+     "largest": 23,
+     "le3": 0,
+     "ariS1": 0.361,
+     "precisionS1": 0.378,
+     "recallS1": 0.448,
+     "f1S1": 0.41,
+     "ariS2": 0.361,
+     "attPlain": 0.436,
+     "compound": 7,
+     "usd": 0.0597688,
+     "labels": [
+      "מנהיגות והשתתפות אזרחית",
+      "ניהול קהילתי שקוף",
+      "תקשורת קהילתית",
+      "לכידות חברתית",
+      "חינוך ופיתוח נוער",
+      "תרבות ופנאי קהילתיים",
+      "שירותים קהילתיים",
+      "מרחב ציבורי ונוף",
+      "מתקני משחק וספורט",
+      "ניהול סביבתי מקיים",
+      "ניידות ובטיחות בדרכים",
+      "ביטחון קהילתי",
+      "תכנון ופיתוח מרחבי"
+     ]
+    }
+   ]
+  },
+  "professionalTermsInArmP": {
+   "בינוי קהילה": [
+    0,
+    0,
+    0
+   ],
+   "בניית קהילה": [
+    0,
+    0,
+    0
+   ],
+   "חוסן (any)": [
+    0,
+    0,
+    0
+   ],
+   "חוסן קהילתי": [
+    0,
+    0,
+    0
+   ],
+   "לכידות (any)": [
+    1,
+    1,
+    1
+   ],
+   "הון חברתי": [
+    0,
+    0,
+    0
+   ],
+   "פיתוח קהילתי": [
+    0,
+    0,
+    0
    ]
   }
  },

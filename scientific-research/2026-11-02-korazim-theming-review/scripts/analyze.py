@@ -354,10 +354,16 @@ for q,qn in QS.items():
         elif s1[a]!=s1[b]: apart.append((a,b))
         if sys_[a]==sys_[b]: heldLive.append((a,b))
     m['fairPairs']=dict(joinedAcrossLive=len(joined),keptApart=len(apart),heldTogetherLive=len(heldLive))
+    # Sigal's definition: professional vocabulary of community development.
+    # Terms: her two examples plus close professional neighbours, chosen by the analyst.
+    nt=lambda x:' '.join(toks(x or ''))
+    TERMS={'בינוי קהילה':r'בינוי (ה)?קהיל','בניית קהילה':r'בניית (ה)?קהיל','חוסן (any)':r'חוסן','חוסן קהילתי':r'חוסן (ה)?קהילתי','לכידות (any)':r'לכידות','הון חברתי':r'הון (ה)?חברתי','פיתוח קהילתי':r'פיתוח (ה)?קהיל'}
+    LAYERS={'finalThemeLabels':[t['statement'] for t in themes],'allThemeDocLabels':[t['statement'] for t in themeDocs],'splitEventTitles':[x['title'] for a in sp for x in a['newState']['splitInto']],'themeDescriptions':[t.get('description') for t in themeDocs],'synthTitles':[s['statement'] for s in SY],'originalsAiForm':[s['statement'] for s in rewrite],'originalsPlain':[s['statement'] for s in plain]}
+    m['professionalTerms']={k:{g:sum(bool(re.search(p,nt(x))) for x in v) for g,v in LAYERS.items()} for k,p in TERMS.items()}
     # ---------- replay arms
     if REPLAY:
         rep={}
-        for arm in ('R','F'):
+        for arm in ('R','F','P'):
             rs=[]
             for n in range(1,10):
                 f=f'{REPLAY}/{q}-{arm}{n}.json'
@@ -369,6 +375,8 @@ for q,qn in QS.items():
                 rs.append(dict(joinRateSheJoined=jr(joined),joinRateSheKeptApart=jr(apart),keepsLivePairs=jr(heldLive),themes=len(labs),other=len(R.get('otherIds') or []),unanswered=len(R.get('unanswered') or []),largest=sizes[-1],le3=sum(s<=3 for s in sizes),ariS1=round(ari(pa,s1),3),**{f'{k}S1':v for k,v in pf1(pa,s1).items()},ariS2=round(ari(pa,s2),3),attPlain=a['attPlain'],compound=sum(comp(l) for l in labs),usd=R.get('usd'),labels=labs))
             rep[arm]=rs
         m['replay']=rep
+    if REPLAY:
+        m['professionalTermsInArmP']={n:[sum(bool(re.search(p,nt(l))) for l in r['labels']) for r in m['replay']['P']] for n,p in TERMS.items()}
     M[qn]=m
 M['_note']='Aggregates, AI labels and Sigal topic names only. No resident text.'
 json.dump(M,open(f'{ST}/results/metrics.json','w'),ensure_ascii=False,indent=1,default=lambda o:o.item() if hasattr(o,'item') else str(o))

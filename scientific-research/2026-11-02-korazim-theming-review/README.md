@@ -8,7 +8,7 @@
 **Answer.**
 
 - **Criticism 1 is confirmed as a description of the machinery.** Nearly every theme came out of the size-triggered split sweep, the splitter never declined, and the fixed rule would split three of her own umbrella topics again. Content played no part in deciding *whether* to split. What is not shown is that splitting alone explains her merges: most pairs she merged were never split siblings.
-- **Criticism 2 is plausible but not measured here.** About 85% of the text the theme judges read is AI-written, and no prompt asks for residents' language. But every word-level test failed to separate her names from the system's. Our instrument can't see what she means by a semantic field, so the next step is to ask her.
+- **Criticism 2 is confirmed for vocabulary, on her own definition.** By "semantic field" she means the professional vocabulary of community development and facilitation, such as "בינוי קהילה" and "חוסן קהילתי"; the AI used simpler terms. "בינוי קהילה" appears in no theme label, and "חוסן" in one final label, inside a list. The same model produces much of this vocabulary when asked to, so this looks like a prompt gap rather than a model limit. Asking for it did not reproduce her groupings, though.
 
 **Scope.** Diagnosis only. No pipeline code changed. One facilitator, two questions, five merge decisions, and hypotheses formed after seeing her edits. Treat this as a detailed case study.
 
@@ -72,7 +72,29 @@ Read these with care:
 
 The precision against her partition is high (.91 and .985) and recall is lower (.41 and .65): themes are mostly clean subsets, and she wants coarser ones. Since she edited the system's list, this shows direction, not quality. A *random* coarsening of the live list with her group sizes scores ARI .64 and .62 against itself, so these agreement numbers are largely structural.
 
-## Finding 4: residents' language and the labels
+## Finding 4: professional vocabulary (her definition)
+
+**Definition, from Sigal via Tal after the first version of this study:** a semantic field is the vocabulary professionals use in community development and facilitation. The first version assumed it meant residents' own vocabulary, so the tests in Finding 4b answer a different question from the one she raised.
+
+Statements or labels matching each term. Terms are her two examples plus close neighbours chosen by the analyst, not a vetted list.
+
+| Term | Final labels (43) | All theme docs ever (88) | Synthesis titles (70) | Originals in AI form (321) | Plain originals (98) |
+|---|---|---|---|---|---|
+| בינוי קהילה | 0 | 0 | 0 | 0 | 0 |
+| חוסן (any) | 1 | 1 | 0 | 1 | 0 |
+| לכידות (any) | 0 | 1 | 1 | 2 | 1 |
+| הון חברתי | 0 | 0 | 0 | 0 | 0 |
+| פיתוח קהילתי | 0 | 0 | 0 | 0 | 0 |
+
+- **The criticism holds.** These terms are nearly absent from every layer, and she couldn't have got them from the data: residents barely use them either. They are knowledge a professional brings to the material.
+- **No prompt invites them.** The label prompt's examples are "Public transit improvements" and "Park & green space", and it asks for the "lever, mechanism, actor, or domain".
+- **The model knows the vocabulary.** With a professional framing (Arm P, Finding 5), and none of her terms in the prompt, it wrote "חוסן קהילתי", "לכידות קהילתית", "תרבות קהילתית" and "הון חברתי" unprompted. It never wrote "בינוי קהילה" in 6 runs, and whether its other terms ("ממשל קהילתי", "קיימות סביבתית") are good professional usage needs her judgement.
+- **Not all her names are of this kind.** "חזות הישוב" and "שיפור פני הכפר" look local rather than professional.
+- **An open design question.** Labels are read by residents as well as by professionals, and a participatory process may want residents' language on some screens. The report and the resident-facing screens may need different names.
+
+## Finding 4b: residents' language and the labels (not what she meant)
+
+These tests assumed the first version's reading. They stand as facts about provenance, not as a test of her criticism.
 
 **What is established**
 
@@ -105,22 +127,24 @@ The precision against her partition is high (.91 and .985) and recall is lower (
 
 ## Finding 5: counterfactual replay (hypothesis-generating)
 
-Three repeats per arm through the compiled production rebuild, no prod writes, total cost $0.55.
+Three repeats per arm through the compiled production rebuild, no prod writes, total cost about $0.86.
 
 - **Arm R:** shipped prompts.
-- **Arm F:** the same mechanics with a facilitator framing, written after seeing her result.
+- **Arm F:** the same mechanics with a facilitator framing, written after seeing her result. It asks for "plain words residents or their village would use", the opposite of what she meant.
+- **Arm P:** the same mechanics framed by the professional concepts of community development, added after her definition. None of her terms are in the prompt.
 
-| Mean of 3 | R, Q.A | F, Q.A | R, Q.B | F, Q.B |
-|---|---|---|---|---|
-| Themes | 13.3 | 10 | 15 (ceiling, all runs) | 12.3 |
-| Largest theme (atoms) | 15 | 20.7 | 25.3 | 34 |
-| Compound names | 13.3 | 0 | 14 | 0.3 |
-| Joins pairs she joined across live themes | 20% | 36% | 44% | 47% |
-| Joins pairs she kept apart | 3% | 6% | 5% | 8% |
-| Keeps pairs the live themes held together | 55% | 62% | 53% | 54% |
+| Mean of 3 | R, Q.A | F, Q.A | P, Q.A | R, Q.B | F, Q.B | P, Q.B |
+|---|---|---|---|---|---|---|
+| Themes | 13.3 | 10 | 11.3 | 15 (ceiling, all runs) | 12.3 | 13 |
+| Largest theme (atoms) | 15 | 20.7 | 17.3 | 25.3 | 34 | 29 |
+| Compound names | 13.3 | 0 | 3.3 | 14 | 0.3 | 5 |
+| Joins pairs she joined across live themes | 20% | 36% | 25% | 44% | 47% | 31% |
+| Joins pairs she kept apart | 3% | 6% | 6% | 5% | 8% | 7% |
+| Keeps pairs the live themes held together | 55% | 62% | 51% | 53% | 54% | 49% |
 
 - **Re-theme as shipped wouldn't have given her structure.** It reduces the theme count, but on Q.B it hits the ceiling every time, names stay compound, and nearly half of the groupings she accepted dissolve.
 - **The facilitator framing is not shown to be better.** The name shape changes because the prompt demands it, so that isn't evidence. It joins somewhat more of what she joined and also more of what she kept apart. Three repeats can't separate the arms, and its largest Q.B theme (34 atoms) may be a catch-all.
+- **The professional framing changes the words, not the structure.** Arm P joins pairs she joined at a rate between R and F on Q.A (25%), and the lowest of the three on Q.B (31%). So "use the professional concept and the umbrella follows" isn't supported: asking for professional terms does not produce her "בינוי קהילה" grouping.
 - **Do not compare these arms with the live list on ARI.** She edited the live list, so it wins by construction.
 
 ## What these data can't support
@@ -128,6 +152,7 @@ Three repeats per arm through the compiled production rebuild, no prod writes, t
 - That the split sweep caused the mismatch with her structure, rather than contributing to it.
 - That the merge judge agreed with her.
 - That her names are closer to residents' language or more everyday.
+- That Arm P's terms are good professional usage, or that a professional prompt would satisfy her: no professional has rated them.
 - That a facilitator prompt beats the shipped one, or that embeddings can or can't recover her merges.
 - Any generalisation beyond this case, or precise significance claims: the tests are uncorrected and post hoc.
 
@@ -137,8 +162,9 @@ Three repeats per arm through the compiled production rebuild, no prod writes, t
 |---|---|---|
 | H1 | Size-triggered splits caused the over-division | **Partly.** Mechanism confirmed, explains only part of her merges |
 | H2 | Arrival-order growth and unrepaired fragmentation | **Partly.** Merges cross split events, but churn between merges and splits makes order hard to isolate |
-| H3 | Labels drift from residents' words in an administrative register | **Not supported as measured.** Provenance is established; the word-level effect isn't |
-| H4 | Lever/actor framing cuts across residents' fields | **Unresolved.** One of four noisy tests; needs her definition |
+| H3 | Labels drift from residents' words in an administrative register | **Not supported as measured, and not her criticism.** Provenance is established; the word-level effect isn't |
+| H4 | Lever/actor framing cuts across residents' fields | **Unresolved, and not her criticism.** One of four noisy tests |
+| H6 | Labels lack the profession's vocabulary (her definition, added after the first version) | **Supported on labels, for a small analyst-chosen term list.** A prompt supplies much of the vocabulary but not her groupings |
 | H5 | Granularity depends on purpose | **Plausible, unmeasured.** Fanny's hand-coding of Bq had 36 clusters for 114 statements, about 3 per cluster; Sigal has 13 (A) and 11 (B) leaves per topic. Different questions and different purposes, so this is only suggestive |
 
 ## Limits
@@ -152,10 +178,10 @@ Three repeats per arm through the compiled production rebuild, no prod writes, t
 
 ## Proposals (none built)
 
-1. **Ask Sigal first (20 minutes):** what is a semantic field to her, with three examples? Which kept labels did she accept vs. leave for lack of time? This is the real test of H3–H5.
+1. **Ask Sigal to rate Arm P's names and to list her field's core terms (20 minutes),** and say which kept labels she accepted vs. left for lack of time. Her list would replace the analyst's term list above.
 2. **Stop treating size as evidence of incoherence.** Scale or remove the 25-leaf rule, and make the splitter judge coherence first. Investigate why it never declines.
 3. **Keep two levels.** The split tree already records a hierarchy, so a large topic with sub-headings could serve both a report and browsing. This would need an IA spec first.
-4. **Give the labeler residents' text** where it exists, and allow short names that aren't lists.
+4. **Offer a professional naming layer,** perhaps from a practitioner-vetted glossary and as an admin or report choice, and allow short names that aren't lists. Decide first which screens use which language.
 5. **Add a label measure to the gate,** with human ratings, since membership F1 can't see this.
 6. **Collect a blind coding** from a second facilitator on these two questions before tuning anything against this case.
 

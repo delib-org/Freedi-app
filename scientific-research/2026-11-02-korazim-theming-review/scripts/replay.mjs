@@ -6,7 +6,8 @@
  *   Arm F: same mechanics; the prompt strings are swapped IN THIS PROCESS ONLY
  *          for a facilitator framing. Production code and deployed prompts are
  *          not changed. Written AFTER seeing Sigal's result, so hypothesis-generating.
- * usage: node replay.mjs --raw=<dir> --q=<id> --arm=R|F --n=<repeat>
+ *   Arm P: as F, but framed by community-development professional vocabulary.
+ * usage: node replay.mjs --raw=<dir> --q=<id> --arm=R|F|P --n=<repeat>
  * Output goes to <raw>/replay/ (outside the repo): holds statement ids and AI names.
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -56,6 +57,24 @@ if (ARM === 'F') {
 NAMING: each "name" is a short phrase of 2-4 words, in the plain words residents or their
 village would use. Name one field: no lists, no commas, no "X and Y". Propose as few fields
 as the answers truly need; the upper limit above is a limit, not a target.`;
+} else if (ARM === 'P') {
+	// Arm P: Sigal's definition of "semantic field" = the professional vocabulary of
+	// community development. No term from her report or her examples is in the prompt.
+	const PROFESSIONAL = `You are a senior professional in community development and participatory facilitation.
+Residents answered one question. Organise their answers into the professional concepts of
+your field, the terms practitioners of community development use when they analyse and
+report on a community. A concept may be large and may hold many different actions and
+actors. Do not split a concept just because it is big. Do not restate the question.
+A proposal that fits no concept is left out.`;
+	const shippedDiscovery = prompts.discoveryUserPrompt;
+	prompts.DISCOVERY_SYSTEM = `${PROFESSIONAL}\nReturn only JSON.`;
+	prompts.ASSIGN_SYSTEM = `${PROFESSIONAL}\nYou now file proposals under a fixed list of concepts.\nReturn only JSON.`;
+	prompts.discoveryUserPrompt = (question, texts, bounds) =>
+		`${shippedDiscovery(question, texts, bounds)}
+
+NAMING: each "name" is the established professional term of community development in Hebrew,
+2-4 words, one concept: no lists, no commas. Propose as few concepts as the answers truly
+need; the upper limit above is a limit, not a target.`;
 } else if (ARM !== 'R') throw new Error('arm');
 
 const PRICE = { 'gpt-5.6-terra': { in: 2, out: 12 }, 'gpt-5.6-luna': { in: 0.2, out: 1.2 } };
