@@ -5,7 +5,7 @@ import clsx from 'clsx';
  * Checkbox Atom - Atomic Design System
  *
  * A minimal React wrapper around BEM-styled checkbox classes.
- * All styling is handled by SCSS in src/view/style/atoms/_checkbox.scss
+ * All styling is handled by SCSS in packages/shared-styles/src/atoms/_checkbox.scss
  *
  * Supports both custom icon mode (pass icon/checkedIcon) and native box mode.
  */
