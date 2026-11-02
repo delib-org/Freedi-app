@@ -912,6 +912,7 @@
  "survey.stakeholders.recalculateFailed",
  "survey.stakeholders.recalculated",
  "survey.stakeholders.recalculating",
+ "survey.stakeholders.skipped",
  "survey.stakeholders.stale",
  "surveyAdminsIntro",
  "surveyClosedMessage",

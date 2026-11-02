@@ -4672,5 +4672,6 @@
   "survey.stakeholders.recalculate": "Scores opnieuw berekenen",
   "survey.stakeholders.recalculating": "Opnieuw berekenen…",
   "survey.stakeholders.recalculated": "Scores opnieuw berekend.",
-  "survey.stakeholders.recalculateFailed": "De scores konden niet opnieuw worden berekend. Probeer het opnieuw of vraag de eigenaar van de enquête."
+  "survey.stakeholders.recalculateFailed": "De scores konden niet opnieuw worden berekend. Probeer het opnieuw of vraag de eigenaar van de enquête.",
+  "survey.stakeholders.skipped": "Het aantal kon niet worden ingesteld bij {{count}} vragen van de enquête, omdat niemand die deze enquête beheert ze beheert. Die vragen houden hun eigen aantal."
 }

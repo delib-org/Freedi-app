@@ -6,13 +6,18 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import StakeholderCountField from '../StakeholderCountField';
 
 const mockCallable = jest.fn();
+const mockCallableOptions = jest.fn();
 const mockAuthedFetch = jest.fn();
 
 jest.mock('@freedi/shared-i18n/next', () => ({
 	useTranslation: () => ({ t: (key: string) => key, dir: 'ltr' }),
 }));
 jest.mock('firebase/functions', () => ({
-	httpsCallable: () => (data: unknown) => mockCallable(data),
+	httpsCallable: (_fn: unknown, _name: string, options: unknown) => {
+		mockCallableOptions(options);
+
+		return (data: unknown) => mockCallable(data);
+	},
 }));
 jest.mock('@/lib/firebase/functionsClient', () => ({ functions: {} }));
 jest.mock('@/lib/api/authedFetch', () => ({
@@ -82,8 +87,10 @@ describe('StakeholderCountField', () => {
 		fireEvent.click(await screen.findByText('survey.stakeholders.recalculate'));
 
 		await waitFor(() => expect(mockCallable).toHaveBeenCalledTimes(2));
-		expect(mockCallable).toHaveBeenCalledWith({ statementId: 'q1' });
-		expect(mockCallable).toHaveBeenCalledWith({ statementId: 'q3' });
+		// the server may run for 300 s; the SDK default of 70 s would show a false failure
+		expect(mockCallableOptions).toHaveBeenCalledWith({ timeout: 310_000 });
+		expect(mockCallable).toHaveBeenCalledWith({ statementId: 'q1', surveyId: 's1' });
+		expect(mockCallable).toHaveBeenCalledWith({ statementId: 'q3', surveyId: 's1' });
 		expect(await screen.findByText('survey.stakeholders.recalculated')).toBeTruthy();
 		expect(screen.queryByText('survey.stakeholders.stale')).toBeNull();
 	});
@@ -111,5 +118,11 @@ describe('StakeholderCountField', () => {
 
 		expect(await screen.findByText('survey.stakeholders.recalculateFailed')).toBeTruthy();
 		expect(screen.getByText('survey.stakeholders.stale')).toBeTruthy();
+	});
+
+	it('says plainly when the number could not be set on some questions', () => {
+		render(<StakeholderCountField value={100} onChange={jest.fn()} questionIds={[]} isSaved skippedCount={2} />);
+
+		expect(screen.getByText('survey.stakeholders.skipped'.replace('{{count}}', '2'))).toBeTruthy();
 	});
 });

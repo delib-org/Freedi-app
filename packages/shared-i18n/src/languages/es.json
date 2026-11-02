@@ -4672,5 +4672,6 @@
   "survey.stakeholders.recalculate": "Recalcular puntuaciones",
   "survey.stakeholders.recalculating": "Recalculando…",
   "survey.stakeholders.recalculated": "Puntuaciones recalculadas.",
-  "survey.stakeholders.recalculateFailed": "No se pudieron recalcular las puntuaciones. Inténtalo de nuevo o consulta con quien administra la encuesta."
+  "survey.stakeholders.recalculateFailed": "No se pudieron recalcular las puntuaciones. Inténtalo de nuevo o consulta con quien administra la encuesta.",
+  "survey.stakeholders.skipped": "No se pudo fijar el número en {{count}} preguntas de la encuesta, porque nadie que gestione esta encuesta las administra. Esas preguntas conservan su propio número."
 }

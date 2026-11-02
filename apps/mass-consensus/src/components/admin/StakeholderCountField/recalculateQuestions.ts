@@ -1,3 +1,4 @@
+import { RECALCULATE_CALL_TIMEOUT_MS } from '@/constants/common';
 import { logError } from '@/lib/utils/errorHandling';
 
 export interface RecalculateOutcome {
@@ -18,15 +19,17 @@ export async function recalculateQuestions(
 		import('firebase/functions'),
 		import('@/lib/firebase/functionsClient'),
 	]);
-	const recalculate = httpsCallable<{ statementId: string }, { success: boolean }>(
+	const recalculate = httpsCallable<{ statementId: string; surveyId: string }, { success: boolean }>(
 		functions,
 		'recalculateIndices',
+		{ timeout: RECALCULATE_CALL_TIMEOUT_MS },
 	);
 	const failedQuestionIds: string[] = [];
 
 	for (const questionId of questionIds) {
 		try {
-			await recalculate({ statementId: questionId });
+			// surveyId lets the server allow this survey's owner and editors for its questions
+			await recalculate({ statementId: questionId, surveyId });
 		} catch (error) {
 			failedQuestionIds.push(questionId);
 			logError(error, {

@@ -16,6 +16,8 @@ interface StakeholderCountFieldProps {
 	questionIds: string[];
 	/** True once the latest edit has reached the server (the cascade has run). */
 	isSaved: boolean;
+	/** Questions the number could not be set on because nobody running the survey administers them. */
+	skippedCount?: number;
 }
 
 type RecalcStatus = 'idle' | 'running' | 'done' | 'failed';
@@ -31,6 +33,7 @@ export default function StakeholderCountField({
 	surveyId,
 	questionIds,
 	isSaved,
+	skippedCount = 0,
 }: StakeholderCountFieldProps) {
 	const { t } = useTranslation();
 	const ratedQuestionIds = useRatedQuestionIds(surveyId, questionIds);
@@ -87,6 +90,11 @@ export default function StakeholderCountField({
 							: t('survey.stakeholders.recalculate')}
 					</button>
 				</div>
+			)}
+			{skippedCount > 0 && (
+				<p className={styles.field__error} role="status">
+					{t('survey.stakeholders.skipped').replace('{{count}}', String(skippedCount))}
+				</p>
 			)}
 			{status === 'failed' && (
 				<p className={styles.field__error} role="alert">

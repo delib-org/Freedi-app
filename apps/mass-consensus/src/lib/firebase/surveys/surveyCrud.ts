@@ -134,6 +134,7 @@ export async function createSurvey(
   if (survey.settings.targetPopulation !== undefined) {
     try {
       await cascadeTargetPopulation({
+        survey,
         questionIds: survey.questionIds,
         change: { previous: undefined, next: survey.settings.targetPopulation },
         addedQuestionIds: survey.questionIds,
@@ -206,10 +207,13 @@ export async function getSurveyWithQuestions(
 /**
  * Update a survey
  */
+/** The saved survey, plus how many questions N could not be set on (not stored). */
+export type UpdatedSurvey = Survey & { targetPopulationSkipped?: number };
+
 export async function updateSurvey(
   surveyId: string,
   data: UpdateSurveyRequest
-): Promise<Survey | null> {
+): Promise<UpdatedSurvey | null> {
   const db = getFirestoreAdmin();
 
   const survey = await getSurveyById(surveyId);
@@ -342,13 +346,16 @@ export async function updateSurvey(
     ? data.questionIds.filter((id) => !previousQuestionIds.has(id))
     : [];
   const populationChanged = populationChange.previous !== populationChange.next;
+  let targetPopulationSkipped = 0;
   if (populationChanged || addedQuestionIds.length > 0) {
     try {
-      await cascadeTargetPopulation({
+      const cascade = await cascadeTargetPopulation({
+        survey: merged,
         questionIds: merged.questionIds,
         change: populationChange,
         addedQuestionIds,
       });
+      targetPopulationSkipped = cascade.refused;
     } catch (error) {
       logger.error('[updateSurvey] cascadeTargetPopulation failed:', surveyId, error);
     }
@@ -374,7 +381,7 @@ export async function updateSurvey(
     }
   }
 
-  return merged;
+  return targetPopulationSkipped > 0 ? { ...merged, targetPopulationSkipped } : merged;
 }
 
 /**

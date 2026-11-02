@@ -97,6 +97,8 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
   const [demographicsLoaded, setDemographicsLoaded] = useState(!existingSurvey);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [saveRetryTick, setSaveRetryTick] = useState(0);
+  // Questions the number of stakeholders could not be set on (nobody running the survey administers them)
+  const [populationSkipped, setPopulationSkipped] = useState(0);
 
   const isEditing = !!existingSurvey;
   const editingSurveyId = existingSurvey?.surveyId;
@@ -333,7 +335,8 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         throw new Error(body.error || 'Failed to save survey');
       }
 
-      const updatedSurvey = (await response.json()) as Survey;
+      const updatedSurvey = (await response.json()) as Survey & { targetPopulationSkipped?: number };
+      setPopulationSkipped(updatedSurvey.targetPopulationSkipped ?? 0);
       const idMapping = await saveDemographics(editingSurveyId, pages, questions);
 
       lastSavedSnapshotRef.current = snapshot;
@@ -594,6 +597,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
           surveyId={editingSurveyId}
           questionIds={selectedQuestions.map((q) => q.statementId)}
           isSaved={saveStatus === 'saved'}
+          skippedCount={populationSkipped}
         />
 
         {/* Opening Slide Settings */}

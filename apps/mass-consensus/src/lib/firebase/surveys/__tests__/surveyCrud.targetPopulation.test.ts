@@ -1,7 +1,7 @@
 const mockSet = jest.fn().mockResolvedValue(undefined);
 const mockUpdate = jest.fn().mockResolvedValue(undefined);
 const mockGet = jest.fn();
-const mockCascade = jest.fn().mockResolvedValue({ updated: 0, skipped: 0 });
+const mockCascade = jest.fn().mockResolvedValue({ updated: 0, skipped: 0, refused: 0 });
 
 jest.mock('@/lib/firebase/admin', () => ({
 	getFirestoreAdmin: () => ({
@@ -88,5 +88,25 @@ describe('surveyCrud - number of stakeholders', () => {
 		expect(mockCascade).toHaveBeenCalledWith(
 			expect.objectContaining({ addedQuestionIds: ['q2'] }),
 		);
+	});
+
+	it('tells the caller how many questions the number could not be set on', async () => {
+		existing(100);
+		mockCascade.mockResolvedValueOnce({ updated: 1, skipped: 0, refused: 2 });
+
+		const saved = await updateSurvey('s1', { settings: { ...DEFAULT_SURVEY_SETTINGS, targetPopulation: 300 } });
+
+		expect(saved?.targetPopulationSkipped).toBe(2);
+		expect(mockCascade).toHaveBeenCalledWith(
+			expect.objectContaining({ survey: expect.objectContaining({ surveyId: 's1' }) }),
+		);
+	});
+
+	it('an unchanged autosave reads no question and no roster (the cascade is not even called)', async () => {
+		existing(300);
+
+		await updateSurvey('s1', { settings: { ...DEFAULT_SURVEY_SETTINGS, targetPopulation: 300 } });
+
+		expect(mockCascade).not.toHaveBeenCalled();
 	});
 });

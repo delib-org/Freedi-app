@@ -1,8 +1,9 @@
 import { FieldValue } from 'firebase-admin/firestore';
-import { Collections, type Statement } from '@freedi/shared-types';
+import { Collections, EvaluationUI, type Statement, type Survey } from '@freedi/shared-types';
 import { getFirestoreAdmin } from '../admin';
 import { logger } from '@/lib/utils/logger';
 import { parseTargetPopulation } from '@/lib/utils/targetPopulation';
+import { isQuestionAdministeredByRoster, surveyRosterUids } from './questionAdminAccess';
 
 /**
  * Cascade the survey's "Number of stakeholders" (settings.targetPopulation) onto
@@ -18,6 +19,7 @@ import { parseTargetPopulation } from '@/lib/utils/targetPopulation';
 
 const FIRESTORE_BATCH_LIMIT = 500;
 const FIELD = 'evaluationSettings.targetPopulation';
+const UI_FIELD = 'evaluationSettings.evaluationUI';
 
 export type TargetPopulationAction =
 	| { kind: 'write'; value: number }
@@ -70,9 +72,13 @@ export function decideForQuestion(
 export interface TargetPopulationCascadeResult {
 	updated: number;
 	skipped: number;
+	/** Questions left alone because nobody running the survey administers them. */
+	refused: number;
 }
 
 interface CascadeInput {
+	/** The survey whose owner and editors must administer each question we write to. */
+	survey: Pick<Survey, 'surveyId' | 'creatorId'>;
 	/** Questions the survey has now. */
 	questionIds: string[];
 	change: TargetPopulationChange;
@@ -90,7 +96,12 @@ export async function cascadeTargetPopulation(
 	const refs = ids.map((id) => db.collection(Collections.statements).doc(id));
 	const snaps = await Promise.all(refs.map((ref) => ref.get()));
 
-	const writes: { ref: FirebaseFirestore.DocumentReference; action: TargetPopulationAction }[] = [];
+	const writes: {
+		ref: FirebaseFirestore.DocumentReference;
+		action: TargetPopulationAction;
+		needsUi: boolean;
+		question: Statement;
+	}[] = [];
 	let skipped = 0;
 
 	snaps.forEach((snap, i) => {
@@ -99,7 +110,8 @@ export async function cascadeTargetPopulation(
 
 			return;
 		}
-		const current = (snap.data() as Statement).evaluationSettings?.targetPopulation;
+		const settings = (snap.data() as Statement).evaluationSettings;
+		const current = settings?.targetPopulation;
 		const action = decideForQuestion(surveyAction, input.change, current, added.has(ids[i]));
 
 		if (action.kind === 'none') {
@@ -107,20 +119,44 @@ export async function cascadeTargetPopulation(
 
 			return;
 		}
-		writes.push({ ref: refs[i], action });
+		// The Statement schema (parsed by functions triggers) requires evaluationUI in
+		// this map; absent means 'suggestions' everywhere, so make that explicit.
+		writes.push({ ref: refs[i], action, needsUi: !settings?.evaluationUI, question: snap.data() as Statement });
 	});
 
-	for (let i = 0; i < writes.length; i += FIRESTORE_BATCH_LIMIT) {
+	// Only now, and only if something would be written, read who runs the survey:
+	// an autosave that changes nothing costs no extra reads.
+	let allowed = writes;
+	let refused = 0;
+	if (writes.length > 0) {
+		const roster = await surveyRosterUids(input.survey);
+		const verdicts = await Promise.all(
+			writes.map((w) => isQuestionAdministeredByRoster(roster, w.question)),
+		);
+		allowed = writes.filter((_, i) => verdicts[i]);
+		refused = writes.length - allowed.length;
+		writes.forEach((w, i) => {
+			if (verdicts[i]) return;
+			logger.warn('[cascadeTargetPopulation] question not administered by the survey roster, left untouched', {
+				operation: 'cascadeTargetPopulation',
+				surveyId: input.survey.surveyId,
+				statementId: w.question.statementId,
+			});
+		});
+	}
+
+	for (let i = 0; i < allowed.length; i += FIRESTORE_BATCH_LIMIT) {
 		const batch = db.batch();
-		for (const { ref, action } of writes.slice(i, i + FIRESTORE_BATCH_LIMIT)) {
+		for (const { ref, action, needsUi } of allowed.slice(i, i + FIRESTORE_BATCH_LIMIT)) {
 			batch.update(ref, {
 				[FIELD]: action.kind === 'write' ? action.value : FieldValue.delete(),
+				...(needsUi ? { [UI_FIELD]: EvaluationUI.suggestions } : {}),
 			});
 		}
 		await batch.commit();
 	}
 
-	logger.info('[cascadeTargetPopulation] cascaded', { updated: writes.length, skipped });
+	logger.info('[cascadeTargetPopulation] cascaded', { updated: allowed.length, skipped, refused });
 
-	return { updated: writes.length, skipped };
+	return { updated: allowed.length, skipped, refused };
 }

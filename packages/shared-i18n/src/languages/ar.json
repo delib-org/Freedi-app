@@ -4791,5 +4791,6 @@
   "survey.stakeholders.recalculate": "إعادة حساب الدرجات",
   "survey.stakeholders.recalculating": "جارٍ إعادة الحساب…",
   "survey.stakeholders.recalculated": "تمت إعادة حساب الدرجات.",
-  "survey.stakeholders.recalculateFailed": "تعذّرت إعادة حساب الدرجات. حاولوا مرة أخرى أو اطلبوا المساعدة من صاحب الاستبيان."
+  "survey.stakeholders.recalculateFailed": "تعذّرت إعادة حساب الدرجات. حاولوا مرة أخرى أو اطلبوا المساعدة من صاحب الاستبيان.",
+  "survey.stakeholders.skipped": "تعذّر تعيين العدد في {{count}} من أسئلة الاستبيان، لأن أحدًا ممن يديرون الاستبيان لا يدير هذه الأسئلة. تحتفظ هذه الأسئلة بعددها الخاص."
 }
