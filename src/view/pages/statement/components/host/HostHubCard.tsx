@@ -1,6 +1,7 @@
 import { FC, ReactNode, useId } from 'react';
-import { ChevronDown, ChevronUp, LucideIcon } from 'lucide-react';
+import { ChevronDown, LucideIcon } from 'lucide-react';
 import clsx from 'clsx';
+import Collapse from '@/view/components/atomic/molecules/Collapse/Collapse';
 import { HostHubSectionId } from './hostHubLogic';
 import styles from './HostHub.module.scss';
 
@@ -52,15 +53,13 @@ const HostHubCard: FC<HostHubCardProps> = ({
 						<span className={styles.cardDescription}>{description}</span>
 					</span>
 					<span className={styles.cardChevron} aria-hidden="true">
-						{expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+						<ChevronDown size={20} />
 					</span>
 				</button>
 			</h2>
-			{expanded && (
-				<div id={bodyId} className={styles.cardBody}>
-					{children}
-				</div>
-			)}
+			<Collapse id={bodyId} isOpen={expanded}>
+				<div className={styles.cardBody}>{children}</div>
+			</Collapse>
 		</section>
 	);
 };

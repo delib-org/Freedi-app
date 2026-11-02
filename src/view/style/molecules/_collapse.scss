@@ -1,0 +1,50 @@
+// Collapse Molecule — BEM
+// Animated open/close for a section body. Height moves with a grid track
+// (0fr -> 1fr), so no height is measured in JS and late-loading content still
+// fits. Only the track and the opacity change; the body clips only while it
+// moves, so focus rings and dropdowns are not cut off once open.
+// React wrapper: atomic/molecules/Collapse.
+//
+// DOM:
+// <div class="collapse [--open] [--moving]" id>
+//   <div class="collapse__inner">…body…</div>
+// </div>
+
+.collapse {
+	display: grid;
+	grid-template-rows: 0fr;
+	// Closing leaves faster than opening arrives.
+	transition: grid-template-rows var(--motion-base) var(--motion-ease-exit);
+
+	&[hidden] {
+		display: none;
+	}
+
+	&__inner {
+		min-block-size: 0;
+		opacity: 0;
+		transition: opacity var(--motion-base) var(--motion-ease-exit);
+	}
+
+	&--open {
+		grid-template-rows: 1fr;
+		transition-timing-function: var(--motion-ease);
+	}
+
+	&--open &__inner {
+		opacity: 1;
+		transition-timing-function: var(--motion-ease);
+	}
+
+	&--moving > &__inner {
+		overflow: hidden;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+
+		&__inner {
+			transition: none;
+		}
+	}
+}

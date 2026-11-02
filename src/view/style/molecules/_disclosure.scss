@@ -11,6 +11,37 @@
 @use '../mixins' as *;
 
 .disclosure {
+	// Chromium 131+: animate the native <details> height. Other browsers
+	// open and close instantly, which is fine.
+	@supports (interpolate-size: allow-keywords) {
+		interpolate-size: allow-keywords;
+
+		&::details-content {
+			block-size: 0;
+			opacity: 0;
+			overflow: hidden;
+			transition:
+				block-size var(--motion-base) var(--motion-ease-exit),
+				opacity var(--motion-base) var(--motion-ease-exit),
+				overflow var(--motion-base) allow-discrete,
+				content-visibility var(--motion-base) allow-discrete;
+		}
+
+		&[open]::details-content {
+			block-size: auto;
+			opacity: 1;
+			// Clips while moving only (overflow flips at the end), so focus rings stay whole.
+			overflow: visible;
+			transition-timing-function: var(--motion-ease);
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			&::details-content {
+				transition: none;
+			}
+		}
+	}
+
 	&__summary {
 		display: inline-flex;
 		align-items: center;
