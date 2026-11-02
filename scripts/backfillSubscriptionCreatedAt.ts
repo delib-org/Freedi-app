@@ -2,18 +2,29 @@
  * Backfill: repair the admin subscriptions the server wrote before it stored a
  * date and the real person on them.
  *
- * Members (People settings) orders by `createdAt`, so a `statementsSubscribe`
- * doc without one is never listed; and `createSubscription` stored the
- * statement's creator as `user`, so an inherited host's doc carried somebody
- * else's name, photo and email. A doc qualifies when `createdAt` is missing or
- * `user.uid !== userId`, and only the missing part is written:
+ * Members (People settings) filters on `statementType` and orders by `createdAt`,
+ * so a `statementsSubscribe` doc lacking either is never listed; and
+ * `createSubscription` stored the statement's creator as `user`, so an inherited
+ * host's doc carried somebody else's name, photo and email. A doc qualifies when
+ * `createdAt` or `statementType` is missing or `user.uid !== userId`, and only the
+ * missing part is written:
  *   - createdAt: the statement's createdAt in ms, else its lastUpdate.
+ *   - statementType: the live statement's, else the doc's embedded copy. Document
+ *     and agreement types are stored too, and Members' filter keeps them out.
+ *     A doc that would still fail the schema does not get it: the Home listener
+ *     parses without a guard, and one bad doc would drop the rest of its snapshot.
  *   - user: { uid, displayName, photoURL, isAnonymous } from usersV2 and Firebase
  *     Auth. With no profile anywhere: { uid, displayName: '', isAnonymous: true },
  *     so the creator's identity still leaves the doc and the UI shows its neutral
  *     name.
  *
  * `lastUpdate` is never touched: it drives ordering and "new activity" elsewhere.
+ * `parentId` and `topParentId` are not written: see subscriptionRepairEffects.ts.
+ *
+ * statementType also opens the doc to Home's listener, so a host can see spaces
+ * and questions there that were absent. Every run prints how many, per surface:
+ * read that part of a dry run before writing.
+ *
  * Idempotent: a second run writes nothing. Elevated roles only, since Firestore
  * cannot query a missing field; a demoted host's doc is not covered.
  * Docs whose id disagrees with their fields are skipped and counted: they are
@@ -43,8 +54,9 @@ import {
 	WriteBatch,
 } from 'firebase-admin/firestore';
 import { safeParse } from 'valibot';
-import { Collections, StatementSubscriptionSchema } from '@freedi/shared-types';
+import { Collections, getUserFeedId, StatementSubscriptionSchema } from '@freedi/shared-types';
 import { FIREBASE } from '../src/constants/common';
+import { convertTimestampsToMillis } from '../src/helpers/timestampHelpers';
 import {
 	assessSubscription,
 	backfillRunRefusal,
@@ -53,8 +65,20 @@ import {
 	formatRepairReport,
 	RepairCandidate,
 	RepairCounter,
+	RepairPatch,
+	resolveStatementType,
 	statementDateMillis,
 } from '../functions/src/migrations/subscriptionRepairPlan';
+import {
+	emptyEffectTally,
+	isTopLevelDoc,
+	MembersOutcome,
+	membersFieldsAfter,
+	membersOutcome,
+	newlyVisibleOn,
+	recordEffects,
+	wouldJoinHomeListener,
+} from '../functions/src/migrations/subscriptionRepairEffects';
 import { ELEVATED_ROLES } from '../functions/src/utils/subscriptionIdentity';
 import {
 	lookupPersonIdentities,
@@ -86,12 +110,24 @@ const auth = getAuth();
 
 const SAMPLE_SIZE = 5;
 
+const OUTCOME_COUNTERS: Readonly<Record<Exclude<MembersOutcome, 'listed'>, RepairCounter>> = {
+	byType: 'hiddenByType',
+	noType: 'hiddenNoType',
+	noDate: 'hiddenNoDate',
+	typeHeldBack: 'hiddenTypeHeldBack',
+};
+
 const counts = emptyRepairCounts();
+const effects = emptyEffectTally();
 const samples = new Map<string, string[]>();
 const schemaIssues = new Map<string, number>();
 const scannedByRole: Record<string, number> = {};
-/** Each statement is read once: its date, or null when it is gone. */
-const statementDates = new Map<string, number | undefined | null>();
+interface StatementFacts {
+	date: number | undefined;
+	statementType: unknown;
+}
+/** Each statement is read once: what the repair needs of it, or null when it is gone. */
+const statementFacts = new Map<string, StatementFacts | null>();
 const identities = new Map<string, PersonIdentity>();
 let failedBatches = 0;
 
@@ -102,14 +138,21 @@ function tally(counter: RepairCounter, docId: string): void {
 	samples.set(counter, sample);
 }
 
-async function loadStatementDates(statementIds: ReadonlyArray<string>): Promise<void> {
-	const missing = [...new Set(statementIds)].filter((id) => !statementDates.has(id));
+function tallyMembersOutcome(outcome: MembersOutcome, docId: string): void {
+	if (outcome !== 'listed') tally(OUTCOME_COUNTERS[outcome], docId);
+}
+
+async function loadStatementFacts(statementIds: ReadonlyArray<string>): Promise<void> {
+	const missing = [...new Set(statementIds)].filter((id) => !statementFacts.has(id));
 	if (missing.length === 0) return;
 	const statements = db.collection(Collections.statements);
 	const snaps = await db.getAll(...missing.map((id) => statements.doc(id)));
 	snaps.forEach((snap, index) => {
 		const data = snap.data();
-		statementDates.set(missing[index], data ? statementDateMillis(data) : null);
+		statementFacts.set(
+			missing[index],
+			data ? { date: statementDateMillis(data), statementType: data.statementType } : null,
+		);
 	});
 }
 
@@ -130,11 +173,31 @@ function countSchemaFailure(doc: QueryDocumentSnapshot): void {
 	schemaIssues.set(path, (schemaIssues.get(path) ?? 0) + 1);
 }
 
+/** What the Home listener would do with this doc: parse it, unguarded. */
+function homeListenerCouldParse(doc: QueryDocumentSnapshot, patch: RepairPatch): boolean {
+	const repaired = convertTimestampsToMillis({ ...doc.data(), ...patch });
+
+	return safeParse(StatementSubscriptionSchema, repaired).success;
+}
+
+/** Repaired docs with a userFeed entry are on Home today; the rest may not be. */
+async function loadFeedEntries(repairs: ReadonlyArray<Assessed>): Promise<Set<string>> {
+	const ids = repairs
+		.filter(({ data, needsStatementType }) => needsStatementType && isTopLevelDoc(data))
+		.map(({ data }) => getUserFeedId(data.userId as string, data.statementId as string));
+	if (ids.length === 0) return new Set();
+	const feed = db.collection(Collections.userFeed);
+	const snaps = await db.getAll(...ids.map((id) => feed.doc(id)));
+
+	return new Set(snaps.filter((snap) => snap.exists).map((snap) => snap.id));
+}
+
 interface Assessed {
 	doc: QueryDocumentSnapshot;
 	data: RepairCandidate;
 	needsCreatedAt: boolean;
 	needsUser: boolean;
+	needsStatementType: boolean;
 }
 
 function assessPage(docs: ReadonlyArray<QueryDocumentSnapshot>): Assessed[] {
@@ -150,6 +213,14 @@ function assessPage(docs: ReadonlyArray<QueryDocumentSnapshot>): Assessed[] {
 		if (assessment.hasNonNumberCreatedAt) tally('nonNumberCreatedAt', doc.id);
 		if (assessment.kind === 'current') {
 			counts.current += 1;
+			tallyMembersOutcome(
+				membersOutcome({
+					statementType: data.statementType,
+					createdAt: data.createdAt,
+					typeHeldBack: false,
+				}),
+				doc.id,
+			);
 
 			return [];
 		}
@@ -160,6 +231,7 @@ function assessPage(docs: ReadonlyArray<QueryDocumentSnapshot>): Assessed[] {
 				data,
 				needsCreatedAt: assessment.needsCreatedAt,
 				needsUser: assessment.needsUser,
+				needsStatementType: assessment.needsStatementType,
 			},
 		];
 	});
@@ -167,24 +239,51 @@ function assessPage(docs: ReadonlyArray<QueryDocumentSnapshot>): Assessed[] {
 
 async function repairPage(docs: ReadonlyArray<QueryDocumentSnapshot>): Promise<void> {
 	const repairs = assessPage(docs);
-	await loadStatementDates(repairs.map(({ data }) => data.statementId as string));
+	await loadStatementFacts(repairs.map(({ data }) => data.statementId as string));
 	const live = repairs.filter(({ doc, data }) => {
-		if (statementDates.get(data.statementId as string) !== null) return true;
+		if (statementFacts.get(data.statementId as string) !== null) return true;
 		tally('statementDeleted', doc.id);
 
 		return false;
 	});
 	await loadIdentities(live.filter((r) => r.needsUser).map(({ data }) => data.userId as string));
+	const feedEntries = await loadFeedEntries(live);
 
 	const batch: WriteBatch = db.batch();
 	let pending = 0;
-	for (const { doc, data, needsCreatedAt, needsUser } of live) {
+	for (const { doc, data, needsCreatedAt, needsUser, needsStatementType } of live) {
 		const uid = data.userId as string;
-		const date = statementDates.get(data.statementId as string) ?? undefined;
+		const statementId = data.statementId as string;
+		const facts = statementFacts.get(statementId);
+		const date = facts?.date;
 		const identity = identities.get(uid) ?? neutralIdentity(uid);
-		const patch = buildRepairPatch({ needsCreatedAt, needsUser }, date, identity);
+		const type = needsStatementType
+			? resolveStatementType(facts?.statementType, data.statement?.statementType)
+			: undefined;
+		const proposed = buildRepairPatch(
+			{ needsCreatedAt, needsUser, needsStatementType },
+			date,
+			identity,
+			type,
+		);
+		const typeHeldBack = !!proposed.statementType && !homeListenerCouldParse(doc, proposed);
+		const patch = typeHeldBack
+			? buildRepairPatch(
+					{ needsCreatedAt, needsUser, needsStatementType: false },
+					date,
+					identity,
+					type,
+				)
+			: proposed;
 
 		if (needsCreatedAt && date === undefined) tally('noStatementDate', doc.id);
+		tallyMembersOutcome(
+			membersOutcome({ ...membersFieldsAfter(data, patch), typeHeldBack }),
+			doc.id,
+		);
+		const hasFeedEntry = feedEntries.has(getUserFeedId(uid, statementId));
+		recordEffects(effects, newlyVisibleOn({ data, patch, hasFeedEntry }), uid, statementId);
+		if (hasFeedEntry && wouldJoinHomeListener(data, patch)) effects.alreadyOnHome += 1;
 		if (Object.keys(patch).length === 0) continue;
 
 		tally('writes', doc.id);
@@ -193,7 +292,7 @@ async function repairPage(docs: ReadonlyArray<QueryDocumentSnapshot>): Promise<v
 			counts.userSet += 1;
 			if (!patch.user.displayName) tally('userSetNameless', doc.id);
 		}
-		if (!doc.get('statementType')) tally('noStatementType', doc.id);
+		if (patch.statementType) counts.statementTypeSet += 1;
 		countSchemaFailure(doc);
 		if (!dryRun) {
 			batch.update(doc.ref, { ...patch });
@@ -234,7 +333,7 @@ async function main(): Promise<void> {
 	for (const role of ELEVATED_ROLES) await scanRole(role);
 
 	console.info(
-		formatRepairReport(counts, samples, schemaIssues, { dryRun, project, scannedByRole }),
+		formatRepairReport(counts, samples, schemaIssues, { dryRun, project, scannedByRole, effects }),
 	);
 	if (failedBatches > 0) {
 		console.error(`${failedBatches} batch(es) failed: run it again.`);

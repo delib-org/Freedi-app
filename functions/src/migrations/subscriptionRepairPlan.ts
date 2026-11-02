@@ -1,14 +1,21 @@
+import type { StatementType } from '@freedi/shared-types';
 import { identityProblems } from '../utils/subscriptionIdentity';
 import type { SubscriptionFields } from '../utils/subscriptionIdentity';
 import type { PersonIdentity } from '../utils/personIdentity';
+import { formatEffectLines, isStatementType } from './subscriptionRepairEffects';
+import type { EffectTally } from './subscriptionRepairEffects';
 
 /**
  * Pure decisions of scripts/backfillSubscriptionCreatedAt.ts: which admin
  * subscriptions need repair, and exactly which fields a repair writes.
  *
- * Two faults, both from the server's admin copies: no `createdAt` (the Members
- * list orders by it, so the doc is never listed) and `user` holding somebody
- * else, the statement's creator (the person is `userId`).
+ * Three faults, all from the server's admin copies: no `createdAt` (the Members
+ * list orders by it), no top-level `statementType` (the Members list filters on
+ * it) and `user` holding somebody else, the statement's creator (the person is
+ * `userId`). Lacking either of the first two, the doc is never listed.
+ *
+ * `parentId` and `topParentId` stay out on purpose. Members needs neither, and
+ * each has a reader that would change: see subscriptionRepairEffects.ts.
  *
  * A doc whose `user` is already its own person is current even without
  * `isAnonymous`: client-written docs carry none by design, and rewriting them
@@ -16,13 +23,25 @@ import type { PersonIdentity } from '../utils/personIdentity';
  * so there are no repaired docs to migrate.
  */
 
-export type RepairCandidate = SubscriptionFields & { createdAt?: unknown };
+export type RepairCandidate = SubscriptionFields & {
+	createdAt?: unknown;
+	statementType?: unknown;
+	parentId?: unknown;
+	isDocument?: unknown;
+	statement?: { statementType?: unknown; parentId?: unknown } | null;
+};
 
 export type RepairAssessment =
 	| { kind: 'current'; hasNonNumberCreatedAt: boolean }
 	/** Its id is not `${userId}--${statementId}`: forged or garbage, never repaired into shape. */
 	| { kind: 'id-mismatch' }
-	| { kind: 'repair'; needsCreatedAt: boolean; needsUser: boolean; hasNonNumberCreatedAt: boolean };
+	| {
+			kind: 'repair';
+			needsCreatedAt: boolean;
+			needsUser: boolean;
+			needsStatementType: boolean;
+			hasNonNumberCreatedAt: boolean;
+	  };
 
 export function assessSubscription(docId: string, data: RepairCandidate): RepairAssessment {
 	if (identityProblems(docId, data).includes('id-mismatch')) return { kind: 'id-mismatch' };
@@ -30,9 +49,10 @@ export function assessSubscription(docId: string, data: RepairCandidate): Repair
 	const needsCreatedAt = data.createdAt === undefined;
 	const hasNonNumberCreatedAt = !needsCreatedAt && typeof data.createdAt !== 'number';
 	const needsUser = data.user?.uid !== data.userId;
+	const needsStatementType = !data.statementType;
 
-	return needsCreatedAt || needsUser
-		? { kind: 'repair', needsCreatedAt, needsUser, hasNonNumberCreatedAt }
+	return needsCreatedAt || needsUser || needsStatementType
+		? { kind: 'repair', needsCreatedAt, needsUser, needsStatementType, hasNonNumberCreatedAt }
 		: { kind: 'current', hasNonNumberCreatedAt };
 }
 
@@ -62,6 +82,16 @@ export function statementDateMillis(statement: {
 	lastUpdate?: unknown;
 }): number | undefined {
 	return toMillis(statement.createdAt) ?? toMillis(statement.lastUpdate);
+}
+
+/**
+ * The type to store: the live statement's, else the doc's frozen copy. A value
+ * outside the enum is refused, since both triggers parse the doc on every update.
+ */
+export function resolveStatementType(live: unknown, embedded: unknown): StatementType | undefined {
+	if (isStatementType(live)) return live;
+
+	return isStatementType(embedded) ? embedded : undefined;
 }
 
 export interface BackfillRunEnv {
@@ -99,6 +129,7 @@ export function backfillRunRefusal({
 export interface RepairPatch {
 	createdAt?: number;
 	user?: PersonIdentity;
+	statementType?: StatementType;
 }
 
 /**
@@ -107,13 +138,19 @@ export interface RepairPatch {
  * `identity` must be the subscriber's own; empty result means nothing to write.
  */
 export function buildRepairPatch(
-	{ needsCreatedAt, needsUser }: { needsCreatedAt: boolean; needsUser: boolean },
+	{
+		needsCreatedAt,
+		needsUser,
+		needsStatementType,
+	}: { needsCreatedAt: boolean; needsUser: boolean; needsStatementType: boolean },
 	statementDate: number | undefined,
 	identity: PersonIdentity,
+	statementType: StatementType | undefined,
 ): RepairPatch {
 	return {
 		...(needsCreatedAt && statementDate !== undefined ? { createdAt: statementDate } : {}),
 		...(needsUser ? { user: identity } : {}),
+		...(needsStatementType && statementType ? { statementType } : {}),
 	};
 }
 
@@ -124,12 +161,16 @@ export type RepairCounter =
 	| 'createdAtSet'
 	| 'userSet'
 	| 'userSetNameless'
+	| 'statementTypeSet'
 	| 'statementDeleted'
 	| 'noStatementDate'
 	| 'nonNumberCreatedAt'
 	| 'idMismatch'
 	| 'schemaInvalid'
-	| 'noStatementType';
+	| 'hiddenByType'
+	| 'hiddenNoType'
+	| 'hiddenNoDate'
+	| 'hiddenTypeHeldBack';
 
 export type RepairCounts = Record<RepairCounter, number>;
 
@@ -141,12 +182,16 @@ export function emptyRepairCounts(): RepairCounts {
 		createdAtSet: 0,
 		userSet: 0,
 		userSetNameless: 0,
+		statementTypeSet: 0,
 		statementDeleted: 0,
 		noStatementDate: 0,
 		nonNumberCreatedAt: 0,
 		idMismatch: 0,
 		schemaInvalid: 0,
-		noStatementType: 0,
+		hiddenByType: 0,
+		hiddenNoType: 0,
+		hiddenNoDate: 0,
+		hiddenTypeHeldBack: 0,
 	};
 }
 
@@ -159,7 +204,13 @@ export function formatRepairReport(
 		dryRun,
 		project,
 		scannedByRole,
-	}: { dryRun: boolean; project: string; scannedByRole: Readonly<Record<string, number>> },
+		effects,
+	}: {
+		dryRun: boolean;
+		project: string;
+		scannedByRole: Readonly<Record<string, number>>;
+		effects: EffectTally;
+	},
 ): string {
 	const byRole = Object.entries(scannedByRole)
 		.map(([role, count]) => `${role}=${count}`)
@@ -167,6 +218,7 @@ export function formatRepairReport(
 	const issues = [...schemaIssues.entries()]
 		.sort((a, b) => b[1] - a[1])
 		.map(([path, count]) => `    ${path}: ${count}`);
+	const stillHidden = counts.hiddenNoType + counts.hiddenNoDate + counts.hiddenTypeHeldBack;
 	const sampleLines = [...samples.entries()].map(([name, ids]) => `  ${name}: ${ids.join(', ')}`);
 
 	return [
@@ -174,13 +226,18 @@ export function formatRepairReport(
 		dryRun ? 'DRY RUN: nothing was written.' : 'WRITE RUN.',
 		`Scanned ${counts.scanned} (${byRole}).`,
 		`${dryRun ? 'Would write' : 'Wrote'} ${counts.writes} doc(s): createdAt on ${counts.createdAtSet}, user on ${counts.userSet}` +
-			` (of which ${counts.userSetNameless} with no profile found, stored nameless).`,
+			` (of which ${counts.userSetNameless} with no profile found, stored nameless),` +
+			` statementType on ${counts.statementTypeSet}.`,
 		`Already current: ${counts.current}.`,
 		`Skipped, statement deleted: ${counts.statementDeleted}.`,
 		`Skipped, id disagrees with its fields (see scanSubscriptionIdentity): ${counts.idMismatch}.`,
 		`createdAt missing and the statement has no usable date: ${counts.noStatementDate}.`,
 		`createdAt present but not a number, left alone: ${counts.nonNumberCreatedAt}.`,
-		`No top-level statementType, so still not listed in Members: ${counts.noStatementType}.`,
+		`Still hidden from Members after this run: ${stillHidden}` +
+			` (no statement type anywhere: ${counts.hiddenNoType}; no date to order by: ${counts.hiddenNoDate};` +
+			` fails the schema, so its type is held back to keep it off Home's listener: ${counts.hiddenTypeHeldBack}).`,
+		`Hidden from Members on purpose, type document or agreement: ${counts.hiddenByType}.`,
+		...formatEffectLines(effects, dryRun),
 		`Fail StatementSubscriptionSchema (each write logs an ERROR from both triggers): ${counts.schemaInvalid}.`,
 		...(issues.length > 0 ? ['  First failing field of those:', ...issues] : []),
 		...(sampleLines.length > 0 ? ['Sample doc ids:', ...sampleLines] : []),
