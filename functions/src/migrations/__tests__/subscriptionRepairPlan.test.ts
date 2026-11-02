@@ -1,5 +1,6 @@
 import {
 	assessSubscription,
+	backfillRunRefusal,
 	buildRepairPatch,
 	emptyRepairCounts,
 	formatRepairReport,
@@ -8,7 +9,7 @@ import {
 } from '../subscriptionRepairPlan';
 
 const ID = 'u1--s1';
-const own = { uid: 'u1', displayName: 'Host' };
+const own = { uid: 'u1', displayName: 'Host', isAnonymous: false };
 const base = { userId: 'u1', statementId: 's1', role: 'admin' };
 
 describe('assessSubscription', () => {
@@ -71,6 +72,15 @@ describe('assessSubscription', () => {
 		expect(assessSubscription(ID, { statementId: 's1' })).toEqual({ kind: 'id-mismatch' });
 		expect(assessSubscription(ID, { userId: 'u1', statementId: 'other' })).toEqual({
 			kind: 'id-mismatch',
+		});
+	});
+
+	it('leaves a doc holding its own person with no isAnonymous alone: nothing to migrate', () => {
+		const earlierRepair = { uid: 'u1', displayName: 'Host' };
+
+		expect(assessSubscription(ID, { ...base, createdAt: 5, user: earlierRepair })).toEqual({
+			kind: 'current',
+			hasNonNumberCreatedAt: false,
 		});
 	});
 
@@ -140,6 +150,42 @@ describe('buildRepairPatch', () => {
 	});
 });
 
+describe('backfillRunRefusal', () => {
+	const real = {
+		project: 'some-project',
+		firestoreEmulator: false,
+		authEmulator: false,
+		dryRun: false,
+		confirmProd: true,
+	};
+
+	it.each([
+		['a confirmed write', real],
+		['a dry run', { ...real, dryRun: true, confirmProd: false }],
+		['the emulator', { ...real, firestoreEmulator: true, authEmulator: true, confirmProd: false }],
+	])('allows %s that names its project', (_name, env) => {
+		expect(backfillRunRefusal(env)).toBeUndefined();
+	});
+
+	it.each([
+		['a confirmed write', real],
+		['a dry run', { ...real, dryRun: true, confirmProd: false }],
+		['the emulator', { ...real, firestoreEmulator: true, authEmulator: true }],
+	])('refuses %s with no project, or a blank one', (_name, env) => {
+		expect(backfillRunRefusal({ ...env, project: undefined })).toContain('GCLOUD_PROJECT');
+		expect(backfillRunRefusal({ ...env, project: '  ' })).toContain('GCLOUD_PROJECT');
+	});
+
+	it('refuses a real write without --confirm-prod', () => {
+		expect(backfillRunRefusal({ ...real, confirmProd: false })).toContain('--confirm-prod');
+	});
+
+	it('refuses one emulator without the other', () => {
+		expect(backfillRunRefusal({ ...real, firestoreEmulator: true })).toContain('or neither');
+		expect(backfillRunRefusal({ ...real, authEmulator: true })).toContain('or neither');
+	});
+});
+
 describe('formatRepairReport', () => {
 	it('prints counts, sample ids and failing fields', () => {
 		const counts = { ...emptyRepairCounts(), scanned: 3, writes: 2, createdAtSet: 2, userSet: 1 };
@@ -147,9 +193,10 @@ describe('formatRepairReport', () => {
 			counts,
 			new Map([['writes', ['u1--s1']]]),
 			new Map([['statement.creator', 4]]),
-			{ dryRun: true, scannedByRole: { admin: 3 } },
+			{ dryRun: true, project: 'some-project', scannedByRole: { admin: 3 } },
 		);
 
+		expect(report).toContain('Project: some-project');
 		expect(report).toContain('DRY RUN');
 		expect(report).toContain('Would write 2 doc(s): createdAt on 2, user on 1');
 		expect(report).toContain('admin=3');
@@ -160,6 +207,7 @@ describe('formatRepairReport', () => {
 	it('says wrote on a write run', () => {
 		const report = formatRepairReport(emptyRepairCounts(), new Map(), new Map(), {
 			dryRun: false,
+			project: 'p',
 			scannedByRole: {},
 		});
 

@@ -8,15 +8,18 @@
  * else's name, photo and email. A doc qualifies when `createdAt` is missing or
  * `user.uid !== userId`, and only the missing part is written:
  *   - createdAt: the statement's createdAt in ms, else its lastUpdate.
- *   - user: { uid, displayName, photoURL } from usersV2, else Firebase Auth. With
- *     no profile anywhere: { uid, displayName: '' }, so the creator's identity
- *     still leaves the doc and the UI shows its neutral name.
+ *   - user: { uid, displayName, photoURL, isAnonymous } from usersV2 and Firebase
+ *     Auth. With no profile anywhere: { uid, displayName: '', isAnonymous: true },
+ *     so the creator's identity still leaves the doc and the UI shows its neutral
+ *     name.
  *
  * `lastUpdate` is never touched: it drives ordering and "new activity" elsewhere.
  * Idempotent: a second run writes nothing. Elevated roles only, since Firestore
  * cannot query a missing field; a demoted host's doc is not covered.
  * Docs whose id disagrees with their fields are skipped and counted: they are
  * for scanSubscriptionIdentity, not for repair.
+ *
+ * Every run must name its project: unset, firebase-admin would use the ADC default.
  *
  * USAGE (from the repo root)
  *   - Local emulator (both hosts are required, so Auth never reaches a real project):
@@ -44,6 +47,7 @@ import { Collections, StatementSubscriptionSchema } from '@freedi/shared-types';
 import { FIREBASE } from '../src/constants/common';
 import {
 	assessSubscription,
+	backfillRunRefusal,
 	buildRepairPatch,
 	emptyRepairCounts,
 	formatRepairReport,
@@ -60,23 +64,23 @@ import {
 
 const dryRun = process.argv.includes('--dry-run');
 const firestoreEmulator = Boolean(process.env.FIRESTORE_EMULATOR_HOST);
-const authEmulator = Boolean(process.env.FIREBASE_AUTH_EMULATOR_HOST);
-// One emulated and one real would read people from one place and write to the
-// other: real Auth names onto an emulator, or blanks onto a real project.
-if (firestoreEmulator !== authEmulator) {
-	console.error('Set both FIRESTORE_EMULATOR_HOST and FIREBASE_AUTH_EMULATOR_HOST, or neither.');
+const project = process.env.GCLOUD_PROJECT?.trim() ?? '';
+const refusal = backfillRunRefusal({
+	project,
+	firestoreEmulator,
+	authEmulator: Boolean(process.env.FIREBASE_AUTH_EMULATOR_HOST),
+	dryRun,
+	confirmProd: process.argv.includes('--confirm-prod'),
+});
+if (refusal) {
+	console.error(refusal);
 	process.exit(1);
 }
-// A dry run only reads, so it may look at a real project unconfirmed. Writing
-// to one still takes --confirm-prod.
-if (!firestoreEmulator && !dryRun && !process.argv.includes('--confirm-prod')) {
-	console.error(
-		'Refusing to write to a real project without --confirm-prod (or point the emulator hosts at an emulator; --dry-run reads only).',
-	);
-	process.exit(1);
-}
+console.info(
+	`Project: ${project} (${firestoreEmulator ? 'emulator' : 'REAL PROJECT'}, ${dryRun ? 'dry run' : 'WRITE'})`,
+);
 
-if (getApps().length === 0) initializeApp({ projectId: process.env.GCLOUD_PROJECT });
+if (getApps().length === 0) initializeApp({ projectId: project });
 const db = getFirestore();
 const auth = getAuth();
 
@@ -229,7 +233,9 @@ async function scanRole(role: string): Promise<void> {
 async function main(): Promise<void> {
 	for (const role of ELEVATED_ROLES) await scanRole(role);
 
-	console.info(formatRepairReport(counts, samples, schemaIssues, { dryRun, scannedByRole }));
+	console.info(
+		formatRepairReport(counts, samples, schemaIssues, { dryRun, project, scannedByRole }),
+	);
 	if (failedBatches > 0) {
 		console.error(`${failedBatches} batch(es) failed: run it again.`);
 		process.exit(1);

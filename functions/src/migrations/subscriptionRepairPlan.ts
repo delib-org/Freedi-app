@@ -9,6 +9,11 @@ import type { PersonIdentity } from '../utils/personIdentity';
  * Two faults, both from the server's admin copies: no `createdAt` (the Members
  * list orders by it, so the doc is never listed) and `user` holding somebody
  * else, the statement's creator (the person is `userId`).
+ *
+ * A doc whose `user` is already its own person is current even without
+ * `isAnonymous`: client-written docs carry none by design, and rewriting them
+ * would be churn. No earlier version of this repair has run on a real project,
+ * so there are no repaired docs to migrate.
  */
 
 export type RepairCandidate = SubscriptionFields & { createdAt?: unknown };
@@ -57,6 +62,38 @@ export function statementDateMillis(statement: {
 	lastUpdate?: unknown;
 }): number | undefined {
 	return toMillis(statement.createdAt) ?? toMillis(statement.lastUpdate);
+}
+
+export interface BackfillRunEnv {
+	project: string | undefined;
+	firestoreEmulator: boolean;
+	authEmulator: boolean;
+	dryRun: boolean;
+	confirmProd: boolean;
+}
+
+/** Why this run must not start; undefined when it may. */
+export function backfillRunRefusal({
+	project,
+	firestoreEmulator,
+	authEmulator,
+	dryRun,
+	confirmProd,
+}: BackfillRunEnv): string | undefined {
+	// Unset, firebase-admin takes the ADC default project: one nobody named.
+	if (!project?.trim()) return 'Set GCLOUD_PROJECT: every run must name its project.';
+	// One emulated and one real would read people from one place and write to the
+	// other: real Auth names onto an emulator, or blanks onto a real project.
+	if (firestoreEmulator !== authEmulator) {
+		return 'Set both FIRESTORE_EMULATOR_HOST and FIREBASE_AUTH_EMULATOR_HOST, or neither.';
+	}
+	// A dry run only reads, so it may look at a real project unconfirmed. Writing
+	// to one still takes --confirm-prod.
+	if (!firestoreEmulator && !dryRun && !confirmProd) {
+		return 'Refusing to write to a real project without --confirm-prod (or point the emulator hosts at an emulator; --dry-run reads only).';
+	}
+
+	return undefined;
 }
 
 export interface RepairPatch {
@@ -118,7 +155,11 @@ export function formatRepairReport(
 	counts: RepairCounts,
 	samples: ReadonlyMap<string, ReadonlyArray<string>>,
 	schemaIssues: ReadonlyMap<string, number>,
-	{ dryRun, scannedByRole }: { dryRun: boolean; scannedByRole: Readonly<Record<string, number>> },
+	{
+		dryRun,
+		project,
+		scannedByRole,
+	}: { dryRun: boolean; project: string; scannedByRole: Readonly<Record<string, number>> },
 ): string {
 	const byRole = Object.entries(scannedByRole)
 		.map(([role, count]) => `${role}=${count}`)
@@ -129,6 +170,7 @@ export function formatRepairReport(
 	const sampleLines = [...samples.entries()].map(([name, ids]) => `  ${name}: ${ids.join(', ')}`);
 
 	return [
+		`Project: ${project}`,
 		dryRun ? 'DRY RUN: nothing was written.' : 'WRITE RUN.',
 		`Scanned ${counts.scanned} (${byRole}).`,
 		`${dryRun ? 'Would write' : 'Wrote'} ${counts.writes} doc(s): createdAt on ${counts.createdAtSet}, user on ${counts.userSet}` +
