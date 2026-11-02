@@ -1,0 +1,1524 @@
+{
+ "thresholds": {
+  "J": 0.5,
+  "P_SIG": 0.05,
+  "SIG_UNITS": 0.8,
+  "PPV": 0.25,
+  "K": 0.15,
+  "LARGEST": 0.4,
+  "COUNT_MAX": 0.85,
+  "COUNT_MIN": 4,
+  "UMB_FRAC": 0.6,
+  "UMB_NEED": 3,
+  "UMB_RUNS": 0.6,
+  "ARI_STAB": 0.7,
+  "COST": 0.25
+ },
+ "perms": 5000,
+ "seed": 20261102,
+ "questions": {
+  "IqKVla0ZHw-m": {
+   "themes": 16,
+   "hersTopics": 11,
+   "umbrellas": {
+    "חזות הישוב": [
+     "3lcTvZsJstyX",
+     "8V1EziRtloYx",
+     "B5RsTL0qkFPV",
+     "ZrirobagZpli"
+    ],
+    "תרבות קהילתית": [
+     "86ybnHPcy7h9",
+     "GpAckb0FjP24",
+     "skE603gfaiXu"
+    ]
+   },
+   "ungrouped": {
+    "chapters": 16,
+    "J": 0.0,
+    "K": 0.0,
+    "PPV": null
+   },
+   "allInOne": {
+    "chapters": 1,
+    "J": 1.0,
+    "K": 1.0,
+    "PPV": 0.075
+   }
+  },
+  "WfkDISMmbduQ": {
+   "themes": 27,
+   "hersTopics": 19,
+   "umbrellas": {
+    "בינוי קהילה": [
+     "0sfOpzOAccHj",
+     "FvN4PkkHjYyj",
+     "GGWyBNBxymAh",
+     "UV-RALhnFk2b",
+     "YFrsHGpG7EPY",
+     "mIxv18D99iw8"
+    ],
+    "שיח ציבורי": [
+     "9RHvqz-qOMIb",
+     "Ib4UMTcCwZSh",
+     "NbJ2LYfTeRtu"
+    ],
+    "שיפור פני הכפר": [
+     "ECM2KTci0GAq",
+     "H2viCMwISge1"
+    ]
+   },
+   "ungrouped": {
+    "chapters": 27,
+    "J": 0.0,
+    "K": 0.0,
+    "PPV": null
+   },
+   "allInOne": {
+    "chapters": 1,
+    "J": 1.0,
+    "K": 1.0,
+    "PPV": 0.05413105413105413
+   }
+  }
+ },
+ "arms": {
+  "neutral": {
+   "runs": [
+    {
+     "q": "IqKVla0ZHw-m",
+     "r": 1,
+     "chapters": 9,
+     "largest": 3,
+     "largestShare": 0.188,
+     "J": 0.4444444444444444,
+     "K": 0.05405405405405406,
+     "PPV": 0.4,
+     "joinedBoth": 4,
+     "joinedHers": 9,
+     "falseJoins": 6,
+     "apartHers": 111,
+     "ari": 0.371,
+     "umbrellasRecovered": [
+      true,
+      true
+     ],
+     "permP": 0.0094,
+     "null": {
+      "p": 0.0094,
+      "J": 0.085,
+      "K": 0.083,
+      "PPV": 0.076,
+      "ari": 0.002,
+      "ari95": 0.143,
+      "umbrellasMean": 0.256
+     },
+     "chapterNames": [
+      "ניהול קהילתי ושירותים",
+      "מרקם קהילתי וערבות",
+      "מסורות טקסים ומורשת",
+      "מוקדי קהילה ותרבות",
+      "טבע נוף וצביון כפרי",
+      "טיפוח המרחב הציבורי",
+      "תשתיות דרכים ושבילים",
+      "צביון דתי וחילוני",
+      "רווחת חתולי הכפר"
+     ],
+     "assignment": {
+      "1DQG2MONgORh": 0,
+      "3lcTvZsJstyX": 5,
+      "86ybnHPcy7h9": 2,
+      "8V1EziRtloYx": 4,
+      "B5RsTL0qkFPV": 5,
+      "BeM9MjzvwNNO": 7,
+      "GpAckb0FjP24": 2,
+      "HVv1cw6zWXJ-": 8,
+      "TEmvM7EnWjTv": 1,
+      "ZrirobagZpli": 5,
+      "ahtqPERANT7e": 2,
+      "dTh94ZQcJ41e": 6,
+      "ijd8WTk96UYb": 4,
+      "sBpiUbybPVGe": 1,
+      "skE603gfaiXu": 3,
+      "vp9Us4UIE36-": 1
+     }
+    },
+    {
+     "q": "IqKVla0ZHw-m",
+     "r": 2,
+     "chapters": 7,
+     "largest": 4,
+     "largestShare": 0.25,
+     "J": 0.4444444444444444,
+     "K": 0.08108108108108109,
+     "PPV": 0.3076923076923077,
+     "joinedBoth": 4,
+     "joinedHers": 9,
+     "falseJoins": 9,
+     "apartHers": 111,
+     "ari": 0.302,
+     "umbrellasRecovered": [
+      true,
+      true
+     ],
+     "permP": 0.0152,
+     "null": {
+      "p": 0.0152,
+      "J": 0.108,
+      "K": 0.108,
+      "PPV": 0.075,
+      "ari": -0.0,
+      "ari95": 0.202,
+      "umbrellasMean": 0.213
+     },
+     "chapterNames": [
+      "קהילה, שייכות וסיוע",
+      "ניהול ומרחבי קהילה",
+      "חגים, טקסים ומסורות",
+      "טבע, נוף וצביון כפרי",
+      "גינון, נוי ומרחב ציבורי",
+      "צביון, מורשת והיסטוריה",
+      "רווחת בעלי חיים"
+     ],
+     "assignment": {
+      "1DQG2MONgORh": 1,
+      "3lcTvZsJstyX": 4,
+      "86ybnHPcy7h9": 2,
+      "8V1EziRtloYx": 3,
+      "B5RsTL0qkFPV": 4,
+      "BeM9MjzvwNNO": 5,
+      "GpAckb0FjP24": 2,
+      "HVv1cw6zWXJ-": 6,
+      "TEmvM7EnWjTv": 0,
+      "ZrirobagZpli": 4,
+      "ahtqPERANT7e": 5,
+      "dTh94ZQcJ41e": 4,
+      "ijd8WTk96UYb": 3,
+      "sBpiUbybPVGe": 0,
+      "skE603gfaiXu": 1,
+      "vp9Us4UIE36-": 0
+     }
+    },
+    {
+     "q": "IqKVla0ZHw-m",
+     "r": 3,
+     "chapters": 6,
+     "largest": 5,
+     "largestShare": 0.312,
+     "J": 0.4444444444444444,
+     "K": 0.14414414414414414,
+     "PPV": 0.2,
+     "joinedBoth": 4,
+     "joinedHers": 9,
+     "falseJoins": 16,
+     "apartHers": 111,
+     "ari": 0.192,
+     "umbrellasRecovered": [
+      true,
+      true
+     ],
+     "permP": 0.0556,
+     "null": {
+      "p": 0.0556,
+      "J": 0.165,
+      "K": 0.167,
+      "PPV": 0.074,
+      "ari": -0.001,
+      "ari95": 0.192,
+      "umbrellasMean": 0.208
+     },
+     "chapterNames": [
+      "ניהול, שייכות וחוסן קהילתי",
+      "תרבות, מסורת ומורשת",
+      "טבע, נוף ואופי כפרי",
+      "סביבה ומרחב ציבורי",
+      "צביון וזהות היישוב",
+      "מוקדי קהילה ויוזמות מקומיות"
+     ],
+     "assignment": {
+      "1DQG2MONgORh": 0,
+      "3lcTvZsJstyX": 3,
+      "86ybnHPcy7h9": 1,
+      "8V1EziRtloYx": 2,
+      "B5RsTL0qkFPV": 3,
+      "BeM9MjzvwNNO": 4,
+      "GpAckb0FjP24": 1,
+      "HVv1cw6zWXJ-": 3,
+      "TEmvM7EnWjTv": 0,
+      "ZrirobagZpli": 3,
+      "ahtqPERANT7e": 1,
+      "dTh94ZQcJ41e": 3,
+      "ijd8WTk96UYb": 2,
+      "sBpiUbybPVGe": 0,
+      "skE603gfaiXu": 5,
+      "vp9Us4UIE36-": 0
+     }
+    },
+    {
+     "q": "IqKVla0ZHw-m",
+     "r": 4,
+     "chapters": 8,
+     "largest": 4,
+     "largestShare": 0.25,
+     "J": 0.4444444444444444,
+     "K": 0.07207207207207207,
+     "PPV": 0.3333333333333333,
+     "joinedBoth": 4,
+     "joinedHers": 9,
+     "falseJoins": 8,
+     "apartHers": 111,
+     "ari": 0.323,
+     "umbrellasRecovered": [
+      true,
+      true
+     ],
+     "permP": 0.0164,
+     "null": {
+      "p": 0.0164,
+      "J": 0.101,
+      "K": 0.1,
+      "PPV": 0.076,
+      "ari": 0.001,
+      "ari95": 0.219,
+      "umbrellasMean": 0.195
+     },
+     "chapterNames": [
+      "ניהול ומוסדות קהילתיים",
+      "קהילה, שכנות וערבות הדדית",
+      "חגים, טקסים ומסורות",
+      "צביון, מורשת וזהות",
+      "מרחבי קהילה ושירותים",
+      "טבע, נוף ואופי כפרי",
+      "טיפוח המרחב הציבורי",
+      "ניהול חתולי הכפר"
+     ],
+     "assignment": {
+      "1DQG2MONgORh": 0,
+      "3lcTvZsJstyX": 6,
+      "86ybnHPcy7h9": 2,
+      "8V1EziRtloYx": 5,
+      "B5RsTL0qkFPV": 6,
+      "BeM9MjzvwNNO": 3,
+      "GpAckb0FjP24": 2,
+      "HVv1cw6zWXJ-": 7,
+      "TEmvM7EnWjTv": 1,
+      "ZrirobagZpli": 6,
+      "ahtqPERANT7e": 3,
+      "dTh94ZQcJ41e": 6,
+      "ijd8WTk96UYb": 5,
+      "sBpiUbybPVGe": 1,
+      "skE603gfaiXu": 4,
+      "vp9Us4UIE36-": 1
+     }
+    },
+    {
+     "q": "IqKVla0ZHw-m",
+     "r": 5,
+     "chapters": 8,
+     "largest": 3,
+     "largestShare": 0.188,
+     "J": 0.2222222222222222,
+     "K": 0.06306306306306306,
+     "PPV": 0.2222222222222222,
+     "joinedBoth": 2,
+     "joinedHers": 9,
+     "falseJoins": 7,
+     "apartHers": 111,
+     "ari": 0.159,
+     "umbrellasRecovered": [
+      false,
+      true
+     ],
+     "permP": 0.1208,
+     "null": {
+      "p": 0.1208,
+      "J": 0.075,
+      "K": 0.075,
+      "PPV": 0.075,
+      "ari": -0.0,
+      "ari95": 0.159,
+      "umbrellasMean": 0.225
+     },
+     "chapterNames": [
+      "קהילה, שכנות וחוסן",
+      "ניהול קהילתי ומרחבי מפגש",
+      "חגים, טקסים ומסורות",
+      "צביון, מורשת וזהות",
+      "טבע, נוף ואיכות חיים",
+      "גינון, נוי והצללה",
+      "ניקיון וטיפול סביבתי",
+      "דרכים ותשתיות ציבוריות"
+     ],
+     "assignment": {
+      "1DQG2MONgORh": 1,
+      "3lcTvZsJstyX": 6,
+      "86ybnHPcy7h9": 2,
+      "8V1EziRtloYx": 4,
+      "B5RsTL0qkFPV": 5,
+      "BeM9MjzvwNNO": 3,
+      "GpAckb0FjP24": 2,
+      "HVv1cw6zWXJ-": 6,
+      "TEmvM7EnWjTv": 0,
+      "ZrirobagZpli": 5,
+      "ahtqPERANT7e": 3,
+      "dTh94ZQcJ41e": 7,
+      "ijd8WTk96UYb": 4,
+      "sBpiUbybPVGe": 0,
+      "skE603gfaiXu": 1,
+      "vp9Us4UIE36-": 0
+     }
+    },
+    {
+     "q": "WfkDISMmbduQ",
+     "r": 1,
+     "chapters": 10,
+     "largest": 6,
+     "largestShare": 0.222,
+     "J": 0.47368421052631576,
+     "K": 0.0783132530120482,
+     "PPV": 0.2571428571428571,
+     "joinedBoth": 9,
+     "joinedHers": 19,
+     "falseJoins": 26,
+     "apartHers": 332,
+     "ari": 0.283,
+     "umbrellasRecovered": [
+      true,
+      true,
+      false
+     ],
+     "permP": 0.0008,
+     "null": {
+      "p": 0.0008,
+      "J": 0.099,
+      "K": 0.1,
+      "PPV": 0.054,
+      "ari": -0.0,
+      "ari95": 0.084,
+      "umbrellasMean": 0.097
+     },
+     "chapterNames": [
+      "קהילה, שייכות ויחסים",
+      "תרבות, פנאי ואירועים",
+      "ילדים, נוער וחינוך",
+      "ספורט ופנאי פעיל",
+      "סביבה, נוי וניקיון",
+      "תשתיות ומרחב ציבורי",
+      "ניהול, שקיפות והשתתפות",
+      "שיח קהילתי בקבוצות",
+      "תקציב ומיסי יישוב",
+      "כלכלה מקומית ותיירות"
+     ],
+     "assignment": {
+      "-tdDLlp-WAjY": 1,
+      "0ZQYaXBhhkdM": 1,
+      "0sfOpzOAccHj": 0,
+      "25IXa3ic4f41": 0,
+      "2bDZn8CH0rS2": 4,
+      "39X4Cc761YtN": 3,
+      "6vmyy1bTaJz7": 2,
+      "6whtWxsZ8O5l": 6,
+      "9RHvqz-qOMIb": 7,
+      "CyuI1BZvVY65": 6,
+      "ECM2KTci0GAq": 4,
+      "FQyr5mQ3R32d": 6,
+      "FvN4PkkHjYyj": 1,
+      "GGWyBNBxymAh": 0,
+      "H2viCMwISge1": 4,
+      "Ib4UMTcCwZSh": 0,
+      "NbJ2LYfTeRtu": 7,
+      "OFqdY9eVn9pm": 8,
+      "PMjtNwTFHRtA": 5,
+      "UV-RALhnFk2b": 0,
+      "YFrsHGpG7EPY": 1,
+      "eFX0CuIIM81I": 2,
+      "gu042o0wTbl6": 9,
+      "mIxv18D99iw8": 0,
+      "qKeKSJcdM805": 4,
+      "s6tLLByl7X7b": 5,
+      "xf9QqAae6LsO": 2
+     }
+    },
+    {
+     "q": "WfkDISMmbduQ",
+     "r": 2,
+     "chapters": 8,
+     "largest": 6,
+     "largestShare": 0.222,
+     "J": 0.47368421052631576,
+     "K": 0.09337349397590361,
+     "PPV": 0.225,
+     "joinedBoth": 9,
+     "joinedHers": 19,
+     "falseJoins": 31,
+     "apartHers": 332,
+     "ari": 0.25,
+     "umbrellasRecovered": [
+      true,
+      true,
+      false
+     ],
+     "permP": 0.0014,
+     "null": {
+      "p": 0.0014,
+      "J": 0.115,
+      "K": 0.114,
+      "PPV": 0.055,
+      "ari": 0.001,
+      "ari95": 0.104,
+      "umbrellasMean": 0.096
+     },
+     "chapterNames": [
+      "קהילה, שייכות וערבות",
+      "תרבות, פנאי ואירועים",
+      "חינוך, נוער וילדים",
+      "ניהול, שקיפות והשתתפות",
+      "תקשורת ושיח קהילתי",
+      "סביבה, נוי וניקיון",
+      "תשתיות, בטיחות ומרחב ציבורי",
+      "מסחר ותיירות מקומית"
+     ],
+     "assignment": {
+      "-tdDLlp-WAjY": 1,
+      "0ZQYaXBhhkdM": 1,
+      "0sfOpzOAccHj": 0,
+      "25IXa3ic4f41": 0,
+      "2bDZn8CH0rS2": 5,
+      "39X4Cc761YtN": 6,
+      "6vmyy1bTaJz7": 2,
+      "6whtWxsZ8O5l": 3,
+      "9RHvqz-qOMIb": 4,
+      "CyuI1BZvVY65": 3,
+      "ECM2KTci0GAq": 5,
+      "FQyr5mQ3R32d": 3,
+      "FvN4PkkHjYyj": 1,
+      "GGWyBNBxymAh": 0,
+      "H2viCMwISge1": 5,
+      "Ib4UMTcCwZSh": 0,
+      "NbJ2LYfTeRtu": 4,
+      "OFqdY9eVn9pm": 3,
+      "PMjtNwTFHRtA": 6,
+      "UV-RALhnFk2b": 0,
+      "YFrsHGpG7EPY": 1,
+      "eFX0CuIIM81I": 2,
+      "gu042o0wTbl6": 7,
+      "mIxv18D99iw8": 0,
+      "qKeKSJcdM805": 5,
+      "s6tLLByl7X7b": 6,
+      "xf9QqAae6LsO": 2
+     }
+    },
+    {
+     "q": "WfkDISMmbduQ",
+     "r": 3,
+     "chapters": 10,
+     "largest": 4,
+     "largestShare": 0.148,
+     "J": 0.42105263157894735,
+     "K": 0.07530120481927711,
+     "PPV": 0.24242424242424243,
+     "joinedBoth": 8,
+     "joinedHers": 19,
+     "falseJoins": 25,
+     "apartHers": 332,
+     "ari": 0.257,
+     "umbrellasRecovered": [
+      false,
+      true,
+      false
+     ],
+     "permP": 0.0008,
+     "null": {
+      "p": 0.0008,
+      "J": 0.094,
+      "K": 0.094,
+      "PPV": 0.054,
+      "ari": 0.0,
+      "ari95": 0.091,
+      "umbrellasMean": 0.047
+     },
+     "chapterNames": [
+      "חיי קהילה ותרבות",
+      "לכידות, הכלה ועזרה הדדית",
+      "חינוך, נוער וילדים",
+      "ניהול, שקיפות והשתתפות",
+      "שיח, הידברות וקהילות דיגיטליות",
+      "סביבה, מורשת וקיימות",
+      "גנים, ספורט ומרחב ציבורי",
+      "תשתיות, בטיחות ואכיפה",
+      "פיתוח ההרחבה והיישוב",
+      "עסקים, מסחר ותיירות"
+     ],
+     "assignment": {
+      "-tdDLlp-WAjY": 0,
+      "0ZQYaXBhhkdM": 0,
+      "0sfOpzOAccHj": 1,
+      "25IXa3ic4f41": 1,
+      "2bDZn8CH0rS2": 5,
+      "39X4Cc761YtN": 6,
+      "6vmyy1bTaJz7": 2,
+      "6whtWxsZ8O5l": 3,
+      "9RHvqz-qOMIb": 4,
+      "CyuI1BZvVY65": 3,
+      "ECM2KTci0GAq": 6,
+      "FQyr5mQ3R32d": 3,
+      "FvN4PkkHjYyj": 0,
+      "GGWyBNBxymAh": 1,
+      "H2viCMwISge1": 6,
+      "Ib4UMTcCwZSh": 4,
+      "NbJ2LYfTeRtu": 4,
+      "OFqdY9eVn9pm": 3,
+      "PMjtNwTFHRtA": 8,
+      "UV-RALhnFk2b": 4,
+      "YFrsHGpG7EPY": 0,
+      "eFX0CuIIM81I": 2,
+      "gu042o0wTbl6": 9,
+      "mIxv18D99iw8": 1,
+      "qKeKSJcdM805": 6,
+      "s6tLLByl7X7b": 7,
+      "xf9QqAae6LsO": 2
+     }
+    },
+    {
+     "q": "WfkDISMmbduQ",
+     "r": 4,
+     "chapters": 8,
+     "largest": 5,
+     "largestShare": 0.185,
+     "J": 0.5789473684210527,
+     "K": 0.08433734939759036,
+     "PPV": 0.28205128205128205,
+     "joinedBoth": 11,
+     "joinedHers": 19,
+     "falseJoins": 28,
+     "apartHers": 332,
+     "ari": 0.331,
+     "umbrellasRecovered": [
+      true,
+      true,
+      false
+     ],
+     "permP": 0.0002,
+     "null": {
+      "p": 0.0002,
+      "J": 0.111,
+      "K": 0.111,
+      "PPV": 0.054,
+      "ari": -0.0,
+      "ari95": 0.07,
+      "umbrellasMean": 0.095
+     },
+     "chapterNames": [
+      "תרבות, פנאי ואירועים",
+      "קהילה, שייכות ועזרה הדדית",
+      "חינוך, נוער וילדים",
+      "ניהול, השתתפות ושקיפות",
+      "שיח ויישוב מחלוקות",
+      "סביבה, נוי ומרחב ציבורי",
+      "פיתוח ותשתיות יישוביות",
+      "עסקים, מסחר ותיירות"
+     ],
+     "assignment": {
+      "-tdDLlp-WAjY": 0,
+      "0ZQYaXBhhkdM": 0,
+      "0sfOpzOAccHj": 1,
+      "25IXa3ic4f41": 1,
+      "2bDZn8CH0rS2": 5,
+      "39X4Cc761YtN": 6,
+      "6vmyy1bTaJz7": 2,
+      "6whtWxsZ8O5l": 3,
+      "9RHvqz-qOMIb": 4,
+      "CyuI1BZvVY65": 3,
+      "ECM2KTci0GAq": 5,
+      "FQyr5mQ3R32d": 3,
+      "FvN4PkkHjYyj": 0,
+      "GGWyBNBxymAh": 1,
+      "H2viCMwISge1": 5,
+      "Ib4UMTcCwZSh": 4,
+      "NbJ2LYfTeRtu": 4,
+      "OFqdY9eVn9pm": 3,
+      "PMjtNwTFHRtA": 6,
+      "UV-RALhnFk2b": 1,
+      "YFrsHGpG7EPY": 0,
+      "eFX0CuIIM81I": 2,
+      "gu042o0wTbl6": 7,
+      "mIxv18D99iw8": 1,
+      "qKeKSJcdM805": 5,
+      "s6tLLByl7X7b": 5,
+      "xf9QqAae6LsO": 2
+     }
+    },
+    {
+     "q": "WfkDISMmbduQ",
+     "r": 5,
+     "chapters": 8,
+     "largest": 6,
+     "largestShare": 0.222,
+     "J": 0.47368421052631576,
+     "K": 0.10542168674698796,
+     "PPV": 0.20454545454545456,
+     "joinedBoth": 9,
+     "joinedHers": 19,
+     "falseJoins": 35,
+     "apartHers": 332,
+     "ari": 0.227,
+     "umbrellasRecovered": [
+      true,
+      true,
+      false
+     ],
+     "permP": 0.0022,
+     "null": {
+      "p": 0.0022,
+      "J": 0.127,
+      "K": 0.125,
+      "PPV": 0.055,
+      "ari": 0.001,
+      "ari95": 0.09,
+      "umbrellasMean": 0.116
+     },
+     "chapterNames": [
+      "פנאי תרבות ומפגשים",
+      "קהילה לכידות ועזרה הדדית",
+      "חינוך נוער וילדים",
+      "ניהול השתתפות ושקיפות",
+      "שיח קהילתי דיגיטלי",
+      "תקציב כלכלה ושירותים",
+      "מרחב ציבורי ותשתיות",
+      "סביבה טבע ומורשת"
+     ],
+     "assignment": {
+      "-tdDLlp-WAjY": 0,
+      "0ZQYaXBhhkdM": 0,
+      "0sfOpzOAccHj": 1,
+      "25IXa3ic4f41": 1,
+      "2bDZn8CH0rS2": 7,
+      "39X4Cc761YtN": 6,
+      "6vmyy1bTaJz7": 2,
+      "6whtWxsZ8O5l": 3,
+      "9RHvqz-qOMIb": 4,
+      "CyuI1BZvVY65": 3,
+      "ECM2KTci0GAq": 6,
+      "FQyr5mQ3R32d": 3,
+      "FvN4PkkHjYyj": 0,
+      "GGWyBNBxymAh": 1,
+      "H2viCMwISge1": 6,
+      "Ib4UMTcCwZSh": 1,
+      "NbJ2LYfTeRtu": 4,
+      "OFqdY9eVn9pm": 5,
+      "PMjtNwTFHRtA": 6,
+      "UV-RALhnFk2b": 1,
+      "YFrsHGpG7EPY": 0,
+      "eFX0CuIIM81I": 2,
+      "gu042o0wTbl6": 5,
+      "mIxv18D99iw8": 1,
+      "qKeKSJcdM805": 6,
+      "s6tLLByl7X7b": 6,
+      "xf9QqAae6LsO": 2
+     }
+    }
+   ],
+   "cost": [
+    0.016624,
+    0.011692,
+    0.014968,
+    0.015664,
+    0.011836,
+    0.02492,
+    0.0245,
+    0.021524,
+    0.024212,
+    0.023756
+   ],
+   "errors": 0,
+   "invalid": 0,
+   "stability": {
+    "IqKVla0ZHw-m": {
+     "meanPairwiseAri": 0.656,
+     "min": 0.423,
+     "randomMeanAri": 0.004,
+     "valid": 5
+    },
+    "WfkDISMmbduQ": {
+     "meanPairwiseAri": 0.743,
+     "min": 0.636,
+     "randomMeanAri": -0.002,
+     "valid": 5
+    }
+   },
+   "criteria": {
+    "C1a_recall_of_her_joins": {
+     "value": 0.457,
+     "need": ">= 0.5",
+     "baselineRandom": 0.108,
+     "ungrouped": 0.0,
+     "passed": false
+    },
+    "C1b_beats_random_permutation": {
+     "value": "8/10 runs p<0.05",
+     "need": ">= 80% of runs",
+     "passed": true
+    },
+    "C2_precision_of_joins": {
+     "value": 0.251,
+     "need": ">= 0.25",
+     "baselineRandom": 0.065,
+     "passed": true
+    },
+    "C3a_false_joins_of_pairs_she_kept_apart": {
+     "value": 0.086,
+     "need": "<= 0.15",
+     "baselineRandom": 0.108,
+     "allInOne": 1.0,
+     "passed": true
+    },
+    "C3b_largest_chapter_share": {
+     "value": 0.312,
+     "need": "<= 0.4 in every run",
+     "passed": true
+    },
+    "C4_umbrellas_recovered": {
+     "value": "4 of 5 (per umbrella hits/runs: [(4, 5), (5, 5), (4, 5), (5, 5), (0, 5)])",
+     "need": ">= 3 of 5, each in >= 60% of runs",
+     "baselineRandomMean": 0.155,
+     "passed": true
+    },
+    "C5_stability_pairwise_ari": {
+     "value": {
+      "IqKVla0ZHw-m": 0.656,
+      "WfkDISMmbduQ": 0.743
+     },
+     "need": ">= 0.7 on each question",
+     "baselineRandom": {
+      "IqKVla0ZHw-m": 0.004,
+      "WfkDISMmbduQ": -0.002
+     },
+     "passed": false
+    },
+    "C6_chapter_count": {
+     "value": {
+      "meanRatioToThemes": 0.4,
+      "min": 6
+     },
+     "need": "mean chapters/themes <= 0.85 and >= 4 chapters",
+     "hers": {
+      "IqKVla0ZHw-m": 11,
+      "WfkDISMmbduQ": 19
+     },
+     "passed": true
+    },
+    "C7_cost_per_run_usd": {
+     "value": 0.019,
+     "need": "<= 0.25",
+     "passed": true
+    },
+    "C8_valid_runs": {
+     "value": "10 valid, 0 invalid, 0 errors",
+     "need": "all runs valid (any invalid run counts as a failure)",
+     "passed": true
+    }
+   },
+   "allPassed": false,
+   "pooled": {
+    "J": 0.457,
+    "K": 0.086,
+    "PPV": 0.251,
+    "arisVsHers": 0.27,
+    "randomAriMean": 0.0,
+    "random95Ari": 0.135
+   },
+   "costTotal": 0.1897
+  },
+  "professional": {
+   "runs": [
+    {
+     "q": "IqKVla0ZHw-m",
+     "r": 1,
+     "invalid": "missing ['T06']"
+    },
+    {
+     "q": "IqKVla0ZHw-m",
+     "r": 2,
+     "chapters": 9,
+     "largest": 4,
+     "largestShare": 0.25,
+     "J": 0.4444444444444444,
+     "K": 0.06306306306306306,
+     "PPV": 0.36363636363636365,
+     "joinedBoth": 4,
+     "joinedHers": 9,
+     "falseJoins": 7,
+     "apartHers": 111,
+     "ari": 0.346,
+     "umbrellasRecovered": [
+      true,
+      true
+     ],
+     "permP": 0.009,
+     "null": {
+      "p": 0.009,
+      "J": 0.091,
+      "K": 0.092,
+      "PPV": 0.074,
+      "ari": -0.001,
+      "ari95": 0.128,
+      "umbrellasMean": 0.155
+     },
+     "chapterNames": [
+      "ממשל קהילתי ותקשורת",
+      "לכידות, שייכות וערבות הדדית",
+      "תרבות, מסורות ומורשת",
+      "זהות וצביון יישובי",
+      "תכנון כפרי ומרחבים פתוחים",
+      "טיפוח סביבתי ונראות",
+      "תשתיות ומרחב ציבורי",
+      "מוקדי קהילה ושירותים",
+      "ותיקים וקשרים בין־דוריים"
+     ],
+     "assignment": {
+      "1DQG2MONgORh": 0,
+      "3lcTvZsJstyX": 5,
+      "86ybnHPcy7h9": 2,
+      "8V1EziRtloYx": 4,
+      "B5RsTL0qkFPV": 5,
+      "BeM9MjzvwNNO": 3,
+      "GpAckb0FjP24": 2,
+      "HVv1cw6zWXJ-": 5,
+      "TEmvM7EnWjTv": 1,
+      "ZrirobagZpli": 5,
+      "ahtqPERANT7e": 2,
+      "dTh94ZQcJ41e": 6,
+      "ijd8WTk96UYb": 4,
+      "sBpiUbybPVGe": 8,
+      "skE603gfaiXu": 7,
+      "vp9Us4UIE36-": 1
+     }
+    },
+    {
+     "q": "IqKVla0ZHw-m",
+     "r": 3,
+     "chapters": 8,
+     "largest": 4,
+     "largestShare": 0.25,
+     "J": 0.2222222222222222,
+     "K": 0.09009009009009009,
+     "PPV": 0.16666666666666666,
+     "joinedBoth": 2,
+     "joinedHers": 9,
+     "falseJoins": 10,
+     "apartHers": 111,
+     "ari": 0.115,
+     "umbrellasRecovered": [
+      false,
+      false
+     ],
+     "permP": 0.1926,
+     "null": {
+      "p": 0.1926,
+      "J": 0.1,
+      "K": 0.1,
+      "PPV": 0.075,
+      "ari": -0.0,
+      "ari95": 0.219,
+      "umbrellasMean": 0.185
+     },
+     "chapterNames": [
+      "ניהול קהילתי והשתתפות תושבים",
+      "לכידות, ערבות וקשרים בין־דוריים",
+      "תרבות, מסורת וזהות מקומית",
+      "מוקדי קהילה ושירותים",
+      "מרחב ציבורי ותשתיות",
+      "טבע, נוף וצביון כפרי",
+      "גינון ונוי בר־קיימא",
+      "רווחת בעלי חיים"
+     ],
+     "assignment": {
+      "1DQG2MONgORh": 0,
+      "3lcTvZsJstyX": 4,
+      "86ybnHPcy7h9": 2,
+      "8V1EziRtloYx": 5,
+      "B5RsTL0qkFPV": 6,
+      "BeM9MjzvwNNO": 2,
+      "GpAckb0FjP24": 2,
+      "HVv1cw6zWXJ-": 7,
+      "TEmvM7EnWjTv": 1,
+      "ZrirobagZpli": 6,
+      "ahtqPERANT7e": 2,
+      "dTh94ZQcJ41e": 4,
+      "ijd8WTk96UYb": 5,
+      "sBpiUbybPVGe": 1,
+      "skE603gfaiXu": 3,
+      "vp9Us4UIE36-": 1
+     }
+    },
+    {
+     "q": "IqKVla0ZHw-m",
+     "r": 4,
+     "chapters": 8,
+     "largest": 4,
+     "largestShare": 0.25,
+     "J": 0.4444444444444444,
+     "K": 0.07207207207207207,
+     "PPV": 0.3333333333333333,
+     "joinedBoth": 4,
+     "joinedHers": 9,
+     "falseJoins": 8,
+     "apartHers": 111,
+     "ari": 0.323,
+     "umbrellasRecovered": [
+      true,
+      true
+     ],
+     "permP": 0.0138,
+     "null": {
+      "p": 0.0138,
+      "J": 0.1,
+      "K": 0.1,
+      "PPV": 0.075,
+      "ari": 0.0,
+      "ari95": 0.219,
+      "umbrellasMean": 0.188
+     },
+     "chapterNames": [
+      "ממשל קהילתי ותקשורת",
+      "קהילתיות, שייכות וחוסן",
+      "חגים, טקסים ומסורות",
+      "מורשת וצביון מקומי",
+      "מרחבי קהילה ויוזמות",
+      "טבע, נוף ואופי כפרי",
+      "טיפוח המרחב הציבורי",
+      "רווחת בעלי חיים"
+     ],
+     "assignment": {
+      "1DQG2MONgORh": 0,
+      "3lcTvZsJstyX": 6,
+      "86ybnHPcy7h9": 2,
+      "8V1EziRtloYx": 5,
+      "B5RsTL0qkFPV": 6,
+      "BeM9MjzvwNNO": 3,
+      "GpAckb0FjP24": 2,
+      "HVv1cw6zWXJ-": 7,
+      "TEmvM7EnWjTv": 1,
+      "ZrirobagZpli": 6,
+      "ahtqPERANT7e": 3,
+      "dTh94ZQcJ41e": 6,
+      "ijd8WTk96UYb": 5,
+      "sBpiUbybPVGe": 1,
+      "skE603gfaiXu": 4,
+      "vp9Us4UIE36-": 1
+     }
+    },
+    {
+     "q": "IqKVla0ZHw-m",
+     "r": 5,
+     "chapters": 6,
+     "largest": 5,
+     "largestShare": 0.312,
+     "J": 0.4444444444444444,
+     "K": 0.14414414414414414,
+     "PPV": 0.2,
+     "joinedBoth": 4,
+     "joinedHers": 9,
+     "falseJoins": 16,
+     "apartHers": 111,
+     "ari": 0.192,
+     "umbrellasRecovered": [
+      true,
+      false
+     ],
+     "permP": 0.0618,
+     "null": {
+      "p": 0.0618,
+      "J": 0.169,
+      "K": 0.167,
+      "PPV": 0.076,
+      "ari": 0.001,
+      "ari95": 0.192,
+      "umbrellasMean": 0.224
+     },
+     "chapterNames": [
+      "ממשל ותקשורת קהילתית",
+      "לכידות, ערבות ושייכות",
+      "תרבות, מסורת ומורשת",
+      "נוף, טבע ואופי כפרי",
+      "ניהול וטיפוח המרחב הציבורי",
+      "מרחבי מפגש ויוזמות מקומיות"
+     ],
+     "assignment": {
+      "1DQG2MONgORh": 0,
+      "3lcTvZsJstyX": 4,
+      "86ybnHPcy7h9": 2,
+      "8V1EziRtloYx": 3,
+      "B5RsTL0qkFPV": 4,
+      "BeM9MjzvwNNO": 2,
+      "GpAckb0FjP24": 2,
+      "HVv1cw6zWXJ-": 4,
+      "TEmvM7EnWjTv": 1,
+      "ZrirobagZpli": 4,
+      "ahtqPERANT7e": 2,
+      "dTh94ZQcJ41e": 4,
+      "ijd8WTk96UYb": 3,
+      "sBpiUbybPVGe": 1,
+      "skE603gfaiXu": 5,
+      "vp9Us4UIE36-": 1
+     }
+    },
+    {
+     "q": "WfkDISMmbduQ",
+     "r": 1,
+     "chapters": 7,
+     "largest": 7,
+     "largestShare": 0.259,
+     "J": 0.42105263157894735,
+     "K": 0.12048192771084337,
+     "PPV": 0.16666666666666666,
+     "joinedBoth": 8,
+     "joinedHers": 19,
+     "falseJoins": 40,
+     "apartHers": 332,
+     "ari": 0.175,
+     "umbrellasRecovered": [
+      false,
+      true,
+      false
+     ],
+     "permP": 0.0046,
+     "null": {
+      "p": 0.0046,
+      "J": 0.137,
+      "K": 0.137,
+      "PPV": 0.054,
+      "ari": 0.0,
+      "ari95": 0.078,
+      "umbrellasMean": 0.046
+     },
+     "chapterNames": [
+      "תרבות, פנאי וחיי קהילה",
+      "קהילתיות, שייכות וערבות הדדית",
+      "חינוך, נוער וגיל רך",
+      "ממשל מקומי ושיתוף ציבור",
+      "שיח קהילתי ויישוב מחלוקות",
+      "פיתוח המרחב ואיכות הסביבה",
+      "כלכלה מקומית ותיירות"
+     ],
+     "assignment": {
+      "-tdDLlp-WAjY": 0,
+      "0ZQYaXBhhkdM": 0,
+      "0sfOpzOAccHj": 1,
+      "25IXa3ic4f41": 1,
+      "2bDZn8CH0rS2": 5,
+      "39X4Cc761YtN": 5,
+      "6vmyy1bTaJz7": 2,
+      "6whtWxsZ8O5l": 3,
+      "9RHvqz-qOMIb": 4,
+      "CyuI1BZvVY65": 3,
+      "ECM2KTci0GAq": 5,
+      "FQyr5mQ3R32d": 3,
+      "FvN4PkkHjYyj": 0,
+      "GGWyBNBxymAh": 1,
+      "H2viCMwISge1": 5,
+      "Ib4UMTcCwZSh": 4,
+      "NbJ2LYfTeRtu": 4,
+      "OFqdY9eVn9pm": 3,
+      "PMjtNwTFHRtA": 5,
+      "UV-RALhnFk2b": 4,
+      "YFrsHGpG7EPY": 0,
+      "eFX0CuIIM81I": 2,
+      "gu042o0wTbl6": 6,
+      "mIxv18D99iw8": 1,
+      "qKeKSJcdM805": 5,
+      "s6tLLByl7X7b": 5,
+      "xf9QqAae6LsO": 2
+     }
+    },
+    {
+     "q": "WfkDISMmbduQ",
+     "r": 2,
+     "chapters": 9,
+     "largest": 7,
+     "largestShare": 0.259,
+     "J": 0.42105263157894735,
+     "K": 0.10542168674698796,
+     "PPV": 0.18604651162790697,
+     "joinedBoth": 8,
+     "joinedHers": 19,
+     "falseJoins": 35,
+     "apartHers": 332,
+     "ari": 0.198,
+     "umbrellasRecovered": [
+      false,
+      false,
+      false
+     ],
+     "permP": 0.004,
+     "null": {
+      "p": 0.004,
+      "J": 0.121,
+      "K": 0.123,
+      "PPV": 0.054,
+      "ari": -0.001,
+      "ari95": 0.093,
+      "umbrellasMean": 0.048
+     },
+     "chapterNames": [
+      "לכידות ושיח קהילתי",
+      "תרבות פנאי ואירועים",
+      "חינוך נוער וילדים",
+      "ממשל השתתפות ושקיפות",
+      "התנדבות ועזרה הדדית",
+      "סביבה נוי ומורשת",
+      "ספורט ומתקני משחק",
+      "פיתוח מקומי ושירותים",
+      "מרחב ציבורי ובטיחות"
+     ],
+     "assignment": {
+      "-tdDLlp-WAjY": 1,
+      "0ZQYaXBhhkdM": 1,
+      "0sfOpzOAccHj": 0,
+      "25IXa3ic4f41": 0,
+      "2bDZn8CH0rS2": 5,
+      "39X4Cc761YtN": 6,
+      "6vmyy1bTaJz7": 2,
+      "6whtWxsZ8O5l": 3,
+      "9RHvqz-qOMIb": 0,
+      "CyuI1BZvVY65": 3,
+      "ECM2KTci0GAq": 5,
+      "FQyr5mQ3R32d": 3,
+      "FvN4PkkHjYyj": 1,
+      "GGWyBNBxymAh": 4,
+      "H2viCMwISge1": 5,
+      "Ib4UMTcCwZSh": 0,
+      "NbJ2LYfTeRtu": 0,
+      "OFqdY9eVn9pm": 3,
+      "PMjtNwTFHRtA": 7,
+      "UV-RALhnFk2b": 0,
+      "YFrsHGpG7EPY": 1,
+      "eFX0CuIIM81I": 2,
+      "gu042o0wTbl6": 7,
+      "mIxv18D99iw8": 0,
+      "qKeKSJcdM805": 5,
+      "s6tLLByl7X7b": 8,
+      "xf9QqAae6LsO": 2
+     }
+    },
+    {
+     "q": "WfkDISMmbduQ",
+     "r": 3,
+     "chapters": 8,
+     "largest": 5,
+     "largestShare": 0.185,
+     "J": 0.5789473684210527,
+     "K": 0.08433734939759036,
+     "PPV": 0.28205128205128205,
+     "joinedBoth": 11,
+     "joinedHers": 19,
+     "falseJoins": 28,
+     "apartHers": 332,
+     "ari": 0.331,
+     "umbrellasRecovered": [
+      true,
+      true,
+      false
+     ],
+     "permP": 0.0002,
+     "null": {
+      "p": 0.0002,
+      "J": 0.111,
+      "K": 0.111,
+      "PPV": 0.054,
+      "ari": 0.0,
+      "ari95": 0.07,
+      "umbrellasMean": 0.104
+     },
+     "chapterNames": [
+      "קהילתיות ולכידות חברתית",
+      "תרבות פנאי ואירועים",
+      "חינוך ילדים ונוער",
+      "מנהיגות וממשל קהילתי",
+      "תקשורת והידברות קהילתית",
+      "מרחב ציבורי ותשתיות",
+      "סביבה ניקיון ומורשת",
+      "כלכלה ושירותים מקומיים"
+     ],
+     "assignment": {
+      "-tdDLlp-WAjY": 1,
+      "0ZQYaXBhhkdM": 1,
+      "0sfOpzOAccHj": 0,
+      "25IXa3ic4f41": 0,
+      "2bDZn8CH0rS2": 6,
+      "39X4Cc761YtN": 5,
+      "6vmyy1bTaJz7": 2,
+      "6whtWxsZ8O5l": 3,
+      "9RHvqz-qOMIb": 4,
+      "CyuI1BZvVY65": 3,
+      "ECM2KTci0GAq": 5,
+      "FQyr5mQ3R32d": 3,
+      "FvN4PkkHjYyj": 1,
+      "GGWyBNBxymAh": 0,
+      "H2viCMwISge1": 5,
+      "Ib4UMTcCwZSh": 4,
+      "NbJ2LYfTeRtu": 4,
+      "OFqdY9eVn9pm": 3,
+      "PMjtNwTFHRtA": 5,
+      "UV-RALhnFk2b": 0,
+      "YFrsHGpG7EPY": 1,
+      "eFX0CuIIM81I": 2,
+      "gu042o0wTbl6": 7,
+      "mIxv18D99iw8": 0,
+      "qKeKSJcdM805": 6,
+      "s6tLLByl7X7b": 5,
+      "xf9QqAae6LsO": 2
+     }
+    },
+    {
+     "q": "WfkDISMmbduQ",
+     "r": 4,
+     "chapters": 8,
+     "largest": 7,
+     "largestShare": 0.259,
+     "J": 0.8947368421052632,
+     "K": 0.0783132530120482,
+     "PPV": 0.3953488372093023,
+     "joinedBoth": 17,
+     "joinedHers": 19,
+     "falseJoins": 26,
+     "apartHers": 332,
+     "ari": 0.512,
+     "umbrellasRecovered": [
+      true,
+      true,
+      false
+     ],
+     "permP": 0.0002,
+     "null": {
+      "p": 0.0002,
+      "J": 0.122,
+      "K": 0.123,
+      "PPV": 0.054,
+      "ari": -0.0,
+      "ari95": 0.093,
+      "umbrellasMean": 0.121
+     },
+     "chapterNames": [
+      "חיי קהילה ושייכות",
+      "פנאי תרבות ומפגש",
+      "חינוך ילדים ונוער",
+      "מנהיגות וממשל קהילתי",
+      "שקיפות תקשורת ודיאלוג",
+      "ניהול כספים ושירותים",
+      "מרחב ציבורי ותשתיות",
+      "סביבה ניקיון ומורשת"
+     ],
+     "assignment": {
+      "-tdDLlp-WAjY": 1,
+      "0ZQYaXBhhkdM": 1,
+      "0sfOpzOAccHj": 0,
+      "25IXa3ic4f41": 0,
+      "2bDZn8CH0rS2": 7,
+      "39X4Cc761YtN": 1,
+      "6vmyy1bTaJz7": 2,
+      "6whtWxsZ8O5l": 3,
+      "9RHvqz-qOMIb": 4,
+      "CyuI1BZvVY65": 4,
+      "ECM2KTci0GAq": 6,
+      "FQyr5mQ3R32d": 3,
+      "FvN4PkkHjYyj": 0,
+      "GGWyBNBxymAh": 0,
+      "H2viCMwISge1": 6,
+      "Ib4UMTcCwZSh": 3,
+      "NbJ2LYfTeRtu": 4,
+      "OFqdY9eVn9pm": 5,
+      "PMjtNwTFHRtA": 6,
+      "UV-RALhnFk2b": 0,
+      "YFrsHGpG7EPY": 0,
+      "eFX0CuIIM81I": 2,
+      "gu042o0wTbl6": 1,
+      "mIxv18D99iw8": 0,
+      "qKeKSJcdM805": 7,
+      "s6tLLByl7X7b": 6,
+      "xf9QqAae6LsO": 2
+     }
+    },
+    {
+     "q": "WfkDISMmbduQ",
+     "r": 5,
+     "chapters": 8,
+     "largest": 5,
+     "largestShare": 0.185,
+     "J": 0.42105263157894735,
+     "K": 0.09036144578313253,
+     "PPV": 0.21052631578947367,
+     "joinedBoth": 8,
+     "joinedHers": 19,
+     "falseJoins": 30,
+     "apartHers": 332,
+     "ari": 0.225,
+     "umbrellasRecovered": [
+      false,
+      true,
+      false
+     ],
+     "permP": 0.0014,
+     "null": {
+      "p": 0.0014,
+      "J": 0.11,
+      "K": 0.108,
+      "PPV": 0.055,
+      "ari": 0.001,
+      "ari95": 0.073,
+      "umbrellasMean": 0.063
+     },
+     "chapterNames": [
+      "לכידות וערבות קהילתית",
+      "שיח והידברות קהילתית",
+      "ממשל, שקיפות והשתתפות",
+      "פנאי, תרבות וספורט",
+      "חינוך, נוער וילדים",
+      "סביבה, נוי ותחזוקה",
+      "פיתוח מקומי ומסחר",
+      "מרחב ציבורי, בטיחות ואכיפה"
+     ],
+     "assignment": {
+      "-tdDLlp-WAjY": 3,
+      "0ZQYaXBhhkdM": 3,
+      "0sfOpzOAccHj": 0,
+      "25IXa3ic4f41": 0,
+      "2bDZn8CH0rS2": 5,
+      "39X4Cc761YtN": 3,
+      "6vmyy1bTaJz7": 4,
+      "6whtWxsZ8O5l": 2,
+      "9RHvqz-qOMIb": 1,
+      "CyuI1BZvVY65": 2,
+      "ECM2KTci0GAq": 5,
+      "FQyr5mQ3R32d": 2,
+      "FvN4PkkHjYyj": 3,
+      "GGWyBNBxymAh": 0,
+      "H2viCMwISge1": 5,
+      "Ib4UMTcCwZSh": 1,
+      "NbJ2LYfTeRtu": 1,
+      "OFqdY9eVn9pm": 2,
+      "PMjtNwTFHRtA": 6,
+      "UV-RALhnFk2b": 1,
+      "YFrsHGpG7EPY": 3,
+      "eFX0CuIIM81I": 4,
+      "gu042o0wTbl6": 6,
+      "mIxv18D99iw8": 0,
+      "qKeKSJcdM805": 5,
+      "s6tLLByl7X7b": 7,
+      "xf9QqAae6LsO": 4
+     }
+    }
+   ],
+   "cost": [
+    0.015824,
+    0.016988,
+    0.014972,
+    0.011936,
+    0.015668,
+    0.025416,
+    0.02166,
+    0.019212,
+    0.019188,
+    0.022932
+   ],
+   "errors": 0,
+   "invalid": 1,
+   "stability": {
+    "IqKVla0ZHw-m": {
+     "meanPairwiseAri": 0.612,
+     "min": 0.471,
+     "randomMeanAri": -0.003,
+     "valid": 4
+    },
+    "WfkDISMmbduQ": {
+     "meanPairwiseAri": 0.557,
+     "min": 0.258,
+     "randomMeanAri": 0.002,
+     "valid": 5
+    }
+   },
+   "criteria": {
+    "C1a_recall_of_her_joins": {
+     "value": 0.504,
+     "need": ">= 0.5",
+     "baselineRandom": 0.118,
+     "ungrouped": 0.0,
+     "passed": true
+    },
+    "C1b_beats_random_permutation": {
+     "value": "7/9 runs p<0.05",
+     "need": ">= 80% of runs",
+     "passed": false
+    },
+    "C2_precision_of_joins": {
+     "value": 0.248,
+     "need": ">= 0.25",
+     "baselineRandom": 0.063,
+     "passed": false
+    },
+    "C3a_false_joins_of_pairs_she_kept_apart": {
+     "value": 0.095,
+     "need": "<= 0.15",
+     "baselineRandom": 0.118,
+     "allInOne": 1.0,
+     "passed": true
+    },
+    "C3b_largest_chapter_share": {
+     "value": 0.312,
+     "need": "<= 0.4 in every run",
+     "passed": true
+    },
+    "C4_umbrellas_recovered": {
+     "value": "2 of 5 (per umbrella hits/runs: [(3, 4), (2, 4), (2, 5), (4, 5), (0, 5)])",
+     "need": ">= 3 of 5, each in >= 60% of runs",
+     "baselineRandomMean": 0.126,
+     "passed": false
+    },
+    "C5_stability_pairwise_ari": {
+     "value": {
+      "IqKVla0ZHw-m": 0.612,
+      "WfkDISMmbduQ": 0.557
+     },
+     "need": ">= 0.7 on each question",
+     "baselineRandom": {
+      "IqKVla0ZHw-m": -0.003,
+      "WfkDISMmbduQ": 0.002
+     },
+     "passed": false
+    },
+    "C6_chapter_count": {
+     "value": {
+      "meanRatioToThemes": 0.38,
+      "min": 6
+     },
+     "need": "mean chapters/themes <= 0.85 and >= 4 chapters",
+     "hers": {
+      "IqKVla0ZHw-m": 11,
+      "WfkDISMmbduQ": 19
+     },
+     "passed": true
+    },
+    "C7_cost_per_run_usd": {
+     "value": 0.0184,
+     "need": "<= 0.25",
+     "passed": true
+    },
+    "C8_valid_runs": {
+     "value": "9 valid, 1 invalid, 0 errors",
+     "need": "all runs valid (any invalid run counts as a failure)",
+     "passed": false
+    }
+   },
+   "allPassed": false,
+   "pooled": {
+    "J": 0.504,
+    "K": 0.095,
+    "PPV": 0.248,
+    "arisVsHers": 0.269,
+    "randomAriMean": 0.0,
+    "random95Ari": 0.129
+   },
+   "costTotal": 0.1838
+  }
+ }
+}
