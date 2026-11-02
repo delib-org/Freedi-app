@@ -56,11 +56,39 @@ async function isOrganizationAdmin(uid: string, organizationId: string): Promise
 }
 
 /**
- * Verifies `uid` may administer `statement`. Accepted paths, in order:
+ * How `uid` administers `statement`, or null when they do not. Accepted paths,
+ * in order:
  *   1. `statement.creatorId === uid`
  *   2. admin/creator subscription on the statement itself
  *   3. admin/creator subscription on `statement.topParentId`
  *   4. org owner/admin membership when the top statement has `organizationId`
+ */
+export async function findStatementAdminSource(
+	uid: string,
+	statement: Statement,
+): Promise<StatementAdminSource | null> {
+	if (statement.creatorId === uid) return 'creator';
+
+	if (await hasAdminSubscription(uid, statement.statementId)) return 'subscription';
+
+	const topParentId = statement.topParentId;
+	if (
+		topParentId &&
+		topParentId !== TOP &&
+		topParentId !== statement.statementId &&
+		(await hasAdminSubscription(uid, topParentId))
+	) {
+		return 'topSubscription';
+	}
+
+	const organizationId = await resolveOrganizationId(statement);
+	if (organizationId && (await isOrganizationAdmin(uid, organizationId))) return 'organization';
+
+	return null;
+}
+
+/**
+ * Verifies `uid` may administer `statement` (see findStatementAdminSource).
  *
  * Throws `HttpsError('permission-denied')` otherwise. Pass a statement id
  * instead of a doc to have it loaded (`not-found` when missing).
@@ -79,26 +107,8 @@ export async function assertStatementAdmin(
 		statement = statementOrId;
 	}
 
-	if (statement.creatorId === uid) return { via: 'creator', statement };
-
-	if (await hasAdminSubscription(uid, statement.statementId)) {
-		return { via: 'subscription', statement };
-	}
-
-	const topParentId = statement.topParentId;
-	if (
-		topParentId &&
-		topParentId !== TOP &&
-		topParentId !== statement.statementId &&
-		(await hasAdminSubscription(uid, topParentId))
-	) {
-		return { via: 'topSubscription', statement };
-	}
-
-	const organizationId = await resolveOrganizationId(statement);
-	if (organizationId && (await isOrganizationAdmin(uid, organizationId))) {
-		return { via: 'organization', statement };
-	}
+	const via = await findStatementAdminSource(uid, statement);
+	if (via) return { via, statement };
 
 	logError(new Error('statement admin authorization denied'), {
 		operation,

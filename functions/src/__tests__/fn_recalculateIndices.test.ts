@@ -521,40 +521,155 @@ describe('recalculateIndices authorization', () => {
 	});
 
 	// MC co-admins are recorded in `surveyAdmins`, and nothing copies them onto the
-	// survey's questions. These pin today's answer: passing them needs a decision,
-	// and the day it is made these tests are the ones that should change.
+	// survey's questions. The fixture: a co-admin (CREATOR) wrote the question, and
+	// the survey is owned by someone else.
 	describe('MC survey admins, who hold no statement subscription', () => {
+		const OWNER = 'survey-owner';
+		const OTHER_SURVEY = 'survey-2';
+
+		function seedSurveyAdmin(surveyId: string, uid: string, role: SurveyAdminRole): void {
+			fake.seed(Collections.surveyAdmins, getSurveyAdminId(surveyId, uid), {
+				surveyId,
+				userId: uid,
+				role,
+			});
+		}
+
+		const inSurvey = (surveyId: unknown, uid: string = CALLER) => ({
+			auth: { uid },
+			data: { statementId: QUESTION, surveyId },
+		});
+
+		async function expectRefusedInSurvey(surveyId: unknown, uid: string = CALLER): Promise<void> {
+			await expect(call(inSurvey(surveyId, uid))).rejects.toMatchObject({
+				code: 'permission-denied',
+				message: 'You are not authorized for this statement',
+			});
+			expect(optionWasRescored()).toBe(false);
+		}
+
 		beforeEach(() => {
 			seedQuestion();
 			fake.seed(Collections.surveys, SURVEY, {
 				surveyId: SURVEY,
-				creatorId: 'survey-owner',
+				creatorId: OWNER,
 				questionIds: [QUESTION],
 			});
+			seedSurveyAdmin(SURVEY, CREATOR, SurveyAdminRole.editor);
 		});
 
-		it('refuses an editor co-admin of a survey holding the question', async () => {
-			fake.seed(Collections.surveyAdmins, getSurveyAdminId(SURVEY, CALLER), {
-				surveyId: SURVEY,
-				userId: CALLER,
-				role: SurveyAdminRole.editor,
+		describe('allowed with the surveyId', () => {
+			it('lets an editor co-admin recalculate', async () => {
+				seedSurveyAdmin(SURVEY, CALLER, SurveyAdminRole.editor);
+
+				const result = await call(inSurvey(SURVEY));
+
+				expect(result.optionsUpdated).toBe(1);
+				expect(optionWasRescored()).toBe(true);
 			});
 
-			await expectRefused();
-		});
+			it('lets the survey owner recalculate a question someone else created', async () => {
+				const result = await call(inSurvey(SURVEY, OWNER));
 
-		it('refuses the owner of a survey holding a question someone else created', async () => {
-			await expectRefused('survey-owner');
-		});
-
-		it('lets a co-admin recalculate a question they created themselves', async () => {
-			fake.seed(Collections.surveyAdmins, getSurveyAdminId(SURVEY, CREATOR), {
-				surveyId: SURVEY,
-				userId: CREATOR,
-				role: SurveyAdminRole.editor,
+				expect(result.optionsUpdated).toBe(1);
+				expect(optionWasRescored()).toBe(true);
 			});
 
-			await expectAllowed(CREATOR);
+			it('lets a co-admin recalculate a question they created, needing no surveyId', async () => {
+				await expectAllowed(CREATOR);
+			});
+
+			it('still lets a statement admin through when the surveyId means nothing', async () => {
+				seedSubscription(QUESTION, Role.admin);
+
+				const result = await call(inSurvey('no-such-survey'));
+
+				expect(result.optionsUpdated).toBe(1);
+			});
 		});
+
+		describe('refused', () => {
+			it('refuses an editor co-admin who sends no surveyId', async () => {
+				seedSurveyAdmin(SURVEY, CALLER, SurveyAdminRole.editor);
+
+				await expectRefused();
+			});
+
+			it('refuses the survey owner who sends no surveyId', async () => {
+				await expectRefused(OWNER);
+			});
+
+			it('refuses a viewer co-admin', async () => {
+				seedSurveyAdmin(SURVEY, CALLER, SurveyAdminRole.viewer);
+
+				await expectRefusedInSurvey(SURVEY);
+			});
+
+			it('refuses a caller on no roster', async () => {
+				await expectRefusedInSurvey(SURVEY);
+			});
+
+			it('refuses a survey that does not exist, with the same answer', async () => {
+				seedSurveyAdmin('no-such-survey', CALLER, SurveyAdminRole.editor);
+
+				await expectRefusedInSurvey('no-such-survey');
+			});
+
+			it('refuses a survey that does not contain the question', async () => {
+				fake.seed(Collections.surveys, SURVEY, {
+					surveyId: SURVEY,
+					creatorId: OWNER,
+					questionIds: ['another-question'],
+				});
+				seedSurveyAdmin(SURVEY, CALLER, SurveyAdminRole.editor);
+
+				await expectRefusedInSurvey(SURVEY);
+			});
+
+			it('refuses the id of another survey the caller edits, which lacks the question', async () => {
+				fake.seed(Collections.surveys, OTHER_SURVEY, {
+					surveyId: OTHER_SURVEY,
+					creatorId: CALLER,
+					questionIds: ['another-question'],
+				});
+				seedSurveyAdmin(OTHER_SURVEY, CALLER, SurveyAdminRole.editor);
+
+				await expectRefusedInSurvey(OTHER_SURVEY);
+			});
+
+			it('refuses an editor of another survey naming the survey that has the question', async () => {
+				seedSurveyAdmin(OTHER_SURVEY, CALLER, SurveyAdminRole.editor);
+
+				await expectRefusedInSurvey(SURVEY);
+			});
+
+			it('refuses a roster record that names someone else', async () => {
+				fake.seed(Collections.surveyAdmins, getSurveyAdminId(SURVEY, CALLER), {
+					surveyId: SURVEY,
+					userId: 'someone-else',
+					role: SurveyAdminRole.editor,
+				});
+
+				await expectRefusedInSurvey(SURVEY);
+			});
+
+			it('refuses a survey with malformed questionIds', async () => {
+				fake.seed(Collections.surveys, SURVEY, { surveyId: SURVEY, creatorId: CALLER });
+
+				await expectRefusedInSurvey(SURVEY);
+			});
+		});
+
+		it.each([[''], [42], [null], [{ id: SURVEY }], ['surveys/survey-1']])(
+			'answers invalid-argument for a surveyId of %p',
+			async (surveyId) => {
+				seedSurveyAdmin(SURVEY, CALLER, SurveyAdminRole.editor);
+
+				await expect(call(inSurvey(surveyId))).rejects.toMatchObject({
+					code: 'invalid-argument',
+				});
+				expect(optionWasRescored()).toBe(false);
+			},
+		);
 	});
 });

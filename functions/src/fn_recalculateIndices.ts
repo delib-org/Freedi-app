@@ -4,6 +4,7 @@ import { DocumentData, FieldValue } from 'firebase-admin/firestore';
 import { db } from './db';
 import {
 	Collections,
+	Statement,
 	StatementType,
 	functionConfig,
 	calcAgreement,
@@ -16,10 +17,11 @@ import {
 	type StakeholderScope,
 } from '@freedi/shared-types';
 import { commitInBatches, type BatchedWrite } from './classroom/batchedWrites';
-import { assertStatementAdmin } from './progress/assertStatementAdmin';
+import { findStatementAdminSource } from './progress/assertStatementAdmin';
 import { refreshChainVoters } from './progress/chainVoters';
 import { calculateConsensusValid } from './helpers/consensusValidCalculator';
 import { logError } from './utils/errorHandling';
+import { canEditQuestionThroughSurvey } from './utils/surveyQuestionAccess';
 
 /**
  * Batches commit one after another, so a question of several thousand options
@@ -33,6 +35,11 @@ const RECALCULATE_TIMEOUT_SECONDS = 300;
  * `undefined` means the field must not exist: it is deleted, never left stale.
  */
 type OptionScores = Record<string, number | undefined>;
+
+/** A Firestore document id: a non-empty string that cannot address another path. */
+function isDocumentId(value: unknown): value is string {
+	return typeof value === 'string' && value.length > 0 && !value.includes('/');
+}
 
 function readField(data: DocumentData, path: string): unknown {
 	return path
@@ -60,6 +67,8 @@ function toOptionUpdate(scores: OptionScores, now: number): Record<string, numbe
 
 interface RecalculateIndicesRequest {
 	statementId: string; // Parent question statement ID
+	/** The survey the caller is working in. Only ever grants what that survey's records say. */
+	surveyId?: string;
 }
 
 interface UpdatedOption {
@@ -94,11 +103,11 @@ interface RecalculateIndicesResult {
  * some options on the new scores. Calling again repairs that, because the options
  * already done are skipped and only the rest are written.
  *
- * Who may call it is decided by assertStatementAdmin, the same check the other
- * question-admin callables use: the question's creator, an admin of the question
- * or of its top statement, or an owner/admin of the organization that holds it.
- * It does not know about MC survey co-admins, who are recorded in `surveyAdmins`
- * and hold no statement subscription.
+ * Who may call it: a statement admin by the check the other question-admin
+ * callables use (findStatementAdminSource). Failing that, when a `surveyId` is
+ * given, whoever may edit that survey and the question through it
+ * (canEditQuestionThroughSurvey): MC co-admins live in `surveyAdmins` and hold no
+ * statement subscription, so the statement check alone would refuse them.
  */
 export const recalculateIndices = onCall<RecalculateIndicesRequest>(
 	{ region: functionConfig.region, timeoutSeconds: RECALCULATE_TIMEOUT_SECONDS },
@@ -107,24 +116,45 @@ export const recalculateIndices = onCall<RecalculateIndicesRequest>(
 			throw new HttpsError('unauthenticated', 'User must be authenticated');
 		}
 
-		const { statementId } = request.data;
+		const { statementId, surveyId } = request.data;
+		const userId = request.auth.uid;
 
-		if (!statementId || typeof statementId !== 'string') {
+		if (!isDocumentId(statementId)) {
 			throw new HttpsError('invalid-argument', 'statementId is required');
 		}
 
-		const { statement } = await assertStatementAdmin(
-			request.auth.uid,
-			statementId,
-			'recalculateIndices',
-		);
+		if (surveyId !== undefined && !isDocumentId(surveyId)) {
+			throw new HttpsError('invalid-argument', 'surveyId is not valid');
+		}
+
+		const statementSnap = await db.collection(Collections.statements).doc(statementId).get();
+
+		if (!statementSnap.exists) {
+			throw new HttpsError('not-found', 'Statement not found');
+		}
+
+		const statement = statementSnap.data() as Statement;
+		const isAuthorized =
+			(await findStatementAdminSource(userId, statement)) !== null ||
+			(surveyId !== undefined &&
+				(await canEditQuestionThroughSurvey(userId, surveyId, statementId)));
+
+		if (!isAuthorized) {
+			logError(new Error('recalculateIndices authorization denied'), {
+				operation: 'recalculateIndices',
+				userId,
+				statementId,
+				metadata: { surveyId },
+			});
+			throw new HttpsError('permission-denied', 'You are not authorized for this statement');
+		}
 
 		try {
 			return await recalculateIndicesForQuestion(statementId, statement);
 		} catch (error) {
 			logError(error, {
 				operation: 'recalculateIndices',
-				userId: request.auth.uid,
+				userId,
 				statementId,
 			});
 			throw new HttpsError('internal', 'Could not finish recalculating. It is safe to try again.');
