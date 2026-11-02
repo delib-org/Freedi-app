@@ -51,7 +51,12 @@ export const { setWaitingMember, removeWaitingMember, clearWaitingMember } =
 	subscriptionsSlice.actions;
 export const selectWaitingMember = createSelector(
 	[getWaitingList, getCreatorUid],
-	(waitingList, creatorUid) => waitingList.filter((waiting) => waiting.adminId === creatorUid),
+	(waitingList, creatorUid) =>
+		creatorUid
+			? waitingList.filter(
+					(waiting) => waiting.adminId === creatorUid || waiting.adminIds?.includes(creatorUid),
+				)
+			: [],
 );
 export const selectWaitingMemberByStatementId =
 	(statementId: string) => (state: SubscriptionsSliceRootState) => {

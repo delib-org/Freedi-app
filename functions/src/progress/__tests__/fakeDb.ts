@@ -29,13 +29,17 @@ interface Ref {
 	update: (data: Doc) => Promise<void>;
 }
 
+interface QuerySnap extends Snap {
+	ref: Ref;
+}
+
 interface Query {
 	where: (field: string, op: string, value: unknown) => Query;
 	orderBy: () => Query;
 	select: () => Query;
 	limit: (n: number) => Query;
 	startAfter: (cursor: Snap) => Query;
-	get: () => Promise<{ empty: boolean; size: number; docs: Snap[] }>;
+	get: () => Promise<{ empty: boolean; size: number; docs: QuerySnap[] }>;
 }
 
 function isIncrement(value: unknown): value is { _increment: number } {
@@ -163,7 +167,7 @@ export function createFakeDb(): FakeDb {
 			let ids = [...col(collection).keys()].sort();
 			if (after) ids = ids.filter((id) => id > after);
 			let docs = ids
-				.map((id) => snapOf(collection, id))
+				.map((id) => ({ ...snapOf(collection, id), ref: makeRef(collection, id) }))
 				.filter((snap) => filters.every(([f, v]) => snap.data()?.[f] === v));
 			if (limit !== undefined) docs = docs.slice(0, limit);
 

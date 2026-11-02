@@ -12,6 +12,7 @@ import BulkAddOptions from '../settings/components/BulkAddOptions/BulkAddOptions
 import ToggleSwitch from '../settings/components/advancedSettings/ToggleSwitch';
 import advStyles from '../settings/components/advancedSettings/EnhancedAdvancedSettings.module.scss';
 import { countHidden } from './hostHubLogic';
+import RoomsMirror from './RoomsMirror';
 import styles from './HostHub.module.scss';
 
 const groupWrapClass = `${advStyles.enhancedSettings} ${advStyles.flatGroup}`;
@@ -45,6 +46,7 @@ const AnswersSection: FC<AnswersSectionProps> = ({ statement }) => {
 					data-testid="show-hidden-answers"
 				/>
 			</div>
+			{isQuestion && <RoomsMirror statement={statement} />}
 			{isQuestion && <AnchoredSettings statement={statement} />}
 			<BulkAddOptions statement={statement} />
 			<div className={styles.row}>

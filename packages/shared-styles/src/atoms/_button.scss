@@ -114,10 +114,11 @@
     }
   }
 
+  // --approve itself is 2.07:1 with white; the solid twin reaches 4.8:1.
   &--approve {
-    background-color: var(--approve);
+    background-color: var(--approve-solid);
     color: var(--white);
-    border-color: var(--approve);
+    border-color: var(--approve-solid);
     width: 165px;
     height: 44px;
 
@@ -229,6 +230,14 @@
 
   &--medium {
     // Default size - already set in base
+  }
+
+  // Touch floor for small buttons in lists (row actions): 44 px on phones,
+  // where button--small alone is ~30 px. Desktop keeps the compact size.
+  &--touch {
+    @include mobile {
+      min-block-size: 2.75rem;
+    }
   }
 
   &--large {

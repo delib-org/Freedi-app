@@ -8,6 +8,7 @@
 // ============================================================================
 
 .checkbox {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
@@ -20,11 +21,15 @@
   // ELEMENTS (Parts of the checkbox)
   // ============================================================================
 
+  // The native input stays the focusable control (Space toggles it, the
+  // label names it); it is only made invisible, never removed from the
+  // accessibility tree. Clicks land on the label, which forwards them.
   &__input {
     position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    margin: 0;
     opacity: 0;
-    width: 0;
-    height: 0;
     pointer-events: none;
   }
 
@@ -69,14 +74,14 @@
   &__label {
     flex: 1;
     font-size: 1rem;
-    color: var(--text-disabled);
+    color: var(--text-body); // ≥ 4.5:1; --text-disabled is for disabled only
     transition: color 0.2s ease;
   }
 
   &__hint {
     display: block;
     font-size: 0.8125rem;
-    color: var(--text-caption);
+    color: var(--text-meta); // --text-caption is 3.7:1 on white
     margin-top: 0.125rem;
   }
 
@@ -182,11 +187,13 @@
   // FOCUS STATE
   // ============================================================================
 
-  &:focus-within {
-    .checkbox__box {
-      outline: 2px solid var(--btn-primary);
-      outline-offset: 2px;
-    }
+  // The input carries focus; a block that is itself focusable (older
+  // wrappers put tabindex on the label) still shows the ring.
+  &__input:focus-visible + .checkbox__box,
+  &__input:focus-visible + .checkbox__icon,
+  &:focus-visible .checkbox__box {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
   }
 
   // ============================================================================

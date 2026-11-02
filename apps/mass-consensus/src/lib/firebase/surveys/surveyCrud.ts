@@ -18,6 +18,8 @@ import { cascadeSynthesisToggle } from '../synthesis/cascadeSynthesisToggle';
 import { cascadeMinResponseWords } from './cascadeMinResponseWords';
 import { cascadeRatingMode } from './cascadeRatingMode';
 import { cascadeAutoAiHandling } from './cascadeAutoAiHandling';
+import { cascadeTargetPopulation } from './cascadeTargetPopulation';
+import { normalizeTargetPopulation } from './normalizeTargetPopulation';
 import { deleteSurveyAdminRecords } from './surveyAdmins';
 import { sanitizeRemovedQuestionIds } from './removedQuestionIds';
 
@@ -37,10 +39,10 @@ export async function createSurvey(
     description: data.description || '',
     creatorId,
     questionIds: data.questionIds || [],
-    settings: {
+    settings: normalizeTargetPopulation({
       ...DEFAULT_SURVEY_SETTINGS,
       ...data.settings,
-    },
+    }),
     questionSettings: data.questionSettings || {},
     status: SurveyStatus.draft,
     createdAt: now,
@@ -127,6 +129,21 @@ export async function createSurvey(
     logger.error('[createSurvey] cascadeAutoAiHandling failed:', survey.surveyId, error);
   }
 
+  // The number of stakeholders typed in the create form reaches the questions
+  // that do not declare their own.
+  if (survey.settings.targetPopulation !== undefined) {
+    try {
+      await cascadeTargetPopulation({
+        survey,
+        questionIds: survey.questionIds,
+        change: { previous: undefined, next: survey.settings.targetPopulation },
+        addedQuestionIds: survey.questionIds,
+      });
+    } catch (error) {
+      logger.error('[createSurvey] cascadeTargetPopulation failed:', survey.surveyId, error);
+    }
+  }
+
   // And for the rating scale: one chosen in the create form has to reach the
   // question Statement now, not on the first later edit.
   try {
@@ -190,10 +207,13 @@ export async function getSurveyWithQuestions(
 /**
  * Update a survey
  */
+/** The saved survey, plus how many questions N could not be set on (not stored). */
+export type UpdatedSurvey = Survey & { targetPopulationSkipped?: number };
+
 export async function updateSurvey(
   surveyId: string,
   data: UpdateSurveyRequest
-): Promise<Survey | null> {
+): Promise<UpdatedSurvey | null> {
   const db = getFirestoreAdmin();
 
   const survey = await getSurveyById(surveyId);
@@ -210,10 +230,10 @@ export async function updateSurvey(
   if (data.questionIds !== undefined) updates.questionIds = data.questionIds;
   if (data.status !== undefined) updates.status = data.status as SurveyStatus;
   if (data.settings !== undefined) {
-    updates.settings = {
+    updates.settings = normalizeTargetPopulation({
       ...survey.settings,
       ...data.settings,
-    };
+    });
   }
   if (data.questionSettings !== undefined) {
     updates.questionSettings = {
@@ -316,6 +336,31 @@ export async function updateSurvey(
     }
   }
 
+  // Number of stakeholders: copy it onto the questions (see the cascade's table).
+  const populationChange = {
+    previous: survey.settings.targetPopulation,
+    next: merged.settings.targetPopulation,
+  };
+  const previousQuestionIds = new Set(survey.questionIds);
+  const addedQuestionIds = data.questionIds
+    ? data.questionIds.filter((id) => !previousQuestionIds.has(id))
+    : [];
+  const populationChanged = populationChange.previous !== populationChange.next;
+  let targetPopulationSkipped = 0;
+  if (populationChanged || addedQuestionIds.length > 0) {
+    try {
+      const cascade = await cascadeTargetPopulation({
+        survey: merged,
+        questionIds: merged.questionIds,
+        change: populationChange,
+        addedQuestionIds,
+      });
+      targetPopulationSkipped = cascade.refused;
+    } catch (error) {
+      logger.error('[updateSurvey] cascadeTargetPopulation failed:', surveyId, error);
+    }
+  }
+
   // Mirror per-question minResponseWords onto each question Statement's
   // statementSettings (the single source of truth read by the submit route and
   // the map control panel). Only needed when per-question settings or the
@@ -336,7 +381,7 @@ export async function updateSurvey(
     }
   }
 
-  return merged;
+  return targetPopulationSkipped > 0 ? { ...merged, targetPopulationSkipped } : merged;
 }
 
 /**

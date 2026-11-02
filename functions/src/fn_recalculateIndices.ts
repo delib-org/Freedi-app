@@ -4,6 +4,7 @@ import { DocumentData, FieldValue } from 'firebase-admin/firestore';
 import { db } from './db';
 import {
 	Collections,
+	Statement,
 	StatementType,
 	functionConfig,
 	calcAgreement,
@@ -15,11 +16,59 @@ import {
 	DEFAULT_SAMPLING_QUALITY,
 	type StakeholderScope,
 } from '@freedi/shared-types';
+import { commitInBatches, type BatchedWrite } from './classroom/batchedWrites';
+import { findStatementAdminSource } from './progress/assertStatementAdmin';
 import { refreshChainVoters } from './progress/chainVoters';
 import { calculateConsensusValid } from './helpers/consensusValidCalculator';
+import { logError } from './utils/errorHandling';
+import { canEditQuestionThroughSurvey } from './utils/surveyQuestionAccess';
+
+/**
+ * Batches commit one after another, so a question of several thousand options
+ * can outlast the 60-second default. Same ceiling as the other per-question
+ * bulk callables (fn_fullExport, fn_reconcileEvaluatorCount).
+ */
+const RECALCULATE_TIMEOUT_SECONDS = 300;
+
+/**
+ * Every score field the recalculation owns on an option, by Firestore path.
+ * `undefined` means the field must not exist: it is deleted, never left stale.
+ */
+type OptionScores = Record<string, number | undefined>;
+
+/** A Firestore document id: a non-empty string that cannot address another path. */
+function isDocumentId(value: unknown): value is string {
+	return typeof value === 'string' && value.length > 0 && !value.includes('/');
+}
+
+function readField(data: DocumentData, path: string): unknown {
+	return path
+		.split('.')
+		.reduce<unknown>((value, key) => (value as DocumentData | undefined)?.[key], data);
+}
+
+function isSameScore(stored: unknown, next: number | undefined): boolean {
+	return stored === next || (Number.isNaN(stored) && Number.isNaN(next));
+}
+
+/** True when writing `scores` would change nothing, a field due for deletion included. */
+function areScoresCurrent(data: DocumentData, scores: OptionScores): boolean {
+	return Object.entries(scores).every(([path, next]) => isSameScore(readField(data, path), next));
+}
+
+function toOptionUpdate(scores: OptionScores, now: number): Record<string, number | FieldValue> {
+	const update: Record<string, number | FieldValue> = { lastUpdate: now };
+	for (const [path, next] of Object.entries(scores)) {
+		update[path] = next !== undefined ? next : FieldValue.delete();
+	}
+
+	return update;
+}
 
 interface RecalculateIndicesRequest {
 	statementId: string; // Parent question statement ID
+	/** The survey the caller is working in. Only ever grants what that survey's records say. */
+	surveyId?: string;
 }
 
 interface UpdatedOption {
@@ -31,7 +80,10 @@ interface UpdatedOption {
 
 interface RecalculateIndicesResult {
 	success: boolean;
+	/** Options written by this call. */
 	optionsUpdated: number;
+	/** Options already holding these exact scores, so left untouched. */
+	optionsUnchanged: number;
 	targetPopulation: number | undefined;
 	samplingQuality: number;
 	updates: UpdatedOption[];
@@ -44,43 +96,68 @@ interface RecalculateIndicesResult {
  * evaluations have already been submitted — existing options won't have the
  * updated confidenceIndex until the next evaluation triggers a recalculation.
  * This function forces an immediate recalculation for all options.
+ *
+ * Options whose scores would not change are not written, so pressing again costs
+ * reads but no writes and fires no triggers. Writes go out in several batches:
+ * each option is written whole, but a failure part way leaves the question with
+ * some options on the new scores. Calling again repairs that, because the options
+ * already done are skipped and only the rest are written.
+ *
+ * Who may call it: a statement admin by the check the other question-admin
+ * callables use (findStatementAdminSource). Failing that, when a `surveyId` is
+ * given, whoever may edit that survey and the question through it
+ * (canEditQuestionThroughSurvey): MC co-admins live in `surveyAdmins` and hold no
+ * statement subscription, so the statement check alone would refuse them.
  */
 export const recalculateIndices = onCall<RecalculateIndicesRequest>(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, timeoutSeconds: RECALCULATE_TIMEOUT_SECONDS },
 	async (request): Promise<RecalculateIndicesResult> => {
-		const { statementId } = request.data;
-
-		if (!statementId) {
-			throw new HttpsError('invalid-argument', 'statementId is required');
-		}
-
 		if (!request.auth) {
 			throw new HttpsError('unauthenticated', 'User must be authenticated');
 		}
 
-		// Read the parent question statement to get evaluationSettings
-		const parentRef = db.collection(Collections.statements).doc(statementId);
-		const parentDoc = await parentRef.get();
+		const { statementId, surveyId } = request.data;
+		const userId = request.auth.uid;
 
-		if (!parentDoc.exists) {
+		if (!isDocumentId(statementId)) {
+			throw new HttpsError('invalid-argument', 'statementId is required');
+		}
+
+		if (surveyId !== undefined && !isDocumentId(surveyId)) {
+			throw new HttpsError('invalid-argument', 'surveyId is not valid');
+		}
+
+		const statementSnap = await db.collection(Collections.statements).doc(statementId).get();
+
+		if (!statementSnap.exists) {
 			throw new HttpsError('not-found', 'Statement not found');
 		}
 
-		const parentData = parentDoc.data();
-		if (!parentData) {
-			throw new HttpsError('not-found', 'Statement data is empty');
+		const statement = statementSnap.data() as Statement;
+		const isAuthorized =
+			(await findStatementAdminSource(userId, statement)) !== null ||
+			(surveyId !== undefined && (await canEditQuestionThroughSurvey(userId, surveyId, statement)));
+
+		if (!isAuthorized) {
+			logError(new Error('recalculateIndices authorization denied'), {
+				operation: 'recalculateIndices',
+				userId,
+				statementId,
+				metadata: { surveyId },
+			});
+			throw new HttpsError('permission-denied', 'You are not authorized for this statement');
 		}
 
-		// Verify the caller is the creator or has admin access
-		const userId = request.auth.uid;
-		if (parentData.creatorId !== userId) {
-			throw new HttpsError(
-				'permission-denied',
-				'Only the statement creator can recalculate indices',
-			);
+		try {
+			return await recalculateIndicesForQuestion(statementId, statement);
+		} catch (error) {
+			logError(error, {
+				operation: 'recalculateIndices',
+				userId,
+				statementId,
+			});
+			throw new HttpsError('internal', 'Could not finish recalculating. It is safe to try again.');
 		}
-
-		return recalculateIndicesForQuestion(statementId, parentData);
 	},
 );
 
@@ -94,9 +171,9 @@ export async function recalculateIndicesForQuestion(
 	parentData: DocumentData,
 ): Promise<RecalculateIndicesResult> {
 	{
-		// Bring the question's electorate up to date before reading it: this
-		// callable exists precisely for the case where the inputs to N changed
-		// after the votes came in, and the voter count is one of those inputs.
+		// Keep the question's participation stat (distinct voters along the
+		// chain) fresh while we are here. It does NOT feed N: N is only ever
+		// the number an admin declared (resolveStakeholderCount below).
 		await refreshChainVoters(statementId);
 
 		const topParentId = (parentData.topParentId as string | undefined) ?? statementId;
@@ -105,7 +182,7 @@ export async function recalculateIndicesForQuestion(
 				? (await db.collection(Collections.statements).doc(topParentId).get()).data()
 				: parentData;
 
-		// Same walk the evaluation trigger does, so a recalculation can never
+		// Same walk the evaluation trigger does (declared N only, else none), so a recalculation can never
 		// disagree with the number a fresh vote would have produced.
 		const parentScope = { ...parentData, evaluation: { ...parentData.evaluation } };
 		const { count: targetPopulation } = resolveStakeholderCount(
@@ -131,14 +208,17 @@ export async function recalculateIndicesForQuestion(
 			return {
 				success: true,
 				optionsUpdated: 0,
+				optionsUnchanged: 0,
 				targetPopulation,
 				samplingQuality,
 				updates: [],
 			};
 		}
 
-		const batch = db.batch();
+		const now = Date.now();
+		const writes: BatchedWrite[] = [];
 		const updates: UpdatedOption[] = [];
+		let optionsUnchanged = 0;
 
 		for (const doc of optionsSnapshot.docs) {
 			const data = doc.data();
@@ -195,23 +275,24 @@ export async function recalculateIndicesForQuestion(
 				);
 			}
 
-			const updateData: Record<string, number | FieldValue> = {
+			const scores: OptionScores = {
 				consensus: agreement,
 				consensusValid: calculateConsensusValid(agreement, data.popperHebbianScore),
 				'evaluation.agreement': agreement,
 				'evaluation.agreementIndex': agreementIndex,
 				'evaluation.likeMindedness': likeMindedness,
-				// Kept in lockstep with the score it produced. Deleted rather
-				// than left stale when no population resolves any more.
-				'evaluation.stakeholderCount':
-					stakeholderCount !== undefined ? stakeholderCount : FieldValue.delete(),
-				lastUpdate: Date.now(),
+				// These two are kept in lockstep with the score they produced, and
+				// are deleted rather than left stale when no population resolves.
+				'evaluation.stakeholderCount': stakeholderCount,
+				'evaluation.confidenceIndex': confidenceIndex,
 			};
-			if (confidenceIndex !== undefined) {
-				updateData['evaluation.confidenceIndex'] = confidenceIndex;
+
+			if (areScoresCurrent(data, scores)) {
+				optionsUnchanged++;
+				continue;
 			}
 
-			batch.update(doc.ref, updateData);
+			writes.push({ kind: 'update', ref: doc.ref, data: toOptionUpdate(scores, now) });
 
 			updates.push({
 				statementId: doc.id,
@@ -221,17 +302,19 @@ export async function recalculateIndicesForQuestion(
 			});
 		}
 
-		await batch.commit();
+		await commitInBatches(db, writes);
 
 		logger.info(`Recalculated indices for ${updates.length} options under ${statementId}`, {
 			targetPopulation,
 			samplingQuality,
 			optionsUpdated: updates.length,
+			optionsUnchanged,
 		});
 
 		return {
 			success: true,
 			optionsUpdated: updates.length,
+			optionsUnchanged,
 			targetPopulation,
 			samplingQuality,
 			updates,

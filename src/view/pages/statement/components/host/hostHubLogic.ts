@@ -38,6 +38,34 @@ export function buildHostHubPath(statementId: string, section: HostHubSectionId)
 	});
 }
 
+/**
+ * Subsections of the People card, in display order (IA main-people-settings
+ * §4). Each is a hash anchor under `?section=people`.
+ */
+export const PEOPLE_ANCHORS = [
+	'join',
+	'waiting',
+	'members',
+	'questions',
+	'entry-check',
+	'stakeholders',
+	'joining',
+] as const;
+
+export type PeopleAnchor = (typeof PEOPLE_ANCHORS)[number];
+
+/** `#waiting` (or `waiting`) → 'waiting'; anything else → null. */
+export function parsePeopleAnchor(hash: string | null | undefined): PeopleAnchor | null {
+	const raw = (hash ?? '').replace(/^#/, '');
+
+	return PEOPLE_ANCHORS.includes(raw as PeopleAnchor) ? (raw as PeopleAnchor) : null;
+}
+
+/** Deep link to one People subsection, e.g. the header badge → Waiting to join. */
+export function buildPeopleAnchorPath(statementId: string, anchor: PeopleAnchor): string {
+	return `${buildHostHubPath(statementId, 'people')}#${anchor}`;
+}
+
 /** How many of a question's answers are hidden from participants right now. */
 export function countHidden(subStatements: ReadonlyArray<{ hide?: boolean }>): number {
 	return subStatements.filter((s) => s.hide === true).length;

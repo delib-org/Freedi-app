@@ -1,0 +1,91 @@
+// Optional "Number of stakeholders" field with its stale-score note (BEM, logical properties for RTL)
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-xs);
+	margin-block-end: var(--spacing-md);
+
+	&__header {
+		display: flex;
+		align-items: baseline;
+		gap: var(--spacing-sm);
+	}
+
+	&__label {
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--text-body);
+	}
+
+	&__optional {
+		font-size: 0.75rem;
+		color: var(--text-secondary);
+	}
+
+	&__input {
+		width: 100%;
+		max-width: 12rem;
+		padding: 0.75rem 1rem;
+		font-size: 1rem;
+		border: 2px solid var(--border-light);
+		border-radius: 8px;
+		outline: none;
+		transition: border-color 0.2s;
+
+		&:focus {
+			border-color: var(--btn-primary);
+		}
+	}
+
+	&__hint {
+		margin: 0;
+		font-size: 0.75rem;
+		color: var(--text-secondary);
+	}
+
+	&__stale {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--spacing-sm);
+		padding: var(--spacing-sm);
+		border-radius: 8px;
+		background: var(--card-default);
+		border: 1px solid var(--border-light);
+	}
+
+	&__staleText {
+		margin: 0;
+		flex: 1 1 14rem;
+		font-size: 0.875rem;
+		color: var(--text-body);
+	}
+
+	&__action {
+		padding: 0.5rem 1rem;
+		border: none;
+		border-radius: 20px;
+		background: var(--btn-primary);
+		color: var(--white, #fff);
+		font-weight: 500;
+		cursor: pointer;
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+	}
+
+	&__error {
+		margin: 0;
+		font-size: 0.875rem;
+		color: var(--error, #c53030);
+	}
+
+	&__done {
+		margin: 0;
+		font-size: 0.875rem;
+		color: var(--text-secondary);
+	}
+}

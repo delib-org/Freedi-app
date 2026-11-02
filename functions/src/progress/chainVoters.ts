@@ -2,11 +2,11 @@
  * The electorate of a question: how many distinct people have evaluated
  * anything under it or under a question above it.
  *
- * This is the number every option beneath a question uses as N when nobody has
- * declared a stakeholder count by hand (see `resolveStakeholderCount` in
- * shared-types). It replaced the subscriber count, which measured traffic
- * rather than participation — a browser auto-subscribes the moment it opens a
- * page, so a question with two voters was reporting an electorate of fifteen.
+ * This is a participation statistic only. It is NOT used as N for the
+ * finite-population correction: N is declared by an admin
+ * (`evaluationSettings.targetPopulation`) or absent, and nothing is inferred
+ * from who voted (see `resolveStakeholderCount` in shared-types). Turnout
+ * measures who showed up, not who the decision is about.
  *
  * ## Why the chain, and why only upward
  *
@@ -157,10 +157,15 @@ export async function refreshChainVoters(questionId: string): Promise<number | u
 		// Mirrored onto the statement so the evaluation trigger reads it off the
 		// parent document it is already holding, at no extra cost, and so the
 		// settings screen can show the admin what N their options are using.
-		batch.update(db.collection(Collections.statements).doc(questionId), {
-			'evaluation.chainEvaluators': count > 0 ? count : FieldValue.delete(),
-			lastUpdate: now,
-		});
+		// The fingerprint can move while the union stays put (somebody who already
+		// voted up the chain votes here too): then the statement is left alone, so
+		// its lastUpdate does not move for a number that did not.
+		if (stored?.chainEvaluated !== count) {
+			batch.update(db.collection(Collections.statements).doc(questionId), {
+				'evaluation.chainEvaluators': count > 0 ? count : FieldValue.delete(),
+				lastUpdate: now,
+			});
+		}
 		await batch.commit();
 
 		return count;

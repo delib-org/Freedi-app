@@ -14,6 +14,9 @@ jest.mock('../evaluatorParticipation', () => ({
 jest.mock('../updateChosenOptions', () => ({
 	updateParentStatementWithChosenOptions: (parentId?: string) => mockRefreshResults(parentId),
 }));
+jest.mock('../themeGuard', () => ({
+	dropEvaluationOnTheme: () => Promise.resolve(false),
+}));
 jest.mock('../statementEvaluationUpdater', () => ({
 	updateStatementEvaluation: () => mockUpdateStatement(),
 }));

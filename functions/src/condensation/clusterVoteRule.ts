@@ -1,4 +1,5 @@
 import type { Evaluation } from '@freedi/shared-types';
+import { computeEffectiveTreeVote, flatClusterTree } from './clusterTree';
 
 /**
  * The ONE counting rule for every cluster score (synthesis, topic cluster,
@@ -11,6 +12,11 @@ import type { Evaluation } from '@freedi/shared-types';
  *   3. Else, the average of the user's votes on the cluster's members.
  *
  * Each user is counted exactly once.
+ *
+ * This is the single-level case of the nested rule in `clusterTree.ts`
+ * (`computeEffectiveTreeVote`): it builds a one-level tree and delegates, so
+ * there is no second copy of the logic. Use the tree version when the
+ * cluster's members can themselves be clusters (themes).
  */
 export function computeEffectiveClusterVote(
 	clusterStatementId: string,
@@ -19,18 +25,15 @@ export function computeEffectiveClusterVote(
 ): number | null {
 	if (userEvaluations.length === 0) return null;
 
-	const direct = userEvaluations.find((e) => e.statementId === clusterStatementId);
-	if (direct) return direct.evaluation;
-
 	const absorbedSet = new Set(absorbedClusterIds);
-	const absorbedValues = userEvaluations
-		.filter((e) => absorbedSet.has(e.statementId))
-		.map((e) => e.evaluation);
-	if (absorbedValues.length > 0) return average(absorbedValues);
+	const byStatement = new Map<string, Evaluation>();
+	for (const e of userEvaluations) byStatement.set(e.statementId, e);
+	const memberIds = [...byStatement.keys()].filter(
+		(id) => id !== clusterStatementId && !absorbedSet.has(id),
+	);
 
-	return average(userEvaluations.map((e) => e.evaluation));
-}
-
-function average(values: number[]): number {
-	return values.reduce((a, b) => a + b, 0) / values.length;
+	return computeEffectiveTreeVote(
+		flatClusterTree(clusterStatementId, absorbedClusterIds, memberIds),
+		byStatement,
+	);
 }

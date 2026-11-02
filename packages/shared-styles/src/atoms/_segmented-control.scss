@@ -38,8 +38,23 @@
 
     &--active {
       background: var(--btn-primary);
-      color: #fff;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+      color: var(--btn-primary-text);
+      box-shadow: var(--elevation-1);
+    }
+  }
+
+  // Two-segment choice that fills its row (InheritanceSwitch). Labels may
+  // wrap to a second line instead of scrolling, so both stay readable at
+  // 360 px in every language.
+  &--stretch {
+    display: flex;
+    inline-size: 100%;
+
+    .segmented-control__segment {
+      flex: 1 1 0;
+      min-inline-size: 0;
+      white-space: normal;
+      text-align: center;
     }
   }
 
@@ -62,6 +77,10 @@
 
     .segmented-control__segment {
       padding: 0.5rem 0.625rem;
+    }
+
+    &.segmented-control--stretch {
+      overflow-x: visible;
     }
   }
 

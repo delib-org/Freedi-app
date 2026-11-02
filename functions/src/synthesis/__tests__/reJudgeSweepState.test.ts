@@ -84,6 +84,10 @@ const fileUnthemedAtoms = jest.fn(async () => ({
 	skipped: 0,
 	errors: 0,
 }));
+const hideEmptyThemesSafely = jest.fn(async () => 0);
+jest.mock('../pipeline/hideEmptyThemes', () => ({
+	hideEmptyThemesSafely: (...args: unknown[]) => hideEmptyThemesSafely(...(args as [])),
+}));
 jest.mock('../pipeline/fileUnthemed', () => ({
 	fileUnthemedAtoms: (...args: unknown[]) => fileUnthemedAtoms(...(args as [])),
 }));
@@ -226,6 +230,15 @@ describe('reJudgeProcessParent sweep-state gate', () => {
 		});
 		expect(first.skipped).toBe(false);
 		expect(consolidateThemes).toHaveBeenCalledTimes(1);
+		expect(hideEmptyThemesSafely).toHaveBeenCalledWith(
+			expect.anything(),
+			PARENT_ID,
+			'synthesis.reJudge.hideEmptyThemes',
+		);
+		// Leftover empty themes are hidden before filing runs.
+		expect(hideEmptyThemesSafely.mock.invocationCallOrder[0]).toBeLessThan(
+			fileUnthemedAtoms.mock.invocationCallOrder[0],
+		);
 
 		jest.clearAllMocks();
 		const second = await reJudgeProcessParent(PARENT_ID, synths, {
@@ -237,6 +250,7 @@ describe('reJudgeProcessParent sweep-state gate', () => {
 		expect(second.merges).toBe(0);
 		expect(consolidateThemes).not.toHaveBeenCalled();
 		expect(splitOversizedThemes).not.toHaveBeenCalled();
+		expect(hideEmptyThemesSafely).not.toHaveBeenCalled();
 		expect(getBatchEmbeddings).not.toHaveBeenCalled();
 	});
 

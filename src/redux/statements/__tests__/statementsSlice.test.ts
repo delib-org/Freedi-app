@@ -7,6 +7,7 @@ import {
 	StatementSubscription,
 	StatementType,
 	Role,
+	Access,
 	ResultsBy,
 	CutoffBy,
 } from '@freedi/shared-types';
@@ -15,6 +16,7 @@ import {
 	setStatement,
 	setStatements,
 	deleteStatement,
+	clearStatementFields,
 	setStatementSubscription,
 	setScreen,
 	resetStatements,
@@ -177,6 +179,38 @@ describe('statementsSlice', () => {
 				);
 
 				expect(newState.statements).toHaveLength(1);
+			});
+		});
+
+		describe('clearStatementFields', () => {
+			it('removes the named fields so a later merge cannot bring them back', () => {
+				const withMembership = {
+					...mockStatement,
+					membership: { access: Access.moderated },
+				} as Statement;
+				const cleared = statementsSlice.reducer(
+					{ ...initialState, statements: [withMembership] },
+					clearStatementFields({ statementId: mockStatement.statementId, fields: ['membership'] }),
+				);
+				const merged = statementsSlice.reducer(
+					cleared,
+					setStatement({ ...mockStatement, lastUpdate: 999 } as Statement),
+				);
+
+				expect(cleared.statements[0].membership).toBeUndefined();
+				expect('membership' in cleared.statements[0]).toBe(false);
+				expect(merged.statements[0].lastUpdate).toBe(999);
+				expect(merged.statements[0].membership).toBeUndefined();
+			});
+
+			it('leaves state untouched when the statement is not loaded', () => {
+				const state = { ...initialState, statements: [mockStatement] };
+				const next = statementsSlice.reducer(
+					state,
+					clearStatementFields({ statementId: 'missing', fields: ['membership'] }),
+				);
+
+				expect(next.statements).toEqual([mockStatement]);
 			});
 		});
 

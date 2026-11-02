@@ -273,6 +273,9 @@ export async function mergeStatements(request: Request, response: Response): Pro
 					statementId: targetStatementId,
 					parentId: questionId,
 					evaluatorId: userId,
+					// onCreateEvaluation reads evaluator.uid and throws without it, which
+					// leaves the vote uncounted. Same minimal shape the MC client writes.
+					evaluator: { uid: userId },
 					evaluation: 1, // +1 for agreement
 					createdAt: now,
 					lastUpdate: now,

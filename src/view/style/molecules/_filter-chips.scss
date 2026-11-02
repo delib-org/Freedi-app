@@ -1,0 +1,34 @@
+// Filter chips Molecule — BEM
+// A single-select group of Chip atoms that filters a list (Members: All ·
+// Hosts · Members · Waiting · Blocked). Spec: docs/ux/main-people-settings-design.md §3.6.
+//
+// DOM:
+// <div class="filter-chips" role="group" aria-label="Filter members">
+//   <button class="chip chip--interactive [chip--selected]" aria-pressed>…</button>…
+// </div>
+@use '../mixins' as *;
+
+.filter-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-xs);
+	// Room for the chip's 44 px hit area (::after, inset -6px) so a
+	// scrolling row does not clip it.
+	padding-block: var(--space-2xs);
+
+	@include mobile {
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		scrollbar-width: none;
+		margin-inline: calc(-1 * var(--space-sm));
+		padding-inline: var(--space-sm);
+
+		&::-webkit-scrollbar {
+			display: none;
+		}
+
+		.chip {
+			flex-shrink: 0;
+		}
+	}
+}

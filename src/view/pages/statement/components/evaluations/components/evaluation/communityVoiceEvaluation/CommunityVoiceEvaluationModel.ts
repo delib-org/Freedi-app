@@ -11,12 +11,15 @@ export interface CommunityVoiceOption {
 	colorSelected: string;
 	alt: string;
 	labelKey: string;
+	/** Answer-card fill: the agree hue, stronger the more it echoes. */
+	cardColor: string;
 }
 
 export const communityVoiceOptions: CommunityVoiceOption[] = [
 	{
 		id: 'cv-4',
 		evaluation: 1,
+		cardColor: 'color-mix(in srgb, var(--agree3) 100%, var(--bg-sunken))',
 		svg: communityVoice4,
 		color: 'rgba(91, 138, 154, 0.18)',
 		colorSelected: 'rgba(91, 138, 154, 0.9)',
@@ -26,6 +29,7 @@ export const communityVoiceOptions: CommunityVoiceOption[] = [
 	{
 		id: 'cv-3',
 		evaluation: 0.75,
+		cardColor: 'color-mix(in srgb, var(--agree3) 80%, var(--bg-sunken))',
 		svg: communityVoice3,
 		color: 'rgba(91, 138, 154, 0.18)',
 		colorSelected: 'rgba(91, 138, 154, 0.7)',
@@ -35,6 +39,7 @@ export const communityVoiceOptions: CommunityVoiceOption[] = [
 	{
 		id: 'cv-2',
 		evaluation: 0.5,
+		cardColor: 'color-mix(in srgb, var(--agree3) 62%, var(--bg-sunken))',
 		svg: communityVoice2,
 		color: 'rgba(91, 138, 154, 0.18)',
 		colorSelected: 'rgba(91, 138, 154, 0.55)',
@@ -44,6 +49,7 @@ export const communityVoiceOptions: CommunityVoiceOption[] = [
 	{
 		id: 'cv-1',
 		evaluation: 0.25,
+		cardColor: 'color-mix(in srgb, var(--agree3) 45%, var(--bg-sunken))',
 		svg: communityVoice1,
 		color: 'rgba(91, 138, 154, 0.18)',
 		colorSelected: 'rgba(91, 138, 154, 0.4)',

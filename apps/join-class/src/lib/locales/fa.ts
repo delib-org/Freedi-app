@@ -553,7 +553,7 @@ const fa: Record<string, string> = {
 	'opening.name_save': 'ذخیره',
 	'opening.name_saving_short': 'در حال ذخیره…',
 	'classPlan.counts': 'بازی‌ها: {{games}} · درس‌ها: {{lessons}}',
-	'classPlan.back': 'طرح درس‌های من',
+	'classPlan.parent': 'طرح درس',
 	'classPlan.rename': 'تغییر نام',
 	'classPlan.list_title': 'طرح درس‌ها',
 	'classPlan.filter_all': 'همه کلاس‌ها',
@@ -573,6 +573,14 @@ const fa: Record<string, string> = {
 		'هنوز کلاسی به شما اختصاص داده نشده است. درس به نام خودتان ذخیره می‌شود.',
 	'teacher.lesson.row': '{{class}} · {{date}}',
 	'teacher.lesson.busy': 'در حال آماده‌سازی درس...',
+	'teacher.lesson.students_label': 'چند دانش‌آموز در کلاس هستند؟',
+	'teacher.lesson.students_hint':
+		'همهٔ کلاس را بشمارید، حتی غایبان امروز. اگر خالی بگذارید، {{count}} حساب می‌کنیم.',
+	'console.class_size.save': 'ذخیره',
+	'console.class_size.saved': 'ذخیره شد. امتیازها دوباره محاسبه شدند.',
+	'console.class_size.save_failed': 'عدد ذخیره نشد. دوباره تلاش کنید.',
+	'console.class_size.recalc_failed':
+		'عدد ذخیره شد، اما امتیازها دوباره محاسبه نشدند. دوباره تلاش کنید.',
 	'plan.lesson_only': 'تغییرات اینجا فقط برای همین درس است',
 	'plan.lesson_from': 'بازی: «{{game}}» · کلاس: {{class}}',
 	'teacher.lesson.not_approved':

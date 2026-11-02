@@ -73,3 +73,48 @@ describe('GroupedSuggestionCard (synthesis)', () => {
 		expect(screen.getByText('evaluators', { exact: false })).toBeTruthy();
 	});
 });
+
+describe('GroupedSuggestionCard (theme)', () => {
+	it('renders no evaluation control for a theme', () => {
+		const theme = {
+			...SYNTHESIS,
+			statementId: 'theme1',
+			isCluster: true,
+			derivedByPipeline: 'topic-cluster',
+		} as unknown as Statement;
+		render(
+			<MemoryRouter>
+				<GroupedSuggestionCard
+					cluster={theme}
+					mode="both"
+					allowDrillToOriginals
+					pipeline="topic"
+					evaluationSlot={<div data-testid="evaluation-control" />}
+				/>
+			</MemoryRouter>,
+		);
+
+		expect(screen.queryByTestId('evaluation-control')).toBeNull();
+	});
+
+	it('keeps the evaluation control for a merged answer (cluster without a pipeline)', () => {
+		const merged = {
+			...SYNTHESIS,
+			statementId: 'merged1',
+			isCluster: true,
+			derivedByPipeline: undefined,
+		} as unknown as Statement;
+		render(
+			<MemoryRouter>
+				<GroupedSuggestionCard
+					cluster={merged}
+					mode="both"
+					allowDrillToOriginals
+					evaluationSlot={<div data-testid="evaluation-control" />}
+				/>
+			</MemoryRouter>,
+		);
+
+		expect(screen.getByTestId('evaluation-control')).toBeTruthy();
+	});
+});

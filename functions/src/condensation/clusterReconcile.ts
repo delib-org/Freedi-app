@@ -2,11 +2,13 @@ import type { Firestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Collections, StatementType, type Statement } from '@freedi/shared-types';
 import {
-	clusterVoteSourceIds,
 	computeClusterEvaluationFromRawEvals,
 	fetchEvaluationsForIds,
 	recomputeClusterEvaluation,
+	resolveClusterPopulation,
 } from './aggregation';
+import { collectTreeIds } from './clusterTree';
+import { loadClusterTree } from './clusterTreeLoader';
 import { logError } from '../utils/errorHandling';
 
 /**
@@ -121,10 +123,16 @@ function nearlyEqual(a: number | undefined, b: number): boolean {
 
 /** True when the stored score differs from what the rule gives today. */
 async function hasDrifted(cluster: Statement): Promise<boolean> {
-	const evals = await fetchEvaluationsForIds(clusterVoteSourceIds(cluster.statementId, cluster));
+	// Same member tree as recomputeClusterEvaluation, or a theme with nested
+	// syntheses would look drifted on every pass.
+	const clusterTree = await loadClusterTree(cluster.statementId, cluster);
+	const evals = await fetchEvaluationsForIds(collectTreeIds(clusterTree));
+	// Same N as recomputeClusterEvaluation, or every cluster of a question with
+	// a declared N would look drifted on every pass.
+	const population = await resolveClusterPopulation(cluster);
 	const { evaluation } = computeClusterEvaluationFromRawEvals(evals, {
-		clusterStatementId: cluster.statementId,
-		absorbedClusterIds: cluster.absorbedClusterIds,
+		...population,
+		clusterTree,
 	});
 	const stored = cluster.evaluation;
 

@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { getFirestore } from 'firebase-admin/firestore';
 import { HttpsError } from 'firebase-functions/v2/https';
 import {
 	getRandomUID,
@@ -11,6 +12,7 @@ import {
 } from '@freedi/shared-types';
 import { logError, ValidationError } from '../../utils/errorHandling';
 import { assertSynthesisAdmin } from '../admin/assertSynthesisAdmin';
+import { hideEmptyThemesSafely } from '../pipeline/hideEmptyThemes';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { applyRebuild } from './applyRebuild';
 import { assignAtoms } from './assignAtoms';
@@ -185,6 +187,9 @@ export async function handleRebuildThemes(
 	}
 
 	try {
+		// Leftover empty themes are hidden first; a failure here never blocks the rebuild.
+		await hideEmptyThemesSafely(getFirestore(), request.questionId, `${OPERATION}.hideEmptyThemes`);
+
 		return request.mode === 'preview'
 			? await runPreview(question, uid)
 			: await runApply(question, request.runId ?? '');

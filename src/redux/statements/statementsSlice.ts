@@ -109,6 +109,11 @@ function protectedTreeTopIds(state: StatementsState): Set<string> {
 	return new Set(Object.values(state.fullyLoadedScopes).map((scope) => scope.treeTopId));
 }
 
+/** Fields a statement may lack — the only ones `clearStatementFields` can drop. */
+export type OptionalStatementField = {
+	[K in keyof Statement]-?: undefined extends Statement[K] ? K : never;
+}[keyof Statement];
+
 export const statementsSlice = createSlice({
 	name: 'statements',
 	initialState,
@@ -230,6 +235,22 @@ export const statementsSlice = createSlice({
 					statementId: action.payload,
 				});
 			}
+		},
+		/**
+		 * Drops top-level fields from one statement. A Firestore `deleteField()`
+		 * never reaches Redux through `setStatement` (it merges keys), so the
+		 * writer clears the field here too.
+		 */
+		clearStatementFields: (
+			state,
+			action: PayloadAction<{ statementId: string; fields: OptionalStatementField[] }>,
+		) => {
+			const { statementId, fields } = action.payload;
+			const statement = state.statements.find((s) => s.statementId === statementId);
+			if (!statement) return;
+			fields.forEach((field) => {
+				delete statement[field];
+			});
 		},
 		setStatementSubscription: (state, action: PayloadAction<StatementSubscription>) => {
 			try {
@@ -463,6 +484,7 @@ export const {
 	setStatementSubscription,
 	setStatementsSubscription,
 	deleteStatement,
+	clearStatementFields,
 	updateStatementTop,
 	deleteSubscribedStatement,
 	setStatementOrder,

@@ -17,6 +17,9 @@ jest.mock('@freedi/shared-types', () => ({
 		comment: 'comment',
 		paragraph: 'paragraph',
 	},
+	// Pure helper that now lives in shared-types; load it directly (the index pulls in valibot).
+	computeOtherIdeas: jest.requireActual('../../../../packages/shared-types/src/utils/otherIdeas')
+		.computeOtherIdeas,
 }));
 
 import {

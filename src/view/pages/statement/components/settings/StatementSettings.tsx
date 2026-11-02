@@ -13,7 +13,6 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 // Custom components
 import Loader from '@/view/components/loaders/Loader';
 import { uxAnalytics } from '@/services/analytics';
-import MembersManagement from './components/membership/MembersManagement';
 import BulkAddOptions from './components/BulkAddOptions/BulkAddOptions';
 
 const StatementSettings: FC = () => {
@@ -41,7 +40,6 @@ const StatementSettings: FC = () => {
 						parentStatement={parentStatement}
 						setStatementToEdit={setStatementToEdit}
 					/>
-					<MembersManagement statement={statementToEdit} />
 					<BulkAddOptions statement={statementToEdit} />
 				</>
 			)}

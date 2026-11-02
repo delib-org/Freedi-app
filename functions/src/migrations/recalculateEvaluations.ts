@@ -1,12 +1,9 @@
 import { db } from '../index';
-import {
-	Collections,
-	Statement,
-	Evaluation,
-	StatementType,
-	calcAgreement,
-} from '@freedi/shared-types';
+import { Collections, Statement, Evaluation, StatementType } from '@freedi/shared-types';
 import { logger } from 'firebase-functions/v1';
+import { FieldValue } from 'firebase-admin/firestore';
+import { recomputeOptionCounters } from '../evaluation/recomputeOptionCounters';
+import { resolveQuestionPopulation } from '../evaluation/resolveQuestionPopulation';
 
 /**
  * Recalculate all evaluation metrics for options under a parent statement
@@ -35,6 +32,9 @@ export async function recalculateOptionsEvaluations(parentId: string): Promise<{
 
 		logger.info(`Found ${optionsSnapshot.size} options to recalculate`);
 
+		// One explicit N for the whole question (undefined = no correction).
+		const populationSize = await resolveQuestionPopulation(db, parentId);
+
 		for (const doc of optionsSnapshot.docs) {
 			results.processed++;
 			const statement = doc.data() as Statement;
@@ -46,45 +46,25 @@ export async function recalculateOptionsEvaluations(parentId: string): Promise<{
 					.where('statementId', '==', statement.statementId)
 					.get();
 
-				// Calculate metrics from scratch
-				let sumEvaluations = 0;
-				let sumSquaredEvaluations = 0;
-				let sumPro = 0;
-				let sumCon = 0;
-				let numberOfEvaluators = 0;
-
-				evaluationsSnapshot.docs.forEach((evalDoc) => {
-					const evaluation = evalDoc.data() as Evaluation;
-					const value = evaluation.evaluation || 0;
-
-					if (value !== 0) {
-						numberOfEvaluators++;
-						sumEvaluations += value;
-						sumSquaredEvaluations += value * value;
-
-						if (value > 0) {
-							sumPro += value;
-						} else {
-							sumCon += Math.abs(value);
-						}
-					}
-				});
-
-				// Calculate averageEvaluation
-				const averageEvaluation = numberOfEvaluators > 0 ? sumEvaluations / numberOfEvaluators : 0;
-
-				// Calculate consensus using Mean - SEM with floor
-				const consensus = calcAgreement(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
+				// Every evaluation document is a participant, zeros included — the
+				// same rule as the live trigger (see recomputeOptionCounters).
+				const evals = evaluationsSnapshot.docs.map((evalDoc) => evalDoc.data() as Evaluation);
+				const counters = recomputeOptionCounters(evals, populationSize);
+				const { numberOfEvaluators, averageEvaluation, agreement: consensus } = counters;
 
 				// Update the statement
 				await doc.ref.update({
-					'evaluation.sumEvaluations': sumEvaluations,
-					'evaluation.sumSquaredEvaluations': sumSquaredEvaluations,
-					'evaluation.sumPro': sumPro,
-					'evaluation.sumCon': sumCon,
+					'evaluation.sumEvaluations': counters.sumEvaluations,
+					'evaluation.sumSquaredEvaluations': counters.sumSquaredEvaluations,
+					'evaluation.sumPro': counters.sumPro,
+					'evaluation.sumCon': counters.sumCon,
 					'evaluation.numberOfEvaluators': numberOfEvaluators,
+					'evaluation.numberOfProEvaluators': counters.numberOfProEvaluators,
+					'evaluation.numberOfConEvaluators': counters.numberOfConEvaluators,
 					'evaluation.averageEvaluation': averageEvaluation,
 					'evaluation.agreement': consensus,
+					'evaluation.agreementIndex': counters.agreementIndex,
+					'evaluation.stakeholderCount': counters.stakeholderCount ?? FieldValue.delete(),
 					consensus: consensus,
 					totalEvaluators: numberOfEvaluators,
 					lastUpdate: Date.now(),
@@ -115,7 +95,5 @@ export async function recalculateOptionsEvaluations(parentId: string): Promise<{
 	}
 }
 
-// The local calcAgreement/calcStandardError were a superseded formula AND had
-// dropped the `Math.min(penalty, mean + 1)` bound the others kept, so this
-// admin endpoint could write consensus values below -1. Both replaced by the
-// canonical calcAgreement, which is bounded by construction.
+// Counters and agreement come from recomputeOptionCounters, which calls the canonical
+// calcAgreement (bounded by construction) with the question's explicit N.

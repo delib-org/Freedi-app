@@ -25,6 +25,8 @@ export const FIREBASE = {
 	QUERY_LIMIT_DEFAULT: 50,
 	QUERY_LIMIT_MAX: 100,
 	FIRST_LOAD_LIMIT: 10,
+	/** Most values one `in` filter may hold. */
+	IN_QUERY_LIMIT: 30,
 } as const;
 
 /**
@@ -66,6 +68,14 @@ export const UI = {
 	// discussion stays open. Each write to a subscription doc also fires
 	// three Cloud Functions triggers.
 	READ_MARK_THROTTLE_MS: 30 * 1000,
+	// How long a toast carrying Undo stays (UX main-people-settings §4.8);
+	// paused while hovered or focused.
+	UNDO_TOAST_DURATION: 6 * TIME.SECOND,
+	// How long the short "Undone" confirmation stays.
+	UNDONE_TOAST_DURATION: 2 * TIME.SECOND,
+	// People › Members: rows shown first, and how many "Show more" adds (UX §4.4).
+	MEMBERS_INITIAL_COUNT: 10,
+	MEMBERS_LOAD_MORE_COUNT: 20,
 } as const;
 
 /**
@@ -86,6 +96,8 @@ export const JOINING = {
 	DEFAULT_MIN_MEMBERS: 3,
 	DEFAULT_MAX_MEMBERS: 10,
 	MIN_ROOM_SIZE: 2,
+	/** Room size People > Joining answers & rooms starts with (a deliberation-sized group). */
+	DEFAULT_ROOM_SIZE: 7,
 } as const;
 
 /**

@@ -23,7 +23,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import EditableStatement from '@/view/components/edit/EditableStatement';
 import { hasParagraphsContent } from '@/utils/paragraphUtils';
 import styles from './SuggestionCard.module.scss';
-import { StatementType, Statement } from '@freedi/shared-types';
+import { StatementType, Statement, isTheme } from '@freedi/shared-types';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import JoinButtons from '@/view/pages/statement/components/joining/JoinButtons';
 import Joined from '@/view/components/joined/Joined';
@@ -266,15 +266,9 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	// A merged answer represents several originals (manual integration or
 	// auto-merge both write isCluster + integratedOptions).
 	const isMerged = statement.isCluster === true && (statement.integratedOptions?.length ?? 0) > 0;
-	const numberOfEvaluators = statement.evaluation?.numberOfEvaluators ?? 0;
 	// Options are shown without an author name by design (getCreatorDisplayName
-	// returns '' for them), so the byline is usually just the rater count.
-	const bylineText = [
-		getCreatorDisplayName(statement),
-		t('{n} rated').replace('{n}', String(numberOfEvaluators)),
-	]
-		.filter(Boolean)
-		.join(' · ');
+	// returns '' for them); the rater count lives in the results chips.
+	const bylineText = getCreatorDisplayName(statement);
 
 	const cardClassName = clsx(
 		styles['statement-evaluation-card'],
@@ -294,10 +288,8 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	const youTubeVideo = extractYouTubeVideo(statement.statement);
 	const showBadgeRow = statement.hide || showVotingWinner;
 	const showJoinRow = Boolean(enableJoining);
-	const showMetaRow =
-		(memberOfClusters && memberOfClusters.length > 0) ||
-		(showBadges ?? false) ||
-		(!image && isAdmin);
+	const showMetaRow = (memberOfClusters && memberOfClusters.length > 0) || (showBadges ?? false);
+	const showAddImage = !image && isAdmin;
 
 	return (
 		<div
@@ -479,16 +471,6 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 								)}
 							</div>
 						)}
-						{/* Admin-only, rare: kept off the footer so it never competes
-						    with the evaluation control for the primary action slot. */}
-						{!image && isAdmin && (
-							<button
-								onClick={() => setShowImageUpload(true)}
-								className="btn btn--small btn--secondary"
-							>
-								{t('Add Image')}
-							</button>
-						)}
 					</div>
 				)}
 
@@ -519,20 +501,35 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 					</div>
 				)}
 
-				{/* Byline: who · how many rated, and the answer's שיחה pill. */}
-				<div className={styles.byline}>
-					<span className={styles.bylineText}>{bylineText}</span>
-					{showChat && (
-						<div className={styles.chat}>
-							<StatementChatMore statement={statement} variant="pill" opensSheet />
-						</div>
-					)}
+				{bylineText && <span className={styles.bylineText}>{bylineText}</span>}
+
+				{/* Face circles, then (after you rate) the results chips. */}
+				<div className={styles['evolution-element']}>
+					{!isTheme(statement) && <Evaluation statement={statement} variant="card" />}
 				</div>
 
-				{/* Face scale, then (after you rate) consensus bar + results strip. */}
-				<div className={styles['evolution-element']}>
-					<Evaluation statement={statement} variant="card" />
-				</div>
+				{/* Bottom row like Join: action pills at the start, the chat as a
+				    small round button at the end. */}
+				{(showAddImage || showChat) && (
+					<div className={styles.actionRow}>
+						<div className={styles.actions}>
+							{showAddImage && (
+								<button
+									type="button"
+									onClick={() => setShowImageUpload(true)}
+									className={styles.pillButton}
+								>
+									{t('Add Image')}
+								</button>
+							)}
+						</div>
+						{showChat && (
+							<div className={styles.chat}>
+								<StatementChatMore statement={statement} variant="round" opensSheet />
+							</div>
+						)}
+					</div>
+				)}
 				{shouldShowAddSubQuestionModal && (
 					<CreateStatementModal
 						allowedTypes={[StatementType.question]}

@@ -1,0 +1,50 @@
+// Inheritance switch Molecule — BEM
+// The one inheritance idiom of People (IA defect 6): a two-segment choice
+// "Same as the group | Change for this question", one caption with the
+// group's value, then the control it governs (read-only while inherited).
+// React wrapper: atomic/molecules/InheritanceSwitch.
+// Spec: docs/ux/main-people-settings-design.md §3.4.
+//
+// DOM:
+// <div class="inheritance-switch [--inherited] [--saving]">
+//   <div class="segmented-control segmented-control--stretch inheritance-switch__choice" role="group">
+//     <button class="segmented-control__segment [--active]" aria-pressed/> × 2
+//   </div>
+//   <p class="inheritance-switch__caption">Group is: <span class="inheritance-switch__value"/></p>
+//   <div class="inheritance-switch__body">…the governed control…</div>
+// </div>
+@use '../mixins' as *;
+
+.inheritance-switch {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	padding: var(--space-xs);
+	border-radius: var(--radius-sm);
+	background: var(--surface-background);
+	border-inline-start: 3px solid var(--group);
+
+	&__caption {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+		overflow-wrap: anywhere;
+	}
+
+	&__value {
+		font-weight: var(--font-weight-medium);
+		color: var(--text-body);
+		unicode-bidi: isolate;
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		min-inline-size: 0;
+	}
+
+	&--saving &__choice {
+		pointer-events: none;
+	}
+}

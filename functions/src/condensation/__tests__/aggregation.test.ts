@@ -1,5 +1,5 @@
 import { computeClusterEvaluationFromRawEvals } from '../aggregation';
-import type { Evaluation } from '@freedi/shared-types';
+import { calcAgreement, calcAgreementIndex, type Evaluation } from '@freedi/shared-types';
 
 /**
  * `computeClusterEvaluationFromRawEvals` is the pure core of cluster
@@ -217,5 +217,51 @@ describe('computeClusterEvaluationFromRawEvals', () => {
 			expect(perUserAverages.get('B')).toBeCloseTo(0.5); // own direct beats absorbed direct
 			expect(perUserAverages.get('C')).toBeCloseTo(0.2);
 		});
+	});
+});
+
+describe('computeClusterEvaluationFromRawEvals — explicit N', () => {
+	const evals: Evaluation[] = [
+		evalRec({ evaluatorId: 'A', statementId: 'X', value: 1 }),
+		evalRec({ evaluatorId: 'B', statementId: 'X', value: 0.5 }),
+		evalRec({ evaluatorId: 'C', statementId: 'Y', value: -0.5 }),
+		evalRec({ evaluatorId: 'D', statementId: 'Y', value: 0 }),
+	];
+	const sum = 1;
+	const sumSq = 1 + 0.25 + 0.25 + 0;
+	const n = 4;
+
+	it('uses the same N-corrected formula as a plain option and sets stakeholderCount', () => {
+		const N = 40;
+		const { evaluation } = computeClusterEvaluationFromRawEvals(evals, { targetPopulation: N });
+
+		expect(evaluation.numberOfEvaluators).toBe(n);
+		expect(evaluation.sumEvaluations).toBeCloseTo(sum);
+		expect(evaluation.agreement).toBe(calcAgreement(sum, sumSq, n, N));
+		expect(evaluation.agreementIndex).toBe(calcAgreementIndex(sum, sumSq, n, N));
+		expect(evaluation.stakeholderCount).toBe(N);
+		// the correction must actually change the result, or the test proves nothing
+		expect(evaluation.agreement).not.toBe(calcAgreement(sum, sumSq, n));
+	});
+
+	it('floors stakeholderCount at the number of evaluators', () => {
+		const { evaluation } = computeClusterEvaluationFromRawEvals(evals, { targetPopulation: 2 });
+
+		expect(evaluation.stakeholderCount).toBe(n);
+	});
+
+	it('without N uses the uncorrected 3-arg formula and omits stakeholderCount', () => {
+		const { evaluation } = computeClusterEvaluationFromRawEvals(evals);
+
+		expect(evaluation.agreement).toBe(calcAgreement(sum, sumSq, n));
+		expect(evaluation.agreementIndex).toBe(calcAgreementIndex(sum, sumSq, n));
+		expect('stakeholderCount' in evaluation).toBe(false);
+	});
+
+	it('treats a non-positive N as absent', () => {
+		const { evaluation } = computeClusterEvaluationFromRawEvals(evals, { targetPopulation: 0 });
+
+		expect(evaluation.agreement).toBe(calcAgreement(sum, sumSq, n));
+		expect('stakeholderCount' in evaluation).toBe(false);
 	});
 });

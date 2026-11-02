@@ -138,7 +138,12 @@ const MemberReviewList: FC<Props> = ({
 			{selectedMembers.size > 0 && (
 				<div className={styles.bulkActions}>
 					<div className={styles.selectionInfo}>
-						<input type="checkbox" checked={selectAll} onChange={handleSelectAll} />
+						<input
+							type="checkbox"
+							aria-label={t('people.selectAll')}
+							checked={selectAll}
+							onChange={handleSelectAll}
+						/>
 						<span>
 							{selectedMembers.size} {t('selected')}
 						</span>

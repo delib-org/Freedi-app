@@ -322,3 +322,9 @@ export const ADD_OPTION_CODES = {
   /** Participants may not add options to this question (admin options only) */
   DISABLED: 'ADD_DISABLED',
 } as const;
+
+/**
+ * recalculateIndices may run up to 300 s on the server; the Firebase SDK gives up
+ * after 70 s by default and would show a false failure for a large question.
+ */
+export const RECALCULATE_CALL_TIMEOUT_MS = 310_000;

@@ -15,12 +15,18 @@ import Snackbar from '@/view/components/snackbar/Snackbar';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
 import { logError } from '@/utils/errorHandling';
 import { getPseudoName } from '@/utils/temporalNameGenerator';
+import { EvaluationCircle, EvaluationCircleRow } from '../shared/EvaluationCircle';
+import { enhancedEvaluationsThumbs } from '../enhancedEvaluation/EnhancedEvaluationModel';
+import type { EvaluationVariant } from '../Evaluation';
+import LikeChips from './LikeChips';
 
 interface Props {
 	statement: Statement;
 	parentStatement?: Statement;
 	shouldDisplayScore?: boolean;
 	enableEvaluation?: boolean;
+	/** 'card' = Join's look: one filled face, results as chips. */
+	variant?: EvaluationVariant;
 }
 
 const SingleLikeEvaluation: FC<Props> = ({
@@ -28,6 +34,7 @@ const SingleLikeEvaluation: FC<Props> = ({
 	parentStatement,
 	shouldDisplayScore = true,
 	enableEvaluation = true,
+	variant = 'default',
 }) => {
 	const { t } = useTranslation();
 
@@ -154,6 +161,79 @@ const SingleLikeEvaluation: FC<Props> = ({
 		</button>
 	);
 
+	const modals = (
+		<>
+			{showVoteModal && parentStatement && (
+				<EvaluationManagementModal
+					parentStatement={parentStatement}
+					maxVotes={maxVotes || 0}
+					onClose={() => {
+						setShowVoteModal(false);
+					}}
+					onVoteRemoved={() => {
+						setShowVoteModal(false);
+						// Show snackbar after removing a vote
+						setShowSnackbar(true);
+					}}
+				/>
+			)}
+			{hasVoteLimit && (
+				<Snackbar
+					message={`${userVoteCount}/${maxVotes} ${t('votes used')}`}
+					subMessage={
+						isAtVoteLimit
+							? t("You've reached the maximum of") + ` ${maxVotes} ${t('votes')}`
+							: undefined
+					}
+					isVisible={showSnackbar}
+					duration={5000}
+					onClose={() => setShowSnackbar(false)}
+					type={isAtVoteLimit ? 'warning' : 'info'}
+				/>
+			)}
+		</>
+	);
+
+	if (variant === 'card') {
+		const [strongLike] = enhancedEvaluationsThumbs;
+		const likeLabel = isLiked ? t('Unlike this suggestion') : t('Like this suggestion');
+		const circle = (
+			<EvaluationCircle
+				color={strongLike.colorSelected}
+				isActive={isLiked}
+				disabled={isProcessing || !enableEvaluation}
+				label={likeLabel}
+				disabledLabel={enableEvaluation ? likeLabel : t('Voting disabled - view only')}
+				onClick={handleLikeToggle}
+				testId="single-like-circle"
+			>
+				<img src={strongLike.svg} alt="" />
+			</EvaluationCircle>
+		);
+
+		return (
+			<div className={styles.cardEvaluation}>
+				<EvaluationCircleRow hasSelection={isLiked} label={t('Rating scale')}>
+					{enableEvaluation ? (
+						circle
+					) : (
+						<Tooltip content={t('Voting is currently disabled by the moderator')} position="top">
+							{circle}
+						</Tooltip>
+					)}
+				</EvaluationCircleRow>
+				{shouldDisplayScore && (
+					<LikeChips
+						likesCount={likesCount}
+						likePercentage={likePercentage}
+						showPercentage={totalEvaluators > 0}
+					/>
+				)}
+				{modals}
+			</div>
+		);
+	}
+
 	return (
 		<div className={styles.singleLikeEvaluation}>
 			{!enableEvaluation ? (
@@ -183,37 +263,7 @@ const SingleLikeEvaluation: FC<Props> = ({
 				</div>
 			)}
 
-			{/* Evaluation Management Modal */}
-			{showVoteModal && parentStatement && (
-				<EvaluationManagementModal
-					parentStatement={parentStatement}
-					maxVotes={maxVotes || 0}
-					onClose={() => {
-						setShowVoteModal(false);
-					}}
-					onVoteRemoved={() => {
-						setShowVoteModal(false);
-						// Show snackbar after removing a vote
-						setShowSnackbar(true);
-					}}
-				/>
-			)}
-
-			{/* Snackbar for vote count */}
-			{hasVoteLimit && (
-				<Snackbar
-					message={`${userVoteCount}/${maxVotes} ${t('votes used')}`}
-					subMessage={
-						isAtVoteLimit
-							? t("You've reached the maximum of") + ` ${maxVotes} ${t('votes')}`
-							: undefined
-					}
-					isVisible={showSnackbar}
-					duration={5000}
-					onClose={() => setShowSnackbar(false)}
-					type={isAtVoteLimit ? 'warning' : 'info'}
-				/>
-			)}
+			{modals}
 		</div>
 	);
 };

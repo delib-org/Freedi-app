@@ -18,6 +18,8 @@ export const PRIVACY_CONFIG = {
 export interface GroupEvaluationStats {
 	evaluatorCount: number;
 	sumEvaluations: number;
+	/** Σe², needed by the agreement formulas. */
+	sumSquaredEvaluations: number;
 	averageEvaluation: number;
 	proCount: number;
 	conCount: number;
@@ -41,6 +43,7 @@ export function calculateEvaluationStats(
 		return {
 			evaluatorCount: 0,
 			sumEvaluations: 0,
+			sumSquaredEvaluations: 0,
 			averageEvaluation: 0,
 			proCount: 0,
 			conCount: 0,
@@ -50,6 +53,7 @@ export function calculateEvaluationStats(
 	}
 
 	const sumEvaluations = evaluations.reduce((sum, val) => sum + val, 0);
+	const sumSquaredEvaluations = evaluations.reduce((sum, val) => sum + val * val, 0);
 	const averageEvaluation = sumEvaluations / evaluations.length;
 
 	let proCount = 0;
@@ -65,6 +69,7 @@ export function calculateEvaluationStats(
 	return {
 		evaluatorCount: evaluations.length,
 		sumEvaluations,
+		sumSquaredEvaluations,
 		averageEvaluation,
 		proCount,
 		conCount,
@@ -98,7 +103,8 @@ export function generatePrivacyNotice(k: number, suppressedCount: number): strin
 	return (
 		`This export uses k-anonymity (k=${k}) to protect user privacy. ` +
 		`Demographic breakdowns are only shown when ${k} or more users share the same demographic characteristic. ` +
-		`${suppressedCount} group(s) had their evaluation details withheld due to insufficient group size.`
+		`${suppressedCount} group(s) had their evaluation details withheld due to insufficient group size. ` +
+		'Anonymized individual evaluations are listed in random order, so no per-person sequence of votes survives.'
 	);
 }
 

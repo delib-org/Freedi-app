@@ -1,0 +1,66 @@
+// Members (#members) — layout only; rows, chips, badges and the empty state
+// come from the person-row, filter-chips, chip and empty-state blocks.
+@use '@/view/style/mixins' as *;
+
+// Search above the chips on phones; one row from 601 px (design §3.6).
+.toolbar {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+
+	@media (min-width: 601px) {
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: center;
+	}
+}
+
+.search {
+	flex: 1 1 16rem;
+}
+
+.list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.caption {
+	margin: 0;
+	font-size: var(--font-size-sm);
+	color: var(--text-meta);
+}
+
+.more {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2xs);
+}
+
+.sheetRole {
+	display: flex;
+	gap: var(--space-xs);
+	margin-block-end: var(--space-sm);
+
+	&:empty {
+		display: none;
+	}
+}
+
+.sheetActions {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+// Block is a danger action in an AA red: the global reject button's
+// --text-error is 3.5:1 on white, --error-text is 7.6:1 (axe: color-contrast).
+.dangerAction {
+	color: var(--error-text);
+	border-color: var(--error-text);
+
+	&:hover:not(:disabled) {
+		color: var(--error-text);
+		border-color: var(--error-text);
+	}
+}

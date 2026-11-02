@@ -4,47 +4,22 @@
  * Tests JSON/CSV export formatting, object flattening, and CSV escaping.
  */
 
-jest.mock('@freedi/shared-types', () => ({
-	StatementType: {
-		option: 'option',
-		question: 'question',
-		statement: 'statement',
-	},
-}));
-
-jest.mock('@/types/export', () => ({
-	extractExportableData: jest.fn((statement: Record<string, unknown>) => {
-		const {
-			statement: text,
-			statementId,
-			parentId,
-			topParentId,
-			createdAt,
-			lastUpdate,
-			consensus,
-			pro,
-			con,
-		} = statement;
-
-		return {
-			statement: text,
-			statementId,
-			parentId,
-			topParentId,
-			createdAt,
-			lastUpdate,
-			consensus,
-			pro,
-			con,
-		};
-	}),
-}));
-
 jest.mock('@/utils/errorHandling', () => ({
 	logError: jest.fn(),
 }));
 
-import { flattenObject, createJSONExport, createCSVExport } from '../exportUtils';
+import { toExportRows } from '@freedi/shared-types';
+import { flattenObject, createJSONExportFromRows, createCSVExportFromRows } from '../exportUtils';
+
+type RowsArgs = Parameters<typeof toExportRows>;
+
+/** Test helper: shape raw statements into export rows, then build the JSON. */
+const createJSONExport = (main: unknown, subs: unknown[]): string =>
+	createJSONExportFromRows(toExportRows(main as RowsArgs[0], subs as RowsArgs[1]));
+
+/** Test helper: shape raw statements into export rows, then build the CSV. */
+const createCSVExport = (main: unknown, subs: unknown[]): string =>
+	createCSVExportFromRows(toExportRows(main as RowsArgs[0], subs as RowsArgs[1]));
 
 interface MockStatement {
 	statement: string;
@@ -113,7 +88,7 @@ describe('exportUtils', () => {
 		});
 	});
 
-	describe('createJSONExport', () => {
+	describe('createJSONExportFromRows', () => {
 		const mainStatement: MockStatement = {
 			statement: 'Main question',
 			statementId: 'main-1',
@@ -141,45 +116,33 @@ describe('exportUtils', () => {
 		];
 
 		it('should return valid JSON string', () => {
-			const result = createJSONExport(
-				mainStatement as unknown as Parameters<typeof createJSONExport>[0],
-				subStatements as unknown as Parameters<typeof createJSONExport>[1],
-			);
+			const result = createJSONExport(mainStatement, subStatements);
 			const parsed = JSON.parse(result);
 			expect(parsed).toBeDefined();
 		});
 
 		it('should include _schema documentation', () => {
-			const result = createJSONExport(
-				mainStatement as unknown as Parameters<typeof createJSONExport>[0],
-				subStatements as unknown as Parameters<typeof createJSONExport>[1],
-			);
+			const result = createJSONExport(mainStatement, subStatements);
 			const parsed = JSON.parse(result);
 			expect(parsed._schema).toBeDefined();
 		});
 
 		it('should include exportMetadata with correct record count', () => {
-			const result = createJSONExport(
-				mainStatement as unknown as Parameters<typeof createJSONExport>[0],
-				subStatements as unknown as Parameters<typeof createJSONExport>[1],
-			);
+			const result = createJSONExport(mainStatement, subStatements);
 			const parsed = JSON.parse(result);
 			expect(parsed.exportMetadata.totalRecords).toBe(2);
 			expect(parsed.exportMetadata.exportFormat).toBe('json');
 		});
 
 		it('should include mainStatement and subStatements', () => {
-			const result = createJSONExport(
-				mainStatement as unknown as Parameters<typeof createJSONExport>[0],
-				subStatements as unknown as Parameters<typeof createJSONExport>[1],
-			);
+			const result = createJSONExport(mainStatement, subStatements);
 			const parsed = JSON.parse(result);
 			expect(parsed.mainStatement).toBeDefined();
 			expect(parsed.subStatements).toHaveLength(1);
 		});
 	});
 
-	describe('createCSVExport', () => {
+	describe('createCSVExportFromRows', () => {
 		const mainStatement: MockStatement = {
 			statement: 'Test question',
 			statementId: 'stmt-1',
@@ -193,18 +156,12 @@ describe('exportUtils', () => {
 		};
 
 		it('should include comment header starting with #', () => {
-			const result = createCSVExport(
-				mainStatement as unknown as Parameters<typeof createCSVExport>[0],
-				[],
-			);
+			const result = createCSVExport(mainStatement, []);
 			expect(result).toContain('# FREEDI DATA EXPORT');
 		});
 
 		it('should include CSV header row with column names', () => {
-			const result = createCSVExport(
-				mainStatement as unknown as Parameters<typeof createCSVExport>[0],
-				[],
-			);
+			const result = createCSVExport(mainStatement, []);
 			const lines = result.split('\n');
 			// Find the first non-comment line (header row)
 			const headerLine = lines.find((line) => !line.startsWith('#') && line.trim().length > 0);
@@ -217,10 +174,7 @@ describe('exportUtils', () => {
 				...mainStatement,
 				statement: 'Hello, world',
 			};
-			const result = createCSVExport(
-				stmtWithComma as unknown as Parameters<typeof createCSVExport>[0],
-				[],
-			);
+			const result = createCSVExport(stmtWithComma, []);
 			// Commas in values should be enclosed in quotes
 			expect(result).toContain('"Hello, world"');
 		});
@@ -230,10 +184,7 @@ describe('exportUtils', () => {
 				...mainStatement,
 				statement: 'He said "hello"',
 			};
-			const result = createCSVExport(
-				stmtWithQuotes as unknown as Parameters<typeof createCSVExport>[0],
-				[],
-			);
+			const result = createCSVExport(stmtWithQuotes, []);
 			// Quotes should be escaped as double quotes
 			expect(result).toContain('""hello""');
 		});
@@ -252,11 +203,10 @@ describe('exportUtils', () => {
 			idea(id, { isCluster: true, derivedByPipeline: 'topic-cluster', integratedOptions: members });
 		const synthesis = (id: string, members: string[]): Row =>
 			idea(id, { isCluster: true, derivedByPipeline: 'synthesis', integratedOptions: members });
-		type Args = Parameters<typeof createJSONExport>;
 		const themeIds = (subs: Row[]): Record<string, string> => {
-			const parsed = JSON.parse(
-				createJSONExport(question as unknown as Args[0], subs as unknown as Args[1]),
-			) as { subStatements: { statementId: string; themeId: string }[] };
+			const parsed = JSON.parse(createJSONExport(question, subs)) as {
+				subStatements: { statementId: string; themeId: string }[];
+			};
 
 			return Object.fromEntries(parsed.subStatements.map((s) => [s.statementId, s.themeId]));
 		};
@@ -283,14 +233,29 @@ describe('exportUtils', () => {
 		});
 
 		it('writes a themeId column into the CSV header and documents it', () => {
-			const csv = createCSVExport(
-				question as unknown as Args[0],
-				[theme('t', ['a']), idea('a')] as unknown as Args[1],
-			);
+			const csv = createCSVExport(question, [theme('t', ['a']), idea('a')]);
 			const header = csv.split('\n').find((line) => !line.startsWith('#') && line.length > 0);
 
 			expect(header?.split(',')).toContain('themeId');
 			expect(csv).toContain('# themeId (string)');
+		});
+	});
+
+	describe('server-built rows', () => {
+		it('marks the metadata as a server export that includes hidden rows', () => {
+			const row = { statementId: 'x', statement: 'x', parentId: 'p', isDerived: false };
+			const json = createJSONExportFromRows(
+				{ mainStatement: row as never, subStatements: [row as never] },
+				{ total: 1, hiddenCount: 0, skippedEmptyThemes: 3, exportedAt: 1700000000000 },
+			);
+			const meta = JSON.parse(json).exportMetadata;
+
+			expect(meta).toMatchObject({
+				source: 'server',
+				includesHidden: true,
+				skippedEmptyThemes: 3,
+				totalRecords: 2,
+			});
 		});
 	});
 });

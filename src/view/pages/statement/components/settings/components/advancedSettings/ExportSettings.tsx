@@ -4,7 +4,8 @@ import { Download, Users, FlaskConical, Sparkles } from 'lucide-react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { exportStatementData } from '@/utils/exportUtils';
+import { buildExportFile } from '@/utils/exportUtils';
+import { fetchFullExport } from '@/controllers/db/fullExport/fullExportController';
 import { exportPrivacyPreservingData } from '@/utils/privacyExportUtils';
 import { logError } from '@/utils/errorHandling';
 import {
@@ -45,6 +46,9 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 	const [isResearchExporting, setIsResearchExporting] = useState(false);
 	const [isQuestionResearchExporting, setIsQuestionResearchExporting] = useState(false);
 
+	const [fullExportError, setFullExportError] = useState<string | null>(null);
+	const [exportedCount, setExportedCount] = useState<number | null>(null);
+
 	const [isStrategicExporting, setIsStrategicExporting] = useState(false);
 	const [strategicExportError, setStrategicExportError] = useState<string | null>(null);
 
@@ -52,9 +56,23 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 
 	async function handleExport(format: ExportFormat) {
 		setIsExporting((prev) => ({ ...prev, [format]: true }));
+		setFullExportError(null);
+		setExportedCount(null);
 		try {
-			await exportStatementData(statement, subStatements, format);
+			// The server reads every child (hidden included); never the Redux list,
+			// which only holds what the admin's screens happened to load.
+			const {
+				mainStatement,
+				subStatements: rows,
+				meta,
+			} = await fetchFullExport({
+				statementId: statement.statementId,
+			});
+
+			buildExportFile({ mainStatement, subStatements: rows }, format, meta);
+			setExportedCount(meta.total);
 		} catch (error) {
+			setFullExportError(error instanceof Error ? error.message : t('Export failed'));
 			logError(error, {
 				operation: 'ExportSettings.handleExport',
 				statementId: statement.statementId,
@@ -174,8 +192,15 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 					{isExporting.csv ? t('Exporting...') : t('Export CSV')}
 				</button>
 			</div>
+			{fullExportError && (
+				<p className={styles.exportInfo} role="alert">
+					{fullExportError}
+				</p>
+			)}
 			<p className={styles.exportInfo}>
-				{t('Includes {{count}} sub-statements').replace('{{count}}', String(subStatements.length))}
+				{exportedCount === null
+					? t('Exports every sub-statement, hidden ones included')
+					: t('Exported {{count}} sub-statements').replace('{{count}}', String(exportedCount))}
 			</p>
 
 			{/* Divider */}

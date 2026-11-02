@@ -9,7 +9,7 @@ import { planBack } from './consoleBack';
  * trapped, Escape cancels and focus goes back to the control that opened it.
  * "End" is the default and has focus; the other way out is "Keep open for
  * students" (not offered when the lesson is already open). After either, the
- * teacher goes to the lesson list, where the row shows the new status.
+ * teacher goes to the lesson's plan screen, where the row shows the new status.
  */
 
 type Choice = 'end' | 'keepOpen';

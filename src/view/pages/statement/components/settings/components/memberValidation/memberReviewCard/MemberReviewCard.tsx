@@ -1,5 +1,7 @@
-import React, { FC, useState, memo } from 'react';
+import React, { FC, useId, useState, memo } from 'react';
 import { Statement, Role } from '@freedi/shared-types';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { fillPlaceholders } from '@/helpers/fillPlaceholders';
 import type { MemberReviewData } from '@/types/demographics';
 import styles from './MemberReviewCard.module.scss';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -28,10 +30,11 @@ const MemberReviewCard: FC<Props> = ({
 }) => {
 	const { t } = useTranslation();
 	const [expanded, setExpanded] = useState(false);
+	const contentId = useId();
 
 	const getRoleBadge = () => {
 		if (member.role === Role.admin) {
-			return <span className={`${styles.badge} ${styles.admin}`}>{t('Admin')}</span>;
+			return <span className={`${styles.badge} ${styles.admin}`}>{t('people.role.host')}</span>;
 		}
 		if (member.role === Role.creator || statement.creator?.uid === member.userId) {
 			return <span className={`${styles.badge} ${styles.creator}`}>{t('Creator')}</span>;
@@ -43,13 +46,27 @@ const MemberReviewCard: FC<Props> = ({
 	const getStatusBadge = () => {
 		switch (member.status) {
 			case 'approved':
-				return <span className={`${styles.badge} ${styles.approved}`}>✓ {t('Approved')}</span>;
+				return (
+					<span className={`${styles.badge} ${styles.approved}`}>
+						✓ {t('people.entry.approved')}
+					</span>
+				);
 			case 'flagged':
-				return <span className={`${styles.badge} ${styles.flagged}`}>⚠ {t('Flagged')}</span>;
+				return (
+					<span className={`${styles.badge} ${styles.flagged}`}>
+						⚠ {t('people.entry.flagged')}
+					</span>
+				);
 			case 'banned':
-				return <span className={`${styles.badge} ${styles.banned}`}>🚫 {t('Banned')}</span>;
+				return (
+					<span className={`${styles.badge} ${styles.banned}`}>🚫 {t('people.entry.blocked')}</span>
+				);
 			default:
-				return <span className={`${styles.badge} ${styles.pending}`}>⏳ {t('Pending')}</span>;
+				return (
+					<span className={`${styles.badge} ${styles.pending}`}>
+						⏳ {t('people.entry.waitingReview')}
+					</span>
+				);
 		}
 	};
 
@@ -134,6 +151,7 @@ const MemberReviewCard: FC<Props> = ({
 				<div className={styles.selectionAndInfo}>
 					<input
 						type="checkbox"
+						aria-label={fillPlaceholders(t('people.selectPerson'), { name: userIdentifier })}
 						checked={isSelected}
 						onChange={(e) => onSelect(member.userId, e.target.checked)}
 						disabled={member.status === 'banned' || !canBan}
@@ -164,13 +182,20 @@ const MemberReviewCard: FC<Props> = ({
 					</div>
 				)}
 
-				<button className={styles.expandBtn} onClick={() => setExpanded(!expanded)}>
-					{expanded ? '▼' : '▶'}
+				<button
+					type="button"
+					className={styles.expandBtn}
+					onClick={() => setExpanded(!expanded)}
+					aria-expanded={expanded}
+					aria-controls={contentId}
+					aria-label={fillPlaceholders(t('people.entry.answersOf'), { name: userIdentifier })}
+				>
+					{expanded ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
 				</button>
 			</div>
 
 			{expanded && (
-				<div className={styles.content}>
+				<div id={contentId} className={styles.content}>
 					<div className={styles.responses}>
 						<h5>{t('Survey Responses')}:</h5>
 						{member.responses.map((response, idx) => (

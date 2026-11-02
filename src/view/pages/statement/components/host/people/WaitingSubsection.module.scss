@@ -1,0 +1,43 @@
+// Waiting to join (#waiting) — layout only; rows, buttons and the empty
+// state come from the person-row, button and empty-state blocks.
+
+.toolbar,
+.bulkBar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-xs);
+}
+
+.toolbar {
+	justify-content: space-between;
+}
+
+// Replaces the toolbar while something is selected and stays in view while
+// the host scrolls a long list.
+.bulkBar {
+	position: sticky;
+	inset-block-start: 0;
+	z-index: 1;
+	padding: var(--space-xs);
+	border-radius: var(--radius-sm);
+	background: var(--surface-background);
+	box-shadow: var(--elevation-1);
+}
+
+.bulkCount {
+	margin-inline-end: auto;
+	font-weight: var(--font-weight-semibold);
+	color: var(--text-title);
+}
+
+.caption {
+	font-size: var(--font-size-sm);
+	color: var(--text-meta);
+}
+
+.list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}

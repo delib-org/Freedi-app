@@ -153,70 +153,8 @@
 	text-align: start;
 }
 
-// --- Consensus bar ----------------------------------------------------------
-
-.consensus {
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-}
-
-.consensus__head {
-	display: flex;
-	justify-content: space-between;
-	align-items: baseline;
-	gap: 0.5rem;
-	font-size: 0.71875rem;
-	color: var(--text-meta);
-}
-
-.consensus__label {
-	font-weight: 600;
-
-	&--positive {
-		color: var(--score-positive-ink);
-	}
-
-	&--split {
-		color: var(--score-split-ink);
-	}
-
-	&--negative {
-		color: var(--score-negative-ink);
-	}
-}
-
-.consensus__track {
-	position: relative;
-	block-size: 0.375rem;
-	border-radius: 0.1875rem;
-	background-color: var(--bg-sunken);
-	overflow: hidden;
-}
-
-.consensus__fill {
-	position: absolute;
-	inset-block: 0;
-	inset-inline-start: 0;
-	border-radius: inherit;
-	transition: inline-size 0.3s var(--motion-ease);
-
-	&--positive {
-		background-color: var(--score-positive);
-	}
-
-	&--split {
-		background-color: var(--score-split);
-	}
-
-	&--negative {
-		background-color: var(--score-negative);
-	}
-}
-
 @media (prefers-reduced-motion: reduce) {
-	.face,
-	.consensus__fill {
+	.face {
 		transition: none;
 	}
 

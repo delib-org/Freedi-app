@@ -158,8 +158,8 @@ function statusGroup(mid: string, status: LessonStatus | null): m.Children {
 	]);
 }
 
-function backBar(): m.Children {
-	const back = planBack();
+function backBar(mid: string): m.Children {
+	const back = planBack(mid);
 
 	return m(TeacherBackBar, { href: back.href, label: back.label });
 }
@@ -287,7 +287,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 
 		if (!ready) {
 			return m('.console', [
-				backBar(),
+				backBar(mid),
 				header(mid, main ? lessonNameOf(main) : undefined, undefined, null),
 				m(
 					'main.console__board',
@@ -323,7 +323,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 		// >>> allProposals END
 
 		return m('.console', { 'data-step': step.key }, [
-			backBar(),
+			backBar(mid),
 			header(mid, lessonNameOf(main), code, status),
 			showQr
 				? m('section.console__qr', [

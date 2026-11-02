@@ -71,6 +71,9 @@ export interface ButtonProps {
 
 	/** Tab index */
 	tabIndex?: number;
+
+	/** Take the first focus when a Modal / Sheet opens (destructive dialogs focus Cancel). */
+	isInitialFocus?: boolean;
 }
 
 // ============================================================================
@@ -92,6 +95,7 @@ const Button: React.FC<ButtonProps> = ({
 	ariaLabel,
 	id,
 	tabIndex,
+	isInitialFocus = false,
 }) => {
 	// Build BEM classes
 	const buttonClasses = clsx(
@@ -117,6 +121,7 @@ const Button: React.FC<ButtonProps> = ({
 			aria-label={ariaLabel || text}
 			aria-busy={loading}
 			tabIndex={tabIndex}
+			data-autofocus={isInitialFocus || undefined}
 		>
 			{loading && <span className="button__loader" aria-hidden="true" />}
 

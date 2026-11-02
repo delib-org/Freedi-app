@@ -8,7 +8,9 @@ jest.mock('@freedi/shared-types', () => ({
 		admin: 'admin',
 		member: 'member',
 		waitingMember: 'waitingMember',
+		waiting: 'waiting',
 		banned: 'banned',
+		unsubscribed: 'unsubscribed',
 	},
 	Collections: {
 		statementsSubscribe: 'statementsSubscribe',
@@ -21,7 +23,9 @@ enum Role {
 	admin = 'admin',
 	member = 'member',
 	waitingMember = 'waitingMember',
+	waiting = 'waiting',
 	banned = 'banned',
+	unsubscribed = 'unsubscribed',
 }
 
 const Collections = {
@@ -43,7 +47,14 @@ interface WaitingMember {
 	};
 }
 
-import { approveMembership } from '../setMembership';
+import { approveMembership, returnToWaiting } from '../setMembership';
+import { updateMemberRole } from '../../subscriptions/setSubscriptions';
+
+jest.mock('../../subscriptions/setSubscriptions', () => ({
+	updateMemberRole: jest.fn(),
+}));
+
+const mockUpdateMemberRole = updateMemberRole as jest.MockedFunction<typeof updateMemberRole>;
 
 // Mock Firebase Firestore
 const mockUpdateDoc = jest.fn();
@@ -112,16 +123,20 @@ describe('setMembership', () => {
 			});
 		});
 
-		it('should ban member when accept is false', async () => {
+		it('declines without blocking: the person becomes unsubscribed, never banned', async () => {
 			await approveMembership(
 				mockWaitingMember as unknown as Parameters<typeof approveMembership>[0],
 				false,
 			);
 
 			expect(mockUpdateDoc).toHaveBeenCalledWith('mock-doc-ref', {
-				role: Role.banned,
+				role: Role.unsubscribed,
 				lastUpdate: expect.any(Number),
 			});
+			expect(mockUpdateDoc).not.toHaveBeenCalledWith(
+				'mock-doc-ref',
+				expect.objectContaining({ role: Role.banned }),
+			);
 		});
 
 		it('should delete from waiting list after approval', async () => {
@@ -206,6 +221,25 @@ describe('setMembership', () => {
 				'sub-123',
 			);
 			expect(mockDoc).toHaveBeenCalledWith(expect.anything(), Collections.awaitingUsers, 'sub-123');
+		});
+	});
+
+	describe('returnToWaiting (Undo)', () => {
+		it('puts a declined person back on the waiting list', async () => {
+			mockUpdateMemberRole.mockResolvedValue(undefined);
+
+			await returnToWaiting(mockWaitingMember as unknown as Parameters<typeof returnToWaiting>[0]);
+
+			expect(mockUpdateMemberRole).toHaveBeenCalledWith('stmt-123', 'user-123', Role.waiting);
+		});
+
+		it('rethrows when the write fails', async () => {
+			mockUpdateMemberRole.mockRejectedValueOnce(new Error('denied'));
+			jest.spyOn(console, 'error').mockImplementation(() => {});
+
+			await expect(
+				returnToWaiting(mockWaitingMember as unknown as Parameters<typeof returnToWaiting>[0]),
+			).rejects.toThrow('denied');
 		});
 	});
 

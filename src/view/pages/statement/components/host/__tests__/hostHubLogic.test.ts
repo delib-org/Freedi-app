@@ -1,5 +1,8 @@
 import {
 	buildHostHubPath,
+	buildPeopleAnchorPath,
+	parsePeopleAnchor,
+	PEOPLE_ANCHORS,
 	countHidden,
 	DEFAULT_HOST_HUB_SECTION,
 	HOST_HUB_SECTIONS,
@@ -22,6 +25,21 @@ describe('hostHubLogic', () => {
 
 	it('builds a canonical deep link', () => {
 		expect(buildHostHubPath('q1', 'results')).toBe('/statement-screen/q1/settings?section=results');
+	});
+
+	it('parses a People anchor with or without the hash', () => {
+		expect(parsePeopleAnchor('#waiting')).toBe('waiting');
+		expect(parsePeopleAnchor('entry-check')).toBe('entry-check');
+		expect(parsePeopleAnchor('#nope')).toBeNull();
+		expect(parsePeopleAnchor('')).toBeNull();
+		expect(parsePeopleAnchor(undefined)).toBeNull();
+		expect(PEOPLE_ANCHORS).toHaveLength(7);
+	});
+
+	it('builds a deep link into one People subsection', () => {
+		expect(buildPeopleAnchorPath('q1', 'waiting')).toBe(
+			'/statement-screen/q1/settings?section=people#waiting',
+		);
 	});
 
 	it('counts hidden answers', () => {

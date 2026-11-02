@@ -12,6 +12,7 @@ import type { FirestoreEvent } from 'firebase-functions/v2/firestore';
 import type { Evaluation } from '@freedi/shared-types';
 import { updateUserDemographicEvaluation } from '../fn_polarizationIndex';
 import { ActionTypes } from './evaluationTypes';
+import { dropEvaluationOnTheme } from './themeGuard';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
 import { recordEvaluatorParticipation } from './evaluatorParticipation';
@@ -52,6 +53,9 @@ export async function updateEvaluation(
 		if (!after.statementId) {
 			throw new Error('statementId is required');
 		}
+
+		// Themes are not voted on: drop a stray evaluation before it feeds any counter.
+		if (await dropEvaluationOnTheme(event.data.after, after.statementId, eventId)) return;
 
 		const { statement, duplicate } = await updateStatementEvaluation({
 			statementId: after.statementId,

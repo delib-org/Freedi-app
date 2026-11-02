@@ -62,18 +62,12 @@ describe('Checkbox', () => {
 			expect(label).toHaveClass('checkbox--checked');
 		});
 
-		it('should set aria-checked to false when unchecked', () => {
-			render(<Checkbox {...defaultProps} checked={false} />);
-
-			const label = screen.getByText('Accept terms').closest('label');
-			expect(label).toHaveAttribute('aria-checked', 'false');
-		});
-
-		it('should set aria-checked to true when checked', () => {
+		it('exposes the native input as the checkbox, checked state included', () => {
 			render(<Checkbox {...defaultProps} checked={true} />);
 
-			const label = screen.getByText('Accept terms').closest('label');
-			expect(label).toHaveAttribute('aria-checked', 'true');
+			const box = screen.getByRole('checkbox', { name: 'Accept terms' });
+			expect(box.tagName).toBe('INPUT');
+			expect(box).toBeChecked();
 		});
 	});
 
@@ -106,30 +100,32 @@ describe('Checkbox', () => {
 			const handleChange = jest.fn();
 			render(<Checkbox {...defaultProps} disabled onChange={handleChange} />);
 
-			const label = screen.getByText('Accept terms').closest('label') as HTMLElement;
-			fireEvent.keyDown(label, { key: 'Enter' });
+			const input = screen.getByRole('checkbox', { name: 'Accept terms' });
+			expect(input).toBeDisabled();
+			fireEvent.click(input);
 
 			expect(handleChange).not.toHaveBeenCalled();
 		});
 
-		it('should call onChange on Enter key press', () => {
+		it('toggles when the label text is clicked', () => {
 			const handleChange = jest.fn();
 			render(<Checkbox {...defaultProps} checked={false} onChange={handleChange} />);
 
-			const label = screen.getByText('Accept terms').closest('label') as HTMLElement;
-			fireEvent.keyDown(label, { key: 'Enter' });
+			fireEvent.click(screen.getByText('Accept terms'));
 
 			expect(handleChange).toHaveBeenCalledWith(true);
 		});
 
-		it('should call onChange on Space key press', () => {
-			const handleChange = jest.fn();
-			render(<Checkbox {...defaultProps} checked={false} onChange={handleChange} />);
+		it('is the one focusable control: no role or tabindex on the label', () => {
+			render(<Checkbox {...defaultProps} />);
 
 			const label = screen.getByText('Accept terms').closest('label') as HTMLElement;
-			fireEvent.keyDown(label, { key: ' ' });
-
-			expect(handleChange).toHaveBeenCalledWith(true);
+			const input = screen.getByRole('checkbox');
+			expect(label).not.toHaveAttribute('role');
+			expect(label).not.toHaveAttribute('tabindex');
+			expect(input).not.toHaveAttribute('aria-hidden');
+			expect(input).not.toHaveAttribute('tabindex');
+			expect(screen.getAllByRole('checkbox')).toHaveLength(1);
 		});
 	});
 
@@ -242,18 +238,24 @@ describe('Checkbox', () => {
 			expect(label).toHaveClass('custom-class');
 		});
 
-		it('should apply custom ariaLabel', () => {
-			render(<Checkbox {...defaultProps} ariaLabel="Custom aria label" />);
+		it('names the input with ariaLabel when the visible label is empty', () => {
+			render(<Checkbox {...defaultProps} label="" ariaLabel="Select Maya" />);
 
-			const label = screen.getByText('Accept terms').closest('label');
-			expect(label).toHaveAttribute('aria-label', 'Custom aria label');
+			expect(screen.getByRole('checkbox', { name: 'Select Maya' })).toBeInTheDocument();
 		});
 
-		it('should use label as aria-label by default', () => {
+		it('is named by its visible label by default', () => {
 			render(<Checkbox {...defaultProps} />);
 
-			const label = screen.getByText('Accept terms').closest('label');
-			expect(label).toHaveAttribute('aria-label', 'Accept terms');
+			expect(screen.getByRole('checkbox', { name: 'Accept terms' })).not.toHaveAttribute(
+				'aria-label',
+			);
+		});
+
+		it('marks the native input as mixed when indeterminate', () => {
+			render(<Checkbox {...defaultProps} indeterminate />);
+
+			expect((screen.getByRole('checkbox') as HTMLInputElement).indeterminate).toBe(true);
 		});
 	});
 });

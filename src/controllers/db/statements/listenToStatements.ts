@@ -6,6 +6,7 @@ import { listenerManager } from '@/controllers/utils/ListenerManager';
 import { firstLoadThenListen } from '@/controllers/utils/firstLoadThenListen';
 import { logError } from '@/utils/errorHandling';
 import { normalizeStatementData, convertTimestampsToMillis } from '@/helpers/timestampHelpers';
+import { membersOfStatementQuery } from '@/controllers/db/membership/membersPage';
 
 // Redux Store
 import {
@@ -40,10 +41,7 @@ import {
 	createManagedCollectionListener,
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
-import {
-	DISCUSSABLE_STATEMENT_TYPES,
-	NON_DOCUMENT_STATEMENT_TYPES,
-} from '@/helpers/statementTypeHelpers';
+import { DISCUSSABLE_STATEMENT_TYPES } from '@/helpers/statementTypeHelpers';
 
 // Tracks subscription docs whose schema-validation failure we've already
 // logged this session, so a malformed doc on a hot listener doesn't spam the
@@ -415,51 +413,50 @@ export async function fetchOlderSubStatements(
 	}
 }
 
-export const listenToMembers = (dispatch: AppDispatch) => (statementId: string) => {
-	try {
-		const membersRef = createCollectionRef(Collections.statementsSubscribe);
-		const q = query(
-			membersRef,
-			where('statementId', '==', statementId),
-			where('statementType', 'in', NON_DOCUMENT_STATEMENT_TYPES),
-			orderBy('createdAt', 'desc'),
-			limit(10), // Load only last 10 members initially, more can be loaded on demand
-		);
+/**
+ * Live listener on the newest `pageSize` subscriptions of a space. Older ones
+ * are fetched on demand with `loadMembersPage` (membership/membersPage.ts).
+ */
+export const listenToMembers =
+	(dispatch: AppDispatch) =>
+	(statementId: string, pageSize: number = FIREBASE.QUERY_LIMIT_MAX) => {
+		try {
+			const q = membersOfStatementQuery(statementId, limit(pageSize));
 
-		const listenerKey = generateListenerKey('members', 'statement', statementId);
+			const listenerKey = generateListenerKey('members', 'statement', statementId);
 
-		return createManagedCollectionListener(
-			q,
-			listenerKey,
-			(subsDB) => {
-				subsDB.docChanges().forEach((change) => {
-					const member = change.doc.data() as StatementSubscription;
-					if (change.type === 'added') {
-						dispatch(setMembership(member));
-					}
+			return createManagedCollectionListener(
+				q,
+				listenerKey,
+				(subsDB) => {
+					subsDB.docChanges().forEach((change) => {
+						const member = change.doc.data() as StatementSubscription;
+						if (change.type === 'added') {
+							dispatch(setMembership(member));
+						}
 
-					if (change.type === 'modified') {
-						dispatch(setMembership(member));
-					}
+						if (change.type === 'modified') {
+							dispatch(setMembership(member));
+						}
 
-					if (change.type === 'removed') {
-						dispatch(removeMembership(member.statementsSubscribeId));
-					}
-				});
-			},
-			(error) =>
-				logError(error, {
-					operation: 'statements.listenToStatements.unknown',
-					metadata: { message: 'Error in members listener:' },
-				}),
-			'query',
-		);
-	} catch (error) {
-		logError(error, { operation: 'statements.listenToStatements.unknown' });
+						if (change.type === 'removed') {
+							dispatch(removeMembership(member.statementsSubscribeId));
+						}
+					});
+				},
+				(error) =>
+					logError(error, {
+						operation: 'statements.listenToStatements.unknown',
+						metadata: { message: 'Error in members listener:' },
+					}),
+				'query',
+			);
+		} catch (error) {
+			logError(error, { operation: 'statements.listenToStatements.unknown' });
 
-		return () => {};
-	}
-};
+			return () => {};
+		}
+	};
 
 export function listenToAllSubStatements(statementId: string, numberOfLastMessages = 7) {
 	try {

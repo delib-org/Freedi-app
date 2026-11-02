@@ -3,7 +3,14 @@ import { parse } from 'valibot';
 import { DB } from '../config';
 import { doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { logError } from '@/utils/errorHandling';
+import { updateMemberRole } from '../subscriptions/setSubscriptions';
 
+/**
+ * Let in (member) or Decline. Decline is not a block: the person becomes
+ * unsubscribed, so a later visit asks to join again (the role → waiting
+ * trigger re-creates their awaitingUsers entry). Block is the only path to
+ * Role.banned.
+ */
 export async function approveMembership(waitingMember: WaitingMember, accept: boolean) {
 	try {
 		parse(WaitingMemberSchema, waitingMember);
@@ -13,7 +20,7 @@ export async function approveMembership(waitingMember: WaitingMember, accept: bo
 			waitingMember.statementsSubscribeId,
 		);
 		await updateDoc(waitingMembersRef, {
-			role: accept ? Role.member : Role.banned, // Update the role to 'member' or whatever is appropriate
+			role: accept ? Role.member : Role.unsubscribed,
 			lastUpdate: Date.now(),
 		});
 
@@ -30,5 +37,22 @@ export async function approveMembership(waitingMember: WaitingMember, accept: bo
 			metadata: { message: 'Error in approveMembership:' },
 		});
 		throw error; // Rethrow the error if needed
+	}
+}
+
+/**
+ * Puts a person back on the waiting list (Undo of Let in / Decline). The
+ * subscription trigger re-creates their awaitingUsers entry for every admin.
+ */
+export async function returnToWaiting(waitingMember: WaitingMember): Promise<void> {
+	try {
+		await updateMemberRole(waitingMember.statementId, waitingMember.userId, Role.waiting);
+	} catch (error) {
+		logError(error, {
+			operation: 'membership.setMembership.returnToWaiting',
+			userId: waitingMember.userId,
+			statementId: waitingMember.statementId,
+		});
+		throw error;
 	}
 }

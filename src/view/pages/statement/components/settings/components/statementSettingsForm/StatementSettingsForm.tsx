@@ -12,8 +12,6 @@ import { Pencil, Users, BarChart3, Brain, Shield, Settings } from 'lucide-react'
 import InstantSettings from '../instantSettings/InstantSettings';
 import QuestionSettings from '../QuestionSettings/QuestionSettings';
 import ChoseBySettings from '../choseBy/ChoseBySettings';
-import GetEvaluators from './../../components/GetEvaluators';
-import GetVoters from './../../components/GetVoters';
 import TitleAndDescription from './../../components/titleAndDescription/TitleAndDescription';
 import { SettingsSection } from './../../components/settingsSection';
 import { setNewStatement } from './../../statementSettingsCont';
@@ -31,9 +29,6 @@ import LocalizationSettings from '../advancedSettings/LocalizationSettings';
 import ExportSettings from '../advancedSettings/ExportSettings';
 import SynthesisPanel from '../synthesisPanel/SynthesisPanel';
 import AnchoredSettings from '../QuestionSettings/AnchoredSettings';
-import ConfidenceIndexSettings from '../QuestionSettings/ConfidenceIndexSettings';
-import JoinFormSettings from '../QuestionSettings/JoinFormSettings/JoinFormSettings';
-import JoinResolutionSettings from '../QuestionSettings/JoinResolutionSettings/JoinResolutionSettings';
 import DeadlineSettings from '../QuestionSettings/DeadlineSettings';
 
 // Hooks & Helpers
@@ -45,7 +40,6 @@ import { defaultStatementSettings } from '../../emptyStatementModel';
 // Redux & Types
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useSelector } from 'react-redux';
-import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
 import {
 	statementSelector,
@@ -53,21 +47,10 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { createStatementsByParentSelector } from '@/redux/utils/selectorFactories';
 import Loader from '@/view/components/loaders/Loader';
-import {
-	StatementSubscription,
-	Role,
-	Statement,
-	StatementSettings,
-	StatementType,
-} from '@freedi/shared-types';
-import MembershipSettings from '../membershipSettings/MembershipSettings';
-import UserDemographicSetting from '../UserDemographicSettings/UserDemographicSetting';
-import MembersSettings from '../membership/MembersSettings';
-import AdminsManagement from '../membership/AdminsManagement/AdminsManagement';
-import MemberValidation from '../memberValidation/MemberValidation';
+import { Role, Statement, StatementSettings, StatementType } from '@freedi/shared-types';
 import EmailNotifications from '../emailNotifications/EmailNotifications';
-import { OptionRooms } from '../optionRooms';
 import ModerationLog from '../moderationLog/ModerationLog';
+import PeopleSection from '../../../host/PeopleSection';
 import { buildStatementPath } from '@/routes/statementPaths';
 
 interface StatementSettingsFormProps {
@@ -89,6 +72,8 @@ interface StatementSettingsFormProps {
  * `omit` lists keys a component only renders under a prop the variant does
  * not pass. The hub list also names the AI group's components, which the
  * hub renders in its own AI and Clustering cards — same page, same guard.
+ * 'PeopleSection' stands for PEOPLE_SECTION_COMPONENTS: both pages render the
+ * same People section.
  */
 export const FORM_COMPOSITION: Record<
 	SettingsVariant,
@@ -97,21 +82,15 @@ export const FORM_COMPOSITION: Record<
 	legacy: [
 		{ component: 'InstantSettings' },
 		{ component: 'ParticipationSettings', omit: ['hasChat'] },
-		{ component: 'OptionRooms' },
 		{ component: 'ChoseBySettings' },
 		{ component: 'DeadlineSettings' },
 		{ component: 'EvaluationSettings' },
 		{ component: 'AnchoredSettings' },
-		{ component: 'ConfidenceIndexSettings' },
 		{ component: 'AISettings' },
 		{ component: 'SynthesisPanel' },
 		{ component: 'DiscussionSettings' },
 		{ component: 'ModerationLog' },
-		{ component: 'MembershipSettings' },
-		{ component: 'MembersSettings' },
-		{ component: 'AdminsManagement' },
-		{ component: 'MemberValidation' },
-		{ component: 'UserDemographicSetting' },
+		{ component: 'PeopleSection' },
 		{ component: 'QuestionSettings' },
 		{ component: 'VisibilitySettings' },
 		{ component: 'NavigationSettings' },
@@ -125,11 +104,11 @@ export const FORM_COMPOSITION: Record<
 		{ component: 'ChoseBySettings' },
 		{ component: 'EvaluationSettings' },
 		{ component: 'AnchoredSettings' },
-		{ component: 'ConfidenceIndexSettings' },
 		{ component: 'AISettings' },
 		{ component: 'SynthesisPanel' },
 		{ component: 'DiscussionSettings' },
 		{ component: 'ModerationLog' },
+		{ component: 'PeopleSection' },
 		{ component: 'QuestionSettings' },
 		{ component: 'VisibilitySettings', omit: ['powerFollowMe'] },
 		{ component: 'NavigationSettings' },
@@ -170,17 +149,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 		settingsStatement.statementSettings ?? defaultStatementSettings;
 	const handlers = useStatementSettingsHandlers(settingsStatement);
 
-	// Selector to get the statement memberships
-	const statementMembershipSelector = (statementId: string | undefined) =>
-		createSelector(
-			(state: RootState) => state.statements.statementMembership,
-			(memberships) =>
-				memberships.filter(
-					(membership: StatementSubscription) => membership.statementId === statementId,
-				),
-		);
-
-	const members: StatementSubscription[] = useAppSelector(statementMembershipSelector(statementId));
 	const currentUserSubscription = useAppSelector(statementSubscriptionSelector(statementId));
 	const isAdminOrCreator =
 		currentUserSubscription?.role === Role.admin || currentUserSubscription?.role === Role.creator;
@@ -191,10 +159,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	const subStatements = useSelector(selectSubStatements(statement.statementId));
 
 	try {
-		const joinedMembers = members
-			.filter((member) => member.role !== Role.banned)
-			.map((m) => m.user);
-
 		// * Functions * //
 		const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 			e.preventDefault();
@@ -302,17 +266,8 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 									handleSettingChange={handlers.handleSettingChange}
 									showChatToggle={isHub}
 								/>
-								{isQuestion && (
-									<>
-										<JoinFormSettings statement={settingsStatement} />
-										<JoinResolutionSettings statement={settingsStatement} />
-									</>
-								)}
 							</div>
 						</SettingsSection>
-
-						{/* Breakout rooms — renders its own section (the hub shows it under People) */}
-						{!isHub && <OptionRooms statement={settingsStatement} />}
 
 						{/* Group 3 — Results & Decision */}
 						<SettingsSection
@@ -331,12 +286,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 									handleSettingChange={handlers.handleSettingChange}
 								/>
 								{isQuestion && <AnchoredSettings statement={settingsStatement} />}
-								{/* Deliberately NOT gated to questions: a settlement
-								    declares its stakeholders once on the group and every
-								    question beneath inherits it. Gating this was why the
-								    number had to be re-entered on every question, and why
-								    setting it on a group did nothing at all. */}
-								<ConfidenceIndexSettings statement={settingsStatement} />
 							</div>
 						</SettingsSection>
 
@@ -369,22 +318,17 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						{/* Group 5 — People (the hub has its own People section) */}
 						{!isHub && (
 							<SettingsSection
-								title={t('Members & Access')}
+								title={t('host.people')}
 								description={t('Who can see this question and who runs it')}
 								icon={Shield}
 								priority="high"
 								defaultExpanded={false}
 							>
-								<div className={groupWrapClass}>
-									<MembershipSettings
-										statement={settingsStatement}
-										setStatementToEdit={setStatementToEdit}
-									/>
-									<MembersSettings statement={settingsStatement} />
-									{isAdminOrCreator && <AdminsManagement statement={settingsStatement} />}
-									{isQuestion && <MemberValidation statement={settingsStatement} />}
-									<UserDemographicSetting statement={settingsStatement} />
-								</div>
+								{/* The same People section the Host hub renders (one Members list). */}
+								<PeopleSection
+									statement={settingsStatement}
+									setStatementToEdit={setStatementToEdit}
+								/>
 							</SettingsSection>
 						)}
 
@@ -433,12 +377,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 									{!isHub && (
 										<>
 											<ExportSettings statement={settingsStatement} subStatements={subStatements} />
-											<section className={styles.getMembersArea}>
-												<GetVoters statementId={statementId} joinedMembers={joinedMembers} />
-											</section>
-											<section className={styles.getMembersArea}>
-												<GetEvaluators statementId={statementId} />
-											</section>
 										</>
 									)}
 								</div>
