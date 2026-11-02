@@ -10,12 +10,18 @@ export interface PersonIdentity {
 	uid: string;
 	displayName: string;
 	photoURL?: string;
+	isAnonymous: boolean;
 }
 
 /** The part of firebase-admin's Auth used here; a root script holds another installed copy of it. */
 export interface AuthUsers {
 	getUsers(identifiers: Array<{ uid: string }>): Promise<{
-		users: Array<{ uid: string; displayName?: string; photoURL?: string }>;
+		users: Array<{
+			uid: string;
+			displayName?: string;
+			photoURL?: string;
+			providerData?: ReadonlyArray<unknown>;
+		}>;
 	}>;
 }
 
@@ -31,29 +37,65 @@ export interface LookupOptions {
 	onAuthFailure?: (error: unknown) => void;
 }
 
+/**
+ * When nothing proves an account, the person counts as anonymous. That is the
+ * default every reader of this flag already applies (`?? true`), and no reader
+ * hides anyone because of it, so a host with no profile still appears, nameless.
+ */
+const ANONYMOUS_WHEN_UNKNOWN = true;
+
 /** For a person with no profile: valid against UserSchema, and nobody else's identity. */
 export function neutralIdentity(uid: string): PersonIdentity {
-	return { uid, displayName: '' };
+	return { uid, displayName: '', isAnonymous: ANONYMOUS_WHEN_UNKNOWN };
 }
 
 function text(value: unknown): string {
 	return typeof value === 'string' ? value.trim() : '';
 }
 
-function identityOf(uid: string, displayName: string, photoURL: string): PersonIdentity {
-	return { uid, displayName, ...(photoURL ? { photoURL } : {}) };
+interface ProfileParts {
+	displayName: string;
+	photoURL: string;
+	/** undefined: this source cannot tell. */
+	isAnonymous: boolean | undefined;
+}
+
+/**
+ * What usersV2 can say about anonymity. The client writes `isAnonymous: true` when
+ * the doc is first created and never clears it, so a `true` may be stale after an
+ * anonymous account is linked: only Auth settles it. An email, which is read here
+ * and never stored, proves an account, and keeps Auth out of the common case on
+ * this hot path.
+ */
+export function anonymityFromProfile(data: {
+	isAnonymous?: unknown;
+	email?: unknown;
+}): boolean | undefined {
+	if (data.isAnonymous === false) return false;
+	if (data.isAnonymous === true) return undefined;
+
+	return text(data.email) ? false : undefined;
+}
+
+/** Firebase Auth's own record: an account with no linked provider is anonymous. */
+export function anonymityFromAuth(providerData: ReadonlyArray<unknown> | undefined): boolean {
+	return (providerData?.length ?? 0) === 0;
 }
 
 async function readAuthProfiles(
 	auth: AuthUsers,
 	uids: string[],
-): Promise<Map<string, PersonIdentity>> {
-	const found = new Map<string, PersonIdentity>();
+): Promise<Map<string, ProfileParts>> {
+	const found = new Map<string, ProfileParts>();
 	for (let i = 0; i < uids.length; i += AUTH_GET_USERS_LIMIT) {
 		const chunk = uids.slice(i, i + AUTH_GET_USERS_LIMIT);
 		const { users } = await auth.getUsers(chunk.map((uid) => ({ uid })));
 		users.forEach((user) => {
-			found.set(user.uid, identityOf(user.uid, text(user.displayName), text(user.photoURL)));
+			found.set(user.uid, {
+				displayName: text(user.displayName),
+				photoURL: text(user.photoURL),
+				isAnonymous: anonymityFromAuth(user.providerData),
+			});
 		});
 	}
 
@@ -61,8 +103,9 @@ async function readAuthProfiles(
 }
 
 /**
- * Identities of `uids` from usersV2, asking Firebase Auth only about those it
- * has no name for. A uid known to neither is absent from the result.
+ * Identities of `uids` from usersV2, asking Firebase Auth only about those whose
+ * name or anonymity it cannot settle. A uid known to neither is absent from the
+ * result. When Auth cannot settle it, the person counts as anonymous.
  */
 export async function lookupPersonIdentities(
 	firestore: Firestore,
@@ -76,26 +119,45 @@ export async function lookupPersonIdentities(
 
 	const usersRef = firestore.collection(Collections.users);
 	const snaps = await firestore.getAll(...unique.map((uid) => usersRef.doc(uid)));
+	const profiles = new Map<string, ProfileParts>();
 	snaps.forEach((snap, index) => {
 		if (!snap.exists) return;
-		const data = snap.data();
+		const data = snap.data() ?? {};
 		const uid = unique[index];
-		found.set(uid, identityOf(uid, text(data?.displayName), text(data?.photoURL)));
+		profiles.set(uid, {
+			displayName: text(data.displayName),
+			photoURL: text(data.photoURL),
+			isAnonymous: anonymityFromProfile(data),
+		});
 	});
 
-	const nameless = unique.filter((uid) => !found.get(uid)?.displayName);
-	if (nameless.length === 0) return found;
+	const unsettled = unique.filter((uid) => {
+		const profile = profiles.get(uid);
 
-	try {
-		const fromAuth = await readAuthProfiles(auth, nameless);
-		fromAuth.forEach((identity, uid) => {
-			const photoURL = found.get(uid)?.photoURL ?? identity.photoURL ?? '';
-			found.set(uid, identityOf(uid, identity.displayName, photoURL));
-		});
-	} catch (error) {
-		if (!onAuthFailure) throw error;
-		onAuthFailure(error);
+		return !profile?.displayName || profile.isAnonymous === undefined;
+	});
+	let fromAuth = new Map<string, ProfileParts>();
+	if (unsettled.length > 0) {
+		try {
+			fromAuth = await readAuthProfiles(auth, unsettled);
+		} catch (error) {
+			if (!onAuthFailure) throw error;
+			onAuthFailure(error);
+		}
 	}
+
+	unique.forEach((uid) => {
+		const profile = profiles.get(uid);
+		const account = fromAuth.get(uid);
+		if (!profile && !account) return;
+		const photoURL = profile?.photoURL || account?.photoURL;
+		found.set(uid, {
+			uid,
+			displayName: profile?.displayName || account?.displayName || '',
+			...(photoURL ? { photoURL } : {}),
+			isAnonymous: account?.isAnonymous ?? profile?.isAnonymous ?? ANONYMOUS_WHEN_UNKNOWN,
+		});
+	});
 
 	return found;
 }

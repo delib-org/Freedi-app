@@ -9,6 +9,10 @@ import { trustedAdminUids } from './utils/subscriptionIdentity';
 const TOP = 'top';
 /** Cap on inherited admins, against escalation in deep hierarchies. */
 export const MAX_INHERITED_ADMINS = 20;
+const MILLIS_PER_SECOND = 1000;
+const PROFILE_LOOKUP_TIMEOUT_SECONDS = 5;
+/** A hung Auth or usersV2 call must not delay, or outlive the trigger with, the admin docs. */
+export const PROFILE_LOOKUP_TIMEOUT_MS = PROFILE_LOOKUP_TIMEOUT_SECONDS * MILLIS_PER_SECOND;
 
 /** Admin uids of `statementId`, from genuine admin subscriptions only. */
 async function readTrustedAdmins(statementId: string): Promise<string[]> {
@@ -21,6 +25,18 @@ async function readTrustedAdmins(statementId: string): Promise<string[]> {
 	// Only docs whose id is {userId}--{statementId}; the uid comes from userId,
 	// never from user.uid (the server's copies store the statement's creator there).
 	return trustedAdminUids(snap.docs, statementId);
+}
+
+function withLookupTimeout<T>(lookup: Promise<T>): Promise<T> {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const timeout = new Promise<never>((_, reject) => {
+		timer = setTimeout(
+			() => reject(new Error(`Profile lookup timed out after ${PROFILE_LOOKUP_TIMEOUT_MS}ms`)),
+			PROFILE_LOOKUP_TIMEOUT_MS,
+		);
+	});
+
+	return Promise.race([lookup, timeout]).finally(() => clearTimeout(timer));
 }
 
 /**
@@ -40,9 +56,9 @@ async function identitiesOfInheritedAdmins(
 			metadata: { admins: uids.length },
 		});
 	try {
-		const found = await lookupPersonIdentities(db, getAuth(), uids, {
-			onAuthFailure: logLookupError,
-		});
+		const found = await withLookupTimeout(
+			lookupPersonIdentities(db, getAuth(), uids, { onAuthFailure: logLookupError }),
+		);
 
 		return uids.map((uid) => found.get(uid) ?? neutralIdentity(uid));
 	} catch (error) {
