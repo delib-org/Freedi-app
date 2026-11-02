@@ -150,7 +150,7 @@ const MembersSubsection: FC<MembersSubsectionProps> = ({
 		<PeopleSubsection
 			id="members"
 			title={t('people.members')}
-			summary={fillPlaceholders(t('people.summary.members'), { count: memberCount })}
+			summary={translateCount(t, 'people.summary.members', memberCount)}
 			isOpen={isOpen}
 			onToggle={onToggle}
 			toggleRef={toggleRef}
