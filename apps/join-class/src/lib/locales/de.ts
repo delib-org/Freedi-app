@@ -590,6 +590,14 @@ const de: Record<string, string> = {
 		'Dir sind noch keine Klassen zugewiesen. Die Stunde wird unter deinem Namen gespeichert.',
 	'teacher.lesson.row': '{{class}} · {{date}}',
 	'teacher.lesson.busy': 'Die Stunde wird vorbereitet...',
+	'teacher.lesson.students_label': 'Wie viele Schüler sind in der Klasse?',
+	'teacher.lesson.students_hint':
+		'Zählen Sie die ganze Klasse, auch wer heute fehlt. Wenn Sie das Feld leer lassen, rechnen wir mit {{count}}.',
+	'console.class_size.save': 'Speichern',
+	'console.class_size.saved': 'Gespeichert. Werte neu berechnet.',
+	'console.class_size.save_failed': 'Die Zahl wurde nicht gespeichert. Versuchen Sie es erneut.',
+	'console.class_size.recalc_failed':
+		'Die Zahl wurde gespeichert, aber die Werte wurden nicht neu berechnet. Versuchen Sie es erneut.',
 	'plan.lesson_only': 'Änderungen hier gelten nur für diese Stunde',
 	'plan.lesson_from': 'Spiel: „{{game}}“ · Klasse: {{class}}',
 	'teacher.lesson.not_approved':

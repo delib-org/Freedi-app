@@ -26,6 +26,7 @@ import {
 } from '@freedi/shared-types';
 import { checkAdminStatus, isAdmin } from './admin';
 import { applyLessonLookOf } from './lessonLook';
+import { classSizePatch, storedClassSize } from './classroom/classSize';
 import {
 	getEffectiveEvaluation as _getEffectiveEvaluation,
 	setEvaluation as _setEvaluation,
@@ -436,6 +437,9 @@ export async function createSubQuestion(
 	const main = mainStatement;
 	const topParentId = main?.topParentId || mainId;
 	const parents = [...(main?.parents ?? []), mainId];
+	// The class size is the lesson's: a question added later carries a copy (an
+	// open-population lesson stays open, so nothing is copied then).
+	const classSize = storedClassSize(main);
 
 	const newQuestion = createStatementObject({
 		statement: trimmed,
@@ -460,6 +464,7 @@ export async function createSubQuestion(
 	await setDoc(doc(db, Collections.statements, newQuestion.statementId), {
 		...newQuestion,
 		...(initial?.order !== undefined ? { order: initial.order } : {}),
+		...(classSize !== undefined ? classSizePatch(classSize, false) : {}),
 	});
 
 	return newQuestion.statementId;

@@ -2,6 +2,9 @@ import m from 'mithril';
 import { getRandomUID } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { startLesson } from '@/lib/lesson';
+import { DEFAULT_CLASS_SIZE } from '@/lib/classroom/classSize';
+import { writeClassSizeOnNewLesson } from '@/lib/classroom/classSizeApi';
+import { rememberUnsavedClassSize } from './classSizeActions';
 import { getUserState } from '@/lib/user';
 import { loadTeacherClasses, type TeacherClass } from '@/lib/teacherClasses';
 import { startFailureOf, type StartFailure } from './startFailure';
@@ -37,6 +40,8 @@ let picked: string | null | undefined;
 let newMainId = '';
 let openGameTitle = '';
 let nameDraft: LessonNameDraft = freshDraft('');
+/** What the teacher typed for "how many students"; empty counts as the default. */
+let studentsText = '';
 let busy = false;
 let failure: StartFailure | null = null;
 
@@ -79,6 +84,7 @@ export function openClassForm(gameId: string, gameTitle: string): void {
 	openGameId = gameId;
 	openGameTitle = gameTitle;
 	nameDraft = freshDraft(defaultLessonName(gameTitle, null, joinGameAndClass));
+	studentsText = '';
 	picked = undefined;
 	newMainId = getRandomUID();
 	busy = false;
@@ -105,6 +111,14 @@ async function submit(planId: string, gameId: string): Promise<void> {
 	m.redraw();
 	try {
 		const id = await startLesson({ planId, gameId, classId, newMainId, lessonName });
+		// The lesson is open and has no ratings yet; if N cannot be written the
+		// lesson still opens and the console says so, with a retry.
+		try {
+			await writeClassSizeOnNewLesson(id, studentsText);
+		} catch (err) {
+			captureException(err, { operation: 'classForm.writeClassSize', planId, gameId });
+			rememberUnsavedClassSize(id, studentsText);
+		}
 		closeClassForm();
 		m.route.set(`/t/${id}`);
 	} catch (err) {
@@ -150,6 +164,36 @@ function nameField(): m.Vnode {
 				nameDraft = onTyped((e.target as HTMLInputElement).value);
 			},
 		}),
+	]);
+}
+
+/** "כמה תלמידים בכיתה?": after the class choice; empty counts as the default. */
+function studentsField(): m.Vnode {
+	return m('.class-form__students', [
+		m(
+			'label.teacher-home__label',
+			{ for: 'class-form-students' },
+			t('teacher.lesson.students_label'),
+		),
+		m('input.teacher-home__input.class-form__students-input', {
+			id: 'class-form-students',
+			type: 'number',
+			inputmode: 'numeric',
+			min: '1',
+			step: '1',
+			value: studentsText,
+			placeholder: String(DEFAULT_CLASS_SIZE),
+			disabled: busy,
+			'data-field': 'class-size',
+			'aria-describedby': 'class-form-students-help',
+			oninput: (e: Event) => {
+				studentsText = (e.target as HTMLInputElement).value;
+			},
+		}),
+		m(
+			'p.class-form__help#class-form-students-help',
+			t('teacher.lesson.students_hint', { count: DEFAULT_CLASS_SIZE }),
+		),
 	]);
 }
 
@@ -211,6 +255,7 @@ export const ClassForm: m.Component<ClassFormAttrs> = {
 							choice(null, t('teacher.lesson.class_none'), '__none'),
 						])
 					: null,
+				ready ? studentsField() : null,
 				m('.class-form__actions', [
 					m(
 						'button.btn.btn--primary',

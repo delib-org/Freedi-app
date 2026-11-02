@@ -5382,5 +5382,12 @@
   "people.rooms.splitDone": "חולקו לחדרים: {{rooms}}, {{people}}.",
   "people.rooms.replace.title_one": "להחליף את החדר הקיים?",
   "people.rooms.replace.title_other": "להחליף את {{count}} החדרים הקיימים?",
-  "people.entry.answersOf": "התשובות של {{name}}"
+  "people.entry.answersOf": "התשובות של {{name}}",
+  "survey.stakeholders.hint": "כמה אנשים הסקר נוגע להם, כולל מי שאולי לא יגיע אליהם. אם לא יודעים, משאירים ריק.",
+  "survey.stakeholders.stale": "ציונים שכבר חושבו נשארים לפי המספר הקודם עד שמחשבים מחדש.",
+  "survey.stakeholders.recalculate": "חישוב מחדש של הציונים",
+  "survey.stakeholders.recalculating": "מחשב מחדש…",
+  "survey.stakeholders.recalculated": "הציונים חושבו מחדש.",
+  "survey.stakeholders.recalculateFailed": "לא הצלחנו לחשב מחדש את הציונים. אפשר לנסות שוב או לפנות לבעל הסקר.",
+  "survey.stakeholders.skipped": "לא ניתן היה לקבוע את המספר ב-{{count}} משאלות הסקר, כי אף אחד ממנהלי הסקר אינו מנהל אותן. בשאלות האלה נשאר המספר שלהן."
 }

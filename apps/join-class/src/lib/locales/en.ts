@@ -582,6 +582,14 @@ const en: Record<string, string> = {
 		'No classes are assigned to you yet. The lesson will be kept under your name.',
 	'teacher.lesson.row': '{{class}} · {{date}}',
 	'teacher.lesson.busy': 'Preparing the lesson...',
+	'teacher.lesson.students_label': 'How many students are in the class?',
+	'teacher.lesson.students_hint':
+		'Count the whole class, including anyone absent today. If you leave this empty, we count {{count}}.',
+	'console.class_size.save': 'Save',
+	'console.class_size.saved': 'Saved. Scores recalculated.',
+	'console.class_size.save_failed': 'The number was not saved. Try again.',
+	'console.class_size.recalc_failed':
+		'The number was saved, but the scores were not recalculated. Try again.',
 	'plan.lesson_only': 'Changes here are for this lesson only',
 	'plan.lesson_from': 'Game: "{{game}}" · Class: {{class}}',
 	'teacher.lesson.not_approved':

@@ -257,6 +257,26 @@
   font-size: var(--font-size-sm);
 }
 
+// ---- class size row (how many students are in the class) --------------------
+.console__class-size {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.console__class-size-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.console__class-size-input {
+  inline-size: 6rem;
+  min-block-size: var(--touch-target);
+  padding-inline: var(--space-sm);
+  font-variant-numeric: tabular-nums;
+}
+
 // ---- projector menu (IA 15.4, UX 15.A) ---------------------------------------
 .projector-menu {
   position: relative;

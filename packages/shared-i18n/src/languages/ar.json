@@ -4785,5 +4785,12 @@
   "people.rooms.splitDone": "تم التوزيع على الغرف: {{rooms}}، {{people}}.",
   "people.rooms.replace.title_one": "استبدال الغرفة الموجودة؟",
   "people.rooms.replace.title_other": "استبدال الغرف الموجودة وعددها {{count}}؟",
-  "people.entry.answersOf": "إجابات {{name}}"
+  "people.entry.answersOf": "إجابات {{name}}",
+  "survey.stakeholders.hint": "كم عدد الأشخاص الذين يخصهم هذا الاستبيان، بمن فيهم من قد لا يصل إليهم. اتركوه فارغًا إذا لم تعرفوا.",
+  "survey.stakeholders.stale": "تبقى الدرجات المحسوبة سابقًا على الرقم القديم إلى أن تعيدوا الحساب.",
+  "survey.stakeholders.recalculate": "إعادة حساب الدرجات",
+  "survey.stakeholders.recalculating": "جارٍ إعادة الحساب…",
+  "survey.stakeholders.recalculated": "تمت إعادة حساب الدرجات.",
+  "survey.stakeholders.recalculateFailed": "تعذّرت إعادة حساب الدرجات. حاولوا مرة أخرى أو اطلبوا المساعدة من صاحب الاستبيان.",
+  "survey.stakeholders.skipped": "تعذّر تعيين العدد في {{count}} من أسئلة الاستبيان، لأن أحدًا ممن يديرون الاستبيان لا يدير هذه الأسئلة. تحتفظ هذه الأسئلة بعددها الخاص."
 }
