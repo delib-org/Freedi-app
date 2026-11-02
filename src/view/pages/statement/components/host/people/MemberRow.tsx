@@ -56,7 +56,7 @@ const MemberRow: FC<MemberRowProps> = ({ entry, actions, onAction, onOpenMenu, h
 	return (
 		<PersonRow
 			name={entry.name}
-			photoURL={entry.subscription.user?.photoURL}
+			photoURL={entry.photoURL}
 			badges={<MemberBadges entry={entry} />}
 			meta={
 				createdAt

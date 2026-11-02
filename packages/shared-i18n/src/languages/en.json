@@ -5249,6 +5249,7 @@
   "people.role.banned": "Blocked",
   "people.role.waiting": "Waiting",
   "people.role.you": "You",
+  "people.unnamed": "Unnamed",
   "people.makeHost": "Make host",
   "people.removeHost": "Remove host",
   "people.noOneToPromote": "Nobody to make host yet. Share the invite link so people can join, then make them a host here.",

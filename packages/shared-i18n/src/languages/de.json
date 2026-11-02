@@ -4571,6 +4571,7 @@
   "people.role.banned": "Gesperrt",
   "people.role.waiting": "Wartet",
   "people.role.you": "Sie",
+  "people.unnamed": "Ohne Namen",
   "people.makeHost": "Zum Host machen",
   "people.removeHost": "Host entfernen",
   "people.noOneToPromote": "Noch niemand, den Sie zum Host machen können. Teilen Sie den Einladungslink, damit Leute beitreten, und machen Sie sie dann hier zum Host.",
