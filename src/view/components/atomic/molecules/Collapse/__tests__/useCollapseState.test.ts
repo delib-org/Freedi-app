@@ -124,6 +124,45 @@ describe('useCollapseState', () => {
 		expect(result.current.isExpanded).toBe(false);
 	});
 
+	describe('when animation frames never run (hidden tab, heavy first mount)', () => {
+		let rafSpy: jest.SpyInstance;
+
+		beforeEach(() => {
+			rafSpy = jest.spyOn(window, 'requestAnimationFrame').mockReturnValue(1);
+		});
+
+		afterEach(() => {
+			rafSpy.mockRestore();
+		});
+
+		it('the timer ending an opening still leaves it open, expanded and visible', () => {
+			const { result, rerender } = setup(false);
+
+			rerender({ open: true });
+			expect(result.current.isExpanded).toBe(false);
+
+			act(() => {
+				jest.advanceTimersByTime(SETTLE_MS);
+			});
+			expect(result.current.phase).toBe('open');
+			expect(result.current.isExpanded).toBe(true);
+			expect(result.current.isMounted).toBe(true);
+			expect(result.current.isMoving).toBe(false);
+		});
+
+		it('the timer ending a closing still leaves it closed and unmounted', () => {
+			const { result, rerender } = setup(true);
+
+			rerender({ open: false });
+			act(() => {
+				jest.advanceTimersByTime(SETTLE_MS);
+			});
+			expect(result.current.phase).toBe('closed');
+			expect(result.current.isMounted).toBe(false);
+			expect(result.current.isExpanded).toBe(false);
+		});
+	});
+
 	it('is instant under reduced motion, with no timers', () => {
 		setReducedMotion(true);
 		const { result, rerender } = setup(false);

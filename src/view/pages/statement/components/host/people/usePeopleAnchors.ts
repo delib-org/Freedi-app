@@ -44,11 +44,11 @@ export function usePeopleAnchors({
 		setOpen((prev) => (prev.has(requested) ? prev : new Set(prev).add(requested)));
 		// After the hub's own effect, which scrolls to the People card.
 		const frame = window.requestAnimationFrame(() => revealSubsection(requested, toggles.current));
-		const settle = scrollAgainWhenSettled(requested);
+		const cancelSettle = scrollAgainWhenSettled(requested);
 
 		return () => {
 			window.cancelAnimationFrame(frame);
-			window.clearTimeout(settle);
+			cancelSettle();
 		};
 	}, [hash, key, availableKey]);
 
@@ -78,16 +78,16 @@ export function usePeopleAnchors({
 		[open],
 	);
 
-	const settleTimer = useRef<number>(0);
-	useEffect(() => () => window.clearTimeout(settleTimer.current), []);
+	const cancelSettle = useRef<() => void>(() => undefined);
+	useEffect(() => () => cancelSettle.current(), []);
 
 	const jumpTo = useCallback((anchor: PeopleAnchor) => {
 		hasInteracted.current = true;
 		setOpen((prev) => (prev.has(anchor) ? prev : new Set(prev).add(anchor)));
 		window.history.replaceState(window.history.state, '', `#${anchor}`);
 		window.requestAnimationFrame(() => revealSubsection(anchor, toggles.current));
-		window.clearTimeout(settleTimer.current);
-		settleTimer.current = scrollAgainWhenSettled(anchor);
+		cancelSettle.current();
+		cancelSettle.current = scrollAgainWhenSettled(anchor);
 	}, []);
 
 	const isOpen = useCallback((anchor: PeopleAnchor) => open.has(anchor), [open]);
@@ -112,14 +112,31 @@ function revealSubsection(
 	toggles.get(anchor)?.focus({ preventScroll: true });
 }
 
+const USER_INPUT_EVENTS = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const;
+
 /**
  * The body opens over a short move, so the page is still too short while the
  * first scroll runs and the browser clamps it. Scroll once more when the move
- * is over; focus is already in place and is left alone.
+ * is over, unless the user has wheeled, touched, clicked or pressed a key since;
+ * focus is already in place and is left alone. Returns a canceller.
  */
-function scrollAgainWhenSettled(anchor: PeopleAnchor): number {
-	return window.setTimeout(
-		() => document.getElementById(anchor)?.scrollIntoView?.({ block: 'start' }),
-		UI.COLLAPSE_DURATION_MS + UI.COLLAPSE_FALLBACK_BUFFER_MS,
+function scrollAgainWhenSettled(anchor: PeopleAnchor): () => void {
+	let userMoved = false;
+	const markMoved = (): void => {
+		userMoved = true;
+	};
+	USER_INPUT_EVENTS.forEach((name) =>
+		window.addEventListener(name, markMoved, { capture: true, passive: true }),
 	);
+	const stop = (): void =>
+		USER_INPUT_EVENTS.forEach((name) => window.removeEventListener(name, markMoved, true));
+	const timer = window.setTimeout(() => {
+		stop();
+		if (!userMoved) document.getElementById(anchor)?.scrollIntoView?.({ block: 'start' });
+	}, UI.COLLAPSE_DURATION_MS + UI.COLLAPSE_FALLBACK_BUFFER_MS);
+
+	return () => {
+		window.clearTimeout(timer);
+		stop();
+	};
 }

@@ -128,7 +128,9 @@ export function useCollapseState(isOpen: boolean): CollapseState {
 	return {
 		phase,
 		isMounted: phase !== 'closed',
-		isExpanded,
+		// Settled open is always expanded, even when the fallback timer beat the frames
+		// (heavy first mount, hidden tab where rAF is paused).
+		isExpanded: phase === 'open' || isExpanded,
 		isMoving: phase === 'opening' || phase === 'closing',
 		isInert: phase === 'closing',
 		ref,
