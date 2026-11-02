@@ -660,6 +660,67 @@ describe('recalculateIndices authorization', () => {
 			});
 		});
 
+		// survey.questionIds is whatever a client sent to POST or PUT /api/surveys, so
+		// owning a survey that lists a question must not be enough on its own.
+		describe("a survey made to name somebody else's question", () => {
+			const FORGED = 'survey-forged';
+
+			beforeEach(() => {
+				fake.seed(Collections.surveys, FORGED, {
+					surveyId: FORGED,
+					creatorId: CALLER,
+					questionIds: [QUESTION],
+				});
+			});
+
+			it('refuses its owner', async () => {
+				await expectRefusedInSurvey(FORGED);
+			});
+
+			it('refuses an editor the forger invited', async () => {
+				seedSurveyAdmin(FORGED, 'accomplice', SurveyAdminRole.editor);
+
+				await expectRefusedInSurvey(FORGED, 'accomplice');
+			});
+
+			it('does not count a viewer who happens to administer the question', async () => {
+				seedSurveyAdmin(FORGED, CREATOR, SurveyAdminRole.viewer);
+
+				await expectRefusedInSurvey(FORGED);
+			});
+		});
+
+		describe('who ties the survey to the question', () => {
+			it('lets an editor through on the question the owner administers', async () => {
+				fake.store.get(Collections.surveyAdmins)?.delete(getSurveyAdminId(SURVEY, CREATOR));
+				seedSubscription(QUESTION, Role.admin, OWNER);
+				seedSurveyAdmin(SURVEY, CALLER, SurveyAdminRole.editor);
+
+				const result = await call(inSurvey(SURVEY));
+
+				expect(result.optionsUpdated).toBe(1);
+			});
+
+			it('counts an owner who administers the question through its top statement', async () => {
+				seedQuestion({ parentId: 'group-1', topParentId: 'group-1' });
+				fake.store.get(Collections.surveyAdmins)?.delete(getSurveyAdminId(SURVEY, CREATOR));
+				seedSubscription('group-1', Role.admin, OWNER);
+				seedSurveyAdmin(SURVEY, CALLER, SurveyAdminRole.editor);
+
+				const result = await call(inSurvey(SURVEY));
+
+				expect(result.optionsUpdated).toBe(1);
+			});
+
+			// The known cost of the tie: the question's author left the survey and nobody
+			// remaining administers it. Refused, until someone is made its admin.
+			it('refuses the owner once the only admin of the question has left the roster', async () => {
+				fake.store.get(Collections.surveyAdmins)?.delete(getSurveyAdminId(SURVEY, CREATOR));
+
+				await expectRefusedInSurvey(SURVEY, OWNER);
+			});
+		});
+
 		it.each([[''], [42], [null], [{ id: SURVEY }], ['surveys/survey-1']])(
 			'answers invalid-argument for a surveyId of %p',
 			async (surveyId) => {

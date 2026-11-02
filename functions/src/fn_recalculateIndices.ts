@@ -136,8 +136,7 @@ export const recalculateIndices = onCall<RecalculateIndicesRequest>(
 		const statement = statementSnap.data() as Statement;
 		const isAuthorized =
 			(await findStatementAdminSource(userId, statement)) !== null ||
-			(surveyId !== undefined &&
-				(await canEditQuestionThroughSurvey(userId, surveyId, statementId)));
+			(surveyId !== undefined && (await canEditQuestionThroughSurvey(userId, surveyId, statement)));
 
 		if (!isAuthorized) {
 			logError(new Error('recalculateIndices authorization denied'), {
