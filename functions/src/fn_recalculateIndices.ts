@@ -15,9 +15,48 @@ import {
 	DEFAULT_SAMPLING_QUALITY,
 	type StakeholderScope,
 } from '@freedi/shared-types';
+import { commitInBatches, type BatchedWrite } from './classroom/batchedWrites';
 import { assertStatementAdmin } from './progress/assertStatementAdmin';
 import { refreshChainVoters } from './progress/chainVoters';
 import { calculateConsensusValid } from './helpers/consensusValidCalculator';
+import { logError } from './utils/errorHandling';
+
+/**
+ * Batches commit one after another, so a question of several thousand options
+ * can outlast the 60-second default. Same ceiling as the other per-question
+ * bulk callables (fn_fullExport, fn_reconcileEvaluatorCount).
+ */
+const RECALCULATE_TIMEOUT_SECONDS = 300;
+
+/**
+ * Every score field the recalculation owns on an option, by Firestore path.
+ * `undefined` means the field must not exist: it is deleted, never left stale.
+ */
+type OptionScores = Record<string, number | undefined>;
+
+function readField(data: DocumentData, path: string): unknown {
+	return path
+		.split('.')
+		.reduce<unknown>((value, key) => (value as DocumentData | undefined)?.[key], data);
+}
+
+function isSameScore(stored: unknown, next: number | undefined): boolean {
+	return stored === next || (Number.isNaN(stored) && Number.isNaN(next));
+}
+
+/** True when writing `scores` would change nothing, a field due for deletion included. */
+function areScoresCurrent(data: DocumentData, scores: OptionScores): boolean {
+	return Object.entries(scores).every(([path, next]) => isSameScore(readField(data, path), next));
+}
+
+function toOptionUpdate(scores: OptionScores, now: number): Record<string, number | FieldValue> {
+	const update: Record<string, number | FieldValue> = { lastUpdate: now };
+	for (const [path, next] of Object.entries(scores)) {
+		update[path] = next !== undefined ? next : FieldValue.delete();
+	}
+
+	return update;
+}
 
 interface RecalculateIndicesRequest {
 	statementId: string; // Parent question statement ID
@@ -32,7 +71,10 @@ interface UpdatedOption {
 
 interface RecalculateIndicesResult {
 	success: boolean;
+	/** Options written by this call. */
 	optionsUpdated: number;
+	/** Options already holding these exact scores, so left untouched. */
+	optionsUnchanged: number;
 	targetPopulation: number | undefined;
 	samplingQuality: number;
 	updates: UpdatedOption[];
@@ -46,6 +88,12 @@ interface RecalculateIndicesResult {
  * updated confidenceIndex until the next evaluation triggers a recalculation.
  * This function forces an immediate recalculation for all options.
  *
+ * Options whose scores would not change are not written, so pressing again costs
+ * reads but no writes and fires no triggers. Writes go out in several batches:
+ * each option is written whole, but a failure part way leaves the question with
+ * some options on the new scores. Calling again repairs that, because the options
+ * already done are skipped and only the rest are written.
+ *
  * Who may call it is decided by assertStatementAdmin, the same check the other
  * question-admin callables use: the question's creator, an admin of the question
  * or of its top statement, or an owner/admin of the organization that holds it.
@@ -53,7 +101,7 @@ interface RecalculateIndicesResult {
  * and hold no statement subscription.
  */
 export const recalculateIndices = onCall<RecalculateIndicesRequest>(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, timeoutSeconds: RECALCULATE_TIMEOUT_SECONDS },
 	async (request): Promise<RecalculateIndicesResult> => {
 		if (!request.auth) {
 			throw new HttpsError('unauthenticated', 'User must be authenticated');
@@ -71,7 +119,16 @@ export const recalculateIndices = onCall<RecalculateIndicesRequest>(
 			'recalculateIndices',
 		);
 
-		return recalculateIndicesForQuestion(statementId, statement);
+		try {
+			return await recalculateIndicesForQuestion(statementId, statement);
+		} catch (error) {
+			logError(error, {
+				operation: 'recalculateIndices',
+				userId: request.auth.uid,
+				statementId,
+			});
+			throw new HttpsError('internal', 'Could not finish recalculating. It is safe to try again.');
+		}
 	},
 );
 
@@ -122,14 +179,17 @@ export async function recalculateIndicesForQuestion(
 			return {
 				success: true,
 				optionsUpdated: 0,
+				optionsUnchanged: 0,
 				targetPopulation,
 				samplingQuality,
 				updates: [],
 			};
 		}
 
-		const batch = db.batch();
+		const now = Date.now();
+		const writes: BatchedWrite[] = [];
 		const updates: UpdatedOption[] = [];
+		let optionsUnchanged = 0;
 
 		for (const doc of optionsSnapshot.docs) {
 			const data = doc.data();
@@ -186,23 +246,24 @@ export async function recalculateIndicesForQuestion(
 				);
 			}
 
-			const updateData: Record<string, number | FieldValue> = {
+			const scores: OptionScores = {
 				consensus: agreement,
 				consensusValid: calculateConsensusValid(agreement, data.popperHebbianScore),
 				'evaluation.agreement': agreement,
 				'evaluation.agreementIndex': agreementIndex,
 				'evaluation.likeMindedness': likeMindedness,
-				// Kept in lockstep with the score it produced. Deleted rather
-				// than left stale when no population resolves any more.
-				'evaluation.stakeholderCount':
-					stakeholderCount !== undefined ? stakeholderCount : FieldValue.delete(),
-				lastUpdate: Date.now(),
+				// These two are kept in lockstep with the score they produced, and
+				// are deleted rather than left stale when no population resolves.
+				'evaluation.stakeholderCount': stakeholderCount,
+				'evaluation.confidenceIndex': confidenceIndex,
 			};
-			if (confidenceIndex !== undefined) {
-				updateData['evaluation.confidenceIndex'] = confidenceIndex;
+
+			if (areScoresCurrent(data, scores)) {
+				optionsUnchanged++;
+				continue;
 			}
 
-			batch.update(doc.ref, updateData);
+			writes.push({ kind: 'update', ref: doc.ref, data: toOptionUpdate(scores, now) });
 
 			updates.push({
 				statementId: doc.id,
@@ -212,17 +273,19 @@ export async function recalculateIndicesForQuestion(
 			});
 		}
 
-		await batch.commit();
+		await commitInBatches(db, writes);
 
 		logger.info(`Recalculated indices for ${updates.length} options under ${statementId}`, {
 			targetPopulation,
 			samplingQuality,
 			optionsUpdated: updates.length,
+			optionsUnchanged,
 		});
 
 		return {
 			success: true,
 			optionsUpdated: updates.length,
+			optionsUnchanged,
 			targetPopulation,
 			samplingQuality,
 			updates,

@@ -5,10 +5,14 @@ import {
 	StatementType,
 	SurveyAdminRole,
 	calcAgreementIndex,
+	calcConfidenceIndex,
+	DEFAULT_SAMPLING_QUALITY,
 	getOrganizationMemberId,
 	getSurveyAdminId,
 } from '@freedi/shared-types';
 import { createFakeDb, FakeDb } from '../progress/__tests__/fakeDb';
+import { BATCH_WRITE_LIMIT } from '../classroom/batchedWrites';
+import { clearChainCache } from '../progress/chainVoters';
 
 let fake: FakeDb = createFakeDb();
 
@@ -39,6 +43,7 @@ import { recalculateIndices } from '../fn_recalculateIndices';
 interface CallResult {
 	success: boolean;
 	optionsUpdated: number;
+	optionsUnchanged: number;
 	targetPopulation: number | undefined;
 }
 
@@ -144,6 +149,223 @@ async function expectRefused(uid: string = CALLER): Promise<void> {
 
 beforeEach(() => {
 	fake = createFakeDb();
+	clearChainCache();
+});
+
+/** Records the size of every committed batch; `failOnCommit` (0-based) makes one throw. */
+function watchBatches(failOnCommit?: number): number[] {
+	const sizes: number[] = [];
+	const realBatch = fake.db.batch;
+	let commits = 0;
+	fake.db.batch = () => {
+		const batch = realBatch();
+		let size = 0;
+
+		return {
+			set: (...args: Parameters<typeof batch.set>) => {
+				size++;
+				batch.set(...args);
+			},
+			update: (...args: Parameters<typeof batch.update>) => {
+				size++;
+				batch.update(...args);
+			},
+			commit: async () => {
+				if (commits++ === failOnCommit) throw new Error('commit failed');
+				sizes.push(size);
+				await batch.commit();
+			},
+		};
+	};
+
+	return sizes;
+}
+
+function seedManyOptions(count: number): void {
+	for (let i = 0; i < count; i++) {
+		const id = `many-${String(i).padStart(5, '0')}`;
+		fake.seed(Collections.statements, id, {
+			statementId: id,
+			statementType: StatementType.option,
+			parentId: QUESTION,
+			topParentId: QUESTION,
+			evaluation: {
+				sumEvaluations: SUM,
+				sumSquaredEvaluations: SUM_SQUARED,
+				numberOfEvaluators: EVALUATORS,
+			},
+		});
+	}
+}
+
+const isRescored = (id: string): boolean =>
+	(fake.read(Collections.statements, id)?.evaluation as { stakeholderCount?: number })
+		.stakeholderCount === POPULATION;
+
+const optionEvaluation = (): Record<string, unknown> =>
+	fake.read(Collections.statements, OPTION)?.evaluation as Record<string, unknown>;
+
+describe('recalculateIndices writes', () => {
+	describe('size', () => {
+		it('splits a question larger than one batch, and rescores every option', async () => {
+			seedQuestion();
+			fake.store.get(Collections.statements)?.delete(OPTION);
+			const optionCount = BATCH_WRITE_LIMIT * 2 + 1;
+			seedManyOptions(optionCount);
+			const sizes = watchBatches();
+
+			const result = await call(asCaller(CREATOR));
+
+			// The first batch is the question's own participation stat.
+			expect(sizes.slice(1)).toEqual([BATCH_WRITE_LIMIT, BATCH_WRITE_LIMIT, 1]);
+			expect(result.optionsUpdated).toBe(optionCount);
+			expect(isRescored('many-00000')).toBe(true);
+			expect(isRescored(`many-${String(optionCount - 1).padStart(5, '0')}`)).toBe(true);
+		});
+
+		it('reports a failure part way, and a second call finishes only what is left', async () => {
+			seedQuestion();
+			fake.store.get(Collections.statements)?.delete(OPTION);
+			const optionCount = BATCH_WRITE_LIMIT + 1;
+			seedManyOptions(optionCount);
+			const lastOption = `many-${String(optionCount - 1).padStart(5, '0')}`;
+			// Commit 0 is the participation stat, 1 the first options, 2 the rest.
+			watchBatches(2);
+
+			await expect(call(asCaller(CREATOR))).rejects.toMatchObject({ code: 'internal' });
+			expect(isRescored('many-00000')).toBe(true);
+			expect(isRescored(lastOption)).toBe(false);
+
+			const sizes = watchBatches();
+			const retry = await call(asCaller(CREATOR));
+
+			expect(sizes).toEqual([1]);
+			expect(retry).toMatchObject({ optionsUpdated: 1, optionsUnchanged: BATCH_WRITE_LIMIT });
+			expect(isRescored(lastOption)).toBe(true);
+		});
+	});
+
+	describe('skipping what would not change', () => {
+		it('writes nothing at all on a repeat call', async () => {
+			seedQuestion();
+			await call(asCaller(CREATOR));
+			const optionLastUpdate = 1;
+			const questionLastUpdate = 2;
+			fake.seed(Collections.statements, OPTION, {
+				...fake.read(Collections.statements, OPTION),
+				lastUpdate: optionLastUpdate,
+			});
+			fake.seed(Collections.statements, QUESTION, {
+				...fake.read(Collections.statements, QUESTION),
+				lastUpdate: questionLastUpdate,
+			});
+			const progressBefore = fake.read(Collections.questionProgress, QUESTION);
+			const sizes = watchBatches();
+
+			const result = await call(asCaller(CREATOR));
+
+			expect(sizes).toEqual([]);
+			expect(result).toMatchObject({ optionsUpdated: 0, optionsUnchanged: 1 });
+			expect(fake.read(Collections.statements, OPTION)?.lastUpdate).toBe(optionLastUpdate);
+			expect(fake.read(Collections.statements, QUESTION)?.lastUpdate).toBe(questionLastUpdate);
+			expect(fake.read(Collections.questionProgress, QUESTION)).toEqual(progressBefore);
+		});
+
+		it('writes when only N changed, with the new count and confidence', async () => {
+			seedQuestion();
+			await call(asCaller(CREATOR));
+			const newPopulation = POPULATION * 2;
+			fake.seed(Collections.statements, QUESTION, {
+				...fake.read(Collections.statements, QUESTION),
+				evaluationSettings: { targetPopulation: newPopulation },
+			});
+			const sizes = watchBatches();
+
+			const result = await call(asCaller(CREATOR));
+
+			expect(sizes).toEqual([1]);
+			expect(result).toMatchObject({ optionsUpdated: 1, targetPopulation: newPopulation });
+			expect(optionEvaluation().stakeholderCount).toBe(newPopulation);
+			expect(optionEvaluation().confidenceIndex).toBe(
+				calcConfidenceIndex(EVALUATORS, newPopulation, DEFAULT_SAMPLING_QUALITY),
+			);
+		});
+
+		it.each([
+			['consensus'],
+			['consensusValid'],
+			['evaluation.agreement'],
+			['evaluation.agreementIndex'],
+			['evaluation.likeMindedness'],
+			['evaluation.stakeholderCount'],
+			['evaluation.confidenceIndex'],
+		])('rewrites an option when only %s has drifted', async (path) => {
+			seedQuestion();
+			await call(asCaller(CREATOR));
+			const stored = fake.read(Collections.statements, OPTION) as Record<string, unknown>;
+			const correct = path.startsWith('evaluation.')
+				? optionEvaluation()[path.replace('evaluation.', '')]
+				: stored[path];
+			const drifted = -1;
+			fake.seed(Collections.statements, OPTION, {
+				...stored,
+				...(path.startsWith('evaluation.')
+					? {
+							evaluation: { ...optionEvaluation(), [path.replace('evaluation.', '')]: drifted },
+						}
+					: { [path]: drifted }),
+			});
+
+			const result = await call(asCaller(CREATOR));
+
+			expect(result.optionsUpdated).toBe(1);
+			const after = fake.read(Collections.statements, OPTION) as Record<string, unknown>;
+			expect(
+				path.startsWith('evaluation.')
+					? optionEvaluation()[path.replace('evaluation.', '')]
+					: after[path],
+			).toBe(correct);
+		});
+
+		it('deletes both the count and the confidence when N is removed, then stays quiet', async () => {
+			seedQuestion();
+			await call(asCaller(CREATOR));
+			expect(optionEvaluation().confidenceIndex).toEqual(expect.any(Number));
+			fake.seed(Collections.statements, QUESTION, {
+				...fake.read(Collections.statements, QUESTION),
+				evaluationSettings: {},
+			});
+
+			const removed = await call(asCaller(CREATOR));
+
+			expect(removed).toMatchObject({ optionsUpdated: 1 });
+			expect(optionEvaluation()).not.toHaveProperty('stakeholderCount');
+			expect(optionEvaluation()).not.toHaveProperty('confidenceIndex');
+
+			const sizes = watchBatches();
+			const repeat = await call(asCaller(CREATOR));
+
+			expect(sizes).toEqual([]);
+			expect(repeat).toMatchObject({ optionsUpdated: 0, optionsUnchanged: 1 });
+		});
+
+		it('writes only the options that changed, and moves only their lastUpdate', async () => {
+			seedQuestion();
+			await call(asCaller(CREATOR));
+			const untouchedLastUpdate = 1;
+			fake.seed(Collections.statements, OPTION, {
+				...fake.read(Collections.statements, OPTION),
+				lastUpdate: untouchedLastUpdate,
+			});
+			seedManyOptions(1);
+
+			const result = await call(asCaller(CREATOR));
+
+			expect(result).toMatchObject({ optionsUpdated: 1, optionsUnchanged: 1 });
+			expect(fake.read(Collections.statements, OPTION)?.lastUpdate).toBe(untouchedLastUpdate);
+			expect(isRescored('many-00000')).toBe(true);
+		});
+	});
 });
 
 describe('recalculateIndices authorization', () => {
