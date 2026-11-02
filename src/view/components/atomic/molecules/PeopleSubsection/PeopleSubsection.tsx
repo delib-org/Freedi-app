@@ -1,6 +1,7 @@
 import React, { Ref } from 'react';
 import clsx from 'clsx';
 import { ChevronDown } from 'lucide-react';
+import Collapse from '../Collapse/Collapse';
 
 /**
  * PeopleSubsection Molecule - Atomic Design System
@@ -95,9 +96,9 @@ const PeopleSubsection: React.FC<PeopleSubsectionProps> = ({
 					<ChevronDown className="people-subsection__chevron" aria-hidden="true" />
 				</button>
 			</h3>
-			<div id={bodyId} className="people-subsection__body" hidden={!isOpen}>
-				{isOpen && children}
-			</div>
+			<Collapse id={bodyId} isOpen={isOpen}>
+				<div className="people-subsection__body">{children}</div>
+			</Collapse>
 		</section>
 	);
 };

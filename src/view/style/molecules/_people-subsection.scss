@@ -12,7 +12,8 @@
 //       <span class="people-subsection__title"/> <span class="people-subsection__summary"/>
 //       <span class="badge badge--unread people-subsection__count"/> <svg class="people-subsection__chevron"/>
 //   </h3>
-//   <div class="people-subsection__body" [hidden]/>
+//   <div class="collapse" id="waiting-body"> (Collapse molecule)
+//     <div class="collapse__inner"><div class="people-subsection__body"/></div>
 // </section>
 @use '../mixins' as *;
 

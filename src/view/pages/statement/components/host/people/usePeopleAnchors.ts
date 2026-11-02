@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router';
+import { UI } from '@/constants/common';
 import { parsePeopleAnchor, PeopleAnchor } from '../hostHubLogic';
 
 interface UsePeopleAnchorsOptions {
@@ -43,8 +44,12 @@ export function usePeopleAnchors({
 		setOpen((prev) => (prev.has(requested) ? prev : new Set(prev).add(requested)));
 		// After the hub's own effect, which scrolls to the People card.
 		const frame = window.requestAnimationFrame(() => revealSubsection(requested, toggles.current));
+		const settle = scrollAgainWhenSettled(requested);
 
-		return () => window.cancelAnimationFrame(frame);
+		return () => {
+			window.cancelAnimationFrame(frame);
+			window.clearTimeout(settle);
+		};
 	}, [hash, key, availableKey]);
 
 	// UX 4.1 applies the default on arrival only: the first default the
@@ -73,11 +78,16 @@ export function usePeopleAnchors({
 		[open],
 	);
 
+	const settleTimer = useRef<number>(0);
+	useEffect(() => () => window.clearTimeout(settleTimer.current), []);
+
 	const jumpTo = useCallback((anchor: PeopleAnchor) => {
 		hasInteracted.current = true;
 		setOpen((prev) => (prev.has(anchor) ? prev : new Set(prev).add(anchor)));
 		window.history.replaceState(window.history.state, '', `#${anchor}`);
 		window.requestAnimationFrame(() => revealSubsection(anchor, toggles.current));
+		window.clearTimeout(settleTimer.current);
+		settleTimer.current = scrollAgainWhenSettled(anchor);
 	}, []);
 
 	const isOpen = useCallback((anchor: PeopleAnchor) => open.has(anchor), [open]);
@@ -100,4 +110,16 @@ function revealSubsection(
 ): void {
 	document.getElementById(anchor)?.scrollIntoView?.({ block: 'start' });
 	toggles.get(anchor)?.focus({ preventScroll: true });
+}
+
+/**
+ * The body opens over a short move, so the page is still too short while the
+ * first scroll runs and the browser clamps it. Scroll once more when the move
+ * is over; focus is already in place and is left alone.
+ */
+function scrollAgainWhenSettled(anchor: PeopleAnchor): number {
+	return window.setTimeout(
+		() => document.getElementById(anchor)?.scrollIntoView?.({ block: 'start' }),
+		UI.COLLAPSE_DURATION_MS + UI.COLLAPSE_FALLBACK_BUFFER_MS,
+	);
 }
