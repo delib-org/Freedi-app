@@ -233,7 +233,9 @@ describe('PeopleSection › summary lines', () => {
 			renderPeople(makeStatement(StatementType.question, undefined, 'group-1'));
 		});
 
-		expect(header('questions')).toHaveTextContent('people.summary.questions · people.sameAsGroup');
+		expect(header('questions')).toHaveTextContent(
+			'people.summary.questions_other · people.sameAsGroup',
+		);
 	});
 
 	it('Entry check carries a count badge only when answers wait for review', async () => {

@@ -3,6 +3,7 @@ import { WaitingMember } from '@freedi/shared-types';
 import { UserCheck } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { fillPlaceholders } from '@/helpers/fillPlaceholders';
+import { translateCount } from '@/helpers/translateCount';
 import { formatRelativeTime } from '@/helpers/relativeTime';
 import Button from '@/view/components/atomic/atoms/Button';
 import Checkbox from '@/view/components/atomic/atoms/Checkbox';
@@ -146,7 +147,7 @@ const WaitingSubsection: FC<WaitingSubsectionProps> = ({
 								size="small"
 							/>
 							<span className={styles.caption}>
-								{fillPlaceholders(t('people.summary.waiting'), { count })}
+								{translateCount(t, 'people.summary.waiting', count)}
 							</span>
 						</div>
 					)}

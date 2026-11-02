@@ -354,11 +354,16 @@ Keys this design needs that the UX table does not have (add to all 7 files; AR/D
 | `people.rooms.splitFailed` | Could not split into rooms | החלוקה לחדרים נכשלה | split error |
 | `people.notSetAnywhere` | Not set anywhere | לא הוגדר בשום מקום | stakeholders caption |
 | `people.saved` | Saved | נשמר | stakeholder input success |
-| `people.summary.members` | {{count}} members | {{count}} חברים/ות | card description, header summary |
-| `people.summary.waiting` | {{count}} waiting | {{count}} ממתינים/ות | card description |
-| `people.summary.hosts` | {{count}} hosts | {{count}} מארחים/ות | header summary |
-| `people.summary.questions` | {{count}} questions | {{count}} שאלות | header summary |
-| `people.summary.toReview` | {{count}} to review | {{count}} לבדיקה | header summary |
+| `people.summary.members_one` | 1 member | חבר/ה אחד/ת | card description, header summary (read through `translateCount`) |
+| `people.summary.members_other` | {{count}} members | {{count}} חברים/ות | card description, header summary |
+| `people.summary.waiting_one` | 1 waiting | ממתין/ה אחד/ת | card description (read through `translateCount`) |
+| `people.summary.waiting_other` | {{count}} waiting | {{count}} ממתינים/ות | card description |
+| `people.summary.hosts_one` | 1 host | מארח/ת אחד/ת | header summary (read through `translateCount`) |
+| `people.summary.hosts_other` | {{count}} hosts | {{count}} מארחים/ות | header summary |
+| `people.summary.questions_one` | 1 question | שאלה אחת | header summary (read through `translateCount`) |
+| `people.summary.questions_other` | {{count}} questions | {{count}} שאלות | header summary |
+| `people.summary.toReview_one` | 1 to review | אחד/ת לבדיקה | header summary (read through `translateCount`) |
+| `people.summary.toReview_other` | {{count}} to review | {{count}} לבדיקה | header summary |
 | `people.empty.inviteHint` | Share the invite link to get people in. | שתפו את קישור ההזמנה כדי לצרף אנשים. | card-level empty state |
 | `people.activationThreshold` | Activation threshold | סף הפעלה | joining block (if no existing key fits) |
 | `host.peopleDesc` (rewrite existing) | Who can join, who is waiting, hosts, questions on joining, entry check, stakeholders, rooms | מי יכול להצטרף, ממתינים, מארחים/ות, שאלות בהצטרפות, בדיקת כניסה, בעלי עניין, חדרים | hub card (retires "מנחים", "חדרי דיון") |

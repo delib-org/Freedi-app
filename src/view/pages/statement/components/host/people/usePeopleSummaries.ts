@@ -2,7 +2,7 @@ import { Access, Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSelector } from '@/redux/statements/statementsSlice';
-import { fillPlaceholders } from '@/helpers/fillPlaceholders';
+import { translateCount } from '@/helpers/translateCount';
 import { accessCopyKeys } from '@/helpers/peopleLabels';
 import { isAccessInherited, resolveEffectiveAccess } from '@/helpers/effectiveAccess';
 import {
@@ -57,11 +57,11 @@ export function usePeopleSummaries({
 		join: summaryLine([t(accessCopyKeys(access).label), isJoinInherited && sameAsGroup]),
 		questions: summaryLine([
 			questionCounts.asked > 0
-				? fillPlaceholders(t('people.summary.questions'), { count: questionCounts.asked })
+				? translateCount(t, 'people.summary.questions', questionCounts.asked)
 				: t('No questions yet'),
 			questionCounts.isSameAsGroup && sameAsGroup,
 		]),
-		entryCheck: fillPlaceholders(t('people.summary.toReview'), { count: toReviewCount }),
+		entryCheck: translateCount(t, 'people.summary.toReview', toReviewCount),
 		stakeholders: summaryLine([
 			stakeholderCount ? stakeholderCount.toLocaleString() : t('people.notSetAnywhere'),
 			isStakeholdersInherited && stakeholderCount !== undefined && sameAsGroup,
