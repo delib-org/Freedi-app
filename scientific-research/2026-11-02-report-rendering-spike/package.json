@@ -1,0 +1,24 @@
+{
+  "name": "report-rendering-spike",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Spike: RTL DOCX + PDF rendering for admin community reports. Not part of the app.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "fonts": "bash scripts/fetch-fonts.sh",
+    "fixtures": "node src/make-fixtures.mjs",
+    "docx": "node src/render-docx.mjs",
+    "pdf": "node src/render-pdf-chromium.mjs",
+    "pdfmake": "node src/render-pdf-pdfmake.mjs"
+  },
+  "dependencies": {
+    "@sparticuz/chromium": "^138.0.2",
+    "bidi-js": "^1.1.0",
+    "docx": "^9.5.0",
+    "jszip": "^3.10.1",
+    "pdfmake": "^0.2.20",
+    "puppeteer-core": "^24.15.0"
+  }
+}
