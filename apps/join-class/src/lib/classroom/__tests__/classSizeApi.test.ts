@@ -3,7 +3,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const mockBatchSet = vi.fn();
 const mockBatchCommit = vi.fn();
 const mockGetDocs = vi.fn();
+const mockGetDoc = vi.fn();
 const mockCallable = vi.fn();
+const mockCallableOptions = vi.fn();
 
 vi.mock('../../firebase', () => ({
 	db: {},
@@ -12,9 +14,14 @@ vi.mock('../../firebase', () => ({
 	collection: (_db: unknown, col: string) => col,
 	query: (...args: unknown[]) => args,
 	where: (...args: unknown[]) => args,
+	getDoc: (...args: unknown[]) => mockGetDoc(...args),
 	getDocs: (...args: unknown[]) => mockGetDocs(...args),
 	writeBatch: () => ({ set: mockBatchSet, commit: mockBatchCommit }),
-	httpsCallable: () => (data: unknown) => mockCallable(data),
+	httpsCallable: (_fn: unknown, _name: string, options: unknown) => {
+		mockCallableOptions(options);
+
+		return (data: unknown) => mockCallable(data);
+	},
 }));
 vi.mock('../../sentry', () => ({ captureException: vi.fn() }));
 
@@ -36,6 +43,7 @@ function answerWith(byParent: Record<string, unknown[]>): void {
 	});
 }
 
+let existingDocs: Record<string, unknown> = {};
 const rated = { evaluation: { numberOfEvaluators: 3 } };
 const unrated = { evaluation: { numberOfEvaluators: 0 } };
 
@@ -44,6 +52,9 @@ describe('class size writes', () => {
 		vi.clearAllMocks();
 		mockBatchCommit.mockResolvedValue(undefined);
 		mockCallable.mockResolvedValue({ data: { success: true } });
+		mockGetDoc.mockImplementation(async (ref: { id: string }) => ({
+			data: () => existingDocs[ref.id],
+		}));
 	});
 
 	it('writes N on the lesson and on each question in one batch', async () => {
@@ -60,6 +71,27 @@ describe('class size writes', () => {
 			expect(call[2]).toEqual({ merge: true });
 		}
 		expect(mockBatchCommit).toHaveBeenCalledTimes(1);
+	});
+
+	it('adds evaluationUI only where the doc has none, and never overwrites an existing one', async () => {
+		existingDocs = {
+			m1: { evaluationSettings: { evaluationUI: 'voting', maxVotesPerUser: 3 } },
+			q1: {},
+			q2: { evaluationSettings: { evaluationUI: 'suggestions' } },
+		};
+
+		await writeClassSize('m1', ['q1', 'q2'], 28);
+
+		const byId = Object.fromEntries(
+			mockBatchSet.mock.calls.map((c) => [(c[0] as { id: string }).id, c[1]]),
+		);
+		expect(byId.m1.evaluationSettings).toEqual({ targetPopulation: 28 });
+		expect(byId.q1.evaluationSettings).toEqual({
+			targetPopulation: 28,
+			evaluationUI: 'suggestions',
+		});
+		expect(byId.q2.evaluationSettings).toEqual({ targetPopulation: 28 });
+		existingDocs = {};
 	});
 
 	it('a new lesson: empty input writes 40 on the lesson and its questions', async () => {
@@ -87,6 +119,9 @@ describe('saveClassSize (the console settings save path)', () => {
 		vi.clearAllMocks();
 		mockBatchCommit.mockResolvedValue(undefined);
 		mockCallable.mockResolvedValue({ data: { success: true } });
+		mockGetDoc.mockImplementation(async (ref: { id: string }) => ({
+			data: () => existingDocs[ref.id],
+		}));
 	});
 
 	it('saves, then recalculates once per question that has ratings', async () => {
@@ -95,6 +130,7 @@ describe('saveClassSize (the console settings save path)', () => {
 		const size = await saveClassSize('m1', ['q1', 'q2', 'q3'], '25');
 
 		expect(size).toBe(25);
+		expect(mockCallableOptions).toHaveBeenCalledWith({ timeout: 310_000 });
 		expect(mockCallable).toHaveBeenCalledTimes(2);
 		expect(mockCallable).toHaveBeenCalledWith({ statementId: 'q1' });
 		expect(mockCallable).toHaveBeenCalledWith({ statementId: 'q3' });

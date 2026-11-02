@@ -464,7 +464,7 @@ export async function createSubQuestion(
 	await setDoc(doc(db, Collections.statements, newQuestion.statementId), {
 		...newQuestion,
 		...(initial?.order !== undefined ? { order: initial.order } : {}),
-		...(classSize !== undefined ? classSizePatch(classSize) : {}),
+		...(classSize !== undefined ? classSizePatch(classSize, false) : {}),
 	});
 
 	return newQuestion.statementId;

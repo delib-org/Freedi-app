@@ -4,6 +4,7 @@ import {
 	doc,
 	collection,
 	functions,
+	getDoc,
 	getDocs,
 	httpsCallable,
 	query,
@@ -11,7 +12,7 @@ import {
 	writeBatch,
 } from '../firebase';
 import { captureException } from '../sentry';
-import { classSizePatch, parseClassSize } from './classSize';
+import { RECALCULATE_TIMEOUT_MS, classSizePatch, parseClassSize } from './classSize';
 
 /**
  * Writing the class size (N): on the lesson and on each of its questions, in
@@ -50,19 +51,31 @@ export async function questionIdsOfLesson(mainId: string): Promise<string[]> {
 	return snap.docs.map((d) => (d.data() as Statement).statementId);
 }
 
+/** Whether each doc already carries evaluationSettings.evaluationUI (never overwritten). */
+async function hasEvaluationUI(id: string): Promise<boolean> {
+	const snap = await getDoc(doc(db, Collections.statements, id));
+
+	return Boolean((snap.data() as Statement | undefined)?.evaluationSettings?.evaluationUI);
+}
+
 /** Merge N onto the lesson and each question. All-or-nothing per batch. */
 export async function writeClassSize(
 	mainId: string,
 	questionIds: readonly string[],
 	size: number,
 ): Promise<void> {
-	const patch = { ...classSizePatch(size), lastUpdate: Date.now() };
 	const ids = [mainId, ...questionIds];
+	const withUi = await Promise.all(ids.map(hasEvaluationUI));
+	const now = Date.now();
 	for (let i = 0; i < ids.length; i += BATCH_LIMIT) {
 		const batch = writeBatch(db);
-		for (const id of ids.slice(i, i + BATCH_LIMIT)) {
-			batch.set(doc(db, Collections.statements, id), patch, { merge: true });
-		}
+		ids.slice(i, i + BATCH_LIMIT).forEach((id, offset) => {
+			batch.set(
+				doc(db, Collections.statements, id),
+				{ ...classSizePatch(size, withUi[i + offset]), lastUpdate: now },
+				{ merge: true },
+			);
+		});
 		await batch.commit();
 	}
 }
@@ -88,6 +101,7 @@ export async function recalculateQuestions(questionIds: readonly string[]): Prom
 	const recalculate = httpsCallable<{ statementId: string }, { success: boolean }>(
 		functions,
 		'recalculateIndices',
+		{ timeout: RECALCULATE_TIMEOUT_MS },
 	);
 	const failed: string[] = [];
 	for (const statementId of questionIds) {
