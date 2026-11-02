@@ -1,16 +1,20 @@
+import { StatementType } from '@freedi/shared-types';
 import {
 	assessSubscription,
 	backfillRunRefusal,
 	buildRepairPatch,
 	emptyRepairCounts,
 	formatRepairReport,
+	resolveStatementType,
 	statementDateMillis,
 	toMillis,
 } from '../subscriptionRepairPlan';
+import { emptyEffectTally } from '../subscriptionRepairEffects';
 
 const ID = 'u1--s1';
 const own = { uid: 'u1', displayName: 'Host', isAnonymous: false };
-const base = { userId: 'u1', statementId: 's1', role: 'admin' };
+const base = { userId: 'u1', statementId: 's1', role: 'admin', statementType: 'question' };
+const noType = { userId: 'u1', statementId: 's1', role: 'admin' };
 
 describe('assessSubscription', () => {
 	it('leaves a dated doc holding its own person alone', () => {
@@ -25,8 +29,34 @@ describe('assessSubscription', () => {
 			kind: 'repair',
 			needsCreatedAt: true,
 			needsUser: false,
+			needsStatementType: false,
 			hasNonNumberCreatedAt: false,
 		});
+	});
+
+	it('wants statementType alone on a doc needing nothing else', () => {
+		expect(assessSubscription(ID, { ...noType, createdAt: 5, user: own })).toEqual({
+			kind: 'repair',
+			needsCreatedAt: false,
+			needsUser: false,
+			needsStatementType: true,
+			hasNonNumberCreatedAt: false,
+		});
+	});
+
+	it.each([
+		['null', null],
+		['an empty string', ''],
+	])('treats a statementType of %s as missing', (_name, statementType) => {
+		expect(assessSubscription(ID, { ...noType, statementType, createdAt: 5, user: own })).toEqual(
+			expect.objectContaining({ kind: 'repair', needsStatementType: true }),
+		);
+	});
+
+	it('leaves a stored statementType alone, document included', () => {
+		expect(
+			assessSubscription(ID, { ...noType, statementType: 'document', createdAt: 5, user: own }),
+		).toMatchObject({ kind: 'current' });
 	});
 
 	it('wants user when it holds somebody else, even with a date', () => {
@@ -85,10 +115,10 @@ describe('assessSubscription', () => {
 	});
 
 	it('is idempotent: applying its own patch makes the doc current', () => {
-		const data = { ...base, user: { uid: 'creator' } };
+		const data = { ...noType, user: { uid: 'creator' } };
 		const assessment = assessSubscription(ID, data);
 		if (assessment.kind !== 'repair') throw new Error('expected a repair');
-		const patch = buildRepairPatch(assessment, 7, own);
+		const patch = buildRepairPatch(assessment, 7, own, StatementType.group);
 
 		expect(assessSubscription(ID, { ...data, ...patch }).kind).toBe('current');
 	});
@@ -123,30 +153,72 @@ describe('statementDateMillis', () => {
 	});
 });
 
+describe('resolveStatementType', () => {
+	it('prefers the live statement', () => {
+		expect(resolveStatementType('group', 'question')).toBe(StatementType.group);
+	});
+
+	it('falls back to the embedded copy', () => {
+		expect(resolveStatementType(undefined, 'question')).toBe(StatementType.question);
+		expect(resolveStatementType('not-a-type', 'question')).toBe(StatementType.question);
+	});
+
+	it('returns document as it is, so the Members filter can keep it out', () => {
+		expect(resolveStatementType('document', 'question')).toBe(StatementType.document);
+	});
+
+	it('refuses anything outside the enum', () => {
+		expect(resolveStatementType('nope', 7)).toBeUndefined();
+		expect(resolveStatementType(undefined, undefined)).toBeUndefined();
+	});
+});
+
 describe('buildRepairPatch', () => {
 	it('sets only the missing parts', () => {
-		expect(buildRepairPatch({ needsCreatedAt: true, needsUser: false }, 7, own)).toEqual({
+		const none = { needsCreatedAt: false, needsUser: false, needsStatementType: false };
+		const type = StatementType.group;
+
+		expect(buildRepairPatch({ ...none, needsCreatedAt: true }, 7, own, type)).toEqual({
 			createdAt: 7,
 		});
-		expect(buildRepairPatch({ needsCreatedAt: false, needsUser: true }, 7, own)).toEqual({
-			user: own,
+		expect(buildRepairPatch({ ...none, needsUser: true }, 7, own, type)).toEqual({ user: own });
+		expect(buildRepairPatch({ ...none, needsStatementType: true }, 7, own, type)).toEqual({
+			statementType: type,
 		});
-		expect(buildRepairPatch({ needsCreatedAt: true, needsUser: true }, 7, own)).toEqual({
-			createdAt: 7,
-			user: own,
-		});
+		expect(buildRepairPatch(none, 7, own, type)).toEqual({});
+	});
+
+	it('writes no statementType when none is known', () => {
+		expect(
+			buildRepairPatch(
+				{ needsCreatedAt: false, needsUser: false, needsStatementType: true },
+				7,
+				own,
+				undefined,
+			),
+		).toEqual({});
 	});
 
 	it('writes nothing for a missing createdAt when the statement has no date', () => {
-		expect(buildRepairPatch({ needsCreatedAt: true, needsUser: false }, undefined, own)).toEqual(
-			{},
-		);
+		expect(
+			buildRepairPatch(
+				{ needsCreatedAt: true, needsUser: false, needsStatementType: false },
+				undefined,
+				own,
+				undefined,
+			),
+		).toEqual({});
 	});
 
-	it('never touches lastUpdate', () => {
-		expect(buildRepairPatch({ needsCreatedAt: true, needsUser: true }, 7, own)).not.toHaveProperty(
-			'lastUpdate',
+	it('never writes lastUpdate, parentId or topParentId', () => {
+		const patch = buildRepairPatch(
+			{ needsCreatedAt: true, needsUser: true, needsStatementType: true },
+			7,
+			own,
+			StatementType.question,
 		);
+
+		expect(Object.keys(patch).sort()).toEqual(['createdAt', 'statementType', 'user']);
 	});
 });
 
@@ -187,18 +259,34 @@ describe('backfillRunRefusal', () => {
 });
 
 describe('formatRepairReport', () => {
+	const effects = emptyEffectTally();
+
 	it('prints counts, sample ids and failing fields', () => {
-		const counts = { ...emptyRepairCounts(), scanned: 3, writes: 2, createdAtSet: 2, userSet: 1 };
+		const counts = {
+			...emptyRepairCounts(),
+			scanned: 3,
+			writes: 2,
+			createdAtSet: 2,
+			userSet: 1,
+			statementTypeSet: 2,
+			hiddenNoType: 1,
+			hiddenNoDate: 2,
+			hiddenTypeHeldBack: 3,
+			hiddenByType: 4,
+		};
 		const report = formatRepairReport(
 			counts,
 			new Map([['writes', ['u1--s1']]]),
 			new Map([['statement.creator', 4]]),
-			{ dryRun: true, project: 'some-project', scannedByRole: { admin: 3 } },
+			{ dryRun: true, project: 'some-project', scannedByRole: { admin: 3 }, effects },
 		);
 
 		expect(report).toContain('Project: some-project');
 		expect(report).toContain('DRY RUN');
 		expect(report).toContain('Would write 2 doc(s): createdAt on 2, user on 1');
+		expect(report).toContain('statementType on 2.');
+		expect(report).toContain('Still hidden from Members after this run: 6');
+		expect(report).toContain('type document or agreement: 4');
 		expect(report).toContain('admin=3');
 		expect(report).toContain('u1--s1');
 		expect(report).toContain('statement.creator: 4');
@@ -209,6 +297,7 @@ describe('formatRepairReport', () => {
 			dryRun: false,
 			project: 'p',
 			scannedByRole: {},
+			effects,
 		});
 
 		expect(report).toContain('Wrote 0 doc(s)');
