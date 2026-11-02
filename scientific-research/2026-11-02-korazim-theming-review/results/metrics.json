@@ -1,0 +1,2061 @@
+{
+ "A": {
+  "gate": {
+   "themes": 16,
+   "allMatch": 16,
+   "mismatches": []
+  },
+  "doublyFiledAtoms": 1,
+  "counts": {
+   "originals": 187,
+   "synths": 32,
+   "atoms": 113,
+   "themesFinal": 16,
+   "themeDocsEver": 46,
+   "topicsS1": 12,
+   "topicsS2": 10,
+   "unthemedAtoms": 4
+  },
+  "themeSizesAtoms": {
+   "sizes": [
+    1,
+    3,
+    3,
+    4,
+    5,
+    5,
+    6,
+    6,
+    6,
+    8,
+    8,
+    8,
+    11,
+    11,
+    11,
+    13
+   ],
+   "median": 6.0,
+   "le3": 3
+  },
+  "topicSizesAtomsS1": {
+   "sizes": [
+    1,
+    3,
+    4,
+    4,
+    4,
+    5,
+    6,
+    8,
+    9,
+    13,
+    24,
+    30
+   ],
+   "median": 5.5
+  },
+  "refinement": {
+   "themesInsideOneTopic": 13,
+   "themes": 16
+  },
+  "agreement": {
+   "S1": {
+    "atoms": {
+     "ari": 0.525,
+     "precision": 0.911,
+     "recall": 0.414,
+     "f1": 0.57
+    },
+    "leaves": {
+     "ari": 0.534,
+     "precision": 0.901,
+     "recall": 0.428,
+     "f1": 0.581
+    }
+   },
+   "S2": {
+    "atoms": {
+     "ari": 0.486,
+     "precision": 0.97,
+     "recall": 0.372,
+     "f1": 0.537
+    },
+    "leaves": {
+     "ari": 0.487,
+     "precision": 0.964,
+     "recall": 0.377,
+     "f1": 0.542
+    }
+   }
+  },
+  "lineage": {
+   "themeDocsEver": 46,
+   "bornFromSplit": 42,
+   "finalThemes": 16,
+   "finalBornFromSplit": 15,
+   "finalBornSpawn": 1,
+   "maxDepth": 4,
+   "depthDist": {
+    "0": 1,
+    "2": 2,
+    "3": 3,
+    "4": 10
+   },
+   "splits": 12,
+   "parentDirectMembers": [
+    6,
+    5,
+    8,
+    7,
+    20,
+    22,
+    16,
+    22,
+    19,
+    22,
+    17,
+    21
+   ],
+   "parentsUnder10Direct": 4,
+   "childrenTotal": 42,
+   "childrenLe2": 9,
+   "spawns": 4,
+   "themeMerges": 18,
+   "rebuildEvents": 0,
+   "rebuildProposals": 0,
+   "splitsFiredBefore": null,
+   "firstSplit": 1792069032698,
+   "lastSplit": 1792877960408,
+   "lastFinalThemeCreated": 1793352354464
+  },
+  "pairs": {
+   "merged": 9,
+   "notMerged": 111,
+   "mergedSibling": 4,
+   "notMergedSibling": 11,
+   "mergedSameTree": 6,
+   "notMergedSameTree": 73,
+   "mergedRefused": 3,
+   "notMergedRefused": 5,
+   "siblingPairs": 15,
+   "refusedFinalPairs": 8,
+   "fisherSibling": 0.01407,
+   "fisherRefused": 0.01374,
+   "pSiblingGivenMerged": 0.444,
+   "pSiblingGivenNot": 0.099,
+   "withinSiblings": {
+    "mergedRefused": 3,
+    "mergedNotRefused": 1,
+    "keptRefused": 3,
+    "keptNotRefused": 8,
+    "fisher": 0.14286
+   },
+   "nonSiblingCountedRefused": 2,
+   "mergeGroups": 2
+  },
+  "refusals": {
+   "events": 115,
+   "firstTs": "2026-10-15T14:27:20.577850Z",
+   "lastTs": "2026-10-30T23:18:47.144441Z",
+   "distinctGroups": 25,
+   "finalPairsRefused": 8,
+   "ofWhichSigalMerged": 3,
+   "sigalMergedPairs": 9,
+   "sigalPairsRefused": 3,
+   "groupsTouchingFinal": 6
+  },
+  "splitTrigger": {
+   "placedLeaves": 152,
+   "alwaysSplitAbove": 25,
+   "alwaysAsShareOfPlaced": 0.164,
+   "largestFinalThemeLeaves": 19,
+   "finalThemesOver": 0,
+   "sigalTopicLeaves": {
+    "חזות הישוב": 43,
+    "תרבות קהילתית": 31,
+    "לכידות קהילתית": 19,
+    "סיוע הדדי והתנדבות": 13,
+    "שקט, שלווה ובנייה נמוכה": 11,
+    "ניהול ותקשורת קהילתית": 10,
+    "ותיקים וקשרים בין-דוריים": 7,
+    "חוסן קהילתי בשעת חירום": 5,
+    "דרכים, שבילים ותשתיות": 4,
+    "צביון היישוב ובית הכנסת": 4,
+    "מורשת, היסטוריה ותיעוד מקומי": 3,
+    "חתולי הכפר": 2
+   },
+   "sigalTopicsThatWouldBeSplit": [
+    "חזות הישוב",
+    "תרבות קהילתית"
+   ]
+  },
+  "splitTriggerCodeExact": {
+   "placed": 155,
+   "alwaysAsShare": 0.161,
+   "largestTheme": 19,
+   "largestShare": 0.123,
+   "topicsOver": [
+    "חזות הישוב",
+    "תרבות קהילתית"
+   ],
+   "topicLeaves": {
+    "חזות הישוב": 47,
+    "תרבות קהילתית": 32,
+    "לכידות קהילתית": 19,
+    "סיוע הדדי והתנדבות": 17,
+    "שקט, שלווה ובנייה נמוכה": 12
+   },
+   "topicsOverByShareRule": []
+  },
+  "lineageContent": {
+   "themeDocsMergedAway": 18,
+   "finalsThatAbsorbedDonors": 4,
+   "meanShareOfMembersPresentAtSplit": 0.63,
+   "finalsHoldingOnlySplitMembers": 2,
+   "splitBornFinals": 15,
+   "donorsMergedIntoDirectSibling": 0
+  },
+  "undoSplits": {
+   "series": [
+    {
+     "undone": 0,
+     "themes": 16,
+     "ariS1": 0.525,
+     "f1S1": 0.57,
+     "ariS2": 0.486
+    },
+    {
+     "undone": 1,
+     "themes": 13,
+     "ariS1": 0.535,
+     "f1S1": 0.591,
+     "ariS2": 0.496
+    },
+    {
+     "undone": 2,
+     "themes": 12,
+     "ariS1": 0.528,
+     "f1S1": 0.586,
+     "ariS2": 0.489
+    },
+    {
+     "undone": 3,
+     "themes": 9,
+     "ariS1": 0.66,
+     "f1S1": 0.712,
+     "ariS2": 0.611
+    },
+    {
+     "undone": 4,
+     "themes": 8,
+     "ariS1": 0.521,
+     "f1S1": 0.605,
+     "ariS2": 0.481
+    },
+    {
+     "undone": 5,
+     "themes": 8,
+     "ariS1": 0.521,
+     "f1S1": 0.605,
+     "ariS2": 0.481
+    },
+    {
+     "undone": 6,
+     "themes": 8,
+     "ariS1": 0.521,
+     "f1S1": 0.605,
+     "ariS2": 0.481
+    },
+    {
+     "undone": 7,
+     "themes": 6,
+     "ariS1": 0.499,
+     "f1S1": 0.598,
+     "ariS2": 0.461
+    },
+    {
+     "undone": 8,
+     "themes": 4,
+     "ariS1": 0.303,
+     "f1S1": 0.457,
+     "ariS2": 0.374
+    },
+    {
+     "undone": 9,
+     "themes": 4,
+     "ariS1": 0.303,
+     "f1S1": 0.457,
+     "ariS2": 0.374
+    },
+    {
+     "undone": 10,
+     "themes": 4,
+     "ariS1": 0.303,
+     "f1S1": 0.457,
+     "ariS2": 0.374
+    },
+    {
+     "undone": 11,
+     "themes": 4,
+     "ariS1": 0.303,
+     "f1S1": 0.457,
+     "ariS2": 0.374
+    },
+    {
+     "undone": 12,
+     "themes": 3,
+     "ariS1": 0.025,
+     "f1S1": 0.273,
+     "ariS2": 0.042
+    }
+   ],
+   "best": {
+    "undone": 3,
+    "themes": 9,
+    "ariS1": 0.66,
+    "f1S1": 0.712,
+    "ariS2": 0.611
+   }
+  },
+  "tiers": {
+   "ai_rewrite": 140,
+   "plain": 47
+  },
+  "provenance": {
+   "themeMembersShownToJudges": {
+    "ai_rewrite": 65,
+    "synth": 33,
+    "plain": 15
+   },
+   "aiWrittenShare": 0.867,
+   "plainOriginalsHiddenInSynth": 26,
+   "spawnLabelsFromOneSynth": 4,
+   "plainWordsRetainedInSynthMean": 0.557,
+   "retentionN": 26
+  },
+  "labels": {
+   "system": {
+    "n": 16,
+    "attPlain": 0.432,
+    "attRewrite": 0.911,
+    "attSynth": 0.536,
+    "residentsPerWordMedian": 0.5,
+    "fullyAttestedPlain": 0,
+    "attRewriteSubsampledToPlainSize": 0.624
+   },
+   "sigalNewNames": {
+    "n": 7,
+    "attPlain": 0.571,
+    "attRewrite": 0.952,
+    "attSynth": 0.536,
+    "residentsPerWordMedian": 1.0,
+    "fullyAttestedPlain": 2,
+    "attRewriteSubsampledToPlainSize": 0.643
+   },
+   "sigalDetail": [
+    {
+     "label": "דרכים, שבילים ותשתיות",
+     "words": 3,
+     "attPlain": 0.333,
+     "attRewrite": 0.667,
+     "attSynth": 0.0,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 1
+    },
+    {
+     "label": "חוסן קהילתי בשעת חירום",
+     "words": 4,
+     "attPlain": 0.5,
+     "attRewrite": 1.0,
+     "attSynth": 0.25,
+     "residentsPerWordMedian": 0.5,
+     "residentsAnyWord": 8
+    },
+    {
+     "label": "חזות הישוב",
+     "words": 1,
+     "attPlain": 1.0,
+     "attRewrite": 1.0,
+     "attSynth": 0.0,
+     "residentsPerWordMedian": 1.0,
+     "residentsAnyWord": 1
+    },
+    {
+     "label": "חתולי הכפר",
+     "words": 1,
+     "attPlain": 0.0,
+     "attRewrite": 1.0,
+     "attSynth": 1.0,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 0
+    },
+    {
+     "label": "לכידות קהילתית",
+     "words": 2,
+     "attPlain": 0.5,
+     "attRewrite": 1.0,
+     "attSynth": 0.5,
+     "residentsPerWordMedian": 3.5,
+     "residentsAnyWord": 7
+    },
+    {
+     "label": "סיוע הדדי והתנדבות",
+     "words": 3,
+     "attPlain": 0.667,
+     "attRewrite": 1.0,
+     "attSynth": 1.0,
+     "residentsPerWordMedian": 1.0,
+     "residentsAnyWord": 4
+    },
+    {
+     "label": "תרבות קהילתית",
+     "words": 2,
+     "attPlain": 1.0,
+     "attRewrite": 1.0,
+     "attSynth": 1.0,
+     "residentsPerWordMedian": 5.0,
+     "residentsAnyWord": 10
+    }
+   ],
+   "systemDetail": [
+    {
+     "label": "ניהול ותקשורת קהילתית",
+     "words": 3,
+     "attPlain": 0.333,
+     "attRewrite": 1.0,
+     "attSynth": 0.333,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 7
+    },
+    {
+     "label": "ניקיון ונראות המרחב הציבורי",
+     "words": 4,
+     "attPlain": 0.5,
+     "attRewrite": 1.0,
+     "attSynth": 0.75,
+     "residentsPerWordMedian": 0.5,
+     "residentsAnyWord": 2
+    },
+    {
+     "label": "טקסים קהילתיים ולאומיים",
+     "words": 3,
+     "attPlain": 0.0,
+     "attRewrite": 0.667,
+     "attSynth": 0.667,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 0
+    },
+    {
+     "label": "חיבור לטבע ומרחבים פתוחים",
+     "words": 4,
+     "attPlain": 0.5,
+     "attRewrite": 1.0,
+     "attSynth": 0.75,
+     "residentsPerWordMedian": 0.5,
+     "residentsAnyWord": 1
+    },
+    {
+     "label": "פינות נוי, פריחה והצללה",
+     "words": 4,
+     "attPlain": 0.5,
+     "attRewrite": 1.0,
+     "attSynth": 0.5,
+     "residentsPerWordMedian": 0.5,
+     "residentsAnyWord": 2
+    },
+    {
+     "label": "צביון היישוב ובית הכנסת",
+     "words": 3,
+     "attPlain": 0.667,
+     "attRewrite": 1.0,
+     "attSynth": 0.333,
+     "residentsPerWordMedian": 1.0,
+     "residentsAnyWord": 2
+    },
+    {
+     "label": "אירועי חגים ומסורות מקומיות",
+     "words": 4,
+     "attPlain": 0.75,
+     "attRewrite": 1.0,
+     "attSynth": 1.0,
+     "residentsPerWordMedian": 2.0,
+     "residentsAnyWord": 6
+    },
+    {
+     "label": "ניהול אוכלוסיית חתולי הכפר",
+     "words": 3,
+     "attPlain": 0.0,
+     "attRewrite": 1.0,
+     "attSynth": 0.333,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 0
+    },
+    {
+     "label": "יחסי שכנות ושייכות קהילתית",
+     "words": 4,
+     "attPlain": 0.25,
+     "attRewrite": 1.0,
+     "attSynth": 0.25,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 7
+    },
+    {
+     "label": "גינון, צמחייה והצללה",
+     "words": 3,
+     "attPlain": 0.333,
+     "attRewrite": 1.0,
+     "attSynth": 0.667,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 1
+    },
+    {
+     "label": "מורשת, היסטוריה ותיעוד מקומי",
+     "words": 4,
+     "attPlain": 0.5,
+     "attRewrite": 0.75,
+     "attSynth": 0.25,
+     "residentsPerWordMedian": 0.5,
+     "residentsAnyWord": 3
+    },
+    {
+     "label": "דרכים, שבילים ותשתיות גינון",
+     "words": 4,
+     "attPlain": 0.25,
+     "attRewrite": 0.75,
+     "attSynth": 0.25,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 1
+    },
+    {
+     "label": "שקט, שלווה ובנייה נמוכה",
+     "words": 4,
+     "attPlain": 0.75,
+     "attRewrite": 0.75,
+     "attSynth": 1.0,
+     "residentsPerWordMedian": 1.0,
+     "residentsAnyWord": 5
+    },
+    {
+     "label": "ותיקים וקשרים בין־דוריים",
+     "words": 3,
+     "attPlain": 0.333,
+     "attRewrite": 0.667,
+     "attSynth": 0.0,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 1
+    },
+    {
+     "label": "מרחבי קהילה, תרבות ויוזמות",
+     "words": 4,
+     "attPlain": 0.75,
+     "attRewrite": 1.0,
+     "attSynth": 0.75,
+     "residentsPerWordMedian": 2.0,
+     "residentsAnyWord": 10
+    },
+    {
+     "label": "סיוע הדדי, התנדבות וחוסן",
+     "words": 4,
+     "attPlain": 0.5,
+     "attRewrite": 1.0,
+     "attSynth": 0.75,
+     "residentsPerWordMedian": 0.5,
+     "residentsAnyWord": 4
+    }
+   ],
+   "phraseInPlain": {
+    "דרכים, שבילים ותשתיות": 0,
+    "חוסן קהילתי בשעת חירום": 0,
+    "חזות הישוב": 0,
+    "חתולי הכפר": 0,
+    "לכידות קהילתית": 0,
+    "סיוע הדדי והתנדבות": 0,
+    "תרבות קהילתית": 0
+   },
+   "phraseInAllOriginals": {
+    "דרכים, שבילים ותשתיות": 0,
+    "חוסן קהילתי בשעת חירום": 0,
+    "חזות הישוב": 0,
+    "חתולי הכפר": 1,
+    "לכידות קהילתית": 0,
+    "סיוע הדדי והתנדבות": 0,
+    "תרבות קהילתית": 0
+   },
+   "systemVerbatim": {
+    "wholeLabelInOriginals": 0,
+    "anySegmentInPlain": 7,
+    "anySegmentInOriginals": 13,
+    "of": 16
+   },
+   "coinedVariantHits": {
+    "חזות הישוב": {
+     "allOriginals": 0,
+     "plain": 0
+    },
+    "תרבות קהילתית": {
+     "allOriginals": 1,
+     "plain": 0
+    },
+    "לכידות קהילתית": {
+     "allOriginals": 0,
+     "plain": 0
+    },
+    "חוסן קהילתי בשעת חירום": {
+     "allOriginals": 0,
+     "plain": 0
+    }
+   },
+   "finalListCompound": {
+    "sigalTopics": 7,
+    "sigalTopicsOf": 12
+   },
+   "coined": {
+    "names": [
+     "חזות הישוב",
+     "תרבות קהילתית",
+     "לכידות קהילתית",
+     "חוסן קהילתי בשעת חירום"
+    ],
+    "wholeNameInOriginals": {
+     "חזות הישוב": 0,
+     "תרבות קהילתית": 0,
+     "לכידות קהילתית": 0,
+     "חוסן קהילתי בשעת חירום": 0
+    },
+    "wholeNameInPlain": {
+     "חזות הישוב": 0,
+     "תרבות קהילתית": 0,
+     "לכידות קהילתית": 0,
+     "חוסן קהילתי בשעת חירום": 0
+    }
+   },
+   "wordCount": {
+    "systemMean": 3.75,
+    "systemUnder3": 0,
+    "coined": {
+     "חזות הישוב": 2,
+     "תרבות קהילתית": 2,
+     "לכידות קהילתית": 2,
+     "חוסן קהילתי בשעת חירום": 4
+    },
+    "coinedUnder3": 3,
+    "coinedCompound": 0
+   },
+   "keptVerbatimByTopicName": 5,
+   "baselineRandomRewriteWordInPlain": 0.314,
+   "compound": {
+    "system": 15,
+    "systemOf": 16,
+    "sigal": 2,
+    "sigalOf": 7
+   },
+   "sigalSplitOrNarrowedAreCompound": {
+    "סיוע הדדי, התנדבות וחוסן": true
+   },
+   "register": {
+    "system": {
+     "administrative": 10,
+     "everyday": 6,
+     "uncoded": []
+    },
+    "sigal": {
+     "administrative": 5,
+     "everyday": 2,
+     "uncoded": []
+    }
+   }
+  },
+  "fieldSpread": {
+   "plainTier": {
+    "terms": [
+     "הקהילה",
+     "השקט",
+     "ההתנדבות",
+     "לכבד",
+     "החיים",
+     "רוח",
+     "מסורת",
+     "התושבים",
+     "העצמאות",
+     "תרבות",
+     "הפרטיות",
+     "הדעות",
+     "ואת",
+     "שיש",
+     "פינות"
+    ],
+    "docFreq": [
+     7,
+     5,
+     4,
+     3,
+     3,
+     3,
+     3,
+     3,
+     3,
+     3,
+     2,
+     2,
+     2,
+     2,
+     2
+    ],
+    "systemBits": 0.525,
+    "sigalBits": 0.525,
+    "nullMean": 0.482,
+    "nullP5": 0.327,
+    "pLowerOrEqual": 1.0,
+    "systemThemesPerTerm": 1.47,
+    "sigalTopicsPerTerm": 1.47
+   },
+   "allOriginals": {
+    "terms": [
+     "הקהילה",
+     "המקום",
+     "התושבים",
+     "חברי",
+     "סביבה",
+     "תחושת",
+     "הנוף",
+     "ואת",
+     "פעילות",
+     "תושבי",
+     "מסורת",
+     "כחלק",
+     "הטבע",
+     "קיום",
+     "השקט"
+    ],
+    "docFreq": [
+     47,
+     23,
+     23,
+     15,
+     14,
+     14,
+     13,
+     13,
+     12,
+     11,
+     10,
+     10,
+     10,
+     10,
+     10
+    ],
+    "systemBits": 1.883,
+    "sigalBits": 1.387,
+    "nullMean": 1.655,
+    "nullP5": 1.428,
+    "pLowerOrEqual": 0.027,
+    "systemThemesPerTerm": 5.0,
+    "sigalTopicsPerTerm": 3.73
+   }
+  },
+  "embeddingRobustness": {
+   "aucLeafCentroid": 0.716,
+   "corrCosineWithThemeSize": 0.565
+  },
+  "embedding": {
+   "mergedMean": 0.929,
+   "notMergedMean": 0.926,
+   "aucMergedVsNot": 0.519,
+   "siblingMean": 0.935,
+   "nonSiblingMean": 0.925,
+   "bestCutF1": 0.235,
+   "bestCutTh": 0.96,
+   "bestCutTP": 2,
+   "bestCutFP": 6,
+   "bestCutFN": 7,
+   "mergedInTopK": 2,
+   "k": 9,
+   "covered": 120
+  },
+  "agreementBaselineRandomCoarsening": 0.638,
+  "fairPairs": {
+   "joinedAcrossLive": 520,
+   "keptApart": 4998,
+   "heldTogetherLive": 404
+  },
+  "replay": {
+   "R": [
+    {
+     "joinRateSheJoined": 0.194,
+     "joinRateSheKeptApart": 0.031,
+     "keepsLivePairs": 0.55,
+     "themes": 13,
+     "other": 5,
+     "unanswered": 0,
+     "largest": 14,
+     "le3": 0,
+     "ariS1": 0.389,
+     "precisionS1": 0.649,
+     "recallS1": 0.347,
+     "f1S1": 0.453,
+     "ariS2": 0.382,
+     "attPlain": 0.442,
+     "compound": 13,
+     "usd": 0.043793200000000004,
+     "labels": [
+      "חגים, טקסים ומסורות",
+      "פעילות חברתית ופנאי",
+      "ילדים, נוער וחינוך",
+      "ותיקים וגיל שלישי",
+      "התנדבות וסיוע הדדי",
+      "שייכות, סובלנות ושיח",
+      "מוסדות וניהול קהילתי",
+      "מורשת וזהות יישובית",
+      "טבע, נוף ושטחים פתוחים",
+      "גינון, נוי והצללה",
+      "בינוי כפרי ותשתיות",
+      "ניקיון, פסולת ומיחזור",
+      "איכות חיים ובטיחות"
+     ]
+    },
+    {
+     "joinRateSheJoined": 0.183,
+     "joinRateSheKeptApart": 0.033,
+     "keepsLivePairs": 0.517,
+     "themes": 14,
+     "other": 3,
+     "unanswered": 0,
+     "largest": 14,
+     "le3": 1,
+     "ariS1": 0.347,
+     "precisionS1": 0.61,
+     "recallS1": 0.313,
+     "f1S1": 0.414,
+     "ariS2": 0.364,
+     "attPlain": 0.452,
+     "compound": 14,
+     "usd": 0.0300022,
+     "labels": [
+      "חגים, טקסים ומסורות",
+      "פעילות חברתית ופנאי",
+      "התנדבות וסיוע הדדי",
+      "שילוב ושייכות קהילתית",
+      "ועדות וניהול קהילתי",
+      "חינוך, נוער וגיל שלישי",
+      "טבע, נוף ומרחבים פתוחים",
+      "גינון ונוי ציבורי",
+      "צביון כפרי ותכנון",
+      "ניקיון, פסולת ומיחזור",
+      "מוסדות ותשתיות יישוביות",
+      "מורשת וזהות היישוב",
+      "סובלנות ותרבות שיח",
+      "פיתוח וכלכלה מקומית"
+     ]
+    },
+    {
+     "joinRateSheJoined": 0.219,
+     "joinRateSheKeptApart": 0.033,
+     "keepsLivePairs": 0.587,
+     "themes": 13,
+     "other": 3,
+     "unanswered": 0,
+     "largest": 17,
+     "le3": 1,
+     "ariS1": 0.414,
+     "precisionS1": 0.667,
+     "recallS1": 0.372,
+     "f1S1": 0.477,
+     "ariS2": 0.408,
+     "attPlain": 0.481,
+     "compound": 13,
+     "usd": 0.0377206,
+     "labels": [
+      "חגים, טקסים ומסורות",
+      "התנדבות ועזרה הדדית",
+      "שייכות ויחסים בקהילה",
+      "ילדים, נוער וגיל שלישי",
+      "מורשת וזהות יישובית",
+      "טבע, נוף ומרחבים פתוחים",
+      "גינון, עצים ופינות נוי",
+      "צביון כפרי ותכנון בנייה",
+      "תשתיות ומרחב ציבורי",
+      "ניקיון, פסולת ומיחזור",
+      "מוסדות ושירותים יישוביים",
+      "ניהול והשתתפות ציבורית",
+      "יוזמות וכלכלה מקומית"
+     ]
+    }
+   ],
+   "F": [
+    {
+     "joinRateSheJoined": 0.312,
+     "joinRateSheKeptApart": 0.066,
+     "keepsLivePairs": 0.577,
+     "themes": 10,
+     "other": 2,
+     "unanswered": 0,
+     "largest": 21,
+     "le3": 2,
+     "ariS1": 0.376,
+     "precisionS1": 0.517,
+     "recallS1": 0.413,
+     "f1S1": 0.459,
+     "ariS2": 0.453,
+     "attPlain": 0.6,
+     "compound": 0,
+     "usd": 0.0431272,
+     "labels": [
+      "חגי הכפר",
+      "חיי קהילה",
+      "דורות היישוב",
+      "נופי הכפר",
+      "סדר ציבורי",
+      "מרחב ציבורי",
+      "צביון הכפר",
+      "מורשת כורזים",
+      "ניהול היישוב",
+      "כלכלה מקומית"
+     ]
+    },
+    {
+     "joinRateSheJoined": 0.417,
+     "joinRateSheKeptApart": 0.07,
+     "keepsLivePairs": 0.646,
+     "themes": 10,
+     "other": 0,
+     "unanswered": 0,
+     "largest": 22,
+     "le3": 0,
+     "ariS1": 0.458,
+     "precisionS1": 0.562,
+     "recallS1": 0.508,
+     "f1S1": 0.534,
+     "ariS2": 0.552,
+     "attPlain": 0.6,
+     "compound": 0,
+     "usd": 0.0342448,
+     "labels": [
+      "חיי קהילה",
+      "מסורות היישוב",
+      "חינוך קהילתי",
+      "רווחת התושבים",
+      "המרחב הירוק",
+      "איכות החיים",
+      "מרחב ציבורי",
+      "טיפול בפסולת",
+      "ניהול היישוב",
+      "פיתוח מקומי"
+     ]
+    },
+    {
+     "joinRateSheJoined": 0.338,
+     "joinRateSheKeptApart": 0.054,
+     "keepsLivePairs": 0.621,
+     "themes": 10,
+     "other": 0,
+     "unanswered": 0,
+     "largest": 19,
+     "le3": 0,
+     "ariS1": 0.444,
+     "precisionS1": 0.59,
+     "recallS1": 0.458,
+     "f1S1": 0.516,
+     "ariS2": 0.511,
+     "attPlain": 0.7,
+     "compound": 0,
+     "usd": 0.049249,
+     "labels": [
+      "תרבות הכפר",
+      "ערבות הדדית",
+      "הדורות בכפר",
+      "נופי כורזים",
+      "חזות הכפר",
+      "אופי המגורים",
+      "המרחב הציבורי",
+      "זהות מקומית",
+      "ניהול קהילתי",
+      "פיתוח מקומי"
+     ]
+    }
+   ]
+  }
+ },
+ "B": {
+  "gate": {
+   "themes": 27,
+   "allMatch": 27,
+   "mismatches": []
+  },
+  "doublyFiledAtoms": 2,
+  "counts": {
+   "originals": 232,
+   "synths": 38,
+   "atoms": 166,
+   "themesFinal": 27,
+   "themeDocsEver": 42,
+   "topicsS1": 20,
+   "topicsS2": 20,
+   "unthemedAtoms": 4
+  },
+  "themeSizesAtoms": {
+   "sizes": [
+    1,
+    1,
+    2,
+    3,
+    3,
+    3,
+    3,
+    4,
+    4,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    6,
+    6,
+    7,
+    7,
+    7,
+    7,
+    8,
+    9,
+    9,
+    10,
+    15,
+    17
+   ],
+   "median": 5.0,
+   "le3": 7
+  },
+  "topicSizesAtomsS1": {
+   "sizes": [
+    2,
+    3,
+    3,
+    3,
+    4,
+    5,
+    5,
+    6,
+    7,
+    7,
+    7,
+    7,
+    8,
+    8,
+    9,
+    9,
+    10,
+    15,
+    17,
+    26
+   ],
+   "median": 7.0
+  },
+  "refinement": {
+   "themesInsideOneTopic": 26,
+   "themes": 27
+  },
+  "agreement": {
+   "S1": {
+    "atoms": {
+     "ari": 0.774,
+     "precision": 0.985,
+     "recall": 0.654,
+     "f1": 0.786
+    },
+    "leaves": {
+     "ari": 0.693,
+     "precision": 0.978,
+     "recall": 0.558,
+     "f1": 0.711
+    }
+   },
+   "S2": {
+    "atoms": {
+     "ari": 0.774,
+     "precision": 0.985,
+     "recall": 0.654,
+     "f1": 0.786
+    },
+    "leaves": {
+     "ari": 0.693,
+     "precision": 0.978,
+     "recall": 0.558,
+     "f1": 0.711
+    }
+   }
+  },
+  "lineage": {
+   "themeDocsEver": 42,
+   "bornFromSplit": 38,
+   "finalThemes": 27,
+   "finalBornFromSplit": 27,
+   "finalBornSpawn": 0,
+   "maxDepth": 3,
+   "depthDist": {
+    "1": 4,
+    "2": 15,
+    "3": 8
+   },
+   "splits": 9,
+   "parentDirectMembers": [
+    6,
+    8,
+    12,
+    21,
+    26,
+    19,
+    23,
+    22,
+    18
+   ],
+   "parentsUnder10Direct": 2,
+   "childrenTotal": 38,
+   "childrenLe2": 8,
+   "spawns": 4,
+   "themeMerges": 6,
+   "rebuildEvents": 0,
+   "rebuildProposals": 0,
+   "splitsFiredBefore": null,
+   "firstSplit": 1792093039345,
+   "lastSplit": 1793286230263,
+   "lastFinalThemeCreated": 1793286230188
+  },
+  "pairs": {
+   "merged": 19,
+   "notMerged": 332,
+   "mergedSibling": 6,
+   "notMergedSibling": 33,
+   "mergedSameTree": 11,
+   "notMergedSameTree": 110,
+   "mergedRefused": 6,
+   "notMergedRefused": 22,
+   "siblingPairs": 39,
+   "refusedFinalPairs": 28,
+   "fisherSibling": 0.01166,
+   "fisherRefused": 0.00197,
+   "pSiblingGivenMerged": 0.316,
+   "pSiblingGivenNot": 0.099,
+   "withinSiblings": {
+    "mergedRefused": 4,
+    "mergedNotRefused": 2,
+    "keptRefused": 16,
+    "keptNotRefused": 17,
+    "fisher": 0.3561
+   },
+   "nonSiblingCountedRefused": 8,
+   "mergeGroups": 3
+  },
+  "refusals": {
+   "events": 178,
+   "firstTs": "2026-10-15T19:47:09.291195Z",
+   "lastTs": "2026-10-30T14:38:28.897631Z",
+   "distinctGroups": 30,
+   "finalPairsRefused": 28,
+   "ofWhichSigalMerged": 6,
+   "sigalMergedPairs": 19,
+   "sigalPairsRefused": 6,
+   "groupsTouchingFinal": 16
+  },
+  "splitTrigger": {
+   "placedLeaves": 203,
+   "alwaysSplitAbove": 25,
+   "alwaysAsShareOfPlaced": 0.123,
+   "largestFinalThemeLeaves": 18,
+   "finalThemesOver": 0,
+   "sigalTopicLeaves": {
+    "בינוי קהילה": 40,
+    "הסדרת המרחב הציבורי": 18,
+    "נוער, צעירים ומנהיגות": 18,
+    "ניקיון, אשפה ומיחזור": 12,
+    "שיפור פני הכפר": 12,
+    "מתקני ספורט ומשחק": 11,
+    "שיח ציבורי": 11,
+    "בחירת בעלי תפקידים ואחריותם": 10,
+    "עסקים, מסחר ותיירות מקומית": 9,
+    "מיסים, תקציב ואמצעי תשלום": 8,
+    "מעורבות וייצוג בקבלת החלטות": 8,
+    "מרחבי מועדון ובילוי למבוגרים": 8,
+    "נגישות למידע ופרוטוקולים": 8,
+    "פיתוח ההרחבה והמרחבים הקהילתיים": 6,
+    "טבע ואיכות הסביבה": 5,
+    "פעילויות פנאי ותוכן למבוגרים": 5,
+    "העשרה וחוגים לילדים": 4,
+    "מורשת ותיעוד": 4,
+    "קבלה וקליטת תושבים": 4,
+    "מבנים ומסגרות לגיל הרך": 2
+   },
+   "sigalTopicsThatWouldBeSplit": [
+    "בינוי קהילה"
+   ]
+  },
+  "splitTriggerCodeExact": {
+   "placed": 216,
+   "alwaysAsShare": 0.116,
+   "largestTheme": 18,
+   "largestShare": 0.083,
+   "topicsOver": [
+    "בינוי קהילה"
+   ],
+   "topicLeaves": {
+    "בינוי קהילה": 43,
+    "הסדרת המרחב הציבורי": 18,
+    "נוער, צעירים ומנהיגות": 18,
+    "שיח ציבורי": 14,
+    "שיפור פני הכפר": 14
+   },
+   "topicsOverByShareRule": []
+  },
+  "lineageContent": {
+   "themeDocsMergedAway": 6,
+   "finalsThatAbsorbedDonors": 1,
+   "meanShareOfMembersPresentAtSplit": 0.67,
+   "finalsHoldingOnlySplitMembers": 10,
+   "splitBornFinals": 27,
+   "donorsMergedIntoDirectSibling": 0
+  },
+  "undoSplits": {
+   "series": [
+    {
+     "undone": 0,
+     "themes": 27,
+     "ariS1": 0.774,
+     "f1S1": 0.786,
+     "ariS2": 0.774
+    },
+    {
+     "undone": 1,
+     "themes": 24,
+     "ariS1": 0.773,
+     "f1S1": 0.786,
+     "ariS2": 0.773
+    },
+    {
+     "undone": 2,
+     "themes": 20,
+     "ariS1": 0.677,
+     "f1S1": 0.699,
+     "ariS2": 0.677
+    },
+    {
+     "undone": 3,
+     "themes": 17,
+     "ariS1": 0.555,
+     "f1S1": 0.59,
+     "ariS2": 0.555
+    },
+    {
+     "undone": 4,
+     "themes": 14,
+     "ariS1": 0.509,
+     "f1S1": 0.549,
+     "ariS2": 0.509
+    },
+    {
+     "undone": 5,
+     "themes": 10,
+     "ariS1": 0.337,
+     "f1S1": 0.401,
+     "ariS2": 0.337
+    },
+    {
+     "undone": 6,
+     "themes": 7,
+     "ariS1": 0.34,
+     "f1S1": 0.405,
+     "ariS2": 0.34
+    },
+    {
+     "undone": 7,
+     "themes": 5,
+     "ariS1": 0.264,
+     "f1S1": 0.341,
+     "ariS2": 0.264
+    },
+    {
+     "undone": 8,
+     "themes": 3,
+     "ariS1": 0.177,
+     "f1S1": 0.272,
+     "ariS2": 0.177
+    },
+    {
+     "undone": 9,
+     "themes": 3,
+     "ariS1": 0.177,
+     "f1S1": 0.272,
+     "ariS2": 0.177
+    }
+   ],
+   "best": {
+    "undone": 0,
+    "themes": 27,
+    "ariS1": 0.774,
+    "f1S1": 0.786,
+    "ariS2": 0.774
+   }
+  },
+  "tiers": {
+   "ai_rewrite": 181,
+   "plain": 51
+  },
+  "provenance": {
+   "themeMembersShownToJudges": {
+    "ai_rewrite": 105,
+    "plain": 25,
+    "synth": 40
+   },
+   "aiWrittenShare": 0.853,
+   "plainOriginalsHiddenInSynth": 20,
+   "spawnLabelsFromOneSynth": 4,
+   "plainWordsRetainedInSynthMean": 0.558,
+   "retentionN": 20
+  },
+  "labels": {
+   "system": {
+    "n": 27,
+    "attPlain": 0.419,
+    "attRewrite": 0.923,
+    "attSynth": 0.496,
+    "residentsPerWordMedian": 0.0,
+    "fullyAttestedPlain": 2,
+    "attRewriteSubsampledToPlainSize": 0.641
+   },
+   "sigalNewNames": {
+    "n": 7,
+    "attPlain": 0.476,
+    "attRewrite": 0.881,
+    "attSynth": 0.548,
+    "residentsPerWordMedian": 0.5,
+    "fullyAttestedPlain": 2,
+    "attRewriteSubsampledToPlainSize": 0.654
+   },
+   "sigalDetail": [
+    {
+     "label": "בינוי קהילה",
+     "words": 2,
+     "attPlain": 0.5,
+     "attRewrite": 0.5,
+     "attSynth": 0.5,
+     "residentsPerWordMedian": 2.0,
+     "residentsAnyWord": 4
+    },
+    {
+     "label": "טבע ואיכות הסביבה",
+     "words": 3,
+     "attPlain": 1.0,
+     "attRewrite": 1.0,
+     "attSynth": 1.0,
+     "residentsPerWordMedian": 2.0,
+     "residentsAnyWord": 3
+    },
+    {
+     "label": "מורשת ותיעוד",
+     "words": 2,
+     "attPlain": 0.0,
+     "attRewrite": 1.0,
+     "attSynth": 0.5,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 0
+    },
+    {
+     "label": "פעילויות פנאי ותוכן למבוגרים",
+     "words": 4,
+     "attPlain": 0.5,
+     "attRewrite": 1.0,
+     "attSynth": 0.5,
+     "residentsPerWordMedian": 0.5,
+     "residentsAnyWord": 2
+    },
+    {
+     "label": "קבלה וקליטת תושבים",
+     "words": 3,
+     "attPlain": 0.333,
+     "attRewrite": 0.667,
+     "attSynth": 0.333,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 3
+    },
+    {
+     "label": "שיח ציבורי",
+     "words": 2,
+     "attPlain": 1.0,
+     "attRewrite": 1.0,
+     "attSynth": 1.0,
+     "residentsPerWordMedian": 3.5,
+     "residentsAnyWord": 6
+    },
+    {
+     "label": "שיפור פני הכפר",
+     "words": 1,
+     "attPlain": 0.0,
+     "attRewrite": 1.0,
+     "attSynth": 0.0,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 0
+    }
+   ],
+   "systemDetail": [
+    {
+     "label": "פעילויות פנאי ותוכן למבוגרים ומתבגרים",
+     "words": 5,
+     "attPlain": 0.4,
+     "attRewrite": 1.0,
+     "attSynth": 0.4,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 2
+    },
+    {
+     "label": "מרחבי מועדון ובילוי למבוגרים",
+     "words": 4,
+     "attPlain": 0.25,
+     "attRewrite": 1.0,
+     "attSynth": 0.75,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 2
+    },
+    {
+     "label": "שכנות טובה ותחושת שייכות",
+     "words": 4,
+     "attPlain": 0.5,
+     "attRewrite": 1.0,
+     "attSynth": 0.25,
+     "residentsPerWordMedian": 0.5,
+     "residentsAnyWord": 1
+    },
+    {
+     "label": "קבלה, הכלה וקליטת תושבים",
+     "words": 4,
+     "attPlain": 0.25,
+     "attRewrite": 0.75,
+     "attSynth": 0.25,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 3
+    },
+    {
+     "label": "טבע, מורשת ואיכות הסביבה",
+     "words": 4,
+     "attPlain": 0.75,
+     "attRewrite": 1.0,
+     "attSynth": 1.0,
+     "residentsPerWordMedian": 1.5,
+     "residentsAnyWord": 3
+    },
+    {
+     "label": "מתקני ספורט ומשחק",
+     "words": 3,
+     "attPlain": 0.0,
+     "attRewrite": 1.0,
+     "attSynth": 1.0,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 0
+    },
+    {
+     "label": "נוער, צעירים ומנהיגות",
+     "words": 3,
+     "attPlain": 0.667,
+     "attRewrite": 1.0,
+     "attSynth": 0.333,
+     "residentsPerWordMedian": 1.0,
+     "residentsAnyWord": 2
+    },
+    {
+     "label": "בחירת בעלי תפקידים ואחריותם",
+     "words": 4,
+     "attPlain": 0.25,
+     "attRewrite": 0.75,
+     "attSynth": 0.5,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 1
+    },
+    {
+     "label": "כללי התנהלות בקבוצות ווטסאפ",
+     "words": 4,
+     "attPlain": 0.75,
+     "attRewrite": 1.0,
+     "attSynth": 0.75,
+     "residentsPerWordMedian": 1.0,
+     "residentsAnyWord": 4
+    },
+    {
+     "label": "נגישות למידע ופרוטוקולים",
+     "words": 3,
+     "attPlain": 0.0,
+     "attRewrite": 1.0,
+     "attSynth": 0.333,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 0
+    },
+    {
+     "label": "גינון, השקיה וטיפוח הכפר",
+     "words": 3,
+     "attPlain": 0.0,
+     "attRewrite": 1.0,
+     "attSynth": 0.667,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 0
+    },
+    {
+     "label": "מעורבות וייצוג בקבלת החלטות",
+     "words": 4,
+     "attPlain": 0.25,
+     "attRewrite": 0.75,
+     "attSynth": 0.25,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 1
+    },
+    {
+     "label": "אירועים קהילתיים ורב־דוריים",
+     "words": 3,
+     "attPlain": 0.0,
+     "attRewrite": 0.667,
+     "attSynth": 0.667,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 0
+    },
+    {
+     "label": "התנדבות וסיוע הדדי בקהילה",
+     "words": 4,
+     "attPlain": 1.0,
+     "attRewrite": 1.0,
+     "attSynth": 0.75,
+     "residentsPerWordMedian": 1.5,
+     "residentsAnyWord": 7
+    },
+    {
+     "label": "צל, עצים ושבילים",
+     "words": 2,
+     "attPlain": 1.0,
+     "attRewrite": 0.5,
+     "attSynth": 0.0,
+     "residentsPerWordMedian": 2.0,
+     "residentsAnyWord": 3
+    },
+    {
+     "label": "הידברות ויישוב מחלוקות",
+     "words": 3,
+     "attPlain": 0.0,
+     "attRewrite": 1.0,
+     "attSynth": 0.0,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 0
+    },
+    {
+     "label": "אכיפה ויישום כללי הקבוצה",
+     "words": 4,
+     "attPlain": 0.5,
+     "attRewrite": 1.0,
+     "attSynth": 0.5,
+     "residentsPerWordMedian": 0.5,
+     "residentsAnyWord": 3
+    },
+    {
+     "label": "מיסים, תקציב ואמצעי תשלום",
+     "words": 4,
+     "attPlain": 0.0,
+     "attRewrite": 1.0,
+     "attSynth": 0.25,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 0
+    },
+    {
+     "label": "פיתוח ההרחבה והמרחבים הקהילתיים",
+     "words": 4,
+     "attPlain": 0.25,
+     "attRewrite": 1.0,
+     "attSynth": 1.0,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 3
+    },
+    {
+     "label": "הקשבה והתחשבות בין תושבים",
+     "words": 3,
+     "attPlain": 0.667,
+     "attRewrite": 1.0,
+     "attSynth": 0.333,
+     "residentsPerWordMedian": 1.0,
+     "residentsAnyWord": 4
+    },
+    {
+     "label": "חינוך ותרבות לחיזוק הקהילה",
+     "words": 4,
+     "attPlain": 0.75,
+     "attRewrite": 1.0,
+     "attSynth": 0.5,
+     "residentsPerWordMedian": 2.5,
+     "residentsAnyWord": 8
+    },
+    {
+     "label": "מבנים ומסגרות לגיל הרך",
+     "words": 4,
+     "attPlain": 0.25,
+     "attRewrite": 0.75,
+     "attSynth": 0.0,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 1
+    },
+    {
+     "label": "עסקים, מסחר ותיירות מקומית",
+     "words": 4,
+     "attPlain": 0.5,
+     "attRewrite": 0.75,
+     "attSynth": 0.25,
+     "residentsPerWordMedian": 0.5,
+     "residentsAnyWord": 5
+    },
+    {
+     "label": "חיבור בין קבוצות ותושבים",
+     "words": 3,
+     "attPlain": 0.667,
+     "attRewrite": 1.0,
+     "attSynth": 0.667,
+     "residentsPerWordMedian": 1.0,
+     "residentsAnyWord": 4
+    },
+    {
+     "label": "ניקיון, אשפה ומיחזור",
+     "words": 3,
+     "attPlain": 0.667,
+     "attRewrite": 1.0,
+     "attSynth": 0.667,
+     "residentsPerWordMedian": 1.0,
+     "residentsAnyWord": 2
+    },
+    {
+     "label": "הסדרת המרחב הציבורי",
+     "words": 3,
+     "attPlain": 0.333,
+     "attRewrite": 1.0,
+     "attSynth": 0.667,
+     "residentsPerWordMedian": 0.0,
+     "residentsAnyWord": 2
+    },
+    {
+     "label": "העשרה וחוגים לילדים",
+     "words": 3,
+     "attPlain": 0.667,
+     "attRewrite": 1.0,
+     "attSynth": 0.667,
+     "residentsPerWordMedian": 1.0,
+     "residentsAnyWord": 1
+    }
+   ],
+   "phraseInPlain": {
+    "בינוי קהילה": 0,
+    "טבע ואיכות הסביבה": 0,
+    "מורשת ותיעוד": 0,
+    "פעילויות פנאי ותוכן למבוגרים": 0,
+    "קבלה וקליטת תושבים": 0,
+    "שיח ציבורי": 1,
+    "שיפור פני הכפר": 0
+   },
+   "phraseInAllOriginals": {
+    "בינוי קהילה": 0,
+    "טבע ואיכות הסביבה": 0,
+    "מורשת ותיעוד": 0,
+    "פעילויות פנאי ותוכן למבוגרים": 0,
+    "קבלה וקליטת תושבים": 0,
+    "שיח ציבורי": 2,
+    "שיפור פני הכפר": 1
+   },
+   "systemVerbatim": {
+    "wholeLabelInOriginals": 0,
+    "anySegmentInPlain": 13,
+    "anySegmentInOriginals": 24,
+    "of": 27
+   },
+   "coinedVariantHits": {
+    "בינוי קהילה": {
+     "allOriginals": 0,
+     "plain": 0
+    },
+    "שיפור פני הכפר": {
+     "allOriginals": 1,
+     "plain": 0
+    },
+    "שיח ציבורי": {
+     "allOriginals": 2,
+     "plain": 1
+    }
+   },
+   "finalListCompound": {
+    "sigalTopics": 16,
+    "sigalTopicsOf": 20
+   },
+   "coined": {
+    "names": [
+     "בינוי קהילה",
+     "שיפור פני הכפר",
+     "שיח ציבורי"
+    ],
+    "wholeNameInOriginals": {
+     "בינוי קהילה": 0,
+     "שיפור פני הכפר": 1,
+     "שיח ציבורי": 2
+    },
+    "wholeNameInPlain": {
+     "בינוי קהילה": 0,
+     "שיפור פני הכפר": 0,
+     "שיח ציבורי": 1
+    }
+   },
+   "wordCount": {
+    "systemMean": 3.7,
+    "systemUnder3": 0,
+    "coined": {
+     "בינוי קהילה": 2,
+     "שיפור פני הכפר": 3,
+     "שיח ציבורי": 2
+    },
+    "coinedUnder3": 2,
+    "coinedCompound": 0
+   },
+   "keptVerbatimByTopicName": 13,
+   "baselineRandomRewriteWordInPlain": 0.298,
+   "compound": {
+    "system": 26,
+    "systemOf": 27,
+    "sigal": 4,
+    "sigalOf": 7
+   },
+   "sigalSplitOrNarrowedAreCompound": {
+    "טבע, מורשת ואיכות הסביבה": true,
+    "פעילויות פנאי ותוכן למבוגרים ומתבגרים": true
+   },
+   "register": {
+    "system": {
+     "administrative": 19,
+     "everyday": 8,
+     "uncoded": []
+    },
+    "sigal": {
+     "administrative": 5,
+     "everyday": 2,
+     "uncoded": []
+    }
+   }
+  },
+  "fieldSpread": {
+   "plainTier": {
+    "terms": [
+     "חברי",
+     "השיח",
+     "במרכז",
+     "מקום",
+     "ועד",
+     "הקהילתית",
+     "תרבות",
+     "השבילים",
+     "ההרחבה",
+     "ולא",
+     "הצורך",
+     "אנשים",
+     "הציבורי",
+     "הכפרי",
+     "התושבים"
+    ],
+    "docFreq": [
+     6,
+     5,
+     4,
+     4,
+     4,
+     4,
+     4,
+     3,
+     3,
+     3,
+     3,
+     3,
+     3,
+     3,
+     3
+    ],
+    "systemBits": 1.245,
+    "sigalBits": 1.017,
+    "nullMean": 1.16,
+    "nullP5": 1.008,
+    "pLowerOrEqual": 0.0585,
+    "systemThemesPerTerm": 2.6,
+    "sigalTopicsPerTerm": 2.27
+   },
+   "allOriginals": {
+    "terms": [
+     "התושבים",
+     "הקהילה",
+     "תושבי",
+     "הרחבת",
+     "מקום",
+     "חברי",
+     "הקמת",
+     "לילדים",
+     "הפעילות",
+     "אחריות",
+     "שיח",
+     "ועד",
+     "חיזוק",
+     "כלל",
+     "ונגיש"
+    ],
+    "docFreq": [
+     56,
+     38,
+     27,
+     25,
+     23,
+     22,
+     21,
+     19,
+     19,
+     17,
+     15,
+     15,
+     14,
+     14,
+     14
+    ],
+    "systemBits": 2.991,
+    "sigalBits": 2.635,
+    "nullMean": 2.642,
+    "nullP5": 2.444,
+    "pLowerOrEqual": 0.4435,
+    "systemThemesPerTerm": 10.2,
+    "sigalTopicsPerTerm": 8.53
+   }
+  },
+  "embeddingRobustness": {
+   "aucLeafCentroid": 0.496,
+   "corrCosineWithThemeSize": 0.658
+  },
+  "embedding": {
+   "mergedMean": 0.914,
+   "notMergedMean": 0.923,
+   "aucMergedVsNot": 0.392,
+   "siblingMean": 0.93,
+   "nonSiblingMean": 0.921,
+   "bestCutF1": 0.107,
+   "bestCutTh": 0.871,
+   "bestCutTP": 19,
+   "bestCutFP": 316,
+   "bestCutFN": 0,
+   "mergedInTopK": 1,
+   "k": 19,
+   "covered": 351
+  },
+  "agreementBaselineRandomCoarsening": 0.617,
+  "fairPairs": {
+   "joinedAcrossLive": 302,
+   "keptApart": 12006,
+   "heldTogetherLive": 581
+  },
+  "replay": {
+   "R": [
+    {
+     "joinRateSheJoined": 0.368,
+     "joinRateSheKeptApart": 0.046,
+     "keepsLivePairs": 0.516,
+     "themes": 15,
+     "other": 6,
+     "unanswered": 0,
+     "largest": 20,
+     "le3": 2,
+     "ariS1": 0.414,
+     "precisionS1": 0.425,
+     "recallS1": 0.495,
+     "f1S1": 0.458,
+     "ariS2": 0.414,
+     "attPlain": 0.35,
+     "compound": 14,
+     "usd": 0.0510834,
+     "labels": [
+      "ניהול, ייצוג והשתתפות",
+      "שקיפות, כספים ושירותי מנהלה",
+      "תרבות שיח וגישור",
+      "קהילתיות, התנדבות וקליטה",
+      "חינוך, נוער וילדים",
+      "מענים לגיל השלישי",
+      "תרבות, אירועים ומוקדי מפגש",
+      "מסחר ושירותים מקומיים",
+      "מתקני ספורט ופנאי",
+      "נוי, הצללה ומרחב פתוח",
+      "ניקיון, פסולת וסביבה",
+      "דרכים, נגישות ותחבורה",
+      "ביטחון, שערים ופיקוח",
+      "תכנון, בנייה ופיתוח ההרחבה",
+      "מורשת ותיעוד היסטורי"
+     ]
+    },
+    {
+     "joinRateSheJoined": 0.384,
+     "joinRateSheKeptApart": 0.05,
+     "keepsLivePairs": 0.482,
+     "themes": 15,
+     "other": 7,
+     "unanswered": 0,
+     "largest": 23,
+     "le3": 2,
+     "ariS1": 0.389,
+     "precisionS1": 0.396,
+     "recallS1": 0.483,
+     "f1S1": 0.435,
+     "ariS2": 0.389,
+     "attPlain": 0.344,
+     "compound": 15,
+     "usd": 0.0434436,
+     "labels": [
+      "ניהול, שקיפות והשתתפות",
+      "מיסים ושירותי מזכירות",
+      "תרבות השיח וגישור",
+      "לכידות, הכלה ועזרה הדדית",
+      "אירועי תרבות ופנאי קהילתיים",
+      "חינוך, ילדים ונוער",
+      "מענים לאזרחים ותיקים",
+      "נוי, צל ומרחב ציבורי",
+      "מתקני משחק וספורט",
+      "ניקיון, פסולת וסביבה",
+      "דרכים, נגישות ותחבורה",
+      "ביטחון ובקרת כניסה",
+      "שירותים, מסחר ועסקים מקומיים",
+      "תכנון, בנייה ווילות אירוח",
+      "מורשת וארכיון היישוב"
+     ]
+    },
+    {
+     "joinRateSheJoined": 0.556,
+     "joinRateSheKeptApart": 0.061,
+     "keepsLivePairs": 0.592,
+     "themes": 15,
+     "other": 6,
+     "unanswered": 0,
+     "largest": 33,
+     "le3": 4,
+     "ariS1": 0.447,
+     "precisionS1": 0.412,
+     "recallS1": 0.612,
+     "f1S1": 0.493,
+     "ariS2": 0.447,
+     "attPlain": 0.328,
+     "compound": 13,
+     "usd": 0.054870999999999996,
+     "labels": [
+      "ניהול, שקיפות והשתתפות",
+      "תקציב, מיסים ותשלומים",
+      "שיח, לכידות ועזרה הדדית",
+      "אירועי תרבות ופנאי",
+      "נוער וחינוך בלתי פורמלי",
+      "חינוך וגיל הרך",
+      "שירותים לגיל השלישי",
+      "תיעוד מורשת היישוב",
+      "נוי, צל ושטחים ירוקים",
+      "מתקני משחק וספורט",
+      "ניקיון, מחזור ומפגעים סביבתיים",
+      "כבישים, הליכה ותחבורה",
+      "ביטחון ובקרת כניסה",
+      "שירותים ומסחר מקומיים",
+      "תכנון, בנייה ופיתוח ההרחבה"
+     ]
+    }
+   ],
+   "F": [
+    {
+     "joinRateSheJoined": 0.391,
+     "joinRateSheKeptApart": 0.079,
+     "keepsLivePairs": 0.549,
+     "themes": 12,
+     "other": 2,
+     "unanswered": 0,
+     "largest": 33,
+     "le3": 1,
+     "ariS1": 0.337,
+     "precisionS1": 0.316,
+     "recallS1": 0.515,
+     "f1S1": 0.392,
+     "ariS2": 0.337,
+     "attPlain": 0.5,
+     "compound": 0,
+     "usd": 0.0532546,
+     "labels": [
+      "ניהול היישוב",
+      "שיח מכבד",
+      "קהילה תומכת",
+      "חינוך הילדים",
+      "פנאי מקומי",
+      "המרחב הציבורי",
+      "איכות הסביבה",
+      "נגישות יישובית",
+      "ביטחון היישוב",
+      "שירותים מקומיים",
+      "פיתוח היישוב",
+      "מורשת מקומית"
+     ]
+    },
+    {
+     "joinRateSheJoined": 0.609,
+     "joinRateSheKeptApart": 0.087,
+     "keepsLivePairs": 0.477,
+     "themes": 13,
+     "other": 2,
+     "unanswered": 0,
+     "largest": 34,
+     "le3": 0,
+     "ariS1": 0.335,
+     "precisionS1": 0.307,
+     "recallS1": 0.543,
+     "f1S1": 0.392,
+     "ariS2": 0.335,
+     "attPlain": 0.385,
+     "compound": 0,
+     "usd": 0.05751,
+     "labels": [
+      "ניהול היישוב",
+      "קשרים קהילתיים",
+      "החינוך המקומי",
+      "חיי פנאי",
+      "רווחת התושבים",
+      "שירותים מקומיים",
+      "המרחב הציבורי",
+      "התניידות ביישוב",
+      "ניקיון סביבתי",
+      "ביטחון היישוב",
+      "סדר ציבורי",
+      "תכנון הכפר",
+      "מורשת מקומית"
+     ]
+    },
+    {
+     "joinRateSheJoined": 0.411,
+     "joinRateSheKeptApart": 0.084,
+     "keepsLivePairs": 0.587,
+     "themes": 12,
+     "other": 3,
+     "unanswered": 0,
+     "largest": 35,
+     "le3": 0,
+     "ariS1": 0.344,
+     "precisionS1": 0.315,
+     "recallS1": 0.549,
+     "f1S1": 0.4,
+     "ariS2": 0.344,
+     "attPlain": 0.542,
+     "compound": 1,
+     "usd": 0.052708,
+     "labels": [
+      "ניהול היישוב",
+      "חיי קהילה",
+      "שיח מכבד",
+      "חינוך ילדים ונוער",
+      "חיי פנאי",
+      "מרחב ציבורי",
+      "סביבה מטופחת",
+      "תנועה ביישוב",
+      "ביטחון ביישוב",
+      "שירותים מקומיים",
+      "תכנון היישוב",
+      "צביון מקומי"
+     ]
+    }
+   ]
+  }
+ },
+ "_note": "Aggregates, AI labels and Sigal topic names only. No resident text."
+}
