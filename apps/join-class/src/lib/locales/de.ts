@@ -570,7 +570,7 @@ const de: Record<string, string> = {
 	'opening.name_save': 'Speichern',
 	'opening.name_saving_short': 'Wird gespeichert…',
 	'classPlan.counts': 'Spiele: {{games}} · Stunden: {{lessons}}',
-	'classPlan.back': 'Meine Unterrichtspläne',
+	'classPlan.parent': 'Unterrichtsplan',
 	'classPlan.rename': 'Umbenennen',
 	'classPlan.list_title': 'Unterrichtspläne',
 	'classPlan.filter_all': 'Alle Klassen',

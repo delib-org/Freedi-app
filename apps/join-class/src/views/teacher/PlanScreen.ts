@@ -5,6 +5,7 @@ import { getAvailableLanguages, t } from '@/lib/i18n';
 import { setFollowLessonLanguage } from '@/lib/store';
 import { getPlanMain, isGameMode } from './planSource';
 import { TeacherBackBar, type TeacherBackBarAttrs } from './TeacherBackBar';
+import { createLeaveGuard } from './leaveGuard';
 import { lessonNameOf } from '@/lib/lessonLinks';
 import { ClassForm, closeClassForm, isClassFormOpen, openClassForm } from './ClassForm';
 import { planPathOf } from '@/lib/lessonLinks';
@@ -450,14 +451,22 @@ function backTarget(
 	mid: string,
 	planTitle: string,
 ): TeacherBackBarAttrs {
-	if (game) return { href: planPathOf(game.planId), label: planTitle || t('classPlan.back') };
+	if (game) return { href: planPathOf(game.planId), label: planTitle || t('classPlan.parent') };
 	const main = getPlanMain();
 
 	return { href: `/t/${mid}`, label: main ? lessonNameOf(main) : t('plan.back') };
 }
 
+// Both bar links save what is being typed before they leave (IA 14.5).
+const leaveGuard = createLeaveGuard({
+	flush: flushAll,
+	hasError: hasAnyError,
+	navigate: (href) => m.route.set(href),
+});
+
 export const PlanScreen: m.Component = {
 	oninit() {
+		leaveGuard.reset();
 		setFollowLessonLanguage(false);
 		closeClassForm();
 		const game = routeGame();
@@ -488,7 +497,10 @@ export const PlanScreen: m.Component = {
 		const planTitle = getGamePlanTitle();
 
 		return m('.plan', [
-			m(TeacherBackBar, backTarget(game, mid, planTitle)),
+			m(TeacherBackBar, {
+				...backTarget(game, mid, planTitle),
+				onLeave: (href) => void leaveGuard.leave(href),
+			}),
 			m('header.plan__header', [
 				m('h1.plan__title', t('plan.title')),
 				ready && getTitle() ? m('p.plan__lesson', getTitle()) : null,

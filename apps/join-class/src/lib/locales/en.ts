@@ -562,7 +562,7 @@ const en: Record<string, string> = {
 	'opening.name_save': 'Save',
 	'opening.name_saving_short': 'Saving…',
 	'classPlan.counts': 'Games: {{games}} · Lessons: {{lessons}}',
-	'classPlan.back': 'My lesson plans',
+	'classPlan.parent': 'Lesson plan',
 	'classPlan.rename': 'Rename',
 	'classPlan.list_title': 'Lesson plans',
 	'classPlan.filter_all': 'All classes',

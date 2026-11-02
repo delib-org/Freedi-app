@@ -16,7 +16,8 @@ export type ConsoleIconName =
 	| 'barChart'
 	| 'ballot'
 	| 'shuffle'
-	| 'reset';
+	| 'reset'
+	| 'home';
 
 interface ShapeSpec {
 	tag: 'path' | 'rect';
@@ -48,6 +49,11 @@ const SHAPES: Record<ConsoleIconName, readonly ShapeSpec[]> = {
 		path('M2 6h1.9c1.5 0 2.9.9 3.6 2.2'),
 		path('M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8'),
 		path('m18 14 4 4-4 4'),
+	],
+	home: [
+		path('m3 10.5 9-7.5 9 7.5'),
+		path('M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5'),
+		path('M10 21v-6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v6'),
 	],
 	reset: [path('M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8'), path('M3 3v5h5')],
 };

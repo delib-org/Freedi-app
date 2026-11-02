@@ -565,7 +565,7 @@ const nl: Record<string, string> = {
 	'opening.name_save': 'Opslaan',
 	'opening.name_saving_short': 'Opslaan…',
 	'classPlan.counts': 'Spellen: {{games}} · Lessen: {{lessons}}',
-	'classPlan.back': 'Mijn lesplannen',
+	'classPlan.parent': 'Lesplan',
 	'classPlan.rename': 'Naam wijzigen',
 	'classPlan.list_title': 'Lesplannen',
 	'classPlan.filter_all': 'Alle klassen',

@@ -567,7 +567,7 @@ const es: Record<string, string> = {
 	'opening.name_save': 'Guardar',
 	'opening.name_saving_short': 'Guardando…',
 	'classPlan.counts': 'Juegos: {{games}} · Clases: {{lessons}}',
-	'classPlan.back': 'Mis planes de clase',
+	'classPlan.parent': 'Plan de clase',
 	'classPlan.rename': 'Cambiar nombre',
 	'classPlan.list_title': 'Planes de clase',
 	'classPlan.filter_all': 'Todos los grupos',
