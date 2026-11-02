@@ -4666,5 +4666,11 @@
   "people.rooms.splitDone": "{{people}} repartidas en {{rooms}}.",
   "people.rooms.replace.title_one": "¿Reemplazar la sala existente?",
   "people.rooms.replace.title_other": "¿Reemplazar las {{count}} salas existentes?",
-  "people.entry.answersOf": "Respuestas de {{name}}"
+  "people.entry.answersOf": "Respuestas de {{name}}",
+  "survey.stakeholders.hint": "A cuántas personas afecta esta encuesta, incluidas aquellas a las que quizá no llegue. Déjalo vacío si no lo sabes.",
+  "survey.stakeholders.stale": "Las puntuaciones ya calculadas mantienen el número anterior hasta que las recalcules.",
+  "survey.stakeholders.recalculate": "Recalcular puntuaciones",
+  "survey.stakeholders.recalculating": "Recalculando…",
+  "survey.stakeholders.recalculated": "Puntuaciones recalculadas.",
+  "survey.stakeholders.recalculateFailed": "No se pudieron recalcular las puntuaciones. Inténtalo de nuevo o consulta con quien administra la encuesta."
 }

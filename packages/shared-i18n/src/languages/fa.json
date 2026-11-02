@@ -5143,5 +5143,11 @@
   "people.rooms.splitDone": "{{people}} در {{rooms}} تقسیم شدند.",
   "people.rooms.replace.title_one": "اتاق موجود جایگزین شود؟",
   "people.rooms.replace.title_other": "{{count}} اتاق موجود جایگزین شوند؟",
-  "people.entry.answersOf": "پاسخ‌های {{name}}"
+  "people.entry.answersOf": "پاسخ‌های {{name}}",
+  "survey.stakeholders.hint": "این نظرسنجی به چند نفر مربوط است، حتی کسانی که شاید به آن‌ها نرسد. اگر نمی‌دانید، خالی بگذارید.",
+  "survey.stakeholders.stale": "امتیازهایی که قبلاً محاسبه شده‌اند تا زمان محاسبهٔ دوباره با عدد قبلی می‌مانند.",
+  "survey.stakeholders.recalculate": "محاسبهٔ دوبارهٔ امتیازها",
+  "survey.stakeholders.recalculating": "در حال محاسبهٔ دوباره…",
+  "survey.stakeholders.recalculated": "امتیازها دوباره محاسبه شدند.",
+  "survey.stakeholders.recalculateFailed": "محاسبهٔ دوبارهٔ امتیازها انجام نشد. دوباره تلاش کنید یا از مالک نظرسنجی کمک بگیرید."
 }

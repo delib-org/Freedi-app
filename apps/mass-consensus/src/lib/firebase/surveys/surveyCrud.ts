@@ -18,6 +18,8 @@ import { cascadeSynthesisToggle } from '../synthesis/cascadeSynthesisToggle';
 import { cascadeMinResponseWords } from './cascadeMinResponseWords';
 import { cascadeRatingMode } from './cascadeRatingMode';
 import { cascadeAutoAiHandling } from './cascadeAutoAiHandling';
+import { cascadeTargetPopulation } from './cascadeTargetPopulation';
+import { normalizeTargetPopulation } from './normalizeTargetPopulation';
 import { deleteSurveyAdminRecords } from './surveyAdmins';
 import { sanitizeRemovedQuestionIds } from './removedQuestionIds';
 
@@ -37,10 +39,10 @@ export async function createSurvey(
     description: data.description || '',
     creatorId,
     questionIds: data.questionIds || [],
-    settings: {
+    settings: normalizeTargetPopulation({
       ...DEFAULT_SURVEY_SETTINGS,
       ...data.settings,
-    },
+    }),
     questionSettings: data.questionSettings || {},
     status: SurveyStatus.draft,
     createdAt: now,
@@ -127,6 +129,20 @@ export async function createSurvey(
     logger.error('[createSurvey] cascadeAutoAiHandling failed:', survey.surveyId, error);
   }
 
+  // The number of stakeholders typed in the create form reaches the questions
+  // that do not declare their own.
+  if (survey.settings.targetPopulation !== undefined) {
+    try {
+      await cascadeTargetPopulation({
+        questionIds: survey.questionIds,
+        change: { previous: undefined, next: survey.settings.targetPopulation },
+        addedQuestionIds: survey.questionIds,
+      });
+    } catch (error) {
+      logger.error('[createSurvey] cascadeTargetPopulation failed:', survey.surveyId, error);
+    }
+  }
+
   // And for the rating scale: one chosen in the create form has to reach the
   // question Statement now, not on the first later edit.
   try {
@@ -210,10 +226,10 @@ export async function updateSurvey(
   if (data.questionIds !== undefined) updates.questionIds = data.questionIds;
   if (data.status !== undefined) updates.status = data.status as SurveyStatus;
   if (data.settings !== undefined) {
-    updates.settings = {
+    updates.settings = normalizeTargetPopulation({
       ...survey.settings,
       ...data.settings,
-    };
+    });
   }
   if (data.questionSettings !== undefined) {
     updates.questionSettings = {
@@ -313,6 +329,28 @@ export async function updateSurvey(
       await cascadeAutoAiHandling(merged);
     } catch (error) {
       logger.error('[updateSurvey] cascadeAutoAiHandling failed:', surveyId, error);
+    }
+  }
+
+  // Number of stakeholders: copy it onto the questions (see the cascade's table).
+  const populationChange = {
+    previous: survey.settings.targetPopulation,
+    next: merged.settings.targetPopulation,
+  };
+  const previousQuestionIds = new Set(survey.questionIds);
+  const addedQuestionIds = data.questionIds
+    ? data.questionIds.filter((id) => !previousQuestionIds.has(id))
+    : [];
+  const populationChanged = populationChange.previous !== populationChange.next;
+  if (populationChanged || addedQuestionIds.length > 0) {
+    try {
+      await cascadeTargetPopulation({
+        questionIds: merged.questionIds,
+        change: populationChange,
+        addedQuestionIds,
+      });
+    } catch (error) {
+      logger.error('[updateSurvey] cascadeTargetPopulation failed:', surveyId, error);
     }
   }
 

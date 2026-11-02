@@ -18,6 +18,8 @@ import LanguageSelector from './LanguageSelector';
 import { CreateQuestionModal } from './CreateQuestionModal';
 import OpeningSlideManager from './OpeningSlideManager';
 import CardColorIntensityControl from './CardColorIntensityControl';
+import StakeholderCountField from './StakeholderCountField';
+import { toWireTargetPopulation } from '@/lib/utils/targetPopulation';
 import { logError } from '@/lib/utils/errorHandling';
 import { UI } from '@/constants/common';
 import styles from './Admin.module.scss';
@@ -215,7 +217,8 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       title: title.trim(),
       description: description.trim() || undefined,
       questionIds: [...new Set(selectedQuestions.map((q) => q.statementId))],
-      settings,
+      // 0 = the admin cleared the number; the server drops the key (JSON drops undefined)
+      settings: { ...settings, targetPopulation: toWireTargetPopulation(settings.targetPopulation) },
       questionSettings: cleanedQuestionSettings,
       removedQuestionIds: dropRemovedQuestionIds(removedQuestionIds, [...selectedIds]),
       defaultLanguage: defaultLanguage || undefined,
@@ -584,6 +587,14 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
             placeholder={t('surveyDescriptionPlaceholder')}
           />
         </div>
+
+        <StakeholderCountField
+          value={settings.targetPopulation}
+          onChange={(targetPopulation) => setSettings({ ...settings, targetPopulation })}
+          surveyId={editingSurveyId}
+          questionIds={selectedQuestions.map((q) => q.statementId)}
+          isSaved={saveStatus === 'saved'}
+        />
 
         {/* Opening Slide Settings */}
         {existingSurvey && onSurveyUpdate && (

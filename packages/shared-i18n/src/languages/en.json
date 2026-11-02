@@ -5344,5 +5344,11 @@
   "people.rooms.splitDone": "Split {{people}} into {{rooms}}.",
   "people.rooms.replace.title_one": "Replace the existing room?",
   "people.rooms.replace.title_other": "Replace the {{count}} existing rooms?",
-  "people.entry.answersOf": "Answers from {{name}}"
+  "people.entry.answersOf": "Answers from {{name}}",
+  "survey.stakeholders.hint": "How many people this survey concerns, including people it may not reach. Leave empty if you don't know.",
+  "survey.stakeholders.stale": "Scores already given keep the old number until you recalculate.",
+  "survey.stakeholders.recalculate": "Recalculate scores",
+  "survey.stakeholders.recalculating": "Recalculating…",
+  "survey.stakeholders.recalculated": "Scores recalculated.",
+  "survey.stakeholders.recalculateFailed": "Could not recalculate the scores. Try again, or ask the survey owner."
 }

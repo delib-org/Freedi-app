@@ -4666,5 +4666,11 @@
   "people.rooms.splitDone": "{{people}} verdeeld over {{rooms}}.",
   "people.rooms.replace.title_one": "De bestaande ruimte vervangen?",
   "people.rooms.replace.title_other": "De {{count}} bestaande ruimtes vervangen?",
-  "people.entry.answersOf": "Antwoorden van {{name}}"
+  "people.entry.answersOf": "Antwoorden van {{name}}",
+  "survey.stakeholders.hint": "Hoeveel mensen deze enquête raakt, ook wie je misschien niet bereikt. Laat leeg als je het niet weet.",
+  "survey.stakeholders.stale": "Scores die al zijn berekend houden het oude aantal tot je opnieuw berekent.",
+  "survey.stakeholders.recalculate": "Scores opnieuw berekenen",
+  "survey.stakeholders.recalculating": "Opnieuw berekenen…",
+  "survey.stakeholders.recalculated": "Scores opnieuw berekend.",
+  "survey.stakeholders.recalculateFailed": "De scores konden niet opnieuw worden berekend. Probeer het opnieuw of vraag de eigenaar van de enquête."
 }

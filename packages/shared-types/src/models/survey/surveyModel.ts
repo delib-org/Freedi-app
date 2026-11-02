@@ -9,6 +9,7 @@ import {
   pipe,
   minValue,
   maxValue,
+  integer,
   record,
   InferOutput,
 } from 'valibot';
@@ -119,6 +120,12 @@ export const SurveySettingsSchema = object({
    * their colour.
    */
   cardColorIntensity: optional(pipe(number(), minValue(0), maxValue(1))),
+  /**
+   * How many people the survey concerns (N), including those it may not reach.
+   * Absent means unknown; never 0 or null. Cascaded onto each question's
+   * `evaluationSettings.targetPopulation`, which is what scoring reads.
+   */
+  targetPopulation: optional(pipe(number(), integer(), minValue(1))),
 });
 
 export type SurveySettings = InferOutput<typeof SurveySettingsSchema>;
