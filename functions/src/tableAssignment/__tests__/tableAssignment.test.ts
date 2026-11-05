@@ -577,6 +577,28 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 		expect(b.inputHash).toBe(a.inputHash);
 	});
 
+	it('leaves a run alone when it became published before the supersede write', async () => {
+		const fake = seedRanked();
+		const fs = fake.asFirestore();
+		const first = await computePreview(fs, HOST, { sessionId: SID, seed: 1 }, NOW);
+		// The host publishes the ready run just as a second preview is being written.
+		const original = fs.runTransaction.bind(fs);
+		fs.runTransaction = ((fn: Parameters<typeof original>[0]) => {
+			const run = fake.read(`tableAssignmentRuns/${first.runId}`) ?? {};
+			fake.seed(`tableAssignmentRuns/${first.runId}`, { ...run, status: 'published' });
+			fake.seed(`tableAssignments/${SID}`, {
+				...(fake.read(`tableAssignments/${SID}`) ?? {}),
+				status: 'published',
+				publishedRunId: first.runId,
+			});
+
+			return original(fn);
+		}) as typeof fs.runTransaction;
+		const second = await computePreview(fs, HOST, { sessionId: SID, seed: 2 }, NOW + 1);
+		expect(fake.read(`tableAssignmentRuns/${first.runId}`)).toMatchObject({ status: 'published' });
+		expect(fake.read(`tableAssignmentRuns/${second.runId}`)).toMatchObject({ status: 'ready' });
+	});
+
 	it('uses Date.now() as the seed when the request has none', async () => {
 		const fake = seedRanked();
 		const { runId } = await computePreview(fake.asFirestore(), HOST, { sessionId: SID }, NOW);

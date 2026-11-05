@@ -119,11 +119,17 @@ export async function computePreview(
 		createdAt: now,
 	};
 
-	const older = await readyRunsQuery(firestore, sessionId).get();
-	const batch = firestore.batch();
-	older.docs.forEach((d) => batch.update(d.ref, { status: 'superseded' }));
-	batch.set(runRef(firestore, runId), run);
-	await batch.commit();
+	// One transaction: the ready runs are read inside it, so a run the host
+	// published a moment ago is no longer 'ready' here and is never overwritten.
+	await firestore.runTransaction(async (tx) => {
+		const older = await tx.get(readyRunsQuery(firestore, sessionId));
+		older.docs.forEach((d) => {
+			if ((d.data() as TableAssignmentRun).status === 'ready') {
+				tx.update(d.ref, { status: 'superseded' });
+			}
+		});
+		tx.set(runRef(firestore, runId), run);
+	});
 
 	return { runId };
 }
