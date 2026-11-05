@@ -20,9 +20,12 @@ $goal-fly: 900ms;
   width: min(100%, 1100px);
   margin-inline: auto;
 
+  [dir='rtl'] & {
+    --dir: -1;
+  }
+
   // the pitch: a pale field with the goal at the top centre
   &__field {
-    direction: ltr; // the pitch is symmetric; balls are placed with a plain x
     position: relative;
     height: #{$goal-pitch-height}cqw;
     overflow: hidden;
@@ -75,9 +78,10 @@ $goal-fly: 900ms;
     width: calc(var(--size) * 1cqw);
     height: calc(var(--size) * 1cqw);
     color: var(--ink);
-    // Moves by transform only (compositor, no layout); the field is always LTR
+    // Moves by transform only (compositor, no layout). --dir mirrors x in RTL:
+    // the ball starts at the inline start, so the old right-to-left order stays.
     transform: translate(
-      calc((var(--x) - var(--size) * 0.5) * 1cqw),
+      calc(var(--dir, 1) * (var(--x) - var(--size) * 0.5) * 1cqw),
       calc((var(--y) - var(--size) * 0.5) * 1cqw)
     );
     transition: transform $goal-fly var(--ease-out, ease-out);

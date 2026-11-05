@@ -57,31 +57,42 @@ describe('goalLayout: balls travel as votes change', () => {
 	const posOf = (balls: { id: string; x: number; y: number }[], id: string) =>
 		balls.find((b) => b.id === id) as { x: number; y: number };
 
-	it('moves a waiting ball toward the goal as its C_p rises, without scoring', () => {
-		const before = goalLayout([p('a', 0.1), p('b', 0.1)], 0.6).balls;
-		const after = goalLayout([p('a', 0.5), p('b', 0.1)], 0.6).balls;
-		expect(posOf(after, 'a').y).toBeLessThan(posOf(before, 'a').y);
-		expect(after.find((b) => b.id === 'a')?.inGoal).toBe(false);
+	it('climbs a visible distance between 25% and 75% of the way to the gate', () => {
+		const at = (consensus: number) => goalLayout([p('a', consensus), p('b', 0)], 0.6);
+		const quarter = at(0.15);
+		const threeQuarters = at(0.45);
+		const moved = posOf(quarter.balls, 'a').y - posOf(threeQuarters.balls, 'a').y;
+		// at least a full ball diameter, not a few pixels
+		expect(moved).toBeGreaterThanOrEqual(quarter.size);
+		expect(posOf(threeQuarters.balls, 'a').x).toBe(posOf(quarter.balls, 'a').x);
+		expect(threeQuarters.balls.find((b) => b.id === 'a')?.inGoal).toBe(false);
 	});
 
-	it('swaps places when votes change the ranking', () => {
+	it('moves a ball up on every rise of C_p and never into the goal box before the gate', () => {
+		let last = Infinity;
+		for (const c of [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.59]) {
+			const { balls, size } = goalLayout([p('a', c)], 0.6);
+			const y = posOf(balls, 'a').y;
+			expect(y).toBeLessThan(last);
+			expect(y - size / 2).toBeGreaterThanOrEqual(GOAL_BOX.y + GOAL_BOX.height);
+			last = y;
+		}
+	});
+
+	it('keeps outside balls in a stable id order, so only their height changes', () => {
 		const before = goalLayout([p('a', 0.3), p('b', 0.1)], 0.6).balls;
 		const after = goalLayout([p('a', 0.1), p('b', 0.3)], 0.6).balls;
-		expect(posOf(before, 'a').x).toBeLessThan(posOf(before, 'b').x);
-		expect(posOf(after, 'b').x).toBeLessThan(posOf(after, 'a').x);
+		expect(posOf(before, 'a').x).toBe(posOf(after, 'a').x);
+		expect(posOf(before, 'b').x).toBe(posOf(after, 'b').x);
 	});
 
-	it('keeps equal proposals still (no jitter on a stable state)', () => {
-		const one = goalLayout([p('a', 0.2), p('b', 0.2)], 0.6).balls;
-		const two = goalLayout([p('b', 0.2), p('a', 0.2)], 0.6).balls;
-		expect(posOf(one, 'a')).toEqual(posOf(two, 'a'));
-	});
-
-	it('never lets a leaning ball touch its neighbours', () => {
-		const { balls, size } = goalLayout([p('a', 0.59), p('b', 0), p('c', 0)], 0.6);
-		const a = posOf(balls, 'a');
-		const b = posOf(balls, 'b');
-		expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(size);
+	it('keeps every ball inside the field sideways', () => {
+		const many = Array.from({ length: 40 }, (_, i) => p(`id${String(i).padStart(2, '0')}`, 0.2));
+		const { balls, size } = goalLayout(many, 0.6);
+		for (const b of balls) {
+			expect(b.x - size / 2).toBeGreaterThanOrEqual(0);
+			expect(b.x + size / 2).toBeLessThanOrEqual(100);
+		}
 	});
 });
 

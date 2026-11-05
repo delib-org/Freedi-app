@@ -1,6 +1,7 @@
 import m from 'mithril';
 import '@/styles/student-screen-sample.scss';
 import { t } from '@/lib/i18n';
+import { captureException } from '@/lib/sentry';
 
 /**
  * The "Student screen" view as its own lazy chunk: a teacher who never opens it
@@ -18,6 +19,7 @@ function load(): Promise<void> {
 		})
 		.catch((error: unknown) => {
 			console.error('[StudentScreen] loading the sample failed:', error);
+			captureException(error, { operation: 'studentScreen.load' });
 			loading = null;
 		});
 

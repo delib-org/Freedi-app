@@ -33,11 +33,13 @@ const SPACING_TIERS: readonly number[] = [6, 4.8, 3.8, 3, 2.4];
 /** A ball is this share of its spacing, so neighbours never touch. */
 const BALL_SHARE = 0.82;
 /**
- * How far (as a share of the spacing) a ball outside the goal leans toward it as
- * its C_p approaches the gate. Smaller than the gap between neighbours
- * (1 - BALL_SHARE), so balls never touch. Every vote that moves C_p moves its ball.
+ * A ball outside the goal starts at the bottom of the field and climbs to the
+ * goal's edge as its C_p nears the gate: its height is its progress, so every
+ * vote that moves C_p visibly moves the ball (several diameters from nothing to
+ * the gate). Balls of one lane may overlap near the top; rows are staggered by
+ * half a spacing so they overlap only partly.
  */
-const LEAN_SHARE = 0.15;
+const TOP_CLEARANCE = 0.5;
 
 export interface GoalBall extends Point {
 	id: string;
@@ -97,9 +99,9 @@ function progressToGate(option: Statement, gate: number): number {
 /** Balls in the goal when C_p has reached the gate; unrated proposals sit outside. */
 export function goalLayout(options: readonly Statement[], gate: number): GoalLayout {
 	const all = visibleOptions(options);
-	// Ranked by C_p: when votes change the order, the balls swap places and travel
+	// In the goal: best first. Outside: a stable (id) order, so only height changes with votes.
 	const scored = all.filter((option) => enteredGoal(option, gate)).sort(byConsensus);
-	const waiting = all.filter((option) => !enteredGoal(option, gate)).sort(byConsensus);
+	const waiting = all.filter((option) => !enteredGoal(option, gate)).sort(byId);
 	const spacing =
 		SPACING_TIERS.find(
 			(tier) =>
@@ -107,17 +109,29 @@ export function goalLayout(options: readonly Statement[], gate: number): GoalLay
 		) ?? SPACING_TIERS[SPACING_TIERS.length - 1];
 	const inGoal = slotsIn(GOAL_INNER, scored.length, spacing);
 	const outside = slotsIn(FIELD, waiting.length, spacing);
+	const size = Math.round(spacing * BALL_SHARE * 100) / 100;
+	const columns = Math.max(1, Math.floor(FIELD.width / spacing));
+	const fieldFloor = FIELD.y * 2 + FIELD.height;
+	const topY = GOAL_BOX.y + GOAL_BOX.height + size / 2 + TOP_CLEARANCE;
 
 	return {
-		size: Math.round(spacing * BALL_SHARE * 100) / 100,
+		size,
 		balls: [
 			...scored.map((option, i) => ({ id: option.statementId, inGoal: true, ...inGoal[i] })),
-			...waiting.map((option, i) => ({
-				id: option.statementId,
-				inGoal: false,
-				x: outside[i].x,
-				y: outside[i].y - progressToGate(option, gate) * LEAN_SHARE * spacing,
-			})),
+			...waiting.map((option, i) => {
+				const row = Math.floor(i / columns);
+				const stagger = row % 2 === 1 ? spacing / 2 : 0;
+				// slot y mirrored so the first row starts at the bottom of the field
+				const startY = fieldFloor - outside[i].y;
+				const x = Math.min(FIELD.x + FIELD.width - size / 2, outside[i].x + stagger);
+
+				return {
+					id: option.statementId,
+					inGoal: false,
+					x,
+					y: startY - progressToGate(option, gate) * Math.max(0, startY - topY),
+				};
+			}),
 		],
 	};
 }
