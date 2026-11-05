@@ -1,7 +1,8 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import type { MapDetailLevel } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { MAP_DETAIL_LEVELS } from '../mapHelpers/detailLevel';
+import type { FoldControls } from '../mapHelpers/useFoldControls';
 import styles from './MapDetailControl.module.scss';
 
 const LEVEL_LABEL: Record<MapDetailLevel, string> = {
@@ -21,6 +22,8 @@ interface Props {
 	/** Theme › Merged idea › Your idea — shown after locating; empty hides it. */
 	breadcrumb: string[];
 	onDismissBreadcrumb: () => void;
+	/** Collapse / expand all and per level; omitted or maxLevel 0 hides the row. */
+	fold?: FoldControls;
 }
 
 /**
@@ -36,8 +39,12 @@ const MapDetailControl: FC<Props> = ({
 	onLocateMine,
 	breadcrumb,
 	onDismissBreadcrumb,
+	fold,
 }) => {
 	const { t } = useTranslation();
+	const [pickedLevel, setPickedLevel] = useState(1);
+	const levelCount = fold?.maxLevel ?? 0;
+	const foldLevel = Math.min(pickedLevel, Math.max(levelCount, 1));
 
 	return (
 		<div className={styles.control}>
@@ -78,6 +85,59 @@ const MapDetailControl: FC<Props> = ({
 					</button>
 				)}
 			</div>
+			{fold && levelCount > 0 && (
+				<div className={styles.foldRow}>
+					<button
+						type="button"
+						className={styles.foldButton}
+						disabled={disabled}
+						onClick={fold.onCollapseAll}
+					>
+						{t('Collapse all')}
+					</button>
+					<button
+						type="button"
+						className={styles.foldButton}
+						disabled={disabled}
+						onClick={fold.onExpandAll}
+					>
+						{t('Expand all')}
+					</button>
+					{levelCount > 1 && (
+						<>
+							<select
+								className={styles.foldSelect}
+								aria-label={t('Level')}
+								value={foldLevel}
+								disabled={disabled}
+								onChange={(ev) => setPickedLevel(Number(ev.target.value))}
+							>
+								{Array.from({ length: levelCount }, (_, index) => index + 1).map((value) => (
+									<option key={value} value={value}>
+										{`${t('Level')} ${value}`}
+									</option>
+								))}
+							</select>
+							<button
+								type="button"
+								className={styles.foldButton}
+								disabled={disabled}
+								onClick={() => fold.onCollapseLevel(foldLevel)}
+							>
+								{t('Collapse level')}
+							</button>
+							<button
+								type="button"
+								className={styles.foldButton}
+								disabled={disabled}
+								onClick={() => fold.onExpandLevel(foldLevel)}
+							>
+								{t('Expand level')}
+							</button>
+						</>
+					)}
+				</div>
+			)}
 			{breadcrumb.length > 0 && (
 				<div className={styles.breadcrumb} role="status">
 					{breadcrumb.map((title, index) => (

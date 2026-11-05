@@ -2,6 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import type { MapDetailLevel, MapSettings } from '@freedi/shared-types';
 import { resolveDefaultDetail } from './detailLevel';
 import { loadLocalDetail, saveLocalDetail } from './mapLocalDetail';
+import { applyFoldChange, type FoldChange } from './foldAll';
+
+const NO_IDS: ReadonlySet<string> = new Set();
 
 export interface MapDetailState {
 	level: MapDetailLevel;
@@ -18,6 +21,8 @@ export interface MapDetailState {
 	toggleExpanded: (id: string, expanded?: boolean) => void;
 	expandMany: (ids: Iterable<string>) => void;
 	resetExpanded: () => void;
+	/** Fold and/or open many nodes at once (collapse all, expand all, per level). */
+	applyFold: (change: FoldChange) => void;
 	/** Whether this viewer may open nodes past the admin's default depth. */
 	allowExpand: boolean;
 }
@@ -102,6 +107,13 @@ export function useMapDetailLevel(
 		});
 	}, []);
 
+	const applyFold = useCallback((change: FoldChange) => {
+		// Two pure updaters batched into one render. A node carries one override,
+		// so each set is updated against an empty counterpart.
+		setExpandedIds((prev) => applyFoldChange({ expanded: prev, folded: NO_IDS }, change).expanded);
+		setFoldedIds((prev) => applyFoldChange({ expanded: NO_IDS, folded: prev }, change).folded);
+	}, []);
+
 	const resetExpanded = useCallback(() => {
 		setExpandedIds(new Set());
 		setFoldedIds(new Set());
@@ -115,6 +127,7 @@ export function useMapDetailLevel(
 		toggleExpanded,
 		expandMany,
 		resetExpanded,
+		applyFold,
 		allowExpand,
 	};
 }
