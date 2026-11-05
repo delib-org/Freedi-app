@@ -1,4 +1,5 @@
 import type { ClassTable, Statement } from '@freedi/shared-types';
+import { noDeviceNamesById } from './actFor';
 
 /**
  * Pure grouping for "what they wrote": texts by question (the step of the
@@ -13,6 +14,8 @@ export interface WrittenText {
 	ratings: number;
 	hidden: boolean;
 	tableId: string | null;
+	/** The teacher entered this for a student without a device. The teacher's screens only. */
+	enteredByTeacher: boolean;
 }
 
 export interface TextGroup {
@@ -39,14 +42,22 @@ export interface QuestionInput {
 	challenge: boolean;
 }
 
-export function toWrittenText(option: Statement): WrittenText {
+/**
+ * `noDeviceNames`: a student without a device has no name on the statement (every
+ * phone loads proposals), so the teacher's screen resolves it from the tables.
+ */
+export function toWrittenText(
+	option: Statement,
+	noDeviceNames: ReadonlyMap<string, string> = new Map(),
+): WrittenText {
 	return {
 		id: option.statementId,
 		text: option.statement,
-		author: option.creator?.displayName?.trim() ?? '',
+		author: option.creator?.displayName?.trim() || (noDeviceNames.get(option.creatorId) ?? ''),
 		ratings: option.evaluation?.numberOfEvaluators ?? 0,
 		hidden: option.hide === true,
 		tableId: option.classTable?.tableId ?? null,
+		enteredByTeacher: !!option.classTable?.enteredByUid,
 	};
 }
 
@@ -56,10 +67,11 @@ export function groupWrittenTexts(
 	tables: readonly ClassTable[],
 ): QuestionGroup[] {
 	const tableById = new Map(tables.map((tb) => [tb.tableId, tb]));
+	const noDeviceNames = noDeviceNamesById(tables);
 
 	return questions.map(({ question, challenge }) => {
 		const texts = (optionsByQuestion.get(question.statementId) ?? [])
-			.map(toWrittenText)
+			.map((option) => toWrittenText(option, noDeviceNames))
 			.sort((a, b) => b.ratings - a.ratings || a.id.localeCompare(b.id));
 		const byTable = new Map<string | null, WrittenText[]>();
 		for (const text of texts) {

@@ -12,6 +12,7 @@
 export { classAssignTables } from './fn_classAssignTables';
 export { classMoveStudent } from './fn_classMoveStudent';
 export { classAddNoDevice } from './fn_classAddNoDevice';
+export { classRequestRename } from './fn_classRequestRename';
 export { classTableStep } from './fn_classTableStep';
 export { classAllTablesTo } from './fn_classAllTablesTo';
 export { classFreezeBallot, classCloseBallot, classPauseBallot } from './fn_classBallot';
@@ -21,6 +22,7 @@ export { classSetItemHidden } from './fn_classSetItemHidden';
 export { classPostReply } from './fn_classPostReply';
 export { classPostProposal } from './fn_classPostProposal';
 export { classEditProposal } from './fn_classEditProposal';
+export { classCastVoteFor } from './fn_classCastVoteFor';
 export { classSetLessonStatus } from './fn_classSetLessonStatus';
 export { classCloneLesson } from './fn_classCloneLesson';
 export { classStartLesson } from './fn_classStartLesson';

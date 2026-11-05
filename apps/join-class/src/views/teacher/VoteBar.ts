@@ -5,6 +5,7 @@ import { t } from '@/lib/i18n';
 import { icon } from './ConsoleIcon';
 import { isBusy } from './consoleState';
 import { VoteOrderSwitch } from './VoteOrderSwitch';
+import { ResultsAudienceSwitch, ResultsChip, VOTE_RESULTS_AUDIENCE } from './ResultsAudienceSwitch';
 import { VoteScopeSwitch } from './VoteScopeSwitch';
 import type { VoteScopeAttrs } from './VoteScopeSwitch';
 import { voteBarState } from './voteBarState';
@@ -13,7 +14,7 @@ import type { VoteActionKey, VoteBarAction } from './voteBarState';
 /**
  * The Vote step's control bar: a status chip with the voted count, the ballot
  * buttons (only the next sensible action is primary), the order of the
- * proposals, and the reset at the end edge. (Trello e3EMqQP2, IA 22.)
+ * proposals, who sees the results, and the reset at the end edge. (Trello e3EMqQP2, IA 22.)
  */
 
 export interface VoteBarAttrs {
@@ -31,6 +32,9 @@ export interface VoteBarAttrs {
 	hasChallenge: boolean;
 	voteOrder: ClassVoteOrder;
 	onVoteOrder: (order: ClassVoteOrder) => void;
+	/** Who sees the results: false = only the teacher (the default), true = the whole class. */
+	resultsShown: boolean;
+	onResultsShown: (shown: boolean) => void;
 	/** All proposals / only those above the goal (Trello OaZEhcB7). */
 	scope?: VoteScopeAttrs;
 	onFreeze: () => void;
@@ -99,6 +103,7 @@ export const VoteBar: m.Component<VoteBarAttrs> = {
 					{ role: 'status', 'aria-live': 'polite', 'data-testid': 'vote-status-chip' },
 					[icon(state.chip.icon), m('span', t(state.chip.labelKey))],
 				),
+				m(ResultsChip, { shown: attrs.resultsShown }),
 				progress(attrs),
 			]),
 			state.primary
@@ -115,6 +120,12 @@ export const VoteBar: m.Component<VoteBarAttrs> = {
 				value: attrs.voteOrder,
 				disabled: !attrs.hasChallenge || isBusy('voteDisplay:order'),
 				onChange: attrs.onVoteOrder,
+			}),
+			m(ResultsAudienceSwitch, {
+				...VOTE_RESULTS_AUDIENCE,
+				shown: attrs.resultsShown,
+				disabled: !attrs.hasChallenge || isBusy('voteDisplay:liveResults'),
+				onChange: attrs.onResultsShown,
 			}),
 			attrs.scope
 				? m(VoteScopeSwitch, {

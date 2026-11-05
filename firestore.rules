@@ -1207,12 +1207,48 @@ service cloud.firestore {
                request.resource.data.get('parentId', null) != null &&
                isClassChallenge(request.resource.data.parentId);
       }
+      // Its author is the server's to say too, with or without a marker on it.
       function rewordsClassProposal() {
         return resource != null &&
                resource.data.get('statementType', '') == 'option' &&
                resource.data.get('parentId', null) != null &&
-               request.resource.data.diff(resource.data).affectedKeys().hasAny(['statement', 'statementType', 'parentId']) &&
+               request.resource.data.diff(resource.data).affectedKeys().hasAny(['statement', 'statementType', 'parentId', 'creatorId', 'creator', 'classTable']) &&
                isClassChallenge(resource.data.parentId);
+      }
+      // An update may not MAKE a proposal either: moving an option under the challenge, or
+      // turning a statement already there into an option, would skip the limit and the
+      // language check. The get() is paid only when the type or the parent really changes.
+      function makesClassProposal() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasAny(['statementType', 'parentId']) &&
+               request.resource.data.get('statementType', '') == 'option' &&
+               request.resource.data.get('parentId', null) != null &&
+               isClassChallenge(request.resource.data.parentId);
+      }
+      // Who wrote something at a table is the server's to say: no client changes the author or
+      // the marker of a statement that carries a marker (a proposal, a table's answer or its
+      // own question), so nobody hands their words to a classmate. No client writes these
+      // fields; a whole-document merge with them unchanged does not count. No get() needed.
+      function changesClassAuthor() {
+        return ('classTable' in resource.data) &&
+               request.resource.data.diff(resource.data).affectedKeys().hasAny(['creatorId', 'creator', 'classTable']);
+      }
+      // join-class students without a device: the teacher enters their proposals
+      // through classPostProposal (Admin SDK), which stamps classTable.enteredByUid and
+      // writes creatorId nd_*. No client may set or move that stamp, on any statement,
+      // nor turn a statement it wrote into a no-device student's. No get() needed.
+      function classEnteredByOf(data) {
+        return ('classTable' in data) && data.classTable is map
+          ? data.classTable.get('enteredByUid', null)
+          : null;
+      }
+      function changesClassEnteredBy() {
+        return classEnteredByOf(request.resource.data) != classEnteredByOf(resource.data);
+      }
+      function claimsNoDeviceAuthor() {
+        let next = request.resource.data.get('creatorId', '');
+        return next != resource.data.get('creatorId', '') &&
+               next is string &&
+               next.matches('^nd_.*');
       }
 
       // join-class homes and lessons are made only by the server (classStartLesson,
@@ -1307,6 +1343,7 @@ service cloud.firestore {
                        !createsClassReplyFields() &&
                        !createsClassProposal() &&
                        !createsClassHomeOrLesson() &&
+                       classEnteredByOf(request.resource.data) == null &&
                        request.resource.data.creatorId == request.auth.uid &&
                        // A student the teacher removed writes nothing more
                        // into that lesson (see agoraRemovedFrom)
@@ -1321,6 +1358,10 @@ service cloud.firestore {
                        !isClassReply() &&
                        !changesClassReplyFields() &&
                        !rewordsClassProposal() &&
+                       !makesClassProposal() &&
+                       !changesClassAuthor() &&
+                       !changesClassEnteredBy() &&
+                       !claimsNoDeviceAuthor() &&
                        !changesClassHomeOrLesson() &&
                        !homeWriteBlocked() &&
                        (isAgoraStatement()
@@ -1998,6 +2039,8 @@ service cloud.firestore {
                                notRemovedAgoraVoter(request.resource.data.parentId) &&
                                classBallotOpen(request.resource.data.parentId, request.resource.data.statementId) &&
                                request.resource.data.userId == request.auth.uid &&
+                               // join-class: only classCastVoteFor (Admin SDK) says who entered a vote.
+                               !('enteredByUid' in request.resource.data) &&
                                voteId == (request.auth.uid + '--' +
                                           request.resource.data.parentId);
       // A delete is a withdrawal too, so on a class ballot it follows the same

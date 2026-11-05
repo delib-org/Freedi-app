@@ -4679,5 +4679,7 @@
   "survey.stakeholders.recalculating": "Wird neu berechnet…",
   "survey.stakeholders.recalculated": "Werte neu berechnet.",
   "survey.stakeholders.recalculateFailed": "Die Werte konnten nicht neu berechnet werden. Versuchen Sie es erneut oder fragen Sie den Umfrage-Inhaber.",
-  "survey.stakeholders.skipped": "Die Zahl konnte bei {{count}} Fragen der Umfrage nicht gesetzt werden, weil niemand, der diese Umfrage leitet, sie verwaltet. Diese Fragen behalten ihre eigene Zahl."
+  "survey.stakeholders.skipped": "Die Zahl konnte bei {{count}} Fragen der Umfrage nicht gesetzt werden, weil niemand, der diese Umfrage leitet, sie verwaltet. Diese Fragen behalten ihre eigene Zahl.",
+  "Collapse level": "Ebene einklappen",
+  "Expand level": "Ebene ausklappen"
 }

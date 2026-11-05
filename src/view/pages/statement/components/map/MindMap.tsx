@@ -20,6 +20,7 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useMapDetailLevel } from './mapHelpers/useMapDetailLevel';
 import { pathToMine } from './mapHelpers/detailLevel';
 import MapDetailControl from './components/MapDetailControl';
+import { useFoldControls } from './mapHelpers/useFoldControls';
 import styles from './MindMap.module.scss';
 
 const MindMap: FC = () => {
@@ -67,6 +68,8 @@ const MindMap: FC = () => {
 		user?.uid,
 		_isAdmin,
 	);
+
+	const fold = useFoldControls(results, detail.applyFold);
 
 	// "My ideas": where the viewer's own statements ended up in the tree.
 	const mine = useMemo(
@@ -224,6 +227,7 @@ const MindMap: FC = () => {
 							onLocateMine={locateMine}
 							breadcrumb={showBreadcrumb ? (mine?.breadcrumb ?? []) : []}
 							onDismissBreadcrumb={() => setShowBreadcrumb(false)}
+							fold={fold}
 						/>
 					)}
 				</div>

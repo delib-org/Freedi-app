@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { proposalLimitOf } from '@freedi/shared-types';
 import type { ClassTable, ClassTableAction, Statement, WritingMode } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import {
@@ -9,11 +10,24 @@ import {
 	updateBroadcastText,
 } from '@/lib/liveDrafts';
 import { createClassOption, updateClassOption } from '@/lib/classroom/c3Data';
-import { changeProposal, newProposalId, sendProposal } from '@/lib/classroom/proposals';
+import {
+	changeProposal,
+	newProposalId,
+	sendProposal,
+	type ProposalResult,
+} from '@/lib/classroom/proposals';
 import { clearDraft, readDraft, writeDraft, type DraftKind } from '@/lib/classroom/c3Draft';
-import { myProposal, type FlowKind, type Mate } from '@/lib/classroom/c3Logic';
+import { myProposals, type FlowKind, type Mate } from '@/lib/classroom/c3Logic';
+import {
+	otherOwnProposals,
+	proposalDraftScope,
+	showsOwnProposalList,
+	writeTargetOf,
+} from '@/lib/classroom/proposalLimit';
+import { refusalReason } from '@/lib/classroom/turnMoment';
 import type { FlowFeed } from './FlowFeed';
 import { ErrorLine } from './ErrorLine';
+import { ownProposalCards } from './ownProposalCards';
 import { ModeSwitch, WriteBox, type WriteState } from './WriteBox';
 import { ReplyEntry } from '../replies/ReplyEntry';
 import { PushAsk } from '../replies/PushAsk';
@@ -33,6 +47,8 @@ export interface WritePanelAttrs {
 	locked: boolean;
 	busy: boolean;
 	onAction: (action: ClassTableAction) => void;
+	/** One proposal the screen wants in the box ("Edit" on a pinned card, "improve" from the replies). */
+	takeEditRequest?: () => string | null;
 }
 
 type Edits = Record<DraftKind, string | undefined>;
@@ -48,15 +64,16 @@ class PanelState {
 	error: string | null = null;
 	/** The id of the proposal being sent; kept for a retry so it is never written twice. */
 	proposalId: string | null = null;
+	/** The proposal the student chose to edit; null = the box follows the limit. */
+	editId: string | null = null;
+	/** The draft key the proposal box is writing under now. */
+	proposalScope = '';
+	/** The server said the author already holds their proposal, ahead of this phone's listener. */
+	limitRefused = false;
 }
 
 function answerScope(table: ClassTable): string {
 	return `${table.tableId}_${table.turn}`;
-}
-
-/** The proposal is one per student for the whole lesson: its draft is keyed by the workspace. */
-function proposalScope(main: Statement): string {
-	return main.statementId;
 }
 
 function sentAnswerOf(a: WritePanelAttrs): Statement | undefined {
@@ -71,11 +88,11 @@ function sentAnswerOf(a: WritePanelAttrs): Statement | undefined {
 	);
 }
 
-function sentProposalOf(a: WritePanelAttrs): Statement | null {
-	if (!a.challenge) return null;
+function ownProposalsOf(a: WritePanelAttrs): Statement[] {
+	if (!a.challenge) return [];
 	const id = a.challenge.statementId;
 
-	return myProposal(
+	return myProposals(
 		a.feed.options.filter((o) => o.parentId === id),
 		a.uid,
 	);
@@ -105,21 +122,51 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 		const self = (vnode.state as { self?: PanelState }).self as PanelState;
 		const a = vnode.attrs;
 		const { table, uid } = a;
-		const scope = `${answerScope(table)}|${proposalScope(a.main)}`;
+		const mainId = a.main.statementId;
+		const requested = a.takeEditRequest?.();
+		if (requested) self.editId = requested;
+		const limit = proposalLimitOf(a.main);
+		const mine = ownProposalsOf(a);
+		// A send whose answer was lost, seen arriving by the listener: it is sent, not a draft any more.
+		const landed = self.proposalId
+			? mine.find((p) => p.statementId === self.proposalId)
+			: undefined;
+		if (landed) {
+			self.proposalId = null;
+			if ((self.edits.proposal ?? '').trim() === landed.statement) {
+				self.edits.proposal = undefined;
+				clearDraft(mainId, 'proposal');
+				self.states.proposal = 'idle';
+			}
+		}
+		const newDraft =
+			self.proposalScope === mainId ? (self.edits.proposal ?? '') : readDraft(mainId, 'proposal');
+		const target = writeTargetOf({
+			limit,
+			mine,
+			editId: self.editId,
+			hasNewDraft: newDraft.trim() !== '',
+		});
+		const proposalScope = proposalDraftScope(mainId, target);
+		const scope = `${answerScope(table)}|${proposalScope}`;
 		if (scope !== self.scope) {
 			self.scope = scope;
+			self.proposalScope = proposalScope;
 			const answerDraft = readDraft(answerScope(table), 'answer');
-			const proposalDraft = readDraft(proposalScope(a.main), 'proposal');
+			const proposalDraft = readDraft(proposalScope, 'proposal');
 			self.edits = { answer: answerDraft || undefined, proposal: proposalDraft || undefined };
 			self.states = { answer: 'idle', proposal: 'idle' };
 		}
+		const limitReached =
+			limit === 'one' &&
+			(target.kind === 'blocked' || (self.limitRefused && target.kind === 'new'));
 		const isAsker = table.askerUid === uid;
 		const tableMode = table.writingMode === 'table';
 		const showAnswer = a.kind === 'tableTalk' && !!table.questionId;
 		const answerEditable = showAnswer && (!tableMode || isAsker);
 		const showProposal = !!a.challenge;
 		const sentAnswer = sentAnswerOf(a);
-		const sentProposal = sentProposalOf(a);
+		const sentProposal = target.kind === 'edit' ? target.proposal : null;
 
 		const valueOf = (kind: DraftKind): string => {
 			const edited = self.edits[kind];
@@ -157,7 +204,9 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 			self.edits[kind] = text;
 			self.states[kind] = 'idle';
 			self.lastTyped = kind;
-			const scopeId = kind === 'answer' ? answerScope(table) : proposalScope(a.main);
+			// Changed words are a new send: the server answers "sent" for a known id without writing.
+			if (kind === 'proposal') self.proposalId = null;
+			const scopeId = kind === 'answer' ? answerScope(table) : proposalScope;
 			writeDraft(scopeId, kind, text);
 			if (!wantBroadcast) return;
 			if (isBroadcasting()) updateBroadcastText(text);
@@ -169,9 +218,8 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 
 			return text.length > 0 && stateOf(kind) !== 'sent';
 		};
-		const canSend =
-			!self.sending &&
-			((answerEditable && dirty('answer')) || (showProposal && !a.locked && dirty('proposal')));
+		const proposalSendable = showProposal && !a.locked && dirty('proposal') && !limitReached;
+		const canSend = !self.sending && ((answerEditable && dirty('answer')) || proposalSendable);
 
 		const sendOne = async (kind: DraftKind): Promise<void> => {
 			const text = (self.edits[kind] ?? '').trim();
@@ -197,11 +245,13 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 					clearDraft(answerScope(table), 'answer');
 				} else if (a.challenge) {
 					// The server checks the words first (IA 24.3): refused text is not published.
-					const mainId = a.main.statementId;
-					if (!self.proposalId) self.proposalId = newProposalId();
-					const result = sentProposal
-						? await changeProposal(mainId, sentProposal.statementId, text)
-						: await sendProposal(mainId, self.proposalId, text);
+					let result: ProposalResult;
+					if (sentProposal) {
+						result = await changeProposal(mainId, sentProposal.statementId, text);
+					} else {
+						self.proposalId ??= newProposalId();
+						result = await sendProposal(mainId, self.proposalId, text);
+					}
 					if (!result.ok) {
 						// Not sent: the text stays in the box and the student writes it again.
 						self.states[kind] = 'refused';
@@ -210,11 +260,19 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 						return;
 					}
 					self.proposalId = null;
-					clearDraft(proposalScope(a.main), 'proposal');
+					clearDraft(proposalScope, 'proposal');
 				}
 				self.edits[kind] = undefined;
 				self.states[kind] = 'sent';
 			} catch (error) {
+				if (kind === 'proposal' && refusalReason(error) === 'already-proposed') {
+					// The limit, not a failure: nothing to retry, and the text stays in the box.
+					self.limitRefused = true;
+					self.proposalId = null;
+					self.states[kind] = 'idle';
+
+					return;
+				}
 				self.states[kind] = 'failed';
 				throw error;
 			}
@@ -224,7 +282,7 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 			self.error = null;
 			const kinds: DraftKind[] = [];
 			if (answerEditable && dirty('answer')) kinds.push('answer');
-			if (showProposal && !a.locked && dirty('proposal')) kinds.push('proposal');
+			if (proposalSendable) kinds.push('proposal');
 			(async () => {
 				for (const kind of kinds) await sendOne(kind);
 				if (isBroadcasting()) await stopBroadcast();
@@ -245,6 +303,17 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 		const proposalLabel = t(a.kind === 'tableTalk' ? 'proposal.optional' : 'proposal.mine');
 		const busySend =
 			self.sending || stateOf('answer') === 'sending' || stateOf('proposal') === 'sending';
+		const ownCards = showsOwnProposalList(limit, mine, target)
+			? ownProposalCards({
+					proposals: otherOwnProposals(mine, target),
+					uid,
+					canEdit: !a.locked,
+					onEdit: (id) => {
+						self.editId = id;
+						self.limitRefused = false;
+					},
+				})
+			: null;
 
 		return m('.write-panel', [
 			a.kind === 'tableTalk' && table.questionId && a.question
@@ -282,13 +351,32 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 						testId: 'proposal-box',
 					})
 				: m('p.write-panel__note', t('proposal.none')),
+			limitReached
+				? m(
+						'p.write-panel__note.write-panel__note--limit',
+						{ role: 'status', 'data-testid': 'proposal-limit-reached' },
+						t('proposal.limit_reached'),
+					)
+				: null,
+			self.editId && sentProposal && (limit === 'unlimited' || mine.length > 1)
+				? m(
+						'button.btn.btn--secondary.btn--small',
+						{
+							type: 'button',
+							'data-testid': 'proposal-edit-done',
+							onclick: () => {
+								self.editId = null;
+							},
+						},
+						t('proposal.edit_done'),
+					)
+				: null,
 			sentProposal?.hide ? m('p.write-panel__note', t('proposal.hidden_mine')) : null,
 			sentProposal && a.kind === 'proposals' && !sentProposal.hide
-				? [
-						m(ReplyEntry, { proposal: sentProposal, uid: a.uid }),
-						m(PushAsk, { mainId: a.main.statementId }),
-					]
+				? [m(ReplyEntry, { proposal: sentProposal, uid: a.uid }), m(PushAsk, { mainId })]
 				: null,
+			ownCards,
+			!sentProposal && mine.length > 0 && a.kind === 'proposals' ? m(PushAsk, { mainId }) : null,
 			m('label.write-panel__broadcast', [
 				m('input', {
 					type: 'checkbox',

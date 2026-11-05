@@ -107,6 +107,12 @@
   color: var(--ink-muted);
 }
 
+// Results closed by the teacher: a calm line, not an error (no warning colour)
+.vote__results-later {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
 // ---- pick = vote: the quiet "your vote counted" line in the footer -----------------------
 
 .vote__status {
@@ -127,6 +133,12 @@
   margin: 0 0 var(--space-sm);
   color: var(--ink-muted);
   font-weight: var(--font-weight-bold, 700);
+}
+
+.summary__support-later {
+  margin: var(--space-md) 0 0;
+  color: var(--ink-muted);
+  font-size: var(--font-size-sm);
 }
 
 .vote-result {

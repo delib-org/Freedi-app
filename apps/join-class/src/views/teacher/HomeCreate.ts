@@ -50,6 +50,8 @@ let flow: CreateFlow = IDLE_FLOW;
 let newTitle = '';
 let copyTitle = '';
 let copySourceTitle = '';
+/** Who opened the form wants to hear when it is cancelled (the lesson picker steps back). */
+let onCancelled: (() => void) | null = null;
 
 export function configureCreate(next: CreateHooks): void {
 	hooks = next;
@@ -60,6 +62,7 @@ export function resetCreate(): void {
 	newTitle = '';
 	copyTitle = '';
 	copySourceTitle = '';
+	onCancelled = null;
 }
 
 export function picking(): boolean {
@@ -126,8 +129,10 @@ function go(move: FlowMove): void {
 
 // ---- entry points the page wires up ---------------------------------------------
 
-export function startCreate(): void {
+/** `cancelled`: what to do after "ביטול" instead of returning focus to the "+" button. */
+export function startCreate(cancelled?: () => void): void {
 	if (flow.step.kind !== 'idle') return;
+	onCancelled = cancelled ?? null;
 	// An old lesson that is only a plan so far cannot get a blank game (the plan doc may only
 	// be made by the server, from the lesson): the only way in is "questions from another game".
 	if (!isPlanMode() && !(hooks?.blankAllowed() ?? true)) {
@@ -155,7 +160,14 @@ export function pickRow(id: string, title: string): void {
 function cancel(): void {
 	// a plan's only form goes straight back to the button; a game's goes one step back
 	if (isPlanMode() && !flow.busy) {
-		flow = IDLE_FLOW;
+		const handBack = onCancelled;
+		// the typed name is dropped; nothing was written
+		resetCreate();
+		if (handBack) {
+			handBack();
+
+			return;
+		}
 		m.redraw.sync();
 		applyFocus({ kind: 'newButton' });
 

@@ -9,12 +9,14 @@ import {
 	Role,
 	classTableId,
 	functionConfig,
+	noDeviceCountOf,
 	tableSizeOf,
 } from '@freedi/shared-types';
 import type {
 	ClassAssignTablesRequest,
 	ClassAssignTablesResponse,
 	ClassTable,
+	NoDeviceMember,
 	Statement,
 	StatementSubscription,
 } from '@freedi/shared-types';
@@ -28,7 +30,8 @@ import {
 } from './classroomAccess';
 import { ClassroomError, toHttpsError } from './classroomErrors';
 import { assertLessonRunning } from './lessonStatusGuard';
-import { Rng, SeatableStudent, assignStudents } from './assignTables';
+import { Rng, SeatableStudent, assignStudents, carryNoDeviceMembers } from './assignTables';
+import { countNoDevice } from './noDeviceMembers';
 
 /**
  * `classAssignTables` (admin): seat the class. Students = the workspace's
@@ -41,8 +44,10 @@ import { Rng, SeatableStudent, assignStudents } from './assignTables';
  * lesson that has none saved; it is validated either way.
  *
  * A second run needs `replace: true` and replaces cleanly in ONE transaction:
- * old tables deleted (no-device members go with them), every old tableId
- * cleared, new tables and tableIds written.
+ * old tables deleted, every old tableId cleared, new tables and tableIds written.
+ * No-device students move across (carryNoDeviceMembers): their proposals and votes
+ * hang on their ids, so a re-split must not orphan them. A lesson with only such
+ * students keeps one table for them.
  */
 
 function validTableSize(value: unknown): number | undefined {
@@ -70,13 +75,19 @@ function tableSizeFor(main: Statement, requested: number | undefined): number {
 	return requested ?? tableSizeOf(main);
 }
 
-export function newTable(mainId: string, n: number, memberUids: string[], now: number): ClassTable {
+export function newTable(
+	mainId: string,
+	n: number,
+	memberUids: string[],
+	now: number,
+	noDeviceMembers: NoDeviceMember[] = [],
+): ClassTable {
 	return {
 		tableId: classTableId(mainId, n),
 		mainId,
 		n,
 		memberUids,
-		noDeviceMembers: [],
+		noDeviceMembers,
 		step: 'pick',
 		askerUid: null,
 		turn: 1,
@@ -122,7 +133,14 @@ export async function assignTables(
 			camp: s.camp,
 			side: s.side,
 		}));
-		const seated = assignStudents(students, size, rng);
+		const dealt = assignStudents(students, size, rng);
+		const oldTables = oldTablesSnap.docs.map((d) => d.data() as ClassTable);
+		const noDeviceTotal = countNoDevice(oldTables);
+		const seated = dealt.length === 0 && noDeviceTotal > 0 ? [{ n: 1, memberUids: [] }] : dealt;
+		const noDeviceAt = carryNoDeviceMembers(
+			oldTables,
+			seated.map((t) => t.n),
+		);
 		const placedUids = new Set(seated.flatMap((t) => t.memberUids));
 
 		// Old seats of people who are no longer member subscriptions (left,
@@ -146,9 +164,16 @@ export async function assignTables(
 		seated.forEach((t) => {
 			tx.set(
 				tableRef(firestore, classTableId(mainId, t.n)),
-				newTable(mainId, t.n, t.memberUids, now),
+				newTable(mainId, t.n, t.memberUids, now, noDeviceAt.get(t.n) ?? []),
 			);
 		});
+		// The count phones read; also heals a lesson from before the count existed.
+		if (noDeviceCountOf(main) !== noDeviceTotal) {
+			tx.update(firestore.collection(Collections.statements).doc(mainId), {
+				'statementSettings.noDeviceCount': noDeviceTotal,
+				lastUpdate: now,
+			});
+		}
 		subsSnap.docs.forEach((d) => {
 			const sub = d.data() as StatementSubscription;
 			const seat = seated.find((t) => t.memberUids.includes(sub.userId));

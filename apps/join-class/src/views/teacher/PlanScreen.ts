@@ -55,6 +55,8 @@ import {
 	PROPOSALS_TURNS_KEY,
 	SPEAK_SECONDS_KEY,
 	ownQuestionsControl,
+	PROPOSAL_LIMIT_KEY,
+	proposalLimitControl,
 	proposalsTurnsControl,
 	speakTimeControl,
 } from './planLessonSettings';
@@ -279,6 +281,8 @@ function renderDetails(): m.Vnode {
 				fieldError(SPEAK_SECONDS_KEY),
 				proposalsTurnsControl(),
 				fieldError(PROPOSALS_TURNS_KEY),
+				proposalLimitControl(),
+				fieldError(PROPOSAL_LIMIT_KEY),
 			]),
 		]),
 		renderLessonFrom(),

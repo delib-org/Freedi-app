@@ -217,6 +217,8 @@ try {
 	// 6. summary ---------------------------------------------------------------
 	await db.doc(`statements/${challengeId}`).update({
 		'statementSettings.ballot': { candidateIds: candidates, frozenAt: Date.now(), closedAt: Date.now(), decisionId: candidates[1] },
+		// Results start closed; the decision card and support faces show once they are open.
+		'statementSettings.voteDisplay.liveResults': true,
 	});
 	await db.doc(`statements/${mainId}`).update({ 'statementSettings.lessonPlan.stepIndex': 7 });
 	await a.page.waitForSelector('.decision__text', { timeout: TIMEOUT });

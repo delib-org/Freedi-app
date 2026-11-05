@@ -1,5 +1,10 @@
 import m from 'mithril';
-import { supportBySide, type Statement, type StatementSubscription } from '@freedi/shared-types';
+import {
+	noDeviceCountOf,
+	supportBySide,
+	type Statement,
+	type StatementSubscription,
+} from '@freedi/shared-types';
 import '@/styles/student-c3.scss';
 import { StudentFrame } from '@/components/StudentFrame';
 import { t } from '@/lib/i18n';
@@ -11,6 +16,7 @@ import { currentUid } from '@/lib/classroom/c3Data';
 import { setMyDecisionSupport } from '@/lib/classroom/studentWrites';
 import { gateOf, sideNamesOf } from '@/lib/classroom/classSettings';
 import { presentCount, summaryOf } from '@/lib/classroom/voteSummary';
+import { liveResultsOn, supportVisibleToClass } from '@/lib/classroom/voteResults';
 import type { Unsubscribe } from '@/lib/firebase';
 import { DecisionCard } from './DecisionCard';
 import { ErrorLine } from './ErrorLine';
@@ -67,7 +73,8 @@ export const SummaryScreen: m.ClassComponent<SummaryScreenAttrs> = {
 			ballot: challenge?.statementSettings?.ballot ?? null,
 			selections: challenge?.selections,
 			proposals: self.feed.options,
-			present: presentCount(self.roster, main.creatorId),
+			present: presentCount(self.roster, main.creatorId) + noDeviceCountOf(main),
+			resultsShown: liveResultsOn(challenge),
 		});
 		const mine = self.pending ?? classState.mySubscription?.decisionSupport;
 		const result = supportBySide(self.roster, gateOf(challenge, main));
@@ -108,7 +115,13 @@ export const SummaryScreen: m.ClassComponent<SummaryScreenAttrs> = {
 							testPrefix: 'support-face',
 						}),
 						m(ErrorLine, { message: self.error }),
-						m(SupportBySide, { result, gate: gateOf(challenge, main), names: sideNamesOf(main) }),
+						supportVisibleToClass(challenge)
+							? m(SupportBySide, {
+									result,
+									gate: gateOf(challenge, main),
+									names: sideNamesOf(main),
+								})
+							: m('p.summary__support-later', { role: 'status' }, t('summary.support_later')),
 					]
 				: null,
 		]);

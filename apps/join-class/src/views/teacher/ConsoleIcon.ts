@@ -11,6 +11,7 @@ export type ConsoleIconName =
 	| 'pause'
 	| 'stop'
 	| 'lock'
+	| 'eye'
 	| 'check'
 	| 'sort'
 	| 'barChart'
@@ -35,6 +36,10 @@ const SHAPES: Record<ConsoleIconName, readonly ShapeSpec[]> = {
 	pause: [rect('6', '4', '4', '16'), rect('14', '4', '4', '16')],
 	stop: [rect('5', '5', '14', '14', '2')],
 	lock: [rect('4', '11', '16', '10', '2'), path('M8 11V7a4 4 0 0 1 8 0v4')],
+	eye: [
+		path('M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z'),
+		path('M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'),
+	],
 	check: [path('M20 6 9 17l-5-5')],
 	sort: [path('m21 16-4 4-4-4'), path('M17 20V4'), path('m3 8 4-4 4 4'), path('M7 4v16')],
 	barChart: [path('M3 3v18h18'), path('M18 17V9'), path('M13 17V5'), path('M8 17v-3')],

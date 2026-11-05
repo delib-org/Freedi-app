@@ -1,4 +1,5 @@
 import type {
+	ClassProposalLimit,
 	ClassTableAction,
 	ClassVoteOrder,
 	LessonLook,
@@ -14,6 +15,7 @@ import {
 	classFreezeBallot,
 	classMoveStudent,
 	classPauseBallot,
+	classRequestRename,
 	classResetTurns,
 	classResetVote,
 	classSetItemHidden,
@@ -192,6 +194,7 @@ export type TableSettingsPatch =
 	| { allowOwnQuestions: boolean }
 	| { speakSeconds: number }
 	| { proposalsTurns: number }
+	| { proposalLimit: ClassProposalLimit }
 	| { tableSize: number };
 
 export function setTableSetting(patch: TableSettingsPatch): Promise<boolean> {
@@ -240,7 +243,7 @@ export function closeBallot(mainId: string): Promise<boolean> {
  */
 export function setVoteDisplay(
 	challengeId: string,
-	field: 'liveResults' | 'onlyAboveGate',
+	field: 'liveResults' | 'supportShown' | 'onlyAboveGate',
 	value: boolean,
 ): Promise<boolean> {
 	const patch = { statementSettings: { voteDisplay: { [field]: value } } } as Partial<Statement>;
@@ -262,9 +265,24 @@ export function setVoteOrder(challengeId: string, order: ClassVoteOrder): Promis
 // >>> voteSummary END
 
 export function moveStudent(mainId: string, uid: string, toTable: DropTarget): Promise<boolean> {
-	return guardedAct(`move:${uid}`, t('console.move'), async () => {
+	// Moving works while paused too (Trello 3sq65nGv); only an ended lesson refuses.
+	if (consoleState.ended) return Promise.resolve(false);
+
+	return act(`move:${uid}`, t('console.move'), async () => {
 		await classMoveStudent({ mainId, uid, toTable });
 		consoleState.announce = t('console.moved', { table: toTable ?? t('console.unplaced_name') });
+	});
+}
+
+/**
+ * Ask one student for a new name. Works at every step and while the lesson is
+ * paused (not `guardedAct`): it is also the teacher's way to get a name that was
+ * never given. The server refuses once the lesson has ended.
+ */
+export function requestNewName(mainId: string, uid: string, name: string): Promise<boolean> {
+	return act(`rename:${uid}`, t('console.rename'), async () => {
+		await classRequestRename({ mainId, uid });
+		consoleState.announce = t('console.rename_asked', { name });
 	});
 }
 

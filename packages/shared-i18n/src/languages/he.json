@@ -5395,5 +5395,7 @@
   "survey.stakeholders.recalculating": "מחשב מחדש…",
   "survey.stakeholders.recalculated": "הציונים חושבו מחדש.",
   "survey.stakeholders.recalculateFailed": "לא הצלחנו לחשב מחדש את הציונים. אפשר לנסות שוב או לפנות לבעל הסקר.",
-  "survey.stakeholders.skipped": "לא ניתן היה לקבוע את המספר ב-{{count}} משאלות הסקר, כי אף אחד ממנהלי הסקר אינו מנהל אותן. בשאלות האלה נשאר המספר שלהן."
+  "survey.stakeholders.skipped": "לא ניתן היה לקבוע את המספר ב-{{count}} משאלות הסקר, כי אף אחד ממנהלי הסקר אינו מנהל אותן. בשאלות האלה נשאר המספר שלהן.",
+  "Collapse level": "כווץ רמה",
+  "Expand level": "הרחב רמה"
 }

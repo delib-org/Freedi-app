@@ -5,6 +5,12 @@ import { ALL_TABLES_RATE_STEPS } from '@/lib/classroom/consoleHelpers';
 import type { IntroVideo } from '@/lib/classroom/introVideos';
 import { ProjectorPick } from './ProjectorPick';
 import { VoteBar } from './VoteBar';
+import {
+	ResultsAudienceSwitch,
+	ResultsChip,
+	SupportAudienceSwitch,
+	VOTE_RESULTS_AUDIENCE,
+} from './ResultsAudienceSwitch';
 import type { VoteScopeAttrs } from './VoteScopeSwitch';
 import { isBusy } from './consoleState';
 import type { ConsoleView } from './consoleState';
@@ -50,6 +56,12 @@ export interface SwitchBandAttrs {
 	/** The order of the proposals on every phone and the projector (Vote step). */
 	voteOrder: ClassVoteOrder;
 	onVoteOrder: (order: ClassVoteOrder) => void;
+	/** Who sees the vote's results: only the teacher (false, the default) or the whole class. */
+	resultsShown: boolean;
+	onResultsShown: (shown: boolean) => void;
+	/** The Summary's support by side: the whole class sees it (needs the results open too). */
+	supportShown: boolean;
+	onSupportShown: (shown: boolean) => void;
 	/** All proposals / only those above the goal (Vote step). */
 	voteScope?: VoteScopeAttrs;
 	onPauseVote: (paused: boolean) => void;
@@ -61,6 +73,8 @@ export interface SwitchBandAttrs {
 	/** "כל ההצעות": the live "n of m students rated everything · at least k ratings" line. */
 	allRatedLine?: string;
 	// >>> allProposals END
+	/** "בלי מכשיר (2/5)": opens the sheet for acting for students without a device. */
+	actForEntry?: m.Children;
 }
 
 const TEST_IDS: Record<string, string> = {
@@ -113,7 +127,7 @@ function resetAction(label: string, key: string, onclick: () => void, disabled =
 
 function stepActions(attrs: SwitchBandAttrs): m.Children {
 	const { stepKey } = attrs;
-	const actions: m.Children[] = [];
+	const actions: m.Children[] = [attrs.actForEntry ?? null];
 	if (stepKey === 'opening' && attrs.introVideos.length > 0) {
 		actions.push(
 			m(ProjectorPick, {
@@ -186,11 +200,32 @@ function stepActions(attrs: SwitchBandAttrs): m.Children {
 				hasChallenge: attrs.hasChallenge,
 				voteOrder: attrs.voteOrder,
 				onVoteOrder: attrs.onVoteOrder,
+				resultsShown: attrs.resultsShown,
+				onResultsShown: attrs.onResultsShown,
 				scope: attrs.voteScope,
 				onFreeze: attrs.onFreeze,
 				onPauseVote: attrs.onPauseVote,
 				onCloseVote: attrs.onCloseVote,
 				onResetVote: attrs.onResetVote,
+			}),
+		);
+	}
+
+	// The Summary step shows the same results to the class: the control stays reachable here.
+	if (stepKey === 'summary') {
+		actions.push(
+			m(ResultsChip, { shown: attrs.resultsShown }),
+			m(ResultsAudienceSwitch, {
+				...VOTE_RESULTS_AUDIENCE,
+				shown: attrs.resultsShown,
+				disabled: !attrs.hasChallenge || isBusy('voteDisplay:liveResults'),
+				onChange: attrs.onResultsShown,
+			}),
+			m(SupportAudienceSwitch, {
+				resultsShown: attrs.resultsShown,
+				supportShown: attrs.supportShown,
+				disabled: !attrs.hasChallenge || isBusy('voteDisplay:supportShown'),
+				onChange: attrs.onSupportShown,
 			}),
 		);
 	}
@@ -220,6 +255,7 @@ function segment(attrs: SwitchBandAttrs): m.Vnode {
 	return m('div.switch-band__segment', { role: 'group', 'aria-label': t('console.view_label') }, [
 		item('tables', 'console.tables'),
 		item('texts', 'console.texts'),
+		item('student', 'console.student_screen'),
 	]);
 }
 

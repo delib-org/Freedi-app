@@ -4,6 +4,7 @@ import { Collections } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { StudentFrame } from '@/components/StudentFrame';
 import { t } from '@/lib/i18n';
+import { liveResultsOn } from '@/lib/classroom/voteResults';
 import { getChallengeQuestion, lessonStepOf, stepLabel } from '@/lib/lesson';
 import { getSubQuestions } from '@/lib/store';
 import { db, doc, getDoc } from '@/lib/firebase';
@@ -63,7 +64,9 @@ export const LessonStateScreen: m.Component<LessonStateAttrs> = {
 	view({ attrs }) {
 		const { status, main } = attrs;
 		const ended = status === 'ended';
-		const text = ended ? decisionText() : null;
+		// The decided proposal is the vote's winner: only when the teacher opened the results.
+		const shown = liveResultsOn(getChallengeQuestion(getSubQuestions()));
+		const text = ended && shown ? decisionText() : null;
 		const headerLine = ended
 			? main.statement
 			: stepLabel(lessonStepOf(main.statementSettings?.lessonPlan).key);

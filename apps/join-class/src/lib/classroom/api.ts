@@ -5,6 +5,8 @@ import type {
 	ClassAllTablesToResponse,
 	ClassAssignTablesRequest,
 	ClassAssignTablesResponse,
+	ClassCastVoteForRequest,
+	ClassCastVoteForResponse,
 	ClassSnapshotGameRequest,
 	ClassSnapshotGameResponse,
 	ClassStartLessonRequest,
@@ -23,6 +25,8 @@ import type {
 	ClassPostReplyRequest,
 	ClassPostReplyResponse,
 	ClassMoveStudentResponse,
+	ClassRequestRenameRequest,
+	ClassRequestRenameResponse,
 	ClassResetTurnsRequest,
 	ClassResetTurnsResponse,
 	ClassResetVoteRequest,
@@ -66,6 +70,13 @@ export function classAssignTables(
 /** Admin: move one student to table `toTable` (1-based) or unseat with `null`. */
 export function classMoveStudent(req: ClassMoveStudentRequest): Promise<ClassMoveStudentResponse> {
 	return call('classMoveStudent', req);
+}
+
+/** Admin: ask one student for a new name; a name form blocks their phone until they save one. */
+export function classRequestRename(
+	req: ClassRequestRenameRequest,
+): Promise<ClassRequestRenameResponse> {
+	return call('classRequestRename', req);
 }
 
 /** Admin: add a student without a device to table `n`. */
@@ -141,11 +152,19 @@ export function classPostReply(req: ClassPostReplyRequest): Promise<ClassPostRep
 	return call('classPostReply', req);
 }
 
-/** A student: their one proposal, after the language check (IA 24.3); hurtful words answer { ok: false }. */
+/**
+ * A student: a proposal, after the language check (IA 24.3); hurtful words answer { ok: false }.
+ * The teacher, with `forStudentId`: the proposal of a student without a device.
+ */
 export function classPostProposal(
 	req: ClassPostProposalRequest,
 ): Promise<ClassPostProposalResponse> {
 	return call('classPostProposal', req);
+}
+
+/** The lesson's teacher: the vote of a student without a device, while the ballot takes votes. */
+export function classCastVoteFor(req: ClassCastVoteForRequest): Promise<ClassCastVoteForResponse> {
+	return call('classCastVoteFor', req);
 }
 
 /** The proposal's writer: new text, same check, until the vote opens (IA 24.3). */

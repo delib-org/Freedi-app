@@ -3,6 +3,7 @@ import '@/styles/console-opening.scss';
 import type { ClassTable, Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { unplacedStudents } from '@/lib/classroom/consoleHelpers';
+import { sideCount } from '@/lib/classroom/sideCount';
 import type { RosterStudent } from '@/lib/classroom/consoleHelpers';
 import { moveStudent } from './consoleActions';
 import { askConfirm } from './ConfirmDialog';
@@ -71,6 +72,17 @@ function sidesToggle(): m.Vnode {
 	);
 }
 
+/** "18 of 24 chose a side": visible from the Side step, whether or not the sides themselves are shown. */
+function sidesCountLine(students: readonly RosterStudent[]): m.Vnode {
+	const { chose, total } = sideCount(students);
+
+	return m(
+		'p.tables-board__sides-count',
+		{ 'data-testid': 'console-sides-count', role: 'status' },
+		t('console.sides_count', { chose, total }),
+	);
+}
+
 function rosterCard(attrs: TablesBoardAttrs): m.Vnode {
 	return m('section.roster-card', { 'aria-label': t('console.roster_title') }, [
 		m('h3.roster-card__title', [
@@ -84,8 +96,10 @@ function rosterCard(attrs: TablesBoardAttrs): m.Vnode {
 					attrs.students.map((s) =>
 						m(MemberChip, {
 							key: s.uid,
+							uid: s.uid,
 							name: s.name,
 							camp: attrs.showSides ? s.camp : null,
+							chosen: attrs.showSides ? s.camp !== null : undefined,
 							from: null,
 							tableNumbers: [],
 						}),
@@ -98,6 +112,7 @@ function unplacedStrip(
 	unplaced: readonly RosterStudent[],
 	tableNumbers: readonly number[],
 	mainId: string,
+	showSides: boolean,
 ): m.Vnode {
 	return m('section.unplaced', { ...dropAttrs(null), 'aria-label': t('console.unplaced_name') }, [
 		m('span.unplaced__label', `${t('console.unplaced_name')}:`),
@@ -107,6 +122,7 @@ function unplacedStrip(
 					uid: s.uid,
 					name: s.name,
 					camp: s.camp,
+					chosen: showSides ? s.camp !== null : undefined,
 					from: null,
 					tableNumbers,
 				}),
@@ -114,7 +130,7 @@ function unplacedStrip(
 					'select.unplaced__select',
 					{
 						'aria-label': `${t('console.to_table')}: ${s.name}`,
-						disabled: consoleState.held,
+						disabled: consoleState.ended,
 						onchange: (e: Event) => {
 							const el = e.target as HTMLSelectElement;
 							const n = Number(el.value);
@@ -145,13 +161,19 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 					? ` ${t('console.unplaced_live', { count: unplaced.length })}`
 					: '',
 			]),
+			attrs.tables.length > 0 && !consoleState.ended
+				? m('p.tables-board__hint', { 'data-testid': 'console-drag-hint' }, t('console.drag_hint'))
+				: null,
+			attrs.showSides && attrs.students.length > 0 ? sidesCountLine(attrs.students) : null,
 			attrs.showSides && attrs.students.length > 0 ? sidesToggle() : null,
 			attrs.tables.length === 0
 				? attrs.opening
 					? m('div.console-opening', [attrs.opening, rosterCard(attrs)])
 					: rosterCard(attrs)
 				: [
-						unplaced.length > 0 ? unplacedStrip(unplaced, tableNumbers, attrs.mainId) : null,
+						unplaced.length > 0
+							? unplacedStrip(unplaced, tableNumbers, attrs.mainId, attrs.showSides)
+							: null,
 						m(
 							'div.tables-board__grid',
 							attrs.tables.map((table) =>
@@ -166,6 +188,7 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 										?.statement,
 									mainId: attrs.mainId,
 									tableNumbers,
+									showSides: attrs.showSides,
 									ratedLine: attrs.ratedLineOf?.(table), // >>> allProposals
 								}),
 							),

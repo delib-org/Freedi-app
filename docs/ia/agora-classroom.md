@@ -419,7 +419,8 @@ Transitions (teacher only, from the console or a home row):
 
 What is fixed:
 - While `paused` or `ended`, the step rail and the forward control are disabled. The paused console shows one primary control, "המשך השיעור". The ended console shows the banner "השיעור הסתיים" and "פתיחה מחדש".
-- The callables (`classTableStep`, `classAssignTables`, `classMoveStudent`, `classCastVote`) refuse when the status is `paused` or `ended`. The client hides writing on those screens.
+- The callables (`classTableStep`, `classAssignTables`, `classCastVote`) refuse when the status is `paused` or `ended`. The client hides writing on those screens.
+- **Moving a student (`classMoveStudent`) works while `paused` and is refused only once `ended`** (Tal, 2026-11-05, Trello 3sq65nGv; it was refused while paused before). A paused table does not move on by itself when its membership shrinks: no turn advances and no timer is cut.
 - A walk-away lesson (the teacher never pressed "סיום השיעור") stays as it is; there is no automatic end in phase 1.
 
 Data, on `statementSettings.lessonPlan` (all moments in ms):
@@ -1867,7 +1868,7 @@ header → vote results (state block) → "עד כמה אתם תומכים בה�
 ## 21. Order of proposals during the vote (Tal, 2026-10-25, card UM5Z8zj0)
 
 ### 21.1 What exists
-`statementSettings.voteDisplay` on the challenge question had two switches in the console settings popover: `liveResults` (absent = on) and `sortBySupport` (absent = off, a live sort by votes on the phones only). The projector's tally always followed ballot order.
+`statementSettings.voteDisplay` on the challenge question had two switches in the console settings popover: `liveResults` (absent = on at the time; since Trello uVEcfwbB, 2026-11: only `true` opens the results to the class, absent or false = closed, in the console, the phones and the projector alike) and `sortBySupport` (absent = off, a live sort by votes on the phones only). The projector's tally always followed ballot order.
 
 ### 21.2 Change (Tal's words: "you can sort by C_p, by Random, and by most voted. The teacher can choose, and it will affect everybody. By default C_p is presented, because these are the options most wanted by the people.")
 - Replace `sortBySupport` with `order: 'consensus' | 'votes' | 'random'`. Absent means `consensus`. One setting for every phone AND the projector.

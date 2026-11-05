@@ -19,6 +19,7 @@ import { getMainStatement } from '@/lib/store';
 import { noDeviceButtons, stepButtons, turnButtons } from './tableSheetTurn';
 import { targetName } from './dragController';
 import { confirmResetTurns } from './consoleConfirms';
+import { actForRowLabel, openActFor } from './actFor/actForState';
 
 /**
  * The table sheet (UX section 5): a 420 px side sheet from the end edge over a
@@ -90,7 +91,7 @@ function memberRow(
 			{
 				type: 'button',
 				'aria-label': `${t('console.remove')}: ${name}`,
-				disabled: consoleState.held || isBusy(`move:${uid}`),
+				disabled: consoleState.ended || isBusy(`move:${uid}`),
 				onclick: () => void moveStudent(consoleState.mainId, uid, null),
 			},
 			t('console.remove'),
@@ -206,6 +207,20 @@ export const TableSheetPanel: m.Component<TableSheetPanelAttrs> = {
 										m('li.table-sheet__member.table-sheet__member--nd', { key: `nd:${nd.id}` }, [
 											m('span.table-sheet__member-name', nd.name),
 											noDeviceButtons(table, nd.id, nd.name, tableModeOf(attrs), serverNow()),
+											actForRowLabel(nd.name)
+												? m(
+														'button.btn.btn--tertiary.table-sheet__act-for',
+														{
+															type: 'button',
+															'data-testid': 'sheet-act-for',
+															onclick: () => {
+																openActFor(nd.id);
+																attrs.onClose();
+															},
+														},
+														actForRowLabel(nd.name),
+													)
+												: null,
 											m('span.table-sheet__member-side', t('console.no_device')),
 										]),
 									),

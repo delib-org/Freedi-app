@@ -1,10 +1,12 @@
 import m from 'mithril';
 import {
+	CLASS_PROPOSAL_LIMITS,
 	MAX_TABLE_SIZE,
 	MIN_TABLE_SIZE,
 	PROPOSALS_TURNS_CHOICES,
 	SPEAK_SECONDS_CHOICES,
 } from '@freedi/shared-types';
+import type { ClassProposalLimit } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import '@/styles/table-settings.scss';
 
@@ -58,23 +60,23 @@ export const OwnQuestionsSwitch: m.Component<OwnQuestionsAttrs> = {
 	},
 };
 
-interface SelectOption {
-	value: number;
+interface SelectOption<T extends number | string = number> {
+	value: T;
 	label: string;
 }
 
-interface SettingsSelectAttrs {
+interface SettingsSelectAttrs<T extends number | string> {
 	id: string;
 	label: string;
 	help: string;
-	value: number;
-	options: readonly SelectOption[];
+	value: T;
+	options: readonly SelectOption<T>[];
 	disabled?: boolean;
-	onChange: (value: number) => void;
+	onChange: (value: T) => void;
 }
 
 /** A labelled native select with its help line (44 px tall, described by the help). */
-function settingsSelect(attrs: SettingsSelectAttrs): m.Children {
+function settingsSelect<T extends number | string>(attrs: SettingsSelectAttrs<T>): m.Children {
 	const { id } = attrs;
 
 	return m('.table-settings__select-row', [
@@ -87,7 +89,11 @@ function settingsSelect(attrs: SettingsSelectAttrs): m.Children {
 				disabled: attrs.disabled,
 				'aria-describedby': `${id}-help`,
 				'data-testid': id,
-				onchange: (e: Event) => attrs.onChange(Number((e.target as HTMLSelectElement).value)),
+				onchange: (e: Event) => {
+					const raw = (e.target as HTMLSelectElement).value;
+					const picked = attrs.options.find((option) => String(option.value) === raw);
+					if (picked) attrs.onChange(picked.value);
+				},
 			},
 			attrs.options.map((option) =>
 				m(
@@ -146,6 +152,31 @@ export const ProposalsTurnsSelect: m.Component<ProposalsTurnsAttrs> = {
 			help: t(`${attrs.scope}.proposals_turns_help`),
 			value: attrs.turns,
 			options: PROPOSALS_TURNS_CHOICES.map((turns) => ({ value: turns, label: String(turns) })),
+			disabled: attrs.disabled,
+			onChange: attrs.onChange,
+		});
+	},
+};
+
+export interface ProposalLimitAttrs {
+	scope: SettingsScope;
+	limit: ClassProposalLimit;
+	disabled?: boolean;
+	onChange: (limit: ClassProposalLimit) => void;
+}
+
+/** "Proposals per student": one (the default) or unlimited, same words on both screens. */
+export const ProposalLimitSelect: m.Component<ProposalLimitAttrs> = {
+	view({ attrs }) {
+		return settingsSelect<ClassProposalLimit>({
+			id: `table-settings-proposal-limit-${attrs.scope}`,
+			label: t('console.proposal_limit'),
+			help: t('console.proposal_limit_help'),
+			value: attrs.limit,
+			options: CLASS_PROPOSAL_LIMITS.map((limit) => ({
+				value: limit,
+				label: t(`console.proposal_limit_${limit}`),
+			})),
 			disabled: attrs.disabled,
 			onChange: attrs.onChange,
 		});

@@ -272,6 +272,8 @@ export const ENGINE_PHASES = [
 				return data?.closedAt && data?.decisionId ? data : null;
 			}, 'ballot closed with a decision');
 			check('the ballot closed with a decision', !!closed.decisionId, closed.decisionId);
+			// Results start closed and the support question shows only once they are open.
+			await admin.collection('statements').doc(challengeId).update({ 'statementSettings.voteDisplay.liveResults': true });
 			await teacherForward(teacher, 'summary');
 			for (const student of students) {
 				await (await byId(student.page, 'support-face-5')).click();
