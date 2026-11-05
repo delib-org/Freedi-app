@@ -65,6 +65,13 @@ const vote: Record<string, string> = {
 	'voting.closed_hidden': 'La votación está cerrada. Los resultados se mostrarán pronto',
 	'console.close_and_go_results_closed': 'Los resultados siguen ocultos para la clase',
 	'console.close_and_go_show': 'Mostrar a la clase',
+	'console.support_audience': 'Quién ve el apoyo por lado',
+	'console.support_hint_closed':
+		"La clase no ve las barras. Elige 'Toda la clase' para compartirlas.",
+	'console.support_hint_blocked': 'Primero abre los resultados a la clase',
+	'console.support_panel_private': 'Solo tú ves esto ahora.',
+	'console.support_panel_shared': 'La clase también lo ve.',
+	'summary.support_later': 'El apoyo de la clase se mostrará pronto',
 	// >>> voteSummary END
 };
 

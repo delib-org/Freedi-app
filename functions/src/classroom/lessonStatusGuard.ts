@@ -3,9 +3,10 @@ import type { LessonStepKey, Statement } from '@freedi/shared-types';
 import { ClassroomError } from './classroomErrors';
 
 /**
- * The classroom callables that move tables or seats refuse while the lesson is
- * paused or ended (IA 13.6): the teacher stopped the room, so nothing under it
- * may shift. 'open' and 'live' pass. A missing main statement counts as live
+ * The classroom callables that reshape the tables (assign, all-tables step,
+ * add no-device) refuse while the lesson is paused or ended (IA 13.6): the
+ * teacher stopped the room, so nothing under it may shift. Moving one student
+ * is the exception: it works while paused (Tal, 2026-11-05), see `assertLessonNotEnded`. 'open' and 'live' pass. A missing main statement counts as live
  * (the callable's own not-found check speaks for it).
  */
 

@@ -5,7 +5,12 @@ import { ALL_TABLES_RATE_STEPS } from '@/lib/classroom/consoleHelpers';
 import type { IntroVideo } from '@/lib/classroom/introVideos';
 import { ProjectorPick } from './ProjectorPick';
 import { VoteBar } from './VoteBar';
-import { ResultsAudienceSwitch, ResultsChip, VOTE_RESULTS_AUDIENCE } from './ResultsAudienceSwitch';
+import {
+	ResultsAudienceSwitch,
+	ResultsChip,
+	SupportAudienceSwitch,
+	VOTE_RESULTS_AUDIENCE,
+} from './ResultsAudienceSwitch';
 import type { VoteScopeAttrs } from './VoteScopeSwitch';
 import { isBusy } from './consoleState';
 import type { ConsoleView } from './consoleState';
@@ -54,6 +59,9 @@ export interface SwitchBandAttrs {
 	/** Who sees the vote's results: only the teacher (false, the default) or the whole class. */
 	resultsShown: boolean;
 	onResultsShown: (shown: boolean) => void;
+	/** The Summary's support by side: the whole class sees it (needs the results open too). */
+	supportShown: boolean;
+	onSupportShown: (shown: boolean) => void;
 	/** All proposals / only those above the goal (Vote step). */
 	voteScope?: VoteScopeAttrs;
 	onPauseVote: (paused: boolean) => void;
@@ -212,6 +220,12 @@ function stepActions(attrs: SwitchBandAttrs): m.Children {
 				shown: attrs.resultsShown,
 				disabled: !attrs.hasChallenge || isBusy('voteDisplay:liveResults'),
 				onChange: attrs.onResultsShown,
+			}),
+			m(SupportAudienceSwitch, {
+				resultsShown: attrs.resultsShown,
+				supportShown: attrs.supportShown,
+				disabled: !attrs.hasChallenge || isBusy('voteDisplay:supportShown'),
+				onChange: attrs.onSupportShown,
 			}),
 		);
 	}

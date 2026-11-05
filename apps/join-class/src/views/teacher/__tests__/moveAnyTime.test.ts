@@ -19,7 +19,7 @@ import { consoleState, resetConsoleState } from '../consoleState';
 
 /**
  * Trello 3sq65nGv: nothing on the teacher's side stops moving a student once the
- * tables are chosen. Only a held (paused / ended) lesson does, and the server agrees.
+ * tables are chosen, while the lesson runs or is paused. Only an ended lesson does, and the server agrees.
  */
 
 function flatten(node: m.Children, out: m.Vnode[] = []): m.Vnode[] {
@@ -43,8 +43,9 @@ function chipButton(): m.Vnode | undefined {
 	);
 }
 
-function boardHint(held: boolean): m.Vnode | undefined {
-	consoleState.held = held;
+function boardHint(state: { held: boolean; ended: boolean }): m.Vnode | undefined {
+	consoleState.held = state.held;
+	consoleState.ended = state.ended;
 	const table = {
 		tableId: 'x--1',
 		mainId: 'x',
@@ -81,14 +82,24 @@ describe('moving students after the tables are chosen', () => {
 		expect(attrs.onkeydown).toBeTypeOf('function');
 	});
 
-	it('a held lesson stands still: no drag', () => {
+	it('a paused lesson still allows the drag and the move menu', () => {
 		consoleState.held = true;
+		consoleState.ended = false;
+		const attrs = chipButton()?.attrs as { onpointerdown?: unknown; onkeydown?: unknown };
+		expect(attrs.onpointerdown).toBeTypeOf('function');
+		expect(attrs.onkeydown).toBeTypeOf('function');
+	});
+
+	it('an ended lesson stands still: no drag', () => {
+		consoleState.held = true;
+		consoleState.ended = true;
 		const attrs = chipButton()?.attrs as { onpointerdown?: unknown };
 		expect(attrs.onpointerdown).toBeUndefined();
 	});
 
-	it('the board tells the teacher she can drag a name, and stops saying so when held', () => {
-		expect(boardHint(false)).toBeDefined();
-		expect(boardHint(true)).toBeUndefined();
+	it('the board tells the teacher she can drag a name, while running and paused, not once ended', () => {
+		expect(boardHint({ held: false, ended: false })).toBeDefined();
+		expect(boardHint({ held: true, ended: false })).toBeDefined();
+		expect(boardHint({ held: true, ended: true })).toBeUndefined();
 	});
 });

@@ -322,6 +322,13 @@ export const ClassVoteDisplaySchema = object({
 	 * (Trello uVEcfwbB).
 	 */
 	liveResults: optional(boolean()),
+	/**
+	 * The whole class sees the Summary's support-by-side bars and verdict
+	 * (phones, projector). Only `true` shows them; absent = teacher-only, for
+	 * new and existing lessons. Results closed (`liveResults`) always wins
+	 * (Trello 89fevjY5).
+	 */
+	supportShown: optional(boolean()),
 	/** Deprecated: old docs only, nobody reads it. Replaced by `order`. */
 	sortBySupport: optional(boolean()),
 	// >>> voteSummary BEGIN

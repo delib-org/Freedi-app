@@ -317,7 +317,7 @@ const nl: Record<string, string> = {
 	'console.rename_asked': '{{name}} om een nieuwe naam gevraagd',
 	'console.student_menu': 'Opties voor {{name}}',
 	'console.drag_hint':
-		'Kunnen sommige leerlingen niet samen zitten? Sleep in elke stap van de les een naam naar een andere tafel. Hun voorstellen en stemmen blijven van hen.',
+		'Kunnen sommige leerlingen niet samen zitten? Sleep op elk moment van de les een naam naar een andere tafel. Hun voorstellen en stemmen blijven van hen.',
 	'console.unplaced_name': 'Zonder tafel',
 	'console.add_no_device': 'Leerling zonder apparaat toevoegen',
 	'console.table_action': 'Actie voor de tafel',

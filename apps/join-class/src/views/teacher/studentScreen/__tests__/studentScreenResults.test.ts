@@ -112,7 +112,7 @@ describe('the Vote sample follows the results switch', () => {
 describe('the Summary and Ended samples follow the results switch', () => {
 	it('closed: names only, no decision, no support question, same note as the phones', () => {
 		withBallot(undefined);
-		const summary = seen(summarySample(MAIN, false));
+		const summary = seen(summarySample(MAIN, false, false));
 		expect(summary).toContain('voting.results_later');
 		expect(summary).not.toContain('summary.how_much');
 		expect(summary).not.toContain('text=student_screen.proposal_1');
@@ -122,14 +122,22 @@ describe('the Summary and Ended samples follow the results switch', () => {
 
 	it('open: the decision and the support question', () => {
 		withBallot(true);
-		const summary = seen(summarySample(MAIN, true));
+		const summary = seen(summarySample(MAIN, true, true));
 		expect(summary).toContain('text=student_screen.proposal_1');
 		expect(summary).toContain('summary.how_much');
 		expect(seen(endedSample(MAIN, true))).toContain('text=student_screen.proposal_1');
 	});
 
+	it('open but support not shared: the faces stay, the bars give way to a calm line', () => {
+		withBallot(true);
+		const summary = seen(summarySample(MAIN, true, false));
+		expect(summary).toContain('summary.how_much');
+		expect(summary).toContain('summary.support_later');
+		expect(seen(summarySample(MAIN, true, true))).not.toContain('summary.support_later');
+	});
+
 	it('with no vote at all the most agreed proposal still shows, as on the phones', () => {
 		challenge.current = null;
-		expect(seen(summarySample(MAIN, false))).toContain('text=student_screen.proposal_1');
+		expect(seen(summarySample(MAIN, false, false))).toContain('text=student_screen.proposal_1');
 	});
 });

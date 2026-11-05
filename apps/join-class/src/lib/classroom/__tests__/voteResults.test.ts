@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { Statement } from '@freedi/shared-types';
-import { liveResultsOn, visibleBallotMode, voteResults } from '../voteResults';
+import {
+	liveResultsOn,
+	supportShownOn,
+	supportVisibleToClass,
+	visibleBallotMode,
+	voteResults,
+} from '../voteResults';
 
-function challenge(voteDisplay?: { liveResults?: boolean }): Statement {
+function challenge(voteDisplay?: { liveResults?: boolean; supportShown?: boolean }): Statement {
 	return {
 		statementId: 'ch',
 		statementSettings: voteDisplay ? { voteDisplay } : {},
@@ -19,6 +25,33 @@ describe('liveResultsOn', () => {
 
 	it('is open only for an explicit true', () => {
 		expect(liveResultsOn(challenge({ liveResults: true }))).toBe(true);
+	});
+});
+
+describe('supportShownOn', () => {
+	it('a missing flag means hidden, for new and existing lessons', () => {
+		expect(supportShownOn(null)).toBe(false);
+		expect(supportShownOn(challenge())).toBe(false);
+		expect(supportShownOn(challenge({}))).toBe(false);
+		expect(supportShownOn(challenge({ supportShown: false }))).toBe(false);
+	});
+
+	it('is shown only for an explicit true', () => {
+		expect(supportShownOn(challenge({ supportShown: true }))).toBe(true);
+	});
+});
+
+describe('supportVisibleToClass', () => {
+	it('needs both the results and the support open', () => {
+		expect(supportVisibleToClass(challenge({ liveResults: true, supportShown: true }))).toBe(true);
+		expect(supportVisibleToClass(challenge({ liveResults: true }))).toBe(false);
+	});
+
+	it('closed results always win over a leftover supportShown', () => {
+		expect(supportVisibleToClass(challenge({ supportShown: true }))).toBe(false);
+		expect(supportVisibleToClass(challenge({ liveResults: false, supportShown: true }))).toBe(
+			false,
+		);
 	});
 });
 

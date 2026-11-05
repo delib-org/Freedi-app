@@ -135,6 +135,12 @@
   font-weight: var(--font-weight-bold, 700);
 }
 
+.summary__support-later {
+  margin: var(--space-md) 0 0;
+  color: var(--ink-muted);
+  font-size: var(--font-size-sm);
+}
+
 .vote-result {
   margin-block-end: var(--space-lg);
 

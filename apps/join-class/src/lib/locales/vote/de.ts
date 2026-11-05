@@ -66,6 +66,13 @@ const vote: Record<string, string> = {
 	'voting.closed_hidden': 'Die Abstimmung ist beendet. Die Ergebnisse werden gleich gezeigt',
 	'console.close_and_go_results_closed': 'Die Ergebnisse sind für die Klasse noch verborgen',
 	'console.close_and_go_show': 'Der Klasse zeigen',
+	'console.support_audience': 'Wer sieht die Unterstützung nach Seite',
+	'console.support_hint_closed':
+		"Die Klasse sieht die Balken nicht. Wählt 'Die ganze Klasse', um sie zu teilen.",
+	'console.support_hint_blocked': 'Zuerst die Ergebnisse für die Klasse öffnen',
+	'console.support_panel_private': 'Nur du siehst das gerade.',
+	'console.support_panel_shared': 'Die Klasse sieht das auch.',
+	'summary.support_later': 'Die Unterstützung der Klasse wird bald gezeigt',
 	// >>> voteSummary END
 };
 

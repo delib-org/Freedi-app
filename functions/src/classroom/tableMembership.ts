@@ -16,12 +16,16 @@ import { moveOnIfReached } from './tableMoveOn';
  * a second turn, while a table they move to starts them as not yet asked. They
  * leave this turn's `spokenUids` / `passedSpeakingUids`. Every derivation
  * reads these lists through the current `memberUids`.
+ *
+ * `held` (the lesson is paused): the room is stopped, so a smaller table must not
+ * move on by itself (no turn advances, no timer is cut); the presses stay as they are.
  */
 export function removeMember(
 	table: ClassTable,
 	uid: string,
 	now: number,
 	lessonStep?: LessonStepKey | null,
+	held = false,
 ): ClassTable {
 	if (!table.memberUids.includes(uid)) return table;
 	const next: ClassTable = {
@@ -48,7 +52,7 @@ export function removeMember(
 	if (table.moveOnUids) next.moveOnUids = table.moveOnUids.filter((m) => m !== uid);
 
 	// A smaller table needs fewer "move on" presses: it may be enough now, and nobody would tap again.
-	return moveOnIfReached(next, lessonStep, now);
+	return held ? next : moveOnIfReached(next, lessonStep, now);
 }
 
 /** Seat `uid` at a table (last in seating order). They are not yet asked and never become the asker by sitting down. */

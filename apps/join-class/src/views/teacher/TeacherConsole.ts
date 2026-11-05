@@ -30,7 +30,13 @@ import {
 	rosterStudents,
 	tablesAreDone,
 } from '@/lib/classroom/consoleHelpers';
-import { liveResultsOn, voteOrderOf, voteResults } from '@/lib/classroom/voteResults';
+import {
+	liveResultsOn,
+	supportShownOn,
+	supportVisibleToClass,
+	voteOrderOf,
+	voteResults,
+} from '@/lib/classroom/voteResults';
 import { everyoneVoted } from '@/lib/classroom/voteSummary';
 import { noDeviceTotal } from '@/lib/classroom/actFor';
 import { groupWrittenTexts } from '@/lib/classroom/textsHelpers';
@@ -75,6 +81,7 @@ import { NotYourLesson } from './NotYourLesson';
 import { ConsoleSettings } from './ConsoleSettings';
 import { ProjectorMenu } from './ProjectorMenu';
 import { GatePanel } from './GatePanel';
+import { SupportPanel } from './SupportPanel';
 import { voteScopeOf } from './voteScopeState';
 import { ActForEntry } from './actFor/ActForEntry';
 import { ActForSheet } from './actFor/ActForSheet';
@@ -267,6 +274,9 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 				stepKey === 'allProposals' ? (table) => tableRatedText(table, challenge) : undefined, // >>> allProposals
 		}),
 		showGate ? m(GatePanel, { rows: gateRows(proposals, gate), gate }) : null,
+		stepKey === 'summary' && main
+			? m(SupportPanel, { main, challenge, shownToClass: supportVisibleToClass(challenge) })
+			: null,
 	];
 }
 
@@ -317,7 +327,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 		const step = getLessonStep();
 		const status = lessonStatusOfMain(main);
 		const held = isLessonStanding(status);
-		consoleState.held = held;
+		Object.assign(consoleState, { held, ended: status === 'ended' });
 		const plan = main.statementSettings?.lessonPlan;
 		// The lesson clock stops while the room is held.
 		const clockEnd = held ? (plan?.pausedAt ?? plan?.endedAt ?? Date.now()) : Date.now();
@@ -397,6 +407,10 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				resultsShown: liveResultsOn(challenge),
 				onResultsShown: (shown: boolean) => {
 					if (challenge) void setVoteDisplay(challenge.statementId, 'liveResults', shown);
+				},
+				supportShown: supportShownOn(challenge),
+				onSupportShown: (shown: boolean) => {
+					if (challenge) void setVoteDisplay(challenge.statementId, 'supportShown', shown);
 				},
 				voteScope: voteScopeOf(
 					challenge,

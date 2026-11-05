@@ -63,6 +63,12 @@ const vote: Record<string, string> = {
 	'voting.closed_hidden': 'ההצבעה נסגרה. התוצאות יוצגו בהמשך',
 	'console.close_and_go_results_closed': 'התוצאות עדיין סגורות לכיתה',
 	'console.close_and_go_show': 'הצגה לכיתה',
+	'console.support_audience': 'מי רואה את התמיכה לפי צד',
+	'console.support_hint_closed': "הכיתה לא רואה את העמודות. לחצו על 'כל הכיתה' כדי לשתף אותן.",
+	'console.support_hint_blocked': 'קודם פותחים את התוצאות לכיתה',
+	'console.support_panel_private': 'זה מוצג כרגע רק במסך שלך.',
+	'console.support_panel_shared': 'גם הכיתה רואה את זה.',
+	'summary.support_later': 'התמיכה של הכיתה תשותף בהמשך',
 	// >>> voteSummary END
 };
 

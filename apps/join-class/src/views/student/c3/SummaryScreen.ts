@@ -16,7 +16,7 @@ import { currentUid } from '@/lib/classroom/c3Data';
 import { setMyDecisionSupport } from '@/lib/classroom/studentWrites';
 import { gateOf, sideNamesOf } from '@/lib/classroom/classSettings';
 import { presentCount, summaryOf } from '@/lib/classroom/voteSummary';
-import { liveResultsOn } from '@/lib/classroom/voteResults';
+import { liveResultsOn, supportVisibleToClass } from '@/lib/classroom/voteResults';
 import type { Unsubscribe } from '@/lib/firebase';
 import { DecisionCard } from './DecisionCard';
 import { ErrorLine } from './ErrorLine';
@@ -115,7 +115,13 @@ export const SummaryScreen: m.ClassComponent<SummaryScreenAttrs> = {
 							testPrefix: 'support-face',
 						}),
 						m(ErrorLine, { message: self.error }),
-						m(SupportBySide, { result, gate: gateOf(challenge, main), names: sideNamesOf(main) }),
+						supportVisibleToClass(challenge)
+							? m(SupportBySide, {
+									result,
+									gate: gateOf(challenge, main),
+									names: sideNamesOf(main),
+								})
+							: m('p.summary__support-later', { role: 'status' }, t('summary.support_later')),
 					]
 				: null,
 		]);

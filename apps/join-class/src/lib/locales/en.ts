@@ -320,7 +320,7 @@ const en: Record<string, string> = {
 	'console.rename_asked': 'Asked {{name}} for a new name',
 	'console.student_menu': 'Options for {{name}}',
 	'console.drag_hint':
-		'Some students cannot sit together? Drag a name to another table, at any step of the lesson. Their proposals and votes stay theirs.',
+		'Some students cannot sit together? Drag a name to another table, at any time in the lesson. Their proposals and votes stay theirs.',
 	'console.unplaced_name': 'No table',
 	'console.add_no_device': 'Add a student without a device',
 	'console.table_action': 'Table action',

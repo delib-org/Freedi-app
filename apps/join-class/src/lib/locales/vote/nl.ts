@@ -65,6 +65,12 @@ const vote: Record<string, string> = {
 	'voting.closed_hidden': 'De stemming is gesloten. De uitslag wordt straks getoond',
 	'console.close_and_go_results_closed': 'De uitslag is nog verborgen voor de klas',
 	'console.close_and_go_show': 'Tonen aan de klas',
+	'console.support_audience': 'Wie ziet de steun per kant',
+	'console.support_hint_closed': "De klas ziet de balken niet. Kies 'De hele klas' om ze te delen.",
+	'console.support_hint_blocked': 'Open eerst de uitslag voor de klas',
+	'console.support_panel_private': 'Alleen jij ziet dit nu.',
+	'console.support_panel_shared': 'De klas ziet dit ook.',
+	'summary.support_later': 'De steun van de klas wordt straks getoond',
 	// >>> voteSummary END
 };
 

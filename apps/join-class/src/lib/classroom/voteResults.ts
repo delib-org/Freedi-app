@@ -29,6 +29,24 @@ export function liveResultsOn(challenge: Statement | null | undefined): boolean 
 }
 
 /**
+ * The teacher's "who sees the support by side" switch (Summary step): true =
+ * the bars and the verdict are on the phones and the projector. Missing =
+ * teacher-only, for new and existing lessons (Trello 89fevjY5).
+ */
+export function supportShownOn(challenge: Statement | null | undefined): boolean {
+	return displayOf(challenge).supportShown === true;
+}
+
+/**
+ * Do the students (phones, projector) see the support by side? Only when the
+ * teacher shared it AND the results are open: closed results always win, so
+ * nothing leaks through a leftover `supportShown`.
+ */
+export function supportVisibleToClass(challenge: Statement | null | undefined): boolean {
+	return liveResultsOn(challenge) && supportShownOn(challenge);
+}
+
+/**
  * The order the students and the projector see. Results shown: the teacher's
  * order, and a closed ballot by its votes (winner first). Results closed: the
  * order must not reveal the votes, so 'votes' and the closed result order fall

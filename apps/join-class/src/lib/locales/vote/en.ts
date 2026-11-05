@@ -65,6 +65,13 @@ const vote: Record<string, string> = {
 	'voting.closed_hidden': 'Voting is closed. Results will be shown soon',
 	'console.close_and_go_results_closed': 'The results are still hidden from the class',
 	'console.close_and_go_show': 'Show to the class',
+	'console.support_audience': 'Who sees the support by side',
+	'console.support_hint_closed':
+		"Students do not see the bars. Choose 'The whole class' to share them.",
+	'console.support_hint_blocked': 'Open the results to the class first',
+	'console.support_panel_private': 'Only you see this now.',
+	'console.support_panel_shared': 'The class sees this too.',
+	'summary.support_later': "The class's support will be shared soon",
 	// >>> voteSummary END
 };
 
