@@ -17,6 +17,11 @@ export interface ConfirmRequest {
 	/** True for a reset: the confirming button looks destructive. */
 	destructive: boolean;
 	run: () => void;
+	/**
+	 * A small extra under the body, redrawn with the dialog (it may change while
+	 * the dialog is open): e.g. a line with an inline action.
+	 */
+	aside?: () => m.Children;
 }
 
 let request: ConfirmRequest | null = null;
@@ -47,6 +52,7 @@ function contents(current: ConfirmRequest): m.Children {
 	return [
 		m('h2.confirm-dialog__title#confirm-dialog-title', current.title),
 		m('p.confirm-dialog__body', current.body),
+		current.aside ? m('div.confirm-dialog__aside', current.aside()) : null,
 		m('div.confirm-dialog__actions', [
 			m(
 				'button.btn.btn--secondary.confirm-dialog__cancel',

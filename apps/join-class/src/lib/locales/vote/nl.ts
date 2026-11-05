@@ -19,8 +19,6 @@ const vote: Record<string, string> = {
 	'voting.paused_hint': 'De docent heeft de stemming even gepauzeerd. Je stem blijft bewaard.',
 	'voting.closed_hint': 'De stemming is gesloten. We wachten op de samenvatting',
 	'console.vote_settings': 'De stemming',
-	'console.vote_live_results': 'Leerlingen zien de uitslag live',
-	'console.vote_live_results_help': 'Hoeveel stemmen elk voorstel heeft. Nooit wie waarop stemde.',
 	'voting.result_votes': '{{percent}}% · {{n}} stemmen',
 	'voting.result_one_vote': '{{percent}}% · 1 stem',
 	// >>> voteSummary BEGIN
@@ -56,6 +54,17 @@ const vote: Record<string, string> = {
 	'console.vote_status_closed': 'Stemmen is gesloten',
 	'console.vote_progress': '{{voted}} van {{present}} hebben gestemd',
 	'console.vote_reset_hint': 'Sluit of pauzeer eerst de stemronde',
+	'console.results_audience': 'Wie ziet de uitslag',
+	'console.results_audience_me': 'Alleen ik',
+	'console.results_audience_class': 'De hele klas',
+	'console.results_hint_closed':
+		'Leerlingen zien alleen hun eigen stem. Kies ‘De hele klas’ om de uitslag te tonen.',
+	'console.results_chip_closed': 'Uitslag verborgen voor de klas',
+	'console.results_chip_shown': 'Uitslag zichtbaar voor de klas',
+	'voting.results_later': 'De uitslag wordt straks getoond',
+	'voting.closed_hidden': 'De stemming is gesloten. De uitslag wordt straks getoond',
+	'console.close_and_go_results_closed': 'De uitslag is nog verborgen voor de klas',
+	'console.close_and_go_show': 'Tonen aan de klas',
 	// >>> voteSummary END
 };
 

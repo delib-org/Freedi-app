@@ -19,9 +19,6 @@ const vote: Record<string, string> = {
 	'voting.paused_hint': 'معلم رأی‌گیری را موقتاً متوقف کرد. رأی شما حفظ شده است.',
 	'voting.closed_hint': 'رأی‌گیری بسته شد. منتظر جمع‌بندی هستیم',
 	'console.vote_settings': 'رأی‌گیری',
-	'console.vote_live_results': 'دانش‌آموزان نتایج را زنده می‌بینند',
-	'console.vote_live_results_help':
-		'هر پیشنهاد چند رأی دارد. هرگز نشان نمی‌دهد چه کسی به چه چیزی رأی داده است.',
 	'voting.result_votes': '{{percent}}٪ · {{n}} رأی',
 	'voting.result_one_vote': '{{percent}}٪ · ۱ رأی',
 	// >>> voteSummary BEGIN
@@ -57,6 +54,17 @@ const vote: Record<string, string> = {
 	'console.vote_status_closed': 'رأی‌گیری بسته شد',
 	'console.vote_progress': '{{voted}} از {{present}} رأی دادند',
 	'console.vote_reset_hint': 'ابتدا رأی‌گیری را ببندید یا متوقف کنید',
+	'console.results_audience': 'چه کسی نتایج را می‌بیند',
+	'console.results_audience_me': 'فقط من',
+	'console.results_audience_class': 'همهٔ کلاس',
+	'console.results_hint_closed':
+		'دانش‌آموزان فقط رأی خودشان را می‌بینند. برای نشان دادن نتایج «همهٔ کلاس» را انتخاب کنید.',
+	'console.results_chip_closed': 'نتایج از کلاس پنهان است',
+	'console.results_chip_shown': 'نتایج برای کلاس نمایان است',
+	'voting.results_later': 'نتایج به‌زودی نشان داده می‌شود',
+	'voting.closed_hidden': 'رأی‌گیری بسته شد. نتایج به‌زودی نشان داده می‌شود',
+	'console.close_and_go_results_closed': 'نتایج هنوز از کلاس پنهان است',
+	'console.close_and_go_show': 'نشان دادن به کلاس',
 	// >>> voteSummary END
 };
 

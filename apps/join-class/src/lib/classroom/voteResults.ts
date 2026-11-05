@@ -19,9 +19,29 @@ function displayOf(challenge: Statement | null | undefined): ClassVoteDisplay {
 	return challenge?.statementSettings?.voteDisplay ?? {};
 }
 
-/** The teacher's "students see live results" switch. On unless switched off. */
+/**
+ * The teacher's "who sees the results" switch: true = the whole class sees
+ * them (phones, projector, summary). Missing = closed, for new and existing
+ * lessons alike (Trello uVEcfwbB): results never leak by default.
+ */
 export function liveResultsOn(challenge: Statement | null | undefined): boolean {
-	return displayOf(challenge).liveResults !== false;
+	return displayOf(challenge).liveResults === true;
+}
+
+/**
+ * The order the students and the projector see. Results shown: the teacher's
+ * order, and a closed ballot by its votes (winner first). Results closed: the
+ * order must not reveal the votes, so 'votes' and the closed result order fall
+ * back to the ratings (C_p); nothing is derived from the tally.
+ */
+export function visibleBallotMode(
+	mode: ClassVoteOrder,
+	closed: boolean,
+	resultsShown: boolean,
+): BallotOrderMode {
+	if (resultsShown) return closed ? 'result' : mode;
+
+	return mode === 'votes' ? 'consensus' : mode;
 }
 
 // >>> voteSummary BEGIN

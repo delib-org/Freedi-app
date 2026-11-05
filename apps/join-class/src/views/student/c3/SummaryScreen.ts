@@ -11,6 +11,7 @@ import { currentUid } from '@/lib/classroom/c3Data';
 import { setMyDecisionSupport } from '@/lib/classroom/studentWrites';
 import { gateOf, sideNamesOf } from '@/lib/classroom/classSettings';
 import { presentCount, summaryOf } from '@/lib/classroom/voteSummary';
+import { liveResultsOn } from '@/lib/classroom/voteResults';
 import type { Unsubscribe } from '@/lib/firebase';
 import { DecisionCard } from './DecisionCard';
 import { ErrorLine } from './ErrorLine';
@@ -68,6 +69,7 @@ export const SummaryScreen: m.ClassComponent<SummaryScreenAttrs> = {
 			selections: challenge?.selections,
 			proposals: self.feed.options,
 			present: presentCount(self.roster, main.creatorId),
+			resultsShown: liveResultsOn(challenge),
 		});
 		const mine = self.pending ?? classState.mySubscription?.decisionSupport;
 		const result = supportBySide(self.roster, gateOf(challenge, main));

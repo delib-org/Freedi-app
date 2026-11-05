@@ -29,7 +29,7 @@ import {
 	rosterStudents,
 	tablesAreDone,
 } from '@/lib/classroom/consoleHelpers';
-import { voteOrderOf, voteResults } from '@/lib/classroom/voteResults';
+import { liveResultsOn, voteOrderOf, voteResults } from '@/lib/classroom/voteResults';
 import { everyoneVoted } from '@/lib/classroom/voteSummary';
 import { groupWrittenTexts } from '@/lib/classroom/textsHelpers';
 import { flagState } from '@/lib/classroom/languageFlags';
@@ -47,6 +47,7 @@ import {
 	goToStep,
 	pauseBallot,
 	pickProjectorVideo,
+	setVoteDisplay,
 	setVoteOrder,
 	startPlenum,
 } from './consoleActions';
@@ -369,6 +370,10 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				voteOrder: voteOrderOf(challenge),
 				onVoteOrder: (order: ClassVoteOrder) => {
 					if (challenge) void setVoteOrder(challenge.statementId, order);
+				},
+				resultsShown: liveResultsOn(challenge),
+				onResultsShown: (shown: boolean) => {
+					if (challenge) void setVoteDisplay(challenge.statementId, 'liveResults', shown);
 				},
 				voteScope: voteScopeOf(
 					challenge,

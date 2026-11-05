@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { Statement, StatementSubscription } from '@freedi/shared-types';
-import { everyoneVoted, presentCount, summaryOf } from '../voteSummary';
+import type { SummaryInput } from '../voteSummary';
+import { everyoneVoted, presentCount, summaryOf as summaryWith } from '../voteSummary';
+
+/** The summary the class sees once the teacher opened the results; the closed one is tested below. */
+const summaryOf = (input: SummaryInput) => summaryWith({ resultsShown: true, ...input });
 
 function option(statementId: string, consensus?: number, hide?: boolean): Statement {
 	return { statementId, statement: `text ${statementId}`, consensus, hide } as unknown as Statement;
@@ -112,5 +116,62 @@ describe('presentCount and everyoneVoted', () => {
 		expect(everyoneVoted(0, 0)).toBe(false);
 		expect(everyoneVoted(2, 3)).toBe(false);
 		expect(everyoneVoted(3, 3)).toBe(true);
+	});
+});
+
+describe('summaryOf with the results closed (the default)', () => {
+	const selections = { a: 1, b: 5, c: 2 };
+	const closedBallot = { candidateIds, closedAt: 10, decisionId: 'b' };
+
+	it('is the closed summary unless resultsShown is true', () => {
+		const left = summaryWith({ ballot: closedBallot, selections, proposals, present: 8 });
+		const off = summaryWith({
+			ballot: closedBallot,
+			selections,
+			proposals,
+			present: 8,
+			resultsShown: false,
+		});
+		expect(left).toEqual(off);
+		expect(left.resultsHidden).toBe(true);
+	});
+
+	it.each([
+		['open', { candidateIds }],
+		['paused', { candidateIds, pausedAt: 5 }],
+		['closed', closedBallot],
+	])('%s: no counts, no winner, no leader, no decision, no tie, no support', (_name, ballot) => {
+		const summary = summaryWith({ ballot, selections, proposals, present: 8 });
+		expect(summary.resultsHidden).toBe(true);
+		expect(summary.decisionText).toBeNull();
+		expect(summary.tie).toBe(false);
+		expect(summary.showSupport).toBe(false);
+		expect(summary.rows.every((r) => r.count === 0 && r.percent === 0)).toBe(true);
+		expect(summary.rows.some((r) => r.winner || r.leading)).toBe(false);
+	});
+
+	it('lists the proposals in the ratings order, never the vote order', () => {
+		const summary = summaryWith({ ballot: closedBallot, selections, proposals, present: 8 });
+		// votes would put b, c, a; the ratings (C_p) put b, c, a too, so use a case that differs
+		const flipped = summaryWith({
+			ballot: closedBallot,
+			selections: { a: 9, b: 0, c: 0 },
+			proposals,
+			present: 8,
+		});
+		expect(summary.rows.map((r) => r.id)).toEqual(['b', 'c', 'a']);
+		expect(flipped.rows.map((r) => r.id)).toEqual(['b', 'c', 'a']);
+	});
+
+	it('keeps the turnout (how many voted, not what)', () => {
+		const summary = summaryWith({ ballot: closedBallot, selections, proposals, present: 8 });
+		expect(summary.voted).toBe(8);
+		expect(summary.present).toBe(8);
+	});
+
+	it('no vote held: nothing is hidden, the decision is the most agreed proposal', () => {
+		const summary = summaryWith({ ballot: null, selections: undefined, proposals, present: 8 });
+		expect(summary.resultsHidden).toBe(false);
+		expect(summary.decisionText).toBe('text b');
 	});
 });

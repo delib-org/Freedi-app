@@ -14,6 +14,7 @@ import {
 	keepOrder,
 	liveResultsOn,
 	orderBallot,
+	visibleBallotMode,
 	voteOrderOf,
 	voteResults,
 } from '@/lib/classroom/voteResults';
@@ -58,8 +59,10 @@ class VoteState {
  * vote (no submit button): it is written at once, a different card moves the
  * vote until the ballot closes, and "Your vote was counted" confirms it. While
  * the teacher has the vote paused the cards are locked; the vote already cast
- * is kept. Live results (on unless the teacher hides them) add each
- * proposal's share. The cards follow the teacher's order (C_p by default,
+ * is kept. Results are closed unless the teacher opens them to the class
+ * (voteDisplay.liveResults === true): then each card adds its share, and a
+ * closed ballot shows the winner; closed, there are no numbers, no winner and
+ * no vote-derived order. The cards follow the teacher's order (C_p by default,
  * votes, or one shared random order); a closed ballot is ordered by votes,
  * winner first. While a pick is being written the order is frozen (IA 21.3).
  */
@@ -110,6 +113,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			);
 		}
 		const closed = !!ballot?.closedAt;
+		const shown = liveResultsOn(challenge);
 		const paused = !closed && typeof ballot?.pausedAt === 'number';
 		const ballotIds = ballot?.candidateIds ?? [];
 		const tally = voteResults(ballotIds, challenge?.selections);
@@ -121,15 +125,16 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			? keepOrder(ballotIds, self.order)
 			: orderBallot(
 					ballotIds,
-					closed ? 'result' : mode,
+					visibleBallotMode(mode, closed, shown),
 					{ consensus: consensusOf(self.feed.options), votes: countsOf(tally) },
-					self.order,
+					// Closed results: nothing carried over from an earlier vote-ordered view.
+					shown ? self.order : [],
 					challengeId ?? '',
 				);
 		const candidates = self.order
 			.map((id) => self.feed.options.find((o) => o.statementId === id))
 			.filter((o): o is Statement => !!o);
-		const results = liveResultsOn(challenge) ? tally : null;
+		const results = shown ? tally : null;
 		if (self.votedId) self.lastVotedId = self.votedId;
 		// The teacher hid the proposal this phone voted for: its vote is withdrawn.
 		const choiceRemoved =
@@ -154,9 +159,10 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			StudentFrame,
 			{
 				headerLine: t('voting.title'),
-				instruction: instructionOf(
-					ballot ? (closed ? 'closed' : paused ? 'paused' : 'open') : 'waiting',
-				),
+				instruction:
+					closed && !shown
+						? t('voting.closed_hidden')
+						: instructionOf(ballot ? (closed ? 'closed' : paused ? 'paused' : 'open') : 'waiting'),
 				action: ballot
 					? m(
 							'p.vote__status',
@@ -173,6 +179,14 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 			ballot
 				? [
 						choiceRemoved ? m('p.vote__empty', { role: 'status' }, t('vote.choice_removed')) : null,
+						// Calm, not an error: the results are the teacher's to open (Trello uVEcfwbB).
+						!shown && !closed
+							? m(
+									'p.vote__results-later',
+									{ role: 'status', 'data-testid': 'vote-results-later' },
+									t('voting.results_later'),
+								)
+							: null,
 						candidates.length === 0
 							? m('p.vote__empty', t('voting.empty'))
 							: m(VoteList, {
@@ -181,7 +195,7 @@ export const VoteScreen: m.ClassComponent<VoteScreenAttrs> = {
 									locked: closed || paused,
 									results,
 									animateReorder: mode !== 'random' || closed,
-									winnerId: closed ? (ballot?.decisionId ?? null) : null,
+									winnerId: closed && shown ? (ballot?.decisionId ?? null) : null,
 									onSelect: (id: string) => {
 										if (open) caster.pick(id);
 									},

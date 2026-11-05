@@ -19,8 +19,6 @@ const vote: Record<string, string> = {
 	'voting.paused_hint': 'أوقف المعلّم التصويت مؤقتًا. صوتك محفوظ.',
 	'voting.closed_hint': 'أُغلق التصويت. بانتظار الملخص',
 	'console.vote_settings': 'التصويت',
-	'console.vote_live_results': 'يرى الطلاب النتائج مباشرة',
-	'console.vote_live_results_help': 'عدد الأصوات لكل اقتراح، دون إظهار من صوّت لأي اقتراح.',
 	'voting.result_votes': '{{percent}}% · {{n}} أصوات',
 	'voting.result_one_vote': '{{percent}}% · صوت واحد',
 	// >>> voteSummary BEGIN
@@ -54,6 +52,16 @@ const vote: Record<string, string> = {
 	'console.vote_status_closed': 'التصويت مغلق',
 	'console.vote_progress': 'صوّت {{voted}} من {{present}}',
 	'console.vote_reset_hint': 'أغلقوا التصويت أو أوقفوه مؤقتًا أولًا',
+	'console.results_audience': 'من يرى النتائج',
+	'console.results_audience_me': 'أنا فقط',
+	'console.results_audience_class': 'الصف كله',
+	'console.results_hint_closed': 'يرى الطلاب تصويتهم فقط. اختاروا «الصف كله» لإظهار النتائج.',
+	'console.results_chip_closed': 'النتائج مخفية عن الصف',
+	'console.results_chip_shown': 'النتائج ظاهرة للصف',
+	'voting.results_later': 'ستظهر النتائج لاحقًا',
+	'voting.closed_hidden': 'انتهى التصويت. ستظهر النتائج لاحقًا',
+	'console.close_and_go_results_closed': 'النتائج ما زالت مخفية عن الصف',
+	'console.close_and_go_show': 'إظهار للصف',
 	// >>> voteSummary END
 };
 

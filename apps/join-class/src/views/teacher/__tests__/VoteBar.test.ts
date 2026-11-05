@@ -20,6 +20,8 @@ const attrsFor = (frozen: boolean, paused: boolean, closed: boolean): VoteBarAtt
 	hasChallenge: true,
 	voteOrder: 'random',
 	onVoteOrder: noop,
+	resultsShown: false,
+	onResultsShown: noop,
 	onFreeze: noop,
 	onPauseVote: noop,
 	onCloseVote: noop,

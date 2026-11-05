@@ -109,3 +109,11 @@
     font-weight: var(--font-weight-semibold);
   }
 }
+
+// the hint under the audience switch (only while the results are closed)
+.results-audience__hint {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--font-size-sm);
+}

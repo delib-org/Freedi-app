@@ -19,6 +19,13 @@ function votesLine(row: SummaryRow): string {
 
 function rowView(row: SummaryRow, attrs: VoteResultsAttrs): m.Vnode {
 	const proposal = attrs.proposals?.find((p) => p.statementId === row.id);
+	if (attrs.summary.resultsHidden) {
+		// Closed to the class: the proposal and its replies, no tag, bar or count.
+		return m('li', { key: row.id, class: 'vote-result__row', 'data-testid': 'vote-result-row' }, [
+			m('span.vote-result__text', { dir: 'auto' }, row.text),
+			proposal ? m(ReplyEntry, { proposal, uid: attrs.uid }) : null,
+		]);
+	}
 	const classes = ['vote-result__row'];
 	if (row.winner) classes.push('vote-result__row--winner');
 	if (row.leading) classes.push('vote-result__row--leading');
@@ -58,6 +65,13 @@ export const VoteResults: m.Component<VoteResultsAttrs> = {
 				summary.rows.map((row) => rowView(row, attrs)),
 			),
 			m('p.vote-result__turnout', t('summary.turnout', { n: summary.voted, m: summary.present })),
+			summary.resultsHidden
+				? m(
+						'p.vote-result__wait',
+						{ role: 'status', 'data-testid': 'vote-result-hidden' },
+						t('voting.results_later'),
+					)
+				: null,
 			summary.tie ? m('p.vote-result__tie', t('summary.tie_by_ratings')) : null,
 			summary.kind === 'open' || summary.kind === 'paused'
 				? m('p.vote-result__wait', { role: 'status' }, t('summary.wait_close'))

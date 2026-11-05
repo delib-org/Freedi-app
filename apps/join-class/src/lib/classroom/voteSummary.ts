@@ -35,8 +35,14 @@ export interface VoteSummary {
 	mostAgreed: boolean;
 	/** Closed with the top vote count shared, so the ratings decided. */
 	tie: boolean;
-	/** The support question and the side bars are shown (a decision exists). */
+	/** The support question and the side bars are shown (a decision exists and is visible). */
 	showSupport: boolean;
+	/**
+	 * A vote exists but the teacher keeps its results closed: the rows carry no
+	 * counts and no winner, and there is no decision text, tie note or support
+	 * question (they would all tell the winner). Trello uVEcfwbB.
+	 */
+	resultsHidden: boolean;
 }
 
 export type SummaryBallot = Pick<ClassBallot, 'candidateIds'> &
@@ -48,6 +54,11 @@ export interface SummaryInput {
 	/** The challenge question's proposals (hidden ones are ignored). */
 	proposals: readonly Statement[];
 	present: number;
+	/**
+	 * The teacher opened the results to the class (voteDisplay.liveResults ===
+	 * true). Leave it out and the summary is the closed one: safe by default.
+	 */
+	resultsShown?: boolean;
 }
 
 /** Students in the room: every subscription but the teacher's. */
@@ -91,6 +102,7 @@ function mostAgreedOf(proposals: readonly Statement[]): Statement | undefined {
 
 export function summaryOf(input: SummaryInput): VoteSummary {
 	const { ballot, selections, proposals, present } = input;
+	const resultsShown = input.resultsShown === true;
 	const kind = kindOf(ballot);
 	if (!ballot || kind === 'none') {
 		const agreed = mostAgreedOf(proposals);
@@ -104,8 +116,10 @@ export function summaryOf(input: SummaryInput): VoteSummary {
 			mostAgreed: !!agreed,
 			tie: false,
 			showSupport: !!agreed,
+			resultsHidden: false,
 		};
 	}
+	if (!resultsShown) return hiddenSummary(ballot, kind, selections, proposals, present);
 	const tally = voteResults(ballot.candidateIds, selections);
 	const votes = countsOf(tally);
 	const order = orderBallot(
@@ -137,5 +151,51 @@ export function summaryOf(input: SummaryInput): VoteSummary {
 		mostAgreed: false,
 		tie: kind === 'closed' && secondCount === topCount,
 		showSupport: kind === 'closed',
+		resultsHidden: false,
+	};
+}
+
+/**
+ * The summary while the results are closed to the class: the proposals in the
+ * ratings order (never the vote order), zero counts, no leader, no winner, no
+ * decision, no tie note, no support question. Only the turnout survives: it
+ * is how many voted, not what they chose.
+ */
+function hiddenSummary(
+	ballot: SummaryBallot,
+	kind: SummaryKind,
+	selections: Record<string, number> | undefined,
+	proposals: readonly Statement[],
+	present: number,
+): VoteSummary {
+	const order = orderBallot(
+		ballot.candidateIds,
+		'consensus',
+		{ consensus: consensusOf(proposals), votes: {} },
+		[],
+		'',
+	);
+	const voted = Object.values(voteResults(ballot.candidateIds, selections)).reduce(
+		(sum, result) => sum + result.count,
+		0,
+	);
+
+	return {
+		kind,
+		rows: order.map((id) => ({
+			id,
+			text: textOf(proposals, id),
+			count: 0,
+			percent: 0,
+			leading: false,
+			winner: false,
+		})),
+		voted,
+		present,
+		decisionText: null,
+		mostAgreed: false,
+		tie: false,
+		showSupport: false,
+		resultsHidden: true,
 	};
 }
