@@ -34,6 +34,37 @@ describe('TableAssignmentSettingsSchema', () => {
 	});
 });
 
+describe('input bounds', () => {
+	it('rejects table sizes 1 and 21 and accepts 2 and 20', () => {
+		expect(safeParse(TableAssignmentSettingsSchema, { tableSize: 1 }).success).toBe(false);
+		expect(safeParse(TableAssignmentSettingsSchema, { tableSize: 21 }).success).toBe(false);
+		expect(safeParse(TableAssignmentSettingsSchema, { tableSize: 2 }).success).toBe(true);
+		expect(safeParse(TableAssignmentSettingsSchema, { tableSize: 20 }).success).toBe(true);
+	});
+
+	it('rejects an empty full name', () => {
+		expect(
+			safeParse(TableAssignmentParticipantSchema, { ...validParticipant, fullName: '' }).success,
+		).toBe(false);
+	});
+
+	it('rejects an empty session title and a negative timestamp', () => {
+		const session = {
+			tableAssignmentId: 'a1',
+			hostUid: 'h1',
+			title: 'Tables',
+			mode: 'direct',
+			status: 'draft',
+			settings: {},
+			createdAt: NOW,
+			lastUpdate: NOW,
+		};
+
+		expect(safeParse(TableAssignmentSchema, { ...session, title: '' }).success).toBe(false);
+		expect(safeParse(TableAssignmentSchema, { ...session, createdAt: -1 }).success).toBe(false);
+	});
+});
+
 describe('TableAssignmentSchema', () => {
 	const valid = {
 		tableAssignmentId: 'a1',

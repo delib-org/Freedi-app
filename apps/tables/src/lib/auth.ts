@@ -45,18 +45,27 @@ export async function signInHostWithGoogle(): Promise<User> {
 	}
 }
 
-/** The participant's identity: the current user, or a fresh anonymous one. */
+/** The in-flight anonymous sign-in, shared by concurrent callers. */
+let anonymousSignIn: Promise<User> | null = null;
+
+/** The participant's identity: the current user, or a fresh anonymous one (single-flight). */
 export async function ensureParticipantUser(): Promise<User> {
 	await waitForAuthReady();
 
+	// Intended: a signed-in (non-anonymous) host keeps their own user, so a host can test as a participant.
 	if (auth.currentUser) return auth.currentUser;
 
-	try {
-		const credential = await signInAnonymously(auth);
-
-		return credential.user;
-	} catch (error) {
-		logError(error, { operation: 'tables.auth.ensureParticipantUser' });
-		throw error;
+	if (!anonymousSignIn) {
+		anonymousSignIn = signInAnonymously(auth)
+			.then((credential) => credential.user)
+			.catch((error: unknown) => {
+				logError(error, { operation: 'tables.auth.ensureParticipantUser' });
+				throw error;
+			})
+			.finally(() => {
+				anonymousSignIn = null;
+			});
 	}
+
+	return anonymousSignIn;
 }
