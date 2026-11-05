@@ -228,31 +228,83 @@ const VOTE_INSTRUCTION: Record<SampleBallot, string> = {
 	closed: 'voting.closed_hint',
 };
 
-export function voteSample(ballot: SampleBallot): m.Children {
+/** The status line under the cards, as on the phones: only a paused or closed vote has one. */
+const VOTE_STATUS: Partial<Record<SampleBallot, string>> = {
+	paused: 'voting.paused',
+	closed: 'voting.closed',
+};
+
+/**
+ * The vote stand-in follows the lesson's real "who sees the results" switch
+ * (`resultsShown`, from `liveResultsOn`): closed, the cards carry no share and no
+ * winner, a closed vote reads "Results will be shown soon" and an open or paused
+ * one adds the calm "results later" note, exactly as VoteScreen does.
+ */
+export function voteSample(ballot: SampleBallot, resultsShown: boolean): m.Children {
 	const proposals = sampleProposals();
 	const standing = ballot === 'paused' || ballot === 'closed';
+	const instruction =
+		ballot === 'closed' && !resultsShown ? 'voting.closed_hidden' : VOTE_INSTRUCTION[ballot];
+	const statusKey = VOTE_STATUS[ballot];
 
 	return m(
 		StudentFrame,
-		{ headerLine: t('voting.title'), instruction: t(VOTE_INSTRUCTION[ballot]) },
+		{
+			headerLine: t('voting.title'),
+			instruction: t(instruction),
+			action:
+				ballot === 'waiting'
+					? null
+					: m('p.vote__status', { role: 'status' }, statusKey ? t(statusKey) : ''),
+		},
 		ballot === 'waiting'
 			? null
-			: m(VoteList, {
-					candidates: proposals,
-					selectedId: null,
-					locked: standing,
-					// the shares are the sample's, never a real count; shown when the vote stands still
-					results: standing ? sampleResults(proposals) : null,
-					animateReorder: false,
-					winnerId: ballot === 'closed' ? proposals[0].statementId : null,
-					onSelect: noop,
-				}),
+			: [
+					!resultsShown && ballot !== 'closed'
+						? m('p.vote__results-later', { role: 'status' }, t('voting.results_later'))
+						: null,
+					m(VoteList, {
+						candidates: proposals,
+						selectedId: null,
+						locked: standing,
+						// the shares are the sample's, never a real count; shown only when the
+						// teacher opened the results and the vote stands still
+						results: standing && resultsShown ? sampleResults(proposals) : null,
+						animateReorder: false,
+						winnerId: ballot === 'closed' && resultsShown ? proposals[0].statementId : null,
+						onSelect: noop,
+					}),
+				],
 	);
 }
 
-export function summarySample(main: Statement): m.Children {
+/** Closed results on the Summary: the proposals by name and the calm note; no decision, no support. */
+function hiddenResults(): m.Vnode {
+	return m('section.vote-result', [
+		m('h2.vote-result__title', t('summary.vote_results')),
+		m(
+			'ol.vote-result__rows',
+			sampleProposals().map((proposal) =>
+				m('li.vote-result__row', { key: proposal.statementId }, [
+					m('span.vote-result__text', { dir: 'auto' }, proposal.statement),
+				]),
+			),
+		),
+		m('p.vote-result__wait', { role: 'status' }, t('voting.results_later')),
+	]);
+}
+
+/** A vote is running or done, so closed results hide the decision (the phones' summaryOf rule). */
+function resultsHidden(resultsShown: boolean): boolean {
+	return !resultsShown && !!getChallengeQuestion(getSubQuestions())?.statementSettings?.ballot;
+}
+
+export function summarySample(main: Statement, resultsShown: boolean): m.Children {
 	const challenge = getChallengeQuestion(getSubQuestions());
 	const [decided] = sampleProposals();
+	if (resultsHidden(resultsShown)) {
+		return m(StudentFrame, { headerLine: t('summary.title') }, hiddenResults());
+	}
 
 	return m(StudentFrame, { headerLine: t('summary.title') }, [
 		m(DecisionCard, { text: decided.statement, note: t('summary.most_agreed') }),
@@ -271,8 +323,8 @@ export function summarySample(main: Statement): m.Children {
 	]);
 }
 
-/** The ended lesson: the state screen's markup, with a sample decision (nothing is fetched). */
-export function endedSample(main: Statement): m.Children {
+/** The ended lesson: the state screen's markup; the sample decision only when the results are open. */
+export function endedSample(main: Statement, resultsShown: boolean): m.Children {
 	const [decided] = sampleProposals();
 
 	return m(StudentFrame, { headerLine: main.statement }, [
@@ -283,6 +335,6 @@ export function endedSample(main: Statement): m.Children {
 			m('h1.lesson-state__title', t('lesson.ended.title')),
 			m('p.lesson-state__body', t('lesson.ended.body')),
 		]),
-		m(DecisionCard, { text: decided.statement }),
+		resultsHidden(resultsShown) ? null : m(DecisionCard, { text: decided.statement }),
 	]);
 }

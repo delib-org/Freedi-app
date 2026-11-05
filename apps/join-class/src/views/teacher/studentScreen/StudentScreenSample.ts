@@ -8,6 +8,7 @@ import { getChallengeQuestion, getLessonStep, getLessonSteps } from '@/lib/lesso
 import { lessonStatusOfMain } from '@/lib/lessonCore';
 import { getMainStatement, getSubQuestions } from '@/lib/store';
 import { setStudentStage } from '@/lib/studentStage';
+import { liveResultsOn } from '@/lib/classroom/voteResults';
 import { isBallotClosed, isBallotFrozen, isBallotPaused } from '@/lib/classroom/consoleHelpers';
 import { OpeningView } from '@/views/student/c2/OpeningView';
 import { LessonStateScreen } from '@/views/student/LessonStateScreen';
@@ -45,6 +46,8 @@ function ballotStateOf(challenge: Statement | null): SampleBallot {
 }
 
 function stepSample(key: LessonStepKey, main: Statement): m.Children {
+	const resultsShown = liveResultsOn(getChallengeQuestion(getSubQuestions()));
+
 	switch (key) {
 		case 'waiting':
 			return waitingSample();
@@ -61,9 +64,9 @@ function stepSample(key: LessonStepKey, main: Statement): m.Children {
 		case 'allProposals':
 			return allProposalsSample();
 		case 'vote':
-			return voteSample(ballotStateOf(getChallengeQuestion(getSubQuestions())));
+			return voteSample(ballotStateOf(getChallengeQuestion(getSubQuestions())), resultsShown);
 		case 'summary':
-			return summarySample(main);
+			return summarySample(main, resultsShown);
 	}
 }
 
@@ -79,7 +82,7 @@ function screenOf(main: Statement): m.Children {
 	if (status === 'ended') {
 		setStudentStage(null);
 
-		return endedSample(main);
+		return endedSample(main, liveResultsOn(getChallengeQuestion(getSubQuestions())));
 	}
 	const step = getLessonStep();
 	setStudentStage(step.key, { index: step.index, total: getLessonSteps().length });
