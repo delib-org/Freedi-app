@@ -91,7 +91,7 @@ function memberRow(
 			{
 				type: 'button',
 				'aria-label': `${t('console.remove')}: ${name}`,
-				disabled: consoleState.held || isBusy(`move:${uid}`),
+				disabled: consoleState.ended || isBusy(`move:${uid}`),
 				onclick: () => void moveStudent(consoleState.mainId, uid, null),
 			},
 			t('console.remove'),

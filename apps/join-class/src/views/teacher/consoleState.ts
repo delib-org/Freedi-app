@@ -46,6 +46,8 @@ export interface ConsoleState {
 	options: Map<string, Statement[]>;
 	/** The lesson is paused or ended: steps, seats and tables stand still (IA 13.6). */
 	held: boolean;
+	/** The lesson has ended: the only state in which students can no longer be moved (paused still allows it). */
+	ended: boolean;
 	/** Teacher pressed "Show sides": names carry their side. Off by default, never persisted. */
 	sidesVisible: boolean;
 }
@@ -63,6 +65,7 @@ export const consoleState: ConsoleState = {
 	announce: '',
 	options: new Map<string, Statement[]>(),
 	held: false,
+	ended: false,
 	sidesVisible: false,
 };
 
@@ -79,6 +82,7 @@ export function resetConsoleState(mainId: string): void {
 	consoleState.announce = '';
 	consoleState.options = new Map<string, Statement[]>();
 	consoleState.held = false;
+	consoleState.ended = false;
 	consoleState.sidesVisible = false;
 }
 

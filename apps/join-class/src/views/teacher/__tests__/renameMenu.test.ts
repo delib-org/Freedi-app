@@ -91,9 +91,16 @@ describe('the student menu offers "ask for a new name"', () => {
 		expect(requestNewName).not.toHaveBeenCalled();
 	});
 
-	it('a held (paused) lesson keeps the rename but offers no move', () => {
+	it('a paused lesson still offers the moves (Trello 3sq65nGv)', () => {
 		consoleState.menuUid = 'u1';
 		consoleState.held = true;
+		expect(optionValues(chip())).toEqual(['', 'none', '2', '3', 'rename']);
+	});
+
+	it('an ended lesson keeps the rename but offers no move', () => {
+		consoleState.menuUid = 'u1';
+		consoleState.held = true;
+		consoleState.ended = true;
 		expect(optionValues(chip())).toEqual(['', 'rename']);
 	});
 });

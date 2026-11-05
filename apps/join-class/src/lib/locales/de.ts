@@ -319,7 +319,7 @@ const de: Record<string, string> = {
 	'console.rename_asked': '{{name}} um einen neuen Namen gebeten',
 	'console.student_menu': 'Optionen für {{name}}',
 	'console.drag_hint':
-		'Manche Schüler können nicht zusammensitzen? Ziehe einen Namen in jedem Schritt der Stunde an einen anderen Tisch. Ihre Vorschläge und Stimmen bleiben ihre.',
+		'Manche Schüler können nicht zusammensitzen? Ziehe jederzeit in der Stunde einen Namen an einen anderen Tisch. Ihre Vorschläge und Stimmen bleiben ihre.',
 	'console.unplaced_name': 'Ohne Tisch',
 	'console.add_no_device': 'Person ohne Gerät hinzufügen',
 	'console.table_action': 'Tischaktion',

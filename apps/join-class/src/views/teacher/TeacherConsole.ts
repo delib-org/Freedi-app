@@ -327,7 +327,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 		const step = getLessonStep();
 		const status = lessonStatusOfMain(main);
 		const held = isLessonStanding(status);
-		consoleState.held = held;
+		Object.assign(consoleState, { held, ended: status === 'ended' });
 		const plan = main.statementSettings?.lessonPlan;
 		// The lesson clock stops while the room is held.
 		const clockEnd = held ? (plan?.pausedAt ?? plan?.endedAt ?? Date.now()) : Date.now();

@@ -130,7 +130,7 @@ function unplacedStrip(
 					'select.unplaced__select',
 					{
 						'aria-label': `${t('console.to_table')}: ${s.name}`,
-						disabled: consoleState.held,
+						disabled: consoleState.ended,
 						onchange: (e: Event) => {
 							const el = e.target as HTMLSelectElement;
 							const n = Number(el.value);
@@ -161,7 +161,7 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 					? ` ${t('console.unplaced_live', { count: unplaced.length })}`
 					: '',
 			]),
-			attrs.tables.length > 0 && !consoleState.held
+			attrs.tables.length > 0 && !consoleState.ended
 				? m('p.tables-board__hint', { 'data-testid': 'console-drag-hint' }, t('console.drag_hint'))
 				: null,
 			attrs.showSides && attrs.students.length > 0 ? sidesCountLine(attrs.students) : null,

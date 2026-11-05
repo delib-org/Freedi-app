@@ -1,7 +1,7 @@
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
 import { FieldValue } from 'firebase-admin/firestore';
 import type { Firestore } from 'firebase-admin/firestore';
-import { classTableId, functionConfig } from '@freedi/shared-types';
+import { classTableId, functionConfig, lessonStatusOf } from '@freedi/shared-types';
 import type {
 	ClassMoveStudentRequest,
 	ClassMoveStudentResponse,
@@ -17,14 +17,16 @@ import {
 	tableRef,
 } from './classroomAccess';
 import { ClassroomError, toHttpsError } from './classroomErrors';
-import { assertLessonRunning, lessonStepOf } from './lessonStatusGuard';
+import { assertLessonNotEnded, lessonStepOf } from './lessonStatusGuard';
 import { addMember, removeMember } from './tableMembership';
 
 /**
  * `classMoveStudent` (admin): move one student to table `toTable` (1-based)
  * or unseat them (`null`). Old table, new table and the student's
  * subscription.tableId change together in one transaction; an asker who
- * leaves hands the asker role to the next tablemate.
+ * leaves hands the asker role to the next tablemate. Works while the lesson
+ * runs or is paused (a paused room does not move on by itself); refused once
+ * it has ended.
  */
 
 const MAX_TABLE_NUMBER = 100;
@@ -52,7 +54,9 @@ export async function moveStudent(
 	const uid = requireId(req?.uid, 'uid');
 	const toTable = validTarget(req?.toTable);
 	const main = await assertWorkspaceAdmin(firestore, mainId, actorUid);
-	assertLessonRunning(main);
+	// Moves work while paused too (Trello 3sq65nGv, Tal 2026-11-05); only an ended lesson refuses.
+	assertLessonNotEnded(main);
+	const held = lessonStatusOf(main?.statementSettings?.lessonPlan) === 'paused';
 	const lessonStep = lessonStepOf(main);
 
 	const subRef = subscriptionRef(firestore, mainId, uid);
@@ -83,7 +87,7 @@ export async function moveStudent(
 		if (fromRef && fromSnap?.exists) {
 			const fromTable = fromSnap.data() as ClassTable;
 			if (fromTable.mainId === mainId)
-				tx.set(fromRef, removeMember(fromTable, uid, now, lessonStep));
+				tx.set(fromRef, removeMember(fromTable, uid, now, lessonStep, held));
 		}
 		if (toRef && toTableDoc) tx.set(toRef, addMember(toTableDoc, uid, now));
 		tx.update(subRef, { tableId: toId ?? FieldValue.delete(), lastUpdate: now });

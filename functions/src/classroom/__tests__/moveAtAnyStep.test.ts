@@ -22,6 +22,7 @@ const STEPS: LessonStepKey[] = [
 	'summary',
 ];
 const STUDENT_COUNT = 6;
+const HOUR_MS = 3_600_000;
 
 function fixedRng(): () => number {
 	let i = 0;
@@ -68,6 +69,17 @@ function seed(fake: FakeFirestore, stepIndex: number): string[] {
 	return uids;
 }
 
+/** Flip the seated lesson to paused or ended (the tables are assigned while it still runs). */
+function holdLesson(fake: FakeFirestore, status: 'paused' | 'ended', extra: object): void {
+	fake.seed(`statements/${MAIN}`, {
+		...(fake.read(`statements/${MAIN}`) as Record<string, unknown>),
+		statementSettings: {
+			tableSize: 3,
+			lessonPlan: { steps: STEPS, stepIndex: 4, status, ...extra },
+		},
+	});
+}
+
 describe('classMoveStudent works at every running step', () => {
 	it.each(STEPS.map((step, index) => [step, index] as const))(
 		'moves a student at %s and leaves their proposal, vote and side alone',
@@ -106,11 +118,54 @@ describe('classMoveStudent works at every running step', () => {
 		},
 	);
 
+	it('moves a student while the lesson is paused, and does not move the old table on by itself', async () => {
+		const fake = new FakeFirestore();
+		seed(fake, 4);
+		const db = fake.asFirestore();
+		await assignTables(db, TEACHER, { mainId: MAIN }, fixedRng());
+		const tables = fake.list('classTables') as unknown as ClassTable[];
+		const from = tables.find((tb) => tb.memberUids.length > 1) as ClassTable;
+		const [mover, stays, third] = from.memberUids;
+		const toN = tables.find((tb) => tb.n !== from.n)?.n as number;
+		const endsAt = Date.now() + HOUR_MS;
+		fake.seed(`classTables/${from.tableId}`, {
+			...from,
+			step: 'talk',
+			questionId: 'q1',
+			askerUid: mover,
+			moveOnUids: [stays, third],
+			speakerUid: stays,
+			speakerEndsAt: endsAt,
+		});
+		holdLesson(fake, 'paused', { pausedAt: 1 });
+
+		await moveStudent(db, TEACHER, { mainId: MAIN, uid: mover, toTable: toN });
+
+		expect(fake.read(`statementsSubscribe/${mover}--${MAIN}`)?.tableId).toBe(`${MAIN}--${toN}`);
+		const left = fake.read(`classTables/${from.tableId}`) as unknown as ClassTable;
+		expect(left.memberUids).not.toContain(mover);
+		// Paused: the press count is met by the smaller table, yet nothing advanced and no timer was cut.
+		expect(left.step).toBe('talk');
+		expect(left.speakerUid).toBe(stays);
+		expect(left.speakerEndsAt).toBe(endsAt);
+	});
+
+	it('refuses to move a student once the lesson has ended', async () => {
+		const fake = new FakeFirestore();
+		const uids = seed(fake, 4);
+		const db = fake.asFirestore();
+		await assignTables(db, TEACHER, { mainId: MAIN }, fixedRng());
+		holdLesson(fake, 'ended', { endedAt: 1 });
+		const attempt = moveStudent(db, TEACHER, { mainId: MAIN, uid: uids[0], toTable: 1 });
+		await expect(attempt).rejects.toMatchObject({ code: 'failed-precondition' });
+	});
+
 	it('refuses a student who tries to move a classmate, at any step', async () => {
 		const fake = new FakeFirestore();
 		const uids = seed(fake, 4);
 		const db = fake.asFirestore();
 		await assignTables(db, TEACHER, { mainId: MAIN }, fixedRng());
+		holdLesson(fake, 'ended', { endedAt: 1 });
 		const attempt = moveStudent(db, uids[1], { mainId: MAIN, uid: uids[0], toTable: 1 });
 		await expect(attempt).rejects.toBeInstanceOf(ClassroomError);
 		await expect(attempt).rejects.toMatchObject({ code: 'permission-denied' });

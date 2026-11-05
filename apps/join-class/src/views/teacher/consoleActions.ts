@@ -265,7 +265,10 @@ export function setVoteOrder(challengeId: string, order: ClassVoteOrder): Promis
 // >>> voteSummary END
 
 export function moveStudent(mainId: string, uid: string, toTable: DropTarget): Promise<boolean> {
-	return guardedAct(`move:${uid}`, t('console.move'), async () => {
+	// Moving works while paused too (Trello 3sq65nGv); only an ended lesson refuses.
+	if (consoleState.ended) return Promise.resolve(false);
+
+	return act(`move:${uid}`, t('console.move'), async () => {
 		await classMoveStudent({ mainId, uid, toTable });
 		consoleState.announce = t('console.moved', { table: toTable ?? t('console.unplaced_name') });
 	});

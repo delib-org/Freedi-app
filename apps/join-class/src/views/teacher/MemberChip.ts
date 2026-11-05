@@ -41,10 +41,10 @@ function sideLabel(camp: Camp | null): string {
 
 const RENAME_VALUE = 'rename';
 
-/** The student's menu. A held lesson (paused / ended) allows no move, but still the rename. */
+/** The student's menu. An ended lesson allows no move (paused does), but still the rename. */
 function studentMenu(attrs: MemberChipAttrs, uid: string): m.Vnode {
 	const label = t('console.student_menu', { name: attrs.name });
-	const moves = !consoleState.held;
+	const moves = !consoleState.ended;
 
 	return m(
 		'select.member-chip__select',
@@ -115,8 +115,8 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 				? `${name}, ${sideLabel(null)}`
 				: name;
 		const label = (noDevice ? `${name}, ${t('console.no_device')}` : spoken) + turnWord;
-		// While the lesson is held nobody moves: no drag, no move menu.
-		const ref = uid !== undefined && !consoleState.held ? { uid, name, from: attrs.from } : null;
+		// Once the lesson has ended nobody moves (paused still allows it): no drag, no move menu.
+		const ref = uid !== undefined && !consoleState.ended ? { uid, name, from: attrs.from } : null;
 		const mod = camp ? `member-chip--${camp}` : '';
 
 		return m('span.member-chip-wrap', { key: uid ?? `nd:${name}` }, [

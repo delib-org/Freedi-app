@@ -317,7 +317,7 @@ const he: Record<string, string> = {
 	'console.rename_asked': 'ביקשנו מ{{name}} שם חדש',
 	'console.student_menu': 'אפשרויות עבור {{name}}',
 	'console.drag_hint':
-		'יש תלמידים שלא יכולים לשבת יחד? גוררים שם לשולחן אחר, בכל שלב בשיעור. ההצעות וההצבעות שלהם נשארות שלהם.',
+		'יש תלמידים שלא יכולים לשבת יחד? גוררים שם לשולחן אחר, בכל רגע בשיעור. ההצעות וההצבעות שלהם נשארות שלהם.',
 	'console.unplaced_name': 'ללא שולחן',
 	'console.add_no_device': 'הוספת משתתף בלי מכשיר',
 	'console.table_action': 'פעולה בשולחן',
