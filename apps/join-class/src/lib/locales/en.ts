@@ -163,8 +163,9 @@ const en: Record<string, string> = {
 	'opening.watch': 'Watch together',
 	'opening.play': 'Watch here',
 	'opening.video_failed': 'The teacher is projecting',
-	'opening.name_prompt': 'What is your name?',
-	'opening.name_hint': 'Only the teacher sees your name',
+	'opening.name_prompt': 'Write your name',
+	'opening.name_hint':
+		'Your teacher and the students at your table will see it, so everyone knows who is who.',
 	'opening.name_join': 'Join',
 	'opening.name_saving': 'Joining…',
 	'opening.name_failed': 'Not saved. Try again',
@@ -313,7 +314,8 @@ const en: Record<string, string> = {
 	'console.plenum_on': 'Everyone together · on',
 	'console.move': 'Move to another table',
 	'console.moved': 'Moved to {{table}}',
-	'console.drag_hint': 'Some students cannot sit together? Drag a name to another table, any time in the lesson. Their proposals and votes stay theirs.',
+	'console.drag_hint':
+		'Some students cannot sit together? Drag a name to another table, any time in the lesson. Their proposals and votes stay theirs.',
 	'console.unplaced_name': 'No table',
 	'console.add_no_device': 'Add a student without a device',
 	'console.table_action': 'Table action',

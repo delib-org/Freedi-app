@@ -27,6 +27,8 @@ export interface ClassState {
 	tables: ClassTable[];
 	/** The signed-in student's workspace subscription. */
 	mySubscription: StatementSubscription | null;
+	/** The listener on `mySubscription` has answered once (null then means "no such doc"). */
+	mySubscriptionLoaded: boolean;
 	/** Every subscription of the workspace (teacher / projector). */
 	roster: StatementSubscription[];
 }
@@ -36,6 +38,7 @@ export const classState: ClassState = {
 	table: null,
 	tables: [],
 	mySubscription: null,
+	mySubscriptionLoaded: false,
 	roster: [],
 };
 
@@ -44,6 +47,7 @@ export function resetClassState(mainId: string | null = null): void {
 	classState.table = null;
 	classState.tables = [];
 	classState.mySubscription = null;
+	classState.mySubscriptionLoaded = false;
 	classState.roster = [];
 }
 
@@ -113,6 +117,7 @@ export function watchClass(mainId: string, role: ClassWatchRole): () => void {
 				mainId,
 				(sub) => {
 					classState.mySubscription = sub;
+					classState.mySubscriptionLoaded = true;
 					const tableId = sub?.tableId;
 					if (tableId !== watchedTableId) {
 						watchedTableId = tableId;

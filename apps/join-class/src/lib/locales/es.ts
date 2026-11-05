@@ -161,8 +161,9 @@ const es: Record<string, string> = {
 	'opening.watch': 'Mirar juntos',
 	'opening.play': 'Ver aquí',
 	'opening.video_failed': 'El docente lo proyecta',
-	'opening.name_prompt': '¿Cómo te llamas?',
-	'opening.name_hint': 'Solo el docente ve tu nombre',
+	'opening.name_prompt': 'Escribe tu nombre',
+	'opening.name_hint':
+		'Tu profesor y los alumnos de tu mesa lo verán, para que todos sepan quién es quién.',
 	'opening.name_join': 'Unirse',
 	'opening.name_saving': 'Uniéndose…',
 	'opening.name_failed': 'No se guardó. Inténtalo de nuevo',
@@ -311,7 +312,8 @@ const es: Record<string, string> = {
 	'console.plenum_on': 'Todos juntos · activo',
 	'console.move': 'Pasar a otra mesa',
 	'console.moved': 'Movido a {{table}}',
-	'console.drag_hint': '¿Algunos alumnos no pueden sentarse juntos? Arrastra un nombre a otra mesa en cualquier momento de la clase. Sus propuestas y votos siguen siendo suyos.',
+	'console.drag_hint':
+		'¿Algunos alumnos no pueden sentarse juntos? Arrastra un nombre a otra mesa en cualquier momento de la clase. Sus propuestas y votos siguen siendo suyos.',
 	'console.unplaced_name': 'Sin mesa',
 	'console.add_no_device': 'Añadir a alguien sin dispositivo',
 	'console.table_action': 'Acción de la mesa',

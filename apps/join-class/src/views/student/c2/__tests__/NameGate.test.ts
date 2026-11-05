@@ -4,20 +4,15 @@ import m from 'mithril';
 const saveMyName = vi.fn(async (): Promise<void> => undefined);
 
 vi.mock('../saveName', () => ({ saveMyName }));
-vi.mock('../rosterWatch', () => ({ watchRoster: () => ({ stop: () => undefined }) }));
 vi.mock('@/lib/i18n', () => ({ t: (key: string) => key }));
-vi.mock('@/lib/lesson', () => ({ stepLabel: () => 'waiting' }));
-vi.mock('@/lib/store', () => ({
-	getCustomDisplayName: () => null,
-	needsDisplayName: () => true,
-}));
+vi.mock('@/lib/store', () => ({ getCustomDisplayName: () => null }));
 vi.mock('@/components/StudentFrame', () => ({ StudentFrame: { view: () => null } }));
 
-const { nameForm } = await import('../WaitingView');
+const { nameForm } = await import('../NameGate');
 type State = Parameters<typeof nameForm>[0];
 
 function freshState(name: string): State {
-	return { name, asked: true, saving: false, failed: false };
+	return { name, saving: false, failed: false };
 }
 
 /** Just the parts of a mithril vnode these tests read. */
