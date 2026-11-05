@@ -22,6 +22,7 @@ $goal-fly: 900ms;
 
   // the pitch: a pale field with the goal at the top centre
   &__field {
+    direction: ltr; // the pitch is symmetric; balls are placed with a plain x
     position: relative;
     height: #{$goal-pitch-height}cqw;
     overflow: hidden;
@@ -69,19 +70,24 @@ $goal-fly: 900ms;
 
   &__ball {
     position: absolute;
-    inset-block-start: calc(var(--y) * 1cqw - var(--size) * 0.5cqw);
-    inset-inline-start: calc(var(--x) * 1cqw - var(--size) * 0.5cqw);
+    inset-block-start: 0;
+    inset-inline-start: 0;
     width: calc(var(--size) * 1cqw);
     height: calc(var(--size) * 1cqw);
     color: var(--ink);
-    transition:
-      inset-block-start $goal-fly var(--ease-out, ease-out),
-      inset-inline-start $goal-fly var(--ease-out, ease-out),
-      width $goal-fly var(--ease-out, ease-out),
-      height $goal-fly var(--ease-out, ease-out);
+    // Moves by transform only (compositor, no layout); the field is always LTR
+    transform: translate(
+      calc((var(--x) - var(--size) * 0.5) * 1cqw),
+      calc((var(--y) - var(--size) * 0.5) * 1cqw)
+    );
+    transition: transform $goal-fly var(--ease-out, ease-out);
+    will-change: transform;
 
     &--scoring {
       z-index: 1;
+    }
+
+    &--scoring .goal-pitch__ball-icon {
       animation: goal-ball-kick 1200ms var(--ease-out, ease-out) both;
     }
   }
@@ -154,7 +160,7 @@ $goal-fly: 900ms;
     transition: none;
   }
 
-  .goal-pitch__ball--scoring,
+  .goal-pitch__ball--scoring .goal-pitch__ball-icon,
   .goal-pitch__net--bulge {
     animation: none;
   }

@@ -32,6 +32,12 @@ const FIELD: Zone = { x: 4, y: 19, width: 92, height: 17 };
 const SPACING_TIERS: readonly number[] = [6, 4.8, 3.8, 3, 2.4];
 /** A ball is this share of its spacing, so neighbours never touch. */
 const BALL_SHARE = 0.82;
+/**
+ * How far (as a share of the spacing) a ball outside the goal leans toward it as
+ * its C_p approaches the gate. Smaller than the gap between neighbours
+ * (1 - BALL_SHARE), so balls never touch. Every vote that moves C_p moves its ball.
+ */
+const LEAN_SHARE = 0.15;
 
 export interface GoalBall extends Point {
 	id: string;
@@ -63,18 +69,37 @@ export function slotsIn(zone: Zone, count: number, spacing: number): Point[] {
 	return points;
 }
 
-/** The proposals worth a ball: visible ones, in a stable (id) order so no ball jumps around. */
-function sortedIds(options: readonly Statement[]): Statement[] {
-	return options
-		.filter((option) => option.hide !== true)
-		.sort((a, b) => (a.statementId < b.statementId ? -1 : a.statementId > b.statementId ? 1 : 0));
+function byId(a: Statement, b: Statement): number {
+	return a.statementId < b.statementId ? -1 : a.statementId > b.statementId ? 1 : 0;
+}
+
+function consensusOf(option: Statement): number {
+	return typeof option.consensus === 'number' ? option.consensus : 0;
+}
+
+/** Best C_p first, ties by id, so equal proposals keep their places. */
+function byConsensus(a: Statement, b: Statement): number {
+	return consensusOf(b) - consensusOf(a) || byId(a, b);
+}
+
+/** The proposals worth a ball: the visible ones. */
+function visibleOptions(options: readonly Statement[]): Statement[] {
+	return options.filter((option) => option.hide !== true);
+}
+
+/** 0..1: how close a proposal is to the gate. */
+function progressToGate(option: Statement, gate: number): number {
+	if (gate <= 0) return 1;
+
+	return Math.min(1, Math.max(0, consensusOf(option) / gate));
 }
 
 /** Balls in the goal when C_p has reached the gate; unrated proposals sit outside. */
 export function goalLayout(options: readonly Statement[], gate: number): GoalLayout {
-	const all = sortedIds(options);
-	const scored = all.filter((option) => enteredGoal(option, gate));
-	const waiting = all.filter((option) => !enteredGoal(option, gate));
+	const all = visibleOptions(options);
+	// Ranked by C_p: when votes change the order, the balls swap places and travel
+	const scored = all.filter((option) => enteredGoal(option, gate)).sort(byConsensus);
+	const waiting = all.filter((option) => !enteredGoal(option, gate)).sort(byConsensus);
 	const spacing =
 		SPACING_TIERS.find(
 			(tier) =>
@@ -87,7 +112,12 @@ export function goalLayout(options: readonly Statement[], gate: number): GoalLay
 		size: Math.round(spacing * BALL_SHARE * 100) / 100,
 		balls: [
 			...scored.map((option, i) => ({ id: option.statementId, inGoal: true, ...inGoal[i] })),
-			...waiting.map((option, i) => ({ id: option.statementId, inGoal: false, ...outside[i] })),
+			...waiting.map((option, i) => ({
+				id: option.statementId,
+				inGoal: false,
+				x: outside[i].x,
+				y: outside[i].y - progressToGate(option, gate) * LEAN_SHARE * spacing,
+			})),
 		],
 	};
 }

@@ -53,6 +53,38 @@ describe('goalLayout', () => {
 	});
 });
 
+describe('goalLayout: balls travel as votes change', () => {
+	const posOf = (balls: { id: string; x: number; y: number }[], id: string) =>
+		balls.find((b) => b.id === id) as { x: number; y: number };
+
+	it('moves a waiting ball toward the goal as its C_p rises, without scoring', () => {
+		const before = goalLayout([p('a', 0.1), p('b', 0.1)], 0.6).balls;
+		const after = goalLayout([p('a', 0.5), p('b', 0.1)], 0.6).balls;
+		expect(posOf(after, 'a').y).toBeLessThan(posOf(before, 'a').y);
+		expect(after.find((b) => b.id === 'a')?.inGoal).toBe(false);
+	});
+
+	it('swaps places when votes change the ranking', () => {
+		const before = goalLayout([p('a', 0.3), p('b', 0.1)], 0.6).balls;
+		const after = goalLayout([p('a', 0.1), p('b', 0.3)], 0.6).balls;
+		expect(posOf(before, 'a').x).toBeLessThan(posOf(before, 'b').x);
+		expect(posOf(after, 'b').x).toBeLessThan(posOf(after, 'a').x);
+	});
+
+	it('keeps equal proposals still (no jitter on a stable state)', () => {
+		const one = goalLayout([p('a', 0.2), p('b', 0.2)], 0.6).balls;
+		const two = goalLayout([p('b', 0.2), p('a', 0.2)], 0.6).balls;
+		expect(posOf(one, 'a')).toEqual(posOf(two, 'a'));
+	});
+
+	it('never lets a leaning ball touch its neighbours', () => {
+		const { balls, size } = goalLayout([p('a', 0.59), p('b', 0), p('c', 0)], 0.6);
+		const a = posOf(balls, 'a');
+		const b = posOf(balls, 'b');
+		expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(size);
+	});
+});
+
 describe('slotsIn', () => {
 	it('centres a short row', () => {
 		const [only] = slotsIn({ x: 0, y: 0, width: 100, height: 10 }, 1, 10);
