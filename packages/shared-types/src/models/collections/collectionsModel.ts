@@ -171,4 +171,10 @@ export enum Collections {
     studioRateLimits = 'studioRateLimits',
 
     odysseyDigestState = 'odysseyDigestState',
+
+    // Tables (shared table assignment)
+    tableAssignments = 'tableAssignments',
+    tableAssignmentTopics = 'tableAssignmentTopics',
+    tableAssignmentParticipants = 'tableAssignmentParticipants',
+    tableAssignmentRuns = 'tableAssignmentRuns',
 }
