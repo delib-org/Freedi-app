@@ -21,6 +21,7 @@ import { useMindMap } from '../MindMapMV';
 import { useMapDetailLevel } from '../mapHelpers/useMapDetailLevel';
 import { hasClusters, pathToMine } from '../mapHelpers/detailLevel';
 import MapDetailControl from '../components/MapDetailControl';
+import { useFoldControls } from '../mapHelpers/useFoldControls';
 import styles from './ClusterMap.module.scss';
 
 /**
@@ -69,6 +70,8 @@ const ClusterMap: FC = () => {
 		isAdmin,
 	);
 	const showDetailControl = !!results && hasClusters(results);
+
+	const fold = useFoldControls(results, detail.applyFold);
 
 	// "My ideas": where the viewer's own statements ended up on the board.
 	const mine = useMemo(
@@ -160,6 +163,7 @@ const ClusterMap: FC = () => {
 							onLocateMine={locateMine}
 							breadcrumb={showBreadcrumb ? (mine?.breadcrumb ?? []) : []}
 							onDismissBreadcrumb={() => setShowBreadcrumb(false)}
+							fold={fold}
 						/>
 					</div>
 				)}
