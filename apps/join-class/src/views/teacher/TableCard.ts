@@ -24,6 +24,7 @@ import {
 } from '@/lib/classroom/tableTurnConsole';
 import { addNoDevice, tableAction } from './consoleActions';
 import { consoleState, isBusy } from './consoleState';
+import { openActFor } from './actFor/actForState';
 import { MemberChip } from './MemberChip';
 import { dropAttrs } from './dragController';
 
@@ -316,6 +317,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 							name: nd.name,
 							camp: null,
 							noDevice: true,
+							onOpen: () => openActFor(nd.id),
 							from: table.n,
 							tableNumbers: attrs.tableNumbers,
 						}),

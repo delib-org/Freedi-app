@@ -1,5 +1,10 @@
 import m from 'mithril';
-import { supportBySide, type Statement, type StatementSubscription } from '@freedi/shared-types';
+import {
+	noDeviceCountOf,
+	supportBySide,
+	type Statement,
+	type StatementSubscription,
+} from '@freedi/shared-types';
 import '@/styles/student-c3.scss';
 import { StudentFrame } from '@/components/StudentFrame';
 import { t } from '@/lib/i18n';
@@ -68,7 +73,7 @@ export const SummaryScreen: m.ClassComponent<SummaryScreenAttrs> = {
 			ballot: challenge?.statementSettings?.ballot ?? null,
 			selections: challenge?.selections,
 			proposals: self.feed.options,
-			present: presentCount(self.roster, main.creatorId),
+			present: presentCount(self.roster, main.creatorId) + noDeviceCountOf(main),
 			resultsShown: liveResultsOn(challenge),
 		});
 		const mine = self.pending ?? classState.mySubscription?.decisionSupport;

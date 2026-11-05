@@ -65,6 +65,8 @@ export interface SwitchBandAttrs {
 	/** "כל ההצעות": the live "n of m students rated everything · at least k ratings" line. */
 	allRatedLine?: string;
 	// >>> allProposals END
+	/** "בלי מכשיר (2/5)": opens the sheet for acting for students without a device. */
+	actForEntry?: m.Children;
 }
 
 const TEST_IDS: Record<string, string> = {
@@ -117,7 +119,7 @@ function resetAction(label: string, key: string, onclick: () => void, disabled =
 
 function stepActions(attrs: SwitchBandAttrs): m.Children {
 	const { stepKey } = attrs;
-	const actions: m.Children[] = [];
+	const actions: m.Children[] = [attrs.actForEntry ?? null];
 	if (stepKey === 'opening' && attrs.introVideos.length > 0) {
 		actions.push(
 			m(ProjectorPick, {

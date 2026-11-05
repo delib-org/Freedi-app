@@ -124,4 +124,59 @@ describe('VoteCaster', () => {
 		expect(caster.written).toBe('b');
 		expect(caster.pending).toBe(false);
 	});
+
+	describe('reset', () => {
+		it('forgets the pick, so a later sync sends nothing', async () => {
+			const { caster, calls, sent } = setup();
+			caster.pick('a');
+			calls[0].resolve();
+			await flush();
+			caster.reset();
+			caster.sync(null);
+			await flush();
+			expect(sent).toEqual(['a']);
+			expect(caster.wanted).toBeNull();
+			expect(caster.written).toBeNull();
+		});
+
+		it('clears a failure, and one that lands after the reset does not come back', async () => {
+			const { caster, calls } = setup();
+			caster.pick('a');
+			caster.reset();
+			calls[0].reject(new Error('offline'));
+			await flush();
+			expect(caster.failed).toBe(false);
+			expect(caster.busy).toBe(false);
+		});
+
+		it('a write in flight during a reset does not claim to be the current vote', async () => {
+			const { caster, calls } = setup();
+			caster.pick('a');
+			caster.reset();
+			calls[0].resolve();
+			await flush();
+			expect(caster.written).toBeNull();
+		});
+
+		it('a new tap during an old write is still sent afterwards', async () => {
+			const { caster, calls, sent } = setup();
+			caster.pick('a');
+			caster.reset();
+			caster.pick('b');
+			calls[0].resolve();
+			await flush();
+			expect(sent).toEqual(['a', 'b']);
+		});
+	});
+
+	it('without a reset, a pick in flight survives an echo: the phone is unchanged', async () => {
+		const { caster, calls, sent } = setup();
+		caster.pick('a');
+		caster.sync(null);
+		expect(caster.wanted).toBe('a');
+		calls[0].resolve();
+		await flush();
+		expect(sent).toEqual(['a']);
+		expect(caster.written).toBe('a');
+	});
 });

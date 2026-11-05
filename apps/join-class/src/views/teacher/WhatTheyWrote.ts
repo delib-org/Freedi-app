@@ -24,6 +24,13 @@ function card(text: WrittenText, noDeviceNames: readonly string[]): m.Vnode {
 		m('p.written-card__text', { dir: 'auto' }, text.text),
 		m('p.written-card__meta', [
 			text.author ? m('span', text.author) : null,
+			text.enteredByTeacher
+				? m(
+						'span.written-card__entered',
+						{ 'data-testid': 'entered-by-teacher' },
+						t('console.entered_by_teacher'),
+					)
+				: null,
 			m('span', t('console.ratings_n', { count: text.ratings })),
 			text.hidden ? m('span.written-card__flag.chip-hidden', t('console.hidden_flag')) : null,
 		]),

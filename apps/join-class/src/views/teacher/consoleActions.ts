@@ -1,4 +1,5 @@
 import type {
+	ClassProposalLimit,
 	ClassTableAction,
 	ClassVoteOrder,
 	LessonLook,
@@ -193,6 +194,7 @@ export type TableSettingsPatch =
 	| { allowOwnQuestions: boolean }
 	| { speakSeconds: number }
 	| { proposalsTurns: number }
+	| { proposalLimit: ClassProposalLimit }
 	| { tableSize: number };
 
 export function setTableSetting(patch: TableSettingsPatch): Promise<boolean> {

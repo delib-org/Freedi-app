@@ -1,6 +1,12 @@
 import { getAuth } from 'firebase-admin/auth';
 import { logger } from 'firebase-functions/v1';
-import { Collections, Role, Statement, createSubscription } from '@freedi/shared-types';
+import {
+	Collections,
+	Role,
+	Statement,
+	createSubscription,
+	isNoDeviceId,
+} from '@freedi/shared-types';
 import { db } from './db';
 import { logError } from './utils/errorHandling';
 import { lookupPersonIdentities, neutralIdentity, PersonIdentity } from './utils/personIdentity';
@@ -99,7 +105,9 @@ export async function setupAdminsForStatement(statement: Statement): Promise<voi
 		const inherited = await identitiesOfInheritedAdmins(otherAdminIds, statement.statementId);
 
 		const batch = db.batch();
-		for (const person of [statement.creator, ...inherited]) {
+		// A student without a device has no account: the teacher entering it inherits admin anyway.
+		const people = isNoDeviceId(creatorUid) ? inherited : [statement.creator, ...inherited];
+		for (const person of people) {
 			const subscription = createSubscription({
 				statement,
 				role: Role.admin,

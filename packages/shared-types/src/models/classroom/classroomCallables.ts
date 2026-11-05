@@ -221,22 +221,43 @@ export type ClassPostReplyResponse =
 	| { ok: false; reason: 'language' };
 
 /**
- * `classPostProposal` (a student of the lesson; IA 24.3): the student's one
- * proposal under the challenge question, written by the server after the AI
- * language check, so the check cannot be skipped. `proposalId` is chosen by
- * the client so a retry after a dropped answer never posts twice. Refused
- * words answer `{ ok: false, reason: 'language' }` (no error): nothing is
- * written and the teacher is flagged. A student with a proposal edits it with
- * `classEditProposal`.
+ * `classPostProposal` (a student of the lesson; IA 24.3): a proposal under the
+ * challenge question, written by the server after the AI language check, so the
+ * check cannot be skipped. `proposalId` is chosen by the client so a retry after a
+ * dropped answer never posts twice. Refused words answer `{ ok: false, reason:
+ * 'language' }` (no error): nothing is written and the teacher is flagged. How many
+ * an author may send is the lesson's `proposalLimit`.
+ *
+ * `forStudentId` (the lesson's teacher only): the proposal is written for this
+ * student without a device, who must sit at a table of this lesson. No name is
+ * stored on it: every phone loads proposals, and only the teacher's screens can
+ * read the tables that hold the name.
  */
 export interface ClassPostProposalRequest {
 	mainId: string;
 	proposalId: string;
 	text: string;
+	forStudentId?: string;
 }
 export type ClassPostProposalResponse =
 	| { ok: true; proposalId: string }
 	| { ok: false; reason: 'language' };
+
+/**
+ * `classCastVoteFor` (the lesson's teacher only): cast or move the vote of one student
+ * without a device, who must sit at a table of this lesson. `votes/{forStudentId}--{challengeId}`,
+ * tallied by the same trigger as any vote. Takes votes only while the ballot takes anyone's:
+ * frozen, not paused, not closed, the lesson not held, `optionId` a candidate or 'none'.
+ */
+export interface ClassCastVoteForRequest {
+	mainId: string;
+	forStudentId: string;
+	optionId: string;
+}
+export interface ClassCastVoteForResponse {
+	ok: true;
+	statementId: string;
+}
 
 /** `classEditProposal` (the proposal's writer, until the ballot is frozen; IA 24.3). Same check as a new proposal. */
 export interface ClassEditProposalRequest {

@@ -14,6 +14,7 @@ import { watchLanguageFlags } from '@/lib/classroom/languageFlags';
 import type { Unsubscribe } from '@/lib/firebase';
 import { resetConsoleState, stopWatchingOptions } from './consoleState';
 import { showUnsavedClassSize } from './classSizeActions';
+import { stopActFor } from './actFor/actForState';
 
 /**
  * Opening and closing the console for one lesson (shared by the console and the
@@ -61,6 +62,7 @@ function closeConsole(): void {
 	stopClass?.();
 	stopClass = null;
 	stopWatchingOptions();
+	stopActFor();
 	if (tick !== null) {
 		window.clearInterval(tick);
 		tick = null;

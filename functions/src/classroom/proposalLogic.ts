@@ -1,5 +1,5 @@
-import { CLASS_PROPOSAL_MAX_LENGTH, StatementType } from '@freedi/shared-types';
-import type { Statement } from '@freedi/shared-types';
+import { CLASS_PROPOSAL_MAX_LENGTH, StatementType, mayAddProposal } from '@freedi/shared-types';
+import type { ClassProposalLimit, Statement } from '@freedi/shared-types';
 import { ClassroomError } from './classroomErrors';
 
 /**
@@ -51,14 +51,30 @@ export function assertEditableProposal(
 	}
 }
 
-/** The proposal the caller already wrote under the challenge, if any (one per student per lesson). */
-export function ownProposalOf(
+/**
+ * Every proposal this author wrote under the challenge. Hidden ones count: the
+ * teacher hiding a proposal does not hand its author another one.
+ */
+export function ownProposalsOf(
 	options: readonly Statement[],
 	challengeId: string,
-	uid: string,
-): Statement | undefined {
-	return options.find(
+	authorId: string,
+): Statement[] {
+	return options.filter(
 		(o) =>
-			o.statementType === StatementType.option && o.parentId === challengeId && o.creatorId === uid,
+			o.statementType === StatementType.option &&
+			o.parentId === challengeId &&
+			o.creatorId === authorId,
 	);
+}
+
+/** The lesson's proposal limit, by author: nothing is ever deleted when it is lowered, only adding stops. */
+export function assertMayAddProposal(limit: ClassProposalLimit, held: number): void {
+	if (!mayAddProposal(limit, held)) {
+		throw new ClassroomError(
+			'failed-precondition',
+			'You already have a proposal: edit it',
+			'already-proposed',
+		);
+	}
 }

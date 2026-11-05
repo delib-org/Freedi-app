@@ -185,6 +185,20 @@ describe('setupAdminsForStatement', () => {
 			});
 		});
 
+		it('gives a student without a device no subscription: nobody can sign in as that id', async () => {
+			seedAdmin('top-admin', TOP);
+			const nd = 'nd_aaa';
+			await setupAdminsForStatement(
+				newStatement({
+					creatorId: nd,
+					creator: { uid: nd, displayName: '' },
+				} as Partial<Statement>),
+			);
+
+			expect(fake.read(Collections.statementsSubscribe, `${nd}--${NEW}`)).toBeUndefined();
+			expect(subOf('top-admin')?.role).toBe(Role.admin);
+		});
+
 		it('never carries the creator: no profile anywhere leaves a nameless identity', async () => {
 			seedAdmin('top-admin', TOP);
 			await setupAdminsForStatement(newStatement());

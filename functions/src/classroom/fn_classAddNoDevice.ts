@@ -1,7 +1,14 @@
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
 import { randomUUID } from 'node:crypto';
 import type { Firestore } from 'firebase-admin/firestore';
-import { classTableId, functionConfig } from '@freedi/shared-types';
+import {
+	CLASS_TABLES_COLLECTION,
+	Collections,
+	MAX_NO_DEVICE_PER_TABLE,
+	NO_DEVICE_ID_PREFIX,
+	classTableId,
+	functionConfig,
+} from '@freedi/shared-types';
 import type {
 	ClassAddNoDeviceRequest,
 	ClassAddNoDeviceResponse,
@@ -12,14 +19,18 @@ import { db } from '../db';
 import { assertWorkspaceAdmin, requireId, requireUid, tableRef } from './classroomAccess';
 import { ClassroomError, toHttpsError } from './classroomErrors';
 import { assertLessonRunning } from './lessonStatusGuard';
+import { countNoDevice } from './noDeviceMembers';
 
 /**
  * `classAddNoDevice` (admin): put a named student who has no phone on table
  * `n` ("בלי מכשיר"). Roster-only: no uid, never an asker or a speaker uid.
+ * Also keeps `statementSettings.noDeviceCount` on the lesson, recounted from the
+ * tables in the same transaction: phones cannot read other tables, and they
+ * need the count to say how many are in the room.
  */
 
 export const MAX_NO_DEVICE_NAME = 60;
-export const MAX_NO_DEVICE_PER_TABLE = 5;
+export { MAX_NO_DEVICE_PER_TABLE };
 
 export function cleanNoDeviceName(value: unknown): string {
 	const name = typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '';
@@ -44,9 +55,11 @@ export async function addNoDevice(
 	assertLessonRunning(await assertWorkspaceAdmin(firestore, mainId, actorUid));
 
 	const ref = tableRef(firestore, classTableId(mainId, n));
-	const member: NoDeviceMember = { id: `nd_${randomUUID()}`, name };
+	const mainRef = firestore.collection(Collections.statements).doc(mainId);
+	const tablesQuery = firestore.collection(CLASS_TABLES_COLLECTION).where('mainId', '==', mainId);
+	const member: NoDeviceMember = { id: `${NO_DEVICE_ID_PREFIX}${randomUUID()}`, name };
 	await firestore.runTransaction(async (tx) => {
-		const snap = await tx.get(ref);
+		const [snap, tablesSnap] = await Promise.all([tx.get(ref), tx.get(tablesQuery)]);
 		if (!snap.exists) throw new ClassroomError('not-found', `Table ${n} does not exist`);
 		const table = snap.data() as ClassTable;
 		const current = table.noDeviceMembers ?? [];
@@ -56,7 +69,13 @@ export async function addNoDevice(
 				'This table already has the most no-device members',
 			);
 		}
-		tx.update(ref, { noDeviceMembers: [...current, member], updatedAt: Date.now() });
+		const now = Date.now();
+		tx.update(ref, { noDeviceMembers: [...current, member], updatedAt: now });
+		tx.update(mainRef, {
+			'statementSettings.noDeviceCount':
+				countNoDevice(tablesSnap.docs.map((d) => d.data() as ClassTable)) + 1,
+			lastUpdate: now,
+		});
 	});
 
 	return { id: member.id };

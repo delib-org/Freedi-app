@@ -5,6 +5,8 @@ import type {
 	ClassAllTablesToResponse,
 	ClassAssignTablesRequest,
 	ClassAssignTablesResponse,
+	ClassCastVoteForRequest,
+	ClassCastVoteForResponse,
 	ClassSnapshotGameRequest,
 	ClassSnapshotGameResponse,
 	ClassStartLessonRequest,
@@ -150,11 +152,19 @@ export function classPostReply(req: ClassPostReplyRequest): Promise<ClassPostRep
 	return call('classPostReply', req);
 }
 
-/** A student: their one proposal, after the language check (IA 24.3); hurtful words answer { ok: false }. */
+/**
+ * A student: a proposal, after the language check (IA 24.3); hurtful words answer { ok: false }.
+ * The teacher, with `forStudentId`: the proposal of a student without a device.
+ */
 export function classPostProposal(
 	req: ClassPostProposalRequest,
 ): Promise<ClassPostProposalResponse> {
 	return call('classPostProposal', req);
+}
+
+/** The lesson's teacher: the vote of a student without a device, while the ballot takes votes. */
+export function classCastVoteFor(req: ClassCastVoteForRequest): Promise<ClassCastVoteForResponse> {
+	return call('classCastVoteFor', req);
 }
 
 /** The proposal's writer: new text, same check, until the vote opens (IA 24.3). */

@@ -17,6 +17,7 @@ import {
 	stepLabel,
 } from '@/lib/lesson';
 import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
+import { proposalLimitOf } from '@freedi/shared-types';
 import type { ClassVoteOrder, LessonStatus, Statement } from '@freedi/shared-types';
 import { classState } from '@/lib/classroom/classState';
 import { gateOf } from '@/lib/classroom/classSettings';
@@ -31,6 +32,7 @@ import {
 } from '@/lib/classroom/consoleHelpers';
 import { liveResultsOn, voteOrderOf, voteResults } from '@/lib/classroom/voteResults';
 import { everyoneVoted } from '@/lib/classroom/voteSummary';
+import { noDeviceTotal } from '@/lib/classroom/actFor';
 import { groupWrittenTexts } from '@/lib/classroom/textsHelpers';
 import { flagState } from '@/lib/classroom/languageFlags';
 import { unseenFlagCount } from '@/lib/classroom/flagLogic';
@@ -74,6 +76,9 @@ import { ConsoleSettings } from './ConsoleSettings';
 import { ProjectorMenu } from './ProjectorMenu';
 import { GatePanel } from './GatePanel';
 import { voteScopeOf } from './voteScopeState';
+import { ActForEntry } from './actFor/ActForEntry';
+import { ActForSheet } from './actFor/ActForSheet';
+import { actForMode, syncActFor } from './actFor/actForState';
 import { StepRail } from './StepRail';
 import { SwitchBand } from './SwitchBand';
 import { introVideosOf, projectorVideoOf } from '@/lib/classroom/introVideos';
@@ -115,7 +120,10 @@ function voteCountsOn(challenge: Statement | null): { voted: number; present: nu
 		0,
 	);
 
-	return { voted, present: rosterStudents(classState.roster).length };
+	return {
+		voted,
+		present: rosterStudents(classState.roster).length + noDeviceTotal(classState.tables),
+	};
 }
 
 /** Every student in the room has a vote on the running ballot. */
@@ -326,6 +334,17 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 		const atAllProposals = step.key === 'allProposals';
 		watchAllProposalsRatings(atAllProposals ? (challenge?.statementId ?? null) : null);
 		// >>> allProposals END
+		const challengeProposals = challenge
+			? (consoleState.options.get(challenge.statementId) ?? [])
+			: [];
+		syncActFor({
+			mainId: mid,
+			challengeId: challenge?.statementId ?? null,
+			ballot: challenge?.statementSettings?.ballot,
+			held,
+			stepKey: step.key,
+			tables: classState.tables,
+		});
 
 		return m('.console', { 'data-step': step.key }, [
 			backBar(mid),
@@ -411,6 +430,10 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				onResetTurns: () => confirmResetTurns(mid),
 				onResetVote: () => confirmResetVote(mid),
 				allRatedLine: atAllProposals ? allRatedBandLine(challenge) : undefined, // >>> allProposals
+				actForEntry:
+					actForMode() !== 'none' && classState.tables.length > 0
+						? m(ActForEntry, { tables: classState.tables, proposals: challengeProposals })
+						: null,
 			}),
 			failureBanner(),
 			challenge === null && !held
@@ -447,6 +470,14 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 						},
 					})
 				: null,
+			m(ActForSheet, {
+				mainId: mid,
+				tables: classState.tables,
+				challenge,
+				proposals: challengeProposals,
+				held,
+				limit: proposalLimitOf(main),
+			}),
 			m(EndChoice, { mainId: mid, status }),
 			m(ConfirmDialog),
 		]);

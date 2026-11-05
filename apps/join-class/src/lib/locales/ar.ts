@@ -8,6 +8,7 @@ import allProposals from './allProposals/ar'; // >>> allProposals
 import reply from './reply/ar';
 import look from './look/ar';
 import challenge from './challenge/ar';
+import actFor from './actFor/ar';
 
 const ar: Record<string, string> = {
 	...vote,
@@ -15,6 +16,7 @@ const ar: Record<string, string> = {
 	...reply,
 	...look,
 	...challenge,
+	...actFor,
 	'step.waiting': 'في انتظار المعلم',
 	'step.opening': 'البداية',
 	'step.side': 'اختيار الجانب',

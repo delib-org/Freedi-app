@@ -40,6 +40,15 @@ export const DEFAULT_PROPOSALS_TURNS = 1;
 /** The turn counts the teacher can choose from; "another turn" can go past the last. */
 export const PROPOSALS_TURNS_CHOICES = [1, 2, 3] as const;
 
+/**
+ * How many proposals each author may send (`statementSettings.proposalLimit`): the
+ * teacher's setting, 'one' when the lesson sets nothing. The field itself is a plain
+ * string on the schema (strict-parse trap): read it through `proposalLimitOf`.
+ */
+export const CLASS_PROPOSAL_LIMITS = ['one', 'unlimited'] as const;
+export type ClassProposalLimit = (typeof CLASS_PROPOSAL_LIMITS)[number];
+export const DEFAULT_PROPOSAL_LIMIT: ClassProposalLimit = 'one';
+
 /** Default gate: a proposal must reach this consensus (`votingSettings.threshold`). */
 export const DEFAULT_GATE = 0.6;
 
@@ -83,6 +92,17 @@ export const NoDeviceMemberSchema = object({
 	name: string(),
 });
 export type NoDeviceMember = InferOutput<typeof NoDeviceMemberSchema>;
+
+/** A student without a device has no account: this prefix marks the id `classAddNoDevice` made. */
+export const NO_DEVICE_ID_PREFIX = 'nd_';
+
+/** The most no-device students one table takes when the teacher adds one. */
+export const MAX_NO_DEVICE_PER_TABLE = 5;
+
+/** Is this author or voter a no-device student (no account: no credits, no pushes, no subscription)? */
+export function isNoDeviceId(id: string | null | undefined): boolean {
+	return typeof id === 'string' && id.startsWith(NO_DEVICE_ID_PREFIX);
+}
 
 export const ClassTableSchema = object({
 	/** `${mainId}--${n}` */
@@ -255,6 +275,12 @@ export const ClassTableMarkerSchema = object({
 	 * really sit at `tableId` are honoured.
 	 */
 	coAuthors: array(string()),
+	/**
+	 * The teacher who entered this proposal for a student without a device. Server-written
+	 * only (classPostProposal; the rules refuse it from any client). Shown on the teacher's
+	 * screens only, never to students or on the projector.
+	 */
+	enteredByUid: optional(string()),
 });
 export type ClassTableMarker = InferOutput<typeof ClassTableMarkerSchema>;
 
