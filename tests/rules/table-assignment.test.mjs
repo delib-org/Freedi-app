@@ -231,9 +231,32 @@ describe('Tables rules', () => {
 	});
 
 	describe('tableAssignmentSeats', () => {
-		it('is server-only', async () => {
-			await assertFails(getDoc(doc(as(HOST), 'tableAssignmentSeats', `${OPEN}_0`)));
-			await assertFails(setDoc(doc(as(P1), 'tableAssignmentSeats', `${OPEN}_0`), { count: 0 }));
+		const seat = `${OPEN}_0`;
+
+		it('lets a registered participant and the host get and list the seat counters of their session', async () => {
+			await assertSucceeds(getDoc(doc(as(P1), 'tableAssignmentSeats', seat)));
+			await assertSucceeds(
+				getDocs(query(collection(as(P1), 'tableAssignmentSeats'), where('sessionId', '==', OPEN))),
+			);
+			await assertSucceeds(getDoc(doc(as(HOST), 'tableAssignmentSeats', seat)));
+			await assertSucceeds(
+				getDocs(query(collection(as(HOST), 'tableAssignmentSeats'), where('sessionId', '==', OPEN))),
+			);
+		});
+
+		it('denies an unregistered signed-in user, a signed-out reader and an unfiltered list', async () => {
+			await assertFails(getDoc(doc(as(STRANGER), 'tableAssignmentSeats', seat)));
+			await assertFails(
+				getDocs(query(collection(as(STRANGER), 'tableAssignmentSeats'), where('sessionId', '==', OPEN))),
+			);
+			await assertFails(getDoc(doc(guest(), 'tableAssignmentSeats', seat)));
+			await assertFails(getDocs(collection(as(P1), 'tableAssignmentSeats')));
+		});
+
+		it('denies all client writes', async () => {
+			await assertFails(setDoc(doc(as(P1), 'tableAssignmentSeats', seat), { sessionId: OPEN, count: 0 }));
+			await assertFails(updateDoc(doc(as(HOST), 'tableAssignmentSeats', seat), { count: 0 }));
+			await assertFails(deleteDoc(doc(as(P1), 'tableAssignmentSeats', seat)));
 		});
 	});
 });

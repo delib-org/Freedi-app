@@ -868,6 +868,10 @@ service cloud.firestore {
              get(sessionPath).data.status in ['registrationOpen', 'registrationClosed', 'published', 'ended'];
     }
 
+    function isRegisteredInTableSession(sessionId) {
+      return exists(/databases/$(database)/documents/tableAssignmentParticipants/$(string(sessionId) + '_' + string(request.auth.uid)));
+    }
+
     function mayReadTableSession(sessionId) {
       return isTableSessionHost(sessionId) || isTableSessionOpenToAll(sessionId);
     }
@@ -907,10 +911,6 @@ service cloud.firestore {
     // Host reads every run (drafts and history). A registered participant reads
     // a run only once it is published: that is what "my table" shows.
     match /tableAssignmentRuns/{runId} {
-      function isRegisteredInTableSession(sessionId) {
-        return exists(/databases/$(database)/documents/tableAssignmentParticipants/$(string(sessionId) + '_' + string(request.auth.uid)));
-      }
-
       allow get, list: if request.auth != null && resource != null &&
                           (isTableSessionHost(resource.data.sessionId) ||
                            (resource.data.status == 'published' &&
@@ -918,9 +918,15 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Direct-mode seat counters: server-only bookkeeping.
+    // Direct-mode seat counters {sessionId}_{tableIndex}: { sessionId, tableIndex,
+    // topicId, count }. Counts only, no identities. The host and registered
+    // participants of the session read them (list needs a sessionId filter) so
+    // the choose-a-table screen shows free seats. Written by tablesJoinTable only.
     match /tableAssignmentSeats/{seatId} {
-      allow read, write: if false;
+      allow get, list: if request.auth != null && resource != null &&
+                          (isTableSessionHost(resource.data.sessionId) ||
+                           isRegisteredInTableSession(resource.data.sessionId));
+      allow write: if false;
     }
 
     // join-class language flags (IA 24.4): one doc per refused proposal / edit /
