@@ -8,6 +8,10 @@ import { HostParticipants } from '@/views/host/HostParticipants';
 import { HostPreview } from '@/views/host/HostPreview';
 import { HostSettings } from '@/views/host/HostSettings';
 import { HostTopics } from '@/views/host/HostTopics';
+import { ParticipantHome } from '@/views/participant/ParticipantHome';
+import { ParticipantMyTable } from '@/views/participant/ParticipantMyTable';
+import { ParticipantPreferences } from '@/views/participant/ParticipantPreferences';
+import { ParticipantTopic, ParticipantTopics } from '@/views/participant/ParticipantTopics';
 
 /** Route params arrive as attrs; a screen declares the ones it reads, the router hands them over. */
 function routeView<Attrs>(component: m.Component<Attrs>): m.Component {
@@ -23,6 +27,11 @@ const VIEWS: Record<string, m.Component> = {
 	'/host/sessions/:id/participants': routeView(HostParticipants),
 	'/host/sessions/:id/preview': routeView(HostPreview),
 	'/host/sessions/:id/assignment': routeView(HostAssignment),
+	'/sessions/:id': routeView(ParticipantHome),
+	'/sessions/:id/topics': routeView(ParticipantTopics),
+	'/sessions/:id/topics/:topicId': routeView(ParticipantTopic),
+	'/sessions/:id/preferences': routeView(ParticipantPreferences),
+	'/sessions/:id/my-table': routeView(ParticipantMyTable),
 };
 
 /** Mithril route table: every route in ROUTES resolves to its view. */

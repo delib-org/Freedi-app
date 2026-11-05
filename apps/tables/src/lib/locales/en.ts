@@ -225,6 +225,74 @@ const en: Record<string, string> = {
 	'tableAssignment.error.computeRefused':
 		'Cannot compute right now. Check that registration is closed and that there are topics and registrants.',
 	'tableAssignment.error.publishStale': 'The input changed since the computation. Compute again.',
+
+	'tableAssignment.back.toTopics': 'Back to the topics',
+	'tableAssignment.field.fullName': 'Full name',
+	'tableAssignment.field.fullName.hint':
+		'Your full name as it will appear on the table list. No password needed.',
+	'tableAssignment.home.registerTitle': 'Register',
+	'tableAssignment.home.register': 'Register',
+	'tableAssignment.home.registeredAs': 'You are registered as {{name}}.',
+	'tableAssignment.stage.notOpen': 'Registration has not opened yet. Please come back later.',
+	'tableAssignment.stage.closedNotRegistered': 'Registration is closed.',
+	'tableAssignment.stage.ended': 'This table assignment has ended.',
+	'tableAssignment.stage.act.ranked': 'Rank topics',
+	'tableAssignment.stage.act.ranked.hint':
+		'Pick up to three topics in order. The make-up of the tables comes before preferences, so you may be seated outside your three choices.',
+	'tableAssignment.stage.act.ranked.button': 'Rank topics',
+	'tableAssignment.stage.act.direct': 'Choose a table',
+	'tableAssignment.stage.act.direct.hint': 'Pick a table that has room. Your seat is kept at once.',
+	'tableAssignment.stage.act.direct.button': 'Choose a table',
+	'tableAssignment.stage.prefsSaved':
+		'Your preferences are saved. You can edit them until registration closes.',
+	'tableAssignment.stage.prefsMissing': 'You have not ranked yet.',
+	'tableAssignment.stage.waiting': 'Waiting for the assignment',
+	'tableAssignment.stage.waiting.hint':
+		'Registration is closed and the assignment will be published soon.',
+	'tableAssignment.stage.seeMyTable': 'Go to my table',
+	'tableAssignment.stage.readTopics': 'Read the topics',
+	'tableAssignment.topics.search': 'Search topics',
+	'tableAssignment.topics.noMatch': 'No matching topics.',
+	'tableAssignment.topics.notOpen': 'The topics have not opened yet.',
+	'tableAssignment.topic.consensusMeaning':
+		'The number describes the proposal itself, not a personal score.',
+	'tableAssignment.topic.noDescription': 'This topic has no explanation yet.',
+	'tableAssignment.topic.unavailable': 'This topic is not available.',
+	'tableAssignment.preferences.pickTitle': 'Rank {{count}} topics',
+	'tableAssignment.preferences.pickHint':
+		'Tap a topic to add it to your ranking, tap again to remove it. The number is your order of preference.',
+	'tableAssignment.preferences.outsideChoices':
+		'Please note: you may be seated at a topic you did not choose, so that every table is balanced and everyone has a seat.',
+	'tableAssignment.preferences.closed': 'Registration is closed, so nothing can be changed.',
+	'tableAssignment.preferences.myOrder': 'My order',
+	'tableAssignment.preferences.rankedAs': 'Rank {{rank}}',
+	'tableAssignment.preferences.remove': 'Remove from my ranking',
+	'tableAssignment.preferences.save': 'Save my preferences',
+	'tableAssignment.preferences.saved': 'Your preferences are saved. Waiting for the assignment.',
+	'tableAssignment.preferences.keptLocally':
+		'Your choices are kept on this device. You can press save again.',
+	'tableAssignment.preferences.notRegistered': 'Register first to rank topics.',
+	'tableAssignment.position.optionalHint':
+		'Optional. If you do not choose, your position stays "Not specified".',
+	'tableAssignment.direct.sit': 'Sit here',
+	'tableAssignment.direct.free': '{{count}} seats free',
+	'tableAssignment.direct.full': 'This table is full',
+	'tableAssignment.direct.yours': 'Your table',
+	'tableAssignment.direct.seatsUnknown':
+		'Free seats are checked on the server: if a table is full you will be told.',
+	'tableAssignment.myTable.numberLabel': 'Table number',
+	'tableAssignment.myTable.topic': 'Topic: {{topic}}',
+	'tableAssignment.myTable.version': 'Version of {{date}}',
+	'tableAssignment.myTable.waiting':
+		'Waiting for the assignment to be published. Your table will show here once it is.',
+	'tableAssignment.myTable.notRegistered': 'Register to see your table.',
+	'tableAssignment.myTable.notSeated': 'No table was found for you in the published assignment.',
+	'tableAssignment.myTable.chooseFirst': 'You have not chosen a table yet.',
+	'tableAssignment.myTable.outsideChoices':
+		'You were seated at a topic you did not rank. This keeps the tables balanced.',
+	'tableAssignment.error.tableFull': 'That table just filled up. You can choose another table.',
+	'tableAssignment.error.preferencesClosed': 'Registration has closed, so this cannot be saved.',
+	'tableAssignment.error.registrationClosed': 'Registration is not open.',
 };
 
 export default en;
