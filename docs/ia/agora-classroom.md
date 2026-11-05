@@ -2248,3 +2248,14 @@ The Vote step's control bar gets one name per concept:
 Bar order: status (chip + count), ballot controls, order of the proposals (§21), reset at the end edge.
 
 **Exception to the band rule.** §5 of the console says the switch band never has a primary button. In the vote bar the next sensible ballot action is primary: "פתיחת ההצבעה" before the vote opens, "סגירת ההצבעה" while it is open, "המשך ההצבעה" while it is paused. The other ballot action is secondary, and there is no ballot control once the vote is closed. Reset stays danger-outline, disabled until the vote is closed or paused ("יש לסגור או להשהות קודם").
+
+## 27. The teacher sees that a student chose a side, never which (Tal, 2026-11-05, Trello leeIKf0U)
+
+Decision (Tal, 2026-11-05): "The teacher should only see that they selected a side, not which side they selected." This supersedes the earlier "Show sides" button and its confirm (card xM5kpNql). The button is removed and nothing replaces it.
+
+| Surface | What the teacher sees now |
+|---|---|
+| Tables board, from the Side step | "18 of 24 chose a side" (aggregate count, unchanged) |
+| Roster, "no table" strip, table cards, table sheet | Chip or row mark: ● chose a side, ○ not yet. The mark and the accessible name never differ by side. A student who has not chosen carries "No side yet" (chip tag and spoken name). |
+| DOM | No class, data attribute, title or aria-label carries the side of a named student, because the console may be mirrored to the room. |
+| Kept | Support-by-side bars (aggregates), the projector's anonymous side distribution, the student's own phone showing their own side, server-side splitting of tables by side. |

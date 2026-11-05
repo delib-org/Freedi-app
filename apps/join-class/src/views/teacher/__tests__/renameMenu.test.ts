@@ -30,7 +30,7 @@ function flatten(node: m.Children, out: m.Vnode[] = []): m.Vnode[] {
 
 function chip(uid: string | null = 'u1'): m.Vnode[] {
 	const tree = (MemberChip.view as unknown as (v: m.Vnode) => m.Vnode)({
-		attrs: { uid: uid ?? undefined, name: 'Dana', camp: null, from: 1, tableNumbers: [1, 2, 3] },
+		attrs: { uid: uid ?? undefined, name: 'Dana', from: 1, tableNumbers: [1, 2, 3] },
 	} as unknown as m.Vnode);
 
 	return flatten(tree);

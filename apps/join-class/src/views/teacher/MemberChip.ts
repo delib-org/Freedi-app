@@ -1,7 +1,5 @@
 import m from 'mithril';
-import type { Camp } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
-import { CAMP_MARK } from '@/lib/classroom/consoleHelpers';
 import type { DropTarget } from '@/lib/classroom/dragReducer';
 import type { AnswerMark, AskMark } from '@/lib/classroom/tableTurnConsole';
 import { moveStudent, requestNewName } from './consoleActions';
@@ -9,18 +7,17 @@ import { blurChip, keyChip, pressChip, targetName } from './dragController';
 import { consoleState } from './consoleState';
 
 /**
- * One student (or a "no device" member) as a chip: side mark (shape, colour and
- * words never alone), name, and a menu: "move to another table" (the pointer-free
+ * One student (or a "no device" member) as a chip: a mark that says whether the
+ * student chose a side (never which one: Tal 2026-11-05), name, and a menu: "move to another table" (the pointer-free
  * equivalent of dragging) and "ask for a new name". Draggable by pointer and by keyboard.
  */
 
 export interface MemberChipAttrs {
 	uid?: string;
 	name: string;
-	camp: Camp | null;
 	/**
-	 * Has this student chosen a side? Shown even while the sides are hidden: it says
-	 * "chose" or "no side yet", never which side. `undefined` = not asked (before the Side step, no device).
+	 * Has this student chosen a side? It says "chose" or "no side yet", never which side.
+	 * `undefined` = not asked (before the Side step, no device).
 	 */
 	chosen?: boolean;
 	noDevice?: boolean;
@@ -33,10 +30,6 @@ export interface MemberChipAttrs {
 	answerMark?: AnswerMark;
 	/** A no-device chip: opens the act-for sheet on this student. */
 	onOpen?: () => void;
-}
-
-function sideLabel(camp: Camp | null): string {
-	return t(camp ? `console.side_${camp}` : 'console.side_none');
 }
 
 const RENAME_VALUE = 'rename';
@@ -85,8 +78,6 @@ function studentMenu(attrs: MemberChipAttrs, uid: string): m.Vnode {
 export const MemberChip: m.Component<MemberChipAttrs> = {
 	view({ attrs }) {
 		const { uid, name, noDevice } = attrs;
-		// A side shows only after the teacher asked for it (sidesVisible); until then a chip is just a name.
-		const camp = consoleState.sidesVisible ? attrs.camp : null;
 		const drag = consoleState.drag;
 		const active = uid !== undefined && drag.mode !== 'idle' && 'uid' in drag && drag.uid === uid;
 		const askWord: Record<AskMark, string> = {
@@ -109,15 +100,10 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 			.map((key) => `, ${t(key, { name })}`)
 			.join('');
 		const noSide = attrs.chosen === false;
-		const spoken = consoleState.sidesVisible
-			? `${name}, ${sideLabel(camp)}`
-			: noSide
-				? `${name}, ${sideLabel(null)}`
-				: name;
+		const spoken = noSide ? `${name}, ${t('console.side_none')}` : name;
 		const label = (noDevice ? `${name}, ${t('console.no_device')}` : spoken) + turnWord;
 		// Once the lesson has ended nobody moves (paused still allows it): no drag, no move menu.
 		const ref = uid !== undefined && !consoleState.ended ? { uid, name, from: attrs.from } : null;
-		const mod = camp ? `member-chip--${camp}` : '';
 
 		return m('span.member-chip-wrap', { key: uid ?? `nd:${name}` }, [
 			m(
@@ -125,7 +111,6 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 				{
 					type: 'button',
 					class: [
-						mod,
 						noDevice ? 'member-chip--no-device' : '',
 						active ? 'member-chip--active' : '',
 						attrs.askMark === '?' ? 'member-chip--asking' : '',
@@ -149,7 +134,7 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 					},
 				},
 				[
-					m('span.member-chip__mark', { 'aria-hidden': 'true' }, camp ? CAMP_MARK[camp] : '○'),
+					m('span.member-chip__mark', { 'aria-hidden': 'true' }, attrs.chosen ? '●' : '○'),
 					attrs.askMark
 						? m(
 								'span.member-chip__turn.member-chip__turn--ask',
@@ -169,7 +154,6 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 					noSide
 						? m('span.member-chip__tag.member-chip__tag--no-side', t('console.side_none'))
 						: null,
-					camp ? m('span.member-chip__tag', sideLabel(camp)) : null,
 				],
 			),
 			uid !== undefined

@@ -48,8 +48,6 @@ export interface ConsoleState {
 	held: boolean;
 	/** The lesson has ended: the only state in which students can no longer be moved (paused still allows it). */
 	ended: boolean;
-	/** Teacher pressed "Show sides": names carry their side. Off by default, never persisted. */
-	sidesVisible: boolean;
 }
 
 export const consoleState: ConsoleState = {
@@ -66,7 +64,6 @@ export const consoleState: ConsoleState = {
 	options: new Map<string, Statement[]>(),
 	held: false,
 	ended: false,
-	sidesVisible: false,
 };
 
 export function resetConsoleState(mainId: string): void {
@@ -83,7 +80,6 @@ export function resetConsoleState(mainId: string): void {
 	consoleState.options = new Map<string, Statement[]>();
 	consoleState.held = false;
 	consoleState.ended = false;
-	consoleState.sidesVisible = false;
 }
 
 export function isBusy(key: string): boolean {
