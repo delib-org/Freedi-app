@@ -161,8 +161,7 @@ const nl: Record<string, string> = {
 	'opening.play': 'Hier kijken',
 	'opening.video_failed': 'De leraar projecteert',
 	'opening.name_prompt': 'Schrijf je naam',
-	'opening.name_hint':
-		'Je leraar en de leerlingen aan je tafel zien hem, zodat iedereen weet wie wie is.',
+	'opening.name_hint': 'Je leraar en de hele klas zien hem, ook op de beamer.',
 	'opening.name_join': 'Meedoen',
 	'opening.name_saving': 'Bezig met meedoen…',
 	'opening.name_failed': 'Niet opgeslagen. Probeer het opnieuw',
@@ -316,7 +315,7 @@ const nl: Record<string, string> = {
 	'console.rename_asked': '{{name}} om een nieuwe naam gevraagd',
 	'console.student_menu': 'Opties voor {{name}}',
 	'console.drag_hint':
-		'Kunnen sommige leerlingen niet samen zitten? Sleep op elk moment in de les een naam naar een andere tafel. Hun voorstellen en stemmen blijven van hen.',
+		'Kunnen sommige leerlingen niet samen zitten? Sleep in elke stap van de les een naam naar een andere tafel. Hun voorstellen en stemmen blijven van hen.',
 	'console.unplaced_name': 'Zonder tafel',
 	'console.add_no_device': 'Leerling zonder apparaat toevoegen',
 	'console.table_action': 'Actie voor de tafel',

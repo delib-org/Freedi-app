@@ -161,7 +161,7 @@ const he: Record<string, string> = {
 	'opening.play': 'לצפות כאן',
 	'opening.video_failed': 'המורה מקרין',
 	'opening.name_prompt': 'כתבו את השם שלכם',
-	'opening.name_hint': 'המורה והתלמידים בשולחן שלכם יראו אותו, כדי שכולם יידעו מי זה מי.',
+	'opening.name_hint': 'המורה וכל הכיתה יראו אותו, גם על המקרן.',
 	'opening.name_join': 'הצטרפות',
 	'opening.name_saving': 'מצטרפים…',
 	'opening.name_failed': 'לא נשמר. לנסות שוב',

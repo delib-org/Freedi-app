@@ -153,7 +153,7 @@ const fa: Record<string, string> = {
 	'opening.play': 'اینجا تماشا کنید',
 	'opening.video_failed': 'معلم نمایش می‌دهد',
 	'opening.name_prompt': 'نام خود را بنویسید',
-	'opening.name_hint': 'معلم و دانش‌آموزان میز شما آن را می‌بینند تا همه بدانند چه کسی کیست.',
+	'opening.name_hint': 'معلم و همه کلاس آن را می‌بینند، روی پروژکتور هم.',
 	'opening.name_join': 'پیوستن',
 	'opening.name_saving': 'در حال پیوستن…',
 	'opening.name_failed': 'ذخیره نشد. دوباره تلاش کنید',

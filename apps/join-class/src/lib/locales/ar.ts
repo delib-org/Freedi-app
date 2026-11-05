@@ -161,7 +161,7 @@ const ar: Record<string, string> = {
 	'opening.play': 'شاهدوا هنا',
 	'opening.video_failed': 'المعلم يعرض',
 	'opening.name_prompt': 'اكتبوا اسمكم',
-	'opening.name_hint': 'سيراه معلمكم والطلاب على طاولتكم، حتى يعرف الجميع من هو من.',
+	'opening.name_hint': 'سيراه المعلم والصف كله، وأيضًا على جهاز العرض.',
 	'opening.name_join': 'انضمام',
 	'opening.name_saving': 'جارٍ الانضمام…',
 	'opening.name_failed': 'لم يُحفظ. حاولوا مرة أخرى',
@@ -315,7 +315,7 @@ const ar: Record<string, string> = {
 	'console.rename_asked': 'طلبنا من {{name}} اسمًا جديدًا',
 	'console.student_menu': 'خيارات لـ {{name}}',
 	'console.drag_hint':
-		'هل هناك طلاب لا يمكنهم الجلوس معًا؟ اسحبوا اسمًا إلى طاولة أخرى في أي وقت من الدرس. تبقى اقتراحاتهم وأصواتهم لهم.',
+		'هل هناك طلاب لا يمكنهم الجلوس معًا؟ اسحبوا اسمًا إلى طاولة أخرى في أي مرحلة من الدرس. تبقى اقتراحاتهم وأصواتهم لهم.',
 	'console.unplaced_name': 'بلا طاولة',
 	'console.add_no_device': 'إضافة طالب بلا جهاز',
 	'console.table_action': 'إجراء على الطاولة',
