@@ -8,6 +8,7 @@ import {
 	consensusOf,
 	countsOf,
 	liveResultsOn,
+	supportVisibleToClass,
 	orderBallot,
 	visibleBallotMode,
 	voteOrderOf,
@@ -251,6 +252,6 @@ export function summaryStage(): m.Vnode {
 				])
 			: null,
 		resultsBlock(summary),
-		summary.showSupport ? supportBlock() : null,
+		summary.showSupport && supportVisibleToClass(challenge) ? supportBlock() : null,
 	]);
 }

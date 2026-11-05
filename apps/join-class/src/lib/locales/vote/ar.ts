@@ -62,6 +62,12 @@ const vote: Record<string, string> = {
 	'voting.closed_hidden': 'انتهى التصويت. ستظهر النتائج لاحقًا',
 	'console.close_and_go_results_closed': 'النتائج ما زالت مخفية عن الصف',
 	'console.close_and_go_show': 'إظهار للصف',
+	'console.support_audience': 'من يرى الدعم حسب الطرف',
+	'console.support_hint_closed': 'لا يرى الطلاب الأعمدة. اختاروا «الصف كله» لمشاركتها.',
+	'console.support_hint_blocked': 'افتحوا النتائج للصف أولًا',
+	'console.support_panel_private': 'أنتم فقط ترون هذا الآن.',
+	'console.support_panel_shared': 'الصف يرى هذا أيضًا.',
+	'summary.support_later': 'سيتم عرض دعم الصف لاحقًا',
 	// >>> voteSummary END
 };
 

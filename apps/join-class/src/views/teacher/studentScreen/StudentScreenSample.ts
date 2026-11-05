@@ -8,7 +8,7 @@ import { getChallengeQuestion, getLessonStep, getLessonSteps } from '@/lib/lesso
 import { lessonStatusOfMain } from '@/lib/lessonCore';
 import { getMainStatement, getSubQuestions } from '@/lib/store';
 import { setStudentStage } from '@/lib/studentStage';
-import { liveResultsOn } from '@/lib/classroom/voteResults';
+import { liveResultsOn, supportVisibleToClass } from '@/lib/classroom/voteResults';
 import { isBallotClosed, isBallotFrozen, isBallotPaused } from '@/lib/classroom/consoleHelpers';
 import { OpeningView } from '@/views/student/c2/OpeningView';
 import { LessonStateScreen } from '@/views/student/LessonStateScreen';
@@ -66,7 +66,11 @@ function stepSample(key: LessonStepKey, main: Statement): m.Children {
 		case 'vote':
 			return voteSample(ballotStateOf(getChallengeQuestion(getSubQuestions())), resultsShown);
 		case 'summary':
-			return summarySample(main, resultsShown);
+			return summarySample(
+				main,
+				resultsShown,
+				supportVisibleToClass(getChallengeQuestion(getSubQuestions())),
+			);
 	}
 }
 

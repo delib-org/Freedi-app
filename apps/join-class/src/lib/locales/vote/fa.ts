@@ -65,6 +65,13 @@ const vote: Record<string, string> = {
 	'voting.closed_hidden': 'رأی‌گیری بسته شد. نتایج به‌زودی نشان داده می‌شود',
 	'console.close_and_go_results_closed': 'نتایج هنوز از کلاس پنهان است',
 	'console.close_and_go_show': 'نشان دادن به کلاس',
+	'console.support_audience': 'چه کسی حمایت بر اساس سمت را می‌بیند',
+	'console.support_hint_closed':
+		'کلاس نمودارها را نمی‌بیند. «همهٔ کلاس» را انتخاب کنید تا نمایش داده شود.',
+	'console.support_hint_blocked': 'نخست نتایج را برای کلاس باز کنید',
+	'console.support_panel_private': 'فعلاً فقط شما این را می‌بینید.',
+	'console.support_panel_shared': 'کلاس هم این را می‌بیند.',
+	'summary.support_later': 'حمایت کلاس به‌زودی نمایش داده می‌شود',
 	// >>> voteSummary END
 };
 

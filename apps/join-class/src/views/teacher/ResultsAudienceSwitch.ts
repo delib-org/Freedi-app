@@ -34,6 +34,15 @@ export const VOTE_RESULTS_AUDIENCE = {
 	hintKey: 'console.results_hint_closed',
 } as const;
 
+/** The Summary's support-by-side switch: its own name, label and hints (Trello 89fevjY5). */
+export const SUPPORT_AUDIENCE = {
+	name: 'support-audience',
+	labelKey: 'console.support_audience',
+	hintKey: 'console.support_hint_closed',
+	/** Shown while the vote results are closed: they come first. */
+	blockedHintKey: 'console.support_hint_blocked',
+} as const;
+
 function option(attrs: ResultsAudienceSwitchAttrs, shown: boolean, labelKey: string): m.Vnode {
 	const id = shown ? 'class' : 'me';
 
@@ -79,6 +88,31 @@ export const ResultsAudienceSwitch: m.Component<ResultsAudienceSwitchAttrs> = {
 						t(attrs.hintKey),
 					),
 		]);
+	},
+};
+
+export interface SupportAudienceSwitchAttrs {
+	resultsShown: boolean;
+	supportShown: boolean;
+	/** No challenge yet, or a write is in flight. */
+	disabled: boolean;
+	onChange: (shown: boolean) => void;
+}
+
+/**
+ * "Who sees the support by side" on the Summary step. Closed results always
+ * win: while they are closed the switch reads "Only me", is locked, and the
+ * hint says to open the results first (Trello 89fevjY5).
+ */
+export const SupportAudienceSwitch: m.Component<SupportAudienceSwitchAttrs> = {
+	view({ attrs }) {
+		return m(ResultsAudienceSwitch, {
+			...SUPPORT_AUDIENCE,
+			shown: attrs.resultsShown && attrs.supportShown,
+			disabled: attrs.disabled || !attrs.resultsShown,
+			hintKey: attrs.resultsShown ? SUPPORT_AUDIENCE.hintKey : SUPPORT_AUDIENCE.blockedHintKey,
+			onChange: attrs.onChange,
+		});
 	},
 };
 

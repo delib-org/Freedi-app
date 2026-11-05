@@ -243,7 +243,7 @@ export function closeBallot(mainId: string): Promise<boolean> {
  */
 export function setVoteDisplay(
 	challengeId: string,
-	field: 'liveResults' | 'onlyAboveGate',
+	field: 'liveResults' | 'supportShown' | 'onlyAboveGate',
 	value: boolean,
 ): Promise<boolean> {
 	const patch = { statementSettings: { voteDisplay: { [field]: value } } } as Partial<Statement>;

@@ -299,7 +299,11 @@ function resultsHidden(resultsShown: boolean): boolean {
 	return !resultsShown && !!getChallengeQuestion(getSubQuestions())?.statementSettings?.ballot;
 }
 
-export function summarySample(main: Statement, resultsShown: boolean): m.Children {
+export function summarySample(
+	main: Statement,
+	resultsShown: boolean,
+	supportShown: boolean,
+): m.Children {
 	const challenge = getChallengeQuestion(getSubQuestions());
 	const [decided] = sampleProposals();
 	if (resultsHidden(resultsShown)) {
@@ -315,11 +319,13 @@ export function summarySample(main: Statement, resultsShown: boolean): m.Childre
 			label: t('summary.how_much'),
 			disabled: true,
 		}),
-		m(SupportBySide, {
-			result: sampleSupport(),
-			gate: gateOf(challenge, main),
-			names: sideNamesOf(main),
-		}),
+		supportShown
+			? m(SupportBySide, {
+					result: sampleSupport(),
+					gate: gateOf(challenge, main),
+					names: sideNamesOf(main),
+				})
+			: m('p.summary__support-later', { role: 'status' }, t('summary.support_later')),
 	]);
 }
 

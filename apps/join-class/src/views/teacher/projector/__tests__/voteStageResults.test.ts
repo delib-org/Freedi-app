@@ -23,13 +23,17 @@ function option(id: string, consensus: number): Statement {
 function challengeWith(
 	liveResults: boolean | undefined,
 	ballot: Record<string, unknown>,
+	supportShown?: boolean,
 ): Statement {
 	return {
 		statementId: 'ch',
 		selections: { a: 7, b: 1, c: 2 },
 		statementSettings: {
 			ballot: { candidateIds: ['a', 'b', 'c'], frozenAt: 1, ...ballot },
-			voteDisplay: liveResults === undefined ? {} : { liveResults },
+			voteDisplay: {
+				...(liveResults === undefined ? {} : { liveResults }),
+				...(supportShown === undefined ? {} : { supportShown }),
+			},
 		},
 	} as unknown as Statement;
 }
@@ -104,6 +108,29 @@ describe('projector summary step', () => {
 		expect(drawn.classes).toContain('projector-decision');
 		expect(drawn.classes).toContain('projector-results__row--winner');
 		expect(drawn.classes).toContain('projector-results__count');
+	});
+
+	it('results open but support not shared (missing flag): no bars, no verdict', () => {
+		data.challenge = challengeWith(true, { closedAt: 5, decisionId: 'a' });
+		const drawn = draw(summaryStage());
+
+		expect(drawn.classes).toContain('projector-decision');
+		expect(drawn.classes).not.toContain('projector-support-block');
+		expect(drawn.classes).not.toContain('projector-support');
+	});
+
+	it('results open and support shared: the bars and the verdict are drawn', () => {
+		data.challenge = challengeWith(true, { closedAt: 5, decisionId: 'a' }, true);
+		const drawn = draw(summaryStage());
+
 		expect(drawn.classes).toContain('projector-support-block');
+		expect(drawn.classes).toContain('projector-support');
+	});
+
+	it('support shared but results closed: results win, nothing leaks', () => {
+		data.challenge = challengeWith(false, { closedAt: 5, decisionId: 'a' }, true);
+		const drawn = draw(summaryStage());
+
+		expect(drawn.classes).not.toContain('projector-support-block');
 	});
 });
