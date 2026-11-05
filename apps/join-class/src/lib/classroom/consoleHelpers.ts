@@ -193,8 +193,6 @@ export function unplacedStudents(
 	return students.filter((s) => !seated.has(s.uid));
 }
 
-export const CAMP_MARK: Record<Camp, string> = { a: '●', b: '■', center: '◆' };
-
 // ---- table timer line ------------------------------------------------------
 
 export type TimerLine =

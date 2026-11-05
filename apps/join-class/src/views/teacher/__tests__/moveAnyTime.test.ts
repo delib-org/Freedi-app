@@ -35,7 +35,7 @@ function flatten(node: m.Children, out: m.Vnode[] = []): m.Vnode[] {
 
 function chipButton(): m.Vnode | undefined {
 	const tree = (MemberChip.view as unknown as (v: m.Vnode) => m.Vnode)({
-		attrs: { uid: 'u1', name: 'Dana', camp: null, from: 1, tableNumbers: [1, 2] },
+		attrs: { uid: 'u1', name: 'Dana', from: 1, tableNumbers: [1, 2] },
 	} as unknown as m.Vnode);
 
 	return flatten(tree).find(

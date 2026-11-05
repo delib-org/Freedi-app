@@ -128,21 +128,6 @@
   font-weight: 700;
 }
 
-#{$game} .member-chip--a {
-  border-color: var(--terra-300);
-  background: var(--terra-50);
-}
-
-#{$game} .member-chip--b {
-  border-color: var(--indigo-300);
-  background: var(--indigo-50);
-}
-
-#{$game} .member-chip--center {
-  border-color: var(--edge-deep);
-  background: var(--paper-soft);
-}
-
 // The chip's states win over its side tint, as before.
 #{$game} .member-chip--answering {
   background: var(--teal-50);
