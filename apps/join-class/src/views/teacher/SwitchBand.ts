@@ -220,6 +220,7 @@ function segment(attrs: SwitchBandAttrs): m.Vnode {
 	return m('div.switch-band__segment', { role: 'group', 'aria-label': t('console.view_label') }, [
 		item('tables', 'console.tables'),
 		item('texts', 'console.texts'),
+		item('student', 'console.student_screen'),
 	]);
 }
 
