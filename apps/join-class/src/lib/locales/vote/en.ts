@@ -19,8 +19,6 @@ const vote: Record<string, string> = {
 	'voting.paused_hint': 'The teacher paused the vote for now. Your vote is kept.',
 	'voting.closed_hint': 'The vote is closed. Waiting for the summary',
 	'console.vote_settings': 'The vote',
-	'console.vote_live_results': 'Students see the results live',
-	'console.vote_live_results_help': 'How many votes each proposal has. Never who voted for what.',
 	'voting.result_votes': '{{percent}}% · {{n}} votes',
 	'voting.result_one_vote': '{{percent}}% · 1 vote',
 	// >>> voteSummary BEGIN
@@ -56,6 +54,17 @@ const vote: Record<string, string> = {
 	'console.vote_status_closed': 'Voting is closed',
 	'console.vote_progress': '{{voted}} of {{present}} voted',
 	'console.vote_reset_hint': 'Close or pause the vote first',
+	'console.results_audience': 'Who sees the results',
+	'console.results_audience_me': 'Only me',
+	'console.results_audience_class': 'The whole class',
+	'console.results_hint_closed':
+		"Students see only their own vote. Choose 'The whole class' to show the results.",
+	'console.results_chip_closed': 'Results hidden from the class',
+	'console.results_chip_shown': 'Results shown to the class',
+	'voting.results_later': 'Results will be shown soon',
+	'voting.closed_hidden': 'Voting is closed. Results will be shown soon',
+	'console.close_and_go_results_closed': 'The results are still hidden from the class',
+	'console.close_and_go_show': 'Show to the class',
 	// >>> voteSummary END
 };
 

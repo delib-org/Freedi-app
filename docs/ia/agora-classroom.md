@@ -1867,7 +1867,7 @@ header → vote results (state block) → "עד כמה אתם תומכים בה�
 ## 21. Order of proposals during the vote (Tal, 2026-10-25, card UM5Z8zj0)
 
 ### 21.1 What exists
-`statementSettings.voteDisplay` on the challenge question had two switches in the console settings popover: `liveResults` (absent = on) and `sortBySupport` (absent = off, a live sort by votes on the phones only). The projector's tally always followed ballot order.
+`statementSettings.voteDisplay` on the challenge question had two switches in the console settings popover: `liveResults` (absent = on at the time; since Trello uVEcfwbB, 2026-11: only `true` opens the results to the class, absent or false = closed, in the console, the phones and the projector alike) and `sortBySupport` (absent = off, a live sort by votes on the phones only). The projector's tally always followed ballot order.
 
 ### 21.2 Change (Tal's words: "you can sort by C_p, by Random, and by most voted. The teacher can choose, and it will affect everybody. By default C_p is presented, because these are the options most wanted by the people.")
 - Replace `sortBySupport` with `order: 'consensus' | 'votes' | 'random'`. Absent means `consensus`. One setting for every phone AND the projector.

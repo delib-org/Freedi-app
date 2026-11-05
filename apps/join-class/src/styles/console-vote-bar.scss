@@ -87,6 +87,19 @@
     color: var(--text-inverse);
     background: var(--ink);
   }
+
+  // who sees the results: a quiet outline chip, so it never competes with the vote state
+  &--results-closed {
+    color: var(--ink);
+    background: var(--bg-muted);
+    box-shadow: inset 0 0 0 1px var(--ink-muted);
+  }
+
+  &--results-shown {
+    color: var(--teal-600);
+    background: var(--teal-50);
+    box-shadow: inset 0 0 0 1px var(--teal-600);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

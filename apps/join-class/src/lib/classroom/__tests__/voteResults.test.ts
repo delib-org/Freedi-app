@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Statement } from '@freedi/shared-types';
-import { liveResultsOn, voteResults } from '../voteResults';
+import { liveResultsOn, visibleBallotMode, voteResults } from '../voteResults';
 
 function challenge(voteDisplay?: { liveResults?: boolean }): Statement {
 	return {
@@ -10,12 +10,30 @@ function challenge(voteDisplay?: { liveResults?: boolean }): Statement {
 }
 
 describe('liveResultsOn', () => {
-	it('is on by default and off only when the teacher switched it off', () => {
-		expect(liveResultsOn(null)).toBe(true);
-		expect(liveResultsOn(challenge())).toBe(true);
-		expect(liveResultsOn(challenge({}))).toBe(true);
-		expect(liveResultsOn(challenge({ liveResults: true }))).toBe(true);
+	it('is closed unless the teacher opened it: a missing setting means closed', () => {
+		expect(liveResultsOn(null)).toBe(false);
+		expect(liveResultsOn(challenge())).toBe(false);
+		expect(liveResultsOn(challenge({}))).toBe(false);
 		expect(liveResultsOn(challenge({ liveResults: false }))).toBe(false);
+	});
+
+	it('is open only for an explicit true', () => {
+		expect(liveResultsOn(challenge({ liveResults: true }))).toBe(true);
+	});
+});
+
+describe('visibleBallotMode', () => {
+	it('results open: the teacher order, and a closed ballot by its votes', () => {
+		expect(visibleBallotMode('votes', false, true)).toBe('votes');
+		expect(visibleBallotMode('consensus', false, true)).toBe('consensus');
+		expect(visibleBallotMode('votes', true, true)).toBe('result');
+	});
+
+	it('results closed: never an order derived from the votes', () => {
+		expect(visibleBallotMode('votes', false, false)).toBe('consensus');
+		expect(visibleBallotMode('votes', true, false)).toBe('consensus');
+		expect(visibleBallotMode('consensus', true, false)).toBe('consensus');
+		expect(visibleBallotMode('random', true, false)).toBe('random');
 	});
 });
 

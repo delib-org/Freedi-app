@@ -20,9 +20,6 @@ const vote: Record<string, string> = {
 		'Die Lehrkraft hat die Abstimmung kurz pausiert. Deine Stimme bleibt erhalten.',
 	'voting.closed_hint': 'Die Abstimmung ist geschlossen. Wir warten auf die Zusammenfassung',
 	'console.vote_settings': 'Die Abstimmung',
-	'console.vote_live_results': 'Die Lernenden sehen die Ergebnisse live',
-	'console.vote_live_results_help':
-		'Wie viele Stimmen jeder Vorschlag hat. Nie, wer wofür gestimmt hat.',
 	'voting.result_votes': '{{percent}} % · {{n}} Stimmen',
 	'voting.result_one_vote': '{{percent}} % · 1 Stimme',
 	// >>> voteSummary BEGIN
@@ -58,6 +55,17 @@ const vote: Record<string, string> = {
 	'console.vote_status_closed': 'Abstimmung geschlossen',
 	'console.vote_progress': '{{voted}} von {{present}} haben abgestimmt',
 	'console.vote_reset_hint': 'Zuerst die Abstimmung schließen oder pausieren',
+	'console.results_audience': 'Wer sieht die Ergebnisse',
+	'console.results_audience_me': 'Nur ich',
+	'console.results_audience_class': 'Die ganze Klasse',
+	'console.results_hint_closed':
+		'Die Lernenden sehen nur ihre eigene Stimme. Wähle „Die ganze Klasse“, um die Ergebnisse zu zeigen.',
+	'console.results_chip_closed': 'Ergebnisse vor der Klasse verborgen',
+	'console.results_chip_shown': 'Ergebnisse für die Klasse sichtbar',
+	'voting.results_later': 'Die Ergebnisse werden gleich gezeigt',
+	'voting.closed_hidden': 'Die Abstimmung ist beendet. Die Ergebnisse werden gleich gezeigt',
+	'console.close_and_go_results_closed': 'Die Ergebnisse sind für die Klasse noch verborgen',
+	'console.close_and_go_show': 'Der Klasse zeigen',
 	// >>> voteSummary END
 };
 

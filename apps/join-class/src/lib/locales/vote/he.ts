@@ -19,8 +19,6 @@ const vote: Record<string, string> = {
 	'voting.paused_hint': 'המורה עצרה את ההצבעה לרגע. ההצבעה שלכם נשמרה.',
 	'voting.closed_hint': 'ההצבעה נסגרה. ממתינים לסיכום',
 	'console.vote_settings': 'ההצבעה',
-	'console.vote_live_results': 'התלמידים רואים את התוצאות בזמן אמת',
-	'console.vote_live_results_help': 'כמה קולות קיבלה כל הצעה. אף פעם לא מי הצביע למה.',
 	'voting.result_votes': '{{percent}}% · {{n}} קולות',
 	'voting.result_one_vote': '{{percent}}% · קול אחד',
 	// >>> voteSummary BEGIN
@@ -54,6 +52,17 @@ const vote: Record<string, string> = {
 	'console.vote_status_closed': 'ההצבעה נסגרה',
 	'console.vote_progress': '{{voted}} מתוך {{present}} הצביעו',
 	'console.vote_reset_hint': 'יש לסגור או להשהות קודם',
+	'console.results_audience': 'מי רואה את התוצאות',
+	'console.results_audience_me': 'רק אני',
+	'console.results_audience_class': 'כל הכיתה',
+	'console.results_hint_closed':
+		"הכיתה רואה רק את ההצבעה שלה. לחצו על 'כל הכיתה' כדי להראות את התוצאות.",
+	'console.results_chip_closed': 'התוצאות סגורות לכיתה',
+	'console.results_chip_shown': 'התוצאות פתוחות לכיתה',
+	'voting.results_later': 'התוצאות יוצגו בהמשך',
+	'voting.closed_hidden': 'ההצבעה נסגרה. התוצאות יוצגו בהמשך',
+	'console.close_and_go_results_closed': 'התוצאות עדיין סגורות לכיתה',
+	'console.close_and_go_show': 'הצגה לכיתה',
 	// >>> voteSummary END
 };
 

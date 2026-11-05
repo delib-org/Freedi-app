@@ -17,6 +17,7 @@ import { lessonStatusOfMain } from '@/lib/lessonCore';
 import { readBallot } from './projector/projectorLogic';
 import { watchClass } from '@/lib/classroom/classState';
 import { projectorData, watchProjector } from '@/lib/classroom/projectorData';
+import { liveResultsOn } from '@/lib/classroom/voteResults';
 import { NotYourLesson } from './NotYourLesson';
 import { ProjectorBand } from './projector/ProjectorBand';
 import { renderStep } from './projector/steps';
@@ -86,7 +87,10 @@ async function open(mid: string): Promise<void> {
 function stateFrame(status: 'paused' | 'ended', code: string | undefined): m.Vnode {
 	const ended = status === 'ended';
 	const ballot = readBallot(projectorData.challenge);
-	const decision = projectorData.proposals.find((o) => o.statementId === ballot?.decisionId);
+	// The decision is the vote's winner: the wall shows it only when the results are open to the class.
+	const decision = liveResultsOn(projectorData.challenge)
+		? projectorData.proposals.find((o) => o.statementId === ballot?.decisionId)
+		: undefined;
 
 	return m('section.projector-step.projector-step--state', { class: `projector-step--${status}` }, [
 		m('span.projector-mark', [

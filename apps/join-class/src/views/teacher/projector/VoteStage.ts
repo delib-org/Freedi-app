@@ -7,7 +7,9 @@ import { projectorData } from '@/lib/classroom/projectorData';
 import {
 	consensusOf,
 	countsOf,
+	liveResultsOn,
 	orderBallot,
+	visibleBallotMode,
 	voteOrderOf,
 	voteResults,
 } from '@/lib/classroom/voteResults';
@@ -54,7 +56,7 @@ const GlideList: m.Component<{ class: string }> = {
 	},
 };
 
-function orderedIds(): string[] {
+function orderedIds(shown: boolean): string[] {
 	const challenge = projectorData.challenge;
 	const ballot = readBallot(challenge);
 	if (!ballot) return [];
@@ -67,9 +69,9 @@ function orderedIds(): string[] {
 	const votes = countsOf(voteResults(ballot.candidateIds, selections));
 	shownOrder = orderBallot(
 		ballot.candidateIds,
-		typeof ballot.closedAt === 'number' ? 'result' : voteOrderOf(challenge),
+		visibleBallotMode(voteOrderOf(challenge), typeof ballot.closedAt === 'number', shown),
 		{ consensus: consensusOf(projectorData.proposals), votes },
-		shownOrder,
+		shown ? shownOrder : [],
 		challengeId,
 	);
 
@@ -80,7 +82,8 @@ export function voteStage(): m.Vnode {
 	const challenge = projectorData.challenge;
 	const ballot = readBallot(challenge);
 	const selections = challenge?.selections as Record<string, number> | undefined;
-	const bars = ballot ? tallyBars(orderedIds(), selections, projectorData.proposals) : [];
+	const shown = liveResultsOn(challenge);
+	const bars = ballot ? tallyBars(orderedIds(shown), selections, projectorData.proposals) : [];
 	const candidates = ballot ? ballotOptions(ballot.candidateIds, projectorData.proposals) : [];
 	const gate = gateOf(challenge, projectorData.main);
 	const status = voteStatus(ballot);
@@ -92,8 +95,18 @@ export function voteStage(): m.Vnode {
 			: m(
 					'p.projector-vote-status',
 					{ role: 'status', 'data-status': status },
-					t(status === 'paused' ? 'voting.paused' : 'voting.closed'),
+					t(
+						status === 'paused'
+							? 'voting.paused'
+							: shown
+								? 'voting.closed'
+								: 'voting.closed_hidden',
+					),
 				),
+		// Results closed to the class: the names, a neutral note, no bars and no counts.
+		ballot && !shown && bars.length > 0
+			? m('p.projector-vote-note', { role: 'status' }, t('voting.results_later'))
+			: null,
 		candidates.length > 0
 			? m(GateStage, { view: gateView(candidates, gate), showWaiting: true })
 			: null,
@@ -103,13 +116,19 @@ export function voteStage(): m.Vnode {
 					GlideList,
 					{ class: 'projector-tally' },
 					bars.map((bar) =>
-						m('li.projector-tally__row', { key: bar.id, 'data-key': bar.id }, [
-							m('span.projector-tally__text', bar.text),
-							m('span.projector-tally__track', { style: barStyle(bar.percent) }, [
-								m('span.projector-tally__fill'),
-							]),
-							m('span.projector-tally__count', bar.count),
-						]),
+						shown
+							? m('li.projector-tally__row', { key: bar.id, 'data-key': bar.id }, [
+									m('span.projector-tally__text', bar.text),
+									m('span.projector-tally__track', { style: barStyle(bar.percent) }, [
+										m('span.projector-tally__fill'),
+									]),
+									m('span.projector-tally__count', bar.count),
+								])
+							: m(
+									'li.projector-tally__row.projector-tally__row--names',
+									{ key: bar.id, 'data-key': bar.id },
+									[m('span.projector-tally__text', bar.text)],
+								),
 					),
 				),
 	]);
@@ -123,7 +142,7 @@ function votesLine(row: SummaryRow): string {
 		: t('voting.result_votes', { percent: row.percent, n: row.count });
 }
 
-function resultsBlock(summary: VoteSummary): m.Children {
+export function resultsBlock(summary: VoteSummary): m.Children {
 	if (summary.kind === 'none') return null;
 	const title =
 		summary.kind === 'open'
@@ -137,25 +156,32 @@ function resultsBlock(summary: VoteSummary): m.Children {
 		m(
 			'ol.projector-results__rows',
 			summary.rows.map((row) =>
-				m(
-					`li.projector-results__row${row.winner ? '.projector-results__row--winner' : ''}`,
-					{ key: row.id },
-					[
-						m('span.projector-results__text', row.text),
-						row.winner ? m('span.projector-results__tag', t('summary.winner')) : null,
-						row.leading ? m('span.projector-results__tag', t('summary.leading')) : null,
-						m('span.projector-results__track', { style: barStyle(row.percent) }, [
-							m('span.projector-results__fill'),
-						]),
-						m('span.projector-results__count', votesLine(row)),
-					],
-				),
+				summary.resultsHidden
+					? m('li.projector-results__row', { key: row.id }, [
+							m('span.projector-results__text', row.text),
+						])
+					: m(
+							`li.projector-results__row${row.winner ? '.projector-results__row--winner' : ''}`,
+							{ key: row.id },
+							[
+								m('span.projector-results__text', row.text),
+								row.winner ? m('span.projector-results__tag', t('summary.winner')) : null,
+								row.leading ? m('span.projector-results__tag', t('summary.leading')) : null,
+								m('span.projector-results__track', { style: barStyle(row.percent) }, [
+									m('span.projector-results__fill'),
+								]),
+								m('span.projector-results__count', votesLine(row)),
+							],
+						),
 			),
 		),
 		m(
 			'p.projector-results__turnout',
 			t('summary.turnout', { n: summary.voted, m: summary.present }),
 		),
+		summary.resultsHidden
+			? m('p.projector-results__note', { role: 'status' }, t('voting.results_later'))
+			: null,
 		summary.tie ? m('p.projector-results__note', t('summary.tie_by_ratings')) : null,
 		summary.kind === 'open' || summary.kind === 'paused'
 			? m('p.projector-results__note', t('summary.wait_close'))
@@ -207,8 +233,10 @@ export function summaryStage(): m.Vnode {
 		selections: challenge?.selections as Record<string, number> | undefined,
 		proposals: projectorData.proposals,
 		present: presentCount(classState.roster, projectorData.main?.creatorId),
+		resultsShown: liveResultsOn(challenge),
 	});
-	const decided = summary.kind === 'none' || summary.kind === 'closed';
+	// Closed results: no decision card at all (not even an empty one), it would be the winner.
+	const decided = (summary.kind === 'none' || summary.kind === 'closed') && !summary.resultsHidden;
 
 	return m('section.projector-step.projector-step--summary', [
 		summary.kind === 'none' ? m('p.projector-results__note', t('summary.no_vote')) : null,

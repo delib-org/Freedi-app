@@ -528,3 +528,31 @@
   background: var(--bg-card);
   border: 1.5px solid var(--danger);
 }
+
+// The results line on the close-and-go and end-lesson confirms: lock/eye + text + inline action
+.results-aside {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-sm);
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--font-size-sm);
+
+  &__show {
+    min-block-size: 44px;
+    padding: 0 var(--space-xs);
+    color: var(--teal-600);
+    font: inherit;
+    font-weight: var(--font-weight-semibold);
+    text-decoration: underline;
+    background: none;
+    border: 0;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--terra-600);
+      outline-offset: 1px;
+    }
+  }
+}

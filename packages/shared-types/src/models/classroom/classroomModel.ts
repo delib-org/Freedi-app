@@ -285,7 +285,11 @@ export type ClassVoteOrder = InferOutput<typeof ClassVoteOrderSchema>;
 // >>> voteSummary END
 
 export const ClassVoteDisplaySchema = object({
-	/** Students see each proposal's share of the votes, live. Absent = on. */
+	/**
+	 * The whole class sees the vote results (phones, projector, summary). Only
+	 * `true` opens them; absent or false = closed, for new and existing lessons
+	 * (Trello uVEcfwbB).
+	 */
 	liveResults: optional(boolean()),
 	/** Deprecated: old docs only, nobody reads it. Replaced by `order`. */
 	sortBySupport: optional(boolean()),

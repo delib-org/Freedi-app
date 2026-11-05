@@ -3,6 +3,7 @@ import type { LessonStatus } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { classSetLessonStatus } from '@/lib/classroom/api';
 import { planBack } from './consoleBack';
+import { resultsAside } from './consoleConfirms';
 
 /**
  * "End the lesson?" (IA 13.6, UX 13.E): one native <dialog>, so focus is
@@ -85,6 +86,8 @@ function contents(attrs: EndChoiceAttrs): m.Children {
 		failed
 			? m('p.end-choice__error', { role: 'alert' }, t('console.failed', { label: t(failedKey) }))
 			: null,
+		// Closed results mean no student rates the decision: say so, with the way to open them.
+		m('div.end-choice__aside', resultsAside()),
 		optionButton(mainId, 'end', 'console.end_now', 'btn--primary', { autofocus: true }),
 		offerKeepOpen
 			? [
