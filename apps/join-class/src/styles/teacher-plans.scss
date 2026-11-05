@@ -142,3 +142,40 @@
 .class-form__error {
   color: var(--error, var(--terra-700));
 }
+
+// ---- teacher home: section heads and the "+ שיעור עם כיתה" picker -------------------
+.teacher-home__section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs) var(--space-md);
+
+  > .teacher-home__section-title {
+    margin-block-end: var(--space-sm);
+  }
+}
+
+.lesson-picker__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lesson-picker__option {
+  inline-size: 100%;
+  min-block-size: var(--touch-target);
+  justify-content: flex-start;
+  text-align: start;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.lesson-picker__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
