@@ -1,12 +1,12 @@
-// Arabic UI strings for Tables. Labels follow docs/ia/shared-table-assignment.md section 3.
+// Arabic UI strings for Tables (الطاولات). Labels follow docs/ia/shared-table-assignment.md section 3.
 
 const ar: Record<string, string> = {
 	'tableAssignment.app': 'الطاولات',
-	'tableAssignment.session': 'التوزيع على الطاولات',
-	'tableAssignment.host': 'المضيف',
+	'tableAssignment.session': 'توزيع على طاولات',
+	'tableAssignment.host': 'المضيف/ة',
 	'tableAssignment.topic': 'موضوع',
 	'tableAssignment.table': 'طاولة',
-	'tableAssignment.participants': 'المسجلون',
+	'tableAssignment.participants': 'المسجّلون',
 	'tableAssignment.preferences': 'تفضيلاتي',
 	'tableAssignment.position': 'موقفي',
 	'tableAssignment.position.unknown': 'غير محدد',
@@ -20,14 +20,206 @@ const ar: Record<string, string> = {
 	'tableAssignment.screen.topics': 'المواضيع',
 	'tableAssignment.screen.topic': 'موضوع',
 	'tableAssignment.screen.settings': 'الإعدادات',
-	'tableAssignment.screen.participants': 'المسجلون',
+	'tableAssignment.screen.participants': 'المسجّلون',
 	'tableAssignment.screen.preview': 'معاينة التوزيع',
 	'tableAssignment.screen.assignment': 'التوزيع المنشور',
 	'tableAssignment.screen.participantHome': 'صفحة المشارك',
 	'tableAssignment.screen.preferences': 'تفضيلاتي',
 	'tableAssignment.screen.myTable': 'طاولتي',
 	'tableAssignment.placeholder.soon': 'هذه الشاشة قيد الإنشاء',
-	'tableAssignment.signIn.google': 'تسجيل الدخول عبر Google',
+	'tableAssignment.signIn.google': 'الدخول بحساب Google',
+
+	'tableAssignment.back': 'رجوع',
+	'tableAssignment.back.toHome': 'العودة إلى صفحة التوزيع',
+	'tableAssignment.back.toList': 'العودة إلى توزيعاتي',
+	'tableAssignment.language': 'اللغة',
+	'tableAssignment.retry': 'إعادة المحاولة',
+	'tableAssignment.cancel': 'إلغاء',
+	'tableAssignment.saving': 'جارٍ الحفظ…',
+	'tableAssignment.saved': 'تم الحفظ',
+	'tableAssignment.create': 'إنشاء',
+	'tableAssignment.composition': 'تركيبة الطاولات',
+
+	'tableAssignment.status.draft': 'مسودة',
+	'tableAssignment.status.registrationOpen': 'التسجيل مفتوح',
+	'tableAssignment.status.registrationClosed': 'التسجيل مغلق',
+	'tableAssignment.status.published': 'تم نشر التوزيع',
+	'tableAssignment.status.ended': 'انتهى',
+
+	'tableAssignment.state.loading': 'جارٍ التحميل…',
+	'tableAssignment.state.error': 'حدث خطأ أثناء التحميل.',
+	'tableAssignment.state.denied': 'ليست لديك صلاحية لرؤية هذه الشاشة.',
+	'tableAssignment.state.empty': 'لا يوجد شيء هنا بعد.',
+	'tableAssignment.state.notFound': 'لم يتم العثور على هذا التوزيع.',
+	'tableAssignment.state.notHost': 'مضيف/ة هذا التوزيع فقط يمكنه إدارته.',
+
+	'tableAssignment.host.signInIntro':
+		'للدخول وإدارة التوزيعات على الطاولات سجّل الدخول بحساب Google.',
+	'tableAssignment.host.signInFailed': 'لم ينجح تسجيل الدخول. يمكنك المحاولة مرة أخرى.',
+
+	'tableAssignment.list.empty': 'ليست لديك توزيعات على طاولات بعد.',
+	'tableAssignment.list.createFirst': 'أنشئ أول توزيع',
+	'tableAssignment.list.create': 'توزيع جديد',
+
+	'tableAssignment.field.title': 'اسم التوزيع',
+	'tableAssignment.field.mode': 'طريقة الاختيار',
+	'tableAssignment.field.topicTitle': 'عنوان الموضوع',
+	'tableAssignment.field.description': 'شرح',
+	'tableAssignment.field.maxTables': 'أقصى عدد من الطاولات للموضوع (اختياري)',
+	'tableAssignment.field.maxTables.hint':
+		'يمكن تركه فارغاً. عند اختيار طاولة، الفارغ يعني طاولة واحدة للموضوع.',
+	'tableAssignment.field.tableSize': 'عدد المقاعد في الطاولة',
+	'tableAssignment.field.balanceTolerance': 'إلى أي حد يجب أن تعكس كل طاولة الجمهور كله',
+	'tableAssignment.field.positionLabel': 'سؤال الموقف',
+	'tableAssignment.field.poleA': 'القطب الأول',
+	'tableAssignment.field.poleB': 'القطب الثاني',
+
+	'tableAssignment.mode.direct.hint':
+		'يختار كل مشارك طاولته ويُحفظ المقعد فوراً. لا يمكن ضمان تنوّع الطاولات.',
+	'tableAssignment.mode.ranked.hint':
+		'يرتّب كل مشارك حتى ثلاثة مواضيع ويوزّع النظام الجميع بحيث تعكس كل طاولة الجمهور.',
+
+	'tableAssignment.home.next': 'الخطوة التالية',
+	'tableAssignment.home.participantLink': 'رابط المشاركين',
+	'tableAssignment.home.participantLinkHint':
+		'أرسل الرابط أو اعرض رمز QR. يحتوي الرابط على معرّف التوزيع فقط.',
+	'tableAssignment.home.sections': 'شاشات التوزيع',
+
+	'tableAssignment.count.topics': 'المواضيع',
+	'tableAssignment.count.registered': 'المسجّلون',
+	'tableAssignment.count.withPreferences': 'لديهم تفضيلات',
+	'tableAssignment.count.withPosition': 'لديهم موقف',
+	'tableAssignment.count.notSpecified': 'غير محدد',
+
+	'tableAssignment.next.addTopics': 'أضف المواضيع التي سيناقشها المشاركون.',
+	'tableAssignment.next.addTopics.button': 'إضافة مواضيع',
+	'tableAssignment.next.openRegistration': 'المواضيع جاهزة. يمكنك فتح التسجيل.',
+	'tableAssignment.next.openRegistration.button': 'فتح التسجيل',
+	'tableAssignment.next.closeRegistration': 'التسجيل مفتوح. أغلقه عندما يسجّل الجميع.',
+	'tableAssignment.next.closeRegistration.button': 'إغلاق التسجيل',
+	'tableAssignment.next.preview': 'التسجيل مغلق. احسب توزيعاً وراجعه.',
+	'tableAssignment.next.preview.button': 'إلى المعاينة',
+	'tableAssignment.next.endSession':
+		'تمتلئ الطاولات حسب اختيار المشاركين. أنهِ التوزيع عند الانتهاء.',
+	'tableAssignment.next.endSession.button': 'إنهاء التوزيع',
+	'tableAssignment.next.viewAssignment': 'تم نشر التوزيع.',
+	'tableAssignment.next.viewAssignment.button': 'إلى التوزيع المنشور',
+	'tableAssignment.next.done': 'انتهى هذا التوزيع.',
+	'tableAssignment.next.done.button': 'انتهى',
+
+	'tableAssignment.control.registrationOpen': 'فتح التسجيل',
+	'tableAssignment.control.registrationClosed': 'إغلاق التسجيل',
+	'tableAssignment.control.ended': 'إنهاء التوزيع',
+
+	'tableAssignment.participants.controls': 'حالة التسجيل',
+	'tableAssignment.participants.privacy':
+		'يرى المضيف الأعداد والأسماء فقط. لا تُعرض مواقف المسجّلين ولا تفضيلاتهم فرداً فرداً.',
+	'tableAssignment.participants.empty': 'لم يسجّل أحد بعد. أرسل الرابط.',
+	'tableAssignment.participants.search': 'بحث بالاسم',
+
+	'tableAssignment.topics.empty': 'لا توجد مواضيع بعد. أضفها يدوياً أو استورد اقتراحات مختارة.',
+	'tableAssignment.topics.locked': 'فُتح التسجيل، لذلك قائمة المواضيع مقفلة.',
+	'tableAssignment.topics.save': 'حفظ المواضيع',
+	'tableAssignment.topics.unsaved': 'لديك تغييرات غير محفوظة.',
+
+	'tableAssignment.topic.add': 'إضافة موضوع',
+	'tableAssignment.topic.edit': 'تعديل',
+	'tableAssignment.topic.delete': 'حذف',
+	'tableAssignment.topic.keep': 'تم',
+	'tableAssignment.topic.moveUp': 'نقل لأعلى',
+	'tableAssignment.topic.moveDown': 'نقل لأسفل',
+	'tableAssignment.topic.consensus': 'التوافق {{value}}',
+	'tableAssignment.topic.maxTablesBadge': 'حتى {{count}} طاولات',
+	'tableAssignment.topic.unknown': 'موضوع غير معروف',
+	'tableAssignment.topic.error.titleRequired': 'العنوان مفقود.',
+	'tableAssignment.topic.error.titleTooLong': 'العنوان طويل جداً.',
+	'tableAssignment.topic.error.descriptionTooLong': 'الشرح طويل جداً.',
+	'tableAssignment.topic.error.maxTablesInvalid': 'عدد الطاولات يجب أن يكون عدداً صحيحاً موجباً.',
+
+	'tableAssignment.import.title': 'استيراد اقتراحات مختارة',
+	'tableAssignment.import.hint':
+		'الصق معرّف السؤال. تُستورد الخيارات المختارة فيه مع العنوان والشرح والتوافق.',
+	'tableAssignment.import.statementId': 'معرّف السؤال',
+	'tableAssignment.import.button': 'استيراد',
+	'tableAssignment.import.reading': 'جارٍ القراءة…',
+	'tableAssignment.import.done': 'أُضيف {{count}} مواضيع إلى القائمة. لا تنسَ الحفظ.',
+	'tableAssignment.import.empty': 'لا توجد خيارات مختارة في هذا السؤال.',
+	'tableAssignment.import.denied': 'ليست لديك صلاحية لقراءة هذا السؤال.',
+	'tableAssignment.import.failed': 'لم ينجح الاستيراد. يمكنك المحاولة مرة أخرى.',
+
+	'tableAssignment.settings.mode': 'طريقة الاختيار',
+	'tableAssignment.settings.modeFixed': 'تُحدَّد عند إنشاء التوزيع ولا يمكن تغييرها لاحقاً.',
+	'tableAssignment.settings.tables': 'الطاولات',
+	'tableAssignment.settings.toleranceHelp':
+		'يجب أن تشبه كل طاولة الجمهور كله. الرقم الصغير يعني صرامة: تكون الطاولة قريبة جداً من الجمهور. الرقم الأكبر أكثر مرونة. 0.3 يناسب معظم الحالات.',
+	'tableAssignment.settings.directNoBalance':
+		'عند اختيار طاولة لا توجد موازنة: كل شخص يختار لنفسه.',
+	'tableAssignment.settings.positionTitle': 'سؤال الموقف (اختياري)',
+	'tableAssignment.settings.positionOn': 'اسأل المسجّلين عن موقفهم',
+	'tableAssignment.settings.positionHelp':
+		'الموقف محور واحد من 0 إلى 100 بين قطبين. من لا يجيب يبقى "غير محدد" ولا يُعدّ في المنتصف.',
+	'tableAssignment.settings.preview': 'هكذا سيراه المشاركون',
+	'tableAssignment.settings.save': 'حفظ الإعدادات',
+	'tableAssignment.settings.invalid': 'القيمة غير صالحة.',
+	'tableAssignment.settings.tableSizeInvalid': 'عدد صحيح بين {{min}} و{{max}}.',
+
+	'tableAssignment.position.nearA': 'قريب من {{a}}',
+	'tableAssignment.position.nearB': 'قريب من {{b}}',
+	'tableAssignment.position.between': 'بين {{a}} و{{b}}',
+	'tableAssignment.position.clear': 'عدم التحديد',
+	'tableAssignment.position.aria': 'الموقف بين {{a}} و{{b}}',
+
+	'tableAssignment.preview.compute': 'احسب',
+	'tableAssignment.preview.recompute': 'احسب من جديد',
+	'tableAssignment.preview.computing': 'جارٍ الحساب…',
+	'tableAssignment.preview.empty': 'لم يُحسب أي توزيع بعد.',
+	'tableAssignment.preview.closeFirst': 'أغلق التسجيل أولاً ثم احسب.',
+	'tableAssignment.preview.stale': 'تغيّرت المعطيات منذ حساب هذه المسودة. احسب من جديد قبل النشر.',
+	'tableAssignment.preview.publish': 'نشر التوزيع',
+	'tableAssignment.preview.alreadyPublished': 'هذا التوزيع منشور بالفعل.',
+	'tableAssignment.preview.directLive':
+		'عند اختيار طاولة لا توجد معاينة. هذه الطاولات كما تمتلئ الآن.',
+
+	'tableAssignment.assignment.empty': 'لم يُنشر التوزيع بعد.',
+	'tableAssignment.assignment.version': 'نسخة بتاريخ {{date}}',
+	'tableAssignment.assignment.print': 'طباعة',
+	'tableAssignment.assignment.directLive': 'الطاولات حسب اختيارات المشاركين حتى الآن.',
+
+	'tableAssignment.metrics.choices': 'تحقيق التفضيلات',
+	'tableAssignment.metrics.rank': 'الاختيار رقم {{rank}}',
+	'tableAssignment.metrics.outside': 'خارج اختياراتهم',
+	'tableAssignment.metrics.noPreference': 'بلا تفضيلات',
+	'tableAssignment.metrics.balanceMax': 'أكبر انحراف لطاولة عن الجمهور',
+	'tableAssignment.metrics.balanceMean': 'متوسط الانحراف',
+	'tableAssignment.metrics.tolerance': 'الحد الذي حدّدته',
+	'tableAssignment.metrics.within': 'التركيبة ضمن الحد المسموح.',
+	'tableAssignment.metrics.outsideTolerance':
+		'التركيبة تتجاوز الحد المسموح. هذا أفضل توزيع تم العثور عليه.',
+	'tableAssignment.balance.explain':
+		'يجب أن تشبه كل طاولة الجمهور كله. الانحراف يقيس بعد الطاولة عن ذلك، والحد هو ما حدّدته أنت.',
+
+	'tableAssignment.table.number': 'الطاولة {{number}}',
+	'tableAssignment.table.size': 'المشاركون: {{count}}',
+	'tableAssignment.table.sizeOf': '{{count}} من {{capacity}}',
+	'tableAssignment.table.empty': 'الطاولة فارغة.',
+	'tableAssignment.member.unknown': 'مشارك/ة',
+
+	'tableAssignment.link.label': 'الرابط',
+	'tableAssignment.link.copy': 'نسخ الرابط',
+	'tableAssignment.link.copied': 'تم النسخ',
+	'tableAssignment.link.copyFailed': 'لم ينجح النسخ. حدّد الرابط وانسخه يدوياً.',
+	'tableAssignment.link.qrAlt': 'رمز QR لرابط المشاركين',
+
+	'tableAssignment.error.generic': 'حدث خطأ. يمكنك المحاولة مرة أخرى.',
+	'tableAssignment.error.network': 'مشكلة في الشبكة. يمكنك المحاولة مرة أخرى.',
+	'tableAssignment.error.noPermission': 'ليست لديك صلاحية لتنفيذ هذا الإجراء.',
+	'tableAssignment.error.notFound': 'غير موجود.',
+	'tableAssignment.error.invalid': 'البيانات غير صالحة.',
+	'tableAssignment.error.statusRefused': 'لا يمكن تغيير حالة التسجيل الآن.',
+	'tableAssignment.error.topicsLocked': 'فُتح التسجيل بالفعل، لذلك لا يمكن تغيير المواضيع.',
+	'tableAssignment.error.computeRefused':
+		'لا يمكن الحساب الآن. تأكد من أن التسجيل مغلق وأن هناك مواضيع ومسجّلين.',
+	'tableAssignment.error.publishStale': 'تغيّرت المعطيات منذ الحساب. احسب من جديد.',
 };
 
 export default ar;

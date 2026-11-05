@@ -1,0 +1,120 @@
+// Buttons and form fields (Join-family look, 48px tap targets).
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-block-size: var(--tap-target);
+  padding: var(--space-sm) var(--space-md);
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--primary {
+    background: var(--brand);
+    color: var(--brand-ink);
+  }
+
+  &--secondary {
+    border-color: var(--brand);
+    background: var(--card);
+    color: var(--brand);
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--brand);
+  }
+
+  &--danger {
+    border-color: var(--danger);
+    background: var(--card);
+    color: var(--danger);
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+
+  &__label {
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &__input {
+    inline-size: 100%;
+    min-block-size: var(--tap-target);
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-sm);
+    background: var(--card);
+    color: var(--ink);
+    font: inherit;
+
+    &[aria-invalid='true'] {
+      border-color: var(--danger);
+    }
+  }
+
+  &__hint {
+    color: var(--ink-muted);
+  }
+
+  &__error {
+    color: var(--danger);
+  }
+}
+
+.form {
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  &__option {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    min-block-size: var(--tap-target);
+    padding: var(--space-sm);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius-sm);
+
+    input {
+      margin-block-start: var(--space-xs);
+    }
+  }
+
+  &__hint {
+    display: block;
+    color: var(--ink-muted);
+  }
+}
+
+.switch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-block-size: var(--tap-target);
+}

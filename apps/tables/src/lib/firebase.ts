@@ -2,6 +2,8 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import type { FirebaseApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
 import type { Auth } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import type { Firestore } from 'firebase/firestore';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import type { Functions } from 'firebase/functions';
 import { logError } from '@freedi/shared-utils';
@@ -11,6 +13,7 @@ const FUNCTIONS_REGION = 'me-west1';
 
 const DEFAULT_AUTH_EMULATOR_PORT = 9099;
 const DEFAULT_FUNCTIONS_EMULATOR_PORT = 5001;
+const DEFAULT_FIRESTORE_EMULATOR_PORT = 8081;
 
 const firebaseConfig = {
 	apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -39,6 +42,7 @@ export function emulatorPort(raw: string | undefined, fallback: number): number 
 
 const app: FirebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 const auth: Auth = getAuth(app);
+const db: Firestore = getFirestore(app);
 const functions: Functions = getFunctions(app, FUNCTIONS_REGION);
 
 if (isLocalhost()) {
@@ -47,6 +51,11 @@ if (isLocalhost()) {
 			auth,
 			`http://localhost:${emulatorPort(import.meta.env.VITE_EMULATOR_AUTH_PORT, DEFAULT_AUTH_EMULATOR_PORT)}`,
 			{ disableWarnings: true },
+		);
+		connectFirestoreEmulator(
+			db,
+			'localhost',
+			emulatorPort(import.meta.env.VITE_EMULATOR_FIRESTORE_PORT, DEFAULT_FIRESTORE_EMULATOR_PORT),
 		);
 		connectFunctionsEmulator(
 			functions,
@@ -58,4 +67,4 @@ if (isLocalhost()) {
 	}
 }
 
-export { app, auth, functions };
+export { app, auth, db, functions };
