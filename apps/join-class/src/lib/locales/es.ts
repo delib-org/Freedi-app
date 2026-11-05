@@ -311,6 +311,7 @@ const es: Record<string, string> = {
 	'console.plenum_on': 'Todos juntos · activo',
 	'console.move': 'Pasar a otra mesa',
 	'console.moved': 'Movido a {{table}}',
+	'console.drag_hint': '¿Algunos alumnos no pueden sentarse juntos? Arrastra un nombre a otra mesa en cualquier momento de la clase. Sus propuestas y votos siguen siendo suyos.',
 	'console.unplaced_name': 'Sin mesa',
 	'console.add_no_device': 'Añadir a alguien sin dispositivo',
 	'console.table_action': 'Acción de la mesa',

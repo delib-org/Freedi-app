@@ -160,6 +160,9 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 					? ` ${t('console.unplaced_live', { count: unplaced.length })}`
 					: '',
 			]),
+			attrs.tables.length > 0 && !consoleState.held
+				? m('p.tables-board__hint', { 'data-testid': 'console-drag-hint' }, t('console.drag_hint'))
+				: null,
 			attrs.showSides && attrs.students.length > 0 ? sidesCountLine(attrs.students) : null,
 			attrs.showSides && attrs.students.length > 0 ? sidesToggle() : null,
 			attrs.tables.length === 0

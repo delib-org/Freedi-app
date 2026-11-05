@@ -302,6 +302,7 @@ const fa: Record<string, string> = {
 	'console.plenum_on': 'همه با هم · فعال',
 	'console.move': 'انتقال به میز دیگر',
 	'console.moved': 'به {{table}} منتقل شد',
+	'console.drag_hint': 'بعضی دانش‌آموزان نمی‌توانند کنار هم بنشینند؟ در هر مرحله از درس یک نام را به میز دیگری بکشید. پیشنهادها و رأی‌هایشان مال خودشان می‌ماند.',
 	'console.unplaced_name': 'بدون میز',
 	'console.add_no_device': 'افزودن دانش‌آموز بدون دستگاه',
 	'console.table_action': 'اقدام روی میز',

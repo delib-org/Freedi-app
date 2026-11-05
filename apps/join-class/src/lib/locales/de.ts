@@ -312,6 +312,7 @@ const de: Record<string, string> = {
 	'console.plenum_on': 'Alle zusammen · aktiv',
 	'console.move': 'An einen anderen Tisch',
 	'console.moved': 'Verschoben zu {{table}}',
+	'console.drag_hint': 'Manche Schüler können nicht zusammensitzen? Ziehe einen Namen jederzeit im Unterricht an einen anderen Tisch. Ihre Vorschläge und Stimmen bleiben ihre.',
 	'console.unplaced_name': 'Ohne Tisch',
 	'console.add_no_device': 'Person ohne Gerät hinzufügen',
 	'console.table_action': 'Tischaktion',

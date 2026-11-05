@@ -310,6 +310,7 @@ const nl: Record<string, string> = {
 	'console.plenum_on': 'Allemaal samen · aan',
 	'console.move': 'Naar een andere tafel',
 	'console.moved': 'Verplaatst naar {{table}}',
+	'console.drag_hint': 'Kunnen sommige leerlingen niet samen zitten? Sleep op elk moment in de les een naam naar een andere tafel. Hun voorstellen en stemmen blijven van hen.',
 	'console.unplaced_name': 'Zonder tafel',
 	'console.add_no_device': 'Leerling zonder apparaat toevoegen',
 	'console.table_action': 'Actie voor de tafel',

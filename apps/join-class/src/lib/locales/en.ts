@@ -313,6 +313,7 @@ const en: Record<string, string> = {
 	'console.plenum_on': 'Everyone together · on',
 	'console.move': 'Move to another table',
 	'console.moved': 'Moved to {{table}}',
+	'console.drag_hint': 'Some students cannot sit together? Drag a name to another table, any time in the lesson. Their proposals and votes stay theirs.',
 	'console.unplaced_name': 'No table',
 	'console.add_no_device': 'Add a student without a device',
 	'console.table_action': 'Table action',

@@ -310,6 +310,7 @@ const ar: Record<string, string> = {
 	'console.plenum_on': 'الجميع معًا · مفعّل',
 	'console.move': 'النقل إلى طاولة أخرى',
 	'console.moved': 'تم النقل إلى {{table}}',
+	'console.drag_hint': 'هل هناك طلاب لا يمكنهم الجلوس معًا؟ اسحبوا اسمًا إلى طاولة أخرى في أي وقت من الدرس. تبقى اقتراحاتهم وأصواتهم لهم.',
 	'console.unplaced_name': 'بلا طاولة',
 	'console.add_no_device': 'إضافة طالب بلا جهاز',
 	'console.table_action': 'إجراء على الطاولة',
