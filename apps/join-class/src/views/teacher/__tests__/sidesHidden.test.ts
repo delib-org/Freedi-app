@@ -27,15 +27,30 @@ function flatten(node: m.Children, out: m.Vnode[] = []): m.Vnode[] {
 	return out;
 }
 
-function chipLabel(): string {
+function chipLabel(extra: { camp?: 'a' | null; chosen?: boolean } = {}): string {
 	const tree = (MemberChip.view as unknown as (v: m.Vnode) => m.Vnode)({
-		attrs: { uid: 'u1', name: 'Dana', camp: 'a', from: null, tableNumbers: [] },
+		attrs: { uid: 'u1', name: 'Dana', camp: 'a', from: null, tableNumbers: [], ...extra },
 	} as unknown as m.Vnode);
 	const button = flatten(tree).find(
 		(v) => (v.attrs as { 'data-uid'?: string } | null)?.['data-uid'] === 'u1',
 	);
 
 	return String((button?.attrs as { 'aria-label': string })['aria-label']);
+}
+
+function boardTree(
+	students: { uid: string; name: string; camp: 'a' | null; tableId: null }[],
+): m.Vnode {
+	return (TablesBoard.view as unknown as (v: m.Vnode) => m.Vnode)({
+		attrs: {
+			mainId: 'x',
+			tables: [],
+			students,
+			plenum: false,
+			tableTalk: false,
+			showSides: true,
+		},
+	} as unknown as m.Vnode);
 }
 
 function toggle(): m.Vnode | undefined {
@@ -92,6 +107,25 @@ describe('teacher board hides sides by default', () => {
 		consoleState.sidesVisible = true;
 		(toggle()?.attrs as { onclick: () => void }).onclick();
 		expect(askConfirm).not.toHaveBeenCalled();
+		expect(consoleState.sidesVisible).toBe(false);
+	});
+
+	it('a student with no side says so even while sides are hidden; one who chose stays just a name', () => {
+		expect(chipLabel({ camp: null, chosen: false })).toBe('Dana, console.side_none');
+		expect(chipLabel({ chosen: true })).toBe('Dana');
+	});
+
+	it('the board counts who chose: "1 of 2 chose a side", with sides still hidden', () => {
+		const tree = boardTree([
+			{ uid: 'u1', name: 'Dana', camp: 'a', tableId: null },
+			{ uid: 'u2', name: 'Eli', camp: null, tableId: null },
+		]);
+		const line = flatten(tree).find(
+			(v) =>
+				(v.attrs as { 'data-testid'?: string } | null)?.['data-testid'] === 'console-sides-count',
+		);
+		expect(line).toBeDefined();
+		expect(JSON.stringify(line?.children)).toContain('console.sides_count');
 		expect(consoleState.sidesVisible).toBe(false);
 	});
 });

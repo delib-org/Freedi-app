@@ -1175,6 +1175,8 @@ export type {
   ClassMoveStudentResponse,
   ClassAddNoDeviceRequest,
   ClassAddNoDeviceResponse,
+  ClassRequestRenameRequest,
+  ClassRequestRenameResponse,
   ClassTableAction,
   ClassTableStepRequest,
   ClassTableStepResponse,

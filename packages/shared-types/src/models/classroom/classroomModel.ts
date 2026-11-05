@@ -158,6 +158,11 @@ export const ClassSubscriptionFieldsSchema = {
 	tableId: optional(string()),
 	/** IA 22: when the student last opened the replies on their own proposal (ms). Student-written. */
 	proposalRepliesReadAt: optional(number()),
+	/**
+	 * The teacher asked this student for a new name (`classRequestRename` sets it true).
+	 * The student's name form stays up until they save a name, which sets it back to false.
+	 */
+	renameRequested: optional(boolean()),
 };
 
 /** IA 22: the longest reply on a proposal, in characters (callable + phone). */

@@ -4,20 +4,25 @@ import { t } from '@/lib/i18n';
 import { CAMP_MARK } from '@/lib/classroom/consoleHelpers';
 import type { DropTarget } from '@/lib/classroom/dragReducer';
 import type { AnswerMark, AskMark } from '@/lib/classroom/tableTurnConsole';
-import { moveStudent } from './consoleActions';
+import { moveStudent, requestNewName } from './consoleActions';
 import { blurChip, keyChip, pressChip, targetName } from './dragController';
 import { consoleState } from './consoleState';
 
 /**
  * One student (or a "no device" member) as a chip: side mark (shape, colour and
- * words never alone), name, and a menu "move to another table" that is the
- * pointer-free equivalent of dragging. Draggable by pointer and by keyboard.
+ * words never alone), name, and a menu: "move to another table" (the pointer-free
+ * equivalent of dragging) and "ask for a new name". Draggable by pointer and by keyboard.
  */
 
 export interface MemberChipAttrs {
 	uid?: string;
 	name: string;
 	camp: Camp | null;
+	/**
+	 * Has this student chosen a side? Shown even while the sides are hidden: it says
+	 * "chose" or "no side yet", never which side. `undefined` = not asked (before the Side step, no device).
+	 */
+	chosen?: boolean;
 	noDevice?: boolean;
 	/** Where the chip sits now: table number, or null = unplaced. */
 	from: DropTarget;
@@ -32,16 +37,27 @@ function sideLabel(camp: Camp | null): string {
 	return t(camp ? `console.side_${camp}` : 'console.side_none');
 }
 
-function moveMenu(attrs: MemberChipAttrs, uid: string): m.Vnode {
+const RENAME_VALUE = 'rename';
+
+/** The student's menu. A held lesson (paused / ended) allows no move, but still the rename. */
+function studentMenu(attrs: MemberChipAttrs, uid: string): m.Vnode {
+	const label = t('console.student_menu', { name: attrs.name });
+	const moves = !consoleState.held;
+
 	return m(
 		'select.member-chip__select',
 		{
-			'aria-label': t('console.move'),
+			'aria-label': label,
 			'data-move-select': uid,
 			onchange: (e: Event) => {
 				const raw = (e.target as HTMLSelectElement).value;
 				consoleState.menuUid = null;
 				if (raw === '') return;
+				if (raw === RENAME_VALUE) {
+					void requestNewName(consoleState.mainId, uid, attrs.name);
+
+					return;
+				}
 				void moveStudent(consoleState.mainId, uid, raw === 'none' ? null : Number(raw));
 			},
 			onblur: () => {
@@ -50,11 +66,16 @@ function moveMenu(attrs: MemberChipAttrs, uid: string): m.Vnode {
 			oncreate: (vnode: m.VnodeDOM) => (vnode.dom as HTMLSelectElement).focus(),
 		},
 		[
-			m('option', { value: '' }, t('console.move')),
-			attrs.from !== null ? m('option', { value: 'none' }, targetName(null)) : null,
-			attrs.tableNumbers
-				.filter((n) => n !== attrs.from)
-				.map((n) => m('option', { value: String(n) }, targetName(n))),
+			m('option', { value: '' }, label),
+			moves && attrs.from !== null
+				? m('option', { value: 'none' }, `${t('console.move')}: ${targetName(null)}`)
+				: null,
+			moves
+				? attrs.tableNumbers
+						.filter((n) => n !== attrs.from)
+						.map((n) => m('option', { value: String(n) }, `${t('console.move')}: ${targetName(n)}`))
+				: null,
+			m('option', { value: RENAME_VALUE }, t('console.rename')),
 		],
 	);
 }
@@ -85,7 +106,12 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 			.filter(Boolean)
 			.map((key) => `, ${t(key, { name })}`)
 			.join('');
-		const spoken = consoleState.sidesVisible ? `${name}, ${sideLabel(camp)}` : name;
+		const noSide = attrs.chosen === false;
+		const spoken = consoleState.sidesVisible
+			? `${name}, ${sideLabel(camp)}`
+			: noSide
+				? `${name}, ${sideLabel(null)}`
+				: name;
 		const label = (noDevice ? `${name}, ${t('console.no_device')}` : spoken) + turnWord;
 		// While the lesson is held nobody moves: no drag, no move menu.
 		const ref = uid !== undefined && !consoleState.held ? { uid, name, from: attrs.from } : null;
@@ -137,14 +163,18 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 							)
 						: null,
 					noDevice ? m('span.member-chip__tag', t('console.no_device')) : null,
+					noSide
+						? m('span.member-chip__tag.member-chip__tag--no-side', t('console.side_none'))
+						: null,
+					camp ? m('span.member-chip__tag', sideLabel(camp)) : null,
 				],
 			),
-			uid !== undefined && !consoleState.held
+			uid !== undefined
 				? m(
 						'button.member-chip__menu',
 						{
 							type: 'button',
-							'aria-label': `${t('console.move')}: ${name}`,
+							'aria-label': t('console.student_menu', { name }),
 							'aria-expanded': consoleState.menuUid === uid ? 'true' : 'false',
 							onclick: () => {
 								consoleState.menuUid = consoleState.menuUid === uid ? null : uid;
@@ -153,9 +183,7 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 						'▾',
 					)
 				: null,
-			uid !== undefined && !consoleState.held && consoleState.menuUid === uid
-				? moveMenu(attrs, uid)
-				: null,
+			uid !== undefined && consoleState.menuUid === uid ? studentMenu(attrs, uid) : null,
 		]);
 	},
 };
