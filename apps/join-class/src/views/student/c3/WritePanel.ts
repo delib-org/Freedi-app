@@ -204,6 +204,8 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 			self.edits[kind] = text;
 			self.states[kind] = 'idle';
 			self.lastTyped = kind;
+			// Changed words are a new send: the server answers "sent" for a known id without writing.
+			if (kind === 'proposal') self.proposalId = null;
 			const scopeId = kind === 'answer' ? answerScope(table) : proposalScope;
 			writeDraft(scopeId, kind, text);
 			if (!wantBroadcast) return;
