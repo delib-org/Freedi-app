@@ -53,6 +53,8 @@ import {
 import { releaseConsole, retainConsole, session } from './consoleSession';
 import { consoleState, dismissFailure, isBusy, watchOptions } from './consoleState';
 import type { ConsoleView } from './consoleState';
+import { consoleViewOf } from './consoleView';
+import { LazyStudentScreen } from './studentScreen/LazyStudentScreen';
 import { abortDrag } from './dragController';
 import { EndChoice, openEndChoice } from './EndChoice';
 import { planBack } from './consoleBack';
@@ -124,7 +126,7 @@ function allVotedOn(challenge: Statement | null): boolean {
 // >>> voteSummary END
 
 function currentView(): ConsoleView {
-	return m.route.param('view') === 'texts' ? 'texts' : 'tables';
+	return consoleViewOf(m.route.param('view'));
 }
 
 /** "Pause the lesson" and "End the lesson" (UX 13.E): the status group at the bar's end. */
@@ -221,6 +223,8 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 	const stepKey = getLessonSteps()[stepIndex] ?? getLessonStep().key;
 	const main = getMainStatement();
 
+	// What the phones show now: a look-only sample, never the projector (Trello 7S3Axkzd)
+	if (view === 'student') return m(LazyStudentScreen);
 	if (view === 'texts') {
 		const inputs = [
 			...guiding.map((question) => ({ question, challenge: false })),

@@ -10,7 +10,7 @@ import type { Unsubscribe } from '@/lib/firebase';
  * state + m.redraw). Views read it; the actions in consoleActions.ts write it.
  */
 
-export type ConsoleView = 'tables' | 'texts';
+export type { ConsoleView } from './consoleView';
 
 export interface ActionFailure {
 	/** Plain-words label of what failed ("חלוקה לשולחנות"). */
