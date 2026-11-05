@@ -29,6 +29,7 @@ export interface LessonSettingsHolder {
 		| 'speakSeconds'
 		| 'proposalsTurns'
 		| 'proposalLimit'
+		| 'noDeviceCount'
 		| 'lessonLook'
 		| 'tableSize'
 	> | null;
@@ -84,6 +85,16 @@ export function proposalLimitOf(main: LessonSettingsHolder | null | undefined): 
 /** May an author who already holds `held` proposals send another one? */
 export function mayAddProposal(limit: ClassProposalLimit, held: number): boolean {
 	return limit === 'unlimited' || held === 0;
+}
+
+/**
+ * Students without a device in the whole lesson, as the server counts them. For
+ * phones, which cannot read other tables; the teacher's screens count from the tables.
+ */
+export function noDeviceCountOf(main: LessonSettingsHolder | null | undefined): number {
+	const count = main?.statementSettings?.noDeviceCount;
+
+	return typeof count === 'number' && count > 0 ? count : 0;
 }
 
 /** The table's current turn at Proposals, 1-based; absent = the first. */

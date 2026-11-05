@@ -1,5 +1,10 @@
-import { DEFAULT_TABLE_SIZE, MAX_TABLE_SIZE, MIN_TABLE_SIZE } from '@freedi/shared-types';
-import type { Camp } from '@freedi/shared-types';
+import {
+	DEFAULT_TABLE_SIZE,
+	MAX_NO_DEVICE_PER_TABLE,
+	MAX_TABLE_SIZE,
+	MIN_TABLE_SIZE,
+} from '@freedi/shared-types';
+import type { Camp, ClassTable, NoDeviceMember } from '@freedi/shared-types';
 
 /**
  * Pure seating algorithm behind `classAssignTables`.
@@ -94,4 +99,33 @@ export function assignStudents(
 
 	// Nobody asks first by seating: the first student who taps "אני אשאל" does.
 	return buckets.map((members, k) => ({ n: k + 1, memberUids: members.map((s) => s.uid) }));
+}
+
+/**
+ * Where the no-device students sit after a re-seat. Their proposals and votes hang on
+ * their ids, so nobody is ever dropped: each stays at their table number when it still
+ * exists and has room, the rest go to the table with the fewest. Fewer tables than the
+ * cap can hold is the one case a table goes over it: losing a student would be worse.
+ */
+export function carryNoDeviceMembers(
+	oldTables: readonly Pick<ClassTable, 'n' | 'noDeviceMembers'>[],
+	newTableNumbers: readonly number[],
+): Map<number, NoDeviceMember[]> {
+	const placed = new Map<number, NoDeviceMember[]>(newTableNumbers.map((n) => [n, []]));
+	const waiting: NoDeviceMember[] = [];
+	for (const table of [...oldTables].sort((x, y) => x.n - y.n)) {
+		for (const member of table.noDeviceMembers ?? []) {
+			const seat = placed.get(table.n);
+			if (seat && seat.length < MAX_NO_DEVICE_PER_TABLE) seat.push(member);
+			else waiting.push(member);
+		}
+	}
+	for (const member of waiting) {
+		const emptiest = [...placed.values()].reduce((best, seat) =>
+			seat.length < best.length ? seat : best,
+		);
+		emptiest.push(member);
+	}
+
+	return placed;
 }

@@ -472,6 +472,8 @@ export const StatementSettingsSchema = object({
 	proposalsTurns: optional(number()),
 	// join-class: proposals per author, 'one' or 'unlimited'. Absent = one. A string, not a picklist (strict-parse trap): read it through proposalLimitOf. Main statement only.
 	proposalLimit: optional(string()),
+	// join-class: students without a device in the whole lesson. Server-written (classAddNoDevice, classAssignTables): phones cannot read other tables. Main statement only.
+	noDeviceCount: optional(number()),
 	// join-class: this main statement is a LESSON (a played game): one game of a lesson plan
 	// played with one class. Written only by the server (classStartLesson / the migration).
 	// `classId` null = no class (the lesson sits under the teacher home). Strings only, no

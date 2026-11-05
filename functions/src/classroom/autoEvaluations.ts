@@ -62,7 +62,9 @@ function authorOf(option: Statement): string | undefined {
  * trusted on its own: the table must exist, belong to this workspace and have
  * the author seated, or nobody gets a +1 (a forged marker on one's own option
  * must not earn a self +1); and `coAuthors` is intersected with the seated
- * members so a student cannot stamp +1s on behalf of any classmate.
+ * members so a student cannot stamp +1s on behalf of any classmate. A student
+ * without a device is seated in `noDeviceMembers`: their own proposal counts as
+ * any author's, and they are never accepted as a co-author.
  */
 export function autoEvaluatorUids(option: Statement, table: ClassTable | undefined): string[] {
 	const marker = option.classTable;
@@ -70,8 +72,11 @@ export function autoEvaluatorUids(option: Statement, table: ClassTable | undefin
 	if (!marker || !author) return [];
 	const validTable =
 		!!table && table.tableId === marker.tableId && isInLesson(option, table.mainId);
-	if (!validTable || !table.memberUids.includes(author)) return [];
+	if (!validTable) return [];
 	const members = table.memberUids;
+	const seated =
+		members.includes(author) || (table.noDeviceMembers ?? []).some((m) => m.id === author);
+	if (!seated) return [];
 	const coAuthors = (marker.coAuthors ?? []).filter(
 		(uid) => typeof uid === 'string' && members.includes(uid),
 	);

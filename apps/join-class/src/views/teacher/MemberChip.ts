@@ -26,6 +26,8 @@ export interface MemberChipAttrs {
 	askMark?: AskMark;
 	/** Table talk, after the name: ✓ answered, ● answering now, – passed this question. */
 	answerMark?: AnswerMark;
+	/** A no-device chip: opens the act-for sheet on this student. */
+	onOpen?: () => void;
 }
 
 function sideLabel(camp: Camp | null): string {
@@ -108,6 +110,7 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 					'aria-label': label,
 					'data-uid': uid,
 					disabled: false,
+					onclick: attrs.onOpen,
 					'aria-pressed': active && drag.mode === 'keyboard' ? 'true' : undefined,
 					onpointerdown: ref ? (e: PointerEvent) => pressChip(e, ref) : undefined,
 					onkeydown: ref ? (e: KeyboardEvent) => keyChip(e, ref, attrs.tableNumbers) : undefined,

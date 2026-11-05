@@ -93,6 +93,17 @@ export const NoDeviceMemberSchema = object({
 });
 export type NoDeviceMember = InferOutput<typeof NoDeviceMemberSchema>;
 
+/** A student without a device has no account: this prefix marks the id `classAddNoDevice` made. */
+export const NO_DEVICE_ID_PREFIX = 'nd_';
+
+/** The most no-device students one table takes when the teacher adds one. */
+export const MAX_NO_DEVICE_PER_TABLE = 5;
+
+/** Is this author or voter a no-device student (no account: no credits, no pushes, no subscription)? */
+export function isNoDeviceId(id: string | null | undefined): boolean {
+	return typeof id === 'string' && id.startsWith(NO_DEVICE_ID_PREFIX);
+}
+
 export const ClassTableSchema = object({
 	/** `${mainId}--${n}` */
 	tableId: string(),
@@ -259,6 +270,12 @@ export const ClassTableMarkerSchema = object({
 	 * really sit at `tableId` are honoured.
 	 */
 	coAuthors: array(string()),
+	/**
+	 * The teacher who entered this proposal for a student without a device. Server-written
+	 * only (classPostProposal; the rules refuse it from any client). Shown on the teacher's
+	 * screens only, never to students or on the projector.
+	 */
+	enteredByUid: optional(string()),
 });
 export type ClassTableMarker = InferOutput<typeof ClassTableMarkerSchema>;
 

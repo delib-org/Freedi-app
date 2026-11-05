@@ -21,6 +21,7 @@ export { classSetItemHidden } from './fn_classSetItemHidden';
 export { classPostReply } from './fn_classPostReply';
 export { classPostProposal } from './fn_classPostProposal';
 export { classEditProposal } from './fn_classEditProposal';
+export { classCastVoteFor } from './fn_classCastVoteFor';
 export { classSetLessonStatus } from './fn_classSetLessonStatus';
 export { classCloneLesson } from './fn_classCloneLesson';
 export { classStartLesson } from './fn_classStartLesson';

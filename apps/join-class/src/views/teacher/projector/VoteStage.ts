@@ -12,6 +12,7 @@ import {
 	voteResults,
 } from '@/lib/classroom/voteResults';
 import { presentCount, summaryOf } from '@/lib/classroom/voteSummary';
+import { noDeviceTotal } from '@/lib/classroom/actFor';
 import type { SummaryRow, VoteSummary } from '@/lib/classroom/voteSummary';
 import { playFlip, recordPositions } from '@/lib/flipReorder';
 import type { Positions } from '@/lib/flipReorder';
@@ -206,7 +207,9 @@ export function summaryStage(): m.Vnode {
 		ballot: readBallot(challenge),
 		selections: challenge?.selections as Record<string, number> | undefined,
 		proposals: projectorData.proposals,
-		present: presentCount(classState.roster, projectorData.main?.creatorId),
+		present:
+			presentCount(classState.roster, projectorData.main?.creatorId) +
+			noDeviceTotal(classState.tables),
 	});
 	const decided = summary.kind === 'none' || summary.kind === 'closed';
 

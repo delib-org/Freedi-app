@@ -1,0 +1,180 @@
+// Teacher console partial: acting for a student without a device (views/teacher/actFor).
+// The shell is the table sheet's (.table-sheet-root, .table-sheet); this is what is inside it.
+
+.act-for {
+  padding-block-start: var(--space-md);
+}
+
+.act-for__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.act-for__title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+}
+
+.act-for__where {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--ink-muted);
+}
+
+.act-for__body,
+.act-for__write,
+.act-for__add {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.act-for__add {
+  padding-block-start: var(--space-sm);
+  border-block-start: 1px solid var(--paper-line);
+}
+
+.act-for__action-title {
+  margin: 0;
+}
+
+.act-for__label {
+  font-weight: var(--font-weight-semibold);
+}
+
+.act-for__area,
+.act-for__input,
+.act-for__select {
+  inline-size: 100%;
+  min-block-size: var(--touch-target);
+  padding: var(--space-sm);
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--ink);
+  font: inherit;
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+}
+
+.act-for__action,
+.act-for__next {
+  min-block-size: var(--touch-target);
+}
+
+.act-for__note,
+.act-for__status {
+  margin: 0;
+}
+
+.act-for__note {
+  color: var(--ink-muted);
+}
+
+// Empty until there is something to say: the live region stays in the page.
+.act-for__status {
+  min-block-size: 1.5em;
+
+  &--done {
+    color: var(--teal-600);
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+.act-for__error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0;
+  color: var(--terra-600);
+}
+
+.act-for__own,
+.act-for__people {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.act-for__own-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+  border-block-end: 1px solid var(--paper-line);
+}
+
+.act-for__own-text {
+  margin: 0;
+}
+
+.act-for__roster {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-block-start: var(--space-sm);
+  border-block-start: 1px solid var(--paper-line);
+}
+
+.act-for__table-title {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-size-sm);
+  color: var(--ink-muted);
+}
+
+.act-for__person-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  inline-size: 100%;
+  min-block-size: var(--touch-target);
+  padding: var(--space-xs) var(--space-sm);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &--on {
+    border-color: var(--teal-600);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+}
+
+.act-for__mark {
+  inline-size: 1.25em;
+  text-align: center;
+}
+
+// "Entered by teacher": on the teacher's screens only (ProposalBlock, WhatTheyWrote).
+.written-card__entered {
+  font-style: italic;
+}
+
+.table-sheet__act-for {
+  min-block-size: var(--touch-target);
+}

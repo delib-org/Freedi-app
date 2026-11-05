@@ -11,6 +11,7 @@ import { currentUid } from '@/lib/classroom/c3Data';
 import { setMyDecisionSupport } from '@/lib/classroom/studentWrites';
 import { gateOf, sideNamesOf } from '@/lib/classroom/classSettings';
 import { presentCount, summaryOf } from '@/lib/classroom/voteSummary';
+import { noDeviceCountOf } from '@freedi/shared-types';
 import type { Unsubscribe } from '@/lib/firebase';
 import { DecisionCard } from './DecisionCard';
 import { ErrorLine } from './ErrorLine';
@@ -67,7 +68,7 @@ export const SummaryScreen: m.ClassComponent<SummaryScreenAttrs> = {
 			ballot: challenge?.statementSettings?.ballot ?? null,
 			selections: challenge?.selections,
 			proposals: self.feed.options,
-			present: presentCount(self.roster, main.creatorId),
+			present: presentCount(self.roster, main.creatorId) + noDeviceCountOf(main),
 		});
 		const mine = self.pending ?? classState.mySubscription?.decisionSupport;
 		const result = supportBySide(self.roster, gateOf(challenge, main));

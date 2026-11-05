@@ -30,6 +30,7 @@ const LISTENER = {
 	mates: 'classMates',
 	ratings: 'classMyRatings',
 	vote: 'classMyVote',
+	studentVote: 'classStudentVote',
 } as const;
 
 /** Firestore `in` queries take at most this many values. */
@@ -154,6 +155,27 @@ export function listenMyVote(
 	return resilientOnSnapshot(
 		LISTENER.vote,
 		doc(db, Collections.votes, getVoteId(uid, challengeId)),
+		(snap) => {
+			const voted = snap.exists() ? (snap.data() as Vote).statementId : null;
+			onData(voted && voted !== NO_VOTE ? voted : null);
+		},
+		(err) => onError?.(err),
+	);
+}
+
+/**
+ * The vote of one student without a device, for the teacher acting for them: the
+ * option id, or null. One listener per student, each bound to that student's slot.
+ */
+export function listenStudentVote(
+	challengeId: string,
+	studentId: string,
+	onData: (optionId: string | null) => void,
+	onError?: (error: Error) => void,
+): Unsubscribe {
+	return resilientOnSnapshot(
+		`${LISTENER.studentVote}:${studentId}`,
+		doc(db, Collections.votes, getVoteId(studentId, challengeId)),
 		(snap) => {
 			const voted = snap.exists() ? (snap.data() as Vote).statementId : null;
 			onData(voted && voted !== NO_VOTE ? voted : null);

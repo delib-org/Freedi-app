@@ -16,14 +16,20 @@ export function newProposalId(): string {
 	return getRandomUID();
 }
 
-/** Send the student's one proposal. */
+/** Send a proposal; `forStudentId` (the teacher only) sends it for a student without a device. */
 export async function sendProposal(
 	mainId: string,
 	proposalId: string,
 	text: string,
+	forStudentId?: string,
 ): Promise<ProposalResult> {
 	try {
-		const res = await classPostProposal({ mainId, proposalId, text });
+		const res = await classPostProposal({
+			mainId,
+			proposalId,
+			text,
+			...(forStudentId ? { forStudentId } : {}),
+		});
 
 		return res.ok ? { ok: true } : { ok: false, reason: res.reason };
 	} catch (error) {

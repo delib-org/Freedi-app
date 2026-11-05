@@ -41,5 +41,8 @@ describe('proposal limit and act-for locale keys', () => {
 	it('keep the agreed Hebrew', () => {
 		expect(actForHe['console.proposal_limit']).toBe('כמה הצעות לכל אחד');
 		expect(actForHe['proposal.limit_reached']).toBe('אפשר לשלוח הצעה אחת');
+		expect(actForHe['console.propose_for']).toBe('להציע בשם {{name}}');
+		expect(actForHe['console.vote_for']).toBe('להצביע בשם {{name}}');
+		expect(actForHe['console.entered_by_teacher']).toBe('הוזן על ידי המורה');
 	});
 });
