@@ -25,13 +25,17 @@ const { ResultsAudienceSwitch, ResultsChip, VOTE_RESULTS_AUDIENCE } = await impo
 );
 const { VoteBar } = await import('../VoteBar');
 const { resultsAside } = await import('../consoleConfirms');
+const { setVoteDisplay } = await import('../consoleActions');
 
 const noop = (): void => undefined;
 
 function challenge(liveResults?: boolean): Statement {
 	return {
 		statementId: 'ch',
-		statementSettings: { voteDisplay: liveResults === undefined ? {} : { liveResults } },
+		statementSettings: {
+			ballot: { candidateIds: ['a'], frozenAt: 1 },
+			voteDisplay: liveResults === undefined ? {} : { liveResults },
+		},
 	} as unknown as Statement;
 }
 
@@ -171,5 +175,44 @@ describe('the close-and-go confirm prompt', () => {
 
 		expect(text).toContain('console.results_chip_shown');
 		expect(text).not.toContain('console.close_and_go_show');
+	});
+});
+
+function findButton(node: unknown): m.Vnode | null {
+	if (Array.isArray(node)) {
+		for (const child of node) {
+			const found = findButton(child);
+			if (found) return found;
+		}
+
+		return null;
+	}
+	if (!node || typeof node !== 'object' || !('tag' in node)) return null;
+	const vnode = node as m.Vnode;
+	if (vnode.tag === 'button') return vnode;
+
+	return findButton(vnode.children);
+}
+
+describe('the inline show action', () => {
+	beforeEach(() => {
+		store.challenge = null;
+		vi.mocked(setVoteDisplay).mockClear();
+	});
+
+	it('writes liveResults = true on the challenge question when tapped', () => {
+		store.challenge = challenge();
+		const button = findButton(resultsAside());
+		const onclick = (button?.attrs as { onclick?: () => void } | undefined)?.onclick;
+
+		onclick?.();
+
+		expect(setVoteDisplay).toHaveBeenCalledWith('ch', 'liveResults', true);
+	});
+
+	it('is not offered when no vote was held', () => {
+		store.challenge = { statementId: 'ch', statementSettings: {} } as unknown as Statement;
+
+		expect(resultsAside()).toBeNull();
 	});
 });

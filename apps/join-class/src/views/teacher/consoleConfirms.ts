@@ -53,19 +53,21 @@ export function confirmResetVote(mainId: string): void {
  */
 export function resultsAside(): m.Children {
 	const challenge = getChallengeQuestion(getSubQuestions());
+	// No vote was held: there are no results to show or hide.
+	if (!challenge?.statementSettings?.ballot) return null;
 	if (liveResultsOn(challenge)) {
-		return m('p.confirm-dialog__results', { role: 'status' }, [
+		return m('p.results-aside', { role: 'status' }, [
 			icon('eye'),
 			m('span', t('console.results_chip_shown')),
 		]);
 	}
 
-	return m('p.confirm-dialog__results', { role: 'status' }, [
+	return m('p.results-aside', { role: 'status' }, [
 		icon('lock'),
 		m('span', t('console.close_and_go_results_closed')),
 		challenge
 			? m(
-					'button.confirm-dialog__show',
+					'button.results-aside__show',
 					{
 						type: 'button',
 						'data-testid': 'confirm-show-results',

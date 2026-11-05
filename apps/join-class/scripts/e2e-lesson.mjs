@@ -466,6 +466,8 @@ async function phaseProjector() {
 	await admin.collection('statements').doc(challengeId).update({
 		'statementSettings.ballot': { candidateIds: optionIds.slice(0, 3), frozenAt: Date.now() },
 		selections: { [optionIds[0]]: 1, [optionIds[1]]: 3 },
+		// Results start closed; this script checks the live tally, so open them to the class.
+		'statementSettings.voteDisplay.liveResults': true,
 	});
 	await setStep(6);
 	await teacher.waitForFunction(() => document.querySelectorAll('.projector-tally__row').length === 3, null, { timeout: TIMEOUT });

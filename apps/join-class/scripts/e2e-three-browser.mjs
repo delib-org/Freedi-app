@@ -457,12 +457,12 @@ const tryCastVote = (phone, optionId) =>
 		},
 		{ mainId: mid, qid: challengeId, option: optionId },
 	);
+// Who sees the results: the audience radios on the Vote bar (liveResults true = the whole class). Results start CLOSED.
 const toggleSetting = async (field, on) => {
-	const box = teacher.page.getByTestId(`vote-display-${field}`);
-	if ((await box.count()) === 0 || !(await box.isVisible())) await teacher.page.locator('summary.console__settings-toggle').click();
-	await box.waitFor({ state: 'visible', timeout: TIMEOUT });
-	if ((await box.isChecked()) !== on) await box.click();
-	await teacher.page.locator('summary.console__settings-toggle').click();
+	if (field !== 'liveResults') throw new Error(`no console control for ${field}`);
+	const radio = teacher.page.getByTestId(on ? 'vote-results-audience-class' : 'vote-results-audience-me');
+	await radio.waitFor({ state: 'visible', timeout: TIMEOUT });
+	if (!(await radio.isChecked())) await radio.check();
 };
 
 const chooseOrder = async (value) => {
@@ -493,7 +493,9 @@ async function phaseVote() {
 	check('vote: the projector shows the open gate once the vote is open', (await projector.page.locator('.gate-stage--open').count()) === 1);
 	const ballot = (await challengeData()).statementSettings.ballot;
 	check('vote: the ballot has both proposals', ballot.candidateIds.length === 2, `${ballot.candidateIds.length}`);
-	check('vote: live results are on by default (a result line under each option)', (await A.page.locator('.vote-list__count').count()) === 2);
+	check('vote: results start closed (no result line under the options, a calm status line instead)', (await A.page.locator('.vote-list__count').count()) === 0 && (await A.page.getByTestId('vote-results-later').count()) === 1);
+	await toggleSetting('liveResults', true);
+	check('vote: opening the results to the class shows a result line under each option', !!(await eventually(async () => (await A.page.locator('.vote-list__count').count()) === 2)));
 	// A votes for the first card
 	const votedFor = await A.page.getByTestId('vote-option').first().getAttribute('data-key');
 	await A.page.getByTestId('vote-option').first().click();
