@@ -22,9 +22,24 @@ export interface DirectTable {
 	free: number | null;
 }
 
+/** Seats taken per table, counted from the registrants (host side, where all of them are readable). */
+export function seatCountsFromParticipants(
+	participants: readonly TableAssignmentParticipant[],
+): Map<number, number> {
+	const counts = new Map<number, number>();
+
+	for (const participant of participants) {
+		const index = participant.chosenTableIndex;
+
+		if (index !== undefined) counts.set(index, (counts.get(index) ?? 0) + 1);
+	}
+
+	return counts;
+}
+
 export function deriveDirectTables(
 	topics: readonly TableAssignmentTopic[],
-	participants: readonly TableAssignmentParticipant[] | null,
+	seatCounts: ReadonlyMap<number, number> | null,
 	tableSize: number,
 ): DirectTable[] {
 	const tables: DirectTable[] = [];
@@ -34,10 +49,8 @@ export function deriveDirectTables(
 		const count = topic.maxTables ?? DEFAULT_TABLES_PER_TOPIC;
 
 		for (let i = 0; i < count; i += 1) {
-			const taken =
-				participants === null
-					? null
-					: participants.filter((p) => p.chosenTableIndex === index).length;
+			// A table without a seat document has nobody at it.
+			const taken = seatCounts === null ? null : (seatCounts.get(index) ?? 0);
 
 			tables.push({
 				index,

@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { makeParticipant, makeRun, makeSession, makeTopic } from '../../__tests__/fixtures';
 import { classifyError, errorCode, errorMessageKey } from '../callableErrors';
-import { deriveDirectTables, isTableFull, tableByIndex } from '../directTables';
+import {
+	deriveDirectTables,
+	isTableFull,
+	seatCountsFromParticipants,
+	tableByIndex,
+} from '../directTables';
 import { formatConsensus, tableNumber } from '../format';
 import { combineStates, stateForErrorCode } from '../loadable';
 import { describeMetrics, formatDeviation } from '../metrics';
@@ -63,7 +68,9 @@ describe('nextHostAction', () => {
 
 	it('offers the right status controls', () => {
 		expect(statusControls('draft')).toEqual(['registrationOpen']);
-		expect(statusControls('registrationOpen')).toEqual(['registrationClosed', 'ended']);
+		expect(statusControls('registrationOpen')).toEqual(['registrationClosed']);
+		expect(statusControls('registrationClosed')).toEqual(['ended']);
+		expect(statusControls('published')).toEqual(['ended']);
 		expect(statusControls('ended')).toEqual([]);
 	});
 });
@@ -289,6 +296,18 @@ describe('callable errors', () => {
 	it('classifies and maps to message keys', () => {
 		expect(classifyError({ code: 'functions/permission-denied' })).toBe('permissionDenied');
 		expect(errorMessageKey({ code: 'functions/failed-precondition' }, 'k.full')).toBe('k.full');
+		expect(
+			errorMessageKey(
+				{ code: 'functions/failed-precondition', details: { reason: 'table-full' } },
+				'k.generic',
+			),
+		).toBe('tableAssignment.error.tableFull');
+		expect(
+			errorMessageKey(
+				{ code: 'functions/failed-precondition', details: { reason: 'stale-run' } },
+				'k.generic',
+			),
+		).toBe('tableAssignment.error.publishStale');
 		expect(errorMessageKey({ code: 'functions/unavailable' }, 'k.full')).toBe(
 			'tableAssignment.error.network',
 		);
@@ -316,7 +335,7 @@ describe('direct tables', () => {
 			makeParticipant('u1', { chosenTableIndex: 2 }),
 			makeParticipant('u2', { chosenTableIndex: 2 }),
 		];
-		const tables = deriveDirectTables(topics, joined, 2);
+		const tables = deriveDirectTables(topics, seatCountsFromParticipants(joined), 2);
 
 		expect(tables[2].taken).toBe(2);
 		expect(isTableFull(tables[2])).toBe(true);

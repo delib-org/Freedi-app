@@ -40,7 +40,18 @@ vi.mock('@/lib/tableAssignment/data', () => {
 	return {
 		subscribeSession: () => sub((s) => s.session),
 		subscribeTopics: () => sub((s) => s.topics, true),
-		subscribeParticipants: () => sub((s) => s.everyone),
+		subscribeSeats: () =>
+			sub((s) => {
+				const counts = new Map<number, number>();
+
+				for (const p of s.everyone) {
+					if (p.chosenTableIndex !== undefined) {
+						counts.set(p.chosenTableIndex, (counts.get(p.chosenTableIndex) ?? 0) + 1);
+					}
+				}
+
+				return counts;
+			}),
 		subscribeMyParticipant: () => sub((s) => s.me),
 		subscribeRun: () => sub((s) => s.run),
 	};
@@ -234,7 +245,7 @@ describe('participant preferences (ranked)', () => {
 		await settle();
 
 		expect(root.textContent).toContain(en['tableAssignment.preferences.keptLocally']);
-		expect(window.localStorage.getItem(`freedi_tables_prefs_${SESSION_ID}`)).toContain('"a"');
+		expect(window.localStorage.getItem(`freedi_tables_prefs_${SESSION_ID}_u1`)).toContain('"a"');
 	});
 
 	it('offers the position slider with "not specified" as the default', async () => {
@@ -279,7 +290,10 @@ describe('participant preferences (direct)', () => {
 	});
 
 	it('lists tables per topic and handles a full table', async () => {
-		hoisted.api.joinTable.mockRejectedValue({ code: 'functions/failed-precondition' });
+		hoisted.api.joinTable.mockRejectedValue({
+			code: 'functions/failed-precondition',
+			details: { reason: 'table-full' },
+		});
 
 		const { root, text } = await renderScreen(ParticipantPreferences, ID);
 

@@ -5,7 +5,7 @@ import { t } from '@/lib/i18n';
 import { Action } from '@/lib/action';
 import { tablesApi } from '@/lib/tableAssignment/client';
 import { canEditPreferences } from '@/logic/nextAction';
-import { loadDraft, saveDraft } from '@/logic/localDraft';
+import { clearDraft, draftIsFresh, loadDraft, saveDraft } from '@/logic/localDraft';
 import {
 	isRankingFull,
 	keepKnownTopics,
@@ -84,11 +84,14 @@ export const RankedPreferences: m.ClosureComponent<{ context: ParticipantContext
 	let ranked: string[] = [];
 	let position: number | null = POSITION_UNSET;
 	let seeded = false;
+	let uid = '';
 	let dirty = false;
 
 	function seed(context: ParticipantContext): void {
+		uid = context.uid;
 		const storage = readStorage();
-		const local = storage ? loadDraft(sessionId, storage) : null;
+		const stored = storage ? loadDraft(sessionId, context.uid, storage) : null;
+		const local = stored && draftIsFresh(stored, context.session.lastUpdate) ? stored : null;
 		const topicIds = context.topics.map((topic) => topic.topicId);
 
 		if (local) {
@@ -107,7 +110,7 @@ export const RankedPreferences: m.ClosureComponent<{ context: ParticipantContext
 
 		dirty = true;
 		save.clear();
-		if (storage) saveDraft(sessionId, { ranked, position }, storage);
+		if (storage) saveDraft(sessionId, uid, { ranked, position, savedAt: Date.now() }, storage);
 	}
 
 	async function submit(): Promise<void> {
@@ -121,7 +124,12 @@ export const RankedPreferences: m.ClosureComponent<{ context: ParticipantContext
 			{ sessionId, count: ranked.length },
 		);
 
-		if (result) dirty = false;
+		if (result) {
+			dirty = false;
+			const storage = readStorage();
+
+			if (storage) clearDraft(sessionId, uid, storage);
+		}
 	}
 
 	return {

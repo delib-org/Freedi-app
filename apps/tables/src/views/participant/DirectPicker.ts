@@ -26,7 +26,7 @@ export const DirectPicker: m.ClosureComponent<{ context: ParticipantContext }> =
 
 	return {
 		view({ attrs }) {
-			const { session, topics, me, everyone } = attrs.context;
+			const { session, topics, me, seats } = attrs.context;
 			const home = participantHomePath(sessionId);
 
 			if (!me) {
@@ -47,7 +47,7 @@ export const DirectPicker: m.ClosureComponent<{ context: ParticipantContext }> =
 				});
 			}
 
-			const tables = deriveDirectTables(topics, everyone, session.settings.tableSize ?? 0);
+			const tables = deriveDirectTables(topics, seats, session.settings.tableSize ?? 0);
 
 			if (tables.length === 0) {
 				return m(StateBox, {
@@ -65,7 +65,7 @@ export const DirectPicker: m.ClosureComponent<{ context: ParticipantContext }> =
 					? m('p.notice.notice--warn', { role: 'status' }, t('tableAssignment.preferences.closed'))
 					: null,
 				join.errorKey ? m('p.notice.notice--error', { role: 'alert' }, t(join.errorKey)) : null,
-				everyone === null ? m('p.card__hint', t('tableAssignment.direct.seatsUnknown')) : null,
+				seats === null ? m('p.card__hint', t('tableAssignment.direct.seatsUnknown')) : null,
 				m(
 					'ul.stack',
 					tables.map((table) => {

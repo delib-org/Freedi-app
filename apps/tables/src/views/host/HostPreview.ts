@@ -5,7 +5,7 @@ import { Action } from '@/lib/action';
 import { LiveValue } from '@/lib/live';
 import { tablesApi } from '@/lib/tableAssignment/client';
 import { subscribeRuns } from '@/lib/tableAssignment/data';
-import { deriveDirectTables } from '@/logic/directTables';
+import { deriveDirectTables, seatCountsFromParticipants } from '@/logic/directTables';
 import { latestRun } from '@/logic/runs';
 import { canPublish, isDraftStale } from '@/logic/stale';
 import { nameByUid } from '@/logic/participants';
@@ -41,7 +41,11 @@ const PreviewBody: m.ClosureComponent<PreviewBodyAttrs> = (initial) => {
 
 	function directLive(context: HostContext): m.Children {
 		const { session, topics, participants } = context;
-		const tables = deriveDirectTables(topics, participants, session.settings.tableSize ?? 0);
+		const tables = deriveDirectTables(
+			topics,
+			seatCountsFromParticipants(participants),
+			session.settings.tableSize ?? 0,
+		);
 
 		return [
 			m('p.notice', { role: 'status' }, t('tableAssignment.preview.directLive')),

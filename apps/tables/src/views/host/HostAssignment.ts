@@ -2,7 +2,7 @@ import m from 'mithril';
 import { getLang, t } from '@/lib/i18n';
 import { LiveValue } from '@/lib/live';
 import { subscribeRun } from '@/lib/tableAssignment/data';
-import { deriveDirectTables } from '@/logic/directTables';
+import { deriveDirectTables, seatCountsFromParticipants } from '@/logic/directTables';
 import { formatMoment } from '@/logic/format';
 import { nameByUid } from '@/logic/participants';
 import { HostFrame } from '@/components/HostFrame';
@@ -47,7 +47,11 @@ const AssignmentBody: m.ClosureComponent<AssignmentBodyAttrs> = () => {
 			const home = hostHomePath(session.tableAssignmentId);
 
 			if (session.mode === 'direct') {
-				const tables = deriveDirectTables(topics, participants, session.settings.tableSize ?? 0);
+				const tables = deriveDirectTables(
+					topics,
+					seatCountsFromParticipants(participants),
+					session.settings.tableSize ?? 0,
+				);
 
 				return tables.length === 0
 					? m(StateBox, {

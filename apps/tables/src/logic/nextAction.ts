@@ -53,7 +53,7 @@ export function canEditPreferences(status: TableAssignmentStatus): boolean {
 	return status === 'registrationOpen';
 }
 
-/** The status controls the participants screen shows for the current status. */
+/** The status controls the participants screen shows: exactly the transitions tablesSetStatus accepts. */
 export function statusControls(
 	status: TableAssignmentStatus,
 ): Array<'registrationOpen' | 'registrationClosed' | 'ended'> {
@@ -61,9 +61,8 @@ export function statusControls(
 		case 'draft':
 			return ['registrationOpen'];
 		case 'registrationOpen':
-			return ['registrationClosed', 'ended'];
+			return ['registrationClosed'];
 		case 'registrationClosed':
-			return ['registrationOpen', 'ended'];
 		case 'published':
 			return ['ended'];
 		case 'ended':

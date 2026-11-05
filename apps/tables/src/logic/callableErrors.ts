@@ -22,6 +22,27 @@ export function errorCode(error: unknown): string {
 	return '';
 }
 
+/** The server's machine-readable cause (HttpsError details.reason), if any. */
+export function errorReason(error: unknown): string {
+	if (typeof error === 'object' && error !== null && 'details' in error) {
+		const details = (error as { details: unknown }).details;
+
+		if (typeof details === 'object' && details !== null && 'reason' in details) {
+			const reason = (details as { reason: unknown }).reason;
+
+			if (typeof reason === 'string') return reason;
+		}
+	}
+
+	return '';
+}
+
+const REASON_KEYS: Readonly<Record<string, string>> = {
+	'table-full': 'tableAssignment.error.tableFull',
+	'stale-run': 'tableAssignment.error.publishStale',
+	'registration-closed': 'tableAssignment.error.registrationClosed',
+};
+
 export function classifyError(error: unknown): CallableErrorKind {
 	switch (errorCode(error)) {
 		case 'unauthenticated':
@@ -54,7 +75,7 @@ export function errorMessageKey(error: unknown, preconditionKey: string): string
 		case 'notFound':
 			return 'tableAssignment.error.notFound';
 		case 'failedPrecondition':
-			return preconditionKey;
+			return REASON_KEYS[errorReason(error)] ?? preconditionKey;
 		case 'invalidArgument':
 			return 'tableAssignment.error.invalid';
 		case 'network':

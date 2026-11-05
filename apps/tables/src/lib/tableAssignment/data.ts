@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, orderBy, query, where } from 'firebase/firestore';
+import { collection, doc, getDocs, query, where } from 'firebase/firestore';
 import type { FirestoreError, Unsubscribe } from 'firebase/firestore';
 import { Collections, tableAssignmentParticipantId } from '@freedi/shared-types';
 import type {
@@ -16,6 +16,9 @@ import { resilientDoc, resilientQuery } from '@/lib/listeners';
  * callables in client.ts. A subscription reports data or an error.
  */
 
+/** Server-written counter docs, `${sessionId}_${tableIndex}`: { sessionId, tableIndex, topicId, count }. */
+const SEATS_COLLECTION = 'tableAssignmentSeats';
+
 export type Subscription<T> = (
 	onData: (data: T) => void,
 	onError: (error: FirestoreError) => void,
@@ -25,12 +28,13 @@ export function subscribeHostSessions(hostUid: string): Subscription<TableAssign
 	return (onData, onError) =>
 		resilientQuery(
 			'tablesHostSessions',
-			query(
-				collection(db, Collections.tableAssignments),
-				where('hostUid', '==', hostUid),
-				orderBy('createdAt', 'desc'),
-			),
-			(snap) => onData(snap.docs.map((d) => d.data() as TableAssignment)),
+			query(collection(db, Collections.tableAssignments), where('hostUid', '==', hostUid)),
+			(snap) =>
+				onData(
+					snap.docs
+						.map((d) => d.data() as TableAssignment)
+						.sort((a, b) => b.createdAt - a.createdAt),
+				),
 			onError,
 		);
 }
@@ -89,6 +93,26 @@ export function subscribeMyParticipant(
 				tableAssignmentParticipantId(sessionId, uid),
 			),
 			(snap) => onData(snap.exists() ? (snap.data() as TableAssignmentParticipant) : null),
+			onError,
+		);
+}
+
+/** Direct mode: seats taken per table index, from the `tableAssignmentSeats` counter docs of one session. */
+export function subscribeSeats(sessionId: string): Subscription<Map<number, number>> {
+	return (onData, onError) =>
+		resilientQuery(
+			'tablesSeats',
+			query(collection(db, SEATS_COLLECTION), where('sessionId', '==', sessionId)),
+			(snap) => {
+				const counts = new Map<number, number>();
+
+				for (const d of snap.docs) {
+					const seat = d.data() as { tableIndex: number; count: number };
+
+					counts.set(seat.tableIndex, seat.count);
+				}
+				onData(counts);
+			},
 			onError,
 		);
 }

@@ -10,7 +10,7 @@ import { ensureParticipantUser } from '@/lib/auth';
 import { LiveValue } from '@/lib/live';
 import {
 	subscribeMyParticipant,
-	subscribeParticipants,
+	subscribeSeats,
 	subscribeSession,
 	subscribeTopics,
 } from '@/lib/tableAssignment/data';
@@ -31,10 +31,10 @@ export interface ParticipantContext {
 	/** The participant's own registration; null while not registered. */
 	me: TableAssignmentParticipant | null;
 	/**
-	 * Everyone's registration, only when `occupancy` was asked and the rules allow
-	 * reading it; null otherwise (seat counts are then unknown, the server still enforces capacity).
+	 * Direct mode: seats taken per table index, only when `occupancy` was asked and the seat
+	 * documents are readable; null otherwise (the server still enforces capacity).
 	 */
-	everyone: TableAssignmentParticipant[] | null;
+	seats: ReadonlyMap<number, number> | null;
 }
 
 export interface ParticipantFrameAttrs {
@@ -42,7 +42,7 @@ export interface ParticipantFrameAttrs {
 	titleKey: string;
 	/** Home has no "back"; every child goes back to the participant home. */
 	isHome?: boolean;
-	/** Also read all registrations to count free seats (direct mode). */
+	/** Also read the seat counters to show free seats (direct mode). */
 	occupancy?: boolean;
 	/** Override where "back" goes (a topic goes back to the topic list). */
 	backHref?: string;
@@ -61,7 +61,7 @@ export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (init
 	const sessionId = initial.attrs.sessionId;
 	const session = new LiveValue('session', subscribeSession(sessionId));
 	const topics = new LiveValue('topics', subscribeTopics(sessionId));
-	const everyone = new LiveValue('everyone', subscribeParticipants(sessionId));
+	const seats = new LiveValue('seats', subscribeSeats(sessionId));
 	let me: LiveValue<TableAssignmentParticipant | null> | null = null;
 	let identity: Identity = { state: 'loading' };
 
@@ -87,7 +87,7 @@ export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (init
 		session.retry();
 		topics.retry();
 		me?.retry();
-		if (initialAttrs.occupancy) everyone.retry();
+		if (initialAttrs.occupancy) seats.retry();
 		if (identity.state === 'error') void signIn();
 	}
 
@@ -95,13 +95,13 @@ export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (init
 		oninit({ attrs }) {
 			session.start();
 			topics.start();
-			if (attrs.occupancy) everyone.start();
+			if (attrs.occupancy) seats.start();
 			void signIn();
 		},
 		onremove() {
 			session.stop();
 			topics.stop();
-			everyone.stop();
+			seats.stop();
 			me?.stop();
 		},
 		view({ attrs }) {
@@ -154,7 +154,7 @@ export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (init
 					topicsState: topics.state,
 					retryTopics: () => topics.retry(),
 					me: me?.data ?? null,
-					everyone: attrs.occupancy && everyone.state === 'ready' ? (everyone.data ?? []) : null,
+					seats: attrs.occupancy && seats.state === 'ready' ? (seats.data ?? new Map()) : null,
 				}),
 			);
 		},

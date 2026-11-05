@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { draftStorageKey, loadDraft, parseDraft, saveDraft, serializeDraft } from '../localDraft';
+import {
+	clearDraft,
+	draftIsFresh,
+	draftStorageKey,
+	loadDraft,
+	parseDraft,
+	saveDraft,
+	serializeDraft,
+} from '../localDraft';
 import { participantStage } from '../participantStage';
 import {
 	isRankingFull,
@@ -94,15 +102,29 @@ describe('local preference draft', () => {
 	it('keeps the last choices, including "not specified"', () => {
 		const storage = memoryStorage();
 
-		saveDraft('s1', { ranked: ['a', 'b'], position: null }, storage);
+		saveDraft('s1', 'u1', { ranked: ['a', 'b'], position: null, savedAt: 10 }, storage);
 
-		expect(storage.data.has(draftStorageKey('s1'))).toBe(true);
-		expect(loadDraft('s1', storage)).toEqual({ ranked: ['a', 'b'], position: null });
-		expect(loadDraft('other', storage)).toBeNull();
+		expect(storage.data.has(draftStorageKey('s1', 'u1'))).toBe(true);
+		expect(loadDraft('s1', 'u1', storage)).toEqual({
+			ranked: ['a', 'b'],
+			position: null,
+			savedAt: 10,
+		});
+		expect(loadDraft('other', 'u1', storage)).toBeNull();
+		expect(loadDraft('s1', 'u2', storage)).toBeNull();
 	});
 
 	it('keeps a position of 0 apart from not specified', () => {
-		expect(parseDraft(serializeDraft({ ranked: [], position: 0 }))?.position).toBe(0);
+		expect(parseDraft(serializeDraft({ ranked: [], position: 0, savedAt: 1 }))?.position).toBe(0);
+	});
+
+	it('clears a draft and only trusts one newer than the server', () => {
+		const storage = { ...memoryStorage(), removeItem: (key: string) => void key };
+		const old = { ranked: [], position: null, savedAt: 5 };
+
+		expect(draftIsFresh(old, 5)).toBe(true);
+		expect(draftIsFresh(old, 6)).toBe(false);
+		clearDraft('s1', 'u1', storage);
 	});
 
 	it('ignores malformed storage', () => {
