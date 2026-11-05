@@ -529,6 +529,41 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 		expect(JSON.stringify(run.tables)).not.toContain('position');
 	});
 
+	it('suppresses position mean/sd on tables with fewer than 3 known positions', async () => {
+		const fake = new FakeFirestore();
+		seedSession(fake, { status: 'registrationClosed' }, { tableSize: 5, balanceTolerance: 5 });
+		seedTopics(fake, [
+			{ topicId: 'alpha', maxTables: 1 },
+			{ topicId: 'beta', maxTables: 1 },
+		]);
+		// alpha table: 5 seats, 3 known positions; beta table: 5 seats, 2 known positions.
+		for (let i = 0; i < 10; i++) {
+			const known = i < 5 ? i < 3 : i < 7;
+			seedParticipant(fake, `u${i}`, {
+				preferences: [i < 5 ? 'alpha' : 'beta'],
+				...(known ? { position: 10 + i * 5 } : {}),
+			});
+		}
+		const { runId } = await computePreview(
+			fake.asFirestore(),
+			HOST,
+			{ sessionId: SID, seed: 1 },
+			NOW,
+		);
+		const run = fake.read(`tableAssignmentRuns/${runId}`) as unknown as TableAssignmentRun;
+		const small = run.tables.filter((t) => t.stats.n < 3);
+		const big = run.tables.filter((t) => t.stats.n >= 3);
+		expect(small.length).toBeGreaterThan(0);
+		expect(big.length).toBeGreaterThan(0);
+		small.forEach((t) => expect(t.stats).toMatchObject({ mean: [], sd: [] }));
+		big.forEach((t) => {
+			expect(t.stats.mean).toHaveLength(1);
+			expect(t.stats.sd).toHaveLength(1);
+		});
+		expect(run.metrics.population.n).toBe(5);
+		expect(run.metrics.population.mean).toHaveLength(1);
+	});
+
 	it('is reproducible for a seed and supersedes the older ready run', async () => {
 		const fake = seedRanked();
 		const fs = fake.asFirestore();

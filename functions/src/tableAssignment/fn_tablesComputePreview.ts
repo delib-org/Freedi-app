@@ -6,10 +6,12 @@ import { functionConfig } from '@freedi/shared-types';
 import type {
 	TableAssignment,
 	TableAssignmentRun,
+	TableAssignmentTableStats,
 	TablesComputePreviewRequest,
 	TablesComputePreviewResponse,
 } from '@freedi/shared-types';
 import { db } from '../db';
+import { TABLE_STATS_MIN_KNOWN_POSITIONS } from './constants';
 import { loadRunInputs } from './runInputs';
 import {
 	actorFrom,
@@ -21,6 +23,13 @@ import {
 	sessionRef,
 } from './tablesAccess';
 import { TablesError, toHttpsError } from './tablesErrors';
+
+/** Drops position mean/sd of a table with too few known positions to stay anonymous. */
+function suppressSmallTableStats(stats: TableAssignmentTableStats): TableAssignmentTableStats {
+	if (stats.n >= TABLE_STATS_MIN_KNOWN_POSITIONS) return stats;
+
+	return { ...stats, mean: [], sd: [] };
+}
 
 function parseSeed(value: unknown): number | undefined {
 	if (value === undefined) return undefined;
@@ -103,7 +112,7 @@ export async function computePreview(
 			index: t.index,
 			topicId: t.topicId,
 			memberUids: t.memberIds,
-			stats: t.stats,
+			stats: suppressSmallTableStats(t.stats),
 		})),
 		metrics: assignment.metrics,
 		inputHash,

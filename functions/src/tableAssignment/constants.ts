@@ -22,3 +22,6 @@ export const POSITION_MAX = 100;
 
 /** Machine-readable causes the client can branch on (HttpsError details.reason). */
 export type TablesErrorReason = 'table-full' | 'stale-run' | 'registration-closed';
+
+/** A table's position mean/sd is stored only with at least this many known positions; fewer could identify a person. */
+export const TABLE_STATS_MIN_KNOWN_POSITIONS = 3;
