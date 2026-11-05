@@ -41,12 +41,36 @@ export interface PickerGame {
 
 export const IDLE_PICKER: PickerStep = { kind: 'idle' };
 
-/** Games per plan: undefined while the count is still being read. */
-export type GameCountOf = (planId: string) => number | undefined;
+/** Games per plan: undefined while the count is being read, null when the read failed. */
+export type GameCountOf = (planId: string) => number | null | undefined;
 
-/** Only plans with a game doc can start a lesson: an old lesson standing in as a plan has none. */
+/**
+ * Only plans with a game doc can start a lesson: an old lesson standing in as a plan has none.
+ * A plan whose count could not be read stays listed: picking it reads the games again.
+ */
 export function listablePlans(rows: readonly PlanRow[], countOf: GameCountOf): PlanRow[] {
-	return rows.filter((row) => row.doc !== null && (countOf(row.planId) ?? 0) > 0);
+	return rows.filter((row) => {
+		if (row.doc === null) return false;
+		const count = countOf(row.planId);
+
+		return count === null || (count ?? 0) > 0;
+	});
+}
+
+/** Tells a late answer from the current one: every open, step change or close starts a new round. */
+export interface ReadGuard {
+	/** Starts a round; earlier ones are stale. Returns the new round's token. */
+	begin: () => number;
+	isCurrent: (token: number) => boolean;
+}
+
+export function createReadGuard(): ReadGuard {
+	let round = 0;
+
+	return {
+		begin: () => ++round,
+		isCurrent: (token) => token === round,
+	};
 }
 
 /** Every plan that could have games has had its count read. */

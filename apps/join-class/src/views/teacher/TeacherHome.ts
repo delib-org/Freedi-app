@@ -44,7 +44,9 @@ let library: TeacherLibrary = { plans: [], lessons: [], ready: false };
 let unsub: Unsubscribe | null = null;
 let filterText = '';
 /** Games per plan, read once per plan change (the plan doc's `lastUpdate` moves when a game is added). */
-const gameCounts = new Map<string, { stamp: number; count: number | undefined }>();
+const gameCounts = new Map<string, { stamp: number; count: number | null | undefined }>();
+/** A stamp no plan doc has, so a failed count read is tried again on the next update. */
+const FAILED_STAMP = -1;
 /** The rows the view last drew, for the picker's open (it opens from a click, outside the view). */
 let currentRows: PlanRow[] = [];
 /** Ids of the plan and first game being made; kept until it succeeds so a retry reuses them. */
@@ -100,6 +102,10 @@ function refreshCounts(rows: readonly PlanRow[]): void {
 			})
 			.catch((err: unknown) => {
 				captureException(err, { operation: 'teacherHome.countGames', planId: row.planId });
+				// Known-but-failed: the picker still lists the plan (picking it reads again and
+				// reports its own failure); the stale stamp makes the next library update retry.
+				gameCounts.set(row.planId, { stamp: FAILED_STAMP, count: null });
+				m.redraw();
 			});
 	}
 }

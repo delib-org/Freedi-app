@@ -9,6 +9,7 @@ import { ClassForm, closeClassForm, openClassForm } from './ClassForm';
 import { renderCreate, resetCreate, startCreate } from './HomeCreate';
 import {
 	IDLE_PICKER,
+	createReadGuard,
 	chooseNewPlan,
 	countsKnown,
 	listablePlans,
@@ -42,6 +43,8 @@ let filterText = '';
 /** The plan whose games are being read. */
 let loadingPlanId: string | null = null;
 let loadFailed = false;
+/** A games read belongs to the round it started in; a step change or close makes it stale. */
+const reads = createReadGuard();
 let source: PickerSource = { rows: [], countOf: () => undefined };
 
 export function isPickerOpen(): boolean {
@@ -64,6 +67,7 @@ function focusTarget(move: PickerMove): void {
 function apply(move: PickerMove): void {
 	const leaving = step;
 	const next = move.step;
+	reads.begin();
 	step = next;
 	if (leaving.kind === 'class' && next.kind !== 'class') closeClassForm();
 	if (leaving.kind === 'name' && next.kind !== 'name') resetCreate();
@@ -93,6 +97,7 @@ export function back(): void {
 
 /** Leaves the picker without moving focus (the teacher went elsewhere on the page). */
 export function closeLessonPicker(): void {
+	reads.begin();
 	if (step.kind === 'class') closeClassForm();
 	if (step.kind === 'name') resetCreate();
 	step = IDLE_PICKER;
@@ -107,18 +112,22 @@ async function choosePlan(row: PlanRow): Promise<void> {
 	if (!uid || loadingPlanId) return;
 	loadingPlanId = row.planId;
 	loadFailed = false;
+	const token = reads.begin();
 	m.redraw();
 	try {
 		const list = await loadGames(row.planId, uid);
+		// the teacher went back or closed while the read ran: the answer is not theirs any more
+		if (!reads.isCurrent(token)) return;
 		games = list.map((g) => ({ gameId: g.gameId, title: g.title }));
+		loadingPlanId = null;
 		const move = pickPlan(step, row.planId, games);
 		if (move) apply(move);
 		else loadFailed = true;
 	} catch (err) {
 		captureException(err, { operation: 'lessonPicker.loadGames', planId: row.planId });
-		loadFailed = true;
+		if (reads.isCurrent(token)) loadFailed = true;
 	} finally {
-		loadingPlanId = null;
+		if (reads.isCurrent(token)) loadingPlanId = null;
 		m.redraw();
 	}
 }

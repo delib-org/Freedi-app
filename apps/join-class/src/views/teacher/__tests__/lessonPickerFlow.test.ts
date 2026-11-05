@@ -6,6 +6,7 @@ import {
 	PLAN_FILTER_FROM,
 	chooseNewPlan,
 	countsKnown,
+	createReadGuard,
 	listablePlans,
 	needsFilter,
 	openPicker,
@@ -40,6 +41,12 @@ describe('listablePlans', () => {
 		expect(listablePlans([row('a', true)], () => undefined)).toEqual([]);
 	});
 
+	it('keeps a plan whose count read failed, so the list is never empty because of a read', () => {
+		expect(
+			listablePlans([row('a', true), row('old', false)], () => null).map((r) => r.planId),
+		).toEqual(['a']);
+	});
+
 	it('keeps the order it was given (by last activity)', () => {
 		const rows = [row('z', true), row('a', true)];
 		expect(listablePlans(rows, () => 1).map((r) => r.planId)).toEqual(['z', 'a']);
@@ -51,6 +58,36 @@ describe('countsKnown', () => {
 		expect(countsKnown([row('old', false)], () => undefined)).toBe(true);
 		expect(countsKnown([row('a', true)], () => undefined)).toBe(false);
 		expect(countsKnown([row('a', true)], () => 0)).toBe(true);
+	});
+
+	it('counts a failed read as known, so "loading" cannot stay forever', () => {
+		expect(countsKnown([row('a', true)], () => null)).toBe(true);
+		expect(
+			openPicker(
+				IDLE_PICKER,
+				1,
+				countsKnown([row('a', true)], () => null),
+			).step,
+		).toEqual(planStep);
+	});
+});
+
+describe('createReadGuard', () => {
+	it('only the latest round is current', () => {
+		const guard = createReadGuard();
+		const first = guard.begin();
+		expect(guard.isCurrent(first)).toBe(true);
+		const second = guard.begin();
+		expect(guard.isCurrent(first)).toBe(false);
+		expect(guard.isCurrent(second)).toBe(true);
+	});
+
+	it('a read started before a close/reopen is stale', () => {
+		const guard = createReadGuard();
+		const inFlight = guard.begin();
+		guard.begin(); // close
+		guard.begin(); // reopen
+		expect(guard.isCurrent(inFlight)).toBe(false);
 	});
 });
 
