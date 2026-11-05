@@ -33,6 +33,18 @@ export interface ClassMoveStudentResponse {
 	ok: true;
 }
 
+/**
+ * `classRequestRename` (admin). Asks one student for a new name: their phone opens a
+ * name form that blocks the screen until they answer (`renameRequested` on their subscription).
+ */
+export interface ClassRequestRenameRequest {
+	mainId: string;
+	uid: string;
+}
+export interface ClassRequestRenameResponse {
+	ok: true;
+}
+
 /** `classAddNoDevice` (admin). Adds a named student without a phone to table `n`. */
 export interface ClassAddNoDeviceRequest {
 	mainId: string;

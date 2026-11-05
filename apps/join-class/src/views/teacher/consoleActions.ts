@@ -14,6 +14,7 @@ import {
 	classFreezeBallot,
 	classMoveStudent,
 	classPauseBallot,
+	classRequestRename,
 	classResetTurns,
 	classResetVote,
 	classSetItemHidden,
@@ -265,6 +266,18 @@ export function moveStudent(mainId: string, uid: string, toTable: DropTarget): P
 	return guardedAct(`move:${uid}`, t('console.move'), async () => {
 		await classMoveStudent({ mainId, uid, toTable });
 		consoleState.announce = t('console.moved', { table: toTable ?? t('console.unplaced_name') });
+	});
+}
+
+/**
+ * Ask one student for a new name. Works at every step and while the lesson is
+ * paused (not `guardedAct`): it is also the teacher's way to get a name that was
+ * never given. The server refuses once the lesson has ended.
+ */
+export function requestNewName(mainId: string, uid: string, name: string): Promise<boolean> {
+	return act(`rename:${uid}`, t('console.rename'), async () => {
+		await classRequestRename({ mainId, uid });
+		consoleState.announce = t('console.rename_asked', { name });
 	});
 }
 

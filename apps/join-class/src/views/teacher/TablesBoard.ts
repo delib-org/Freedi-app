@@ -96,6 +96,7 @@ function rosterCard(attrs: TablesBoardAttrs): m.Vnode {
 					attrs.students.map((s) =>
 						m(MemberChip, {
 							key: s.uid,
+							uid: s.uid,
 							name: s.name,
 							camp: attrs.showSides ? s.camp : null,
 							chosen: attrs.showSides ? s.camp !== null : undefined,

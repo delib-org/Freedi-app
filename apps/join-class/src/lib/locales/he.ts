@@ -310,6 +310,10 @@ const he: Record<string, string> = {
 	'console.plenum_on': 'כולם ביחד · פעיל',
 	'console.move': 'העברה לשולחן אחר',
 	'console.moved': 'הועבר ל{{table}}',
+	'opening.name_prompt_rename': 'ביקשו מכם שם חדש. כתבו אותו כאן',
+	'console.rename': 'בקשת שם חדש',
+	'console.rename_asked': 'ביקשנו מ{{name}} שם חדש',
+	'console.student_menu': 'אפשרויות עבור {{name}}',
 	'console.drag_hint':
 		'יש תלמידים שלא יכולים לשבת יחד? גוררים שם לשולחן אחר, בכל שלב בשיעור. ההצעות וההצבעות שלהם נשארות שלהם.',
 	'console.unplaced_name': 'ללא שולחן',

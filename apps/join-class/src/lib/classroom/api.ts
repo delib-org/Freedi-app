@@ -23,6 +23,8 @@ import type {
 	ClassPostReplyRequest,
 	ClassPostReplyResponse,
 	ClassMoveStudentResponse,
+	ClassRequestRenameRequest,
+	ClassRequestRenameResponse,
 	ClassResetTurnsRequest,
 	ClassResetTurnsResponse,
 	ClassResetVoteRequest,
@@ -66,6 +68,13 @@ export function classAssignTables(
 /** Admin: move one student to table `toTable` (1-based) or unseat with `null`. */
 export function classMoveStudent(req: ClassMoveStudentRequest): Promise<ClassMoveStudentResponse> {
 	return call('classMoveStudent', req);
+}
+
+/** Admin: ask one student for a new name; a name form blocks their phone until they save one. */
+export function classRequestRename(
+	req: ClassRequestRenameRequest,
+): Promise<ClassRequestRenameResponse> {
+	return call('classRequestRename', req);
 }
 
 /** Admin: add a student without a device to table `n`. */

@@ -2,13 +2,14 @@ import m from 'mithril';
 import '@/styles/student-c2.scss';
 import { StudentFrame } from '@/components/StudentFrame';
 import { t } from '@/lib/i18n';
+import { classState } from '@/lib/classroom/classState';
 import { getCustomDisplayName } from '@/lib/store';
 import { saveMyName } from './saveName';
 
 /**
  * The name form. It is not a step: `StudentStage` puts it in front of ANY step
  * while the student has no name (lib/classroom/nameGate.ts), so nobody reaches the
- * lesson nameless. It says why the name is needed and who sees it.
+ * lesson nameless, and again when the teacher asks for a new name. It says why the name is needed and who sees it.
  */
 
 export interface NameFormState {
@@ -30,12 +31,13 @@ export async function submitName(state: NameFormState, mainId: string): Promise<
 	m.redraw();
 }
 
-export function nameForm(state: NameFormState, mainId: string): m.Children {
+/** `rename`: the teacher asked for a new name, so the screen says so. */
+export function nameForm(state: NameFormState, mainId: string, rename = false): m.Children {
 	return m(
 		StudentFrame,
 		{
 			headerLine: '',
-			instruction: t('opening.name_prompt'),
+			instruction: t(rename ? 'opening.name_prompt_rename' : 'opening.name_prompt'),
 		},
 		m(
 			'form.name-entry',
@@ -83,12 +85,17 @@ export interface NameGateAttrs {
 export const NameGate: m.Component<NameGateAttrs> = {
 	oninit(vnode) {
 		const state = vnode.state as unknown as NameFormState;
-		state.name = getCustomDisplayName() ?? '';
+		// A rename starts empty: the teacher wants a different name than the one on file.
+		state.name = classState.mySubscription?.renameRequested ? '' : (getCustomDisplayName() ?? '');
 		state.saving = false;
 		state.failed = false;
 	},
 
 	view(vnode) {
-		return nameForm(vnode.state as unknown as NameFormState, vnode.attrs.mainId);
+		return nameForm(
+			vnode.state as unknown as NameFormState,
+			vnode.attrs.mainId,
+			classState.mySubscription?.renameRequested === true,
+		);
 	},
 };

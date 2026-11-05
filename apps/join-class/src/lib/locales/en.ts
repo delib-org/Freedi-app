@@ -314,6 +314,10 @@ const en: Record<string, string> = {
 	'console.plenum_on': 'Everyone together · on',
 	'console.move': 'Move to another table',
 	'console.moved': 'Moved to {{table}}',
+	'opening.name_prompt_rename': 'Your teacher asked for a new name. Write it here',
+	'console.rename': 'Ask for a new name',
+	'console.rename_asked': 'Asked {{name}} for a new name',
+	'console.student_menu': 'Options for {{name}}',
 	'console.drag_hint':
 		'Some students cannot sit together? Drag a name to another table, any time in the lesson. Their proposals and votes stay theirs.',
 	'console.unplaced_name': 'No table',

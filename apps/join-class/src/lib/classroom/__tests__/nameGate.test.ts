@@ -42,4 +42,11 @@ describe('needsNameForm (Trello dZQmKXRY: no student reaches the lesson without 
 			needsNameForm(input({ user: { displayName: '', isAnonymous: false }, deviceName: 'Dana' })),
 		).toBe(true);
 	});
+
+	it('a rename request from the teacher asks again, even for a student who has a name', () => {
+		const named = { user: { uid: 'u', displayName: 'Dana' }, renameRequested: true };
+		expect(needsNameForm(input({ sub: named }))).toBe(true);
+		expect(needsNameForm(input({ sub: named, deviceName: 'Dana' }))).toBe(true);
+		expect(needsNameForm(input({ sub: { ...named, renameRequested: false } }))).toBe(false);
+	});
 });

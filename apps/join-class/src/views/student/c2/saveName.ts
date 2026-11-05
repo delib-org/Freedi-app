@@ -23,6 +23,8 @@ export async function saveMyName(mainId: string, rawName: string): Promise<void>
 			>[1]) ?? `${uid}--${mainId}`;
 		await updateDoc(doc(db, Collections.statementsSubscribe, subId), {
 			'user.displayName': name,
+			// Answers a teacher's "ask for a new name" (a no-op when none was asked).
+			renameRequested: false,
 			lastUpdate: Date.now(),
 		});
 	} catch (error) {

@@ -313,6 +313,10 @@ const de: Record<string, string> = {
 	'console.plenum_on': 'Alle zusammen · aktiv',
 	'console.move': 'An einen anderen Tisch',
 	'console.moved': 'Verschoben zu {{table}}',
+	'opening.name_prompt_rename': 'Deine Lehrkraft möchte einen neuen Namen. Schreibe ihn hier',
+	'console.rename': 'Um einen neuen Namen bitten',
+	'console.rename_asked': '{{name}} um einen neuen Namen gebeten',
+	'console.student_menu': 'Optionen für {{name}}',
 	'console.drag_hint':
 		'Manche Schüler können nicht zusammensitzen? Ziehe einen Namen jederzeit im Unterricht an einen anderen Tisch. Ihre Vorschläge und Stimmen bleiben ihre.',
 	'console.unplaced_name': 'Ohne Tisch',

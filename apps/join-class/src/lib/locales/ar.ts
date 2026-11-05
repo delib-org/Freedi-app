@@ -310,6 +310,10 @@ const ar: Record<string, string> = {
 	'console.plenum_on': 'الجميع معًا · مفعّل',
 	'console.move': 'النقل إلى طاولة أخرى',
 	'console.moved': 'تم النقل إلى {{table}}',
+	'opening.name_prompt_rename': 'طلب منكم المعلم اسمًا جديدًا. اكتبوه هنا',
+	'console.rename': 'طلب اسم جديد',
+	'console.rename_asked': 'طلبنا من {{name}} اسمًا جديدًا',
+	'console.student_menu': 'خيارات لـ {{name}}',
 	'console.drag_hint':
 		'هل هناك طلاب لا يمكنهم الجلوس معًا؟ اسحبوا اسمًا إلى طاولة أخرى في أي وقت من الدرس. تبقى اقتراحاتهم وأصواتهم لهم.',
 	'console.unplaced_name': 'بلا طاولة',

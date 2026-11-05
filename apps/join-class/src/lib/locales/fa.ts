@@ -302,6 +302,10 @@ const fa: Record<string, string> = {
 	'console.plenum_on': 'همه با هم · فعال',
 	'console.move': 'انتقال به میز دیگر',
 	'console.moved': 'به {{table}} منتقل شد',
+	'opening.name_prompt_rename': 'معلم از شما نام جدیدی خواسته است. آن را اینجا بنویسید',
+	'console.rename': 'درخواست نام جدید',
+	'console.rename_asked': 'از {{name}} نام جدید خواسته شد',
+	'console.student_menu': 'گزینه‌ها برای {{name}}',
 	'console.drag_hint':
 		'بعضی دانش‌آموزان نمی‌توانند کنار هم بنشینند؟ در هر مرحله از درس یک نام را به میز دیگری بکشید. پیشنهادها و رأی‌هایشان مال خودشان می‌ماند.',
 	'console.unplaced_name': 'بدون میز',

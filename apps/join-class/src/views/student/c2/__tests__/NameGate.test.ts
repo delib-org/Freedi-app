@@ -5,6 +5,7 @@ const saveMyName = vi.fn(async (): Promise<void> => undefined);
 
 vi.mock('../saveName', () => ({ saveMyName }));
 vi.mock('@/lib/i18n', () => ({ t: (key: string) => key }));
+vi.mock('@/lib/classroom/classState', () => ({ classState: { mySubscription: null } }));
 vi.mock('@/lib/store', () => ({ getCustomDisplayName: () => null }));
 vi.mock('@/components/StudentFrame', () => ({ StudentFrame: { view: () => null } }));
 
@@ -72,5 +73,16 @@ describe('the name form Save button', () => {
 			preventDefault: () => undefined,
 		} as unknown as Event);
 		expect(saveMyName).not.toHaveBeenCalled();
+	});
+});
+
+describe('the name form wording', () => {
+	it('asks plainly, and says so when the teacher asked for a new name', () => {
+		const ask = nameForm(freshState(''), 'main') as unknown as { attrs: { instruction: string } };
+		const again = nameForm(freshState(''), 'main', true) as unknown as {
+			attrs: { instruction: string };
+		};
+		expect(ask.attrs.instruction).toBe('opening.name_prompt');
+		expect(again.attrs.instruction).toBe('opening.name_prompt_rename');
 	});
 });
