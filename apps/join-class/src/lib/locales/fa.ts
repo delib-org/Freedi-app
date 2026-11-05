@@ -326,6 +326,7 @@ const fa: Record<string, string> = {
 	'console.side_b': 'سمت ب',
 	'console.side_center': 'وسط',
 	'console.side_none': 'هنوز سمتی انتخاب نکرده‌اند',
+	'console.sides_count': '{{chose}} از {{total}} نفر سمتی انتخاب کردند',
 	'console.sides_show': 'نمایش سمت‌ها',
 	'console.sides_hide': 'پنهان کردن سمت‌ها',
 	'console.sides_confirm_title': 'سمت دانش‌آموزان نمایش داده شود؟',

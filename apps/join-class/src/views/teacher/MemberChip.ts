@@ -18,6 +18,11 @@ export interface MemberChipAttrs {
 	uid?: string;
 	name: string;
 	camp: Camp | null;
+	/**
+	 * Has this student chosen a side? Shown even while the sides are hidden: it says
+	 * "chose" or "no side yet", never which side. `undefined` = not asked (before the Side step, no device).
+	 */
+	chosen?: boolean;
 	noDevice?: boolean;
 	/** Where the chip sits now: table number, or null = unplaced. */
 	from: DropTarget;
@@ -85,7 +90,12 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 			.filter(Boolean)
 			.map((key) => `, ${t(key, { name })}`)
 			.join('');
-		const spoken = consoleState.sidesVisible ? `${name}, ${sideLabel(camp)}` : name;
+		const noSide = attrs.chosen === false;
+		const spoken = consoleState.sidesVisible
+			? `${name}, ${sideLabel(camp)}`
+			: noSide
+				? `${name}, ${sideLabel(null)}`
+				: name;
 		const label = (noDevice ? `${name}, ${t('console.no_device')}` : spoken) + turnWord;
 		// While the lesson is held nobody moves: no drag, no move menu.
 		const ref = uid !== undefined && !consoleState.held ? { uid, name, from: attrs.from } : null;
@@ -137,6 +147,10 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 							)
 						: null,
 					noDevice ? m('span.member-chip__tag', t('console.no_device')) : null,
+					noSide
+						? m('span.member-chip__tag.member-chip__tag--no-side', t('console.side_none'))
+						: null,
+					camp ? m('span.member-chip__tag', sideLabel(camp)) : null,
 				],
 			),
 			uid !== undefined && !consoleState.held

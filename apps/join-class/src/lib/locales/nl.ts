@@ -334,6 +334,7 @@ const nl: Record<string, string> = {
 	'console.side_b': 'Kant B',
 	'console.side_center': 'In het midden',
 	'console.side_none': 'Nog geen kant',
+	'console.sides_count': '{{chose}} van {{total}} hebben een kant gekozen',
 	'console.sides_show': 'Kanten tonen',
 	'console.sides_hide': 'Kanten verbergen',
 	'console.sides_confirm_title': 'De kanten van de leerlingen tonen?',

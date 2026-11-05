@@ -334,6 +334,7 @@ const ar: Record<string, string> = {
 	'console.side_b': 'الجانب ب',
 	'console.side_center': 'في الوسط',
 	'console.side_none': 'لم يختاروا جانبًا بعد',
+	'console.sides_count': '{{chose}} من {{total}} اختاروا جانبًا',
 	'console.sides_show': 'إظهار الجوانب',
 	'console.sides_hide': 'إخفاء الجوانب',
 	'console.sides_confirm_title': 'هل تريد إظهار جوانب الطلاب؟',

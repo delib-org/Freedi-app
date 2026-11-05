@@ -335,6 +335,7 @@ const es: Record<string, string> = {
 	'console.side_b': 'Lado B',
 	'console.side_center': 'En el medio',
 	'console.side_none': 'Aún sin lado',
+	'console.sides_count': '{{chose}} de {{total}} eligieron un lado',
 	'console.sides_show': 'Mostrar lados',
 	'console.sides_hide': 'Ocultar lados',
 	'console.sides_confirm_title': '¿Mostrar los lados de los alumnos?',

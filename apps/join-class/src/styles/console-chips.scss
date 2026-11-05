@@ -84,6 +84,12 @@
 .member-chip__tag {
   font-size: var(--font-size-xs);
   color: var(--ink-muted);
+
+  // A student who has not chosen a side yet: the words stand out, the chip is not dimmed.
+  &--no-side {
+    color: var(--ink);
+    font-weight: var(--font-weight-bold);
+  }
 }
 
 .member-chip__menu {

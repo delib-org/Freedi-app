@@ -334,6 +334,7 @@ const he: Record<string, string> = {
 	'console.side_b': 'צד ב׳',
 	'console.side_center': 'באמצע',
 	'console.side_none': 'עוד לא בחרו צד',
+	'console.sides_count': '{{chose}} מתוך {{total}} בחרו צד',
 	'console.sides_show': 'הצגת הצדדים',
 	'console.sides_hide': 'הסתרת הצדדים',
 	'console.sides_confirm_title': 'להציג את הצדדים של התלמידים?',
