@@ -98,10 +98,17 @@ const slots = new Map<string, StudentSlot>();
 let slotsFor = '';
 let mode: ActForMode = 'none';
 
+/**
+ * Nothing is known about this student's vote any more, so nothing is remembered either. The
+ * next listener's first answer must not meet an old pick: the caster would send it again, a
+ * vote nobody tapped (another console may have reset the vote in between).
+ */
 function stopListening(slot: StudentSlot): void {
 	slot.stopVote?.();
 	slot.stopVote = null;
 	slot.listeningTo = null;
+	slot.votedId = null;
+	slot.caster.reset();
 }
 
 /** The lesson is gone: every listener stops and every slot goes with it. */

@@ -210,6 +210,9 @@ export function actForProposal(input: ActForProposalInput): m.Children {
 							return;
 						}
 						slot.newText = value;
+						// Changed words are a new send: the server answers "sent" for a known id without
+						// writing, so a retry's id would drop them.
+						slot.proposalId = null;
 						writeDraft(draftScopeOf(mainId, student.id), 'proposal', value);
 					},
 				}),

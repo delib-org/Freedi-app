@@ -24,6 +24,8 @@ export class VoteCaster {
 	busy = false;
 	failed = false;
 	private readonly options: VoteCasterOptions;
+	/** Moves on `reset`: what a write started before it says no longer counts. */
+	private generation = 0;
 
 	constructor(options: VoteCasterOptions) {
 		this.options = options;
@@ -58,18 +60,31 @@ export class VoteCaster {
 		void this.drain();
 	}
 
+	/**
+	 * Forget every pick. For a screen that stops listening: nothing remembered here may be sent
+	 * later without a new tap, because `sync` re-sends a pick the server does not hold. A write
+	 * already in flight still reaches the server; the next listener reports what it left.
+	 */
+	reset(): void {
+		this.generation += 1;
+		this.wanted = null;
+		this.written = null;
+		this.failed = false;
+	}
+
 	private async drain(): Promise<void> {
 		if (this.busy) return;
 		this.busy = true;
 		try {
 			while (this.wanted !== null && this.wanted !== this.written && !this.failed) {
 				const optionId = this.wanted;
+				const generation = this.generation;
 				this.options.onChange();
 				try {
 					await this.options.write(optionId);
-					this.written = optionId;
+					if (generation === this.generation) this.written = optionId;
 				} catch (error) {
-					this.failed = true;
+					if (generation === this.generation) this.failed = true;
 					this.options.onError(error);
 				}
 			}

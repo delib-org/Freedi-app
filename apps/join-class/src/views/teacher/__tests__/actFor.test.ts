@@ -177,6 +177,24 @@ describe('a vote never lands on the wrong student', () => {
 		expect(castVote).not.toHaveBeenCalled();
 	});
 
+	it('no ghost vote: a pick is forgotten when the listener stops, and never re-sent', async () => {
+		sync('vote', ballot);
+		const dana = slotOf('m', DANA);
+		dana.caster.pick('p1');
+		await flush();
+		expect(castVote).toHaveBeenCalledTimes(1);
+		// The console leaves the vote; another console resets it meanwhile.
+		sync('proposals');
+		expect(dana.caster.wanted).toBeNull();
+		expect(dana.votedId).toBeNull();
+		// Back at the vote, the new listener answers "no vote" while the ballot is open.
+		sync('vote', ballot);
+		listeners.get(DANA)?.(null);
+		await flush();
+		expect(castVote).toHaveBeenCalledTimes(1);
+		expect(slotOf('m', DANA).votedId).toBeNull();
+	});
+
 	it('the sheet never moves on by itself: a draw with a counted vote stays on the student', () => {
 		sync('vote', ballot);
 		openActFor(DANA);
@@ -336,6 +354,26 @@ describe('the proposal part', () => {
 		await flush();
 		expect((postProposal.mock.calls[1][0] as { proposalId: string }).proposalId).toBe(firstId);
 		expect(dana.newText).toBe('');
+		errorSpy.mockRestore();
+	});
+
+	it('words changed after a failure go out under a new id, so they are not dropped', async () => {
+		const dana = slotOf('m', DANA);
+		dana.newText = 'First words';
+		postProposal.mockRejectedValueOnce(new Error('answer lost'));
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+		submit(flatten(actForProposal(base({ slot: dana }))));
+		await flush();
+		const firstId = (postProposal.mock.calls[0][0] as { proposalId: string }).proposalId;
+		const area = attrOf(flatten(actForProposal(base({ slot: dana }))), 'act-for-text');
+		(area?.attrs as { oninput: (e: Event) => void }).oninput({
+			target: { value: 'Better words' },
+		} as unknown as Event);
+		submit(flatten(actForProposal(base({ slot: dana }))));
+		await flush();
+		const second = postProposal.mock.calls[1][0] as { proposalId: string; text: string };
+		expect(second.text).toBe('Better words');
+		expect(second.proposalId).not.toBe(firstId);
 		errorSpy.mockRestore();
 	});
 
