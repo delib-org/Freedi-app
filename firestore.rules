@@ -1129,14 +1129,30 @@ service cloud.firestore {
                request.resource.data.get('parentId', null) != null &&
                isClassChallenge(request.resource.data.parentId);
       }
-      // Its author is the server's to say too: the writer may not hand a proposal to
-      // someone else, a classmate or a student without a device.
+      // Its author is the server's to say too, with or without a marker on it.
       function rewordsClassProposal() {
         return resource != null &&
                resource.data.get('statementType', '') == 'option' &&
                resource.data.get('parentId', null) != null &&
                request.resource.data.diff(resource.data).affectedKeys().hasAny(['statement', 'statementType', 'parentId', 'creatorId', 'creator', 'classTable']) &&
                isClassChallenge(resource.data.parentId);
+      }
+      // An update may not MAKE a proposal either: moving an option under the challenge, or
+      // turning a statement already there into an option, would skip the limit and the
+      // language check. The get() is paid only when the type or the parent really changes.
+      function makesClassProposal() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasAny(['statementType', 'parentId']) &&
+               request.resource.data.get('statementType', '') == 'option' &&
+               request.resource.data.get('parentId', null) != null &&
+               isClassChallenge(request.resource.data.parentId);
+      }
+      // Who wrote something at a table is the server's to say: no client changes the author or
+      // the marker of a statement that carries a marker (a proposal, a table's answer or its
+      // own question), so nobody hands their words to a classmate. No client writes these
+      // fields; a whole-document merge with them unchanged does not count. No get() needed.
+      function changesClassAuthor() {
+        return ('classTable' in resource.data) &&
+               request.resource.data.diff(resource.data).affectedKeys().hasAny(['creatorId', 'creator', 'classTable']);
       }
       // join-class students without a device: the teacher enters their proposals
       // through classPostProposal (Admin SDK), which stamps classTable.enteredByUid and
@@ -1264,6 +1280,8 @@ service cloud.firestore {
                        !isClassReply() &&
                        !changesClassReplyFields() &&
                        !rewordsClassProposal() &&
+                       !makesClassProposal() &&
+                       !changesClassAuthor() &&
                        !changesClassEnteredBy() &&
                        !claimsNoDeviceAuthor() &&
                        !changesClassHomeOrLesson() &&
