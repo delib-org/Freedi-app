@@ -19,10 +19,13 @@
     "@freedi/table-assignment-client": "file:../../packages/table-assignment-client",
     "@sentry/browser": "^9.42.1",
     "firebase": "^12.18.0",
-    "mithril": "^2.2.8"
+    "mithril": "^2.2.8",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "@types/mithril": "^2.2.7",
+    "@types/qrcode": "^1.5.6",
+    "jsdom": "^29.1.1",
     "sass": "^1.94.2",
     "typescript": "^5.7.3",
     "vite": "^6.0.7",

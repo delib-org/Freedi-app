@@ -1,40 +1,6 @@
 @use 'tokens';
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: 'Assistant', system-ui, sans-serif;
-}
-
-.placeholder {
-  display: flex;
-  flex-direction: column;
-  gap: var(--padding);
-  max-width: 40rem;
-  margin: 0 auto;
-  padding: var(--padding-large) var(--padding);
-
-  &__app {
-    margin: 0;
-    color: var(--brand);
-    font-weight: 700;
-  }
-
-  &__title {
-    margin: 0;
-    font-size: 1.75rem;
-  }
-
-  &__note {
-    margin: 0;
-    color: var(--ink-muted);
-  }
-}
+@use 'base';
+@use 'forms';
+@use 'host';
+@use 'participant';
+@use 'side-slider';

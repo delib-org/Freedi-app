@@ -1,10 +1,14 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { buildRouteTable } from '../router';
 import { ROUTES, matchRoute } from '../routes';
 import { detectLanguage } from '../lib/i18n';
 import he from '../lib/locales/he';
 import en from '../lib/locales/en';
 import ar from '../lib/locales/ar';
+
+// The screens import Firebase; the route table only needs them to exist, not to connect.
+vi.mock('@/lib/firebase', () => ({ app: {}, auth: {}, db: {}, functions: {} }));
+vi.mock('qrcode', () => ({ default: { toDataURL: async () => '' } }));
 
 const SAMPLE_ID = 'abc123';
 
