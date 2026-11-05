@@ -1331,5 +1331,8 @@ export { covenantWorkflow } from './fn_covenant';
 // join-class classroom engine (lane C1 adds its callables inside ./classroom only)
 export * from './classroom';
 
+// Tables (table assignment): host + participant callables
+export * from './tableAssignment';
+
 export { deliberation, queueDeliberation, updateDeliberations } from './deliberation/functions';
 export { createAgreementHandoff, redeemAgreementHandoff } from './deliberation/handoff';

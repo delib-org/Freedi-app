@@ -1222,6 +1222,67 @@ export type {
   LessonStatusAction,
 } from './models/classroom/classroomCallables';
 
+// Tables (שולחנות): shared table-assignment model and callables contract
+export {
+  TABLE_ASSIGNMENT_TABLE_SIZE_DEFAULT,
+  TABLE_ASSIGNMENT_BALANCE_TOLERANCE_DEFAULT,
+  TABLE_ASSIGNMENT_MAX_PREFERENCES,
+  TABLE_ASSIGNMENT_TABLE_SIZE_MIN,
+  TABLE_ASSIGNMENT_TABLE_SIZE_MAX,
+  TABLE_ASSIGNMENT_TITLE_MAX_LENGTH,
+  TABLE_ASSIGNMENT_DESCRIPTION_MAX_LENGTH,
+  TABLE_ASSIGNMENT_FULL_NAME_MAX_LENGTH,
+  TableAssignmentStatusSchema,
+  TableAssignmentModeSchema,
+  TableAssignmentPositionQuestionSchema,
+  TableAssignmentSettingsSchema,
+  TableAssignmentSchema,
+  TableAssignmentTopicSchema,
+  TableAssignmentPreferencesSchema,
+  TableAssignmentParticipantSchema,
+  TableAssignmentRunStatusSchema,
+  TableAssignmentTableStatsSchema,
+  TableAssignmentRunTableSchema,
+  TableAssignmentMetricsSchema,
+  TableAssignmentRunSchema,
+  tableAssignmentParticipantId,
+} from './models/tableAssignment/tableAssignmentModel';
+export type {
+  TableAssignmentStatus,
+  TableAssignmentMode,
+  TableAssignmentPositionQuestion,
+  TableAssignmentSettings,
+  TableAssignment,
+  TableAssignmentTopic,
+  TableAssignmentParticipant,
+  TableAssignmentRunStatus,
+  TableAssignmentTableStats,
+  TableAssignmentRunTable,
+  TableAssignmentMetrics,
+  TableAssignmentRun,
+} from './models/tableAssignment/tableAssignmentModel';
+export type {
+  TablesCreateSessionRequest,
+  TablesCreateSessionResponse,
+  TablesTopicInput,
+  TablesSaveTopicsRequest,
+  TablesSaveTopicsResponse,
+  TablesSaveSettingsRequest,
+  TablesSaveSettingsResponse,
+  TablesSetStatusRequest,
+  TablesSetStatusResponse,
+  TablesRegisterRequest,
+  TablesRegisterResponse,
+  TablesSavePreferencesRequest,
+  TablesSavePreferencesResponse,
+  TablesJoinTableRequest,
+  TablesJoinTableResponse,
+  TablesComputePreviewRequest,
+  TablesComputePreviewResponse,
+  TablesPublishRunRequest,
+  TablesPublishRunResponse,
+} from './models/tableAssignment/tableAssignmentCallables';
+
 // Theme rebuild ("Re-theme with AI") callable contract
 export type {
   ThemeRebuildMode,

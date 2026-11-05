@@ -78,6 +78,8 @@
     "deploy:admin": "npm run env:prod && cd apps/admin && npm run build && cd ../.. && firebase use wizcol && firebase deploy --only hosting:admin && npm run env:dev",
     "deploy:join": "npm run env:prod && cd apps/join && npm run build && cd ../.. && firebase use wizcol && firebase deploy --only hosting:join && npm run env:dev",
     "deploy:join-class": "npm run env:prod && cd apps/join-class && npm run build && cd ../.. && firebase use wizcol && firebase deploy --only hosting:join-class && npm run env:dev",
+    "dev:tables": "npm run env:dev && cd apps/tables && npm run dev",
+    "deploy:tables": "npm run env:prod && cd apps/tables && npm run build && cd ../.. && firebase use wizcol && firebase deploy --only hosting:tables && npm run env:dev",
     "deploy:studio": "npm run env:prod && cd apps/studio && npm run build && cd ../.. && firebase use wizcol && firebase deploy --only hosting:studio && npm run env:dev",
     "deploy:studio:dev": "npm run env:test && cd apps/studio && npm run build && cd ../.. && firebase use test && firebase deploy --only hosting:studio && npm run env:dev",
     "deploy:chat": "npm run env:prod && cd apps/chat && npm run build && cd ../.. && node apps/chat/scripts/copy-ssr-to-functions.cjs && firebase use wizcol && firebase deploy --only functions:ssrChat,hosting:chat && npm run env:dev",

@@ -851,6 +851,84 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // === Tables (table assignment) ===
+    // Every write goes through the tables* callables (Admin SDK): clients write
+    // nothing. Reads are scoped so a participant never sees another person's
+    // preferences or position (those live only in tableAssignmentParticipants).
+    function isTableSessionHost(sessionId) {
+      let sessionPath = /databases/$(database)/documents/tableAssignments/$(sessionId);
+      return exists(sessionPath) && get(sessionPath).data.hostUid == request.auth.uid;
+    }
+
+    // The session is readable to any signed-in user (anonymous included) once
+    // registration has opened; drafts are the host's alone.
+    function isTableSessionOpenToAll(sessionId) {
+      let sessionPath = /databases/$(database)/documents/tableAssignments/$(sessionId);
+      return exists(sessionPath) &&
+             get(sessionPath).data.status in ['registrationOpen', 'registrationClosed', 'published', 'ended'];
+    }
+
+    function isRegisteredInTableSession(sessionId) {
+      return exists(/databases/$(database)/documents/tableAssignmentParticipants/$(string(sessionId) + '_' + string(request.auth.uid)));
+    }
+
+    function mayReadTableSession(sessionId) {
+      return isTableSessionHost(sessionId) || isTableSessionOpenToAll(sessionId);
+    }
+
+    match /tableAssignments/{sessionId} {
+      allow get: if request.auth != null &&
+                    (resource == null ||
+                     resource.data.hostUid == request.auth.uid ||
+                     resource.data.status in ['registrationOpen', 'registrationClosed', 'published', 'ended']);
+      // A host lists their own sessions (query on hostUid); nobody lists anyone else's.
+      allow list: if request.auth != null && resource != null &&
+                     resource.data.hostUid == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /tableAssignmentTopics/{topicId} {
+      allow get, list: if request.auth != null && resource != null &&
+                          mayReadTableSession(resource.data.sessionId);
+      allow write: if false;
+    }
+
+    // Doc id = {sessionId}_{uid}. The owner reads their own; the host reads all.
+    match /tableAssignmentParticipants/{participantId} {
+      allow list: if request.auth != null && resource != null &&
+                     (resource.data.uid == request.auth.uid ||
+                      isTableSessionHost(resource.data.sessionId));
+      // A get of one's own not-yet-registered doc answers "missing" instead of
+      // permission-denied, so the registration screen settles quietly.
+      allow get: if request.auth != null &&
+                    (resource == null
+                       ? participantId.matches('.*_' + request.auth.uid)
+                       : (resource.data.uid == request.auth.uid ||
+                          isTableSessionHost(resource.data.sessionId)));
+      allow write: if false;
+    }
+
+    // Host reads every run (drafts and history). A registered participant reads
+    // a run only once it is published: that is what "my table" shows.
+    match /tableAssignmentRuns/{runId} {
+      allow get, list: if request.auth != null && resource != null &&
+                          (isTableSessionHost(resource.data.sessionId) ||
+                           (resource.data.status == 'published' &&
+                            isRegisteredInTableSession(resource.data.sessionId)));
+      allow write: if false;
+    }
+
+    // Direct-mode seat counters {sessionId}_{tableIndex}: { sessionId, tableIndex,
+    // topicId, count }. Counts only, no identities. The host and registered
+    // participants of the session read them (list needs a sessionId filter) so
+    // the choose-a-table screen shows free seats. Written by tablesJoinTable only.
+    match /tableAssignmentSeats/{seatId} {
+      allow get, list: if request.auth != null && resource != null &&
+                          (isTableSessionHost(resource.data.sessionId) ||
+                           isRegisteredInTableSession(resource.data.sessionId));
+      allow write: if false;
+    }
+
     // join-class language flags (IA 24.4): one doc per refused proposal / edit /
     // reply, classLanguageFlags/{flagId}. Written only by the classroom
     // callables (Admin SDK). Read only by an admin of the lesson (a get of their
