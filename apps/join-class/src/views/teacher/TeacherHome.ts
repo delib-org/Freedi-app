@@ -10,6 +10,7 @@ import type { Unsubscribe } from '@/lib/firebase';
 import { ensurePlan, loadGames, writeGame } from '@/lib/classPlans';
 import { emptySnapshot } from '@/lib/classroom/gameSnapshotEdit';
 import { gamePathOf, planPathOf } from '@/lib/lessonLinks';
+import type { ClassLessonEntry } from '@/lib/joinSubscriptions';
 import { buildPlanRows, openNow, type PlanRow } from '@/lib/planTree';
 import { watchLibrary, type TeacherLibrary } from '@/lib/teacherLibrary';
 import { filterLessons } from './homeHelpers';
@@ -29,15 +30,25 @@ import {
 	startCreate,
 } from './HomeCreate';
 import { captureException } from '@/lib/sentry';
-
-/** A name filter appears above this many plans (IA 8). */
-const FILTER_FROM = 10;
+import {
+	closeLessonPicker,
+	isPickerNaming,
+	isPickerOpen,
+	back as pickerBack,
+	openLessonPicker,
+	renderPicker,
+} from './LessonPicker';
+import { PLAN_FILTER_FROM } from './lessonPickerFlow';
 
 let library: TeacherLibrary = { plans: [], lessons: [], ready: false };
 let unsub: Unsubscribe | null = null;
 let filterText = '';
 /** Games per plan, read once per plan change (the plan doc's `lastUpdate` moves when a game is added). */
-const gameCounts = new Map<string, { stamp: number; count: number }>();
+const gameCounts = new Map<string, { stamp: number; count: number | null | undefined }>();
+/** A stamp no plan doc has, so a failed count read is tried again on the next update. */
+const FAILED_STAMP = -1;
+/** The rows the view last drew, for the picker's open (it opens from a click, outside the view). */
+let currentRows: PlanRow[] = [];
 /** Ids of the plan and first game being made; kept until it succeeds so a retry reuses them. */
 let pendingIds: { planId: string; gameId: string } | null = null;
 
@@ -83,7 +94,7 @@ function refreshCounts(rows: readonly PlanRow[]): void {
 		if (!row.doc) continue;
 		const stamp = row.doc.lastUpdate;
 		if (gameCounts.get(row.planId)?.stamp === stamp) continue;
-		gameCounts.set(row.planId, { stamp, count: gameCounts.get(row.planId)?.count ?? 0 });
+		gameCounts.set(row.planId, { stamp, count: gameCounts.get(row.planId)?.count });
 		loadGames(row.planId, uid)
 			.then((games) => {
 				gameCounts.set(row.planId, { stamp, count: games.length });
@@ -91,6 +102,10 @@ function refreshCounts(rows: readonly PlanRow[]): void {
 			})
 			.catch((err: unknown) => {
 				captureException(err, { operation: 'teacherHome.countGames', planId: row.planId });
+				// Known-but-failed: the picker still lists the plan (picking it reads again and
+				// reports its own failure); the stale stamp makes the next library update retry.
+				gameCounts.set(row.planId, { stamp: FAILED_STAMP, count: null });
+				m.redraw();
 			});
 	}
 }
@@ -159,32 +174,82 @@ function renderFilter(shown: number): m.Children {
 	];
 }
 
+/** "+ מערך שיעור חדש": the name form under the plans heading; it drops the lesson picker. */
+function openAddPlan(): void {
+	closeLessonPicker();
+	resetCreate();
+	startCreate();
+}
+
+/** "+ שיעור עם כיתה": the picker under the open-now heading; it drops the plan name form. */
+function openAddLesson(): void {
+	resetCreate();
+	openLessonPicker({ rows: currentRows, countOf: (id) => gameCounts.get(id)?.count });
+}
+
+function renderOpenNow(running: ClassLessonEntry[]): m.Vnode {
+	return m('section.teacher-home__open-now', { 'aria-labelledby': 'open-now-title' }, [
+		m('.teacher-home__section-head', [
+			m('h2.teacher-home__section-title', { id: 'open-now-title' }, t('teacher.home.open_now')),
+			isPickerOpen()
+				? null
+				: m(
+						'button.btn.btn--secondary.btn--small.teacher-home__new-lesson',
+						{ type: 'button', 'data-action': 'add-lesson', onclick: () => openAddLesson() },
+						t('teacher.lesson.new'),
+					),
+		]),
+		isPickerOpen() ? m('.teacher-home__create', renderPicker()) : null,
+		running.length > 0
+			? m('ul.teacher-home__list', running.map(renderOpenRow))
+			: m('p.teacher-home__empty', t('teacher.home.open_now_empty')),
+	]);
+}
+
+function renderPlans(rows: PlanRow[]): m.Vnode {
+	const filtering = rows.length > PLAN_FILTER_FROM;
+	const shown = filtering ? filterLessons(rows, filterText) : rows;
+	const formOpen = !isPickerNaming() && !createIdle(false);
+
+	return m('section.teacher-home__plans', { 'aria-labelledby': 'plans-title' }, [
+		m('.teacher-home__section-head', [
+			m('h2.teacher-home__section-title', { id: 'plans-title' }, t('classPlan.list_title')),
+			formOpen
+				? null
+				: m(
+						'button.btn.btn--primary.btn--small.teacher-home__new',
+						{ type: 'button', onclick: () => openAddPlan() },
+						t('teacher.new'),
+					),
+		]),
+		formOpen ? renderCreate(false) : null,
+		filtering ? renderFilter(shown.length) : null,
+		filtering && shown.length === 0
+			? m('p.teacher-home__empty', t('teacher.home.filter_none'))
+			: null,
+		m('ul.teacher-home__list', shown.map(renderPlanRow)),
+	]);
+}
+
 function renderLists(rows: PlanRow[]): m.Children {
 	if (!library.ready) {
 		return m('.teacher-home__skeleton', { 'aria-busy': 'true', 'aria-label': t('plan.loading') });
 	}
-	const filtering = rows.length > FILTER_FROM;
-	const shown = filtering ? filterLessons(rows, filterText) : rows;
-	const running = openNow(library.lessons, Date.now());
+	// No plans yet: the name form is already open (the "+" buttons would only repeat it).
+	if (rows.length === 0) return renderCreate(true);
 
-	return [
-		running.length > 0
-			? m('section.teacher-home__open-now', { 'aria-labelledby': 'open-now-title' }, [
-					m('h2.teacher-home__section-title', { id: 'open-now-title' }, t('teacher.home.open_now')),
-					m('ul.teacher-home__list', running.map(renderOpenRow)),
-				])
-			: null,
-		rows.length > 0
-			? m('section.teacher-home__plans', { 'aria-labelledby': 'plans-title' }, [
-					m('h2.teacher-home__section-title', { id: 'plans-title' }, t('classPlan.list_title')),
-					filtering ? renderFilter(shown.length) : null,
-					filtering && shown.length === 0
-						? m('p.teacher-home__empty', t('teacher.home.filter_none'))
-						: null,
-					m('ul.teacher-home__list', shown.map(renderPlanRow)),
-				])
-			: null,
-	];
+	return [renderOpenNow(openNow(library.lessons, Date.now())), renderPlans(rows)];
+}
+
+/** Escape: the picker's list or class form steps back; the name forms step back themselves. */
+function onEscape(e: KeyboardEvent): void {
+	if (e.key === 'Escape' && isPickerOpen() && !isPickerNaming()) {
+		e.preventDefault();
+		pickerBack();
+
+		return;
+	}
+	onPageEscape(e);
 }
 
 export const TeacherHome: m.Component = {
@@ -192,6 +257,7 @@ export const TeacherHome: m.Component = {
 		// The teacher's own screens keep the teacher's language, whatever the lesson's is.
 		setFollowLessonLanguage(false);
 		library = { plans: [], lessons: [], ready: false };
+		closeLessonPicker();
 		resetCreate();
 		configureCreate({
 			mode: 'plan',
@@ -212,6 +278,7 @@ export const TeacherHome: m.Component = {
 	},
 
 	onremove() {
+		closeLessonPicker();
 		if (unsub) {
 			unsub();
 			unsub = null;
@@ -220,10 +287,11 @@ export const TeacherHome: m.Component = {
 
 	view() {
 		const rows = library.ready ? buildPlanRows(library.lessons, library.plans) : [];
+		currentRows = rows;
 		const emptyState = library.ready && rows.length === 0;
 		const name = accountName();
 
-		return m('.teacher-home', { onkeydown: (e: KeyboardEvent) => onPageEscape(e) }, [
+		return m('.teacher-home', { onkeydown: (e: KeyboardEvent) => onEscape(e) }, [
 			m('header.teacher-home__header', [
 				m(BrandLogo, { size: 40, className: 'teacher-home__logo' }),
 				name ? m('p.teacher-home__account', t('teacher.account', { name })) : null,
@@ -236,15 +304,6 @@ export const TeacherHome: m.Component = {
 			m('main.teacher-home__body', [
 				m('h1.teacher-home__title', t('teacher.home.title')),
 				emptyState ? m('p.teacher-home__how', t('teacher.home.how')) : null,
-				library.ready && !createIdle(emptyState)
-					? renderCreate(emptyState)
-					: library.ready
-						? m(
-								'button.btn.btn--primary.teacher-home__new',
-								{ type: 'button', onclick: () => startCreate() },
-								t('teacher.new'),
-							)
-						: null,
 				renderLists(rows),
 			]),
 			m(WizColFooter),
