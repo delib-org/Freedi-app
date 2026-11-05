@@ -24,6 +24,7 @@
 		"@freedi/deliberation-brain": "file:freedi-deliberation-brain-1.0.0.tgz",
 		"@freedi/evidence": "file:freedi-evidence-1.0.0.tgz",
 		"@freedi/shared-types": "file:freedi-shared-types-1.0.2.tgz",
+		"@freedi/table-assignment": "file:freedi-table-assignment-1.0.0.tgz",
 		"@sendgrid/mail": "^8.1.6",
 		"@sentry/node": "^10.73.0",
 		"@sentry/sveltekit": "^10.57.0",
