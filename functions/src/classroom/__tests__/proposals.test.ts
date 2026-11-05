@@ -3,7 +3,10 @@ import {
 	CLASS_LANGUAGE_FLAGS_KEPT,
 	CLASS_LANGUAGE_FLAG_TTL_DAYS,
 	CLASS_PROPOSAL_MAX_LENGTH,
+	proposalLimitOf,
+	snapshotFromLesson,
 } from '@freedi/shared-types';
+import type { Statement } from '@freedi/shared-types';
 import { postProposal } from '../fn_classPostProposal';
 import type { PostProposalDeps } from '../fn_classPostProposal';
 import { editProposal } from '../fn_classEditProposal';
@@ -28,7 +31,7 @@ function member(fake: FakeFirestore, uid: string, name: string, extra = {}): voi
 	});
 }
 
-function seedLesson(ballot = false): FakeFirestore {
+function seedLesson(ballot = false, limit?: 'one' | 'unlimited'): FakeFirestore {
 	const fake = new FakeFirestore();
 	fake.seed(`statements/${MAIN}`, {
 		statementId: MAIN,
@@ -37,7 +40,10 @@ function seedLesson(ballot = false): FakeFirestore {
 		statementType: 'question',
 		creatorId: TEACHER,
 		creator: { uid: TEACHER, displayName: 'Ms Teacher' },
-		statementSettings: { lessonPlan: { steps: ['proposals'], stepIndex: 0 } },
+		statementSettings: {
+			lessonPlan: { steps: ['proposals'], stepIndex: 0 },
+			...(limit ? { proposalLimit: limit } : {}),
+		},
 	});
 	member(fake, TEACHER, 'Ms Teacher');
 	member(fake, STUDENT, 'Dana', { tableId: `${MAIN}--2` });
@@ -170,6 +176,118 @@ describe('classPostProposal', () => {
 		await expect(
 			postProposal(seedLesson(true).asFirestore(), STUDENT, base, deps()),
 		).rejects.toMatchObject({ reason: 'vote-running' });
+	});
+});
+
+describe('the proposal limit (statementSettings.proposalLimit)', () => {
+	const send = (fake: FakeFirestore, uid: string, proposalId: string, d = deps()) =>
+		postProposal(fake.asFirestore(), uid, { mainId: MAIN, proposalId, text: 'An idea' }, d);
+	const setLimit = (fake: FakeFirestore, limit: 'one' | 'unlimited'): void =>
+		fake.seed(`statements/${MAIN}`, {
+			...fake.read(`statements/${MAIN}`),
+			statementSettings: {
+				lessonPlan: { steps: ['proposals'], stepIndex: 0 },
+				proposalLimit: limit,
+			},
+		});
+	const writtenBy = (fake: FakeFirestore, uid: string): Record<string, unknown>[] =>
+		fake.list('statements').filter((s) => s.creatorId === uid && s.statementType === 'option');
+
+	it('starts on one: a lesson that set nothing, or anything unknown, allows one', async () => {
+		expect(proposalLimitOf({})).toBe('one');
+		expect(proposalLimitOf(null)).toBe('one');
+		expect(proposalLimitOf({ statementSettings: { proposalLimit: 'one' } })).toBe('one');
+		expect(proposalLimitOf({ statementSettings: { proposalLimit: 'many' } })).toBe('one');
+		expect(proposalLimitOf({ statementSettings: { proposalLimit: 'unlimited' } })).toBe(
+			'unlimited',
+		);
+	});
+
+	it('unlimited lets one student send several, each by its own id', async () => {
+		const fake = seedLesson(false, 'unlimited');
+		await send(fake, STUDENT, 'p1');
+		await send(fake, STUDENT, 'p2');
+		await send(fake, STUDENT, 'p3');
+		expect(writtenBy(fake, STUDENT)).toHaveLength(3);
+	});
+
+	it('a retry of any of the author own proposals is the same write, not a new one', async () => {
+		const fake = seedLesson(false, 'unlimited');
+		await send(fake, STUDENT, 'p1');
+		await send(fake, STUDENT, 'p2');
+		setLimit(fake, 'one');
+		// Under the old "first match" check the retry of p2 would be refused as a second proposal.
+		await expect(send(fake, STUDENT, 'p2')).resolves.toEqual({ ok: true, proposalId: 'p2' });
+		await expect(send(fake, STUDENT, 'p1')).resolves.toEqual({ ok: true, proposalId: 'p1' });
+		expect(writtenBy(fake, STUDENT)).toHaveLength(2);
+	});
+
+	it('switched back to one: nothing goes away, editing works, adding stops', async () => {
+		const fake = seedLesson(false, 'unlimited');
+		await send(fake, STUDENT, 'p1');
+		await send(fake, STUDENT, 'p2');
+		setLimit(fake, 'one');
+		await expect(send(fake, STUDENT, 'p3')).rejects.toMatchObject({ reason: 'already-proposed' });
+		expect(writtenBy(fake, STUDENT)).toHaveLength(2);
+		await expect(
+			editProposal(
+				fake.asFirestore(),
+				STUDENT,
+				{ mainId: MAIN, proposalId: 'p1', text: 'Better' },
+				deps(),
+			),
+		).resolves.toEqual({ ok: true, proposalId: 'p1' });
+		// Somebody holding none still may send their one.
+		await expect(send(fake, MATE, 'm1')).resolves.toEqual({ ok: true, proposalId: 'm1' });
+	});
+
+	it('obeys the limit for the teacher own proposals too', async () => {
+		const fake = seedLesson();
+		await send(fake, TEACHER, 't1');
+		await expect(send(fake, TEACHER, 't2')).rejects.toMatchObject({ reason: 'already-proposed' });
+	});
+
+	it('a hidden proposal still counts: hiding does not hand its author another', async () => {
+		const fake = seedLesson();
+		await send(fake, STUDENT, 'p1');
+		fake.seed('statements/p1', { ...fake.read('statements/p1'), hide: true });
+		await expect(send(fake, STUDENT, 'p2')).rejects.toMatchObject({ reason: 'already-proposed' });
+	});
+
+	it('checks again when writing: two sends racing past the first check cannot both land', async () => {
+		const fake = seedLesson();
+		const racing: PostProposalDeps = {
+			now: () => NOW,
+			// The language check takes seconds: the other send lands while this one waits.
+			detect: async () => {
+				await send(fake, STUDENT, 'first');
+
+				return false;
+			},
+		};
+		await expect(send(fake, STUDENT, 'second', racing)).rejects.toMatchObject({
+			reason: 'already-proposed',
+		});
+		expect(writtenBy(fake, STUDENT).map((s) => s.statementId)).toEqual(['first']);
+	});
+
+	it("refuses an id that is someone else's proposal instead of answering sent", async () => {
+		const fake = seedLesson(false, 'unlimited');
+		await send(fake, MATE, 'taken');
+		await expect(send(fake, STUDENT, 'taken')).rejects.toMatchObject({
+			reason: 'proposal-id-taken',
+		});
+		expect(fake.read('statements/taken')).toMatchObject({ creatorId: MATE });
+	});
+
+	it('a game carries the setting into every lesson played from it', () => {
+		const source = {
+			statementSettings: { proposalLimit: 'unlimited' },
+		} as unknown as Statement;
+		const snapshot = snapshotFromLesson(source, []);
+		expect(snapshot.settings.proposalLimit).toBe('unlimited');
+		const untouched = snapshotFromLesson({ statementSettings: {} } as unknown as Statement, []);
+		expect(untouched.settings.proposalLimit).toBeUndefined();
 	});
 });
 

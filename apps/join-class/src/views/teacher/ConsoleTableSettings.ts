@@ -1,16 +1,19 @@
 import m from 'mithril';
 import {
 	allowOwnQuestionsOf,
+	proposalLimitOf,
 	proposalsTurnsOf,
 	speakSecondsOf,
 	tableSizeOf,
 } from '@freedi/shared-types';
+import type { ClassProposalLimit } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { getMainStatement } from '@/lib/store';
 import { setTableSetting } from './consoleActions';
 import { isBusy } from './consoleState';
 import {
 	OwnQuestionsSwitch,
+	ProposalLimitSelect,
 	ProposalsTurnsSelect,
 	SpeakTimeSelect,
 	TableSizeSelect,
@@ -45,6 +48,12 @@ export const ConsoleTableSettings: m.Component = {
 				turns: proposalsTurnsOf(main),
 				disabled: !main || isBusy('tableSetting:proposalsTurns'),
 				onChange: (turns: number) => void setTableSetting({ proposalsTurns: turns }),
+			}),
+			m(ProposalLimitSelect, {
+				scope: 'console',
+				limit: proposalLimitOf(main),
+				disabled: !main || isBusy('tableSetting:proposalLimit'),
+				onChange: (limit: ClassProposalLimit) => void setTableSetting({ proposalLimit: limit }),
 			}),
 			m(TableSizeSelect, {
 				size: tableSizeOf(main),

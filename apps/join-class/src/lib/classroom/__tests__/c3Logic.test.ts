@@ -6,7 +6,7 @@ import {
 	idleCountdownText,
 	isOwnItem,
 	listableItems,
-	myProposal,
+	myProposals,
 	officialSubstep,
 	partitionRateItems,
 	plenumOrder,
@@ -183,8 +183,8 @@ describe('rate list', () => {
 		expect(ordered.map((s) => s.statementId)).toEqual(['high', 'tieNew', 'tieOld', 'low']);
 	});
 
-	it('finds my own (latest) proposal', () => {
-		const found = myProposal(
+	it('finds all my own proposals, newest first', () => {
+		const found = myProposals(
 			[
 				item('a', { creatorId: 'me', createdAt: 1 }),
 				item('b', { creatorId: 'me', createdAt: 2 }),
@@ -192,8 +192,8 @@ describe('rate list', () => {
 			],
 			'me',
 		);
-		expect(found?.statementId).toBe('b');
-		expect(myProposal([item('c')], 'me')).toBeNull();
+		expect(found.map((p) => p.statementId)).toEqual(['b', 'a']);
+		expect(myProposals([item('c')], 'me')).toEqual([]);
 	});
 
 	it('reads the table number from a table id', () => {

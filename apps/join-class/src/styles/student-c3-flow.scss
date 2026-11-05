@@ -404,3 +404,21 @@ body.c3-lock {
     opacity: 1;
   }
 }
+
+// The student's own proposals as cards, when they may hold several (the proposal limit).
+.own-proposals {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+}
+
+// "You can send one proposal": said plainly under the box, the text stays.
+.write-panel__note--limit {
+  font-weight: var(--font-weight-semibold);
+}

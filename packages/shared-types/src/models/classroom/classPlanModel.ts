@@ -79,6 +79,8 @@ export const ClassGameVideoSchema = object({ id: string(), title: string(), url:
 export const ClassGameSettingsSchema = object({
 	speakSeconds: optional(number()),
 	proposalsTurns: optional(number()),
+	/** Plain string, as on the lesson (strict-parse trap); read through `proposalLimitOf`. */
+	proposalLimit: optional(string()),
 	tableSize: optional(number()),
 	allowOwnQuestions: optional(boolean()),
 	sideQuestion: optional(string()),

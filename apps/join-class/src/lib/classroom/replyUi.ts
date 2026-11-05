@@ -22,7 +22,8 @@ export interface ReplyUiState {
 	toMe: Statement[];
 	/** The read mark the unread count is measured from (ms). */
 	readAt: number | undefined;
-	improve: (() => void) | null;
+	/** Opens the screen's edit box, on the proposal whose replies were open. */
+	improve: ((proposalId?: string) => void) | null;
 	/** Own proposals the teacher hid: their replies leave the unread count (IA 24.2). */
 	hiddenProposals: ReadonlySet<string>;
 	/** Opens the replies of a proposal by id; set by the reply host once it is running. */
@@ -63,7 +64,7 @@ export function backFromReplies(): void {
  * on every draw (the handler closes over the screen's state); `owner` lets the
  * screen clear only its own handler when it goes away.
  */
-export function setImproveHandler(owner: object, handler: () => void): void {
+export function setImproveHandler(owner: object, handler: (proposalId?: string) => void): void {
 	improveOwner = owner;
 	replyUi.improve = handler;
 }
@@ -77,8 +78,9 @@ export function clearImproveHandler(owner: object): void {
 /** "Improve my proposal": the sheet closes and the screen's edit box opens. */
 export function improveFromReplies(): void {
 	const improve = replyUi.improve;
+	const proposalId = replyUi.open?.proposal.statementId;
 	replyUi.open = null;
-	improve?.();
+	improve?.(proposalId);
 	m.redraw();
 }
 

@@ -40,6 +40,15 @@ export const DEFAULT_PROPOSALS_TURNS = 1;
 /** The turn counts the teacher can choose from; "another turn" can go past the last. */
 export const PROPOSALS_TURNS_CHOICES = [1, 2, 3] as const;
 
+/**
+ * How many proposals each author may send (`statementSettings.proposalLimit`): the
+ * teacher's setting, 'one' when the lesson sets nothing. The field itself is a plain
+ * string on the schema (strict-parse trap): read it through `proposalLimitOf`.
+ */
+export const CLASS_PROPOSAL_LIMITS = ['one', 'unlimited'] as const;
+export type ClassProposalLimit = (typeof CLASS_PROPOSAL_LIMITS)[number];
+export const DEFAULT_PROPOSAL_LIMIT: ClassProposalLimit = 'one';
+
 /** Default gate: a proposal must reach this consensus (`votingSettings.threshold`). */
 export const DEFAULT_GATE = 0.6;
 

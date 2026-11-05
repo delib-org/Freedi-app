@@ -8,6 +8,7 @@ import allProposals from './allProposals/fa'; // >>> allProposals
 import reply from './reply/fa';
 import look from './look/fa';
 import challenge from './challenge/fa';
+import actFor from './actFor/fa';
 
 const fa: Record<string, string> = {
 	...vote,
@@ -15,6 +16,7 @@ const fa: Record<string, string> = {
 	...reply,
 	...look,
 	...challenge,
+	...actFor,
 	'step.waiting': 'در انتظار معلم',
 	'step.opening': 'شروع',
 	'step.side': 'انتخاب جانب',

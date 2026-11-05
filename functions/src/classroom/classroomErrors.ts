@@ -24,6 +24,7 @@ export type ClassroomErrorReason =
 	| 'reply-too-long'
 	| 'proposal-too-long'
 	| 'already-proposed'
+	| 'proposal-id-taken'
 	| 'own-questions-off'
 	| 'turns-done'
 	| 'not-talking'

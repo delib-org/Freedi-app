@@ -33,7 +33,8 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 	);
 	// "Improve my proposal" from the replies (IA 22.5): the plenum's edit box on
 	// the rate screen, else the write screen (its box edits the sent proposal).
-	setImproveHandler(self, () => {
+	setImproveHandler(self, (proposalId) => {
+		self.editRequest = proposalId ?? null;
 		if (!plenum) {
 			ctx.goto('write');
 
@@ -59,6 +60,12 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 			locked: ballotFrozen,
 			busy: self.busy,
 			onAction: ctx.act,
+			takeEditRequest: () => {
+				const request = self.editRequest;
+				self.editRequest = null;
+
+				return request;
+			},
 		});
 	let body: m.Children;
 	let action: m.Children = null;
@@ -112,6 +119,10 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 			editing: self.editing,
 			onToggleEdit: () => {
 				self.editing = !self.editing;
+			},
+			onEdit: (proposalId) => {
+				self.editRequest = proposalId;
+				self.editing = true;
 			},
 			onError,
 		});

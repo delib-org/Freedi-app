@@ -8,6 +8,7 @@ import allProposals from './allProposals/nl'; // >>> allProposals
 import reply from './reply/nl';
 import look from './look/nl';
 import challenge from './challenge/nl';
+import actFor from './actFor/nl';
 
 const nl: Record<string, string> = {
 	...vote,
@@ -15,6 +16,7 @@ const nl: Record<string, string> = {
 	...reply,
 	...look,
 	...challenge,
+	...actFor,
 	'step.waiting': 'Wachten op de docent',
 	'step.opening': 'Opening',
 	'step.side': 'Kies een kant',

@@ -6,7 +6,7 @@ import type { Statement } from '../statement/StatementTypes';
 import type { StatementSettings } from '../statement/StatementSettings';
 import { createParagraphChildStatement, createStatementObject } from '../statement/StatementUtils';
 import type { User } from '../user/User';
-import { proposalsTurnsOf, speakSecondsOf, tableSizeOf } from './classroomLogic';
+import { proposalLimitOf, proposalsTurnsOf, speakSecondsOf, tableSizeOf } from './classroomLogic';
 import {
 	CLASS_GAME_MAX_PARAGRAPHS,
 	CLASS_GAME_MAX_QUESTIONS,
@@ -164,6 +164,9 @@ export function snapshotFromLesson(
 		...(s?.proposalsTurns !== undefined
 			? { proposalsTurns: proposalsTurnsOf({ statementSettings: s }) }
 			: {}),
+		...(s?.proposalLimit !== undefined
+			? { proposalLimit: proposalLimitOf({ statementSettings: s }) }
+			: {}),
 		...(s?.tableSize !== undefined ? { tableSize: tableSizeOf({ statementSettings: s }) } : {}),
 		...(typeof s?.allowOwnQuestions === 'boolean'
 			? { allowOwnQuestions: s.allowOwnQuestions }
@@ -259,6 +262,7 @@ function lessonSettings(
 		...(snapshot.sideClaims ? { sideClaims: { ...snapshot.sideClaims } } : {}),
 		...(g.speakSeconds !== undefined ? { speakSeconds: speakSecondsOf(holder) } : {}),
 		...(g.proposalsTurns !== undefined ? { proposalsTurns: proposalsTurnsOf(holder) } : {}),
+		...(g.proposalLimit !== undefined ? { proposalLimit: proposalLimitOf(holder) } : {}),
 		...(g.tableSize !== undefined ? { tableSize: tableSizeOf(holder) } : {}),
 		...(typeof g.allowOwnQuestions === 'boolean' ? { allowOwnQuestions: g.allowOwnQuestions } : {}),
 	} as StatementSettings;

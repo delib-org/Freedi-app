@@ -1030,6 +1030,8 @@ export {
   SPEAK_SECONDS_CHOICES,
   DEFAULT_PROPOSALS_TURNS,
   PROPOSALS_TURNS_CHOICES,
+  CLASS_PROPOSAL_LIMITS,
+  DEFAULT_PROPOSAL_LIMIT,
   DEFAULT_GATE,
   SIDE_MIN,
   SIDE_MAX,
@@ -1074,6 +1076,7 @@ export type {
   ClassReplyMarker,
   ClassLanguageFlag,
   ClassLanguageFlagKind,
+  ClassProposalLimit,
 } from './models/classroom/classroomModel';
 export {
   campOf,
@@ -1095,6 +1098,8 @@ export {
   noQuestionsLeft,
   speakSecondsOf,
   proposalsTurnsOf,
+  proposalLimitOf,
+  mayAddProposal,
   proposalsTurnOf,
   proposalsMaxTurns,
   proposalsTurnOver,
