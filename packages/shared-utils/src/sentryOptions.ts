@@ -33,7 +33,8 @@ export type FreediApp =
 	| 'agora'
 	| 'flow'
 	| 'odyssey'
-	| 'studio';
+	| 'studio'
+	| 'tables';
 
 export interface BuildSentryOptionsArgs {
 	dsn: string;

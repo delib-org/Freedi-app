@@ -1,0 +1,12 @@
+// Design tokens for Tables. Definitions live here; components only use var(--token).
+// Palette and spacing follow the Join family (docs/guides/design-guide.md).
+
+:root {
+  --paper: #faf6ef;
+  --ink: #1c1917;
+  --ink-muted: #4a433c;
+  --brand: #1f5895;
+  --padding: 1rem;
+  --padding-large: 2rem;
+  --radius: 12px;
+}
