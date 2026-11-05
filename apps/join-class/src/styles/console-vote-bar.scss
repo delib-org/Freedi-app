@@ -84,7 +84,8 @@
   }
 
   &--closed {
-    color: var(--text-inverse);
+    // the paper tone reads on --ink in both schemes (--text-inverse stays white in dark mode: 1.17:1)
+    color: var(--paper);
     background: var(--ink);
   }
 

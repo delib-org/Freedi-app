@@ -33,6 +33,7 @@ import { startLessonViaPlan } from './lib/startLessonViaPlan.mjs';
 const TIMEOUT = 25000;
 const SLOW = 60000; // one onStatementCreated / newEvaluation round is ~6 s on the emulator
 const POLL_MS = 250;
+const GLIDE_MS = 1500; // longer than the vote cards' glide to a new layout
 const PHONE = { width: 375, height: 812 };
 const LAPTOP = { width: 1280, height: 800 };
 const PROJECTOR = { width: 1920, height: 1080 };
@@ -467,10 +468,12 @@ const toggleSetting = async (field, on) => {
 
 const chooseOrder = async (value) => {
 	const radio = teacher.page.getByTestId(`vote-order-${value}`);
-	if ((await radio.count()) === 0 || !(await radio.isVisible())) await teacher.page.locator('summary.console__settings-toggle').click();
+	// The order switch sits on the Vote bar; only open the settings popover when it is not there, and close it again only then.
+	const opened = (await radio.count()) === 0 || !(await radio.isVisible());
+	if (opened) await teacher.page.locator('summary.console__settings-toggle').click();
 	await radio.waitFor({ state: 'visible', timeout: TIMEOUT });
 	if (!(await radio.isChecked())) await radio.check();
-	await teacher.page.locator('summary.console__settings-toggle').click();
+	if (opened) await teacher.page.locator('summary.console__settings-toggle').click();
 };
 
 async function phaseVote() {
@@ -490,14 +493,18 @@ async function phaseVote() {
 	);
 	check('vote: after opening, the open button is gone and pause is enabled', buttonsOk === true);
 	await snapAll('vote-open');
-	check('vote: the projector shows the open gate once the vote is open', (await projector.page.locator('.gate-stage--open').count()) === 1);
+	// The gate is the consensus gate (open only once a proposal passes it); these proposals sit below it, so only its presence is stable.
+	check('vote: the projector shows the gate once the vote is open', (await projector.page.locator('.gate-stage').count()) === 1);
 	const ballot = (await challengeData()).statementSettings.ballot;
 	check('vote: the ballot has both proposals', ballot.candidateIds.length === 2, `${ballot.candidateIds.length}`);
 	check('vote: results start closed (no result line under the options, a calm status line instead)', (await A.page.locator('.vote-list__count').count()) === 0 && (await A.page.getByTestId('vote-results-later').count()) === 1);
 	await toggleSetting('liveResults', true);
 	check('vote: opening the results to the class shows a result line under each option', !!(await eventually(async () => (await A.page.locator('.vote-list__count').count()) === 2)));
+	// The cards grow by a result line and glide to their new place; the app ignores taps until the glide ends (VoteList), so wait it out like a student would.
+	await sleep(GLIDE_MS);
 	// A votes for the first card
-	const votedFor = await A.page.getByTestId('vote-option').first().getAttribute('data-key');
+	// With the replies entry beside each card the key sits on the row, not on the card button.
+	const votedFor = await A.page.locator('.vote-list__row').first().getAttribute('data-key');
 	await A.page.getByTestId('vote-option').first().click();
 	await eventually(async () => (await votesCount()) === 1);
 	check('vote: A voted once', (await votesCount()) === 1);
@@ -625,7 +632,8 @@ async function phaseBackAndResets() {
 	await noticeBoth('ההצבעה התחילה מחדש', 'reset vote');
 	const ballot = (await challengeData()).statementSettings.ballot;
 	check('reset vote: the ballot is open again with both candidates and no decision', ballot.candidateIds.length === 2 && !ballot.closedAt && !ballot.decisionId);
-	check('reset vote: both phones can vote again', (await voteLabel(A)) === 'הצבעה' && (await voteLabel(B)) === 'הצבעה');
+	// An open vote with no pick has an empty status line; "can vote" is two radio cards.
+	check('reset vote: both phones can vote again', (await A.page.locator('[role=radio]').count()) === 2 && (await B.page.locator('[role=radio]').count()) === 2 && (await voteLabel(A)) === '' && (await voteLabel(B)) === '');
 	await snapAll('reset-vote-done');
 
 	// both vote for the first card, then the teacher hides that proposal
@@ -633,19 +641,20 @@ async function phaseBackAndResets() {
 	const firstId = (await challengeData()).statementSettings.ballot.candidateIds[0];
 	await sleep(900); // a re-order glide ignores taps until it ends (IA 21.3)
 	for (const phone of phones) {
-		await phone.page.locator(`[data-testid=vote-option][data-key="${firstId}"]`).click();
+		await phone.page.locator(`.vote-list__row[data-key="${firstId}"] [data-testid=vote-option]`).click();
 	}
 	await eventually(async () => (await votesCount()) === 2);
 	const firstText = (await admin.collection('statements').doc(firstId).get()).data().statement;
 	await teacher.page.goto(`${BASE}/t/${mid}?view=texts`, { waitUntil: 'domcontentloaded' });
-	const card = teacher.page.locator('.written-card', { hasText: firstText }).first();
+	// "What they wrote" threads each proposal as a block (Trello NFOEJXMy): its own hide control sits in the block's parent row.
+	const card = teacher.page.locator('.proposal-block', { hasText: firstText }).first();
 	await card.waitFor({ timeout: TIMEOUT });
 	await snapAll('texts');
-	await card.getByRole('button', { name: 'הסתרה' }).click();
+	await card.locator('.proposal-block__parent').getByTestId('proposal-hide').click();
 	await eventually(async () => (await admin.collection('statements').doc(firstId).get()).data().hide === true);
 	check('hide: the proposal is hidden in the data', (await admin.collection('statements').doc(firstId).get()).data().hide === true);
 	await sleep(1000);
-	check('hide: the teacher card is flagged hidden', (await teacher.page.locator('.written-card--hidden').count()) === 1);
+	check('hide: the teacher card is flagged hidden', (await teacher.page.locator('.proposal-block--hidden').count()) === 1);
 	for (const phone of phones) {
 		const msg = await eventually(() => bodyText(phone.page), (v) => v.includes('ההצעה שבחרתם הוסרה'), 8000);
 		const mine = (await admin.collection('votes').where('parentId', '==', challengeId).get()).docs.map((d) => `${d.data().userId.slice(0, 4)}:${d.data().statementId === firstId ? 'first' : d.data().statementId}`);
