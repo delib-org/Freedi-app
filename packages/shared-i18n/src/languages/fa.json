@@ -5158,5 +5158,7 @@
   "survey.stakeholders.recalculateFailed": "محاسبهٔ دوبارهٔ امتیازها انجام نشد. دوباره تلاش کنید یا از مالک نظرسنجی کمک بگیرید.",
   "survey.stakeholders.skipped": "عدد روی {{count}} پرسش از نظرسنجی تنظیم نشد، چون هیچ‌یک از مدیران این نظرسنجی آن‌ها را مدیریت نمی‌کند. این پرسش‌ها عدد خودشان را نگه می‌دارند.",
   "Collapse level": "جمع کردن سطح",
-  "Expand level": "گسترش سطح"
+  "Expand level": "گسترش سطح",
+  "Add what the group is divided on": "افزودن آنچه گروه درباره‌اش دو دسته است",
+  "Could not update the summary": "به‌روزرسانی خلاصه ممکن نشد"
 }

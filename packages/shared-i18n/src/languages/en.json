@@ -5359,5 +5359,7 @@
   "survey.stakeholders.recalculateFailed": "Could not recalculate the scores. Try again, or ask the survey owner.",
   "survey.stakeholders.skipped": "The number could not be set on {{count}} of the survey's questions, because nobody who runs this survey manages them. Those questions keep their own number.",
   "Collapse level": "Collapse level",
-  "Expand level": "Expand level"
+  "Expand level": "Expand level",
+  "Add what the group is divided on": "Add what the group is divided on",
+  "Could not update the summary": "Could not update the summary"
 }

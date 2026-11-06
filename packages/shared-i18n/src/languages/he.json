@@ -5397,5 +5397,7 @@
   "survey.stakeholders.recalculateFailed": "לא הצלחנו לחשב מחדש את הציונים. אפשר לנסות שוב או לפנות לבעל הסקר.",
   "survey.stakeholders.skipped": "לא ניתן היה לקבוע את המספר ב-{{count}} משאלות הסקר, כי אף אחד ממנהלי הסקר אינו מנהל אותן. בשאלות האלה נשאר המספר שלהן.",
   "Collapse level": "כווץ רמה",
-  "Expand level": "הרחב רמה"
+  "Expand level": "הרחב רמה",
+  "Add what the group is divided on": "הוסף במה הקבוצה חלוקה",
+  "Could not update the summary": "לא ניתן היה לעדכן את הסיכום"
 }

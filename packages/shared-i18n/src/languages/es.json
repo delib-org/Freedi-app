@@ -4681,5 +4681,7 @@
   "survey.stakeholders.recalculateFailed": "No se pudieron recalcular las puntuaciones. Inténtalo de nuevo o consulta con quien administra la encuesta.",
   "survey.stakeholders.skipped": "No se pudo fijar el número en {{count}} preguntas de la encuesta, porque nadie que gestione esta encuesta las administra. Esas preguntas conservan su propio número.",
   "Collapse level": "Contraer nivel",
-  "Expand level": "Expandir nivel"
+  "Expand level": "Expandir nivel",
+  "Add what the group is divided on": "Añadir en qué está dividido el grupo",
+  "Could not update the summary": "No se pudo actualizar el resumen"
 }
