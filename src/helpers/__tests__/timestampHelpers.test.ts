@@ -252,6 +252,43 @@ describe('preprocessFirestoreData', () => {
 // normalizeStatementData
 // -----------------------------------------------------------------------
 describe('normalizeStatementData', () => {
+	describe('evaluationSettings repair', () => {
+		it('defaults evaluationUI to suggestions when the map lacks it', () => {
+			const result = normalizeStatementData({
+				statementId: 's1',
+				parentId: 'p1',
+				topParentId: 't1',
+				evaluationSettings: { targetPopulation: 40 },
+			}) as { evaluationSettings: Record<string, unknown> };
+
+			expect(result.evaluationSettings).toEqual({
+				targetPopulation: 40,
+				evaluationUI: 'suggestions',
+			});
+		});
+
+		it('keeps an existing evaluationUI', () => {
+			const result = normalizeStatementData({
+				statementId: 's1',
+				parentId: 'p1',
+				topParentId: 't1',
+				evaluationSettings: { evaluationUI: 'voting' },
+			}) as { evaluationSettings: Record<string, unknown> };
+
+			expect(result.evaluationSettings.evaluationUI).toBe('voting');
+		});
+
+		it('does not invent evaluationSettings', () => {
+			const result = normalizeStatementData({
+				statementId: 's1',
+				parentId: 'p1',
+				topParentId: 't1',
+			}) as Record<string, unknown>;
+
+			expect(result.evaluationSettings).toBeUndefined();
+		});
+	});
+
 	// -----------------------------------------------------------------------
 	// Passthrough cases
 	// -----------------------------------------------------------------------

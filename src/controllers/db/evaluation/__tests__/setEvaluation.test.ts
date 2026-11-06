@@ -103,12 +103,14 @@ import {
 	setEvaluationUIType,
 	setAnchoredEvaluationSettings,
 	setMaxVotesPerUser,
+	setConfidenceIndexSettings,
 } from '../setEvaluation';
 
 // Mock Firebase Firestore
 const mockSetDoc = jest.fn();
 const mockUpdateDoc = jest.fn();
 const mockDoc = jest.fn();
+const mockGetDoc = jest.fn();
 
 jest.mock('firebase/firestore', () => ({
 	Timestamp: {
@@ -117,6 +119,8 @@ jest.mock('firebase/firestore', () => ({
 	doc: (...args: unknown[]) => mockDoc(...args),
 	setDoc: (...args: unknown[]) => mockSetDoc(...args),
 	updateDoc: (...args: unknown[]) => mockUpdateDoc(...args),
+	getDoc: (...args: unknown[]) => mockGetDoc(...args),
+	deleteField: () => 'DELETE_FIELD',
 }));
 
 // Mock Firebase config.
@@ -196,6 +200,10 @@ describe('setEvaluation', () => {
 		mockDoc.mockReturnValue('mock-ref');
 		mockSetDoc.mockResolvedValue(undefined);
 		mockUpdateDoc.mockResolvedValue(undefined);
+		// By default the statement already carries evaluationUI
+		mockGetDoc.mockResolvedValue({
+			data: () => ({ evaluationSettings: { evaluationUI: EvaluationUI.voting } }),
+		});
 		// The signed-in session agrees with the evaluator unless a test says otherwise
 		mockAuth.currentUser = { uid: mockUser.uid };
 	});
@@ -480,6 +488,57 @@ describe('setEvaluation', () => {
 			await expect(setMaxVotesPerUser('stmt-123', 5)).rejects.toThrow('Update failed');
 
 			expect(logger.error).toHaveBeenCalled();
+		});
+	});
+
+	describe('statements stored without evaluationUI', () => {
+		const noSettings = { data: () => ({ statementId: 'stmt-123' }) };
+		const settingsWithoutUI = { data: () => ({ evaluationSettings: { anchored: {} } }) };
+		const defaultUI = { 'evaluationSettings.evaluationUI': EvaluationUI.suggestions };
+
+		it('setMaxVotesPerUser adds evaluationUI when there are no settings', async () => {
+			mockGetDoc.mockResolvedValueOnce(noSettings);
+
+			await setMaxVotesPerUser('stmt-123', 5);
+
+			expect(mockUpdateDoc).toHaveBeenCalledWith(expect.anything(), {
+				'evaluationSettings.maxVotesPerUser': 5,
+				...defaultUI,
+			});
+		});
+
+		it('setAnchoredEvaluationSettings adds evaluationUI when the map lacks it', async () => {
+			mockGetDoc.mockResolvedValueOnce(settingsWithoutUI);
+
+			await setAnchoredEvaluationSettings('stmt-123', {
+				anchored: true,
+				numberOfAnchoredStatements: 2,
+			});
+
+			expect(mockUpdateDoc).toHaveBeenCalledWith(expect.anything(), {
+				'evaluationSettings.anchored': { anchored: true, numberOfAnchoredStatements: 2 },
+				...defaultUI,
+			});
+		});
+
+		it('setConfidenceIndexSettings adds evaluationUI when missing', async () => {
+			mockGetDoc.mockResolvedValueOnce(noSettings);
+
+			await setConfidenceIndexSettings('stmt-123', { targetPopulation: 40, samplingQuality: 0.5 });
+
+			expect(mockUpdateDoc).toHaveBeenCalledWith(expect.anything(), {
+				'evaluationSettings.targetPopulation': 40,
+				'evaluationSettings.samplingQuality': 0.5,
+				...defaultUI,
+			});
+		});
+
+		it('never overwrites an existing evaluationUI', async () => {
+			await setConfidenceIndexSettings('stmt-123', { targetPopulation: 40 });
+
+			expect(mockUpdateDoc).toHaveBeenCalledWith(expect.anything(), {
+				'evaluationSettings.targetPopulation': 40,
+			});
 		});
 	});
 });
