@@ -6,7 +6,10 @@ import {
 	createAgreementHandoff,
 	DELIBERATION_POLL_MS,
 } from '@/controllers/db/deliberation';
+import { useSelector } from 'react-redux';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { statementSelector } from '@/redux/statements/statementsSlice';
+import SubGroupCardSummary from '@/view/components/subGroupCard/SubGroupCardSummary';
 import styles from './Agreement.module.scss';
 import processStyles from './QuestionProcess.module.scss';
 
@@ -24,6 +27,8 @@ export default function QuestionProcess({
 	variant?: 'page' | 'card';
 }) {
 	const isCard = variant === 'card';
+	// One summary per question: the live statement's own, same as on the question card.
+	const liveStatement = useSelector(statementSelector(statement.statementId)) ?? statement;
 	const { t } = useTranslation();
 	const [data, setData] = useState<DeliberationStatus>();
 	const [error, setError] = useState('');
@@ -151,22 +156,12 @@ export default function QuestionProcess({
 				<>
 					<div className={processStyles.process__head}>
 						<h2>{isCard ? t('Summary') : t('Summary of agreed proposals')}</h2>
-						{isCard && !!data?.summaryAt && (
-							<small>{new Date(data.summaryAt).toLocaleString()}</small>
-						)}
 					</div>
-					<p>{data?.summary || t('No summary yet')}</p>
-					{!isCard && !!data?.summaryAt && (
-						<small>{new Date(data.summaryAt).toLocaleString()}</small>
-					)}
-					{data?.summaryStale && (
-						<p>{t('Agreed proposals have changed since the last summary.')}</p>
-					)}
-					{data?.canManage && (
-						<button disabled={busy} onClick={() => void act('summary')}>
-							{busy ? t('Working…') : t('Update summary')}
-						</button>
-					)}
+					<SubGroupCardSummary
+						statement={liveStatement}
+						summary={liveStatement.summary ?? ''}
+						isAdmin={data?.canManage === true}
+					/>
 				</>
 			)}
 			{view === 'covenant' && (

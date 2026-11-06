@@ -14,7 +14,6 @@ export const POLICY = {
 	dailyProjectCalls: 100,
 	dailyFacilitatorCalls: 10,
 	dailyQuestionCalls: 4,
-	summaryTokens: 3500,
 } as const;
 
 export async function assertRegisteredFacilitator(uid: string): Promise<void> {

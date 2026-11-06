@@ -6,6 +6,7 @@ import { getGeminiModel, getGenAI, LLM_MODEL_HEAVY } from './config/gemini';
 import { ALLOWED_ORIGINS } from './config/cors';
 import { getParagraphsText } from './helpers';
 import { logError } from './utils/errorHandling';
+import { stampWorkflowSummary } from './deliberation/records';
 import { filterDividedOptions, summaryCoversDivided } from './utils/dividedOptions';
 
 interface SummarizeDiscussionRequest {
@@ -160,144 +161,20 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 			throw new HttpsError('permission-denied', 'Only admins can generate summaries');
 		}
 
-		// 3. Get total participants from parent evaluation
-		const totalParticipants = question.evaluation?.asParentTotalEvaluators || 0;
-
-		// 4. Gather the question tree with its above-cutoff answers.
-		// Each question's answers are the child options flagged isChosen by the
-		// cutoff logic (which applies that question's own resultsSettings).
-		const maxDepth = includeSubQuestions === true ? MAX_SUB_QUESTION_DEPTH : 0;
-		const tree = await buildQuestionTree(question, 0, maxDepth);
-
-		const totalSolutions = countSolutions(tree);
-		const subQuestionsCount = countSubQuestions(tree);
-
-		if (totalSolutions === 0) {
-			throw new HttpsError(
-				'failed-precondition',
-				includeSubQuestions
-					? 'No selected solutions to summarize in this question or its sub-questions. Please configure cutoff settings first.'
-					: 'No selected solutions to summarize. Please configure cutoff settings first.',
-			);
-		}
-
-		// Options the group is split on, picked by code from the vote counts.
-		const dividedOptions = includeDivided === true ? await fetchDividedOptions(statementId) : [];
-
-		// 5. Detect language and build prompt
-		const detectedLang = language || detectLanguage(question.statement);
-		const useDeepSummary = maxDepth > 0 && subQuestionsCount > 0;
-		const prompt = useDeepSummary
-			? buildTreeSummaryPrompt(tree, totalParticipants, adminPrompt, detectedLang)
-			: buildSummaryPrompt(
-					question,
-					tree.solutions,
-					totalParticipants,
-					adminPrompt,
-					detectedLang,
-					dividedOptions,
-				);
-
-		// 6. Call the LLM with retry logic for truncation.
-		// Deep (sub-question) summaries are an integration/synthesis task, so they
-		// run on the heavy reasoning model; flat summaries stay on the fast tier.
+		const saved = await generateAndSaveSummary(question, statementId, userId, {
+			adminPrompt,
+			language,
+			includeSubQuestions,
+			includeDivided,
+			operation: 'summarizeDiscussion.callable',
+		});
 		try {
-			const model = useDeepSummary
-				? getGenAI().getGenerativeModel({ model: LLM_MODEL_HEAVY })
-				: getGeminiModel();
-
-			// Calculate appropriate token limit based on number of solutions
-			// More solutions = need more tokens for complete summary
-			// The brief flat summary needs far fewer than the deep one.
-			const baseTokens = 4096;
-			const tokensPerSolution = 100;
-			const maxOutputTokens = useDeepSummary
-				? Math.min(8192, baseTokens + totalSolutions * tokensPerSolution)
-				: BRIEF_SUMMARY_MAX_OUTPUT_TOKENS;
-
-			let summaryText = '';
-			let attempts = 0;
-			const maxAttempts = 2;
-
-			while (attempts < maxAttempts) {
-				attempts++;
-
-				const result = await model.generateContent({
-					contents: [{ role: 'user', parts: [{ text: prompt }] }],
-					generationConfig: {
-						temperature: 0.4,
-						maxOutputTokens,
-					},
-				});
-
-				const response = result.response;
-
-				// Check if response was truncated
-				const finishReason = response.candidates?.[0]?.finishReason;
-				if (finishReason && finishReason !== 'STOP') {
-					logger.warn(`Gemini response finished with reason: ${finishReason}`);
-					if (finishReason === 'SAFETY') {
-						throw new HttpsError('failed-precondition', 'Content was filtered by safety settings');
-					}
-					if (finishReason === 'MAX_TOKENS' && attempts < maxAttempts) {
-						logger.warn('Summary was truncated, retrying with condensed prompt...');
-						// Continue to retry with higher token count (already at max, so this is best effort)
-						continue;
-					}
-				}
-
-				summaryText = response.text();
-
-				// Check if summary ends mid-sentence (basic truncation detection)
-				const trimmedText = summaryText.trim();
-				const endsWithPunctuation = /[.!?؟。،:\n]$/.test(trimmedText);
-
-				if (!endsWithPunctuation && trimmedText.length > 100 && attempts < maxAttempts) {
-					logger.warn('Summary appears truncated (no ending punctuation), retrying...');
-					continue;
-				}
-
-				break; // Success - exit loop
-			}
-
-			// Clean up any markdown code blocks if AI accidentally wrapped the response
-			summaryText = summaryText
-				.replace(/^```(?:markdown)?\s*/i, '')
-				.replace(/```\s*$/i, '')
-				.trim();
-
-			// 7. Save summary to Firestore
-			const generatedAt = Date.now();
-			// The deep tree summary never covers divided options.
-			const coversDivided = summaryCoversDivided(useDeepSummary, dividedOptions.length);
-			await db.collection(Collections.statements).doc(statementId).update({
-				summary: summaryText,
-				summaryGeneratedAt: generatedAt,
-				summaryIncludesDivided: coversDivided,
-				lastUpdate: generatedAt,
-			});
-
-			return {
-				summary: summaryText,
-				questionTitle: question.statement,
-				totalParticipants,
-				solutionsCount: totalSolutions,
-				subQuestionsCount,
-				generatedAt,
-				includeDivided: coversDivided,
-				dividedCount: dividedOptions.length,
-			};
+			await stampWorkflowSummary(statementId, saved.generatedAt);
 		} catch (error) {
-			if (error instanceof HttpsError) {
-				throw error;
-			}
-			logError(error, {
-				operation: 'summarizeDiscussion.generate',
-				statementId,
-				userId,
-			});
-			throw new HttpsError('internal', 'Failed to generate summary');
+			logError(error, { operation: 'summarizeDiscussion.stampWorkflow', statementId, userId });
 		}
+
+		return saved;
 	},
 );
 
@@ -578,4 +455,176 @@ Write a brief summary in ${languageName} that tells readers:
 - **IMPORTANT: Finish the whole summary - do not stop mid-sentence**
 
 Return ONLY the markdown summary text with proper ## and ### headers. Do not wrap in code blocks or JSON.`;
+}
+
+export interface SummaryOptions {
+	adminPrompt?: string;
+	language?: string;
+	includeSubQuestions?: boolean;
+	includeDivided?: boolean;
+	/** Caller label for error logs, e.g. 'deliberation.generateSummary'. */
+	operation?: string;
+}
+
+/**
+ * Builds the question's summary and saves it on the statement (summary,
+ * summaryGeneratedAt, summaryIncludesDivided). The one place a question summary
+ * is written: the card button and the deliberation workflow both call it.
+ * The caller has already checked permissions.
+ */
+export async function generateAndSaveSummary(
+	question: Statement,
+	statementId: string,
+	userId: string,
+	options: SummaryOptions,
+): Promise<SummarizeDiscussionResponse> {
+	const { adminPrompt, language, includeSubQuestions, includeDivided } = options;
+	const operation = options.operation ?? 'summarizeDiscussion.generate';
+	const db = getFirestore();
+	// 3. Get total participants from parent evaluation
+	const totalParticipants = question.evaluation?.asParentTotalEvaluators || 0;
+
+	// 4. Gather the question tree with its above-cutoff answers.
+	// Each question's answers are the child options flagged isChosen by the
+	// cutoff logic (which applies that question's own resultsSettings).
+	const maxDepth = includeSubQuestions === true ? MAX_SUB_QUESTION_DEPTH : 0;
+	const tree = await buildQuestionTree(question, 0, maxDepth);
+
+	const totalSolutions = countSolutions(tree);
+	const subQuestionsCount = countSubQuestions(tree);
+
+	if (totalSolutions === 0) {
+		throw new HttpsError(
+			'failed-precondition',
+			includeSubQuestions
+				? 'No selected solutions to summarize in this question or its sub-questions. Please configure cutoff settings first.'
+				: 'No selected solutions to summarize. Please configure cutoff settings first.',
+		);
+	}
+
+	// Options the group is split on, picked by code from the vote counts.
+	const dividedOptions = includeDivided === true ? await fetchDividedOptions(statementId) : [];
+
+	// 5. Detect language and build prompt
+	const detectedLang = language || detectLanguage(question.statement);
+	const useDeepSummary = maxDepth > 0 && subQuestionsCount > 0;
+	const prompt = useDeepSummary
+		? buildTreeSummaryPrompt(tree, totalParticipants, adminPrompt, detectedLang)
+		: buildSummaryPrompt(
+				question,
+				tree.solutions,
+				totalParticipants,
+				adminPrompt,
+				detectedLang,
+				dividedOptions,
+			);
+
+	// 6. Call the LLM with retry logic for truncation.
+	// Deep (sub-question) summaries are an integration/synthesis task, so they
+	// run on the heavy reasoning model; flat summaries stay on the fast tier.
+	try {
+		const model = useDeepSummary
+			? getGenAI().getGenerativeModel({ model: LLM_MODEL_HEAVY })
+			: getGeminiModel();
+
+		// Calculate appropriate token limit based on number of solutions
+		// More solutions = need more tokens for complete summary
+		// The brief flat summary needs far fewer than the deep one.
+		const baseTokens = 4096;
+		const tokensPerSolution = 100;
+		const maxOutputTokens = useDeepSummary
+			? Math.min(8192, baseTokens + totalSolutions * tokensPerSolution)
+			: BRIEF_SUMMARY_MAX_OUTPUT_TOKENS;
+
+		let summaryText = '';
+		let attempts = 0;
+		const maxAttempts = 2;
+
+		while (attempts < maxAttempts) {
+			attempts++;
+
+			const result = await model.generateContent({
+				contents: [{ role: 'user', parts: [{ text: prompt }] }],
+				generationConfig: {
+					temperature: 0.4,
+					maxOutputTokens,
+				},
+			});
+
+			const response = result.response;
+
+			// Check if response was truncated
+			const finishReason = response.candidates?.[0]?.finishReason;
+			if (finishReason && finishReason !== 'STOP') {
+				logger.warn(`Gemini response finished with reason: ${finishReason}`);
+				if (finishReason === 'SAFETY') {
+					throw new HttpsError('failed-precondition', 'Content was filtered by safety settings');
+				}
+				if (finishReason === 'MAX_TOKENS' && attempts < maxAttempts) {
+					logger.warn('Summary was truncated, retrying with condensed prompt...');
+					// Continue to retry with higher token count (already at max, so this is best effort)
+					continue;
+				}
+			}
+
+			summaryText = response.text();
+
+			// Check if summary ends mid-sentence (basic truncation detection)
+			const trimmedText = summaryText.trim();
+			const endsWithPunctuation = /[.!?؟。،:\n]$/.test(trimmedText);
+
+			if (!endsWithPunctuation && trimmedText.length > 100 && attempts < maxAttempts) {
+				logger.warn('Summary appears truncated (no ending punctuation), retrying...');
+				continue;
+			}
+
+			break; // Success - exit loop
+		}
+
+		// Clean up any markdown code blocks if AI accidentally wrapped the response
+		summaryText = summaryText
+			.replace(/^```(?:markdown)?\s*/i, '')
+			.replace(/```\s*$/i, '')
+			.trim();
+
+		// 7. Save summary to Firestore
+		const generatedAt = Date.now();
+		// The deep tree summary never covers divided options.
+		const coversDivided = summaryCoversDivided(useDeepSummary, dividedOptions.length);
+		await db
+			.collection(Collections.statements)
+			.doc(statementId)
+			.update({
+				summary: summaryText,
+				summaryGeneratedAt: generatedAt,
+				summaryIncludesDivided: coversDivided,
+				// What the summary was built from, so the UI can tell when the selection changes.
+				summarySelectedIds: tree.solutions
+					.map((solution) => solution.statementId)
+					.filter((id): id is string => typeof id === 'string')
+					.sort(),
+				lastUpdate: generatedAt,
+			});
+
+		return {
+			summary: summaryText,
+			questionTitle: question.statement,
+			totalParticipants,
+			solutionsCount: totalSolutions,
+			subQuestionsCount,
+			generatedAt,
+			includeDivided: coversDivided,
+			dividedCount: dividedOptions.length,
+		};
+	} catch (error) {
+		if (error instanceof HttpsError) {
+			throw error;
+		}
+		logError(error, {
+			operation,
+			statementId,
+			userId,
+		});
+		throw new HttpsError('internal', 'Failed to generate summary');
+	}
 }

@@ -112,6 +112,8 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 				</p>
 			)}
 
+			{visible && <QuestionProcess statement={statement} view="summary" variant="card" />}
+
 			{visible && leading.length > 0 && (
 				<section className={styles.section} aria-labelledby={`${listId}-leading`}>
 					<div className={styles.section__head}>
@@ -125,8 +127,6 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 					))}
 				</section>
 			)}
-
-			{visible && <QuestionProcess statement={statement} view="summary" variant="card" />}
 
 			{visible && (
 				<section className={styles.section}>
