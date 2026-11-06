@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useEditPermission } from '@/controllers/hooks/useEditPermission';
@@ -25,12 +25,23 @@ const SubGroupCardSummary: FC<Props> = ({ statement, summary }) => {
 	const { isAdmin } = useEditPermission(statement);
 	const [isLoading, setIsLoading] = useState(false);
 	const [hasFailed, setHasFailed] = useState(false);
+	// The fresh text from the callable, so the admin sees it at once even if the
+	// statement listener has not delivered the update yet. The prop wins again
+	// whenever it changes.
+	const [generated, setGenerated] = useState<string | undefined>(undefined);
+
+	useEffect(() => {
+		setGenerated(undefined);
+	}, [summary]);
 
 	const addDivided = async (): Promise<void> => {
 		setIsLoading(true);
 		setHasFailed(false);
 		try {
-			await requestDiscussionSummary(statement.statementId, undefined, { includeDivided: true });
+			const result = await requestDiscussionSummary(statement.statementId, undefined, {
+				includeDivided: true,
+			});
+			setGenerated(result.summary);
 		} catch (error) {
 			if (!(error instanceof SummarizationNotReadyError)) {
 				logError(error, {
@@ -47,7 +58,7 @@ const SubGroupCardSummary: FC<Props> = ({ statement, summary }) => {
 	return (
 		<div className={styles.summary}>
 			<div className={styles.summary__text}>
-				<Text description={summary} enableMarkdown={true} />
+				<Text description={generated ?? summary} enableMarkdown={true} />
 			</div>
 			{isAdmin && (
 				<button

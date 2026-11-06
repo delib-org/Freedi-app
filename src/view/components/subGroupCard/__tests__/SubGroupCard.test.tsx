@@ -34,7 +34,7 @@ jest.mock('@/view/components/text/Text', () => ({
 	default: ({ description }: { description: string }) => <div>{description}</div>,
 }));
 jest.mock('@/controllers/db/summarization/summarizationController', () => ({
-	requestDiscussionSummary: jest.fn().mockResolvedValue({}),
+	requestDiscussionSummary: jest.fn().mockResolvedValue({ summary: 'New summary with division' }),
 	SummarizationNotReadyError: class extends Error {},
 }));
 jest.mock('@/utils/errorHandling', () => ({ logError: jest.fn() }));
@@ -100,5 +100,6 @@ describe('SubGroupCard summary vs results', () => {
 				includeDivided: true,
 			}),
 		);
+		expect(await screen.findByText('New summary with division')).toBeTruthy();
 	});
 });

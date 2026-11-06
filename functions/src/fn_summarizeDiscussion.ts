@@ -21,7 +21,8 @@ interface SummarizeDiscussionRequest {
 	/**
 	 * When true, the summary ALSO covers options the group is divided on
 	 * (decided by vote counts in code, see utils/dividedOptions). Default is
-	 * selected options only.
+	 * selected options only. Applies to the flat path only: it is ignored when
+	 * includeSubQuestions builds the tree summary.
 	 */
 	includeDivided?: boolean;
 }
