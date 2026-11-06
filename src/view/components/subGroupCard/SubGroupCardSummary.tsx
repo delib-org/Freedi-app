@@ -34,6 +34,7 @@ const SubGroupCardSummary: FC<Props> = ({ statement, summary, isAdmin = false })
 	const [isLoading, setIsLoading] = useState(false);
 	const [hasFailed, setHasFailed] = useState(false);
 	const [isExpanded, setIsExpanded] = useState(false);
+	const [hasNoDivided, setHasNoDivided] = useState(false);
 	const [generated, setGenerated] = useState<GeneratedSummary | undefined>(undefined);
 
 	// The prop wins again whenever the statement listener delivers a new summary.
@@ -52,10 +53,12 @@ const SubGroupCardSummary: FC<Props> = ({ statement, summary, isAdmin = false })
 	const regenerate = async (): Promise<void> => {
 		setIsLoading(true);
 		setHasFailed(false);
+		setHasNoDivided(false);
 		try {
 			const result = await requestDiscussionSummary(statement.statementId, undefined, {
 				includeDivided: !includesDivided,
 			});
+			setHasNoDivided(!includesDivided && result.dividedCount === 0);
 			setGenerated({
 				summary: result.summary,
 				includeDivided: result.includeDivided,
@@ -111,6 +114,9 @@ const SubGroupCardSummary: FC<Props> = ({ statement, summary, isAdmin = false })
 				>
 					{isLoading ? t('Generating...') : buttonLabel}
 				</button>
+			)}
+			{hasNoDivided && (
+				<p className={styles.summary__date}>{t('The group is not split on any option')}</p>
 			)}
 			{hasFailed && (
 				<p className={styles.summary__error} role="alert">

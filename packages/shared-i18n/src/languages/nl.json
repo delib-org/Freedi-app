@@ -4685,5 +4685,6 @@
   "Add what the group is divided on": "Voeg toe waarover de groep verdeeld is",
   "Could not update the summary": "De samenvatting kon niet worden bijgewerkt",
   "Show selected options only": "Alleen geselecteerde opties tonen",
-  "Summary from": "Samenvatting van"
+  "Summary from": "Samenvatting van",
+  "The group is not split on any option": "De groep is over geen enkele optie verdeeld"
 }

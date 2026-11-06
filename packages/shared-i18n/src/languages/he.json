@@ -5401,5 +5401,6 @@
   "Add what the group is divided on": "הוסף במה הקבוצה חלוקה",
   "Could not update the summary": "לא ניתן היה לעדכן את הסיכום",
   "Show selected options only": "הצג רק את האפשרויות שנבחרו",
-  "Summary from": "סיכום מתאריך"
+  "Summary from": "סיכום מתאריך",
+  "The group is not split on any option": "הקבוצה אינה חלוקה בנוגע לאף אפשרות"
 }

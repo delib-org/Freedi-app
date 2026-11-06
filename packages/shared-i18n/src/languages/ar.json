@@ -4804,5 +4804,6 @@
   "Add what the group is divided on": "أضف ما تنقسم حوله المجموعة",
   "Could not update the summary": "تعذّر تحديث الملخّص",
   "Show selected options only": "عرض الخيارات المحددة فقط",
-  "Summary from": "ملخّص بتاريخ"
+  "Summary from": "ملخّص بتاريخ",
+  "The group is not split on any option": "المجموعة غير منقسمة حول أي خيار"
 }

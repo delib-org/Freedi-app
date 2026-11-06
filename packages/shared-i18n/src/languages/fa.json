@@ -5162,5 +5162,6 @@
   "Add what the group is divided on": "افزودن آنچه گروه درباره‌اش دو دسته است",
   "Could not update the summary": "به‌روزرسانی خلاصه ممکن نشد",
   "Show selected options only": "نمایش فقط گزینه‌های انتخاب‌شده",
-  "Summary from": "خلاصه مورخ"
+  "Summary from": "خلاصه مورخ",
+  "The group is not split on any option": "گروه درباره هیچ گزینه‌ای دو دسته نیست"
 }

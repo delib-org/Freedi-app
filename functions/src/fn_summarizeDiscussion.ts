@@ -6,7 +6,7 @@ import { getGeminiModel, getGenAI, LLM_MODEL_HEAVY } from './config/gemini';
 import { ALLOWED_ORIGINS } from './config/cors';
 import { getParagraphsText } from './helpers';
 import { logError } from './utils/errorHandling';
-import { filterDividedOptions } from './utils/dividedOptions';
+import { filterDividedOptions, summaryCoversDivided } from './utils/dividedOptions';
 
 interface SummarizeDiscussionRequest {
 	statementId: string;
@@ -36,6 +36,8 @@ interface SummarizeDiscussionResponse {
 	generatedAt: number;
 	/** Whether the saved summary also covers options the group is divided on. */
 	includeDivided: boolean;
+	/** How many divided options were found (0 when none, or not asked for). */
+	dividedCount: number;
 }
 
 interface SelectedSolution {
@@ -267,7 +269,7 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 			// 7. Save summary to Firestore
 			const generatedAt = Date.now();
 			// The deep tree summary never covers divided options.
-			const coversDivided = !useDeepSummary && includeDivided === true;
+			const coversDivided = summaryCoversDivided(useDeepSummary, dividedOptions.length);
 			await db.collection(Collections.statements).doc(statementId).update({
 				summary: summaryText,
 				summaryGeneratedAt: generatedAt,
@@ -283,6 +285,7 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 				subQuestionsCount,
 				generatedAt,
 				includeDivided: coversDivided,
+				dividedCount: dividedOptions.length,
 			};
 		} catch (error) {
 			if (error instanceof HttpsError) {

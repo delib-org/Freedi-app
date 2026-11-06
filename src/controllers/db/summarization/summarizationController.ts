@@ -22,6 +22,8 @@ interface SummarizeDiscussionResponse {
 	generatedAt: number;
 	/** Whether the saved summary also covers options the group is divided on */
 	includeDivided: boolean;
+	/** How many divided options the server found */
+	dividedCount: number;
 }
 
 interface SummarizeDiscussionOptions {

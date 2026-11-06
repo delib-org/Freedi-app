@@ -32,6 +32,7 @@ jest.mock('@/controllers/db/summarization/summarizationController', () => ({
 	requestDiscussionSummary: jest.fn().mockResolvedValue({
 		summary: 'New summary with division',
 		includeDivided: true,
+		dividedCount: 2,
 		generatedAt: 1700000000000,
 	}),
 	SummarizationNotReadyError: class extends Error {},
@@ -105,6 +106,7 @@ describe('SubGroupCard summary vs results', () => {
 		(requestDiscussionSummary as jest.Mock).mockResolvedValueOnce({
 			summary: 'Selected only again',
 			includeDivided: false,
+			dividedCount: 0,
 			generatedAt: 1700000000000,
 		});
 		renderCard(buildQuestion({ summary: 'Summary text', summaryIncludesDivided: true }), true);
@@ -117,6 +119,21 @@ describe('SubGroupCard summary vs results', () => {
 			}),
 		);
 		expect(await screen.findByText('Selected only again')).toBeTruthy();
+		expect(screen.getByText('Add what the group is divided on')).toBeTruthy();
+	});
+
+	it('says the group is not split when asked to add divided and none exist', async () => {
+		(requestDiscussionSummary as jest.Mock).mockResolvedValueOnce({
+			summary: 'Same summary',
+			includeDivided: false,
+			dividedCount: 0,
+			generatedAt: 1700000000000,
+		});
+		renderCard(buildQuestion({ summary: 'Summary text' }), true);
+
+		fireEvent.click(screen.getByText('Add what the group is divided on'));
+
+		expect(await screen.findByText('The group is not split on any option')).toBeTruthy();
 		expect(screen.getByText('Add what the group is divided on')).toBeTruthy();
 	});
 

@@ -4685,5 +4685,6 @@
   "Add what the group is divided on": "Ergänzen, worüber die Gruppe geteilter Meinung ist",
   "Could not update the summary": "Die Zusammenfassung konnte nicht aktualisiert werden",
   "Show selected options only": "Nur ausgewählte Optionen zeigen",
-  "Summary from": "Zusammenfassung vom"
+  "Summary from": "Zusammenfassung vom",
+  "The group is not split on any option": "Die Gruppe ist bei keiner Option gespalten"
 }
