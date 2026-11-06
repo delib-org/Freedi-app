@@ -1,5 +1,5 @@
 import { Statement } from '@freedi/shared-types';
-import { isDividedOption, filterDividedOptions } from '../dividedOptions';
+import { isDividedOption, filterDividedOptions, summaryCoversDivided } from '../dividedOptions';
 
 function option(total: number, pro?: number, con?: number): Statement {
 	return {
@@ -42,5 +42,29 @@ describe('filterDividedOptions', () => {
 	it('keeps only divided options', () => {
 		const divided = option(10, 4, 4);
 		expect(filterDividedOptions([divided, option(10, 9, 1)])).toEqual([divided]);
+	});
+});
+
+describe('filterDividedOptions', () => {
+	it('skips options with hide === true', () => {
+		const visible = option(10, 4, 4);
+		const hidden = { ...option(10, 4, 4), hide: true } as Statement;
+		const notHidden = { ...option(10, 4, 4), hide: false } as Statement;
+
+		expect(filterDividedOptions([visible, hidden, notHidden])).toEqual([visible, notHidden]);
+	});
+});
+
+describe('summaryCoversDivided', () => {
+	it('is false when no divided option was found', () => {
+		expect(summaryCoversDivided(false, 0)).toBe(false);
+	});
+
+	it('is true for a flat summary with divided options', () => {
+		expect(summaryCoversDivided(false, 2)).toBe(true);
+	});
+
+	it('is false for the deep summary', () => {
+		expect(summaryCoversDivided(true, 2)).toBe(false);
 	});
 });

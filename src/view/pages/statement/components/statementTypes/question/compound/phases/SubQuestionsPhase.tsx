@@ -124,7 +124,7 @@ const SubQuestionsPhase: FC = () => {
 				<div className={styles.subQuestionList}>
 					{unlockedSubQuestions.map((sq) => (
 						<div key={sq.statementId} className={styles.subQuestionItem}>
-							<SubGroupCard statement={sq} />
+							<SubGroupCard statement={sq} isAdmin={isAdmin} />
 							{isAdmin && (
 								<button
 									className="phase-admin-controls__btn phase-admin-controls__btn--lock"

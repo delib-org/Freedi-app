@@ -8,14 +8,47 @@
 		line-height: 1.5;
 	}
 
+	// Plain-text teaser (see helpers/summaryPreview): line-clamp only works on
+	// a single run of inline text, so the markdown is stripped before this.
+	&__preview {
+		margin: 0;
+		overflow-wrap: anywhere;
+		line-height: 1.5;
+		color: var(--text-body);
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	&__toggle {
+		align-self: flex-start;
+		padding: 0;
+		background: none;
+		border: 0;
+		color: var(--btn-primary);
+		font: inherit;
+		cursor: pointer;
+		text-decoration: underline;
+	}
+
+	&__date {
+		margin: 0;
+		font-size: var(--font-size-small);
+		color: var(--text-meta);
+	}
+
 	&__button {
 		align-self: flex-start;
-		min-height: 44px;
-		padding: 8px 18px;
+		// 2.75rem = the 44px touch minimum from the design guide (same value
+		// the shared button--touch modifier uses).
+		min-height: 2.75rem;
+		padding: var(--space-xs) var(--space-md);
 		background: var(--space-surface, var(--card-default));
 		color: var(--text-body);
 		border: 1px solid var(--space-line, var(--border-light));
-		border-radius: 24px;
+		border-radius: var(--radius-chip);
 		font: inherit;
 		cursor: pointer;
 

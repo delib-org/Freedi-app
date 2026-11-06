@@ -38,13 +38,13 @@ export default function GroupPage() {
 				{subGroups.length > 0 && <h4>{t('Groups')}</h4>}
 				<div className={styles.wrapper}>
 					{subGroups.map((sub) => (
-						<SubGroupCard key={sub.statementId} statement={sub} />
+						<SubGroupCard key={sub.statementId} statement={sub} isAdmin={isAdmin} />
 					))}
 				</div>
 				{subQuestions.length > 0 && <h4>{t('Questions')}</h4>}
 				<div className={styles.wrapper}>
 					{subQuestions.map((sub) => (
-						<SubGroupCard key={sub.statementId} statement={sub} />
+						<SubGroupCard key={sub.statementId} statement={sub} isAdmin={isAdmin} />
 					))}
 				</div>
 				<AddButton />

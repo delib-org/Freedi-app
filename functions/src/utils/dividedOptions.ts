@@ -29,6 +29,15 @@ export function isDividedOption(statement: Statement): boolean {
 	return proShare > DIVIDED_MIN_SIDE_SHARE && conShare > DIVIDED_MIN_SIDE_SHARE;
 }
 
+/** Divided options the reader may see: hidden options are never summarized. */
 export function filterDividedOptions(options: Statement[]): Statement[] {
-	return options.filter(isDividedOption);
+	return options.filter((option) => option.hide !== true && isDividedOption(option));
+}
+
+/**
+ * Whether a saved summary should be flagged as covering divided options: only
+ * the flat summary can, and only when it actually has a divided section.
+ */
+export function summaryCoversDivided(useDeepSummary: boolean, dividedCount: number): boolean {
+	return !useDeepSummary && dividedCount > 0;
 }

@@ -5361,5 +5361,8 @@
   "Collapse level": "Collapse level",
   "Expand level": "Expand level",
   "Add what the group is divided on": "Add what the group is divided on",
-  "Could not update the summary": "Could not update the summary"
+  "Could not update the summary": "Could not update the summary",
+  "Show selected options only": "Show selected options only",
+  "Summary from": "Summary from",
+  "The group is not split on any option": "The group is not split on any option"
 }

@@ -4,7 +4,7 @@ import { updateStatementSummary } from '@/controllers/db/summarization/summariza
 import { logError } from '@/utils/errorHandling';
 import Text from '@/view/components/text/Text';
 import { Modal } from '@/view/components/atomic/molecules/Modal';
-import { buildSummaryPreview } from './summaryPreview';
+import { buildSummaryPreview } from '@/helpers/summaryPreview';
 import styles from './SummaryDisplay.module.scss';
 
 interface SummaryDisplayProps {

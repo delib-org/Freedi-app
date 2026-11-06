@@ -4683,5 +4683,8 @@
   "Collapse level": "Contraer nivel",
   "Expand level": "Expandir nivel",
   "Add what the group is divided on": "Añadir en qué está dividido el grupo",
-  "Could not update the summary": "No se pudo actualizar el resumen"
+  "Could not update the summary": "No se pudo actualizar el resumen",
+  "Show selected options only": "Mostrar solo las opciones seleccionadas",
+  "Summary from": "Resumen del",
+  "The group is not split on any option": "El grupo no está dividido en ninguna opción"
 }
