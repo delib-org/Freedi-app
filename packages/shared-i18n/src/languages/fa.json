@@ -5160,5 +5160,7 @@
   "Collapse level": "جمع کردن سطح",
   "Expand level": "گسترش سطح",
   "Add what the group is divided on": "افزودن آنچه گروه درباره‌اش دو دسته است",
-  "Could not update the summary": "به‌روزرسانی خلاصه ممکن نشد"
+  "Could not update the summary": "به‌روزرسانی خلاصه ممکن نشد",
+  "Show selected options only": "نمایش فقط گزینه‌های انتخاب‌شده",
+  "Summary from": "خلاصه مورخ"
 }

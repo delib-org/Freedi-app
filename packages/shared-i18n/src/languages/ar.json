@@ -4802,5 +4802,7 @@
   "Collapse level": "اطوِ المستوى",
   "Expand level": "وسّع المستوى",
   "Add what the group is divided on": "أضف ما تنقسم حوله المجموعة",
-  "Could not update the summary": "تعذّر تحديث الملخّص"
+  "Could not update the summary": "تعذّر تحديث الملخّص",
+  "Show selected options only": "عرض الخيارات المحددة فقط",
+  "Summary from": "ملخّص بتاريخ"
 }

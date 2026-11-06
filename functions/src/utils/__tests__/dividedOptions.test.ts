@@ -44,3 +44,13 @@ describe('filterDividedOptions', () => {
 		expect(filterDividedOptions([divided, option(10, 9, 1)])).toEqual([divided]);
 	});
 });
+
+describe('filterDividedOptions', () => {
+	it('skips options with hide === true', () => {
+		const visible = option(10, 4, 4);
+		const hidden = { ...option(10, 4, 4), hide: true } as Statement;
+		const notHidden = { ...option(10, 4, 4), hide: false } as Statement;
+
+		expect(filterDividedOptions([visible, hidden, notHidden])).toEqual([visible, notHidden]);
+	});
+});

@@ -34,9 +34,13 @@ interface SummarizeDiscussionResponse {
 	solutionsCount: number;
 	subQuestionsCount: number;
 	generatedAt: number;
+	/** Whether the saved summary also covers options the group is divided on. */
+	includeDivided: boolean;
 }
 
 interface SelectedSolution {
+	/** Lets the prompt tell which divided options are also selected. */
+	statementId?: string;
 	title: string;
 	description?: string;
 	consensus: number;
@@ -50,6 +54,21 @@ export interface QuestionNode {
 	solutions: SelectedSolution[];
 	children: QuestionNode[];
 }
+
+/**
+ * A summary is "a minute of reading or less". 150 words is about a minute for
+ * English readers and a little under for Hebrew/Arabic, who read slower, so
+ * this is deliberately conservative. The cap covers the whole summary,
+ * divided section included.
+ */
+export const SUMMARY_MAX_WORDS = 150;
+
+/**
+ * Output cap for the brief flat summary. ~150 words is a few hundred tokens
+ * even in Hebrew; the rest is a safety margin because the reasoning models
+ * count their hidden reasoning against the same limit.
+ */
+export const BRIEF_SUMMARY_MAX_OUTPUT_TOKENS = 2048;
 
 /** Sub-questions are gathered up to this many levels below the root question. */
 const MAX_SUB_QUESTION_DEPTH = 2;
@@ -187,9 +206,12 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 
 			// Calculate appropriate token limit based on number of solutions
 			// More solutions = need more tokens for complete summary
+			// The brief flat summary needs far fewer than the deep one.
 			const baseTokens = 4096;
 			const tokensPerSolution = 100;
-			const maxOutputTokens = Math.min(8192, baseTokens + totalSolutions * tokensPerSolution);
+			const maxOutputTokens = useDeepSummary
+				? Math.min(8192, baseTokens + totalSolutions * tokensPerSolution)
+				: BRIEF_SUMMARY_MAX_OUTPUT_TOKENS;
 
 			let summaryText = '';
 			let attempts = 0;
@@ -244,9 +266,12 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 
 			// 7. Save summary to Firestore
 			const generatedAt = Date.now();
+			// The deep tree summary never covers divided options.
+			const coversDivided = !useDeepSummary && includeDivided === true;
 			await db.collection(Collections.statements).doc(statementId).update({
 				summary: summaryText,
 				summaryGeneratedAt: generatedAt,
+				summaryIncludesDivided: coversDivided,
 				lastUpdate: generatedAt,
 			});
 
@@ -257,6 +282,7 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 				solutionsCount: totalSolutions,
 				subQuestionsCount,
 				generatedAt,
+				includeDivided: coversDivided,
 			};
 		} catch (error) {
 			if (error instanceof HttpsError) {
@@ -288,6 +314,7 @@ async function fetchChosenSolutions(parentId: string): Promise<SelectedSolution[
 		.map((doc) => doc.data() as Statement)
 		.sort((a, b) => (b.consensus ?? 0) - (a.consensus ?? 0))
 		.map((s) => ({
+			statementId: s.statementId,
 			title: s.statement,
 			description: getParagraphsText(s.paragraphs),
 			consensus: s.consensus ?? 0,
@@ -487,6 +514,11 @@ ${s.description ? `**Details**: ${s.description}` : ''}
 	const agreementStrength =
 		topSolution.consensus > 0.5 ? 'strong' : topSolution.consensus > 0.2 ? 'moderate' : 'emerging';
 
+	const selectedIds = new Set(solutions.map((s) => s.statementId).filter(Boolean));
+	const selectedTitles = new Set(solutions.map((s) => s.title.trim()));
+	const isAlsoSelected = (o: Statement): boolean =>
+		selectedIds.has(o.statementId) || selectedTitles.has(o.statement.trim());
+
 	const dividedText =
 		dividedOptions.length > 0
 			? `## Where the Group Is Divided
@@ -497,18 +529,19 @@ ${dividedOptions
 		const pro = o.evaluation?.numberOfProEvaluators ?? 0;
 		const con = o.evaluation?.numberOfConEvaluators ?? 0;
 		const description = getParagraphsText(o.paragraphs);
+		const selectedNote = isAlsoSelected(o) ? ' [selected above, but the group is split on it]' : '';
 
-		return `- **${o.statement}** (${pro} for, ${con} against, ${total} voters)${description ? `\n  ${description}` : ''}`;
+		return `- **${o.statement}** (${pro} for, ${con} against, ${total} voters)${selectedNote}${description ? `\n  ${description}` : ''}`;
 	})
 	.join('\n')}
 `
 			: '';
 	const dividedTask =
 		dividedOptions.length > 0
-			? `\n5. **Where is the group divided?** - Add a separate section "## Where the Group Is Divided" (translated to ${languageName}) describing, in plain language, what the group is split on, using ONLY the divided options listed above. Do not present them as agreements.`
+			? `\n5. **Where is the group divided?** - In one or two short sentences or bullets, say what the group is split on, using ONLY the divided options listed above. Present them as splits, not as agreements. An option marked "selected above, but the group is split on it" passed the selection cutoff, so say it was selected but that the group is split on it, rather than listing it as a plain agreement.`
 			: '';
 
-	return `You are writing an informative summary of a group decision for people who want to understand what was agreed upon.
+	return `You are writing a BRIEF summary of a group decision for busy readers.
 
 ## The Question Discussed
 "${question.statement}"
@@ -521,49 +554,25 @@ ${solutionsText}
 ${dividedText}${adminPrompt ? `## Special Focus Requested\n${adminPrompt}\n` : ''}
 
 ## Your Task
-Write a clear, informative summary in ${languageName} that helps readers understand:
+Write a brief summary in ${languageName} that tells readers:
 
-1. **What was the question/challenge?** - Briefly explain what the group was trying to decide
-2. **What did they agree on?** - Clearly state each agreed solution in plain language. The reader should understand exactly what was decided.
-3. **How strong is the agreement?** - This discussion shows ${agreementStrength} consensus (top score: ${topSolution.consensus.toFixed(2)})
-4. **Key takeaways** - What should someone know about this decision?${dividedTask}
+1. **What was decided** - State each agreed solution in plain language. If there are many, group them and name only the main ones.
+2. **How strong is the agreement?** - This discussion shows ${agreementStrength} consensus (top score: ${topSolution.consensus.toFixed(2)}). One short clause is enough.${dividedTask}
 
-**CRITICAL FORMATTING RULES - YOU MUST FOLLOW THESE**:
-- Use proper markdown headers for ALL section titles:
-  - Use "## " (with space) for main sections (e.g., "## The Discussion Question", "## What Was Agreed")
-  - Use "### " (with space) for subsections (e.g., "### Key Agreements", "### Conclusions")
-- Do NOT use **bold text** for section titles - use ## or ### headers instead
-- Example of CORRECT formatting:
-  ## The Discussion Question
-  The group discussed...
+**LENGTH - THIS IS THE MOST IMPORTANT RULE**:
+- The WHOLE summary must be at most ${SUMMARY_MAX_WORDS} words, including any section on where the group is divided. A person must be able to read it in one minute or less.
+- Use short, plain sentences. Drop background and repetition; do not retell the discussion.
+- If the content does not fit, keep the most important points and leave the rest out.
 
-  ## What Was Agreed
-  ### Personal Updates
-  - Agreement 1
-  - Agreement 2
-
-  ## Key Takeaways
-  The main conclusions...
-
-- Example of WRONG formatting (do NOT do this):
-  **The Discussion Question**
-  **What Was Agreed**
+**Formatting**:
+- Use at most one short "## " heading per part, or no headings at all. Do NOT use **bold text** as a heading.
+- Bullet points (- ) are fine for listing agreements.
 
 **Writing Style**:
-- Write for someone who wasn't part of the discussion - they should fully understand the decisions
+- Write for someone who wasn't part of the discussion
 - Focus on the SUBSTANCE of what was agreed, not the process
 - Use clear, accessible language - avoid jargon
-- Be specific about what the group decided to do/believe/support
-${
-	solutions.length > 10
-		? `- Since there are ${solutions.length} agreements, organize them by theme/category using ## and ### headers
-- For each category, summarize the key agreements briefly
-- Aim for 400-600 words to cover all major decisions`
-		: `- Keep it concise (150-300 words) but ensure all key agreements are clearly explained`
-}
-- Use bullet points (- ) for listing multiple agreements under each section
-- If solutions have descriptions, incorporate that detail into your explanation
-- **IMPORTANT: Complete the entire summary - do not stop mid-sentence or mid-section**
+- **IMPORTANT: Finish the whole summary - do not stop mid-sentence**
 
 Return ONLY the markdown summary text with proper ## and ### headers. Do not wrap in code blocks or JSON.`;
 }

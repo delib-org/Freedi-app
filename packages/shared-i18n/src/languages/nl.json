@@ -4683,5 +4683,7 @@
   "Collapse level": "Niveau samenvouwen",
   "Expand level": "Niveau uitklappen",
   "Add what the group is divided on": "Voeg toe waarover de groep verdeeld is",
-  "Could not update the summary": "De samenvatting kon niet worden bijgewerkt"
+  "Could not update the summary": "De samenvatting kon niet worden bijgewerkt",
+  "Show selected options only": "Alleen geselecteerde opties tonen",
+  "Summary from": "Samenvatting van"
 }

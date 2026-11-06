@@ -15,9 +15,11 @@ import { ArrowUpRight } from 'lucide-react';
 
 interface Props {
 	statement: Statement;
+	/** Lets admins change what the question's summary covers. Defaults to false. */
+	isAdmin?: boolean;
 }
 
-const SubGroupCard: FC<Props> = ({ statement }) => {
+const SubGroupCard: FC<Props> = ({ statement, isAdmin = false }) => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const { Icon, text } = useSubGroupCard(statement);
@@ -90,7 +92,7 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 				) : (
 					statement.statementType === StatementType.question &&
 					(summary ? (
-						<SubGroupCardSummary statement={statement} summary={summary} />
+						<SubGroupCardSummary statement={statement} summary={summary} isAdmin={isAdmin} />
 					) : (
 						<div className={styles.results}>
 							{results.length !== 0 && (

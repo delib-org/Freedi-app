@@ -29,6 +29,7 @@ export function isDividedOption(statement: Statement): boolean {
 	return proShare > DIVIDED_MIN_SIDE_SHARE && conShare > DIVIDED_MIN_SIDE_SHARE;
 }
 
+/** Divided options the reader may see: hidden options are never summarized. */
 export function filterDividedOptions(options: Statement[]): Statement[] {
-	return options.filter(isDividedOption);
+	return options.filter((option) => option.hide !== true && isDividedOption(option));
 }

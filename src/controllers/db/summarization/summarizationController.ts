@@ -20,6 +20,8 @@ interface SummarizeDiscussionResponse {
 	solutionsCount: number;
 	subQuestionsCount: number;
 	generatedAt: number;
+	/** Whether the saved summary also covers options the group is divided on */
+	includeDivided: boolean;
 }
 
 interface SummarizeDiscussionOptions {
