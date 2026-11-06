@@ -25,6 +25,8 @@ interface GeneratedSummary {
 }
 
 /**
+ * The question's one summary, shown on its card and in the Results tab. An empty
+ * `summary` shows "No summary yet" (admins get a button to create it).
  * The question's summary on its card: a short preview that expands to the full
  * text. Admins get one button that toggles between the summary of the selected
  * options only and one that also covers what the group is divided on.
@@ -45,6 +47,7 @@ const SubGroupCardSummary: FC<Props> = ({ statement, summary, isAdmin = false })
 	const text = generated?.summary ?? summary;
 	const includesDivided = generated?.includeDivided ?? statement.summaryIncludesDivided === true;
 	const generatedAt = generated?.generatedAt ?? statement.summaryGeneratedAt;
+	const hasText = text.trim().length > 0;
 	const preview = useMemo(() => buildSummaryPreview(text), [text]);
 	const generatedOn = generatedAt
 		? new Intl.DateTimeFormat(currentLanguage, { dateStyle: 'medium' }).format(generatedAt)
@@ -56,9 +59,9 @@ const SubGroupCardSummary: FC<Props> = ({ statement, summary, isAdmin = false })
 		setHasNoDivided(false);
 		try {
 			const result = await requestDiscussionSummary(statement.statementId, undefined, {
-				includeDivided: !includesDivided,
+				includeDivided: hasText && !includesDivided,
 			});
-			setHasNoDivided(!includesDivided && result.dividedCount === 0);
+			setHasNoDivided(hasText && !includesDivided && result.dividedCount === 0);
 			setGenerated({
 				summary: result.summary,
 				includeDivided: result.includeDivided,
@@ -77,20 +80,25 @@ const SubGroupCardSummary: FC<Props> = ({ statement, summary, isAdmin = false })
 		}
 	};
 
-	const buttonLabel = includesDivided
-		? t('Show selected options only')
-		: t('Add what the group is divided on');
+	// No summary yet: the button creates the selected-options one.
+	const buttonLabel = !hasText
+		? t('Summarize')
+		: includesDivided
+			? t('Show selected options only')
+			: t('Add what the group is divided on');
 
 	return (
 		<div className={styles.summary}>
-			{isExpanded ? (
+			{!hasText ? (
+				<p className={styles.summary__preview}>{t('No summary yet')}</p>
+			) : isExpanded ? (
 				<div className={styles.summary__text}>
 					<Text description={text} enableMarkdown={true} />
 				</div>
 			) : (
 				<p className={styles.summary__preview}>{preview.text}</p>
 			)}
-			{preview.isTruncated && (
+			{hasText && preview.isTruncated && (
 				<button
 					type="button"
 					className={styles.summary__toggle}

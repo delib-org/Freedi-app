@@ -184,7 +184,7 @@ export async function snapshot(
 	};
 }
 export async function status(uid: string, questionId: string): Promise<DeliberationStatus> {
-	const { canManage } = await questionFor(uid, questionId);
+	const { canManage, question } = await questionFor(uid, questionId);
 	const items = await children(questionId),
 		sources = selectedSources(items),
 		hash = sourcesHash(sources);
@@ -198,8 +198,8 @@ export async function status(uid: string, questionId: string): Promise<Deliberat
 		canManage,
 		sources: sources.map((s) => ({ id: s.statementId, text: s.statement, cp: s.consensus })),
 		sourceHash: hash,
-		summary: state?.summary || '',
-		summaryAt: state?.summaryAt || 0,
+		summary: question.summary || '',
+		summaryAt: question.summaryGeneratedAt || state?.summaryAt || 0,
 		summaryStale: state?.summaryHash !== hash,
 		automatic: state?.enabled === true && typeof state.enabledBy === 'string',
 		agreements: await Promise.all(
