@@ -108,7 +108,13 @@ export async function removeOptionFromMassConsensus(ev: FirestoreEvent<DocumentS
 		await db.runTransaction(async (transaction) => {
 			const parentDoc = await transaction.get(parentRef);
 			if (!parentDoc.exists) {
-				throw new Error('Parent statement does not exist');
+				// Expected: deleting a whole question deletes its options after the parent is gone.
+				logger.info('Parent statement already deleted, skipping suggestions decrement', {
+					statementId: deletedStatement.statementId,
+					parentId: deletedStatement.parentId,
+				});
+
+				return;
 			}
 
 			const parentData = parentDoc.data();
