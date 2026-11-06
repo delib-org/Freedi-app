@@ -1,3 +1,5 @@
+import { EvaluationUI } from '@freedi/shared-types';
+
 /**
  * Check if a value is a Firestore VectorValue (embedding)
  * VectorValue objects have a _values property containing the embedding array
@@ -127,6 +129,17 @@ export function normalizeStatementData(data: unknown): unknown {
 		const docObj = obj.doc as Record<string, unknown>;
 		if (docObj.isDoc === undefined) {
 			docObj.isDoc = false;
+		}
+	}
+
+	// Repair evaluationSettings maps stored without evaluationUI (created by older
+	// dotted-path writers). StatementEvaluationSettingsSchema requires it, so every
+	// strict parse would reject the whole statement. 'suggestions' is what every
+	// reader already assumes when it is absent.
+	if (obj.evaluationSettings && typeof obj.evaluationSettings === 'object') {
+		const settings = obj.evaluationSettings as Record<string, unknown>;
+		if (settings.evaluationUI === undefined || settings.evaluationUI === null) {
+			settings.evaluationUI = EvaluationUI.suggestions;
 		}
 	}
 
