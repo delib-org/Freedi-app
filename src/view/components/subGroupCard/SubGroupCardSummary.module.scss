@@ -1,0 +1,32 @@
+.summary {
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+
+	&__text {
+		overflow-wrap: anywhere;
+		line-height: 1.5;
+	}
+
+	&__button {
+		align-self: flex-start;
+		min-height: 44px;
+		padding: 8px 18px;
+		background: var(--space-surface, var(--card-default));
+		color: var(--text-body);
+		border: 1px solid var(--space-line, var(--border-light));
+		border-radius: 24px;
+		font: inherit;
+		cursor: pointer;
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+	}
+
+	&__error {
+		margin: 0;
+		color: var(--text-error, var(--text-body));
+	}
+}

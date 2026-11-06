@@ -4681,5 +4681,7 @@
   "survey.stakeholders.recalculateFailed": "De scores konden niet opnieuw worden berekend. Probeer het opnieuw of vraag de eigenaar van de enquête.",
   "survey.stakeholders.skipped": "Het aantal kon niet worden ingesteld bij {{count}} vragen van de enquête, omdat niemand die deze enquête beheert ze beheert. Die vragen houden hun eigen aantal.",
   "Collapse level": "Niveau samenvouwen",
-  "Expand level": "Niveau uitklappen"
+  "Expand level": "Niveau uitklappen",
+  "Add what the group is divided on": "Voeg toe waarover de groep verdeeld is",
+  "Could not update the summary": "De samenvatting kon niet worden bijgewerkt"
 }

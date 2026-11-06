@@ -6,6 +6,7 @@ import { getGeminiModel, getGenAI, LLM_MODEL_HEAVY } from './config/gemini';
 import { ALLOWED_ORIGINS } from './config/cors';
 import { getParagraphsText } from './helpers';
 import { logError } from './utils/errorHandling';
+import { filterDividedOptions } from './utils/dividedOptions';
 
 interface SummarizeDiscussionRequest {
 	statementId: string;
@@ -17,6 +18,12 @@ interface SummarizeDiscussionRequest {
 	 * generated with the heavy reasoning model.
 	 */
 	includeSubQuestions?: boolean;
+	/**
+	 * When true, the summary ALSO covers options the group is divided on
+	 * (decided by vote counts in code, see utils/dividedOptions). Default is
+	 * selected options only.
+	 */
+	includeDivided?: boolean;
 }
 
 interface SummarizeDiscussionResponse {
@@ -78,7 +85,8 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 		cors: [...ALLOWED_ORIGINS],
 	},
 	async (request): Promise<SummarizeDiscussionResponse> => {
-		const { statementId, adminPrompt, language, includeSubQuestions } = request.data;
+		const { statementId, adminPrompt, language, includeSubQuestions, includeDivided } =
+			request.data;
 		const userId = request.auth?.uid;
 
 		if (!userId) {
@@ -151,12 +159,22 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 			);
 		}
 
+		// Options the group is split on, picked by code from the vote counts.
+		const dividedOptions = includeDivided === true ? await fetchDividedOptions(statementId) : [];
+
 		// 5. Detect language and build prompt
 		const detectedLang = language || detectLanguage(question.statement);
 		const useDeepSummary = maxDepth > 0 && subQuestionsCount > 0;
 		const prompt = useDeepSummary
 			? buildTreeSummaryPrompt(tree, totalParticipants, adminPrompt, detectedLang)
-			: buildSummaryPrompt(question, tree.solutions, totalParticipants, adminPrompt, detectedLang);
+			: buildSummaryPrompt(
+					question,
+					tree.solutions,
+					totalParticipants,
+					adminPrompt,
+					detectedLang,
+					dividedOptions,
+				);
 
 		// 6. Call the LLM with retry logic for truncation.
 		// Deep (sub-question) summaries are an integration/synthesis task, so they
@@ -275,6 +293,20 @@ async function fetchChosenSolutions(parentId: string): Promise<SelectedSolution[
 			averageEvaluation: s.evaluation?.averageEvaluation || 0,
 			numberOfEvaluators: s.evaluation?.numberOfEvaluators || 0,
 		}));
+}
+
+/**
+ * Fetch the question's child options (selected or not) that the group is
+ * divided on. Equality-only filters, no composite index needed.
+ */
+async function fetchDividedOptions(parentId: string): Promise<Statement[]> {
+	const snapshot = await getFirestore()
+		.collection(Collections.statements)
+		.where('parentId', '==', parentId)
+		.where('statementType', '==', StatementType.option)
+		.get();
+
+	return filterDividedOptions(snapshot.docs.map((doc) => doc.data() as Statement));
 }
 
 /**
@@ -428,12 +460,13 @@ Return ONLY the markdown summary text with proper ## and ### headers. Do not wra
 /**
  * Build the summary prompt for Gemini AI
  */
-function buildSummaryPrompt(
+export function buildSummaryPrompt(
 	question: Statement,
 	solutions: SelectedSolution[],
 	totalParticipants: number,
 	adminPrompt?: string,
 	language: string = 'en',
+	dividedOptions: Statement[] = [],
 ): string {
 	const languageName = LANGUAGE_NAMES[language] || 'English';
 
@@ -453,6 +486,27 @@ ${s.description ? `**Details**: ${s.description}` : ''}
 	const agreementStrength =
 		topSolution.consensus > 0.5 ? 'strong' : topSolution.consensus > 0.2 ? 'moderate' : 'emerging';
 
+	const dividedText =
+		dividedOptions.length > 0
+			? `## Where the Group Is Divided
+The following option(s) split the group: many evaluators supported them and many opposed them.
+${dividedOptions
+	.map((o) => {
+		const total = o.evaluation?.numberOfEvaluators ?? 0;
+		const pro = o.evaluation?.numberOfProEvaluators ?? 0;
+		const con = o.evaluation?.numberOfConEvaluators ?? 0;
+		const description = getParagraphsText(o.paragraphs);
+
+		return `- **${o.statement}** (${pro} for, ${con} against, ${total} voters)${description ? `\n  ${description}` : ''}`;
+	})
+	.join('\n')}
+`
+			: '';
+	const dividedTask =
+		dividedOptions.length > 0
+			? `\n5. **Where is the group divided?** - Add a separate section "## Where the Group Is Divided" (translated to ${languageName}) describing, in plain language, what the group is split on, using ONLY the divided options listed above. Do not present them as agreements.`
+			: '';
+
 	return `You are writing an informative summary of a group decision for people who want to understand what was agreed upon.
 
 ## The Question Discussed
@@ -463,7 +517,7 @@ ${getParagraphsText(question.paragraphs) ? `Context: ${getParagraphsText(questio
 ${totalParticipants} participants evaluated the proposals. The following ${solutions.length} solution(s) achieved consensus:
 ${solutionsText}
 
-${adminPrompt ? `## Special Focus Requested\n${adminPrompt}\n` : ''}
+${dividedText}${adminPrompt ? `## Special Focus Requested\n${adminPrompt}\n` : ''}
 
 ## Your Task
 Write a clear, informative summary in ${languageName} that helps readers understand:
@@ -471,7 +525,7 @@ Write a clear, informative summary in ${languageName} that helps readers underst
 1. **What was the question/challenge?** - Briefly explain what the group was trying to decide
 2. **What did they agree on?** - Clearly state each agreed solution in plain language. The reader should understand exactly what was decided.
 3. **How strong is the agreement?** - This discussion shows ${agreementStrength} consensus (top score: ${topSolution.consensus.toFixed(2)})
-4. **Key takeaways** - What should someone know about this decision?
+4. **Key takeaways** - What should someone know about this decision?${dividedTask}
 
 **CRITICAL FORMATTING RULES - YOU MUST FOLLOW THESE**:
 - Use proper markdown headers for ALL section titles:
