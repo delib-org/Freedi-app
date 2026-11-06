@@ -32,6 +32,12 @@ export async function generate(
 		lease = randomUUID();
 	if (!sources.length) {
 		if (mode === 'summary') {
+			// Nothing passes the cutoff any more: the question's one summary goes too.
+			await statements.doc(question.statementId).update({
+				summary: '',
+				summaryGeneratedAt: 0,
+				summaryIncludesDivided: false,
+			});
 			await ref.set({ summaryAt: Date.now(), summaryHash: hash }, { merge: true });
 
 			return '';
@@ -71,12 +77,16 @@ export async function generate(
 		);
 		let result = '';
 		if (mode === 'summary') {
-			// One summary per question: the same brief the question card shows, selected options only.
+			// One summary per question: the same brief the question card shows. Keeps the
+			// admin's chosen style (with or without divided options) on automatic refreshes.
 			const saved = await generateAndSaveSummary(
 				question,
 				question.statementId,
 				automatic ? String(enabledBy) : requestedBy || question.creatorId,
-				{ includeDivided: false },
+				{
+					includeDivided: question.summaryIncludesDivided === true,
+					operation: 'deliberation.generateSummary',
+				},
 			);
 			await ref.set({ summaryAt: saved.generatedAt, summaryHash: hash }, { merge: true });
 		} else {

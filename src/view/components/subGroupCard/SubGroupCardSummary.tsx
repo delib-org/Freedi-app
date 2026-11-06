@@ -6,6 +6,7 @@ import {
 	SummarizationNotReadyError,
 } from '@/controllers/db/summarization/summarizationController';
 import { buildSummaryPreview } from '@/helpers/summaryPreview';
+import { isSummaryObsolete } from '@/helpers/summaryObsolete';
 import { logError } from '@/utils/errorHandling';
 import Text from '@/view/components/text/Text';
 import styles from './SubGroupCardSummary.module.scss';
@@ -48,6 +49,8 @@ const SubGroupCardSummary: FC<Props> = ({ statement, summary, isAdmin = false })
 	const includesDivided = generated?.includeDivided ?? statement.summaryIncludesDivided === true;
 	const generatedAt = generated?.generatedAt ?? statement.summaryGeneratedAt;
 	const hasText = text.trim().length > 0;
+	// A fresh result from this component is current by definition.
+	const isObsolete = !generated && hasText && isSummaryObsolete(statement);
 	const preview = useMemo(() => buildSummaryPreview(text), [text]);
 	const generatedOn = generatedAt
 		? new Intl.DateTimeFormat(currentLanguage, { dateStyle: 'medium' }).format(generatedAt)
@@ -59,9 +62,9 @@ const SubGroupCardSummary: FC<Props> = ({ statement, summary, isAdmin = false })
 		setHasNoDivided(false);
 		try {
 			const result = await requestDiscussionSummary(statement.statementId, undefined, {
-				includeDivided: hasText && !includesDivided,
+				includeDivided: hasText && (isObsolete ? includesDivided : !includesDivided),
 			});
-			setHasNoDivided(hasText && !includesDivided && result.dividedCount === 0);
+			setHasNoDivided(hasText && !isObsolete && !includesDivided && result.dividedCount === 0);
 			setGenerated({
 				summary: result.summary,
 				includeDivided: result.includeDivided,
@@ -83,9 +86,11 @@ const SubGroupCardSummary: FC<Props> = ({ statement, summary, isAdmin = false })
 	// No summary yet: the button creates the selected-options one.
 	const buttonLabel = !hasText
 		? t('Summarize')
-		: includesDivided
-			? t('Show selected options only')
-			: t('Add what the group is divided on');
+		: isObsolete
+			? t('Update summary')
+			: includesDivided
+				? t('Show selected options only')
+				: t('Add what the group is divided on');
 
 	return (
 		<div className={styles.summary}>
@@ -111,6 +116,11 @@ const SubGroupCardSummary: FC<Props> = ({ statement, summary, isAdmin = false })
 			{generatedOn && (
 				<p className={styles.summary__date}>
 					{t('Summary from')} {generatedOn}
+				</p>
+			)}
+			{isObsolete && (
+				<p className={styles.summary__date} data-testid="summary-obsolete">
+					{t('Agreed proposals have changed since the last summary.')}
 				</p>
 			)}
 			{isAdmin && (

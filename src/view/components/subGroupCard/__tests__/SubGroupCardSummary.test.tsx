@@ -43,3 +43,50 @@ describe('SubGroupCardSummary with no summary yet', () => {
 		expect(await screen.findByText('Fresh selected-only summary')).toBeInTheDocument();
 	});
 });
+
+describe('SubGroupCardSummary obsolete marker', () => {
+	beforeEach(() => jest.clearAllMocks());
+
+	const withSelection = (
+		summarySelectedIds: string[] | undefined,
+		resultIds: string[],
+		includeDivided = false,
+	): Statement =>
+		({
+			statementId: 'q1',
+			statement: 'Q',
+			summarySelectedIds,
+			summaryIncludesDivided: includeDivided,
+			results: resultIds.map((statementId) => ({ statementId })),
+		}) as unknown as Statement;
+
+	it('shows the note and an Update summary button when the selection changed', async () => {
+		render(
+			<SubGroupCardSummary
+				statement={withSelection(['a'], ['a', 'b'], true)}
+				summary="Old text"
+				isAdmin
+			/>,
+		);
+		expect(screen.getByTestId('summary-obsolete')).toBeInTheDocument();
+		fireEvent.click(screen.getByRole('button', { name: 'Update summary' }));
+		await waitFor(() =>
+			expect(requestDiscussionSummary).toHaveBeenCalledWith('q1', undefined, {
+				includeDivided: true,
+			}),
+		);
+		await waitFor(() => expect(screen.queryByTestId('summary-obsolete')).toBeNull());
+	});
+
+	it('shows no note when the selection is the same', () => {
+		render(
+			<SubGroupCardSummary statement={withSelection(['a', 'b'], ['b', 'a'])} summary="Text" />,
+		);
+		expect(screen.queryByTestId('summary-obsolete')).toBeNull();
+	});
+
+	it('shows no note for an old summary without a recorded selection', () => {
+		render(<SubGroupCardSummary statement={withSelection(undefined, ['a'])} summary="Text" />);
+		expect(screen.queryByTestId('summary-obsolete')).toBeNull();
+	});
+});

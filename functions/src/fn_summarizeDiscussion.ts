@@ -6,6 +6,7 @@ import { getGeminiModel, getGenAI, LLM_MODEL_HEAVY } from './config/gemini';
 import { ALLOWED_ORIGINS } from './config/cors';
 import { getParagraphsText } from './helpers';
 import { logError } from './utils/errorHandling';
+import { stampWorkflowSummary } from './deliberation/records';
 import { filterDividedOptions, summaryCoversDivided } from './utils/dividedOptions';
 
 interface SummarizeDiscussionRequest {
@@ -160,12 +161,20 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 			throw new HttpsError('permission-denied', 'Only admins can generate summaries');
 		}
 
-		return generateAndSaveSummary(question, statementId, userId, {
+		const saved = await generateAndSaveSummary(question, statementId, userId, {
 			adminPrompt,
 			language,
 			includeSubQuestions,
 			includeDivided,
+			operation: 'summarizeDiscussion.callable',
 		});
+		try {
+			await stampWorkflowSummary(statementId, saved.generatedAt);
+		} catch (error) {
+			logError(error, { operation: 'summarizeDiscussion.stampWorkflow', statementId, userId });
+		}
+
+		return saved;
 	},
 );
 
@@ -453,6 +462,8 @@ export interface SummaryOptions {
 	language?: string;
 	includeSubQuestions?: boolean;
 	includeDivided?: boolean;
+	/** Caller label for error logs, e.g. 'deliberation.generateSummary'. */
+	operation?: string;
 }
 
 /**
@@ -468,6 +479,7 @@ export async function generateAndSaveSummary(
 	options: SummaryOptions,
 ): Promise<SummarizeDiscussionResponse> {
 	const { adminPrompt, language, includeSubQuestions, includeDivided } = options;
+	const operation = options.operation ?? 'summarizeDiscussion.generate';
 	const db = getFirestore();
 	// 3. Get total participants from parent evaluation
 	const totalParticipants = question.evaluation?.asParentTotalEvaluators || 0;
@@ -579,12 +591,20 @@ export async function generateAndSaveSummary(
 		const generatedAt = Date.now();
 		// The deep tree summary never covers divided options.
 		const coversDivided = summaryCoversDivided(useDeepSummary, dividedOptions.length);
-		await db.collection(Collections.statements).doc(statementId).update({
-			summary: summaryText,
-			summaryGeneratedAt: generatedAt,
-			summaryIncludesDivided: coversDivided,
-			lastUpdate: generatedAt,
-		});
+		await db
+			.collection(Collections.statements)
+			.doc(statementId)
+			.update({
+				summary: summaryText,
+				summaryGeneratedAt: generatedAt,
+				summaryIncludesDivided: coversDivided,
+				// What the summary was built from, so the UI can tell when the selection changes.
+				summarySelectedIds: tree.solutions
+					.map((solution) => solution.statementId)
+					.filter((id): id is string => typeof id === 'string')
+					.sort(),
+				lastUpdate: generatedAt,
+			});
 
 		return {
 			summary: summaryText,
@@ -601,7 +621,7 @@ export async function generateAndSaveSummary(
 			throw error;
 		}
 		logError(error, {
-			operation: 'summarizeDiscussion.generate',
+			operation,
 			statementId,
 			userId,
 		});

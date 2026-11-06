@@ -291,3 +291,11 @@ export async function persistAgreement(
 
 	return id;
 }
+
+/** Marks the workflow's summary as current after a manual summary, so auto mode does not redo it. */
+export async function stampWorkflowSummary(questionId: string, summaryAt: number): Promise<void> {
+	const ref = workflows.doc(questionId);
+	if (!(await ref.get()).exists) return;
+	const hash = sourcesHash(selectedSources(await children(questionId)));
+	await ref.set({ summaryAt, summaryHash: hash }, { merge: true });
+}

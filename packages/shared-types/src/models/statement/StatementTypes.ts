@@ -295,6 +295,7 @@ export const StatementSchema = object({
 	chosenSolutions: optional(array(string())), // the chosen solutions of the statement
 	summary: optional(string()), // the summary of the statement - AI-generated, admin-editable; shared across all apps
 	summaryGeneratedAt: optional(number()), // when the summary was generated/last edited (ms)
+	summarySelectedIds: optional(array(string())), // sorted ids of the selected options the summary was built from; a different current selection makes the summary obsolete
 	summaryIncludesDivided: optional(boolean()), // true when the summary also covers options the group is divided on
 	evaluation: optional(StatementEvaluationSchema), // the evaluation of the statement
 	evaluationSettings: optional(StatementEvaluationSettingsSchema), // the evaluation settings of the statement
