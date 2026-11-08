@@ -5,11 +5,11 @@
 import { getFunctions } from 'firebase/functions';
 import { Statement, Paragraph } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
+import { getAuthHeaders } from '@/controllers/db/authHeaders';
 
 interface ImportRequest {
 	documentUrl: string;
 	statementId: string;
-	userId: string;
 }
 
 interface ImportResponse {
@@ -46,13 +46,10 @@ export async function importGoogleDocToStatement(
 
 		const response = await fetch(functionUrl, {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
+			headers: await getAuthHeaders(),
 			body: JSON.stringify({
 				documentUrl,
 				statementId: statement.statementId,
-				userId,
 			} as ImportRequest),
 		});
 

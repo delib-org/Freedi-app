@@ -9,6 +9,7 @@ import { resultsByParentId } from './mapCont';
 import { Statement, Results } from '@freedi/shared-types';
 import { APIEndPoint, isChatMessage } from '@/controllers/general/helpers';
 import { logError } from '@/utils/errorHandling';
+import { getAuthHeaders } from '@/controllers/db/authHeaders';
 
 export function useMindMap(statementIdPassed: string | null = null) {
 	const { statementId: paramsStatement } = useParams();
@@ -71,48 +72,40 @@ export function useMindMap(statementIdPassed: string | null = null) {
 		}
 	}, [subject, descendants]);
 
-	function handleCluster(statementId: string) {
+	async function handleCluster(statementId: string): Promise<void> {
 		setLoading(true);
-		const endPoint = APIEndPoint('getCluster', {});
-		fetch(endPoint, {
-			method: 'POST',
-			body: JSON.stringify({
-				statementId,
-			}),
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
-			.catch((error) => {
-				logError(error, {
-					operation: 'useMindMap.handleCluster',
-					statementId,
-				});
-			})
-			.finally(() => {
-				setLoading(false);
+		try {
+			await fetch(APIEndPoint('getCluster', {}), {
+				method: 'POST',
+				body: JSON.stringify({ statementId }),
+				headers: await getAuthHeaders(),
 			});
+		} catch (error) {
+			logError(error, {
+				operation: 'useMindMap.handleCluster',
+				statementId,
+			});
+		} finally {
+			setLoading(false);
+		}
 	}
 
-	function handleRecoverSnapshot(statementId: string) {
+	async function handleRecoverSnapshot(statementId: string): Promise<void> {
 		setLoading(true);
-		const endPoint = APIEndPoint('recoverLastSnapshot', {});
-		fetch(endPoint, {
-			method: 'POST',
-			body: JSON.stringify({ snapshotId: statementId }),
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
-			.catch((error) => {
-				logError(error, {
-					operation: 'useMindMap.handleRecoverSnapshot',
-					metadata: { snapshotId: statementId },
-				});
-			})
-			.finally(() => {
-				setLoading(false);
+		try {
+			await fetch(APIEndPoint('recoverLastSnapshot', {}), {
+				method: 'POST',
+				body: JSON.stringify({ snapshotId: statementId }),
+				headers: await getAuthHeaders(),
 			});
+		} catch (error) {
+			logError(error, {
+				operation: 'useMindMap.handleRecoverSnapshot',
+				metadata: { snapshotId: statementId },
+			});
+		} finally {
+			setLoading(false);
+		}
 	}
 
 	return {
