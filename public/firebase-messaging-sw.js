@@ -83,10 +83,10 @@ importScripts('/badge-store.js');
 // past, which breaks push with "The requested version (1) is less than the
 // existing version (2)". firebaseMessagingSw.test.ts enforces the match.
 importScripts(
-	"https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"
+	"https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"
 );
 importScripts(
-	"https://www.gstatic.com/firebasejs/12.18.0/firebase-messaging-compat.js"
+	"https://www.gstatic.com/firebasejs/12.19.0/firebase-messaging-compat.js"
 );
 
 // Initialize the Firebase app in the service worker with build-time config
