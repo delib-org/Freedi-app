@@ -7,6 +7,7 @@
 import { Statement } from '@freedi/shared-types';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { COMMENT } from '@/constants/common';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 interface SubmitCommentParams {
   commentText: string;
@@ -24,7 +25,6 @@ export async function submitComment({
   commentText,
   suggestionStatement,
   userId,
-  userName,
   reasoning,
 }: SubmitCommentParams): Promise<{ statementId: string }> {
   try {
@@ -52,15 +52,13 @@ export async function submitComment({
       throw new ValidationError('User ID is required');
     }
 
-    const response = await fetch('/api/comments/submit', {
+    const response = await participantFetch('/api/comments/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         commentText: trimmedText,
         suggestionId: suggestionStatement.statementId,
         topParentId: suggestionStatement.topParentId || suggestionStatement.parentId,
-        userId,
-        userName,
         reasoning,
       }),
     });

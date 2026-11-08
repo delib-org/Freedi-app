@@ -21,6 +21,8 @@ export interface CloudFunctionOptions {
   /** Pause between attempts; tests pass 0. */
   retryDelayMs?: number;
   fetchImpl?: typeof fetch;
+  /** The caller's `Authorization` header, forwarded so the function can verify them. */
+  authorization?: string | null;
 }
 
 function isJson(response: Response): boolean {
@@ -36,14 +38,16 @@ export async function postToCloudFunction<T = Record<string, unknown>>(
   body: unknown,
   options: CloudFunctionOptions = {}
 ): Promise<CloudFunctionResult<T>> {
-  const { retryDelayMs = RETRY_DELAY_MS, fetchImpl = fetch } = options;
+  const { retryDelayMs = RETRY_DELAY_MS, fetchImpl = fetch, authorization } = options;
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (authorization) headers.Authorization = authorization;
   let attempts = 0;
 
   while (true) {
     attempts += 1;
     const response = await fetchImpl(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(body),
       cache: 'no-store',
     });

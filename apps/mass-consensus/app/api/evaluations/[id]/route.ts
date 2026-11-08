@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId, unauthorizedResponse, verifyParticipant } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections } from '@freedi/shared-types';
-import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { upsertEvaluation } from '@/lib/firebase/evaluations/evaluationWrites';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
@@ -25,20 +25,18 @@ export async function POST(
   }
 
   try {
+    // Identity comes only from the verified ID token: never from the body, query
+    // or a cookie. verifyIdToken without checkRevoked is a local signature check
+    // against cached Google certs, so voting gains no network round trip.
+    const participant = await verifyParticipant(request);
+    if (!participant) {
+      return unauthorizedResponse();
+    }
+
+    const { userId, displayName } = participant;
     const { id: statementId } = await params;
     const body = await request.json();
-    const { evaluation, userId: bodyUserId, userName, surveyId } = body;
-
-    // Get user ID
-    const cookieUserId = getUserIdFromCookie(request.headers.get('cookie'));
-    const userId = bodyUserId || cookieUserId;
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
-    }
+    const { evaluation, surveyId } = body;
 
     // Validate evaluation range (-1 to 1)
     if (typeof evaluation !== 'number' || evaluation < -1 || evaluation > 1) {
@@ -71,8 +69,6 @@ export async function POST(
         { status: 400 }
       );
     }
-
-    const displayName = userName || getAnonymousDisplayName(userId);
 
     // If this evaluation was submitted inside a survey session, resolve the
     // survey's demographic anchor and stamp it on the evaluation. The
@@ -148,10 +144,7 @@ export async function GET(
 
   try {
     const { id: statementId } = await params;
-    const url = new URL(request.url);
-    const queryUserId = url.searchParams.get('userId');
-    const cookieUserId = getUserIdFromCookie(request.headers.get('cookie'));
-    const userId = queryUserId || cookieUserId;
+    const userId = await getVerifiedUserId(request);
 
     if (!userId) {
       return NextResponse.json({ evaluation: null });

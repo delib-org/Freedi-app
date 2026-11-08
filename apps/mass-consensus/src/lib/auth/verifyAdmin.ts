@@ -115,6 +115,27 @@ export async function verifyToken(token: string): Promise<string | null> {
   }
 }
 
+/**
+ * Verify a Firebase ID token and return its uid and name claim. No database
+ * read and no revocation check, so it costs no network round trip.
+ * @param token - Firebase ID token from Authorization header
+ * @returns The token's uid and name, or null if the token is invalid
+ */
+export async function verifyParticipantToken(
+  token: string
+): Promise<{ userId: string; name: string | null } | null> {
+  try {
+    initializeFirebaseAdmin();
+    const decodedToken = await getAuth().verifyIdToken(token);
+
+    return { userId: decodedToken.uid, name: decodedToken.name?.trim() || null };
+  } catch (error) {
+    reportTokenFailure(error, 'verifyAdmin.verifyParticipantToken');
+
+    return null;
+  }
+}
+
 export interface CallerIdentity {
   userId: string;
   /** Lowercased email from the auth token, or null (e.g. anonymous sign-in). */

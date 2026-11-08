@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId, unauthorizedResponse } from '@/lib/auth/requestIdentity';
+import { AI_UID_RATE_LIMIT, checkVerifiedUidLimit } from '@/lib/utils/verifiedUidRateLimit';
 import OpenAI from 'openai';
 import { logError } from '@/lib/utils/errorHandling';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
@@ -16,6 +18,17 @@ export async function POST(request: NextRequest) {
   let originalText = '';
 
   try {
+    const userId = await getVerifiedUserId(request);
+    if (!userId) {
+      return unauthorizedResponse();
+    }
+
+    // Cost guard: see ai/feedback for why the in-memory limit is not enough.
+    const uidLimit = await checkVerifiedUidLimit(userId, AI_UID_RATE_LIMIT.rewriteComment);
+    if (uidLimit) {
+      return uidLimit;
+    }
+
     const body = await request.json();
     originalText = body.originalText || '';
     const { suggestionText, questionText } = body;

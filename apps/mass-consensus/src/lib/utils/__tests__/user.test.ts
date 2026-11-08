@@ -4,8 +4,6 @@
 import {
   generateAnonymousUserId,
   getOrCreateAnonymousUser,
-  getUserIdFromCookie,
-  getUserIdFromCookies,
   getAnonymousDisplayName,
 } from '../user';
 
@@ -184,82 +182,6 @@ describe('user utilities', () => {
         // Restore window
         global.window = originalWindow;
       }
-    });
-  });
-
-  describe('getUserIdFromCookie', () => {
-    it('should return null for null cookie header', () => {
-      const result = getUserIdFromCookie(null);
-      expect(result).toBeNull();
-    });
-
-    it('should return null for empty cookie header', () => {
-      const result = getUserIdFromCookie('');
-      expect(result).toBeNull();
-    });
-
-    it('should extract userId from cookie header', () => {
-      const cookieHeader = 'userId=anon_123_abc; other=value';
-      const result = getUserIdFromCookie(cookieHeader);
-      expect(result).toBe('anon_123_abc');
-    });
-
-    it('should handle userId at the end of cookie string', () => {
-      const cookieHeader = 'other=value; userId=anon_456_def';
-      const result = getUserIdFromCookie(cookieHeader);
-      expect(result).toBe('anon_456_def');
-    });
-
-    it('should handle userId as only cookie', () => {
-      const cookieHeader = 'userId=anon_789_ghi';
-      const result = getUserIdFromCookie(cookieHeader);
-      expect(result).toBe('anon_789_ghi');
-    });
-
-    it('should return null when userId is not present', () => {
-      const cookieHeader = 'sessionId=abc123; theme=dark';
-      const result = getUserIdFromCookie(cookieHeader);
-      expect(result).toBeNull();
-    });
-
-    it('should not match partial key names', () => {
-      // Should not match "otherUserId"
-      const cookieHeader = 'otherUserId=wrong; userId=correct';
-      const result = getUserIdFromCookie(cookieHeader);
-      expect(result).toBe('correct');
-    });
-
-    it('should handle special characters in userId value', () => {
-      const cookieHeader = 'userId=anon_123_abc-def';
-      const result = getUserIdFromCookie(cookieHeader);
-      expect(result).toBe('anon_123_abc-def');
-    });
-  });
-
-  describe('getUserIdFromCookies', () => {
-    it('should return null when cookie is not found', () => {
-      const cookieStore = {
-        get: jest.fn().mockReturnValue(undefined),
-      };
-      const result = getUserIdFromCookies(cookieStore);
-      expect(result).toBeNull();
-      expect(cookieStore.get).toHaveBeenCalledWith('userId');
-    });
-
-    it('should return userId when cookie exists', () => {
-      const cookieStore = {
-        get: jest.fn().mockReturnValue({ value: 'anon_123_abc' }),
-      };
-      const result = getUserIdFromCookies(cookieStore);
-      expect(result).toBe('anon_123_abc');
-    });
-
-    it('should handle empty string value', () => {
-      const cookieStore = {
-        get: jest.fn().mockReturnValue({ value: '' }),
-      };
-      const result = getUserIdFromCookies(cookieStore);
-      expect(result).toBe('');
     });
   });
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { getOrCreateAnonymousUser } from '@/lib/utils/user';
+import { useAuth } from '@/components/auth/AuthProvider';
 import {
 	getResearchConsent,
 	saveResearchConsent,
@@ -20,20 +20,18 @@ export default function ResearchConsentBanner({
 }: ResearchConsentBannerProps) {
 	const { t } = useTranslation();
 	const [showBanner, setShowBanner] = useState(false);
-	const [userId, setUserId] = useState<string>('');
+	const { user } = useAuth();
+	const userId = user?.uid ?? '';
 
 	useEffect(() => {
-		if (!enableResearchLogging || !topParentId) return;
+		if (!enableResearchLogging || !topParentId || !userId) return;
 
-		const uid = getOrCreateAnonymousUser();
-		setUserId(uid);
-
-		getResearchConsent(uid, topParentId).then((consent) => {
+		getResearchConsent(userId, topParentId).then((consent) => {
 			if (consent === null) {
 				setShowBanner(true);
 			}
 		});
-	}, [enableResearchLogging, topParentId]);
+	}, [enableResearchLogging, topParentId, userId]);
 
 	useEffect(() => {
 		if (showBanner) {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId, unauthorizedResponse } from '@/lib/auth/requestIdentity';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES } from '@/constants/common';
 import { postToCloudFunction } from '@/lib/api/cloudFunction';
@@ -15,20 +16,18 @@ export async function POST(
   const { id: questionId } = await params;
 
   try {
+    const userId = await getVerifiedUserId(request);
+    if (!userId) {
+      return unauthorizedResponse();
+    }
+
     const body = await request.json();
-    const { userInput, userId } = body;
+    const { userInput } = body;
 
     // Validate input
     if (!userInput || typeof userInput !== 'string') {
       return NextResponse.json(
         { error: 'User input is required', ok: false, isMultipleSuggestions: false, suggestions: [] },
-        { status: 400 }
-      );
-    }
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required', ok: false, isMultipleSuggestions: false, suggestions: [] },
         { status: 400 }
       );
     }
@@ -63,7 +62,7 @@ export async function POST(
       userInput,
       questionId,
       userId,
-    });
+    }, { authorization: request.headers.get('authorization') });
 
     if (result.kind === 'unavailable') {
       logError(new Error('Multi-suggestion service returned a non-JSON page'), {

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { unauthorizedResponse, verifyParticipant } from '@/lib/auth/requestIdentity';
 import { isMeaningfulSuggestion, MIN_MEANINGFUL_WORDS } from '@freedi/shared-types';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, StatementType, createStatementObject, SourceApp } from '@freedi/shared-types';
-import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { VALIDATION, ERROR_MESSAGES } from '@/constants/common';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
@@ -102,19 +102,14 @@ export async function POST(
   }
 
   try {
-    const body = await request.json();
-    const { solutionText, userId: bodyUserId, userName, existingStatementId } = body;
-
-    // Get user ID
-    const cookieUserId = getUserIdFromCookie(request.headers.get('cookie'));
-    const userId = bodyUserId || cookieUserId;
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
+    const participant = await verifyParticipant(request);
+    if (!participant) {
+      return unauthorizedResponse();
     }
+
+    const { userId, displayName } = participant;
+    const body = await request.json();
+    const { solutionText, existingStatementId } = body;
 
     // Validate solution text
     if (!solutionText || typeof solutionText !== 'string') {
@@ -167,7 +162,6 @@ export async function POST(
     }
 
     const questionData = questionDoc.data();
-    const displayName = userName || getAnonymousDisplayName(userId);
 
     // If user selected an existing solution, create evaluation instead
     if (existingStatementId) {

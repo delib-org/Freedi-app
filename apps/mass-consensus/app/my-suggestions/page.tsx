@@ -4,7 +4,8 @@ import { cookies } from 'next/headers';
 import { Statement } from '@freedi/shared-types';
 import { getQuestionFromFirebase, getUserSolutions, getUserSuggestionsForSurvey, getCommentsForStatements } from '@/lib/firebase/queries';
 import { getSurveyWithQuestions } from '@/lib/firebase/surveys';
-import { getUserIdFromCookies } from '@/lib/utils/user';
+import { getSessionUid } from '@/lib/auth/serverSession';
+import SessionBootstrap from '@/components/auth/SessionBootstrap';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import { MySuggestionsPageData, QuestionSuggestionsData, SuggestionWithComments, MySuggestionsStats } from '@/types/mySuggestions';
 import MySuggestionsPage from '@/components/my-suggestions/MySuggestionsPage';
@@ -96,9 +97,9 @@ export default async function MySuggestionsRoute({ searchParams }: PageProps) {
   }
 
   const cookieStore = await cookies();
-  const userId = getUserIdFromCookies(cookieStore);
+  const userId = await getSessionUid(cookieStore);
   if (!userId) {
-    redirect('/');
+    return <SessionBootstrap fallbackHref="/" />;
   }
 
   try {

@@ -13,6 +13,7 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { pingSurveyEntry } from '@/lib/utils/surveyEntryPing';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 export interface SwipeInterfaceWrapperProps {
   question: Statement;
@@ -46,19 +47,18 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
     if (isLoading || viewRecordedRef.current) return;
     viewRecordedRef.current = true;
 
-    const viewerId = user?.uid || getOrCreateAnonymousUser();
-    fetch(`/api/statements/${question.statementId}/view`, {
+    participantFetch(`/api/statements/${question.statementId}/view`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: viewerId }),
+      body: JSON.stringify({}),
     }).catch(() => {
       // Non-blocking: view tracking must never disturb the flow
     });
 
     if (surveyId) {
-      pingSurveyEntry(surveyId, viewerId);
+      pingSurveyEntry(surveyId);
     }
-  }, [isLoading, user?.uid, question.statementId, surveyId]);
+  }, [isLoading, question.statementId, surveyId]);
 
   // Use shared anonymous user utility for consistent ID across modes
 

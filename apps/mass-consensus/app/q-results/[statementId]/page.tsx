@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { Statement } from '@freedi/shared-types';
 import { getQuestionFromFirebase, getAllSolutionsSorted, getUserSolutions } from '@/lib/firebase/queries';
-import { getUserIdFromCookies } from '@/lib/utils/user';
+import { getSessionUid } from '@/lib/auth/serverSession';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import ResultCard from '@/components/q-results/ResultCard';
 import styles from './q-results.module.scss';
@@ -59,7 +59,7 @@ export default async function QResultsPage({ params }: PageProps) {
 
     // Try to get user's solutions if they have a cookie
     const cookieStore = await cookies();
-    const userId = getUserIdFromCookies(cookieStore);
+    const userId = await getSessionUid(cookieStore);
     if (userId) {
       userSolutions = await getUserSolutions(statementId, userId);
     }

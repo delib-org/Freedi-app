@@ -12,6 +12,7 @@ import EnhancedLoader from './EnhancedLoader';
 import SimilarSolutions from './SimilarSolutions';
 import SuccessMessage from './SuccessMessage';
 import MultiSuggestionPreview from './MultiSuggestionPreview';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 interface AddSolutionFlowProps {
   questionId: string;
@@ -61,22 +62,20 @@ export default function AddSolutionFlow({
       // Use cache: 'no-store' to prevent Next.js from caching these dynamic API calls
       const [multiResponse, similarResponse] = await Promise.all([
         // Check for multiple suggestions
-        fetch(`/api/statements/${questionId}/detect-multi`, {
+        participantFetch(`/api/statements/${questionId}/detect-multi`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userInput: solutionText,
-            userId,
           }),
           cache: 'no-store',
         }),
         // Check for similar solutions
-        fetch(`/api/statements/${questionId}/check-similar`, {
+        participantFetch(`/api/statements/${questionId}/check-similar`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userInput: solutionText,
-            userId,
           }),
           cache: 'no-store',
         }),
@@ -235,12 +234,11 @@ export default function AddSolutionFlow({
     setFlowState({ step: 'submitting' });
 
     try {
-      const response = await fetch(`/api/statements/${questionId}/submit`, {
+      const response = await participantFetch(`/api/statements/${questionId}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           solutionText: textToSubmit,
-          userId,
           existingStatementId: statementId,
         }),
       });

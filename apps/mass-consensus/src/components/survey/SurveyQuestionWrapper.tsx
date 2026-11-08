@@ -9,6 +9,7 @@ import SurveyProgressBar from './SurveyProgress';
 import SurveyNavigation from './SurveyNavigation';
 import ResearchConsentBanner from '@/components/shared/ResearchConsentBanner';
 import styles from './Survey.module.scss';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 interface SurveyQuestionWrapperProps {
   survey: SurveyWithQuestions;
@@ -195,7 +196,7 @@ export default function SurveyQuestionWrapper({
 
       // Save to server for statistics tracking
       const isLastQuestion = currentIndex === totalFlowItems - 1;
-      fetch(`/api/surveys/${survey.surveyId}/progress`, {
+      participantFetch(`/api/surveys/${survey.surveyId}/progress`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -233,7 +234,7 @@ export default function SurveyQuestionWrapper({
           lastUpdated: Date.now(),
         }));
 
-        fetch(`/api/surveys/${survey.surveyId}/progress`, {
+        participantFetch(`/api/surveys/${survey.surveyId}/progress`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
