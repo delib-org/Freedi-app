@@ -1,5 +1,6 @@
 'use client';
 
+import { logout } from '@/lib/firebase/client';
 import { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useRouter } from 'next/navigation';
@@ -51,11 +52,15 @@ export default function HomeClient({ documents, groups: initialGroups, user }: H
     setDebouncedSearch('');
   }, []);
 
-  const handleSignOut = useCallback(() => {
-    // Clear cookies
-    document.cookie = 'userId=; path=/; max-age=0';
-    document.cookie = 'userDisplayName=; path=/; max-age=0';
-    document.cookie = 'userEmail=; path=/; max-age=0';
+  const handleSignOut = useCallback(async () => {
+    // Ends the Firebase sign-in and the signed session cookie: clearing the
+    // readable cookies alone would leave the server treating this user as signed in.
+    try {
+      await logout();
+    } catch {
+      // Already reported by logout(); still take the user to the login screen.
+    }
+
     localStorage.removeItem('signUserId');
     localStorage.removeItem('firebaseUser');
     router.push('/login');

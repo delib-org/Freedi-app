@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/firebaseClient';
+	import { safeRedirectPath } from '$lib/safeRedirect';
 	import { t } from '$lib/i18n';
 
 	// Lazy Google sign-in (§6.4). Never gates reading; draft-preserving — returns
@@ -10,7 +11,7 @@
 	let busy = $state(false);
 	let errorMsg = $state('');
 
-	const redirectTo = $derived(page.url.searchParams.get('redirectTo') ?? '/');
+	const redirectTo = $derived(safeRedirectPath(page.url.searchParams.get('redirectTo'), '/'));
 
 	async function signIn() {
 		busy = true;

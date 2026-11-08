@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections, Paragraph, ParagraphType, Statement, StatementType } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
@@ -17,8 +17,7 @@ export async function GET(
   try {
     // For GET, we treat the param as documentId
     const { paragraphId: documentId } = await params;
-    const cookieHeader = request.headers.get('cookie');
-    const userId = getUserIdFromCookie(cookieHeader);
+    const userId = await getVerifiedUserId(request);
 
     if (!userId) {
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
@@ -83,8 +82,7 @@ export async function PATCH(
 ) {
   try {
     const { paragraphId } = await params;
-    const cookieHeader = request.headers.get('cookie');
-    const userId = getUserIdFromCookie(cookieHeader);
+    const userId = await getVerifiedUserId(request);
 
     if (!userId) {
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });

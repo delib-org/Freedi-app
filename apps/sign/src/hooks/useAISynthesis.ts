@@ -6,6 +6,7 @@
 
 'use client';
 
+import { getAuthorizationHeader } from '@/lib/firebase/client';
 import { useState, useCallback } from 'react';
 import { API_ROUTES } from '@/constants/common';
 import { logError } from '@/lib/utils/errorHandling';
@@ -54,7 +55,7 @@ export function useAISynthesis() {
 		try {
 			const response = await fetch(API_ROUTES.ADMIN_REFINEMENT(paragraphId), {
 				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
+				headers: { 'Content-Type': 'application/json', ...(await getAuthorizationHeader()) },
 				body: JSON.stringify({
 					action: 'synthesize',
 					originalContent,
@@ -101,7 +102,7 @@ export function useAISynthesis() {
 		try {
 			const response = await fetch(API_ROUTES.ADMIN_REFINEMENT(paragraphId), {
 				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
+				headers: { 'Content-Type': 'application/json', ...(await getAuthorizationHeader()) },
 				body: JSON.stringify({
 					action: 'improve',
 					suggestionId,
@@ -144,7 +145,7 @@ export function useAISynthesis() {
 		try {
 			const response = await fetch(API_ROUTES.ADMIN_REFINEMENT(paragraphId), {
 				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
+				headers: { 'Content-Type': 'application/json', ...(await getAuthorizationHeader()) },
 				body: JSON.stringify({
 					action: 'setPhase',
 					phase,

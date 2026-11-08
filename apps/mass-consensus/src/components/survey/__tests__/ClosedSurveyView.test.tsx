@@ -6,6 +6,11 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import ClosedSurveyView from '../ClosedSurveyView';
 
 // Mock i18n — return keys so assertions are stable across locales
+// Firebase Auth cannot load under jest; the token handling has its own tests.
+jest.mock('@/lib/firebase/participantFetch', () => ({
+  participantFetch: (input: string, init?: RequestInit) => global.fetch(input, init),
+}));
+
 jest.mock('@freedi/shared-i18n/next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,

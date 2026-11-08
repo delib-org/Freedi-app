@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId, unauthorizedResponse } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, Statement, StatementType } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
@@ -22,12 +23,9 @@ export async function GET(
       );
     }
 
-    const userId = request.nextUrl.searchParams.get('userId');
+    const userId = await getVerifiedUserId(request);
     if (!userId) {
-      return NextResponse.json(
-        { error: 'userId query parameter is required' },
-        { status: 400 }
-      );
+      return unauthorizedResponse();
     }
 
     const db = getFirestoreAdmin();

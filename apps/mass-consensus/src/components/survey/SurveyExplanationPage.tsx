@@ -9,6 +9,7 @@ import { logError } from '@/lib/utils/errorHandling';
 import SurveyProgressBar from './SurveyProgress';
 import ExplanationPageBody from './ExplanationPageBody';
 import styles from './Survey.module.scss';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 interface SurveyExplanationPageProps {
   survey: SurveyWithQuestions;
@@ -70,7 +71,7 @@ export default function SurveyExplanationPage({
     setIsNavigatingNext(true);
 
     // Save progress to server for statistics tracking
-    fetch(`/api/surveys/${survey.surveyId}/progress`, {
+    participantFetch(`/api/surveys/${survey.surveyId}/progress`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

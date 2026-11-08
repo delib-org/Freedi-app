@@ -1,4 +1,5 @@
 'use client';
+import { getAuthorizationHeader } from '@/lib/firebase/client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -169,7 +170,7 @@ export default function AdminVersionsPage() {
 					API_ROUTES.ADMIN_VERSION_PROCESS_AI(statementId, version.versionId),
 					{
 						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
+						headers: { 'Content-Type': 'application/json', ...(await getAuthorizationHeader()) },
 					}
 				);
 

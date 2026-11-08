@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { denyWithoutDocumentAccess, getParticipantIdentity } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, StatementType, Statement, DEMOGRAPHIC_CONSTANTS } from '@freedi/shared-types';
 import { StatementWithParagraphs, Paragraph } from '@/types';
@@ -132,6 +133,10 @@ export async function GET(
     const hasDemographicFilter = demographicQuestionId && segmentValue;
 
     const db = getFirestoreAdmin();
+
+    // Before anything is read: the demographic filter below also returns data.
+    const denied = await denyWithoutDocumentAccess(db, docId, await getParticipantIdentity(request));
+    if (denied) return denied;
 
     // Get users in segment if demographic filter is applied
     let segmentUsers: Set<string> | null = null;

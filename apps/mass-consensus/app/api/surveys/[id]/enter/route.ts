@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId, unauthorizedResponse } from '@/lib/auth/requestIdentity';
 import { getSurveyById, markSurveyEntered } from '@/lib/firebase/surveys';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
 
@@ -27,12 +27,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const surveyId = context.params.id;
 
-    const body = await request.json().catch(() => ({}));
-    const bodyUserId = typeof body.userId === 'string' ? body.userId : undefined;
-    const userId = bodyUserId || getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getVerifiedUserId(request);
 
     if (!userId) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+      return unauthorizedResponse();
     }
 
     const survey = await getSurveyById(surveyId);

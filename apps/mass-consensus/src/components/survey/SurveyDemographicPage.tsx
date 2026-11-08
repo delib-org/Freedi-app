@@ -1,17 +1,16 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef, type CSSProperties, type KeyboardEvent } from 'react';
+import { useState, useCallback, useRef, type CSSProperties, type KeyboardEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import type { SurveyDemographicPage, UserDemographicQuestion } from '@freedi/shared-types';
 import { UserDemographicQuestionType } from '@freedi/shared-types';
 import { SurveyWithQuestions, getTotalFlowLength } from '@/types/survey';
-import { getOrCreateAnonymousUser } from '@/lib/utils/user';
-import { getCurrentToken } from '@/lib/firebase/client';
 import { logError } from '@/lib/utils/errorHandling';
 import SurveyProgressBar from './SurveyProgress';
 import InlineMarkdown from '../shared/InlineMarkdown';
 import styles from './Survey.module.scss';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 const OTHER_SENTINEL = '__other__';
 
@@ -91,11 +90,6 @@ export default function SurveyDemographicPage({
   const otherInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const isNavigating = isSubmitting || isNavigatingBack || isSkipping;
-
-  // Ensure anonymous user ID is set on mount
-  useEffect(() => {
-    getOrCreateAnonymousUser();
-  }, []);
 
   const totalFlowLength = getTotalFlowLength(survey);
   const isLastItem = currentFlowIndex === totalFlowLength - 1;
@@ -354,14 +348,6 @@ export default function SurveyDemographicPage({
     setIsSubmitting(true);
 
     try {
-      // Ensure userId cookie is fresh before API call (mobile browsers may drop it)
-      getOrCreateAnonymousUser();
-
-      // Signed-in visitors send a token; anonymous ones are identified by the
-      // userId cookie above, so a missing token is normal here and the header
-      // is simply left off. (This used to read a localStorage copy written once
-      // at sign-in — stale by design, and `Bearer null` for everyone else.)
-      const token = await getCurrentToken();
       const formattedAnswers = Object.entries(answers).map(([questionId, data]) => ({
         questionId,
         answer: data.answer,
@@ -370,12 +356,9 @@ export default function SurveyDemographicPage({
       }));
 
       // Save answers to the API
-      const response = await fetch(`/api/surveys/${survey.surveyId}/demographics/${demographicPage.demographicPageId}/answers`, {
+      const response = await participantFetch(`/api/surveys/${survey.surveyId}/demographics/${demographicPage.demographicPageId}/answers`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ answers: formattedAnswers }),
       });
@@ -385,7 +368,7 @@ export default function SurveyDemographicPage({
       }
 
       // Save progress to server for statistics tracking
-      fetch(`/api/surveys/${survey.surveyId}/progress`, {
+      participantFetch(`/api/surveys/${survey.surveyId}/progress`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -422,7 +405,7 @@ export default function SurveyDemographicPage({
     setIsSkipping(true);
 
     // Save progress to server for statistics tracking (even when skipping)
-    fetch(`/api/surveys/${survey.surveyId}/progress`, {
+    participantFetch(`/api/surveys/${survey.surveyId}/progress`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

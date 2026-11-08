@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { unauthorizedResponse, verifyParticipant } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, StatementType, createStatementObject, SourceApp } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
@@ -11,12 +12,16 @@ import { COMMENT } from '@/constants/common';
  */
 export async function POST(request: NextRequest) {
   try {
+    const participant = await verifyParticipant(request);
+    if (!participant) {
+      return unauthorizedResponse();
+    }
+
+    const { userId, displayName } = participant;
     const {
       commentText,
       suggestionId,
       topParentId,
-      userId,
-      userName,
       reasoning,
     } = await request.json();
 
@@ -37,9 +42,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!suggestionId || !userId) {
+    if (!suggestionId) {
       return NextResponse.json(
-        { error: 'suggestionId and userId are required' },
+        { error: 'suggestionId is required' },
         { status: 400 }
       );
     }
@@ -55,7 +60,7 @@ export async function POST(request: NextRequest) {
       topParentId: topParentId || suggestionId,
       creatorId: userId,
       creator: {
-        displayName: userName || 'Anonymous',
+        displayName,
         uid: userId,
       },
       sourceApp: SourceApp.MASS_CONSENSUS,

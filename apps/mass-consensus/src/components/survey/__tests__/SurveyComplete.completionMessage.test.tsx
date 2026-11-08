@@ -6,6 +6,11 @@ import { render, screen, act } from '@testing-library/react';
 import { SurveyStatus, DEFAULT_SURVEY_SETTINGS, type SurveyWithQuestions } from '@/types/survey';
 import SurveyComplete from '../SurveyComplete';
 
+// Firebase Auth cannot load under jest; the token handling has its own tests.
+jest.mock('@/lib/firebase/participantFetch', () => ({
+  participantFetch: (input: string, init?: RequestInit) => global.fetch(input, init),
+}));
+
 jest.mock('@freedi/shared-i18n/next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,

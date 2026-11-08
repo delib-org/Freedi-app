@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId, unauthorizedResponse } from '@/lib/auth/requestIdentity';
 import { getSurveyProgress, upsertSurveyProgress, getSurveyById } from '@/lib/firebase/surveys';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { UpdateProgressRequest } from '@/types/survey';
 import { logger } from '@/lib/utils/logger';
 import { logResearchAction } from '@/lib/utils/researchLogger';
@@ -32,13 +32,10 @@ async function logSurveyEntry(surveyId: string, userId: string): Promise<void> {
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const surveyId = context.params.id;
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getVerifiedUserId(request);
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID required' },
-        { status: 400 }
-      );
+      return unauthorizedResponse();
     }
 
     const progress = await getSurveyProgress(surveyId, userId);
@@ -86,13 +83,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const surveyId = context.params.id;
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getVerifiedUserId(request);
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID required' },
-        { status: 400 }
-      );
+      return unauthorizedResponse();
     }
 
     const body: UpdateProgressRequest = await request.json();

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { denyWithoutDocumentAccess, getParticipantIdentity } from '@/lib/auth/requestIdentity';
+import { getParticipantId } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { isDocumentFrozen, FROZEN_DOCUMENT_ERROR } from '@/lib/admin/documentStatus';
 import { logger } from '@/lib/utils/logger';
@@ -19,7 +20,7 @@ export async function POST(
 ): Promise<NextResponse> {
   try {
     const { docId } = await params;
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -40,6 +41,9 @@ export async function POST(
     }
 
     const db = getFirestoreAdmin();
+
+    const denied = await denyWithoutDocumentAccess(db, docId, await getParticipantIdentity(request));
+    if (denied) return denied;
 
     if (await isDocumentFrozen(db, docId)) {
       return NextResponse.json(

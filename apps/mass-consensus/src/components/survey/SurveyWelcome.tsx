@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { SurveyWithQuestions, SurveyProgress } from '@/types/survey';
-import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { logError } from '@/lib/utils/errorHandling';
 import styles from './Survey.module.scss';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 interface SurveyWelcomeProps {
   survey: SurveyWithQuestions;
@@ -30,10 +30,7 @@ export default function SurveyWelcome({ survey }: SurveyWelcomeProps) {
   useEffect(() => {
     const fetchProgress = async () => {
       try {
-        // Get or create anonymous user ID (sets cookie for API requests)
-        getOrCreateAnonymousUser();
-
-        const response = await fetch(`/api/surveys/${survey.surveyId}/progress`, {
+        const response = await participantFetch(`/api/surveys/${survey.surveyId}/progress`, {
           credentials: 'include',
         });
 

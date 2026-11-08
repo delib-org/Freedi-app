@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkAdminAccess } from '@/lib/utils/adminAccess';
+import { getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import {
   Collections,
   createParagraphChildStatement,
@@ -22,8 +23,7 @@ interface AddParagraphInput {
  */
 export async function POST(request: NextRequest) {
   try {
-    const cookieHeader = request.headers.get('cookie');
-    const userId = getUserIdFromCookie(cookieHeader);
+    const userId = await getVerifiedUserId(request);
 
     if (!userId) {
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
@@ -37,6 +37,12 @@ export async function POST(request: NextRequest) {
     }
 
     const db = getFirestoreAdmin();
+
+    // Same rule as the other admin paragraph routes: viewers may read, not write
+    const access = await checkAdminAccess(db, documentId, userId);
+    if (!access.isAdmin || access.isViewer) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
 
     // Get document to verify it exists and get creator info
     const docRef = db.collection(Collections.statements).doc(documentId);

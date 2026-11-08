@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, UserEvaluation } from '@freedi/shared-types';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { logError } from '@/lib/utils/errorHandling';
 
 /**
@@ -16,10 +16,7 @@ export async function GET(
 
   try {
     // Get user ID from request
-    const url = new URL(request.url);
-    const bodyUserId = url.searchParams.get('userId');
-    const cookieUserId = getUserIdFromCookie(request.headers.get('cookie'));
-    const userId = bodyUserId || cookieUserId;
+    const userId = await getVerifiedUserId(request);
 
     if (!userId) {
       return NextResponse.json({

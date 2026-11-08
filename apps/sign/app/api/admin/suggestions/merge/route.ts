@@ -6,9 +6,10 @@
  * suggestion that the community can vote on.
  */
 
+import { getVerifiedUserId, getVerifiedDisplayName } from '@/lib/auth/requestIdentity';
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
+import { getAnonymousDisplayName } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections, SourceApp } from '@freedi/shared-types';
 import { createSuggestionStatement } from '@freedi/shared-types';
@@ -24,8 +25,7 @@ interface MergeRequest {
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
 	try {
-		const cookieHeader = request.headers.get('cookie');
-		const userId = getUserIdFromCookie(cookieHeader);
+		const userId = await getVerifiedUserId(request);
 
 		if (!userId) {
 			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 		}
 
 		// Create the suggestion statement
-		const displayName = getUserDisplayNameFromCookie(cookieHeader) || getAnonymousDisplayName(userId);
+		const displayName = (await getVerifiedDisplayName(request)) || getAnonymousDisplayName(userId);
 		const creator = {
 			uid: userId,
 			displayName,

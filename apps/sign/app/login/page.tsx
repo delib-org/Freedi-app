@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { googleLogin, anonymousLogin } from '@/lib/firebase/client';
+import { googleLogin, anonymousLogin, subscribeToAuthState } from '@/lib/firebase/client';
+import { establishServerSession } from '@/lib/firebase/serverSession';
+import { safeRedirectPath } from '@/lib/utils/safeRedirect';
 import { trackUserLogin } from '@/lib/analytics';
 import styles from './login.module.scss';
 
@@ -30,10 +32,23 @@ export default function LoginPage() {
           }
         })()
       : '/');
-  const redirectUrl =
-    rawRedirect && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') && rawRedirect !== '/login'
-      ? rawRedirect
-      : '/';
+  const sanitizedRedirect = safeRedirectPath(rawRedirect, '/');
+  const redirectUrl = sanitizedRedirect === '/login' ? '/' : sanitizedRedirect;
+
+  // A server page sent an already signed-in user here because it found no
+  // session (e.g. a user signed in before sessions existed). Create it and go back.
+  const serverAskedForSession = searchParams.has('redirect');
+  useEffect(() => {
+    if (!serverAskedForSession) return;
+
+    return subscribeToAuthState((user) => {
+      if (!user || user.isAnonymous) return;
+
+      void establishServerSession(user).then((session) => {
+        if (session === 'created') window.location.href = redirectUrl;
+      });
+    });
+  }, [serverAskedForSession, redirectUrl]);
 
   console.info('[Login] Redirect URL:', redirectUrl, '(raw:', rawRedirect, ')');
 

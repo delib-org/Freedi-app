@@ -6,8 +6,10 @@ import {
   signInWithGoogle,
   signOutUser,
   getCurrentToken,
+  ensureSignedInUser,
   User,
 } from '@/lib/firebase/client';
+import { clearServerSession, establishServerSession } from '@/lib/firebase/serverSession';
 import { isPopupBlockedAuthError } from '@/lib/firebase/authErrors';
 import { logError } from '@/lib/utils/errorHandling';
 
@@ -53,6 +55,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         } catch (error) {
           logError(error, { operation: 'AuthProvider.onAuthChange' });
         }
+
+        void establishServerSession(firebaseUser);
       } else {
         // Only clear the cookie if it was set by Firebase auth (not anonymous)
         // Anonymous userId cookies are managed by getOrCreateAnonymousUser()
@@ -60,6 +64,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (existingCookie && !existingCookie[1].startsWith('anon_')) {
           document.cookie = 'userId=; path=/; max-age=0';
         }
+
+        // Participants never need an account, but the server only accepts a
+        // verified token, so a visitor without one is signed in anonymously.
+        // Stays "loading" until that user arrives through this same callback.
+        const anonymousUser = await ensureSignedInUser();
+        if (anonymousUser) return;
       }
 
       setIsLoading(false);
@@ -87,6 +97,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = useCallback(async () => {
     try {
       await signOutUser();
+      await clearServerSession();
       setUser(null);
     } catch (error) {
       logError(error, { operation: 'AuthProvider.signOut' });

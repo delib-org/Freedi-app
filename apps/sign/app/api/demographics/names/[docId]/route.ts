@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { denyWithoutDocumentAccess, getParticipantIdentity } from '@/lib/auth/requestIdentity';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { Collections } from '@freedi/shared-types';
 import { getDemographicQuestions } from '@/lib/firebase/demographicQueries';
@@ -23,7 +24,7 @@ export interface DemographicNamesResponse {
  * display mode is 'form' — name answers are never exposed otherwise.
  */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ docId: string }> }
 ): Promise<NextResponse> {
   try {
@@ -38,6 +39,9 @@ export async function GET(
         { status: 404 }
       );
     }
+
+    const denied = await denyWithoutDocumentAccess(db, docId, await getParticipantIdentity(request), docSnap.data());
+    if (denied) return denied;
 
     const document = docSnap.data();
     const signSettings = document?.signSettings ?? {};

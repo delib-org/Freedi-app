@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { unauthorizedResponse, verifyParticipant } from '@/lib/auth/requestIdentity';
 import { isMeaningfulSuggestion, MIN_MEANINGFUL_WORDS } from '@freedi/shared-types';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES, VALIDATION } from '@/constants/common';
@@ -33,14 +34,20 @@ export async function POST(
   let parsedBody: {
     targetStatementId?: string;
     solutionText?: string;
-    userId?: string;
-    userName?: string;
     autoMerge?: boolean;
   } = {};
+  let userId: string | undefined;
 
   try {
+    const participant = await verifyParticipant(request);
+    if (!participant) {
+      return unauthorizedResponse();
+    }
+
+    userId = participant.userId;
+    const userName = participant.displayName;
     parsedBody = await request.json();
-    const { targetStatementId, solutionText, userId, userName, autoMerge } = parsedBody;
+    const { targetStatementId, solutionText, autoMerge } = parsedBody;
 
     // Validate required fields
     if (!targetStatementId) {
@@ -53,13 +60,6 @@ export async function POST(
     if (!solutionText || typeof solutionText !== 'string') {
       return NextResponse.json(
         { error: 'Solution text is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
         { status: 400 }
       );
     }
@@ -125,7 +125,7 @@ export async function POST(
       userId,
       userName,
       autoMerge: autoMerge === true,
-    });
+    }, { authorization: request.headers.get('authorization') });
 
     if (result.kind === 'unavailable') {
       logError(new Error('Merge service returned a non-JSON page'), {
@@ -182,7 +182,7 @@ export async function POST(
     });
   } catch (error) {
     // Use parsedBody from top level (already parsed before try block might fail)
-    const { userId, targetStatementId } = parsedBody;
+    const { targetStatementId } = parsedBody;
 
     logError(error, {
       operation: 'api.merge',

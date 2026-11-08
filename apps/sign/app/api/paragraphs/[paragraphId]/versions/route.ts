@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { denyWithoutDocumentAccess, getParticipantIdentity } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, Statement, VersionArchive } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
@@ -42,6 +43,14 @@ export async function GET(
 		}
 
 		const paragraph = paragraphSnap.data() as Statement;
+
+		const denied = await denyWithoutDocumentAccess(
+			db,
+			paragraph.topParentId || paragraph.parentId,
+			await getParticipantIdentity(request)
+		);
+		if (denied) return denied;
+
 		const currentVersion = paragraph.versionControl?.currentVersion || 1;
 
 		// Get recent versions (Tier 1 - full storage)

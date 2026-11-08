@@ -49,6 +49,7 @@ import {
   trackProposalPromptShown,
   trackProposalPromptDismissed,
 } from '@/lib/analytics';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 export interface SwipeInterfaceProps {
   question: Statement;
@@ -120,7 +121,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
 
     const checkUserSolutions = async () => {
       try {
-        const response = await fetch(`/api/user-solutions/${question.statementId}?userId=${userId}`);
+        const response = await participantFetch(`/api/user-solutions/${question.statementId}`);
         if (response.ok) {
           const data = await response.json();
           setHasSubmittedSolution(data.hasSubmitted);
@@ -178,8 +179,8 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     const loadPreviousEvaluations = async () => {
       try {
         // First check which statements the user has already evaluated
-        const response = await fetch(
-          `/api/user-evaluations/${question.statementId}?userId=${encodeURIComponent(userId)}`
+        const response = await participantFetch(
+          `/api/user-evaluations/${question.statementId}`
         );
         if (!response.ok) return;
 

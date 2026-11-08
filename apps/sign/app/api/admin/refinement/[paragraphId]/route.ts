@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getForwardableAuthorization, getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections, AdminPermissionLevel } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
@@ -72,7 +72,7 @@ export async function PUT(
 ): Promise<NextResponse> {
 	try {
 		const { paragraphId } = await params;
-		const userId = getUserIdFromCookie(request.headers.get('cookie'));
+		const userId = await getVerifiedUserId(request);
 
 		if (!userId) {
 			return NextResponse.json(
@@ -121,9 +121,9 @@ export async function PUT(
 			case 'setPhase':
 				return handleSetPhase(paragraphRef, body, userId);
 			case 'synthesize':
-				return handleSynthesize(paragraphId, body);
+				return handleSynthesize(paragraphId, body, await getForwardableAuthorization(request, userId));
 			case 'improve':
-				return handleImprove(body);
+				return handleImprove(body, await getForwardableAuthorization(request, userId));
 			default:
 				return NextResponse.json(
 					{ error: 'Invalid action. Must be "setPhase", "synthesize", or "improve".' },
@@ -189,6 +189,7 @@ async function handleSynthesize(
 		}>;
 		customInstructions?: string;
 	},
+	authorization: string | null,
 ): Promise<NextResponse> {
 	const { originalContent, suggestions, customInstructions } = body;
 
@@ -201,9 +202,11 @@ async function handleSynthesize(
 
 	const functionUrl = `${getFirebaseFunctionUrl()}/processRefinementAI`;
 
+	if (!authorization) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
 	const response = await fetch(functionUrl, {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
+		headers: { 'Content-Type': 'application/json', Authorization: authorization },
 		body: JSON.stringify({
 			operation: 'synthesize',
 			paragraphId,
@@ -249,6 +252,7 @@ async function handleImprove(
 		}>;
 		originalParagraphContent?: string;
 	},
+	authorization: string | null,
 ): Promise<NextResponse> {
 	const { suggestionId, suggestionContent, comments, originalParagraphContent } = body;
 
@@ -261,9 +265,11 @@ async function handleImprove(
 
 	const functionUrl = `${getFirebaseFunctionUrl()}/processRefinementAI`;
 
+	if (!authorization) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
 	const response = await fetch(functionUrl, {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
+		headers: { 'Content-Type': 'application/json', Authorization: authorization },
 		body: JSON.stringify({
 			operation: 'improve',
 			suggestionId,
