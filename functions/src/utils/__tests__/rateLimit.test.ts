@@ -135,7 +135,7 @@ describe('passesHttpRateLimit', () => {
 
 		return res;
 	};
-	const req = { headers: {} };
+	const req = { headers: { 'x-forwarded-for': '203.0.113.9' } };
 
 	it('writes a 429 once the budget is spent', async () => {
 		const res = makeRes();
@@ -150,11 +150,41 @@ describe('passesHttpRateLimit', () => {
 		expect(res.status).toHaveBeenCalledWith(429);
 	});
 
-	it('fails closed when Firestore cannot settle the transaction', async () => {
-		mockRunTransaction.mockRejectedValue(new Error('aborted'));
+	it('fails open on contention for an AI budget, and still logs it', async () => {
+		mockRunTransaction.mockRejectedValue(new Error('10 ABORTED: too much contention'));
+		const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
 		const res = makeRes();
 
+		await expect(passesHttpRateLimit(req as never, res as never, budget, 'u1')).resolves.toBe(true);
+		expect(res.status).not.toHaveBeenCalled();
+		// uid, IP and global counters each failed and each was reported.
+		expect(consoleError).toHaveBeenCalledTimes(3);
+		consoleError.mockRestore();
+	});
+
+	it('still refuses a really exhausted global counter when the narrower ones hit contention', async () => {
+		mockRunTransaction.mockRejectedValueOnce(new Error('aborted'));
+		mockRunTransaction.mockRejectedValueOnce(new Error('aborted'));
+		mockDocs.set(`${API_RATE_LIMITS_COLLECTION}/test__global__0`, { windowStart: 1, count: 5 });
+		const clock = jest.spyOn(Date, 'now').mockReturnValue(2);
+		const res = makeRes();
+		const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
 		await expect(passesHttpRateLimit(req as never, res as never, budget, 'u1')).resolves.toBe(
+			false,
+		);
+		expect(res.status).toHaveBeenCalledWith(429);
+
+		clock.mockRestore();
+		consoleError.mockRestore();
+	});
+
+	it('fails closed for an email budget when Firestore cannot settle the transaction', async () => {
+		mockRunTransaction.mockRejectedValue(new Error('aborted'));
+		const res = makeRes();
+		const emailBudget: RateBudget = { ...budget, failClosed: true };
+
+		await expect(passesHttpRateLimit(req as never, res as never, emailBudget, 'u1')).resolves.toBe(
 			false,
 		);
 		expect(res.status).toHaveBeenCalledWith(429);

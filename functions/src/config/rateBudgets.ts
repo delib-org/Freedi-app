@@ -15,6 +15,12 @@ export interface RateBudget {
 	perUidPerHour: number;
 	perIpPerHour?: number;
 	globalPerDay: number;
+	/**
+	 * Refuse the call when the limiter itself errors. Email only: a burst of mail
+	 * cannot be taken back, while a burst of AI calls is a bill the global ceiling
+	 * still bounds, and refusing it would lock a classroom out on contention.
+	 */
+	failClosed?: boolean;
 }
 
 const budget = (
@@ -24,8 +30,17 @@ const budget = (
 	perIpPerHour?: number,
 ): RateBudget => ({ name, perUidPerHour, globalPerDay, perIpPerHour });
 
-/** Roomy enough that a class behind one school address is not throttled together. */
-const CLASSROOM_IP_HOUR = 600;
+const emailBudget = (
+	name: string,
+	perUidPerHour: number,
+	globalPerDay: number,
+	perIpPerHour?: number,
+): RateBudget => ({ ...budget(name, perUidPerHour, globalPerDay, perIpPerHour), failClosed: true });
+
+/** Roomy enough that a whole school behind one address is not throttled together. */
+const SCHOOL_IP_HOUR = 3000;
+/** Subscribing happens once per person, so this stays tighter: it limits mailing-list stuffing. */
+const EMAIL_IP_HOUR = 600;
 
 export const RATE_BUDGETS = {
 	findSimilarStatements: budget('findSimilarStatements', 60, 30000),
@@ -37,18 +52,21 @@ export const RATE_BUDGETS = {
 	processRefinementAI: budget('processRefinementAI', 30, 1000),
 	rescoreStatement: budget('rescoreStatement', 30, 500),
 
-	improveSuggestion: budget('improveSuggestion', 30, 10000, CLASSROOM_IP_HOUR),
-	detectStatementType: budget('detectStatementType', 120, 30000, CLASSROOM_IP_HOUR),
-	checkProfanity: budget('checkProfanity', 120, 30000, CLASSROOM_IP_HOUR),
-	analyzeFalsifiability: budget('analyzeFalsifiability', 30, 5000, CLASSROOM_IP_HOUR),
-	refineIdea: budget('refineIdea', 60, 5000, CLASSROOM_IP_HOUR),
-	summarizeLink: budget('summarizeLink', 30, 2000, CLASSROOM_IP_HOUR),
-	generateDialecticalRevision: budget('generateDialecticalRevision', 30, 3000, CLASSROOM_IP_HOUR),
-	getCluster: budget('getCluster', 10, 200, CLASSROOM_IP_HOUR),
+	// No IP budget: these run on every keystroke-sized action, so a class behind
+	// one address would turn a single IP document into a write hot spot.
+	detectStatementType: budget('detectStatementType', 120, 30000),
+	checkProfanity: budget('checkProfanity', 120, 30000),
 
-	addEmailSubscriber: budget('addEmailSubscriber', 10, 5000, CLASSROOM_IP_HOUR),
-	addFeedback: budget('addFeedback', 5, 200, CLASSROOM_IP_HOUR),
-	sendEmailToSubscribers: budget('sendEmailToSubscribers', 5, 100),
+	improveSuggestion: budget('improveSuggestion', 30, 10000, SCHOOL_IP_HOUR),
+	analyzeFalsifiability: budget('analyzeFalsifiability', 30, 5000, SCHOOL_IP_HOUR),
+	refineIdea: budget('refineIdea', 60, 5000, SCHOOL_IP_HOUR),
+	summarizeLink: budget('summarizeLink', 30, 2000, SCHOOL_IP_HOUR),
+	generateDialecticalRevision: budget('generateDialecticalRevision', 30, 3000, SCHOOL_IP_HOUR),
+	getCluster: budget('getCluster', 10, 200, SCHOOL_IP_HOUR),
+
+	addEmailSubscriber: emailBudget('addEmailSubscriber', 10, 5000, EMAIL_IP_HOUR),
+	addFeedback: emailBudget('addFeedback', 5, 200, EMAIL_IP_HOUR),
+	sendEmailToSubscribers: emailBudget('sendEmailToSubscribers', 5, 100),
 } as const;
 
 /** Addressees across every admin send in a day. One Gmail account carries them all. */

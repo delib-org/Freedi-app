@@ -335,8 +335,13 @@ const corsConfig = isProduction
 			'https://freedi-test.web.app',
 			'https://delib-5.web.app',
 			'https://wizcol-app.web.app',
+			'https://wizcol-app.firebaseapp.com',
 			'https://app.wizcol.com',
 			'https://sign.wizcol.com',
+			// Join calls improveSuggestion from the browser
+			'https://join.wizcol.com',
+			'https://wizcol-join.web.app',
+			'https://wizcol-join.firebaseapp.com',
 		]
 	: [
 			'http://localhost:5173',
@@ -549,7 +554,7 @@ exports.detectStatementType = wrapAuthedMemoryIntensiveHttpFunction(
 );
 
 // PHASE 4 FIX: Metrics and monitoring functions
-exports.analyzeSubscriptionPatterns = analyzeSubscriptionPatterns;
+exports.analyzeSubscriptionPatterns = wrapAdminHttpFunction(analyzeSubscriptionPatterns);
 
 // Maintenance HTTP functions (admin auth required)
 exports.maintainRole = wrapAdminHttpFunction(maintainRole);

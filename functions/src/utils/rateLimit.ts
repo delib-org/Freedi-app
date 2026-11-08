@@ -12,9 +12,11 @@ import { logError } from './errorHandling';
  * A transaction on a window document is the only lock that survives cold starts
  * and parallel instances; an in-memory counter would reset with each container.
  *
- * Fails CLOSED. If Firestore cannot settle the transaction (contention included)
- * the request is refused: a flood from one address must not turn its own
- * contention into free passage.
+ * A limiter error is not a verdict. If Firestore cannot settle a transaction
+ * (contention on a busy counter included) the call goes through and the error is
+ * logged, so a full classroom is not locked out by its own traffic. Only a counter
+ * that is really exhausted refuses. Email budgets are the exception and fail
+ * closed: sent mail cannot be recalled.
  *
  * `apiRateLimits` has no rule in firestore.rules, so clients cannot read or write it.
  */
@@ -114,6 +116,27 @@ function hashIp(ip: string): string {
 	return createHash('sha256').update(ip).digest('hex').slice(0, 32);
 }
 
+function isExhausted(error: unknown): boolean {
+	return error instanceof HttpsError && error.code === 'resource-exhausted';
+}
+
+/**
+ * One counter of a budget. Real exhaustion always propagates; any other failure
+ * propagates only for a fail-closed budget and is otherwise logged and skipped.
+ */
+async function reserveCounter(budget: RateBudget, uid: string, slot: WindowSlot): Promise<void> {
+	try {
+		await reserveWindowSlot(slot);
+	} catch (error) {
+		if (isExhausted(error) || budget.failClosed) throw error;
+		logError(error, {
+			operation: 'rateLimit.reserveRateBudget',
+			userId: uid,
+			metadata: { budget: budget.name, counter: slot.label, failedOpen: true },
+		});
+	}
+}
+
 /**
  * Reserve one call against a budget.
  *
@@ -129,7 +152,7 @@ export async function reserveRateBudget(
 ): Promise<void> {
 	const collection = API_RATE_LIMITS_COLLECTION;
 
-	await reserveWindowSlot({
+	await reserveCounter(budget, uid, {
 		collection,
 		docId: `${budget.name}__uid__${uid}`,
 		limit: budget.perUidPerHour,
@@ -140,7 +163,7 @@ export async function reserveRateBudget(
 	});
 
 	if (budget.perIpPerHour !== undefined && ip) {
-		await reserveWindowSlot({
+		await reserveCounter(budget, uid, {
 			collection,
 			docId: `${budget.name}__ip__${hashIp(ip)}`,
 			limit: budget.perIpPerHour,
@@ -152,7 +175,7 @@ export async function reserveRateBudget(
 	}
 
 	const shards = shardCount(budget.globalPerDay);
-	await reserveWindowSlot({
+	await reserveCounter(budget, uid, {
 		collection,
 		docId: `${budget.name}__global__${Math.floor(Math.random() * shards)}`,
 		limit: Math.ceil(budget.globalPerDay / shards),
@@ -163,13 +186,13 @@ export async function reserveRateBudget(
 	});
 }
 
-/** Log anything other than a clean refusal: that is the limiter failing, not the caller. */
+/** Log a fail-closed budget's limiter error. A plain refusal needs no log entry. */
 function logLimiterFailure(error: unknown, budget: RateBudget, uid: string): void {
-	if (error instanceof HttpsError && error.code === 'resource-exhausted') return;
+	if (isExhausted(error)) return;
 	logError(error, {
 		operation: 'rateLimit.reserveRateBudget',
 		userId: uid,
-		metadata: { budget: budget.name },
+		metadata: { budget: budget.name, failedOpen: false },
 	});
 }
 
