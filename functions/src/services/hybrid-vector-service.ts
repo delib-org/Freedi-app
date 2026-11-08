@@ -1,7 +1,12 @@
 import { logger } from 'firebase-functions';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
 import type { Statement, StatementEvaluation } from '@freedi/shared-types';
 import { EMBEDDING_DIMENSIONS } from './embedding-service';
+import {
+	embeddingDocRef,
+	extractEmbeddingArray,
+	isNotFoundError,
+} from './statement-embedding-store';
 
 // Hybrid vector configuration
 const RATING_VECTOR_DIMENSIONS = 8;
@@ -127,14 +132,13 @@ export function isHybridClusteringEnabled(statement: Statement, topParent?: Stat
 }
 
 /**
- * Save a hybrid embedding vector to a statement document.
+ * Save a hybrid embedding vector to the statement's embedding doc
+ * (`statementEmbeddings/{id}`, written by saveEmbedding just before this).
  */
 export async function saveHybridEmbedding(
 	statementId: string,
 	hybridVector: number[],
 ): Promise<void> {
-	const db = getFirestore();
-
 	if (hybridVector.length !== HYBRID_DIMENSIONS) {
 		logger.warn(
 			`Invalid hybrid embedding dimensions: ${hybridVector.length}, expected ${HYBRID_DIMENSIONS}`,
@@ -142,14 +146,16 @@ export async function saveHybridEmbedding(
 	}
 
 	try {
-		await db
-			.collection('statements')
-			.doc(statementId)
-			.update({
+		await embeddingDocRef(statementId).set(
+			{
+				statementId,
 				hybridEmbedding: FieldValue.vector(hybridVector),
 				hybridEmbeddingStale: false,
 				hybridEmbeddingUpdatedAt: Date.now(),
-			});
+				lastUpdate: Date.now(),
+			},
+			{ merge: true },
+		);
 	} catch (error) {
 		logger.error('Failed to save hybrid embedding', { statementId, error });
 		throw error;
@@ -158,34 +164,23 @@ export async function saveHybridEmbedding(
 
 /**
  * Mark a statement's hybrid embedding as stale (needs recomputation).
- * This is a cheap single-field write, called from evaluation triggers.
+ * This is a cheap single-field write, called from evaluation triggers — on
+ * the embedding doc, so a vote no longer rewrites the statement doc (and
+ * every listener re-downloading it) just to flip this flag. Statements
+ * without an embedding doc have no hybrid vector to go stale.
  */
 export async function markHybridEmbeddingStale(statementId: string): Promise<void> {
-	const db = getFirestore();
-
 	try {
-		await db.collection('statements').doc(statementId).update({
+		await embeddingDocRef(statementId).update({
 			hybridEmbeddingStale: true,
 		});
 	} catch (error) {
+		if (isNotFoundError(error)) return;
+
 		logger.error('Failed to mark hybrid embedding stale', { statementId, error });
 		throw error;
 	}
 }
 
 // Helper to extract embedding array from VectorValue or plain array
-export function extractEmbeddingArray(embedding: unknown): number[] | null {
-	if (!embedding) return null;
-
-	if (Array.isArray(embedding)) {
-		return embedding as number[];
-	}
-
-	if (typeof embedding === 'object' && embedding !== null && 'toArray' in embedding) {
-		const vectorValue = embedding as { toArray: () => number[] };
-
-		return vectorValue.toArray();
-	}
-
-	return null;
-}
+export { extractEmbeddingArray };

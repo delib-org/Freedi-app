@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { Collections, type Statement } from '@freedi/shared-types';
 import { deriveActivities, type DerivedActivity } from '@freedi/event-core';
@@ -8,6 +8,7 @@ import { db } from '@/firebase';
 import { activityUrlResolver } from '@/config';
 import ActivityRow from '@/components/ActivityRow';
 import ShareHub from '@/components/ShareHub';
+import StudioPage from './_shared/StudioPage';
 import styles from './EventDashboard.module.scss';
 
 interface EventData {
@@ -60,33 +61,33 @@ export default function EventDashboard() {
 		[data.children],
 	);
 
-	const backLink = (label: string) => (
-		<Link to="/" className={styles.back}>
-			<span className={styles.backArrow} aria-hidden="true">
-				←
-			</span>
-			{label}
-		</Link>
-	);
+	// The trail carries the way back now: Personal › Events › this event. A
+	// hand-rolled "My Events" link pointed at "/", which redirects a member of
+	// one organization INTO that organization rather than back to their events.
+	const title = data.event?.statement || t('Untitled event');
+	const crumbs = [{ label: t('Events'), to: '/personal' }, { label: title }];
 
-	if (loading) return <main className={styles.page}>{t('Loading…')}</main>;
+	if (loading) {
+		return (
+			<StudioPage breadcrumb={crumbs}>
+				<div className={styles.page}>{t('Loading…')}</div>
+			</StudioPage>
+		);
+	}
 
 	if (error) {
 		return (
-			<main className={styles.page}>
+			<StudioPage breadcrumb={crumbs}>
 				<p className={styles.error}>{error}</p>
-				{backLink(t('Back to My Events'))}
-			</main>
+			</StudioPage>
 		);
 	}
 
 	return (
-		<main className={styles.page}>
-			{backLink(t('My Events'))}
-
+		<StudioPage breadcrumb={crumbs}>
 			<header className={styles.header}>
 				<span className={styles.badge}>{t('Event')}</span>
-				<h1 className={styles.title}>{data.event?.statement || t('Untitled event')}</h1>
+				<h1 className={styles.title}>{title}</h1>
 				<p className={styles.meta}>
 					{tWithParams('Activities: {{count}}', { count: activities.length })}
 				</p>
@@ -110,6 +111,6 @@ export default function EventDashboard() {
 
 				<ShareHub activities={activities} />
 			</div>
-		</main>
+		</StudioPage>
 	);
 }

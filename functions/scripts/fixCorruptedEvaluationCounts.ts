@@ -10,8 +10,15 @@
  */
 
 import { initializeApp, cert, getApps, applicationDefault } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { Collections, Statement, Evaluation } from '@freedi/shared-types';
+// Pure counting rule + N walk shared with the callable, so this script writes
+// exactly what the live trigger and "Recalculate" write.
+import {
+	hasCounterMismatch,
+	recomputeOptionCounters,
+} from '../src/evaluation/recomputeOptionCounters';
+import { resolveQuestionPopulation } from '../src/evaluation/resolveQuestionPopulation';
 
 // Initialize Firebase Admin
 if (getApps().length === 0) {
@@ -34,12 +41,26 @@ if (getApps().length === 0) {
 		// Emulator
 		initializeApp({ projectId: 'demo-test' });
 	} else {
-		console.error('No credentials provided. Set GOOGLE_APPLICATION_CREDENTIALS, FIREBASE_PROJECT_ID, or FIRESTORE_EMULATOR_HOST');
+		console.error(
+			'No credentials provided. Set GOOGLE_APPLICATION_CREDENTIALS, FIREBASE_PROJECT_ID, or FIRESTORE_EMULATOR_HOST',
+		);
 		process.exit(1);
 	}
 }
 
 const db = getFirestore();
+
+// N is explicit per question; resolve it once per parent, not once per option.
+const populationByParent = new Map<string, number | undefined>();
+
+async function populationFor(parentId: string | undefined): Promise<number | undefined> {
+	if (!parentId) return undefined;
+	if (!populationByParent.has(parentId)) {
+		populationByParent.set(parentId, await resolveQuestionPopulation(db, parentId));
+	}
+
+	return populationByParent.get(parentId);
+}
 
 interface FixResult {
 	statementId: string;
@@ -70,6 +91,7 @@ async function fixStatementEvaluationCounts(statementId: string): Promise<FixRes
 
 	if (!statementDoc.exists) {
 		console.error(`Statement ${statementId} not found`);
+
 		return null;
 	}
 
@@ -81,34 +103,10 @@ async function fixStatementEvaluationCounts(statementId: string): Promise<FixRes
 		.where('statementId', '==', statementId)
 		.get();
 
-	// Calculate actual counts from evaluation documents
-	let actualProCount = 0;
-	let actualConCount = 0;
-	let actualNeutralCount = 0;
-	let sumEvaluations = 0;
-	let sumSquaredEvaluations = 0;
-	let sumPro = 0;
-	let sumCon = 0;
-
-	evaluationsSnapshot.forEach((doc) => {
-		const evaluation = doc.data() as Evaluation;
-		const evalValue = evaluation.evaluation;
-
-		if (evalValue > 0) {
-			actualProCount++;
-			sumPro += evalValue;
-		} else if (evalValue < 0) {
-			actualConCount++;
-			sumCon += Math.abs(evalValue);
-		} else {
-			actualNeutralCount++;
-		}
-
-		sumEvaluations += evalValue;
-		sumSquaredEvaluations += evalValue * evalValue;
-	});
-
-	const totalWithNonZeroEval = actualProCount + actualConCount;
+	// EVERY evaluation document is a participant, zeros included.
+	const evals = evaluationsSnapshot.docs.map((doc) => doc.data() as Evaluation);
+	const counters = recomputeOptionCounters(evals, await populationFor(statement.parentId));
+	const actualNeutralCount = evals.filter((e) => e.evaluation === 0).length;
 
 	// Current values
 	const currentEval = statement.evaluation || {
@@ -124,59 +122,35 @@ async function fixStatementEvaluationCounts(statementId: string): Promise<FixRes
 		totalEvaluators: statement.totalEvaluators || 0,
 	};
 
-	// Check if there's a mismatch
-	const hasProMismatch = before.numberOfProEvaluators !== actualProCount;
-	const hasConMismatch = before.numberOfConEvaluators !== actualConCount;
-	const hasEvaluatorMismatch = before.numberOfEvaluators !== totalWithNonZeroEval;
-
-	if (!hasProMismatch && !hasConMismatch && !hasEvaluatorMismatch) {
+	if (!hasCounterMismatch(statement.evaluation, counters)) {
 		console.info(`Statement ${statementId} has correct counts, skipping`);
+
 		return null;
-	}
-
-	// Calculate correct averageEvaluation and agreement
-	const averageEvaluation = totalWithNonZeroEval > 0 ? sumEvaluations / totalWithNonZeroEval : 0;
-
-	// Mean - SEM with uncertainty floor (same as fn_evaluation.ts)
-	const FLOOR_STD_DEV = 0.5;
-	let agreement = 0;
-	if (totalWithNonZeroEval > 0) {
-		const mean = sumEvaluations / totalWithNonZeroEval;
-		let sem = FLOOR_STD_DEV;
-
-		if (totalWithNonZeroEval > 1) {
-			const variance = sumSquaredEvaluations / totalWithNonZeroEval - mean * mean;
-			const observedStdDev = Math.sqrt(Math.max(0, variance));
-			const adjustedStdDev = Math.max(observedStdDev, FLOOR_STD_DEV);
-			sem = adjustedStdDev / Math.sqrt(totalWithNonZeroEval);
-		}
-
-		const availableRange = mean + 1;
-		const penalty = Math.min(sem, availableRange);
-		agreement = mean - penalty;
 	}
 
 	// Update the statement
 	await statementRef.update({
-		'evaluation.numberOfEvaluators': totalWithNonZeroEval,
-		'evaluation.numberOfProEvaluators': actualProCount,
-		'evaluation.numberOfConEvaluators': actualConCount,
-		'evaluation.sumEvaluations': sumEvaluations,
-		'evaluation.sumSquaredEvaluations': sumSquaredEvaluations,
-		'evaluation.sumPro': sumPro,
-		'evaluation.sumCon': sumCon,
-		'evaluation.averageEvaluation': averageEvaluation,
-		'evaluation.agreement': agreement,
-		totalEvaluators: totalWithNonZeroEval,
-		consensus: agreement,
+		'evaluation.numberOfEvaluators': counters.numberOfEvaluators,
+		'evaluation.numberOfProEvaluators': counters.numberOfProEvaluators,
+		'evaluation.numberOfConEvaluators': counters.numberOfConEvaluators,
+		'evaluation.sumEvaluations': counters.sumEvaluations,
+		'evaluation.sumSquaredEvaluations': counters.sumSquaredEvaluations,
+		'evaluation.sumPro': counters.sumPro,
+		'evaluation.sumCon': counters.sumCon,
+		'evaluation.averageEvaluation': counters.averageEvaluation,
+		'evaluation.agreement': counters.agreement,
+		'evaluation.agreementIndex': counters.agreementIndex,
+		'evaluation.stakeholderCount': counters.stakeholderCount ?? FieldValue.delete(),
+		totalEvaluators: counters.numberOfEvaluators,
+		consensus: counters.agreement,
 		lastUpdate: Date.now(),
 	});
 
 	const after = {
-		numberOfEvaluators: totalWithNonZeroEval,
-		numberOfProEvaluators: actualProCount,
-		numberOfConEvaluators: actualConCount,
-		totalEvaluators: totalWithNonZeroEval,
+		numberOfEvaluators: counters.numberOfEvaluators,
+		numberOfProEvaluators: counters.numberOfProEvaluators,
+		numberOfConEvaluators: counters.numberOfConEvaluators,
+		totalEvaluators: counters.numberOfEvaluators,
 	};
 
 	return {
@@ -186,8 +160,8 @@ async function fixStatementEvaluationCounts(statementId: string): Promise<FixRes
 		after,
 		actualEvaluations: {
 			total: evaluationsSnapshot.size,
-			pro: actualProCount,
-			con: actualConCount,
+			pro: counters.numberOfProEvaluators,
+			con: counters.numberOfConEvaluators,
 			neutral: actualNeutralCount,
 		},
 	};
@@ -218,8 +192,12 @@ async function findAndFixCorruptedStatements(parentId?: string): Promise<void> {
 		if (result) {
 			results.push(result);
 			console.info(`Fixed: ${result.statementId} - "${result.statement}"`);
-			console.info(`  Before: pro=${result.before.numberOfProEvaluators}, con=${result.before.numberOfConEvaluators}, total=${result.before.numberOfEvaluators}`);
-			console.info(`  After:  pro=${result.after.numberOfProEvaluators}, con=${result.after.numberOfConEvaluators}, total=${result.after.numberOfEvaluators}`);
+			console.info(
+				`  Before: pro=${result.before.numberOfProEvaluators}, con=${result.before.numberOfConEvaluators}, total=${result.before.numberOfEvaluators}`,
+			);
+			console.info(
+				`  After:  pro=${result.after.numberOfProEvaluators}, con=${result.after.numberOfConEvaluators}, total=${result.after.numberOfEvaluators}`,
+			);
 		}
 	}
 
@@ -230,7 +208,9 @@ async function findAndFixCorruptedStatements(parentId?: string): Promise<void> {
 	if (results.length > 0) {
 		console.info('\nFixed statements:');
 		for (const result of results) {
-			console.info(`  - ${result.statementId}: pro ${result.before.numberOfProEvaluators} -> ${result.after.numberOfProEvaluators}, con ${result.before.numberOfConEvaluators} -> ${result.after.numberOfConEvaluators}`);
+			console.info(
+				`  - ${result.statementId}: pro ${result.before.numberOfProEvaluators} -> ${result.after.numberOfProEvaluators}, con ${result.before.numberOfConEvaluators} -> ${result.after.numberOfConEvaluators}`,
+			);
 		}
 	}
 }

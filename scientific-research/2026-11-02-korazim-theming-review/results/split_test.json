@@ -1,0 +1,1199 @@
+{
+ "model": "gpt-5.6-luna",
+ "usd": 0.636,
+ "calls": 552,
+ "errors": 0,
+ "rates": {
+  "bm-mix": {
+   "control": {
+    "split": 118,
+    "runs": 120,
+    "rate": 0.983
+   },
+   "candidate": {
+    "split": 115,
+    "runs": 120,
+    "rate": 0.958
+   }
+  },
+  "bm-one": {
+   "control": {
+    "split": 60,
+    "runs": 60,
+    "rate": 1.0
+   },
+   "candidate": {
+    "split": 15,
+    "runs": 60,
+    "rate": 0.25
+   }
+  },
+  "sigal": {
+   "control": {
+    "split": 15,
+    "runs": 15,
+    "rate": 1.0
+   },
+   "candidate": {
+    "split": 2,
+    "runs": 15,
+    "rate": 0.133
+   }
+  },
+  "korazim": {
+   "control": {
+    "split": 63,
+    "runs": 63,
+    "rate": 1.0
+   },
+   "candidate": {
+    "split": 20,
+    "runs": 63,
+    "rate": 0.317
+   }
+  },
+  "other": {
+   "control": {
+    "split": 18,
+    "runs": 18,
+    "rate": 1.0
+   },
+   "candidate": {
+    "split": 0,
+    "runs": 18,
+    "rate": 0.0
+   }
+  }
+ },
+ "ratesByLang": {
+  "bm-mix:en": {
+   "control": {
+    "split": 58,
+    "runs": 60,
+    "rate": 0.967
+   },
+   "candidate": {
+    "split": 58,
+    "runs": 60,
+    "rate": 0.967
+   }
+  },
+  "bm-mix:he": {
+   "control": {
+    "split": 60,
+    "runs": 60,
+    "rate": 1.0
+   },
+   "candidate": {
+    "split": 57,
+    "runs": 60,
+    "rate": 0.95
+   }
+  },
+  "bm-one:en": {
+   "control": {
+    "split": 30,
+    "runs": 30,
+    "rate": 1.0
+   },
+   "candidate": {
+    "split": 0,
+    "runs": 30,
+    "rate": 0.0
+   }
+  },
+  "bm-one:he": {
+   "control": {
+    "split": 30,
+    "runs": 30,
+    "rate": 1.0
+   },
+   "candidate": {
+    "split": 15,
+    "runs": 30,
+    "rate": 0.5
+   }
+  }
+ },
+ "sigalCases": {
+  "חזות הישוב": {
+   "members": 32,
+   "control": [
+    5,
+    4,
+    4
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ]
+  },
+  "תרבות קהילתית": {
+   "members": 24,
+   "control": [
+    6,
+    5,
+    6
+   ],
+   "candidate": [
+    0,
+    3,
+    3
+   ]
+  },
+  "בינוי קהילה": {
+   "members": 29,
+   "control": [
+    5,
+    5,
+    5
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ]
+  },
+  "שיח ציבורי": {
+   "members": 11,
+   "control": [
+    3,
+    3,
+    4
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ]
+  },
+  "שיפור פני הכפר": {
+   "members": 9,
+   "control": [
+    3,
+    3,
+    3
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ]
+  }
+ },
+ "bmOneSplitByCandidate": [
+  [
+   "bm:he:one:digital-services",
+   [
+    5,
+    5,
+    5
+   ]
+  ],
+  [
+   "bm:he:one:environment-and-waste",
+   [
+    0,
+    3,
+    3
+   ]
+  ],
+  [
+   "bm:he:one:health",
+   [
+    5,
+    2,
+    3
+   ]
+  ],
+  [
+   "bm:he:one:parks-and-green-space",
+   [
+    5,
+    5,
+    5
+   ]
+  ],
+  [
+   "bm:he:one:public-safety",
+   [
+    5,
+    5,
+    5
+   ]
+  ],
+  [
+   "bm:he:one:transport",
+   [
+    0,
+    0,
+    3
+   ]
+  ]
+ ],
+ "bmMixKeptByCandidate": [
+  [
+   "bm:en:mix:culture+health+parks-and-green-space",
+   [
+    0,
+    0,
+    4
+   ]
+  ],
+  [
+   "bm:he:mix:culture+digital-services",
+   [
+    2,
+    0,
+    2
+   ]
+  ],
+  [
+   "bm:he:mix:digital-services+housing+parks-and-green-space",
+   [
+    0,
+    3,
+    5
+   ]
+  ],
+  [
+   "bm:he:mix:culture+parks-and-green-space+transport",
+   [
+    0,
+    5,
+    6
+   ]
+  ]
+ ],
+ "historical": [
+  {
+   "id": "hist:Bq-VQPMPiG7b:0",
+   "title": "",
+   "date": null,
+   "direct": 60,
+   "resolved": 49,
+   "leavesApprox": 60,
+   "placedUpperBound": 114,
+   "shareLowerBound": 0.53,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    5,
+    5,
+    6
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": true
+  },
+  {
+   "id": "hist:Bq-VQPMPiG7b:1",
+   "title": "",
+   "date": null,
+   "direct": 30,
+   "resolved": 22,
+   "leavesApprox": 30,
+   "placedUpperBound": 114,
+   "shareLowerBound": 0.26,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    5,
+    5,
+    5
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": false
+  },
+  {
+   "id": "hist:Bq-VQPMPiG7b:2",
+   "title": "שיתוף בעלי עניין והסכמות",
+   "date": null,
+   "direct": 43,
+   "resolved": 43,
+   "leavesApprox": 59,
+   "placedUpperBound": 114,
+   "shareLowerBound": 0.52,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    5,
+    6,
+    5
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": true
+  },
+  {
+   "id": "hist:IqKVla0ZHw-m:0",
+   "title": "תרבות ארגונית וערבות הדדית",
+   "date": null,
+   "direct": 6,
+   "resolved": 6,
+   "leavesApprox": 10,
+   "placedUpperBound": 20,
+   "shareLowerBound": 0.5,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    2,
+    3,
+    3
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": true,
+   "sigalTopicsSpanned": 4,
+   "topTopicShare": 0.5,
+   "topTopic": "סיוע הדדי והתנדבות"
+  },
+  {
+   "id": "hist:IqKVla0ZHw-m:1",
+   "title": "הנוף והאופי הייחודי",
+   "date": null,
+   "direct": 5,
+   "resolved": 5,
+   "leavesApprox": 10,
+   "placedUpperBound": 22,
+   "shareLowerBound": 0.45,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    2,
+    2,
+    2
+   ],
+   "candidate": [
+    0,
+    2,
+    2
+   ],
+   "newTriggerPossible": true,
+   "sigalTopicsSpanned": 3,
+   "topTopicShare": 0.4,
+   "topTopic": "חזות הישוב"
+  },
+  {
+   "id": "hist:IqKVla0ZHw-m:2",
+   "title": "התנדבות ופעילות קהילתית",
+   "date": null,
+   "direct": 8,
+   "resolved": 8,
+   "leavesApprox": 11,
+   "placedUpperBound": 35,
+   "shareLowerBound": 0.31,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    3,
+    3,
+    3
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": true,
+   "sigalTopicsSpanned": 3,
+   "topTopicShare": 0.38,
+   "topTopic": "ותיקים וקשרים בין-דוריים"
+  },
+  {
+   "id": "hist:IqKVla0ZHw-m:3",
+   "title": "נוף ויופי חזותי",
+   "date": null,
+   "direct": 7,
+   "resolved": 7,
+   "leavesApprox": 14,
+   "placedUpperBound": 44,
+   "shareLowerBound": 0.32,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    2,
+    2,
+    2
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": true,
+   "sigalTopicsSpanned": 1,
+   "topTopicShare": 1.0,
+   "topTopic": "חזות הישוב"
+  },
+  {
+   "id": "hist:IqKVla0ZHw-m:4",
+   "title": "קהילה מכילה ובין־דורית",
+   "date": null,
+   "direct": 20,
+   "resolved": 20,
+   "leavesApprox": 27,
+   "placedUpperBound": 129,
+   "shareLowerBound": 0.21,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    4,
+    5,
+    4
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": false,
+   "sigalTopicsSpanned": 4,
+   "topTopicShare": 0.55,
+   "topTopic": "לכידות קהילתית"
+  },
+  {
+   "id": "hist:IqKVla0ZHw-m:5",
+   "title": "חיי קהילה, מסורות ושייכות",
+   "date": null,
+   "direct": 22,
+   "resolved": 22,
+   "leavesApprox": 28,
+   "placedUpperBound": 140,
+   "shareLowerBound": 0.2,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    5,
+    5,
+    5
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": false,
+   "sigalTopicsSpanned": 6,
+   "topTopicShare": 0.36,
+   "topTopic": "תרבות קהילתית"
+  },
+  {
+   "id": "hist:IqKVla0ZHw-m:6",
+   "title": "נוף, גינון וטיפוח היישוב",
+   "date": null,
+   "direct": 16,
+   "resolved": 16,
+   "leavesApprox": 26,
+   "placedUpperBound": 148,
+   "shareLowerBound": 0.18,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    5,
+    4,
+    5
+   ],
+   "candidate": [
+    2,
+    2,
+    3
+   ],
+   "newTriggerPossible": false,
+   "sigalTopicsSpanned": 4,
+   "topTopicShare": 0.44,
+   "topTopic": "חזות הישוב"
+  },
+  {
+   "id": "hist:IqKVla0ZHw-m:7",
+   "title": "חזות היישוב ואופיו הכפרי",
+   "date": null,
+   "direct": 22,
+   "resolved": 22,
+   "leavesApprox": 31,
+   "placedUpperBound": 148,
+   "shareLowerBound": 0.21,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    3,
+    5,
+    3
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": false,
+   "sigalTopicsSpanned": 3,
+   "topTopicShare": 0.59,
+   "topTopic": "חזות הישוב"
+  },
+  {
+   "id": "hist:IqKVla0ZHw-m:8",
+   "title": "גינון ונוי במרחב היישוב",
+   "date": null,
+   "direct": 19,
+   "resolved": 19,
+   "leavesApprox": 27,
+   "placedUpperBound": 153,
+   "shareLowerBound": 0.18,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    3,
+    5,
+    4
+   ],
+   "candidate": [
+    2,
+    2,
+    2
+   ],
+   "newTriggerPossible": false,
+   "sigalTopicsSpanned": 4,
+   "topTopicShare": 0.42,
+   "topTopic": "חזות הישוב"
+  },
+  {
+   "id": "hist:IqKVla0ZHw-m:9",
+   "title": "טבע, גינון ותחזוקת המרחב הציבורי",
+   "date": null,
+   "direct": 22,
+   "resolved": 22,
+   "leavesApprox": 28,
+   "placedUpperBound": 157,
+   "shareLowerBound": 0.18,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    4,
+    5,
+    5
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": false,
+   "sigalTopicsSpanned": 2,
+   "topTopicShare": 0.86,
+   "topTopic": "חזות הישוב"
+  },
+  {
+   "id": "hist:IqKVla0ZHw-m:10",
+   "title": "צביון כפרי ונוף פתוח",
+   "date": null,
+   "direct": 17,
+   "resolved": 17,
+   "leavesApprox": 28,
+   "placedUpperBound": 157,
+   "shareLowerBound": 0.18,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    4,
+    3,
+    4
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": false,
+   "sigalTopicsSpanned": 2,
+   "topTopicShare": 0.53,
+   "topTopic": "חזות הישוב"
+  },
+  {
+   "id": "hist:IqKVla0ZHw-m:11",
+   "title": "מורשת, מסורות וטקסים",
+   "date": null,
+   "direct": 21,
+   "resolved": 21,
+   "leavesApprox": 26,
+   "placedUpperBound": 182,
+   "shareLowerBound": 0.14,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    4,
+    5,
+    5
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": false,
+   "sigalTopicsSpanned": 4,
+   "topTopicShare": 0.67,
+   "topTopic": "תרבות קהילתית"
+  },
+  {
+   "id": "hist:WfkDISMmbduQ:0",
+   "title": "איכות הסביבה וקיימות",
+   "date": null,
+   "direct": 6,
+   "resolved": 6,
+   "leavesApprox": 8,
+   "placedUpperBound": 52,
+   "shareLowerBound": 0.15,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    2,
+    2,
+    2
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": true,
+   "sigalTopicsSpanned": 3,
+   "topTopicShare": 0.5,
+   "topTopic": "שיפור פני הכפר"
+  },
+  {
+   "id": "hist:WfkDISMmbduQ:1",
+   "title": "התנדבות ומעורבות תושבים",
+   "date": null,
+   "direct": 8,
+   "resolved": 8,
+   "leavesApprox": 10,
+   "placedUpperBound": 52,
+   "shareLowerBound": 0.19,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    3,
+    3,
+    3
+   ],
+   "candidate": [
+    0,
+    3,
+    3
+   ],
+   "newTriggerPossible": true,
+   "sigalTopicsSpanned": 2,
+   "topTopicShare": 0.75,
+   "topTopic": "בינוי קהילה"
+  },
+  {
+   "id": "hist:WfkDISMmbduQ:2",
+   "title": "טיפוח המרחב הציבורי, שבילים והצללה",
+   "date": null,
+   "direct": 12,
+   "resolved": 12,
+   "leavesApprox": 18,
+   "placedUpperBound": 62,
+   "shareLowerBound": 0.29,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    3,
+    5,
+    5
+   ],
+   "candidate": [
+    3,
+    3,
+    3
+   ],
+   "newTriggerPossible": true,
+   "sigalTopicsSpanned": 5,
+   "topTopicShare": 0.33,
+   "topTopic": "שיפור פני הכפר"
+  },
+  {
+   "id": "hist:WfkDISMmbduQ:3",
+   "title": "שיח ולכידות בין תושבים",
+   "date": null,
+   "direct": 21,
+   "resolved": 21,
+   "leavesApprox": 28,
+   "placedUpperBound": 125,
+   "shareLowerBound": 0.22,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    4,
+    4,
+    4
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": false,
+   "sigalTopicsSpanned": 4,
+   "topTopicShare": 0.76,
+   "topTopic": "בינוי קהילה"
+  },
+  {
+   "id": "hist:WfkDISMmbduQ:4",
+   "title": "הנהגה וניהול יישובי",
+   "date": null,
+   "direct": 26,
+   "resolved": 26,
+   "leavesApprox": 28,
+   "placedUpperBound": 178,
+   "shareLowerBound": 0.16,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    4,
+    5,
+    4
+   ],
+   "candidate": [
+    3,
+    3,
+    3
+   ],
+   "newTriggerPossible": false,
+   "sigalTopicsSpanned": 6,
+   "topTopicShare": 0.27,
+   "topTopic": "מיסים, תקציב ואמצעי תשלום"
+  },
+  {
+   "id": "hist:WfkDISMmbduQ:5",
+   "title": "סביבה, ניקיון ושטחים ירוקים",
+   "date": null,
+   "direct": 19,
+   "resolved": 19,
+   "leavesApprox": 27,
+   "placedUpperBound": 194,
+   "shareLowerBound": 0.14,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    4,
+    4,
+    4
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": false,
+   "sigalTopicsSpanned": 4,
+   "topTopicShare": 0.47,
+   "topTopic": "ניקיון, אשפה ומיחזור"
+  },
+  {
+   "id": "hist:WfkDISMmbduQ:6",
+   "title": "שירותים ופעילויות לילדים ולנוער",
+   "date": null,
+   "direct": 23,
+   "resolved": 23,
+   "leavesApprox": 28,
+   "placedUpperBound": 199,
+   "shareLowerBound": 0.14,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    6,
+    6,
+    6
+   ],
+   "candidate": [
+    4,
+    4,
+    4
+   ],
+   "newTriggerPossible": false,
+   "sigalTopicsSpanned": 7,
+   "topTopicShare": 0.3,
+   "topTopic": "נוער, צעירים ומנהיגות"
+  },
+  {
+   "id": "hist:WfkDISMmbduQ:7",
+   "title": "תרבות, פנאי ואירועים קהילתיים",
+   "date": null,
+   "direct": 22,
+   "resolved": 22,
+   "leavesApprox": 27,
+   "placedUpperBound": 214,
+   "shareLowerBound": 0.13,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    5,
+    4,
+    5
+   ],
+   "candidate": [
+    0,
+    0,
+    2
+   ],
+   "newTriggerPossible": false,
+   "sigalTopicsSpanned": 4,
+   "topTopicShare": 0.32,
+   "topTopic": "עסקים, מסחר ותיירות מקומית"
+  },
+  {
+   "id": "hist:WfkDISMmbduQ:8",
+   "title": "שיח מכבד והקשבה הדדית",
+   "date": null,
+   "direct": 18,
+   "resolved": 18,
+   "leavesApprox": 25,
+   "placedUpperBound": 224,
+   "shareLowerBound": 0.11,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    3,
+    3,
+    2
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": false,
+   "sigalTopicsSpanned": 2,
+   "topTopicShare": 0.61,
+   "topTopic": "שיח ציבורי"
+  },
+  {
+   "id": "hist:hXri7CdHStbF:0",
+   "title": "פיתוח וצמיחת היישוב והקהילה",
+   "date": null,
+   "direct": 47,
+   "resolved": 47,
+   "leavesApprox": 47,
+   "placedUpperBound": 64,
+   "shareLowerBound": 0.73,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    6,
+    5,
+    5
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": true
+  },
+  {
+   "id": "hist:hXri7CdHStbF:1",
+   "title": "קליטת משפחות וצמיחה דמוגרפית",
+   "date": null,
+   "direct": 20,
+   "resolved": 20,
+   "leavesApprox": 20,
+   "placedUpperBound": 64,
+   "shareLowerBound": 0.31,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    4,
+    5,
+    6
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": true
+  },
+  {
+   "id": "hist:hgLZ7j6F2kGb:0",
+   "title": "תחושת שייכות, השתתפות ותרומה בקהילה",
+   "date": null,
+   "direct": 9,
+   "resolved": 8,
+   "leavesApprox": 9,
+   "placedUpperBound": 31,
+   "shareLowerBound": 0.29,
+   "firedByFixedRuleOnly": null,
+   "control": [
+    3,
+    3,
+    3
+   ],
+   "candidate": [
+    0,
+    0,
+    0
+   ],
+   "newTriggerPossible": true
+  }
+ ],
+ "korazimByPurity": {
+  "pure": [
+   [
+    "נוף ויופי חזותי",
+    1.0,
+    [
+     2,
+     2,
+     2
+    ],
+    [
+     0,
+     0,
+     0
+    ]
+   ],
+   [
+    "טבע, גינון ותחזוקת המרחב הציבורי",
+    0.86,
+    [
+     4,
+     5,
+     5
+    ],
+    [
+     0,
+     0,
+     0
+    ]
+   ]
+  ],
+  "candidateKept": [
+   [
+    "תרבות ארגונית וערבות הדדית",
+    0.5,
+    4
+   ],
+   [
+    "התנדבות ופעילות קהילתית",
+    0.38,
+    3
+   ],
+   [
+    "נוף ויופי חזותי",
+    1.0,
+    1
+   ],
+   [
+    "קהילה מכילה ובין־דורית",
+    0.55,
+    4
+   ],
+   [
+    "חיי קהילה, מסורות ושייכות",
+    0.36,
+    6
+   ],
+   [
+    "חזות היישוב ואופיו הכפרי",
+    0.59,
+    3
+   ],
+   [
+    "טבע, גינון ותחזוקת המרחב הציבורי",
+    0.86,
+    2
+   ],
+   [
+    "צביון כפרי ונוף פתוח",
+    0.53,
+    2
+   ],
+   [
+    "מורשת, מסורות וטקסים",
+    0.67,
+    4
+   ],
+   [
+    "איכות הסביבה וקיימות",
+    0.5,
+    3
+   ],
+   [
+    "שיח ולכידות בין תושבים",
+    0.76,
+    4
+   ],
+   [
+    "סביבה, ניקיון ושטחים ירוקים",
+    0.47,
+    4
+   ],
+   [
+    "תרבות, פנאי ואירועים קהילתיים",
+    0.32,
+    4
+   ],
+   [
+    "שיח מכבד והקשבה הדדית",
+    0.61,
+    2
+   ]
+  ],
+  "decisions": 21,
+  "keptByCandidate": 14
+ },
+ "triggerOnHistorical": {
+  "total": 27,
+  "leavesOver25": 18,
+  "over25AndShareBelowThirdAtLeast": [
+   [
+    "hist:Bq-VQPMPiG7b:1",
+    30,
+    114
+   ],
+   [
+    "hist:IqKVla0ZHw-m:4",
+    27,
+    129
+   ],
+   [
+    "hist:IqKVla0ZHw-m:5",
+    28,
+    140
+   ],
+   [
+    "hist:IqKVla0ZHw-m:6",
+    26,
+    148
+   ],
+   [
+    "hist:IqKVla0ZHw-m:7",
+    31,
+    148
+   ],
+   [
+    "hist:IqKVla0ZHw-m:8",
+    27,
+    153
+   ],
+   [
+    "hist:IqKVla0ZHw-m:9",
+    28,
+    157
+   ],
+   [
+    "hist:IqKVla0ZHw-m:10",
+    28,
+    157
+   ],
+   [
+    "hist:IqKVla0ZHw-m:11",
+    26,
+    182
+   ],
+   [
+    "hist:WfkDISMmbduQ:3",
+    28,
+    125
+   ],
+   [
+    "hist:WfkDISMmbduQ:4",
+    28,
+    178
+   ],
+   [
+    "hist:WfkDISMmbduQ:5",
+    27,
+    194
+   ],
+   [
+    "hist:WfkDISMmbduQ:6",
+    28,
+    199
+   ],
+   [
+    "hist:WfkDISMmbduQ:7",
+    27,
+    214
+   ],
+   [
+    "hist:WfkDISMmbduQ:8",
+    25,
+    224
+   ]
+  ],
+  "placedUnder": {
+   "p30": 2,
+   "p50": 5
+  },
+  "placedAtFirstSplit": {
+   "IqKVla0ZHw-m": 20,
+   "WfkDISMmbduQ": 52,
+   "hgLZ7j6F2kGb": 31,
+   "hXri7CdHStbF": 64,
+   "Bq-VQPMPiG7b": 114
+  }
+ },
+ "criteria": {
+  "P1": {
+   "need": ">=0.90",
+   "got": 0.958,
+   "passed": true
+  },
+  "P2": {
+   "need": ">=0.90 kept",
+   "got": 0.75,
+   "passed": false
+  },
+  "P3": {
+   "need": "3 of 3",
+   "case": "hist:Bq-VQPMPiG7b:0",
+   "got": [
+    0,
+    0,
+    0
+   ],
+   "passed": false
+  },
+  "P4": {
+   "need": ">=0.80 kept",
+   "got": 0.867,
+   "passed": true
+  },
+  "C1": {
+   "need": "control >=0.90",
+   "got": 1.0,
+   "passed": true
+  }
+ },
+ "triggerSimulation": {
+  "IqKVla0ZHw-m": {
+   "splits": 12,
+   "firedOnlyByFixedRule": 8,
+   "parentsTopicsSpannedInThose": [
+    4,
+    6,
+    4,
+    3,
+    4,
+    2,
+    2,
+    4
+   ],
+   "themesToday": 16,
+   "themesAfterChange": 4,
+   "herTopics": 12,
+   "ariToday": 0.514,
+   "ariAfterChange": 0.303,
+   "largestAfterChangeAtoms": 59
+  },
+  "WfkDISMmbduQ": {
+   "splits": 9,
+   "firedOnlyByFixedRule": 6,
+   "parentsTopicsSpannedInThose": [
+    4,
+    6,
+    4,
+    7,
+    4,
+    2
+   ],
+   "themesToday": 27,
+   "themesAfterChange": 7,
+   "herTopics": 20,
+   "ariToday": 0.736,
+   "ariAfterChange": 0.345,
+   "largestAfterChangeAtoms": 46
+  }
+ },
+ "parentsWithAtLeast2OfHerTopics": 20
+}

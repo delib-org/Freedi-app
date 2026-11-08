@@ -1,0 +1,383 @@
+{
+ "summary": {
+  "pairs": 27,
+  "tally": {
+   "refused": 24,
+   "proposed": 3
+  },
+  "pairsWithAHeadingOfOneSynthesis": 25,
+  "perRun": {
+   "en-seed42-themefix": {
+    "themes": 16,
+    "minThemesBlocks": false,
+    "maxGroupsReturnedByJudge": 1,
+    "capReached": false,
+    "splitSiblingThemes": 0,
+    "consolidateMergeEventsInRun": 10,
+    "sharedTopicPairs": 7
+   },
+   "en-seed42-consolidated": {
+    "themes": 11,
+    "minThemesBlocks": false,
+    "maxGroupsReturnedByJudge": 0,
+    "capReached": false,
+    "splitSiblingThemes": 0,
+    "consolidateMergeEventsInRun": 8,
+    "sharedTopicPairs": 1
+   },
+   "en-seed7-consolidated": {
+    "themes": 10,
+    "minThemesBlocks": false,
+    "maxGroupsReturnedByJudge": 1,
+    "capReached": false,
+    "splitSiblingThemes": 0,
+    "consolidateMergeEventsInRun": 5,
+    "sharedTopicPairs": 0
+   },
+   "en-seed1234-consolidated": {
+    "themes": 17,
+    "minThemesBlocks": false,
+    "maxGroupsReturnedByJudge": 1,
+    "capReached": false,
+    "splitSiblingThemes": 0,
+    "consolidateMergeEventsInRun": 4,
+    "sharedTopicPairs": 8
+   },
+   "en-seed42-filingfix": {
+    "themes": 14,
+    "minThemesBlocks": false,
+    "maxGroupsReturnedByJudge": 1,
+    "capReached": false,
+    "splitSiblingThemes": 0,
+    "consolidateMergeEventsInRun": 7,
+    "sharedTopicPairs": 5
+   },
+   "he-seed42-large-formulation": {
+    "themes": 11,
+    "minThemesBlocks": false,
+    "maxGroupsReturnedByJudge": 0,
+    "capReached": false,
+    "splitSiblingThemes": 0,
+    "consolidateMergeEventsInRun": 4,
+    "sharedTopicPairs": 3
+   },
+   "he-seed42-large-judgedattach": {
+    "themes": 10,
+    "minThemesBlocks": false,
+    "maxGroupsReturnedByJudge": 0,
+    "capReached": false,
+    "splitSiblingThemes": 0,
+    "consolidateMergeEventsInRun": 6,
+    "sharedTopicPairs": 0
+   },
+   "he-seed42-large-recall": {
+    "themes": 12,
+    "minThemesBlocks": false,
+    "maxGroupsReturnedByJudge": 1,
+    "capReached": false,
+    "splitSiblingThemes": 0,
+    "consolidateMergeEventsInRun": 10,
+    "sharedTopicPairs": 3
+   }
+  }
+ },
+ "rows": [
+  {
+   "run": "en-seed42-themefix",
+   "topic": "digital-services",
+   "a": "Public Wi-Fi access",
+   "b": "Government transparency and open data",
+   "statementsA": 2,
+   "statementsB": 4,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed42-themefix",
+   "topic": "digital-services",
+   "a": "Public Wi-Fi access",
+   "b": "Municipal service request systems",
+   "statementsA": 2,
+   "statementsB": 8,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed42-themefix",
+   "topic": "public-safety",
+   "a": "Street lighting improvements",
+   "b": "Community safety and policing",
+   "statementsA": 2,
+   "statementsB": 4,
+   "smallSide": 2,
+   "proposedInSamples": "2/3",
+   "cause": "proposed"
+  },
+  {
+   "run": "en-seed42-themefix",
+   "topic": "health",
+   "a": "In-home support for seniors",
+   "b": "Healthcare access and services",
+   "statementsA": 2,
+   "statementsB": 8,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed42-themefix",
+   "topic": "culture",
+   "a": "Arts and cultural life",
+   "b": "Neighborhood library access",
+   "statementsA": 6,
+   "statementsB": 2,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed42-themefix",
+   "topic": "environment-and-waste",
+   "a": "Public building solar energy",
+   "b": "Waste reduction programs",
+   "statementsA": 2,
+   "statementsB": 6,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed42-themefix",
+   "topic": "digital-services",
+   "a": "Government transparency and open data",
+   "b": "Municipal service request systems",
+   "statementsA": 4,
+   "statementsB": 8,
+   "smallSide": 4,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed42-consolidated",
+   "topic": "digital-services",
+   "a": "City service request access",
+   "b": "Public internet access",
+   "statementsA": 10,
+   "statementsB": 2,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed1234-consolidated",
+   "topic": "public-safety",
+   "a": "Neighborhood emergency response access",
+   "b": "Street lighting and safety",
+   "statementsA": 2,
+   "statementsB": 12,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed1234-consolidated",
+   "topic": "housing",
+   "a": "Affordable student housing",
+   "b": "Affordable housing development",
+   "statementsA": 2,
+   "statementsB": 2,
+   "smallSide": 2,
+   "proposedInSamples": "2/3",
+   "cause": "proposed"
+  },
+  {
+   "run": "en-seed1234-consolidated",
+   "topic": "housing",
+   "a": "Affordable student housing",
+   "b": "Clean and efficient energy",
+   "statementsA": 2,
+   "statementsB": 6,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed1234-consolidated",
+   "topic": "culture",
+   "a": "Public Art and Cultural Spaces",
+   "b": "Neighborhood library access",
+   "statementsA": 8,
+   "statementsB": 2,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed1234-consolidated",
+   "topic": "housing",
+   "a": "Affordable housing development",
+   "b": "Clean and efficient energy",
+   "statementsA": 2,
+   "statementsB": 6,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed1234-consolidated",
+   "topic": "digital-services",
+   "a": "Digital municipal services",
+   "b": "Public digital connectivity",
+   "statementsA": 10,
+   "statementsB": 2,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed1234-consolidated",
+   "topic": "environment-and-waste",
+   "a": "Household recycling services",
+   "b": "Air quality monitoring",
+   "statementsA": 6,
+   "statementsB": 2,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed1234-consolidated",
+   "topic": "parks-and-green-space",
+   "a": "Accessible playgrounds and recreation",
+   "b": "Community gardens and urban agriculture",
+   "statementsA": 4,
+   "statementsB": 2,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed42-filingfix",
+   "topic": "environment-and-waste",
+   "a": "Urban Food Sustainability",
+   "b": "Municipal renewable energy",
+   "statementsA": 8,
+   "statementsB": 2,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed42-filingfix",
+   "topic": "environment-and-waste",
+   "a": "Urban Food Sustainability",
+   "b": "Air quality monitoring",
+   "statementsA": 8,
+   "statementsB": 2,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed42-filingfix",
+   "topic": "digital-services",
+   "a": "Accessible and transparent government",
+   "b": "Public internet access",
+   "statementsA": 10,
+   "statementsB": 2,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "en-seed42-filingfix",
+   "topic": "public-safety",
+   "a": "Street lighting and safety",
+   "b": "Neighborhood Emergency Services",
+   "statementsA": 8,
+   "statementsB": 2,
+   "smallSide": 2,
+   "proposedInSamples": "1/3",
+   "cause": "proposed"
+  },
+  {
+   "run": "en-seed42-filingfix",
+   "topic": "environment-and-waste",
+   "a": "Municipal renewable energy",
+   "b": "Air quality monitoring",
+   "statementsA": 2,
+   "statementsB": 2,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "he-seed42-large-formulation",
+   "topic": "digital-services",
+   "a": "קישוריות דיגיטלית ציבורית",
+   "b": "שקיפות עירונית ותקציבית",
+   "statementsA": 2,
+   "statementsB": 3,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "he-seed42-large-formulation",
+   "topic": "digital-services",
+   "a": "קישוריות דיגיטלית ציבורית",
+   "b": "שירותים עירוניים ופניות תושבים",
+   "statementsA": 2,
+   "statementsB": 8,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "he-seed42-large-formulation",
+   "topic": "digital-services",
+   "a": "שקיפות עירונית ותקציבית",
+   "b": "שירותים עירוניים ופניות תושבים",
+   "statementsA": 3,
+   "statementsB": 8,
+   "smallSide": 3,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "he-seed42-large-recall",
+   "topic": "digital-services",
+   "a": "קישוריות דיגיטלית ציבורית",
+   "b": "שקיפות עירונית ונתונים פתוחים",
+   "statementsA": 2,
+   "statementsB": 2,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "he-seed42-large-recall",
+   "topic": "digital-services",
+   "a": "קישוריות דיגיטלית ציבורית",
+   "b": "שירותים עירוניים ופניות תושבים",
+   "statementsA": 2,
+   "statementsB": 8,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  },
+  {
+   "run": "he-seed42-large-recall",
+   "topic": "digital-services",
+   "a": "שקיפות עירונית ונתונים פתוחים",
+   "b": "שירותים עירוניים ופניות תושבים",
+   "statementsA": 2,
+   "statementsB": 8,
+   "smallSide": 2,
+   "proposedInSamples": "0/3",
+   "cause": "refused"
+  }
+ ]
+}

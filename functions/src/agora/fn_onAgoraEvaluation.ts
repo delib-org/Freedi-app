@@ -1,4 +1,5 @@
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
+import { FieldPath } from 'firebase-admin/firestore';
 import type { Transaction } from 'firebase-admin/firestore';
 import { db } from '../db';
 import {
@@ -7,14 +8,14 @@ import {
 	AgoraParticipant,
 	AgoraProposalScore,
 	AgoraRatingDist,
+	AgoraRoundKind,
 	AgoraSession,
 	AgoraStage,
 	Evaluation,
 	AGORA_POINTS,
+	AGORA_ROUNDS,
 	NotificationTriggerType,
 	StatementType,
-	currentPlanIndex,
-	evaluateVotingTrigger,
 	resolveStagePlan,
 	bridgingPayout,
 	bridgingTierFor,
@@ -30,68 +31,15 @@ import {
 	getRandomUID,
 	isAgoraAiUid,
 	tallyAgoraCamps,
+	isAgoraHidden,
+	roundSpecOf,
+	roundAppreciates,
+	Statement,
+	ModeratedDoc,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { awardCredit } from '../engagement/credits/creditEngine';
 import { CreditAction, SourceApp } from '@freedi/shared-types';
-import { advanceSession } from './stageAdvance';
-
-/**
- * The deliberation → voting auto-open. Runs after this rating's score has
- * committed, with the session as it was read at the start of the trigger:
- * a stale `stage` here only means `advanceSession` refuses the move, which
- * is exactly what a second in-flight rating should get.
- *
- * The sibling scores are read AFTER our own commit, and our own doc is
- * replaced by the score just computed, so the last rating to land cannot
- * read a neighbour's score from before its transaction and miss the bar
- * with no later write left to retry. The teacher's own "open next" button
- * stays the backstop for a trigger that never ran.
- */
-async function maybeAutoOpenVoting(
-	session: AgoraSession,
-	fresh: AgoraProposalScore,
-): Promise<void> {
-	if (session.stage !== AgoraStage.deliberation) return;
-	const plan = resolveStagePlan(session);
-	const index = currentPlanIndex(session);
-	const rule = plan[index]?.votingTrigger;
-	if (!rule?.enabled) return;
-	if (plan[index + 1]?.stage !== AgoraStage.voting) return;
-
-	const scoresSnap = await db
-		.collection(Collections.agoraScores)
-		.where('sessionId', '==', session.sessionId)
-		.get();
-	const scores = new Map<string, AgoraProposalScore>(
-		scoresSnap.docs.map((docSnap) => [docSnap.id, docSnap.data() as AgoraProposalScore]),
-	);
-	scores.set(fresh.statementId, fresh);
-
-	const verdict = evaluateVotingTrigger(
-		Array.from(scores.values()).map((score) => ({
-			statementId: score.statementId,
-			mean: score.classConsensus?.mean ?? 0,
-			n: score.classConsensus?.n ?? 0,
-		})),
-		rule,
-	);
-	if (!verdict.fired) return;
-
-	const result = await advanceSession(
-		session.sessionId,
-		{ toIndex: index + 1 },
-		{ kind: 'system' },
-		{ trigger: { mode: verdict.mode, candidateIds: verdict.candidateIds } },
-	);
-	// `stale` is the normal fate of every rating but the first to fire
-	if (!result.ok && result.reason !== 'stale') {
-		logError(new Error(`auto-open voting refused: ${result.reason}`), {
-			operation: 'agora.onEvaluationWritten.autoOpenVoting',
-			metadata: { sessionId: session.sessionId },
-		});
-	}
-}
 
 /**
  * One camp's tallies while a proposal is being recounted. Same shape as the
@@ -210,6 +158,49 @@ async function creditRatingEffort(
 	});
 }
 
+/**
+ * A like on a story, or a rating at or above the unit floor on a need or a
+ * vision, pays the AUTHOR once. The ledger is a map on the author's own
+ * participant doc keyed by the evaluation id — deterministic per (rater,
+ * text) — so a redelivered trigger, a re-rating, or an un-like then a re-like
+ * all find their key and pay nothing. A later downgrade never claws back:
+ * the appreciation happened, and a toggle must not become a lever.
+ */
+export async function creditRoundAppreciation(
+	sessionId: string,
+	kind: AgoraRoundKind,
+	evaluation: Evaluation,
+	evaluationId: string,
+): Promise<void> {
+	const spec = AGORA_ROUNDS[kind];
+	if (!roundAppreciates(spec, evaluation.evaluation)) return;
+	if (isAgoraAiUid(evaluation.evaluatorId)) return;
+
+	const answerSnap = await db.collection(Collections.statements).doc(evaluation.statementId).get();
+	if (!answerSnap.exists) return;
+	const answer = answerSnap.data() as Statement;
+	if (isAgoraHidden(answer)) return;
+	const authorId = answer.creatorId;
+	if (!authorId || authorId === evaluation.evaluatorId) return;
+
+	const authorRef = db
+		.collection(Collections.agoraParticipants)
+		.doc(createAgoraParticipantId(sessionId, authorId));
+
+	await db.runTransaction(async (transaction) => {
+		const snap = await transaction.get(authorRef);
+		if (!snap.exists) return;
+		const author = snap.data() as AgoraParticipant;
+		if (author.roundAppreciations?.[evaluationId]) return;
+
+		const points = { ...author.points };
+		points.appreciation = (points.appreciation ?? 0) + spec.appreciation.points;
+		points.total += spec.appreciation.points;
+		transaction.update(authorRef, { points, lastActive: Date.now() });
+		transaction.update(authorRef, new FieldPath('roundAppreciations', evaluationId), true);
+	});
+}
+
 function emptyTally(): CampTally {
 	return { sum: 0, n: 0, positiveN: 0, studentDist: emptyDist() };
 }
@@ -283,10 +274,14 @@ async function recountPerCamp(
 			.where('statementId', '==', statementId),
 	);
 
-	const verdicts = snapshot.docs.map((docSnap) => {
+	// Same shape-assertion caveat as the trigger's guard: a stored row with no
+	// evaluatorId would land in the student histogram as an anonymous rater and
+	// skew every camp reading off it.
+	const verdicts = snapshot.docs.flatMap((docSnap) => {
 		const evaluation = docSnap.data() as Evaluation;
+		if (!evaluation.evaluatorId) return [];
 
-		return { evaluatorId: evaluation.evaluatorId, value: evaluation.evaluation };
+		return [{ evaluatorId: evaluation.evaluatorId, value: evaluation.evaluation }];
 	});
 
 	return tallyEvaluations(verdicts, campOf);
@@ -305,12 +300,47 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 		const before = event.data?.before.exists ? (event.data.before.data() as Evaluation) : null;
 		const evaluation = after ?? before;
 		if (!evaluation?.agoraSessionId) return;
+		// `doc.data() as Evaluation` asserts a shape rather than checking one, so
+		// the two ids below are typed `string` no matter what is actually stored.
+		// Everything downstream feeds them straight to `.doc()` or reads
+		// `.startsWith` off them, so a document missing either — a probe, a
+		// partial write, a hand-edited row — threw instead of being ignored.
+		if (!evaluation.evaluatorId || !evaluation.statementId) return;
 
 		const { agoraSessionId: sessionId, statementId, evaluatorId } = evaluation;
 
 		try {
 			const sessionSnap = await db.collection(Collections.agoraSessions).doc(sessionId).get();
 			const session = sessionSnap.exists ? (sessionSnap.data() as AgoraSession) : null;
+
+			// A WizCol round's text: the appreciated AUTHOR is paid, the reader
+			// is not, and nothing below enters — a 0…1 mean must never meet the
+			// square's −1…+1 formulas.
+			const questionItem = session
+				? resolveStagePlan(session).find(
+						(item) =>
+							item.stage === AgoraStage.question && item.statementId === evaluation.parentId,
+					)
+				: undefined;
+			const roundSpec = questionItem ? roundSpecOf(questionItem) : null;
+			if (roundSpec) {
+				if (after) {
+					await creditRoundAppreciation(
+						sessionId,
+						roundSpec.kind,
+						after,
+						event.params.evaluationId,
+					).catch((creditError: unknown) => {
+						logError(creditError, {
+							operation: 'agora.onEvaluationWritten.creditRoundAppreciation',
+							userId: evaluatorId,
+							statementId,
+						});
+					});
+				}
+
+				return;
+			}
 
 			// A brand-new rating (not an edit of one) earns the evaluation
 			// credit — non-blocking, and never fatal to the bridging update.
@@ -362,66 +392,65 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 			 * wing. Positioning is one-shot in the UI, so this can only ever go
 			 * from unknown to known.
 			 */
+			// A text the teacher took down keeps the score it had: nothing moves,
+			// nothing pays, until it is restored.
+			if (isAgoraHidden(proposalSnap.data() as ModeratedDoc | undefined)) return;
+
 			const creatorId = proposalSnap.data()?.creatorId as string | undefined;
 			const authorSide = creatorId ? campOf.get(creatorId) : undefined;
 			const authorCamp = authorSide ?? AgoraCamp.center;
 			const authorPositioned = Boolean(authorSide && creatorId && !isAgoraAiUid(creatorId));
 
-			const { score: freshScore, credit: authorToCredit } = await db.runTransaction(
-				async (transaction) => {
-					const scoreSnap = await transaction.get(scoreRef);
-					const perCamp = await recountPerCamp(transaction, sessionId, statementId, campOf);
-					const existing = scoreSnap.exists ? (scoreSnap.data() as AgoraProposalScore) : undefined;
+			const { credit: authorToCredit } = await db.runTransaction(async (transaction) => {
+				const scoreSnap = await transaction.get(scoreRef);
+				const perCamp = await recountPerCamp(transaction, sessionId, statementId, campOf);
+				const existing = scoreSnap.exists ? (scoreSnap.data() as AgoraProposalScore) : undefined;
 
-					const score: AgoraProposalScore = {
-						...existing,
-						statementId,
-						sessionId,
-						authorCamp,
-						authorPositioned,
-						perCamp,
-						bridgingScore: existing?.bridgingScore ?? 0,
-						lastUpdate: Date.now(),
-					};
+				const score: AgoraProposalScore = {
+					...existing,
+					statementId,
+					sessionId,
+					authorCamp,
+					authorPositioned,
+					perCamp,
+					bridgingScore: existing?.bridgingScore ?? 0,
+					lastUpdate: Date.now(),
+				};
 
-					score.bridgingScore = calcBridgingScore({
-						authorCamp: score.authorCamp,
-						perCamp: score.perCamp,
-						crossCampPool: crossCampPoolFor(score.authorCamp, campCounts),
-					});
-					// The class's own reading of this proposal, finite-population
-					// corrected against the students who could have rated it.
-					const classConsensus = calcAgoraClassConsensus({
-						perCamp: score.perCamp,
-						eligible: eligiblePoolFor(score, consensusPool),
-					});
-					if (classConsensus) score.classConsensus = classConsensus;
+				score.bridgingScore = calcBridgingScore({
+					authorCamp: score.authorCamp,
+					perCamp: score.perCamp,
+					crossCampPool: crossCampPoolFor(score.authorCamp, campCounts),
+				});
+				// The class's own reading of this proposal, finite-population
+				// corrected against the students who could have rated it.
+				const classConsensus = calcAgoraClassConsensus({
+					perCamp: score.perCamp,
+					eligible: eligiblePoolFor(score, consensusPool),
+				});
+				if (classConsensus) score.classConsensus = classConsensus;
 
-					// The ladder is graduated and MONOTONIC: a later dip never claws a
-					// tier back, so an author is never punished for a proposal that
-					// moved. Sessions predating the tiers read their old boolean guard
-					// as "tier 2 already paid".
-					const alreadyAwarded =
-						score.bridgingTierAwarded ?? (score.bridgingCreditAwardedAt ? 2 : 0);
-					const reachedTier = bridgingTierFor(score.bridgingScore);
-					const bonus = bridgingPayout(reachedTier) - bridgingPayout(alreadyAwarded);
-					if (reachedTier > alreadyAwarded) {
-						score.bridgingTierAwarded = reachedTier;
-						if (reachedTier >= 2 && !score.bridgingCreditAwardedAt) {
-							score.bridgingCreditAwardedAt = Date.now();
-						}
+				// The ladder is graduated and MONOTONIC: a later dip never claws a
+				// tier back, so an author is never punished for a proposal that
+				// moved. Sessions predating the tiers read their old boolean guard
+				// as "tier 2 already paid".
+				const alreadyAwarded = score.bridgingTierAwarded ?? (score.bridgingCreditAwardedAt ? 2 : 0);
+				const reachedTier = bridgingTierFor(score.bridgingScore);
+				const bonus = bridgingPayout(reachedTier) - bridgingPayout(alreadyAwarded);
+				if (reachedTier > alreadyAwarded) {
+					score.bridgingTierAwarded = reachedTier;
+					if (reachedTier >= 2 && !score.bridgingCreditAwardedAt) {
+						score.bridgingCreditAwardedAt = Date.now();
 					}
+				}
 
-					transaction.set(scoreRef, score);
+				transaction.set(scoreRef, score);
 
-					return {
-						score,
-						credit: reachedTier > alreadyAwarded ? { score, tier: reachedTier, bonus } : null,
-					};
-				},
-			);
-
-			if (session) await maybeAutoOpenVoting(session, freshScore);
+				return {
+					score,
+					credit: reachedTier > alreadyAwarded ? { score, tier: reachedTier, bonus } : null,
+				};
+			});
 
 			// Bridging bonus for the author — once per tier, per proposal
 			if (authorToCredit) {

@@ -11,58 +11,21 @@ import {
 	DemographicTag,
 } from '@freedi/shared-types';
 import { db } from '.';
-
-interface ParticipantWithDemographics {
-	userId: string;
-	userName: string;
-	demographicKey: string;
-	demographicTags: DemographicTag[];
-	hasCompleteDemographics: boolean;
-}
+import { requireStatementAdmin } from './utils/httpAuth';
+import {
+	ParticipantWithDemographics,
+	createDemographicKey,
+	hasEnoughPeopleToSplit,
+	MIN_PEOPLE_TO_SPLIT,
+	scrambleIntoRooms,
+} from './rooms/scrambleIntoRooms';
 
 export interface SplitJoinedOptionRequest {
 	optionStatementId: string;
 	parentStatementId: string;
 	roomSize: number;
 	scrambleByQuestions?: string[];
-	adminId: string;
 	adminName?: string;
-}
-
-interface ScrambleResult {
-	rooms: Array<{
-		roomNumber: number;
-		participants: ParticipantWithDemographics[];
-	}>;
-	totalParticipants: number;
-	totalRooms: number;
-	balanceScore: number;
-}
-
-/**
- * Shuffles an array in place using Fisher-Yates algorithm
- */
-function shuffleArray<T>(array: T[]): T[] {
-	const shuffled = [...array];
-	for (let i = shuffled.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1));
-		[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-	}
-
-	return shuffled;
-}
-
-/**
- * Creates a demographic key from participant's answers to selected questions
- */
-function createDemographicKey(tags: DemographicTag[], questionIds: string[]): string {
-	const answers = questionIds.map((qId) => {
-		const tag = tags.find((t) => t.questionId === qId);
-
-		return tag?.answer || 'unknown';
-	});
-
-	return answers.join('|');
 }
 
 /**
@@ -84,135 +47,18 @@ async function getActiveSettingsIdsForParent(parentStatementId: string): Promise
 }
 
 /**
- * Stratified Round-Robin Scrambling Algorithm
- * Distributes participants across rooms to maximize demographic diversity
- */
-function scrambleIntoRooms(
-	participants: ParticipantWithDemographics[],
-	roomSize: number,
-): ScrambleResult {
-	if (participants.length === 0) {
-		return {
-			rooms: [],
-			totalParticipants: 0,
-			totalRooms: 0,
-			balanceScore: 0,
-		};
-	}
-
-	// Calculate number of rooms needed
-	const totalRooms = Math.ceil(participants.length / roomSize);
-
-	// Separate complete and incomplete demographic profiles
-	const completeProfiles = participants.filter((p) => p.hasCompleteDemographics);
-	const incompleteProfiles = participants.filter((p) => !p.hasCompleteDemographics);
-
-	// Group participants by demographic combination
-	const demographicGroups = new Map<string, ParticipantWithDemographics[]>();
-	for (const participant of completeProfiles) {
-		const key = participant.demographicKey;
-		if (!demographicGroups.has(key)) {
-			demographicGroups.set(key, []);
-		}
-		demographicGroups.get(key)!.push(participant);
-	}
-
-	// Shuffle each group internally for randomness
-	for (const [key, group] of demographicGroups) {
-		demographicGroups.set(key, shuffleArray(group));
-	}
-
-	// Initialize empty rooms
-	const rooms: Array<{ roomNumber: number; participants: ParticipantWithDemographics[] }> = [];
-	for (let i = 0; i < totalRooms; i++) {
-		rooms.push({ roomNumber: i + 1, participants: [] });
-	}
-
-	// Distribute using round-robin from each demographic group
-	const groupKeys = shuffleArray(Array.from(demographicGroups.keys()));
-
-	for (const key of groupKeys) {
-		const group = demographicGroups.get(key)!;
-		for (const participant of group) {
-			// Find room with fewest participants
-			const targetRoom = rooms.reduce((min, room) =>
-				room.participants.length < min.participants.length ? room : min,
-			);
-			targetRoom.participants.push(participant);
-		}
-	}
-
-	// Assign incomplete profiles randomly to rooms with space
-	const shuffledIncomplete = shuffleArray(incompleteProfiles);
-	for (const participant of shuffledIncomplete) {
-		// Find room with fewest participants that isn't full
-		const availableRooms = rooms.filter((r) => r.participants.length < roomSize);
-		if (availableRooms.length > 0) {
-			const targetRoom = availableRooms.reduce((min, room) =>
-				room.participants.length < min.participants.length ? room : min,
-			);
-			targetRoom.participants.push(participant);
-		} else {
-			// All rooms at capacity, add to room with fewest
-			const targetRoom = rooms.reduce((min, room) =>
-				room.participants.length < min.participants.length ? room : min,
-			);
-			targetRoom.participants.push(participant);
-		}
-	}
-
-	// Calculate balance score (0-1, how evenly distributed demographics are)
-	const balanceScore = calculateBalanceScore(rooms, demographicGroups.size);
-
-	return {
-		rooms,
-		totalParticipants: participants.length,
-		totalRooms,
-		balanceScore,
-	};
-}
-
-/**
- * Calculates how evenly demographics are distributed across rooms
- * Returns a score from 0 to 1, where 1 is perfectly balanced
- */
-function calculateBalanceScore(
-	rooms: Array<{ roomNumber: number; participants: ParticipantWithDemographics[] }>,
-	numDemographicGroups: number,
-): number {
-	if (rooms.length <= 1 || numDemographicGroups <= 1) return 1;
-
-	// Calculate variance in room sizes
-	const sizes = rooms.map((r) => r.participants.length);
-	const avgSize = sizes.reduce((a, b) => a + b, 0) / sizes.length;
-	const variance = sizes.reduce((sum, size) => sum + Math.pow(size - avgSize, 2), 0) / sizes.length;
-
-	// Normalize variance to a 0-1 score (lower variance = higher score)
-	const maxVariance = Math.pow(avgSize, 2);
-	const sizeScore = maxVariance > 0 ? 1 - variance / maxVariance : 1;
-
-	return Math.max(0, Math.min(1, sizeScore));
-}
-
-/**
  * HTTP endpoint to split joined members of an option into rooms
  * Uses the joined[] array from the option statement instead of subscriptions
  */
-export async function splitJoinedOption(req: Request, res: Response): Promise<void> {
+export async function splitJoinedOption(req: Request, res: Response, uid: string): Promise<void> {
 	try {
-		const {
-			optionStatementId,
-			parentStatementId,
-			roomSize,
-			scrambleByQuestions,
-			adminId,
-			adminName,
-		} = req.body as SplitJoinedOptionRequest;
+		const { optionStatementId, parentStatementId, roomSize, scrambleByQuestions, adminName } =
+			req.body as SplitJoinedOptionRequest;
 
 		// Validate input
-		if (!optionStatementId || !parentStatementId || !roomSize || !adminId) {
+		if (!optionStatementId || !parentStatementId || !roomSize) {
 			res.status(400).json({
-				error: 'Missing required fields: optionStatementId, parentStatementId, roomSize, adminId',
+				error: 'Missing required fields: optionStatementId, parentStatementId, roomSize',
 			});
 
 			return;
@@ -223,6 +69,14 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 
 			return;
 		}
+
+		const parent = await requireStatementAdmin(
+			res,
+			uid,
+			parentStatementId,
+			'splitJoinedOption.splitJoinedOption',
+		);
+		if (!parent) return;
 
 		const questionsToScramble = scrambleByQuestions || [];
 		const useRandomAssignment = questionsToScramble.length === 0;
@@ -241,6 +95,12 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 		}
 
 		const optionData = optionDoc.data();
+		// Admin of the question says nothing about an option from some other question.
+		if (optionData?.parentId !== parentStatementId) {
+			res.status(400).json({ error: 'Option does not belong to this question' });
+
+			return;
+		}
 		const joinedMembers: Creator[] = optionData?.joined || [];
 
 		if (joinedMembers.length === 0) {
@@ -249,9 +109,10 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 			return;
 		}
 
-		if (joinedMembers.length < roomSize) {
+		// A small answer still gets one (smaller) room; only a lone person cannot.
+		if (!hasEnoughPeopleToSplit(joinedMembers.length)) {
 			res.status(400).json({
-				error: `Not enough members to split. Need at least ${roomSize} members, have ${joinedMembers.length}`,
+				error: `Not enough members to split. Need at least ${MIN_PEOPLE_TO_SPLIT} members, have ${joinedMembers.length}`,
 			});
 
 			return;
@@ -400,7 +261,7 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 			scrambleByQuestions: questionsToScramble,
 			createdAt: now,
 			lastUpdate: now,
-			createdBy: { uid: adminId, displayName: adminName || 'Admin' },
+			createdBy: { uid, displayName: adminName || 'Admin' },
 			status: 'active',
 			totalRooms: scrambleResult.totalRooms,
 			totalParticipants: scrambleResult.totalParticipants,
@@ -480,7 +341,11 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
  * HTTP endpoint to get options that exceed their maximum member limit
  * Used by admin to see which options need splitting
  */
-export async function getOptionsExceedingMax(req: Request, res: Response): Promise<void> {
+export async function getOptionsExceedingMax(
+	req: Request,
+	res: Response,
+	uid: string,
+): Promise<void> {
 	try {
 		const { parentStatementId } = req.query as { parentStatementId: string };
 
@@ -490,17 +355,16 @@ export async function getOptionsExceedingMax(req: Request, res: Response): Promi
 			return;
 		}
 
-		// Get parent statement to check maxJoinMembers setting
-		const parentDoc = await db.collection(Collections.statements).doc(parentStatementId).get();
+		// Lists who joined each option, so it is an admin view.
+		const parentData = await requireStatementAdmin(
+			res,
+			uid,
+			parentStatementId,
+			'splitJoinedOption.getOptionsExceedingMax',
+		);
+		if (!parentData) return;
 
-		if (!parentDoc.exists) {
-			res.status(404).json({ error: 'Parent statement not found' });
-
-			return;
-		}
-
-		const parentData = parentDoc.data();
-		const maxJoinMembers = parentData?.statementSettings?.maxJoinMembers;
+		const maxJoinMembers = parentData.statementSettings?.maxJoinMembers;
 
 		if (!maxJoinMembers) {
 			res.status(200).json({
@@ -559,7 +423,11 @@ export async function getOptionsExceedingMax(req: Request, res: Response): Promi
  * HTTP endpoint to get all options with at least one joined member
  * Used by admin to see all options that can have rooms assigned
  */
-export async function getAllOptionsWithMembers(req: Request, res: Response): Promise<void> {
+export async function getAllOptionsWithMembers(
+	req: Request,
+	res: Response,
+	uid: string,
+): Promise<void> {
 	try {
 		const { parentStatementId } = req.query as { parentStatementId: string };
 
@@ -569,18 +437,17 @@ export async function getAllOptionsWithMembers(req: Request, res: Response): Pro
 			return;
 		}
 
-		// Get parent statement to check settings
-		const parentDoc = await db.collection(Collections.statements).doc(parentStatementId).get();
+		// Lists who joined each option, so it is an admin view.
+		const parentData = await requireStatementAdmin(
+			res,
+			uid,
+			parentStatementId,
+			'splitJoinedOption.getAllOptionsWithMembers',
+		);
+		if (!parentData) return;
 
-		if (!parentDoc.exists) {
-			res.status(404).json({ error: 'Parent statement not found' });
-
-			return;
-		}
-
-		const parentData = parentDoc.data();
-		const maxJoinMembers = parentData?.statementSettings?.maxJoinMembers || 7;
-		const minJoinMembers = parentData?.statementSettings?.minJoinMembers || 3;
+		const maxJoinMembers = parentData.statementSettings?.maxJoinMembers || 7;
+		const minJoinMembers = parentData.statementSettings?.minJoinMembers || 3;
 
 		// Get all option statements under this parent
 		const optionsSnapshot = await db
@@ -645,7 +512,11 @@ export async function getAllOptionsWithMembers(req: Request, res: Response): Pro
  * Deletes all rooms, participants, and archives settings
  * Used before reassigning all rooms to start fresh with Room 1
  */
-export async function clearAllRoomsForParent(req: Request, res: Response): Promise<void> {
+export async function clearAllRoomsForParent(
+	req: Request,
+	res: Response,
+	uid: string,
+): Promise<void> {
 	try {
 		const { parentStatementId } = req.body as { parentStatementId: string };
 
@@ -654,6 +525,14 @@ export async function clearAllRoomsForParent(req: Request, res: Response): Promi
 
 			return;
 		}
+
+		const parent = await requireStatementAdmin(
+			res,
+			uid,
+			parentStatementId,
+			'splitJoinedOption.clearAllRoomsForParent',
+		);
+		if (!parent) return;
 
 		logger.info(`Clearing all rooms for parent: ${parentStatementId}`);
 

@@ -1,0 +1,231 @@
+@use '../tokens' as *;
+
+// The scenario's two characters in the village: a face, a chip, the study
+// house's bubble and the card that hangs in every desk bubble. The words are
+// always the package's own — nothing here is generated.
+
+.cast-face {
+	flex: none;
+	inline-size: 56px;
+	block-size: 56px;
+	border-radius: var(--radius-full);
+	border: 2px solid var(--village-nav-border);
+	object-fit: cover;
+	background: var(--village-nav-surface);
+
+	&--sm {
+		inline-size: 28px;
+		block-size: 28px;
+		border-width: 1px;
+	}
+
+	&--letter {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--village-nav-ink);
+		font-weight: 700;
+	}
+}
+
+.cast-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-sm);
+	min-block-size: 44px;
+	padding: var(--space-xs) var(--space-md) var(--space-xs) var(--space-xs);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-full);
+	background: var(--bg-card-solid);
+	color: var(--text-primary);
+	font: inherit;
+	cursor: pointer;
+
+	&[aria-pressed='true'] {
+		background: var(--mine-strong);
+		border-color: var(--mine-strong);
+		color: #fff;
+	}
+
+	&--heard:not([aria-pressed='true']) {
+		border-color: var(--village-nav-border);
+	}
+
+	&:focus-visible {
+		outline: 3px solid var(--village-nav-accent);
+		outline-offset: 2px;
+	}
+}
+
+// --- The study house: the two voices speak in a sheet over the village ---
+.cast-bubble {
+	position: absolute;
+	z-index: 45;
+	inset-inline: var(--space-sm);
+	inset-block-end: var(--village-bar-clear);
+	max-inline-size: 560px;
+	margin-inline: auto;
+	max-block-size: 48dvh;
+	overflow: auto;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding: var(--space-md);
+	background: var(--bg-card-solid);
+	color: var(--text-primary);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
+	animation: cast-in var(--motion-base) ease-out both;
+
+	&__head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__who {
+		display: flex;
+		flex-direction: column;
+		min-inline-size: 0;
+	}
+
+	&__heading,
+	&__role {
+		color: var(--text-secondary);
+	}
+
+	&__chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__question {
+		margin: 0;
+		padding: var(--space-sm) var(--space-md);
+		border-inline-start: 4px solid var(--village-nav-accent);
+		color: var(--text-secondary);
+	}
+
+	&__line {
+		display: block;
+		inline-size: 100%;
+		min-block-size: 4.2em;
+		padding: var(--space-sm) 0;
+		border: 0;
+		background: none;
+		color: inherit;
+		font: inherit;
+		font-size: 1.15rem;
+		line-height: 1.7;
+		text-align: start;
+		cursor: pointer;
+
+		&:focus-visible {
+			outline: 3px solid var(--village-nav-accent);
+			outline-offset: 2px;
+		}
+	}
+
+	&__foot {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__dots {
+		display: inline-flex;
+		gap: 6px;
+		margin-inline-end: auto;
+
+		i {
+			inline-size: 8px;
+			block-size: 8px;
+			border-radius: var(--radius-full);
+			background: var(--border-subtle);
+
+			&.is-on {
+				background: var(--mine-strong);
+			}
+		}
+	}
+}
+
+// --- The card in the desk bubble: opinions on the front, needs on the back ---
+.cast-cards {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	margin-block-start: var(--space-sm);
+
+	&__chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+}
+
+.cast-card {
+	padding: var(--space-sm) var(--space-md);
+	max-block-size: 30dvh;
+	overflow: auto;
+	background: var(--bg-card-solid);
+	color: var(--text-primary);
+	border: 1px solid var(--border-subtle);
+	border-inline-start: 4px solid var(--village-nav-accent);
+	border-radius: var(--radius-sm);
+	animation: cast-in var(--motion-base) ease-out both;
+
+	&--needs {
+		border-inline-start-color: var(--mine-strong);
+	}
+
+	&__head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+
+		div {
+			display: flex;
+			flex-direction: column;
+			margin-inline-end: auto;
+			color: var(--text-primary);
+		}
+
+		small {
+			color: var(--text-secondary);
+		}
+	}
+
+	&__title {
+		margin: var(--space-sm) 0 var(--space-xs);
+		font-size: 1rem;
+	}
+
+	&__list {
+		margin: 0;
+		padding-inline-start: 1.2em;
+		line-height: 1.6;
+	}
+}
+
+@keyframes cast-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.cast-bubble,
+	.cast-card {
+		animation: none;
+	}
+}

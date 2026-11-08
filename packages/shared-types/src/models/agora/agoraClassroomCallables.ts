@@ -1,4 +1,7 @@
+import type { SupervisorTeacherDetail } from './agoraSupervisorCallables';
 import type { AgoraSessionFlow } from './sessionFlow';
+import type { AgoraTeacherSurface } from './agoraTeacherUsage';
+import type { AgoraLanguagePlace } from './agoraLanguage';
 
 /**
  * Wire contracts of the classroom-hierarchy callables (schools, classes,
@@ -11,14 +14,78 @@ import type { AgoraSessionFlow } from './sessionFlow';
 
 /** `agoraAdminManageSchool` — sys-admin only. */
 export interface ManageSchoolRequest {
-	action: 'create' | 'rename' | 'archive';
+	action:
+		| 'create'
+		| 'rename'
+		| 'archive'
+		| 'assignTeacher'
+		| 'removeTeacher'
+		| 'resendTeacherInvite'
+		| 'cancelTeacherInvite'
+		| 'assignSupervisor'
+		| 'removeSupervisor'
+		| 'setSupervisorScope';
 	schoolId?: string;
 	name?: string;
 	city?: string;
+	/**
+	 * assignTeacher/removeTeacher/resendTeacherInvite/cancelTeacherInvite: the
+	 * teacher's sign-in email, looked up server-side. assignTeacher with an
+	 * email no account has yet files a pending invite instead of failing.
+	 */
+	teacherEmail?: string;
+	/** assignSupervisor/removeSupervisor/setSupervisorScope: the supervisor's sign-in email */
+	supervisorEmail?: string;
+	/** Scope editing only: an already attached supervisor. */
+	supervisorUid?: string;
+	/**
+	 * setSupervisorScope: the teachers this supervisor may see. `null` (or
+	 * absent) clears the narrowing — every teacher of the school again.
+	 */
+	teacherIds?: string[] | null;
 }
 
 export interface ManageSchoolResponse {
 	schoolId: string;
+	/** Present on assignTeacher/removeTeacher — the resolved uid, echoed for the admin UI */
+	teacherUid?: string;
+	/** Present on the supervisor actions — the resolved uid */
+	supervisorUid?: string;
+	/** assignTeacher: true when no account had the email and an invite was filed instead */
+	invited?: boolean;
+	/** assignTeacher/resendTeacherInvite: whether the email went out (false = mail unconfigured or failed) */
+	emailSent?: boolean;
+	/** removeTeacher/cancelTeacherInvite: a pending invite for that email was cancelled */
+	inviteCancelled?: boolean;
+}
+
+/**
+ * `agoraTeacherClass` — a teacher's own classes. A teacher attached to a
+ * school (its `teacherMap`) opens classes in it; the class's teachers rename,
+ * archive, and add or remove co-teachers. Co-teachers are added by sign-in
+ * email (resolved server-side, never stored) and removed by uid.
+ */
+export type TeacherClassRequest =
+	| {
+			action: 'create';
+			/** Required when the teacher belongs to more than one school */
+			schoolId?: string;
+			/** The label — "ז'2", "the Tuesday group" */
+			name: string;
+			/** The grade — "ז", "10" */
+			gradeLevel?: string;
+	  }
+	| { action: 'rename'; classId: string; name: string; gradeLevel?: string }
+	| { action: 'archive'; classId: string }
+	| { action: 'addTeacher'; classId: string; teacherEmail: string }
+	| { action: 'removeTeacher'; classId: string; teacherUid: string };
+
+export interface TeacherClassResponse {
+	classId: string;
+	/** Present on create — the persistent code students claim roster spots with */
+	classCode?: string;
+	/** Present on addTeacher — the resolved uid */
+	teacherUid?: string;
 }
 
 /** `agoraAdminOpenClass` — sys-admin only. */
@@ -103,6 +170,7 @@ export interface TeacherRosterResponse {
  */
 export type TeacherConsoleRequest =
 	| { view: 'dashboard' }
+	| { view: 'activity' }
 	| { view: 'class'; classId: string }
 	| { view: 'report'; sessionId: string };
 
@@ -123,10 +191,22 @@ export interface TeacherConsoleDashboard {
 		memberCount: number;
 		schoolId: string;
 	}>;
+	/**
+	 * The schools this teacher is attached to — where they may open classes.
+	 * Empty means "ask your admin": the start screen offers guest games only.
+	 */
+	schools: Array<{ schoolId: string; name: string }>;
 	/** classId → its aggregate doc, when one exists (JSON: plain object) */
 	aggregates: Record<string, unknown>;
 	/** This teacher's sessions, newest first (AgoraSession JSON) */
 	sessions: unknown[];
+	/**
+	 * The schools this caller supervises — where the "supervise" entry
+	 * leads. Empty for a plain teacher.
+	 */
+	supervisedSchools: Array<{ schoolId: string; name: string }>;
+	/** usersV2/{uid}.systemAdmin — the system view's key */
+	isSystemAdmin: boolean;
 }
 
 export interface TeacherConsoleClassDetail {
@@ -135,6 +215,8 @@ export interface TeacherConsoleClassDetail {
 	gradeLevel?: string;
 	classCode: string;
 	schoolName: string;
+	/** Every teacher on the class, by display name — the caller is one of them */
+	teachers: Array<{ uid: string; name: string }>;
 	members: TeacherConsoleMember[];
 	/** memberId → AgoraStudentAggregate JSON */
 	careers: Record<string, unknown>;
@@ -149,12 +231,15 @@ export interface TeacherConsoleReport {
 	session: unknown;
 	/** Students only (AI raters excluded), AgoraParticipant JSON */
 	participants: unknown[];
+	/** Real names typed at the door (AgoraIdentity JSON) — teacher-only, may be empty */
+	identities: unknown[];
 }
 
 export type TeacherConsoleResponse =
 	| TeacherConsoleDashboard
 	| TeacherConsoleClassDetail
-	| TeacherConsoleReport;
+	| TeacherConsoleReport
+	| SupervisorTeacherDetail;
 
 /** New optional fields `agoraCreateSession` accepts for class games. */
 export interface CreateSessionClassroomFields {
@@ -162,4 +247,192 @@ export interface CreateSessionClassroomFields {
 	classId?: string;
 	/** Which beats to run — the classroom counterpart of the civic script */
 	flow?: AgoraSessionFlow;
+}
+
+/**
+ * `agoraTeacherMessage` — one line into the private teacher ↔ student thread.
+ * The teacher names the student; a student's reply names nobody (it is their
+ * own thread). Exactly one of `text` / `presetKey` is required.
+ */
+export interface TeacherMessageRequest {
+	sessionId: string;
+	/** Teacher only: which student */
+	studentUid?: string;
+	text?: string;
+	/** A quick phrase (AGORA_TEACHER_PRESETS) — rendered in the student's language */
+	presetKey?: string;
+	/** "About your proposal": the text the note concerns */
+	aboutStatementId?: string;
+}
+
+export interface TeacherMessageResponse {
+	messageId: string;
+}
+
+/** `agoraModerateStatement` — the session teacher's hand on a student's text. */
+export interface ModerateStatementRequest {
+	sessionId: string;
+	action: 'hide' | 'restore' | 'edit' | 'delete' | 'clearLookName' | 'forgetNames';
+	/** hide / restore / edit / delete */
+	statementId?: string;
+	/** hide / edit / delete: shown to the author on the thread, never to the class */
+	reason?: string;
+	/** edit: the replacement wording */
+	text?: string;
+	/** clearLookName: whose custom look name to blank */
+	studentUid?: string;
+}
+
+export interface ModerateStatementResponse {
+	ok: true;
+	/** hide / restore / delete: the resulting state */
+	hidden?: boolean;
+	/** delete: gone for good */
+	deleted?: boolean;
+}
+
+/**
+ * `agoraRemoveParticipant` — the session teacher takes one student out of
+ * the lesson: their seat is deleted and their uid is blocked from this
+ * session until the teacher lets them back (see agoraRemoval.ts).
+ * Repeat-safe: removing someone already removed answers `removed: false`.
+ */
+export interface RemoveParticipantRequest {
+	sessionId: string;
+	studentUid: string;
+}
+
+export interface RemoveParticipantResponse {
+	ok: true;
+	/** false when the student was already out of the room */
+	removed: boolean;
+}
+
+/**
+ * `agoraResolveRejoin` — the session teacher answers a removed student's
+ * knock: `approve` gives the parked seat back (same pseudonym), `decline`
+ * keeps them out until they knock again.
+ */
+export interface ResolveRejoinRequest {
+	sessionId: string;
+	studentUid: string;
+	decision: 'approve' | 'decline';
+}
+
+export interface ResolveRejoinResponse {
+	ok: true;
+	decision: 'approve' | 'decline';
+}
+
+/**
+ * `agoraCheckLanguage` — the gate every student text passes before the
+ * client writes it. A refusal has already been charged and filed by the time
+ * the response arrives: the strike is on the participant doc, the words are
+ * on the private thread, and the client's only job is to keep the draft in
+ * the box and say why.
+ */
+export interface CheckLanguageRequest {
+	sessionId: string;
+	text: string;
+	/** An edit of an existing note / answer: the statement the text was for */
+	statementId?: string;
+	/**
+	 * Where the student was writing (see AGORA_LANGUAGE_PLACES), filed with
+	 * the refusal so the teacher's alert can say "in a note", "in an answer".
+	 */
+	place?: AgoraLanguagePlace;
+	/** The stage-plan item the text belonged to, when the writer knows it */
+	itemId?: string;
+}
+
+export type CheckLanguageResponse =
+	| { ok: true }
+	| {
+			ok: false;
+			reason: 'language';
+			/** This student's strikes in the session, this one included */
+			strikes: number;
+			/** Coins actually taken (less than the penalty when the balance floored) */
+			deducted: number;
+			/** The balance after the deduction */
+			pointsTotal: number;
+	  }
+	| {
+			/**
+			 * The text holds a word on the session teacher's own list. No strike, no
+			 * coins: the student is asked to rephrase. `word` is the student's own
+			 * word that matched — never the list.
+			 */
+			ok: false;
+			reason: 'banned_word';
+			word: string;
+	  };
+
+/**
+ * `agoraSetBannedWords` — a teacher replaces their list of words their
+ * students may not use (applies to every class they run). The server cleans
+ * it (trim, dedupe, caps) and answers with what it stored.
+ */
+export interface SetBannedWordsRequest {
+	words: string[];
+}
+
+export interface SetBannedWordsResponse {
+	ok: true;
+	words: string[];
+}
+
+/**
+ * `agoraRewordQuestion` — the session teacher makes the question in front of
+ * the room clearer, while the room is looking at it.
+ *
+ * The stage plan is frozen from the current item back (`agoraUpdateStagePlan`
+ * refuses to touch it) because an opened item's outcome is already being
+ * computed against it. The WORDS are the exception: they change nothing the
+ * server has counted, and a class that does not understand the question needs
+ * them changed now, not next lesson.
+ *
+ * `scope` is the question the teacher is asked after typing: `session` keeps
+ * the new wording to this one item; `kind` also rewords every other item of
+ * the same round kind in this plan and saves it as the teacher's standing
+ * wording for that kind (see `agoraTeacherPrompts`). `kind` is meaningless
+ * for an `open` question — it has no siblings and no shared prompt — and is
+ * refused there.
+ */
+export interface RewordQuestionRequest {
+	sessionId: string;
+	/** Which plan item — the current one, or any question item */
+	itemId: string;
+	/** The question itself; blank on a round means "back to the book's prompt" */
+	title: string;
+	/** The sentence under it */
+	explanation: string;
+	scope: 'session' | 'kind';
+}
+
+export interface RewordQuestionResponse {
+	ok: true;
+	/** The plan items this reword actually rewrote */
+	itemIds: string[];
+	/** `kind` scope: the wording is now this teacher's default for that round */
+	savedAsDefault: boolean;
+}
+
+/**
+ * `agoraTeacherHeartbeat` — the console's "I am still here" beat, credited
+ * server-side against the teacher's usage month (see `creditHeartbeat`).
+ */
+export interface TeacherHeartbeatRequest {
+	surface: AgoraTeacherSurface;
+	/** Ms the client believes elapsed since its previous beat */
+	sinceMs: number;
+}
+
+export interface TeacherHeartbeatResponse {
+	/** 'YYYY-MM-DD' (UTC) the beat landed on */
+	day: string;
+	/** What the server actually credited — 0 for a burst or noise */
+	creditedMs: number;
+	/** That day's running total after this beat */
+	dayActiveMs: number;
 }

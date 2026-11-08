@@ -7,6 +7,7 @@ import {
 	User as FreediUser,
 } from '@freedi/shared-types';
 import { collection, db, doc, getDocs, query, setDoc, where } from './firebase';
+import { publicSailorName } from './sailorName';
 
 /**
  * Answering a stance IS a standard Freedi evaluation — same collection, same
@@ -45,7 +46,7 @@ export function valueToAttitude(value: number): OdysseyAttitudeKey | undefined {
 export function voyageIdentity(user: FreediUser): FreediUser {
 	return {
 		uid: user.uid,
-		displayName: (user.displayName ?? '').trim().split(/\s+/)[0] || 'מפליג/ה',
+		displayName: publicSailorName(user.displayName, user.isAnonymous),
 		isAnonymous: user.isAnonymous,
 	};
 }

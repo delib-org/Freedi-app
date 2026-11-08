@@ -7,6 +7,7 @@ import { logError } from '@/lib/utils/errorHandling';
 import WizColAttribution from '../shared/WizColAttribution';
 import styles from './CompletionScreen.module.scss';
 import AchievementBadge, { BadgeType } from './AchievementBadge';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 interface CompletionScreenProps {
   questionId: string;
@@ -66,10 +67,10 @@ export default function CompletionScreen({
     setError(null);
 
     try {
-      const response = await fetch(`/api/statements/${questionId}/subscribe`, {
+      const response = await participantFetch(`/api/statements/${questionId}/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, userId }),
+        body: JSON.stringify({ email }),
       });
 
       if (!response.ok) {

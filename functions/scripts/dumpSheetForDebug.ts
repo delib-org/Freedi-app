@@ -84,6 +84,7 @@ function getSheetsClient(): sheets_v4.Sheets | null {
 		key: rawKey.replace(/\\n/g, '\n'),
 		scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 	});
+
 	return google.sheets({ version: 'v4', auth });
 }
 
@@ -106,5 +107,6 @@ function parseArgs(argv: string[]): { sheetId?: string } {
 	for (let i = 0; i < argv.length; i++) {
 		if (argv[i] === '--sheet-id') out.sheetId = argv[++i];
 	}
+
 	return out;
 }

@@ -5,6 +5,7 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError } from '@/lib/utils/errorHandling';
 import WizColAttribution from '../shared/WizColAttribution';
 import styles from './Survey.module.scss';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 interface ClosedSurveyViewProps {
   surveyTitle: string;
@@ -29,7 +30,7 @@ export default function ClosedSurveyView({
     setErrorMsg(null);
 
     try {
-      const response = await fetch(
+      const response = await participantFetch(
         `/api/statements/${primaryStatementId}/subscribe`,
         {
           method: 'POST',

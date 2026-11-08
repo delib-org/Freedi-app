@@ -185,18 +185,16 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
 
 						changes.forEach((change) => {
 							try {
-								const data = change.doc.data();
-								const statement = parseStatement(data);
+								// A removed doc needs only its id; parsing it could throw on
+								// legacy data and leave a ghost node in the map.
+								if (change.type === 'removed') {
+									store.dispatch(deleteStatement(change.doc.id));
 
-								switch (change.type) {
-									case 'added':
-									case 'modified':
-										store.dispatch(setStatement(statement));
-										break;
-									case 'removed':
-										store.dispatch(deleteStatement(statement.statementId));
-										break;
+									return;
 								}
+
+								const statement = parseStatement(change.doc.data());
+								store.dispatch(setStatement(statement));
 							} catch (error) {
 								logError(error, {
 									operation: 'listenToMindMapData.processChange',
@@ -290,17 +288,14 @@ function listenToMindMapClusters(statementId: string): Unsubscribe {
 				// this covers both the initial load and subsequent updates.
 				snapshot.docChanges().forEach((change) => {
 					try {
-						const statement = parseStatement(change.doc.data());
+						// A removed doc needs only its id; no parse.
+						if (change.type === 'removed') {
+							store.dispatch(deleteStatement(change.doc.id));
 
-						switch (change.type) {
-							case 'added':
-							case 'modified':
-								store.dispatch(setStatement(statement));
-								break;
-							case 'removed':
-								store.dispatch(deleteStatement(statement.statementId));
-								break;
+							return;
 						}
+
+						store.dispatch(setStatement(parseStatement(change.doc.data())));
 					} catch (error) {
 						logError(error, {
 							operation: 'listenToMindMapClusters.processChange',

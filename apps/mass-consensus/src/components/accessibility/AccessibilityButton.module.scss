@@ -1,0 +1,222 @@
+/**
+ * Accessibility control — a round button in the top inline-start corner
+ * (mirrors in RTL): clear of the rating buttons on the cards and of the
+ * full-width bars fixed to the bottom of survey/question pages.
+ */
+
+.a11y {
+  position: fixed;
+  inset-inline-start: var(--spacing-sm);
+  top: var(--spacing-sm);
+  // Above every overlay (consent banner is 99999): participants must be able
+  // to fix contrast or text size before reading a dialog
+  z-index: 100000;
+
+  &__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border-radius: var(--radius-full);
+    background: var(--btn-primary-hover); // darker teal: 3:1+ against the white icon
+    color: var(--mc-on-brand, white);
+    box-shadow: var(--shadow-md);
+    opacity: 0.85;
+
+    &:hover,
+    &--open {
+      opacity: 1;
+    }
+
+    &:focus-visible {
+      opacity: 1;
+      outline: 3px solid var(--mc-focus, var(--text-primary));
+      outline-offset: 2px;
+    }
+  }
+
+  &__panel {
+    position: absolute;
+    top: calc(2.75rem + var(--spacing-xs));
+    inset-inline-start: 0;
+    width: min(18rem, calc(100vw - 2 * var(--spacing-sm)));
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--mc-border, #e2e8f0);
+    background: var(--mc-surface, white);
+    color: var(--text-body);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    animation: scale-in 0.15s ease-out;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.125rem;
+  }
+
+  &__close {
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-inline-end: calc(-1 * var(--spacing-xs));
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    line-height: 1;
+
+    &:hover {
+      background: var(--mc-surface-muted, #f7fafc);
+    }
+  }
+
+  &__group {
+    border: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  &__label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__segmented {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    padding: 0.25rem;
+    gap: 0.25rem;
+    border-radius: var(--radius-md);
+    background: var(--mc-surface-subtle, #e2e8f0);
+  }
+
+  &__segment {
+    min-height: 2.75rem;
+    padding: 0 var(--spacing-xs);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+
+    &--active {
+      background: var(--mc-surface, white);
+      color: var(--text-primary);
+      font-weight: 700;
+      box-shadow: var(--shadow-sm);
+    }
+  }
+
+  &__switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 2.75rem;
+    width: 100%;
+    padding: 0;
+    background: transparent;
+    text-align: start;
+  }
+
+  &__switch {
+    position: relative;
+    flex-shrink: 0;
+    width: 2.75rem;
+    height: 1.5rem;
+    border-radius: var(--radius-full);
+    background: var(--mc-border-strong, #cbd5e0);
+    transition: background 0.2s ease;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0.1875rem;
+      inset-inline-start: 0.1875rem;
+      width: 1.125rem;
+      height: 1.125rem;
+      border-radius: 50%;
+      background: var(--mc-on-brand, white);
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+      transition: inset-inline-start 0.2s ease;
+    }
+
+    &--on {
+      background: var(--btn-primary);
+
+      &::after {
+        inset-inline-start: calc(100% - 1.3125rem);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      &,
+      &::after {
+        transition: none;
+      }
+    }
+  }
+
+  &__stepper {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+
+  &__step {
+    flex: 1;
+    min-height: 2.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--mc-border, #e2e8f0);
+    background: var(--mc-surface, white);
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  &__step-small {
+    font-size: 0.875rem;
+  }
+
+  &__step-large {
+    font-size: 1.25rem;
+  }
+
+  &__value {
+    min-width: 3.5rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__reset {
+    align-self: flex-start;
+    min-height: 2.75rem;
+    padding: 0 var(--spacing-xs);
+    background: transparent;
+    color: var(--mc-brand-text, var(--btn-primary));
+    font-weight: 600;
+    text-decoration: underline;
+  }
+
+  // Everything interactive in the panel gets a visible focus ring
+  &__panel button:focus-visible {
+    outline: 3px solid var(--mc-focus, var(--btn-primary));
+    outline-offset: 2px;
+  }
+}

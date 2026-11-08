@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSurveyById } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { denySurveyPermission } from '@/lib/auth/surveyAccess';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { logger } from '@/lib/utils/logger';
 import {
@@ -32,15 +33,14 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
     }
 
-    // Verify user owns this survey
+    // Verify the caller may reach this survey
     const survey = await getSurveyById(surveyId);
     if (!survey) {
       return NextResponse.json({ error: 'Survey not found' }, { status: 404 });
     }
 
-    if (survey.creatorId !== userId) {
-      return NextResponse.json({ error: 'You can only view subscribers for your own surveys' }, { status: 403 });
-    }
+    const denied0 = await denySurveyPermission(survey, userId, 'view');
+    if (denied0) return denied0;
 
     const questionIds = survey.questionIds || [];
     // Also check the surveyId itself in case subscriptions were written against it

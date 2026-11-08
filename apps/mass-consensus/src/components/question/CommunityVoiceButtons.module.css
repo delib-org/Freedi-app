@@ -118,7 +118,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle, white 10%, transparent 10.01%);
+  background: radial-gradient(circle, var(--mc-surface-muted, white) 10%, transparent 10.01%);
   opacity: 0;
   transform: scale(10, 10);
   transition: transform 0.5s, opacity 1s;

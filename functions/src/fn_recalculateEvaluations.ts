@@ -9,32 +9,17 @@ import {
 	StatementType,
 	StatementEvaluation,
 	functionConfig,
-	calcAgreement,
 } from '@freedi/shared-types';
-import { calculateConsensusValid } from './helpers/consensusValidCalculator';
 import type { PopperHebbianScore } from '@freedi/shared-types';
+import { calculateConsensusValid } from './helpers/consensusValidCalculator';
+import { resolveQuestionPopulation } from './evaluation/resolveQuestionPopulation';
+import { hasCounterMismatch, recomputeOptionCounters } from './evaluation/recomputeOptionCounters';
+import { planClusterRecompute, type StatementFix } from './evaluation/planClusterRecompute';
+import { buildQuestionClusterTrees } from './evaluation/questionClusterTrees';
 
 interface RecalculateRequest {
 	statementId: string; // Parent statement ID (the question)
 	dryRun?: boolean; // If true, only report what would change without applying
-}
-
-interface StatementFix {
-	statementId: string;
-	statementText?: string; // First 50 chars of statement text for identification
-	isClusterOption?: boolean;
-	before: {
-		numberOfEvaluators: number;
-		numberOfProEvaluators: number;
-		numberOfConEvaluators: number;
-		consensus?: number;
-	};
-	after: {
-		numberOfEvaluators: number;
-		numberOfProEvaluators: number;
-		numberOfConEvaluators: number;
-		consensus?: number;
-	};
 }
 
 interface RecalculateResult {
@@ -46,10 +31,10 @@ interface RecalculateResult {
 	errors: string[];
 }
 
-// calcAgreement was a local copy of a superseded formula (no t-multiplier, a
-// hard 0.5 uncertainty floor). A "recalculate" tool that writes different
-// numbers from the live trigger is worse than no tool, so it now imports the
-// canonical one from @freedi/shared-types.
+// The counters come from recomputeOptionCounters, which follows the live
+// trigger's rule (every evaluation document is a participant, zeros included)
+// and the canonical agreement formula from @freedi/shared-types. A "recalculate"
+// tool that writes different numbers from the live trigger is worse than no tool.
 
 /**
  * Bulk recompute: fetch every evaluation under the parent in ONE query,
@@ -96,6 +81,10 @@ export async function bulkRecalculateForParent(
 
 		return result;
 	}
+
+	// 1b. The question's explicit N, resolved once and used for every option and
+	//     synthesis of this run (undefined = open population, no correction).
+	const populationSize = await resolveQuestionPopulation(db, parentId);
 
 	// 2. All evaluations under this parent, paginated by `evaluatorId` to
 	//    stream the result set instead of buffering the whole collection
@@ -147,6 +136,21 @@ export async function bulkRecalculateForParent(
 	}
 	const planned: PlannedUpdate[] = [];
 
+	// 3b. Member trees of the question's clusters (theme -> synthesis -> options),
+	//     so a cluster's score follows votes through nested clusters exactly like
+	//     recomputeClusterEvaluation does.
+	const isClusterDoc = (statement: Statement & { integratedOptions?: string[] }): boolean =>
+		(statement.integratedOptions ?? []).length > 0 || statement.isCluster === true;
+	const optionsById = new Map(
+		optionsSnapshot.docs.map((doc) => [doc.id, doc.data() as Statement] as const),
+	);
+	const clusterTrees = await buildQuestionClusterTrees(
+		parentId,
+		optionsById,
+		[...optionsById.entries()].filter(([, statement]) => isClusterDoc(statement)).map(([id]) => id),
+		evalsByStatementId,
+	);
+
 	for (const doc of optionsSnapshot.docs) {
 		result.statementsProcessed++;
 		try {
@@ -160,9 +164,11 @@ export async function bulkRecalculateForParent(
 				(statement.integratedOptions && statement.integratedOptions.length > 0) ||
 				statement.isCluster === true;
 
-			const plannedUpdate = isClusterOption
-				? planClusterRecompute(statement, doc.id, evalsByStatementId)
-				: planOptionRecompute(statement, doc.id, evalsByStatementId);
+			const clusterTree = clusterTrees.get(doc.id);
+			const plannedUpdate =
+				isClusterOption && clusterTree
+					? planClusterRecompute(statement, doc.id, clusterTree, evalsByStatementId, populationSize)
+					: planOptionRecompute(statement, doc.id, evalsByStatementId, populationSize);
 
 			if (plannedUpdate) {
 				planned.push({ ref: doc.ref, ...plannedUpdate });
@@ -239,27 +245,10 @@ function planOptionRecompute(
 	statement: Statement,
 	statementId: string,
 	evalsByStatementId: Map<string, Evaluation[]>,
+	populationSize: number | undefined,
 ): { payload: Record<string, unknown>; fix: StatementFix } | null {
 	const evals = evalsByStatementId.get(statementId) ?? [];
-	let actualProCount = 0;
-	let actualConCount = 0;
-	let sumEvaluations = 0;
-	let sumSquaredEvaluations = 0;
-	let sumPro = 0;
-	let sumCon = 0;
-	for (const e of evals) {
-		const v = e.evaluation;
-		if (v > 0) {
-			actualProCount++;
-			sumPro += v;
-		} else if (v < 0) {
-			actualConCount++;
-			sumCon += Math.abs(v);
-		}
-		sumEvaluations += v;
-		sumSquaredEvaluations += v * v;
-	}
-	const totalWithNonZeroEval = actualProCount + actualConCount;
+	const counters = recomputeOptionCounters(evals, populationSize);
 
 	const currentEval: StatementEvaluation = statement.evaluation || {
 		numberOfEvaluators: 0,
@@ -280,13 +269,9 @@ function planOptionRecompute(
 		numberOfConEvaluators: currentEval.numberOfConEvaluators || 0,
 	};
 
-	const hasProMismatch = before.numberOfProEvaluators !== actualProCount;
-	const hasConMismatch = before.numberOfConEvaluators !== actualConCount;
-	const hasEvaluatorMismatch = before.numberOfEvaluators !== totalWithNonZeroEval;
-	if (!hasProMismatch && !hasConMismatch && !hasEvaluatorMismatch) return null;
+	if (!hasCounterMismatch(currentEval, counters)) return null;
 
-	const averageEvaluation = totalWithNonZeroEval > 0 ? sumEvaluations / totalWithNonZeroEval : 0;
-	const agreement = calcAgreement(sumEvaluations, sumSquaredEvaluations, totalWithNonZeroEval);
+	const { agreement, numberOfEvaluators: totalEvaluators } = counters;
 	const consensusValid = calculateConsensusValid(
 		agreement,
 		(statement as Statement & { popperHebbianScore?: PopperHebbianScore }).popperHebbianScore ??
@@ -295,27 +280,35 @@ function planOptionRecompute(
 
 	const updatedEvaluation: StatementEvaluation = {
 		...currentEval,
-		numberOfEvaluators: totalWithNonZeroEval,
-		numberOfProEvaluators: actualProCount,
-		numberOfConEvaluators: actualConCount,
-		sumEvaluations,
-		sumSquaredEvaluations,
-		sumPro,
-		sumCon,
-		averageEvaluation,
+		numberOfEvaluators: counters.numberOfEvaluators,
+		numberOfProEvaluators: counters.numberOfProEvaluators,
+		numberOfConEvaluators: counters.numberOfConEvaluators,
+		sumEvaluations: counters.sumEvaluations,
+		sumSquaredEvaluations: counters.sumSquaredEvaluations,
+		sumPro: counters.sumPro,
+		sumCon: counters.sumCon,
+		averageEvaluation: counters.averageEvaluation,
 		agreement,
+		agreementIndex: counters.agreementIndex,
 		evaluationRandomNumber: currentEval.evaluationRandomNumber ?? Math.random(),
 		viewed: currentEval.viewed ?? 0,
 	};
+	// `evaluation` is written whole, so dropping the key removes a stale
+	// snapshot the `...currentEval` spread would otherwise carry over.
+	if (counters.stakeholderCount !== undefined) {
+		updatedEvaluation.stakeholderCount = counters.stakeholderCount;
+	} else {
+		delete updatedEvaluation.stakeholderCount;
+	}
 
 	return {
 		payload: {
 			evaluation: updatedEvaluation,
-			totalEvaluators: totalWithNonZeroEval,
+			totalEvaluators: totalEvaluators,
 			consensus: agreement,
 			consensusValid,
-			proSum: sumPro,
-			conSum: sumCon,
+			proSum: counters.sumPro,
+			conSum: counters.sumCon,
 		},
 		fix: {
 			statementId,
@@ -323,149 +316,9 @@ function planOptionRecompute(
 			isClusterOption: false,
 			before: { ...before, consensus: statement.consensus ?? 0 },
 			after: {
-				numberOfEvaluators: totalWithNonZeroEval,
-				numberOfProEvaluators: actualProCount,
-				numberOfConEvaluators: actualConCount,
-				consensus: agreement,
-			},
-		},
-	};
-}
-
-/**
- * Cluster-option recompute using pre-grouped evaluations. Direct evaluations
- * on the cluster OVERWRITE source-statement evaluations for the same user,
- * matching the legacy semantics.
- */
-function planClusterRecompute(
-	statement: Statement & { integratedOptions?: string[]; isCluster?: boolean },
-	clusterId: string,
-	evalsByStatementId: Map<string, Evaluation[]>,
-): { payload: Record<string, unknown>; fix: StatementFix } | null {
-	const sourceIds = statement.integratedOptions ?? [];
-	if (sourceIds.length === 0) return null;
-
-	interface UserEval {
-		evaluation: number;
-		isDirect: boolean;
-		sourceEvaluations: number[];
-	}
-	const userEvals = new Map<string, UserEval>();
-
-	// Source evaluations (averaged per user across their sources).
-	for (const sourceId of sourceIds) {
-		const evals = evalsByStatementId.get(sourceId) ?? [];
-		for (const e of evals) {
-			const uid = e.evaluator?.uid ?? e.evaluatorId;
-			if (!uid) continue;
-			const existing = userEvals.get(uid);
-			if (existing && !existing.isDirect) {
-				existing.sourceEvaluations.push(e.evaluation);
-				existing.evaluation =
-					existing.sourceEvaluations.reduce((a, b) => a + b, 0) / existing.sourceEvaluations.length;
-			} else if (!existing) {
-				userEvals.set(uid, {
-					evaluation: e.evaluation,
-					isDirect: false,
-					sourceEvaluations: [e.evaluation],
-				});
-			}
-		}
-	}
-
-	// Direct evaluations on the cluster itself OVERRIDE the source avg.
-	const directEvals = evalsByStatementId.get(clusterId) ?? [];
-	for (const e of directEvals as (Evaluation & { migratedAt?: number })[]) {
-		if (e.migratedAt) continue;
-		const uid = e.evaluator?.uid ?? e.evaluatorId;
-		if (!uid) continue;
-		userEvals.set(uid, {
-			evaluation: e.evaluation,
-			isDirect: true,
-			sourceEvaluations: [],
-		});
-	}
-
-	let sumEvaluations = 0;
-	let sumSquaredEvaluations = 0;
-	let sumPro = 0;
-	let sumCon = 0;
-	let proCount = 0;
-	let conCount = 0;
-	for (const [, data] of userEvals) {
-		const v = data.evaluation;
-		sumEvaluations += v;
-		sumSquaredEvaluations += v * v;
-		if (v > 0) {
-			proCount++;
-			sumPro += v;
-		} else if (v < 0) {
-			conCount++;
-			sumCon += Math.abs(v);
-		}
-	}
-	const totalEvaluators = proCount + conCount;
-
-	const currentEval: StatementEvaluation = statement.evaluation || {
-		numberOfEvaluators: 0,
-		numberOfProEvaluators: 0,
-		numberOfConEvaluators: 0,
-		sumEvaluations: 0,
-		sumPro: 0,
-		sumCon: 0,
-		sumSquaredEvaluations: 0,
-		averageEvaluation: 0,
-		agreement: 0,
-		evaluationRandomNumber: Math.random(),
-		viewed: 0,
-	};
-	const before = {
-		numberOfEvaluators: currentEval.numberOfEvaluators || 0,
-		numberOfProEvaluators: currentEval.numberOfProEvaluators || 0,
-		numberOfConEvaluators: currentEval.numberOfConEvaluators || 0,
-	};
-
-	const averageEvaluation = totalEvaluators > 0 ? sumEvaluations / totalEvaluators : 0;
-	const agreement = calcAgreement(sumEvaluations, sumSquaredEvaluations, totalEvaluators);
-	const consensusValid = calculateConsensusValid(
-		agreement,
-		(statement as Statement & { popperHebbianScore?: PopperHebbianScore }).popperHebbianScore ??
-			undefined,
-	);
-
-	const updatedEvaluation: StatementEvaluation = {
-		...currentEval,
-		numberOfEvaluators: totalEvaluators,
-		numberOfProEvaluators: proCount,
-		numberOfConEvaluators: conCount,
-		sumEvaluations,
-		sumSquaredEvaluations,
-		sumPro,
-		sumCon,
-		averageEvaluation,
-		agreement,
-		evaluationRandomNumber: currentEval.evaluationRandomNumber ?? Math.random(),
-		viewed: currentEval.viewed ?? 0,
-	};
-
-	return {
-		payload: {
-			evaluation: updatedEvaluation,
-			totalEvaluators,
-			consensus: agreement,
-			consensusValid,
-			proSum: sumPro,
-			conSum: sumCon,
-		},
-		fix: {
-			statementId: clusterId,
-			statementText: statement.statement?.substring(0, 50),
-			isClusterOption: true,
-			before: { ...before, consensus: statement.consensus ?? 0 },
-			after: {
 				numberOfEvaluators: totalEvaluators,
-				numberOfProEvaluators: proCount,
-				numberOfConEvaluators: conCount,
+				numberOfProEvaluators: counters.numberOfProEvaluators,
+				numberOfConEvaluators: counters.numberOfConEvaluators,
 				consensus: agreement,
 			},
 		},

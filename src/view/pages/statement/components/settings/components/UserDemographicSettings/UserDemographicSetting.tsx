@@ -1,6 +1,5 @@
 import React, { FC, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import SectionTitle from '../sectionTitle/SectionTitle';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import SettingsModal from '../settingsModal/SettingsModal';
 import UserQuestionComp from './userQuestion/UserQuestionComp';
@@ -35,7 +34,9 @@ import RadioButtonEmptyIcon from '@/assets/icons/radioButtonEmpty.svg?react';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
 import CheckboxEmptyIcon from '@/assets/icons/checkboxEmptyIcon.svg?react';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
-import { InheritedDemographics } from '@/view/components/atomic/molecules/InheritedDemographics';
+import InlineNote from '@/view/components/atomic/atoms/InlineNote';
+import InheritedJoinQuestions from './InheritedJoinQuestions';
+import OwnJoinQuestions from './OwnJoinQuestions';
 import { useInheritedDemographics } from '@/controllers/hooks/userDemographic/useInheritedDemographics';
 import { setExcludedInheritedDemographics } from '@/controllers/db/userDemographic/excludedInheritedDemographics';
 import { logError } from '@/utils/errorHandling';
@@ -68,6 +69,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 	const [showBulkPaste, setShowBulkPaste] = useState(false);
 	const [bulkPasteText, setBulkPasteText] = useState('');
 	const [allowOther, setAllowOther] = useState(false);
+	const [excludeSaveFailed, setExcludeSaveFailed] = useState(false);
 
 	// Check if this is the top parent (group level)
 	const isTopParent = statement.parentId === 'top';
@@ -78,18 +80,16 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 	// Handle inherited demographics exclusion changes - persist to Firestore
 	const handleExcludedIdsChange = useCallback(
 		async (excludedIds: string[]) => {
+			setExcludeSaveFailed(false);
 			try {
 				await setExcludedInheritedDemographics(statement.statementId, excludedIds);
-				console.info(
-					'Excluded inherited demographics saved:',
-					excludedIds.length,
-					'questions excluded',
-				);
 			} catch (error) {
 				logError(error, {
 					operation: 'UserDemographicSetting.handleExcludedIdsChange',
 					statementId: statement.statementId,
+					metadata: { excludedCount: excludedIds.length },
 				});
+				setExcludeSaveFailed(true);
 			}
 		},
 		[statement.statementId],
@@ -98,8 +98,8 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 	// Use the inherited demographics hook
 	const {
 		inheritedQuestions,
-		loading: inheritedLoading,
 		toggleQuestion: toggleInheritedQuestion,
+		enableAll: askAllInherited,
 	} = useInheritedDemographics({
 		statement,
 		initialExcludedIds,
@@ -252,12 +252,20 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 
 	return (
 		<div>
-			<SectionTitle title={t('Member Information')} />
-			<div className="btns">
-				<button className="btn btn--secondary" onClick={() => setShowModal(true)}>
-					{t('Survey')}
-				</button>
-			</div>
+			{!isTopParent && inheritedQuestions.length > 0 && (
+				<InheritedJoinQuestions
+					questions={inheritedQuestions}
+					groupId={statement.topParentId}
+					onAskChange={toggleInheritedQuestion}
+					onAskAll={askAllInherited}
+				/>
+			)}
+			{excludeSaveFailed && <InlineNote variant="error">{t('people.error.save')}</InlineNote>}
+			<OwnJoinQuestions
+				questions={userQuestions}
+				hasInherited={!isTopParent && inheritedQuestions.length > 0}
+				onOpenEditor={() => setShowModal(true)}
+			/>
 			{showModal && (
 				<SettingsModal
 					closeModal={closeModal}
@@ -270,17 +278,7 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 							<div className={styles.spacer}></div>
 							<X className={styles.XBtn} onClick={closeModal} />
 						</div>
-						<h3>{t('Survey setting')}</h3>
-
-						{/* Inherited Demographics Section - Only show for non-top-parent statements */}
-						{!isTopParent && inheritedQuestions.length > 0 && (
-							<InheritedDemographics
-								inheritedQuestions={inheritedQuestions}
-								onToggleQuestion={toggleInheritedQuestion}
-								loading={inheritedLoading}
-								defaultExpanded={false}
-							/>
-						)}
+						<h3>{t('people.joinQuestions')}</h3>
 
 						{/* New Question Form */}
 						<form className={styles.newQuestionForm} onSubmit={handleAddNewQuestion}>

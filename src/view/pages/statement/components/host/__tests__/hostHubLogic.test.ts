@@ -1,0 +1,49 @@
+import {
+	buildHostHubPath,
+	buildPeopleAnchorPath,
+	parsePeopleAnchor,
+	PEOPLE_ANCHORS,
+	countHidden,
+	DEFAULT_HOST_HUB_SECTION,
+	HOST_HUB_SECTIONS,
+	isHostHubSection,
+	parseHostHubSection,
+} from '../hostHubLogic';
+
+describe('hostHubLogic', () => {
+	it('parses ?section= and falls back to Live now', () => {
+		expect(parseHostHubSection(new URLSearchParams('section=people'))).toBe('people');
+		expect(parseHostHubSection(new URLSearchParams('section=nope'))).toBe(DEFAULT_HOST_HUB_SECTION);
+		expect(parseHostHubSection(new URLSearchParams(''))).toBe('live');
+	});
+
+	it('recognises exactly the hub sections', () => {
+		HOST_HUB_SECTIONS.forEach((id) => expect(isHostHubSection(id)).toBe(true));
+		expect(isHostHubSection('members')).toBe(false);
+		expect(isHostHubSection(null)).toBe(false);
+	});
+
+	it('builds a canonical deep link', () => {
+		expect(buildHostHubPath('q1', 'results')).toBe('/statement-screen/q1/settings?section=results');
+	});
+
+	it('parses a People anchor with or without the hash', () => {
+		expect(parsePeopleAnchor('#waiting')).toBe('waiting');
+		expect(parsePeopleAnchor('entry-check')).toBe('entry-check');
+		expect(parsePeopleAnchor('#nope')).toBeNull();
+		expect(parsePeopleAnchor('')).toBeNull();
+		expect(parsePeopleAnchor(undefined)).toBeNull();
+		expect(PEOPLE_ANCHORS).toHaveLength(7);
+	});
+
+	it('builds a deep link into one People subsection', () => {
+		expect(buildPeopleAnchorPath('q1', 'waiting')).toBe(
+			'/statement-screen/q1/settings?section=people#waiting',
+		);
+	});
+
+	it('counts hidden answers', () => {
+		expect(countHidden([{ hide: true }, {}, { hide: false }, { hide: true }])).toBe(2);
+		expect(countHidden([])).toBe(0);
+	});
+});

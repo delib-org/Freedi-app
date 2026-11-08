@@ -5,7 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useWarmGoogleSignIn } from '@/hooks/useWarmGoogleSignIn';
 import { trackUserLogin } from '@/lib/analytics';
+import { isPopupBlockedAuthError } from '@/lib/firebase/authErrors';
+import { safeRedirectPath } from '@/lib/utils/safeRedirect';
 import styles from './login.module.scss';
 
 /**
@@ -15,21 +18,23 @@ export default function LoginPage() {
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isLoading, signIn } = useAuth();
+  const { user, isAuthenticated, isLoading, signIn } = useAuth();
+  useWarmGoogleSignIn(!isAuthenticated);
   const [error, setError] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   // Get redirect URL from query params
-  const redirectUrl = searchParams.get('redirect') || '/admin/surveys';
+  const redirectUrl = safeRedirectPath(searchParams.get('redirect'), '/admin/surveys');
 
   // Redirect if already logged in
   useEffect(() => {
     console.info('[LoginPage] Auth state:', { user: user?.email || null, isLoading, redirectUrl });
-    if (user && !isLoading) {
+    // Every visitor has an anonymous user now; only a real account counts here.
+    if (isAuthenticated && !isLoading) {
       console.info('[LoginPage] User logged in, redirecting to:', redirectUrl);
       router.push(redirectUrl);
     }
-  }, [user, isLoading, router, redirectUrl]);
+  }, [user, isAuthenticated, isLoading, router, redirectUrl]);
 
   const handleSignIn = async () => {
     setError(null);
@@ -37,13 +42,20 @@ export default function LoginPage() {
 
     try {
       const user = await signIn();
-      if (user?.uid) {
-        trackUserLogin(user.uid, 'google');
-      }
+      // Popup closed by the user: stay on the login screen, no message.
+      if (!user) return;
+      trackUserLogin(user.uid, 'google');
       router.push(redirectUrl);
     } catch (err) {
-      console.error('Sign in error:', err);
-      setError(t('loginFailed') || 'Sign in failed. Please try again.');
+      if (isPopupBlockedAuthError(err)) {
+        setError(
+          t('signInPopupBlocked') ||
+            'Your browser blocked the sign-in window. Please allow pop-ups for this site and try again.',
+        );
+      } else {
+        // Already reported with context by AuthProvider.signIn.
+        setError(t('loginFailed') || 'Sign in failed. Please try again.');
+      }
     } finally {
       setIsSigningIn(false);
     }
@@ -61,7 +73,7 @@ export default function LoginPage() {
   }
 
   // Don't show login form if already authenticated
-  if (user) {
+  if (isAuthenticated) {
     return (
       <div className={styles.container}>
         <div className={styles.card}>

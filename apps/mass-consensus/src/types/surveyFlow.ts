@@ -1,3 +1,4 @@
+import { orderPagesAtPosition } from '@freedi/shared-types';
 import type { SurveyDemographicPage, SurveyExplanationPage, Survey } from '@freedi/shared-types';
 
 // ============================================
@@ -65,57 +66,39 @@ export type SurveyFlowItem = QuestionFlowItem | DemographicFlowItem | Explanatio
  * - 1-n: After question at index n-1 (e.g., position 1 = after first question)
  * - -1: After all questions
  *
- * At each position, explanation pages are added first, then demographic pages.
+ * Pages sharing a position follow `orderPagesAtPosition` — the order the admin
+ * dragged them into, or explanations-then-demographics for surveys saved before
+ * that order existed.
  *
  * @param survey - The survey containing questionIds, demographicPages, and explanationPages
  * @returns Array of SurveyFlowItem in the correct order
  */
 export function buildSurveyFlow(survey: Survey): SurveyFlowItem[] {
   const flow: SurveyFlowItem[] = [];
-  const demographicPages = survey.demographicPages || [];
-  const explanationPages = survey.explanationPages || [];
+  const demographicPages: SurveyDemographicPage[] = survey.demographicPages || [];
+  const explanationPages: SurveyExplanationPage[] = survey.explanationPages || [];
   const questionIds = [...new Set(survey.questionIds || [])];
-
-  // Group demographic pages by position
-  const demographicsByPosition = new Map<number, SurveyDemographicPage[]>();
-  for (const page of demographicPages) {
-    const existing = demographicsByPosition.get(page.position) || [];
-    existing.push(page);
-    demographicsByPosition.set(page.position, existing);
-  }
-
-  // Group explanation pages by position
-  const explanationsByPosition = new Map<number, SurveyExplanationPage[]>();
-  for (const page of explanationPages) {
-    const existing = explanationsByPosition.get(page.position) || [];
-    existing.push(page);
-    explanationsByPosition.set(page.position, existing);
-  }
 
   let flowIndex = 0;
 
   // Helper function to add pages at a given position
   const addPagesAtPosition = (position: number) => {
-    // Add explanation pages first
-    const explanationsAtPosition = explanationsByPosition.get(position) || [];
-    for (const page of explanationsAtPosition) {
-      flow.push({
-        type: 'explanation',
-        flowIndex: flowIndex++,
-        id: page.explanationPageId,
-        explanationPage: page,
-      });
-    }
-
-    // Then add demographic pages
-    const demographicsAtPosition = demographicsByPosition.get(position) || [];
-    for (const page of demographicsAtPosition) {
-      flow.push({
-        type: 'demographic',
-        flowIndex: flowIndex++,
-        id: page.demographicPageId,
-        demographicPage: page,
-      });
+    for (const item of orderPagesAtPosition(position, explanationPages, demographicPages)) {
+      if (item.type === 'explanation') {
+        flow.push({
+          type: 'explanation',
+          flowIndex: flowIndex++,
+          id: item.page.explanationPageId,
+          explanationPage: item.page,
+        });
+      } else {
+        flow.push({
+          type: 'demographic',
+          flowIndex: flowIndex++,
+          id: item.page.demographicPageId,
+          demographicPage: item.page,
+        });
+      }
     }
   };
 

@@ -26,7 +26,7 @@ const BanConfirmationModal: FC<Props> = ({ member, statement, onConfirm, onCance
 
 	const getRoleBadge = () => {
 		if (member.role === Role.admin) {
-			return <span className={`${styles.roleBadge} ${styles.admin}`}>{t('Admin')}</span>;
+			return <span className={`${styles.roleBadge} ${styles.admin}`}>{t('people.role.host')}</span>;
 		}
 		if (member.role === Role.creator || statement.creator?.uid === member.userId) {
 			return <span className={`${styles.roleBadge} ${styles.creator}`}>{t('Creator')}</span>;

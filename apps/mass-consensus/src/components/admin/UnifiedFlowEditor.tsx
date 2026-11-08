@@ -9,9 +9,8 @@ import type {
   SurveyExplanationPage,
   SurveySettings,
   QuestionOverrideSettings,
-  RatingMode,
 } from '@freedi/shared-types';
-import { UserDemographicQuestionType, SuggestionMode } from '@freedi/shared-types';
+import { UserDemographicQuestionType } from '@freedi/shared-types';
 import {
   DndContext,
   closestCenter,
@@ -32,18 +31,15 @@ import { CSS } from '@dnd-kit/utilities';
 import DemographicQuestionEditor from './DemographicQuestionEditor';
 import ExplanationEditor from './ExplanationEditor';
 import QuestionTextEditor from './QuestionTextEditor';
+import QuestionOptionsBlock from './QuestionOptionsBlock';
+import QuestionSettingsPanel from './QuestionSettingsPanel';
 import SynthesisStatusBadge, { resolveSynthesisBadgeState } from './SynthesisStatusBadge';
 import styles from './Admin.module.scss';
+import { buildUnifiedFlow, recalculatePositions } from './flowEditorOrder';
+import type { FlowItemData } from './flowEditorOrder';
+import { readLiveSynthFromSettings } from './liveSynthSettings';
 
 const MAIN_APP_URL = process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://app.wizcol.com';
-
-function readLiveSynthFromSettings(settings: unknown): boolean | undefined {
-	if (!settings || typeof settings !== 'object') return undefined;
-	const raw = (settings as Record<string, unknown>)['liveSynthEnabled'];
-	if (raw === true) return true;
-	if (raw === false) return false;
-	return undefined;
-}
 
 interface UnifiedFlowEditorProps {
   questions: Statement[];
@@ -59,104 +55,8 @@ interface UnifiedFlowEditorProps {
   onQuestionSettingsChange: (questionId: string, settings: QuestionOverrideSettings) => void;
   onQuestionTextChange: (questionId: string, newText: string) => void;
   onRemoveQuestion: (questionId: string) => void;
-}
-
-type FlowItemData =
-  | { type: 'question'; id: string; question: Statement }
-  | { type: 'demographic'; id: string; page: SurveyDemographicPage }
-  | { type: 'explanation'; id: string; page: SurveyExplanationPage };
-
-/**
- * Builds a unified flow from questions, demographic pages, and explanation pages
- * based on their positions
- */
-function buildUnifiedFlow(
-  questions: Statement[],
-  demographicPages: SurveyDemographicPage[],
-  explanationPages: SurveyExplanationPage[]
-): FlowItemData[] {
-  const flow: FlowItemData[] = [];
-
-  // Group pages by position
-  const demosByPosition = new Map<number, SurveyDemographicPage[]>();
-  demographicPages.forEach((page) => {
-    const existing = demosByPosition.get(page.position) || [];
-    existing.push(page);
-    demosByPosition.set(page.position, existing);
-  });
-
-  const explanationsByPosition = new Map<number, SurveyExplanationPage[]>();
-  explanationPages.forEach((page) => {
-    const existing = explanationsByPosition.get(page.position) || [];
-    existing.push(page);
-    explanationsByPosition.set(page.position, existing);
-  });
-
-  // Helper to add pages at a position
-  const addPagesAtPosition = (position: number) => {
-    // Explanation pages first
-    (explanationsByPosition.get(position) || []).forEach((page) => {
-      flow.push({ type: 'explanation', id: page.explanationPageId, page });
-    });
-    // Then demographic pages
-    (demosByPosition.get(position) || []).forEach((page) => {
-      flow.push({ type: 'demographic', id: page.demographicPageId, page });
-    });
-  };
-
-  // Position 0: before all questions
-  addPagesAtPosition(0);
-
-  // Interleave questions and pages
-  questions.forEach((question, index) => {
-    flow.push({ type: 'question', id: question.statementId, question });
-    addPagesAtPosition(index + 1);
-  });
-
-  // Position -1: after all questions
-  addPagesAtPosition(-1);
-
-  return flow;
-}
-
-/**
- * Recalculates positions for pages based on new flow order
- */
-function recalculatePositions(
-  flow: FlowItemData[],
-  _questions: Statement[]
-): {
-  demographicPages: SurveyDemographicPage[];
-  explanationPages: SurveyExplanationPage[];
-  questionOrder: Statement[];
-} {
-  const questionOrder: Statement[] = [];
-  const demographicPages: SurveyDemographicPage[] = [];
-  const explanationPages: SurveyExplanationPage[] = [];
-
-  let lastQuestionIndex = -1;
-  const totalQuestions = flow.filter((item) => item.type === 'question').length;
-
-  flow.forEach((item) => {
-    if (item.type === 'question') {
-      questionOrder.push(item.question);
-      lastQuestionIndex++;
-    } else if (item.type === 'demographic') {
-      const newPosition =
-        lastQuestionIndex === totalQuestions - 1 && questionOrder.length === totalQuestions
-          ? -1 // After all questions
-          : lastQuestionIndex + 1; // After the last question we've seen
-      demographicPages.push({ ...item.page, position: newPosition });
-    } else if (item.type === 'explanation') {
-      const newPosition =
-        lastQuestionIndex === totalQuestions - 1 && questionOrder.length === totalQuestions
-          ? -1
-          : lastQuestionIndex + 1;
-      explanationPages.push({ ...item.page, position: newPosition });
-    }
-  });
-
-  return { questionOrder, demographicPages, explanationPages };
+  /** Lets survey editors manage the cards of questions they did not create. */
+  surveyId?: string;
 }
 
 interface SortableFlowItemProps {
@@ -165,6 +65,13 @@ interface SortableFlowItemProps {
   onToggleExpand: () => void;
   onRemove: () => void;
   // For questions
+  surveyId?: string;
+  /** Header shortcut to the question's cards and their pictures. */
+  onOpenPictures?: () => void;
+  /** Bumped each time the shortcut is used, so the panel opens and scrolls into view. */
+  cardsFocusRequest?: number;
+  /** The question's page in the live survey, for the preview's link. */
+  liveUrl?: string;
   surveySettings?: SurveySettings;
   questionSetting?: QuestionOverrideSettings;
   onQuestionSettingsChange?: (settings: QuestionOverrideSettings) => void;
@@ -184,6 +91,10 @@ function SortableFlowItem({
   expanded,
   onToggleExpand,
   onRemove,
+  surveyId,
+  onOpenPictures,
+  cardsFocusRequest,
+  liveUrl,
   surveySettings,
   questionSetting,
   onQuestionSettingsChange,
@@ -257,6 +168,16 @@ function SortableFlowItem({
             })}
           />
         )}
+        {item.type === 'question' && onOpenPictures && (
+          <button
+            type="button"
+            className={styles.flowPicturesButton}
+            onClick={onOpenPictures}
+            aria-label={t('Add pictures to the cards of this question')}
+          >
+            <span aria-hidden="true">🖼️</span> {t('Pictures')}
+          </button>
+        )}
         <button
           type="button"
           className={styles.flowExpandButton}
@@ -295,8 +216,18 @@ function SortableFlowItem({
                   onChange={onQuestionTextChange}
                 />
               )}
+              <QuestionOptionsBlock
+                questionId={item.question.statementId}
+                surveyId={surveyId}
+                questionSetting={questionSetting}
+                surveySettings={surveySettings}
+                onSettingsChange={onQuestionSettingsChange}
+                liveUrl={liveUrl}
+                focusRequest={cardsFocusRequest}
+              />
               <QuestionSettingsPanel
                 questionSetting={questionSetting}
+                storedSettings={item.question.statementSettings}
                 surveySettings={surveySettings}
                 onChange={onQuestionSettingsChange}
               />
@@ -319,274 +250,13 @@ function SortableFlowItem({
           {item.type === 'explanation' && onExplanationUpdate && (
             <ExplanationEditor
               page={item.page}
+              surveyId={surveyId}
               onUpdate={onExplanationUpdate}
               onRemove={onRemove}
             />
           )}
         </div>
       )}
-    </div>
-  );
-}
-
-interface QuestionSettingsPanelProps {
-  questionSetting?: QuestionOverrideSettings;
-  surveySettings: SurveySettings;
-  onChange: (settings: QuestionOverrideSettings) => void;
-}
-
-function QuestionSettingsPanel({
-  questionSetting,
-  surveySettings,
-  onChange,
-}: QuestionSettingsPanelProps) {
-  const { t } = useTranslation();
-
-  const handleToggle = (key: keyof QuestionOverrideSettings, value: boolean) => {
-    onChange({ ...questionSetting, [key]: value });
-  };
-
-  const handleNumber = (key: keyof QuestionOverrideSettings, value: number | undefined) => {
-    onChange({ ...questionSetting, [key]: value });
-  };
-
-  const handleSuggestionMode = (value: string) => {
-    if (value === 'default') {
-      // Remove the override by creating new object without suggestionMode
-      const newSetting = { ...questionSetting };
-      delete newSetting.suggestionMode;
-      onChange(newSetting);
-    } else {
-      onChange({ ...questionSetting, suggestionMode: value as SuggestionMode });
-    }
-  };
-
-  const handleRatingMode = (value: string) => {
-    if (value === 'default') {
-      // 'default' = no override → falls back to agree-disagree everywhere
-      const newSetting = { ...questionSetting };
-      delete newSetting.ratingMode;
-      onChange(newSetting);
-    } else {
-      onChange({ ...questionSetting, ratingMode: value as RatingMode });
-    }
-  };
-
-  // Get the survey default label for the dropdown
-  const getSurveyDefaultLabel = () => {
-    const defaultMode = surveySettings.suggestionMode || SuggestionMode.encourage;
-    const labels: Record<string, string> = {
-      [SuggestionMode.encourage]: t('suggestionModeEncourage') || 'Encourage New Ideas',
-      [SuggestionMode.balanced]: t('suggestionModeBalanced') || 'Balanced',
-      [SuggestionMode.restrict]: t('suggestionModeRestrict') || 'Encourage Merging',
-    };
-    return labels[defaultMode] || defaultMode;
-  };
-
-  return (
-    <div className={styles.questionSettingsPanel}>
-      <div className={styles.settingRow}>
-        <div className={styles.testModeToggle}>
-          <label className={styles.toggleSwitch}>
-            <input
-              type="checkbox"
-              checked={
-                surveySettings.allowParticipantsToAddSuggestions
-                  ? true
-                  : questionSetting?.allowParticipantsToAddSuggestions ?? true
-              }
-              disabled={surveySettings.allowParticipantsToAddSuggestions}
-              onChange={(e) => handleToggle('allowParticipantsToAddSuggestions', e.target.checked)}
-            />
-            <span className={styles.toggleSlider}></span>
-          </label>
-          <span className={styles.toggleLabel}>{t('allowParticipantsToAddSuggestionsQuestion') || 'Allow participants to add suggestions'}</span>
-        </div>
-        {surveySettings.allowParticipantsToAddSuggestions && (
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
-            {t('surveySettingEnabled') || '(Survey setting enabled)'}
-          </span>
-        )}
-      </div>
-
-      <div className={styles.settingRow}>
-        <div className={styles.testModeToggle}>
-          <label className={styles.toggleSwitch}>
-            <input
-              type="checkbox"
-              checked={questionSetting?.askUserForASolutionBeforeEvaluation ?? true}
-              onChange={(e) => handleToggle('askUserForASolutionBeforeEvaluation', e.target.checked)}
-            />
-            <span className={styles.toggleSlider}></span>
-          </label>
-          <span className={styles.toggleLabel}>{t('askForSuggestionBeforeEvaluation') || 'Ask for suggestion before showing options'}</span>
-        </div>
-      </div>
-
-      {/* Suggestion Mode override */}
-      <div className={styles.settingRow}>
-        <label className={styles.settingLabel}>
-          <span>{t('suggestionModeOverride') || 'Suggestion Mode'}</span>
-        </label>
-        <select
-          className={styles.selectInput}
-          value={questionSetting?.suggestionMode || 'default'}
-          onChange={(e) => handleSuggestionMode(e.target.value)}
-          style={{ marginTop: '0.25rem' }}
-        >
-          <option value="default">
-            {t('useSurveyDefault') || 'Use Survey Default'} ({getSurveyDefaultLabel()})
-          </option>
-          <option value={SuggestionMode.encourage}>
-            {t('suggestionModeEncourage') || 'Encourage New Ideas'}
-          </option>
-          <option value={SuggestionMode.balanced}>
-            {t('suggestionModeBalanced') || 'Balanced'}
-          </option>
-          <option value={SuggestionMode.restrict}>
-            {t('suggestionModeRestrict') || 'Encourage Merging'}
-          </option>
-        </select>
-        <span className={styles.settingHint}>
-          {t('suggestionModeHint') || 'Controls how easy it is to add new vs. merge with existing'}
-        </span>
-      </div>
-
-      <div className={styles.settingRow}>
-        <div className={styles.testModeToggle}>
-          <label className={styles.toggleSwitch}>
-            <input
-              type="checkbox"
-              checked={questionSetting?.allowSkipping ?? false}
-              disabled={surveySettings.allowSkipping}
-              onChange={(e) => handleToggle('allowSkipping', e.target.checked)}
-            />
-            <span className={styles.toggleSlider}></span>
-          </label>
-          <span className={styles.toggleLabel}>{t('allowSkippingThisQuestion') || 'Allow skipping this question'}</span>
-        </div>
-      </div>
-
-      <div className={styles.settingRow}>
-        <label className={styles.settingLabel}>
-          <span>{t('minEvaluationsThisQuestion') || 'Minimum evaluations for this question'}</span>
-          <input
-            type="number"
-            className={styles.numberInput}
-            value={questionSetting?.minEvaluationsPerQuestion ?? ''}
-            placeholder={String(surveySettings.minEvaluationsPerQuestion)}
-            min={0}
-            max={100}
-            onChange={(e) => {
-              const val = e.target.value;
-              handleNumber('minEvaluationsPerQuestion', val ? parseInt(val, 10) : undefined);
-            }}
-          />
-        </label>
-      </div>
-
-      <div className={styles.settingRow}>
-        <label className={styles.settingLabel}>
-          <span>{t('minWordsThisQuestion') || 'Minimum words per response'}</span>
-          <input
-            type="number"
-            className={styles.numberInput}
-            value={questionSetting?.minResponseWords ?? ''}
-            placeholder="0"
-            min={0}
-            max={100}
-            onChange={(e) => {
-              const val = e.target.value;
-              handleNumber('minResponseWords', val ? parseInt(val, 10) : undefined);
-            }}
-          />
-        </label>
-        <span className={styles.settingHint}>
-          {t('minWordsHint') || 'Require each response to have at least this many words. 0 = no minimum.'}
-        </span>
-      </div>
-
-      <div className={styles.settingRow}>
-        <label className={styles.settingLabel}>
-          <span>{t('ratingModeThisQuestion') || 'How participants rate options'}</span>
-          <select
-            className={styles.selectInput}
-            value={questionSetting?.ratingMode || 'default'}
-            onChange={(e) => handleRatingMode(e.target.value)}
-          >
-            <option value="default">
-              {t('ratingModeAgreeDisagree') || 'Agree – Disagree (default)'}
-            </option>
-            <option value="reactions">
-              {t('ratingModeReactions') || 'Emoji reactions 😐🙂😊👍❤️'}
-            </option>
-          </select>
-        </label>
-        <span className={styles.settingHint}>
-          {t('ratingModeHint') || 'Reactions use a positive-only scale (no disagree). Applies across all apps.'}
-        </span>
-      </div>
-
-      <div className={styles.settingRow}>
-        <div className={styles.testModeToggle}>
-          <label className={styles.toggleSwitch}>
-            <input
-              type="checkbox"
-              checked={questionSetting?.showViewProgress ?? true}
-              onChange={(e) => handleToggle('showViewProgress', e.target.checked)}
-            />
-            <span className={styles.toggleSlider}></span>
-          </label>
-          <span className={styles.toggleLabel}>{t('showViewProgress') || 'Show view progress / status button'}</span>
-        </div>
-      </div>
-
-      <div className={styles.settingRow}>
-        <div className={styles.testModeToggle}>
-          <label className={styles.toggleSwitch}>
-            <input
-              type="checkbox"
-              checked={questionSetting?.askUserForASolutionAfterEvaluation ?? false}
-              onChange={(e) => handleToggle('askUserForASolutionAfterEvaluation', e.target.checked)}
-            />
-            <span className={styles.toggleSlider}></span>
-          </label>
-          <span className={styles.toggleLabel}>{t('askForSuggestionAfterEvaluation') || 'Ask user to add an answer after completing evaluations'}</span>
-        </div>
-      </div>
-
-      {/* Live synthesis per-question override.
-          When the survey-level toggle is off, this checkbox is disabled and
-          forced to OFF — the survey kill switch wins. */}
-      <div className={styles.settingRow}>
-        <div className={styles.testModeToggle}>
-          <label className={styles.toggleSwitch}>
-            <input
-              type="checkbox"
-              checked={(() => {
-                const surveyOn = readLiveSynthFromSettings(surveySettings) ?? true;
-                if (!surveyOn) return false;
-                const override = readLiveSynthFromSettings(questionSetting);
-                return override ?? true;
-              })()}
-              disabled={readLiveSynthFromSettings(surveySettings) === false}
-              onChange={(e) => {
-                onChange({
-                  ...(questionSetting || {}),
-                  liveSynthEnabled: e.target.checked,
-                } as QuestionOverrideSettings);
-              }}
-            />
-            <span className={styles.toggleSlider}></span>
-          </label>
-          <span className={styles.toggleLabel}>{t('liveSynthEnabledForQuestion') || 'Auto-synthesis enabled for this question'}</span>
-        </div>
-        {readLiveSynthFromSettings(surveySettings) === false && (
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
-            {t('synthesisDisabledTooltip') || 'Enable synthesis at the survey level to use this'}
-          </span>
-        )}
-      </div>
     </div>
   );
 }
@@ -689,9 +359,11 @@ export default function UnifiedFlowEditor({
   onQuestionSettingsChange,
   onQuestionTextChange,
   onRemoveQuestion,
+  surveyId,
 }: UnifiedFlowEditorProps) {
   const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [cardsFocus, setCardsFocus] = useState<{ id: string; request: number } | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -854,13 +526,25 @@ export default function UnifiedFlowEditor({
       >
         <SortableContext items={flow.map((item) => item.id)} strategy={verticalListSortingStrategy}>
           <div className={styles.flowItemsList}>
-            {flow.map((item) => (
+            {flow.map((item, flowIndex) => (
               <SortableFlowItem
                 key={item.id}
                 item={item}
                 expanded={expandedId === item.id}
                 onToggleExpand={() => setExpandedId(expandedId === item.id ? null : item.id)}
                 onRemove={() => handleRemoveItem(item)}
+                surveyId={surveyId}
+                // The live survey addresses pages by their index in this same flow
+                liveUrl={surveyId && item.type === 'question' ? `/s/${surveyId}/q/${flowIndex}` : undefined}
+                onOpenPictures={
+                  item.type === 'question'
+                    ? () => {
+                        setExpandedId(item.id);
+                        setCardsFocus((prev) => ({ id: item.id, request: (prev?.request ?? 0) + 1 }));
+                      }
+                    : undefined
+                }
+                cardsFocusRequest={cardsFocus?.id === item.id ? cardsFocus.request : undefined}
                 surveySettings={surveySettings}
                 questionSetting={item.type === 'question' ? questionSettings[item.id] : undefined}
                 onQuestionSettingsChange={

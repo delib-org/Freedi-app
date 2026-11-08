@@ -12,7 +12,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
 .landing {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  background: linear-gradient(135deg, var(--mc-surface-muted, #f5f7fa) 0%, var(--mc-surface-muted, #e8ecf1) 100%);
   overflow-x: hidden;
 }
 
@@ -79,7 +79,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 .heroTitle {
   font-size: 2.25rem;
   font-weight: 700;
-  color: var(--text-title, #191e29);
+  color: var(--text-title, var(--mc-text-strong, #191e29));
   margin: 0 0 1rem 0;
   line-height: 1.2;
 
@@ -90,7 +90,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
 .heroSubtitle {
   font-size: 1.1rem;
-  color: var(--text-body, #3d4d71);
+  color: var(--text-body, var(--mc-text-strong, #3d4d71));
   margin: 0 0 2rem 0;
   line-height: 1.6;
 
@@ -142,7 +142,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 .secondaryLink {
   font-size: 1rem;
   font-weight: 500;
-  color: var(--btn-primary, #5f88e5);
+  color: var(--btn-primary, var(--mc-brand-text, #5f88e5));
   text-decoration: none;
   padding: 0.5rem 1rem;
   border-radius: 8px;
@@ -159,7 +159,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
 .problem {
   padding: 4rem 1.5rem;
-  background: white;
+  background: var(--mc-surface, white);
 
   @media (min-width: 768px) {
     padding: 6rem 2rem;
@@ -169,7 +169,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 .sectionTitle {
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--text-title, #191e29);
+  color: var(--text-title, var(--mc-text-strong, #191e29));
   text-align: center;
   margin: 0 0 2.5rem 0;
 
@@ -193,7 +193,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .problemCard {
-  background: #fff;
+  background: var(--mc-surface, #fff);
   border-radius: 16px;
   padding: 1.5rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
@@ -209,13 +209,13 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   h3 {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--text-title, #191e29);
+    color: var(--text-title, var(--mc-text-strong, #191e29));
     margin: 1rem 0 0.5rem;
   }
 
   p {
     font-size: 0.95rem;
-    color: var(--text-body, #3d4d71);
+    color: var(--text-body, var(--mc-text-strong, #3d4d71));
     margin: 0;
     line-height: 1.5;
   }
@@ -227,7 +227,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
 .problemSummary {
   font-size: 1.1rem;
-  color: var(--text-body, #3d4d71);
+  color: var(--text-body, var(--mc-text-strong, #3d4d71));
   text-align: center;
   max-width: 600px;
   margin: 0 auto;
@@ -240,7 +240,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
 .howItWorks {
   padding: 4rem 1.5rem;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  background: linear-gradient(135deg, var(--mc-surface-muted, #f5f7fa) 0%, var(--mc-surface-muted, #e8ecf1) 100%);
 
   @media (min-width: 768px) {
     padding: 6rem 2rem;
@@ -264,7 +264,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 20px;
   padding: 2rem 1.5rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
@@ -311,7 +311,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   h3 {
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--text-title, #191e29);
+    color: var(--text-title, var(--mc-text-strong, #191e29));
     margin: 0 0 0.5rem;
 
     @media (min-width: 768px) {
@@ -321,7 +321,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
   p {
     font-size: 1rem;
-    color: var(--text-body, #3d4d71);
+    color: var(--text-body, var(--mc-text-strong, #3d4d71));
     margin: 0;
     line-height: 1.6;
   }
@@ -343,7 +343,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  background: #f5f7fa;
+  background: var(--mc-surface-muted, #f5f7fa);
   border-radius: 30px;
 }
 
@@ -381,7 +381,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   transform: translate(-50%, -50%);
   width: 16px;
   height: 16px;
-  background: white;
+  background: var(--mc-surface, white);
   border: 3px solid var(--agree, #57c6b2);
   border-radius: 50%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -401,7 +401,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .submitIcon {
-  color: var(--btn-primary, #5f88e5);
+  color: var(--btn-primary, var(--mc-brand-text, #5f88e5));
   animation: iconBounce 2s ease-in-out infinite;
 }
 
@@ -456,7 +456,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
 .benefits {
   padding: 4rem 1.5rem;
-  background: white;
+  background: var(--mc-surface, white);
 
   @media (min-width: 768px) {
     padding: 6rem 2rem;
@@ -480,7 +480,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .benefitCard {
-  background: #fff;
+  background: var(--mc-surface, #fff);
   border-radius: 16px;
   padding: 2rem 1.5rem;
   text-align: center;
@@ -495,20 +495,20 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   h3 {
     font-size: 1.15rem;
     font-weight: 600;
-    color: var(--text-title, #191e29);
+    color: var(--text-title, var(--mc-text-strong, #191e29));
     margin: 1rem 0 0.5rem;
   }
 
   p {
     font-size: 0.95rem;
-    color: var(--text-body, #3d4d71);
+    color: var(--text-body, var(--mc-text-strong, #3d4d71));
     margin: 0;
     line-height: 1.5;
   }
 }
 
 .benefitIcon {
-  color: var(--btn-primary, #5f88e5);
+  color: var(--btn-primary, var(--mc-brand-text, #5f88e5));
 }
 
 // ============================================
@@ -569,7 +569,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
 .finalCta {
   padding: 4rem 1.5rem;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  background: linear-gradient(135deg, var(--mc-surface-muted, #f5f7fa) 0%, var(--mc-surface-muted, #e8ecf1) 100%);
   text-align: center;
 
   @media (min-width: 768px) {
@@ -579,7 +579,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   h2 {
     font-size: 1.75rem;
     font-weight: 700;
-    color: var(--text-title, #191e29);
+    color: var(--text-title, var(--mc-text-strong, #191e29));
     margin: 0 0 0.75rem;
 
     @media (min-width: 768px) {
@@ -590,7 +590,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
 .ctaSubtitle {
   font-size: 1.1rem;
-  color: var(--text-body, #3d4d71);
+  color: var(--text-body, var(--mc-text-strong, #3d4d71));
   margin: 0 0 2rem;
 }
 
@@ -602,9 +602,9 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   padding: 1rem 2rem;
   font-size: 1rem;
   font-weight: 500;
-  color: var(--text-title, #191e29);
-  background: white;
-  border: 2px solid #e2e8f0;
+  color: var(--text-title, var(--mc-text-strong, #191e29));
+  background: var(--mc-surface, white);
+  border: 2px solid var(--mc-border, #e2e8f0);
   border-radius: 50px;
   cursor: pointer;
   transition: all 0.2s $animation-easing;
@@ -629,7 +629,7 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
 .terms {
   font-size: 0.85rem;
-  color: var(--text-muted, #718096);
+  color: var(--text-muted, var(--mc-text-muted, #718096));
   margin: 1.5rem 0 0;
 }
 
@@ -639,8 +639,8 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
 .footer {
   padding: 2rem 1.5rem;
-  background: white;
-  border-top: 1px solid #e2e8f0;
+  background: var(--mc-surface, white);
+  border-top: 1px solid var(--mc-border, #e2e8f0);
 }
 
 .footerContent {
@@ -652,19 +652,19 @@ $animation-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 .footerLogo {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--btn-primary, #5f88e5);
+  color: var(--btn-primary, var(--mc-brand-text, #5f88e5));
   margin-bottom: 0.5rem;
 }
 
 .footerPowered {
   font-size: 0.9rem;
-  color: var(--text-body, #3d4d71);
+  color: var(--text-body, var(--mc-text-strong, #3d4d71));
   margin: 0 0 0.25rem;
 }
 
 .footerInstitute {
   font-size: 0.85rem;
-  color: var(--text-muted, #718096);
+  color: var(--text-muted, var(--mc-text-muted, #718096));
   margin: 0;
 }
 

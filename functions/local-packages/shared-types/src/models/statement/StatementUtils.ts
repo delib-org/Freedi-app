@@ -35,11 +35,8 @@ export function createBasicStatement({
 			consensus: 0,
 			voted: 0,
 			statementId: getRandomUID(),
-			topParentId:
-				parentStatement.topParentId || parentStatement.statementId,
-			parents: parentStatement.parents
-				? [...parentStatement.parents]
-				: [],
+			topParentId: parentStatement.topParentId || parentStatement.statementId,
+			parents: parentStatement.parents ? [...parentStatement.parents] : [],
 			lastUpdate: new Date().getTime(),
 			createdAt: new Date().getTime(),
 		};

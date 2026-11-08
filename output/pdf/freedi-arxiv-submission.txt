@@ -1,0 +1,15 @@
+Title: Geometry Proposes, Judgement Disposes: Systems and Algorithmic Engineering for Online Aggregation in Deliberative AI
+
+Authors (in order): Tal Yaron; Fany Yuval
+
+Affiliations: Tal Yaron — Freedi; Fany Yuval — Ben-Gurion University of the Negev
+
+Abstract:
+Online deliberation platforms must decide whether each incoming free-form statement repeats an existing proposal, relates to it, or should remain independent. We describe Freedi's streaming aggregation architecture, which separates embedding-based candidate retrieval from discrete language-model adjudication. Only an affirmative equivalence decision authorizes synthesis; ambiguous or failed decisions preserve separate proposals. An optional Claim Registry classifies statements against an evolving codebook anchored by verbatim exemplars. On 875 hard counterfactual triplets, focused raw-anchor classification achieves 95.0%–96.5% attach-and-reject accuracy. On a controlled 100-statement English corpus, the evaluated build recovers all 50 ground-truth paraphrase pairs in each of three arrival orders, while topical grouping remains order-sensitive. These results do not establish general order independence: an automated audit of a separate replay of 114 authentic Hebrew statements measures member-level merge precision of 74.4% and text fidelity of 0.953 after targeted repairs. Bare-LLM baselines also recover the controlled corpus exactly, so the architectural motivation concerns streaming state management, retrieval cost, and failure handling rather than universal per-decision superiority. We analyze the limits of geometric gates, canonicalization, and repeated maintenance, and propose combining learned preference geometry with discrete adjudication as future work.
+
+Suggested primary category: cs.AI (subject to author choice and moderation).
+Compiler: pdfLaTeX. Main source: main.tex. Upload: freedi-arxiv-source.zip.
+License: not selected; choose the intended license at submission.
+Journal reference, DOI, arXiv identifier: none assigned in this preparation.
+Not submitted. Inspect the arXiv-generated PDF before completing submission.
+Official guidance: https://info.arxiv.org/help/submit_tex.html

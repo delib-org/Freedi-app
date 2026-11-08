@@ -6,6 +6,10 @@ import {
   array,
   optional,
   enum_,
+  pipe,
+  minValue,
+  maxValue,
+  integer,
   record,
   InferOutput,
 } from 'valibot';
@@ -99,6 +103,29 @@ export const SurveySettingsSchema = object({
   suggestionMode: optional(SuggestionModeSchema),
   /** Display mode: swipe for tinder-style, classic for multi-card */
   displayMode: optional(DisplayModeSchema),
+  /**
+   * When the AI detects that one submission holds several distinct answers,
+   * split and submit them automatically instead of asking the participant.
+   */
+  autoSplitMultiSuggestions: optional(boolean()),
+  /**
+   * When the AI finds an existing suggestion that says the same thing in other
+   * words, merge the new text into it automatically (no "merge or add new?"
+   * screen) and record a +1 evaluation of the merged suggestion for the author.
+   */
+  autoMergeSimilar: optional(boolean()),
+  /**
+   * How strongly the evaluation cards are tinted, 0 (white) to 1 (full colour,
+   * the default). Only the card background fades — text, emoji and buttons keep
+   * their colour.
+   */
+  cardColorIntensity: optional(pipe(number(), minValue(0), maxValue(1))),
+  /**
+   * How many people the survey concerns (N), including those it may not reach.
+   * Absent means unknown; never 0 or null. Cascaded onto each question's
+   * `evaluationSettings.targetPopulation`, which is what scoring reads.
+   */
+  targetPopulation: optional(pipe(number(), integer(), minValue(1))),
 });
 
 export type SurveySettings = InferOutput<typeof SurveySettingsSchema>;
@@ -127,6 +154,26 @@ export const QuestionOverrideSettingsSchema = object({
   minResponseWords: optional(number()),
   /** How participants evaluate options for THIS question (agree-disagree | reactions). Cascaded onto the question Statement's statementSettings.ratingMode. */
   ratingMode: optional(RatingModeSchema),
+  /** Steps on the agree-disagree scale for THIS question (3 = -1 · 0 · +1; 5 / undefined = the classic five). Cascaded onto statementSettings.ratingSteps. */
+  ratingSteps: optional(number()),
+  /** Override the survey's auto-split behaviour for THIS question */
+  autoSplitMultiSuggestions: optional(boolean()),
+  /** Override the survey's auto-merge behaviour for THIS question */
+  autoMergeSimilar: optional(boolean()),
+  /**
+   * The admin writes THIS question's options (with pictures) in the survey editor.
+   * Editor intent only: it opens the options editor and the preview; it changes nothing
+   * for participants. Together with blockParticipantOptions it is "Admin options only".
+   */
+  adminProvidesOptions: optional(boolean()),
+  /**
+   * Participants cannot add their own options to THIS question. Beats the survey-level
+   * allowParticipantsToAddSuggestions and switches off every "add your answer" prompt.
+   * Enforced by the MC API (submit / merge / prepare return 403 ADD_DISABLED).
+   */
+  blockParticipantOptions: optional(boolean()),
+  /** Show THIS question as swipe cards or as the classic card list, instead of the survey's display mode */
+  displayMode: optional(DisplayModeSchema),
 });
 
 export type QuestionOverrideSettings = InferOutput<typeof QuestionOverrideSettingsSchema>;
@@ -177,6 +224,11 @@ export const SurveyDemographicPageSchema = object({
   description: optional(string()),
   /** Position in the survey flow: 0 = before questions, 1-n = after question n, -1 = after all */
   position: number(),
+  /**
+   * Order among the pages that share a position, lower first. Optional because
+   * older surveys have none; see `orderPagesAtPosition` for how they sort.
+   */
+  order: optional(number()),
   /** Whether this page is required or can be skipped */
   required: boolean(),
   /** Array of custom demographic question IDs specific to this survey */
@@ -201,11 +253,59 @@ export const SurveyExplanationPageSchema = object({
   content: string(),
   /** Position in the survey flow: 0 = before questions, 1-n = after question n, -1 = after all */
   position: number(),
+  /** Order among the pages that share a position, lower first. See `orderPagesAtPosition`. */
+  order: optional(number()),
   /** Optional hero/header image URL */
   heroImageUrl: optional(string()),
 });
 
 export type SurveyExplanationPage = InferOutput<typeof SurveyExplanationPageSchema>;
+
+/** A demographic or explanation page tagged with which kind it is. */
+export type SurveyFlowPage =
+  | { type: 'explanation'; page: SurveyExplanationPage }
+  | { type: 'demographic'; page: SurveyDemographicPage };
+
+/**
+ * The pages that sit at one position in the survey flow, in display order.
+ *
+ * Pages carrying an `order` sort by it. Pages without one — every survey saved
+ * before the field existed — keep the rule those surveys were built under:
+ * explanations first, then demographics, each in array order. A page with an
+ * `order` sorts before any page without, so a survey that has been reordered
+ * once is fully determined by `order` and a legacy survey looks as it always did.
+ *
+ * Both the admin flow editor and the participant runtime go through this, so
+ * what the admin sees is what the participant gets.
+ */
+export function orderPagesAtPosition(
+  position: number,
+  explanationPages: SurveyExplanationPage[],
+  demographicPages: SurveyDemographicPage[]
+): SurveyFlowPage[] {
+  const atPosition: SurveyFlowPage[] = [
+    ...explanationPages
+      .filter((page) => page.position === position)
+      .map((page): SurveyFlowPage => ({ type: 'explanation', page })),
+    ...demographicPages
+      .filter((page) => page.position === position)
+      .map((page): SurveyFlowPage => ({ type: 'demographic', page })),
+  ];
+
+  const rank = (item: SurveyFlowPage): number | undefined =>
+    typeof item.page.order === 'number' ? item.page.order : undefined;
+
+  // Array.prototype.sort is stable, so ties keep the legacy explanation-first order.
+  return atPosition.sort((a, b) => {
+    const ra = rank(a);
+    const rb = rank(b);
+    if (ra === undefined && rb === undefined) return 0;
+    if (ra === undefined) return 1;
+    if (rb === undefined) return -1;
+
+    return ra - rb;
+  });
+}
 
 // ============================================
 // Survey Demographic Answer Schema
@@ -243,6 +343,8 @@ export const SurveySchema = object({
   settings: SurveySettingsSchema,
   /** Per-question settings overrides (keyed by questionId) */
   questionSettings: optional(record(string(), QuestionOverrideSettingsSchema)),
+  /** Questions the admin removed from this survey (newest first) so they can be re-added from the picker */
+  removedQuestionIds: optional(array(string())),
   /** Survey lifecycle status */
   status: SurveyStatusSchema,
   /** Total responses started */
@@ -281,6 +383,12 @@ export const SurveySchema = object({
   showAllSolutionsLink: optional(boolean()),
   /** Custom label for the all-solutions link (replaces default i18n 'seeAllSolutions') */
   allSolutionsLinkLabel: optional(string()),
+  /**
+   * The admin's own message on the completion screen. Same shape as an
+   * explanation page so the same editor and renderer serve both; its
+   * `position` and `order` are unused. Absent = the default completion screen.
+   */
+  completionMessage: optional(SurveyExplanationPageSchema),
   createdAt: number(),
   lastUpdate: number(),
 });
@@ -346,4 +454,10 @@ export const DEFAULT_QUESTION_OVERRIDE_SETTINGS: QuestionOverrideSettings = {
   askUserForASolutionAfterEvaluation: undefined,
   minResponseWords: undefined,
   ratingMode: undefined,
+  ratingSteps: undefined,
+  autoSplitMultiSuggestions: undefined,
+  autoMergeSimilar: undefined,
+  adminProvidesOptions: undefined,
+  blockParticipantOptions: undefined,
+  displayMode: undefined,
 };

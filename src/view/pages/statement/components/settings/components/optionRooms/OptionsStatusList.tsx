@@ -1,21 +1,17 @@
 import { FC } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { AlertTriangle, Check, Users, CheckCircle } from 'lucide-react';
-import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { OptionWithMembers } from '@/controllers/db/joining/splitJoinedOption';
+import { fillPlaceholders } from '@/helpers/fillPlaceholders';
+import { translateCount } from '@/helpers/translateCount';
 import styles from './OptionRooms.module.scss';
 
 interface OptionsStatusListProps {
 	options: OptionWithMembers[];
-	onAssignAllRooms: () => void;
-	isAssigning?: boolean;
 }
 
-const OptionsStatusList: FC<OptionsStatusListProps> = ({
-	options,
-	onAssignAllRooms,
-	isAssigning = false,
-}) => {
+/** How many people joined each answer and whether it is ready to split. */
+const OptionsStatusList: FC<OptionsStatusListProps> = ({ options }) => {
 	const { t } = useTranslation();
 
 	if (options.length === 0) {
@@ -54,7 +50,7 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({
 	) => {
 		switch (status) {
 			case 'assigned':
-				return t('Rooms assigned');
+				return t('people.rooms.assigned');
 			case 'ok':
 				return t('Ready to assign');
 			case 'warning':
@@ -64,15 +60,16 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({
 		}
 	};
 
-	// Check if any rooms are already assigned
-	const hasExistingRooms = options.some((opt) => opt.hasActiveRooms);
 	const totalParticipants = options.reduce((sum, opt) => sum + opt.joinedCount, 0);
 
 	return (
 		<div className={styles.optionRooms__subsection}>
-			<h3 className={styles.optionRooms__subsectionTitle}>{t('Options with Participants')}</h3>
+			<h3 className={styles.optionRooms__subsectionTitle}>{t('people.rooms.answersJoined')}</h3>
 			<p className={styles.optionRooms__subsectionDescription}>
-				{options.length} {t('options')} {t('with')} {totalParticipants} {t('participants')}
+				{fillPlaceholders(t('people.rooms.answersSummary'), {
+					answers: translateCount(t, 'people.rooms.answerCount', options.length),
+					people: translateCount(t, 'people.personCount', totalParticipants),
+				})}
 			</p>
 
 			<div className={styles.optionRooms__statusList}>
@@ -91,7 +88,7 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({
 								</div>
 								<div className={styles.optionRooms__statusDetails}>
 									<span className={styles.optionRooms__memberCount}>
-										{option.joinedCount} {t('members')}
+										{translateCount(t, 'people.personCount', option.joinedCount)}
 									</span>
 									<span className={styles.optionRooms__statusBadge}>
 										{getStatusText(option, status)}
@@ -101,21 +98,6 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({
 						</div>
 					);
 				})}
-			</div>
-
-			<div className={styles.optionRooms__assignAllButton}>
-				<Button
-					text={
-						isAssigning
-							? t('Assigning...')
-							: hasExistingRooms
-								? t('Reassign all rooms')
-								: t('Assign all rooms')
-					}
-					buttonType={ButtonType.PRIMARY}
-					onClick={onAssignAllRooms}
-					disabled={isAssigning}
-				/>
 			</div>
 		</div>
 	);

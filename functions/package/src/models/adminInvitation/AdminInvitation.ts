@@ -85,7 +85,7 @@ export type DocumentCollaborator = InferOutput<typeof DocumentCollaboratorSchema
  */
 export function hasPermissionLevel(
 	userLevel: AdminPermissionLevel,
-	requiredLevel: AdminPermissionLevel
+	requiredLevel: AdminPermissionLevel,
 ): boolean {
 	const levels: Record<AdminPermissionLevel, number> = {
 		[AdminPermissionLevel.owner]: 3,

@@ -1,0 +1,44 @@
+// Inline note Atom — BEM
+// A one-line message that belongs to the control above it: a save error under
+// a fieldset, a row's failure, a "10 of 42" caption. React wrapper:
+// atomic/atoms/InlineNote. Spec: docs/ux/main-people-settings-design.md §3.8.
+//
+// DOM:   <p class="inline-note inline-note--error" role="alert">text [<span class="inline-note__action">…</span>]</p>
+// Modifiers: --error (role alert) · --success · --info (role status)
+@use '../mixins' as *;
+
+.inline-note {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-xs);
+	margin: 0;
+	padding: var(--space-2xs) var(--space-xs);
+	border-radius: var(--radius-sm);
+	font-size: var(--font-size-sm);
+	line-height: 1.4;
+
+	&__text {
+		min-inline-size: 0;
+	}
+
+	&__action {
+		margin-inline-start: auto;
+		flex-shrink: 0;
+	}
+
+	&--error {
+		color: var(--error-text);
+		background: var(--error-bg);
+	}
+
+	&--success {
+		color: var(--approve-ink);
+		background: color-mix(in srgb, var(--agree) 12%, transparent);
+	}
+
+	&--info {
+		color: var(--text-meta);
+		background: transparent;
+		padding-inline: 0;
+	}
+}

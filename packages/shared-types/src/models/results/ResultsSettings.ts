@@ -9,7 +9,9 @@ export enum ResultsBy {
 
 export enum CutoffBy {
 	topOptions = 'topOptions',
-	aboveThreshold = 'aboveThreshold'
+	aboveThreshold = 'aboveThreshold',
+	/** No cutoff — every option passes, still in ranked order */
+	all = 'all',
 }
 
 export const ResultsSettingsSchema = object({

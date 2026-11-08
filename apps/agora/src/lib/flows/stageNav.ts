@@ -2,15 +2,15 @@
  * Where a player is LOOKING, as opposed to where the room IS.
  *
  * The session says which stage is current; the player may step back to any
- * stage already opened and re-read it. That choice is theirs alone, so it
- * lives on their device, and it never outranks the room: the moment the
- * teacher opens the next stage everyone is carried there, and a step back
- * to a stage that was never opened is refused.
+ * stage already opened and catch up. That choice is theirs alone, so it
+ * lives on their device. Only stages the room has opened are available.
+ * Students catching up keep their station when the teacher opens the next one,
+ * until the room reaches its results: then everyone is carried to them.
  *
  * Pure — no Mithril, no storage. The controller persists the string and runs
  * the redraws.
  */
-import type { AgoraStagePlanItem } from '@freedi/shared-types';
+import { AgoraStage, type AgoraStagePlanItem } from '@freedi/shared-types';
 
 export interface StageNavState {
 	/** null = looking at the current stage */
@@ -21,7 +21,12 @@ export const INITIAL_STAGE_NAV: StageNavState = { viewingItemId: null };
 
 export type StageNavEvent =
 	| { kind: 'select'; itemId: string }
-	| { kind: 'session-advanced' }
+	/**
+	 * The teacher opened a new station. `led`: the room walks as one — a
+	 * student who had stepped back is carried along too. Not led: a student
+	 * catching up keeps their station.
+	 */
+	| { kind: 'session-advanced'; led?: boolean }
 	| { kind: 'restore'; raw: string | null };
 
 function openedIndex(
@@ -47,8 +52,18 @@ export function stageNavReduce(
 
 			return { viewingItemId: index === currentIndex ? null : event.itemId };
 		}
-		case 'session-advanced':
-			return state.viewingItemId === null ? state : { viewingItemId: null };
+		case 'session-advanced': {
+			if (state.viewingItemId === null) return state;
+			if (event.led) return INITIAL_STAGE_NAV;
+			const currentStage = plan[currentIndex]?.stage;
+			if (currentStage === AgoraStage.results || currentStage === AgoraStage.ended) {
+				return INITIAL_STAGE_NAV;
+			}
+
+			return openedIndex(plan, currentIndex, state.viewingItemId) === -1
+				? INITIAL_STAGE_NAV
+				: state;
+		}
 		case 'restore': {
 			const raw = (event.raw ?? '').trim();
 			if (!raw) return INITIAL_STAGE_NAV;

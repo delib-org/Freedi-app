@@ -252,7 +252,7 @@ $addOptionSize: 60px;
 }
 .whiteIcon,
 .whiteIcon * {
-  color: #fff !important;
+  color: #fff;
   fill: #fff !important;
   stroke: #fff !important;
 }
@@ -374,3 +374,23 @@ $addOptionSize: 60px;
     animation: none !important;
   }
 }
+
+ .addOptionButton { background: var(--space-purple); color: var(--space-paper); } .addOptionButtonLabel { color: inherit; }
+
+
+	.sortButton,
+	.subFabButton {
+		background: var(--space-mint);
+		color: var(--space-ink);
+		box-shadow: var(--space-shadow);
+	}
+	.sortButton svg,
+	.subFabButton svg,
+	.whiteIcon,
+	.whiteIcon * {
+		color: var(--space-ink);
+		fill: currentColor;
+	}
+	.sortMenu {
+		border-radius: 24px;
+	}

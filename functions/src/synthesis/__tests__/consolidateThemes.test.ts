@@ -39,6 +39,7 @@ jest.mock('firebase-admin/firestore', () => {
 	}));
 
 	return {
+		FieldValue: { arrayUnion: (...values: unknown[]) => ({ arrayUnion: values }) },
 		getFirestore: jest.fn(() => ({
 			collection,
 			batch: () => ({
@@ -217,9 +218,43 @@ describe('consolidateThemes — merge mechanics', () => {
 		const survivor = committed.find((c) => c.id === 't1');
 		const donor = committed.find((c) => c.id === 't2');
 		expect(survivor?.data.statement).toBe('Environment and waste');
+		// The donor's direct votes keep counting for the survivor.
+		expect(survivor?.data.absorbedClusterIds).toEqual({ arrayUnion: ['t2'] });
 		expect(survivor?.data.integratedOptions).toEqual(expect.arrayContaining(['s1', 'sX', 's2']));
 		expect(donor?.data.hide).toBe(true);
 		expect(donor?.data.mergedInto).toBe('t1');
+	});
+
+	/**
+	 * `splitThemes` divides a catch-all because the merge judge's notion of
+	 * "same area" is what let it form; offered the sub-topics it would re-merge
+	 * them, and the two sweeps would undo each other every ten minutes.
+	 */
+	it('refuses to merge two sub-topics of the same split', async () => {
+		statementDocs.set('t1', { ...theme('t1', 'Funding', ['s1']), splitFrom: 'old' } as Statement);
+		statementDocs.set('t2', {
+			...theme('t2', 'Partnerships', ['s2']),
+			splitFrom: 'old',
+		} as Statement);
+		groupEquivalentThemesMock.mockResolvedValue([
+			{ ids: ['t1', 't2'], title: 'Research for change' },
+		]);
+
+		const result = await consolidateThemes(PARENT, 'q', 'test');
+
+		expect(result.merges).toBe(0);
+		expect(committed).toHaveLength(0);
+	});
+
+	it('still lets a sub-topic merge into an unrelated heading', async () => {
+		statementDocs.set('t1', { ...theme('t1', 'Funding', ['s1']), splitFrom: 'old' } as Statement);
+		groupEquivalentThemesMock.mockResolvedValue([
+			{ ids: ['t1', 't3'], title: 'Libraries and funding' },
+		]);
+
+		const result = await consolidateThemes(PARENT, 'q', 'test');
+
+		expect(result.merges).toBe(1);
 	});
 
 	it('leaves fewer than three headings alone', async () => {

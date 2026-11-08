@@ -175,6 +175,54 @@ describe('NotificationService', () => {
 		});
 	});
 
+	describe('getPushSubscriptionFields()', () => {
+		it('returns push off and no token before a token is held', () => {
+			const { PushService } = require('../pushService');
+			PushService.isInitialized.mockReturnValue(true);
+
+			expect(service.getPushSubscriptionFields()).toEqual({
+				getPushNotification: false,
+				pushToken: null,
+			});
+		});
+
+		it('returns the in-memory token once initialized with permission granted', async () => {
+			const { isBrowserNotificationsSupported } = require('../platformService');
+			const { PushService, initializeMessaging, getOrRefreshToken } = require('../pushService');
+			isBrowserNotificationsSupported.mockReturnValue(true);
+			PushService.requestPermission.mockResolvedValue(true);
+			PushService.isInitialized.mockReturnValue(true);
+			PushService.safeGetPermission.mockReturnValue('granted');
+			initializeMessaging.mockResolvedValue({ success: true });
+			getOrRefreshToken.mockResolvedValue('mock-token');
+
+			await service.initialize('user-123');
+
+			expect(service.getPushSubscriptionFields()).toEqual({
+				getPushNotification: true,
+				pushToken: 'mock-token',
+			});
+		});
+
+		it('returns no token when permission is not granted', async () => {
+			const { isBrowserNotificationsSupported } = require('../platformService');
+			const { PushService, initializeMessaging, getOrRefreshToken } = require('../pushService');
+			isBrowserNotificationsSupported.mockReturnValue(true);
+			PushService.requestPermission.mockResolvedValue(true);
+			PushService.isInitialized.mockReturnValue(true);
+			initializeMessaging.mockResolvedValue({ success: true });
+			getOrRefreshToken.mockResolvedValue('mock-token');
+			await service.initialize('user-123');
+			PushService.safeGetPermission.mockReturnValue('denied');
+
+			expect(service.getPushSubscriptionFields()).toEqual({
+				getPushNotification: false,
+				pushToken: null,
+			});
+			PushService.safeGetPermission.mockReturnValue('granted');
+		});
+	});
+
 	describe('initialize()', () => {
 		const { isBrowserNotificationsSupported } = require('../platformService');
 

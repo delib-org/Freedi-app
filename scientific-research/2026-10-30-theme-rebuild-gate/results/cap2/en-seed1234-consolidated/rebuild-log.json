@@ -1,0 +1,90 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed1234-consolidated",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 9,
+ "themesWithMembers": 9,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  9,
+  7,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  4
+ ],
+ "ms": 26116,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 941,
+   "completion": 867
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 1857,
+   "completion": 1200
+  }
+ },
+ "usd": 0.0140974,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Affordable Housing and Renting",
+   "rule": "Proposals that create, preserve, convert, subsidize, or regulate housing and rental conditions, including student housing and residential energy upgrades.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "Schools and Youth Learning",
+   "rule": "Proposals focused on school facilities, teachers, class conditions, student meals, tutoring, arts instruction, or school-age student access to education and transit.",
+   "size": 7
+  },
+  {
+   "key": "t3",
+   "name": "Public Spaces and Culture",
+   "rule": "Proposals that add or improve parks, gardens, playgrounds, libraries, dog areas, public art, museums, festivals, or other shared recreational and cultural amenities.",
+   "size": 9
+  },
+  {
+   "key": "t4",
+   "name": "Public Transit and Safe Mobility",
+   "rule": "Proposals that improve bus service or rider information, or make walking and cycling routes and street crossings safer.",
+   "size": 5
+  },
+  {
+   "key": "t5",
+   "name": "Health and Care Access",
+   "rule": "Proposals that expand preventive, primary, specialist, mental-health, or in-home care services for residents.",
+   "size": 5
+  },
+  {
+   "key": "t6",
+   "name": "Municipal Service Access",
+   "rule": "Proposals that make city services, information, or resident interactions with government easier through hotlines, in-person help, online systems, public data, or connectivity.",
+   "size": 5
+  },
+  {
+   "key": "t7",
+   "name": "Community Safety and Emergency Response",
+   "rule": "Proposals that prevent crime, improve public safety conditions, or expand emergency-response capacity through policing, lighting, cameras, or response stations.",
+   "size": 4
+  },
+  {
+   "key": "t8",
+   "name": "Environmental Sustainability",
+   "rule": "Proposals that reduce pollution or waste, increase clean energy, or monitor environmental conditions through recycling, composting, plastic limits, solar power, or air-quality data.",
+   "size": 5
+  },
+  {
+   "key": "t9",
+   "name": "Local Jobs and Small Business",
+   "rule": "Proposals that support employment, worker training, local hiring, independent work, small-business finance, or business licensing.",
+   "size": 5
+  }
+ ]
+}

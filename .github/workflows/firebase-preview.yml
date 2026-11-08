@@ -17,7 +17,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '20.x'
+  # Matches functions/package.json engines (>=22), the nodejs22 runtime in
+  # firebase.json and all 229 functions deployed to wizcol-app. Building on 20
+  # and running on 22 is the kind of gap that only surfaces in production.
+  NODE_VERSION: '22.x'
 
 jobs:
   # Job 1: Validate before preview
@@ -25,10 +28,10 @@ jobs:
     name: Validate Code
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -51,10 +54,10 @@ jobs:
       pull-requests: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'

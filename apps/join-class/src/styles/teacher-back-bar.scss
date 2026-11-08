@@ -1,0 +1,169 @@
+// =============================================================================
+// The teacher bar: one component on every screen below the lesson list (plan, game,
+// lesson console, lesson questions, table sheet). A house chip to the list, then
+// "‹ <parent name>", one level up. Sticky at the top, tap targets of at least 44 px.
+// Tokens only, logical properties so Hebrew (RTL) is the default case, not an override.
+// =============================================================================
+
+@use 'game-scope' as *;
+
+$back-bar-tap: 44px;
+$back-bar-home-icon: 24px;
+$back-bar-home-border: 2px;
+
+.back-bar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: var(--z-sticky, 20);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  inline-size: 100%;
+  min-block-size: max(#{$back-bar-tap}, var(--touch-target));
+  padding-inline: var(--space-sm);
+  // room for the home chip's border and its pressed-key edge inside the bar
+  padding-block: var(--space-xs);
+  background: var(--paper-soft);
+  border-block-end: 1px solid var(--paper-line);
+
+  // The home chip: filled and bordered, so it reads as a button and the back link
+  // stays a plain text link.
+  &__home {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    box-sizing: border-box;
+    min-block-size: $back-bar-tap;
+    min-inline-size: $back-bar-tap;
+    padding-inline: var(--space-xs);
+    background: var(--teal-50);
+    color: var(--teal-ink, var(--teal-700));
+    border: $back-bar-home-border solid var(--teal-ink, var(--teal-700));
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-bold);
+    text-decoration: none;
+    transition:
+      background var(--dur-quick) var(--ease-out),
+      transform var(--dur-quick) var(--ease-out);
+
+    .console-icon {
+      flex: none;
+      inline-size: $back-bar-home-icon;
+      block-size: $back-bar-home-icon;
+    }
+
+    @media (hover: hover) {
+      &:hover {
+        background: var(--teal-100);
+      }
+    }
+
+    &:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
+    }
+
+    // No back link beside it: the chip names its destination.
+    &--text {
+      max-inline-size: 100%;
+      padding-inline: var(--space-sm) var(--space-md);
+    }
+
+    @include no-motion;
+  }
+
+  &__home-label {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    // the whole bar height is the tap target; the name stays on one line and is
+    // cut with an ellipsis (its full text is the link's title)
+    flex: 0 1 auto;
+    min-block-size: max(#{$back-bar-tap}, var(--touch-target));
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    padding-inline-end: var(--space-md);
+    color: var(--teal-ink, var(--teal-700));
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
+      border-radius: var(--radius-sm);
+    }
+  }
+
+  &__chevron {
+    flex: none;
+    font-size: var(--font-size-xl);
+    line-height: 1;
+    unicode-bidi: isolate;
+
+    // "‹" points left; in Hebrew/Arabic/Persian the way back points right
+    [dir='rtl'] & {
+      transform: scaleX(-1);
+    }
+  }
+
+  &__label {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// Game look: the chip sits on a pressed-key edge, and sinks onto it when pressed.
+#{$game} .back-bar__home {
+  @include edge(var(--edge-teal), var(--edge-size-sm));
+}
+
+#{$game} .back-bar__home:active {
+  @include press(var(--edge-size-sm));
+}
+
+// Solid look: no edge, a darker fill while pressed.
+:root[data-look='solid'] .back-bar__home:active {
+  background: var(--teal-100);
+}
+
+// The bar and the console header read as one band, not two stacked strips.
+.back-bar:has(+ .console__bar) {
+  border-block-end-color: transparent;
+}
+
+.back-bar + .console__bar {
+  background: var(--paper-soft);
+  padding-block-start: 0;
+}
+
+// Inside a screen that has its own page padding the bar spans edge to edge.
+.plan > .back-bar,
+.teacher-home > .back-bar {
+  margin-inline: calc(-1 * var(--space-md));
+  inline-size: calc(100% + 2 * var(--space-md));
+  margin-block-start: calc(-1 * var(--space-md));
+  padding-inline: var(--space-md);
+}
+
+// The table sheet scrolls on its own and has its own padding.
+.table-sheet > .back-bar {
+  margin-inline: calc(-1 * var(--space-md));
+  inline-size: calc(100% + 2 * var(--space-md));
+  padding-inline: var(--space-md);
+  background: var(--bg-paper);
+}

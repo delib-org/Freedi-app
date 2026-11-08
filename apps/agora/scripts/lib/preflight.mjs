@@ -17,7 +17,8 @@
  */
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import { dirname, resolve, join } from 'node:path';
+import { readdirSync, statSync, existsSync, readFileSync } from 'node:fs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 /** apps/agora — the worktree this script belongs to */
@@ -126,12 +127,7 @@ async function checkFirestore(quiet, autoSeed) {
 async function checkAuth() {
 	const res = await get(`${AUTH_HOST}/`);
 	if (res.offline) {
-		throw unreachable(
-			res,
-			'Auth emulator',
-			AUTH_HOST,
-			'npm run emulators (from the repo root)',
-		);
+		throw unreachable(res, 'Auth emulator', AUTH_HOST, 'npm run emulators (from the repo root)');
 	}
 }
 
@@ -184,6 +180,52 @@ async function checkFunctions(quiet) {
  * serves files inside its own project root, so a foreign server replies 403
  * for a path in this worktree.
  */
+/**
+ * The agora dev server serves shared-types straight from its dist, so a stale
+ * or half-written build there is an "export not provided" SyntaxError in the
+ * browser — before any app code runs. Refuse to start against a dist older
+ * than its source, or one missing a canary the app imports.
+ */
+function newestMtime(dir) {
+	let newest = 0;
+	for (const entry of readdirSync(dir, { withFileTypes: true })) {
+		const path = join(dir, entry.name);
+		if (entry.isDirectory()) {
+			if (entry.name === '__tests__') continue;
+			newest = Math.max(newest, newestMtime(path));
+		} else if (entry.name.endsWith('.ts')) {
+			newest = Math.max(newest, statSync(path).mtimeMs);
+		}
+	}
+
+	return newest;
+}
+
+async function checkSharedTypes(quiet) {
+	const pkg = resolve(APP_ROOT, '../../packages/shared-types');
+	const dist = join(pkg, 'dist/esm/index.js');
+	const agoraDist = join(pkg, 'dist/esm/models/agora/index.js');
+	const fix = 'cd packages/shared-types && npm run build';
+	if (!existsSync(dist) || !existsSync(agoraDist)) {
+		throw new PreflightError('shared-types has no dist — the app cannot import it', fix);
+	}
+	const srcNewest = newestMtime(join(pkg, 'src'));
+	const distAt = Math.min(statSync(dist).mtimeMs, statSync(agoraDist).mtimeMs);
+	if (srcNewest > distAt + 1000) {
+		throw new PreflightError(
+			'shared-types dist is older than its source — the browser will meet a missing export',
+			fix,
+		);
+	}
+	if (!readFileSync(agoraDist, 'utf8').includes('AGORA_STAGE_ORDER')) {
+		throw new PreflightError(
+			'shared-types dist is missing the agora exports (half-written build)',
+			fix,
+		);
+	}
+	say(quiet, '   ✓ shared-types dist is current');
+}
+
 async function checkVite() {
 	const root = await get(`${VITE_HOST}/`);
 	if (root.offline) {
@@ -206,6 +248,7 @@ async function checkVite() {
 }
 
 const CHECKS = {
+	sharedTypes: checkSharedTypes,
 	firestore: checkFirestore,
 	auth: checkAuth,
 	functions: checkFunctions,
@@ -218,7 +261,7 @@ const CHECKS = {
  * ready.
  */
 export async function preflight({
-	needs = ['firestore', 'auth', 'functions', 'vite'],
+	needs = ['sharedTypes', 'firestore', 'auth', 'functions', 'vite'],
 	autoSeed = true,
 	quiet = false,
 } = {}) {

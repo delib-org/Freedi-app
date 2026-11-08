@@ -18,13 +18,18 @@
   --type-meta: 1;
 
   font-size: var(--font-size-2xs);
+}
 
-  // A custom property inherits. Without this reset a mark containing a nested
-  // element would hand that child the exemption too, and a real word could
-  // ride into the 12px rung on a parent's permission.
-  * {
-    --type-meta: 0;
-  }
+// A custom property inherits by default, and then a mark containing a nested
+// element would hand that child the exemption too — a real word could ride
+// into the 12px rung on a parent's permission. Registered as non-inheriting,
+// the stamp stays on the element that asked for it. (This used to be a nested
+// `* { --type-meta: 0 }` inside the mixin, which put a nested rule before the
+// caller's own declarations in 48 places — Sass's mixed-decls deprecation.)
+@property --type-meta {
+  syntax: '<integer>';
+  inherits: false;
+  initial-value: 0;
 }
 
 // ============================================================================
@@ -141,6 +146,26 @@
   --surface-tint: #faf8ff;               // the faintest wash of a surface
   --surface-flare: #ffffff;              // the white-hot centre of a spark
 
+  // Navigation over the village's illustrated landscape.
+  --village-nav-surface: #233f35;
+  --village-nav-ink: #fff6de;
+  --village-nav-muted: #e6dcc0;
+  --village-nav-border: #d4b674;
+  --village-nav-accent: #e5a548;
+
+  // The coin: one obol of the (fictional) Republic of Elaia — nickel ring
+  // with the legend, bronze core with the olive wreath and the numeral 1.
+  // Metals, not a look's hues: a coin is the same coin in every look.
+  --coin-ring-hi: #f4f5f2;
+  --coin-ring: #c3c7c4;
+  --coin-ring-lo: #8a908d;
+  --coin-core-hi: #f1dc9c;
+  --coin-core: #cfa94f;
+  --coin-core-lo: #9a7428;
+  --coin-edge: #5d625f;
+  --coin-ink: #5a4313;
+  --coin-legend: #3f4442;
+
   // --- MINE: the purple family ---
   // Named by job, not by lightness, so a rule reads as a decision.
   --mine-light: #a98cf7;  // highlights, gradient tops, glows — NEVER under text
@@ -182,6 +207,7 @@
   // classmate is good news, and red said "something went wrong" about the
   // single friendliest event in the game.
   --pink: #f56aa8;
+  --pink-ink: #2b1420;    // the label on a pink count — dark here (6.1:1), white on the looks' deeper pinks
   --gold: #ffd23f;        // laps behind you, celebration sparks
   --amber: #ffb254;       // warm accent tiles
 
@@ -209,6 +235,25 @@
   --who-6: #c03f2a; // coral
   --who-7: #c23a86; // pink
   --who-8: #4a53c0; // indigo
+
+  // --- Charts (@freedi/shared-charts) ---
+  // The dashboard's categorical slots reuse the classmate hues, so a theme
+  // that recolours --who-* recolours every chart with it. The chrome tokens
+  // alias the surface/hairline/meta tokens above and so follow ink-on-dark.
+  --chart-1: #0f6fb5; // sky
+  --chart-2: #a05a15; // amber
+  --chart-3: #4a53c0; // indigo
+  --chart-4: #2b7530; // green
+  --chart-5: #c23a86; // pink
+  --chart-6: #71741a; // olive
+  --chart-seq-1: #86b6ef;
+  --chart-seq-2: #5598e7;
+  --chart-seq-3: #256abf;
+  --chart-seq-4: #104281;
+  --chart-grid: var(--border-subtle);
+  --chart-text: var(--text-secondary);
+  --chart-surface: var(--bg-card-solid);
+  --chart-muted: var(--peer-tile);
 
   // The two mark tints — a row's news as a coloured disc rather than a
   // sentence. Flat, pale, opaque: an rgba() wash over a white card is a
@@ -253,6 +298,11 @@
   // drawn as a line ON a strongly green surface (the map's bridge zone) it
   // falls to 2.9:1, while this clears 4.6:1 there and 8:1 on white.
   --success-deep: #0d5c37;
+  // The green as TEXT, the way --danger-ink is the red as text. On the light
+  // themes that is the deep rung itself; the navy theme re-points it, because
+  // there a dark green label on a dark panel is the very bug --success-deep
+  // was invented to avoid.
+  --success-ink: #0d5c37;
   --danger: #d13d4e;   // FILL only — as text on white it is 4.19:1
   --danger-ink: #b3202f; // the same alarm, readable as text (5.9:1)
   --warning: #b97300; // borders/fills only; warning copy uses --text-primary
@@ -338,6 +388,8 @@
   // object. This is the number that decides whether the layout reads.
   --shadow-card: 0 6px 18px -6px rgba(70, 45, 150, 0.16), 0 2px 5px -2px rgba(70, 45, 150, 0.1);
   --shadow-raised: 0 14px 34px -10px rgba(70, 45, 150, 0.26), 0 3px 8px -3px rgba(70, 45, 150, 0.12);
+  // The veil under a modal: the page is still there, just not for now
+  --scrim: rgba(20, 12, 45, 0.28);
   --shadow-mine: 0 14px 30px -10px rgba(99, 66, 220, 0.55);
   --glow-lantern: 0 8px 20px -6px rgba(115, 80, 227, 0.55);
   --glow-marker: 0 0 12px rgba(139, 107, 240, 0.55);
@@ -417,6 +469,14 @@
     var(--field-mid) 50%,
     var(--field-for) 100%
   );
+  // The goal at the top of the field (see .board__goal). White posts on
+  // purpose and in every look: the field is a tinted ramp everywhere, and a
+  // white bar on it is a goalpost where a coloured one is a frame. The ball's
+  // seams are inked the same dark in every look — --ink goes white on the
+  // civic navy, and a white ball with white seams is a moon.
+  --goal-post: #ffffff;
+  --goal-mesh: color-mix(in srgb, var(--success-deep) 45%, transparent);
+  --goal-ball-ink: #2b2350;
 
   // --- Motion (camera-move easing; never hard cuts) ---
   --motion-fast: 150ms;
@@ -430,19 +490,30 @@
   --z-map: 1;
   --z-content: 10;
   --z-header: 50;
+  // The teacher's side panel: over the board and the sticky strip, under the
+  // student-thread drawer (hard-coded 60 in _teacher-console.scss) that opens
+  // from inside it.
+  --z-panel: 55;
   --z-toast: 90;
   --z-modal: 100;
 
-  // --- Fixed deliberation chrome ---
-  // Two fixed strips stack at the bottom of every deliberation screen (the
-  // Others|Results bar, and the proposal dock parked on its top edge). They
-  // have to agree on their heights, and the page has to know the total to
-  // keep its last button clear of both.
-  --delib-nav-h: 68px;
-  // Sized for a quiet uppercase label plus TWO lines of the proposal voice —
-  // the bar's whole job is showing the student their own sentence, and one
-  // 18px line of Hebrew on a 360px phone is about four words.
-  --dock-bar-h: 100px;
+  // --- Fixed teacher chrome ---
+  // The console's bar and its control strip stack the same way: the strip
+  // sticks under the bar on desktop, and on a phone it is the fixed bottom
+  // bar the page has to keep its last card clear of.
+  --teacher-nav-h: 56px;
+  --teacher-strip-h: 108px;
+  // The strip's one-row height on a laptop — what the class view's world
+  // leaves room for under the bar (the 108px above is the phone's reserve)
+  --teacher-strip-desk-h: 64px;
+
+  // The disclosure chevron is the `arrow` icon given a quarter turn (there
+  // is no separate chevron glyph). The arrow is drawn pointing LEFT — the
+  // back button's direction — so −90° points it down and +90° up. Held here
+  // so the three folds that use it turn the same way if the glyph is ever
+  // redrawn.
+  --chevron-closed: -90deg;
+  --chevron-open: 90deg;
 }
 
 // ============================================================================
@@ -494,11 +565,9 @@
 // my own message in a conversation
 .thread__msg--mine,
 .chat-bubble--mine,
-// the notebook carrying my proposal, collapsed
-.shell--delib .proposal-dock,
-// the face I pressed, and the tab I am on
+// the face I pressed, and the door I am standing in (the flat view's pill)
 .rate-scale__option--selected,
-.delib-nav__item--active,
+.place-bar--flat .place-bar__item--active,
 // the ballot row I voted for — MINE is a purple surface, not a border
 .voting__option--mine,
 // the HUD's two filled tokens
@@ -523,7 +592,6 @@
 // pill — has to hand the ink back, or the on-dark remap paints white text
 // onto white paper. Same registry, opposite direction.
 .on-light,
-.shell--delib .proposal-dock__panel,
 // The desk's two pale panels: the stuck-write notice (which carries a real
 // .btn, and a .btn--secondary is white paper by definition) and the
 // self-check pills. Both are white islands on the one ink-on-dark surface a
@@ -532,6 +600,10 @@
 // white-on-white all over again.
 .write-desk__stuck,
 .write-desk__selfcheck-chip,
+// ...and the third: the brief the room carried into this stage, a whole white
+// CARD sitting on the desk. Its bands, its summary and its fold label all
+// re-derived from the desk's white ink and shipped invisible.
+.carried,
 // :not(--implemented) — that one is a solid GREEN fill carrying white, so
 // handing it the light ink turns its label back to dark-on-dark
 .on-dark .helped__chip:not(.helped__chip--implemented),

@@ -1,5 +1,6 @@
 import React, { FC, ReactNode, useState } from 'react';
-import { ChevronDown, ChevronUp, HelpCircle, LucideIcon } from 'lucide-react';
+import { ChevronDown, HelpCircle, LucideIcon } from 'lucide-react';
+import Collapse from '@/view/components/atomic/molecules/Collapse/Collapse';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './SettingsSection.module.scss';
 
@@ -75,14 +76,18 @@ const SettingsSection: FC<SettingsSectionProps> = ({
 						</div>
 					)}
 					{collapsible && (
-						<div className={styles.settingsSection__chevron}>
-							{isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+						<div
+							className={`${styles.settingsSection__chevron} ${isExpanded ? styles['settingsSection__chevron--open'] : ''}`}
+						>
+							<ChevronDown size={20} />
 						</div>
 					)}
 				</div>
 				{description && <p className={styles.settingsSection__description}>{description}</p>}
 			</div>
-			{isExpanded && <div className={styles.settingsSection__content}>{children}</div>}
+			<Collapse isOpen={isExpanded}>
+				<div className={styles.settingsSection__content}>{children}</div>
+			</Collapse>
 		</section>
 	);
 };

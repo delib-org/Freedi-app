@@ -5,6 +5,7 @@
  * Needs: emulators + vite on 3009 + seeded demo package.
  */
 import { chromium } from '@playwright/test';
+import { passNameDoor } from './lib/e2e.mjs';
 import { mkdirSync } from 'node:fs';
 import { auditPage, report } from './contrast-audit.mjs';
 import { auditType, summarise } from './type-audit.mjs';
@@ -100,6 +101,9 @@ for (let attempt = 0; attempt < 6 && !topicReady; attempt++) {
 }
 if (!topicReady) throw new Error('teacher home never listed a topic package');
 await teacher.locator('text=המהפכה הצרפתית').first().click();
+// Tapping a scenario opens the start screen already holding it; the one
+// button there opens the lesson.
+await teacher.waitForURL(/teach\/start/, { timeout: 20000 });
 await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
 await teacher.waitForURL(/session/, { timeout: 20000 });
 await teacher.waitForSelector('.teacher__code', { timeout: 20000 });
@@ -112,6 +116,7 @@ for (const [page, label] of [
 	[s2, 'S2'],
 ]) {
 	await page.goto(`${BASE}/#!/join/${code}`, { waitUntil: 'domcontentloaded' });
+	await passNameDoor(page);
 	await page.waitForSelector('.lobby__name', { timeout: 20000 });
 	console.log(`${label} joined as`, await page.locator('.lobby__name').textContent());
 }
@@ -177,7 +182,7 @@ for (let i = 0; i < 3; i++) {
 		await shot(s1, `00b-values-graded-${i}`);
 	}
 	await teacher
-		.locator('.class-progress__count--all')
+		.locator('.teacher-now__count--all')
 		.waitFor({ timeout: 20000 })
 		.catch(() => console.log(`  (stage ${i}: class progress never read all-done, continuing)`));
 }
@@ -273,7 +278,7 @@ if (await entry.count()) {
 }
 
 // --- 04: MY screen (the workshop: what came back, the elders, the needs)
-await s1.locator('.delib-nav__item--mine').click();
+await s1.locator('.place-bar__item[data-place="note"]').click();
 await s1.waitForTimeout(800);
 await shot(s1, '04-my-screen');
 await shotFull(s1, '04b-my-screen-full');
@@ -286,7 +291,7 @@ await shot(s1, '04c-dock-open');
 await s1.keyboard.press('Escape');
 await s1.waitForTimeout(500);
 // ...and back to the square, where the lap's work is
-await s1.locator('.delib-nav__item--peer').click();
+await s1.locator('.place-bar__item[data-place="board"]').click();
 await s1.waitForTimeout(800);
 
 // --- rate enough to move on
@@ -350,7 +355,7 @@ await shot(s1, '06-help-open');
 await shotFull(s1, '06b-help-open-full');
 
 // --- 07: the results tab
-await s1.locator('.delib-nav__item--results').click();
+await s1.locator('.place-bar__item[data-place="results"]').click();
 await s1.waitForTimeout(1200);
 await shot(s1, '07-results-tab');
 await shotFull(s1, '07b-results-tab-full');

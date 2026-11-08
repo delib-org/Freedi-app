@@ -11,7 +11,7 @@
 .tabs {
   display: flex;
   gap: var(--spacing-sm);
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid var(--mc-border, #e0e0e0);
   margin-bottom: var(--spacing-xl);
 }
 
@@ -57,13 +57,13 @@
   }
 
   .tab {
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--mc-border, #e0e0e0);
     border-left: 3px solid transparent;
     margin-bottom: 0;
   }
 
   .tab.active {
     border-left-color: var(--btn-primary);
-    border-bottom-color: #e0e0e0;
+    border-bottom-color: var(--mc-border, #e0e0e0);
   }
 }

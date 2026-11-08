@@ -10,7 +10,7 @@
  */
 import { chromium } from '@playwright/test';
 import { preflight } from './lib/preflight.mjs';
-import { eq, fail, mkPage as makePage, shotter, step } from './lib/e2e.mjs';
+import { eq, fail, mkPage as makePage, shotter, step, passNameDoor } from './lib/e2e.mjs';
 
 await preflight();
 
@@ -60,6 +60,9 @@ try {
 	await teacher.waitForSelector('text=המהפכה הצרפתית', { timeout: 30000 });
 }
 await teacher.locator('text=המהפכה הצרפתית').first().click();
+// Tapping a scenario opens the start screen already holding it; the one
+// button there opens the lesson.
+await teacher.waitForURL(/teach\/start/, { timeout: 20000 });
 await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
 await teacher.waitForURL(/session/, { timeout: 20000 });
 await teacher.waitForSelector('.teacher__code', { timeout: 20000 });
@@ -72,6 +75,7 @@ for (const [page, label] of [
 	[s2, 'S2'],
 ]) {
 	await page.goto(`${BASE}/#!/join/${code}`, { waitUntil: 'domcontentloaded' });
+	await passNameDoor(page);
 	await page.waitForSelector('.lobby__name', { timeout: 15000 });
 	console.log(`${label} joined as`, await page.locator('.lobby__name').textContent());
 }
@@ -118,7 +122,7 @@ await s2.locator('textarea.write-desk__textarea').fill(
 	'נקים אספה לאומית עם רוב לעם, נבטל פטורי מס של האצולה אך נבטיח את ביטחונם.',
 );
 await s2.locator('.write-desk__cta').click();
-await s2.waitForSelector('.stall__head, .delib-nav', { timeout: 20000 });
+await s2.waitForSelector('.stall__head, .place-bar', { timeout: 20000 });
 console.log('S2 proposed normally');
 
 // ---------- The wedge ----------
@@ -137,7 +141,7 @@ await s1.locator('.write-desk__cta').click();
 // 1. The desk STAYS. The student is not dealt a lap around a phantom.
 await s1.waitForTimeout(2500);
 eq('S1 is still at the writing desk', await s1.locator('.write-desk').count(), 1);
-eq('S1 was given no tabs', await s1.locator('.delib-nav').count(), 0);
+eq('S1 was given no tabs', await s1.locator('.place-bar').count(), 0);
 eq('S1 was given no square', await s1.locator('.stall-list').count(), 0);
 const ctaLabel = (await s1.locator('.write-desk__cta').textContent()).trim();
 console.log('   S1 CTA says:', ctaLabel);
@@ -175,13 +179,13 @@ await s1.locator('.write-desk__stuck button').click();
 await s1.waitForSelector('textarea.write-desk__textarea', { timeout: 25000 });
 const restored = await s1.locator('textarea.write-desk__textarea').inputValue();
 eq('the draft survived the reload', restored, DRAFT);
-eq('the phantom proposal is gone', await s1.locator('.delib-nav').count(), 0);
+eq('the phantom proposal is gone', await s1.locator('.place-bar').count(), 0);
 await shot(s1, '03-S1-draft-restored');
 
 // 5. …and the retry lands for real, on both sides
 step('the retry lands: the square finally has two');
 await s1.locator('.write-desk__cta').click();
-await s1.waitForSelector('.delib-nav', { timeout: 25000 });
+await s1.waitForSelector('.place-bar', { timeout: 25000 });
 console.log('   ✓ S1 got the tabs only once the write was real');
 const deadline = Date.now() + 20000;
 let count = 0;

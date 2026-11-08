@@ -44,6 +44,7 @@ export {
   getQuestionsWithAdminAccess,
   getAvailableQuestions,
   searchQuestions,
+  getAllAccessibleQuestions,
   getSurveysByStatus,
 } from './surveyQueries';
 
@@ -80,6 +81,30 @@ export {
   getAllSurveyDemographicAnswers,
 } from './surveyDemographicAnswers';
 export type { SaveDemographicAnswersOptions } from './surveyDemographicAnswers';
+
+// Survey admins (co-admin roster + email invitations)
+export {
+  EMAIL_REGEX,
+  normalizeEmail,
+  hashToken,
+  mintInviteToken,
+  buildInviteLink,
+  listSurveyAdmins,
+  listSurveyAdminInvitations,
+  createSurveyAdminInvitation,
+  acceptSurveyAdminInvitation,
+  revokeSurveyAdminInvitation,
+  updateSurveyAdminRole,
+  removeSurveyAdmin,
+  deleteSurveyAdminRecords,
+  getSurveysSharedWithUser,
+} from './surveyAdmins';
+export type {
+  CreateInvitationInput,
+  CreateInvitationResult,
+  AcceptorIdentity,
+  AcceptInvitationResult,
+} from './surveyAdmins';
 
 // Export data
 export { getSurveyExportData } from './surveyExport';

@@ -1,102 +1,45 @@
-import closeList from '@/assets/icons/closeList.png';
+import { FC } from 'react';
+import { Link, useParams } from 'react-router';
 import MembersIcon from '@/assets/icons/group.svg?react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { approveMultiple, rejectMultiple } from '@/services/membershipActions';
-import { useState } from 'react';
-import Checkbox from '../checkbox/Checkbox';
-import ApproveMember from './approveMember/WaitingMember';
-import waitingStyles from './approveMember/WaitingMember.module.scss';
-import styles from './WaitingList.module.scss';
+import { fillPlaceholders } from '@/helpers/fillPlaceholders';
+import { buildPeopleAnchorPath } from '@/view/pages/statement/components/host/hostHubLogic';
 import { useApproveMembership } from './WaitingListVM';
+import { formatWaitingCount, pickWaitingStatementId } from './waitingBadgeLogic';
+import styles from './WaitingList.module.scss';
 
-const WaitingList = () => {
+/**
+ * Header badge: how many people wait to join the spaces this host runs. A
+ * shortcut, not a second list: it opens People › Waiting to join of the
+ * space on screen (or the space where most people wait). Hidden at 0.
+ */
+const WaitingList: FC = () => {
 	const { waitingList } = useApproveMembership();
-	const { dir, t } = useTranslation();
-	const [show, setShow] = useState(false);
-	const [selectedIds, setSelectedIds] = useState<string[]>([]);
+	const { statementId } = useParams();
+	const { t } = useTranslation();
 
-	const allIds = waitingList.map((m) => m.statementsSubscribeId);
-	const allSelected = waitingList.length > 0 && selectedIds.length === waitingList.length;
+	const targetStatementId = pickWaitingStatementId(waitingList, statementId);
+	if (!targetStatementId) return null;
 
-	const toggleSelectAll = () => {
-		setSelectedIds(allSelected ? [] : allIds);
-	};
-
-	const handleApproveAll = () => {
-		const membersToApprove = waitingList.filter((m) =>
-			selectedIds.includes(m.statementsSubscribeId),
-		);
-		approveMultiple(membersToApprove);
-		setSelectedIds([]);
-	};
-
-	const handleDenyAll = () => {
-		const membersToReject = waitingList.filter((m) =>
-			selectedIds.includes(m.statementsSubscribeId),
-		);
-		rejectMultiple(membersToReject);
-		setSelectedIds([]);
-	};
-
-	const numberMembers = waitingList.length < 99 ? waitingList.length : '99+';
-	if (numberMembers === 0) return null;
+	const count = waitingList.length;
 
 	return (
-		<div className={styles.approveMembers}>
-			<button onClick={() => setShow(!show)} className={styles.toggleButton}>
-				<MembersIcon />
-				<div className={`notificationsCircle ${styles.notification}`}>{numberMembers}</div>
-			</button>
-
-			{show && waitingList.length > 0 && (
-				<div className={`${styles.membersList} ${dir === 'rtl' ? styles.rtl : styles.ltr}`}>
-					<button className={styles.exitButton} onClick={() => setShow(false)}>
-						<img src={closeList} alt="Close" />
-					</button>
-
-					<h3 className={styles.listTitle}>{t('Waiting List')}</h3>
-
-					<div className={styles.selectAllWrapper}>
-						<Checkbox
-							label={allSelected ? 'Deselect All' : 'Select All'}
-							isChecked={allSelected}
-							onChange={toggleSelectAll}
-							className={styles.reverseCheckboxLayout}
-						/>
-					</div>
-
-					{selectedIds.length === waitingList.length && (
-						<div className={waitingStyles.actions}>
-							<button className={waitingStyles.approveBtn} onClick={handleApproveAll}>
-								{t('Approve All')}
-							</button>
-							<button className={waitingStyles.rejectBtn} onClick={handleDenyAll}>
-								{t('Deny All')}
-							</button>
-						</div>
-					)}
-
-					{waitingList.map((member) => (
-						<ApproveMember
-							key={member.statementsSubscribeId}
-							wait={member}
-							isChecked={selectedIds.includes(member.statementsSubscribeId)}
-							onCheckChange={(checked) => {
-								setSelectedIds((prev) =>
-									checked
-										? [...prev, member.statementsSubscribeId]
-										: prev.filter((id) => id !== member.statementsSubscribeId),
-								);
-							}}
-						/>
-					))}
-
-					<button className={styles.closeBtn} onClick={() => setShow(false)}>
-						{t('Close')}
-					</button>
-				</div>
-			)}
-		</div>
+		<span className={`badge-container ${styles.waitingBadge}`}>
+			<Link
+				to={buildPeopleAnchorPath(targetStatementId, 'waiting')}
+				className={styles.waitingBadge__link}
+				aria-label={fillPlaceholders(t('people.waitingCount'), { count })}
+				data-testid="waiting-badge"
+			>
+				<MembersIcon aria-hidden="true" />
+			</Link>
+			<span
+				className={`badge badge--unread badge--small badge--top-right ${styles.waitingBadge__count}`}
+				aria-hidden="true"
+			>
+				{formatWaitingCount(count)}
+			</span>
+		</span>
 	);
 };
 

@@ -1,0 +1,97 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed7-consolidated",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 10,
+ "themesWithMembers": 10,
+ "otherCount": 1,
+ "unanswered": 0,
+ "sizes": [
+  6,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  4,
+  4
+ ],
+ "ms": 18553,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 941,
+   "completion": 864
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 1847,
+   "completion": 1043
+  }
+ },
+ "usd": 0.013871000000000001,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Digital City Access",
+   "rule": "Proposals that improve access to municipal information, applications, service requests, or connectivity through online tools, public digital access, or assistance using those tools.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "Housing Affordability and Supply",
+   "rule": "Proposals that create, convert, regulate, upgrade, or make housing more affordable, including housing-market transparency.",
+   "size": 5
+  },
+  {
+   "key": "t3",
+   "name": "Local Jobs and Businesses",
+   "rule": "Proposals that support workers, career transitions, local hiring, entrepreneurship, or the operation of small businesses.",
+   "size": 5
+  },
+  {
+   "key": "t4",
+   "name": "Public Safety and Response",
+   "rule": "Proposals that prevent crime, improve perceived safety, or shorten emergency-response times through policing, surveillance, lighting, or emergency facilities.",
+   "size": 4
+  },
+  {
+   "key": "t5",
+   "name": "Transit and Street Mobility",
+   "rule": "Proposals that improve bus service, transit information or fares, cycling infrastructure, or street designs that make travel safer.",
+   "size": 6
+  },
+  {
+   "key": "t6",
+   "name": "Health and Care Access",
+   "rule": "Proposals that expand medical, mental-health, preventive-health, specialist-care, or in-home care services.",
+   "size": 5
+  },
+  {
+   "key": "t7",
+   "name": "Schools and Student Support",
+   "rule": "Proposals that improve schools, teaching, student meals, learning support, enrichment, or school-age transportation.",
+   "size": 5
+  },
+  {
+   "key": "t8",
+   "name": "Environmental Sustainability",
+   "rule": "Proposals that reduce pollution, waste, or resource use through monitoring, recycling, composting, clean energy, or restrictions on disposable materials.",
+   "size": 5
+  },
+  {
+   "key": "t9",
+   "name": "Parks and Neighborhood Recreation",
+   "rule": "Proposals that create or improve local green spaces, gardens, playgrounds, or dedicated outdoor recreation areas.",
+   "size": 4
+  },
+  {
+   "key": "t10",
+   "name": "Culture and Community Spaces",
+   "rule": "Proposals that expand cultural programming, arts access, libraries, festivals, concerts, museums, or public art.",
+   "size": 5
+  }
+ ]
+}

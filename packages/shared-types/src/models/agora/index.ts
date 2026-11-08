@@ -25,6 +25,9 @@ export {
 	AGORA_ANTI_GAMING,
 	AGORA_VOTING,
 	AGORA_CHALLENGE,
+	AGORA_IDENTITY,
+	AGORA_TEACHER_MESSAGE,
+	isAgoraTextLongEnough,
 } from './agoraConstants';
 
 export type {
@@ -32,6 +35,7 @@ export type {
 	AgoraValue,
 	AgoraCharacter,
 	AgoraDialogueLine,
+	AgoraYoutubeVideo,
 	AgoraScene,
 	AgoraHealthMetricDef,
 	AgoraRubricCriterion,
@@ -46,6 +50,7 @@ export {
 	AgoraValueSchema,
 	AgoraCharacterSchema,
 	AgoraDialogueLineSchema,
+	AgoraYoutubeVideoSchema,
 	AgoraSceneSchema,
 	AgoraHealthMetricDefSchema,
 	AgoraRubricCriterionSchema,
@@ -54,6 +59,7 @@ export {
 	AgoraArtworkSchema,
 	AgoraValueAnswerKeySchema,
 	AgoraTopicPackageSchema,
+	topicStagePlan,
 } from './agoraTopicPackage';
 
 export type {
@@ -74,6 +80,44 @@ export {
 	AgoraDebriefSchema,
 	AgoraOutcomeStatsSchema,
 } from './agoraSession';
+
+export type {
+	AgoraThemePreset,
+	AgoraThemeSeeds,
+	AgoraCustomTheme,
+	AgoraThemeChoice,
+	AgoraResolvedTheme,
+	AgoraThemeTally,
+	ThemeSession,
+	ThemeParticipant,
+	TallyParticipant,
+} from './agoraTheme';
+export {
+	AGORA_THEME_PRESETS,
+	AGORA_DEFAULT_THEME,
+	AGORA_THEME,
+	HexColourSchema,
+	AgoraThemeSeedsSchema,
+	AgoraCustomThemeSchema,
+	AgoraThemeChoiceSchema,
+	resolveAgoraTheme,
+	tallyAgoraThemes,
+} from './agoraTheme';
+
+export type { AgoraRemoval, RemovalSession, RejoinRequest } from './agoraRemoval';
+export {
+	AgoraRemovalSchema,
+	AGORA_REJOIN,
+	AGORA_REMOVED_REASON,
+	AGORA_REJOIN_COOLDOWN_REASON,
+	createAgoraRemovalId,
+	isRejoinDeclined,
+	isRejoinPending,
+	isRemovedFromAgoraSession,
+	pendingRejoinRequests,
+	rejoinAllowedAt,
+	removalOf,
+} from './agoraRemoval';
 
 export type { AgoraAgreementResults, AgoraIdentityMode } from './agoraSession';
 export { AgoraAgreementResultsSchema, AgoraIdentityModeSchema } from './agoraSession';
@@ -126,6 +170,81 @@ export {
 	evaluateVotingTrigger,
 } from './stagePlan';
 
+export type {
+	AgoraLinkedApp,
+	AgoraStationLink,
+	AgoraStationVisit,
+	StationLinkHosts,
+	StationLinkError,
+	StationHandoffFragment,
+	AgoraGuestClaim,
+	StationVisitState,
+	CheckStationLinkRequest,
+	CheckStationLinkResponse,
+	MintStationHandoffRequest,
+	MintStationHandoffResponse,
+	RedeemAppHandoffRequest,
+	RedeemAppHandoffResponse,
+} from './stationLink';
+export {
+	AgoraLinkedAppSchema,
+	AgoraStationLinkSchema,
+	AgoraStationVisitSchema,
+	AGORA_LINKABLE_APPS,
+	AGORA_STATION_LINK,
+	STATION_LINK_HOSTS,
+	STATION_LINK_ERRORS,
+	parseStationLink,
+	stationReturnPath,
+	stationReturnUrl,
+	stationAppUrl,
+	stationDeepLink,
+	parseHandoffFragment,
+	agoraGuestClaimOf,
+	stationVisitState,
+	stationVisitCounts,
+} from './stationLink';
+
+export type {
+	AgoraQuestionKind,
+	AgoraRoundKind,
+	AgoraEvaluationScale,
+	AgoraRoundSummary,
+	AgoraRoundSpec,
+	AgoraUnitRating,
+} from './rounds';
+export {
+	AgoraQuestionKindSchema,
+	AGORA_ROUND,
+	AGORA_ROUND_KINDS,
+	AGORA_ROUNDS,
+	questionKindOf,
+	isRoundKind,
+	roundSpecOf,
+	evaluationScaleOf,
+	isUnitRating,
+	roundLikes,
+	roundAppreciates,
+	rankRoundAnswers,
+	roundProgress,
+} from './rounds';
+
+export type {
+	AgoraCpBand,
+	AgoraCpBandSummary,
+	CpBandRow,
+} from './questionSummary';
+export {
+	AGORA_CP_BANDS,
+	AGORA_CP_BAND_ORDER,
+	AgoraCpBandSchema,
+	AgoraCpBandSummarySchema,
+	agoraCpBand,
+	cpOf,
+	groupByCpBand,
+	rankByCp,
+} from './questionSummary';
+
 export type { AgoraSessionFlow, AgoraScoreMode, ResolvedSessionFlow } from './sessionFlow';
 export {
 	AgoraSessionFlowSchema,
@@ -152,6 +271,8 @@ export type {
 } from './agoraCivicCallables';
 
 export type { AgoraValueScore, AgoraPoints, AgoraParticipant } from './agoraParticipant';
+export type { LanguageStrikeOutcome, AgoraLanguagePlace } from './agoraLanguage';
+export { applyLanguageStrike, AGORA_LANGUAGE_PLACES, isAgoraLanguagePlace } from './agoraLanguage';
 export {
 	AgoraValueScoreSchema,
 	AgoraPointsSchema,
@@ -203,6 +324,7 @@ export type { AgoraValueAnswer } from './agoraValueAnswer';
 export { AgoraValueAnswerSchema, createAgoraValueAnswerId } from './agoraValueAnswer';
 
 export type { BridgingInput } from './agoraBridging';
+export { BRIDGE_ZONE, backing, campLean, boardPercent, inBridgeZone } from './agoraGoal';
 export {
 	deriveCamp,
 	calcBridgingScore,
@@ -257,8 +379,79 @@ export {
 	advancementSummary,
 } from './agoraClassroom';
 
+export type { SupervisorScope } from './agoraSupervisor';
+export {
+	resolveSupervisorScope,
+	isTeacherInScope,
+	isClassInScope,
+	schoolTeacherUids,
+} from './agoraSupervisor';
+
+export type {
+	AgoraTeacherLessonRow,
+	AgoraTeacherMonthBucket,
+	AgoraTeacherAggregate,
+	AgoraLessonSpan,
+	LessonSpanSession,
+	LessonRowSession,
+} from './agoraTeacherAggregate';
+export {
+	AGORA_TEACHER_AGGREGATE,
+	AgoraTeacherLessonRowSchema,
+	AgoraTeacherMonthBucketSchema,
+	AgoraTeacherAggregateSchema,
+	monthKeyOf,
+	dayKeyOf,
+	emptyTeacherAggregate,
+	mergeTeacherLesson,
+	deriveLessonSpan,
+	teacherLessonRowFrom,
+} from './agoraTeacherAggregate';
+
+export type {
+	AgoraTeacherSurface,
+	AgoraUsageSlice,
+	AgoraTeacherUsageMonth,
+	HeartbeatInput,
+	HeartbeatResult,
+	AgoraPeriod,
+	AgoraUsageSeries,
+	LessonSeries,
+} from './agoraTeacherUsage';
+export {
+	AGORA_TEACHER_SURFACES,
+	AgoraTeacherSurfaceSchema,
+	AGORA_TEACHER_USAGE,
+	AgoraUsageSliceSchema,
+	AgoraTeacherUsageMonthSchema,
+	createAgoraTeacherUsageId,
+	creditHeartbeat,
+	dayKeyToMs,
+	dayKeysBetween,
+	weekStartOf,
+	bucketUsage,
+	lessonSeries,
+} from './agoraTeacherUsage';
+
+export type {
+	SupervisorConsoleRequest,
+	SupervisorTeacherRow,
+	SupervisorClassRow,
+	SupervisorOverview,
+	SupervisorSessionRow,
+	SupervisorTeacherDetail,
+	SupervisorClassDetail,
+	SupervisorStudentDetail,
+	SupervisorSystemView,
+	SupervisorConsoleResponse,
+	BackfillTeacherAggregatesRequest,
+	BackfillTeacherAggregatesResponse,
+} from './agoraSupervisorCallables';
+
 export type {
 	ManageSchoolRequest,
+	TeacherClassRequest,
+	TeacherClassResponse,
 	ManageSchoolResponse,
 	OpenClassRequest,
 	OpenClassResponse,
@@ -274,4 +467,264 @@ export type {
 	TeacherConsoleReport,
 	TeacherConsoleResponse,
 	CreateSessionClassroomFields,
+	TeacherMessageRequest,
+	TeacherMessageResponse,
+	ModerateStatementRequest,
+	ModerateStatementResponse,
+	RemoveParticipantRequest,
+	RemoveParticipantResponse,
+	ResolveRejoinRequest,
+	ResolveRejoinResponse,
+	CheckLanguageRequest,
+	CheckLanguageResponse,
+	SetBannedWordsRequest,
+	SetBannedWordsResponse,
+	RewordQuestionRequest,
+	RewordQuestionResponse,
+	TeacherHeartbeatRequest,
+	TeacherHeartbeatResponse,
 } from './agoraClassroomCallables';
+
+export type { AgoraModeration, ModeratedDoc } from './agoraModeration';
+export {
+	AgoraModerationSchema,
+	isAgoraDeleted,
+	isAgoraHidden,
+	isTeacherEdited,
+	isTeacherTouched,
+} from './agoraModeration';
+
+export type { AgoraTeacherBannedWords } from './agoraBannedWords';
+export {
+	AGORA_BANNED_WORDS,
+	AgoraTeacherBannedWordsSchema,
+	bannedWordKey,
+	bannedWordTokens,
+	cleanBannedWords,
+	findBannedWord,
+} from './agoraBannedWords';
+
+export type {
+	AgoraQuestionWording,
+	AgoraTeacherPromptMap,
+	AgoraTeacherPrompts,
+} from './agoraTeacherPrompts';
+export {
+	AgoraQuestionWordingSchema,
+	AgoraTeacherPromptsSchema,
+	applyTeacherPrompts,
+} from './agoraTeacherPrompts';
+
+export type { AgoraIdentity } from './agoraIdentity';
+export { AgoraIdentitySchema, createAgoraIdentityId } from './agoraIdentity';
+
+export type {
+	AgoraTeacherMessage,
+	AgoraTeacherMessageFrom,
+	AgoraTeacherMessageKind,
+	AgoraModerationAction,
+	AgoraTeacherPreset,
+} from './agoraTeacherMessage';
+export {
+	AgoraTeacherMessageSchema,
+	AgoraTeacherMessageFromSchema,
+	AgoraTeacherMessageKindSchema,
+	AgoraModerationActionSchema,
+	AGORA_TEACHER_PRESETS,
+	isAgoraTeacherPreset,
+} from './agoraTeacherMessage';
+
+export { AGORA_LOTTERY } from './agoraConstants';
+export type {
+	AgoraHand,
+	DealNotesMode,
+	DealNotesRequest,
+	DealNotesResponse,
+	DealCandidate,
+	PlanDealInput,
+	PlanDealResult,
+} from './agoraHand';
+export {
+	AgoraHandSchema,
+	createAgoraHandId,
+	lotteryActive,
+	handGoal,
+	orderCandidates,
+	planDeal,
+} from './agoraHand';
+
+export {
+	AGORA_MATERIALS,
+	AGORA_MATERIAL_KINDS,
+	AgoraMaterialItemSchema,
+	AgoraSceneMaterialsSchema,
+	AgoraMaterialMessageSchema,
+	AgoraMaterialChatSchema,
+	createAgoraSceneMaterialsId,
+	createAgoraMaterialChatId,
+} from './agoraMaterials';
+export type {
+	AgoraMaterialKind,
+	AgoraMaterialItem,
+	AgoraSceneMaterials,
+	AgoraMaterialMessage,
+	AgoraMaterialChat,
+	SceneMaterialsRequest,
+	SceneMaterialsFailure,
+	SceneMaterialsResponse,
+	AskMaterialsRequest,
+	AskMaterialsResponse,
+} from './agoraMaterials';
+export type {
+	AgoraLibraryLang,
+	AgoraLibraryTagKind,
+	AgoraLibraryTagStatus,
+	AgoraLibraryTag,
+	NearTagReason,
+	NearTag,
+	AgoraLibrarySeedTag,
+	AgoraLibraryVisibility,
+	AgoraLibraryCard,
+	AgoraLibraryStats,
+	RatingContribution,
+	AgoraScenarioRating,
+	PublishInput,
+	PublishProblem,
+	AgoraApprovalSource,
+	AgoraApprovalGrant,
+	AgoraApprovedTeacher,
+	AgoraScenarioCardText,
+	AgoraScenarioTranslation,
+	LibraryAccessResponse,
+	LibraryCreateTagRequest,
+	LibraryCreateTagResponse,
+	LibraryPublishRequest,
+	LibraryPublishResponse,
+	LibraryUnpublishRequest,
+	LibraryUseRequest,
+	LibraryUseResponse,
+	LibraryRateRequest,
+	LibraryGenerateCoverRequest,
+	LibraryGenerateCoverResponse,
+	LibraryRateResponse,
+	LibraryTranslateRequest,
+	LibraryTranslateResponse,
+	LibraryModerateRequest,
+	LibraryModerateResponse,
+} from './agoraLibrary';
+export {
+	AGORA_LIBRARY_LANGS,
+	AGORA_LIBRARY,
+	AGORA_LIBRARY_SEED_TAGS,
+	isAgoraLibraryLang,
+	AgoraLibraryTagKindSchema,
+	AgoraLibraryTagStatusSchema,
+	AgoraLibraryTagSchema,
+	AgoraLibraryVisibilitySchema,
+	AgoraLibraryCardSchema,
+	AgoraLibraryStatsSchema,
+	AgoraScenarioRatingSchema,
+	AgoraApprovalSourceSchema,
+	AgoraApprovalGrantSchema,
+	AgoraApprovedTeacherSchema,
+	AgoraScenarioCardTextSchema,
+	AgoraScenarioTranslationSchema,
+	tagLabelIn,
+	normalizeLibraryText,
+	normalizeTagKey,
+	agoraTagId,
+	editDistance,
+	findNearDuplicateTags,
+	showsAsFilterChip,
+	seedTagDocs,
+	emptyLibraryStats,
+	bayesianAverage,
+	applyRatingChange,
+	createAgoraRatingId,
+	isValidStars,
+	isNewerVersionAvailable,
+	isNewScenario,
+	publishProblems,
+	createAgoraTranslationId,
+} from './agoraLibrary';
+
+export type {
+	AgoraPostHiddenBy,
+	AgoraScenarioPost,
+	PostThreadEntry,
+	LibraryPostRequest,
+	LibraryPostResponse,
+	LibraryHidePostRequest,
+	LibraryHidePostResponse,
+	AgoraReportTargetKind,
+	AgoraReportStatus,
+	AgoraReportResolution,
+	AgoraLibraryReport,
+	LibraryReportRequest,
+	LibraryReportResponse,
+	LibraryResolveReportRequest,
+	LibraryResolveReportResponse,
+	LibraryMergeTagsRequest,
+	LibraryMergeTagsResponse,
+} from './agoraLibraryCommunity';
+export {
+	AGORA_LIBRARY_COMMUNITY,
+	AgoraPostHiddenBySchema,
+	AgoraScenarioPostSchema,
+	AgoraReportTargetKindSchema,
+	AgoraReportStatusSchema,
+	AgoraReportResolutionSchema,
+	AgoraLibraryReportSchema,
+	buildPostThread,
+	canUnhidePost,
+	createAgoraReportId,
+	repointTagIds,
+	resolveTagAlias,
+} from './agoraLibraryCommunity';
+
+export type {
+	AgoraAccessRole,
+	AgoraAccessStatus,
+	AgoraAccessSource,
+	AgoraAccessDecidedVia,
+	AgoraAccessRequest,
+	AgoraAccessActor,
+	RequestAccessRequest,
+	RequestAccessResponse,
+	AccessStatusRow,
+	ManageAccessRequest,
+	ManageAccessResponse,
+	AccessRequestRow,
+	AccessSchoolOption,
+} from './agoraAccess';
+export {
+	AGORA_ACCESS,
+	AgoraAccessRoleSchema,
+	AgoraAccessStatusSchema,
+	AgoraAccessSourceSchema,
+	AgoraAccessDecidedViaSchema,
+	AgoraAccessRequestSchema,
+	canDecideAccessRequest,
+	canSeeAccessRequest,
+	canRemoveAccess,
+} from './agoraAccess';
+
+export type { AgoraTeacherInvite, AgoraTeacherInviteStatus } from './agoraTeacherInvite';
+export {
+	AGORA_TEACHER_INVITE,
+	AgoraTeacherInviteSchema,
+	AgoraTeacherInviteStatusSchema,
+	agoraTeacherInviteId,
+	normalizeInviteEmail,
+} from './agoraTeacherInvite';
+
+export type {
+	AgoraTopicReader,
+	TopicAccessRequest,
+	TopicAccessResponse,
+} from './agoraScenarioAccess';
+export {
+	canOpenScenario,
+	createAgoraTopicReaderId,
+	isPrivateScenario,
+} from './agoraScenarioAccess';

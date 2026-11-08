@@ -1,0 +1,36 @@
+import { Collections, getStatementSubscriptionId } from '@freedi/shared-types';
+import { db, doc, updateDoc } from '@/lib/firebase';
+import { setCustomDisplayName } from '@/lib/store';
+import { ensureMemberSubscription } from '@/lib/classroom/studentWrites';
+import { getUserState } from '@/lib/user';
+
+/**
+ * A student types their name once (kept on the device like Join's chat name)
+ * and the teacher's roster shows it: the name is written onto the member
+ * subscription's `user.displayName`. The device keeps the name only AFTER that
+ * write succeeded: a name stored first would count as "has a name" and close the
+ * form on a failed save (Trello dZQmKXRY).
+ */
+export async function saveMyName(mainId: string, rawName: string): Promise<void> {
+	const name = rawName.trim();
+	if (!name) return;
+	try {
+		const uid = getUserState().user?.uid;
+		if (!uid) throw new Error('no signed-in user');
+		await ensureMemberSubscription(mainId);
+		const subId =
+			getStatementSubscriptionId(mainId, { uid } as Parameters<
+				typeof getStatementSubscriptionId
+			>[1]) ?? `${uid}--${mainId}`;
+		await updateDoc(doc(db, Collections.statementsSubscribe, subId), {
+			'user.displayName': name,
+			// Answers a teacher's "ask for a new name" (a no-op when none was asked).
+			renameRequested: false,
+			lastUpdate: Date.now(),
+		});
+		setCustomDisplayName(name);
+	} catch (error) {
+		console.error('[Classroom] saveMyName failed:', error);
+		throw error;
+	}
+}

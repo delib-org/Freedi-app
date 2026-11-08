@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId, unauthorizedResponse } from '@/lib/auth/requestIdentity';
+import { AI_UID_RATE_LIMIT, checkVerifiedUidLimit } from '@/lib/utils/verifiedUidRateLimit';
 import OpenAI from 'openai';
 import {
   getQuestionFromFirebase,
@@ -22,11 +24,23 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { questionId, userId } = await request.json();
+    const userId = await getVerifiedUserId(request);
+    if (!userId) {
+      return unauthorizedResponse();
+    }
 
-    if (!questionId || !userId) {
+    // Cost guard: the in-memory limit above is per instance and keyed by a
+    // forgeable cookie, so OpenAI spend is also capped per verified uid.
+    const uidLimit = await checkVerifiedUidLimit(userId, AI_UID_RATE_LIMIT.feedback);
+    if (uidLimit) {
+      return uidLimit;
+    }
+
+    const { questionId } = await request.json();
+
+    if (!questionId) {
       return NextResponse.json(
-        { error: 'questionId and userId are required' },
+        { error: 'questionId is required' },
         { status: 400 }
       );
     }

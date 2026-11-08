@@ -41,12 +41,12 @@ button {
 
 	&--icon {
 		background-color: var(--icon-blue);
-		color: var(--white);
+		color: var(--btn-primary-text);
 	}
 
 	&--affirmation {
 		background-color: var(--button-blue);
-		color: var(--white);
+		color: var(--btn-primary-text);
 	}
 
 	&--add {
@@ -104,7 +104,7 @@ button {
 
 	&--primary {
 		background-color: var(--btn-primary);
-		color: var(--white);
+		color: var(--btn-primary-text);
 	}
 
 	&--secondary {

@@ -22,6 +22,103 @@ import { logError } from '@/utils/errorHandling';
 const TOKEN_REFRESH_INTERVAL = 30 * 24 * 60 * 60 * 1000;
 
 /**
+ * FCM databases whose schema version can conflict.
+ *
+ * They hold only a cached registration token, which is re-fetched on demand,
+ * so deleting them costs one extra network round trip and nothing else.
+ *
+ * `firebase-installations-database` is deliberately absent: every SDK we have
+ * shipped opens it at version 1, so it cannot be the conflict, and the
+ * service worker keeps it open with no versionchange handler — deleting it
+ * only ever blocked the repair.
+ */
+const FCM_DATABASES = [
+	'firebase-messaging-database',
+	// The pre-v9 store the SDK still migrates from.
+	'fcm_token_details_db',
+] as const;
+
+/**
+ * How long a blocked delete may wait for another tab or the service worker to
+ * close its connection before the repair is left for the next page load.
+ */
+const FCM_DATABASE_DELETE_TIMEOUT_MS = 3000;
+
+/**
+ * True for the IndexedDB failure that happens when a database on this origin
+ * was left at a NEWER schema version than the SDK asking for it expects
+ * ("The requested version (1) is less than the existing version (2)").
+ *
+ * `indexedDB.open(name, 1)` can never succeed against a version-2 database, so
+ * once a browser is in this state every future `getToken()` fails the same way
+ * — push stays broken for that user across reloads and redeploys until the
+ * database is removed.
+ */
+const isIndexedDbVersionError = (error: unknown): boolean => {
+	if (error instanceof DOMException && error.name === 'VersionError') return true;
+
+	// Wrapped by the SDK, or a non-DOMException in older browsers: fall back to
+	// the message, which the spec fixes.
+	const message = error instanceof Error ? error.message : String(error);
+
+	return message.includes('VersionError') || message.includes('less than the existing version');
+};
+
+/** DOMException code for AbortError (legacy ABORT_ERR). */
+const ABORT_ERR_CODE = 20;
+
+/**
+ * True when the browser's own push service refused the subscription
+ * ("AbortError: Registration failed - push service error"). That is the
+ * browser/network (GCM unreachable, push disabled in Brave, etc.), not an app
+ * bug: notifications are simply unavailable this session.
+ */
+export const isPushServiceUnavailableError = (error: unknown): boolean => {
+	const message = error instanceof Error ? error.message : String(error);
+	if (!message.toLowerCase().includes('push service error')) return false;
+
+	if (error instanceof Error && error.name === 'AbortError') return true;
+
+	return error instanceof DOMException && error.code === ABORT_ERR_CODE;
+};
+
+/**
+ * Delete the FCM databases so the SDK can recreate them at the version it
+ * expects. Resolves true only when every delete actually completed.
+ *
+ * A `blocked` delete is not a failure: it stays queued and completes the
+ * moment the other connection closes. So wait for that — retrying `getToken()`
+ * while the old database still exists just fails the same way — but give up
+ * after FCM_DATABASE_DELETE_TIMEOUT_MS rather than hanging the caller.
+ */
+const deleteFcmDatabases = async (): Promise<boolean> => {
+	const results = await Promise.all(
+		FCM_DATABASES.map(
+			(name) =>
+				new Promise<boolean>((resolve) => {
+					try {
+						const request = indexedDB.deleteDatabase(name);
+						const timeout = setTimeout(() => resolve(false), FCM_DATABASE_DELETE_TIMEOUT_MS);
+						const settle = (deleted: boolean) => {
+							clearTimeout(timeout);
+							resolve(deleted);
+						};
+						request.onsuccess = () => settle(true);
+						request.onerror = () => settle(false);
+						request.onblocked = () => {
+							console.info(`[PushService] Waiting for another tab to release ${name}`);
+						};
+					} catch {
+						resolve(false);
+					}
+				}),
+		),
+	);
+
+	return results.every(Boolean);
+};
+
+/**
  * State for the PushService.
  */
 interface PushServiceState {
@@ -262,7 +359,7 @@ export const getOrRefreshToken = async (forceRefresh: boolean = false): Promise<
 		if (!swRegistration) {
 			logError(
 				new Error('[PushService] No Firebase messaging service worker registration found!'),
-				{ operation: 'services.pushService.unknown' },
+				{ operation: 'services.pushService.getOrRefreshToken' },
 			);
 
 			return null;
@@ -277,10 +374,33 @@ export const getOrRefreshToken = async (forceRefresh: boolean = false): Promise<
 		}
 
 		const { getToken } = await import('firebase/messaging');
-		const currentToken = await getToken(state.messaging!, {
-			vapidKey,
-			serviceWorkerRegistration: swRegistration,
-		});
+		const requestToken = () =>
+			getToken(state.messaging!, {
+				vapidKey,
+				serviceWorkerRegistration: swRegistration,
+			});
+
+		let currentToken: string;
+		try {
+			currentToken = await requestToken();
+		} catch (error) {
+			if (!isIndexedDbVersionError(error)) throw error;
+
+			// A stale FCM database at a newer schema version than this SDK build
+			// expects. Nothing the SDK does can recover in place, so clear the
+			// stores and ask once more — the token and installation id in them are
+			// disposable.
+			console.info('[PushService] Rebuilding FCM databases after IndexedDB version conflict');
+			if (!(await deleteFcmDatabases())) {
+				// Another tab still holds the old database, so a retry now would fail
+				// identically. That is transient — the repair runs again on the next
+				// load — so it is not an incident.
+				console.info('[PushService] FCM database still in use; repair deferred to next load');
+
+				return null;
+			}
+			currentToken = await requestToken();
+		}
 
 		if (currentToken) {
 			state.token = currentToken;
@@ -298,10 +418,18 @@ export const getOrRefreshToken = async (forceRefresh: boolean = false): Promise<
 		// permission-blocked is expected when users deny notifications — don't report to Sentry
 		const isPermissionBlocked =
 			error instanceof Error && error.message.includes('permission-blocked');
-		if (!isPermissionBlocked) {
+		if (isPushServiceUnavailableError(error)) {
+			// Expected: the browser's push service is unreachable or disabled.
+			console.info('[PushService] Push service unavailable; notifications off for this session');
+		} else if (!isPermissionBlocked) {
 			logError(error, {
-				operation: 'services.pushService.unknown',
-				metadata: { message: '[PushService] Error getting FCM token:' },
+				operation: 'services.pushService.getOrRefreshToken',
+				metadata: {
+					message: '[PushService] Error getting FCM token:',
+					// The repair above already ran and did not stick — worth knowing,
+					// because it means push is permanently broken for this browser.
+					versionConflictSurvivedRepair: isIndexedDbVersionError(error),
+				},
 			});
 		}
 

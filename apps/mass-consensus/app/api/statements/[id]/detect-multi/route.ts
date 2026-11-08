@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId, unauthorizedResponse } from '@/lib/auth/requestIdentity';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES } from '@/constants/common';
+import { postToCloudFunction } from '@/lib/api/cloudFunction';
 
 /**
  * POST /api/statements/[id]/detect-multi
@@ -14,20 +16,18 @@ export async function POST(
   const { id: questionId } = await params;
 
   try {
+    const userId = await getVerifiedUserId(request);
+    if (!userId) {
+      return unauthorizedResponse();
+    }
+
     const body = await request.json();
-    const { userInput, userId } = body;
+    const { userInput } = body;
 
     // Validate input
     if (!userInput || typeof userInput !== 'string') {
       return NextResponse.json(
         { error: 'User input is required', ok: false, isMultipleSuggestions: false, suggestions: [] },
-        { status: 400 }
-      );
-    }
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required', ok: false, isMultipleSuggestions: false, suggestions: [] },
         { status: 400 }
       );
     }
@@ -58,24 +58,27 @@ export async function POST(
       .replace('checkForSimilarStatements', 'detectMultipleSuggestions'); // Legacy fallback
 
     // Call Cloud Function
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userInput,
+    const result = await postToCloudFunction(endpoint, {
+      userInput,
+      questionId,
+      userId,
+    }, { authorization: request.headers.get('authorization') });
+
+    if (result.kind === 'unavailable') {
+      logError(new Error('Multi-suggestion service returned a non-JSON page'), {
+        operation: 'api.detectMulti',
         questionId,
-        userId,
-      }),
-    });
+        metadata: { status: result.status, attempts: result.attempts, preview: result.preview },
+      });
 
-    const data = await response.json();
-
-    // Pass through the response
-    if (!response.ok) {
-      return NextResponse.json(data, { status: response.status });
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.GENERIC, ok: false, isMultipleSuggestions: false, suggestions: [] },
+        { status: 503 }
+      );
     }
 
-    return NextResponse.json(data);
+    // Pass through the response
+    return NextResponse.json(result.data, { status: result.status });
   } catch (error) {
     logError(error, {
       operation: 'api.detectMulti',

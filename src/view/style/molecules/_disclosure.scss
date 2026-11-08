@@ -1,0 +1,87 @@
+// Disclosure Molecule — BEM
+// Native <details>: a text summary ("More") that opens expert controls
+// below it. <details> carries the expanded state for assistive tech.
+// Spec: docs/ux/main-people-settings-design.md §3.7.
+//
+// DOM:
+// <details class="disclosure">
+//   <summary class="disclosure__summary">More <svg class="disclosure__chevron"/></summary>
+//   <div class="disclosure__body"/>
+// </details>
+@use '../mixins' as *;
+
+.disclosure {
+	// Chromium 131+: animate the native <details> height. Other browsers
+	// open and close instantly, which is fine.
+	@supports (interpolate-size: allow-keywords) {
+		interpolate-size: allow-keywords;
+
+		&::details-content {
+			block-size: 0;
+			opacity: 0;
+			overflow: hidden;
+			transition:
+				block-size var(--motion-base) var(--motion-ease-exit),
+				opacity var(--motion-base) var(--motion-ease-exit),
+				overflow var(--motion-base) allow-discrete,
+				content-visibility var(--motion-base) allow-discrete;
+		}
+
+		&[open]::details-content {
+			block-size: auto;
+			opacity: 1;
+			// Clips while moving only (overflow flips at the end), so focus rings stay whole.
+			overflow: visible;
+			transition-timing-function: var(--motion-ease);
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			&::details-content {
+				transition: none;
+			}
+		}
+	}
+
+	&__summary {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2xs);
+		min-block-size: 2.75rem;
+		padding-inline: var(--space-2xs);
+		// --text-blue, not --btn-primary: 14 px text needs 4.5:1 (design §12).
+		color: var(--text-blue);
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-medium);
+		cursor: pointer;
+		list-style: none;
+
+		&::-webkit-details-marker {
+			display: none;
+		}
+
+		@include focus-visible;
+	}
+
+	&__chevron {
+		inline-size: 1rem;
+		block-size: 1rem;
+		transition: transform var(--motion-base) var(--motion-ease);
+	}
+
+	&[open] &__chevron {
+		transform: rotate(180deg);
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		padding-block-start: var(--space-xs);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		&__chevron {
+			transition: none;
+		}
+	}
+}

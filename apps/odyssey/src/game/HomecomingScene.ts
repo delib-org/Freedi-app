@@ -1,13 +1,28 @@
 import Phaser from 'phaser';
 import {
+	BOAT_SCALE,
+	BOAT_SCALE_NARROW,
+	COLOR_CREAM,
 	COLOR_GOLD,
+	NARROW_STAGE_WIDTH,
 	PARTICLES_ARRIVAL,
 	PARTICLES_SPARKLE,
+	STAGE_FONT,
 	STAGGER_FLAGS_MS,
 	STAGGER_LANTERN_MS,
 	TWEEN_SHIP_MS,
+	mirrorSign,
+	mirrorX,
 } from '../lib/stageConstants';
-import { islandDepth, islandPosition, sailorPlacement, shipLayout } from '../lib/seaLayout';
+import {
+	type FanFrame,
+	islandDepth,
+	islandPosition,
+	partyShipPlacement,
+	rangeRings,
+	sailorPlacement,
+	seaFan,
+} from '../lib/seaLayout';
 import type { StageCommand } from '../lib/stageBus';
 import { stageState } from './stageState';
 import { SeaScene, type PartyShip } from './SeaScene';
@@ -15,10 +30,27 @@ import { SeaScene, type PartyShip } from './SeaScene';
 /**
  * Summary — golden-hour homecoming tableau: lanterns light on every visited
  * island (equal glow regardless of answers), the wake trail is complete,
- * party ships and fellow sailors rest at their true distances, and the
- * lighthouse — the Agora gate — is the most-lit object on screen.
+ * party ships ride the same rings around the player's boat as they did on the
+ * voyage — near the boat, far toward the horizon — and the lighthouse, the
+ * Agora gate, is the most-lit object on screen.
  * docs/phaser-game-design.md §2.5
  */
+
+/**
+ * The fan sits lower than on the voyage: the lit islands take the top of the
+ * frame, and the ships must not ride in among them.
+ */
+const HOMECOMING_FAN: FanFrame = { berth: 0.6, horizon: 0.27 };
+/** The band of the frame the visited islands are drawn in. */
+const ISLANDS_TOP = 0.04;
+const ISLANDS_HEIGHT = 0.2;
+/** Where the islands' band starts, leaving the lighthouse its corner. */
+const ISLANDS_INSET = 0.18;
+const ISLANDS_SQUEEZE = 0.7;
+/** The lighthouse corner, as composed (the far side from the harbor). */
+const LIGHTHOUSE_X = 0.06;
+/** How far the beam reaches from the lighthouse. */
+const BEAM_REACH = 260;
 export class HomecomingScene extends SeaScene {
 	private boat?: Phaser.GameObjects.Container;
 	private wake?: Phaser.GameObjects.Graphics;
@@ -27,6 +59,8 @@ export class HomecomingScene extends SeaScene {
 	private islandNodes: Phaser.GameObjects.Container[] = [];
 	private sailorNodes: Phaser.GameObjects.Image[] = [];
 	private ships: PartyShip[] = [];
+	private rings?: Phaser.GameObjects.Graphics;
+	private boatIsNarrow = false;
 	private celebrated = false;
 
 	constructor() {
@@ -41,16 +75,27 @@ export class HomecomingScene extends SeaScene {
 		this.createSea(0.92);
 		this.wake = this.add.graphics().setDepth(10);
 		this.buildLighthouse();
-		this.boat = this.spawnBoat(this.W * 0.16, this.H * 0.72, 0.13);
+		this.drawRings();
+		this.boat = this.spawnPlayerBoat();
 		this.buildIslands();
 		this.buildShips();
 		this.buildSailors();
 	}
 
 	protected layout(): void {
-		if (this.boat) this.moveBoat(this.boat, this.W * 0.16, this.H * 0.72);
-		this.lighthouse?.setPosition(this.W * 0.06, this.H * 0.3);
-		this.beam?.setPosition(this.W * 0.06, this.H * 0.26);
+		this.drawRings();
+		// the boat's size, and the party names on the water, change at the
+		// phone/desktop breakpoint — rebuild rather than re-measure
+		if (this.boat && this.boatIsNarrow !== this.narrow()) {
+			this.boat.destroy();
+			this.boat = this.spawnPlayerBoat();
+			this.buildShips();
+		} else if (this.boat) {
+			const fan = seaFan(this.W, this.H, HOMECOMING_FAN);
+			this.moveBoat(this.boat, fan.cx, fan.cy);
+		}
+		this.lighthouse?.setPosition(this.lighthouseX(), this.H * 0.3);
+		this.beam?.setPosition(this.lighthouseX(), this.H * 0.26);
 		this.positionIslands();
 		this.positionSailors();
 		this.applyShipLayout(false);
@@ -105,7 +150,7 @@ export class HomecomingScene extends SeaScene {
 				const lantern = this.add.image(0, -6, 'glow').setScale(0).setAlpha(0);
 				const label = this.add
 					.text(0, labelY, island.title, {
-						fontFamily: 'Arial',
+						fontFamily: STAGE_FONT,
 						fontSize: '12px',
 						color: '#fff4d3',
 						backgroundColor: 'rgba(6,26,48,0.85)',
@@ -148,11 +193,13 @@ export class HomecomingScene extends SeaScene {
 		visited.forEach((island, index) => {
 			const node = this.islandNodes[index];
 			if (!node) return;
-			const base = islandPosition(island.posX, island.posY, this.W, this.H);
+			// Laid out in the chart's own (RTL) frame and mirrored as a whole, so
+			// the band keeps clear of the lighthouse whichever corner it is in.
+			const base = islandPosition(island.posX, island.posY, this.W, this.H, 'rtl');
 			// compress the chart into the upper band so the DOM sections scroll below
 			node.setPosition(
-				this.W * 0.18 + base.x * 0.7,
-				this.H * 0.05 + (base.y / this.H) * this.H * 0.45,
+				mirrorX(this.W * ISLANDS_INSET + base.x * ISLANDS_SQUEEZE, this.W),
+				this.H * ISLANDS_TOP + (base.y / this.H) * this.H * ISLANDS_HEIGHT,
 			);
 			// same atmospheric perspective as the chart, gentler at tableau size
 			const depth = islandDepth(island.posY);
@@ -176,22 +223,54 @@ export class HomecomingScene extends SeaScene {
 		this.wake.lineBetween(previous.x, previous.y, this.boat.x, this.boat.y);
 	}
 
+	/** The player's boat at the centre of the rings, named and haloed exactly
+	 *  as on the voyage, so the distances read from the same hull. */
+	private spawnPlayerBoat(): Phaser.GameObjects.Container {
+		this.boatIsNarrow = this.narrow();
+		const fan = seaFan(this.W, this.H, HOMECOMING_FAN);
+
+		return this.spawnBoat(fan.cx, fan.cy, this.narrow() ? BOAT_SCALE_NARROW : BOAT_SCALE, {
+			named: true,
+		});
+	}
+
+	private narrow(): boolean {
+		return this.W < NARROW_STAGE_WIDTH;
+	}
+
+	/** The voyage's range rings — near / middle / far — around the boat. */
+	private drawRings(): void {
+		this.rings?.destroy();
+		const fan = seaFan(this.W, this.H, HOMECOMING_FAN);
+		const graphics = this.add.graphics().setDepth(-18);
+		rangeRings(this.W, this.H, HOMECOMING_FAN).forEach((ring, index) => {
+			graphics.lineStyle(index === 2 ? 1 : 1.5, COLOR_CREAM, index === 2 ? 0.14 : 0.22);
+			graphics.strokeEllipse(fan.cx, fan.cy, ring.rx * 2, ring.ry * 2);
+		});
+		this.rings = graphics;
+	}
+
 	private buildShips(): void {
 		for (const ship of this.ships) ship.container.destroy();
-		this.ships = stageState.parties.map((party) => this.spawnPartyShip(party, 0.09));
+		this.ships = stageState.parties.map((party) =>
+			this.spawnPartyShip(party, 0.1, { named: !this.narrow() }),
+		);
 		this.applyShipLayout(false);
 	}
 
 	private applyShipLayout(animate: boolean): void {
 		const count = this.ships.length || 1;
 		this.ships.forEach((ship, index) => {
-			const placement = shipLayout(
+			const base = partyShipPlacement(
 				stageState.distances[ship.party.id],
 				index,
 				count,
 				this.W,
-				this.H * 0.9,
+				this.H,
+				HOMECOMING_FAN,
 			);
+			// same trim as the voyage: a phone's fan cannot hold full-size hulls
+			const placement = { ...base, scale: base.scale * (this.narrow() ? 0.7 : 1) };
 			ship.container.setDepth(Math.round(placement.y));
 			if (animate) {
 				this.tweens.add({
@@ -237,16 +316,24 @@ export class HomecomingScene extends SeaScene {
 		});
 	}
 
+	private lighthouseX(): number {
+		return mirrorX(this.W * LIGHTHOUSE_X, this.W);
+	}
+
 	private buildLighthouse(): void {
-		this.lighthouse = this.add.image(this.W * 0.06, this.H * 0.3, 'lighthouse').setDepth(25);
+		const x = this.lighthouseX();
+		this.lighthouse = this.add.image(x, this.H * 0.3, 'lighthouse').setDepth(25);
 		this.add
-			.image(this.W * 0.06, this.H * 0.22, 'glow')
+			.image(x, this.H * 0.22, 'glow')
 			.setScale(1.6)
 			.setAlpha(0.9)
 			.setDepth(24);
+		// The beam sweeps inward from its corner: drawn pointing +x, and flipped
+		// about its origin when the lighthouse stands on the other side.
 		this.beam = this.add
-			.triangle(this.W * 0.06, this.H * 0.26, 0, 0, 260, -34, 260, 34, 0xfff4d3, 0.12)
+			.triangle(x, this.H * 0.26, 0, 0, BEAM_REACH, -34, BEAM_REACH, 34, 0xfff4d3, 0.12)
 			.setOrigin(0, 0.5)
+			.setScale(mirrorSign(), 1)
 			.setDepth(23);
 		if (!this.reducedMotion) {
 			this.tweens.add({
@@ -269,7 +356,7 @@ export class HomecomingScene extends SeaScene {
 		const flags = Math.min(islandCount, 8);
 		for (let i = 0; i < flags; i++) {
 			const flag = this.add
-				.image(this.boat.x + 14, this.boat.y - 30, 'flag')
+				.image(this.boat.x + mirrorSign() * 14, this.boat.y - 30, 'flag')
 				.setTint(0xfff4d3)
 				.setAlpha(0)
 				.setDepth(110);
@@ -299,7 +386,7 @@ export class HomecomingScene extends SeaScene {
 		if (this.reducedMotion) return;
 		this.tweens.add({
 			targets: this.boat,
-			x: this.lighthouse.x + 60,
+			x: this.lighthouse.x + mirrorSign() * 60,
 			y: this.lighthouse.y + 60,
 			duration: 1000,
 			ease: 'Sine.inOut',

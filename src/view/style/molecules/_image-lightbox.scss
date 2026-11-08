@@ -1,0 +1,145 @@
+// Image Lightbox Molecule — BEM
+// A picture opened to the full screen, where it can be zoomed and panned.
+// React wrapper: atomic/molecules/ImageLightbox (portal, focus trap, gestures).
+//
+// DOM:   <div class="image-lightbox [image-lightbox--zoomed] [image-lightbox--gesturing]" role="dialog">
+//          <div class="image-lightbox__stage">
+//            <img class="image-lightbox__image" style="--image-lightbox-x/-y/-scale" />
+//          </div>
+//          <div class="image-lightbox__controls">
+//            <button class="image-lightbox__button">−</button>
+//            <button class="image-lightbox__button">+</button>
+//          </div>
+//          <button class="image-lightbox__button image-lightbox__button--close">×</button>
+//        </div>
+//
+// The wrapper feeds the live pan/zoom in as custom properties; the transform,
+// its easing and every cursor are decided here.
+
+@keyframes image-lightbox-enter {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
+.image-lightbox {
+	// Over modals and sheets (1000): a picture can be opened from inside one.
+	position: fixed;
+	inset: 0;
+	z-index: 1100;
+	background: color-mix(in srgb, var(--surface-background) 94%, transparent);
+	backdrop-filter: blur(6px);
+	animation: image-lightbox-enter var(--motion-fast) var(--motion-ease);
+
+	&:focus {
+		outline: none;
+	}
+
+	// The whole screen is the stage: a tap beside the picture leaves the viewer.
+	// touch-action is off so a pinch reaches the wrapper instead of zooming the page.
+	&__stage {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: var(--space-md);
+		overflow: hidden;
+		touch-action: none;
+		cursor: zoom-out;
+	}
+
+	&__image {
+		display: block;
+		max-width: 100%;
+		max-height: 100%;
+		object-fit: contain;
+		border-radius: 8px;
+		box-shadow: var(--elevation-3);
+		transform: translate3d(var(--image-lightbox-x, 0), var(--image-lightbox-y, 0), 0)
+			scale(var(--image-lightbox-scale, 1));
+		transition: transform var(--motion-fast) var(--motion-ease);
+		will-change: transform;
+		cursor: zoom-in;
+		user-select: none;
+		-webkit-user-drag: none;
+	}
+
+	&--zoomed &__image {
+		cursor: grab;
+	}
+
+	// A finger or the mouse is moving the picture: it must follow exactly.
+	&--gesturing &__image {
+		transition: none;
+		cursor: grabbing;
+	}
+
+	&__controls {
+		position: absolute;
+		inset-block-end: calc(var(--space-md) + env(safe-area-inset-bottom, 0px));
+		inset-inline: 0;
+		display: flex;
+		justify-content: center;
+		gap: var(--space-xs);
+		// Minus on the left, plus on the right in every language, like a map's.
+		direction: ltr;
+		// Only the buttons take taps; the strip between them belongs to the stage.
+		pointer-events: none;
+	}
+
+	&__button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		padding: 0;
+		border: 1px solid var(--border-light, transparent);
+		border-radius: var(--radius-pill);
+		background: var(--card-default);
+		color: var(--text-title);
+		box-shadow: var(--elevation-2);
+		cursor: pointer;
+		pointer-events: auto;
+		transition: background-color var(--motion-fast) var(--motion-ease);
+
+		svg {
+			width: 20px;
+			height: 20px;
+		}
+
+		&:hover {
+			background: var(--bg-hover);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary);
+			outline-offset: 2px;
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: default;
+		}
+
+		&--close {
+			position: absolute;
+			inset-block-start: calc(var(--space-md) + env(safe-area-inset-top, 0px));
+			inset-inline-end: var(--space-md);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+
+		&__image,
+		&__button {
+			transition: none;
+		}
+	}
+}

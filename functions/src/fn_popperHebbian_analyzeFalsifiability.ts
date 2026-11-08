@@ -2,6 +2,8 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getGeminiModel } from './config/gemini';
 import { functionConfig } from '@freedi/shared-types';
 import { logError } from './utils/errorHandling';
+import { enforceCallableRateLimit } from './utils/rateLimit';
+import { RATE_BUDGETS } from './config/rateBudgets';
 
 interface AnalyzeFalsifiabilityRequest {
 	ideaText: string;
@@ -35,11 +37,15 @@ const LANGUAGE_NAMES: Record<string, string> = {
 export const analyzeFalsifiability = onCall<AnalyzeFalsifiabilityRequest>(
 	{ region: functionConfig.region },
 	async (request): Promise<AnalyzeFalsifiabilityResponse> => {
+		if (!request.auth?.uid) {
+			throw new HttpsError('unauthenticated', 'Sign in required');
+		}
 		const { ideaText, context, language = 'en' } = request.data;
 
 		if (!ideaText) {
 			throw new HttpsError('invalid-argument', 'Idea text is required');
 		}
+		await enforceCallableRateLimit(request, RATE_BUDGETS.analyzeFalsifiability, request.auth.uid);
 
 		const languageName = LANGUAGE_NAMES[language] || 'English';
 		const languageInstruction =

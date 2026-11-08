@@ -7,6 +7,7 @@ import {
   updateSurvey,
 } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { denySurveyPermission } from '@/lib/auth/surveyAccess';
 import type { UserDemographicQuestion } from '@freedi/shared-types';
 import type { SurveyDemographicPage } from '@/types/survey';
 import { logger } from '@/lib/utils/logger';
@@ -95,13 +96,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     logger.info(`[POST demographics] Survey creatorId: ${survey.creatorId}`);
 
-    if (survey.creatorId !== userId) {
-      logger.warn(`[POST demographics] Mismatch: creatorId=${survey.creatorId}, userId=${userId}`);
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 403 }
-      );
-    }
+    const denied0 = await denySurveyPermission(survey, userId, 'edit');
+    if (denied0) return denied0;
 
     const body: UpdateDemographicsRequest = await request.json();
 
@@ -183,12 +179,8 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       );
     }
 
-    if (survey.creatorId !== userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 403 }
-      );
-    }
+    const denied1 = await denySurveyPermission(survey, userId, 'edit');
+    if (denied1) return denied1;
 
     const { searchParams } = new URL(request.url);
     const questionId = searchParams.get('questionId');

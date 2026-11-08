@@ -1,7 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { unauthorizedResponse, verifyParticipant } from '@/lib/auth/requestIdentity';
+import { isMeaningfulSuggestion, MIN_MEANINGFUL_WORDS } from '@freedi/shared-types';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES, VALIDATION } from '@/constants/common';
 import { logger } from '@/lib/utils/logger';
+import { getAddOptionRefusal } from '@/lib/firebase/addOptionGuard';
+import { postToCloudFunction } from '@/lib/api/cloudFunction';
+
+const STATUS_CONFLICT = 409;
+
+interface MergeFunctionResponse {
+  error?: string;
+  statementId?: string;
+  mergedStatementId?: string;
+  newTitle?: string;
+  /** Auto-merge refused: the same-idea judge did not call it the same idea */
+  notSameIdea?: boolean;
+  verdict?: string;
+}
 
 /**
  * POST /api/statements/[id]/merge
@@ -18,13 +34,20 @@ export async function POST(
   let parsedBody: {
     targetStatementId?: string;
     solutionText?: string;
-    userId?: string;
-    userName?: string;
+    autoMerge?: boolean;
   } = {};
+  let userId: string | undefined;
 
   try {
+    const participant = await verifyParticipant(request);
+    if (!participant) {
+      return unauthorizedResponse();
+    }
+
+    userId = participant.userId;
+    const userName = participant.displayName;
     parsedBody = await request.json();
-    const { targetStatementId, solutionText, userId, userName } = parsedBody;
+    const { targetStatementId, solutionText, autoMerge } = parsedBody;
 
     // Validate required fields
     if (!targetStatementId) {
@@ -41,13 +64,6 @@ export async function POST(
       );
     }
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
-    }
-
     const trimmedText = solutionText.trim();
 
     if (trimmedText.length < VALIDATION.MIN_SOLUTION_LENGTH) {
@@ -57,11 +73,25 @@ export async function POST(
       );
     }
 
+    if (!isMeaningfulSuggestion(trimmedText)) {
+      return NextResponse.json(
+        { error: `Suggestion must have at least ${MIN_MEANINGFUL_WORDS} real words` },
+        { status: 400 }
+      );
+    }
+
     if (trimmedText.length > VALIDATION.MAX_SOLUTION_LENGTH) {
       return NextResponse.json(
         { error: `Solution must be less than ${VALIDATION.MAX_SOLUTION_LENGTH} characters` },
         { status: 400 }
       );
+    }
+
+    // "Admin options only": refuse before any upstream call. A merge adds the
+    // participant's text to the pool just as a new option would.
+    const refusal = await getAddOptionRefusal(questionId);
+    if (refusal) {
+      return NextResponse.json(refusal.body, { status: refusal.status });
     }
 
     // Get Cloud Function endpoint from environment
@@ -88,28 +118,53 @@ export async function POST(
     });
 
     // Call Cloud Function
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        targetStatementId,
-        newContent: trimmedText,
-        questionId,
-        userId,
-        userName,
-      }),
-    });
+    const result = await postToCloudFunction<MergeFunctionResponse>(endpoint, {
+      targetStatementId,
+      newContent: trimmedText,
+      questionId,
+      userId,
+      userName,
+      autoMerge: autoMerge === true,
+    }, { authorization: request.headers.get('authorization') });
 
-    const data = await response.json();
+    if (result.kind === 'unavailable') {
+      logError(new Error('Merge service returned a non-JSON page'), {
+        operation: 'api.merge',
+        userId,
+        metadata: { questionId, targetStatementId, status: result.status, attempts: result.attempts, preview: result.preview },
+      });
+
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.MERGE_FAILED || 'Failed to merge statement', unavailable: true },
+        { status: 503 }
+      );
+    }
+
+    const data = result.data;
+
+    // The same-idea judge refused an automatic merge. Not a failure: the
+    // client adds the text as a new suggestion instead.
+    if (result.status === STATUS_CONFLICT && data.notSameIdea) {
+      logger.info('[Merge] Auto-merge refused: not the same idea', {
+        questionId,
+        targetStatementId,
+        verdict: data.verdict,
+      });
+
+      return NextResponse.json(
+        { error: data.error, notSameIdea: true, verdict: data.verdict },
+        { status: STATUS_CONFLICT }
+      );
+    }
 
     // Pass through the response
-    if (!response.ok) {
+    if (!result.ok) {
       logger.error('[Merge] Cloud Function error', {
-        status: response.status,
+        status: result.status,
         error: data.error,
       });
 
-      return NextResponse.json(data, { status: response.status });
+      return NextResponse.json(data, { status: result.status });
     }
 
     logger.info('[Merge] Success', {
@@ -127,7 +182,7 @@ export async function POST(
     });
   } catch (error) {
     // Use parsedBody from top level (already parsed before try block might fail)
-    const { userId, targetStatementId } = parsedBody;
+    const { targetStatementId } = parsedBody;
 
     logError(error, {
       operation: 'api.merge',

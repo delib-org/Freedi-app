@@ -15,17 +15,24 @@ import {
 	CivicStanceMeta,
 	Evaluation,
 	AGORA_CIVIC_CENTER_POSITION,
+	AGORA_IDENTITY,
+	AGORA_REMOVED_REASON,
 	AGORA_SESSION,
+	AgoraIdentity,
+	createAgoraIdentityId,
 	createAgoraClassMemberId,
 	createAgoraParticipantId,
 	deriveCamp,
 	deriveCivicCampPositionFromIsland,
 	functionConfig,
+	isRemovedFromAgoraSession,
 	resolveSessionFlow,
 	AttitudeMap,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { generateAnonName } from './anonNames';
+import { knockToRejoin } from './rejoin';
+import { grantTopicRead } from './topicReaders';
 
 interface CivicStanding {
 	campPosition: number;
@@ -137,11 +144,52 @@ async function readStanceBaseline(
 	return Object.keys(baseline).length ? baseline : undefined;
 }
 
+/**
+ * The real name typed at the door, kept for the teacher alone. Written to
+ * `agoraIdentities` — never to the participant doc every phone in the room
+ * reads. A blank, a civic session, or a session that opted out all mean:
+ * nothing is written. On a rejoin the first name stands; a re-typed one on
+ * a second device never overwrites it.
+ */
+async function recordIdentity(
+	session: AgoraSession,
+	uid: string,
+	anonName: string,
+	realName: unknown,
+	memberId?: string,
+): Promise<void> {
+	if (typeof realName !== 'string') return;
+	const trimmed = realName.trim().slice(0, AGORA_IDENTITY.MAX_REAL_NAME);
+	if (!trimmed) return;
+	if (session.sessionMode === AgoraSessionMode.civic || session.collectRealNames === false) return;
+
+	const ref = db
+		.collection(Collections.agoraIdentities)
+		.doc(createAgoraIdentityId(session.sessionId, uid));
+	if ((await ref.get()).exists) return;
+	const now = Date.now();
+	const identity: AgoraIdentity = {
+		identityId: ref.id,
+		sessionId: session.sessionId,
+		teacherId: session.teacherId,
+		userId: uid,
+		anonName,
+		realName: trimmed,
+		...(memberId ? { memberId } : {}),
+		createdAt: now,
+		lastUpdate: now,
+		expiresAt: (session.lessonEndsAt ?? now) + AGORA_IDENTITY.RETENTION_MS,
+	};
+	await ref.set(identity);
+}
+
 interface Request {
 	code: string;
 	teamMemberCount?: number;
 	/** `named` sessions only: the name this person goes by */
 	displayName?: string;
+	/** For the teacher alone (`agoraIdentities`) — never on a card */
+	realName?: string;
 }
 
 /** Long enough for a real name, short enough to sit on a card */
@@ -151,6 +199,8 @@ interface Result {
 	sessionId: string;
 	participantId: string;
 	anonName: string;
+	/** A removed login knocked: not seated, waiting for the teacher */
+	waiting?: true;
 }
 
 /**
@@ -166,7 +216,7 @@ export const agoraJoinSession = onCall(
 			throw new HttpsError('unauthenticated', 'User must be authenticated');
 		}
 
-		const { code, teamMemberCount, displayName } = request.data ?? {};
+		const { code, teamMemberCount, displayName, realName } = request.data ?? {};
 		if (!code || typeof code !== 'string') {
 			throw new HttpsError('invalid-argument', 'code is required');
 		}
@@ -191,12 +241,33 @@ export const agoraJoinSession = onCall(
 			}
 
 			const session = sessionSnap.docs[0].data() as AgoraSession;
+			// The teacher took this login out of this lesson. Before anything
+			// else — a rejoin, a roster check — or the door would hand the seat
+			// straight back. The door is a knock instead: the request waits for
+			// the teacher (agoraResolveRejoin), and the student waits with it.
+			// Other sessions never read this list.
+			if (isRemovedFromAgoraSession(session, uid)) {
+				const knock = await knockToRejoin(session.sessionId, uid);
+				if (knock) {
+					// The name they type at the door is for the teacher's request card
+					// — and stays theirs if the teacher lets them back
+					await recordIdentity(session, uid, knock.anonName, realName);
+
+					return {
+						sessionId: session.sessionId,
+						participantId: createAgoraParticipantId(session.sessionId, uid),
+						anonName: knock.anonName,
+						waiting: true,
+					};
+				}
+			}
 			const participantId = createAgoraParticipantId(session.sessionId, uid);
 			const participantRef = db.collection(Collections.agoraParticipants).doc(participantId);
 
 			const existing = await participantRef.get();
 			if (existing.exists) {
 				const participant = existing.data() as AgoraParticipant;
+				await recordIdentity(session, uid, participant.anonName, realName, participant.memberId);
 
 				// A voyager seated before camp derivation existed (or before the
 				// centre fallback) can hold no campPosition. Heal it on rejoin, so
@@ -215,6 +286,8 @@ export const agoraJoinSession = onCall(
 						lastActive: Date.now(),
 					});
 				}
+				// A seat taken before reader markers existed gets one on its way back in
+				await grantTopicRead(session.topicPackageId, uid, session.sessionId);
 
 				return {
 					sessionId: session.sessionId,
@@ -309,6 +382,10 @@ export const agoraJoinSession = onCall(
 					transaction.get(sessionRef),
 					transaction.get(participantRef),
 				]);
+				// A removal that landed between the read above and this seat
+				if (isRemovedFromAgoraSession(freshSession.data() as AgoraSession | undefined, uid)) {
+					throw new HttpsError('permission-denied', AGORA_REMOVED_REASON);
+				}
 				if (freshParticipant.exists) {
 					return (freshParticipant.data() as AgoraParticipant).anonName;
 				}
@@ -351,6 +428,10 @@ export const agoraJoinSession = onCall(
 
 				return name;
 			});
+
+			await recordIdentity(session, uid, anonName, realName, rosterMember?.memberId);
+			// The player may read the scenario behind the game even when it is private
+			await grantTopicRead(session.topicPackageId, uid, session.sessionId);
 
 			// The roster's "last active" column — fire-and-forget: losing it costs
 			// a timestamp, never a seat.

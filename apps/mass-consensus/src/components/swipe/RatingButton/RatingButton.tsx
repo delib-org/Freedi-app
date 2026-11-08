@@ -7,6 +7,7 @@
  * Mode-aware via the shared cross-app scale (`getEvaluationScale`):
  * - 'agree-disagree' (default): signed -1..1 scale, SVG thumbs.
  * - 'reactions': positive 0..1 scale, emoji reactions.
+ * - 'three-point': -1 · 0 · +1, single thumbs.
  *
  * Design principles:
  * - Emoji-only display for universal clarity
@@ -19,7 +20,7 @@ import React from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import clsx from 'clsx';
 import { getEvaluationEntry } from '@freedi/shared-types';
-import type { RatingMode } from '@freedi/shared-types';
+import type { EvaluationScaleKey } from '@freedi/shared-types';
 import { playClickSound } from '../SwipeCard/soundEffects';
 import EvaluationFace from '@/components/icons/EvaluationFace';
 
@@ -28,8 +29,8 @@ export type RatingValue = number;
 
 export interface RatingButtonProps {
   rating: RatingValue;
-  /** Evaluation mode; undefined = agree-disagree (default). */
-  ratingMode?: RatingMode;
+  /** Evaluation scale; undefined = five-step agree-disagree (default). */
+  ratingMode?: EvaluationScaleKey;
   onClick: (rating: RatingValue) => void;
   disabled?: boolean;
   size?: 'small' | 'medium' | 'large';

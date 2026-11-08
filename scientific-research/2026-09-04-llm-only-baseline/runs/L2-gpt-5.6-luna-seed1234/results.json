@@ -1,0 +1,738 @@
+{
+  "synths": {
+    "items": [
+      {
+        "id": "syn001",
+        "title": "Open primary-care clinics in underserved neighborhoods.",
+        "members": [
+          {
+            "id": "s051"
+          },
+          {
+            "id": "s052"
+          }
+        ]
+      },
+      {
+        "id": "syn002",
+        "title": "Improve street lighting on dark streets and footpaths.",
+        "members": [
+          {
+            "id": "s031"
+          },
+          {
+            "id": "s032"
+          }
+        ]
+      },
+      {
+        "id": "syn003",
+        "title": "Open a public library branch in every neighborhood.",
+        "members": [
+          {
+            "id": "s073"
+          },
+          {
+            "id": "s074"
+          }
+        ]
+      },
+      {
+        "id": "syn004",
+        "title": "Run free screening campaigns for early detection of disease.",
+        "members": [
+          {
+            "id": "s057"
+          },
+          {
+            "id": "s058"
+          }
+        ]
+      },
+      {
+        "id": "syn005",
+        "title": "Offer cheap credit to small neighborhood businesses.",
+        "members": [
+          {
+            "id": "s062"
+          },
+          {
+            "id": "s061"
+          }
+        ]
+      },
+      {
+        "id": "syn006",
+        "title": "Give riders live vehicle tracking in an app so they know arrival times.",
+        "members": [
+          {
+            "id": "s010"
+          },
+          {
+            "id": "s009"
+          }
+        ]
+      },
+      {
+        "id": "syn007",
+        "title": "Open subsidized coworking spaces for freelancers.",
+        "members": [
+          {
+            "id": "s069"
+          },
+          {
+            "id": "s070"
+          }
+        ]
+      },
+      {
+        "id": "syn008",
+        "title": "Shorten the waiting times for specialist appointments.",
+        "members": [
+          {
+            "id": "s055"
+          },
+          {
+            "id": "s056"
+          }
+        ]
+      },
+      {
+        "id": "syn009",
+        "title": "Require developers to include affordable units in every new building.",
+        "members": [
+          {
+            "id": "s011"
+          },
+          {
+            "id": "s012"
+          }
+        ]
+      },
+      {
+        "id": "syn010",
+        "title": "Put solar panels on the roofs of all public buildings.",
+        "members": [
+          {
+            "id": "s083"
+          },
+          {
+            "id": "s084"
+          }
+        ]
+      },
+      {
+        "id": "syn011",
+        "title": "Provide free public wifi in the squares and community centers.",
+        "members": [
+          {
+            "id": "s093"
+          },
+          {
+            "id": "s094"
+          }
+        ]
+      },
+      {
+        "id": "syn012",
+        "title": "Provide free mental-health counseling for residents.",
+        "members": [
+          {
+            "id": "s053"
+          },
+          {
+            "id": "s054"
+          }
+        ]
+      },
+      {
+        "id": "syn013",
+        "title": "Simplify the business licensing process down to one short form.",
+        "members": [
+          {
+            "id": "s065"
+          },
+          {
+            "id": "s066"
+          }
+        ]
+      },
+      {
+        "id": "syn014",
+        "title": "Require city contractors to hire local residents.",
+        "members": [
+          {
+            "id": "s067"
+          },
+          {
+            "id": "s068"
+          }
+        ]
+      },
+      {
+        "id": "syn015",
+        "title": "Fund retraining programs for workers changing careers.",
+        "members": [
+          {
+            "id": "s063"
+          },
+          {
+            "id": "s064"
+          }
+        ]
+      },
+      {
+        "id": "syn016",
+        "title": "Allocate plots for community vegetable gardens.",
+        "members": [
+          {
+            "id": "s025"
+          },
+          {
+            "id": "s026"
+          }
+        ]
+      },
+      {
+        "id": "syn017",
+        "title": "Build protected bike lanes that are separated from car traffic.",
+        "members": [
+          {
+            "id": "s003"
+          },
+          {
+            "id": "s004"
+          }
+        ]
+      },
+      {
+        "id": "syn018",
+        "title": "Operate night buses on weekends so people can get home late.",
+        "members": [
+          {
+            "id": "s007"
+          },
+          {
+            "id": "s008"
+          }
+        ]
+      },
+      {
+        "id": "syn019",
+        "title": "Set up enclosed off-leash areas for dogs in every neighborhood.",
+        "members": [
+          {
+            "id": "s030"
+          },
+          {
+            "id": "s029"
+          }
+        ]
+      },
+      {
+        "id": "syn020",
+        "title": "Run buses more often during rush hour so people do not wait long.",
+        "members": [
+          {
+            "id": "s001"
+          },
+          {
+            "id": "s002"
+          }
+        ]
+      },
+      {
+        "id": "syn021",
+        "title": "Provide free after-school homework tutoring for pupils who fall behind.",
+        "members": [
+          {
+            "id": "s045"
+          },
+          {
+            "id": "s046"
+          }
+        ]
+      },
+      {
+        "id": "syn022",
+        "title": "Fund subsidies for upgrading aging flats so they use less energy.",
+        "members": [
+          {
+            "id": "s018"
+          },
+          {
+            "id": "s017"
+          }
+        ]
+      },
+      {
+        "id": "syn023",
+        "title": "Collect recycling from every doorstep once a week.",
+        "members": [
+          {
+            "id": "s081"
+          },
+          {
+            "id": "s082"
+          }
+        ]
+      },
+      {
+        "id": "syn024",
+        "title": "Reduce how long emergency services take to arrive by adding stations closer to neighborhoods.",
+        "members": [
+          {
+            "id": "s038"
+          },
+          {
+            "id": "s037"
+          }
+        ]
+      },
+      {
+        "id": "syn025",
+        "title": "Ban single-use plastics in shops and restaurants.",
+        "members": [
+          {
+            "id": "s085"
+          },
+          {
+            "id": "s086"
+          }
+        ]
+      },
+      {
+        "id": "syn026",
+        "title": "Commission murals and sculptures from local artists for public squares.",
+        "members": [
+          {
+            "id": "s077"
+          },
+          {
+            "id": "s078"
+          }
+        ]
+      },
+      {
+        "id": "syn027",
+        "title": "Add speed bumps and narrowed crossings near schools.",
+        "members": [
+          {
+            "id": "s033"
+          },
+          {
+            "id": "s034"
+          }
+        ]
+      },
+      {
+        "id": "syn028",
+        "title": "Line the sidewalks with trees so pedestrians get shade.",
+        "members": [
+          {
+            "id": "s024"
+          },
+          {
+            "id": "s023"
+          }
+        ]
+      },
+      {
+        "id": "syn029",
+        "title": "Set up separate collection of kitchen food scraps for composting.",
+        "members": [
+          {
+            "id": "s087"
+          },
+          {
+            "id": "s088"
+          }
+        ]
+      },
+      {
+        "id": "syn030",
+        "title": "Put neighborhood officers who know the residents on regular patrol.",
+        "members": [
+          {
+            "id": "s035"
+          },
+          {
+            "id": "s036"
+          }
+        ]
+      },
+      {
+        "id": "syn031",
+        "title": "Expand home-care services so seniors can stay in their own homes.",
+        "members": [
+          {
+            "id": "s059"
+          },
+          {
+            "id": "s060"
+          }
+        ]
+      },
+      {
+        "id": "syn032",
+        "title": "Provide no-cost hot meals for all students during the school day.",
+        "members": [
+          {
+            "id": "s050"
+          },
+          {
+            "id": "s049"
+          }
+        ]
+      },
+      {
+        "id": "syn033",
+        "title": "Let residents complete all municipal forms online.",
+        "members": [
+          {
+            "id": "s091"
+          },
+          {
+            "id": "s092"
+          }
+        ]
+      },
+      {
+        "id": "syn034",
+        "title": "Construct low-cost student housing close to the colleges.",
+        "members": [
+          {
+            "id": "s020"
+          },
+          {
+            "id": "s019"
+          }
+        ]
+      },
+      {
+        "id": "syn035",
+        "title": "Ensure a small green park sits within a five-minute walk of every home.",
+        "members": [
+          {
+            "id": "s021"
+          },
+          {
+            "id": "s022"
+          }
+        ]
+      },
+      {
+        "id": "syn036",
+        "title": "Renovate old school buildings with modern classrooms and laboratories.",
+        "members": [
+          {
+            "id": "s047"
+          },
+          {
+            "id": "s048"
+          }
+        ]
+      },
+      {
+        "id": "syn037",
+        "title": "Publish a municipal database of rents so renters can see real market rates.",
+        "members": [
+          {
+            "id": "s014"
+          },
+          {
+            "id": "s013"
+          }
+        ]
+      },
+      {
+        "id": "syn038",
+        "title": "Organize frequent public festivals and open-air music events.",
+        "members": [
+          {
+            "id": "s076"
+          },
+          {
+            "id": "s075"
+          }
+        ]
+      },
+      {
+        "id": "syn039",
+        "title": "Make every playground accessible to children with disabilities.",
+        "members": [
+          {
+            "id": "s027"
+          },
+          {
+            "id": "s028"
+          }
+        ]
+      },
+      {
+        "id": "syn040",
+        "title": "Install security cameras at the crime hotspots.",
+        "members": [
+          {
+            "id": "s039"
+          },
+          {
+            "id": "s040"
+          }
+        ]
+      },
+      {
+        "id": "syn041",
+        "title": "Staff in-person support counters that help people navigate the municipal website.",
+        "members": [
+          {
+            "id": "s096"
+          },
+          {
+            "id": "s095"
+          }
+        ]
+      },
+      {
+        "id": "syn042",
+        "title": "Raise teacher salaries to attract and keep good educators.",
+        "members": [
+          {
+            "id": "s043"
+          },
+          {
+            "id": "s044"
+          }
+        ]
+      },
+      {
+        "id": "syn043",
+        "title": "Let all school-age children ride public transit at no charge.",
+        "members": [
+          {
+            "id": "s006"
+          },
+          {
+            "id": "s005"
+          }
+        ]
+      },
+      {
+        "id": "syn044",
+        "title": "Pay for no-cost instrument instruction for kids.",
+        "members": [
+          {
+            "id": "s080"
+          },
+          {
+            "id": "s079"
+          }
+        ]
+      },
+      {
+        "id": "syn045",
+        "title": "Release municipal data and spending on a public open-data website.",
+        "members": [
+          {
+            "id": "s098"
+          },
+          {
+            "id": "s097"
+          }
+        ]
+      },
+      {
+        "id": "syn046",
+        "title": "Create a single phone number for all city service requests.",
+        "members": [
+          {
+            "id": "s099"
+          },
+          {
+            "id": "s100"
+          }
+        ]
+      },
+      {
+        "id": "syn047",
+        "title": "Convert empty office buildings into apartments.",
+        "members": [
+          {
+            "id": "s015"
+          },
+          {
+            "id": "s016"
+          }
+        ]
+      },
+      {
+        "id": "syn048",
+        "title": "Deploy pollution monitors citywide with public real-time readings.",
+        "members": [
+          {
+            "id": "s090"
+          },
+          {
+            "id": "s089"
+          }
+        ]
+      },
+      {
+        "id": "syn049",
+        "title": "Offer no-charge museum admission on one day of every week.",
+        "members": [
+          {
+            "id": "s072"
+          },
+          {
+            "id": "s071"
+          }
+        ]
+      },
+      {
+        "id": "syn050",
+        "title": "Reduce class sizes so teachers can give individual attention.",
+        "members": [
+          {
+            "id": "s041"
+          },
+          {
+            "id": "s042"
+          }
+        ]
+      }
+    ]
+  },
+  "topicClusters": {
+    "items": [
+      {
+        "id": "top001",
+        "title": "Healthcare and Senior Care",
+        "members": [],
+        "memberSynthIds": [
+          "syn001",
+          "syn004",
+          "syn008",
+          "syn012",
+          "syn031"
+        ]
+      },
+      {
+        "id": "top002",
+        "title": "Public Safety and Emergency Response",
+        "members": [],
+        "memberSynthIds": [
+          "syn002",
+          "syn024",
+          "syn027",
+          "syn030",
+          "syn040"
+        ]
+      },
+      {
+        "id": "top003",
+        "title": "Public Transportation and Cycling",
+        "members": [],
+        "memberSynthIds": [
+          "syn006",
+          "syn017",
+          "syn018",
+          "syn020",
+          "syn043"
+        ]
+      },
+      {
+        "id": "top004",
+        "title": "Affordable Housing",
+        "members": [],
+        "memberSynthIds": [
+          "syn009",
+          "syn022",
+          "syn034",
+          "syn037",
+          "syn047"
+        ]
+      },
+      {
+        "id": "top005",
+        "title": "Local Economy and Employment",
+        "members": [],
+        "memberSynthIds": [
+          "syn005",
+          "syn007",
+          "syn013",
+          "syn014",
+          "syn015"
+        ]
+      },
+      {
+        "id": "top006",
+        "title": "Schools and Youth Services",
+        "members": [],
+        "memberSynthIds": [
+          "syn021",
+          "syn032",
+          "syn036",
+          "syn042",
+          "syn044",
+          "syn050"
+        ]
+      },
+      {
+        "id": "top007",
+        "title": "Environment and Waste Reduction",
+        "members": [],
+        "memberSynthIds": [
+          "syn010",
+          "syn023",
+          "syn025",
+          "syn029",
+          "syn048"
+        ]
+      },
+      {
+        "id": "top008",
+        "title": "Parks and Community Amenities",
+        "members": [],
+        "memberSynthIds": [
+          "syn016",
+          "syn019",
+          "syn028",
+          "syn035",
+          "syn039"
+        ]
+      },
+      {
+        "id": "top009",
+        "title": "Arts, Culture and Libraries",
+        "members": [],
+        "memberSynthIds": [
+          "syn003",
+          "syn026",
+          "syn038",
+          "syn049"
+        ]
+      },
+      {
+        "id": "top010",
+        "title": "Digital Access and City Services",
+        "members": [],
+        "memberSynthIds": [
+          "syn011",
+          "syn033",
+          "syn041",
+          "syn045",
+          "syn046"
+        ]
+      }
+    ]
+  },
+  "parameters": {
+    "language": "en",
+    "corpus": "scripts/seedSynthBenchmark.accuracy100.en.json",
+    "corpusSha": "8fdcaccc66dd",
+    "seed": 1234,
+    "condition": "L2",
+    "model": "gpt-5.6-luna"
+  }
+}

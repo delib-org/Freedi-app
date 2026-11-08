@@ -12,22 +12,21 @@ import {
 import { logError } from '../utils/errorHandling';
 import { runCondensationPipeline } from './pipeline';
 import { notifyAuthorsOfGrouping } from './authorNotifications';
-import { findClustersAffectedByEvaluation, recomputeClusterEvaluation } from './aggregation';
+import { recomputeAffectedClusters } from './recomputeAffectedClusters';
 
 const db = getFirestore();
 
 /**
  * Callable: run the non-destructive condensation pipeline on demand.
  *
- * Input: { parentId: string, mode?: 'manual' | 'scheduled' }
+ * Input: { parentId: string, dryRun?: boolean }
  * Auth: user must be signed in.
  * Permission: only the parent's creator can trigger a manual run. (Admin
  * extension can be added later by reading subscription roles.)
  */
 export const runCondensation = onCall({ region: functionConfig.region }, async (request) => {
-	const { parentId, mode, dryRun } = (request.data ?? {}) as {
+	const { parentId, dryRun } = (request.data ?? {}) as {
 		parentId?: string;
-		mode?: 'manual' | 'scheduled';
 		dryRun?: boolean;
 	};
 
@@ -44,7 +43,7 @@ export const runCondensation = onCall({ region: functionConfig.region }, async (
 	}
 	const parent = parentDoc.data() as Statement;
 
-	if (parent.creatorId !== request.auth.uid && mode !== 'scheduled') {
+	if (parent.creatorId !== request.auth.uid) {
 		throw new HttpsError(
 			'permission-denied',
 			'Only the creator can trigger grouping for this question',
@@ -186,19 +185,7 @@ export const onEvaluationChangeRecomputeCondensationClusters = onDocumentWritten
 			const statementId = after?.statementId ?? before?.statementId;
 			if (!statementId) return;
 
-			const affected = await findClustersAffectedByEvaluation(statementId);
-			if (affected.length === 0) return;
-
-			for (const clusterId of affected) {
-				try {
-					await recomputeClusterEvaluation(clusterId);
-				} catch (error) {
-					logError(error, {
-						operation: 'onEvaluationChangeRecomputeCondensationClusters.recompute',
-						statementId: clusterId,
-					});
-				}
-			}
+			await recomputeAffectedClusters(statementId);
 		} catch (error) {
 			logger.error('condensation.onEvaluationChangeRecomputeCondensationClusters error', error);
 		}

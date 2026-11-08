@@ -11,14 +11,12 @@ import {
 	picklist,
 	InferOutput,
 } from 'valibot';
+import { AgoraRemovalSchema } from './agoraRemoval';
 import { VotingStageSettingsSchema, VotingStateSchema } from '../vote/votingStageSettings';
 import { VotingGameStateSchema } from '../vote/challengeGame';
 import { AgoraSessionFlowSchema } from './sessionFlow';
-import {
-	AgoraCarriedAnswerSchema,
-	AgoraStagePlanSchema,
-	AgoraStageStateSchema,
-} from './stagePlan';
+import { AgoraThemeChoiceSchema } from './agoraTheme';
+import { AgoraCarriedAnswerSchema, AgoraStagePlanSchema, AgoraStageStateSchema } from './stagePlan';
 import {
 	AgoraStage,
 	AgoraRoundPhase,
@@ -226,6 +224,13 @@ export const AgoraSessionSchema = object({
 	 */
 	aggregatedAt: optional(number()),
 	/**
+	 * When this game was folded into the teacher's own aggregate doc
+	 * (`agoraTeacherAggregates`). Stamped beside `aggregatedAt` by the
+	 * finished-session trigger; the backfill stamps it alone on games that
+	 * finished before teacher aggregates existed. Server-written.
+	 */
+	teacherAggregatedAt: optional(number()),
+	/**
 	 * Which track this session runs. Absent on every classroom session ever
 	 * written, and `undefined` means `classroom` — see AgoraSessionMode.
 	 */
@@ -251,6 +256,62 @@ export const AgoraSessionSchema = object({
 	/** Position in the resolved plan. Server-owned; absent on sessions without a plan. */
 	stageIndex: optional(number()),
 	identity: optional(AgoraIdentityModeSchema),
+	/**
+	 * Ask every student for their real name at the door, for the teacher's
+	 * console only (`agoraIdentities`). Server-owned, set at creation. Absent
+	 * means the classroom default: on for a teacher's lesson, never on civic.
+	 */
+	collectRealNames: optional(boolean()),
+	/**
+	 * The look the room wears by default — the teacher's pick, at creation or
+	 * live from the console. Teacher-writable (see firestore.rules). Absent
+	 * means AGORA_DEFAULT_THEME; a student's own pick on their participant
+	 * doc outranks it. Never read on civic sessions, which wear Odyssey's.
+	 */
+	theme: optional(nullable(AgoraThemeChoiceSchema)),
+	world: optional(picklist(['village', 'classic'])),
+	/**
+	 * Who moves students between the village's stations. `teacher` (absent =
+	 * teacher): every advance walks the whole class to the new station and
+	 * opens its paper. `free`: students pick where to walk on the village map,
+	 * and a newly opened station is announced, not imposed. Teacher-writable.
+	 */
+	villageNavigation: optional(picklist(['teacher', 'free'])),
+	/**
+	 * The teacher's latest "everyone to …": a place id (`council`, or
+	 * `current` for the room's own station) and when it was called. Each
+	 * client walks there once per `at`. Teacher-writable.
+	 */
+	villageCall: optional(object({ place: string(), at: number() })),
+	/**
+	 * After the lobby, whether the projector keeps a small join QR beside the
+	 * code. Absent = off; the lobby always shows the big one. Teacher-writable
+	 * from the console's menu, read live by the projector.
+	 */
+	projectorQr: optional(boolean()),
+	/**
+	 * The library video the teacher started for the class: which scene it
+	 * belongs to, its YouTube id (and start offset), and when it was started
+	 * (ms). Each student device follows it once per `at`; a student replaying
+	 * a video on their own phone never writes this. Teacher-writable.
+	 */
+	libraryVideo: optional(
+		object({
+			sceneId: string(),
+			videoId: string(),
+			startSeconds: optional(number()),
+			at: number(),
+		}),
+	),
+	/**
+	 * Who the teacher took out of this lesson: uid → when, the pseudonym they
+	 * played under, and their knock to come back. Written only by
+	 * `agoraRemoveParticipant`, `agoraJoinSession` (the knock) and
+	 * `agoraResolveRejoin`; pinned by rules, which also refuse the uid's
+	 * statements, ratings and votes in this session while it is here. Other
+	 * sessions are untouched. See agoraRemoval.ts.
+	 */
+	removedUids: optional(record(string(), AgoraRemovalSchema)),
 	stage: enum_(AgoraStage),
 	roundNumber: number(),
 	roundPhase: optional(enum_(AgoraRoundPhase)),

@@ -1,0 +1,3 @@
+# Weak evidence only: LibreOffice's reading of the DOCX, not Word's. arm64 for native speed.
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends libreoffice-writer fonts-noto-core fonts-dejavu-core && rm -rf /var/lib/apt/lists/*

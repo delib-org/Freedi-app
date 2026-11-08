@@ -74,10 +74,17 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       ['USE_FIREBASE_EMULATOR', 'USE_FIREBASE_EMULATOR'],
       ['FIRESTORE_EMULATOR_HOST', 'FIRESTORE_EMULATOR_HOST'],
       ['FIREBASE_AUTH_EMULATOR_HOST', 'FIREBASE_AUTH_EMULATOR_HOST'],
+      // Optional: card pictures. Unset, MC falls back to the default suite's localhost:9199.
+      ['FIREBASE_STORAGE_EMULATOR_HOST', 'FIREBASE_STORAGE_EMULATOR_HOST'],
       ['OPENAI_API_KEY', 'OPENAI_API_KEY'],
       ['OPENAI_FAST_MODEL', 'OPENAI_FAST_MODEL'],
       ['FIND_SIMILAR_STATEMENTS_ENDPOINT', 'FIND_SIMILAR_STATEMENTS_ENDPOINT'],
       ['FIND_SIMILAR_STATEMENTS_ENDPOINT', 'CHECK_SIMILARITIES_ENDPOINT'],
+      // Outgoing mail — survey co-admin invitations are sent from the Next
+      // runtime (src/lib/email/transporter.ts), not from the functions.
+      ['EMAIL_USER', 'EMAIL_USER'],
+      ['EMAIL_PASSWORD', 'EMAIL_PASSWORD'],
+      ['EMAIL_SERVICE', 'EMAIL_SERVICE'],
       // Client-side vars (NEXT_PUBLIC_ prefix)
       ['FIREBASE_API_KEY', 'NEXT_PUBLIC_FIREBASE_API_KEY'],
       ['FIREBASE_AUTH_DOMAIN', 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'],
@@ -104,11 +111,17 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       'EMAIL_USER': 'EMAIL_USER',
       'EMAIL_PASSWORD': 'EMAIL_PASSWORD',
       'EMAIL_SERVICE': 'EMAIL_SERVICE',
+      // Where Odyssey feedback letters go. Optional — odysseyFeedbackEmail.ts
+      // falls back to both developers when unset, which is the normal state.
+      'ODYSSEY_FEEDBACK_RECIPIENTS': 'ODYSSEY_FEEDBACK_RECIPIENTS',
       // Google Sheets API (join-form export trigger)
       'GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL': 'GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL',
       'GOOGLE_SHEETS_PRIVATE_KEY': 'GOOGLE_SHEETS_PRIVATE_KEY',
       // Synthesis feature flags — read by functions/src/synthesis/featureFlags.ts
       'SYNTHESIS_LIVE_SYNTH_ENABLED': 'SYNTHESIS_LIVE_SYNTH_ENABLED',
+      // Folds member evaluations into their synth (see clusterRecompute.ts);
+      // without it a synth never inherits the votes of the originals it replaced.
+      'SYNTHESIS_CLUSTER_AWARE_POLARIZATION': 'SYNTHESIS_CLUSTER_AWARE_POLARIZATION',
       // WizCol Studio base URL — organization invite links (functions/src/organizations/orgAuth.ts)
       'STUDIO_APP_BASE_URL': 'STUDIO_APP_BASE_URL',
       // Sign editor links returned by the Studio Draft tool
@@ -236,6 +249,52 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
     },
     extra: ''
   },
+  joinClass: {
+    path: path.join(ROOT_DIR, 'apps', 'join-class'),
+    filename: '.env.local',
+    // JOIN_FIREBASE_* overrides win when set (prod uses a dedicated web app
+    // registration inside the wizcol-app project); otherwise fall back to
+    // the shared FIREBASE_* values.
+    mapping: {
+      'JOIN_FIREBASE_API_KEY|FIREBASE_API_KEY': 'VITE_FIREBASE_API_KEY',
+      'JOIN_FIREBASE_AUTH_DOMAIN|FIREBASE_AUTH_DOMAIN': 'VITE_FIREBASE_AUTH_DOMAIN',
+      'JOIN_FIREBASE_PROJECT_ID|FIREBASE_PROJECT_ID': 'VITE_FIREBASE_PROJECT_ID',
+      'JOIN_FIREBASE_STORAGE_BUCKET|FIREBASE_STORAGE_BUCKET': 'VITE_FIREBASE_STORAGE_BUCKET',
+      'JOIN_FIREBASE_MESSAGING_SENDER_ID|FIREBASE_MESSAGING_SENDER_ID': 'VITE_FIREBASE_MESSAGING_SENDER_ID',
+      'JOIN_FIREBASE_APP_ID|FIREBASE_APP_ID': 'VITE_FIREBASE_APP_ID',
+      'JOIN_FIREBASE_MEASUREMENT_ID|FIREBASE_MEASUREMENT_ID': 'VITE_FIREBASE_MEASUREMENT_ID',
+      'JOIN_FIREBASE_DATABASE_URL|FIREBASE_DATABASE_URL': 'VITE_FIREBASE_DATABASE_URL',
+      // Web push (IA 22 reply notices): the project's web-push certificate
+      'FIREBASE_VAPID_KEY': 'VITE_FIREBASE_VAPID_KEY',
+      // Sentry (shares the main app's project; tagged with `app: 'join-class'` at runtime)
+      'SENTRY_DSN': 'VITE_SENTRY_DSN',
+      'ENVIRONMENT': 'VITE_ENVIRONMENT',
+      'APP_VERSION': 'VITE_APP_VERSION',
+    },
+    extra: ''
+  },
+  tables: {
+    path: path.join(ROOT_DIR, 'apps', 'tables'),
+    filename: '.env.local',
+    // WizCol Tables (table assignment, tables.wizcol.com). Prefer a dedicated
+    // TABLES_FIREBASE_* web app registration if present; otherwise fall back
+    // to the shared FIREBASE_* values (the JOIN_* key is restricted to Join's
+    // own domains, so it is not a fallback here).
+    mapping: {
+      'TABLES_FIREBASE_API_KEY|FIREBASE_API_KEY': 'VITE_FIREBASE_API_KEY',
+      'TABLES_FIREBASE_AUTH_DOMAIN|FIREBASE_AUTH_DOMAIN': 'VITE_FIREBASE_AUTH_DOMAIN',
+      'TABLES_FIREBASE_PROJECT_ID|FIREBASE_PROJECT_ID': 'VITE_FIREBASE_PROJECT_ID',
+      'TABLES_FIREBASE_STORAGE_BUCKET|FIREBASE_STORAGE_BUCKET': 'VITE_FIREBASE_STORAGE_BUCKET',
+      'TABLES_FIREBASE_MESSAGING_SENDER_ID|FIREBASE_MESSAGING_SENDER_ID': 'VITE_FIREBASE_MESSAGING_SENDER_ID',
+      'TABLES_FIREBASE_APP_ID|FIREBASE_APP_ID': 'VITE_FIREBASE_APP_ID',
+      'TABLES_FIREBASE_MEASUREMENT_ID|FIREBASE_MEASUREMENT_ID': 'VITE_FIREBASE_MEASUREMENT_ID',
+      // Sentry (shares the main app's project; tagged with `app: 'tables'` at runtime)
+      'SENTRY_DSN': 'VITE_SENTRY_DSN',
+      'ENVIRONMENT': 'VITE_ENVIRONMENT',
+      'APP_VERSION': 'VITE_APP_VERSION',
+    },
+    extra: ''
+  },
   studio: {
     path: path.join(ROOT_DIR, 'apps', 'studio'),
     filename: '.env.local',
@@ -294,6 +353,10 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       'FIREBASE_MESSAGING_SENDER_ID': 'VITE_FIREBASE_MESSAGING_SENDER_ID',
       'FIREBASE_APP_ID': 'VITE_FIREBASE_APP_ID',
       'FIREBASE_MEASUREMENT_ID': 'VITE_FIREBASE_MEASUREMENT_ID',
+      // Stamped into every feedback letter, so a bug report says which build
+      // produced it. Without this line import.meta.env.VITE_APP_VERSION is
+      // undefined and every letter reads "לא ידוע".
+      'APP_VERSION': 'VITE_APP_VERSION',
     },
     extra: ''
   }

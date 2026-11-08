@@ -1,0 +1,33 @@
+{
+  "condition": "L1",
+  "model": "gpt-5.6-luna",
+  "requestedModel": "gpt-5.6-luna",
+  "fallbackNote": null,
+  "seed": 7,
+  "apiCalls": 1,
+  "retries": 0,
+  "promptTokens": 1669,
+  "completionTokens": 2092,
+  "reasoningTokens": 943,
+  "totalTokens": 3761,
+  "estimatedCostUsd": 0.0028,
+  "wallClockSeconds": 22.3,
+  "synthesesProduced": 50,
+  "topicsProduced": 10,
+  "invalid": {
+    "invented": 0,
+    "duplicatedAcrossSyntheses": 0,
+    "missing": 0,
+    "singletonSyntheses": 0,
+    "badSynthesisIndex": 0,
+    "synthesisInMultipleTopics": 0,
+    "looseAlsoInSynthesis": 0,
+    "unfiledSyntheses": 1,
+    "invalidOutput": 0
+  },
+  "finishReason": "stop",
+  "truncated": false,
+  "orphanIds": [],
+  "apiModel": "gpt-5.6-luna",
+  "ranAt": "2026-09-04T05:07:35.022Z"
+}

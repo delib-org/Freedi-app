@@ -8,9 +8,12 @@
  */
 
 import { logger } from 'firebase-functions/v1';
+import { FieldValue } from 'firebase-admin/firestore';
 import { Collections, Evaluation, calcAgreement } from '@freedi/shared-types';
 import { db } from '../index';
-import { updateParentTotalEvaluators } from './updateChosenOptions';
+import { reconcileParentEvaluators } from './evaluatorParticipation';
+import { resolveQuestionPopulation } from './resolveQuestionPopulation';
+import { clampEvaluationValue } from './evaluationTypes';
 
 // ============================================================================
 // TYPES
@@ -87,17 +90,18 @@ export async function migrateEvaluationsToNewStatement(
 				const evaluation = doc.data() as Evaluation;
 				const userId = evaluation.evaluator?.uid;
 
-				if (!userId || evaluation.evaluation === 0) return;
+				const value = clampEvaluationValue(evaluation.evaluation);
+				if (!userId || value === 0) return;
 
 				const existing = evaluationsByUser.get(userId);
 
 				if (existing) {
 					// User already evaluated another source statement - add to their evaluations array
-					existing.evaluations.push(evaluation.evaluation);
+					existing.evaluations.push(value);
 				} else {
 					// First evaluation from this user
 					evaluationsByUser.set(userId, {
-						evaluations: [evaluation.evaluation],
+						evaluations: [value],
 						evaluator: evaluation.evaluator,
 					});
 				}
@@ -176,7 +180,15 @@ export async function migrateEvaluationsToNewStatement(
 		// rewriting integrated statements with a formula the rest of the app
 		// had already left behind.
 		const averageEvaluation = numberOfEvaluators > 0 ? sumEvaluations / numberOfEvaluators : 0;
-		const agreement = calcAgreement(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
+		// Same explicit-N walk as every other writer (question -> top group);
+		// undefined when nobody declared one, which is the uncorrected formula.
+		const declaredN = await resolveQuestionPopulation(db, parentId);
+		const agreement = calcAgreement(
+			sumEvaluations,
+			sumSquaredEvaluations,
+			numberOfEvaluators,
+			declaredN,
+		);
 
 		result.newEvaluationMetrics = {
 			sumEvaluations,
@@ -202,6 +214,8 @@ export async function migrateEvaluationsToNewStatement(
 			'evaluation.sumSquaredEvaluations': sumSquaredEvaluations,
 			'evaluation.averageEvaluation': averageEvaluation,
 			'evaluation.agreement': agreement,
+			'evaluation.stakeholderCount':
+				declaredN !== undefined ? Math.max(declaredN, numberOfEvaluators) : FieldValue.delete(),
 			consensus: agreement,
 			totalEvaluators: numberOfEvaluators,
 			lastUpdate: now,
@@ -212,7 +226,7 @@ export async function migrateEvaluationsToNewStatement(
 		);
 
 		// Update parent's total evaluator count to reflect the changes
-		await updateParentTotalEvaluators(parentId);
+		await reconcileParentEvaluators(parentId);
 
 		return result;
 	} catch (error) {
@@ -221,8 +235,5 @@ export async function migrateEvaluationsToNewStatement(
 	}
 }
 
-// Migration-specific consensus helpers used to live here. They were a copy of
-// a superseded formula, so integration silently disagreed with every other
-// write path. Deleted in favour of calcAgreement from @freedi/shared-types —
-// if this file ever needs the population-aware variant, pass the stakeholder
-// count as the fourth argument rather than reintroducing a local copy.
+// Consensus comes from calcAgreement in @freedi/shared-types, with the question's
+// explicit N (if any) as the fourth argument. Do not reintroduce a local copy.

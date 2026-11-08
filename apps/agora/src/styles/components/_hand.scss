@@ -1,0 +1,36 @@
+@use '../tokens' as *;
+
+// ============================================================================
+// The hand: the line under a board whose notes were dealt by lottery
+// (components/HandStatus.ts), and the teacher's coverage line.
+// ============================================================================
+
+.hand {
+	display: grid;
+	gap: var(--space-xs);
+	justify-items: start;
+	padding-block: var(--space-sm);
+
+	&__line {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	&__note {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	&__more {
+		margin-block-start: var(--space-xs);
+	}
+}
+
+.teacher-answers__coverage {
+	margin: 0;
+	font-size: var(--font-size-sm);
+	color: var(--text-secondary);
+}

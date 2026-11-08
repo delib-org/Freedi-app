@@ -11,7 +11,14 @@ import {
 	picklist,
 	InferOutput,
 } from 'valibot';
+import { stagePlanPreset } from './stagePlan';
+import type { AgoraStagePlanItem } from './stagePlan';
 import { AgoraSceneKind, AgoraTopicStatus } from './agoraEnums';
+import {
+	AgoraLibraryCardSchema,
+	AgoraLibraryStatsSchema,
+	AgoraLibraryVisibilitySchema,
+} from './agoraLibrary';
 
 /** A value held by a historical character — also the AI grading answer key */
 export const AgoraValueSchema = object({
@@ -57,6 +64,22 @@ export const AgoraDialogueLineSchema = object({
 export type AgoraDialogueLine = InferOutput<typeof AgoraDialogueLineSchema>;
 
 /**
+ * One YouTube video a teacher pasted into a scene. Only the id is stored —
+ * never the raw link or any HTML — and clients build the youtube-nocookie
+ * embed URL from it.
+ */
+export const AgoraYoutubeVideoSchema = object({
+	/** The 11-character YouTube video id */
+	videoId: string(),
+	/** A teacher-written label; clients fall back to "Video N" when absent */
+	title: optional(string()),
+	/** Where playback begins, from a `&t=` / `?t=` in the pasted link */
+	startSeconds: optional(number()),
+});
+
+export type AgoraYoutubeVideo = InferOutput<typeof AgoraYoutubeVideoSchema>;
+
+/**
  * One narrative scene. If videoUrl is missing, clients render the
  * dialogue/text fallback over the scene images.
  */
@@ -66,6 +89,11 @@ export const AgoraSceneSchema = object({
 	title: string(),
 	text: string(),
 	videoUrl: optional(string()),
+	/**
+	 * Any number of YouTube videos, in the teacher's order. Independent of the
+	 * uploaded `videoUrl`, which keeps working as before.
+	 */
+	youtubeVideos: optional(array(AgoraYoutubeVideoSchema)),
 	imageUrls: array(string()),
 	dialogue: array(AgoraDialogueLineSchema),
 });
@@ -145,6 +173,8 @@ export const AgoraTopicPackageSchema = object({
 	kind: optional(AgoraTopicKindSchema),
 	/** The teacher's original topic prompt, e.g. "המהפכה הצרפתית" */
 	topic: string(),
+	/** Original teacher intent, retained separately from the editable AI draft. */
+	authoringBrief: optional(object({ statement: string(), description: string() })),
 	/** BCP-47 language code the package content is written in */
 	language: string(),
 	status: enum_(AgoraTopicStatus),
@@ -164,8 +194,28 @@ export const AgoraTopicPackageSchema = object({
 	healthMetrics: array(AgoraHealthMetricDefSchema),
 	scenes: array(AgoraSceneSchema),
 	artwork: optional(AgoraArtworkSchema),
+	/**
+	 * The teachers' library. All optional, all server-written (rules refuse a
+	 * client write to `stats` and `library`): absent `visibility` means private.
+	 * A public scenario is listed, rated and copyable by approved teachers only.
+	 */
+	visibility: optional(AgoraLibraryVisibilitySchema),
+	library: optional(AgoraLibraryCardSchema),
+	stats: optional(AgoraLibraryStatsSchema),
+	/** On a copy taken from the library: the original scenario's id... */
+	sourceScenarioId: optional(string()),
+	/** ...its title and author as they were, so the credit survives the original going private... */
+	sourceTitle: optional(string()),
+	sourceAuthorName: optional(string()),
+	/** ...and the original's `lastUpdate` when this copy was taken ("a new version is available" compares to it) */
+	sourceVersion: optional(number()),
 	createdAt: number(),
 	lastUpdate: number(),
 });
 
 export type AgoraTopicPackage = InferOutput<typeof AgoraTopicPackageSchema>;
+
+/** Every scenario, question-led or not, starts from the WizCol plan (no vision round). */
+export function topicStagePlan(): AgoraStagePlanItem[] {
+	return stagePlanPreset('scenarioWizcol');
+}

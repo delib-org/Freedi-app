@@ -1,0 +1,43 @@
+// =============================================================================
+// "Someone replied to you" (IA 23.1): one lasting line under the step title.
+// Teal marks what is new; the whole line is the tap target.
+// =============================================================================
+
+.reply-notice {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  min-height: var(--touch-target, 44px);
+  margin: var(--space-sm) var(--space-md) 0;
+  padding: var(--space-xs) var(--space-md);
+  border: 1.5px solid var(--teal-600);
+  border-radius: var(--radius-lg);
+  background: var(--teal-50);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-card-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  &__dot {
+    flex: none;
+    inline-size: var(--space-sm);
+    block-size: var(--space-sm);
+    border-radius: 50%;
+    background: var(--teal-600);
+  }
+
+  &__text {
+    flex: 1;
+    overflow-wrap: anywhere;
+  }
+}

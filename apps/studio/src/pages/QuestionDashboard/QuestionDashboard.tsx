@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ActivityType, type ScheduledAction } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/react';
@@ -7,8 +7,10 @@ import { EmptyState } from '@/components/atomic/atoms/EmptyState';
 import { Skeleton } from '@/components/atomic/atoms/Skeleton';
 import { ActivityBoard } from '@/components/atomic/molecules/ActivityBoard';
 import { activityUrlResolver } from '@/config';
+import { useOrgActivity, useQuestionProgressByIds } from '@/db/orgActivities';
+import { sumProgress } from '@/db/progress';
 import { useScheduledActionsByTop } from '@/db/scheduledActions';
-import { archiveStatement } from '@/db/statements';
+import { archiveStatement, questionStatusToRunState } from '@/db/statements';
 import { useOrg } from '@/org/OrgContext';
 import { logError } from '@/utils/logError';
 import StudioPage from '@/pages/_shared/StudioPage';
@@ -21,6 +23,7 @@ import DashboardDrawer from './components/DashboardDrawer';
 import EditQuestionModal from './components/EditQuestionModal';
 import EditScheduledActionModal from './components/EditScheduledActionModal';
 import EmptyActivities from './components/EmptyActivities';
+import LinkedSurveyCard from './components/LinkedSurveyCard';
 import HomePreview from './components/HomePreview';
 import PlanRatingCard, { hasRatedPlan } from './components/PlanRatingCard';
 import QuestionHeader from './components/QuestionHeader';
@@ -53,6 +56,30 @@ export default function QuestionDashboard() {
 	const data = useQuestionDashboardData(qId);
 	const { question, questionLoading, activities, activitiesLoading, progressById } = data;
 	const { data: scheduled } = useScheduledActionsByTop(orgId, qId);
+	// Present only when this question was added from elsewhere rather than
+	// created here — it carries the name this organization gave it.
+	const { data: activity } = useOrgActivity(orgId, qId);
+
+	// A linked question's participation lives on its OWN progress record (and,
+	// for a survey, on its sibling questions'). The dashboard's usual totals sum
+	// records whose topParentId is this question — descendants it does not have —
+	// so a question with real answers would read as "No participants yet".
+	const linkedProgressIds = useMemo(
+		() => (activity ? (activity.surveyQuestionIds ?? [activity.statementId]) : []),
+		[activity],
+	);
+	const { data: linkedProgress } = useQuestionProgressByIds(linkedProgressIds);
+	const headerTotals = activity ? sumProgress(linkedProgress) : data.totals;
+
+	// The usual pill is rolled up from the activities below it. A linked survey
+	// has none — it IS the activity — so read its state off the question the way
+	// the board card does, rather than reporting a live survey as "not yet open".
+	const headerRollup = useMemo(() => {
+		if (!activity?.surveyId) return data.rollup;
+		const state = questionStatusToRunState(question?.statementSettings?.questionStatus);
+
+		return { state, openCount: state === 'open' ? 1 : 0, total: 1 };
+	}, [activity?.surveyId, data.rollup, question?.statementSettings?.questionStatus]);
 
 	const [modal, setModal] = useState<DashboardModal>(null);
 	const [addType, setAddType] = useState<ActivityType | undefined>(undefined);
@@ -159,9 +186,12 @@ export default function QuestionDashboard() {
 		showToast(t('Activity archived'));
 	};
 
+	// The board name when this organization gave the question one, so the trail
+	// reads the same as the card the consultant clicked.
+	const boardTitle = activity?.label?.trim() || question?.statement;
 	const breadcrumb = [
 		{ label: t('Questions'), to: orgHome },
-		{ label: question?.statement || t('Question') },
+		{ label: boardTitle || t('Question') },
 	];
 
 	if (!questionLoading && !question) {
@@ -183,10 +213,10 @@ export default function QuestionDashboard() {
 			<div className={styles.page}>
 				{question ? (
 					<QuestionHeader
-						title={question.statement}
+						title={boardTitle ?? question.statement}
 						description={question.description}
-						rollup={data.rollup}
-						totals={data.totals}
+						rollup={headerRollup}
+						totals={headerTotals}
 						lastActivityAt={
 							data.totals.lastActivity || question.lastChildUpdate || question.lastUpdate
 						}
@@ -222,11 +252,19 @@ export default function QuestionDashboard() {
 							onSelect={(id) => selectActivity(id)}
 							onQuickAction={(id, action) => void handleQuickAction(id, action)}
 							emptyState={
-								<EmptyActivities
-									canManage={canManage}
-									onPickType={openAdd}
-									onPlanWithAI={() => navigate(planHref)}
-								/>
+								// A question added as a whole crowd survey has no activity
+								// children of its own — the survey IS the activity. Showing
+								// "pick an activity type" there would be wrong twice over: it
+								// hides the survey, and it invites setting one up again.
+								activity?.surveyId ? (
+									<LinkedSurveyCard activity={activity} />
+								) : (
+									<EmptyActivities
+										canManage={canManage}
+										onPickType={openAdd}
+										onPlanWithAI={() => navigate(planHref)}
+									/>
+								)
 							}
 						/>
 						{(activities.length > 0 || scheduled.length > 0) && (
@@ -301,10 +339,16 @@ export default function QuestionDashboard() {
 						<EditQuestionModal
 							isOpen={modal === 'edit'}
 							question={question}
+							activity={activity}
+							organizationId={orgId}
 							onClose={() => setModal(null)}
 							onSaved={() => {
 								setModal(null);
 								showToast(t('Saved'));
+							}}
+							onUnlinked={() => {
+								setModal(null);
+								navigate(`/orgs/${orgId}`);
 							}}
 						/>
 					)}

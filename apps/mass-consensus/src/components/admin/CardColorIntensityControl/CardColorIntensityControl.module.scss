@@ -1,0 +1,59 @@
+// Card colour intensity slider + five-zone preview (mirrors the swipe card strips)
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.value {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.slider {
+  width: 100%;
+  accent-color: var(--btn-primary);
+  cursor: pointer;
+}
+
+.preview {
+  display: flex;
+  height: 3rem;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--card-default);
+  box-shadow: var(--shadow-sm);
+  direction: ltr; // same left-to-right order as the swipe card
+}
+
+.zone {
+  flex: 1;
+  background: var(--preview-zone-color);
+  // 0.55 = the swipe card's resting strip opacity
+  opacity: calc(0.55 * var(--card-color-intensity, 1));
+}
+
+.zone0 { --preview-zone-color: var(--rating-strongly-disagree); }
+.zone1 { --preview-zone-color: var(--rating-disagree); }
+.zone2 { --preview-zone-color: var(--rating-neutral); }
+.zone3 { --preview-zone-color: var(--rating-agree); }
+.zone4 { --preview-zone-color: var(--rating-strongly-agree); }
+
+.hint {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 0;
+}

@@ -1,0 +1,112 @@
+.top-agreements {
+  padding: 1.5rem;
+  background: var(--mc-surface, white);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-block-end: 1rem;
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    color: var(--text-heading, #1a1a2e);
+    margin: 0;
+  }
+
+  &__refresh,
+  &__more {
+    min-height: 44px;
+    padding-inline: 1rem;
+    background: transparent;
+    color: var(--btn-primary, #5f88e5);
+    border: 1px solid var(--btn-primary, #5f88e5);
+    border-radius: 20px;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary, #5f88e5);
+      outline-offset: 2px;
+    }
+  }
+
+  &__more {
+    margin-block-start: 0.75rem;
+  }
+
+  &__message {
+    color: var(--text-muted, #718096);
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+  }
+
+  &__question {
+    padding-block: 1rem;
+    border-block-start: 1px solid var(--border-light, #e2e8f0);
+  }
+
+  &__question-title {
+    font-size: 1rem;
+    color: var(--text-heading, #1a1a2e);
+    margin: 0 0 0.75rem;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      'rank text score'
+      'rank text evaluators';
+    align-items: center;
+    column-gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg-muted, #f7fafc);
+    border-radius: 8px;
+  }
+
+  &__rank {
+    grid-area: rank;
+    font-weight: 700;
+    color: var(--text-muted, #718096);
+    min-inline-size: 1.5rem;
+    text-align: center;
+  }
+
+  &__text {
+    grid-area: text;
+    color: var(--text-body, #3d4d71);
+    overflow-wrap: anywhere;
+  }
+
+  &__score {
+    grid-area: score;
+    font-weight: 700;
+    color: var(--agree, #2e7d32);
+    text-align: end;
+  }
+
+  &__evaluators {
+    grid-area: evaluators;
+    font-size: 0.8rem;
+    color: var(--text-muted, #718096);
+    text-align: end;
+  }
+}

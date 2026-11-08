@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
 import { db } from './index';
+import { assertStatementAdmin } from './progress/assertStatementAdmin';
 import {
 	Collections,
 	Evaluation,
@@ -71,6 +72,8 @@ export const fixClusterIntegration = onCall<FixClusterRequest>(
 			throw new HttpsError('unauthenticated', 'User must be authenticated');
 		}
 
+		await assertStatementAdmin(request.auth.uid, clusterId, 'fixClusterIntegration');
+
 		const modeLabel = dryRun ? '[DRY RUN] ' : '';
 		logger.info(`${modeLabel}Fixing cluster ${clusterId} with ${sourceIds.length} sources`);
 
@@ -96,6 +99,10 @@ export const fixClusterIntegration = onCall<FixClusterRequest>(
 			const sourceDoc = await db.collection(Collections.statements).doc(sourceId).get();
 			if (sourceDoc.exists) {
 				const source = sourceDoc.data()!;
+				// Admin of the cluster grants nothing over statements in another discussion.
+				if (source.topParentId !== cluster.topParentId) {
+					throw new HttpsError('permission-denied', 'Source is outside this discussion');
+				}
 				sourceDetails.push({
 					id: sourceId,
 					statement: source.statement?.substring(0, 50) || '',

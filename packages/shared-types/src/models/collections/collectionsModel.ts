@@ -1,6 +1,8 @@
 export enum Collections {
     statements = 'statements',
     statementDeletions = 'statementDeletions', // tombstones for deleted statements (delta-listener delete sync)
+    statementEmbeddings = 'statementEmbeddings', // server-only vectors per statement, kept off the statement doc so listeners don't download them
+    questionEmbeddings = 'questionEmbeddings', // server-only vectors per QUESTION (one fixed model) for admin "search by meaning"
     statementSnapShots = 'statementSnapshots',
     statementHistory = 'statementHistory', // subcollection on statements/{id}/statementHistory
     termsOfUseAcceptance = 'termsOfUseAcceptance',
@@ -8,6 +10,8 @@ export enum Collections {
     statementsMetaData = 'statementsMeta',
     statementsPasswords = 'statementsPasswords',
     statementsSubscribe = 'statementsSubscribe',
+    userFeed = 'userFeed', // server-written per-user home feed: one doc per (user, top-level discussion), ordered by lastActivity
+    userFeedThrottle = 'userFeedThrottle', // server-only: last activity fan-out per discussion (coalesces userFeed writes)
     massConsensus = 'massConsensus',
     massConsensusMembers = 'massConsensusMembers',
     massConsensusProcesses = 'massConsensusProcesses',
@@ -17,6 +21,7 @@ export enum Collections {
     roomParticipants = 'roomParticipants',
     roomsSettings = 'roomsSettings',
     evaluations = 'evaluations',
+    evaluationParticipants = 'evaluationParticipants', // server-only: one doc per (question,user) already counted in the question's evaluator total
     votes = 'votes',
     users = 'usersV2',
     usersData = 'usersData',
@@ -62,6 +67,8 @@ export enum Collections {
     helperPoints = 'helperPoints',
     surveys = 'surveys',
     surveyProgress = 'surveyProgress',
+    surveyAdmins = 'surveyAdmins',
+    surveyAdminInvitations = 'surveyAdminInvitations',
     adminInvitations = 'adminInvitations',
     viewerLinks = 'viewerLinks',
     documentCollaborators = 'documentCollaborators',
@@ -104,6 +111,10 @@ export enum Collections {
     agoraSessions = 'agoraSessions',
     agoraParticipants = 'agoraParticipants',
     agoraScores = 'agoraScores',
+    agoraHands = 'agoraHands',
+    agoraSceneMaterials = 'agoraSceneMaterials',
+    agoraMaterialChats = 'agoraMaterialChats',
+    agoraRemovals = 'agoraRemovals',
     agoraValueAnswers = 'agoraValueAnswers',
     agoraCharacterReviews = 'agoraCharacterReviews',
     agoraSchools = 'agoraSchools',
@@ -112,15 +123,43 @@ export enum Collections {
     agoraStudentAggregates = 'agoraStudentAggregates',
     agoraClassAggregates = 'agoraClassAggregates',
     agoraStats = 'agoraStats',
+    agoraTeacherAggregates = 'agoraTeacherAggregates',
+    agoraTeacherUsage = 'agoraTeacherUsage',
+    agoraIdentities = 'agoraIdentities',
+    agoraTeacherMessages = 'agoraTeacherMessages',
+    agoraTeacherPrompts = 'agoraTeacherPrompts',
+    agoraTeacherBannedWords = 'agoraTeacherBannedWords',
+    // The teachers' scenario library (tags, ratings, cached translations, approval markers)
+    agoraLibraryTags = 'agoraLibraryTags',
+    agoraScenarioRatings = 'agoraScenarioRatings',
+    agoraScenarioPosts = 'agoraScenarioPosts',
+    agoraLibraryReports = 'agoraLibraryReports',
+    agoraScenarioTranslations = 'agoraScenarioTranslations',
+    agoraApprovedTeachers = 'agoraApprovedTeachers',
+    // Requests to become an Agora teacher / regional coordinator (server-written)
+    agoraAccessRequests = 'agoraAccessRequests',
+    // Pending email invitations for a school's teachers (server-written, sys-admin read)
+    agoraTeacherInvites = 'agoraTeacherInvites',
+    // Server-written markers: who may read a private scenario (players of a game built on it)
+    agoraTopicReaders = 'agoraTopicReaders',
+    // One-time codes a linked station redeems in another app (server only; doc id = sha256(code))
+    appHandoffs = 'appHandoffs',
 
     // Israeli Odyssey pre-election civic-voice game
     odysseyGames = 'odysseyGames',
     odysseyJourneys = 'odysseyJourneys',
+    // Letters to the developers, and the throttle counters that guard them.
+    // Both are written only by odysseyFeedbackSubmit — server-only, see
+    // firestore.rules. The feedback docs hold reply-to addresses players
+    // volunteered, so no client may read them.
+    odysseyFeedback = 'odysseyFeedback',
+    odysseyRateLimits = 'odysseyRateLimits',
 
     // WizCol Studio — consultant organizations (Cloud-Function-only writes)
     organizations = 'organizations',
     organizationMembers = 'organizationMembers',
     organizationInvitations = 'organizationInvitations',
+    organizationActivities = 'organizationActivities',
 
     // Per-question participation funnel (server-maintained counters + markers)
     questionProgress = 'questionProgress',
@@ -132,4 +171,10 @@ export enum Collections {
     studioRateLimits = 'studioRateLimits',
 
     odysseyDigestState = 'odysseyDigestState',
+
+    // Tables (shared table assignment)
+    tableAssignments = 'tableAssignments',
+    tableAssignmentTopics = 'tableAssignmentTopics',
+    tableAssignmentParticipants = 'tableAssignmentParticipants',
+    tableAssignmentRuns = 'tableAssignmentRuns',
 }

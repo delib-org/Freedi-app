@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
 import { useGame } from '../state/GameContext';
+import { useT } from '../i18n/useT';
 
 /**
  * Where the ships' courses come from.
@@ -15,6 +16,7 @@ import { useGame } from '../state/GameContext';
  */
 export default function Parties() {
 	const { content } = useGame();
+	const { t } = useT();
 
 	if (!content) return <NoGameYet />;
 
@@ -24,54 +26,47 @@ export default function Parties() {
 
 	return (
 		<>
-			<GameChrome stage="הספינות" />
+			<GameChrome stage={t('parties.stage')} />
 			<div className="page">
 				<div className="w-full max-w-3xl flex flex-col gap-4 pb-8">
 					<header className="text-center fade-in">
-						<h1 className="text-3xl font-bold text-[var(--cream)] m-0">איך נקבע מסלול של ספינה</h1>
-						<p className="text-[15px] text-[#cfe6f5] mt-2 mb-0">
-							הקרבה שאתם רואים היא חישוב, לא דעה. זה מה שנכנס לתוכו.
-						</p>
+						<h1 className="text-3xl font-bold text-[var(--cream)] m-0">{t('parties.title')}</h1>
+						<p className="text-[15px] text-[#cfe6f5] mt-2 mb-0">{t('parties.intro')}</p>
 					</header>
 
 					<section className="panel fade-in">
-						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-2">השיטה</h2>
+						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-2">
+							{t('parties.methodTitle')}
+						</h2>
 						<p className="text-[15px] m-0 mb-2">
-							לכל מפלגה נקבע ציון על <strong>כל חוף בנפרד</strong> — עד כמה היא תומכת או מתנגדת לו —
-							על בסיס חומר מפורסם: מצע, הצבעות בכנסת והתבטאויות מתועדות. הקרבה שלכם לספינה היא המרחק
-							הממוצע בין הציונים שלכם לשלה, על החופים שסימנתם בלבד.
+							{t('parties.method1a')} <strong>{t('parties.method1strong')}</strong>{' '}
+							{t('parties.method1b')}
 						</p>
-						<p className="text-[15px] m-0">
-							לכל ציון נשמרים גם מקורות ורמת ודאות. ציון שלא נמצאה לו עמדה מפורסמת מסומן כהערכה
-							ומקבל ודאות נמוכה — הוא נספר, אבל לא מתחזה לידיעה.
-						</p>
+						<p className="text-[15px] m-0">{t('parties.method2')}</p>
 					</section>
 
 					<section className="panel fade-in">
 						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-2">
-							ומה עושים עם מפלגה חדשה?
+							{t('parties.newTitle')}
 						</h2>
-						<p className="text-[15px] m-0 mb-2">
-							חלק מהמפלגות בבחירות האלה צעירות מהשאלות שהמסע שואל. לכל מקרה כלל אחר:
-						</p>
-						<ul className="text-[15px] m-0 pr-5 flex flex-col gap-1.5">
+						<p className="text-[15px] m-0 mb-2">{t('parties.newIntro')}</p>
+						<ul className="text-[15px] m-0 ps-5 flex flex-col gap-1.5">
 							<li>
-								<strong>אותו גוף בשם חדש</strong> — המסלול נשמר כפי שהוא.
+								<strong>{t('parties.rule1strong')}</strong> {t('parties.rule1')}
 							</li>
 							<li>
-								<strong>איחוד של מפלגות קיימות</strong> — המסלול נגזר מן הרכיב בעל התיעוד הרציף
-								והמשקל הגדול ביותר.
+								<strong>{t('parties.rule2strong')}</strong> {t('parties.rule2')}
 							</li>
 							<li>
-								<strong>מפלגה חדשה לגמרי</strong> — המסלול נגזר מהתבטאויות מתועדות של מנהיגיה
-								ומהזדהותם המפלגתית והצבעותיהם בעבר. כאן הוודאות נמוכה יותר, ולעיתים קרובות מסומנת
-								כהערכה.
+								<strong>{t('parties.rule3strong')}</strong> {t('parties.rule3')}
 							</li>
 						</ul>
 					</section>
 
 					<section className="panel fade-in">
-						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-3">הספינות על המפה</h2>
+						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-3">
+							{t('parties.shipsTitle')}
+						</h2>
 						<div className="flex flex-col gap-3">
 							{parties.map((party) => (
 								<div key={party.partyId} className="flex items-start gap-3">
@@ -87,15 +82,12 @@ export default function Parties() {
 								</div>
 							))}
 						</div>
-						<p className="text-[13px] opacity-70 mt-4 mb-0">
-							המפה מציגה את המפלגות המתמודדות היום. מפלגה שהתפרקה או התאחדה אינה שטה כאן בשמה הישן,
-							ורשימות שייסגרו סופית רק עם סגירת הרשימות יתווספו כשיהיה מה לומר עליהן.
-						</p>
+						<p className="text-[13px] opacity-70 mt-4 mb-0">{t('parties.footnote')}</p>
 					</section>
 
 					<div className="flex justify-center gap-3">
 						<Link className="btn" to="/summary">
-							חזרה למפת ההפלגה
+							{t('parties.back')}
 						</Link>
 					</div>
 				</div>

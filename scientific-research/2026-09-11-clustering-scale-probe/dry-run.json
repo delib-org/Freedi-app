@@ -1,0 +1,218 @@
+{
+  "at": "2026-09-11T03:51:11.093Z",
+  "model": "gpt-5.6-luna",
+  "maxCompletionTokens": 4000,
+  "prices": {
+    "retrievedAt": "2026-09-11",
+    "sources": [
+      "https://developers.openai.com/api/docs/pricing",
+      "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    ],
+    "tier": "Standard (not Batch/Flex/Priority)",
+    "models": {
+      "gpt-5.6-luna": {
+        "inputPerM": 0.2,
+        "cachedInputPerM": 0.02,
+        "outputPerM": 1.2,
+        "cacheWriteMultiplier": 1.25,
+        "longContextThreshold": 272000,
+        "longContextInputMultiplier": 2,
+        "longContextOutputMultiplier": 1.5,
+        "contextWindow": 1050000
+      },
+      "text-embedding-3-small": {
+        "inputPerM": 0.02
+      },
+      "text-embedding-3-large": {
+        "inputPerM": 0.13
+      }
+    }
+  },
+  "stages": {
+    "smoke": {
+      "logicalCalls": 8,
+      "worstUsdOneAttempt": 0.04631875,
+      "worstUsdAllAttempts": 0.0926375,
+      "stageCapUsd": 0.25,
+      "fitsOneAttempt": true
+    },
+    "main": {
+      "logicalCalls": 240,
+      "worstUsdOneAttempt": 1.6576839999999995,
+      "worstUsdAllAttempts": 3.315367999999999,
+      "stageCapUsd": 3.75,
+      "fitsOneAttempt": true
+    }
+  },
+  "cells": {
+    "smoke|A|100": {
+      "stage": "smoke",
+      "method": "A",
+      "size": 100,
+      "calls": 4,
+      "inputBoundMean": 6255,
+      "inputBoundMax": 6323,
+      "shownMean": 100,
+      "worstUsd": 0.02545475
+    },
+    "smoke|B|100": {
+      "stage": "smoke",
+      "method": "B",
+      "size": 100,
+      "calls": 4,
+      "inputBoundMean": 1664,
+      "inputBoundMax": 1727,
+      "shownMean": 15,
+      "worstUsd": 0.020864
+    },
+    "main|A|200": {
+      "stage": "main",
+      "method": "A",
+      "size": 200,
+      "calls": 40,
+      "inputBoundMean": 11598,
+      "inputBoundMax": 11715,
+      "shownMean": 200,
+      "worstUsd": 0.307978
+    },
+    "main|B|500": {
+      "stage": "main",
+      "method": "B",
+      "size": 500,
+      "calls": 40,
+      "inputBoundMean": 1644,
+      "inputBoundMax": 1803,
+      "shownMean": 15,
+      "worstUsd": 0.20843550000000008
+    },
+    "main|A|100": {
+      "stage": "main",
+      "method": "A",
+      "size": 100,
+      "calls": 40,
+      "inputBoundMean": 6223,
+      "inputBoundMax": 6443,
+      "shownMean": 100,
+      "worstUsd": 0.254225
+    },
+    "main|A|500": {
+      "stage": "main",
+      "method": "A",
+      "size": 500,
+      "calls": 40,
+      "inputBoundMean": 27808,
+      "inputBoundMax": 27875,
+      "shownMean": 500,
+      "worstUsd": 0.47008049999999996
+    },
+    "main|B|200": {
+      "stage": "main",
+      "method": "B",
+      "size": 200,
+      "calls": 40,
+      "inputBoundMean": 1644,
+      "inputBoundMax": 1826,
+      "shownMean": 15,
+      "worstUsd": 0.20843499999999998
+    },
+    "main|B|100": {
+      "stage": "main",
+      "method": "B",
+      "size": 100,
+      "calls": 40,
+      "inputBoundMean": 1653,
+      "inputBoundMax": 1853,
+      "shownMean": 15,
+      "worstUsd": 0.20853000000000008
+    }
+  },
+  "violations": [],
+  "boundCheck": [
+    {
+      "callId": "smoke-p5yca-n100-o0-B",
+      "bound": 1704,
+      "observedPrompt": 676,
+      "observedCompletion": 102,
+      "reasoning": 54,
+      "finishReason": "stop"
+    },
+    {
+      "callId": "smoke-p5yca-n100-o0-A",
+      "bound": 6210,
+      "observedPrompt": 2700,
+      "observedCompletion": 144,
+      "reasoning": 93,
+      "finishReason": "stop"
+    },
+    {
+      "callId": "smoke-pptbv-n100-o0-A",
+      "bound": 6257,
+      "observedPrompt": 2761,
+      "observedCompletion": 119,
+      "reasoning": 71,
+      "finishReason": "stop"
+    },
+    {
+      "callId": "smoke-pptbv-n100-o0-B",
+      "bound": 1648,
+      "observedPrompt": 648,
+      "observedCompletion": 121,
+      "reasoning": 69,
+      "finishReason": "stop"
+    },
+    {
+      "callId": "smoke-pxjks-n100-o0-B",
+      "bound": 1577,
+      "observedPrompt": 628,
+      "observedCompletion": 118,
+      "reasoning": 72,
+      "finishReason": "stop"
+    },
+    {
+      "callId": "smoke-pxjks-n100-o0-A",
+      "bound": 6229,
+      "observedPrompt": 2699,
+      "observedCompletion": 139,
+      "reasoning": 95,
+      "finishReason": "stop"
+    },
+    {
+      "callId": "smoke-pk7ki-n100-o0-A",
+      "bound": 6323,
+      "observedPrompt": 2770,
+      "observedCompletion": 188,
+      "reasoning": 134,
+      "finishReason": "stop"
+    },
+    {
+      "callId": "smoke-pk7ki-n100-o0-B",
+      "bound": 1727,
+      "observedPrompt": 689,
+      "observedCompletion": 280,
+      "reasoning": 231,
+      "finishReason": "stop"
+    }
+  ],
+  "extension1000": {
+    "feasible": false,
+    "bankSize": 583,
+    "reason": "bank has 583 eligible items (< 1,000); no frozen 1,000-item bank exists, so the optional extension is not run"
+  },
+  "ledger": {
+    "capUsd": 5,
+    "spentUsd": 0.009488550000000002,
+    "openReservedUsd": 0,
+    "stages": {
+      "prep": {
+        "settledUsd": 0.00477525,
+        "retainedUsd": 0
+      },
+      "smoke": {
+        "settledUsd": 0.0047133,
+        "retainedUsd": 0
+      }
+    }
+  },
+  "remainingUsd": 4.99051145,
+  "fitsRemaining": true
+}

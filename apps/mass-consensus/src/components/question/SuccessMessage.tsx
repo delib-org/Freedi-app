@@ -11,6 +11,11 @@ interface SuccessMessageProps {
   voteCount?: number;
   onComplete: () => void;
   autoRedirectSeconds?: number;
+  /**
+   * Something the participant should know alongside the success — currently
+   * only that part of a split submission did not make it in.
+   */
+  note?: string;
 }
 
 export default function SuccessMessage({
@@ -19,6 +24,7 @@ export default function SuccessMessage({
   voteCount,
   onComplete,
   autoRedirectSeconds = UI.AUTO_REDIRECT_SECONDS,
+  note,
 }: SuccessMessageProps) {
   const { t, tWithParams } = useTranslation();
 
@@ -95,6 +101,9 @@ export default function SuccessMessage({
         <p className={styles.message}>
           {getMessage()}
         </p>
+
+        {/* Partial outcome, when some of a split submission was refused */}
+        {note && <p className={styles.note}>{note}</p>}
 
         {/* Vote Counter (for evaluated solutions) */}
         {!isNewSolution && voteCount !== undefined && (

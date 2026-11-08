@@ -67,6 +67,8 @@ export interface CreateSurveyRequest {
   questionIds?: string[];
   settings?: Partial<SurveySettings>;
   questionSettings?: Record<string, QuestionOverrideSettings>;
+  /** Recently removed question ids (newest first), for the picker's "Recently removed" section */
+  removedQuestionIds?: string[];
   /** Default language for the survey (e.g., 'en', 'he', 'ar') */
   defaultLanguage?: string;
   /** When true, forces all participants to use defaultLanguage regardless of preferences */
@@ -91,6 +93,8 @@ export interface CreateSurveyRequest {
   showAllSolutionsLink?: boolean;
   /** Custom label for the all-solutions link (replaces default i18n 'seeAllSolutions') */
   allSolutionsLinkLabel?: string;
+  /** The admin's message on the completion screen; null removes it */
+  completionMessage?: SurveyExplanationPage | null;
 }
 
 /**
@@ -102,6 +106,8 @@ export interface UpdateSurveyRequest {
   questionIds?: string[];
   settings?: Partial<SurveySettings>;
   questionSettings?: Record<string, QuestionOverrideSettings>;
+  /** Recently removed question ids (newest first), for the picker's "Recently removed" section */
+  removedQuestionIds?: string[];
   status?: 'draft' | 'active' | 'closed';
   /** Default language for the survey (e.g., 'en', 'he', 'ar') */
   defaultLanguage?: string;
@@ -135,6 +141,8 @@ export interface UpdateSurveyRequest {
   showAllSolutionsLink?: boolean;
   /** Custom label for the all-solutions link (replaces default i18n 'seeAllSolutions') */
   allSolutionsLinkLabel?: string;
+  /** The admin's message on the completion screen; null removes it */
+  completionMessage?: SurveyExplanationPage | null;
 }
 
 /**
@@ -210,6 +218,8 @@ export interface AvailableQuestionsResponse {
 export interface TestDataCounts {
   progressCount: number;
   demographicAnswerCount: number;
+  evaluationCount: number;
+  userEvaluationCount: number;
   total: number;
 }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { denyWithoutDocumentAccess, getParticipantIdentity } from '@/lib/auth/requestIdentity';
+import { getParticipantId } from '@/lib/auth/requestIdentity';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import {
   getUserDemographicAnswers,
@@ -24,7 +25,7 @@ export async function GET(
 ): Promise<NextResponse> {
   try {
     const { docId } = await params;
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -80,7 +81,7 @@ export async function POST(
 ): Promise<NextResponse> {
   try {
     const { docId } = await params;
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -101,6 +102,9 @@ export async function POST(
         { status: 404 }
       );
     }
+
+    const denied = await denyWithoutDocumentAccess(db, docId, await getParticipantIdentity(request), docSnap.data());
+    if (denied) return denied;
 
     const document = docSnap.data();
     const topParentId = document?.topParentId || docId;

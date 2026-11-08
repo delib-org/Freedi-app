@@ -64,7 +64,7 @@
 
 		&--active {
 			background-color: var(--btn-primary);
-			color: white;
+			color: var(--btn-primary-text);
 		}
 
 		&:disabled {
@@ -240,7 +240,9 @@
 	&__save-btn {
 		@include button-base;
 		background-color: var(--btn-primary);
-		color: white;
+		// Not literal white: on a brand whose primary is a pale ink (dark mode)
+		// white text on it is invisible.
+		color: var(--btn-primary-text);
 
 		&:hover {
 			background-color: var(--btn-primary-hover);
@@ -254,7 +256,11 @@
 
 	&__cancel-btn {
 		@include button-base;
-		background-color: var(--btn-secondary);
+		// --btn-secondary is the ink colour, so it used to paint body text on a
+		// body-coloured button: invisible in light and dark alike. Cancel is the
+		// quiet option — a bordered surface button.
+		background-color: var(--btn-secondary-default, var(--card-default));
+		border: 1px solid var(--border-subtle, var(--border-light));
 		color: var(--text-body);
 
 		&:hover {

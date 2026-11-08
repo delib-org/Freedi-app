@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { getAdaptiveBatch, getRandomOptions } from '@/lib/firebase/queries';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { logError } from '@/lib/utils/errorHandling';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
@@ -27,11 +27,10 @@ export async function POST(
   try {
     const { id: questionId } = await params;
     const body = await request.json();
-    const { userId: bodyUserId, size = 6, useAdaptive = true } = body;
+    const { size = 6, useAdaptive = true } = body;
 
-    // Get user ID from cookie or body
-    const cookieUserId = getUserIdFromCookie(request.headers.get('cookie'));
-    const userId = bodyUserId || cookieUserId;
+    // Null for a caller without a valid token: they get the random batch below.
+    const userId = await getVerifiedUserId(request);
 
     logger.info('[batch/route] Processing batch request:', {
       questionId,

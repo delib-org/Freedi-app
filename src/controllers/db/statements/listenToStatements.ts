@@ -1,7 +1,12 @@
 import { Unsubscribe } from 'firebase/auth';
 import { and, getDocs, limit, or, orderBy, query, startAfter, where } from 'firebase/firestore';
+import type { QuerySnapshot } from 'firebase/firestore';
+import { FIREBASE } from '@/constants/common';
+import { listenerManager } from '@/controllers/utils/ListenerManager';
+import { firstLoadThenListen } from '@/controllers/utils/firstLoadThenListen';
 import { logError } from '@/utils/errorHandling';
 import { normalizeStatementData, convertTimestampsToMillis } from '@/helpers/timestampHelpers';
+import { membersOfStatementQuery } from '@/controllers/db/membership/membersPage';
 
 // Redux Store
 import {
@@ -36,10 +41,7 @@ import {
 	createManagedCollectionListener,
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
-import {
-	DISCUSSABLE_STATEMENT_TYPES,
-	NON_DOCUMENT_STATEMENT_TYPES,
-} from '@/helpers/statementTypeHelpers';
+import { DISCUSSABLE_STATEMENT_TYPES } from '@/helpers/statementTypeHelpers';
 
 // Tracks subscription docs whose schema-validation failure we've already
 // logged this session, so a malformed doc on a hot listener doesn't spam the
@@ -270,52 +272,72 @@ export const listenToSubStatements = (
 
 		let isFirstCall = true;
 
-		return createManagedCollectionListener(
+		const handleSnapshot = (statementsDB: QuerySnapshot): void => {
+			// For the first call, batch process all statements at once
+			if (isFirstCall) {
+				const startStatements: Statement[] = [];
+
+				statementsDB.forEach((doc) => {
+					// Normalize data to remove non-serializable values (like VectorValue embeddings)
+					const statement = normalizeStatementData(doc.data()) as Statement;
+					startStatements.push(statement);
+				});
+
+				// Dispatch all statements at once instead of individually
+				if (startStatements.length > 0) {
+					dispatch(setStatements(startStatements));
+				}
+
+				isFirstCall = false;
+			} else {
+				// After initial load, handle individual changes
+				const changes = statementsDB.docChanges();
+
+				// When using a limited query, "removed" events may be window shifts
+				// (doc pushed out of the limit window by a new doc), not actual deletions.
+				// Only treat as deletion if no additions occur in the same snapshot batch.
+				const hasAdditions = numberOfOptions ? changes.some((c) => c.type === 'added') : false;
+
+				changes.forEach((change) => {
+					// Normalize data to remove non-serializable values (like VectorValue embeddings)
+					const statement = normalizeStatementData(change.doc.data()) as Statement;
+
+					if (change.type === 'added') {
+						dispatch(setStatement(statement));
+					} else if (change.type === 'modified') {
+						dispatch(setStatement(statement));
+					} else if (change.type === 'removed') {
+						// Skip removal if it's likely a window shift (limited query + additions in same batch)
+						if (!hasAdditions) {
+							dispatch(deleteStatement(statement.statementId));
+						}
+					}
+				});
+			}
+		};
+
+		// Head start: a bounded read of the first 10 reaches Redux before the full
+		// listener snapshot. Pointless when the live query is already that small.
+		// Also skipped when the key is already registered: the managed listener then
+		// ignores our handler, and the head start would overwrite fresher state.
+		const needsHeadStart =
+			(!numberOfOptions || numberOfOptions > FIREBASE.FIRST_LOAD_LIMIT) &&
+			!listenerManager.hasListener(listenerKey);
+		const firstLoad = needsHeadStart
+			? firstLoadThenListen({
+					queryRef: q,
+					onSnapshotNext: handleSnapshot,
+					onFirstDocs: (docs) => {
+						dispatch(setStatements(docs.map((d) => normalizeStatementData(d.data()) as Statement)));
+					},
+					operation: 'statements.listenToSubStatements',
+				})
+			: null;
+
+		const unsubscribe = createManagedCollectionListener(
 			q,
 			listenerKey,
-			(statementsDB) => {
-				// For the first call, batch process all statements at once
-				if (isFirstCall) {
-					const startStatements: Statement[] = [];
-
-					statementsDB.forEach((doc) => {
-						// Normalize data to remove non-serializable values (like VectorValue embeddings)
-						const statement = normalizeStatementData(doc.data()) as Statement;
-						startStatements.push(statement);
-					});
-
-					// Dispatch all statements at once instead of individually
-					if (startStatements.length > 0) {
-						dispatch(setStatements(startStatements));
-					}
-
-					isFirstCall = false;
-				} else {
-					// After initial load, handle individual changes
-					const changes = statementsDB.docChanges();
-
-					// When using a limited query, "removed" events may be window shifts
-					// (doc pushed out of the limit window by a new doc), not actual deletions.
-					// Only treat as deletion if no additions occur in the same snapshot batch.
-					const hasAdditions = numberOfOptions ? changes.some((c) => c.type === 'added') : false;
-
-					changes.forEach((change) => {
-						// Normalize data to remove non-serializable values (like VectorValue embeddings)
-						const statement = normalizeStatementData(change.doc.data()) as Statement;
-
-						if (change.type === 'added') {
-							dispatch(setStatement(statement));
-						} else if (change.type === 'modified') {
-							dispatch(setStatement(statement));
-						} else if (change.type === 'removed') {
-							// Skip removal if it's likely a window shift (limited query + additions in same batch)
-							if (!hasAdditions) {
-								dispatch(deleteStatement(statement.statementId));
-							}
-						}
-					});
-				}
-			},
+			firstLoad ? firstLoad.onNext : handleSnapshot,
 			(error) =>
 				logError(error, {
 					operation: 'statements.listenToStatements.unknown',
@@ -323,6 +345,11 @@ export const listenToSubStatements = (
 				}),
 			'query',
 		);
+
+		return () => {
+			firstLoad?.cancel();
+			unsubscribe();
+		};
 	} catch (error) {
 		logError(error, { operation: 'statements.listenToStatements.unknown' });
 
@@ -386,51 +413,50 @@ export async function fetchOlderSubStatements(
 	}
 }
 
-export const listenToMembers = (dispatch: AppDispatch) => (statementId: string) => {
-	try {
-		const membersRef = createCollectionRef(Collections.statementsSubscribe);
-		const q = query(
-			membersRef,
-			where('statementId', '==', statementId),
-			where('statementType', 'in', NON_DOCUMENT_STATEMENT_TYPES),
-			orderBy('createdAt', 'desc'),
-			limit(10), // Load only last 10 members initially, more can be loaded on demand
-		);
+/**
+ * Live listener on the newest `pageSize` subscriptions of a space. Older ones
+ * are fetched on demand with `loadMembersPage` (membership/membersPage.ts).
+ */
+export const listenToMembers =
+	(dispatch: AppDispatch) =>
+	(statementId: string, pageSize: number = FIREBASE.QUERY_LIMIT_MAX) => {
+		try {
+			const q = membersOfStatementQuery(statementId, limit(pageSize));
 
-		const listenerKey = generateListenerKey('members', 'statement', statementId);
+			const listenerKey = generateListenerKey('members', 'statement', statementId);
 
-		return createManagedCollectionListener(
-			q,
-			listenerKey,
-			(subsDB) => {
-				subsDB.docChanges().forEach((change) => {
-					const member = change.doc.data() as StatementSubscription;
-					if (change.type === 'added') {
-						dispatch(setMembership(member));
-					}
+			return createManagedCollectionListener(
+				q,
+				listenerKey,
+				(subsDB) => {
+					subsDB.docChanges().forEach((change) => {
+						const member = change.doc.data() as StatementSubscription;
+						if (change.type === 'added') {
+							dispatch(setMembership(member));
+						}
 
-					if (change.type === 'modified') {
-						dispatch(setMembership(member));
-					}
+						if (change.type === 'modified') {
+							dispatch(setMembership(member));
+						}
 
-					if (change.type === 'removed') {
-						dispatch(removeMembership(member.statementsSubscribeId));
-					}
-				});
-			},
-			(error) =>
-				logError(error, {
-					operation: 'statements.listenToStatements.unknown',
-					metadata: { message: 'Error in members listener:' },
-				}),
-			'query',
-		);
-	} catch (error) {
-		logError(error, { operation: 'statements.listenToStatements.unknown' });
+						if (change.type === 'removed') {
+							dispatch(removeMembership(member.statementsSubscribeId));
+						}
+					});
+				},
+				(error) =>
+					logError(error, {
+						operation: 'statements.listenToStatements.unknown',
+						metadata: { message: 'Error in members listener:' },
+					}),
+				'query',
+			);
+		} catch (error) {
+			logError(error, { operation: 'statements.listenToStatements.unknown' });
 
-		return () => {};
-	}
-};
+			return () => {};
+		}
+	};
 
 export function listenToAllSubStatements(statementId: string, numberOfLastMessages = 7) {
 	try {

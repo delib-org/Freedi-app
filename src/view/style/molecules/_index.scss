@@ -8,7 +8,6 @@
 @forward 'rich-text-editor';
 @forward 'multi-suggestion-modal';
 @forward 'similarity-card';
-@forward 'inherited-demographics';
 @forward 'frequency-selector';
 @forward 'engagement-dashboard';
 @forward 'subscription-manager';
@@ -24,6 +23,23 @@
 @forward 'section-divider';
 @forward 'view-layers-toggle';
 @forward 'load-all-banner';
+@forward 'agora-guest-bar';
+@forward 'search-box';
+@forward 'search-results';
 @forward 'results-strip';
 @forward 'list-toolbar';
 @forward 'admin-drawer';
+
+@forward 'sheet';
+@forward 'chip';
+@forward 'tone-card';
+@forward 'map-fullscreen';
+@forward 'image-lightbox';
+@forward 'people-subsection';
+@forward 'person-row';
+@forward 'filter-chips';
+@forward 'empty-state';
+@forward 'inheritance-switch';
+@forward 'access-picker';
+@forward 'disclosure';
+@forward 'collapse';

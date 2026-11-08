@@ -1,0 +1,248 @@
+import { ChallengePhase, VOTE_AGAINST } from '@freedi/shared-types';
+import type { AgoraProposalScore, AgoraSession } from '@freedi/shared-types';
+import type { CouncilVoice } from './councilVoices';
+import { boardPercent, campLean, inBridgeZone, standings } from '../boardGeometry';
+
+/**
+ * What the council's scoreboard paints, as data.
+ *
+ * The 3D board is a canvas inside the village iframe and cannot read the
+ * session; the shell sends it this model on every state sync. It is the
+ * same reading the classic results board draws — same ranks, same goal
+ * (`inBridgeZone`), same lead — flattened to numbers a canvas can plot, so
+ * the wooden board at the council and the map on a phone never disagree.
+ */
+
+export interface CouncilPoint {
+	rank: number;
+	/** Class agreement, −100…100 — the vertical axis */
+	percent: number;
+	/** Which camp is behind it, −1…1 — the horizontal axis */
+	lean: number;
+	raters: number;
+	mine: boolean;
+	/** Standing in the goal */
+	scored: boolean;
+	lead: boolean;
+	color: string;
+	label: string;
+	/** Nobody has rated it — it has no place on the field yet */
+	unrated: boolean;
+}
+
+export interface CouncilBallotRow {
+	number: number;
+	label: string;
+	votes: number;
+	/** 0…1 of all votes cast */
+	share: number;
+	mine: boolean;
+	/** The characters' existing verdicts on this proposal — portrait tiles on the board */
+	voices?: CouncilVoice[];
+}
+
+/** One side of a motion — for or against — as a standing pillar */
+export interface CouncilMotionSide {
+	votes: number;
+	/** 0…1 of all votes cast */
+	share: number;
+	mine: boolean;
+}
+
+/**
+ * A ballot of ONE candidate is a motion: "do we adopt this?". The board draws
+ * it the way the phones do — the proposal, then two standing pillars.
+ */
+export interface CouncilMotion {
+	label: string;
+	voices?: CouncilVoice[];
+	for: CouncilMotionSide;
+	against: CouncilMotionSide;
+}
+
+export interface CouncilModel {
+	mode: 'pitch' | 'ballot';
+	goalOnly: boolean;
+	leftLabel: string;
+	rightLabel: string;
+	scoredAny: boolean;
+	points: CouncilPoint[];
+	footer: string;
+	title?: string;
+	candidates?: CouncilBallotRow[];
+	/** Set instead of a list when the ballot is a single for/against motion */
+	motion?: CouncilMotion;
+	showResults?: boolean;
+}
+
+/** One pastel per proposal number, so a point keeps its colour as ranks move */
+const POINT_COLORS = [
+	'#f4c95d',
+	'#9fd3e6',
+	'#e6a0a0',
+	'#b7d9a3',
+	'#d3b3e6',
+	'#f0b787',
+	'#a3c9d9',
+	'#e2cc8f',
+];
+
+export interface CouncilPitchInput {
+	proposals: ReadonlyArray<{ statementId: string; statement: string; creatorId: string }>;
+	scores: Readonly<Record<string, AgoraProposalScore>>;
+	userId?: string;
+	/** The teacher narrowed the board to the goal */
+	goalOnly: boolean;
+	leftLabel: string;
+	rightLabel: string;
+	leadStatementId?: string;
+}
+
+/** The class map, for the council board: every rated proposal as a point */
+export function councilPitch(input: CouncilPitchInput): CouncilModel {
+	const ranked = standings(input.proposals, input.scores);
+	const rankOf = new Map(ranked.map((entry) => [entry.statementId, entry.rank]));
+	const lead =
+		input.leadStatementId && rankOf.has(input.leadStatementId)
+			? input.leadStatementId
+			: (ranked[0]?.statementId ?? '');
+
+	const points: CouncilPoint[] = input.proposals.map((proposal, index) => {
+		const score = input.scores[proposal.statementId];
+		const rated = score?.classConsensus !== undefined && score.classConsensus.n > 0;
+
+		return {
+			rank: rankOf.get(proposal.statementId) ?? input.proposals.length,
+			percent: rated ? boardPercent(score) : 0,
+			lean: rated && score ? campLean(score) : 0,
+			raters: rated && score?.classConsensus ? score.classConsensus.n : 0,
+			mine: proposal.creatorId === input.userId,
+			scored: inBridgeZone(score),
+			lead: proposal.statementId === lead,
+			color: POINT_COLORS[index % POINT_COLORS.length],
+			label: proposal.statement,
+			unrated: !rated,
+		};
+	});
+	const shown = input.goalOnly ? points.filter((point) => point.scored) : points;
+	const rated = points.filter((point) => !point.unrated).length;
+	const scoredCount = points.filter((point) => point.scored).length;
+	const footer =
+		rated === 0
+			? 'עוד לא דורגו הצעות · לכו לביתן ודרגו את הפתקים של החברים'
+			: scoredCount > 0
+				? `${scoredCount} ${scoredCount === 1 ? 'הצעה' : 'הצעות'} בתוך השער · ${rated} מתוך ${points.length} דורגו`
+				: `עדיין אין הצעה בתוך השער · ${rated} מתוך ${points.length} דורגו`;
+
+	return {
+		mode: 'pitch',
+		goalOnly: input.goalOnly,
+		leftLabel: input.leftLabel,
+		rightLabel: input.rightLabel,
+		scoredAny: scoredCount > 0,
+		points: shown,
+		footer,
+	};
+}
+
+export interface CouncilBallotInput {
+	session: AgoraSession;
+	/** statementId → votes, as counted by the server */
+	selections: Readonly<Record<string, number>>;
+	myVoteStatementId: string | null;
+	votedCount: number;
+	classSize: number;
+	/** The vote is over: the tallies are always shown */
+	closed: boolean;
+	/** The teacher's own screen: the tallies are never hidden from her, whatever the class sees */
+	teacherView?: boolean;
+	/** The characters' verdicts on a proposal, when the class asked for them */
+	voicesOf?: (statementId: string) => CouncilVoice[];
+}
+
+/** The ballot with its bars, for the council board during the vote */
+export function councilBallot(input: CouncilBallotInput): CouncilModel {
+	const candidates = input.session.voting?.candidates ?? [];
+	const total = candidates.reduce(
+		(sum, candidate) => sum + (input.selections[candidate.statementId] ?? 0),
+		0,
+	);
+	// A challenge is judged blind, so while one stands the reveal does nothing
+	// for the class — the same rule as the students' ballot.
+	const game = input.session.votingGame;
+	const challengeLive =
+		(game?.phase === ChallengePhase.vote || game?.phase === ChallengePhase.resolving) &&
+		Boolean(game?.challengerStatementId);
+	const showResults =
+		input.closed ||
+		input.teacherView === true ||
+		(input.session.votingSettings?.showResults === true && !challengeLive);
+	const footer =
+		input.classSize > 0
+			? `${input.votedCount} מתוך ${input.classSize} הצביעו${showResults ? '' : ' · התוצאות ייחשפו כשהמורה יחליט'}`
+			: `${input.votedCount} הצביעו`;
+
+	// Same rule as the students' ballot: a motion is a motion only while it
+	// stands alone — a challenger pinned beside it makes it "which of these?"
+	if (candidates.length === 1 && !challengeLive) {
+		const candidate = candidates[0];
+		const forVotes = input.selections[candidate.statementId] ?? 0;
+		const againstVotes = input.selections[VOTE_AGAINST] ?? 0;
+		const motionTotal = forVotes + againstVotes;
+
+		return {
+			mode: 'ballot',
+			goalOnly: input.session.votingSettings?.goalZoneOnly === true,
+			leftLabel: '',
+			rightLabel: '',
+			scoredAny: false,
+			points: [],
+			title: input.closed ? 'ההצבעה הסתיימה' : 'הצעה אחת על השולחן · מאמצים אותה?',
+			motion: {
+				label: candidate.statement,
+				voices: input.voicesOf?.(candidate.statementId),
+				for: {
+					votes: forVotes,
+					share: motionTotal > 0 ? forVotes / motionTotal : 0,
+					mine: input.myVoteStatementId === candidate.statementId,
+				},
+				against: {
+					votes: againstVotes,
+					share: motionTotal > 0 ? againstVotes / motionTotal : 0,
+					mine: input.myVoteStatementId === VOTE_AGAINST,
+				},
+			},
+			showResults,
+			footer,
+		};
+	}
+	const rows: CouncilBallotRow[] = candidates.map((candidate, index) => {
+		const votes = input.selections[candidate.statementId] ?? 0;
+
+		return {
+			number: index + 1,
+			label: candidate.statement,
+			votes,
+			share: total > 0 ? votes / total : 0,
+			mine: input.myVoteStatementId === candidate.statementId,
+			voices: input.voicesOf?.(candidate.statementId),
+		};
+	});
+	// Same rule as the students' ballot: once the counts show, the board follows them.
+	if (showResults && input.session.votingSettings?.liveReorder !== false) {
+		rows.sort((a, b) => b.votes - a.votes || a.number - b.number);
+	}
+
+	return {
+		mode: 'ballot',
+		goalOnly: input.session.votingSettings?.goalZoneOnly === true,
+		leftLabel: '',
+		rightLabel: '',
+		scoredAny: false,
+		points: [],
+		title: input.closed ? 'ההצבעה הסתיימה' : 'הצבעה · בחרו הצעה אחת',
+		candidates: rows,
+		showResults,
+		footer,
+	};
+}

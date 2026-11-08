@@ -39,17 +39,18 @@ interface DetectMultipleSuggestionsResponse {
 export async function detectMultipleSuggestions(
 	request: Request,
 	response: Response,
+	userId: string,
 ): Promise<void> {
 	const startTime = Date.now();
 
 	try {
-		const { userInput, questionId, userId } = request.body as DetectMultipleSuggestionsRequest;
+		const { userInput, questionId } = request.body as DetectMultipleSuggestionsRequest;
 
 		// Validate required fields
-		if (!userInput || !userId) {
+		if (!userInput) {
 			response.status(400).send({
 				ok: false,
-				error: 'Missing required fields: userInput and userId',
+				error: 'Missing required field: userInput',
 				isMultipleSuggestions: false,
 				suggestions: [],
 				originalText: userInput || '',
@@ -65,8 +66,28 @@ export async function detectMultipleSuggestions(
 			userId,
 		});
 
-		// Step 1: Check for inappropriate content first
-		const contentCheck = await checkForInappropriateContent(userInput);
+		// Moderation runs alongside the detection; its verdict is applied last so a
+		// clean submission never waits for it. Never cached.
+		const moderationPromise = checkForInappropriateContent(userInput);
+
+		// Question context, when we have it
+		let questionContext = '';
+		if (questionId) {
+			try {
+				const parentStatement = await getCachedParentStatement(questionId);
+				if (parentStatement) {
+					questionContext = parentStatement.statement || '';
+				}
+			} catch (error) {
+				logger.warn('Failed to get parent statement for context', { questionId, error });
+				// Continue without context - not a critical error
+			}
+		}
+
+		const [result, contentCheck] = await Promise.all([
+			detectAndSplitMultipleSuggestions(userInput, questionContext),
+			moderationPromise,
+		]);
 
 		if (contentCheck.isInappropriate) {
 			logger.warn('Inappropriate content detected in multi-suggestion check', { userId });
@@ -96,23 +117,6 @@ export async function detectMultipleSuggestions(
 
 			return;
 		}
-
-		// Step 2: Get question context if available
-		let questionContext = '';
-		if (questionId) {
-			try {
-				const parentStatement = await getCachedParentStatement(questionId);
-				if (parentStatement) {
-					questionContext = parentStatement.statement || '';
-				}
-			} catch (error) {
-				logger.warn('Failed to get parent statement for context', { questionId, error });
-				// Continue without context - not a critical error
-			}
-		}
-
-		// Step 3: Detect and split multiple suggestions
-		const result = await detectAndSplitMultipleSuggestions(userInput, questionContext);
 
 		const responseTime = Date.now() - startTime;
 

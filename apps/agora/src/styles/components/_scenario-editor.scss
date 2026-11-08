@@ -1,0 +1,40 @@
+// What the scenario editor and the publish sheet say when a press needs
+// explaining. Both live where the teacher is looking when they press (the
+// editor's sticky bar, the sheet's strip above its footer), never down the page
+// where a phone's screen does not reach.
+
+// A line in the editor's sticky save bar: why the last save, upload or file did not take
+.editor__error {
+	flex: 1 0 100%;
+	margin: 0;
+	padding: var(--space-sm) var(--space-md);
+	border-radius: var(--radius-md);
+	background: var(--mark-edited);
+	border-inline-start: 4px solid var(--warning);
+	color: var(--text-primary);
+	font-size: var(--font-size-sm);
+	line-height: 1.4;
+}
+
+// The publish sheet's strip, first row of its footer (which stays on screen,
+// sticky on a phone): what is missing, what the server refused, why the
+// button is waiting
+.scn-publish {
+	// The sheet's grid row sized itself to its content, so a long form grew past the
+	// screen and nothing scrolled: on a phone the tags were out of reach and Publish
+	// could never be satisfied. A row that may shrink gives the body its own scroll.
+	grid-template-rows: minmax(0, 1fr);
+}
+
+.scn-publish .question-sheet__foot {
+	flex-wrap: wrap;
+}
+
+.scn-publish__alert {
+	flex: 1 0 100%;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	max-block-size: 40vh;
+	overflow-y: auto;
+}

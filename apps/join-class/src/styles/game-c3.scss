@@ -1,0 +1,180 @@
+// =============================================================================
+// Game look — lesson part 2 (table talk, proposals, all proposals, vote):
+// proposal cards, choices, the rating faces, sub-step pills and the win stamps.
+// Loaded with student-c3.scss, so the student entry does not carry it. Scoped by
+// $game (see _game-scope.scss); the overview is in _game.scss.
+// =============================================================================
+
+@use 'game-scope' as *;
+@use 'game-wins';
+
+// ---- proposal cards ------------------------------------------------------------------
+#{$game} .text-card {
+  border: 2px solid var(--card-line);
+  border-radius: 20px;
+  @include edge(var(--card-line));
+}
+
+#{$game} .text-card {
+  margin-block-end: calc(var(--space-md) + var(--edge-size));
+}
+
+#{$game} .text-card--mine {
+  border-color: var(--teal-500);
+  background: var(--teal-50);
+  @include edge(var(--edge-teal));
+}
+
+#{$game} .text-card__body {
+  font-weight: 700;
+}
+
+// ---- choices: a question to pick, a proposal to vote for --------------------------
+#{$game} :is(.pick__item, .vote-list__item) {
+  border: 2px solid var(--edge-control);
+  border-radius: 18px;
+  @include edge(var(--edge-control));
+  font-weight: 700;
+  transition:
+    transform var(--dur-quick) var(--ease-out),
+    box-shadow var(--dur-quick) var(--ease-out);
+  @include no-motion;
+}
+
+#{$game} :is(.pick__item, .vote-list__item):active:not(:disabled) {
+  @include press;
+}
+
+#{$game} :is(.pick__list, .vote-list) {
+  gap: 14px;
+}
+
+// Selected = a teal fill, border and edge, and a check badge (the mark below).
+#{$game} :is(.pick__item--on, .vote-list__item--on) {
+  border-color: var(--teal-500);
+  background: var(--teal-50);
+  color: var(--teal-ink);
+  @include edge(var(--edge-teal));
+  font-weight: 800;
+}
+
+#{$game} .pick__item--used {
+  box-shadow: none;
+}
+
+#{$game} .pick__own {
+  border-width: 2px;
+  border-radius: 18px;
+}
+
+// The radio glyph becomes a ring, and a teal check badge when chosen.
+#{$game} :is(.pick__item .pick__radio, .vote-list__mark) {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  inline-size: 28px;
+  block-size: 28px;
+  border: 3px solid var(--edge-control);
+  border-radius: var(--radius-full);
+  font-size: 0;
+  color: transparent;
+}
+
+#{$game} :is(.pick__item--on .pick__radio, .vote-list__item--on .vote-list__mark) {
+  border-color: var(--teal-600);
+  background: var(--teal-600);
+
+  &::after {
+    content: '✓';
+    color: var(--text-inverse);
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+  }
+}
+
+#{$game} .vote-list__track {
+  block-size: 14px;
+}
+
+#{$game} .vote-list__item--on .vote-list__track {
+  background: var(--bg-card);
+}
+
+#{$game} .vote-list__item--on .vote-list__fill {
+  background: var(--teal-500);
+}
+
+#{$game} .vote-list__item--on .vote-list__count {
+  color: var(--teal-ink);
+  font-weight: 800;
+}
+
+#{$game} .vote-list__count {
+  font-weight: 700;
+}
+
+// ---- the 5 rating faces: bigger, filled, with an edge; the chosen one rings ---------
+// Room for the chosen face's ring (it scales up 1.18) between its neighbours.
+#{$game} .rate-faces .evaluation {
+  gap: var(--space-sm);
+  padding-inline: var(--space-sm);
+}
+
+#{$game} .evaluation__thumb {
+  max-width: 52px;
+  border: 0;
+  box-shadow: 0 4px 0 var(--edge-face);
+}
+
+// Every face stays vivid after a choice (the ring and the check mark the chosen one).
+#{$game} .evaluation--has-selection .evaluation__thumb:not(.evaluation__thumb--active) {
+  filter: none;
+  opacity: 1;
+  transform: none;
+}
+
+#{$game} .evaluation__thumb--active,
+#{$game} .evaluation__thumb--active:active {
+  box-shadow:
+    0 4px 0 var(--teal-600),
+    0 0 0 4px var(--bg-card),
+    0 0 0 7px var(--teal-600);
+}
+
+#{$game} .evaluation__thumb-check {
+  inline-size: 24px;
+  block-size: 24px;
+  inset-block-end: -8px;
+  inset-inline-end: -8px;
+  background: var(--teal-600);
+  box-shadow: 0 0 0 3px var(--bg-card);
+}
+
+#{$game} .rate-faces__scale {
+  font-weight: 700;
+}
+
+// ---- small controls ---------------------------------------------------------------
+#{$game} .substeps__pill {
+  min-height: 40px;
+  border-width: 2px;
+  font-weight: 800;
+}
+
+#{$game} .reply-entry {
+  min-height: 40px;
+  border: 2px solid var(--card-line);
+  border-radius: var(--radius-full);
+  font-weight: 700;
+}
+
+#{$game} .reply-entry--new {
+  border-color: var(--teal-600);
+}
+
+#{$game} .all-proposals__progress {
+  color: var(--teal-ink);
+  font-size: var(--font-size-base);
+  font-weight: 800;
+}

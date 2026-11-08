@@ -6,16 +6,20 @@ import {
 	AgoraSession,
 	AgoraSessionStatus,
 	AgoraStage,
+	roundSpecOf,
 	AgoraStagePlan,
 	AgoraStagePlanSchema,
 	AgoraTopicPackage,
 	functionConfig,
 	currentPlanIndex,
 	resolveStagePlan,
+	applyTeacherPrompts,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { buildQuestionStatement } from './questionStage';
 import { sanitizeStagePlan } from './stagePlanInput';
+import { loadTeacherPrompts } from './teacherPrompts';
+import { verifyPlanLinks } from './stationLink';
 
 interface Request {
 	sessionId: string;
@@ -54,7 +58,26 @@ export const agoraUpdateStagePlan = onCall(
 		}
 
 		try {
+			// A round the teacher adds now takes the same standing wording a round
+			// they start a game with does — read before the transaction opens, it
+			// is the teacher's own doc and nothing in here races it.
+			const teacherPrompts = await loadTeacherPrompts(uid);
 			const sessionRef = db.collection(Collections.agoraSessions).doc(sessionId);
+			// Linked stations are checked against their questions before the
+			// transaction: each check is a few reads outside this session's tree.
+			// Only the session's teacher gets that far.
+			const before = await sessionRef.get();
+			const storedSession = before.data() as AgoraSession | undefined;
+			if (!storedSession) throw new HttpsError('not-found', 'Session not found');
+			if (storedSession.teacherId !== uid) {
+				throw new HttpsError('permission-denied', 'Only the session teacher can edit the plan');
+			}
+			const linkedPlan = await verifyPlanLinks(
+				parsed.output,
+				uid,
+				storedSession.stagePlan ?? [],
+				Date.now(),
+			);
 			const token = request.auth?.token as Record<string, unknown> | undefined;
 			const creator = {
 				uid,
@@ -81,7 +104,10 @@ export const agoraUpdateStagePlan = onCall(
 				const topic = topicSnap.data() as AgoraTopicPackage | undefined;
 				const hasCharacters = topic?.kind !== 'quick';
 
-				const clean = sanitizeStagePlan(parsed.output, { hasCharacters });
+				const clean = applyTeacherPrompts(
+					sanitizeStagePlan(linkedPlan, { hasCharacters }),
+					teacherPrompts,
+				);
 
 				// The frozen prefix must be byte-for-byte what is stored (ended is
 				// appended at resolve time, so compare against the resolved plan
@@ -98,9 +124,11 @@ export const agoraUpdateStagePlan = onCall(
 					clean[index] = stored;
 				}
 
-				// New question items get their Statement now; edited ones get their
-				// text updated. Both are safe inside the transaction: the ids are
-				// deterministic per item and the writes touch only this session's tree.
+				// New question items (open or a round) get their Statement now; edited
+				// ones get their text updated. Both are safe inside the transaction:
+				// the ids are deterministic per item and the writes touch only this
+				// session's tree. A round with no title keeps the kind as its text —
+				// the phones render the prompt from their own language, not from here.
 				const existingById = new Map(current.map((item) => [item.itemId, item]));
 				for (let index = frozenUpTo + 1; index < clean.length; index += 1) {
 					const item = clean[index];
@@ -109,7 +137,7 @@ export const agoraUpdateStagePlan = onCall(
 					if (previous?.statementId) {
 						clean[index] = { ...item, statementId: previous.statementId };
 						transaction.update(db.collection(Collections.statements).doc(previous.statementId), {
-							statement: (item.title ?? '').trim(),
+							statement: (item.title ?? '').trim() || (roundSpecOf(item)?.kind ?? ''),
 							description: (item.explanation ?? '').trim(),
 							lastUpdate: Date.now(),
 						});

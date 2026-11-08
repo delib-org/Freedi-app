@@ -72,9 +72,9 @@ const ListToolbar: React.FC<ListToolbarProps> = ({
 	const closeSheet = useCallback(() => setIsSheetOpen(false), []);
 	const sheetRef = useClickOutside(closeSheet);
 
-	// Layer chips earn their space only when there is more than one layer to
-	// choose between. Most questions have no AI proposals and no clusters.
-	const showLayers = availableLayers.synth || availableLayers.cluster;
+	// Clusters live in Maps. The list only needs a layer choice when synthesized
+	// proposals exist alongside the raw proposals.
+	const showLayers = availableLayers.synth;
 	const isDefaultFilter = filterMode === TreeFilterMode.all;
 
 	const handleFilterChange = (mode: TreeFilterMode) => {

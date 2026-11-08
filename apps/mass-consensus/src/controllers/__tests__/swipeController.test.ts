@@ -8,9 +8,13 @@
  */
 
 // Mock Firebase client before importing controller
-jest.mock('@/lib/firebase/client', () => ({
+// Firebase Auth cannot load under jest; the token handling has its own tests.
+jest.mock('@/lib/firebase/participantFetch', () => ({
+  participantFetch: (input: string, init?: RequestInit) => global.fetch(input, init),
+}));
+
+jest.mock('@/lib/firebase/firestoreClient', () => ({
   db: {},
-  auth: {},
 }));
 
 import { submitRating, loadCardBatch, syncPendingEvaluations } from '../swipeController';

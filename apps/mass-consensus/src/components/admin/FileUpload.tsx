@@ -133,6 +133,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
       {preview && selectedFile && !uploading && !error && (
         <div className="file-upload__preview">
+          {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview, nothing for next/image to optimize */}
           <img
             src={preview}
             alt={selectedFile.name}

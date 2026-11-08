@@ -107,15 +107,21 @@ export function countsFor(node: Results): NodeCounts {
 	return { ideas, merged, voices };
 }
 
+const NO_IDS: ReadonlySet<string> = new Set();
+
 /**
  * Annotate a Results tree for a detail level. Nothing is removed except nodes
  * beyond the drawable depth; folded nodes keep their `sub` so a caller can
  * count them, peek, or expand in place.
+ *
+ * `expandedIds` opens nodes the level would fold; `foldedIds` folds nodes the
+ * level would open — so a viewer can close a merged idea even at "everything".
  */
 export function applyDetailLevel(
 	results: Results,
 	level: MapDetailLevel,
 	expandedIds: ReadonlySet<string>,
+	foldedIds: ReadonlySet<string> = NO_IDS,
 ): DetailResults {
 	let overflowLogged = false;
 
@@ -150,11 +156,11 @@ export function applyDetailLevel(
 
 		const sub = node.sub.map((child) => walk(child, clusterDepth, false));
 		const singleSource = kind === 'synth' && sub.length <= 1;
+		const id = node.top.statementId;
 		const collapsed =
 			!isRoot &&
 			sub.length > 0 &&
-			collapsedByLevel(kind, level) &&
-			!expandedIds.has(node.top.statementId);
+			(foldedIds.has(id) || (collapsedByLevel(kind, level) && !expandedIds.has(id)));
 
 		return { top: node.top, sub, kind, collapsed, singleSource, overflowCount: 0, clusterDepth };
 	}

@@ -6,6 +6,7 @@ import {
 	invitedElders,
 	elderIdFromStageId,
 	elderStageId,
+	islandFocusStance,
 	pickElderReaction,
 	pickIslandRemark,
 } from '../elders';
@@ -118,16 +119,37 @@ describe('pickElderReaction', () => {
 	it('returns null when no elder declared on the island', () => {
 		expect(pickElderReaction([elder({ positions: {} })], islands[0], 's1', 1)).toBeNull();
 	});
+
+	it('names the shore the line answers', () => {
+		expect(pickElderReaction([elder()], islands[0], 's2', 1)?.stanceId).toBe('s2');
+	});
 });
 
 describe('pickIslandRemark', () => {
 	it('prefers a marked stance an elder declared', () => {
 		const remark = pickIslandRemark([elder()], islands[0], { s2: 0.5, s1: 1 });
 		expect(remark?.agrees).toBe(true);
+		expect(remark?.stanceId).toBe('s1');
 	});
 
 	it('returns null when nothing was marked', () => {
 		expect(pickIslandRemark([elder()], islands[0], {})).toBeNull();
+	});
+});
+
+describe('islandFocusStance', () => {
+	it('is the marked stance an elder declared, when there is one', () => {
+		expect(islandFocusStance([elder()], islands[0], { s2: 1, s1: -1 })?.statementId).toBe('s1');
+	});
+
+	it('is the first marked stance otherwise', () => {
+		expect(islandFocusStance([elder({ positions: {} })], islands[0], { s2: 1 })?.statementId).toBe(
+			's2',
+		);
+	});
+
+	it('is null when nothing was marked', () => {
+		expect(islandFocusStance([elder()], islands[0], {})).toBeNull();
 	});
 });
 

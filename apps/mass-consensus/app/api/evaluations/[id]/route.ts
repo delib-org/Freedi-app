@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId, unauthorizedResponse, verifyParticipant } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, Evaluation } from '@freedi/shared-types';
-import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
-import { FieldValue } from 'firebase-admin/firestore';
+import { Collections } from '@freedi/shared-types';
+import { upsertEvaluation } from '@/lib/firebase/evaluations/evaluationWrites';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
 import { logResearchAction } from '@/lib/utils/researchLogger';
@@ -25,20 +25,18 @@ export async function POST(
   }
 
   try {
+    // Identity comes only from the verified ID token: never from the body, query
+    // or a cookie. verifyIdToken without checkRevoked is a local signature check
+    // against cached Google certs, so voting gains no network round trip.
+    const participant = await verifyParticipant(request);
+    if (!participant) {
+      return unauthorizedResponse();
+    }
+
+    const { userId, displayName } = participant;
     const { id: statementId } = await params;
     const body = await request.json();
-    const { evaluation, userId: bodyUserId, userName, surveyId } = body;
-
-    // Get user ID
-    const cookieUserId = getUserIdFromCookie(request.headers.get('cookie'));
-    const userId = bodyUserId || cookieUserId;
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
-    }
+    const { evaluation, surveyId } = body;
 
     // Validate evaluation range (-1 to 1)
     if (typeof evaluation !== 'number' || evaluation < -1 || evaluation > 1) {
@@ -72,12 +70,6 @@ export async function POST(
       );
     }
 
-    // Evaluation ID format: `${userId}--${statementId}`
-    const evaluationId = `${userId}--${statementId}`;
-    const evaluationRef = db.collection(Collections.evaluations).doc(evaluationId);
-
-    const displayName = userName || getAnonymousDisplayName(userId);
-
     // If this evaluation was submitted inside a survey session, resolve the
     // survey's demographic anchor and stamp it on the evaluation. The
     // polarization index uses this to look up the evaluator's demographic
@@ -92,56 +84,15 @@ export async function POST(
       }
     }
 
-    const evaluationData: Partial<Evaluation> = {
-      evaluationId,
-      parentId,
-      statementId,
-      evaluatorId: userId,
-      evaluator: {
-        uid: userId,
-        displayName,
-        email: '',
-        photoURL: '',
-        isAnonymous: true,
-      },
-      evaluation,
-      updatedAt: Date.now(),
-      ...(demographicAnchorId ? { demographicAnchorId } : {}),
-    };
-
     // Save evaluation and update userEvaluations in a single transaction
-    const userEvaluationId = `${userId}--${parentId}`;
-    const userEvaluationRef = db.collection(Collections.userEvaluations).doc(userEvaluationId);
-
-    await db.runTransaction(async (transaction) => {
-      const [userEvalDoc, existingEvalDoc] = await Promise.all([
-        transaction.get(userEvaluationRef),
-        transaction.get(evaluationRef),
-      ]);
-      const now = Date.now();
-
-      // Preserve an existing anchor on re-evaluation when the client didn't
-      // resend surveyId (e.g., user updates their rating after the fact).
-      if (!evaluationData.demographicAnchorId && existingEvalDoc.exists) {
-        const existingAnchor = existingEvalDoc.data()?.demographicAnchorId;
-        if (typeof existingAnchor === 'string' && existingAnchor) {
-          evaluationData.demographicAnchorId = existingAnchor;
-        }
-      }
-
-      // Save evaluation
-      transaction.set(evaluationRef, evaluationData);
-
-      // Update userEvaluations collection to track this evaluation
-      transaction.set(userEvaluationRef, {
-        userEvaluationId,
-        userId,
-        parentStatementId: parentId,
-        evaluatedOptionsIds: FieldValue.arrayUnion(statementId),
-        lastUpdated: now,
-        // Only set createdAt if document doesn't exist
-        ...(userEvalDoc.exists ? {} : { createdAt: now }),
-      }, { merge: true });
+    // (deterministic id, anchor preserved on re-evaluation)
+    const { evaluationId } = await upsertEvaluation(db, {
+      statementId,
+      parentId,
+      userId,
+      displayName,
+      evaluation,
+      demographicAnchorId,
     });
 
     // Research logging — check parent question's settings
@@ -193,10 +144,7 @@ export async function GET(
 
   try {
     const { id: statementId } = await params;
-    const url = new URL(request.url);
-    const queryUserId = url.searchParams.get('userId');
-    const cookieUserId = getUserIdFromCookie(request.headers.get('cookie'));
-    const userId = queryUserId || cookieUserId;
+    const userId = await getVerifiedUserId(request);
 
     if (!userId) {
       return NextResponse.json({ evaluation: null });

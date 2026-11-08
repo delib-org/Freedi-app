@@ -14,6 +14,7 @@ import {
 	AuthCredential,
 } from 'firebase/auth';
 import { auth } from '@/controllers/db/config';
+import { popupResolver } from '@/controllers/auth/popupResolver';
 import { getAnonymousName } from '@/utils/temporalNameGenerator';
 import { setUserToDB } from '@/controllers/db/user/setUser';
 import { convertFirebaseUserToCreator } from '@/utils/userUtils';
@@ -41,7 +42,7 @@ async function trySilentGoogleSignIn(): Promise<boolean> {
 			login_hint: localStorage.getItem('lastGoogleEmail') || undefined,
 		});
 
-		const result = await signInWithPopup(auth, provider);
+		const result = await signInWithPopup(auth, provider, popupResolver);
 
 		// Store successful login info
 		localStorage.setItem('lastAuthProvider', 'google.com');
@@ -150,6 +151,13 @@ export async function handlePublicAutoAuth(): Promise<void> {
 
 	inFlightAutoAuth = (async () => {
 		try {
+			// Firebase restores a persisted session asynchronously, so on a cold
+			// page load `auth.currentUser` is still null for the first few ticks.
+			// Deciding before that resolves signed a returning Google user in
+			// anonymously ON TOP of their own session — they came back as
+			// "Logical Vision" and wrote under that name. Wait for the restore.
+			await auth.authStateReady();
+
 			// Check if already authenticated
 			if (auth.currentUser) {
 				console.info('User already authenticated, skipping auto-auth');

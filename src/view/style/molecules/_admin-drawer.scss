@@ -57,7 +57,9 @@ $admin-drawer-width: 320px;
 		width: 52px;
 		height: 56px;
 		padding: 0;
-		color: #ffffff;
+		// Not literal white: this brand's primary is a pale ink in dark mode, and a
+		// white glyph on it disappeared.
+		color: var(--btn-primary-text);
 		background: var(--btn-primary);
 		border: 0;
 		border-start-start-radius: 14px;
@@ -331,7 +333,7 @@ $admin-drawer-width: 320px;
 
 		&--active {
 			background: var(--btn-primary);
-			color: #ffffff;
+			color: var(--btn-primary-text);
 		}
 	}
 
@@ -393,4 +395,10 @@ $admin-drawer-width: 320px;
 	.admin-drawer__toggle-knob {
 		transition: none;
 	}
+}
+
+// A sheet or modal holds the screen: the drawer's handle (z-index 9001) must
+// not float over it — it covered the sheet's close button.
+body.modal-open .admin-drawer__handle {
+	visibility: hidden;
 }

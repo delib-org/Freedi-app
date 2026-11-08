@@ -5,6 +5,7 @@ import { t } from '../lib/i18n';
 import { rerateStances } from '../lib/callables';
 import { RATE_OPTIONS } from '../components/RateScale';
 import { Icon } from '../components/Icon';
+import { ExplainHint } from '../components/ExplainHint';
 
 export interface ReRateAttrs {
 	session: AgoraSession;
@@ -98,7 +99,10 @@ export function ReRate(): m.Component<ReRateAttrs> {
 				m('.shell__content', [
 					m('.card.rerate', [
 						m('h1.rerate__title', t('rerate.title')),
-						m('p.rerate__lead', t('rerate.lead')),
+						m('.hint-line', [
+							m('p.rerate__lead.hint-line__text', t('rerate.lead')),
+							m(ExplainHint, { text: t('rerate.why') }),
+						]),
 						m(
 							'.rerate__stances',
 							stances.map((stance) =>
@@ -115,15 +119,14 @@ export function ReRate(): m.Component<ReRateAttrs> {
 												{
 													class: active ? 'rate-scale__option--selected' : undefined,
 													role: 'radio',
+													'aria-label': t(option.labelKey),
+													title: t(option.labelKey),
 													'aria-checked': String(active),
 													onclick: () => {
 														ratings = { ...ratings, [stance.statementId]: option.value };
 													},
 												},
-												[
-													m('span.rate-scale__emoji', m(Icon, { name: option.icon, size: 30 })),
-													m('span.rate-scale__label', t(option.labelKey)),
-												],
+												[m('span.rate-scale__emoji', m(Icon, { name: option.icon, size: 38 }))],
 											);
 										}),
 									),

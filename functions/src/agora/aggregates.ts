@@ -1,18 +1,25 @@
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Transaction } from 'firebase-admin/firestore';
 import { db } from '../db';
 import {
 	Collections,
+	AgoraClass,
 	AgoraClassAggregate,
 	AgoraClassGameRow,
 	AgoraParticipant,
 	AgoraSession,
 	AgoraStudentAggregate,
 	AgoraStudentGameRow,
+	AgoraTeacherAggregate,
+	AgoraThemeTally,
 	emptyAgoraPoints,
 	emptyClassAggregate,
 	emptyStudentAggregate,
+	emptyTeacherAggregate,
 	mergeClassGame,
 	mergeStudentGame,
+	mergeTeacherLesson,
+	tallyAgoraThemes,
+	teacherLessonRowFrom,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 
@@ -31,6 +38,33 @@ function periodKeysFor(timestampMs: number): { day: string; month: string; year:
 }
 
 /**
+ * Fold one finished lesson into the teacher's own aggregate doc, inside a
+ * transaction the caller already opened (and already READ `prevAgg` in — Admin
+ * transactions want every read before the first write). Shared by the
+ * finished-session fold below and the backfill, so the two can never build
+ * the row differently. Returns the merged doc.
+ *
+ * A room nobody joined is not a lesson: the hourly sweep ends open sessions
+ * that never started, and counting those would credit a teacher with lessons
+ * for rooms they only opened. Returns the aggregate unchanged, unwritten.
+ */
+export function foldTeacherLessonTx(
+	transaction: Transaction,
+	session: AgoraSession,
+	studentCount: number,
+	prevAgg: AgoraTeacherAggregate | undefined,
+	now: number,
+): AgoraTeacherAggregate {
+	if (studentCount === 0) return prevAgg ?? emptyTeacherAggregate(session.teacherId);
+	const teacherAggRef = db.collection(Collections.agoraTeacherAggregates).doc(session.teacherId);
+	const row = teacherLessonRowFrom(session, studentCount);
+	const agg = mergeTeacherLesson(prevAgg ?? emptyTeacherAggregate(session.teacherId), row, now);
+	transaction.set(teacherAggRef, agg);
+
+	return agg;
+}
+
+/**
  * Fold a finished session into the career/class aggregate docs — the numbers
  * the teacher console ("how has this student done across the term?") and the
  * sys-admin console ("how is this class advancing?") read.
@@ -41,10 +75,10 @@ function periodKeysFor(timestampMs: number): { day: string; month: string; year:
  * to ended) and Firestore retries triggers at-least-once, so without the
  * guard a game would count twice.
  *
- * Returns true when this call actually did the folding (the caller bumps the
+ * Returns the room's theme tally when this call actually did the folding (the caller bumps the
  * period stats exactly then).
  */
-export async function writeSessionAggregates(sessionId: string): Promise<boolean> {
+export async function writeSessionAggregates(sessionId: string): Promise<AgoraThemeTally | null> {
 	const sessionRef = db.collection(Collections.agoraSessions).doc(sessionId);
 
 	// Participants are read before the transaction — they are final once a
@@ -64,22 +98,37 @@ export async function writeSessionAggregates(sessionId: string): Promise<boolean
 	return db.runTransaction(async (transaction) => {
 		const sessionSnap = await transaction.get(sessionRef);
 		const session = sessionSnap.data() as AgoraSession | undefined;
-		if (!session || session.aggregatedAt !== undefined) return false;
+		if (!session || session.aggregatedAt !== undefined) return null;
 
 		const now = Date.now();
 		const playedAt = session.classScore?.computedAt ?? now;
 		const { classId, schoolId } = session;
 
-		if (classId && schoolId) {
-			const classAggRef = db.collection(Collections.agoraClassAggregates).doc(classId);
-			const studentAggRefs = rosterStudents.map((student) =>
-				db.collection(Collections.agoraStudentAggregates).doc(student.memberId),
-			);
-			const [classAggSnap, ...studentAggSnaps] = await Promise.all([
-				transaction.get(classAggRef),
-				...studentAggRefs.map((ref) => transaction.get(ref)),
-			]);
+		// Every read up front — the teacher's doc beside the class and career
+		// docs — because the first write closes the transaction to reads. The
+		// class comes along for its teacherMap: the aggregate carries a copy so
+		// a teacher's browser can query its own classes' advancement without
+		// the rule reading this document for every one of them.
+		const teacherAggRef = db.collection(Collections.agoraTeacherAggregates).doc(session.teacherId);
+		const classAggRef =
+			classId && schoolId ? db.collection(Collections.agoraClassAggregates).doc(classId) : null;
+		const classRef =
+			classId && schoolId ? db.collection(Collections.agoraClasses).doc(classId) : null;
+		const studentAggRefs =
+			classId && schoolId
+				? rosterStudents.map((student) =>
+						db.collection(Collections.agoraStudentAggregates).doc(student.memberId),
+					)
+				: [];
+		const [teacherAggSnap, classAggSnap, classSnap, studentAggSnaps] = await Promise.all([
+			transaction.get(teacherAggRef),
+			classAggRef ? transaction.get(classAggRef) : Promise.resolve(null),
+			classRef ? transaction.get(classRef) : Promise.resolve(null),
+			Promise.all(studentAggRefs.map((ref) => transaction.get(ref))),
+		]);
+		const teacherMap = (classSnap?.data() as AgoraClass | undefined)?.teacherMap;
 
+		if (classId && schoolId && classAggRef && classAggSnap) {
 			const classRow: AgoraClassGameRow = {
 				sessionId,
 				topicPackageId: session.topicPackageId,
@@ -93,11 +142,14 @@ export async function writeSessionAggregates(sessionId: string): Promise<boolean
 			};
 			const classAgg = mergeClassGame(
 				(classAggSnap.data() as AgoraClassAggregate | undefined) ??
-					emptyClassAggregate(classId, schoolId),
+					emptyClassAggregate(classId, schoolId, teacherMap),
 				classRow,
 				now,
 			);
-			transaction.set(classAggRef, classAgg);
+			transaction.set(classAggRef, {
+				...classAgg,
+				...(teacherMap ? { teacherMap } : {}),
+			});
 
 			rosterStudents.forEach((student, index) => {
 				const row: AgoraStudentGameRow = {
@@ -119,9 +171,28 @@ export async function writeSessionAggregates(sessionId: string): Promise<boolean
 			});
 		}
 
-		transaction.update(sessionRef, { aggregatedAt: now, lastUpdate: now });
+		// The teacher's own doc advances for EVERY finished game, guest games
+		// included — a lesson without a roster is still a lesson.
+		if (session.teacherAggregatedAt === undefined) {
+			foldTeacherLessonTx(
+				transaction,
+				session,
+				students.length,
+				teacherAggSnap.data() as AgoraTeacherAggregate | undefined,
+				now,
+			);
+		}
 
-		return true;
+		transaction.update(sessionRef, {
+			aggregatedAt: now,
+			teacherAggregatedAt: now,
+			lastUpdate: now,
+		});
+
+		// How the room dressed, counted from the same participant reads — the
+		// one thing the company asked to learn from a finished game that is
+		// not a score
+		return tallyAgoraThemes(session, students);
 	});
 }
 
@@ -134,7 +205,11 @@ export async function writeSessionAggregates(sessionId: string): Promise<boolean
  * inside a transaction (the questionProgressWriter technique), so a class that
  * plays five games in a month still counts once that month.
  */
-export async function bumpAgoraStats(session: AgoraSession, studentCount: number): Promise<void> {
+export async function bumpAgoraStats(
+	session: AgoraSession,
+	studentCount: number,
+	themes: AgoraThemeTally,
+): Promise<void> {
 	try {
 		const periodKeys = periodKeysFor(session.classScore?.computedAt ?? Date.now());
 		const periods: Array<{ key: string; type: string }> = [
@@ -157,6 +232,14 @@ export async function bumpAgoraStats(session: AgoraSession, studentCount: number
 					gamesFinished: FieldValue.increment(1),
 					[outcomeField]: FieldValue.increment(1),
 					studentsReached: FieldValue.increment(studentCount),
+					// Which look people actually played in — the favourite-design
+					// question, answered per student rather than per room
+					'byTheme.candy': FieldValue.increment(themes.worn.candy),
+					'byTheme.purple': FieldValue.increment(themes.worn.purple),
+					'byTheme.custom': FieldValue.increment(themes.worn.custom),
+					'byTheme.built': FieldValue.increment(themes.built),
+					'byTheme.borrowed': FieldValue.increment(themes.borrowed),
+					[`byRoomTheme.${themes.sessionDefault}`]: FieldValue.increment(1),
 					lastUpdate: now,
 				},
 				{ merge: true },

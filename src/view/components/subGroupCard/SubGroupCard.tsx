@@ -2,6 +2,7 @@ import { FC, useState } from 'react';
 import styles from './SubGroupCard.module.scss';
 import { Link, NavLink, useNavigate } from 'react-router';
 import useSubGroupCard from './SubGroupCardVM';
+import SubGroupCardSummary from './SubGroupCardSummary';
 import { EvaluationUI, Statement, StatementType } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useRouteTargets } from '@/controllers/statementRouter/useRouteTargets';
@@ -14,18 +15,21 @@ import { ArrowUpRight } from 'lucide-react';
 
 interface Props {
 	statement: Statement;
+	/** Lets admins change what the question's summary covers. Defaults to false. */
+	isAdmin?: boolean;
 }
 
-const SubGroupCard: FC<Props> = ({ statement }) => {
+const SubGroupCard: FC<Props> = ({ statement, isAdmin = false }) => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
-	const { Icon, backgroundColor, text } = useSubGroupCard(statement);
+	const { Icon, text } = useSubGroupCard(statement);
 	const routeTargets = useRouteTargets(statement);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
 	const [showRoutePicker, setShowRoutePicker] = useState(false);
 
 	try {
 		const { results = [], topVotedOption, evaluationSettings, hide } = statement;
+		const summary = statement.summary?.trim();
 		const evaluationUI = evaluationSettings?.evaluationUI;
 		const isDecidedByVoting = evaluationUI === EvaluationUI.voting;
 		const shouldSeeVoting = isDecidedByVoting && topVotedOption;
@@ -35,18 +39,17 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 		return (
 			<div
 				className={styles.subGroupCard}
-				style={{
-					border: `1px solid ${backgroundColor}`,
-					borderLeft: `5px solid ${backgroundColor}`,
-					opacity: hide ? 0.5 : 1,
-				}}
+				data-hidden={hide || undefined}
+				data-kind={statement.statementType}
 			>
-				<Link to={`/statement/${statement.statementId}`} className={styles.type}>
-					<div className={styles.text}>{text}</div>{' '}
-					<div className={styles.iconWrapper} style={{ color: backgroundColor }}>
+				<div className={styles.type}>
+					<Link to={`/statement/${statement.statementId}`} className={styles.text}>
+						{text}
+					</Link>{' '}
+					<div className={styles.iconWrapper}>
 						{Icon}
 						<div onClick={(e) => e.stopPropagation()}>
-							<StatementChatMore statement={statement} onlyCircle={true} />
+							<StatementChatMore statement={statement} />
 						</div>
 						{routeTargets.length > 0 && (
 							<div
@@ -58,7 +61,7 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 								<Menu
 									setIsOpen={setIsCardMenuOpen}
 									isMenuOpen={isCardMenuOpen}
-									iconColor={backgroundColor}
+									iconColor="var(--text-body)"
 									isCardMenu={true}
 									isNavMenu={false}
 								>
@@ -74,7 +77,7 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 							</div>
 						)}
 					</div>
-				</Link>
+				</div>
 				{routeTargets.length > 0 && (
 					<RoutePicker
 						statement={statement}
@@ -87,7 +90,10 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 						{topVotedOption.statement}
 					</NavLink>
 				) : (
-					statement.statementType === StatementType.question && (
+					statement.statementType === StatementType.question &&
+					(summary ? (
+						<SubGroupCardSummary statement={statement} summary={summary} isAdmin={isAdmin} />
+					) : (
 						<div className={styles.results}>
 							{results.length !== 0 && (
 								<NavLink to={`/statement/${results[0].parentId}/main`}>
@@ -104,7 +110,7 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 								))}
 							</ul>
 						</div>
-					)
+					))
 				)}
 				{statement.statementType === StatementType.question && (
 					<button

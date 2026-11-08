@@ -8,7 +8,6 @@ import {
 	ChallengePhase,
 	ChallengeResolvedBy,
 } from '@freedi/shared-types';
-import { AGORA_POINTS } from '@freedi/shared-types';
 import { t } from './i18n';
 import { celebrate } from './celebration';
 import { requestHelpedFocus, requestMineFocus } from './helpedFocus';
@@ -207,6 +206,12 @@ export function subscribeNotificationDetectors(): void {
 	on('challenge:changed', ({ userId, phase }) => {
 		announceChallengePhase(userId, phase);
 	});
+
+	// A refused text: the box already says why, the thread keeps the words —
+	// the toast is the door to the teacher's note about it.
+	on('language:flagged', () => {
+		pushLocalToast(NotificationTriggerType.AGORA_LANGUAGE_FLAGGED, { kind: 'teacher' });
+	});
 }
 
 /**
@@ -330,9 +335,9 @@ export function detectHelpedImprovements(sessionId: string, userId: string): voi
  */
 export function detectThreadMessages(sessionId: string, userId: string): void {
 	const key = `agora_${sessionId}_received_toastmark`;
-	const { proposals, suggestions } = getDeliberationState();
+	const { proposals, suggestions, answersByQuestion } = getDeliberationState();
 	const mineIds = new Set(
-		proposals
+		[...proposals, ...Object.values(answersByQuestion).flat()]
 			.filter((proposal) => proposal.creatorId === userId)
 			.map((proposal) => proposal.statementId),
 	);
@@ -442,6 +447,14 @@ export function detectThreadMessages(sessionId: string, userId: string): void {
  * next step is another stall.
  */
 function serverNewsTarget(trigger: string, proposalId?: string): InboxTarget {
+	if (
+		trigger === NotificationTriggerType.AGORA_TEACHER_NOTE ||
+		trigger === NotificationTriggerType.AGORA_TEACHER_HIDDEN ||
+		trigger === NotificationTriggerType.AGORA_TEACHER_RESTORED ||
+		trigger === NotificationTriggerType.AGORA_TEACHER_EDITED
+	) {
+		return { kind: 'teacher' };
+	}
 	if (trigger === NotificationTriggerType.AGORA_SUGGESTION_DECLINED) return { kind: 'market' };
 	if (
 		proposalId &&
@@ -555,14 +568,6 @@ export function listenToNotifications(userId: string): void {
 									: t('celebrate.suggestion_implemented_capped')
 								: t('celebrate.suggestion_accepted', { n: awarded }),
 						detail: suggestion?.statement,
-						// Accept is the promise, not the payoff. Saying what comes
-						// next turns the wait for "+2" into anticipation instead of
-						// an invisible state — and teaches the ladder when it lands.
-						// A thank-you IS the payoff — it promises nothing further.
-						hint:
-							implemented || thanked
-								? undefined
-								: t('celebrate.accepted_hint', { n: AGORA_POINTS.SUGGESTION_IMPLEMENTED }),
 						action:
 							implemented && proposalId
 								? {
@@ -593,7 +598,7 @@ export function listenToNotifications(userId: string): void {
 								? t('celebrate.bridging_full', { n: awarded })
 								: t('celebrate.bridging_reached', { n: awarded })
 							: t('celebrate.proposal_credited', { n: awarded }),
-						hint: bridging ? t('celebrate.bridging_hint') : t('celebrate.proposal_credited_hint'),
+						hint: bridging ? undefined : t('celebrate.proposal_credited_hint'),
 						// Bridging arrives while you are off rating classmates, so it
 						// offers the trip back to your proposal. The first-proposal
 						// credit fires the instant you submit — you are already
@@ -625,7 +630,6 @@ export function listenToNotifications(userId: string): void {
 					if (first) {
 						celebrate({
 							message: t('celebrate.revision_first', { n: awarded }),
-							hint: t('celebrate.revision_first_hint'),
 						});
 					} else {
 						pushLocalToast('agora_revision_credited');
@@ -731,7 +735,11 @@ export function detectProposalMilestones(sessionId: string, userId: string): voi
 	const score = scores[mine.statementId];
 	if (!score?.classConsensus) return;
 
-	// ---- 1. The bridge zone: the goal, made into a place on the map ----
+	// ---- 1. The goal: the win condition, made into a place on the map ----
+	// The map draws top-centre as a football goal (ResultsBoard), so this is
+	// the moment the ball goes in — the one celebration with a picture of its
+	// own, a whistle and a roar. Once per sitting: a goal replayed on every
+	// rating that keeps it there is a goal that stops meaning anything.
 	const zoneKey = `agora_${sessionId}_zone`;
 	if (inBridgeZone(score) && !sessionStorage.getItem(zoneKey)) {
 		sessionStorage.setItem(zoneKey, '1');
@@ -742,10 +750,10 @@ export function detectProposalMilestones(sessionId: string, userId: string): voi
 			detail: mine.statement,
 		});
 		celebrate({
+			kind: 'goal',
 			message: t('celebrate.bridge_zone'),
 			detail: mine.statement,
-			hint: t('celebrate.bridge_zone_hint'),
-			sound: 'applause',
+			sound: 'goal',
 		});
 	}
 

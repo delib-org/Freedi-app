@@ -4,6 +4,7 @@ import { useLocation, useParams, useSearchParams } from 'react-router';
 import { StatementType } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useLevelTransition } from '@/controllers/hooks/useSlideAndSubStatement';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { isAdmin as isAdminRole } from '@/controllers/general/helpers';
 import { listenToMindMapData } from '@/controllers/db/statements/optimizedListeners';
@@ -12,12 +13,7 @@ import {
 	statementSelector,
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
-import { useSummarization } from '@/controllers/hooks/useSummarization';
 import ShareButton from '@/view/components/buttons/shareButton/ShareButton';
-import Modal from '@/view/components/modal/Modal';
-import SummarizeButton from '@/view/pages/statement/components/statementTypes/question/document/MultiStageQuestion/components/SummarizeButton/SummarizeButton';
-import SummarizeModal from '@/view/pages/statement/components/statementTypes/question/document/MultiStageQuestion/components/SummarizeModal/SummarizeModal';
-import SummaryDisplay from '@/view/pages/statement/components/statementTypes/question/document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay';
 import ClusterBoard from './ClusterBoard';
 import MapAdminPanel from './MapAdminPanel';
 import { loadLocalFilter, saveLocalFilter, type LocalMapFilter } from './mapLocalFilter';
@@ -25,14 +21,15 @@ import { useMindMap } from '../MindMapMV';
 import { useMapDetailLevel } from '../mapHelpers/useMapDetailLevel';
 import { hasClusters, pathToMine } from '../mapHelpers/detailLevel';
 import MapDetailControl from '../components/MapDetailControl';
+import { useFoldControls } from '../mapHelpers/useFoldControls';
 import styles from './ClusterMap.module.scss';
 
 /**
  * Standalone, shareable, embeddable cluster board.
  *
  * Reuses the mind-map data layer (useMindMap + Firestore listeners + edit
- * functions) but renders a custom radial board: a central subject, colored
- * cluster pills, and a grid of sticky-note cards per cluster. Access is handled
+ * functions) but renders a custom radial board: a central subject and one
+ * colored frame per cluster (title pill on top, sticky-note grid inside). Access is handled
  * by ProtectedLayout (which auto signs-in anonymous visitors for public
  * statements), so anyone with access can co-edit.
  */
@@ -43,6 +40,8 @@ const ClusterMap: FC = () => {
 	const [searchParams] = useSearchParams();
 
 	const isEmbed = searchParams.get('embed') === '1' || location.pathname.endsWith('/embed');
+	// The board is the map level: it pushes in over the question and pops back.
+	const { className: levelClassName } = useLevelTransition();
 
 	const { user, creator } = useAuthentication();
 	const statement = useSelector(statementSelector(statementId));
@@ -71,6 +70,8 @@ const ClusterMap: FC = () => {
 		isAdmin,
 	);
 	const showDetailControl = !!results && hasClusters(results);
+
+	const fold = useFoldControls(results, detail.applyFold);
 
 	// "My ideas": where the viewer's own statements ended up on the board.
 	const mine = useMemo(
@@ -107,29 +108,6 @@ const ClusterMap: FC = () => {
 		[statementId, user?.uid],
 	);
 
-	// Discussion summary — reuses the same mechanism as the question document:
-	// admins generate/regenerate it (callable `summarizeDiscussion` writes
-	// `summary` + `summaryGeneratedAt` onto the question doc), and anyone with
-	// access can open it via "Show summary" since it lives on the shared doc.
-	const { generateSummary, isGenerating } = useSummarization();
-	const [summarizeModalOpen, setSummarizeModalOpen] = useState(false);
-	const [showSummary, setShowSummary] = useState(false);
-	const summary = statement?.summary;
-	// `summaryGeneratedAt` is written by the summarizeDiscussion CF but not in the
-	// shared-types schema — read it via a cast, the same pattern the question
-	// document sections (IntroductionSection/SimpleQuestion/StagePage) use.
-	const summaryGeneratedAt = (statement as { summaryGeneratedAt?: number } | undefined)
-		?.summaryGeneratedAt;
-
-	const handleGenerateSummary = async (customPrompt: string, includeSubQuestions: boolean) => {
-		if (!statementId) return;
-		const ok = await generateSummary(statementId, customPrompt || undefined, includeSubQuestions);
-		if (ok) {
-			setSummarizeModalOpen(false);
-			setShowSummary(true);
-		}
-	};
-
 	// Real-time descendants + root for the board (mirrors useStatementListeners'
 	// 'mind-map' branch). The standalone page owns this listener itself.
 	useEffect(() => {
@@ -159,27 +137,11 @@ const ClusterMap: FC = () => {
 	}
 
 	return (
-		<div className={styles.board}>
+		<div className={`${styles.board} ${isEmbed ? '' : levelClassName}`} data-map-root>
 			{!isEmbed && (
 				<header className={styles.toolbar}>
 					<h1 className={styles.title}>{statement.statement}</h1>
 					<div className={styles.toolbarActions}>
-						{isQuestion && summary && (
-							<button
-								type="button"
-								className="btn btn--secondary"
-								onClick={() => setShowSummary(true)}
-							>
-								{t('Show summary')}
-							</button>
-						)}
-						{isQuestion && (
-							<SummarizeButton
-								statement={statement}
-								onOpenModal={() => setSummarizeModalOpen(true)}
-								isLoading={isGenerating}
-							/>
-						)}
 						<ShareButton
 							title={t('Share map')}
 							text={t('Share')}
@@ -201,6 +163,7 @@ const ClusterMap: FC = () => {
 							onLocateMine={locateMine}
 							breadcrumb={showBreadcrumb ? (mine?.breadcrumb ?? []) : []}
 							onDismissBreadcrumb={() => setShowBreadcrumb(false)}
+							fold={fold}
 						/>
 					</div>
 				)}
@@ -231,25 +194,6 @@ const ClusterMap: FC = () => {
 					applyToEveryone={applyToEveryone}
 					onApplyToEveryoneChange={setApplyToEveryone}
 				/>
-			)}
-
-			<SummarizeModal
-				isOpen={summarizeModalOpen}
-				onClose={() => setSummarizeModalOpen(false)}
-				onGenerate={handleGenerateSummary}
-				isLoading={isGenerating}
-				questionTitle={statement.statement}
-			/>
-
-			{showSummary && summary && (
-				<Modal closeModal={() => setShowSummary(false)}>
-					<SummaryDisplay
-						summary={summary}
-						generatedAt={summaryGeneratedAt}
-						statementId={statementId}
-						canEdit={isAdmin}
-					/>
-				</Modal>
 			)}
 		</div>
 	);

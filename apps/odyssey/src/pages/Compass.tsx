@@ -2,12 +2,45 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { OdysseyCompassAnswer } from '@freedi/shared-types';
 import GameChrome from '../components/GameChrome';
+import WindArt from '../components/WindArt';
+import WindProgress from '../components/WindProgress';
 import { useGame } from '../state/GameContext';
+import { DECIDE_WIND_ID } from '../lib/compassArt';
 import NoGameYet from '../components/NoGameYet';
 import { useMode } from '../lib/mode';
 import { stageBus } from '../lib/stageBus';
+// One cap, read by the compass and by the strip that reports it as a lit wind.
+import { TOP_VALUES } from '../lib/voyageSteps';
+import { useT } from '../i18n/useT';
 
-const TOP_VALUES = 3;
+/**
+ * Chips that make a wind read as answered, and earn the ✓.
+ *
+ * One chip already unblocks the way onward — the gate has always been "said
+ * something". Three is when an answer stops being a shrug, so that is what the
+ * wind asks for, out loud and from the start: a player who has picked nothing
+ * is shown "0/3" so they never discover the target by accident. Before the
+ * indicator, the screen said nothing until three, and players learned the rule
+ * only when the ✓ appeared.
+ */
+const CHIPS_ENOUGH = 3;
+
+/**
+ * Enough said on a question wind — three chips, or words of your own.
+ *
+ * One rule, in one place, because three things ask the question and they must
+ * not disagree: the indicator on the card, the button at the foot of the
+ * screen, and the petals on the compass rose out at sea. They did disagree.
+ * The indicator asked for three while the button opened at one, so a player
+ * could be told "1/3" and walk on anyway — which taught them the count was
+ * decoration.
+ *
+ * Words are a whole answer at any length: someone who wrote a paragraph and
+ * picked nothing must not be held at the gate for being short of three.
+ */
+function windAnswered(entry: OdysseyCompassAnswer | undefined): boolean {
+	return (entry?.chips.length ?? 0) >= CHIPS_ENOUGH || (entry?.answer ?? '').trim() !== '';
+}
 
 /**
  * Inspiration chips are deliberately uncapped.
@@ -26,11 +59,16 @@ const TOP_VALUES = 3;
  * fourth wind — ranking the top values. Personal/reflective, stored on the
  * journey doc (not statements). In game mode the compass rose on the sea
  * stage reacts: answered winds light petals, ranked values hoist pennants.
+ *
+ * Chips are STORED canonical (Hebrew) and only DISPLAYED translated: the
+ * journey keeps chip text, and a sailor's answers must mean the same thing to
+ * the elders and to every other player whatever language they chose them in.
  */
 export default function Compass() {
 	const navigate = useNavigate();
 	const mode = useMode();
-	const { content, journey, text, updateJourney } = useGame();
+	const { content, journey, text, updateJourney, canonicalChip } = useGame();
+	const { t } = useT();
 	const [answers, setAnswers] = useState<Record<string, OdysseyCompassAnswer>>(() => ({
 		...(journey?.compassAnswers ?? {}),
 	}));
@@ -56,11 +94,7 @@ export default function Compass() {
 	/** One boolean per wind: the 3 questions + the values wind. */
 	const windsLit = useMemo(
 		() => [
-			...questions.map((question) => {
-				const entry = answers[question.questionId] ?? { answer: '', chips: [] };
-
-				return entry.answer.trim() !== '' || entry.chips.length > 0;
-			}),
+			...questions.map((question) => windAnswered(answers[question.questionId])),
 			ranked.length === TOP_VALUES,
 		],
 		[questions, answers, ranked],
@@ -94,6 +128,10 @@ export default function Compass() {
 		return answers[questionId] ?? { answer: '', chips: [] };
 	}
 
+	function answered(questionId: string): boolean {
+		return windAnswered(answerOf(questionId));
+	}
+
 	function setAnswer(questionId: string, patch: Partial<OdysseyCompassAnswer>): void {
 		setAnswers((current) => ({
 			...current,
@@ -101,7 +139,13 @@ export default function Compass() {
 		}));
 	}
 
-	function toggleChip(questionId: string, chip: string): void {
+	/** Whether a displayed chip is picked — compared in canonical form. */
+	function chipPicked(questionId: string, displayedChip: string): boolean {
+		return answerOf(questionId).chips.includes(canonicalChip(questionId, displayedChip));
+	}
+
+	function toggleChip(questionId: string, displayedChip: string): void {
+		const chip = canonicalChip(questionId, displayedChip);
 		const current = answerOf(questionId);
 		if (current.chips.includes(chip)) {
 			setAnswer(questionId, { chips: current.chips.filter((item) => item !== chip) });
@@ -123,11 +167,7 @@ export default function Compass() {
 	}
 
 	const complete =
-		questions.every((question) => {
-			const entry = answerOf(question.questionId);
-
-			return entry.answer.trim() !== '' || entry.chips.length > 0;
-		}) && ranked.length === TOP_VALUES;
+		questions.every((question) => answered(question.questionId)) && ranked.length === TOP_VALUES;
 
 	async function save(): Promise<void> {
 		setSaving(true);
@@ -163,9 +203,19 @@ export default function Compass() {
 					{questions.map((question, index) => (
 						<section key={question.questionId} className="panel fade-in">
 							<p className="eyebrow m-0">
-								רוח {index + 1} מתוך {questions.length + 1}
+								{t('compass.windCounter', { index: index + 1, total: questions.length + 1 })}
 							</p>
-							<h2 className="text-xl font-bold text-[var(--cream)] mt-1 mb-1">{question.title}</h2>
+							<div className="flex items-center justify-between gap-3 mt-1 mb-1">
+								<span className="wind-head">
+									<WindArt questionId={question.questionId} />
+									<h2 className="text-xl font-bold text-[var(--cream)] m-0">{question.title}</h2>
+								</span>
+								<WindProgress
+									count={answerOf(question.questionId).chips.length}
+									target={CHIPS_ENOUGH}
+									done={answered(question.questionId)}
+								/>
+							</div>
 							<p className="text-[15px] text-[#dcecf7] mt-0 mb-3">{question.prompt}</p>
 
 							{/*
@@ -178,11 +228,11 @@ export default function Compass() {
 							{question.chips.length > 0 ? (
 								<>
 									<p className="text-[13px] opacity-75 m-0 mb-2">
-										בחרו כל מה שמדבר אליכם — אין הגבלה:
+										{t('compass.chipsHint', { min: CHIPS_ENOUGH })}
 									</p>
-									<div className="flex flex-wrap gap-2" aria-label="כפתורי השראה">
+									<div className="flex flex-wrap gap-2" aria-label={t('compass.chipsAria')}>
 										{question.chips.map((chip) => {
-											const active = answerOf(question.questionId).chips.includes(chip);
+											const active = chipPicked(question.questionId, chip);
 
 											return (
 												<button
@@ -197,65 +247,44 @@ export default function Compass() {
 											);
 										})}
 									</div>
-									<p className="text-[13px] opacity-75 mt-2 mb-3">
-										{answerOf(question.questionId).chips.length > 0
-											? `נבחרו ${answerOf(question.questionId).chips.length} מתוך ${
-													question.chips.length
-												}. לחיצה נוספת מסירה בחירה.`
-											: 'אפשר לבחור כמה שתרצו.'}
-									</p>
+									<div className="mb-3" />
 								</>
 							) : null}
 
 							<p className="text-[13px] opacity-75 m-0 mb-2">
-								ובמילים שלכם — מה שאף כפתור לא אומר{question.chips.length > 0 ? ' (לא חובה)' : ''}:
+								{question.chips.length > 0 ? t('compass.ownWordsOptional') : t('compass.ownWords')}
 							</p>
 							<textarea
 								rows={3}
 								value={answerOf(question.questionId).answer}
 								onChange={(event) => setAnswer(question.questionId, { answer: event.target.value })}
-								placeholder="כתבו במילים שלכם…"
+								placeholder={t('compass.ownWordsPlaceholder')}
 							/>
 						</section>
 					))}
 
 					<section className="panel fade-in">
 						<p className="eyebrow m-0">
-							רוח {questions.length + 1} מתוך {questions.length + 1}
+							{t('compass.windCounter', {
+								index: questions.length + 1,
+								total: questions.length + 1,
+							})}
 						</p>
 						<div className="flex items-center justify-between gap-3 mt-1 mb-1">
-							<h2 className="text-xl font-bold text-[var(--cream)] m-0">רוח ההכרעה</h2>
-							<span
-								className="flex items-center gap-2 rounded-full border border-[rgba(232,185,88,0.5)] bg-[rgba(6,24,44,0.7)] px-3 py-1"
-								role="status"
-								aria-label={`נבחרו ${ranked.length} ערכים מתוך ${TOP_VALUES}`}
-							>
-								<span className="flex gap-1" aria-hidden="true">
-									{Array.from({ length: TOP_VALUES }, (_, dot) => (
-										<span
-											key={dot}
-											className={`inline-block h-2.5 w-2.5 rounded-full ${
-												dot < ranked.length
-													? 'bg-[var(--gold-strong)]'
-													: 'border border-[rgba(232,185,88,0.5)]'
-											}`}
-										/>
-									))}
-								</span>
-								<strong
-									className={`text-[14px] ${
-										ranked.length === TOP_VALUES
-											? 'text-[var(--gold-strong)]'
-											: 'text-[var(--cream)]'
-									}`}
-								>
-									{ranked.length}/{TOP_VALUES}
-								</strong>
+							<span className="wind-head">
+								<WindArt questionId={DECIDE_WIND_ID} />
+								<h2 className="text-xl font-bold text-[var(--cream)] m-0">
+									{t('compass.decideWind')}
+								</h2>
 							</span>
+							<WindProgress
+								count={ranked.length}
+								target={TOP_VALUES}
+								done={ranked.length === TOP_VALUES}
+							/>
 						</div>
 						<p className="text-[15px] text-[#dcecf7] mt-0 mb-3">
-							כשאין פתרון טוב, מה בכל זאת צריך להנחות אותך? בחרו {TOP_VALUES} ערכים מובילים, לפי
-							הסדר.
+							{t('compass.decidePrompt', { top: TOP_VALUES })}
 						</p>
 						<div className="flex flex-wrap gap-2">
 							{values.map((value) => {
@@ -278,16 +307,12 @@ export default function Compass() {
 							// A ranking saved before the cap dropped to 3 loads with more —
 							// say exactly what unblocks the way onward.
 							<p className="text-[13px] text-[var(--gold-strong)] mt-3 mb-0">
-								בחרתם {ranked.length} ערכים — הסירו {ranked.length - TOP_VALUES} בלחיצה עליהם כדי
-								להמשיך.
+								{t('compass.tooMany', {
+									picked: ranked.length,
+									extra: ranked.length - TOP_VALUES,
+								})}
 							</p>
-						) : (
-							<p className="text-[13px] opacity-75 mt-3 mb-0">
-								{ranked.length === TOP_VALUES
-									? 'נבחרו כל הערכים. לחיצה נוספת מסירה ערך.'
-									: `נבחרו ${ranked.length} מתוך ${TOP_VALUES}. לחיצה נוספת מסירה ערך.`}
-							</p>
-						)}
+						) : null}
 					</section>
 
 					<div className="flex flex-col items-center gap-2 pb-4">
@@ -297,11 +322,11 @@ export default function Compass() {
 							disabled={!complete || saving}
 							onClick={() => void save()}
 						>
-							{saving ? 'שומר…' : 'המצפן שלך כויל — לפתיחת המפה'}
+							{saving ? t('common.saving') : t('compass.submit')}
 						</button>
 						{!complete ? (
 							<p className="text-[13px] opacity-75 m-0">
-								ענו על כל רוח (בטקסט או בבחירת השראה) ובחרו {TOP_VALUES} ערכים.
+								{t('compass.incomplete', { min: CHIPS_ENOUGH, top: TOP_VALUES })}
 							</p>
 						) : null}
 					</div>

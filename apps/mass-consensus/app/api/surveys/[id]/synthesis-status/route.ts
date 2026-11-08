@@ -3,6 +3,7 @@ import { Collections, type Statement } from '@freedi/shared-types';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getSurveyById } from '@/lib/firebase/surveys/surveyCrud';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { denySurveyPermission } from '@/lib/auth/surveyAccess';
 import { logger } from '@/lib/utils/logger';
 
 interface RouteContext {
@@ -65,12 +66,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
 		if (!survey) {
 			return NextResponse.json({ error: 'Survey not found' }, { status: 404 });
 		}
-		if (survey.creatorId !== userId) {
-			return NextResponse.json(
-				{ error: 'You can only view status for your own surveys' },
-				{ status: 403 }
-			);
-		}
+		const denied0 = await denySurveyPermission(survey, userId, 'view');
+		if (denied0) return denied0;
 
 		const db = getFirestoreAdmin();
 		const surveyLiveSynthExplicit = readLiveSynth(survey.settings);

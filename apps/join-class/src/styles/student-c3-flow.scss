@@ -1,0 +1,424 @@
+// =============================================================================
+// Student screens, part 2 (lane C3): table talk, proposals, vote, summary.
+// Lazy: imported only by the c3 view modules, so it ships with their chunk.
+// Tokens only, BEM, logical properties (RTL-safe), transform/opacity motion.
+// Screens down = `.frame--down` (student-frame.scss): everything below inherits
+// its colours with `currentColor` so the one inverted screen needs no overrides.
+// =============================================================================
+
+body.c3-lock {
+  overflow: hidden;
+}
+
+// ---- shared bits ------------------------------------------------------------
+
+.c3-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-block: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border: 1.5px solid var(--terra-600);
+  border-radius: var(--radius-md);
+  background: var(--terra-50);
+  color: var(--ink);
+  font-size: var(--font-size-sm);
+
+  &__text {
+    flex: 1;
+  }
+}
+
+// ---- table flow bar + sub-step strip -------------------------------------------
+
+.flow {
+  &__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    margin-block-end: var(--space-md);
+  }
+
+  &__class {
+    flex: none;
+  }
+
+  &__plenum {
+    margin-block: 0 var(--space-md);
+    color: var(--ink-muted);
+    font-weight: var(--font-weight-bold, 700);
+  }
+}
+
+.substeps {
+  display: flex;
+  gap: var(--space-xs);
+  margin-block-end: var(--space-lg);
+
+  &__pill {
+    flex: 1;
+    min-height: 36px;
+    padding: 0 var(--space-xs);
+    border: 1.5px solid var(--border-medium);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold, 700);
+    cursor: pointer;
+
+    &--on {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+
+      .frame--down & {
+        border-color: var(--paper);
+        background: var(--paper);
+        color: var(--ink);
+      }
+    }
+  }
+}
+
+// ---- pick -------------------------------------------------------------------
+
+.pick {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+
+  &__title,
+  &__all-used,
+  &__empty {
+    margin: 0;
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  // A radio row: the choice is local to this phone until "I want to start".
+  &__item,
+  &__own {
+    display: flex;
+    gap: var(--space-sm);
+    min-height: 56px;
+    padding: var(--space-sm) var(--space-md);
+    border: 1.5px solid var(--border-medium);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    color: var(--ink);
+    font: inherit;
+    text-align: start;
+  }
+
+  &__item {
+    align-items: center;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: default;
+    }
+
+    &--on {
+      border: 2px solid var(--ink);
+      background: var(--paper-soft);
+    }
+
+    &--used {
+      border-color: var(--border-medium);
+      background: var(--paper-soft);
+      color: var(--ink-soft);
+      cursor: default;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__radio {
+    flex: none;
+    color: var(--ink);
+  }
+
+  // "+ our own question": dashed, always last of the free group; opens its own field.
+  &__own {
+    flex-direction: column;
+    border-style: dashed;
+
+    &.pick__item--on {
+      border: 2px solid var(--ink);
+      background: var(--paper-soft);
+    }
+  }
+
+  &__own-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-height: var(--touch-target, 48px);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  &__eyebrow,
+  &__hint,
+  &__used {
+    font-size: var(--font-size-xs);
+    color: var(--ink-soft);
+  }
+
+  &__text {
+    font-size: var(--font-size-base);
+  }
+
+  &__input {
+    width: 100%;
+    min-height: var(--touch-target);
+    padding: var(--space-sm) var(--space-md);
+    border: 1.5px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    color: var(--ink);
+    font: inherit;
+  }
+
+  // The questions already asked: collapsed, greyed, not tappable.
+  &__used-list {
+    color: var(--ink-faint);
+    font-size: var(--font-size-sm);
+
+    summary {
+      min-height: var(--touch-target);
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+  }
+
+  &__used-items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
+
+// ---- "<name> sent the proposal": a short notice after the watch view closed by itself ----
+
+.live-toast {
+  position: fixed;
+  inset-inline: var(--space-md);
+  // top of the screen, under the header: never on the pinned footer
+  inset-block-start: calc(var(--touch-target, 48px) + var(--space-md));
+  z-index: 20;
+  margin: 0;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold, 600);
+  text-align: center;
+  pointer-events: none;
+  animation: c3-line-in var(--dur-base) var(--ease-out);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+// ---- live line: "דן כותב/ת עכשיו", under the strip (IA 17, UX 1) --------------------
+
+.live-line-wrap {
+  display: grid;
+  grid-template-rows: 1fr;
+  margin-block-end: var(--space-md);
+  animation: c3-line-in var(--dur-base) var(--ease-out);
+
+  &__inner {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  // The wait is over: the row folds away (grid rows, no layout reads in JS).
+  &--leaving {
+    grid-template-rows: 0fr;
+    margin-block-end: 0;
+    opacity: 0;
+    transition:
+      grid-template-rows var(--dur-quick) var(--ease-out),
+      margin-block-end var(--dur-quick) var(--ease-out),
+      opacity var(--dur-quick) var(--ease-out);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+
+    &--leaving {
+      transition: none;
+    }
+  }
+}
+
+.live-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: var(--space-sm) var(--space-md);
+  border: 1.5px dashed var(--teal-500);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover,
+  &:active {
+    background: var(--teal-50);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: calc(-1 * var(--focus-ring-width));
+  }
+
+  &__dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--teal-500);
+    animation: c3-live-pulse 1.6s ease-in-out infinite;
+  }
+
+  &__text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold, 700);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // Points toward the reading end: left in RTL, mirrored in LTR.
+  &__chevron {
+    flex: none;
+    color: var(--ink-soft);
+    font-size: var(--font-size-lg);
+    line-height: 1;
+  }
+
+  html[dir='ltr'] &__chevron {
+    transform: scaleX(-1);
+  }
+
+  .frame--down & {
+    border-color: var(--paper-line);
+
+    &:hover,
+    &:active {
+      background: var(--ink-muted);
+    }
+  }
+
+  .frame--down &__dot {
+    background: currentcolor;
+  }
+
+  .frame--down &__chevron {
+    color: currentcolor;
+  }
+
+  :root[data-high-contrast] & {
+    border-width: 2px;
+    border-color: var(--border-strong);
+  }
+
+  :root[data-high-contrast] &__dot {
+    background: var(--ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__dot {
+      animation: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    border-color: CanvasText;
+    color: ButtonText;
+    background: ButtonFace;
+
+    &__dot {
+      background: CanvasText;
+    }
+  }
+}
+
+@keyframes c3-line-in {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+
+  to {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+
+@keyframes c3-live-pulse {
+  from {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+// The student's own proposals as cards, when they may hold several (the proposal limit).
+.own-proposals {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+}
+
+// "You can send one proposal": said plainly under the box, the text stays.
+.write-panel__note--limit {
+  font-weight: var(--font-weight-semibold);
+}

@@ -21,7 +21,7 @@ const Textarea: React.FC<TextAreaProps> = ({
 	placeholder = 'Please write the description of your suggestion here...',
 	value = '',
 	onChange,
-	backgroundColor = '#fff',
+	backgroundColor = 'var(--card-default)',
 	name,
 	maxLength,
 	onKeyUp,

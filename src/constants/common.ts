@@ -24,6 +24,9 @@ export const FIREBASE = {
 	MAX_TRANSACTION_RETRIES: 3,
 	QUERY_LIMIT_DEFAULT: 50,
 	QUERY_LIMIT_MAX: 100,
+	FIRST_LOAD_LIMIT: 10,
+	/** Most values one `in` filter may hold. */
+	IN_QUERY_LIMIT: 30,
 } as const;
 
 /**
@@ -44,6 +47,7 @@ export const NOTIFICATION = {
 	TOKEN_CHECK_INTERVAL: 24 * TIME.HOUR,
 	SERVICE_WORKER_TIMEOUT: 10 * TIME.SECOND,
 	CHECK_INTERVAL: 500,
+	TOKEN_RESYNC_INTERVAL: TIME.WEEK,
 } as const;
 
 /**
@@ -53,6 +57,10 @@ export const UI = {
 	DEBOUNCE_DELAY: 300,
 	THROTTLE_DELAY: 1000,
 	ANIMATION_DURATION: 200,
+	// Collapse molecule: mirrors --motion-base (180 ms) in the tokens; the buffer
+	// is how long we wait past it before ending a move that never fired transitionend.
+	COLLAPSE_DURATION_MS: 180,
+	COLLAPSE_FALLBACK_BUFFER_MS: 100,
 	MODAL_Z_INDEX: 1000,
 	TOOLTIP_DELAY: 500,
 	// Minimum gap between two animated list reorders. Live evaluation updates
@@ -60,6 +68,18 @@ export const UI = {
 	// keeps the FLIP glide followable and stops the measure-storm that used to
 	// freeze mobile during active deliberation.
 	REORDER_THROTTLE_DELAY: 1200,
+	// Minimum gap between two "mark discussion as read" writes while a
+	// discussion stays open. Each write to a subscription doc also fires
+	// three Cloud Functions triggers.
+	READ_MARK_THROTTLE_MS: 30 * 1000,
+	// How long a toast carrying Undo stays (UX main-people-settings §4.8);
+	// paused while hovered or focused.
+	UNDO_TOAST_DURATION: 6 * TIME.SECOND,
+	// How long the short "Undone" confirmation stays.
+	UNDONE_TOAST_DURATION: 2 * TIME.SECOND,
+	// People › Members: rows shown first, and how many "Show more" adds (UX §4.4).
+	MEMBERS_INITIAL_COUNT: 10,
+	MEMBERS_LOAD_MORE_COUNT: 20,
 } as const;
 
 /**
@@ -80,6 +100,8 @@ export const JOINING = {
 	DEFAULT_MIN_MEMBERS: 3,
 	DEFAULT_MAX_MEMBERS: 10,
 	MIN_ROOM_SIZE: 2,
+	/** Room size People > Joining answers & rooms starts with (a deliberation-sized group). */
+	DEFAULT_ROOM_SIZE: 7,
 } as const;
 
 /**
@@ -128,8 +150,12 @@ export const STORAGE_KEYS = {
 	PWA_INSTALL_TRIGGER_DATA: 'pwa-install-trigger-data',
 	PWA_INSTALL_SOFT_PROMPT_DISMISSED_AT: 'pwa-install-soft-prompt-dismissed-at',
 	NOTIFICATION_SOFT_PROMPT_DISMISSED_AT: 'notification-soft-prompt-dismissed-at',
+	FCM_TOKEN_SYNC: 'freedi_fcm_token_sync',
 	SHOW_HIDDEN_CARDS: 'freedi_showHiddenCards',
 	MAP_DETAIL_LEVEL: 'freedi_map_detail_level',
+	SIDEBAR_WIDTH: 'freedi_sidebar_width',
+	/** Text size (rem) chosen in the cluster board's note focus box. */
+	MAP_NOTE_FONT_REM: 'freedi_map_note_font_rem',
 } as const;
 
 /**
@@ -186,6 +212,23 @@ export const BULK_LOAD = {
 	COUNT_REFRESH_MS: 60000,
 	/** How long the "All statements loaded" confirmation stays visible */
 	DONE_BANNER_HIDE_MS: 4000,
+} as const;
+
+/**
+ * Statement search constants (home, subscriptions, whole-tree search).
+ * Scoring thresholds shared with the server live in SEARCH_CONFIG (@freedi/shared-types).
+ */
+export const SEARCH = {
+	/** Wait after typing before ranking locally */
+	DEBOUNCE_MS: 250,
+	/** Wait after typing before calling the searchStatements function */
+	SERVER_DEBOUNCE_MS: 500,
+	/** Most recently updated subscriptions downloaded for local search */
+	SUBSCRIPTIONS_CANDIDATE_LIMIT: 1000,
+	/** How long downloaded subscription candidates stay fresh */
+	CACHE_TTL_MS: 5 * TIME.MINUTE,
+	/** Trees larger than this are searched on the server instead of downloaded */
+	SERVER_TREE_THRESHOLD: 1500,
 } as const;
 
 /**

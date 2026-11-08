@@ -18,6 +18,6 @@
 		}
 	},
 	"compileOnSave": true,
-	"include": ["src", "scripts"],
+	"include": ["src", "scripts", "jest.setup.ts"],
 	"exclude": ["node_modules", "lib"]
 }

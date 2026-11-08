@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId, getVerifiedDisplayName } from '@/lib/auth/requestIdentity';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { logger } from '@/lib/utils/logger';
 import {
@@ -22,7 +22,7 @@ export async function GET(
 ): Promise<NextResponse> {
 	try {
 		const { docId } = await params;
-		const userId = getUserIdFromCookie(request.headers.get('cookie'));
+		const userId = await getVerifiedUserId(request);
 
 		if (!userId) {
 			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -71,8 +71,7 @@ export async function POST(
 ): Promise<NextResponse> {
 	try {
 		const { docId } = await params;
-		const cookieHeader = request.headers.get('cookie');
-		const userId = getUserIdFromCookie(cookieHeader);
+		const userId = await getVerifiedUserId(request);
 
 		if (!userId) {
 			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -86,7 +85,7 @@ export async function POST(
 		}
 
 		const body: DataManagementRequest = await request.json();
-		const adminName = getUserDisplayNameFromCookie(cookieHeader) || undefined;
+		const adminName = (await getVerifiedDisplayName(request)) || undefined;
 		const now = Date.now();
 
 		switch (body.action) {

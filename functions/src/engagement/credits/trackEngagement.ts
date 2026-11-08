@@ -8,7 +8,7 @@
 
 import { logger } from 'firebase-functions';
 import { getFirestore } from 'firebase-admin/firestore';
-import { CreditAction, SourceApp, Collections } from '@freedi/shared-types';
+import { CreditAction, SourceApp, Collections, isNoDeviceId } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { awardCredit, getOrCreateUserEngagement } from './creditEngine';
 
@@ -24,7 +24,8 @@ export async function trackStatementCreation(
 ): Promise<void> {
 	try {
 		const userId = statement.creator?.uid;
-		if (!userId) return;
+		// A student without a device has no account to credit (join-class).
+		if (!userId || isNoDeviceId(userId)) return;
 
 		let action: CreditAction;
 		switch (statement.statementType) {
@@ -72,6 +73,7 @@ export async function trackEvaluationEngagement(
 	topParentId?: string,
 	sourceApp: SourceApp = SourceApp.MAIN,
 ): Promise<void> {
+	if (isNoDeviceId(userId)) return;
 	try {
 		await awardCredit({
 			userId,
@@ -103,6 +105,7 @@ export async function trackVoteEngagement(
 	topParentId?: string,
 	sourceApp: SourceApp = SourceApp.MAIN,
 ): Promise<void> {
+	if (isNoDeviceId(userId)) return;
 	try {
 		await awardCredit({
 			userId,

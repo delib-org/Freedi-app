@@ -1,7 +1,20 @@
+import { getDir } from '../i18n/i18n';
+
 /**
  * Pure layout math for the sea stage — extracted from PartySea so scenes and
  * tests share one source of truth (docs/phaser-game-design.md §6).
+ *
+ * The sea was composed for a right-to-left reader. Every function that places
+ * something by its horizontal order takes a `dir` and mirrors for 'ltr'; the
+ * default reads the current language, so scenes need pass nothing, and tests
+ * pass it explicitly.
  */
+
+export type StageDir = 'rtl' | 'ltr';
+
+function mirror(x: number, width: number, dir: StageDir): number {
+	return dir === 'ltr' ? width - x : x;
+}
 
 export interface ShipPlacement {
 	x: number;
@@ -46,7 +59,8 @@ function clamp01(value: number): number {
 
 /**
  * Island position on the chart. Admin data stores `posX` as percent from the
- * RIGHT edge (the DOM version used `right: posX%`), so Phaser x flips it.
+ * RIGHT edge (the DOM version used `right: posX%`), so Phaser x flips it —
+ * and flips it back for a left-to-right reader, whose harbor is on the left.
  * The archipelago is kept together: posY maps into the sea band (never onto
  * the horizon), and far rows pull toward the center like a receding seascape.
  */
@@ -55,13 +69,14 @@ export function islandPosition(
 	posY: number,
 	width: number,
 	height: number,
+	dir: StageDir = getDir(),
 ): { x: number; y: number } {
 	const t = clamp01(posY / 100);
 	const xRaw = width * (1 - posX / 100);
 	const squeeze = FAR_SQUEEZE + (1 - FAR_SQUEEZE) * t;
 
 	return {
-		x: width / 2 + (xRaw - width / 2) * squeeze,
+		x: mirror(width / 2 + (xRaw - width / 2) * squeeze, width, dir),
 		y: height * (CHART_TOP + (CHART_BOTTOM - CHART_TOP) * t),
 	};
 }
@@ -90,18 +105,20 @@ export function dayPhaseForIsland(index: number, count: number): number {
 	return 0.45 + 0.35 * t;
 }
 
-/** Fellow-sailor glyph placement: even x spread, y by distance band. */
+/** Fellow-sailor glyph placement: even x spread in reading order, y by
+ *  distance band. */
 export function sailorPlacement(
 	distance: number,
 	index: number,
 	count: number,
 	width: number,
 	height: number,
+	dir: StageDir = getDir(),
 ): { x: number; y: number } {
 	const safeCount = Math.max(1, count);
 
 	return {
-		x: width * (0.15 + (0.7 * (index + 0.5)) / safeCount),
+		x: mirror(width * (0.15 + (0.7 * (index + 0.5)) / safeCount), width, dir),
 		y: height * (0.2 + 0.5 * (1 - Math.min(1, Math.max(0, distance)))),
 	};
 }
@@ -138,18 +155,27 @@ const FAN_HORIZON = 0.2;
 /** Where the player sits. */
 const FAN_BERTH = 0.56;
 
-export function seaFan(width: number, height: number): SeaFan {
-	const cy = height * FAN_BERTH;
-
-	return { cx: width / 2, cy, rx: width * 0.4, ry: cy - height * FAN_HORIZON };
+/** Where the fan sits in the frame, as fractions of its height. A sea that
+ *  shares the frame with other things (the homecoming tableau's islands)
+ *  moves the fan; the voyage uses the defaults. */
+export interface FanFrame {
+	berth?: number;
+	horizon?: number;
 }
 
-/** A ship's lane, by index only. Lane 0 is the rightmost — this is a Hebrew
- *  game and the eye starts on the right. */
-export function fanAngle(index: number, count: number): number {
-	const safeCount = Math.max(1, count);
+export function seaFan(width: number, height: number, frame: FanFrame = {}): SeaFan {
+	const cy = height * (frame.berth ?? FAN_BERTH);
 
-	return FAN_SPREAD / 2 - (FAN_SPREAD * (index + 0.5)) / safeCount;
+	return { cx: width / 2, cy, rx: width * 0.4, ry: cy - height * (frame.horizon ?? FAN_HORIZON) };
+}
+
+/** A ship's lane, by index only. Lane 0 is where the eye starts: the
+ *  rightmost for a Hebrew or Arabic reader, the leftmost in English. */
+export function fanAngle(index: number, count: number, dir: StageDir = getDir()): number {
+	const safeCount = Math.max(1, count);
+	const angle = FAN_SPREAD / 2 - (FAN_SPREAD * (index + 0.5)) / safeCount;
+
+	return dir === 'ltr' ? -angle : angle;
 }
 
 /** The ring a distance sits on, as a fraction of the outermost ring. */
@@ -168,11 +194,13 @@ export function partyShipPlacement(
 	count: number,
 	width: number,
 	height: number,
+	frame: FanFrame = {},
+	dir: StageDir = getDir(),
 ): ShipPlacement {
 	const value = distance ?? 0.9;
-	const fan = seaFan(width, height);
+	const fan = seaFan(width, height, frame);
 	const ring = ringOf(value);
-	const angle = fanAngle(index, count);
+	const angle = fanAngle(index, count, dir);
 
 	return {
 		x: fan.cx + Math.sin(angle) * fan.rx * ring,
@@ -184,8 +212,12 @@ export function partyShipPlacement(
 
 /** The two rings that divide the sea into near / middle / far, as semi-axis
  *  pairs. Drawn, not labelled — the words live in the card a tap opens. */
-export function rangeRings(width: number, height: number): { rx: number; ry: number }[] {
-	const fan = seaFan(width, height);
+export function rangeRings(
+	width: number,
+	height: number,
+	frame: FanFrame = {},
+): { rx: number; ry: number }[] {
+	const fan = seaFan(width, height, frame);
 
 	return [1 / 3, 2 / 3, 1].map((distance) => ({
 		rx: fan.rx * ringOf(distance),
@@ -205,4 +237,45 @@ export function proximityBandOf(distance: number | null | undefined): ProximityB
 	if (value < 2 / 3) return 'middle';
 
 	return 'far';
+}
+
+/**
+ * Below this spread the ships really are equally far from the player, and
+ * stretching them apart would draw a difference that is not there.
+ */
+const MIN_RELATIVE_SPREAD = 0.01;
+
+/**
+ * Where each ship sails, relative to the rest of the fleet.
+ *
+ * An absolute distance is a mean over every stance the player marked, and
+ * party routes are continuous scores — so for almost any player every party
+ * lands between ~0.35 and ~0.5, and the whole fleet rides the same ring.
+ * The sea's job is to show which parties sail NEAR your route and which sail
+ * far, so it stretches that band: the nearest reference ship rides the
+ * innermost ring, the farthest the horizon, the rest in proportion between.
+ *
+ * `referenceIds` names the ships that set the scale (the parties). Any other
+ * ship (an elder) is placed on that same scale, clamped to the sea, so an
+ * elder can never push the parties together. Unknown distances stay null.
+ * The true distance is still the number a card puts in words.
+ */
+export function relativeDistances(
+	distances: Record<string, number | null | undefined>,
+	referenceIds: readonly string[] = Object.keys(distances),
+): Record<string, number | null> {
+	const known = referenceIds
+		.map((id) => distances[id])
+		.filter((value): value is number => typeof value === 'number');
+	const min = Math.min(...known);
+	const spread = Math.max(...known) - min;
+	const stretch = known.length >= 2 && spread >= MIN_RELATIVE_SPREAD;
+
+	return Object.fromEntries(
+		Object.entries(distances).map(([id, value]): [string, number | null] => {
+			if (typeof value !== 'number') return [id, null];
+
+			return [id, stretch ? clamp01((value - min) / spread) : value];
+		}),
+	);
 }

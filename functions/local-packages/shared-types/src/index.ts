@@ -1,285 +1,267 @@
 // Base types and utilities
 export {
-  StatementType,
-  DeliberativeElement,
-  QuestionStage,
-  Access,
-  membersAllowed,
-  QuestionType,
-  QuestionStagesType,
-  DocumentType,
-  DeliberationType,
-  StepType,
-  Screen,
-  SortType,
-  QuestionStep
-} from "./models/TypeEnums";
-export { isMember, maxKeyInObject, getRandomUID } from "./models/TypeUtils";
-export { functionConfig } from "./models/ConfigFunctions";
+	StatementType,
+	DeliberativeElement,
+	QuestionStage,
+	Access,
+	membersAllowed,
+	QuestionType,
+	QuestionStagesType,
+	DocumentType,
+	DeliberationType,
+	StepType,
+	Screen,
+	SortType,
+	QuestionStep,
+} from './models/TypeEnums';
+export { isMember, maxKeyInObject, getRandomUID } from './models/TypeUtils';
+export { functionConfig } from './models/ConfigFunctions';
 
 // Agreement models
 export type {
-  Agreement,
-  AgreeDisagree,
-  Agree,
-  Importance,
-  DocumentApproval,
-  DocumentImportance
-} from "./models/agreement/Agreement";
+	Agreement,
+	AgreeDisagree,
+	Agree,
+	Importance,
+	DocumentApproval,
+	DocumentImportance,
+} from './models/agreement/Agreement';
 
 export {
-  AgreementSchema,
-  AgreeDisagreeSchema,
-  AgreeSchema,
-  ImportanceSchema,
-  DocumentApprovalSchema,
-  DocumentImportanceSchema,
-  AgreeDisagreeEnum
-} from "./models/agreement/Agreement";
+	AgreementSchema,
+	AgreeDisagreeSchema,
+	AgreeSchema,
+	ImportanceSchema,
+	DocumentApprovalSchema,
+	DocumentImportanceSchema,
+	AgreeDisagreeEnum,
+} from './models/agreement/Agreement';
 
 // Approval models
-export type { Approval } from "./models/approval/Approval";
-export { ApprovalSchema } from "./models/approval/Approval";
+export type { Approval } from './models/approval/Approval';
+export { ApprovalSchema } from './models/approval/Approval';
 
 // ChoseBy models
-export type {
-  ChoseBy
-} from "./models/choseBy/ChoseByTypes";
+export type { ChoseBy } from './models/choseBy/ChoseByTypes';
 
 export {
-  ChoseBySchema,
-  CutoffType,
-  ChoseByEvaluationType,
-  defaultChoseBySettings
-} from "./models/choseBy/ChoseByTypes";
+	ChoseBySchema,
+	CutoffType,
+	ChoseByEvaluationType,
+	defaultChoseBySettings,
+} from './models/choseBy/ChoseByTypes';
 
 // Document models
-export type {
-  DocumentSigns,
-  Signature
-} from "./models/document/index";
+export type { DocumentSigns, Signature } from './models/document/index';
 
-export {
-  DocumentSignsSchema,
-  SignatureSchema,
-  SignatureType
-} from "./models/document/index";
+export { DocumentSignsSchema, SignatureSchema, SignatureType } from './models/document/index';
 
 // Evaluation models
 export type {
-  Evaluation,
-  Evaluator,
-  StatementEvaluation,
-  StatementEvaluationSettings,
-  UserEvaluation,
-  UserEvaluationSchema
-} from "./models/evaluation/Evaluation";
+	Evaluation,
+	Evaluator,
+	StatementEvaluation,
+	StatementEvaluationSettings,
+	UserEvaluation,
+	UserEvaluationSchema,
+} from './models/evaluation/Evaluation';
 
 export {
-  EvaluationSchema,
-  EvaluatorSchema,
-  StatementEvaluationSchema,
-  StatementEvaluationSettingsSchema,
-  SelectionFunction,
-  EvaluationUI
-} from "./models/evaluation/Evaluation";
+	EvaluationSchema,
+	EvaluatorSchema,
+	StatementEvaluationSchema,
+	StatementEvaluationSettingsSchema,
+	SelectionFunction,
+	EvaluationUI,
+} from './models/evaluation/Evaluation';
 
 // Invitation models
-export type { Invitation } from "./models/invitation/Invitation";
-export { InvitationSchema } from "./models/invitation/Invitation";
+export type { Invitation } from './models/invitation/Invitation';
+export { InvitationSchema } from './models/invitation/Invitation';
 
 // MassConsensus models
 export type {
-  MassConsensusMember,
-  MassConsensusProcess,
-  MassConsensusStage,
-  ExplanationConfig,
-  PostActionConfig,
-  ExplanationDisplayMode
-} from "./models/massConsensus/massConsensusModel";
+	MassConsensusMember,
+	MassConsensusProcess,
+	MassConsensusStage,
+	ExplanationConfig,
+	PostActionConfig,
+	ExplanationDisplayMode,
+} from './models/massConsensus/massConsensusModel';
 
 export {
-  MassConsensusPageUrls,
-  MassConsensusPageUrlsSchema,
-  MassConsensusMemberSchema,
-  MassConsensusProcessSchema,
-  MassConsensusStageSchema,
-  MassConsensusStageType,
-  MassConsensusStageTypeSchema,
-  ExplanationConfigSchema,
-  PostActionConfigSchema,
-  ExplanationDisplayModeSchema,
-  defaultStageTemplates
-} from "./models/massConsensus/massConsensusModel";
+	MassConsensusPageUrls,
+	MassConsensusPageUrlsSchema,
+	MassConsensusMemberSchema,
+	MassConsensusProcessSchema,
+	MassConsensusStageSchema,
+	MassConsensusStageType,
+	MassConsensusStageTypeSchema,
+	ExplanationConfigSchema,
+	PostActionConfigSchema,
+	ExplanationDisplayModeSchema,
+	defaultStageTemplates,
+} from './models/massConsensus/massConsensusModel';
 
 // Notification models
-export type { NotificationType, ReadContext, NotificationReadStatusType } from "./models/notification/Notification";
-export { NotificationSchema, NotificationReadStatusSchema } from "./models/notification/Notification";
+export type {
+	NotificationType,
+	ReadContext,
+	NotificationReadStatusType,
+} from './models/notification/Notification';
+export {
+	NotificationSchema,
+	NotificationReadStatusSchema,
+} from './models/notification/Notification';
 
 // Question models
-export type { QuestionSettings } from "./models/question/QuestionType";
-export { QuestionSettingsSchema } from "./models/question/QuestionType";
+export type { QuestionSettings } from './models/question/QuestionType';
+export { QuestionSettingsSchema } from './models/question/QuestionType';
 
 // Results models
-export type { Results, ResultsSettings } from "./models/results/Results";
-export { ResultsBy, CutoffBy, ResultsSettingsSchema, defaultResultsSettings } from "./models/results/Results";
+export type { Results, ResultsSettings } from './models/results/Results';
+export {
+	ResultsBy,
+	CutoffBy,
+	ResultsSettingsSchema,
+	defaultResultsSettings,
+} from './models/results/Results';
 
 // Stage models
-export { StageSelectionType } from "./models/stage/stageTypes";
+export { StageSelectionType } from './models/stage/stageTypes';
 
 // Paragraph models
-export type {
-  Paragraph
-} from "./models/paragraph/paragraphModel";
+export type { Paragraph } from './models/paragraph/paragraphModel';
 
-export {
-  ParagraphSchema,
-  ParagraphType
-} from "./models/paragraph/paragraphModel";
+export { ParagraphSchema, ParagraphType } from './models/paragraph/paragraphModel';
 
 // Statement models
-export type {
-  SimpleStatement
-} from "./models/statement/SimpleStatement";
+export type { SimpleStatement } from './models/statement/SimpleStatement';
 
 export {
-  SimpleStatementSchema,
-  statementToSimpleStatement
-} from "./models/statement/SimpleStatement";
+	SimpleStatementSchema,
+	statementToSimpleStatement,
+} from './models/statement/SimpleStatement';
+export type { StatementSettings } from './models/statement/StatementSettings';
+
+export { StatementSettingsSchema, evaluationType } from './models/statement/StatementSettings';
 export type {
-  StatementSettings
-} from "./models/statement/StatementSettings";
+	StatementSubscription,
+	StatementView,
+	WaitingMember,
+} from './models/statement/StatementSubscription';
 
 export {
-  StatementSettingsSchema,
-  evaluationType
-} from "./models/statement/StatementSettings";
-export type {
-  StatementSubscription,
-  StatementView,
-  WaitingMember
-} from "./models/statement/StatementSubscription";
+	StatementSubscriptionSchema,
+	getStatementSubscriptionId,
+	StatementViewSchema,
+	WaitingMemberSchema,
+} from './models/statement/StatementSubscription';
+export type { Statement, LastMessage, StatementMetaData } from './models/statement/StatementTypes';
 
 export {
-  StatementSubscriptionSchema,
-  getStatementSubscriptionId,
-  StatementViewSchema,
-  WaitingMemberSchema
-} from "./models/statement/StatementSubscription";
-export type {
-  Statement,
-  LastMessage,
-  StatementMetaData
-} from "./models/statement/StatementTypes";
-
-export {
-  LastMessageSchema,
-  StatementSchema,
-  StatementMetaDataSchema
-} from "./models/statement/StatementTypes";
-export { createBasicStatement } from "./models/statement/StatementUtils";
+	LastMessageSchema,
+	StatementSchema,
+	StatementMetaDataSchema,
+} from './models/statement/StatementTypes';
+export { createBasicStatement } from './models/statement/StatementUtils';
 
 // User models
-export type {
-  User,
-  Membership,
-  Step,
-  Creator
-} from "./models/user/User";
+export type { User, Membership, Step, Creator } from './models/user/User';
 
 export {
-  UserSchema,
-  MembershipSchema,
-  StepSchema,
-  CreatorSchema,
-  LoginType
-} from "./models/user/User";
-export type {
-  UserSettings,
-  UserData
-} from "./models/user/UserSettings";
+	UserSchema,
+	MembershipSchema,
+	StepSchema,
+	CreatorSchema,
+	LoginType,
+} from './models/user/User';
+export type { UserSettings, UserData } from './models/user/UserSettings';
 
-export {
-  Role,
-  Languages,
-  userSettingsSchema,
-  UserDataSchema
-} from "./models/user/UserSettings";
+export { Role, Languages, userSettingsSchema, UserDataSchema } from './models/user/UserSettings';
 
-export {
-  createSubscription,
-  updateArray
-} from "./controllers/helpers";
+export { createSubscription, updateArray } from './controllers/helpers';
 
 // Vote models
-export type { Vote, VotingSettings } from "./models/vote/votingModel";
-export { VoteSchema, getVoteId, VotingSettingsSchema } from "./models/vote/votingModel";
+export type { Vote, VotingSettings } from './models/vote/votingModel';
+export { VoteSchema, getVoteId, VotingSettingsSchema } from './models/vote/votingModel';
 
-export type { StatementSnapShot } from "./models/statement/StatementSnapShot";
-export { statementSnapShotSchema } from "./models/statement/StatementSnapShot";
-
-export type { UserDemographicQuestion, DemographicOption, DemographicQuestionScope } from "./models/userDemographic/userDemographicModel";
-export {
-  UserDemographicQuestionType, UserDemographicQuestionSchema,
-  DemographicOptionSchema, DemographicQuestionScopeSchema } from "./models/userDemographic/userDemographicModel";
-
-export { Collections } from "./models/collections/collectionsModel";
+export type { StatementSnapShot } from './models/statement/StatementSnapShot';
+export { statementSnapShotSchema } from './models/statement/StatementSnapShot';
 
 export type {
-  PolarizationIndex,
-  AxesItem,
-  DemographicGroup
-} from "./models/polarizationIndex/polarizationIndexModel";
-
+	UserDemographicQuestion,
+	DemographicOption,
+	DemographicQuestionScope,
+} from './models/userDemographic/userDemographicModel';
 export {
-  PolarizationIndexSchema,
-  AxesItemSchema,
-  DemographicGroupSchema
-} from "./models/polarizationIndex/polarizationIndexModel";
+	UserDemographicQuestionType,
+	UserDemographicQuestionSchema,
+	DemographicOptionSchema,
+	DemographicQuestionScopeSchema,
+} from './models/userDemographic/userDemographicModel';
+
+export { Collections } from './models/collections/collectionsModel';
 
 export type {
-  Online
-} from "./models/statement/online";
+	PolarizationIndex,
+	AxesItem,
+	DemographicGroup,
+} from './models/polarizationIndex/polarizationIndexModel';
 
 export {
-  OnlineSchema
-} from "./models/statement/online";
+	PolarizationIndexSchema,
+	AxesItemSchema,
+	DemographicGroupSchema,
+} from './models/polarizationIndex/polarizationIndexModel';
 
+export type { Online } from './models/statement/online';
+
+export { OnlineSchema } from './models/statement/online';
 
 export type {
-  Questionnaire,
-  QuestionnaireQuestion
-} from "./models/questionnaire/questionnaireModel";
+	Questionnaire,
+	QuestionnaireQuestion,
+} from './models/questionnaire/questionnaireModel';
 
 export {
-  QuestionnaireSchema,
-  QuestionnaireQuestionSchema
-} from "./models/questionnaire/questionnaireModel";
+	QuestionnaireSchema,
+	QuestionnaireQuestionSchema,
+} from './models/questionnaire/questionnaireModel';
 
 export type {
-  FairDivisionSelection,
-  FairDivisionUserSelection
-} from "./models/statement/fairDivision";
+	FairDivisionSelection,
+	FairDivisionUserSelection,
+} from './models/statement/fairDivision';
 
 export {
-  FairDivisionSelectionSchema,
-  FairDivisionUserSelectionSchema
-} from "./models/statement/fairDivision";
+	FairDivisionSelectionSchema,
+	FairDivisionUserSelectionSchema,
+} from './models/statement/fairDivision';
 
-export type { Feedback } from "./models/feedback/feedbackModel";
-export { FeedbackSchema } from "./models/feedback/feedbackModel";
+export type { Feedback } from './models/feedback/feedbackModel';
+export { FeedbackSchema } from './models/feedback/feedbackModel';
 
-
-export { RoomSchema, RoomSettingsSchema, RoomParticipantSchema, DemographicTagSchema } from "./models/rooms/roomsModel";
-export type { Room, RoomSettings, RoomParticipant, DemographicTag } from "./models/rooms/roomsModel";
+export {
+	RoomSchema,
+	RoomSettingsSchema,
+	RoomParticipantSchema,
+	DemographicTagSchema,
+} from './models/rooms/roomsModel';
+export type {
+	Room,
+	RoomSettings,
+	RoomParticipant,
+	DemographicTag,
+} from './models/rooms/roomsModel';
 
 // Survey models
-export type { Survey, SurveySettings, SurveyProgress } from "./models/survey/surveyModel";
+export type { Survey, SurveySettings, SurveyProgress } from './models/survey/surveyModel';
 export {
-  SurveySchema,
-  SurveySettingsSchema,
-  SurveyProgressSchema,
-  SurveyStatus,
-  SurveyStatusSchema,
-  DEFAULT_SURVEY_SETTINGS,
-} from "./models/survey/surveyModel";
+	SurveySchema,
+	SurveySettingsSchema,
+	SurveyProgressSchema,
+	SurveyStatus,
+	SurveyStatusSchema,
+	DEFAULT_SURVEY_SETTINGS,
+} from './models/survey/surveyModel';

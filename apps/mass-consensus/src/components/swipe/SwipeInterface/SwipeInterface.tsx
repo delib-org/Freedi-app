@@ -15,11 +15,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Statement } from '@freedi/shared-types';
 import SwipeCard from '../SwipeCard';
-import RatingButton from '../RatingButton';
 import SurveyProgress from '../SurveyProgress';
 import CommentModal from '../CommentModal';
+import CardImageModal from '../CardImageModal';
+import { useSwipeCardImages } from '@/hooks/useSwipeCardImages';
 import SolutionPromptModal from '@/components/question/SolutionPromptModal';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
+import { resolveCanAddOptions } from '@/lib/utils/participantOptions';
+import { cardColorIntensityStyle } from '@/lib/utils/cardColorIntensity';
 import {
   setCardStack,
   cardEvaluated,
@@ -35,7 +38,8 @@ import {
 } from '@/store/slices/swipeSelectors';
 import { submitRating, fetchPreviousEvaluations } from '@/controllers/swipeController';
 import { submitComment } from '@/controllers/commentController';
-import { getEvaluationScale, getEvaluationEntry } from '@freedi/shared-types';
+import { resolveEvaluationScaleKey } from '@freedi/shared-types';
+import { useVisualScale } from '../SwipeCard/visualScale';
 import type { RatingValue } from '../RatingButton';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError } from '@/lib/utils/errorHandling';
@@ -45,6 +49,7 @@ import {
   trackProposalPromptShown,
   trackProposalPromptDismissed,
 } from '@/lib/analytics';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 export interface SwipeInterfaceProps {
   question: Statement;
@@ -55,6 +60,10 @@ export interface SwipeInterfaceProps {
   onComplete?: () => void;
   /** Surveys: used to stamp each evaluation with its demographic anchor */
   surveyId?: string;
+  /** Position in a multi-question survey ("1) …"); omitted = no number */
+  questionNumber?: number;
+  /** Standalone page: the server found a survey that blocks participant options here */
+  blockedByServer?: boolean;
 }
 
 const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
@@ -65,18 +74,24 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   mergedSettings,
   onComplete,
   surveyId,
+  questionNumber,
+  blockedByServer = false,
 }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const { showToast } = useToast();
 
-  // Evaluation mode for this question (agree-disagree default | reactions).
-  // Cross-app: read from the shared statementSettings.ratingMode.
-  const ratingMode = question.statementSettings?.ratingMode;
+  // Evaluation scale for this question (five-step agree-disagree default |
+  // reactions | three-point). Cross-app: resolved from the shared
+  // statementSettings.ratingMode + ratingSteps.
+  const ratingMode = resolveEvaluationScaleKey(question.statementSettings);
+  // Same left-to-right order as the card, so a button press throws toward its own side
+  const visualScale = useVisualScale(ratingMode);
   const currentCard = useSelector(selectCurrentCard);
   const evaluatedCount = useSelector(selectEvaluatedCardsCount);
   const totalCount = useSelector(selectTotalCardsCount);
   const showProposalPrompt = useSelector(selectShowProposalPrompt);
+  const cardImages = useSwipeCardImages(currentCard, surveyId);
 
   const [showProposalModal, setShowProposalModal] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
@@ -91,16 +106,14 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   // Guard against double swipes within the same animation cycle
   const isSwipeInFlightRef = useRef(false);
 
+  // May this participant add options at all? One answer for every gate below.
+  const canAdd = resolveCanAddOptions(mergedSettings, blockedByServer);
+
   // Check if user must add solution first
-  const requiresSolution = mergedSettings?.askUserForASolutionBeforeEvaluation ?? true;
+  const requiresSolution = canAdd && (mergedSettings?.askUserForASolutionBeforeEvaluation ?? true);
   const [hasCheckedUserSolutions, setHasCheckedUserSolutions] = useState(false);
   const [, setHasSubmittedSolution] = useState(false);
   const [showSolutionPrompt, setShowSolutionPrompt] = useState(false);
-
-  console.info('[SwipeInterface Debug] Settings check:', {
-    mergedSettings: mergedSettings?.askUserForASolutionBeforeEvaluation,
-    finalRequiresSolution: requiresSolution
-  });
 
   // Check if user has submitted solutions (for "add solution first" feature)
   useEffect(() => {
@@ -108,15 +121,12 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
 
     const checkUserSolutions = async () => {
       try {
-        console.info('[SwipeInterface Debug] Checking user solutions for questionId:', question.statementId);
-        const response = await fetch(`/api/user-solutions/${question.statementId}?userId=${userId}`);
+        const response = await participantFetch(`/api/user-solutions/${question.statementId}`);
         if (response.ok) {
           const data = await response.json();
-          console.info('[SwipeInterface Debug] API response:', data);
           setHasSubmittedSolution(data.hasSubmitted);
 
           const shouldShowModal = !data.hasSubmitted && requiresSolution;
-          console.info('[SwipeInterface Debug] Should show modal?', shouldShowModal, '(hasSubmitted:', data.hasSubmitted, 'requiresSolution:', requiresSolution, ')');
           if (shouldShowModal) {
             setShowSolutionPrompt(true);
           }
@@ -137,6 +147,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   // Listen for footer "add suggestion" button event
   useEffect(() => {
     const handleTriggerAdd = () => {
+      if (!canAdd) return;
       setShowProposalModal(true);
     };
 
@@ -144,7 +155,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     return () => {
       window.removeEventListener('trigger-add-suggestion', handleTriggerAdd);
     };
-  }, []);
+  }, [canAdd]);
 
   // Initialize cards on mount
   useEffect(() => {
@@ -168,8 +179,8 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     const loadPreviousEvaluations = async () => {
       try {
         // First check which statements the user has already evaluated
-        const response = await fetch(
-          `/api/user-evaluations/${question.statementId}?userId=${encodeURIComponent(userId)}`
+        const response = await participantFetch(
+          `/api/user-evaluations/${question.statementId}`
         );
         if (!response.ok) return;
 
@@ -203,17 +214,29 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     loadPreviousEvaluations();
   }, [userId, question.statementId, initialSolutions]);
 
-  // Handle showing proposal prompt
+  // Handle showing the every-N-cards proposal prompt — never on a question
+  // closed to suggestions, and never when the participant cannot add at all
+  // (then the prompt is dismissed so the counter does not stay armed).
+  const suggestionsClosed = mergedSettings?.suggestionsClosed ?? false;
+
   useEffect(() => {
-    if (showProposalPrompt) {
+    if (!showProposalPrompt) return;
+
+    if (!canAdd) {
+      dispatch(dismissProposalPrompt());
+
+      return;
+    }
+
+    if (!suggestionsClosed) {
       setShowProposalModal(true);
       // Track that prompt was shown
       trackProposalPromptShown(question.statementId, userId, evaluatedCount);
     }
-  }, [showProposalPrompt, question.statementId, userId, evaluatedCount]);
+  }, [showProposalPrompt, suggestionsClosed, canAdd, dispatch, question.statementId, userId, evaluatedCount]);
 
   // Show solution prompt after completing minimum evaluations (if admin enabled)
-  const askAfterEvaluation = mergedSettings?.askUserForASolutionAfterEvaluation ?? false;
+  const askAfterEvaluation = canAdd && (mergedSettings?.askUserForASolutionAfterEvaluation ?? false);
   const minEvaluations = mergedSettings?.minEvaluationsPerQuestion ?? 0;
   const [hasShownAfterEvalPrompt, setHasShownAfterEvalPrompt] = useState(false);
 
@@ -246,7 +269,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     const capturedStatementId = currentCard.statementId;
 
     // Get throw direction from the shared evaluation scale
-    const entry = getEvaluationEntry(rating, ratingMode);
+    const entry = visualScale.find((candidate) => candidate.value === rating);
     const rawDirection = entry?.direction || 'right';
     const direction: 'left' | 'right' = rawDirection === 'up' ? 'right' : rawDirection;
 
@@ -351,7 +374,10 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   };
 
   return (
-    <div className="swipe-interface">
+    <div
+      className="swipe-interface"
+      style={cardColorIntensityStyle(mergedSettings?.cardColorIntensity)}
+    >
       {/* Progress indicator */}
       <div className="swipe-interface__progress">
         <SurveyProgress current={evaluatedCount} total={totalCount} />
@@ -359,41 +385,20 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
 
       {/* Current card or completion message */}
       {currentCard ? (
-        <>
-          <div className="swipe-interface__card">
-            <SwipeCard
-              statement={currentCard}
-              onSwipe={handleSwipe}
-              ratingMode={ratingMode}
-              totalCards={totalCount}
-              currentIndex={evaluatedCount}
-              programmaticThrow={programmaticThrow}
-              onCommentClick={handleOpenComment}
-            />
-          </div>
-
-          {/* Rating buttons - universal layout (negative to positive, left to right)
-              - Left side = negative (strongly disagree, red)
-              - Right side = positive (strongly agree, green)
-              Matches the zone strip colors on the card
-              isSelected highlights the user's previous vote for this card
-          */}
-          <div className="swipe-interface__rating-buttons">
-            {(() => {
-              const prevRating = currentCard ? previousEvaluations.get(currentCard.statementId) : undefined;
-
-              return getEvaluationScale(ratingMode).map((entry) => (
-                <RatingButton
-                  key={entry.value}
-                  rating={entry.value}
-                  ratingMode={ratingMode}
-                  onClick={handleSwipe}
-                  isSelected={prevRating === entry.value}
-                />
-              ));
-            })()}
-          </div>
-        </>
+        <div className="swipe-interface__card">
+          <SwipeCard
+            statement={currentCard}
+            onSwipe={handleSwipe}
+            onRate={handleSwipe}
+            selectedRating={previousEvaluations.get(currentCard.statementId)}
+            ratingMode={ratingMode}
+            totalCards={totalCount}
+            currentIndex={evaluatedCount}
+            programmaticThrow={programmaticThrow}
+            onCommentClick={handleOpenComment}
+            onImageEditClick={cardImages.onImageEditClick}
+          />
+        </div>
       ) : (
         <div className="swipe-interface__completion">
           <div className="swipe-interface__completion-emoji">🎉</div>
@@ -408,29 +413,41 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
             >
               {t('goToNextQuestion')}
             </button>
-          ) : (
+          ) : canAdd ? (
             <button
               className="swipe-interface__completion-button"
               onClick={() => setShowProposalModal(true)}
             >
               {t('Submit Your Own Idea')}
             </button>
-          )}
+          ) : null}
         </div>
       )}
 
       {/* Proposal Modal - uses SolutionPromptModal for full AI check + similarity search */}
-      <SolutionPromptModal
-        isOpen={showProposalModal}
-        onClose={handleProposalDismiss}
-        onSubmitSuccess={handleProposalSuccess}
-        questionId={question.statementId}
-        questionText={question.statement}
-        questionDescription={getParagraphsText(question.paragraphs)}
-        minWords={question.statementSettings?.minResponseWords}
-        userId={userId}
-        userName={userName}
-      />
+      {canAdd && (
+        <SolutionPromptModal
+          isOpen={showProposalModal}
+          onClose={handleProposalDismiss}
+          onSubmitSuccess={handleProposalSuccess}
+          questionId={question.statementId}
+          questionText={question.statement}
+          questionNumber={questionNumber}
+          questionDescription={getParagraphsText(question.paragraphs)}
+          minWords={question.statementSettings?.minResponseWords}
+          userId={userId}
+          userName={userName}
+          surveyId={surveyId}
+          suggestionMode={mergedSettings?.suggestionMode}
+          autoSplitMultiSuggestions={
+            mergedSettings?.autoSplitMultiSuggestions ??
+            question.statementSettings?.autoSplitMultiSuggestions
+          }
+          autoMergeSimilar={
+            mergedSettings?.autoMergeSimilar ?? question.statementSettings?.autoMergeSimilar
+          }
+        />
+      )}
 
       {/* Comment Modal */}
       {currentCard && (
@@ -443,23 +460,45 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         />
       )}
 
+      {currentCard && cardImages.onImageEditClick && (
+        <CardImageModal
+          isOpen={cardImages.isImageModalOpen}
+          onClose={cardImages.closeImageModal}
+          statement={currentCard}
+          surveyId={surveyId}
+          onSaved={cardImages.onImageSaved}
+        />
+      )}
+
       {/* Solution Prompt Modal - "Add solution first" feature */}
-      <SolutionPromptModal
-        isOpen={showSolutionPrompt}
-        onClose={() => setShowSolutionPrompt(false)}
-        onSubmitSuccess={() => {
-          setShowSolutionPrompt(false);
-          setHasSubmittedSolution(true);
-        }}
-        questionId={question.statementId}
-        questionText={question.statement}
-        questionDescription={getParagraphsText(question.paragraphs)}
-        minWords={question.statementSettings?.minResponseWords}
-        userId={userId}
-        userName={userName}
-        requiresSolution={requiresSolution}
-        hasCheckedUserSolutions={hasCheckedUserSolutions}
-      />
+      {canAdd && (
+        <SolutionPromptModal
+          isOpen={showSolutionPrompt}
+          onClose={() => setShowSolutionPrompt(false)}
+          onSubmitSuccess={() => {
+            setShowSolutionPrompt(false);
+            setHasSubmittedSolution(true);
+          }}
+          questionId={question.statementId}
+          questionText={question.statement}
+          questionNumber={questionNumber}
+          questionDescription={getParagraphsText(question.paragraphs)}
+          minWords={question.statementSettings?.minResponseWords}
+          userId={userId}
+          userName={userName}
+          surveyId={surveyId}
+          suggestionMode={mergedSettings?.suggestionMode}
+          autoSplitMultiSuggestions={
+            mergedSettings?.autoSplitMultiSuggestions ??
+            question.statementSettings?.autoSplitMultiSuggestions
+          }
+          autoMergeSimilar={
+            mergedSettings?.autoMergeSimilar ?? question.statementSettings?.autoMergeSimilar
+          }
+          requiresSolution={requiresSolution}
+          hasCheckedUserSolutions={hasCheckedUserSolutions}
+        />
+      )}
     </div>
   );
 };

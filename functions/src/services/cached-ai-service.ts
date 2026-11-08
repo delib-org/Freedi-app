@@ -27,7 +27,7 @@ export async function getCachedSimilarStatements(
 	const cacheKey = cache.generateKey(
 		'similar',
 		question.substring(0, 30), // First 30 chars of question
-		userInput.substring(0, 50), // First 50 chars of user input
+		userInput, // First 50 chars of user input
 		statements.length.toString(), // Number of statements
 		numberOfSimilarStatements.toString(), // Number requested
 		// Add a hash of the first few statements for uniqueness
@@ -84,7 +84,7 @@ export async function getCachedSimilarStatementIds(
 	const cacheKey = cache.generateKey(
 		'similar_ids',
 		question.substring(0, 30),
-		userInput.substring(0, 50),
+		userInput,
 		statements.length.toString(),
 		numberOfSimilarStatements.toString(),
 		// Hash of first few statement IDs for uniqueness
@@ -143,12 +143,14 @@ export async function getCachedSimilarityResponse(
 	creatorId: string,
 	threshold?: number,
 ): Promise<CachedSimilarityResponse | null> {
-	// Include threshold in cache key so different thresholds get different cache entries
+	// Include threshold in cache key so different thresholds get different cache
+	// entries. The whole input goes into the key: truncating it let two long
+	// submissions with the same opening return each other's results.
 	const thresholdKey = threshold !== undefined ? threshold.toFixed(2) : 'default';
 	const cacheKey = cache.generateKey(
 		'full_response',
 		statementId,
-		userInput.substring(0, 50),
+		userInput,
 		creatorId,
 		thresholdKey,
 	);
@@ -185,7 +187,7 @@ export async function saveCachedSimilarityResponse(
 	const cacheKey = cache.generateKey(
 		'full_response',
 		statementId,
-		userInput.substring(0, 50),
+		userInput,
 		creatorId,
 		thresholdKey,
 	);

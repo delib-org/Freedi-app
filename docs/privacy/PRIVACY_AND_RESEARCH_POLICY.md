@@ -33,6 +33,8 @@ We are committed to transparency, data minimization, and user control. Research 
 | Evaluations (ratings -1 to +1) | Consensus calculation | Firestore |
 | Votes | Decision-making | Firestore |
 | Discussion subscriptions | Notifications and access control | Firestore |
+| Agora real names (classroom game, minors) | Shown ONLY to the session's teacher next to a student's pseudonym; typed voluntarily at the door, skippable; never on a card, never to a classmate, never in an AI prompt or a log | Firestore `agoraIdentities`, teacher-only read rule, TTL 30 days after the lesson |
+| Agora teacher notes and moderation notices | Private teacher ↔ one-student thread: notes, replies, why a text was taken down and the words removed | Firestore `agoraTeacherMessages`, readable by that teacher and that student only |
 
 ### 2.3 Research Data (Opt-In Only)
 
@@ -118,6 +120,7 @@ When demographic data is included in exports:
 - Statements, evaluations, and votes are retained as long as the discussion exists
 - Users can request deletion of their account data by contacting the platform administrators
 - Consent records are retained to honor user preferences
+- **Agora real names** (`agoraIdentities`) carry an `expiresAt` 30 days after the lesson's end and are deleted by a Firestore TTL policy; the teacher can delete them earlier from the console ("forget names"). They are the only real names of minors the platform stores, and they never enter aggregates, exports, notifications or LLM prompts.
 
 ### 5.3 Cookies
 

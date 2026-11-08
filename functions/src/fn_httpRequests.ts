@@ -7,8 +7,8 @@ const statementController = new StatementController();
 const maintenanceController = new MaintenanceController();
 
 // Statement endpoints
-export const getUserOptions = (req: Request, res: Response) =>
-	statementController.getUserOptions(req, res);
+export const getUserOptions = (req: Request, res: Response, uid: string) =>
+	statementController.getUserOptions(req, res, uid);
 
 export const getRandomStatements = (req: Request, res: Response) =>
 	statementController.getRandomStatements(req, res);

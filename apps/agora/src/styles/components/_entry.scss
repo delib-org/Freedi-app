@@ -35,6 +35,14 @@
   text-align: center;
   max-width: 46ch;
   margin: 0 auto;
+
+  // The same hint under a form control or a section title: it belongs to
+  // the thing above it, so it starts where that thing starts.
+  &--start {
+    text-align: start;
+    max-width: none;
+    margin: 0;
+  }
 }
 
 .home-header {

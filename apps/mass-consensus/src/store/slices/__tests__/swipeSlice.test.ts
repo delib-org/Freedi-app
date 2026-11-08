@@ -9,6 +9,7 @@ import reducer, {
   setSocialActivities,
   addSocialActivity,
   setCardStack,
+  cardImageUpdated,
   cardEvaluated,
   proposalSubmitted,
   dismissProposalPrompt,
@@ -93,6 +94,44 @@ describe('swipeSlice', () => {
 
       expect(state.cardStack).toHaveLength(0);
       expect(state.currentCard).toBe(null);
+    });
+  });
+
+  describe('cardImageUpdated', () => {
+    const imagesURL = { main: 'https://example.com/a.png', alt: 'A bridge' };
+
+    it('should update the image on the current card and in the stack', () => {
+      const withCards = reducer(initialState, setCardStack([mockStatement1, mockStatement2]));
+      const state = reducer(withCards, cardImageUpdated({ statementId: 'stmt1', imagesURL }));
+
+      expect(state.currentCard?.imagesURL).toEqual(imagesURL);
+      expect(state.cardStack[0].imagesURL).toEqual(imagesURL);
+      expect(state.cardStack[1].imagesURL).toBeUndefined();
+    });
+
+    it('should update a card further down the stack without touching the current one', () => {
+      const withCards = reducer(initialState, setCardStack([mockStatement1, mockStatement2]));
+      const state = reducer(withCards, cardImageUpdated({ statementId: 'stmt2', imagesURL }));
+
+      expect(state.currentCard?.imagesURL).toBeUndefined();
+      expect(state.cardStack[1].imagesURL).toEqual(imagesURL);
+    });
+
+    it('should clear an image', () => {
+      const withImage = reducer(
+        initialState,
+        setCardStack([{ ...mockStatement1, imagesURL }])
+      );
+      const state = reducer(withImage, cardImageUpdated({ statementId: 'stmt1', imagesURL: {} }));
+
+      expect(state.currentCard?.imagesURL?.main).toBeUndefined();
+    });
+
+    it('should ignore an unknown card', () => {
+      const withCards = reducer(initialState, setCardStack([mockStatement1]));
+      const state = reducer(withCards, cardImageUpdated({ statementId: 'nope', imagesURL }));
+
+      expect(state).toEqual(withCards);
     });
   });
 

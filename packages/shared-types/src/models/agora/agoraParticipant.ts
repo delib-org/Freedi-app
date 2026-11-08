@@ -7,9 +7,12 @@ import {
 	boolean,
 	enum_,
 	record,
+	nullable,
 	InferOutput,
 } from 'valibot';
 import { AgoraCamp, AgoraStage } from './agoraEnums';
+import { AgoraCustomThemeSchema, AgoraThemeChoiceSchema } from './agoraTheme';
+import { AgoraStationVisitSchema } from './stationLink';
 
 export const AgoraValueScoreSchema = object({
 	characterId: string(),
@@ -36,6 +39,18 @@ export const AgoraPointsSchema = object({
 	 * legacy-docs reason as `rating` — read as `?? 0`.
 	 */
 	revising: optional(number()),
+	/**
+	 * Likes and high ratings received in the WizCol rounds
+	 * (AGORA_POINTS.ROUND_APPRECIATION each). Optional for the same
+	 * legacy-docs reason as `rating` — read as `?? 0`.
+	 */
+	appreciation: optional(number()),
+	/**
+	 * Coins actually taken by language strikes (AGORA_POINTS.LANGUAGE_PENALTY
+	 * each, less when the balance floored). Kept so the category columns
+	 * still explain `total`. Optional for the legacy-docs reason — `?? 0`.
+	 */
+	penalties: optional(number()),
 	total: number(),
 });
 
@@ -78,6 +93,27 @@ export const AgoraParticipantSchema = object({
 			scenesTotal: number(),
 		}),
 	),
+	/**
+	 * Where this student's screen is standing in the village — a place id
+	 * (`booth:<itemId>`, `library`, `council`, …), when it got there, and the
+	 * teacher's call it answered, if any. Written by the student's client once
+	 * per station; the teacher's "who has arrived" reads it. A courtesy
+	 * signal, never a gate.
+	 */
+	whereabouts: optional(
+		object({
+			place: string(),
+			at: number(),
+			callAt: optional(number()),
+		}),
+	),
+	/**
+	 * Linked stations this student opened, and when they came back — keyed by
+	 * plan itemId. Written by the student's own client (the participant rule
+	 * is a deny-list); the teacher's "opened / came back" reads it. A courtesy
+	 * signal like `whereabouts`: "finished" is not knowable from here.
+	 */
+	stationVisits: optional(record(string(), AgoraStationVisitSchema)),
 	/** 0 (fully left camp) … 100 (fully right camp) */
 	campPosition: optional(number()),
 	camp: optional(enum_(AgoraCamp)),
@@ -102,6 +138,20 @@ export const AgoraParticipantSchema = object({
 	/** How many of this student's ratings have been credited (cap guard) */
 	creditedRatings: optional(number()),
 	/**
+	 * Times the language check refused this student's text in this session.
+	 * Server-written by `agoraCheckLanguage`, rules-pinned; the teacher's
+	 * console shows the count, the student's screen never does.
+	 */
+	languageStrikes: optional(number()),
+	/** When the latest language strike landed */
+	lastLanguageStrikeAt: optional(number()),
+	/**
+	 * The round-appreciation ledger: evaluation ids that already paid THIS
+	 * author (`${raterUid}--${answerId}`). Server-written, rules-pinned — a
+	 * redelivered trigger or a re-rating finds its key here and pays nothing.
+	 */
+	roundAppreciations: optional(record(string(), boolean())),
+	/**
 	 * Durable per-proposal "what I've acknowledged" watermarks (change-awareness
 	 * chips survive refresh and device switch). Keyed by proposal statementId.
 	 * Written by the student's client only, debounced, monotonic max-merge —
@@ -120,6 +170,20 @@ export const AgoraParticipantSchema = object({
 	),
 	/** `${proposalId}--${helperUid}` → createdAt of the newest thread message read */
 	seenThreads: optional(record(string(), number())),
+	/**
+	 * The look this person chose to wear, if they chose. Absent means "the
+	 * room's" (AgoraSession.theme). Written by the student's own client; a
+	 * classmate's look is copied in whole so it survives its maker rebuilding.
+	 */
+	theme: optional(nullable(AgoraThemeChoiceSchema)),
+	/**
+	 * The look this person BUILT — separate from what they wear, so a student
+	 * who tries a preset for a moment does not pull their creation off the
+	 * class list. One per student; rebuilding replaces it. Every participant
+	 * in the room reads all participant docs already, so the union of these IS
+	 * the class style list, with no extra listener and no extra collection.
+	 */
+	builtTheme: optional(nullable(AgoraCustomThemeSchema)),
 	joinedAt: number(),
 	lastActive: number(),
 });

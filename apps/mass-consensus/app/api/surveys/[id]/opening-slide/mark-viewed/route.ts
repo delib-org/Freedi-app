@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserIdFromCookie } from '@/lib/utils/user';
+import { getVerifiedUserId, unauthorizedResponse } from '@/lib/auth/requestIdentity';
 import { markOpeningSlideViewed } from '@/lib/firebase/surveys';
 import { logger } from '@/lib/utils/logger';
 
@@ -14,13 +14,10 @@ export async function POST(
   try {
     const surveyId = params.id;
 
-    // Get user ID (can be authenticated or anonymous)
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    // Verified ID token only (anonymous Firebase users have one too)
+    const userId = await getVerifiedUserId(request);
     if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
+      return unauthorizedResponse();
     }
 
     await markOpeningSlideViewed(surveyId, userId);

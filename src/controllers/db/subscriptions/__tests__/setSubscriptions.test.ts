@@ -17,6 +17,7 @@ jest.mock('@freedi/shared-types', () => ({
 		member: 'member',
 		waiting: 'waiting',
 		banned: 'banned',
+		unsubscribed: 'unsubscribed',
 	},
 	ResultsBy: {
 		consensus: 'consensus',
@@ -49,6 +50,7 @@ enum Role {
 	member = 'member',
 	waiting = 'waiting',
 	banned = 'banned',
+	unsubscribed = 'unsubscribed',
 }
 
 enum ResultsBy {
@@ -104,6 +106,7 @@ jest.mock('firebase/firestore', () => ({
 	updateDoc: jest.fn(),
 	setDoc: jest.fn(),
 	getDoc: jest.fn(),
+	runTransaction: jest.fn(),
 	arrayUnion: jest.fn((val) => ({ _arrayUnion: val })),
 	arrayRemove: jest.fn((val) => ({ _arrayRemove: val })),
 	Timestamp: {
@@ -144,12 +147,13 @@ jest.mock('../../userDemographic/getUserDemographic', () => ({
 	getUserGroupAnswers: jest.fn().mockResolvedValue([]),
 }));
 
-import { doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, getDoc, runTransaction } from 'firebase/firestore';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 
 const mockDoc = doc as jest.MockedFunction<typeof doc>;
 const mockUpdateDoc = updateDoc as jest.MockedFunction<typeof updateDoc>;
 const mockSetDoc = setDoc as jest.MockedFunction<typeof setDoc>;
+const mockRunTransaction = runTransaction as jest.MockedFunction<typeof runTransaction>;
 const mockGetDoc = getDoc as jest.MockedFunction<typeof getDoc>;
 
 describe('setSubscriptions', () => {
@@ -230,6 +234,41 @@ describe('setSubscriptions', () => {
 				creator: mockCreator,
 			});
 
+			expect(mockSetDoc).not.toHaveBeenCalled();
+		});
+
+		it('lets a declined person ask to join again: unsubscribed → waiting', async () => {
+			mockGetDoc.mockResolvedValue({
+				exists: () => true,
+				data: () => ({ role: Role.unsubscribed }),
+			} as unknown as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+
+			await setStatementSubscriptionToDB({
+				statement: mockStatement,
+				creator: { ...mockCreator, uid: 'declined-user' },
+				role: Role.waiting,
+			});
+
+			expect(mockUpdateDoc).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({ role: Role.waiting, statementId: 'stmt-123' }),
+			);
+			expect(mockSetDoc).not.toHaveBeenCalled();
+		});
+
+		it('never lifts a block: a banned person asking again stays banned', async () => {
+			mockGetDoc.mockResolvedValue({
+				exists: () => true,
+				data: () => ({ role: Role.banned }),
+			} as unknown as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+
+			await setStatementSubscriptionToDB({
+				statement: mockStatement,
+				creator: { ...mockCreator, uid: 'blocked-user' },
+				role: Role.waiting,
+			});
+
+			expect(mockUpdateDoc).not.toHaveBeenCalled();
 			expect(mockSetDoc).not.toHaveBeenCalled();
 		});
 
@@ -328,46 +367,124 @@ describe('setSubscriptions', () => {
 
 			expect(mockSetDoc).not.toHaveBeenCalled();
 		});
+
+		describe('device push token', () => {
+			const otherUser: Creator = {
+				uid: 'different-user-789',
+				displayName: 'Different User',
+				email: 'different@example.com',
+			};
+
+			beforeEach(() => {
+				mockGetDoc.mockResolvedValue({
+					exists: () => false,
+				} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+			});
+
+			it('writes the token with the new push-enabled subscription', async () => {
+				await setStatementSubscriptionToDB({
+					statement: mockStatement,
+					creator: otherUser,
+					getPushNotification: true,
+					pushToken: 'tok-1',
+				});
+
+				expect(mockSetDoc).toHaveBeenCalledWith(
+					expect.anything(),
+					expect.objectContaining({ getPushNotification: true, tokens: { _arrayUnion: 'tok-1' } }),
+					{ merge: true },
+				);
+			});
+
+			it('creates the subscription without tokens when no token is held', async () => {
+				await setStatementSubscriptionToDB({
+					statement: mockStatement,
+					creator: otherUser,
+					getPushNotification: true,
+					pushToken: null,
+				});
+
+				expect(mockSetDoc).toHaveBeenCalledTimes(1);
+				const data = mockSetDoc.mock.calls[0][1] as Record<string, unknown>;
+				expect(data).not.toHaveProperty('tokens');
+			});
+
+			it('ignores the token when push is not enabled', async () => {
+				await setStatementSubscriptionToDB({
+					statement: mockStatement,
+					creator: otherUser,
+					getPushNotification: false,
+					pushToken: 'tok-1',
+				});
+
+				const data = mockSetDoc.mock.calls[0][1] as Record<string, unknown>;
+				expect(data).not.toHaveProperty('tokens');
+			});
+		});
 	});
 
 	describe('updateLastReadTimestamp', () => {
+		const runWithStoredDoc = (
+			snapshot: { exists: boolean; lastReadTimestamp?: number },
+			transactionUpdate: jest.Mock,
+		): void => {
+			mockRunTransaction.mockImplementation(async (_db, updateFn) => {
+				const transaction = {
+					get: jest.fn().mockResolvedValue({
+						exists: () => snapshot.exists,
+						data: () => ({ lastReadTimestamp: snapshot.lastReadTimestamp }),
+					}),
+					update: transactionUpdate,
+				};
+
+				return updateFn(transaction as never);
+			});
+		};
+
 		it('should update timestamp when subscription exists', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => true,
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+			const update = jest.fn();
+			runWithStoredDoc({ exists: true, lastReadTimestamp: 1 }, update);
 
 			await updateLastReadTimestamp('stmt-123', 'user-123');
 
-			expect(mockUpdateDoc).toHaveBeenCalledWith(
+			expect(update).toHaveBeenCalledWith(
 				expect.anything(),
 				expect.objectContaining({
 					lastReadTimestamp: expect.any(Number),
 					statementId: 'stmt-123',
 				}),
 			);
+			expect(mockGetDoc).not.toHaveBeenCalled();
 		});
 
-		it('should not update when subscription does not exist', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => false,
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+		it('should never write an older timestamp than the stored one', async () => {
+			const update = jest.fn();
+			runWithStoredDoc({ exists: true, lastReadTimestamp: Date.now() + 60_000 }, update);
 
 			await updateLastReadTimestamp('stmt-123', 'user-123');
 
-			expect(mockUpdateDoc).not.toHaveBeenCalled();
+			expect(update).not.toHaveBeenCalled();
 		});
 
-		it('should throw error when statementId is missing', async () => {
+		it('should not update or throw when subscription does not exist', async () => {
+			const update = jest.fn();
+			runWithStoredDoc({ exists: false }, update);
+
+			await expect(updateLastReadTimestamp('stmt-123', 'user-123')).resolves.toBeUndefined();
+
+			expect(update).not.toHaveBeenCalled();
+		});
+
+		it('should not run a transaction when statementId is missing', async () => {
 			await updateLastReadTimestamp('', 'user-123');
 
-			// Should throw and log error
-			expect(mockUpdateDoc).not.toHaveBeenCalled();
+			expect(mockRunTransaction).not.toHaveBeenCalled();
 		});
 
-		it('should throw error when userId is missing', async () => {
+		it('should not run a transaction when userId is missing', async () => {
 			await updateLastReadTimestamp('stmt-123', '');
 
-			expect(mockUpdateDoc).not.toHaveBeenCalled();
+			expect(mockRunTransaction).not.toHaveBeenCalled();
 		});
 	});
 

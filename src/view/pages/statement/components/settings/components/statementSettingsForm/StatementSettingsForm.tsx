@@ -1,4 +1,7 @@
 import { Dispatch, FC, FormEvent, useState } from 'react';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { isAdvancedGroupVisible } from '../../settingsVisibility';
+import { SettingsVariant } from '../../settingsTypeHelpers';
 import { logError } from '@/utils/errorHandling';
 
 // Third party imports
@@ -9,8 +12,6 @@ import { Pencil, Users, BarChart3, Brain, Shield, Settings } from 'lucide-react'
 import InstantSettings from '../instantSettings/InstantSettings';
 import QuestionSettings from '../QuestionSettings/QuestionSettings';
 import ChoseBySettings from '../choseBy/ChoseBySettings';
-import GetEvaluators from './../../components/GetEvaluators';
-import GetVoters from './../../components/GetVoters';
 import TitleAndDescription from './../../components/titleAndDescription/TitleAndDescription';
 import { SettingsSection } from './../../components/settingsSection';
 import { setNewStatement } from './../../statementSettingsCont';
@@ -28,9 +29,6 @@ import LocalizationSettings from '../advancedSettings/LocalizationSettings';
 import ExportSettings from '../advancedSettings/ExportSettings';
 import SynthesisPanel from '../synthesisPanel/SynthesisPanel';
 import AnchoredSettings from '../QuestionSettings/AnchoredSettings';
-import ConfidenceIndexSettings from '../QuestionSettings/ConfidenceIndexSettings';
-import JoinFormSettings from '../QuestionSettings/JoinFormSettings/JoinFormSettings';
-import JoinResolutionSettings from '../QuestionSettings/JoinResolutionSettings/JoinResolutionSettings';
 import DeadlineSettings from '../QuestionSettings/DeadlineSettings';
 
 // Hooks & Helpers
@@ -42,7 +40,6 @@ import { defaultStatementSettings } from '../../emptyStatementModel';
 // Redux & Types
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useSelector } from 'react-redux';
-import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
 import {
 	statementSelector,
@@ -50,27 +47,75 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { createStatementsByParentSelector } from '@/redux/utils/selectorFactories';
 import Loader from '@/view/components/loaders/Loader';
-import {
-	StatementSubscription,
-	Role,
-	Statement,
-	StatementSettings,
-	StatementType,
-} from '@freedi/shared-types';
-import MembershipSettings from '../membershipSettings/MembershipSettings';
-import UserDemographicSetting from '../UserDemographicSettings/UserDemographicSetting';
-import MembersSettings from '../membership/MembersSettings';
-import AdminsManagement from '../membership/AdminsManagement/AdminsManagement';
-import MemberValidation from '../memberValidation/MemberValidation';
+import { Role, Statement, StatementSettings, StatementType } from '@freedi/shared-types';
 import EmailNotifications from '../emailNotifications/EmailNotifications';
-import { OptionRooms } from '../optionRooms';
 import ModerationLog from '../moderationLog/ModerationLog';
+import PeopleSection from '../../../host/PeopleSection';
+import { buildStatementPath } from '@/routes/statementPaths';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
 	parentStatement?: Statement | 'top';
 	setStatementToEdit: Dispatch<Statement>;
+	/**
+	 * 'legacy': the whole settings page (hero toggles, People, exports here).
+	 * 'hub': composed inside the Host hub, which owns Live now, People, Results
+	 * exports, AI, Clustering and Insights — so this form omits them.
+	 */
+	variant?: SettingsVariant;
 }
+
+/**
+ * Which settings components each variant composes. Read by the
+ * duplicate-control guard test together with the keys each file writes, so
+ * adding a toggle that already exists elsewhere on the same page fails CI.
+ * `omit` lists keys a component only renders under a prop the variant does
+ * not pass. The hub list also names the AI group's components, which the
+ * hub renders in its own AI and Clustering cards — same page, same guard.
+ * 'PeopleSection' stands for PEOPLE_SECTION_COMPONENTS: both pages render the
+ * same People section.
+ */
+export const FORM_COMPOSITION: Record<
+	SettingsVariant,
+	Array<{ component: string; omit?: string[] }>
+> = {
+	legacy: [
+		{ component: 'InstantSettings' },
+		{ component: 'ParticipationSettings', omit: ['hasChat'] },
+		{ component: 'ChoseBySettings' },
+		{ component: 'DeadlineSettings' },
+		{ component: 'EvaluationSettings' },
+		{ component: 'AnchoredSettings' },
+		{ component: 'AISettings' },
+		{ component: 'SynthesisPanel' },
+		{ component: 'DiscussionSettings' },
+		{ component: 'ModerationLog' },
+		{ component: 'PeopleSection' },
+		{ component: 'QuestionSettings' },
+		{ component: 'VisibilitySettings' },
+		{ component: 'NavigationSettings' },
+		{ component: 'LocalizationSettings' },
+		{ component: 'EmailNotifications' },
+		{ component: 'ExportSettings' },
+	],
+	hub: [
+		{ component: 'InstantSettings' },
+		{ component: 'ParticipationSettings' },
+		{ component: 'ChoseBySettings' },
+		{ component: 'EvaluationSettings' },
+		{ component: 'AnchoredSettings' },
+		{ component: 'AISettings' },
+		{ component: 'SynthesisPanel' },
+		{ component: 'DiscussionSettings' },
+		{ component: 'ModerationLog' },
+		{ component: 'PeopleSection' },
+		{ component: 'QuestionSettings' },
+		{ component: 'VisibilitySettings', omit: ['powerFollowMe'] },
+		{ component: 'NavigationSettings' },
+		{ component: 'LocalizationSettings' },
+		{ component: 'EmailNotifications' },
+	],
+};
 
 // The shared settings SCSS module nests everything under .enhancedSettings;
 // flat groups keep that context via this wrapper (flatGroup drops the old
@@ -81,8 +126,10 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	statement,
 	parentStatement,
 	setStatementToEdit,
+	variant = 'legacy',
 }) => {
 	const imageUrl = statement.imagesURL?.main ?? '';
+	const isHub = variant === 'hub';
 
 	// * Hooks * //
 	const navigate = useNavigate();
@@ -91,6 +138,8 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 
 	const [image, setImage] = useState<string>(imageUrl);
 	const [loading, setLoading] = useState<boolean>(false);
+	const [advancedRevealed, setAdvancedRevealed] = useState(false);
+	const creator = useAppSelector(creatorSelector);
 
 	// Prefer the live Redux statement for instant-save groups so toggles
 	// reflect Firestore writes as soon as the listener fires.
@@ -100,17 +149,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 		settingsStatement.statementSettings ?? defaultStatementSettings;
 	const handlers = useStatementSettingsHandlers(settingsStatement);
 
-	// Selector to get the statement memberships
-	const statementMembershipSelector = (statementId: string | undefined) =>
-		createSelector(
-			(state: RootState) => state.statements.statementMembership,
-			(memberships) =>
-				memberships.filter(
-					(membership: StatementSubscription) => membership.statementId === statementId,
-				),
-		);
-
-	const members: StatementSubscription[] = useAppSelector(statementMembershipSelector(statementId));
 	const currentUserSubscription = useAppSelector(statementSubscriptionSelector(statementId));
 	const isAdminOrCreator =
 		currentUserSubscription?.role === Role.admin || currentUserSubscription?.role === Role.creator;
@@ -121,10 +159,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	const subStatements = useSelector(selectSubStatements(statement.statementId));
 
 	try {
-		const joinedMembers = members
-			.filter((member) => member.role !== Role.banned)
-			.map((m) => m.user);
-
 		// * Functions * //
 		const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 			e.preventDefault();
@@ -138,11 +172,14 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			setLoading(false);
 			if (!newStatement) throw new Error('No new statement');
 			// Navigate to the statement page after saving
-			navigate(`/statement/${newStatement.statementId}`);
+			navigate(buildStatementPath({ statementId: newStatement.statementId }));
 		};
 
 		const isNewStatement = !statementId;
 		const isQuestion = settingsStatement.statementType === StatementType.question;
+		const showAdvanced =
+			advancedRevealed ||
+			isAdvancedGroupVisible({ statement: settingsStatement, advanceUser: creator?.advanceUser });
 
 		const statementSettingsProps = {
 			statement: settingsStatement,
@@ -162,7 +199,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			<div className="wrapper">
 				{/* ⚡ Instant Settings — always visible, single source of truth for
 				    participation mode, rating scale, and high-frequency toggles */}
-				{!isNewStatement && <InstantSettings statement={settingsStatement} />}
+				{!isNewStatement && <InstantSettings statement={settingsStatement} variant={variant} />}
 
 				{/* Group 1 — Question & Description (the only part that needs Save) */}
 				<form
@@ -227,18 +264,10 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 									statement={settingsStatement}
 									settings={settings}
 									handleSettingChange={handlers.handleSettingChange}
+									showChatToggle={isHub}
 								/>
-								{isQuestion && (
-									<>
-										<JoinFormSettings statement={settingsStatement} />
-										<JoinResolutionSettings statement={settingsStatement} />
-									</>
-								)}
 							</div>
 						</SettingsSection>
-
-						{/* Breakout rooms — renders its own section */}
-						<OptionRooms statement={settingsStatement} />
 
 						{/* Group 3 — Results & Decision */}
 						<SettingsSection
@@ -250,104 +279,109 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						>
 							<div className={groupWrapClass}>
 								{isQuestion && <ChoseBySettings {...statementSettingsProps} />}
-								{isQuestion && <DeadlineSettings statement={settingsStatement} />}
+								{isQuestion && !isHub && <DeadlineSettings statement={settingsStatement} />}
 								<EvaluationSettings
 									statement={settingsStatement}
 									settings={settings}
 									handleSettingChange={handlers.handleSettingChange}
 								/>
 								{isQuestion && <AnchoredSettings statement={settingsStatement} />}
-								{/* Deliberately NOT gated to questions: a settlement
-								    declares its stakeholders once on the group and every
-								    question beneath inherits it. Gating this was why the
-								    number had to be re-entered on every question, and why
-								    setting it on a group did nothing at all. */}
-								<ConfidenceIndexSettings statement={settingsStatement} />
 							</div>
 						</SettingsSection>
 
-						{/* Group 4 — AI & Smart Features */}
-						<SettingsSection
-							title={t('AI & Smart Features')}
-							description={t('Optional AI help. Everything here is off unless you turn it on')}
-							icon={Brain}
-							priority="medium"
-							defaultExpanded={false}
-						>
-							<div className={groupWrapClass}>
-								<AISettings
-									statement={settingsStatement}
-									settings={settings}
-									handleSettingChange={handlers.handleSettingChange}
-								/>
-								{isQuestion && <SynthesisPanel statement={settingsStatement} />}
-								<DiscussionSettings
-									statement={settingsStatement}
-									settings={settings}
-									handleSettingChange={handlers.handleSettingChange}
-								/>
-								{isAdminOrCreator && <ModerationLog statement={settingsStatement} />}
-							</div>
-						</SettingsSection>
+						{/* Group 4 — AI & Smart Features (the hub has its own AI and Clustering sections) */}
+						{!isHub && (
+							<SettingsSection
+								title={t('AI & Smart Features')}
+								description={t('Optional AI help. Everything here is off unless you turn it on')}
+								icon={Brain}
+								priority="medium"
+								defaultExpanded={false}
+							>
+								<div className={groupWrapClass}>
+									<AISettings
+										statement={settingsStatement}
+										settings={settings}
+										handleSettingChange={handlers.handleSettingChange}
+									/>
+									{isQuestion && <SynthesisPanel statement={settingsStatement} />}
+									<DiscussionSettings
+										statement={settingsStatement}
+										settings={settings}
+										handleSettingChange={handlers.handleSettingChange}
+									/>
+									{isAdminOrCreator && <ModerationLog statement={settingsStatement} />}
+								</div>
+							</SettingsSection>
+						)}
 
-						{/* Group 5 — Members & Access */}
-						<SettingsSection
-							title={t('Members & Access')}
-							description={t('Who can see this question and who runs it')}
-							icon={Shield}
-							priority="high"
-							defaultExpanded={false}
-						>
-							<div className={groupWrapClass}>
-								<MembershipSettings
+						{/* Group 5 — People (the hub has its own People section) */}
+						{!isHub && (
+							<SettingsSection
+								title={t('host.people')}
+								description={t('Who can see this question and who runs it')}
+								icon={Shield}
+								priority="high"
+								defaultExpanded={false}
+							>
+								{/* The same People section the Host hub renders (one Members list). */}
+								<PeopleSection
 									statement={settingsStatement}
 									setStatementToEdit={setStatementToEdit}
 								/>
-								<MembersSettings statement={settingsStatement} />
-								{isAdminOrCreator && <AdminsManagement statement={settingsStatement} />}
-								{isQuestion && <MemberValidation statement={settingsStatement} />}
-								<UserDemographicSetting statement={settingsStatement} />
-							</div>
-						</SettingsSection>
+							</SettingsSection>
+						)}
 
-						{/* Group 6 — Data & Advanced */}
-						<SettingsSection
-							title={t('Data & Advanced')}
-							description={t('Exports, notifications, language, and rarely-changed setup')}
-							icon={Settings}
-							priority="low"
-							defaultExpanded={false}
-						>
-							<div className={groupWrapClass}>
-								<QuestionSettings {...statementSettingsProps} />
-								<VisibilitySettings
-									statement={settingsStatement}
-									settings={settings}
-									handleHideChange={handlers.handleHideChange}
-									handleSettingChange={handlers.handleSettingChange}
-									handlePowerFollowMeChange={handlers.handlePowerFollowMeChange}
-									handleIsDocumentChange={handlers.handleIsDocumentChange}
-								/>
-								<NavigationSettings
-									statement={settingsStatement}
-									settings={settings}
-									handleSettingChange={handlers.handleSettingChange}
-								/>
-								<LocalizationSettings
-									statement={settingsStatement}
-									handleDefaultLanguageChange={handlers.handleDefaultLanguageChange}
-									handleForceLanguageChange={handlers.handleForceLanguageChange}
-								/>
-								<EmailNotifications statement={settingsStatement} />
-								<ExportSettings statement={settingsStatement} subStatements={subStatements} />
-								<section className={styles.getMembersArea}>
-									<GetVoters statementId={statementId} joinedMembers={joinedMembers} />
-								</section>
-								<section className={styles.getMembersArea}>
-									<GetEvaluators statementId={statementId} />
-								</section>
-							</div>
-						</SettingsSection>
+						{/* Group 6 — Data & Advanced: folded away unless the user wants
+						    advanced tools or already customised something in it. */}
+						{!showAdvanced && (
+							<button
+								type="button"
+								className={styles.revealAdvanced}
+								onClick={() => setAdvancedRevealed(true)}
+								data-testid="reveal-advanced"
+							>
+								{t('host.showAdvanced')}
+							</button>
+						)}
+						{showAdvanced && (
+							<SettingsSection
+								title={t('Data & Advanced')}
+								description={t('Exports, notifications, language, and rarely-changed setup')}
+								icon={Settings}
+								priority="low"
+								defaultExpanded={false}
+							>
+								<div className={groupWrapClass}>
+									<QuestionSettings {...statementSettingsProps} />
+									<VisibilitySettings
+										statement={settingsStatement}
+										settings={settings}
+										handleHideChange={handlers.handleHideChange}
+										handleSettingChange={handlers.handleSettingChange}
+										handlePowerFollowMeChange={handlers.handlePowerFollowMeChange}
+										handleIsDocumentChange={handlers.handleIsDocumentChange}
+										showPresenterMode={!isHub}
+									/>
+									<NavigationSettings
+										statement={settingsStatement}
+										settings={settings}
+										handleSettingChange={handlers.handleSettingChange}
+									/>
+									<LocalizationSettings
+										statement={settingsStatement}
+										handleDefaultLanguageChange={handlers.handleDefaultLanguageChange}
+										handleForceLanguageChange={handlers.handleForceLanguageChange}
+									/>
+									<EmailNotifications statement={settingsStatement} />
+									{!isHub && (
+										<>
+											<ExportSettings statement={settingsStatement} subStatements={subStatements} />
+										</>
+									)}
+								</div>
+							</SettingsSection>
+						)}
 					</>
 				)}
 			</div>

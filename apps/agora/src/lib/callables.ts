@@ -1,18 +1,51 @@
 import { functions, httpsCallable } from './firebase';
+import { withApprovalGate } from './access';
 import type {
 	AgoraDeviceMode,
+	DealNotesRequest,
+	DealNotesResponse,
 	AgoraIdentityMode,
 	AgoraSessionFlow,
 	AgoraStage,
 	AgoraStagePlan,
+	AgoraThemeChoice,
 	ChallengeOutcome,
 	ChallengePhase,
 	JoinClassRequest,
 	JoinClassResponse,
+	ModerateStatementRequest,
+	ModerateStatementResponse,
+	RemoveParticipantRequest,
+	RemoveParticipantResponse,
+	ResolveRejoinRequest,
+	ResolveRejoinResponse,
+	RewordQuestionRequest,
+	SetBannedWordsRequest,
+	SetBannedWordsResponse,
+	RewordQuestionResponse,
+	TeacherMessageRequest,
+	TeacherMessageResponse,
 	TeacherConsoleRequest,
 	TeacherConsoleResponse,
 	TeacherRosterRequest,
 	TeacherRosterResponse,
+	TeacherClassRequest,
+	TeacherClassResponse,
+	TopicAccessRequest,
+	TopicAccessResponse,
+	TeacherHeartbeatRequest,
+	TeacherHeartbeatResponse,
+	SupervisorConsoleRequest,
+	SupervisorConsoleResponse,
+	SupervisorOverview,
+	SupervisorTeacherDetail,
+	SupervisorClassDetail,
+	SupervisorStudentDetail,
+	SupervisorSystemView,
+	CheckStationLinkRequest,
+	CheckStationLinkResponse,
+	MintStationHandoffRequest,
+	MintStationHandoffResponse,
 } from '@freedi/shared-types';
 
 /** A game started from a typed main question, with no scenario behind it */
@@ -24,6 +57,8 @@ export interface QuickGameRequest {
 }
 
 export interface CreateSessionRequest {
+	world?: 'village' | 'classic';
+	villageNavigation?: 'teacher' | 'free';
 	/** A ready scenario — or omit it and send `quick` */
 	topicPackageId?: string;
 	quick?: QuickGameRequest;
@@ -37,6 +72,10 @@ export interface CreateSessionRequest {
 	/** The ordered stage list; absent means the legacy order */
 	stagePlan?: AgoraStagePlan;
 	identity?: AgoraIdentityMode;
+	/** Ask for real names at the door, for the teacher alone. Absent = on. */
+	collectRealNames?: boolean;
+	/** The look the room wears by default; absent means AGORA_DEFAULT_THEME */
+	theme?: AgoraThemeChoice;
 }
 
 export interface CreateSessionResponse {
@@ -49,12 +88,16 @@ export interface JoinSessionRequest {
 	teamMemberCount?: number;
 	/** `named` sessions: the name this person goes by */
 	displayName?: string;
+	/** For the teacher alone — never on a card */
+	realName?: string;
 }
 
 export interface JoinSessionResponse {
 	sessionId: string;
 	participantId: string;
 	anonName: string;
+	/** The teacher removed this login: not seated, the knock waits for the teacher */
+	waiting?: boolean;
 }
 
 export interface AdvanceStageRequest {
@@ -97,7 +140,7 @@ export async function createSession(request: CreateSessionRequest): Promise<Crea
 		functions,
 		'agoraCreateSession',
 	);
-	const result = await call(request);
+	const result = await withApprovalGate(() => call(request));
 
 	return result.data;
 }
@@ -112,11 +155,57 @@ export async function joinSession(request: JoinSessionRequest): Promise<JoinSess
 	return result.data;
 }
 
+/** Ask to read the private scenario of a session I am in (the reader-marker fallback) */
+export async function requestTopicAccess(
+	request: TopicAccessRequest,
+): Promise<TopicAccessResponse> {
+	const call = httpsCallable<TopicAccessRequest, TopicAccessResponse>(
+		functions,
+		'agoraTopicAccess',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+export interface BallotGoalOnlyRequest {
+	sessionId: string;
+	goalZoneOnly: boolean;
+}
+
+export interface BallotGoalOnlyResponse {
+	/** Candidates on the ballot after the redraw (absent when the vote is not open) */
+	candidates?: number;
+	/** Votes withdrawn because their proposal left the ballot */
+	withdrawn?: number;
+}
+
+/** The teacher's goal switch during the vote: redraws the ballot from the goal, server-side */
+export async function setBallotGoalOnly(
+	request: BallotGoalOnlyRequest,
+): Promise<BallotGoalOnlyResponse> {
+	const call = httpsCallable<BallotGoalOnlyRequest, BallotGoalOnlyResponse>(
+		functions,
+		'agoraSetBallotGoalOnly',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
 export async function advanceStage(request: AdvanceStageRequest): Promise<AdvanceStageResponse> {
 	const call = httpsCallable<AdvanceStageRequest, AdvanceStageResponse>(
 		functions,
 		'agoraAdvanceStage',
 	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** A student's hand of classmates' notes at a station — dealt by lottery, server-side */
+export async function dealNotes(request: DealNotesRequest): Promise<DealNotesResponse> {
+	const call = httpsCallable<DealNotesRequest, DealNotesResponse>(functions, 'agoraDealNotes');
 	const result = await call(request);
 
 	return result.data;
@@ -162,7 +251,8 @@ export async function challengeTurn(request: ChallengeTurnRequest): Promise<Chal
 }
 
 export interface GenerateTopicPackageRequest {
-	topic: string;
+	statement: string;
+	description: string;
 	language: string;
 }
 
@@ -187,7 +277,7 @@ export async function generateTopicPackage(
 		// while the package quietly finished and appeared on the next visit.
 		{ timeout: 5 * 60 * 1000 },
 	);
-	const result = await call(request);
+	const result = await withApprovalGate(() => call(request));
 
 	return result.data;
 }
@@ -200,6 +290,20 @@ export async function generateTopicPackage(
 export async function joinClass(request: JoinClassRequest): Promise<JoinClassResponse> {
 	const call = httpsCallable<JoinClassRequest, JoinClassResponse>(functions, 'agoraJoinClass');
 	const result = await call(request);
+
+	return result.data;
+}
+
+/**
+ * A teacher's own classes: open one in a school the admin attached them to,
+ * rename, archive, add or remove a co-teacher — see fn_agoraTeacherClass.
+ */
+export async function teacherClass(request: TeacherClassRequest): Promise<TeacherClassResponse> {
+	const call = httpsCallable<TeacherClassRequest, TeacherClassResponse>(
+		functions,
+		'agoraTeacherClass',
+	);
+	const result = await withApprovalGate(() => call(request));
 
 	return result.data;
 }
@@ -223,7 +327,7 @@ export async function teacherRoster(request: TeacherRosterRequest): Promise<Teac
 		functions,
 		'agoraTeacherRoster',
 	);
-	const result = await call(request);
+	const result = await withApprovalGate(() => call(request));
 
 	return result.data;
 }
@@ -253,6 +357,152 @@ export async function rerateStances(request: RerateStancesRequest): Promise<Rera
 	const call = httpsCallable<RerateStancesRequest, RerateStancesResponse>(
 		functions,
 		'agoraRerateStances',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** One line into the private teacher ↔ student thread — either side. */
+export async function teacherMessage(
+	request: TeacherMessageRequest,
+): Promise<TeacherMessageResponse> {
+	const call = httpsCallable<TeacherMessageRequest, TeacherMessageResponse>(
+		functions,
+		'agoraTeacherMessage',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The teacher's hand on a student's text: hide, restore, reword. */
+export async function moderateStatement(
+	request: ModerateStatementRequest,
+): Promise<ModerateStatementResponse> {
+	const call = httpsCallable<ModerateStatementRequest, ModerateStatementResponse>(
+		functions,
+		'agoraModerateStatement',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The session teacher takes one student out of the lesson (seat deleted, uid blocked). */
+export async function removeParticipant(
+	request: RemoveParticipantRequest,
+): Promise<RemoveParticipantResponse> {
+	const call = httpsCallable<RemoveParticipantRequest, RemoveParticipantResponse>(
+		functions,
+		'agoraRemoveParticipant',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The session teacher answers a removed student's knock: let back in, or not now. */
+export async function resolveRejoin(request: ResolveRejoinRequest): Promise<ResolveRejoinResponse> {
+	const call = httpsCallable<ResolveRejoinRequest, ResolveRejoinResponse>(
+		functions,
+		'agoraResolveRejoin',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/**
+ * The teacher makes the question in front of the room clearer — and says
+ * whether the new words are for this game or for every round like it.
+ */
+export async function rewordQuestion(
+	request: RewordQuestionRequest,
+): Promise<RewordQuestionResponse> {
+	const call = httpsCallable<RewordQuestionRequest, RewordQuestionResponse>(
+		functions,
+		'agoraRewordQuestion',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The answer a supervisor console view returns, narrowed by the request's `view`. */
+export type SupervisorConsoleResult<R extends SupervisorConsoleRequest> = R extends {
+	view: 'overview';
+}
+	? SupervisorOverview
+	: R extends { view: 'teacher' }
+		? SupervisorTeacherDetail
+		: R extends { view: 'class' }
+			? SupervisorClassDetail
+			: R extends { view: 'student' }
+				? SupervisorStudentDetail
+				: SupervisorSystemView;
+
+/** Every read the supervisor console makes — see fn_agoraSupervisorConsole. */
+export async function supervisorConsole<R extends SupervisorConsoleRequest>(
+	request: R,
+): Promise<SupervisorConsoleResult<R>> {
+	const call = httpsCallable<SupervisorConsoleRequest, SupervisorConsoleResponse>(
+		functions,
+		'agoraSupervisorConsole',
+	);
+	const result = await call(request);
+
+	// The union is discriminated by the request, not the response: the server
+	// answers the view it was asked for, so the narrowing is decided here.
+	return result.data as SupervisorConsoleResult<R>;
+}
+
+/** A teacher's active screen time — elapsed milliseconds and a surface name, nothing else. */
+export async function teacherHeartbeat(
+	request: TeacherHeartbeatRequest,
+): Promise<TeacherHeartbeatResponse> {
+	const call = httpsCallable<TeacherHeartbeatRequest, TeacherHeartbeatResponse>(
+		functions,
+		'agoraTeacherHeartbeat',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The teacher replaces their list of words their students may not use */
+export async function setBannedWords(
+	request: SetBannedWordsRequest,
+): Promise<SetBannedWordsResponse> {
+	const call = httpsCallable<SetBannedWordsRequest, SetBannedWordsResponse>(
+		functions,
+		'agoraSetBannedWords',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** The step editor's check of a pasted link: the question's words, or `details.reason` */
+export async function checkStationLink(
+	request: CheckStationLinkRequest,
+): Promise<CheckStationLinkResponse> {
+	const call = httpsCallable<CheckStationLinkRequest, CheckStationLinkResponse>(
+		functions,
+		'agoraCheckStationLink',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** A linked station's way in: a one-time deep link for this student */
+export async function mintStationHandoff(
+	request: MintStationHandoffRequest,
+): Promise<MintStationHandoffResponse> {
+	const call = httpsCallable<MintStationHandoffRequest, MintStationHandoffResponse>(
+		functions,
+		'agoraMintStationHandoff',
 	);
 	const result = await call(request);
 

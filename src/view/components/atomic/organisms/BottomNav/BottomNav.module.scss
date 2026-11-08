@@ -1,0 +1,98 @@
+// Floating bottom navigation (WizCol mobile, slice 6).
+// Centred dark pill, 24px above the bottom edge plus the safe-area inset.
+.bottomNav {
+	position: fixed;
+	inset-inline: 0;
+	inset-block-end: 0;
+	z-index: 900; // under sheets and modals (1000)
+	display: flex;
+	justify-content: center;
+	padding-inline: var(--space-lg);
+	padding-block-end: calc(var(--space-lg) + env(safe-area-inset-bottom, 0px));
+	pointer-events: none;
+
+	&__pill {
+		pointer-events: auto;
+		display: flex;
+		align-items: center;
+		gap: var(--space-3xs);
+		padding: 6px;
+		border-radius: var(--radius-chip, 999px);
+		background: var(--nav-floating-bg);
+		color: var(--nav-floating-ink);
+		box-shadow: var(--shadow-floating);
+		font-family: var(--font-ui);
+	}
+
+	&__item {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		min-height: var(--tap-min, 44px);
+		padding-inline: var(--space-md);
+		border: 0;
+		border-radius: var(--radius-chip, 999px);
+		background: transparent;
+		color: var(--nav-floating-ink);
+		font: inherit;
+		font-size: 0.78rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color var(--motion-fast, 150ms) ease;
+
+		&:focus-visible {
+			outline: 3px solid var(--accent-violet);
+			outline-offset: 2px;
+		}
+
+		&--active {
+			background: var(--nav-floating-active-bg);
+			color: var(--nav-floating-active-ink);
+		}
+	}
+
+	&__badge {
+		min-width: 1.1rem;
+		padding: 1px 5px;
+		border-radius: var(--radius-chip, 999px);
+		background: var(--badge-unread);
+		color: var(--badge-unread-ink);
+		font-size: 0.6rem;
+		line-height: 1.4;
+		text-align: center;
+	}
+
+	&__ask {
+		display: grid;
+		place-items: center;
+		width: var(--tap-min, 44px);
+		height: var(--tap-min, 44px);
+		margin-inline-start: var(--space-3xs);
+		border: 0;
+		border-radius: 50%;
+		background: var(--accent-violet);
+		color: var(--accent-violet-ink);
+		box-shadow: var(--accent-violet-shadow);
+		cursor: pointer;
+
+		&:focus-visible {
+			outline: 3px solid var(--nav-floating-ink);
+			outline-offset: 2px;
+		}
+	}
+
+	:global(body.modal-open) & {
+		display: none;
+	}
+
+	@media (min-width: 1024px) {
+		display: none;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		&__item {
+			transition: none;
+		}
+	}
+}

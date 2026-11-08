@@ -162,9 +162,23 @@ function setupFirestoreMockForGet(
 	});
 	const batchUpdate = jest.fn();
 	const batchCommit = jest.fn().mockResolvedValue(undefined);
+	// The spawn commits the cluster and its member claims in one transaction.
+	// No claim exists yet, so every read comes back empty and each write goes
+	// straight through to the doc handle — the cluster write still lands on
+	// `clusterSet`, as before the transaction.
+	type DocHandle = { set: (data: unknown) => Promise<unknown> };
+	const tx = {
+		getAll: jest.fn((...refs: unknown[]) =>
+			Promise.resolve(refs.map(() => ({ exists: false, data: () => undefined }))),
+		),
+		set: jest.fn((ref: DocHandle, data: unknown) => {
+			void ref.set(data);
+		}),
+	};
 	mockGetFirestore.mockReturnValue({
 		collection: collMock,
 		batch: () => ({ update: batchUpdate, set: jest.fn(), commit: batchCommit }),
+		runTransaction: (fn: (t: typeof tx) => Promise<unknown>) => fn(tx),
 	});
 
 	return {

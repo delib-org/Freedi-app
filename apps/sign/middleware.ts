@@ -1,70 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { SECURE_UID_COOKIE } from './src/lib/auth/sessionCookies';
 
-const SECURE_UID_COOKIE = '_uid';
 const LEGACY_UID_COOKIE = 'userId';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
+const SERVER_MINTED_ANON_ID = /^anon_\d+_[a-z0-9]+$/;
 
 /**
- * Middleware to ensure an HttpOnly secure userId cookie exists.
- * - If `_uid` cookie exists, pass through.
- * - If only legacy `userId` exists, copy it to `_uid` as HttpOnly.
- * - If neither exists, generate a new anonymous ID and set both.
+ * Make sure every visitor has a server-minted anonymous id in `_uid`.
  *
- * The `_uid` cookie is HttpOnly (invisible to JS, immune to XSS).
- * The legacy `userId` cookie is kept for backward-compatible client reads.
+ * This is a placeholder for first paint and for visitors without Firebase, and
+ * the server treats it as low-privilege only (src/lib/auth/requestIdentity.ts).
+ *
+ * It must never hold a real account's uid. It used to copy the JS-writable
+ * `userId` cookie into `_uid`, which made any forged uid look server-issued.
+ * Google sign-in now creates a signed session cookie through /api/auth/session
+ * instead, and that session always takes priority over `_uid`. A `_uid` left
+ * over from the old copy is replaced here.
+ *
+ * The edge runtime cannot verify Firebase session cookies, so verification
+ * happens in the Node route handlers and server components.
  */
 export function middleware(request: NextRequest) {
   const secureUid = request.cookies.get(SECURE_UID_COOKIE)?.value;
-  const legacyUid = request.cookies.get(LEGACY_UID_COOKIE)?.value;
-  const isProduction = process.env.NODE_ENV === 'production';
-
-  // Sync `_uid` to `userId` after a client-side login.
-  //
-  // Client-side Firebase login (Google / anonymous) only writes the legacy,
-  // JS-readable `userId` cookie — it cannot touch HttpOnly cookies. Without
-  // this sync, `_uid` stays stuck at whatever anonymous ID we minted on the
-  // very first visit, and `getUserIdFromCookies` (which prefers `_uid`)
-  // keeps reporting the old anon UID. The server then thinks the user is
-  // anonymous after a successful Google sign-in, and bounces them back to
-  // `/login` — an infinite loop.
-  if (secureUid && legacyUid && legacyUid !== secureUid) {
-    // Rewrite the INCOMING request cookie too, not just the response cookie.
-    //
-    // `response.cookies.set()` alone only updates the cookie sent back to the
-    // browser — it does NOT change what `cookies()` returns inside the Server
-    // Component that renders on THIS request. Without also rewriting the
-    // request cookie, the home page would render with the stale `_uid`, query
-    // Firestore under the old (anonymous) uid, and show zero documents. The
-    // user only self-heals on a manual refresh. Forwarding the mutated request
-    // headers makes the same-request render read the fresh Google uid.
-    request.cookies.set(SECURE_UID_COOKIE, legacyUid);
-
-    const response = NextResponse.next({
-      request: { headers: request.headers },
-    });
-    response.cookies.set(SECURE_UID_COOKIE, legacyUid, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: 'lax',
-      maxAge: COOKIE_MAX_AGE,
-      path: '/',
-    });
-
-    return response;
-  }
-
-  // Already has secure cookie and matches legacy — pass through
-  if (secureUid) {
+  if (secureUid && SERVER_MINTED_ANON_ID.test(secureUid)) {
     return NextResponse.next();
   }
 
-  const response = NextResponse.next();
+  const legacyUid = request.cookies.get(LEGACY_UID_COOKIE)?.value;
+  const isProduction = process.env.NODE_ENV === 'production';
+  const anonymousId =
+    legacyUid && SERVER_MINTED_ANON_ID.test(legacyUid)
+      ? legacyUid
+      : `anon_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
-  // Use legacy userId if available, otherwise generate new anonymous ID
-  const userId = legacyUid || `anon_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  // Rewrite the incoming cookie too, so a server page rendered on this same
+  // request sees the replacement rather than the stale value.
+  request.cookies.set(SECURE_UID_COOKIE, anonymousId);
+  const response = NextResponse.next({ request: { headers: request.headers } });
 
-  // Set HttpOnly secure cookie (server-only, XSS-proof)
-  response.cookies.set(SECURE_UID_COOKIE, userId, {
+  response.cookies.set(SECURE_UID_COOKIE, anonymousId, {
     httpOnly: true,
     secure: isProduction,
     sameSite: 'lax',
@@ -72,9 +46,10 @@ export function middleware(request: NextRequest) {
     path: '/',
   });
 
-  // Also set legacy cookie if it doesn't exist (for client-side reads)
+  // Also set the legacy cookie for client-side reads, but never overwrite one
+  // the browser already holds: after sign-in it carries the real uid.
   if (!legacyUid) {
-    response.cookies.set(LEGACY_UID_COOKIE, userId, {
+    response.cookies.set(LEGACY_UID_COOKIE, anonymousId, {
       httpOnly: false,
       secure: isProduction,
       sameSite: 'lax',

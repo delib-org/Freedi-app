@@ -1,0 +1,47 @@
+// Inherited questions on joining. Spec: docs/ux/main-people-settings-ux.md §3.9.
+.list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2xs);
+	margin: 0;
+	padding-inline-start: var(--space-md);
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+	min-block-size: 2.75rem;
+	font-size: var(--font-size-md);
+	color: var(--text-body);
+}
+
+.question {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	overflow-wrap: anywhere;
+}
+
+.ask {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2xs);
+	min-block-size: 2.75rem;
+	font-size: var(--font-size-sm);
+	color: var(--text-meta);
+	cursor: pointer;
+
+	input {
+		inline-size: 1.25rem;
+		block-size: 1.25rem;
+		accent-color: var(--btn-primary);
+	}
+}
+
+.editLink {
+	align-self: flex-start;
+	font-size: var(--font-size-sm);
+	color: var(--text-blue);
+	text-decoration: underline;
+	text-underline-offset: 0.15em;
+}

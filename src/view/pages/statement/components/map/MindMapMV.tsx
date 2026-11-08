@@ -2,127 +2,110 @@ import {
 	statementDescendantsSelector,
 	statementSelector,
 } from '@/redux/statements/statementsSlice';
-import { useEffect, useState, useRef } from 'react';
-import { useSelector } from 'react-redux';
+import { useMemo, useState, useRef } from 'react';
+import { shallowEqual, useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import { resultsByParentId } from './mapCont';
 import { Statement, Results } from '@freedi/shared-types';
 import { APIEndPoint, isChatMessage } from '@/controllers/general/helpers';
 import { logError } from '@/utils/errorHandling';
+import { getAuthHeaders } from '@/controllers/db/authHeaders';
 
 export function useMindMap(statementIdPassed: string | null = null) {
 	const { statementId: paramsStatement } = useParams();
 	const statementId = statementIdPassed ?? paramsStatement;
 	const statement = useSelector(statementSelector(statementId));
-	const allDescendants: Statement[] = useSelector(statementDescendantsSelector(statementId));
-	const descendants = allDescendants.filter((statement) => !isChatMessage(statement.statementType));
 
-	const [flat, setFlat] = useState(false);
+	// One selector instance per subject, and shallowEqual so an update anywhere
+	// else in the store (or a no-op re-dispatch) keeps the same array: Redux
+	// keeps the object of every statement that did not change.
+	const descendantsSelector = useMemo(
+		() => statementDescendantsSelector(statementId),
+		[statementId],
+	);
+	const allDescendants: Statement[] = useSelector(descendantsSelector, shallowEqual);
+	const descendants = useMemo(
+		() => allDescendants.filter((statement) => !isChatMessage(statement.statementType)),
+		[allDescendants],
+	);
+
 	const [loading, setLoading] = useState(false);
-
-	// Use a ref to track if we've already processed these descendants
-	const processedDescendants = useRef<string | null>(null);
-
-	// Initialize results state properly
-	const [results, setResults] = useState<Results | null>(null);
 
 	// REMOVED: Duplicate listener - descendants are now loaded by useStatementListeners hook
 	// when screen is 'mind-map', which calls listenToAllDescendants()
 	// This ensures all sub-statements are loaded correctly on direct navigation
 
-	useEffect(() => {
-		setFlat(isFlat(descendants, statementId));
-	}, [descendants.length, statementId]);
+	const flat = useMemo(() => isFlat(descendants, statementId), [descendants, statementId]);
 
-	// Calculate results only when descendants or statement change
-	useEffect(() => {
-		// Skip if no data yet
-		if (!statement) return;
+	// The subject doc changes on every child write (lastChildUpdate), so it is
+	// only taken up when a field the maps show changes: its title, color, or
+	// the admin map settings (statementSettings.map).
+	const subjectKey = statement
+		? JSON.stringify([
+				statement.statementId,
+				statement.statement,
+				statement.color,
+				statement.statementSettings,
+			])
+		: '';
+	const subjectRef = useRef<{ key: string; statement: Statement | undefined }>({
+		key: '',
+		statement: undefined,
+	});
+	if (subjectRef.current.key !== subjectKey) {
+		subjectRef.current = { key: subjectKey, statement };
+	}
+	const subject = subjectRef.current.statement;
 
-		// Create a cache key from the current data
-		const cacheKey = JSON.stringify({
-			statementId: statement.statementId,
-			descendantsLength: descendants.length,
-			// Include the subject's own render-affecting fields so edits to it
-			// (title, color, and admin map settings) refresh results.top —
-			// otherwise keying on statementId alone leaves the board stale when
-			// only the subject changes (e.g. the map admin panel writes
-			// statementSettings.map).
-			subjectStatement: statement.statement,
-			subjectColor: statement.color,
-			subjectSettings: statement.statementSettings,
-			// Only include specific properties to limit unnecessary recalculations
-			descendants: descendants,
-		});
-
-		// Skip processing if we've already processed this exact data
-		if (processedDescendants.current === cacheKey) return;
-
-		// Update our processed tracking
-		processedDescendants.current = cacheKey;
-
+	const results = useMemo<Results | null>(() => {
+		if (!subject) return null;
 		try {
-			// Calculate new results
-			const newResults = resultsByParentId(statement, descendants);
-
-			// Update state only if results actually changed
-			setResults((prevResults) => {
-				const prevResultsStr = JSON.stringify(prevResults);
-				const newResultsStr = JSON.stringify(newResults);
-
-				return prevResultsStr === newResultsStr ? prevResults : newResults;
-			});
+			return resultsByParentId(subject, descendants);
 		} catch (error) {
 			logError(error, {
 				operation: 'useMindMap.calculateResults',
-				statementId: statement?.statementId,
-				metadata: { descendantsCount: descendants?.length },
+				statementId: subject.statementId,
+				metadata: { descendantsCount: descendants.length },
 			});
-		}
-	}, [descendants, statement]);
 
-	function handleCluster(statementId: string) {
+			return null;
+		}
+	}, [subject, descendants]);
+
+	async function handleCluster(statementId: string): Promise<void> {
 		setLoading(true);
-		const endPoint = APIEndPoint('getCluster', {});
-		fetch(endPoint, {
-			method: 'POST',
-			body: JSON.stringify({
-				statementId,
-			}),
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
-			.catch((error) => {
-				logError(error, {
-					operation: 'useMindMap.handleCluster',
-					statementId,
-				});
-			})
-			.finally(() => {
-				setLoading(false);
+		try {
+			await fetch(APIEndPoint('getCluster', {}), {
+				method: 'POST',
+				body: JSON.stringify({ statementId }),
+				headers: await getAuthHeaders(),
 			});
+		} catch (error) {
+			logError(error, {
+				operation: 'useMindMap.handleCluster',
+				statementId,
+			});
+		} finally {
+			setLoading(false);
+		}
 	}
 
-	function handleRecoverSnapshot(statementId: string) {
+	async function handleRecoverSnapshot(statementId: string): Promise<void> {
 		setLoading(true);
-		const endPoint = APIEndPoint('recoverLastSnapshot', {});
-		fetch(endPoint, {
-			method: 'POST',
-			body: JSON.stringify({ snapshotId: statementId }),
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
-			.catch((error) => {
-				logError(error, {
-					operation: 'useMindMap.handleRecoverSnapshot',
-					metadata: { snapshotId: statementId },
-				});
-			})
-			.finally(() => {
-				setLoading(false);
+		try {
+			await fetch(APIEndPoint('recoverLastSnapshot', {}), {
+				method: 'POST',
+				body: JSON.stringify({ snapshotId: statementId }),
+				headers: await getAuthHeaders(),
 			});
+		} catch (error) {
+			logError(error, {
+				operation: 'useMindMap.handleRecoverSnapshot',
+				metadata: { snapshotId: statementId },
+			});
+		} finally {
+			setLoading(false);
+		}
 	}
 
 	return {

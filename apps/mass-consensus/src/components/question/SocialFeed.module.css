@@ -3,8 +3,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
-  border-top: 1px solid #e2e8f0;
+  background: var(--mc-surface, white);
+  border-top: 1px solid var(--mc-border, #e2e8f0);
   border-radius: 16px 16px 0 0;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
   z-index: 100;
@@ -28,12 +28,12 @@
   border: none;
   cursor: pointer;
   font-size: 0.875rem;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, var(--mc-text-muted, #64748b));
   transition: background 0.2s ease;
 }
 
 .toggle:hover {
-  background: #f8fafc;
+  background: var(--mc-surface-muted, #f8fafc);
 }
 
 .toggleIcon {
@@ -90,7 +90,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background: #f8fafc;
+  background: var(--mc-surface-muted, #f8fafc);
   border-radius: 12px;
   font-size: 0.8125rem;
   animation: slideIn 0.3s ease-out forwards;
@@ -125,19 +125,19 @@
 
 .user {
   font-weight: 600;
-  color: var(--text-body, #475569);
+  color: var(--text-body, var(--mc-text, #475569));
   flex-shrink: 0;
 }
 
 .action {
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, var(--mc-text-muted, #64748b));
   flex: 1;
   text-align: right;
 }
 
 .time {
   font-size: 0.6875rem;
-  color: #94a3b8;
+  color: var(--mc-text-muted, #94a3b8);
   flex-shrink: 0;
 }
 

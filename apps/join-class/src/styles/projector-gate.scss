@@ -1,0 +1,167 @@
+// =============================================================================
+// Projector gate (Trello XL9UDKoV) - the big Agora-style gate shown at the
+// proposals and vote steps. Imported by the lazy TeacherProjector view only.
+// Two doors swing open (scaleX to the outer edge, symmetrical so RTL needs no
+// mirror) when an option passes the lesson's gate. Tokens only, BEM.
+// Type is in px like the rest of the projector: status 64 px, chips >= 32 px.
+// =============================================================================
+
+$gate-min-text: 32px;
+$gate-width: 360px;
+$gate-height: 240px;
+$gate-post: 24px;
+$gate-lintel: 28px;
+$gate-sill: 12px;
+$gate-swing: 0.28;
+
+.gate-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+
+  &__frame {
+    display: flex;
+    flex-direction: column;
+    width: $gate-width;
+  }
+
+  &__lintel {
+    height: $gate-lintel;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    background: var(--ink);
+  }
+
+  // The opening is framed by two posts (border) and holds the light + doors
+  &__opening {
+    position: relative;
+    display: flex;
+    height: $gate-height;
+    overflow: hidden;
+    border-inline: $gate-post solid var(--ink);
+    background: var(--paper-deep);
+  }
+
+  &__light {
+    position: absolute;
+    inset: 0;
+    background: var(--teal-100);
+    opacity: 0;
+  }
+
+  &__door {
+    position: relative;
+    flex: 1;
+    background: var(--terra-600);
+    box-shadow: inset 0 0 0 4px var(--terra-700);
+    transform: scaleX(1);
+
+    &--first { transform-origin: left center; }
+    &--second { transform-origin: right center; }
+  }
+
+  &__sill {
+    height: $gate-sill;
+    background: var(--ink);
+
+    &--lit { background: var(--teal-500); }
+  }
+
+  &__status {
+    margin: 0;
+    font-size: 64px;
+    font-weight: var(--font-weight-bold, 700);
+    line-height: 1.1;
+    color: var(--ink-muted);
+  }
+
+  &--open &__status { color: var(--teal-500); }
+
+  &--open &__light { opacity: 1; }
+
+  &--open &__door {
+    transform: scaleX($gate-swing);
+    animation: gate-swing var(--dur-slow, 900ms) var(--ease-out, ease-out) both;
+  }
+
+  &--open &__light {
+    animation: gate-glow var(--dur-slow, 900ms) var(--ease-out, ease-out) both;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-md);
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__chip {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    min-width: 0;
+    max-width: 44%;
+    padding: var(--space-sm) var(--space-lg);
+    border: 4px solid var(--paper-line);
+    border-radius: var(--radius-lg);
+    background: var(--paper-soft);
+    color: var(--ink);
+
+    &--through {
+      border-color: var(--teal-500);
+      background: var(--teal-50);
+      animation: gate-through var(--dur-slow, 900ms) var(--ease-out, ease-out) both;
+    }
+
+    &--more {
+      justify-content: center;
+      border-style: dashed;
+      color: var(--ink-muted);
+    }
+  }
+
+  &__chip-text {
+    min-width: 0;
+    font-size: 48px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__chip-note {
+    font-size: $gate-min-text;
+    font-weight: var(--font-weight-bold, 700);
+    color: var(--ink-muted);
+  }
+
+  &__chip--through &__chip-note { color: var(--teal-600); }
+}
+
+@keyframes gate-swing {
+  from { transform: scaleX(1); }
+  to { transform: scaleX($gate-swing); }
+}
+
+@keyframes gate-glow {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes gate-through {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// Instant state change: the final frames, no motion
+@media (prefers-reduced-motion: reduce) {
+  .gate-stage--open .gate-stage__door,
+  .gate-stage--open .gate-stage__light,
+  .gate-stage__chip--through {
+    animation: none;
+  }
+}

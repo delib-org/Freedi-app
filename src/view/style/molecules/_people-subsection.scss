@@ -1,0 +1,120 @@
+// People subsection Molecule — BEM
+// One accordion row inside the People card of the Host hub: a heading button
+// with the title, a live summary and a count badge (only when something waits
+// for the host), and a body. Not a card: it inherits the hub card's surface.
+// React wrapper: atomic/molecules/PeopleSubsection.
+// Spec: docs/ux/main-people-settings-design.md §3.1.
+//
+// DOM:
+// <section class="people-subsection [--open] [--attention]" id="waiting">
+//   <h3 class="people-subsection__heading">
+//     <button class="people-subsection__header" aria-expanded aria-controls>
+//       <span class="people-subsection__title"/> <span class="people-subsection__summary"/>
+//       <span class="badge badge--unread people-subsection__count"/> <svg class="people-subsection__chevron"/>
+//   </h3>
+//   <div class="collapse" id="waiting-body"> (Collapse molecule)
+//     <div class="collapse__inner"><div class="people-subsection__body"/></div>
+// </section>
+@use '../mixins' as *;
+
+.people-subsection {
+	// A hash link lands under the sticky statement header, not behind it.
+	scroll-margin-block-start: var(--space-2xl);
+
+	& + & {
+		border-block-start: var(--hairline);
+	}
+
+	&__heading {
+		margin: 0;
+		font: inherit;
+	}
+
+	&__header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-xs);
+		inline-size: calc(100% + 2 * var(--space-sm));
+		min-block-size: 3rem;
+		margin-inline: calc(-1 * var(--space-sm));
+		padding-block: var(--space-xs);
+		padding-inline: var(--space-sm);
+		border: 0;
+		background: transparent;
+		color: inherit;
+		font: inherit;
+		text-align: start;
+		cursor: pointer;
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary);
+			outline-offset: -2px;
+		}
+
+		@include desktop {
+			&:hover {
+				background: var(--bg-hover);
+			}
+		}
+	}
+
+	&__title {
+		font-size: var(--font-size-md);
+		font-weight: var(--font-weight-semibold);
+		color: var(--text-title);
+	}
+
+	// "Title · summary" on one line; on phones the summary wraps under the
+	// title and the dot would start a line, so it goes.
+	&__separator {
+		color: var(--text-meta);
+
+		@include mobile {
+			display: none;
+		}
+	}
+
+	&__summary {
+		flex: 1 1 0;
+		min-inline-size: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+		@include truncate;
+
+		@include mobile {
+			flex-basis: 100%;
+			order: 3;
+			white-space: normal;
+		}
+	}
+
+	&__count {
+		@include stat-number;
+	}
+
+	&__chevron {
+		inline-size: 1.25rem;
+		block-size: 1.25rem;
+		margin-inline-start: auto;
+		color: var(--text-caption);
+		transition: transform var(--motion-base) var(--motion-ease);
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		padding-block: 0 var(--space-md);
+	}
+
+	&--open &__chevron {
+		transform: rotate(180deg);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		&__chevron {
+			transition: none;
+		}
+	}
+}

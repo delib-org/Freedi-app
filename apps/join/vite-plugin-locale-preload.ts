@@ -18,8 +18,12 @@ import type { OutputBundle, OutputChunk } from 'rollup';
  *
  * The same script sets `dir`/`lang` on `<html>` immediately, so the boot splash
  * renders right-to-left from the first frame instead of flipping, and preloads
- * the Hebrew font subset for Hebrew visitors (Assistant has no Arabic coverage,
- * so `ar`/`fa` fall through to system fonts and need no font preload).
+ * the Hebrew font subset for EVERY visitor. Unicode-range makes the browser fetch
+ * that subset only once Hebrew text is laid out — which for non-Hebrew UI
+ * languages still happens (Hebrew questions/options are user content), and then
+ * it was the last request on the page (6.2s on slow 4G, after a fallback-font
+ * flash). The file is 7.5 kB, so preloading it everywhere is cheaper than the
+ * late swap.
  *
  * Language detection here MUST mirror `detectLanguage()` in `src/lib/i18n.ts`.
  * A mismatch only wastes a preload — it can't render the wrong language, since
@@ -64,7 +68,7 @@ d.lang=l;
 d.dir=R.indexOf(l)>-1?'rtl':'ltr';
 function p(href,as,type){var k=document.createElement('link');k.rel=as==='font'?'preload':'modulepreload';k.href=href;if(as){k.as=as}if(type){k.type=type}k.crossOrigin='anonymous';document.head.appendChild(k)}
 if(C[l]){p(C[l])}
-if(l==='he'){p('/fonts/assistant-hebrew.woff2','font','font/woff2')}
+p('/fonts/assistant-hebrew.woff2','font','font/woff2')
 }catch(e){}})();`;
 }
 

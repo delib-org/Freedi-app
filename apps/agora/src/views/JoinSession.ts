@@ -2,12 +2,15 @@ import m from 'mithril';
 import { t } from '../lib/i18n';
 import { ensureUser, signInWithHandoff } from '../lib/user';
 import { joinClass, joinSession } from '../lib/callables';
-import { findSessionByCode } from '../lib/teacher';
-import { ODYSSEY_THEME, rememberSessionTheme } from '../lib/theme';
+import { findSessionByCode, hasSeatInSession } from '../lib/teacher';
+import { paintTheme, rememberTheme } from '../lib/theme';
 import {
 	AgoraDeviceMode,
 	AgoraSessionStatus,
 	AgoraSession,
+	AGORA_IDENTITY,
+	AGORA_REJOIN_COOLDOWN_REASON,
+	AGORA_REMOVED_REASON,
 	AGORA_SESSION,
 } from '@freedi/shared-types';
 import {
@@ -18,6 +21,8 @@ import {
 	type ClassJoinState,
 } from '../lib/flows/classJoin';
 import { ClassJoinPanel } from '../components/ClassJoinPanel';
+import { iconLabel } from '../components/Icon';
+import { joinNamePhase } from '../lib/flows/joinName';
 
 type JoinPhase = 'looking' | 'name' | 'team-size' | 'joining' | 'class-join' | 'error';
 
@@ -32,6 +37,8 @@ export function JoinSession(
 	let teamMemberCount = 2;
 	/** `named` rooms: the name this person goes by — asked at the door */
 	let displayName = '';
+	/** What the door asks for: the card name (`named`), or a real name for the teacher alone */
+	let namePhase: 'named' | 'real' | 'none' = 'none';
 	let classJoin: ClassJoinState = INITIAL_CLASS_JOIN;
 
 	/** One entry point for the flow: reduce, then run whatever the step needs. */
@@ -99,33 +106,35 @@ export function JoinSession(
 	 * not worth turning them away for: they still get in, just as a newcomer
 	 * with no camp, which is exactly what an anonymous join has always been.
 	 */
-	async function establishIdentity(): Promise<void> {
+	async function establishIdentity(): Promise<string> {
 		// The gate says which world this code belongs to, and it says so a whole
 		// round trip before the session document could. Recording it here is what
 		// lets the square be the right colour on its first frame.
 		const theme = m.route.param('theme');
 		if (theme === 'odyssey') {
-			rememberSessionTheme(ODYSSEY_THEME);
-			document.documentElement.dataset.sessionTheme = ODYSSEY_THEME;
+			paintTheme({ kind: 'civic' });
+			rememberTheme({ kind: 'civic' });
 		}
 
 		const handoff = m.route.param('handoff');
 		if (handoff) {
 			try {
-				await signInWithHandoff(handoff);
+				const handedOff = await signInWithHandoff(handoff);
 
-				return;
+				return handedOff.uid;
 			} catch (error) {
 				console.error('[Join] Handoff sign-in failed, joining as a newcomer:', error);
 			}
 		}
 
-		await ensureUser();
+		const user = await ensureUser();
+
+		return user.uid;
 	}
 
 	async function lookupSession(): Promise<void> {
 		try {
-			await establishIdentity();
+			const uid = await establishIdentity();
 			const found = await findSessionByCode(code);
 
 			if (!found) {
@@ -146,10 +155,20 @@ export function JoinSession(
 				return;
 			}
 
+			// Already seated from this browser: back to the game, no questions.
+			// Asking again would hand the teacher a second "real name" for the
+			// same student and look, to the student, like being thrown out.
+			if (await hasSeatInSession(session.sessionId, uid)) {
+				m.route.set(`/play/${session.sessionId}`);
+
+				return;
+			}
+
 			// A named room asks who you are before anything else — the name is
-			// what everyone will see on your cards. A class game already has an
-			// alias for you and never asks.
-			if (session.identity === 'named' && !session.classId) {
+			// what everyone will see on your cards. A classroom asks for a real
+			// name too, for the teacher's eyes only (see lib/flows/joinName).
+			namePhase = joinNamePhase(session);
+			if (namePhase !== 'none') {
 				phase = 'name';
 				m.redraw();
 			} else {
@@ -177,13 +196,25 @@ export function JoinSession(
 		m.redraw();
 		try {
 			const trimmedName = displayName.trim();
+			// A named room puts the typed name on the cards AND hands it to the
+			// teacher; a classroom hands it to the teacher only.
 			const result = await joinSession({
 				code,
 				teamMemberCount: session?.deviceMode === AgoraDeviceMode.team ? teamMemberCount : undefined,
-				...(trimmedName ? { displayName: trimmedName } : {}),
+				...(trimmedName && namePhase === 'named' ? { displayName: trimmedName } : {}),
+				...(trimmedName ? { realName: trimmedName } : {}),
 			});
+			// A removed login is not seated: its knock now waits for the teacher,
+			// and the game screen is where it waits (and where it is let back in)
 			m.route.set(`/play/${result.sessionId}`);
 		} catch (error) {
+			if (String(error).includes(AGORA_REJOIN_COOLDOWN_REASON)) {
+				phase = 'error';
+				errorKey = 'join.rejoin_cooldown';
+				m.redraw();
+
+				return;
+			}
 			// A class game admits roster members only: this specific refusal is
 			// not an error, it is the door to the one-time class-join step.
 			if (/class-membership-required/.test(String(error))) {
@@ -191,6 +222,14 @@ export function JoinSession(
 				classJoin = INITIAL_CLASS_JOIN;
 				pendingAlias = '';
 				pendingPin = '';
+				m.redraw();
+
+				return;
+			}
+			// Removed between the knock check and the seat — one more knock will do
+			if (String(error).includes(AGORA_REMOVED_REASON)) {
+				phase = 'error';
+				errorKey = 'join.removed';
 				m.redraw();
 
 				return;
@@ -216,14 +255,23 @@ export function JoinSession(
 
 					phase === 'name'
 						? m('.card.stack', [
-								m('h3.text-center', t('join.your_name')),
-								m('p.text-center.home-explanation', t('join.your_name_hint')),
+								m('h3.text-center', t(namePhase === 'named' ? 'join.your_name' : 'join.real_name')),
+								m(
+									'p.text-center.home-explanation',
+									namePhase === 'named'
+										? t('join.your_name_hint')
+										: iconLabel('lock', t('join.real_name_hint')),
+								),
 								m('input.join__name-input', {
 									type: 'text',
 									value: displayName,
-									maxlength: 40,
+									maxlength: namePhase === 'named' ? 40 : AGORA_IDENTITY.MAX_REAL_NAME,
 									autofocus: true,
-									placeholder: t('join.your_name_placeholder'),
+									placeholder: t(
+										namePhase === 'named'
+											? 'join.your_name_placeholder'
+											: 'join.real_name_placeholder',
+									),
 									oninput: (event: InputEvent) => {
 										displayName = (event.target as HTMLInputElement).value;
 									},
@@ -236,13 +284,27 @@ export function JoinSession(
 									{ disabled: !displayName.trim(), onclick: () => void afterName() },
 									t('join.continue'),
 								),
+								// A real name is asked, never demanded: the teacher can still read
+								// the pseudonym off the board and ask out loud
+								namePhase === 'real'
+									? m(
+											'button.btn.btn--ghost.btn--full',
+											{
+												type: 'button',
+												onclick: () => {
+													displayName = '';
+													void afterName();
+												},
+											},
+											t('join.real_name_skip'),
+										)
+									: null,
 							])
 						: null,
 
 					phase === 'team-size' && session
 						? m('.card.stack', [
-								m('h3.text-center', t('join.team_question')),
-								m('p.text-center.home-explanation', t('join.team_hint')),
+								m('h3.text-center', iconLabel('people', t('join.team_question'), 20)),
 								m(
 									'.join__team-picker',
 									Array.from({ length: AGORA_SESSION.TEAM_SIZE_MAX }, (_, index) => index + 1).map(

@@ -27,6 +27,14 @@ export enum AgoraStage {
 	 * later stage as carried context.
 	 */
 	question = 'question',
+	/**
+	 * A station whose task lives in another WizCol app — a main-app question
+	 * today, a Join session later (docs/ia/agora-linked-app-stations.md). Only
+	 * ever appears in an explicit plan, like `question`. Agora owns no desk,
+	 * board, rating or outcome for it: the item carries a `link`, the student
+	 * opens it and comes back, and `stationVisits` records the two stamps.
+	 */
+	linked = 'linked',
 }
 
 /**

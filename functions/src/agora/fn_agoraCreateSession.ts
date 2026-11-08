@@ -18,7 +18,11 @@ import {
 	AgoraStagePlan,
 	AgoraStagePlanItem,
 	AgoraStagePlanSchema,
+	applyTeacherPrompts,
+	AgoraThemeChoice,
+	AgoraThemeChoiceSchema,
 	AgoraTopicPackage,
+	topicStagePlan,
 	AgoraTopicStatus,
 	SourceApp,
 	AGORA_AI_REVIEW,
@@ -32,8 +36,12 @@ import {
 import { safeParse } from 'valibot';
 import { logError } from '../utils/errorHandling';
 import { generateUniqueCode } from './joinCodes';
+import { requireApprovedTeacher } from './libraryAccess';
 import { buildQuestionStatement } from './questionStage';
 import { sanitizeStagePlan } from './stagePlanInput';
+import { verifyPlanLinks } from './stationLink';
+import { loadTeacherPrompts } from './teacherPrompts';
+import { mayOpenScenario } from './topicReaders';
 
 /** A game started by typing the main question — no scenario package behind it */
 export interface QuickGameRequest {
@@ -45,6 +53,8 @@ export interface QuickGameRequest {
 }
 
 interface Request {
+	world?: 'village' | 'classic';
+	villageNavigation?: 'teacher' | 'free';
 	/** A ready scenario package — or omit it and send `quick` */
 	topicPackageId?: string;
 	quick?: QuickGameRequest;
@@ -58,6 +68,25 @@ interface Request {
 	/** The ordered stage list. Absent means the legacy order for the flow. */
 	stagePlan?: AgoraStagePlan;
 	identity?: AgoraIdentityMode;
+	/** Ask for real names at the door (teacher-only). Absent = on for a lesson. */
+	collectRealNames?: boolean;
+	/** The look the room wears by default; absent means AGORA_DEFAULT_THEME */
+	theme?: AgoraThemeChoice;
+}
+
+/**
+ * The look is the teacher's to choose and the schema's to shape: the client
+ * parses the session doc strictly, so a malformed theme written here would
+ * brick every tab that later joins the room.
+ */
+function sanitizeTheme(theme: unknown): AgoraThemeChoice | undefined {
+	if (theme === undefined || theme === null) return undefined;
+	const parsed = safeParse(AgoraThemeChoiceSchema, theme);
+	if (!parsed.success) {
+		throw new HttpsError('invalid-argument', 'Invalid theme');
+	}
+
+	return parsed.output;
 }
 
 /** Sanity bounds on the teacher's flow knobs — a 40-round lesson is a typo */
@@ -191,13 +220,9 @@ interface Result {
 export const agoraCreateSession = onCall(
 	{ region: functionConfig.region },
 	async (request: CallableRequest<Request>): Promise<Result> => {
-		const uid = request.auth?.uid;
-		if (!uid) {
-			throw new HttpsError('unauthenticated', 'User must be authenticated');
-		}
-		if (request.auth?.token.firebase.sign_in_provider === 'anonymous') {
-			throw new HttpsError('permission-denied', 'Teachers must sign in with a full account');
-		}
+		// Hard gate (Tal, 2026-10-15): only an approved teacher opens a lesson,
+		// guest lessons included. Throws unauthenticated / permission-denied.
+		const { uid } = await requireApprovedTeacher(request);
 
 		const {
 			topicPackageId,
@@ -209,7 +234,22 @@ export const agoraCreateSession = onCall(
 			flow,
 			stagePlan,
 			identity,
+			theme,
+			collectRealNames,
 		} = request.data ?? {};
+		const world = request.data?.world;
+		if (world !== undefined && world !== 'village' && world !== 'classic') {
+			throw new HttpsError('invalid-argument', 'Invalid world');
+		}
+		const villageNavigation = request.data?.villageNavigation;
+		if (
+			villageNavigation !== undefined &&
+			villageNavigation !== 'teacher' &&
+			villageNavigation !== 'free'
+		) {
+			throw new HttpsError('invalid-argument', 'Invalid villageNavigation');
+		}
+		const roomTheme = sanitizeTheme(theme);
 		const quickGame = quick !== undefined ? parseQuick(quick) : undefined;
 		if (!quickGame && (!topicPackageId || typeof topicPackageId !== 'string')) {
 			throw new HttpsError('invalid-argument', 'topicPackageId or quick is required');
@@ -252,11 +292,16 @@ export const agoraCreateSession = onCall(
 					throw new HttpsError('not-found', 'Topic package not found');
 				}
 				topic = topicSnap.data() as AgoraTopicPackage;
+				// Someone else's private scenario is not theirs to run (the library copies)
+				if (!(await mayOpenScenario(topic, uid))) {
+					throw new HttpsError('permission-denied', 'This scenario is private');
+				}
 				if (topic.status !== AgoraTopicStatus.ready) {
 					throw new HttpsError('failed-precondition', 'Topic package is not ready');
 				}
 			}
 			const isQuick = topic.kind === 'quick';
+			if (!plan && topic.authoringBrief) plan = topicStagePlan();
 
 			// A class game must be opened by one of the class's own teachers; a
 			// guest game (no classId) stays exactly what sessions have always been.
@@ -292,8 +337,16 @@ export const agoraCreateSession = onCall(
 					}
 				: teacherFlow;
 
+			// A teacher who reworded a round "for all my games like this" gets those
+			// words here, on every round item they left blank — see agoraTeacherPrompts.
+			const teacherPrompts = plan ? await loadTeacherPrompts(uid) : undefined;
 			const cleanPlan: AgoraStagePlanItem[] | undefined = plan
-				? sanitizeStagePlan(plan, { hasCharacters: !isQuick })
+				? applyTeacherPrompts(
+						sanitizeStagePlan(await verifyPlanLinks(plan, uid, [], Date.now()), {
+							hasCharacters: !isQuick,
+						}),
+						teacherPrompts,
+					)
 				: undefined;
 			if (isQuick && !cleanPlan) {
 				throw new HttpsError('invalid-argument', 'A quick game needs a stage plan');
@@ -341,7 +394,7 @@ export const agoraCreateSession = onCall(
 			const code = await generateUniqueCode();
 			const batch = db.batch();
 
-			// One question Statement per question item — the answers' parent
+			// One question Statement per question item (open or a round) — the answers' parent
 			const planWithStatements = cleanPlan?.map((item) => {
 				if (item.stage !== AgoraStage.question) return item;
 				const statement = buildQuestionStatement({
@@ -372,6 +425,10 @@ export const agoraCreateSession = onCall(
 					? { stagePlan: planWithStatements, stageIndex: 0, stageState: {} }
 					: {}),
 				...(identity ? { identity } : {}),
+				collectRealNames: collectRealNames !== false,
+				...(roomTheme ? { theme: roomTheme } : {}),
+				...(world ? { world } : {}),
+				...(villageNavigation ? { villageNavigation } : {}),
 				stage: AgoraStage.lobby,
 				roundNumber: 0,
 				participantCount: 0,

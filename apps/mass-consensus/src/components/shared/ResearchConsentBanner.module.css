@@ -15,7 +15,7 @@
 }
 
 .banner {
-	background: #fff;
+	background: var(--mc-surface, #fff);
 	border-radius: 16px;
 	padding: 2rem;
 	max-width: 440px;
@@ -35,13 +35,13 @@
 .title {
 	font-size: 1.3rem;
 	font-weight: 700;
-	color: #1a202c;
+	color: var(--mc-text-strong, #1a202c);
 	margin: 0;
 }
 
 .message {
 	font-size: 0.95rem;
-	color: #4a5568;
+	color: var(--mc-text, #4a5568);
 	line-height: 1.5;
 	margin: 0;
 }
@@ -55,7 +55,7 @@
 
 .optOut {
 	font-size: 0.8rem;
-	color: #a0aec0;
+	color: var(--mc-text-muted, #a0aec0);
 	margin: 0;
 }
 
@@ -84,10 +84,10 @@
 
 .declineBtn {
 	padding: 0.6rem 1.5rem;
-	border: 1px solid #e2e8f0;
+	border: 1px solid var(--mc-border, #e2e8f0);
 	border-radius: 10px;
 	background: transparent;
-	color: #4a5568;
+	color: var(--mc-text, #4a5568);
 	font-weight: 600;
 	font-size: 0.9rem;
 	cursor: pointer;
@@ -95,5 +95,5 @@
 }
 
 .declineBtn:hover {
-	background: #f7fafc;
+	background: var(--mc-surface-muted, #f7fafc);
 }

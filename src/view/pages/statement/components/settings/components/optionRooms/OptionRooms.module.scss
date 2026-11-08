@@ -28,6 +28,43 @@
 		margin: 0 0 0.5rem 0;
 	}
 
+	// Joining answers & rooms (People #joining): one block, groups separated
+	// by the body gap, no card-in-card.
+	&__group {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__groupTitle {
+		margin: 0;
+		font-size: var(--font-size-md);
+		font-weight: var(--font-weight-semibold);
+		color: var(--text-title);
+	}
+
+	&__inlineFields {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-md);
+		padding-inline-start: var(--space-md);
+	}
+
+	&__inlineNumber {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		font-size: var(--font-size-sm);
+		color: var(--text-body);
+	}
+
+	&__splitActions {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-xs);
+	}
+
 	// Toggle and checkbox styles
 	&__toggleRow {
 		display: flex;

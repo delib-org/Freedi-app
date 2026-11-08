@@ -1,1 +1,26 @@
 @forward '@freedi/shared-styles/tokens/variables';
+
+// UX components inherit the active main-app palette, including dark mode.
+:root {
+	--radius-sheet: 24px;
+	--radius-card: 20px;
+	--shadow-card: var(--elevation-2);
+	--line-height-body: 1.55;
+	--radius-chip: 999px;
+	--shadow-sheet: var(--elevation-3);
+	--font-size-small: 0.875rem;
+	--eyebrow-size: 0.6875rem;
+	--eyebrow-tracking: 0.1em;
+	--btn-primary-ink: var(--btn-primary-text);
+	--tone-lilac: var(--space-purple-soft, var(--card-default));
+	--tone-mint: var(--space-mint-soft, var(--card-default));
+	--tone-yellow: var(--space-yellow-soft, var(--card-default));
+	--tone-pink: var(--card-default);
+	--tone-peach: var(--card-default);
+	--tone-lilac-ink: var(--text-title);
+	--tone-mint-ink: var(--text-title);
+	--tone-yellow-ink: var(--text-title);
+	--tone-pink-ink: var(--text-title);
+	--tone-peach-ink: var(--text-title);
+	--tone-coral: var(--btn-primary);
+}

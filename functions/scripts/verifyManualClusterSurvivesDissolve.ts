@@ -57,8 +57,20 @@ async function main(): Promise<void> {
 			titleLockedByCreator: true,
 			integratedOptions: [M1, M2],
 		},
-		{ statementId: M1, statement: 'manual member one', statementType: 'option', parentId: Q, hide: false },
-		{ statementId: M2, statement: 'manual member two', statementType: 'option', parentId: Q, hide: false },
+		{
+			statementId: M1,
+			statement: 'manual member one',
+			statementType: 'option',
+			parentId: Q,
+			hide: false,
+		},
+		{
+			statementId: M2,
+			statement: 'manual member two',
+			statementType: 'option',
+			parentId: Q,
+			hide: false,
+		},
 		// Auto-formed synth cluster: no title lock, members hidden + integratedInto.
 		{
 			statementId: SYNTH,
@@ -69,8 +81,22 @@ async function main(): Promise<void> {
 			derivedByPipeline: 'synthesis',
 			integratedOptions: [S1, S2],
 		},
-		{ statementId: S1, statement: 'synth member one', statementType: 'option', parentId: Q, hide: true, integratedInto: SYNTH },
-		{ statementId: S2, statement: 'synth member two', statementType: 'option', parentId: Q, hide: true, integratedInto: SYNTH },
+		{
+			statementId: S1,
+			statement: 'synth member one',
+			statementType: 'option',
+			parentId: Q,
+			hide: true,
+			integratedInto: SYNTH,
+		},
+		{
+			statementId: S2,
+			statement: 'synth member two',
+			statementType: 'option',
+			parentId: Q,
+			hide: true,
+			integratedInto: SYNTH,
+		},
 	];
 	const seedBatch = db.batch();
 	for (const doc of seed) {
@@ -103,15 +129,23 @@ async function main(): Promise<void> {
 
 	check('synth cluster was dissolved (deleted)', !synth.exists);
 	check('result reports clustersReversed === 1', result.clustersReversed === 1);
-	check('synth member 1 re-shown (hide=false, no integratedInto)', s1.exists && s1.data()?.hide === false && !s1.data()?.integratedInto);
-	check('synth member 2 re-shown (hide=false, no integratedInto)', s2.exists && s2.data()?.hide === false && !s2.data()?.integratedInto);
+	check(
+		'synth member 1 re-shown (hide=false, no integratedInto)',
+		s1.exists && s1.data()?.hide === false && !s1.data()?.integratedInto,
+	);
+	check(
+		'synth member 2 re-shown (hide=false, no integratedInto)',
+		s2.exists && s2.data()?.hide === false && !s2.data()?.integratedInto,
+	);
 
 	// --- Cleanup --------------------------------------------------------------
 	const cleanup = db.batch();
 	for (const id of [Q, MANUAL, M1, M2, SYNTH, S1, S2]) cleanup.delete(col.doc(id));
 	await cleanup.commit();
 
-	console.info(`\n${failures.length === 0 ? 'PASS ✅ — all assertions held' : `FAIL ❌ — ${failures.length} assertion(s) failed`}`);
+	console.info(
+		`\n${failures.length === 0 ? 'PASS ✅ — all assertions held' : `FAIL ❌ — ${failures.length} assertion(s) failed`}`,
+	);
 	process.exit(failures.length === 0 ? 0 : 1);
 }
 

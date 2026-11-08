@@ -13,6 +13,7 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { pingSurveyEntry } from '@/lib/utils/surveyEntryPing';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 export interface SwipeInterfaceWrapperProps {
   question: Statement;
@@ -21,6 +22,10 @@ export interface SwipeInterfaceWrapperProps {
   onComplete?: () => void;
   /** Survey context: used to stamp evaluations with a demographic anchor */
   surveyId?: string;
+  /** Position in a multi-question survey ("1) …"); omitted = no number */
+  questionNumber?: number;
+  /** Standalone page: the server found a survey that blocks participant options here */
+  blockedByServer?: boolean;
 }
 
 const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
@@ -29,6 +34,8 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
   mergedSettings,
   onComplete,
   surveyId,
+  questionNumber,
+  blockedByServer,
 }) => {
   const { t } = useTranslation();
   const { user, isLoading } = useAuth();
@@ -40,19 +47,18 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
     if (isLoading || viewRecordedRef.current) return;
     viewRecordedRef.current = true;
 
-    const viewerId = user?.uid || getOrCreateAnonymousUser();
-    fetch(`/api/statements/${question.statementId}/view`, {
+    participantFetch(`/api/statements/${question.statementId}/view`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: viewerId }),
+      body: JSON.stringify({}),
     }).catch(() => {
       // Non-blocking: view tracking must never disturb the flow
     });
 
     if (surveyId) {
-      pingSurveyEntry(surveyId, viewerId);
+      pingSurveyEntry(surveyId);
     }
-  }, [isLoading, user?.uid, question.statementId, surveyId]);
+  }, [isLoading, question.statementId, surveyId]);
 
   // Use shared anonymous user utility for consistent ID across modes
 
@@ -85,6 +91,8 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
       mergedSettings={mergedSettings}
       onComplete={onComplete}
       surveyId={surveyId}
+      questionNumber={questionNumber}
+      blockedByServer={blockedByServer}
     />
   );
 };

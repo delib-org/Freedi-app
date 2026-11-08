@@ -2,7 +2,7 @@
   // Typography
   font-size: 1rem;
   line-height: 1.7;
-  color: var(--text-body, #3d4d71);
+  color: var(--text-body, var(--mc-text-strong, #3d4d71));
   word-wrap: break-word;
   overflow-wrap: break-word;
 
@@ -12,7 +12,7 @@
     margin-bottom: 0.5em;
     font-weight: 600;
     line-height: 1.3;
-    color: var(--text-title, #1a2540);
+    color: var(--text-title, var(--mc-text-strong, #1a2540));
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
@@ -107,7 +107,7 @@
 
   // Links
   a {
-    color: var(--btn-primary, #5f88e5);
+    color: var(--btn-primary, var(--mc-brand-text, #5f88e5));
     text-decoration: none;
     word-break: break-word;
 
@@ -232,5 +232,33 @@
 
   em {
     font-style: italic;
+  }
+
+  // Coloured text: `(blue)…(/blue)` in the markdown, see remarkColorTags.
+  // Class names are global because remark emits them, not this module.
+  // Each colour is the theme's role for it, light literal as the fallback,
+  // so the text stays readable in dark and high-contrast modes.
+  :global(.md-color--blue) {
+    color: var(--mc-brand-text, #1d4ed8);
+  }
+
+  :global(.md-color--green) {
+    color: var(--mc-success-text, #15803d);
+  }
+
+  :global(.md-color--red) {
+    color: var(--mc-danger-text, #b91c1c);
+  }
+
+  :global(.md-color--orange) {
+    color: var(--mc-warning-text, #c2410c);
+  }
+
+  :global(.md-color--purple) {
+    color: var(--mc-accent-text, #6d28d9);
+  }
+
+  :global(.md-color--gray) {
+    color: var(--mc-text-muted, #64748b);
   }
 }

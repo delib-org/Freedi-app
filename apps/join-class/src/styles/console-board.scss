@@ -1,0 +1,426 @@
+// Teacher console partial: switch band, failure banner, board, table card. See console.scss for the shared tokens.
+
+// ---- band 2: switch ---------------------------------------------------------
+.switch-band {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  min-height: var(--switch-height);
+  padding: var(--space-xs) var(--space-md);
+  background: var(--paper);
+  border-block-end: 1px solid var(--paper-line);
+}
+
+.switch-band__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.switch-band__action {
+  min-height: 40px;
+
+  &--on {
+    color: var(--text-inverse);
+    background: var(--teal-600);
+    border-color: var(--teal-600);
+    opacity: 1;
+  }
+}
+
+// >>> allProposals BEGIN
+// "כל ההצעות": the live rated-everything line (IA 19.6).
+.switch-band__line {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+// >>> allProposals END
+
+// ---- "on the projector": the Opening step's choice (UX 14.E) -----------------
+.projector-pick {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-inline-size: 0;
+
+  &__label {
+    flex: 0 0 auto;
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    min-inline-size: 0;
+  }
+
+  &__item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    min-block-size: 40px;
+    max-inline-size: 14ch;
+    padding: 0 var(--space-md);
+    overflow: hidden;
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-full);
+    background: var(--paper);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--font-size-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    // on = ink fill and the screen shape before the words, so it reads without colour
+    &--on {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      font-weight: var(--font-weight-bold);
+      opacity: 1;
+    }
+
+    &--busy[aria-busy='true'] {
+      outline: 1.5px dashed var(--ink);
+      outline-offset: 2px;
+    }
+  }
+
+  &__mark {
+    flex: 0 0 auto;
+    inline-size: 12px;
+    block-size: 8px;
+    border: 1.5px solid currentColor;
+    border-radius: 1px;
+  }
+}
+
+.switch-band__segment {
+  display: inline-flex;
+  padding: 2px;
+  background: var(--bg-muted);
+  border-radius: var(--radius-full);
+}
+
+.switch-band__segment-btn {
+  min-height: 40px;
+  padding: 0 var(--space-lg);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  color: var(--ink-muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+
+  &--on {
+    color: var(--ink);
+    background: var(--bg-card);
+    box-shadow: var(--shadow-xs);
+  }
+}
+
+// ---- the count on the "what they wrote" switch (IA 24.4) ---------------------------------------------
+
+.switch-band__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: var(--space-lg);
+  margin-inline-start: var(--space-xs);
+  padding-inline: var(--space-xs);
+  border-radius: var(--radius-full);
+  background: var(--warning);
+  color: var(--text-inverse);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+// ---- failure ----------------------------------------------------------------
+.console__failure {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  color: var(--danger);
+  background: var(--terra-50);
+  border-block-end: 2px solid var(--terra-300);
+  font-weight: var(--font-weight-semibold);
+}
+
+// ---- band 3: board ----------------------------------------------------------
+.console__board {
+  flex: 1;
+  padding: var(--space-md);
+}
+
+.tables-board__live {
+  min-height: 1px;
+  font-size: var(--font-size-sm);
+  color: var(--ink-muted);
+}
+
+// "18 of 24 chose a side" and the "drag a name" hint: calm lines above the grid.
+.tables-board__sides-count,
+.tables-board__hint {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tables-board__sides-count {
+  color: var(--ink);
+  font-weight: var(--font-weight-bold);
+}
+
+.tables-board__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-width), 1fr));
+  gap: var(--space-md);
+}
+
+.roster-card,
+.gate-panel {
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-lg);
+}
+
+.gate-panel {
+  margin-block-start: var(--space-lg);
+}
+
+.roster-card__title,
+.gate-panel__title {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-size-lg);
+}
+
+.roster-card__empty,
+.gate-panel__empty,
+.written__empty {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.roster-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+// ---- unplaced strip ---------------------------------------------------------
+.unplaced {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  min-height: 56px;
+  margin-block-end: var(--space-md);
+  padding: var(--space-xs) var(--space-md);
+  background: var(--terra-50);
+  border-block-start: 2px solid var(--terra-300);
+  border-radius: var(--radius-md);
+}
+
+.unplaced__label {
+  font-weight: var(--font-weight-bold);
+}
+
+.unplaced__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.unplaced__select,
+.member-chip__select,
+.table-sheet__select {
+  min-height: 36px;
+  padding: 0 var(--space-sm);
+  font: inherit;
+  color: var(--ink);
+  background: var(--bg-card);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-full);
+}
+
+// ---- table card -------------------------------------------------------------
+.table-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-height: 232px;
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+
+  &--target {
+    border: 2px dashed var(--terra-500);
+
+    .table-card__title {
+      color: var(--terra-500);
+    }
+  }
+
+  &--over {
+    background: var(--terra-50);
+  }
+}
+
+.table-card__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.table-card__title {
+  color: var(--ink);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.table-card__turn {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--ink-muted);
+}
+
+.table-card__now,
+.table-card__timer,
+.table-card__asker {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.table-card__now {
+  font-weight: var(--font-weight-bold);
+}
+
+.table-card__timer {
+  font-variant-numeric: tabular-nums;
+
+  &--over {
+    color: var(--terra-600);
+    font-weight: var(--font-weight-bold);
+  }
+
+  // --ink-faint is page-background only (tokens): inside a card it fails contrast in dark mode.
+  &--none {
+    color: var(--ink-soft);
+  }
+}
+
+.table-card__bar {
+  height: 6px;
+  overflow: hidden;
+  background: var(--paper-deep);
+  border-radius: var(--radius-full);
+}
+
+.table-card__bar-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--terra-500);
+  border-radius: inherit;
+  transform: scaleX(var(--fill, 0));
+  transform-origin: inline-start;
+  transition: transform var(--dur-base) linear;
+}
+
+.table-card__asker {
+  color: var(--ink-muted);
+}
+
+// Table talk: the question being answered, one line.
+.table-card__question {
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// "Waiting for ..." with the time since the table last changed; a stuck table gets a clock glyph and a warning colour.
+.table-card__wait {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+
+  &--stuck {
+    color: var(--warning);
+    font-weight: var(--font-weight-bold);
+  }
+}
+
+.table-card__members {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: var(--space-xs);
+}
+
+.table-card__actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.table-card__quick {
+  min-height: 40px;
+  min-width: 72px;
+}
+
+.table-card__nd-open {
+  align-self: flex-start;
+  min-height: 40px;
+}
+
+.table-card__nd-form {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.table-card__nd-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 var(--space-sm);
+  font: inherit;
+  color: var(--ink);
+  background: var(--bg-input);
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-md);
+}
+
+// "Everyone has voted": a quiet status next to the vote actions (the teacher still closes).
+.switch-band__note {
+  margin: 0;
+  color: var(--teal-700);
+  font-weight: var(--font-weight-bold, 700);
+}

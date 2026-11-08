@@ -1,0 +1,16 @@
+{
+  "sourceRows": 896,
+  "eligible": 607,
+  "excluded": {
+    "moderatedNotApproved": 289,
+    "empty": 0,
+    "exactDuplicate": 0
+  },
+  "chars": {
+    "min": 19,
+    "median": 101,
+    "max": 228,
+    "total": 59786
+  },
+  "bankAllSha256": "6eae1f2e43cdf8854c179d2e5e3eb9dc7e6039d447bb383734a1bb30e42948cf"
+}

@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
 import { CampScale } from '../components/CampScale';
+import { ExplainHint } from '../components/ExplainHint';
 import { NeedsPeek } from '../components/NeedsBoard';
 import { saveCampPosition } from '../lib/teacher';
 import { AgoraParticipant, AgoraTopicPackage } from '@freedi/shared-types';
@@ -60,7 +61,12 @@ export function Positioning(): m.Component<PositioningAttrs> {
 			return m('.shell', [
 				m('.shell__content', { style: { justifyContent: 'center', gap: 'var(--space-xl)' } }, [
 					m('h2.text-center', t('positioning.title')),
-					catchUp ? m('p.home-explanation', t('positioning.catch_up')) : null,
+					catchUp
+						? m('.hint-line', [
+								m('p.home-explanation.hint-line__text', t('positioning.catch_up')),
+								m(ExplainHint, { text: t('positioning.why') }),
+							])
+						: null,
 					m('p.home-explanation', t('positioning.hint')),
 
 					m('.card.stack', [

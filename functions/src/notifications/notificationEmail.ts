@@ -12,6 +12,9 @@ import { logger } from 'firebase-functions/v1';
 import { SourceApp } from '@freedi/shared-types';
 import { getEmailTransporter } from '../utils/emailTransporter';
 
+/** Public home of Agora (the WizCol classroom app); AGORA_APP_URL overrides it */
+export const AGORA_DEFAULT_APP_URL = 'https://agora.wizcol.com';
+
 /**
  * Per-app base URLs for absolute links in emails. Env-overridable so each
  * deployment can point at the right host; the defaults are the public domains.
@@ -22,7 +25,7 @@ const APP_BASE_URLS: Record<SourceApp, string> = {
 	[SourceApp.SIGN]: process.env.SIGN_APP_URL || 'https://sign.freedi.tech',
 	[SourceApp.MASS_CONSENSUS]: process.env.MC_APP_URL || 'https://mc.freedi.tech',
 	[SourceApp.FLOW]: process.env.FLOW_APP_URL || 'https://flow.freedi.tech',
-	[SourceApp.AGORA]: process.env.AGORA_APP_URL || 'https://agora.freedi.tech',
+	[SourceApp.AGORA]: process.env.AGORA_APP_URL || AGORA_DEFAULT_APP_URL,
 	[SourceApp.JOIN]: process.env.JOIN_APP_URL || 'https://join.wizcol.com',
 	[SourceApp.ODYSSEY]: process.env.ODYSSEY_APP_URL || 'https://wizcol-od.web.app',
 };

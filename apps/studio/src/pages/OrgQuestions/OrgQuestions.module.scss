@@ -23,3 +23,71 @@
 	color: var(--text-error);
 	font-size: 0.875rem;
 }
+
+// ---- "Add an existing question" picker -------------------------------------
+
+.pickerList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	max-height: 16rem;
+	overflow-y: auto;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.pickerRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-sm);
+	width: 100%;
+	padding: 0.5rem 0.625rem;
+	border: 1px solid var(--border-light);
+	border-radius: 8px;
+	background: var(--card-default);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+
+	&:hover:not(:disabled) {
+		border-color: var(--btn-primary);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 1px;
+	}
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.6;
+	}
+}
+
+.pickerRowSelected {
+	border-color: var(--btn-primary);
+	box-shadow: inset 0 0 0 1px var(--btn-primary);
+}
+
+.pickerTitle {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text-title);
+}
+
+.pickerHint {
+	margin: 0;
+	font-size: var(--font-size-xs);
+	color: var(--text-meta);
+}
+
+.emptyLinks {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: 0.25rem var(--space-sm);
+	justify-content: center;
+}

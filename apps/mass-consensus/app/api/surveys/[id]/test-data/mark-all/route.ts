@@ -6,6 +6,7 @@ import {
   getRetroactiveTestDataCounts,
 } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { denySurveyPermission } from '@/lib/auth/surveyAccess';
 import { logger } from '@/lib/utils/logger';
 
 /**
@@ -30,18 +31,14 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
     }
 
-    // Verify user owns this survey
+    // Verify the caller may reach this survey
     const survey = await getSurveyById(surveyId);
     if (!survey) {
       return NextResponse.json({ error: 'Survey not found' }, { status: 404 });
     }
 
-    if (survey.creatorId !== userId) {
-      return NextResponse.json(
-        { error: 'You can only view pilot data for your own surveys' },
-        { status: 403 }
-      );
-    }
+    const denied0 = await denySurveyPermission(survey, userId, 'view');
+    if (denied0) return denied0;
 
     const counts = await getRetroactiveTestDataCounts(surveyId, survey.questionIds || []);
 
@@ -78,18 +75,14 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
     }
 
-    // Verify user owns this survey
+    // Verify the caller may reach this survey
     const survey = await getSurveyById(surveyId);
     if (!survey) {
       return NextResponse.json({ error: 'Survey not found' }, { status: 404 });
     }
 
-    if (survey.creatorId !== userId) {
-      return NextResponse.json(
-        { error: 'You can only mark pilot data for your own surveys' },
-        { status: 403 }
-      );
-    }
+    const denied1 = await denySurveyPermission(survey, userId, 'edit');
+    if (denied1) return denied1;
 
     const result = await markAllDataAsTestData(surveyId, survey.questionIds || []);
 
@@ -133,18 +126,14 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
     }
 
-    // Verify user owns this survey
+    // Verify the caller may reach this survey
     const survey = await getSurveyById(surveyId);
     if (!survey) {
       return NextResponse.json({ error: 'Survey not found' }, { status: 404 });
     }
 
-    if (survey.creatorId !== userId) {
-      return NextResponse.json(
-        { error: 'You can only unmark pilot data for your own surveys' },
-        { status: 403 }
-      );
-    }
+    const denied2 = await denySurveyPermission(survey, userId, 'edit');
+    if (denied2) return denied2;
 
     const result = await unmarkRetroactiveTestData(surveyId, survey.questionIds || []);
 

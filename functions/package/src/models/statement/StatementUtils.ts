@@ -2,7 +2,7 @@ import { Statement, StatementSchema } from './StatementTypes';
 import { StatementType } from '../TypeEnums';
 import { getRandomUID } from '../TypeUtils';
 import { StageSelectionType } from '../stage/stageTypes';
-import { parse, safeParse } from 'valibot';
+import { safeParse } from 'valibot';
 import { User } from '../user/User';
 import { Paragraph } from '../paragraph/paragraphModel';
 import { StatementSettings } from './StatementSettings';
@@ -120,12 +120,14 @@ export function createStatementObject(params: CreateStatementParams): Statement 
 		const result = safeParse(StatementSchema, newStatement);
 		if (!result.success) {
 			console.error('Statement validation failed:', result.issues);
+
 			return undefined;
 		}
 
 		return result.output;
 	} catch (error) {
 		console.error('Error creating statement object:', error);
+
 		return undefined;
 	}
 }

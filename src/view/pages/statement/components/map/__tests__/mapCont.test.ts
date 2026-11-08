@@ -23,6 +23,8 @@ interface MockStatement {
 	isCluster?: boolean;
 	derivedByPipeline?: 'synthesis' | 'topic-cluster';
 	integratedOptions?: string[];
+	hide?: boolean;
+	mergedInto?: string;
 }
 
 const QUESTION_ID = 'q1';
@@ -51,6 +53,103 @@ function findNode(node: Results, id: string): Results | null {
 
 	return null;
 }
+
+describe('resultsByParentId — retired clusters', () => {
+	/**
+	 * The theme sweeps retire a cluster by hiding it and emptying its members
+	 * (a merge donor keeps `mergedInto`, a split parent keeps `splitInto`).
+	 * Drawn, that is an empty box hanging off the question.
+	 */
+	it('does not draw a hidden, emptied cluster', () => {
+		const descendants = [
+			make({ statementId: 'o1' }),
+			make({
+				statementId: 'donor',
+				isCluster: true,
+				derivedByPipeline: 'topic-cluster',
+				integratedOptions: [],
+				hide: true,
+				mergedInto: 'survivor',
+			}),
+			make({
+				statementId: 'survivor',
+				isCluster: true,
+				derivedByPipeline: 'topic-cluster',
+				integratedOptions: ['o1'],
+			}),
+		];
+		const tree = resultsByParentId(question, descendants);
+
+		expect(childIds(tree)).toEqual(['survivor']);
+		expect(findNode(tree, 'donor')).toBeNull();
+	});
+});
+
+describe('resultsByParentId — hidden options', () => {
+	/**
+	 * Seen on WfkDISMmbduQ: originals already merged into a synth or theme are
+	 * hidden (`hide` + `mergedInto`) and no live cluster lists them any more.
+	 * Drawn, they land in the board's "Other ideas" as loose ideas — 17 on the
+	 * map against the 3 the shared rule (computeOtherIdeas) gives.
+	 */
+	it('does not draw a hidden merged-away option as a loose idea', () => {
+		const descendants = [
+			make({
+				statementId: 'theme',
+				isCluster: true,
+				derivedByPipeline: 'topic-cluster',
+				integratedOptions: ['synth'],
+			}),
+			make({
+				statementId: 'synth',
+				isCluster: true,
+				derivedByPipeline: 'synthesis',
+				integratedOptions: ['o1'],
+			}),
+			make({ statementId: 'o1' }),
+			make({ statementId: 'o2' }), // a live loose idea
+			make({ statementId: 'merged-away', hide: true, mergedInto: 'synth' }),
+		];
+		const tree = resultsByParentId(question, descendants);
+
+		expect(childIds(tree).sort()).toEqual(['o2', 'theme']);
+		expect(findNode(tree, 'merged-away')).toBeNull();
+	});
+
+	it('does not draw an admin-hidden plain option either', () => {
+		const descendants = [make({ statementId: 'o1', hide: true }), make({ statementId: 'o2' })];
+
+		expect(childIds(resultsByParentId(question, descendants))).toEqual(['o2']);
+	});
+
+	it('still nests a hidden original under the synth that lists it', () => {
+		const descendants = [
+			make({
+				statementId: 'synth',
+				isCluster: true,
+				derivedByPipeline: 'synthesis',
+				integratedOptions: ['o1', 'o2'],
+			}),
+			make({ statementId: 'o1', hide: true, mergedInto: 'synth' }),
+			make({ statementId: 'o2', hide: true, mergedInto: 'synth' }),
+		];
+		const tree = resultsByParentId(question, descendants);
+
+		expect(childIds(tree)).toEqual(['synth']);
+		expect(childIds(findNode(tree, 'synth') as Results).sort()).toEqual(['o1', 'o2']);
+	});
+
+	it('does not draw a hidden option nested under a hidden loose parent', () => {
+		const descendants = [
+			make({ statementId: 'o1', hide: true }),
+			make({ statementId: 'o1-child', parentId: 'o1' }),
+		];
+		const tree = resultsByParentId(question, descendants);
+
+		expect(childIds(tree)).toEqual([]);
+		expect(findNode(tree, 'o1-child')).toBeNull();
+	});
+});
 
 describe('resultsByParentId — cluster nesting', () => {
 	it('leaves a plain flat tree untouched', () => {

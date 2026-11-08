@@ -66,6 +66,10 @@ const now = Date.now();
 const topicPackage = {
 	topicPackageId: TOPIC_PACKAGE_ID,
 	creatorId: 'seed-teacher',
+	// Every e2e teacher starts lessons on this demo, and none of them is its
+	// author: a private scenario can only be run (and read) by its author, so
+	// the shared demo is public. With no `library` card it is still unlisted.
+	visibility: 'public',
 	topic: 'המהפכה הצרפתית',
 	language: 'he',
 	status: 'ready',

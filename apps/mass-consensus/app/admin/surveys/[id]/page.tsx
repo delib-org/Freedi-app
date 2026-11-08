@@ -26,7 +26,7 @@ export default async function EditSurveyPage({ params }: PageProps) {
   }
 
   return (
-    <div className="page" style={{ padding: '2rem' }}>
+    <div className="page">
       <SurveyEditView survey={survey} />
     </div>
   );

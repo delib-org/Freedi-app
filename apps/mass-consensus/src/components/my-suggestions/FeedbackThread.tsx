@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { CommentData } from '@/types/api';
-import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { logError } from '@/lib/utils/errorHandling';
 import styles from './FeedbackThread.module.scss';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 interface FeedbackThreadProps {
   statementId: string;
@@ -55,8 +55,7 @@ export default function FeedbackThread({ statementId, initialComments, totalComm
     setIsLoading(true);
 
     try {
-      const userId = getOrCreateAnonymousUser();
-      const response = await fetch(`/api/comments/${statementId}?userId=${encodeURIComponent(userId)}`);
+      const response = await participantFetch(`/api/comments/${statementId}`);
 
       if (response.ok) {
         const data = await response.json();

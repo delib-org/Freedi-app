@@ -18,7 +18,7 @@ import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { useComponentState } from './hooks/useComponentState';
 import { useStatementViewTracking } from '@/controllers/hooks/useStatementViewTracking';
 import { analyticsService } from '@/services/analytics';
-import { updateLastReadTimestamp } from '@/controllers/db/subscriptions/setSubscriptions';
+import { useMarkDiscussionRead } from './hooks/useMarkDiscussionRead';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { closePanels } from '@/controllers/hooks/panelUtils';
 
@@ -110,9 +110,16 @@ const StatementMain: React.FC = () => {
 	React.useEffect(() => {
 		if (statement && statementId && user?.uid) {
 			analyticsService.trackStatementView(statementId, 'direct');
-			updateLastReadTimestamp(statementId, user.uid);
 		}
 	}, [statementId, statement, user?.uid]);
+
+	// Mark as read on open, then only when newer content arrives (throttled)
+	useMarkDiscussionRead({
+		statementId,
+		userId: user?.uid,
+		isLoaded: Boolean(statement),
+		lastChildUpdate: statement?.lastChildUpdate,
+	});
 
 	// Reset new statement modal when component unmounts or navigating to a different statement
 	React.useEffect(() => {

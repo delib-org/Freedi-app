@@ -43,4 +43,50 @@ export {
 	createOdysseyJourneyId,
 } from './odysseyJourney';
 
-export type { MintAgoraHandoffResponse } from './odysseyCallables';
+export type {
+	MintAgoraHandoffResponse,
+	OdysseyTranslateGameRequest,
+	OdysseyTranslateGameResponse,
+} from './odysseyCallables';
+
+export type {
+	OdysseyTranslationLang,
+	OdysseyCompassQuestionTranslation,
+	OdysseyIslandTranslation,
+	OdysseyPartyTranslation,
+	OdysseyElderTranslation,
+	OdysseyGameTranslation,
+} from './odysseyTranslation';
+export {
+	ODYSSEY_TRANSLATIONS_SUBCOLLECTION,
+	ODYSSEY_TRANSLATION_LANGS,
+	OdysseyTranslationLangSchema,
+	OdysseyCompassQuestionTranslationSchema,
+	OdysseyIslandTranslationSchema,
+	OdysseyPartyTranslationSchema,
+	OdysseyElderValueTranslationSchema,
+	OdysseyElderTranslationSchema,
+	OdysseyGameTranslationSchema,
+	odysseyTranslationsPath,
+} from './odysseyTranslation';
+
+export type {
+	OdysseyFeedbackContext,
+	OdysseyFeedbackRequest,
+	OdysseyFeedback,
+	OdysseyFeedbackResponse,
+} from './odysseyFeedback';
+export {
+	ODYSSEY_FEEDBACK_DEFAULT_RECIPIENTS,
+	ODYSSEY_FEEDBACK_MESSAGE_MIN,
+	ODYSSEY_FEEDBACK_MESSAGE_MAX,
+	ODYSSEY_FEEDBACK_EMAIL_MAX,
+	ODYSSEY_FEEDBACK_CONTEXT_FIELD_MAX,
+	ODYSSEY_FEEDBACK_CONTEXT_SHORT_MAX,
+	ODYSSEY_FEEDBACK_PER_HOUR,
+	ODYSSEY_FEEDBACK_GLOBAL_PER_DAY,
+	ODYSSEY_FEEDBACK_GLOBAL_KEY,
+	OdysseyFeedbackContextSchema,
+	OdysseyFeedbackRequestSchema,
+	OdysseyFeedbackSchema,
+} from './odysseyFeedback';

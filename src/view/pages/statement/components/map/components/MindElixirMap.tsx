@@ -1,4 +1,12 @@
-import React, { useEffect, useRef, useCallback, useState, memo, useMemo } from 'react';
+import React, {
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useCallback,
+	useState,
+	memo,
+	useMemo,
+} from 'react';
 import MindElixir from 'mind-elixir';
 // Library CSS loads with this lazy chunk instead of the global stylesheet
 import 'mind-elixir/style.css';
@@ -40,6 +48,7 @@ import {
 import type { DropKind } from '../mapHelpers/moveBranch';
 import { FilterType } from '@/controllers/general/sorting';
 import PanZoomControls from './PanZoomControls';
+import { findMapRoot } from '../hooks/useMapFullScreen';
 import styles from './MindElixirMap.module.scss';
 import { logError } from '@/utils/errorHandling';
 import { useSelector } from 'react-redux';
@@ -65,6 +74,8 @@ interface Props {
 	level: MapDetailLevel;
 	/** Nodes the viewer opened past the level by hand. */
 	expandedIds: ReadonlySet<string>;
+	/** Nodes folded by hand although the level would open them. */
+	foldedIds?: ReadonlySet<string>;
 	/** Fired when the viewer opens/closes a node with MindElixir's own expander. */
 	onToggleExpanded: (id: string, expanded: boolean) => void;
 	/** Nodes to badge "includes yours" (merged ideas holding one of the viewer's originals). */
@@ -121,6 +132,7 @@ function MindElixirMap({
 	filterBy,
 	level,
 	expandedIds,
+	foldedIds,
 	onToggleExpanded,
 	markIds,
 	locateId,
@@ -154,6 +166,34 @@ function MindElixirMap({
 
 	// State for controls panel
 	const [isButtonVisible, setIsButtonVisible] = useState(false);
+	const layoutControlsRef = useRef<HTMLDivElement>(null);
+	const [layoutControlsRight, setLayoutControlsRight] = useState<number>();
+
+	// Keep the layout menu at the physical bottom-right of this map. The app's
+	// RTL sidebar changes the map's viewport edge, so a fixed CSS `right` value
+	// either covered the sidebar or collided with the bottom-left zoom controls.
+	useLayoutEffect(() => {
+		const root = findMapRoot(containerRef.current);
+		if (!root) return;
+
+		const updatePosition = () => {
+			setLayoutControlsRight(
+				Math.max(16, window.innerWidth - root.getBoundingClientRect().right + 16),
+			);
+		};
+		updatePosition();
+		window.addEventListener('resize', updatePosition);
+		document.addEventListener('fullscreenchange', updatePosition);
+		const resizeObserver =
+			typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(updatePosition);
+		resizeObserver?.observe(root);
+
+		return () => {
+			window.removeEventListener('resize', updatePosition);
+			document.removeEventListener('fullscreenchange', updatePosition);
+			resizeObserver?.disconnect();
+		};
+	}, []);
 
 	// Live zoom level (1 = 100%) shown in the floating zoom controls.
 	const [mapScale, setMapScale] = useState(1);
@@ -400,13 +440,24 @@ function MindElixirMap({
 		[t],
 	);
 
-	const data = useMemo(() => {
-		const leveled = applyDetailLevel(descendants, level, expandedIds);
+	// `signature` is everything MindElixir would draw. Most live updates (a vote
+	// moving consensus, a lastUpdate bump) touch fields the map never shows, and
+	// a refresh() rebuilds every node — on a phone that was ~100ms per update and
+	// dropped the selection. Taken here, before MindElixir adds `parent` back-links
+	// to the tree and makes it circular.
+	const { data, signature } = useMemo(() => {
+		const leveled = applyDetailLevel(descendants, level, expandedIds, foldedIds);
 		const filtered =
 			filterBy === FilterType.questionsResults ? filterDescendants(leveled) : leveled;
+		const built = filtered
+			? toMindElixirData(filtered, [], formatBadge, { boardMode, markIds })
+			: null;
 
-		return filtered ? toMindElixirData(filtered, [], formatBadge, { boardMode, markIds }) : null;
-	}, [descendants, filterBy, level, expandedIds, formatBadge, boardMode, markIds]);
+		return { data: built, signature: built ? JSON.stringify(built) : '' };
+	}, [descendants, filterBy, level, expandedIds, foldedIds, formatBadge, boardMode, markIds]);
+
+	// The signature MindElixir is currently showing.
+	const drawnSignatureRef = useRef('');
 
 	// Initialize MindElixir
 	useEffect(() => {
@@ -455,11 +506,9 @@ function MindElixirMap({
 				const targetScale = currentScale * (1 + delta);
 				const clampedScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, targetScale));
 				if (Math.abs(clampedScale - currentScale) < 0.001) return;
-				const containerRect = container.getBoundingClientRect();
-				mindRef.current.scale(clampedScale, {
-					x: e.clientX - containerRect.left,
-					y: e.clientY - containerRect.top,
-				});
+				// scale() wants viewport coordinates and subtracts the container
+				// offset itself.
+				mindRef.current.scale(clampedScale, { x: e.clientX, y: e.clientY });
 				setMapScale(clampedScale);
 			},
 			// Intercept operations before they happen
@@ -477,9 +526,13 @@ function MindElixirMap({
 
 		// Initialize with data
 		mind.init(data);
+		drawnSignatureRef.current = signature;
 
 		// Store reference
 		mindRef.current = mind;
+
+		let lastWidth = rect.width;
+		let lastHeight = rect.height;
 
 		// SIDE layout, but every first-level branch carries an explicit side (see
 		// `toMindElixirData`), so a map nobody has arranged still draws entirely
@@ -491,8 +544,35 @@ function MindElixirMap({
 				mindRef.current.initSide();
 				mindRef.current.scaleFit();
 				setMapScale(mindRef.current.scaleVal);
+				// The fit just used the current size; measure resizes from here.
+				const fitted = container.getBoundingClientRect();
+				lastWidth = fitted.width;
+				lastHeight = fitted.height;
 			}
 		}, 100);
+
+		// The canvas can change size after the first fit (side panel opening, the
+		// page below settling). Shift the map by half the size change so whatever
+		// the viewer is looking at stays centered, instead of sliding out of view.
+		const resizeObserver =
+			typeof ResizeObserver === 'undefined'
+				? undefined
+				: new ResizeObserver(() => {
+						const canvas = mindRef.current?.map;
+						if (!canvas) return;
+						const next = container.getBoundingClientRect();
+						const dx = (next.width - lastWidth) / 2;
+						const dy = (next.height - lastHeight) / 2;
+						lastWidth = next.width;
+						lastHeight = next.height;
+						if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+						canvas.style.transform = canvas.style.transform.replace(
+							/translate3d\(([-\d.]+)px,\s*([-\d.]+)px/,
+							(_match, x: string, y: string) =>
+								`translate3d(${parseFloat(x) + dx}px, ${parseFloat(y) + dy}px`,
+						);
+					});
+		resizeObserver?.observe(container);
 
 		// Event: Node selected
 		mind.bus.addListener('selectNewNode', (nodeObj: NodeObj) => {
@@ -944,13 +1024,10 @@ function MindElixirMap({
 
 			const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
 			const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-			const rect = container.getBoundingClientRect();
 
-			// scale() takes an ABSOLUTE target, zooming toward the pinch midpoint.
-			mindRef.current.scale(newScale, {
-				x: midX - rect.left,
-				y: midY - rect.top,
-			});
+			// scale() takes an ABSOLUTE target and viewport coordinates, zooming
+			// toward the pinch midpoint.
+			mindRef.current.scale(newScale, { x: midX, y: midY });
 			setMapScale(newScale);
 		};
 
@@ -979,6 +1056,7 @@ function MindElixirMap({
 			container.removeEventListener('touchmove', handleTouchMove);
 			container.removeEventListener('touchend', handleTouchEnd);
 			removeNodeButtons();
+			resizeObserver?.disconnect();
 			mind.destroy();
 			mindRef.current = null;
 		};
@@ -987,6 +1065,9 @@ function MindElixirMap({
 	// Update data when descendants change
 	useEffect(() => {
 		if (!mindRef.current || !data) return;
+
+		// Nothing the map draws has changed (see `signature`).
+		if (signature === drawnSignatureRef.current) return;
 
 		// Skip refresh if the user is currently editing a node inline.
 		// MindElixir creates div#input-box for inline editing; refresh would destroy it.
@@ -1005,6 +1086,7 @@ function MindElixirMap({
 			// If refresh fails, reinitialize
 			mindRef.current.init(data);
 		}
+		drawnSignatureRef.current = signature;
 
 		// Restore scale and position after refresh
 		if (currentScale && mindRef.current) {
@@ -1047,7 +1129,7 @@ function MindElixirMap({
 				}
 			}, 50);
 		}
-	}, [data, removeNodeButtons]);
+	}, [data, signature, removeNodeButtons]);
 
 	// A depth change redraws the tree; the toolbar may be pointing at a node
 	// that just folded away, so close it rather than leave it floating.
@@ -1165,6 +1247,8 @@ function MindElixirMap({
 			try {
 				const parsedData = JSON.parse(savedData);
 				mindRef.current.init(parsedData);
+				// The canvas no longer shows `data`; let the next update redraw it.
+				drawnSignatureRef.current = '';
 			} catch {
 				logError(new Error('Failed to restore mind map data'), {
 					operation: 'components.MindElixirMap.handleRestore',
@@ -1188,8 +1272,12 @@ function MindElixirMap({
 		const target = Math.min(SCALE_MAX, Math.max(SCALE_MIN, current * step));
 		if (Math.abs(target - current) < 0.001) return;
 		const rect = containerRef.current?.getBoundingClientRect();
-		// scale() takes an ABSOLUTE target; zoom around the viewport center.
-		mind.scale(target, rect ? { x: rect.width / 2, y: rect.height / 2 } : { x: 0, y: 0 });
+		// scale() takes an ABSOLUTE target and viewport coordinates (it subtracts
+		// the container offset itself); zoom around the container center.
+		mind.scale(
+			target,
+			rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : { x: 0, y: 0 },
+		);
 		setMapScale(target);
 	}, []);
 
@@ -1521,10 +1609,9 @@ function MindElixirMap({
 				</div>
 			)}
 
-			{/* Persistent zoom controls (bottom-start, clear of the FAB). */}
+			{/* Persistent map controls in the canvas's physical bottom-left corner. */}
 			<PanZoomControls
 				fixed
-				align="start"
 				scale={mapScale}
 				onZoomIn={handleZoomIn}
 				onZoomOut={handleZoomOut}
@@ -1532,12 +1619,17 @@ function MindElixirMap({
 			/>
 
 			{/* Controls Panel */}
-			<div className={styles.controlsPanel}>
+			<div
+				ref={layoutControlsRef}
+				className={styles.controlsPanel}
+				style={layoutControlsRight === undefined ? undefined : { right: layoutControlsRight }}
+			>
 				{!isButtonVisible ? (
 					<button
 						className={styles.mainButton}
 						onClick={() => setIsButtonVisible(true)}
-						aria-label={t('Menu')}
+						aria-label={t('Map layout')}
+						title={t('Map layout')}
 					>
 						<svg
 							width="24"
@@ -1553,6 +1645,7 @@ function MindElixirMap({
 							<line x1="3" y1="12" x2="21" y2="12" />
 							<line x1="3" y1="18" x2="21" y2="18" />
 						</svg>
+						<span className={styles.mainButtonLabel}>{t('Map layout')}</span>
 					</button>
 				) : (
 					<div className={styles.arcButtons}>

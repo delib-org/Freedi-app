@@ -114,6 +114,19 @@ const swipeSlice = createSlice({
       state.error = null;
     },
 
+    // An admin changed the picture on a card; keep both copies of it in step
+    cardImageUpdated: (
+      state,
+      action: PayloadAction<{ statementId: string; imagesURL: Statement['imagesURL'] }>
+    ) => {
+      const { statementId, imagesURL } = action.payload;
+      const card = state.cardStack.find((c) => c.statementId === statementId);
+      if (card) card.imagesURL = imagesURL;
+      if (state.currentCard?.statementId === statementId) {
+        state.currentCard.imagesURL = imagesURL;
+      }
+    },
+
     // Mark a card as evaluated
     cardEvaluated: (state, action: PayloadAction<{ statementId: string; rating: number }>) => {
       const { statementId, rating } = action.payload;
@@ -212,6 +225,7 @@ export const {
   setSocialActivities,
   addSocialActivity,
   setCardStack,
+  cardImageUpdated,
   cardEvaluated,
   proposalSubmitted,
   dismissProposalPrompt,

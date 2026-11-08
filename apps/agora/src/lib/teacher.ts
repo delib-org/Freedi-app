@@ -1,9 +1,21 @@
+import {
+	deleteField,
+	orderBy,
+	runTransaction,
+	startAfter,
+	type QueryDocumentSnapshot,
+	type DocumentData,
+} from 'firebase/firestore';
+import { t } from './i18n';
 import { parse } from 'valibot';
 import {
 	Collections,
 	AgoraCamp,
 	AgoraClassAggregate,
 	AgoraClassAggregateSchema,
+	AgoraClassSchema,
+	AgoraSchoolSchema,
+	AgoraIdentitySchema,
 	AgoraParticipant,
 	AgoraParticipantSchema,
 	AgoraSession,
@@ -12,8 +24,11 @@ import {
 	AgoraStudentAggregateSchema,
 	AgoraTopicPackage,
 	AgoraTopicPackageSchema,
+	AgoraYoutubeVideo,
+	AgoraThemeChoice,
 	VotingStageSettings,
 	AGORA_VOTING,
+	createAgoraParticipantId,
 	deriveCamp,
 } from '@freedi/shared-types';
 import type {
@@ -40,6 +55,9 @@ import {
 } from './firebase';
 import { trackWrite } from './confirmedWrite';
 import { teacherConsole } from './callables';
+import type { VillageCallPlace } from './flows/villageRoute';
+import { nextCallStamp } from './flows/summons';
+import { shouldClearLibraryVideo } from './flows/libraryVideo';
 
 /**
  * Everything the teacher and join screens ask of Firestore.
@@ -68,6 +86,29 @@ export async function findSessionByCode(code: string): Promise<AgoraSession | nu
 		console.error('[Teacher] Invalid session doc:', error);
 
 		return null;
+	}
+}
+
+/**
+ * Whether this login already holds a seat in the session. The join door asks
+ * it before asking anything else: a student who lands back on the door — a
+ * reload, a shared link, the "no seat" screen tapped on a blip — is walked
+ * straight back in, not asked for their name a second time.
+ *
+ * A failed read answers "no": the door then runs as it always did, and the
+ * join callable keeps one seat per login either way.
+ */
+export async function hasSeatInSession(sessionId: string, userId: string): Promise<boolean> {
+	try {
+		const snapshot = await getDoc(
+			doc(db, Collections.agoraParticipants, createAgoraParticipantId(sessionId, userId)),
+		);
+
+		return snapshot.exists();
+	} catch (error) {
+		console.error('[Join] Seat lookup failed:', error);
+
+		return false;
 	}
 }
 
@@ -217,6 +258,114 @@ export async function setVotingSettings(
 }
 
 /**
+ * The look the room wears by default. The teacher's to set, live: every phone
+ * that has not chosen a look of its own repaints on the next snapshot. The
+ * shape is pinned by the rules as well as the schema, because every client
+ * parses the session strictly and a malformed theme would brick the room.
+ */
+export async function setSessionTheme(sessionId: string, theme: AgoraThemeChoice): Promise<void> {
+	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
+		theme,
+		lastUpdate: Date.now(),
+	});
+}
+
+/** Who moves the class between the village's stations — the teacher's to switch, live */
+export async function setVillageNavigation(
+	sessionId: string,
+	villageNavigation: 'teacher' | 'free',
+): Promise<void> {
+	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
+		villageNavigation,
+		lastUpdate: Date.now(),
+	});
+}
+
+/** Whether the projector keeps a small join QR after the lobby — the teacher's to switch, live */
+export async function setProjectorQr(sessionId: string, projectorQr: boolean): Promise<void> {
+	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
+		projectorQr,
+		lastUpdate: Date.now(),
+	});
+}
+
+/**
+ * Walk every student's village to one place — the room's station, the
+ * council, or any opened station by name (`booth:<itemId>`, `library`). A
+ * timestamp rather than a flag, so calling the same place twice calls twice,
+ * and each phone acts once per call. Returns the stamp, so the console can
+ * tell its own call from one made on the teacher's other device.
+ */
+export async function callVillage(
+	sessionId: string,
+	place: VillageCallPlace,
+	/** The server time the room reached its station — the stamp never falls below it */
+	currentOpenedAt?: number,
+	/** Sending the class anywhere but the library ends the class's video */
+	clearVideo = false,
+): Promise<number> {
+	const at = nextCallStamp(Date.now(), currentOpenedAt);
+	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
+		villageCall: { place, at },
+		...(clearVideo ? { libraryVideo: deleteField() } : {}),
+		lastUpdate: at,
+	});
+
+	return at;
+}
+
+/**
+ * Start a library video for the whole class, and bring the class to the
+ * library with it: the same `villageCall` the move-class sheet writes, so
+ * every phone (village or flat) walks to the library item the room is on and
+ * the video plays there. The stage itself is never advanced from here.
+ *
+ * One stamp serves both fields, so each phone reacts once per start.
+ * `floorAt` is the highest stamp already in play (the station's opening time,
+ * the last call, the last video): the new one never falls below it. A
+ * student's own replay never writes any of this.
+ */
+export async function startLibraryVideo(
+	sessionId: string,
+	sceneId: string,
+	video: AgoraYoutubeVideo,
+	floorAt?: number,
+): Promise<number> {
+	const at = nextCallStamp(Date.now(), floorAt);
+	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
+		libraryVideo: {
+			sceneId,
+			videoId: video.videoId,
+			...(video.startSeconds ? { startSeconds: video.startSeconds } : {}),
+			at,
+		},
+		villageCall: { place: 'library', at },
+		lastUpdate: at,
+	});
+
+	return at;
+}
+
+/**
+ * End the class's library video. The class stays in the library and students
+ * may replay; the wall returns to the stage. Clears only what was started no
+ * later than this stop (see `shouldClearLibraryVideo`), so a start pressed on
+ * the teacher's other device a moment later is never undone by a late stop.
+ */
+export async function stopLibraryVideo(
+	sessionId: string,
+	stopAt: number = Date.now(),
+): Promise<void> {
+	const ref = doc(db, Collections.agoraSessions, sessionId);
+	await runTransaction(db, async (transaction) => {
+		const snapshot = await transaction.get(ref);
+		const existing = snapshot.data()?.libraryVideo as { at?: number } | undefined;
+		if (!shouldClearLibraryVideo(existing?.at, stopAt)) return;
+		transaction.update(ref, { libraryVideo: deleteField(), lastUpdate: stopAt });
+	});
+}
+
+/**
  * Where a student placed themselves between the two camps.
  *
  * The camp is derived here rather than taken from the caller, so the one rule
@@ -244,7 +393,7 @@ export async function saveCampPosition(
 // all. Wire payloads are valibot-parsed here; malformed entries are skipped —
 // one bad doc must not blank a dashboard.
 
-function parseEach<T>(rows: unknown[], parseRow: (data: unknown) => T, label: string): T[] {
+export function parseEach<T>(rows: unknown[], parseRow: (data: unknown) => T, label: string): T[] {
 	const parsed: T[] = [];
 	for (const row of rows) {
 		try {
@@ -263,13 +412,225 @@ const parseCareer = (data: unknown): AgoraStudentAggregate =>
 const parseParticipant = (data: unknown): AgoraParticipant => parse(AgoraParticipantSchema, data);
 
 export interface TeacherDashboard {
+	supervisedSchools: TeacherConsoleDashboard['supervisedSchools'];
+	isSystemAdmin: boolean;
 	classes: TeacherConsoleDashboard['classes'];
+	/** Where this teacher may open classes — empty means "ask your admin" */
+	schools: TeacherConsoleDashboard['schools'];
 	aggregates: Map<string, AgoraClassAggregate>;
 	sessions: AgoraSession[];
 }
 
-/** Everything the /teach dashboard shows, in one round trip. */
-export async function fetchTeacherDashboard(): Promise<TeacherDashboard> {
+export const EMPTY_DASHBOARD: TeacherDashboard = {
+	supervisedSchools: [],
+	isSystemAdmin: false,
+	classes: [],
+	schools: [],
+	aggregates: new Map(),
+	sessions: [],
+};
+
+/** Grades a teacher picks from; stored as the number, shown in the teacher's language */
+export const AGORA_GRADES: readonly string[] = [
+	'1',
+	'2',
+	'3',
+	'4',
+	'5',
+	'6',
+	'7',
+	'8',
+	'9',
+	'10',
+	'11',
+	'12',
+];
+
+/** A stored grade as the screen prints it — a picked grade by its name, anything else as typed */
+export function gradeLabel(gradeLevel: string | undefined): string {
+	const grade = (gradeLevel ?? '').trim();
+	if (!grade) return '';
+
+	return AGORA_GRADES.includes(grade) ? t(`grade.g${grade}`) : grade;
+}
+
+/** "ז' · 2" — the grade first, then the label the teacher gave the class */
+export function classLabel(agoraClass: { name: string; gradeLevel?: string }): string {
+	const grade = gradeLabel(agoraClass.gradeLevel);
+
+	return grade ? `${grade} · ${agoraClass.name}` : agoraClass.name;
+}
+
+/**
+ * The dashboard, read straight from Firestore by the teacher's own browser.
+ *
+ * Four queries on the channel the app already holds open, answered by the
+ * Firestore frontend — no function, and so no cold start. That is the whole
+ * point: `agoraTeacherConsole` shares an entry module with every other
+ * function in the codebase, and the first teacher after a quiet period was
+ * paying for all of it to load before being told the names of their classes.
+ *
+ * Every one of these is a `teacherMap.<uid> == true` equality except the
+ * sessions, which are already read this way by the archive panel below. The
+ * roster does NOT come this way and must not: member documents carry the
+ * students' PIN hashes, which is exactly why the console strips them.
+ */
+async function queryTeacherDashboard(uid: string): Promise<TeacherDashboard> {
+	const mine = (collectionName: string) =>
+		getDocs(query(collection(db, collectionName), where(`teacherMap.${uid}`, '==', true)));
+
+	const [classSnaps, schoolSnaps, aggregateSnaps, sessionSnaps, supervisedSnaps, userSnap] =
+		await Promise.all([
+			mine(Collections.agoraClasses),
+			mine(Collections.agoraSchools),
+			mine(Collections.agoraClassAggregates),
+			getDocs(
+				query(
+					collection(db, Collections.agoraSessions),
+					where('teacherId', '==', uid),
+					orderBy('createdAt', 'desc'),
+					limit(20),
+				),
+			),
+			// The schools this caller supervises — the "supervise" entry. Proved
+			// by the same equality constraint as teacherMap, on supervisorMap.
+			getDocs(
+				query(collection(db, Collections.agoraSchools), where(`supervisorMap.${uid}`, '==', true)),
+			),
+			// usersV2/{uid}.systemAdmin, as the console reads it
+			getDoc(doc(db, Collections.users, uid)),
+		]);
+	const activeSchools = (snaps: typeof schoolSnaps): TeacherConsoleDashboard['schools'] =>
+		parseEach(
+			snaps.docs.map((snap) => snap.data()),
+			(data: unknown) => parse(AgoraSchoolSchema, data),
+			'school',
+		)
+			.filter((school) => school.status === 'active')
+			.map((school) => ({ schoolId: school.schoolId, name: school.name }))
+			.sort((a, b) => a.name.localeCompare(b.name));
+
+	const classes = parseEach(
+		classSnaps.docs.map((snap) => snap.data()),
+		(data: unknown) => parse(AgoraClassSchema, data),
+		'class',
+	)
+		.filter((agoraClass) => agoraClass.status === 'active')
+		.sort((a, b) => a.name.localeCompare(b.name));
+
+	const aggregates = new Map<string, AgoraClassAggregate>();
+	for (const aggregate of parseEach(
+		aggregateSnaps.docs.map((snap) => snap.data()),
+		(data: unknown) => parse(AgoraClassAggregateSchema, data),
+		'class aggregate',
+	)) {
+		aggregates.set(aggregate.classId, aggregate);
+	}
+
+	return {
+		classes: classes.map((agoraClass) => ({
+			classId: agoraClass.classId,
+			name: agoraClass.name,
+			...(agoraClass.gradeLevel ? { gradeLevel: agoraClass.gradeLevel } : {}),
+			classCode: agoraClass.classCode,
+			memberCount: agoraClass.memberCount,
+			schoolId: agoraClass.schoolId,
+		})),
+		schools: activeSchools(schoolSnaps),
+		supervisedSchools: activeSchools(supervisedSnaps),
+		isSystemAdmin: userSnap.data()?.systemAdmin === true,
+		aggregates,
+		sessions: parseEach(
+			sessionSnaps.docs.map((snap) => snap.data()),
+			parseSession,
+			'session',
+		),
+	};
+}
+
+/**
+ * Everything the /teach dashboard shows.
+ *
+ * Read directly when it can be, through the console when it cannot. The
+ * fallback is not decoration: hosting and security rules deploy separately,
+ * so a browser can be running this code against rules that have not landed
+ * yet, and a teacher must not lose their classes over a deploy order. It is
+ * logged loudly, because the standing state of this is the fast path.
+ */
+export async function fetchTeacherDashboard(uid?: string): Promise<TeacherDashboard> {
+	if (uid) {
+		let direct: TeacherDashboard | null = null;
+		try {
+			direct = await queryTeacherDashboard(uid);
+		} catch (error) {
+			console.error('[Teacher] Reading the dashboard direct failed; asking the console:', error);
+		}
+		if (direct) {
+			const unindexed = classesMissingAggregates(
+				direct.classes,
+				direct.sessions,
+				direct.aggregates,
+			);
+			if (unindexed.length === 0) return direct;
+
+			// The query answered, but it can only see aggregates that carry
+			// `teacherMap`. One written before the field existed is simply absent
+			// — the class reads "no games yet" over a history it has — until the
+			// backfill script runs. The console reads by id and sees them all.
+			console.error(
+				'[Teacher] Class aggregates missing from the direct read (teacherMap not backfilled?); asking the console for advancement:',
+				{ uid, classIds: unindexed },
+			);
+			try {
+				const fromConsole = await fetchConsoleDashboard();
+
+				return {
+					...direct,
+					aggregates: new Map([...direct.aggregates, ...fromConsole.aggregates]),
+				};
+			} catch (error) {
+				console.error('[Teacher] Asking the console for advancement failed:', error);
+
+				return direct;
+			}
+		}
+	}
+
+	return fetchConsoleDashboard();
+}
+
+/**
+ * The classes whose advancement the direct read cannot be trusted on: a game
+ * of theirs has been folded into an aggregate (`aggregatedAt` on the session),
+ * yet no aggregate came back for them. That is the signature of an aggregate
+ * written before `teacherMap` existed — invisible to the equality query, not
+ * missing from the database. Only the sessions on hand are consulted, so it is
+ * a tripwire, not a census.
+ */
+export function classesMissingAggregates(
+	classes: ReadonlyArray<{ classId: string }>,
+	sessions: ReadonlyArray<Pick<AgoraSession, 'classId' | 'aggregatedAt'>>,
+	aggregates: ReadonlyMap<string, unknown>,
+): string[] {
+	const mine = new Set(classes.map((agoraClass) => agoraClass.classId));
+	const missing = new Set<string>();
+	for (const session of sessions) {
+		const { classId } = session;
+		if (
+			classId &&
+			session.aggregatedAt !== undefined &&
+			mine.has(classId) &&
+			!aggregates.has(classId)
+		) {
+			missing.add(classId);
+		}
+	}
+
+	return [...missing];
+}
+
+/** The dashboard as the `agoraTeacherConsole` callable serves it */
+async function fetchConsoleDashboard(): Promise<TeacherDashboard> {
 	const data = (await teacherConsole({ view: 'dashboard' })) as TeacherConsoleDashboard;
 	const aggregates = new Map<string, AgoraClassAggregate>();
 	for (const [classId, aggregate] of Object.entries(data.aggregates ?? {})) {
@@ -282,6 +643,9 @@ export async function fetchTeacherDashboard(): Promise<TeacherDashboard> {
 
 	return {
 		classes: data.classes ?? [],
+		supervisedSchools: data.supervisedSchools ?? [],
+		isSystemAdmin: data.isSystemAdmin ?? false,
+		schools: data.schools ?? [],
 		aggregates,
 		sessions: parseEach(data.sessions ?? [], parseSession, 'session'),
 	};
@@ -293,6 +657,8 @@ export interface TeacherClassDetail {
 	gradeLevel?: string;
 	classCode: string;
 	schoolName: string;
+	/** Every teacher on the class — the reader is one of them */
+	teachers: TeacherConsoleClassDetail['teachers'];
 	members: TeacherConsoleMember[];
 	careers: Map<string, AgoraStudentAggregate>;
 	aggregate: AgoraClassAggregate | null;
@@ -328,6 +694,7 @@ export async function fetchTeacherClass(classId: string): Promise<TeacherClassDe
 		gradeLevel: data.gradeLevel,
 		classCode: data.classCode,
 		schoolName: data.schoolName,
+		teachers: data.teachers ?? [],
 		members: data.members ?? [],
 		careers,
 		aggregate,
@@ -339,6 +706,8 @@ export interface SessionReport {
 	session: AgoraSession;
 	/** Students only — AI raters filtered out */
 	participants: AgoraParticipant[];
+	/** userId → the real name typed at the door; empty when nobody gave one */
+	realNames: Record<string, string>;
 }
 
 /** One finished game, read once — the report screen holds no listeners. */
@@ -355,5 +724,32 @@ export async function fetchSessionReport(sessionId: string): Promise<SessionRepo
 	return {
 		session: parse(AgoraSessionSchema, data.session),
 		participants: parseEach(data.participants ?? [], parseParticipant, 'participant'),
+		realNames: Object.fromEntries(
+			parseEach(data.identities ?? [], (row) => parse(AgoraIdentitySchema, row), 'identity').map(
+				(identity) => [identity.userId, identity.realName],
+			),
+		),
+	};
+}
+
+/** Cursor pagination retains access to all past lessons without filling the dashboard. */
+export async function fetchSessionHistory(
+	uid: string,
+	cursor?: QueryDocumentSnapshot<DocumentData>,
+) {
+	const snap = await getDocs(
+		query(
+			collection(db, Collections.agoraSessions),
+			where('teacherId', '==', uid),
+			orderBy('createdAt', 'desc'),
+			...(cursor ? [startAfter(cursor)] : []),
+			limit(25),
+		),
+	);
+
+	return {
+		sessions: snap.docs.map((d) => parse(AgoraSessionSchema, d.data())),
+		cursor: snap.empty ? undefined : snap.docs[snap.docs.length - 1],
+		hasMore: snap.size === 25,
 	};
 }

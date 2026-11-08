@@ -16,6 +16,7 @@ import { NotificationFrequency } from '../engagement/NotificationFrequency';
 import { BranchPreferenceSchema } from '../engagement/EngagementModel';
 import { StatementSchema } from './StatementTypes';
 import { SimpleStatementSchema } from './SimpleStatement';
+import { ClassSubscriptionFieldsSchema } from '../classroom/classroomModel';
 
 export const StatementSubscriptionSchema = object({
 	role: enum_(Role),
@@ -56,11 +57,19 @@ export const StatementSubscriptionSchema = object({
 	// back to `openedInJoin` desc.
 	openedInJoin: optional(number()),
 	joinOrder: optional(number()),
+	// join-class — the same idea for the classroom app: epoch-ms when the
+	// teacher last created/opened this lesson there. Kept apart from
+	// `openedInJoin` so a Join workspace never shows up as a lesson (and the
+	// other way round). Presence (>0) lists the lesson on the teacher's home.
+	openedInClass: optional(number()),
 
 	// WizCol Studio — consultant tenant of the subscribed statement, copied
 	// onto materialized org-admin subscriptions so an org's roster can be
 	// queried without joining through /statements.
 	organizationId: optional(string()),
+
+	// join-class: side / camp / decisionSupport (student-written), tableId (server-written)
+	...ClassSubscriptionFieldsSchema,
 });
  
 export type StatementSubscription = InferOutput<
@@ -88,8 +97,11 @@ export const WaitingMemberSchema = object({
 	// Spread all properties from the original schema
 	...StatementSubscriptionSchema.entries,
 
-	// Add your new property
-	adminId: string(), // or any other valibot validator
+	// Legacy entries named one admin; entries written since the N×M fix carry
+	// every admin of the top parent (fn_subscriptions). Both are optional so an
+	// entry of either shape parses.
+	adminId: optional(string()),
+	adminIds: optional(array(string())),
 });
 
 export type WaitingMember = InferOutput<

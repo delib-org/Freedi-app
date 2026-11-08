@@ -17,7 +17,7 @@ export const NotificationSchema = object({
 	notificationId: string(),
 	readAt: optional(number()),
 	viewedInList: optional(boolean()),
-	viewedInContext: optional(boolean())
+	viewedInContext: optional(boolean()),
 });
 
 export type NotificationType = InferOutput<typeof NotificationSchema>;
@@ -25,15 +25,15 @@ export type NotificationType = InferOutput<typeof NotificationSchema>;
 export enum ReadContext {
 	LIST = 'list',
 	CHAT = 'chat',
-	STATEMENT = 'statement'
-};
+	STATEMENT = 'statement',
+}
 
 export const NotificationReadStatusSchema = object({
 	userId: string(),
 	notificationId: string(),
 	statementId: string(),
 	readAt: number(),
-	readContext: enum_(ReadContext)
+	readContext: enum_(ReadContext),
 });
 
 export type NotificationReadStatusType = InferOutput<typeof NotificationReadStatusSchema>;

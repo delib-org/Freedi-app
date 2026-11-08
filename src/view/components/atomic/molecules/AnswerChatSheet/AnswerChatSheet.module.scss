@@ -1,0 +1,315 @@
+// AnswerChatSheet — the per-answer thread. Bottom sheet (78% of the viewport)
+// on phones, a centred dialog from tablet up. Logical properties throughout:
+// the bubble's small corner sits on the START side (right in RTL, left in LTR).
+
+.root {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+}
+
+.backdrop {
+	position: absolute;
+	inset: 0;
+	background: var(--scrim);
+	animation: fadeIn var(--motion-base) var(--motion-ease) both;
+}
+
+.panel {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	inline-size: 100%;
+	block-size: 78dvh;
+	padding: 0.875rem 1.25rem calc(1rem + env(safe-area-inset-bottom, 0px));
+	box-sizing: border-box;
+	background: var(--bg-page);
+	color: var(--text-body);
+	border-start-start-radius: var(--radius-sheet);
+	border-start-end-radius: var(--radius-sheet);
+	box-shadow: var(--shadow-sheet);
+	outline: none;
+	animation: sheetIn var(--level-duration) var(--level-ease) both;
+}
+
+.handle {
+	flex: none;
+	align-self: center;
+	inline-size: 2.5rem;
+	block-size: 0.25rem;
+	border-radius: 0.125rem;
+	background: var(--border-subtle);
+}
+
+.header {
+	flex: none;
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.625rem;
+}
+
+.heading {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.1875rem;
+}
+
+.eyebrow {
+	font-size: var(--eyebrow-size);
+	font-weight: 600;
+	letter-spacing: var(--eyebrow-tracking);
+	color: var(--text-meta);
+}
+
+.title {
+	margin: 0;
+	font-size: 0.90625rem;
+	font-weight: 600;
+	line-height: 1.4;
+	color: var(--text-title);
+	text-align: start;
+	overflow-wrap: anywhere;
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.close {
+	flex: none;
+	min-height: var(--tap-min);
+	padding-inline: 0.5rem;
+	border: 0;
+	border-radius: var(--radius-chip);
+	background: transparent;
+	color: var(--text-meta);
+	font: inherit;
+	font-size: 0.8125rem;
+	cursor: pointer;
+
+	&:hover {
+		color: var(--text-title);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+}
+
+.list {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding-block: 0.25rem;
+}
+
+.empty {
+	margin: auto 0;
+	text-align: center;
+	font-size: 0.8125rem;
+	color: var(--text-meta);
+}
+
+.message {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.625rem;
+}
+
+.avatar {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 2rem;
+	block-size: 2rem;
+	border-radius: 50%;
+	overflow: hidden;
+	font-size: 0.78125rem;
+	font-weight: 600;
+
+	img {
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: cover;
+	}
+
+	&--lilac {
+		background: var(--tone-lilac);
+		color: var(--tone-lilac-ink);
+	}
+
+	&--mint {
+		background: var(--tone-mint);
+		color: var(--tone-mint-ink);
+	}
+
+	&--yellow {
+		background: var(--tone-yellow);
+		color: var(--tone-yellow-ink);
+	}
+
+	&--sunken {
+		background: var(--tone-sunken);
+		color: var(--tone-sunken-ink);
+	}
+}
+
+.messageBody {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.messageMeta {
+	font-size: 0.71875rem;
+	color: var(--text-meta);
+	text-align: start;
+}
+
+.messageNew {
+	color: var(--badge-unread);
+	font-weight: 600;
+}
+
+.bubble {
+	align-self: flex-start;
+	max-inline-size: 100%;
+	padding: 0.625rem 0.875rem;
+	border: 1px solid var(--border-subtle);
+	border-radius: 1.125rem;
+	border-start-start-radius: 0.25rem;
+	background: var(--card-default);
+	font-size: 0.875rem;
+	line-height: var(--line-height-card);
+	text-align: start;
+	overflow-wrap: anywhere;
+}
+
+.bubbleText,
+.bubbleDescription {
+	margin: 0;
+	white-space: pre-line;
+}
+
+.bubbleDescription {
+	margin-block-start: 0.25rem;
+	color: var(--text-meta);
+}
+
+.composer {
+	flex: none;
+	display: flex;
+	gap: 0.5rem;
+}
+
+.input {
+	flex: 1;
+	min-width: 0;
+	min-height: var(--tap-min);
+	padding-inline: 1rem;
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-chip);
+	background: var(--card-default);
+	color: var(--text-title);
+	font: inherit;
+	font-size: 0.875rem;
+
+	&::placeholder {
+		color: var(--text-faint);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 1px;
+	}
+}
+
+.send {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: var(--tap-min);
+	block-size: var(--tap-min);
+	border: 0;
+	border-radius: 50%;
+	background: var(--nav-floating-bg);
+	color: var(--nav-floating-ink);
+	cursor: pointer;
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+}
+
+// The arrow points toward the start edge (forward in RTL); mirror it in LTR.
+.root[dir='ltr'] .sendIcon {
+	transform: scaleX(-1);
+}
+
+@media (min-width: 601px) {
+	.root {
+		align-items: center;
+		padding: 1.5rem;
+	}
+
+	.panel {
+		inline-size: min(36rem, 100%);
+		block-size: min(78dvh, 44rem);
+		border-radius: var(--radius-sheet);
+		animation-name: dialogIn;
+	}
+
+	.handle {
+		display: none;
+	}
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+}
+
+@keyframes sheetIn {
+	from {
+		transform: translateY(100%);
+	}
+}
+
+@keyframes dialogIn {
+	from {
+		opacity: 0;
+		transform: translateY(1rem) scale(0.98);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.backdrop,
+	.panel {
+		animation: none;
+	}
+}

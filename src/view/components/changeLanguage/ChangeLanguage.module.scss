@@ -5,12 +5,13 @@
 	min-width: 12.5rem;
 	max-width: 16rem;
 	padding: 0.375rem;
-	background-color: var(--card-default);
-	border: 1px solid var(--border-light);
+	background-color: var(--space-surface, var(--card-default));
+	color: var(--space-ink, var(--text-body));
+	border: 1px solid var(--space-line, var(--border-light));
 	border-radius: 0.75rem;
 	box-shadow:
-		0px 8px 16px rgba(38, 56, 84, 0.12),
-		0px 16px 32px rgba(38, 56, 84, 0.08);
+		0 8px 18px color-mix(in srgb, var(--space-ink, #263854) 16%, transparent),
+		0 20px 42px color-mix(in srgb, var(--space-ink, #263854) 12%, transparent);
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
@@ -39,7 +40,7 @@
 	border: none;
 	border-radius: 0.5rem;
 	background: transparent;
-	color: var(--text-body);
+	color: var(--space-ink, var(--text-body));
 	font-family: 'Open Sans', sans-serif;
 	font-size: 0.9375rem;
 	font-weight: 500;
@@ -58,8 +59,8 @@
 }
 
 .selected {
-	background-color: rgba(95, 136, 229, 0.1);
-	color: var(--btn-primary);
+	background-color: color-mix(in srgb, var(--space-ink, var(--btn-primary)) 12%, transparent);
+	color: var(--space-ink, var(--text-body));
 	font-weight: 600;
 }
 
@@ -76,7 +77,7 @@
 }
 
 .check {
-	color: var(--btn-primary);
+	color: var(--space-ink, var(--btn-primary));
 	font-weight: 700;
 	margin-inline-start: 0.5rem;
 }

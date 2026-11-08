@@ -1,0 +1,731 @@
+{
+  "synths": {
+    "items": [
+      {
+        "id": "syn001",
+        "title": "Neighborhood primary-care clinics",
+        "members": [
+          {
+            "id": "s051"
+          },
+          {
+            "id": "s052"
+          }
+        ]
+      },
+      {
+        "id": "syn002",
+        "title": "Improved street lighting",
+        "members": [
+          {
+            "id": "s031"
+          },
+          {
+            "id": "s032"
+          }
+        ]
+      },
+      {
+        "id": "syn003",
+        "title": "Library branch in every neighborhood",
+        "members": [
+          {
+            "id": "s073"
+          },
+          {
+            "id": "s074"
+          }
+        ]
+      },
+      {
+        "id": "syn004",
+        "title": "Free early-detection health screenings",
+        "members": [
+          {
+            "id": "s057"
+          },
+          {
+            "id": "s058"
+          }
+        ]
+      },
+      {
+        "id": "syn005",
+        "title": "Low-interest small-business loans",
+        "members": [
+          {
+            "id": "s062"
+          },
+          {
+            "id": "s061"
+          }
+        ]
+      },
+      {
+        "id": "syn006",
+        "title": "Real-time transit arrival app",
+        "members": [
+          {
+            "id": "s010"
+          },
+          {
+            "id": "s009"
+          }
+        ]
+      },
+      {
+        "id": "syn007",
+        "title": "Subsidized coworking spaces",
+        "members": [
+          {
+            "id": "s069"
+          },
+          {
+            "id": "s070"
+          }
+        ]
+      },
+      {
+        "id": "syn008",
+        "title": "Shorter specialist appointment waits",
+        "members": [
+          {
+            "id": "s055"
+          },
+          {
+            "id": "s056"
+          }
+        ]
+      },
+      {
+        "id": "syn009",
+        "title": "Affordable housing requirements in new construction",
+        "members": [
+          {
+            "id": "s011"
+          },
+          {
+            "id": "s012"
+          }
+        ]
+      },
+      {
+        "id": "syn010",
+        "title": "Solar panels on public buildings",
+        "members": [
+          {
+            "id": "s083"
+          },
+          {
+            "id": "s084"
+          }
+        ]
+      },
+      {
+        "id": "syn011",
+        "title": "Free public Wi-Fi",
+        "members": [
+          {
+            "id": "s093"
+          },
+          {
+            "id": "s094"
+          }
+        ]
+      },
+      {
+        "id": "syn012",
+        "title": "Free mental-health counseling",
+        "members": [
+          {
+            "id": "s053"
+          },
+          {
+            "id": "s054"
+          }
+        ]
+      },
+      {
+        "id": "syn013",
+        "title": "Simplified business licensing",
+        "members": [
+          {
+            "id": "s065"
+          },
+          {
+            "id": "s066"
+          }
+        ]
+      },
+      {
+        "id": "syn014",
+        "title": "Local hiring by city contractors",
+        "members": [
+          {
+            "id": "s067"
+          },
+          {
+            "id": "s068"
+          }
+        ]
+      },
+      {
+        "id": "syn015",
+        "title": "Career retraining programs",
+        "members": [
+          {
+            "id": "s063"
+          },
+          {
+            "id": "s064"
+          }
+        ]
+      },
+      {
+        "id": "syn016",
+        "title": "Community vegetable gardens",
+        "members": [
+          {
+            "id": "s025"
+          },
+          {
+            "id": "s026"
+          }
+        ]
+      },
+      {
+        "id": "syn017",
+        "title": "Protected bike lanes",
+        "members": [
+          {
+            "id": "s003"
+          },
+          {
+            "id": "s004"
+          }
+        ]
+      },
+      {
+        "id": "syn018",
+        "title": "Weekend night transit",
+        "members": [
+          {
+            "id": "s007"
+          },
+          {
+            "id": "s008"
+          }
+        ]
+      },
+      {
+        "id": "syn019",
+        "title": "Neighborhood dog-run areas",
+        "members": [
+          {
+            "id": "s030"
+          },
+          {
+            "id": "s029"
+          }
+        ]
+      },
+      {
+        "id": "syn020",
+        "title": "More frequent rush-hour buses",
+        "members": [
+          {
+            "id": "s001"
+          },
+          {
+            "id": "s002"
+          }
+        ]
+      },
+      {
+        "id": "syn021",
+        "title": "Free after-school tutoring",
+        "members": [
+          {
+            "id": "s045"
+          },
+          {
+            "id": "s046"
+          }
+        ]
+      },
+      {
+        "id": "syn022",
+        "title": "Energy-efficiency upgrades for old apartments",
+        "members": [
+          {
+            "id": "s018"
+          },
+          {
+            "id": "s017"
+          }
+        ]
+      },
+      {
+        "id": "syn023",
+        "title": "Weekly curbside recycling collection",
+        "members": [
+          {
+            "id": "s081"
+          },
+          {
+            "id": "s082"
+          }
+        ]
+      },
+      {
+        "id": "syn024",
+        "title": "More local emergency-service stations",
+        "members": [
+          {
+            "id": "s038"
+          },
+          {
+            "id": "s037"
+          }
+        ]
+      },
+      {
+        "id": "syn025",
+        "title": "Ban single-use plastics",
+        "members": [
+          {
+            "id": "s085"
+          },
+          {
+            "id": "s086"
+          }
+        ]
+      },
+      {
+        "id": "syn026",
+        "title": "Public art by local artists",
+        "members": [
+          {
+            "id": "s077"
+          },
+          {
+            "id": "s078"
+          }
+        ]
+      },
+      {
+        "id": "syn027",
+        "title": "Traffic calming near schools",
+        "members": [
+          {
+            "id": "s033"
+          },
+          {
+            "id": "s034"
+          }
+        ]
+      },
+      {
+        "id": "syn028",
+        "title": "More street shade trees",
+        "members": [
+          {
+            "id": "s024"
+          },
+          {
+            "id": "s023"
+          }
+        ]
+      },
+      {
+        "id": "syn029",
+        "title": "Separate food-scrap compost collection",
+        "members": [
+          {
+            "id": "s087"
+          },
+          {
+            "id": "s088"
+          }
+        ]
+      },
+      {
+        "id": "syn030",
+        "title": "Neighborhood beat officers",
+        "members": [
+          {
+            "id": "s035"
+          },
+          {
+            "id": "s036"
+          }
+        ]
+      },
+      {
+        "id": "syn031",
+        "title": "Expanded in-home senior care",
+        "members": [
+          {
+            "id": "s059"
+          },
+          {
+            "id": "s060"
+          }
+        ]
+      },
+      {
+        "id": "syn032",
+        "title": "Free school meals",
+        "members": [
+          {
+            "id": "s050"
+          },
+          {
+            "id": "s049"
+          }
+        ]
+      },
+      {
+        "id": "syn033",
+        "title": "Online municipal procedures",
+        "members": [
+          {
+            "id": "s091"
+          },
+          {
+            "id": "s092"
+          }
+        ]
+      },
+      {
+        "id": "syn034",
+        "title": "Subsidized student housing near campuses",
+        "members": [
+          {
+            "id": "s020"
+          },
+          {
+            "id": "s019"
+          }
+        ]
+      },
+      {
+        "id": "syn035",
+        "title": "Nearby green parks for every resident",
+        "members": [
+          {
+            "id": "s021"
+          },
+          {
+            "id": "s022"
+          }
+        ]
+      },
+      {
+        "id": "syn036",
+        "title": "Modernized school facilities",
+        "members": [
+          {
+            "id": "s047"
+          },
+          {
+            "id": "s048"
+          }
+        ]
+      },
+      {
+        "id": "syn037",
+        "title": "Public rent registry",
+        "members": [
+          {
+            "id": "s014"
+          },
+          {
+            "id": "s013"
+          }
+        ]
+      },
+      {
+        "id": "syn038",
+        "title": "Regular outdoor festivals and concerts",
+        "members": [
+          {
+            "id": "s076"
+          },
+          {
+            "id": "s075"
+          }
+        ]
+      },
+      {
+        "id": "syn039",
+        "title": "Accessible playgrounds",
+        "members": [
+          {
+            "id": "s027"
+          },
+          {
+            "id": "s028"
+          }
+        ]
+      },
+      {
+        "id": "syn040",
+        "title": "Security cameras at crime hotspots",
+        "members": [
+          {
+            "id": "s039"
+          },
+          {
+            "id": "s040"
+          }
+        ]
+      },
+      {
+        "id": "syn041",
+        "title": "In-person help with online city services",
+        "members": [
+          {
+            "id": "s096"
+          },
+          {
+            "id": "s095"
+          }
+        ]
+      },
+      {
+        "id": "syn042",
+        "title": "Higher teacher salaries",
+        "members": [
+          {
+            "id": "s043"
+          },
+          {
+            "id": "s044"
+          }
+        ]
+      },
+      {
+        "id": "syn043",
+        "title": "Free public transit for school-age children",
+        "members": [
+          {
+            "id": "s006"
+          },
+          {
+            "id": "s005"
+          }
+        ]
+      },
+      {
+        "id": "syn044",
+        "title": "Free music lessons for children",
+        "members": [
+          {
+            "id": "s080"
+          },
+          {
+            "id": "s079"
+          }
+        ]
+      },
+      {
+        "id": "syn045",
+        "title": "Public open-data and budget portal",
+        "members": [
+          {
+            "id": "s098"
+          },
+          {
+            "id": "s097"
+          }
+        ]
+      },
+      {
+        "id": "syn046",
+        "title": "Convert vacant offices to housing",
+        "members": [
+          {
+            "id": "s015"
+          },
+          {
+            "id": "s016"
+          }
+        ]
+      },
+      {
+        "id": "syn047",
+        "title": "Public real-time air-quality monitoring",
+        "members": [
+          {
+            "id": "s090"
+          },
+          {
+            "id": "s089"
+          }
+        ]
+      },
+      {
+        "id": "syn048",
+        "title": "Weekly free museum admission",
+        "members": [
+          {
+            "id": "s072"
+          },
+          {
+            "id": "s071"
+          }
+        ]
+      },
+      {
+        "id": "syn049",
+        "title": "Smaller class sizes",
+        "members": [
+          {
+            "id": "s041"
+          },
+          {
+            "id": "s042"
+          }
+        ]
+      },
+      {
+        "id": "syn050",
+        "title": "Unified municipal service hotline",
+        "members": [
+          {
+            "id": "s099"
+          },
+          {
+            "id": "s100"
+          }
+        ]
+      }
+    ]
+  },
+  "topicClusters": {
+    "items": [
+      {
+        "id": "top001",
+        "title": "Healthcare and senior support",
+        "members": [],
+        "memberSynthIds": [
+          "syn001",
+          "syn004",
+          "syn008",
+          "syn012",
+          "syn031"
+        ]
+      },
+      {
+        "id": "top002",
+        "title": "Transport and road safety",
+        "members": [],
+        "memberSynthIds": [
+          "syn006",
+          "syn017",
+          "syn018",
+          "syn020",
+          "syn027",
+          "syn043"
+        ]
+      },
+      {
+        "id": "top003",
+        "title": "Housing and affordability",
+        "members": [],
+        "memberSynthIds": [
+          "syn009",
+          "syn022",
+          "syn034",
+          "syn037",
+          "syn046"
+        ]
+      },
+      {
+        "id": "top004",
+        "title": "Business and employment",
+        "members": [],
+        "memberSynthIds": [
+          "syn005",
+          "syn007",
+          "syn013",
+          "syn014",
+          "syn015"
+        ]
+      },
+      {
+        "id": "top005",
+        "title": "Education and children",
+        "members": [],
+        "memberSynthIds": [
+          "syn021",
+          "syn032",
+          "syn036",
+          "syn039",
+          "syn042",
+          "syn044",
+          "syn049"
+        ]
+      },
+      {
+        "id": "top006",
+        "title": "Environment and green space",
+        "members": [],
+        "memberSynthIds": [
+          "syn010",
+          "syn016",
+          "syn023",
+          "syn025",
+          "syn028",
+          "syn029",
+          "syn035",
+          "syn047"
+        ]
+      },
+      {
+        "id": "top007",
+        "title": "Public safety and emergency response",
+        "members": [],
+        "memberSynthIds": [
+          "syn002",
+          "syn024",
+          "syn030",
+          "syn040"
+        ]
+      },
+      {
+        "id": "top008",
+        "title": "Culture, recreation and community amenities",
+        "members": [],
+        "memberSynthIds": [
+          "syn003",
+          "syn019",
+          "syn026",
+          "syn038",
+          "syn048"
+        ]
+      },
+      {
+        "id": "top009",
+        "title": "Digital services and civic administration",
+        "members": [],
+        "memberSynthIds": [
+          "syn011",
+          "syn033",
+          "syn041",
+          "syn045",
+          "syn050"
+        ]
+      }
+    ]
+  },
+  "parameters": {
+    "language": "en",
+    "corpus": "scripts/seedSynthBenchmark.accuracy100.en.json",
+    "corpusSha": "8fdcaccc66dd",
+    "seed": 1234,
+    "condition": "L1",
+    "model": "gpt-5.6-terra"
+  }
+}

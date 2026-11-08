@@ -1,0 +1,111 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed42-filingfix",
+ "atoms": 51,
+ "synthAtoms": 49,
+ "discovered": 12,
+ "themesWithMembers": 12,
+ "otherCount": 2,
+ "unanswered": 0,
+ "sizes": [
+  6,
+  5,
+  5,
+  5,
+  5,
+  4,
+  4,
+  4,
+  4,
+  3,
+  2,
+  2
+ ],
+ "ms": 24786,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 2322,
+   "completion": 1753
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 3293,
+   "completion": 864
+  }
+ },
+ "usd": 0.0273754,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Municipal Service Access",
+   "rule": "Proposals that make city services, procedures, or public internet access easier to reach through in-person, phone, or online channels.",
+   "size": 4
+  },
+  {
+   "key": "t2",
+   "name": "Affordable Housing Supply",
+   "rule": "Proposals that create, require, convert, subsidize, or make pricing more transparent for affordable residential housing.",
+   "size": 4
+  },
+  {
+   "key": "t3",
+   "name": "Building Clean Energy",
+   "rule": "Proposals that install renewable energy or improve energy efficiency in municipal or residential buildings.",
+   "size": 2
+  },
+  {
+   "key": "t4",
+   "name": "Waste Reduction Systems",
+   "rule": "Proposals that reduce disposable waste or expand collection and diversion of recyclable or compostable materials.",
+   "size": 3
+  },
+  {
+   "key": "t5",
+   "name": "Parks and Green Amenities",
+   "rule": "Proposals that add or improve neighborhood green spaces, trees, playgrounds, dog areas, or community gardens.",
+   "size": 5
+  },
+  {
+   "key": "t6",
+   "name": "School Learning Support",
+   "rule": "Proposals that improve pupils' learning conditions, school facilities, teaching capacity, meals, tutoring, or educational instruction.",
+   "size": 6
+  },
+  {
+   "key": "t7",
+   "name": "Health and Home Care",
+   "rule": "Proposals that expand access to medical, mental-health, preventive, specialist, primary-care, or in-home care services.",
+   "size": 5
+  },
+  {
+   "key": "t8",
+   "name": "Culture and Library Access",
+   "rule": "Proposals that broaden public access to cultural events, museums, libraries, public art, or other cultural spaces.",
+   "size": 4
+  },
+  {
+   "key": "t9",
+   "name": "Community Safety Response",
+   "rule": "Proposals that improve safety through policing, surveillance, emergency-response facilities, or lighting in unsafe areas.",
+   "size": 4
+  },
+  {
+   "key": "t10",
+   "name": "Public Transit Service",
+   "rule": "Proposals that make bus or public-transit travel more frequent, available, trackable, or affordable for riders.",
+   "size": 5
+  },
+  {
+   "key": "t11",
+   "name": "Safe Walking and Cycling",
+   "rule": "Proposals that physically redesign streets to protect pedestrians or cyclists from motor traffic.",
+   "size": 2
+  },
+  {
+   "key": "t12",
+   "name": "Jobs and Small Business",
+   "rule": "Proposals that support workers, local hiring, freelancers, or small businesses through training, procurement, workspace, licensing, or finance.",
+   "size": 5
+  }
+ ]
+}

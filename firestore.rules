@@ -11,6 +11,17 @@ service cloud.firestore {
       return path.split('/').join('_');
     }
 
+    // join-class: the students of a lesson write nothing while the teacher has
+    // it paused or ended (statementSettings.lessonPlan.status; absent = live).
+    // One get() of the main statement. Used ONLY behind a join-class-specific
+    // condition (a class field on a subscription, a vote on a question that
+    // carries a ballot), so the main app's own writes never pay for it.
+    function classLessonWritable(mainId) {
+      let path = /databases/$(database)/documents/statements/$(mainId);
+      return !exists(path) ||
+             !(get(path).data.get('statementSettings', {}).get('lessonPlan', {}).get('status', 'live') in ['paused', 'ended']);
+    }
+
     // WizCol Studio — consultant organizations. Membership lives in
     // `organizationMembers/{orgId}--{uid}` (deterministic id, one exists()
     // per check). These helpers are used ONLY by the org collections and by
@@ -68,17 +79,172 @@ service cloud.firestore {
 
     // Topic packages: teachers author them; ready packages are readable by
     // any signed-in user (students need scenes/artwork during the game).
+    //
+    // The teachers' scenario library rides on the same documents, so the rules
+    // split reading in two:
+    //   get  — a PUBLIC scenario: any signed-in user. A private one (anything
+    //          not public, never-published included): its author, a sys-admin,
+    //          or someone holding a reader marker
+    //          `agoraTopicReaders/{id}--{uid}` — the server leaves one for each
+    //          player of a game built on it (agoraJoinSession, and
+    //          agoraTopicAccess for someone already in the session). A leaked
+    //          id alone no longer opens a private scenario.
+    //   list — the owner's own packages, or PUBLIC ones for an approved teacher
+    //          (see isApprovedAgoraTeacher). Nobody else can enumerate anything.
+    // `visibility`, `library`, `stats` and the `source*` credit are written by
+    // the agoraLibrary* callables alone; a client can neither publish nor claim
+    // a rating or an original author.
+    function isApprovedAgoraTeacher() {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/agoraApprovedTeachers/$(request.auth.uid));
+    }
+
+    function agoraLibraryFieldsUntouched() {
+      return !request.resource.data.diff(resource.data).affectedKeys()
+               .hasAny(['visibility', 'library', 'stats', 'sourceScenarioId',
+                        'sourceTitle', 'sourceAuthorName', 'sourceVersion']);
+    }
+
+    function isAgoraTopicReader(topicPackageId) {
+      return exists(/databases/$(database)/documents/agoraTopicReaders/$(topicPackageId + '--' + request.auth.uid));
+    }
+
     match /agoraTopicPackages/{topicPackageId} {
-      allow read: if isAuthenticated();
+      // Cheapest first: the doc's own fields, then the marker, then the admin
+      // lookup (two reads). A missing package reads as missing, not denied.
+      allow get: if isAuthenticated() &&
+                    (resource == null ||
+                     resource.data.get('creatorId', '') == request.auth.uid ||
+                     resource.data.get('visibility', 'private') == 'public' ||
+                     isAgoraTopicReader(topicPackageId) ||
+                     isSystemAdminUser());
+      allow list: if isAuthenticated() &&
+                     (resource.data.creatorId == request.auth.uid ||
+                      // A sys-admin also lists what is hidden, to lift a hide
+                      (isSystemAdminUser() &&
+                       resource.data.get('visibility', 'private') == 'public') ||
+                      (isApprovedAgoraTeacher() &&
+                       resource.data.get('visibility', 'private') == 'public' &&
+                       resource.data.get('library', {}).get('hidden', true) == false));
+      // Only an approved teacher (or a sys-admin) creates a scenario: a
+      // pending teacher gets nothing until approved (Tal, 2026-10-15).
       allow create: if isAuthenticated() &&
-                       request.resource.data.creatorId == request.auth.uid;
-      allow update, delete: if isAuthenticated() &&
-                               resource.data.creatorId == request.auth.uid;
+                       (isApprovedAgoraTeacher() || isSystemAdminUser()) &&
+                       request.resource.data.creatorId == request.auth.uid &&
+                       !request.resource.data.keys().hasAny(
+                         ['visibility', 'library', 'stats', 'sourceScenarioId',
+                          'sourceTitle', 'sourceAuthorName', 'sourceVersion']);
+      allow update: if isAuthenticated() &&
+                       resource.data.creatorId == request.auth.uid &&
+                       agoraLibraryFieldsUntouched();
+      allow delete: if isAuthenticated() &&
+                       resource.data.creatorId == request.auth.uid;
+    }
+
+    // The library's vocabularies, ratings and translation cache. Only an
+    // approved teacher reads any of it, and nothing here is client-written:
+    // agoraLibraryCreateTag / Publish / Rate / Translate / Moderate are the
+    // writers. A hidden review is read by its author and a sys-admin alone.
+    match /agoraLibraryTags/{tagId} {
+      allow read: if isApprovedAgoraTeacher();
+      allow write: if false;
+    }
+    match /agoraScenarioRatings/{ratingId} {
+      allow get: if isApprovedAgoraTeacher() &&
+                    (resource == null ||
+                     resource.data.get('hidden', true) == false ||
+                     resource.data.get('teacherId', '') == request.auth.uid ||
+                     isSystemAdminUser());
+      allow list: if isApprovedAgoraTeacher() &&
+                     (resource.data.get('hidden', true) == false ||
+                      resource.data.get('teacherId', '') == request.auth.uid ||
+                      isSystemAdminUser());
+      allow write: if false;
+    }
+    // The discussion under a scenario. Teachers read the visible posts; a hidden
+    // one is read by the scenario's author (the doc carries `scenarioOwnerId`
+    // for exactly this) and by a sys-admin. Written by agoraLibraryPost /
+    // agoraLibraryHidePost alone.
+    match /agoraScenarioPosts/{postId} {
+      allow get: if isApprovedAgoraTeacher() &&
+                    (resource == null ||
+                     resource.data.get('hidden', true) == false ||
+                     resource.data.get('scenarioOwnerId', '') == request.auth.uid ||
+                     isSystemAdminUser());
+      allow list: if isApprovedAgoraTeacher() &&
+                     (resource.data.get('hidden', true) == false ||
+                      resource.data.get('scenarioOwnerId', '') == request.auth.uid ||
+                      isSystemAdminUser());
+      allow write: if false;
+    }
+    // Reports about a scenario, review or post: the moderation queue's input.
+    // Sys-admins read them; only agoraLibraryReport / agoraLibraryResolveReport write.
+    match /agoraLibraryReports/{reportId} {
+      allow read: if isSystemAdminUser();
+      allow write: if false;
+    }
+    match /agoraScenarioTranslations/{translationId} {
+      allow read, write: if false;
+    }
+    // Reader markers for private scenarios (see agoraTopicPackages above).
+    // The rules ask exists() of them; no client reads or writes one.
+    match /agoraTopicReaders/{readerId} {
+      allow read, write: if false;
+    }
+    // The approval marker agoraLibraryAccess writes (and the rules above ask
+    // `exists()` of). A teacher reads their own; nobody writes it from a client.
+    match /agoraApprovedTeachers/{teacherId} {
+      allow get: if isAuthenticated() && request.auth.uid == teacherId;
+      allow list, write: if false;
     }
 
     // Sessions: created via callable only. The teacher may update live-control
     // fields directly; everyone in the class reads the session doc (it is the
     // single source of truth for stage/round state).
+    // === Agora looks (see shared-types agoraTheme.ts) ===
+    // A seed is one `#rrggbb`; a custom look is four seeds, a short name and
+    // its maker; a choice is a preset name, plus the look when it is custom.
+    // Null is a cleared field and is fine everywhere.
+    function agoraHexColour(value) {
+      return value is string && value.matches('^#[0-9a-fA-F]{6}$');
+    }
+    function agoraThemeSeedsValid(seeds) {
+      return seeds is map &&
+             seeds.keys().hasOnly(['page', 'mine', 'peer', 'go']) &&
+             seeds.keys().hasAll(['page', 'mine', 'peer', 'go']) &&
+             agoraHexColour(seeds.page) && agoraHexColour(seeds.mine) &&
+             agoraHexColour(seeds.peer) && agoraHexColour(seeds.go);
+    }
+    function agoraCustomThemeValid(look) {
+      return look == null ||
+             (look is map &&
+              look.keys().hasOnly(['name', 'authorId', 'seeds', 'font', 'createdAt']) &&
+              look.name is string && look.name.size() >= 1 && look.name.size() <= 24 &&
+              look.authorId is string && look.createdAt is number &&
+              (!('font' in look) || (look.font is string && look.font.size() <= 40)) &&
+              agoraThemeSeedsValid(look.seeds));
+    }
+    function agoraThemeChoiceValid(choice) {
+      return choice == null ||
+             (choice is map &&
+              choice.keys().hasOnly(['preset', 'custom']) &&
+              (choice.preset in ['candy', 'purple', 'custom']) &&
+              (choice.preset != 'custom' || 'custom' in choice) &&
+              agoraCustomThemeValid(choice.get('custom', null)));
+    }
+
+    // The teacher took this login out of this lesson and has not let it back
+    // (agoraRemoveParticipant writes the uid into the session's `removedUids`;
+    // agoraResolveRejoin's approve takes it out). Read by the statement,
+    // evaluation and vote rules so a removed student cannot keep writing into
+    // the room from a stale tab or the SDK. One get() of the session, only on
+    // writes that name an Agora session; other sessions are never consulted.
+    function agoraRemovedFrom(sessionId) {
+      let path = /databases/$(database)/documents/agoraSessions/$(sessionId);
+      return exists(path) &&
+             request.auth.uid in get(path).data.get('removedUids', {});
+    }
+
     match /agoraSessions/{sessionId} {
       allow read: if isAuthenticated();
       allow create, delete: if false;
@@ -126,6 +292,13 @@ service cloud.firestore {
                          resource.data.get('stageState', {}) &&
                        request.resource.data.get('identity', '') ==
                          resource.data.get('identity', '') &&
+                       request.resource.data.get('collectRealNames', true) ==
+                         resource.data.get('collectRealNames', true) &&
+                       // The room's look is the teacher's to set, live. The
+                       // shape is pinned here because every client parses the
+                       // session doc with a strict schema: one malformed write
+                       // would brick every open tab in the room.
+                       agoraThemeChoiceValid(request.resource.data.get('theme', null)) &&
                        request.resource.data.get('agreement', {}) ==
                          resource.data.get('agreement', {}) &&
                        request.resource.data.get('roundNumber', -1) ==
@@ -151,7 +324,14 @@ service cloud.firestore {
                        // votingSettings.challengeGame (whether the round runs
                        // at all) stays teacher-writable above.
                        request.resource.data.get('votingGame', {}) ==
-                         resource.data.get('votingGame', {});
+                         resource.data.get('votingGame', {}) &&
+                       // Who was removed, and who asked to come back, is the
+                       // callables' to write (agoraRemoveParticipant, the
+                       // join knock, agoraResolveRejoin): each moves a seat in
+                       // the same transaction, and a list edited from the
+                       // teacher's browser would let someone back without one.
+                       request.resource.data.get('removedUids', {}) ==
+                         resource.data.get('removedUids', {});
     }
 
     // Participants: created via callable only (anon names are server-issued).
@@ -173,6 +353,18 @@ service cloud.firestore {
                          resource.data.get('creditedRatings', -1) &&
                        request.resource.data.get('firstProposalAwardedAt', -1) ==
                          resource.data.get('firstProposalAwardedAt', -1) &&
+                       // The language-strike ledger is agoraCheckLanguage's: a
+                       // client that could clear it would erase what the
+                       // teacher is shown.
+                       request.resource.data.get('languageStrikes', 0) ==
+                         resource.data.get('languageStrikes', 0) &&
+                       request.resource.data.get('lastLanguageStrikeAt', -1) ==
+                         resource.data.get('lastLanguageStrikeAt', -1) &&
+                       // The round-appreciation ledger (which likes already
+                       // paid this author) is the trigger's; a client that
+                       // could clear a key could be paid for the same like twice.
+                       request.resource.data.get('roundAppreciations', {}) ==
+                         resource.data.get('roundAppreciations', {}) &&
                        request.resource.data.get('isAI', false) ==
                          resource.data.get('isAI', false) &&
                        // Positioning is one-shot, as the UI already assumes
@@ -195,12 +387,90 @@ service cloud.firestore {
                        // agoraJoinSession. A client that could edit it would be
                        // crediting someone else's career with this game's points.
                        request.resource.data.get('memberId', '') ==
-                         resource.data.get('memberId', '');
+                         resource.data.get('memberId', '') &&
+                       // The look they wear and the look they built. Bounded
+                       // so a client cannot park a novel in a colour name.
+                       agoraThemeChoiceValid(request.resource.data.get('theme', null)) &&
+                       agoraCustomThemeValid(request.resource.data.get('builtTheme', null));
+    }
+
+    // Real names typed at the door, readable by the session's teacher ONLY.
+    // The console listens with `sessionId == X && teacherId == me`, which is
+    // exactly the per-document equality below — the one shape both runQuery
+    // and the SDK's listen path can prove (unlike `uid in array`, see
+    // agoraClasses). Written by agoraJoinSession, deleted by TTL or by the
+    // teacher's "forget names" — never by a client.
+    match /agoraIdentities/{identityId} {
+      allow read: if isAuthenticated() && resource.data.teacherId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // The private teacher <-> one-student thread. Each side lists with its own
+    // key, and both keys are pinned on every line by the callable that writes
+    // it (agoraTeacherMessage / agoraModerateStatement). A classmate holds
+    // neither key and sees nothing.
+    match /agoraTeacherMessages/{messageId} {
+      allow read: if isAuthenticated() &&
+                     (resource.data.teacherId == request.auth.uid ||
+                      resource.data.studentUid == request.auth.uid);
+      allow write: if false;
+    }
+
+    // A teacher's standing wording for the WizCol rounds — their own doc,
+    // keyed by their uid, written by agoraRewordQuestion alone.
+    match /agoraTeacherPrompts/{teacherId} {
+      allow read: if isAuthenticated() && request.auth.uid == teacherId;
+      allow write: if false;
+    }
+
+    // A teacher's list of words their students may not use — their own doc,
+    // keyed by their uid, written by agoraSetBannedWords alone. The language
+    // gate reads it on the server; a student never can.
+    match /agoraTeacherBannedWords/{teacherId} {
+      allow read: if isAuthenticated() && request.auth.uid == teacherId;
+      allow write: if false;
+    }
+
+    // A removed student's seat, parked whole by agoraRemoveParticipant until
+    // the teacher lets them back (agoraResolveRejoin). Server-only: it holds
+    // points and credit guards the student must not rewrite.
+    match /agoraRemovals/{removalId} {
+      allow read, write: if false;
     }
 
     // Proposal scores (bridging/plausibility): server-computed only.
     match /agoraScores/{statementId} {
       allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // A student's hand of dealt notes per station: written by agoraDealNotes
+    // only. The owner may get it (the client listens before the first deal
+    // creates it, so a missing doc must not error); nobody may list hands.
+    match /agoraHands/{handId} {
+      allow get: if isAuthenticated()
+        && (resource == null || resource.data.userId == request.auth.uid);
+      allow list: if false;
+      allow write: if false;
+    }
+
+    // Background materials on a library scene (agoraSceneMaterials) hold text
+    // the teacher's callable extracted; any signed-in user may get one (the
+    // students read them), nobody lists, only the callable writes.
+    match /agoraSceneMaterials/{materialsId} {
+      allow get: if isAuthenticated();
+      allow list: if false;
+      allow write: if false;
+    }
+
+    // A student's private conversation with the materials, one doc per
+    // session and student, written by agoraAskMaterials only. Only its owner
+    // may get it (a missing doc must not error: the panel reads it first);
+    // not classmates, not the teacher, nobody lists.
+    match /agoraMaterialChats/{chatId} {
+      allow get: if isAuthenticated()
+        && (resource == null || resource.data.userId == request.auth.uid);
+      allow list: if false;
       allow write: if false;
     }
 
@@ -242,10 +512,18 @@ service cloud.firestore {
     }
 
     // Schools: any signed-in user may resolve a school's name (teachers show
-    // it as a breadcrumb); only sys-admins enumerate them.
+    // it as a breadcrumb). Enumerating them is a sys-admin's right — except
+    // that a teacher may enumerate the ones they are attached to, proved the
+    // same way a class is, from a `teacherMap.<uid> == true` constraint. The
+    // dashboard needs that list before a teacher has any class to read a
+    // schoolId from: it is what "open your first class" is offered against.
     match /agoraSchools/{schoolId} {
       allow get: if isAuthenticated();
-      allow list: if isSystemAdminUser();
+      // ...and a supervisor the ones they supervise, from `supervisorMap.<uid>`.
+      allow list: if isSystemAdminUser() ||
+                     (isAuthenticated() &&
+                      (request.auth.uid in resource.data.get('teacherMap', {}) ||
+                       request.auth.uid in resource.data.get('supervisorMap', {})));
       allow write: if false;
     }
 
@@ -289,8 +567,18 @@ service cloud.firestore {
     }
 
     // Class aggregates: the advancement summary both consoles print.
+    //
+    // The teacherMap clause is what makes the teacher's dashboard one query
+    // instead of one document read per class: `isAgoraClassTeacher` costs a
+    // get() of the class per aggregate evaluated, which is a billed read each
+    // and caps a query at twenty of them. The map is denormalized from the
+    // class by the same callables that write teacherIds. The get() stays
+    // behind it for aggregates written before the field existed — a `get` of
+    // one document, never a long list.
     match /agoraClassAggregates/{classId} {
       allow read: if isSystemAdminUser() ||
+                     (isAuthenticated() &&
+                      request.auth.uid in resource.data.get('teacherMap', {})) ||
                      isAgoraClassTeacher(resource.data.classId);
       allow write: if false;
     }
@@ -298,6 +586,45 @@ service cloud.firestore {
     // Sys-admin dashboard period counters (day/month/year docs + unique-class
     // markers). Trigger-written, admin-read.
     match /agoraStats/{statDocId} {
+      allow read: if isSystemAdminUser();
+      allow write: if false;
+    }
+
+    // Teacher aggregates (one doc per teacher uid) and console usage months
+    // (`{uid}--{YYYY-MM}`). Trigger/heartbeat-written. Sys-admin-read only:
+    // supervisors read them through the agoraSupervisorConsole callable,
+    // which filters by their scope, and a teacher never reads their own —
+    // hours are the supervisor's number, not a self-tally.
+    match /agoraTeacherAggregates/{teacherId} {
+      allow read: if isSystemAdminUser();
+      allow write: if false;
+    }
+    match /agoraTeacherUsage/{usageId} {
+      allow read: if isSystemAdminUser();
+      allow write: if false;
+    }
+
+    // Access requests (who asks to be an Agora teacher / regional coordinator).
+    // Written only by the agoraRequestAccess / agoraManageAccess callables.
+    // The applicant reads their own (get by id, or a list constrained to
+    // their uid); a sys-admin reads all. Coordinators read through the
+    // callable only: rules cannot prove "a school I coordinate" without a
+    // get() per document, and the callable is also where the applicant's
+    // email is joined in — it is never stored here.
+    match /agoraAccessRequests/{requestId} {
+      allow get: if isSystemAdminUser() ||
+                    (isAuthenticated() && resource != null &&
+                     resource.data.uid == request.auth.uid);
+      allow list: if isSystemAdminUser() ||
+                     (isAuthenticated() && resource.data.uid == request.auth.uid);
+      allow write: if false;
+    }
+
+    // Pending email invitations to teach in a school. They hold an email
+    // address, so only the people who manage a school's teachers — system
+    // admins — may read them; written only by agoraAdminManageSchool and
+    // claimed only server-side, on a verified Google sign-in.
+    match /agoraTeacherInvites/{inviteId} {
       allow read: if isSystemAdminUser();
       allow write: if false;
     }
@@ -315,6 +642,20 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() &&
                                (resource.data.creatorId == request.auth.uid ||
                                 request.auth.uid in resource.data.adminUids);
+
+      // One doc per language (en, ar): the display overlay on the Hebrew
+      // game. Public read like the game itself — a player reads it before
+      // login, and most games have none, so a missing doc must resolve
+      // cleanly (no resource.data here). Written by the odysseyTranslateGame
+      // callable (Admin SDK); the client rule lets the game's own admins
+      // hand-fix a line. The parent get() is what proves they are admins.
+      match /translations/{lang} {
+        allow read;
+        allow write: if isAuthenticated() &&
+                        exists(/databases/$(database)/documents/odysseyGames/$(gameId)) &&
+                        (get(/databases/$(database)/documents/odysseyGames/$(gameId)).data.creatorId == request.auth.uid ||
+                         request.auth.uid in get(/databases/$(database)/documents/odysseyGames/$(gameId)).data.adminUids);
+      }
     }
 
     // Personal voyage state (compass answers, chosen islands, captain's log).
@@ -327,8 +668,30 @@ service cloud.firestore {
                       resource.data.userId == request.auth.uid);
       allow delete: if isAuthenticated() &&
                        resource.data.userId == request.auth.uid;
-      allow create, update: if isAuthenticated() &&
-                               request.resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() &&
+                       request.resource.data.userId == request.auth.uid &&
+                       journeyId == request.auth.uid + '--' + request.resource.data.gameId;
+      allow update: if isAuthenticated() &&
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.userId == request.auth.uid;
+    }
+
+    // Odyssey "מכתב לבוני הספינה" — letters to the developers. Written ONLY by
+    // the odysseyFeedbackSubmit callable; the Admin SDK bypasses these rules, so
+    // an explicit deny costs the server nothing and documents the decision.
+    //
+    // Deliberately NOT stored in /feedback: that collection grants
+    // `allow read: if request.auth != null`, and "authenticated" here includes
+    // every anonymous Odyssey player. These documents hold the reply-to
+    // addresses players volunteer, which no client may read.
+    match /odysseyFeedback/{feedbackId} {
+      allow read, write: if false;
+    }
+
+    // Per-uid (and one `_global`) throttle counters for Odyssey server
+    // functions. A client-writable counter is not a counter.
+    match /odysseyRateLimits/{docId} {
+      allow read, write: if false;
     }
 
 	match /polarizationIndex/{statementId=**} {
@@ -358,6 +721,240 @@ service cloud.firestore {
 		allow read: if request.auth.uid != null;
 		allow write: if request.auth.uid != null && isAdmin();
 	}
+
+    // join-class: the six-digit class code -> workspace lookup behind /c/:code.
+    // Any signed-in user (anonymous students included) resolves a code; only an
+    // admin of the workspace the code points at may create or re-point it.
+    // Codes are never deleted from a client.
+    match /classCodes/{code} {
+      function isClassCodeAdmin(mainId) {
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(mainId)));
+        return exists(subPath) &&
+               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+      }
+
+      function isValidClassCode() {
+        return code.matches('^[0-9]{6}$') &&
+               request.resource.data.keys().hasOnly(['mainId', 'createdAt']) &&
+               request.resource.data.mainId is string &&
+               request.resource.data.createdAt is number;
+      }
+
+      // get only: a code can be resolved, never enumerated.
+      allow get: if request.auth.uid != null;
+      allow create: if request.auth.uid != null &&
+                       isValidClassCode() &&
+                       isClassCodeAdmin(request.resource.data.mainId);
+      allow update: if request.auth.uid != null &&
+                       isValidClassCode() &&
+                       resource.data.mainId == request.resource.data.mainId &&
+                       isClassCodeAdmin(resource.data.mainId);
+      allow delete: if false;
+    }
+
+    // join-class lesson plans (IA docs/ia/join-class-lesson-plan.md 9.3).
+    // classPlans/{planId}: a teacher's topic. Owner-scoped: only the owner reads,
+    // creates and updates it; the list query must filter ownerUid == uid. Never
+    // deleted from a client. The owner and creation time never change.
+    match /classPlans/{planId} {
+      function isValidClassPlan() {
+        let d = request.resource.data;
+        return d.keys().hasOnly(['planId', 'title', 'ownerUid', 'createdAt', 'lastUpdate']) &&
+               d.planId == planId &&
+               d.title is string &&
+               d.title.size() > 0 &&
+               d.title.size() <= 200 &&
+               d.ownerUid is string &&
+               d.createdAt is number &&
+               d.lastUpdate is number;
+      }
+
+      allow read: if request.auth != null &&
+                     resource != null &&
+                     resource.data.ownerUid == request.auth.uid;
+      // A plan id that is a statement id (an old lesson's own plan, IA 11.11) is
+      // made only by the server (classSnapshotGame / the migration): otherwise
+      // anyone could take classPlans/{someone's lesson id} first.
+      allow create: if request.auth != null &&
+                       isValidClassPlan() &&
+                       request.resource.data.ownerUid == request.auth.uid &&
+                       !exists(/databases/$(database)/documents/statements/$(planId));
+      allow update: if request.auth != null &&
+                       resource != null &&
+                       resource.data.ownerUid == request.auth.uid &&
+                       isValidClassPlan() &&
+                       request.resource.data.ownerUid == resource.data.ownerUid &&
+                       request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if false;
+
+      // classPlans/{planId}/games/{gameId}: a prepared game (data, not a
+      // statement; no class code). The same owner test, and on create the plan
+      // must be the caller's. The snapshot is only shape-checked here; the
+      // server re-validates it (checkSnapshot) before a lesson is built from it.
+      match /games/{gameId} {
+        function isValidClassGame() {
+          let d = request.resource.data;
+          return d.keys().hasOnly(['gameId', 'planId', 'ownerUid', 'title', 'order', 'snapshot',
+                                   'sourceMainId', 'createdAt', 'lastUpdate']) &&
+                 d.gameId == gameId &&
+                 d.planId == planId &&
+                 d.title is string &&
+                 d.title.size() > 0 &&
+                 d.title.size() <= 200 &&
+                 d.order is number &&
+                 d.snapshot is map &&
+                 d.ownerUid is string &&
+                 (!('sourceMainId' in d) || d.sourceMainId is string) &&
+                 d.createdAt is number &&
+                 d.lastUpdate is number;
+        }
+        function ownsPlan() {
+          let planPath = /databases/$(database)/documents/classPlans/$(planId);
+          return exists(planPath) && get(planPath).data.ownerUid == request.auth.uid;
+        }
+
+        allow read: if request.auth != null &&
+                       resource != null &&
+                       resource.data.ownerUid == request.auth.uid;
+        allow create: if request.auth != null &&
+                         isValidClassGame() &&
+                         request.resource.data.ownerUid == request.auth.uid &&
+                         ownsPlan();
+        allow update: if request.auth != null &&
+                         resource != null &&
+                         resource.data.ownerUid == request.auth.uid &&
+                         isValidClassGame() &&
+                         request.resource.data.ownerUid == resource.data.ownerUid &&
+                         request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if false;
+      }
+    }
+
+    // join-class: one doc per table, classTables/{mainId}--{n}. Written only by
+    // the classroom callables (Admin SDK). Read by a student seated at the
+    // table (memberUids, no extra read) or by an admin of the workspace (one
+    // get of their subscription). The teacher's list query filters on
+    // mainId == X, which is what lets the rule resolve resource.data.mainId.
+    match /classTables/{tableId} {
+      function isClassTableAdmin(mainId) {
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(mainId)));
+        return exists(subPath) &&
+               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+      }
+
+      function mayReadClassTable() {
+        return request.auth.uid in resource.data.get('memberUids', []) ||
+               isClassTableAdmin(resource.data.mainId);
+      }
+
+      // A get of a table that no longer exists (re-seated) answers "missing"
+      // instead of permission-denied, so a student's listener settles quietly;
+      // it reveals nothing but the absence of a guessable id.
+      allow get: if request.auth != null && (resource == null || mayReadClassTable());
+      allow list: if request.auth != null && mayReadClassTable();
+      allow write: if false;
+    }
+
+    // === Tables (table assignment) ===
+    // Every write goes through the tables* callables (Admin SDK): clients write
+    // nothing. Reads are scoped so a participant never sees another person's
+    // preferences or position (those live only in tableAssignmentParticipants).
+    function isTableSessionHost(sessionId) {
+      let sessionPath = /databases/$(database)/documents/tableAssignments/$(sessionId);
+      return exists(sessionPath) && get(sessionPath).data.hostUid == request.auth.uid;
+    }
+
+    // The session is readable to any signed-in user (anonymous included) once
+    // registration has opened; drafts are the host's alone.
+    function isTableSessionOpenToAll(sessionId) {
+      let sessionPath = /databases/$(database)/documents/tableAssignments/$(sessionId);
+      return exists(sessionPath) &&
+             get(sessionPath).data.status in ['registrationOpen', 'registrationClosed', 'published', 'ended'];
+    }
+
+    function isRegisteredInTableSession(sessionId) {
+      return exists(/databases/$(database)/documents/tableAssignmentParticipants/$(string(sessionId) + '_' + string(request.auth.uid)));
+    }
+
+    function mayReadTableSession(sessionId) {
+      return isTableSessionHost(sessionId) || isTableSessionOpenToAll(sessionId);
+    }
+
+    match /tableAssignments/{sessionId} {
+      allow get: if request.auth != null &&
+                    (resource == null ||
+                     resource.data.hostUid == request.auth.uid ||
+                     resource.data.status in ['registrationOpen', 'registrationClosed', 'published', 'ended']);
+      // A host lists their own sessions (query on hostUid); nobody lists anyone else's.
+      allow list: if request.auth != null && resource != null &&
+                     resource.data.hostUid == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /tableAssignmentTopics/{topicId} {
+      allow get, list: if request.auth != null && resource != null &&
+                          mayReadTableSession(resource.data.sessionId);
+      allow write: if false;
+    }
+
+    // Doc id = {sessionId}_{uid}. The owner reads their own; the host reads all.
+    match /tableAssignmentParticipants/{participantId} {
+      allow list: if request.auth != null && resource != null &&
+                     (resource.data.uid == request.auth.uid ||
+                      isTableSessionHost(resource.data.sessionId));
+      // A get of one's own not-yet-registered doc answers "missing" instead of
+      // permission-denied, so the registration screen settles quietly.
+      allow get: if request.auth != null &&
+                    (resource == null
+                       ? participantId.matches('.*_' + request.auth.uid)
+                       : (resource.data.uid == request.auth.uid ||
+                          isTableSessionHost(resource.data.sessionId)));
+      allow write: if false;
+    }
+
+    // Host reads every run (drafts and history). A registered participant reads
+    // a run only once it is published: that is what "my table" shows.
+    match /tableAssignmentRuns/{runId} {
+      allow get, list: if request.auth != null && resource != null &&
+                          (isTableSessionHost(resource.data.sessionId) ||
+                           (resource.data.status == 'published' &&
+                            isRegisteredInTableSession(resource.data.sessionId)));
+      allow write: if false;
+    }
+
+    // Direct-mode seat counters {sessionId}_{tableIndex}: { sessionId, tableIndex,
+    // topicId, count }. Counts only, no identities. The host and registered
+    // participants of the session read them (list needs a sessionId filter) so
+    // the choose-a-table screen shows free seats. Written by tablesJoinTable only.
+    match /tableAssignmentSeats/{seatId} {
+      allow get, list: if request.auth != null && resource != null &&
+                          (isTableSessionHost(resource.data.sessionId) ||
+                           isRegisteredInTableSession(resource.data.sessionId));
+      allow write: if false;
+    }
+
+    // join-class language flags (IA 24.4): one doc per refused proposal / edit /
+    // reply, classLanguageFlags/{flagId}. Written only by the classroom
+    // callables (Admin SDK). Read only by an admin of the lesson (a get of their
+    // subscription); a student never reads one. The teacher's list query filters
+    // on mainId == X, which is what lets the rule resolve resource.data.mainId.
+    // The one client write is the admin's "seen": seenAt, a number, nothing else.
+    match /classLanguageFlags/{flagId} {
+      function isFlagAdmin(mainId) {
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(mainId)));
+        return exists(subPath) &&
+               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+      }
+
+      allow get: if request.auth != null && resource != null && isFlagAdmin(resource.data.mainId);
+      allow list: if request.auth != null && isFlagAdmin(resource.data.mainId);
+      allow create: if false;
+      allow update: if request.auth != null &&
+                       isFlagAdmin(resource.data.mainId) &&
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seenAt']) &&
+                       request.resource.data.seenAt is number;
+      allow delete: if false;
+    }
 
     match /statements/{statementId} {
       function isAdmin() {
@@ -497,6 +1094,16 @@ service cloud.firestore {
         return changesJoinMembership() && parentHasJoinForm();
       }
 
+      // Authorship is what isCreator() reads, and server code credits it. Admins
+      // of a statement may edit it, but they may not make it someone else's or
+      // their own. A full-document merge keeps the same value, so it passes;
+      // a legacy document with no creatorId has nothing to protect.
+      function changesCreatorIdWithoutBeingCreator() {
+        return resource.data.get('creatorId', null) != null &&
+               request.resource.data.get('creatorId', null) != resource.data.creatorId &&
+               !isCreator();
+      }
+
       function isAllowedToUpdate() {
         // Participation first, because it needs no get() calls: joining an
         // option and voting on evidence are the hot paths, and the whole point
@@ -573,7 +1180,127 @@ service cloud.firestore {
                // of the proposal lifecycle. A student who could strip it could
                // walk their challenge back into the first-draft credit.
                request.resource.data.get('agoraChallenge', false) ==
-                 resource.data.get('agoraChallenge', false);
+                 resource.data.get('agoraChallenge', false) &&
+               // The teacher's marks and the shared hide flag they mirror: a
+               // student who could clear them would put their own text back.
+               request.resource.data.get('hide', false) ==
+                 resource.data.get('hide', false) &&
+               request.resource.data.get('agoraModeration', {}) ==
+                 resource.data.get('agoraModeration', {});
+      }
+
+      // join-class replies on a proposal (IA 22). A reply (a statement with a
+      // `classReply` marker) and the proposal's counters (replyCount,
+      // lastReplyAt, replyPushAt, replyPushCount) are written ONLY by the
+      // classPostReply / classSetItemHidden callables (Admin SDK), which run
+      // the AI language check and the push dedupe. No client may create a
+      // reply, set or move those fields, or edit or delete a reply — not even
+      // its writer (a hidden reply would otherwise come back).
+      function classReplyServerFields() {
+        return ['classReply', 'replyCount', 'lastReplyAt', 'replyPushAt', 'replyPushCount'];
+      }
+      function createsClassReplyFields() {
+        return request.resource.data.keys().hasAny(classReplyServerFields());
+      }
+      function isClassReply() {
+        return resource != null && resource.data.get('classReply', null) != null;
+      }
+      // join-class proposals (IA 24.3): an option whose parent is the lesson's
+      // challenge question. Created and re-worded ONLY by classPostProposal /
+      // classEditProposal (Admin SDK), which run the AI language check, so no
+      // client may create one or change its text. Everything else about an
+      // option (joining, the evaluation counters) is untouched. Table-talk
+      // answers (options under a guiding question) keep their client path.
+      function isClassChallenge(parentId) {
+        let challengePath = /databases/$(database)/documents/statements/$(cleanPath(string(parentId)));
+        return exists(challengePath) &&
+               get(challengePath).data.get('statementSettings', {}).get('classRole', '') == 'challenge';
+      }
+      function createsClassProposal() {
+        return request.resource.data.get('statementType', '') == 'option' &&
+               request.resource.data.get('parentId', null) != null &&
+               isClassChallenge(request.resource.data.parentId);
+      }
+      // Its author is the server's to say too, with or without a marker on it.
+      function rewordsClassProposal() {
+        return resource != null &&
+               resource.data.get('statementType', '') == 'option' &&
+               resource.data.get('parentId', null) != null &&
+               request.resource.data.diff(resource.data).affectedKeys().hasAny(['statement', 'statementType', 'parentId', 'creatorId', 'creator', 'classTable']) &&
+               isClassChallenge(resource.data.parentId);
+      }
+      // An update may not MAKE a proposal either: moving an option under the challenge, or
+      // turning a statement already there into an option, would skip the limit and the
+      // language check. The get() is paid only when the type or the parent really changes.
+      function makesClassProposal() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasAny(['statementType', 'parentId']) &&
+               request.resource.data.get('statementType', '') == 'option' &&
+               request.resource.data.get('parentId', null) != null &&
+               isClassChallenge(request.resource.data.parentId);
+      }
+      // Who wrote something at a table is the server's to say: no client changes the author or
+      // the marker of a statement that carries a marker (a proposal, a table's answer or its
+      // own question), so nobody hands their words to a classmate. No client writes these
+      // fields; a whole-document merge with them unchanged does not count. No get() needed.
+      function changesClassAuthor() {
+        return ('classTable' in resource.data) &&
+               request.resource.data.diff(resource.data).affectedKeys().hasAny(['creatorId', 'creator', 'classTable']);
+      }
+      // join-class students without a device: the teacher enters their proposals
+      // through classPostProposal (Admin SDK), which stamps classTable.enteredByUid and
+      // writes creatorId nd_*. No client may set or move that stamp, on any statement,
+      // nor turn a statement it wrote into a no-device student's. No get() needed.
+      function classEnteredByOf(data) {
+        return ('classTable' in data) && data.classTable is map
+          ? data.classTable.get('enteredByUid', null)
+          : null;
+      }
+      function changesClassEnteredBy() {
+        return classEnteredByOf(request.resource.data) != classEnteredByOf(resource.data);
+      }
+      function claimsNoDeviceAuthor() {
+        let next = request.resource.data.get('creatorId', '');
+        return next != resource.data.get('creatorId', '') &&
+               next is string &&
+               next.matches('^nd_.*');
+      }
+
+      // join-class homes and lessons are made only by the server (classStartLesson,
+      // classCloneLesson, the migration): no client creates a statement with a
+      // home id or carrying classHome / classLesson, nor changes those fields.
+      // A squatted jcTeacher_{uid} would otherwise block that teacher's home.
+      function isClassHomeData(data) {
+        return ('statementSettings' in data) &&
+               data.statementSettings is map &&
+               ('classHome' in data.statementSettings) &&
+               data.statementSettings.classHome != null;
+      }
+      function classLinkOf(data) {
+        return ('statementSettings' in data) && data.statementSettings is map
+          ? [data.statementSettings.get('classHome', null), data.statementSettings.get('classLesson', null)]
+          : [null, null];
+      }
+      function createsClassHomeOrLesson() {
+        return statementId.matches('^jc(Class|Teacher)_.*') ||
+               classLinkOf(request.resource.data) != [null, null];
+      }
+      function changesClassHomeOrLesson() {
+        return classLinkOf(request.resource.data) != classLinkOf(resource.data);
+      }
+      // A HOME is server-only after creation too: its creator (the first teacher
+      // to start a lesson in the class, who may since have been removed from it)
+      // must not keep isCreator() power over it. Only the timestamp bumps any
+      // participant may make on any statement get through; no client deletes it.
+      function homeWriteBlocked() {
+        return isClassHomeData(resource.data) &&
+               !(request.resource.data.diff(resource.data).affectedKeys()
+                   .hasOnly(['lastUpdate', 'lastChildUpdate']) &&
+                 request.resource.data.get('lastUpdate', 0) is number &&
+                 request.resource.data.get('lastChildUpdate', 0) is number);
+      }
+
+      function changesClassReplyFields() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasAny(classReplyServerFields());
       }
 
       // Reading requires a session. Not because statements are secret — most
@@ -606,7 +1333,17 @@ service cloud.firestore {
       // Flip it back the moment the main app, Sign, Join and Chat are out.
       // tests/rules/statements.test.mjs has the assertion, skipped with the
       // same explanation, so the debt is visible on every run.
-      allow read;
+      //
+      // join-class HOMES (IA docs/ia/join-class-lesson-plan.md 9.3): a class or
+      // teacher home (statementSettings.classHome) is a teachers-only container.
+      // `get` of a home needs an admin subscription on it; every other statement
+      // keeps today's open get. `list` stays open until the staged auth gate
+      // above ships (a home's title is a class name, not student content).
+      allow get: if resource == null ||
+                    !isClassHomeData(resource.data) ||
+                    isAdmin() ||
+                    isSystemAdmin();
+      allow list: if true;
 
       // You may only create a statement as yourself. isCreator() cannot be
       // reused here: it reads `resource`, which is null at create time.
@@ -614,17 +1351,44 @@ service cloud.firestore {
       // (statementSettingsCont.ts:152, promoteOptionToSubQuestion.ts:66) are
       // updates, not creates, so they are unaffected by this pin.
       allow create: if request.auth.uid != null &&
+                       !request.resource.data.keys().hasAny(['agreementBallot', 'agreementMeta', 'deliberationEnabled']) &&
                        !setsCreatorRoleOnCreate() &&
                        !setsOrganizationIdOnCreate() &&
-                       request.resource.data.creatorId == request.auth.uid;
+                       !createsClassReplyFields() &&
+                       !createsClassProposal() &&
+                       !createsClassHomeOrLesson() &&
+                       classEnteredByOf(request.resource.data) == null &&
+                       request.resource.data.creatorId == request.auth.uid &&
+                       // A student the teacher removed writes nothing more
+                       // into that lesson (see agoraRemovedFrom)
+                       (request.resource.data.get('agoraSessionId', null) == null ||
+                        !agoraRemovedFrom(request.resource.data.agoraSessionId));
 
       allow update: if request.auth.uid != null &&
+                       !resource.data.keys().hasAny(['agreementBallot']) &&
+                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['agreementMeta', 'agreementBallot', 'deliberationEnabled']) &&
                        !changesCreatorRole() &&
+                       !changesCreatorIdWithoutBeingCreator() &&
                        !changesOrganizationId() &&
+                       !isClassReply() &&
+                       !changesClassReplyFields() &&
+                       !rewordsClassProposal() &&
+                       !makesClassProposal() &&
+                       !changesClassAuthor() &&
+                       !changesClassEnteredBy() &&
+                       !claimsNoDeviceAuthor() &&
+                       !changesClassHomeOrLesson() &&
+                       !homeWriteBlocked() &&
                        (isAgoraStatement()
-                          ? (isCreator() && agoraServerFieldsUnchanged())
+                          ? (isCreator() && agoraServerFieldsUnchanged() &&
+                             !agoraRemovedFrom(resource.data.agoraSessionId))
                           : isAllowedToUpdate());
-      allow delete: if request.auth.uid != null && isAuthorized();
+      // Agora text is never deleted from a browser: the teacher takes it down
+      // through agoraModerateStatement (soft, restorable, told to the author).
+      // The session teacher inherits an admin subscription on every proposal
+      // (setupAdminsForStatement), which used to make isAuthorized() a hard
+      // delete with no tombstone and no audit.
+      allow delete: if request.auth.uid != null && !isAgoraStatement() && !isClassReply() && !isClassHomeData(resource.data) && !resource.data.keys().hasAny(['agreementBallot']) && isAuthorized();
 
       // Civil Activity Hub — join form submissions subcollection.
       // Scoped to the owning question document. Each user owns their own
@@ -685,9 +1449,17 @@ service cloud.firestore {
       allow delete: if request.auth != null && (resource == null || resource.data.get('userId', '') == request.auth.uid);
     }
 
-    match /pushNotifications/{pushNotificationId=**} {
+    // One document per FCM token, keyed by the token. Writing means "this device
+    // is mine", so the incoming userId must be the caller. An existing document
+    // may name someone else: one browser keeps one token across sign-outs, so the
+    // next person to sign in on it has to be able to take the document over.
+    // Reads stay as they were (next batch).
+    match /pushNotifications/{pushNotificationId} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow create, update: if request.auth != null &&
+                               request.resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null &&
+                       (resource == null || resource.data.get('userId', '') == request.auth.uid);
     }
 
     // Per-user global notification settings (master mute, channels, quiet hours,
@@ -696,9 +1468,13 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    match /askedToBeNotified/{askedToBeNotifiedId=**} {
+    // Legacy per-(token, statement) registration, same ownership as above.
+    match /askedToBeNotified/{askedToBeNotifiedId} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow create, update: if request.auth != null &&
+                               request.resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null &&
+                       (resource == null || resource.data.get('userId', '') == request.auth.uid);
     }
 
     match /statementsMeta/{statementId=**} {
@@ -737,9 +1513,12 @@ service cloud.firestore {
       allow read: if request.auth.uid != null;
     }
     
+    // Written only by the Sign API routes (Admin SDK). The browser reads the
+    // live counts (useRealtimeSignatureCounts). A client write would be a
+    // signature in someone else's name.
     match /signatures/{signaturesId=**} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow write: if false;
     }
     
     match /agrees/{agreeId=**} {
@@ -747,13 +1526,26 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
     
-    match /invitations/{invitationId=**} {
+    // Numeric PIN invitations (main app, InvitePanel). A PIN resolves to a
+    // pathname the app navigates to, so rewriting one would redirect everyone
+    // holding that PIN: a document is created once and never changed. The
+    // pathname must be a single-origin path, not "//host".
+    match /invitations/{invitationId} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow create: if request.auth != null &&
+                       request.resource.data.keys().hasOnly(['statementId', 'pathname', 'lastUpdate', 'number']) &&
+                       request.resource.data.statementId is string &&
+                       request.resource.data.pathname is string &&
+                       request.resource.data.pathname.matches('^/[^/\\\\].*') &&
+                       request.resource.data.lastUpdate is number &&
+                       request.resource.data.number is int &&
+                       request.resource.data.number > 0;
+      allow update, delete: if false;
     }
     
+    // No client or server code uses this collection.
     match /admins/{adminStatementId=**} {
-      allow write: if request.auth.uid == request.resource.data.user.uid;
+      allow read, write: if false;
     }
     
    match /statementsSubscribe/{statementSubId} {
@@ -783,26 +1575,65 @@ service cloud.firestore {
         return isAdmin() || isCreator();
       }
       
-      function getAccess() {
-        let statementId = getStatementId();
-        let statement = get(/databases/$(database)/documents/statements/$(statementId)).data;
-        
-        // Check for statement's own access override first, then topParent's access
-        return statement != null && statement.membership != null && statement.membership.access != null 
-          ? statement.membership.access 
-          : (statement != null && statement.topParentId != null 
-            ? (get(/databases/$(database)/documents/statements/$(statement.topParentId)).data != null &&
-               get(/databases/$(database)/documents/statements/$(statement.topParentId)).data.membership != null &&
-               get(/databases/$(database)/documents/statements/$(statement.topParentId)).data.membership.access != null
-                 ? get(/databases/$(database)/documents/statements/$(statement.topParentId)).data.membership.access
-                 : null)
-            : null);
+      // membership.access of a statement doc (null when it has none or is missing).
+      function statementDataOf(id) {
+        let path = /databases/$(database)/documents/statements/$(cleanPath(string(id)));
+        return exists(path) ? get(path).data : null;
       }
-      
+      function accessOf(data) {
+        return data == null
+          ? null
+          : (data.get('membership', null) is map ? data.membership.get('access', null) : null);
+      }
+      function isHomeData(data) {
+        return data != null &&
+               data.get('statementSettings', null) is map &&
+               data.statementSettings.get('classHome', null) != null;
+      }
+
+      // The access that judges a subscription: the statement's own; else, when the
+      // top parent is a join-class HOME (secret, teachers only), the access of the
+      // lesson, parents[1]; else the top parent's (IA join-class-lesson-plan 9.3).
+      // At most three gets: the statement, its top parent, the lesson.
+      function getAccess() {
+        let statement = statementDataOf(getStatementId());
+        let own = accessOf(statement);
+        let topId = statement == null ? null : statement.get('topParentId', null);
+        let top = (own != null || topId == null) ? null : statementDataOf(topId);
+        let topIsHome = isHomeData(top);
+        let parents = statement == null ? [] : statement.get('parents', []);
+        return own != null
+          ? own
+          : (top == null
+              ? null
+              : (topIsHome
+                  ? ((parents is list && parents.size() > 1) ? accessOf(statementDataOf(parents[1])) : null)
+                  : accessOf(top)));
+      }
+
       function isBanned() {
         return resource != null && resource.data.role == "banned";
       }
-      
+
+      // join-class HOMES: who administers a home is decided only by the server
+      // (classStartLesson re-syncs it to the class's teacherIds; removeClassTeacher
+      // revokes). No client creates or raises an elevated subscription on a home
+      // (not even its creator, via isCreator()), changes anyone's role there, or
+      // touches another person's home subscription. A teacher may still edit or
+      // drop their own (bookmark, read marks) without changing its role.
+      function isHomeSubscription() {
+        return isHomeData(statementDataOf(getStatementId()));
+      }
+      function homeSubscriptionWriteOk() {
+        return !isHomeSubscription() ||
+               (request.resource.data.role != 'admin' &&
+                request.resource.data.role != 'statement-creator' &&
+                request.resource.data.role != 'creator');
+      }
+      function homeSubscriptionUpdateOk() {
+        return !isHomeSubscription() || (isSubscriber() && isRoleUnchanged());
+      }
+
       function isOpenToAll() {
         return getAccess() == "openToAll";
       }
@@ -850,6 +1681,89 @@ service cloud.firestore {
                (isTargetAdmin() || isTargetStatementCreator());
       }
 
+      // join-class fields on a workspace subscription. The student writes
+      // side (0..100), camp ('a'|'center'|'b') and decisionSupport (-1..+1)
+      // on their own doc; tableId is server-written only (classAssignTables /
+      // classMoveStudent), so no non-admin client may set, change or clear it.
+      // Each check is a no-op for a doc that does not carry the field, so the
+      // main app's own subscription writes are untouched.
+      // proposalRepliesReadAt (IA 22): the student's own read mark on the
+      // replies to their proposal; any number, no lesson gate (reading is not
+      // a write into the lesson).
+      function classFieldValuesOk() {
+        let d = request.resource.data;
+        return (!('proposalRepliesReadAt' in d) || d.proposalRepliesReadAt is number) &&
+               (!('side' in d) || (d.side is number && d.side >= 0 && d.side <= 100)) &&
+               (!('camp' in d) || d.camp in ['a', 'center', 'b']) &&
+               (!('decisionSupport' in d) ||
+                 (d.decisionSupport is number && d.decisionSupport >= -1 && d.decisionSupport <= 1));
+      }
+
+      function classCreateOk() {
+        let d = request.resource.data;
+        return classFieldValuesOk() && !('tableId' in d) &&
+               (!('side' in d || 'camp' in d || 'decisionSupport' in d) ||
+                classLessonWritable(d.statementId));
+      }
+
+      function classUpdateOk() {
+        let changed = request.resource.data.diff(resource.data).affectedKeys();
+        return classFieldValuesOk() &&
+               !changed.hasAny(['tableId']) &&
+               (!changed.hasAny(['side', 'camp', 'decisionSupport']) ||
+                classLessonWritable(resource.data.statementId));
+      }
+
+      // IDENTITY OF A SUBSCRIPTION. Every admin check (statements isAdmin(),
+      // checkTopParentAdmin(), this block's isAdmin(), the server's
+      // isWorkspaceAdmin, covenant membership) finds a subscription by its DOC
+      // ID, {uid}--{statementId}; the access checks here read its FIELDS. They
+      // must agree, or a doc judged against one statement grants admin over
+      // another (way A: create {uid}--X holding the fields of a statement the
+      // writer owns; way B: move statementId onto X; way C: promote an old
+      // mismatched member doc). Every client builds the id as
+      // `${uid}--${statementId}` and never moves statementId / userId.
+      function userUidOf(d) {
+        return d.get('user', null) is map ? d.user.get('uid', null) : null;
+      }
+
+      function createIdentityOk() {
+        let d = request.resource.data;
+        return d.get('statementId', null) is string &&
+               statementSubId == request.auth.uid + '--' + d.statementId &&
+               (d.get('user', null) == null || userUidOf(d) == request.auth.uid);
+      }
+
+      // After the write, a doc carrying both userId and statementId must be
+      // exactly {userId}--{statementId}, so a doc whose id already disagrees
+      // (written before this rule) can no longer be updated, e.g. promoted.
+      // statementId / userId never change; a legacy doc missing them may gain
+      // them only together with the other, i.e. only the exact values its id
+      // names. user.uid may stay as it is (server copies store the statement's
+      // creator there) or become userId.
+      function updateIdentityOk() {
+        let before = resource.data;
+        let after = request.resource.data;
+        let beforeStatement = before.get('statementId', null);
+        let afterStatement = after.get('statementId', null);
+        let beforeUser = before.get('userId', null);
+        let afterUser = after.get('userId', null);
+        let complete = afterUser is string && afterStatement is string;
+        return (afterStatement == beforeStatement || (beforeStatement == null && complete)) &&
+               (afterUser == beforeUser || (beforeUser == null && complete)) &&
+               (!complete || statementSubId == afterUser + '--' + afterStatement) &&
+               (userUidOf(after) == userUidOf(before) || userUidOf(after) == afterUser);
+      }
+
+      // The roles a person may give themselves. An allow-list, because a
+      // deny-list misses whatever it did not think of: server code counts the
+      // literal 'creator' as an admin (functions/src/classroom/classroomAccess.ts)
+      // and it was never on the old list. Real creators and admins do not pass
+      // through here, they take the isAdminOrCreator() branch.
+      function isSelfGrantableRole() {
+        return request.resource.data.role in ['member', 'waiting', 'unsubscribed'];
+      }
+
       allow read: if request.auth.uid != null;
 
       // For create
@@ -863,20 +1777,27 @@ service cloud.firestore {
       // and self-grant statement-admin (edit protected settings, delete, ban).
       allow create: if request.auth.uid != null &&
                      request.resource.data.userId == request.auth.uid &&
+                     createIdentityOk() &&
+                     homeSubscriptionWriteOk() &&
                      (isAdminOrCreator() ||
-                      (request.resource.data.role != 'admin' &&
-                       request.resource.data.role != 'statement-creator' &&
-                       request.resource.data.role != 'banned' &&
+                      (isSelfGrantableRole() &&
+                       classCreateOk() &&
                        (isPublic() ||
                         isOpenToAll() ||
                         isOpenForRegistered() ||
                         (isModerated() && isWaitingRole()))));
 
       // For update
+      // The subscriber branch is already an allow-list: a person may keep their
+      // role or move to 'waiting' / 'member'. Only an admin or the real creator
+      // can set anything else.
       allow update: if request.auth.uid != null &&
                      !isTryingToBanProtectedUser() &&
+                     updateIdentityOk() &&
+                     homeSubscriptionUpdateOk() &&
                      (isAdminOrCreator() ||
                       (isSubscriber() &&
+                        classUpdateOk() &&
                         (isRoleUnchanged() ||
                           (!isBanned() &&
                             ((isModerated() && isWaitingRole()) ||
@@ -885,15 +1806,35 @@ service cloud.firestore {
                       ));
       
       // For delete
-      allow delete: if request.auth.uid != null && 
+      allow delete: if request.auth.uid != null &&
+                     (!isHomeSubscription() || isSubscriber()) &&
                      (isAdminOrCreator() ||
                       (isSubscriber() && !isBanned()));
     }
 
+    // Home activity feed — one doc per (user, top-level discussion), written
+    // ONLY by Cloud Functions (membership lifecycle + coalesced activity).
+    // A user reads only their own entries; the home query filters on
+    // userId == auth.uid, so a list is provably limited to them. No client
+    // writes: a client that could stamp lastActivity could pin a discussion
+    // to the top of its own (or, via a forged id, someone else's) home.
+    match /userFeed/{feedId} {
+      allow read: if request.auth != null &&
+                   resource != null &&
+                   resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Server-only coalescing marker for userFeed fan-out (one per discussion).
+    match /userFeedThrottle/{statementId} {
+      allow read, write: if false;
+    }
+
     // The rest of the collection rules...
+    // No app reads or writes this any more; only the Admin SDK export and
+    // restore scripts touch it.
     match /massConsensusProcesses/{statementId=**} {
-      allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow read, write: if false;
     }
     
     match /statementsSignatures/{signatureId=**} {
@@ -905,9 +1846,11 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
 
+    // No client writes this. A write fires onSetChoseBySettings, which rewrites
+    // a question's chosen options, so it must not be reachable from a browser.
     match /choseBy/{statementId=**} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow write: if false;
     }
 
     match /statementRoomsAsked/{requestId=**} {
@@ -915,8 +1858,9 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
 
+    // No client writes this. A write fires updateResultsSettings.
     match /resultsTriggers/{statementId=**} {
-      allow write: if request.auth.uid != null;
+      allow write: if false;
     }
 
     match /statementLobbyRooms/{statementId=**} {
@@ -975,7 +1919,13 @@ service cloud.firestore {
     // {uid}--{statementId} (see docs/architecture/rules-inventory.md §2); the
     // synthetic agora-ai--* raters and every server aggregation use the Admin
     // SDK and bypass these rules entirely.
-    match /evaluations/{evluationId=**} {
+    //
+    // Everything below judges only the incoming document: a vote stays a direct
+    // client write with no added lookup, because every get() here is paid on
+    // every vote. The one lookup is notRemovedAgoraRater, and only for a rating
+    // that names an Agora session. Nothing here looks at the option, so anyone,
+    // anonymous included, can evaluate an option somebody else wrote.
+    match /evaluations/{evaluationDocId} {
       // Cross-user reads stay open: Odyssey's opinion map reads the whole
       // game's evaluations, and Agora derives its "who rated when" timeline
       // the same way.
@@ -988,22 +1938,38 @@ service cloud.firestore {
                && request.resource.data.statementId is string
                && request.resource.data.evaluatorId is string
                && request.resource.data.evaluation is number
+               && request.resource.data.evaluation >= -1
+               && request.resource.data.evaluation <= 1
                && request.resource.data.updatedAt is number;
       }
 
+      // Who the vote claims to be, in all three places it says so. The trigger
+      // counts by evaluator.uid, so that is the field a forger would aim at.
+      // evaluator is optional: Flow writes the vote without it.
       function isOwnEvaluation() {
         return request.auth != null &&
-               request.resource.data.evaluatorId == request.auth.uid;
+               request.resource.data.evaluatorId == request.auth.uid &&
+               (request.resource.data.get('evaluator', null) == null ||
+                request.resource.data.evaluator.uid == request.auth.uid) &&
+               evaluationDocId == request.auth.uid + '--' + request.resource.data.statementId &&
+               request.resource.data.evaluationId == evaluationDocId;
       }
 
-      allow create: if hasEvaluationShape() && isOwnEvaluation();
+      // An Agora rating names its session; a student the teacher removed
+      // from that session rates nothing more in it.
+      function notRemovedAgoraRater() {
+        return request.resource.data.get('agoraSessionId', null) == null ||
+               !agoraRemovedFrom(request.resource.data.agoraSessionId);
+      }
+
+      allow create: if hasEvaluationShape() && isOwnEvaluation() && notRemovedAgoraRater();
 
       // On update both sides must be the caller: the existing document to stop
       // one student overwriting another's rating, and the incoming one to stop
       // an evaluation being reassigned to someone else. statementId and
       // parentId are pinned so a rating cannot be moved onto a different
       // proposal after the fact.
-      allow update: if hasEvaluationShape() && isOwnEvaluation()
+      allow update: if hasEvaluationShape() && isOwnEvaluation() && notRemovedAgoraRater()
                     && resource.data.evaluatorId == request.auth.uid
                     && request.resource.data.statementId == resource.data.statementId
                     && request.resource.data.parentId == resource.data.parentId
@@ -1030,9 +1996,14 @@ service cloud.firestore {
     // Typing status for real-time collaboration indicators
     match /typingStatus/{typingId} {
       allow read: if request.auth != null;
-      // Users can only write their own typing status (document ID includes their userId)
-      allow create, update: if request.auth != null &&
-                              request.resource.data.userId == request.auth.uid;
+      // Users can only write their own typing status: the document id ends in
+      // their uid ({paragraphId}--{uid}), and an existing document must be theirs.
+      allow create: if request.auth != null &&
+                       request.resource.data.userId == request.auth.uid &&
+                       typingId.matches('.*--' + request.auth.uid);
+      allow update: if request.auth != null &&
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.userId == request.auth.uid;
       // Users can delete their own typing status
       // Note: resource may be null if document doesn't exist, so we check for it first
       allow delete: if request.auth != null &&
@@ -1107,13 +2078,55 @@ service cloud.firestore {
     // statementId 'none' rather than deleting, so the counting trigger can
     // decrement; the delete rule is here only for account cleanup.
     match /votes/{voteId} {
+      function agreementBallotOpen(parentId, optionId) {
+        let path = /databases/$(database)/documents/statements/$(parentId);
+        return !exists(path) || !get(path).data.keys().hasAny(['agreementBallot']) ||
+          (get(path).data.get('questionSettings', {}).get('isHalted', false) != true &&
+           (optionId == 'none' || get(/databases/$(database)/documents/statements/$(optionId)).data.parentId == parentId));
+      }
+      // An Agora ballot's question carries its session; a student the teacher
+      // removed from that session votes no more in it. Same parent get() as
+      // agreementBallotOpen, so it is billed once.
+      function notRemovedAgoraVoter(parentId) {
+        let path = /databases/$(database)/documents/statements/$(parentId);
+        return !exists(path) ||
+               get(path).data.get('agoraSessionId', null) == null ||
+               !agoraRemovedFrom(get(path).data.agoraSessionId);
+      }
+      // join-class: a challenge question that carries statementSettings.ballot
+      // takes votes only while that ballot is frozen, not paused (pausedAt:
+      // the teacher locked the votes for now) and not closed, and only for one
+      // of its candidates (or 'none' to withdraw). Questions without a ballot
+      // (every main-app vote) pass untouched. Same parent get() as the two
+      // checks above, billed once.
+      function classBallotOpen(parentId, optionId) {
+        let path = /databases/$(database)/documents/statements/$(parentId);
+        let ballot = exists(path)
+          ? get(path).data.get('statementSettings', {}).get('ballot', null)
+          : null;
+        return ballot == null ||
+               (ballot.get('closedAt', null) == null &&
+                ballot.get('pausedAt', null) == null &&
+                (optionId == 'none' || optionId in ballot.get('candidateIds', [])) &&
+                classLessonWritable(get(path).data.get('parentId', 'none')));
+      }
       allow read: if request.auth.uid != null;
       allow create, update: if request.auth.uid != null &&
+                               agreementBallotOpen(request.resource.data.parentId, request.resource.data.statementId) &&
+                               notRemovedAgoraVoter(request.resource.data.parentId) &&
+                               classBallotOpen(request.resource.data.parentId, request.resource.data.statementId) &&
                                request.resource.data.userId == request.auth.uid &&
+                               // join-class: only classCastVoteFor (Admin SDK) says who entered a vote.
+                               !('enteredByUid' in request.resource.data) &&
                                voteId == (request.auth.uid + '--' +
                                           request.resource.data.parentId);
+      // A delete is a withdrawal too, so on a class ballot it follows the same
+      // gate as writing 'none': refused while the vote is paused or closed (or
+      // the lesson is held). Votes on questions without a ballot are unchanged.
       allow delete: if request.auth.uid != null &&
-                       resource.data.userId == request.auth.uid;
+                       resource != null &&
+                       resource.data.userId == request.auth.uid &&
+                       classBallotOpen(resource.data.get('parentId', 'none'), 'none');
     }
     
     match /posts/{postId=**} {
@@ -1138,15 +2151,23 @@ service cloud.firestore {
 
     match /usersSettings/{settingId=**} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null
-        && request.resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null &&
+                       request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null &&
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.userId == request.auth.uid;
     }
 
     match /usersData/{dataId=**} {
       allow read: if request.auth.uid != null;
-      // Ensure users can only write documents where userId matches their auth uid
-      allow write: if request.auth.uid != null
-        && request.resource.data.userId == request.auth.uid;
+      // Both sides of a write must be the caller. Checking only the incoming
+      // userId let anyone overwrite another user's answers by stamping their
+      // own uid on them. No client deletes here (a delete was never allowed).
+      allow create: if request.auth != null &&
+                       request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null &&
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.userId == request.auth.uid;
     }
 
     match /usersV2/{userId} {
@@ -1162,7 +2183,11 @@ service cloud.firestore {
         return request.resource.data.get('systemAdmin', false) == existing;
       }
 
-      allow read: if request.auth != null;
+      // These documents hold email addresses. A user reads their own; the
+      // system-admin console (apps/admin) reads and lists all of them.
+      allow get: if request.auth != null &&
+                    (request.auth.uid == userId || isSystemAdminUser());
+      allow list: if isSystemAdminUser();
       // Allow users to write their own document (userId must match auth uid),
       // but never to set or change the systemAdmin privilege flag.
       allow write: if request.auth != null &&
@@ -1236,9 +2261,9 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
     
+    // No code in the repo reads or writes this collection.
     match /tokens/{token=**} {
-      allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow read, write: if false;
     }
       
     match /consultations/{consultationId} {
@@ -1452,20 +2477,36 @@ service cloud.firestore {
     // update let anyone write consent docs. Ownership can't be tied to auth.uid
     // because anonymous users store a custom userId, so auth-presence is the
     // boundary. Anonymous-auth users still satisfy `request.auth != null`.
+    //
+    // MC and Sign participants hold a browser-minted `anon_...` id that is not
+    // their Firebase uid. Any other id is a real account's uid, so it can only
+    // be written by that account: nobody can give or withdraw a signed-in
+    // person's consent. The anon_ records stay unbound until those two apps
+    // send a verified identity.
     match /researchConsent/{consentId} {
+      function mayWriteConsentFor(uid) {
+        return uid == request.auth.uid || uid.matches('^anon_.*');
+      }
       allow create: if request.auth != null &&
                      request.resource.data.userId is string &&
                      request.resource.data.topParentId is string &&
-                     request.resource.data.consentId == consentId;
+                     request.resource.data.consentId == consentId &&
+                     mayWriteConsentFor(request.resource.data.userId);
       allow read: if request.auth != null;
       allow update: if request.auth != null &&
                      request.resource.data.consentId == consentId &&
-                     request.resource.data.userId == resource.data.userId;
+                     request.resource.data.userId == resource.data.userId &&
+                     mayWriteConsentFor(resource.data.userId);
       allow delete: if false;
     }
 
     // Notification queue - no client access (Functions only)
     match /notificationQueue/{queueItemId} {
+      allow read, write: if false;
+    }
+
+    // Statement vectors (embedding, hybridEmbedding) - no client access (Functions only)
+    match /statementEmbeddings/{statementId} {
       allow read, write: if false;
     }
 
@@ -1508,7 +2549,13 @@ service cloud.firestore {
         isQuestionAdmin(resource.data.questionId) ||
         isQuestionCreator(resource.data.questionId)
       );
-      allow list: if request.auth != null;
+      // These rows carry the raw invite token, so a list is a credential dump.
+      // DelegatesPanel queries `where questionId == X`; that equality is what
+      // lets the rule below be proven for the whole result.
+      allow list: if request.auth != null && (
+        isQuestionAdmin(resource.data.questionId) ||
+        isQuestionCreator(resource.data.questionId)
+      );
       allow write: if false;
     }
 
@@ -1581,8 +2628,32 @@ service cloud.firestore {
         isOrgAdmin(resource.data.organizationId) ||
         isSystemAdminUser()
       );
-      // Safe to list: only `tokenHash` (sha256) is stored — the raw invite
-      // token never touches Firestore, so a listed row is not a credential.
+      // Only `tokenHash` (sha256) is stored, but the rows still hold invitees'
+      // email addresses. Studio queries `where organizationId == X` from pages
+      // only an org admin or a system admin reaches; a viewer is redirected.
+      allow list: if request.auth != null && (
+        isOrgAdmin(resource.data.organizationId) ||
+        isSystemAdminUser()
+      );
+      allow write: if false;
+    }
+
+    // Questions linked onto an organization's board from elsewhere. Written
+    // exclusively by fn_linkOrgStatement / fn_renameOrgActivity /
+    // fn_unlinkOrgStatement (Admin SDK); clients only read. A link record holds
+    // no content of its own beyond the org-facing label, and the authority it
+    // represents lives in statementsSubscribe, not here.
+    match /organizationActivities/{activityId} {
+      // `resource != null` first: on a document that does not exist `resource`
+      // is null, and reading `.data` off it is an ERROR in rules, not a denial.
+      // An error propagates to the client as a failed listener rather than a
+      // clean "no such document" — which is what a question with no link record
+      // (i.e. every question the org owns) looks like.
+      allow get: if resource != null &&
+                    (isOrgMember(resource.data.organizationId) || isSystemAdminUser());
+      // list: Studio's board query is `where organizationId == X`; scoping the
+      // list by resource.data would need a get() per row, exactly as for
+      // organizationMembers above.
       allow list: if request.auth != null;
       allow write: if false;
     }
@@ -1684,6 +2755,24 @@ service cloud.firestore {
       match /items/{itemId} {
         allow read, write: if false;
       }
+    }
+    // Bookkeeping for the reJudge sweep (fingerprints + pair refusals). Written
+    // only by fn_synthesisReJudge through the Admin SDK; nothing reads it.
+    match /synthesisSweepState/{document=**} { allow read, write: if false; }
+    match /agreementHandoffs/{document=**} { allow read, write: if false; }
+    // Linked stations' one-time codes (doc id = sha256 of the code). Written and
+    // redeemed only by agoraMintStationHandoff / redeemAppHandoff (Admin SDK).
+    match /appHandoffs/{document=**} { allow read, write: if false; }
+    match /deliberationBudgets/{id=**} { allow read, write: if false; }
+    // One marker per (question, user) already counted in the question's evaluator
+    // total. Written only by the evaluation triggers / backfill (Admin SDK).
+    match /evaluationParticipants/{document=**} { allow read, write: if false; }
+    match /questionDeliberations/{document=**} {
+      allow read, write: if false;
+    }
+    // Version-bound covenant records are only served by the authorized callable.
+    match /covenantWorkflows/{document=**} {
+      allow read, write: if false;
     }
   }
 }

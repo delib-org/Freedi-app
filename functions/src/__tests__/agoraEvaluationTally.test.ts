@@ -82,4 +82,19 @@ describe('agora tallyEvaluations', () => {
 
 		expect(tallyEvaluations(rated, campOf)).toEqual(tallyEvaluations(rated, campOf));
 	});
+
+	// `recountPerCamp` drops raterless rows before they get here, but the tally
+	// is the thing every camp reading is computed from, so it must not throw or
+	// invent an anonymous student if one ever slips through.
+	it('survives a row whose rater is missing', () => {
+		const perCamp = tallyEvaluations(
+			[
+				{ evaluatorId: undefined as unknown as string, value: 1 },
+				{ evaluatorId: 'rina', value: 1 },
+			],
+			camps({ rina: AgoraCamp.right }),
+		);
+
+		expect(perCamp.right).toMatchObject({ sum: 1, n: 1, positiveN: 1 });
+	});
 });

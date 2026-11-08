@@ -6,6 +6,10 @@ import {
 	formatErrorDetails,
 } from '../../../../utils/errorBoundaryHelpers';
 import { logError } from '@/utils/errorHandling';
+import {
+	isFirestoreAssertionError,
+	recordIndexedDBError,
+} from '@/utils/firestorePersistenceFallback';
 
 interface Props {
 	children: ReactNode;
@@ -41,11 +45,22 @@ export class StatementErrorBoundary extends Component<Props, State> {
 			operation: 'components.StatementErrorBoundary.componentDidCatch',
 			metadata: { componentStack: errorInfo.componentStack },
 		});
+		// Errors caught here never reach the global IndexedDB handler, so record
+		// the Firestore failure ourselves: the next load must skip the persistent cache.
+		if (isFirestoreAssertionError(error)) recordIndexedDBError();
 		this.setState({ errorInfo });
 		this.props.onError?.(error, errorInfo);
 	}
 
 	private handleRetry = () => {
+		// A failed Firestore SDK cannot recover in place; re-rendering would hit it
+		// again. A reload starts on the memory cache recorded in componentDidCatch.
+		if (isFirestoreAssertionError(this.state.error)) {
+			window.location.reload();
+
+			return;
+		}
+
 		this.setState({
 			hasError: false,
 			error: undefined,

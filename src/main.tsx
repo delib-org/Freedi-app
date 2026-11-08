@@ -1,116 +1,75 @@
-// Import the CSS first to ensure it loads quickly
-import './view/style/style.scss';
-
-import * as React from 'react';
-import { createRoot } from 'react-dom/client';
-import { RouterProvider } from 'react-router';
-import { store } from './redux/store';
-import { Provider } from 'react-redux';
-import { router } from './routes/router';
-import { UserConfigProvider } from './context/UserConfigContext';
-import { AuthStateProvider } from './context/AuthStateContext';
-import PWAWrapper from './view/components/pwa/PWAWrapper';
-import { initSentry } from './services/monitoring/sentry';
-import RootErrorBoundary from './components/ErrorBoundary/RootErrorBoundary';
-import { schedulePrefetchLazyRoutes } from './routes/prefetchRoutes';
+/**
+ * Keep this entry dependency-free. Signed-out visitors should not download the
+ * application, Firestore, Redux, monitoring or PWA code to see the landing page.
+ */
 import { loadLanguageData, DEFAULT_LANGUAGE, isValidLanguage } from '@freedi/shared-i18n';
+import { hasPersistedFirebaseUser } from './utils/persistedAuthUser';
 import { LocalStorageObjects } from './types/localStorage/LocalStorageObjects';
 
-// Start downloading the current language's dictionary chunk immediately,
-// in parallel with the rest of app boot (UserConfigProvider awaits the same cached promise)
-try {
-	const savedConfig = localStorage.getItem(LocalStorageObjects.UserConfig);
-	const parsed: { chosenLanguage?: string } = savedConfig ? JSON.parse(savedConfig) : {};
-	const lang = parsed.chosenLanguage;
-	void loadLanguageData(lang && isValidLanguage(lang) ? lang : DEFAULT_LANGUAGE);
-} catch {
-	void loadLanguageData(DEFAULT_LANGUAGE);
+/**
+ * Origins the signed-in app talks to before it can show any data: reCAPTCHA
+ * (App Check) scripts, the App Check token exchange, Auth's account lookup and
+ * token refresh, and Firestore. On slow 4G every new origin costs DNS + TCP +
+ * TLS (~3 round trips, ~1.7 s) and the app used to discover them one after
+ * another, only once app-main.js had finished downloading. Opening them now
+ * overlaps that setup with the app download.
+ *
+ * Scripts are fetched in no-cors mode (credentialed connection pool); the
+ * Firebase REST/WebChannel calls are anonymous CORS requests, which use a
+ * separate pool and need `crossorigin` on the hint to share the connection.
+ */
+const SCRIPT_ORIGINS = ['https://www.google.com', 'https://www.gstatic.com'];
+const API_ORIGINS = [
+	'https://content-firebaseappcheck.googleapis.com',
+	'https://identitytoolkit.googleapis.com',
+	'https://securetoken.googleapis.com',
+	'https://firestore.googleapis.com',
+];
+// The exact URL App Check's ReCaptchaV3Provider injects as a classic script.
+const RECAPTCHA_SCRIPT_URL = 'https://www.google.com/recaptcha/api.js';
+
+function addHint(rel: string, href: string, attributes: Record<string, string> = {}): void {
+	const link = document.createElement('link');
+	link.rel = rel;
+	link.href = href;
+	Object.entries(attributes).forEach(([name, value]) => link.setAttribute(name, value));
+	document.head.append(link);
 }
 
-// Initialize Sentry before anything else
-initSentry();
+function warmUpSignedInConnections(): void {
+	// Locally the app talks to the emulators and App Check is off.
+	if (['localhost', '127.0.0.1', '::1'].includes(location.hostname)) return;
 
-// Initialize IndexedDB error handler early to catch connection errors
-import { setupIndexedDBErrorHandler } from './utils/indexedDBErrorHandler';
-import { isChunkLoadError, handleChunkLoadError } from './utils/errorBoundaryHelpers';
-
-setupIndexedDBErrorHandler();
-
-// Global handler for chunk loading errors (stale cache after deployment)
-window.addEventListener('error', (event) => {
-	if (event.error && isChunkLoadError(event.error)) {
-		console.info('Chunk loading error detected (global handler), reloading...');
-		event.preventDefault();
-		handleChunkLoadError();
-	}
-});
-
-window.addEventListener('unhandledrejection', (event) => {
-	if (event.reason && isChunkLoadError(event.reason)) {
-		console.info('Chunk loading promise rejection detected, reloading...');
-		event.preventDefault();
-		handleChunkLoadError();
-	}
-});
-
-// Defer non-critical startup work until the browser is idle (after first paint)
-const runWhenIdle = (callback: () => void): void => {
-	if (typeof window.requestIdleCallback === 'function') {
-		window.requestIdleCallback(() => callback(), { timeout: 5000 });
-	} else {
-		window.setTimeout(callback, 1500);
-	}
-};
-
-runWhenIdle(() => {
-	// Microsoft Clarity analytics — not needed for first paint
-	import('@microsoft/clarity')
-		.then((module) => module.default.init('vipo4d20gg'))
-		.catch(() => undefined);
-
-	// Firebase messaging service worker registration + monitor (self-executes on import)
-	import('./utils/ensureFirebaseServiceWorker').catch(() => undefined);
-});
-
-// Warm the lazy route chunks during idle time so later navigations are instant
-schedulePrefetchLazyRoutes();
-
-// Import debug utilities in development and testing
-if (import.meta.env.DEV || import.meta.env.MODE === 'testing') {
-	import('./utils/testSentry');
-	import('./utils/debugNotifications');
-	import('./utils/notificationDebugger');
-	import('./utils/testNotification');
-	import('./utils/notificationStatus');
-	import('./utils/debugGroupNotifications');
-	import('./utils/debugDeploymentNotifications');
-	import('./utils/debugServiceWorkers');
-	import('./utils/debugChromeNotifications');
-	import('./utils/monitorNotifications');
-	import('./utils/debugFCMDelivery');
-	import('./utils/testChromeDelivery');
-	import('./utils/compareBrowserTokens');
-	import('./utils/fixChromeServiceWorker');
-	import('./utils/debugServiceWorkerScopes');
-	import('./utils/monitorPushEvents');
+	SCRIPT_ORIGINS.forEach((origin) => addHint('preconnect', origin));
+	API_ORIGINS.forEach((origin) => addHint('preconnect', origin, { crossorigin: 'anonymous' }));
+	addHint('preload', RECAPTCHA_SCRIPT_URL, { as: 'script' });
 }
 
-export const AppVersion = '5.5.26'; // Update this version when making changes
+/**
+ * Start the reader's dictionary chunk alongside app-main.js instead of after
+ * it: app-main asks for the same language, and the loader caches the promise.
+ */
+function warmUpDictionary(): void {
+	try {
+		const savedConfig = localStorage.getItem(LocalStorageObjects.UserConfig);
+		const parsed: { chosenLanguage?: string } = savedConfig ? JSON.parse(savedConfig) : {};
+		const lang = parsed.chosenLanguage;
+		void loadLanguageData(lang && isValidLanguage(lang) ? lang : DEFAULT_LANGUAGE);
+	} catch {
+		void loadLanguageData(DEFAULT_LANGUAGE);
+	}
+}
 
-const root = createRoot(document.getElementById('root')!);
+const isLandingPath = location.pathname === '/' || location.pathname === '/start';
+const isSignedIn = hasPersistedFirebaseUser();
 
-root.render(
-	<React.StrictMode>
-		<RootErrorBoundary>
-			<Provider store={store}>
-				<UserConfigProvider>
-					<AuthStateProvider>
-						<PWAWrapper>
-							<RouterProvider router={router} />
-						</PWAWrapper>
-					</AuthStateProvider>
-				</UserConfigProvider>
-			</Provider>
-		</RootErrorBoundary>
-	</React.StrictMode>,
-);
+if (isLandingPath && !isSignedIn) {
+	void import('./landing-main');
+} else {
+	warmUpDictionary();
+	if (isSignedIn) warmUpSignedInConnections();
+	// A known signed-in visitor at the marketing URL can skip its component and
+	// dictionary entirely. Firebase still verifies the session in the full app.
+	if (isLandingPath) history.replaceState(null, '', '/home');
+	void import('./app-main');
+}

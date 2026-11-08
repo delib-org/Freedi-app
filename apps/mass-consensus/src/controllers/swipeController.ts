@@ -7,12 +7,12 @@
  * - Types from @freedi/shared-types
  */
 
-import { query, where, getDocs, limit as firestoreLimit, orderBy, collection } from 'firebase/firestore';
 import { Statement } from '@freedi/shared-types';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
-import { db } from '@/lib/firebase/client';
+import { loadFirestore } from '@/lib/firebase/lazyFirestore';
 import { SWIPE } from '@/constants/common';
 import { Collections, isValidEvaluationValue } from '@freedi/shared-types';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 /**
  * Submit a rating for a statement via API route
@@ -52,13 +52,11 @@ export async function submitRating(
     }
 
     // Call API route which uses deterministic evaluation IDs
-    const response = await fetch(`/api/evaluations/${statementId}`, {
+    const response = await participantFetch(`/api/evaluations/${statementId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         evaluation: rating,
-        userId,
-        userName,
         ...(surveyId ? { surveyId } : {}),
       }),
     });
@@ -98,15 +96,16 @@ export async function loadCardBatch(
     }
 
     // Query statements that are children of this question
-    const statementsRef = collection(db, Collections.statements);
-    const q = query(
+    const { sdk, db } = await loadFirestore();
+    const statementsRef = sdk.collection(db, Collections.statements);
+    const q = sdk.query(
       statementsRef,
-      where('parentId', '==', questionId),
-      orderBy('createdAt', 'desc'),
-      firestoreLimit(limit)
+      sdk.where('parentId', '==', questionId),
+      sdk.orderBy('createdAt', 'desc'),
+      sdk.limit(limit)
     );
 
-    const snapshot = await getDocs(q);
+    const snapshot = await sdk.getDocs(q);
     const statements: Statement[] = [];
 
     snapshot.forEach((doc) => {
@@ -203,8 +202,8 @@ export async function fetchPreviousEvaluations(
     // Fetch evaluations in parallel
     const fetches = statementIds.map(async (statementId) => {
       try {
-        const response = await fetch(
-          `/api/evaluations/${statementId}?userId=${encodeURIComponent(userId)}`
+        const response = await participantFetch(
+          `/api/evaluations/${statementId}`
         );
         if (response.ok) {
           const data = await response.json();

@@ -1,0 +1,76 @@
+// Search Box Molecule — BEM
+// A search input with a leading icon and a clear button.
+// React wrapper: atomic/molecules/SearchBox
+//
+// DOM:   <div class="search-box">
+//          <svg class="search-box__icon"/>
+//          <input class="search-box__input" type="search"/>
+//          [<button class="search-box__clear">×</button>]
+//        </div>
+@use '../mixins' as *;
+
+.search-box {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-height: 2.75rem;
+	padding-block: 0.25rem;
+	padding-inline: 0.75rem 0.25rem;
+	background: var(--card-default);
+	color: var(--text-body);
+	border: 1px solid var(--border-light);
+	border-radius: 0.75rem;
+	transition: border-color var(--motion-fast, 0.15s) ease;
+
+	&:focus-within {
+		border-color: var(--btn-primary);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--btn-primary) 20%, transparent);
+	}
+
+	&__icon {
+		flex-shrink: 0;
+		color: var(--text-caption, var(--text-body));
+	}
+
+	&__input {
+		flex: 1;
+		min-width: 0;
+		border: 0;
+		background: none;
+		color: inherit;
+		font: inherit;
+		font-size: 1rem; // 16px keeps iOS from zooming into the field
+		padding: 0;
+
+		&:focus {
+			outline: none;
+		}
+
+		// The clear button replaces the browser's own.
+		&::-webkit-search-cancel-button {
+			appearance: none;
+		}
+	}
+
+	&__clear {
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 2.25rem;
+		height: 2.25rem;
+		border: 0;
+		border-radius: 50%;
+		background: none;
+		color: var(--text-caption, var(--text-body));
+		cursor: pointer;
+
+		&:hover,
+		&:focus-visible {
+			background: color-mix(in srgb, var(--text-body) 8%, transparent);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+}

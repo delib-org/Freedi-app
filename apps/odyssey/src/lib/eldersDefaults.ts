@@ -1,4 +1,5 @@
 import type { OdysseyElder } from '@freedi/shared-types';
+import { COUNSEL_BY_SLUG } from './counsel/index';
 
 /**
  * Seed content for the Elder personas — the crew of המלחים מחכים, AI characters
@@ -10,9 +11,10 @@ import type { OdysseyElder } from '@freedi/shared-types';
  *
  * The twelve are chosen to disagree with each other, not to average out: the
  * founder and the man who thought founding was not enough, two chief rabbis
- * who read the same sources to opposite conclusions, the general who drew
- * borders and the poet who never lived to vote. A crew that agreed would be a
- * chorus, and a chorus teaches a player nothing.
+ * who read the same sources to opposite conclusions, the underground
+ * broadcaster who gave up a seat rather than a border, the woman who answered
+ * every question by planting something, and the poet who never lived to vote.
+ * A crew that agreed would be a chorus, and a chorus teaches a player nothing.
  *
  * `positions` need not cover every island. Someone who never governed has no
  * documented view on the rabbinate, and inventing one would be the exact lie
@@ -45,6 +47,13 @@ export interface DefaultElder {
 	opposeLine: string;
 	/** island slug → standing challenge in the elder's voice (email + game) */
 	challenges: Record<string, string>;
+	/**
+	 * island slug → one line per shore, by 1-based shore index (an empty
+	 * string leaves that shore to the fallback). What the elder says when the
+	 * player consults them about that shore before marking it. Optional: the
+	 * voyage falls back to the island's challenge line, labelled as such.
+	 */
+	counsel?: Record<string, string[]>;
 }
 
 /**
@@ -88,6 +97,7 @@ export function buildEldersFromDefaults(input: {
 			const challenge = elder.challenges[slug];
 			if (challenge) challenges[islandId] = challenge;
 		}
+		const counsel = resolveCounsel(elder.counsel, islandIdBySlug, stanceIdsBySlug);
 
 		return {
 			elderId: elder.slug,
@@ -102,15 +112,48 @@ export function buildEldersFromDefaults(input: {
 			positions,
 			reactions,
 			challenges,
+			// absent, not `{}`, until a sailor has shore lines: the field is
+			// optional on the schema and an unauthored sailor stays unauthored
+			...(counsel ? { counsel } : {}),
 			sortOrder: index + 1,
 			enabled: true,
 		};
 	});
 }
 
+/**
+ * Seed shore lines (island slug → lines by 1-based shore index) to the stored
+ * shape (island statementId → stance statementId → line). Not tied to
+ * `positions`: a sailor with no documented lean on an island may still have
+ * a question about one of its shores. Undefined when nothing resolves, so an
+ * unauthored sailor carries no `counsel` field at all.
+ */
+export function resolveCounsel(
+	seed: Record<string, string[]> | undefined,
+	islandIdBySlug: Map<string, string>,
+	stanceIdsBySlug: Map<string, string[]>,
+): Record<string, Record<string, string>> | undefined {
+	if (!seed) return undefined;
+	const counsel: Record<string, Record<string, string>> = {};
+	for (const [slug, lines] of Object.entries(seed)) {
+		const islandId = islandIdBySlug.get(slug);
+		const stanceIds = stanceIdsBySlug.get(slug);
+		if (!islandId || !stanceIds) continue;
+		const byStance: Record<string, string> = {};
+		lines.forEach((line, shoreIndex) => {
+			const stanceId = stanceIds[shoreIndex];
+			if (stanceId && line.trim()) byStance[stanceId] = line.trim();
+		});
+		if (Object.keys(byStance).length > 0) counsel[islandId] = byStance;
+	}
+
+	return Object.keys(counsel).length > 0 ? counsel : undefined;
+}
+
 export const DEFAULT_ELDERS: DefaultElder[] = [
 	{
 		slug: 'herzl',
+		counsel: COUNSEL_BY_SLUG['herzl'],
 		name: 'בנימין זאב הרצל',
 		role: 'חוזה המדינה',
 		years: '1860–1904',
@@ -172,6 +215,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 	},
 	{
 		slug: 'ben-gurion',
+		counsel: COUNSEL_BY_SLUG['ben-gurion'],
 		name: 'דוד בן-גוריון',
 		role: 'ראש הממשלה הראשון',
 		years: '1886–1973',
@@ -191,7 +235,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 			},
 			{
 				valueId: 'self-reliance',
-				label: 'עצמאות כוחנו',
+				label: 'עצמאות',
 				description: 'עתידנו תלוי במה שנבנה במו ידינו, לא בהבטחות מבחוץ.',
 			},
 			{
@@ -236,6 +280,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 	},
 	{
 		slug: 'jabotinsky',
+		counsel: COUNSEL_BY_SLUG['jabotinsky'],
 		name: 'זאב ז׳בוטינסקי',
 		role: 'מייסד התנועה הרוויזיוניסטית',
 		years: '1880–1940',
@@ -297,6 +342,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 	},
 	{
 		slug: 'rav-kook',
+		counsel: COUNSEL_BY_SLUG['rav-kook'],
 		name: 'הרב אברהם יצחק הכהן קוק',
 		role: 'הרב הראשי האשכנזי הראשון',
 		years: '1865–1935',
@@ -358,69 +404,70 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 		},
 	},
 	{
-		slug: 'begin',
-		name: 'מנחם בגין',
-		role: 'ראש הממשלה השישי',
-		years: '1913–1992',
-		color: '#7a4b2b',
-		bio: 'דמות בינה מלאכותית בהשראת מנחם בגין — איש האופוזיציה שהפך לראש ממשלה, שוחר משפט וחירות שחתם על השלום הראשון.',
+		slug: 'geula-cohen',
+		counsel: COUNSEL_BY_SLUG['geula-cohen'],
+		name: 'גאולה כהן',
+		role: 'לוחמת לח״י וחברת כנסת',
+		years: '1925–2019',
+		color: '#8c3b2a',
+		bio: 'דמות בינה מלאכותית בהשראת גאולה כהן — קולה המשדר של לח״י במחתרת, אסירה שנמלטה מן הבריטים, וחברת כנסת שפרשה מן הליכוד בגלל קמפ דייוויד וחוקקה את חוק יסוד: ירושלים.',
 		needs: [
-			'כבוד האדם באשר הוא — גם כשהוא יריב',
-			'שלטון חוק ומשפט הוגן: יש שופטים בירושלים',
-			'גאווה יהודית לאומית שאינה מתנצלת',
-			'דאגה אמיתית לשכונות ולמשפחות המוחלשות',
+			'ריבונות מלאה בארץ ישראל — חוק שמחילים, לא מצב שמנהלים',
+			'נאמנות לרעיון גם במחיר הכיסא — פרשה ולא התחרטה',
+			'ירושלים שלמה ומאוחדת, כתובה בחוק יסוד',
+			'עברית, עלייה וחירות ליהודים הכלואים מעבר למסך',
 		],
 		values: [
 			{
-				valueId: 'human-dignity',
-				label: 'הדר',
-				description: 'כבוד האדם וחירותו — בנימוס, במשפט וביחס לכל אדם.',
+				valueId: 'sovereignty',
+				label: 'ריבונות',
+				description: 'מולדת אינה מנוהלת — מחילים עליה חוק ואומרים זאת בקול.',
 			},
 			{
-				valueId: 'rule-of-law',
-				label: 'שלטון החוק',
-				description: 'המשפט מעל השלטון: גם ראש ממשלה עומד לפני שופטים.',
+				valueId: 'defiance',
+				label: 'מרי',
+				description: 'מי שאינו מוכן לשלם מחיר על דעתו, אין לו דעה — יש לו כיסא.',
 			},
 			{
-				valueId: 'national-pride',
-				label: 'גאון לאומי',
-				description: 'עם חופשי בארצו, שאינו כורע ואינו מתנצל על קיומו.',
+				valueId: 'jerusalem',
+				label: 'ירושלים',
+				description: 'יש דברים שאינם נתונים למשא ומתן, ועליהם כותבים חוק יסוד.',
 			},
 		],
 		positions: {
-			accountability: 1,
-			'rule-of-law': 2,
-			'clean-hands': 1,
+			accountability: 2,
+			'rule-of-law': 3,
+			'clean-hands': 2,
 			'political-home': 1,
 			'security-storm': 1,
-			'arab-partnership': 3,
-			'civic-equality': 3,
-			'civic-covenant': 3,
+			'arab-partnership': 4,
+			'civic-equality': 4,
+			'civic-covenant': 1,
 			'sabbath-rabbinate': 4,
 			'bread-and-home': 4,
-			'democracy-itself': 4,
-			'world-partners': 3,
+			'democracy-itself': 2,
+			'world-partners': 4,
 		},
-		agreeLine: 'רבותיי, ב{island} דעתנו אחת. טוב לדעת שיש עם מי להפליג בהדר.',
-		opposeLine:
-			'ב{island} אנו חלוקים, ידידי/תי — אך מחלוקת בין אוהבי ישראל היא זכות. בוא/י נתדיין.',
+		agreeLine: 'ב{island} אנחנו על אותו גל. מה שמאמינים בו — משדרים בקול, כך למדתי במחתרת.',
+		opposeLine: 'ב{island} אני חולקת עליך, ובגלוי. ויתרתי על כיסא בשביל דעה; לא אשתוק עליה עכשיו.',
 		challenges: {
-			accountability: 'כשקמה ועדת חקירה — קיבלתי את דינה. האם גם היום כך ראוי?',
-			'rule-of-law': 'יש שופטים בירושלים, אמרתי. כמה כוח ראוי לתת להם מול הנבחרים?',
-			'clean-hands': 'חייתי בדירה שכורה כל חיי. מה מותר ומה אסור למי ששולט?',
-			'political-home': 'האמנתי בארץ ישראל השלמה — והחזרתי את סיני למען השלום. מה היית מכריע/ה?',
-			'security-storm': 'הפצצתי כור בבגדאד כשכל העולם גינה. מתי מכה מונעת היא חובה?',
-			'arab-partnership': 'אזרח הוא אזרח, בלי הבדל דת ולאום — כך למדתי מז׳בוטינסקי. ומה בקואליציה?',
-			'civic-equality': 'זכויות הפרט קדושות בעיניי. האם די בהן, או שנדרשת גם הכרה קולקטיבית?',
-			'civic-covenant': 'אני כיבדתי את לומדי התורה. איך משלבים כבוד למסורת עם שוויון בנטל?',
-			'sabbath-rabbinate': 'עצרתי את טיסות אל-על בשבת — משום כבוד, לא כפייה. איפה הגבול שלך?',
-			'bread-and-home': 'פרויקט שיקום השכונות היה גאוותי. מה חייבת המדינה למשפחות עמלות?',
-			'democracy-itself': 'ישבתי באופוזיציה שנות דור בלי לערער על הכללים. השיטה חולה או המנהיגים?',
-			'world-partners': 'איננו רפובליקת בננות, אמרתי לאמריקנים. מתי עומדים לבד גם במחיר?',
+			accountability: 'שידרתי מן המחתרת גם את מה שלא נעים היה לשמוע. מה חייבים לברר, ומתי?',
+			'rule-of-law': 'חוק ירושלים עבר בכנסת ברוב סוחף. מי מכריע בסוף — הנבחרים או השופטים?',
+			'clean-hands': 'ישבתי בכלא בשביל אמונה, לא בשביל משרה. מה באמת פוסל אדם מלשרת?',
+			'political-home': 'קרעתי בכנסת את דפי קמפ דייוויד. מה לא נמכר גם תמורת שלום?',
+			'security-storm': 'בלח״י האמנתי שמעטים נחושים משנים היסטוריה. מה מכריע היום?',
+			'arab-partnership': 'דרשתי נאמנות למדינה מכל אזרח. מה את/ה דורש/ת, וממי?',
+			'civic-equality': 'זכויות שוות — ודאי. וחובות? מה הקשר בין השתיים בעיניך?',
+			'civic-covenant': 'נשאתי נשק בגיל שמונה עשרה. מה מבקשים היום מבן ישיבה?',
+			'sabbath-rabbinate': 'חילונית הייתי, ועל ירושלים שלמה נלחמתי. מה יהודי במרחב הציבורי?',
+			'bread-and-home': 'ביתי היה פשוט תמיד, גם בכנסת. מה חייבת המדינה למשפחה עמלה?',
+			'democracy-itself': 'פרשתי מסיעה והקמתי מפלגה, ושילמתי על כך. מה צריך לתקן בשיטה?',
+			'world-partners': 'העולם גינה את חוק ירושלים, והחוק נשאר. מתי עומדים לבד?',
 		},
 	},
 	{
 		slug: 'golda',
+		counsel: COUNSEL_BY_SLUG['golda'],
 		name: 'גולדה מאיר',
 		role: 'ראש הממשלה הרביעית',
 		years: '1898–1978',
@@ -481,68 +528,70 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 		},
 	},
 	{
-		slug: 'dayan',
-		name: 'משה דיין',
-		role: 'רמטכ״ל ושר הביטחון והחוץ',
-		years: '1915–1981',
-		color: '#6b6a3c',
-		bio: 'דמות בינה מלאכותית בהשראת משה דיין — איש שדה וקצין, שקבע עובדות בשטח, פתח את הגשרים לירדן וחתם בסוף דרכו על השלום עם מצרים.',
+		slug: 'rachel-yanait',
+		counsel: COUNSEL_BY_SLUG['rachel-yanait'],
+		name: 'רחל ינאית בן-צבי',
+		role: 'ממקימות "השומר" ומחנכת',
+		years: '1886–1979',
+		color: '#5c7042',
+		bio: 'דמות בינה מלאכותית בהשראת רחל ינאית בן-צבי — מחוג מקימי "השומר", מייסדת משק הפועלות בירושלים ומחנכת, שגרה בצריף גם כשבעלה כיהן כנשיא, וחתמה אחרי 1967 על הקריאה לארץ ישראל השלמה.',
 		needs: [
-			'הכרעה בזמן אמת — עדיף להחליט ולתקן מאשר להסס',
-			'גבולות שאפשר להגן עליהם, ולא רק לצייר',
-			'סידורים מעשיים בשטח גם בלי הסכם מושלם',
-			'לקיחת סיכון מחושב כשההזדמנות אמיתית',
+			'עבודה ואדמה שמעובדת בידיים — בית נבנה, לא מוכרז',
+			'מקום שווה לאישה בשדה, בשמירה ובהנהגה',
+			'נוער וקליטה: ילד שמוצא כאן שורש, לא מחסה',
+			'פשטות אצל מי ששולט — צריף מספיק',
 		],
 		values: [
 			{
-				valueId: 'border',
-				label: 'גבול',
-				description: 'קו על מפה שווה רק כמה שאפשר לעמוד עליו בפועל.',
+				valueId: 'labour',
+				label: 'עבודה',
+				description: 'רעיון שאין מי שיעבוד אותו נובל עוד לפני שהנביט.',
 			},
 			{
-				valueId: 'risk',
-				label: 'סיכון',
-				description: 'מי שאינו מוכן לשלם מחיר, גם לא יקבל דבר.',
+				valueId: 'women-equal',
+				label: 'שוויון האישה',
+				description: 'אישה חורשת, שומרת ומלמדת — שותפה מלאה, לא נלווית.',
 			},
 			{
-				valueId: 'decision',
-				label: 'הכרעה',
-				description: 'אי־החלטה היא החלטה — רק בלי שיישא בה מישהו באחריות.',
+				valueId: 'rootedness',
+				label: 'שורשים',
+				description: 'נוער שנשתל כאן היטב הוא הביטחון של מחר.',
 			},
 		],
 		positions: {
 			accountability: 1,
 			'rule-of-law': 2,
-			'clean-hands': 2,
-			'political-home': 2,
+			'clean-hands': 1,
+			'political-home': 1,
 			'security-storm': 3,
 			'arab-partnership': 3,
-			'civic-equality': 2,
-			'civic-covenant': 2,
-			'sabbath-rabbinate': 3,
-			'bread-and-home': 2,
-			'democracy-itself': 3,
-			'world-partners': 2,
+			'civic-equality': 1,
+			'civic-covenant': 1,
+			'sabbath-rabbinate': 2,
+			'bread-and-home': 1,
+			'democracy-itself': 1,
+			'world-partners': 3,
 		},
-		agreeLine: 'ב{island} אנחנו על אותו קו. עכשיו צריך גם לעמוד בו.',
-		opposeLine: 'ב{island} אני רואה את השטח אחרת ממך. בוא/י נבדוק מה באמת אפשרי שם.',
+		agreeLine: 'ב{island} דעתנו אחת. עכשיו צריך גם ידיים — בלעדיהן זה נשאר נאום.',
+		opposeLine: 'ב{island} אני חולקת עליך. בוא/י נדבר על זה תוך כדי עבודה; שם דעות מתבררות.',
 		challenges: {
-			accountability: 'עמדתי בעצמי מול ועדת חקירה, ואני יודע מה היא עושה. מה נכון לברר?',
-			'rule-of-law': 'קבעתי עובדות ולפעמים קדמתי לחוק. מי היה צריך לעצור אותי?',
-			'clean-hands': 'ידעתי מה נאמר עליי. מה באמת פוסל אדם מלשרת?',
-			'political-home': 'פתחתי גשרים לירדן בלי הסכם. מה מסדרים בשטח לפני שמסכימים על מפה?',
-			'security-storm': 'אמרתי שרם א־שייח עדיף על שלום — ואז החזרתי את סיני. מה משנה דעה?',
-			'arab-partnership': 'ניהלתי ממשל צבאי ואחר כך שלטון פתוח. איפה עובר קו האזרחות?',
-			'civic-equality': 'בשטח למדתי שאין ביטחון בלי כבוד. מה נדרש כדי שאזרח ירגיש אזרח?',
-			'civic-covenant': 'הצבא היה בית היתוך — או שדימיינו לו זאת. מהי חובה הוגנת היום?',
-			'sabbath-rabbinate': 'מסרתי את המפתחות של הר הבית לוואקף כדי לא להצית אש. צדקתי?',
-			'bread-and-home': 'חקלאי הייתי לפני שהייתי קצין. מה המדינה חייבת למי שעובד את האדמה?',
-			'democracy-itself': 'ראיתי ממשלות ששיתקו את עצמן. מה צריך כדי שאפשר יהיה להכריע?',
-			'world-partners': 'למדתי שמעצמה יכולה להציל אותך וגם לעצור אותך. כמה תלות ראויה?',
+			accountability: 'ב"השומר" ביררנו כל כישלון בינינו, בלי רחמים. מי צריך לברר היום, ומתי?',
+			'rule-of-law': 'יישבנו מקומות גם כשהממשלה לא רצתה. למי נתונה המילה האחרונה?',
+			'clean-hands': 'גרנו בצריף גם כשבעלי היה נשיא. מה מותר ומה אסור למי ששולט?',
+			'political-home': 'חתמתי על הקריאה לארץ ישראל השלמה וייעצתי לצעירים איך להיאחז. מה היעד שלך?',
+			'security-storm': 'ב"השומר" למדנו לשמור בעצמנו, בלי לחכות לאיש. מה שומר עלינו היום?',
+			'arab-partnership': 'עבדנו לצד שכנים בשדה הרבה לפני שדיברו על שלום. מה אפשר לעשות יחד עכשיו?',
+			'civic-equality': 'קלטתי נוער מכל עדה ולימדתי אותו מקצוע. מה חייבים לילד שנולד כאן?',
+			'civic-covenant': 'פתחתי משק לימוד לנערות כשאמרו שזה לא לנשים. מה נחשב תרומה?',
+			'sabbath-rabbinate': 'ביתי היה חילוני ושבתותיו היו שלנו. איך חיים יחד במרחב אחד?',
+			'bread-and-home': 'האמנתי בעבודה ובשיתוף, לא בהפקר. מה תפקיד המדינה בלחם ובבית?',
+			'democracy-itself': 'במועצות הפועלות הכרענו בהצבעה של מי שעושה את העבודה. מה חסר היום?',
+			'world-partners': 'נטעתי יערות בלי לשאול את העולם. כמה משקל לתת לדעתו?',
 		},
 	},
 	{
 		slug: 'ovadia',
+		counsel: COUNSEL_BY_SLUG['ovadia'],
 		name: 'הרב עובדיה יוסף',
 		role: 'הראשון לציון ומנהיג ש״ס',
 		years: '1920–2013',
@@ -561,9 +610,9 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 				description: 'שרשרת הפסיקה נושאת דורות; אין מנתקים חוליה בקלות ראש.',
 			},
 			{
-				valueId: 'community',
-				label: 'ציבור',
-				description: 'ציבור שנדחק לשוליים אינו נגאל בהכרזה אלא בכוח מאורגן.',
+				valueId: 'halacha',
+				label: 'הלכה',
+				description: 'השאלה אינה מה נוח אלא מה מותר ומה אסור; הפסיקה קודמת לרוח השעה.',
 			},
 			{
 				valueId: 'mercy',
@@ -604,6 +653,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 	},
 	{
 		slug: 'aloni',
+		counsel: COUNSEL_BY_SLUG['aloni'],
 		name: 'שולמית אלוני',
 		role: 'מייסדת ר״ץ ושרת החינוך',
 		years: '1928–2014',
@@ -665,6 +715,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 	},
 	{
 		slug: 'leibowitz',
+		counsel: COUNSEL_BY_SLUG['leibowitz'],
 		name: 'ישעיהו ליבוביץ',
 		role: 'הוגה דעות ומדען',
 		years: '1903–1994',
@@ -726,6 +777,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 	},
 	{
 		slug: 'habibi',
+		counsel: COUNSEL_BY_SLUG['habibi'],
 		name: 'אמיל חביבי',
 		role: 'סופר וחבר כנסת',
 		years: '1922–1996',
@@ -794,6 +846,7 @@ export const DEFAULT_ELDERS: DefaultElder[] = [
 		// dignity of the person in front of you — she speaks. Elsewhere she is
 		// silent, and the sea simply sails past her on those islands.
 		slug: 'senesh',
+		counsel: COUNSEL_BY_SLUG['senesh'],
 		name: 'חנה סנש',
 		role: 'משוררת וצנחנית',
 		years: '1921–1944',

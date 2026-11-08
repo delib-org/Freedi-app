@@ -7,6 +7,7 @@ import type {
 } from '@freedi/shared-types';
 import { opinionDistance, routeAttitudes } from '@freedi/shared-types';
 import type { IslandContent } from './game';
+import { publicSailorName } from './sailorName';
 
 /**
  * ==========================  DISTANCE ENGINE  ==========================
@@ -107,7 +108,10 @@ export function participantProfiles(evaluations: Evaluation[]): Map<string, Part
 	for (const evaluation of evaluations) {
 		const profile = profiles.get(evaluation.evaluatorId) ?? {
 			userId: evaluation.evaluatorId,
-			displayName: evaluation.evaluator?.displayName?.split(' ')[0] ?? 'מפליג/ה',
+			displayName: publicSailorName(
+				evaluation.evaluator?.displayName,
+				evaluation.evaluator?.isAnonymous,
+			),
 			attitudes: {},
 		};
 		profile.attitudes[evaluation.statementId] = evaluation.evaluation;

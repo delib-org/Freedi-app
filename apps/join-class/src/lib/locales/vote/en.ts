@@ -1,0 +1,78 @@
+// English strings of the vote: the student's ballot screen (voting.*) and
+// the teacher's vote controls (console.*_vote). Spread into ../en.ts, so they
+// ship in the same locale chunk; split out only to keep each file small.
+
+const vote: Record<string, string> = {
+	'console.open_vote': 'Open the vote',
+	'console.pause_vote': 'Pause the vote',
+	'console.resume_vote': 'Resume the vote',
+	'console.close_vote': 'Close the vote',
+	'voting.title': 'Vote',
+	'voting.pick_one': 'Choose one proposal',
+	'voting.waiting': 'Waiting for the teacher to open the vote',
+	'voting.empty': 'Nothing to vote on',
+	'voting.saving': 'Saving…',
+	'voting.counted': 'Your vote was counted',
+	'voting.closed': 'The vote is closed',
+	'voting.failed': 'The vote was not saved. Try again',
+	'voting.paused': 'Voting is paused',
+	'voting.paused_hint': 'The teacher paused the vote for now. Your vote is kept.',
+	'voting.closed_hint': 'The vote is closed. Waiting for the summary',
+	'console.vote_settings': 'The vote',
+	'voting.result_votes': '{{percent}}% · {{n}} votes',
+	'voting.result_one_vote': '{{percent}}% · 1 vote',
+	// >>> voteSummary BEGIN
+	'summary.vote_results': 'Vote results',
+	'summary.turnout': '{{n}} of {{m}} voted',
+	'summary.leading': 'Leading now',
+	'summary.vote_open': 'The vote is still open',
+	'summary.wait_close': 'The teacher will close the vote',
+	'summary.no_vote': 'No vote was held',
+	'summary.most_agreed': 'The most agreed proposal',
+	'summary.tie_by_ratings': 'A tie, decided by the ratings',
+	'summary.by_side_explain':
+		'How much each side supports the decision, by the side you picked at the start of the lesson',
+	'summary.winner': 'The chosen proposal',
+	'console.close_and_go_title': 'The vote is still open. Close it and go to the summary?',
+	'console.close_and_go_body': 'After closing, votes can no longer be changed.',
+	'console.close_and_go_yes': 'Close and go',
+	'console.all_voted': 'Everyone has voted',
+	'console.vote_order': 'Order of the proposals',
+	'console.vote_order_consensus': 'By the ratings',
+	'console.vote_order_votes': 'By the number of votes',
+	'console.vote_order_random': 'Random order',
+	'console.vote_scope': 'Proposals on the vote',
+	'console.vote_scope_all': 'All proposals',
+	'console.vote_scope_above': 'Only above the goal',
+	'console.vote_scope_count': '{{above}} of {{total}} above the goal',
+	'console.vote_scope_none':
+		'Fewer than two proposals are above the goal, so the vote will hold the top proposals instead',
+	'console.vote_scope_locked': 'Set before opening the vote',
+	'console.vote_status_not_open': 'Not open',
+	'console.vote_status_open': 'Voting is open',
+	'console.vote_status_paused': 'Voting is paused',
+	'console.vote_status_closed': 'Voting is closed',
+	'console.vote_progress': '{{voted}} of {{present}} voted',
+	'console.vote_reset_hint': 'Close or pause the vote first',
+	'console.results_audience': 'Who sees the results',
+	'console.results_audience_me': 'Only me',
+	'console.results_audience_class': 'The whole class',
+	'console.results_hint_closed':
+		"Students see only their own vote. Choose 'The whole class' to show the results.",
+	'console.results_chip_closed': 'Results hidden from the class',
+	'console.results_chip_shown': 'Results shown to the class',
+	'voting.results_later': 'Results will be shown soon',
+	'voting.closed_hidden': 'Voting is closed. Results will be shown soon',
+	'console.close_and_go_results_closed': 'The results are still hidden from the class',
+	'console.close_and_go_show': 'Show to the class',
+	'console.support_audience': 'Who sees the support by side',
+	'console.support_hint_closed':
+		"Students do not see the bars. Choose 'The whole class' to share them.",
+	'console.support_hint_blocked': 'Open the results to the class first',
+	'console.support_panel_private': 'Only you see this now.',
+	'console.support_panel_shared': 'The class sees this too.',
+	'summary.support_later': "The class's support will be shared soon",
+	// >>> voteSummary END
+};
+
+export default vote;

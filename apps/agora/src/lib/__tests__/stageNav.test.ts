@@ -44,7 +44,7 @@ describe('stageNavReduce', () => {
 		expect(back.viewingItemId).toBeNull();
 	});
 
-	it('is carried forward when the room advances', () => {
+	it('keeps a catch-up station when the room advances', () => {
 		const state = stageNavReduce(
 			{ viewingItemId: 'question-1' },
 			{ kind: 'session-advanced' },
@@ -52,7 +52,15 @@ describe('stageNavReduce', () => {
 			3,
 		);
 
-		expect(state.viewingItemId).toBeNull();
+		expect(state.viewingItemId).toBe('question-1');
+	});
+
+	it('carries a catch-up station to the results when the room reaches them', () => {
+		for (const index of [4, 5]) {
+			expect(
+				stageNavReduce({ viewingItemId: 'question-1' }, { kind: 'session-advanced' }, plan, index),
+			).toBe(INITIAL_STAGE_NAV);
+		}
 	});
 
 	it('restores only what is still valid', () => {
@@ -78,5 +86,16 @@ describe('stageNavReduce', () => {
 	it('round-trips through the storage string', () => {
 		expect(serializeStageNav({ viewingItemId: 'question-1' })).toBe('question-1');
 		expect(serializeStageNav(INITIAL_STAGE_NAV)).toBe('');
+	});
+});
+
+describe('stageNav — the teacher leads the room', () => {
+	it('a led advance carries a student who had stepped back; an unled one leaves them', () => {
+		const back = { viewingItemId: 'question-1' };
+		expect(stageNavReduce(back, { kind: 'session-advanced', led: true }, plan, 2)).toBe(
+			INITIAL_STAGE_NAV,
+		);
+		expect(stageNavReduce(back, { kind: 'session-advanced', led: false }, plan, 2)).toBe(back);
+		expect(stageNavReduce(back, { kind: 'session-advanced' }, plan, 2)).toBe(back);
 	});
 });

@@ -4,7 +4,7 @@
 	flex-direction: column;
 	position: relative;
 	overflow: visible;
-	
+
 	.numberOfVotesMark {
 		color: var(--icons-blue);
 		font-family: 'Patrick Hand', cursive;
@@ -15,7 +15,8 @@
 		justify-content: flex-start;
 		align-items: center;
 		gap: 0.7rem;
-		padding: 1rem;
+		// Compact: the counter is a caption, the columns below are the content.
+		padding: 0.5rem 1rem;
 
 		svg {
 			width: 17px;
@@ -31,4 +32,13 @@
 .statementVote::-webkit-scrollbar-thumb {
 	background: linear-gradient(45deg, var(--accent), var(--halfPrimary));
 	border-radius: 1rem;
+}
+
+.statementVote .numberOfVotesMark {
+	font-family: inherit;
+	background: var(--space-mint);
+	border-radius: 24px;
+	width: fit-content;
+	margin-block: 8px;
+	color: var(--space-ink);
 }

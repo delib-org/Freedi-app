@@ -1,0 +1,389 @@
+@use '../tokens' as *;
+
+// ============================================================================
+// Library background materials — the teacher's editor and the student's sheet
+// (BEM, tokens only)
+// ============================================================================
+
+// ---- Teacher: one scene's materials in the lesson editor -------------------
+
+.materials-editor {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	min-width: 0;
+
+	&__hint,
+	&__facts,
+	&__total {
+		margin: 0;
+		font-size: 0.875rem;
+		color: var(--text-secondary);
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__item {
+		padding: var(--space-sm) var(--space-md);
+		background: var(--bg-inset);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-sm);
+	}
+
+	&__row {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__name {
+		flex: 1 1 8rem;
+		min-width: 0;
+		overflow-wrap: anywhere;
+		color: var(--text-primary);
+		font-weight: 600;
+	}
+
+	&__kind {
+		padding: 2px var(--space-sm);
+		font-size: 0.75rem;
+		font-weight: 700;
+		color: var(--mine-ink);
+		background: var(--peer-tile);
+		border-radius: var(--radius-full);
+	}
+
+	&__preview {
+		margin: var(--space-xs) 0 0;
+		padding: var(--space-sm);
+		font-size: 0.875rem;
+		line-height: 1.5;
+		color: var(--text-primary);
+		background: var(--surface-raised);
+		border-radius: var(--radius-sm);
+		overflow-wrap: anywhere;
+	}
+
+	&__drop {
+		min-height: 64px;
+		padding: var(--space-md);
+		font: inherit;
+		color: var(--mine-ink);
+		background: var(--surface-tint);
+		border: 2px dashed var(--border-strong);
+		border-radius: var(--radius-md);
+		cursor: pointer;
+
+		&:hover:not(:disabled),
+		&--over {
+			background: var(--peer-tile);
+			border-color: var(--mine-strong);
+		}
+
+		&:focus-visible {
+			outline: 3px solid var(--mine-strong);
+			outline-offset: 2px;
+		}
+
+		&:disabled {
+			opacity: 0.55;
+			cursor: not-allowed;
+		}
+	}
+
+	&__file {
+		display: none;
+	}
+
+	&__box {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		align-items: stretch;
+
+		&--inline {
+			flex-direction: row;
+			flex-wrap: wrap;
+		}
+	}
+
+	&__link {
+		flex: 1 1 12rem;
+		min-width: 0;
+	}
+
+	&__textarea {
+		resize: vertical;
+		min-height: 5rem;
+	}
+
+	&__status {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+	&__error {
+		margin: 0;
+		color: var(--danger-ink);
+		font-weight: 600;
+	}
+}
+
+// ---- Student: the button on the scene and the sheet it opens ---------------
+
+.scene__materials {
+	position: relative;
+	display: flex;
+	justify-content: center;
+	padding-inline: var(--space-md);
+}
+
+.materials__open {
+	min-height: 44px;
+	padding: var(--space-sm) var(--space-md);
+	font: inherit;
+	font-weight: 600;
+	color: #fff;
+	background: rgba(0, 0, 0, 0.5);
+	border: 1px solid rgba(255, 255, 255, 0.35);
+	border-radius: var(--radius-full);
+	backdrop-filter: blur(6px);
+	cursor: pointer;
+
+	&:focus-visible {
+		outline: 2px solid #fff;
+		outline-offset: 2px;
+	}
+}
+
+.materials {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-modal);
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	background: var(--bg-overlay);
+
+	&__panel {
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		max-width: 640px;
+		max-height: 92dvh;
+		color: var(--text-primary);
+		background: var(--surface-raised);
+		border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+		box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.25);
+	}
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-md);
+		padding: var(--space-md);
+		border-bottom: 1px solid var(--border-subtle);
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 1.125rem;
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-lg);
+		padding: var(--space-md);
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+
+	&__heading {
+		margin: 0 0 var(--space-sm);
+		font-size: 1rem;
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__item {
+		padding: var(--space-sm) var(--space-md);
+		background: var(--surface-tint);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-sm);
+	}
+
+	&__item-head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__item-title {
+		margin: 0;
+		font-size: 1rem;
+		overflow-wrap: anywhere;
+	}
+
+	&__item-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+		margin-top: var(--space-sm);
+	}
+
+	&__kind {
+		padding: 2px var(--space-sm);
+		font-size: 0.75rem;
+		font-weight: 700;
+		color: var(--mine-ink);
+		background: var(--peer-tile);
+		border-radius: var(--radius-full);
+	}
+
+	&__text {
+		margin: var(--space-sm) 0 0;
+		max-height: 40dvh;
+		overflow-y: auto;
+		font-size: 0.9375rem;
+		line-height: 1.6;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
+
+	&__hint,
+	&__left {
+		margin: 0 0 var(--space-sm);
+		font-size: 0.875rem;
+		color: var(--text-secondary);
+	}
+
+	&__thread {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		margin: 0 0 var(--space-sm);
+		padding: 0;
+		list-style: none;
+	}
+
+	&__empty {
+		color: var(--text-secondary);
+		font-size: 0.9375rem;
+	}
+
+	&__msg {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		max-width: 92%;
+		padding: var(--space-sm) var(--space-md);
+		border-radius: var(--radius-sm);
+
+		&--student {
+			align-self: flex-end;
+			color: var(--text-primary);
+			background: var(--peer-tile);
+		}
+
+		&--ai {
+			align-self: flex-start;
+			background: var(--bg-inset);
+			border: 1px solid var(--border-subtle);
+		}
+
+		&--unknown {
+			border-style: dashed;
+			border-color: var(--border-strong);
+		}
+
+		&--pending {
+			color: var(--text-secondary);
+			font-style: italic;
+		}
+	}
+
+	&__who {
+		font-size: 0.75rem;
+		font-weight: 700;
+		color: var(--text-secondary);
+	}
+
+	&__msg-text {
+		margin: 0;
+		line-height: 1.5;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
+
+	&__flag {
+		font-size: 0.8125rem;
+		font-weight: 600;
+		color: var(--text-secondary);
+	}
+
+	&__notice {
+		margin: 0 0 var(--space-sm);
+
+		&--error {
+			color: var(--danger-ink);
+			font-weight: 600;
+		}
+	}
+
+	&__form {
+		display: flex;
+		gap: var(--space-sm);
+		align-items: flex-end;
+	}
+
+	&__input {
+		flex: 1;
+		min-width: 0;
+		resize: none;
+	}
+}
+
+@media (min-width: 720px) {
+	.materials {
+		align-items: center;
+
+		&__panel {
+			border-radius: var(--radius-lg);
+		}
+	}
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.materials__panel {
+		animation: materials-rise 160ms ease-out;
+	}
+}
+
+@keyframes materials-rise {
+	from {
+		transform: translateY(16px);
+		opacity: 0;
+	}
+
+	to {
+		transform: none;
+		opacity: 1;
+	}
+}

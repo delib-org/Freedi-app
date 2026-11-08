@@ -27,7 +27,11 @@
  *   GCLOUD_PROJECT=wizcol-app npx tsx scripts/backfillSubscriptionLastUpdate.ts --execute
  */
 import { initializeApp, getApps } from 'firebase-admin/app';
-import { getFirestore, type QueryDocumentSnapshot } from 'firebase-admin/firestore';
+import {
+	getFirestore,
+	type DocumentData,
+	type QueryDocumentSnapshot,
+} from 'firebase-admin/firestore';
 
 if (process.env.FIRESTORE_EMULATOR_HOST) {
 	console.error(
@@ -48,7 +52,7 @@ if (getApps().length === 0) initializeApp({ projectId: project });
 const db = getFirestore();
 const PAGE = 500;
 
-function deriveLastUpdate(data: FirebaseFirestore.DocumentData): number {
+function deriveLastUpdate(data: DocumentData): number {
 	const createdAt = data.createdAt;
 	if (typeof createdAt === 'number' && createdAt > 0) return createdAt;
 	// Firestore Timestamp fallback (legacy docs that stored a Timestamp)

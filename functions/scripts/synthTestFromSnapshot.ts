@@ -16,17 +16,21 @@ import { initializeApp, getApps } from 'firebase-admin/app';
 // emulator so this test never writes to a real project; the Gemini judge uses
 // Vertex via ADC (GCLOUD_PROJECT). Requires the emulator running on :8081.
 if (!process.env.FIRESTORE_EMULATOR_HOST) process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8081';
-if (getApps().length === 0) initializeApp({ projectId: process.env.GCLOUD_PROJECT ?? 'freedi-test' });
+if (getApps().length === 0)
+	initializeApp({ projectId: process.env.GCLOUD_PROJECT ?? 'freedi-test' });
 
 const snapshotPath = process.argv.find((a) => a.endsWith('.json'));
 const getArg = (k: string, d: string) => {
 	const m = process.argv.find((a) => a.startsWith(`--${k}=`));
+
 	return m ? m.split('=')[1] : d;
 };
 const THRESHOLD = Number(getArg('threshold', '0.92'));
 const MAX_LLM = Number(getArg('max-llm-calls', '200'));
 if (!snapshotPath) {
-	console.error('Usage: npx tsx scripts/synthTestFromSnapshot.ts scripts/snapshots/<qid>.json [--threshold=0.92]');
+	console.error(
+		'Usage: npx tsx scripts/synthTestFromSnapshot.ts scripts/snapshots/<qid>.json [--threshold=0.92]',
+	);
 	process.exit(1);
 }
 
@@ -47,11 +51,13 @@ async function main(): Promise<void> {
 		let s = 0;
 		for (const x of o.embedding) s += x * x;
 		s = Math.sqrt(s) || 1;
+
 		return o.embedding.map((x) => x / s);
 	});
 	const cos = (a: number[], b: number[]) => {
 		let d = 0;
 		for (let i = 0; i < a.length; i++) d += a[i] * b[i];
+
 		return d;
 	};
 
@@ -62,6 +68,7 @@ async function main(): Promise<void> {
 			par[x] = par[par[x]];
 			x = par[x];
 		}
+
 		return x;
 	};
 	for (let i = 0; i < n; i++)
@@ -83,12 +90,21 @@ async function main(): Promise<void> {
 
 	console.info(`\n# Synthesis test (cosine candidates, no UMAP) — threshold=${THRESHOLD}`);
 	console.info(`Question: "${snap.questionText.slice(0, 90)}"`);
-	console.info(`Options: ${n} | candidate clusters: ${candidateIdx.length} | standalone (singletons): ${singletons}\n`);
+	console.info(
+		`Options: ${n} | candidate clusters: ${candidateIdx.length} | standalone (singletons): ${singletons}\n`,
+	);
 
 	const members = new Map(opts.map((o, i) => [o.id, { id: o.id, text: o.text, embedding: V[i] }]));
-	const candidates = candidateIdx.map((g, i) => ({ clusterId: `cand-${i}`, memberIds: g.map((idx) => opts[idx].id) }));
+	const candidates = candidateIdx.map((g, i) => ({
+		clusterId: `cand-${i}`,
+		memberIds: g.map((idx) => opts[idx].id),
+	}));
 
-	const judge = await twoTierJudge(candidates, members, { maxLlmCalls: MAX_LLM, autoAcceptBand: 0.94, autoRejectBand: 0.6 });
+	const judge = await twoTierJudge(candidates, members, {
+		maxLlmCalls: MAX_LLM,
+		autoAcceptBand: 0.94,
+		autoRejectBand: 0.6,
+	});
 	const verified = [...judge.verifiedClusters, ...judge.refinedFromDissent];
 
 	console.info(

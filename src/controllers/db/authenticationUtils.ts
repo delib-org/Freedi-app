@@ -1,5 +1,6 @@
 import { GoogleAuthProvider, signInWithPopup, signInAnonymously } from 'firebase/auth';
 import { auth } from './config';
+import { popupResolver, warmPopupResolver } from '@/controllers/auth/popupResolver';
 import { notificationService } from '@/services/notificationService';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';
@@ -15,7 +16,8 @@ const CANCELLED_SIGN_IN_CODES = new Set([
 
 export function googleLogin() {
 	const provider = new GoogleAuthProvider();
-	signInWithPopup(auth, provider)
+	// Auth has no default resolver (see config.ts); pass the warmed one.
+	signInWithPopup(auth, provider, popupResolver)
 		.then((result) => {
 			logger.info('User signed in with Google', { userId: result.user.uid });
 
@@ -66,6 +68,9 @@ export const logOut = async () => {
 		});
 
 		logger.info('User logged out successfully');
+
+		// The login screen comes next: make sure its Google popup is warm.
+		void warmPopupResolver(auth);
 	} catch (error) {
 		logger.error('Error during logout', error);
 	}

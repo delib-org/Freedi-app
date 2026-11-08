@@ -17,7 +17,8 @@ await page.waitForTimeout(1500);
 // New journey → wizard
 await page.goto('http://localhost:3009/#!/teach/new', { waitUntil: 'domcontentloaded' });
 await page.waitForSelector('input.text-input', { timeout: 10000 });
-await page.locator('input.text-input').fill('המהפכה התעשייתית באנגליה');
+await page.locator('#scenario-statement').fill('כיצד נוכל לפתור את הסכסוך הישראלי־פלסטיני?');
+await page.locator('#scenario-description').fill('לפתח הצעות שעונות על הצרכים של ישראלים ופלסטינים, ולבחון היכן אפשר להגיע להסכמה.');
 await page.locator('button.btn--primary').click();
 console.log('GENERATING (real AI, up to 3 min)...');
 await page.waitForURL(/\/teach\/topic\//, { timeout: 300000 });
@@ -44,8 +45,8 @@ console.log('MARKED READY');
 
 // Back at teacher home the new package is listed and selectable
 await page.goto('http://localhost:3009/#!/teach', { waitUntil: 'domcontentloaded' });
-await page.waitForSelector('.teacher__topic-option', { timeout: 10000 });
-const topics = await page.locator('.teacher__topic-option strong').allTextContents();
+await page.waitForSelector('.scenario-row', { timeout: 10000 });
+const topics = await page.locator('.scenario-row__title').allTextContents();
 console.log('TOPIC LIST:', topics);
 await page.screenshot({ path: 'agora-authoring.png', fullPage: true });
 

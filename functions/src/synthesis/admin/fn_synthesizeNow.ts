@@ -6,6 +6,7 @@ import { ALLOWED_ORIGINS } from '../../config/cors';
 import { loadSynthesisSettings } from '../pipeline/loadSynthesisSettings';
 import { enqueueItem, initProgressDoc } from '../queue/enqueue';
 import { QUEUE_COLLECTION, type ProgressDoc } from '../queue/types';
+import { estimateEtaMinutes, isRunInFlight } from '../queue/runState';
 import { assertSynthesisAdmin } from './assertSynthesisAdmin';
 
 /**
@@ -37,9 +38,8 @@ function db() {
 async function isOperationInFlight(questionId: string): Promise<boolean> {
 	const snap = await db().collection(QUEUE_COLLECTION).doc(questionId).get();
 	if (!snap.exists) return false;
-	const progress = snap.data() as ProgressDoc;
 
-	return progress.status === 'running' || progress.status === 'paused';
+	return isRunInFlight(snap.data() as ProgressDoc, Date.now());
 }
 
 export const synthesizeNow = onCall<SynthesizeNowRequest>(
@@ -120,7 +120,7 @@ export const synthesizeNow = onCall<SynthesizeNowRequest>(
 
 		return {
 			enqueued,
-			etaMinutes: Math.ceil(enqueued / 50),
+			etaMinutes: estimateEtaMinutes(enqueued),
 		};
 	},
 );

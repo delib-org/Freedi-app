@@ -13,6 +13,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { loadEmbeddingDocs } from '../src/services/statement-embedding-store';
 
 if (process.env.FIRESTORE_EMULATOR_HOST) {
 	console.error('FIRESTORE_EMULATOR_HOST is set — unset it to read production. Aborting.');
@@ -21,7 +22,9 @@ if (process.env.FIRESTORE_EMULATOR_HOST) {
 const questionId = process.argv[2];
 const project = process.env.GCLOUD_PROJECT;
 if (!questionId || !project) {
-	console.error('Usage: GCLOUD_PROJECT=wizcol-app npx tsx scripts/dumpQuestionFromProd.ts <questionId>');
+	console.error(
+		'Usage: GCLOUD_PROJECT=wizcol-app npx tsx scripts/dumpQuestionFromProd.ts <questionId>',
+	);
 	process.exit(1);
 }
 if (getApps().length === 0) initializeApp({ projectId: project });
@@ -36,6 +39,7 @@ const extractEmbedding = (raw: unknown): number[] | null => {
 			return null;
 		}
 	}
+
 	return null;
 };
 
@@ -61,13 +65,15 @@ async function main(): Promise<void> {
 	const options: Array<{ id: string; text: string; embedding: number[]; evaluators: number }> = [];
 	let skippedDerived = 0;
 	let missingEmb = 0;
+	// Vectors live in statementEmbeddings; older docs may still carry them.
+	const stored = await loadEmbeddingDocs(snap.docs.map((d) => d.id));
 	for (const d of snap.docs) {
 		const x = d.data();
 		if (isDerived(x)) {
 			skippedDerived++;
 			continue;
 		}
-		const embedding = extractEmbedding(x.embedding);
+		const embedding = extractEmbedding(stored.get(d.id)?.embedding ?? x.embedding);
 		if (!embedding) {
 			missingEmb++;
 			continue;

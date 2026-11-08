@@ -1,0 +1,19 @@
+// the teacher's own view of the support by side on the Summary step (Trello 89fevjY5)
+.support-panel {
+  margin-block-start: var(--space-lg);
+  padding: var(--space-md);
+  border: 1px solid var(--border-subtle, currentcolor);
+  border-radius: var(--radius-md, 8px);
+  background: var(--surface, transparent);
+
+  &__title {
+    margin: 0;
+    font-size: var(--font-size-lg);
+  }
+
+  &__note {
+    margin: var(--space-xs) 0 var(--space-sm);
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+  }
+}

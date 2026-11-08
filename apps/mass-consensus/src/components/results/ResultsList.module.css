@@ -14,8 +14,8 @@
   display: flex;
   gap: var(--spacing-md);
   padding: var(--spacing-lg);
-  background: white;
-  border: 1px solid #e0e0e0;
+  background: var(--mc-surface, white);
+  border: 1px solid var(--mc-border, #e0e0e0);
   border-radius: 12px;
   transition: all 0.2s ease;
 }
@@ -69,7 +69,7 @@
 .empty {
   text-align: center;
   padding: var(--spacing-xl);
-  background: #f9fafb;
+  background: var(--mc-surface-muted, #f9fafb);
   border-radius: 12px;
 }
 

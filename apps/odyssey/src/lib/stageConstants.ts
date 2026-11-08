@@ -1,7 +1,32 @@
+import { getDir, t } from '../i18n/i18n';
+
 /**
  * Named tuning constants for the Phaser sea stage
  * (docs/phaser-game-design.md §4 — no magic numbers in scene code).
  */
+
+/**
+ * The stage was composed for a right-to-left reader: the harbor sits on the
+ * right, the islands slide in from the left, the eye starts on the right.
+ * Mirror an absolute x for a left-to-right language. Read at call time, so a
+ * scene rebuilt after a language change lays itself out the other way round.
+ */
+export function mirrorX(x: number, width: number, dir = getDir()): number {
+	return dir === 'ltr' ? width - x : x;
+}
+
+/** The sign of a relative x offset: +1 as composed (RTL), −1 mirrored. */
+export function mirrorSign(dir = getDir()): 1 | -1 {
+	return dir === 'ltr' ? -1 : 1;
+}
+
+/**
+ * Font stack for every Phaser Text. Noto Sans Arabic FIRST: its @font-face is
+ * scoped by unicode-range to Arabic glyphs, so Hebrew and Latin fall through to
+ * Arial without downloading it — but a font listed after Arial would never be
+ * reached for Arabic either, since Arial has those glyphs too.
+ */
+export const STAGE_FONT = '"Noto Sans Arabic", Arial, Helvetica, sans-serif';
 
 /** Party-ship reposition tween (verbatim PartySea timing). */
 export const TWEEN_SHIP_MS = 1400;
@@ -60,8 +85,11 @@ export const ATTITUDE_GLYPHS: Record<'support' | 'livewith' | 'oppose', string> 
 };
 
 /** The player's own ship, named on the water so it is never mistaken for a
- *  party ship. */
-export const MY_SHIP_LABEL = 'הספינה שלך';
+ *  party ship. A function: the label is read in the current language when the
+ *  boat is spawned, not when this module loads. */
+export function myShipLabel(): string {
+	return t('stage.myShip');
+}
 
 /** The player's boat. On a sea that also carries party ships it draws above
  *  all of them — those are depth-sorted by their y, which reaches into the

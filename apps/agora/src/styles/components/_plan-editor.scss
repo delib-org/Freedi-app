@@ -1,0 +1,476 @@
+@use '../tokens' as *;
+
+// The lesson builder: the lesson's steps as cards the teacher edits in place
+// (StagePlanEditor.ts, docs/ia/agora-lesson-builder.md). The editor that
+// opens under a card and the add-step sheet are in _plan-step-editor.scss.
+// Mobile first: one column at 390px, every
+// control at least 44px tall, nothing truncated to a few letters.
+// Imported by components.scss; do not import directly.
+
+$touch: 44px;
+
+// --- the list and its templates ---
+.plan-editor {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__templates {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__templates-label {
+		@include type-meta;
+		font-weight: 700;
+		color: var(--text-secondary);
+	}
+
+	&__template-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+
+	&__template {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		min-block-size: $touch;
+		padding: 0 var(--space-md);
+		border: 1.5px solid var(--border-subtle);
+		border-radius: var(--radius-full);
+		background: var(--bg-card-solid);
+		color: var(--text-primary);
+		font: inherit;
+		font-weight: 600;
+		cursor: pointer;
+		transition:
+			border-color var(--motion-fast) var(--ease-camera),
+			background var(--motion-fast) var(--ease-camera);
+
+		&:hover {
+			border-color: var(--mine);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+
+		&[aria-pressed='true'] {
+			border-color: var(--mine-strong);
+			background: var(--mine-strong);
+			color: var(--text-on-lantern);
+			cursor: default;
+		}
+	}
+
+	&__confirm {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		border-radius: var(--radius-tile);
+		background: var(--mark-edited);
+		color: var(--text-primary);
+	}
+
+	&__confirm-text {
+		margin: 0;
+		font-weight: 600;
+	}
+
+	&__confirm-actions {
+		display: flex;
+		gap: var(--space-sm);
+	}
+
+	&__list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+	}
+
+	// The "+" between two cards: a thin seam to the eye, a full touch target to the thumb
+	&__insert {
+		display: flex;
+		justify-content: center;
+		margin-block: -6px;
+		position: relative;
+		z-index: 1;
+	}
+
+	&__insert-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		inline-size: $touch;
+		block-size: $touch;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		cursor: pointer;
+		color: var(--mine-ink);
+
+		&:focus-visible {
+			outline: none;
+
+			.plan-editor__insert-plus {
+				outline: 2px solid var(--lantern-glow);
+				outline-offset: 2px;
+			}
+		}
+
+		&:hover .plan-editor__insert-plus {
+			background: var(--mine-strong);
+			border-color: var(--mine-strong);
+			color: var(--text-on-lantern);
+		}
+	}
+
+	&__insert-plus {
+		display: inline-grid;
+		place-items: center;
+		inline-size: 26px;
+		block-size: 26px;
+		border-radius: var(--radius-full);
+		border: 1.5px dashed var(--border-strong);
+		background: var(--bg-card-solid);
+		transition:
+			background var(--motion-fast) var(--ease-camera),
+			color var(--motion-fast) var(--ease-camera);
+	}
+
+	// "Add a step" at the end: the obvious door, dashed like the own-question row
+	&__add {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-sm);
+		min-block-size: 52px;
+		padding: var(--space-sm) var(--space-md);
+		border: 2px dashed var(--border-strong);
+		border-radius: var(--radius-tile);
+		background: transparent;
+		color: var(--mine-ink);
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
+		transition:
+			background var(--motion-fast) var(--ease-camera),
+			border-color var(--motion-fast) var(--ease-camera);
+
+		&:hover {
+			background: var(--bg-inset);
+			border-color: var(--mine);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+
+	&__add-plus {
+		display: inline-grid;
+		place-items: center;
+		inline-size: 28px;
+		block-size: 28px;
+		border-radius: var(--radius-full);
+		background: var(--mine-strong);
+		color: var(--text-on-lantern);
+	}
+
+	&__errors {
+		margin: 0;
+		padding: var(--space-sm) var(--space-md);
+		padding-inline-start: calc(var(--space-md) + 1em);
+		border-radius: var(--radius-tile);
+		background: var(--bg-inset);
+		color: var(--danger-ink);
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+	}
+
+	// --- Shared form fields: the class form, banned words and class settings borrow these ---
+	&__field {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__text {
+		inline-size: 100%;
+		padding: var(--space-xs) var(--space-sm);
+		border: 1.5px solid var(--border-subtle);
+		border-radius: var(--radius-sm, 8px);
+		font: inherit;
+		background: var(--bg-card-solid);
+		color: var(--text-primary);
+	}
+}
+
+// --- One step ---
+.plan-step {
+	position: relative;
+	margin-block: var(--space-xs);
+	border: 1.5px solid var(--border-subtle);
+	border-radius: var(--radius-tile);
+	background: var(--bg-card-solid);
+	box-shadow: var(--shadow-card);
+	// A moved card slides to its new place (FLIP in StagePlanEditor); the displaced neighbour glides
+	transition:
+		transform var(--motion-base) var(--ease-camera),
+		border-color var(--motion-fast) var(--ease-camera);
+
+	&--moved {
+		transition: transform var(--motion-base) var(--ease-spring);
+		animation: plan-step-settle var(--motion-slow) ease-out both;
+		z-index: 1;
+	}
+
+	&--open {
+		border-color: var(--mine);
+	}
+
+	&--invalid {
+		border-color: var(--danger);
+	}
+
+	// The fixed ends and the steps that already ran: present, quiet, untouchable
+	&--fixed,
+	&--frozen {
+		background: var(--bg-inset);
+		box-shadow: none;
+		border-style: dashed;
+	}
+
+	&__main {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-sm);
+		inline-size: 100%;
+		padding: var(--space-sm) var(--space-md);
+		border: 0;
+		background: transparent;
+		color: inherit;
+		font: inherit;
+		text-align: start;
+	}
+
+	// The whole top of an editable card is the door to its editor
+	button#{&}__main {
+		cursor: pointer;
+		border-radius: var(--radius-tile) var(--radius-tile) 0 0;
+
+		&:hover .plan-step__line:not(.plan-step__line--default) {
+			color: var(--mine-ink);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: -2px;
+		}
+	}
+
+	&__num {
+		flex: 0 0 auto;
+		display: inline-grid;
+		place-items: center;
+		inline-size: 30px;
+		block-size: 30px;
+		margin-block-start: 2px;
+		border-radius: var(--radius-full);
+		background: var(--peer-tile);
+		color: var(--mine-ink);
+		font-weight: 800;
+		font-size: var(--font-size-sm);
+	}
+
+	&--fixed &__num,
+	&--frozen &__num {
+		background: var(--bg-card-solid);
+		color: var(--text-secondary);
+	}
+
+	&__text {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 4px;
+	}
+
+	&__chip {
+		@include type-meta;
+		display: inline-flex;
+		align-items: center;
+		padding: 2px var(--space-sm);
+		border-radius: var(--radius-full);
+		font-weight: 700;
+		line-height: 1.5;
+
+		&--question {
+			background: var(--mine-strong);
+			color: var(--text-on-lantern);
+		}
+
+		&--round {
+			background: var(--mark-edited);
+			color: var(--text-primary);
+		}
+
+		&--talk {
+			background: var(--peer-tile);
+			color: var(--mine-ink);
+		}
+
+		&--vote {
+			background: var(--mark-helped);
+			color: var(--success-ink);
+		}
+
+		&--scene {
+			background: var(--bg-inset);
+			color: var(--text-primary);
+		}
+
+		&--fixed {
+			background: var(--bg-card-solid);
+			color: var(--text-secondary);
+		}
+	}
+
+	// The words students read: full, wrapping, three lines at most
+	&__line {
+		color: var(--text-primary);
+		font-weight: 600;
+		line-height: 1.4;
+		overflow-wrap: anywhere;
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+
+		&--default {
+			color: var(--text-secondary);
+			font-weight: 400;
+			font-size: var(--font-size-sm);
+		}
+	}
+
+	&__problem {
+		@include type-meta;
+		color: var(--danger-ink);
+		font-weight: 700;
+	}
+
+	&__pin {
+		@include type-meta;
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		margin-block-start: 6px;
+		color: var(--text-secondary);
+		white-space: nowrap;
+	}
+
+	// The toolbar on its own line: edit at the start, move and remove at the end
+	&__tools {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+		padding: 0 var(--space-xs) var(--space-xs);
+		padding-inline-start: calc(var(--space-md) + 30px); // under the text, not the number
+	}
+
+	&__spacer {
+		flex: 1 1 auto;
+	}
+
+	&__tool {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-xs);
+		min-inline-size: $touch;
+		min-block-size: $touch;
+		padding: 0 var(--space-sm);
+		border: 0;
+		border-radius: var(--radius-tile);
+		background: transparent;
+		color: var(--text-secondary);
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
+		transition:
+			background var(--motion-fast) var(--ease-camera),
+			color var(--motion-fast) var(--ease-camera);
+
+		&:hover:not(:disabled) {
+			background: var(--bg-inset);
+			color: var(--mine-ink);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 1px;
+		}
+
+		// Disabled looks disabled — faded, never highlighted
+		&:disabled {
+			opacity: 0.3;
+			cursor: default;
+		}
+
+		&--edit {
+			color: var(--mine-ink);
+			padding-inline: var(--space-sm) var(--space-md);
+			background: var(--bg-inset);
+		}
+
+		&--icon {
+			padding: 0;
+		}
+
+		&--remove:hover:not(:disabled) {
+			color: var(--danger-ink);
+		}
+	}
+
+	// One left-pointing arrow drawing, turned to point up or down
+	&__arrow--up {
+		transform: rotate(90deg);
+	}
+
+	&__arrow--down {
+		transform: rotate(-90deg);
+	}
+}
+
+@keyframes plan-step-settle {
+	from {
+		box-shadow: 0 0 0 4px var(--mine-light);
+	}
+
+	to {
+		box-shadow: var(--shadow-card);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.plan-step,
+	.plan-step--moved,
+	.plan-editor__template,
+	.plan-editor__add,
+	.plan-step__tool {
+		transition: none;
+		animation: none;
+	}
+}

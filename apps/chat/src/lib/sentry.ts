@@ -10,8 +10,51 @@ import * as Sentry from '@sentry/sveltekit';
 
 const dsn: string | undefined = import.meta.env.VITE_SENTRY_DSN;
 
-/** Init only in production builds with a real DSN (dev stays Sentry-free). */
-export const sentryEnabled: boolean = import.meta.env.PROD && !!dsn && dsn.startsWith('https://');
+/**
+ * True when this is a developer's machine rather than a deployment.
+ *
+ * `import.meta.env.PROD` alone is not enough here. The SSR half of this app is
+ * built once and then runs inside the `ssrChat` Cloud Function — including in
+ * the local emulator, where the bundle still carries PROD=true and
+ * functions/.env still carries the production DSN. Chat therefore filed local
+ * errors into the production project. The browser half has the same hole under
+ * `vite preview`.
+ *
+ * Inlined rather than imported from `@freedi/shared-utils` (which has the same
+ * check for every other app) because chat's server bundle is externalised by
+ * adapter-node: anything it imports must also exist in functions/package.json,
+ * and this is four lines.
+ */
+function isLocalRuntime(): boolean {
+	if (import.meta.env.VITE_SENTRY_ENABLE_IN_LOCAL === 'true') return false;
+
+	const host = (globalThis as { location?: { hostname?: string } }).location?.hostname;
+	if (typeof host === 'string') {
+		return (
+			host === 'localhost' ||
+			host === '127.0.0.1' ||
+			host === '0.0.0.0' ||
+			host === '::1' ||
+			host === '[::1]' ||
+			host.endsWith('.local') ||
+			host.endsWith('.localhost')
+		);
+	}
+
+	const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process
+		?.env;
+	if (!env) return false;
+	if (env.FUNCTIONS_EMULATOR || env.FIRESTORE_EMULATOR_HOST || env.FIREBASE_AUTH_EMULATOR_HOST) {
+		return true;
+	}
+
+	// Every server target chat deploys to sets one of these.
+	return !(env.K_SERVICE || env.FUNCTION_TARGET || env.VERCEL);
+}
+
+/** Init only in deployed production builds with a real DSN (local stays Sentry-free). */
+export const sentryEnabled: boolean =
+	import.meta.env.PROD && !!dsn && dsn.startsWith('https://') && !isLocalRuntime();
 
 /** Options common to the client and server `Sentry.init()` calls. */
 export const sharedSentryOptions = {

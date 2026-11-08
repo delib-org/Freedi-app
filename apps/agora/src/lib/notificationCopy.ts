@@ -34,6 +34,16 @@ const LOOKS: Readonly<Record<string, { icon: IconName; key: string }>> = {
 	agora_challenge_survived: { icon: 'trophy', key: 'toast.challenge_survived' },
 	agora_challenge_failed: { icon: 'again', key: 'toast.challenge_failed' },
 	agora_challenge_vote_freed: { icon: 'again', key: 'toast.challenge_vote_freed' },
+	// The teacher's hand: a private note, or a word about the student's text.
+	// The line says only that the teacher wrote — the words wait in the thread.
+	agora_teacher_note: { icon: 'megaphone', key: 'toast.teacher_note' },
+	agora_teacher_hidden: { icon: 'again', key: 'toast.teacher_hidden' },
+	agora_teacher_restored: { icon: 'check', key: 'toast.teacher_restored' },
+	agora_teacher_edited: { icon: 'edit', key: 'toast.teacher_edited' },
+	// The language gate refused a text (client-raised; no backing doc)
+	agora_language_flagged: { icon: 'again', key: 'toast.language_flagged' },
+	// The teacher called everyone to a place (client-raised from the session doc)
+	agora_called_to: { icon: 'home', key: 'toast.called_to' },
 };
 
 /**

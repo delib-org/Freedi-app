@@ -1,6 +1,7 @@
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 import { Statement } from '@freedi/shared-types';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
+import { ImageLightbox } from '@/view/components/atomic/molecules/ImageLightbox';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './StatementImage.module.scss';
 
@@ -24,6 +25,7 @@ const StatementImage: FC<Props> = ({
 	fileInputRef,
 }) => {
 	const { t, dir } = useTranslation();
+	const [isEnlarged, setIsEnlarged] = useState(false);
 
 	// Determine variant and container class based on display mode
 	const variant = displayMode === 'inline' ? 'inline' : 'compact';
@@ -40,14 +42,37 @@ const StatementImage: FC<Props> = ({
 
 	return (
 		<div className={containerClass} style={floatStyle}>
-			<UploadImage
-				statement={statement}
-				fileInputRef={fileInputRef}
-				image={image}
-				setImage={setImage}
-				isAdmin={isAdmin}
-				variant={variant}
-			/>
+			{/* An admin's press replaces the picture; everyone else's enlarges it. */}
+			{isAdmin ? (
+				<UploadImage
+					statement={statement}
+					fileInputRef={fileInputRef}
+					image={image}
+					setImage={setImage}
+					isAdmin={isAdmin}
+					variant={variant}
+				/>
+			) : (
+				<>
+					<button
+						type="button"
+						className={styles.enlargeBtn}
+						onClick={() => setIsEnlarged(true)}
+						aria-label={`${t('Enlarge image')}: ${statement.statement}`}
+					>
+						<img src={image} alt="" className={styles.picture} />
+					</button>
+					<ImageLightbox
+						isOpen={isEnlarged}
+						onClose={() => setIsEnlarged(false)}
+						src={image}
+						alt={statement.statement}
+						closeLabel={t('Close')}
+						zoomInLabel={t('Zoom in')}
+						zoomOutLabel={t('Zoom out')}
+					/>
+				</>
+			)}
 			{isAdmin && (
 				<div className={styles.imageControls}>
 					<button className={styles.imageRemoveBtn} onClick={onRemove} title={t('Remove Image')}>

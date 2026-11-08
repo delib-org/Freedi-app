@@ -80,7 +80,7 @@
 		height: 36px;
 		border-radius: 8px;
 		background-color: var(--icons-blue);
-		color: white;
+		color: var(--btn-primary-text);
 		flex-shrink: 0;
 
 		svg {
@@ -149,7 +149,15 @@
 		justify-content: center;
 		margin-left: auto;
 		color: var(--text-body);
-		transition: transform 0.2s ease;
+		transition: transform var(--motion-base) var(--motion-ease);
+
+		&--open {
+			transform: rotate(180deg);
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
 	}
 
 	&__description {
@@ -167,18 +175,6 @@
 
 	&__content {
 		padding: 1rem 1.5rem;
-		animation: slideDown 0.2s ease;
-	}
-}
-
-@keyframes slideDown {
-	from {
-		opacity: 0;
-		transform: translateY(-10px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
 	}
 }
 
@@ -232,5 +228,22 @@
 				transform: none;
 			}
 		}
+	}
+}
+
+.settingsSection {
+	border: 1px solid var(--space-line);
+	border-radius: 28px;
+	box-shadow: none;
+	&.priority--high,
+	&.priority--medium,
+	&.priority--low {
+		border-inline-start: 1px solid var(--space-line);
+		border-left: 1px solid var(--space-line);
+	}
+	&__header {
+		background: var(--space-surface);
+		border-color: var(--space-line);
+		padding: 24px;
 	}
 }

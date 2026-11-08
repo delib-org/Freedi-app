@@ -7,11 +7,22 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { authedFetch } from '@/lib/api/authedFetch';
 import { logError, httpErrorFromResponse } from '@/lib/utils/errorHandling';
+import { UI } from '@/constants/common';
+import { useSuggestedQuestions } from './useSuggestedQuestions';
+import { useRemovedQuestions } from './useRemovedQuestions';
+import { useSimilarByMeaning } from './useSimilarByMeaning';
+import { selectMeaningSuggestions } from './suggestedQuestions';
+import { useAccessibleQuestions } from './useAccessibleQuestions';
+import { filterQuestionsBySearch } from './questionSearchFilter';
 import styles from './Admin.module.scss';
 
 interface QuestionPickerProps {
   selectedQuestions: Statement[];
   onQuestionsChange: (questions: Statement[]) => void;
+  /** Called (instead of removing directly) when the admin un-ticks a selected question */
+  onRemoveQuestion: (questionId: string) => void;
+  /** Questions the admin removed from this survey, newest first (not currently selected) */
+  removedQuestionIds: string[];
 }
 
 interface QuestionsResponse {
@@ -27,6 +38,8 @@ interface QuestionsResponse {
 export default function QuestionPicker({
   selectedQuestions,
   onQuestionsChange,
+  onRemoveQuestion,
+  removedQuestionIds,
 }: QuestionPickerProps) {
   const { t } = useTranslation();
   const router = useRouter();
@@ -38,6 +51,14 @@ export default function QuestionPicker({
   const [searchQuery, setSearchQuery] = useState('');
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
+  const meaning = useSimilarByMeaning(searchQuery);
+  const meaningRows = selectMeaningSuggestions(meaning.questions, questions, selectedQuestions);
+  const removedQuestions = useRemovedQuestions(removedQuestionIds);
+  const suggestedQuestions = useSuggestedQuestions(selectedQuestions).filter(
+    (q) => !removedQuestionIds.includes(q.statementId)
+  );
+  const loadAccessibleQuestions = useAccessibleQuestions();
+  const loadedAllRef = useRef(false);
 
   // Debounce timer ref
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -106,6 +127,34 @@ export default function QuestionPicker({
     fetchQuestions();
   }, [fetchQuestions]);
 
+  // Search = one fetch of the accessible set per session, then a local filter
+  const runSearch = async (search: string) => {
+    if (!search.trim()) {
+      fetchQuestions();
+
+      return;
+    }
+
+    try {
+      setError(null);
+      if (!loadedAllRef.current) setLoading(true);
+      const all = await loadAccessibleQuestions();
+      loadedAllRef.current = true;
+      if (search !== currentSearchRef.current) return;
+
+      setQuestions(filterQuestionsBySearch(all, search));
+      setNextCursor(null);
+      setHasMore(false);
+    } catch (err) {
+      logError(err, { operation: 'QuestionPicker.runSearch', metadata: { searchQuery: search } });
+      if (search === currentSearchRef.current) {
+        setError(t('failedToFetchQuestions') || 'Failed to load questions');
+      }
+    } finally {
+      if (search === currentSearchRef.current) setLoading(false);
+    }
+  };
+
   // Debounced search
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -118,8 +167,8 @@ export default function QuestionPicker({
 
     // Debounce search by 300ms
     debounceRef.current = setTimeout(() => {
-      fetchQuestions(value);
-    }, 300);
+      runSearch(value);
+    }, UI.DEBOUNCE_DELAY);
   };
 
   // Load more handler
@@ -135,9 +184,7 @@ export default function QuestionPicker({
     );
 
     if (isSelected) {
-      onQuestionsChange(
-        selectedQuestions.filter((q) => q.statementId !== question.statementId)
-      );
+      onRemoveQuestion(question.statementId);
     } else {
       onQuestionsChange([...selectedQuestions, question]);
     }
@@ -175,13 +222,59 @@ export default function QuestionPicker({
         onChange={(e) => handleSearchChange(e.target.value)}
       />
 
+      {!searchQuery && removedQuestions.length > 0 && (
+        <div className={styles.suggestedSection}>
+          <h3 className={styles.suggestedTitle}>{t('recentlyRemovedQuestions')}</h3>
+          <div className={styles.questionList}>
+            {removedQuestions.map((question) => (
+              <div
+                key={question.statementId}
+                className={styles.questionItem}
+                onClick={() => handleToggleQuestion(question)}
+              >
+                <input
+                  type="checkbox"
+                  className={styles.questionCheckbox}
+                  checked={false}
+                  onChange={() => handleToggleQuestion(question)}
+                />
+                <span className={styles.questionText}>{question.statement}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!searchQuery && suggestedQuestions.length > 0 && (
+        <div className={styles.suggestedSection}>
+          <h3 className={styles.suggestedTitle}>{t('suggestedQuestions')}</h3>
+          <div className={styles.questionList}>
+            {suggestedQuestions.map((question) => (
+              <div
+                key={question.statementId}
+                className={styles.questionItem}
+                onClick={() => handleToggleQuestion(question)}
+              >
+                <input
+                  type="checkbox"
+                  className={styles.questionCheckbox}
+                  checked={false}
+                  onChange={() => handleToggleQuestion(question)}
+                />
+                <span className={styles.questionText}>{question.statement}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className={styles.loading}>
           <div className={styles.spinner} />
           <p>{t('searchingQuestions') || 'Searching questions...'}</p>
         </div>
       ) : questions.length === 0 && selectedQuestions.length === 0 ? (
-        <p style={{ textAlign: 'center', color: '#666', padding: '2rem' }}>
+        <p style={{ textAlign: 'center', color: 'var(--text-muted, #666)', padding: '2rem' }}>
           {searchQuery
             ? (t('noMatchingQuestions') || 'No matching questions found')
             : (t('noQuestionsAvailable') || 'No questions available')}
@@ -256,7 +349,34 @@ export default function QuestionPicker({
         </>
       )}
 
-      <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
+      {!loading && (meaning.loading || meaningRows.length > 0) && (
+        <div className={styles.suggestedSection}>
+          <h3 className={styles.suggestedTitle}>{t('similarByMeaning')}</h3>
+          {meaning.loading ? (
+            <p className={styles.suggestedTitle}>{t('searchingBySimilarMeaning')}</p>
+          ) : (
+            <div className={styles.questionList}>
+              {meaningRows.map((question) => (
+                <div
+                  key={question.statementId}
+                  className={styles.questionItem}
+                  onClick={() => handleToggleQuestion(question)}
+                >
+                  <input
+                    type="checkbox"
+                    className={styles.questionCheckbox}
+                    checked={false}
+                    onChange={() => handleToggleQuestion(question)}
+                  />
+                  <span className={styles.questionText}>{question.statement}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--text-muted, #666)' }}>
         {selectedQuestions.length} {t('questionsSelected') || 'questions selected'}
         {questions.length > 0 && ` • ${questions.length} ${t('shown') || 'shown'}`}
       </div>

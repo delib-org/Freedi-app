@@ -1,0 +1,155 @@
+{
+  "run": "llm-only-L2-gpt-5.6-luna-seed1234",
+  "language": "en",
+  "statements": 100,
+  "composite": 0.984070796460177,
+  "grade": "excellent",
+  "direct": {
+    "composite": 0.992,
+    "synthRate": 1,
+    "synthCleanRate": 1,
+    "pairsJoined": 50,
+    "pairsJoinedClean": 50,
+    "pairsTotal": 50,
+    "clusterScore": 0.9800000000000001,
+    "themes": [
+      {
+        "theme": "health",
+        "statements": 10,
+        "gathered": 10,
+        "representingGroups": 6,
+        "largestGroupHits": 10,
+        "largestGroupSize": 10,
+        "score": 1
+      },
+      {
+        "theme": "public-safety",
+        "statements": 10,
+        "gathered": 10,
+        "representingGroups": 6,
+        "largestGroupHits": 10,
+        "largestGroupSize": 10,
+        "score": 1
+      },
+      {
+        "theme": "culture",
+        "statements": 10,
+        "gathered": 8,
+        "representingGroups": 6,
+        "largestGroupHits": 8,
+        "largestGroupSize": 8,
+        "score": 0.8
+      },
+      {
+        "theme": "jobs-and-economy",
+        "statements": 10,
+        "gathered": 10,
+        "representingGroups": 6,
+        "largestGroupHits": 10,
+        "largestGroupSize": 10,
+        "score": 1
+      },
+      {
+        "theme": "transport",
+        "statements": 10,
+        "gathered": 10,
+        "representingGroups": 6,
+        "largestGroupHits": 10,
+        "largestGroupSize": 10,
+        "score": 1
+      },
+      {
+        "theme": "housing",
+        "statements": 10,
+        "gathered": 10,
+        "representingGroups": 6,
+        "largestGroupHits": 10,
+        "largestGroupSize": 10,
+        "score": 1
+      },
+      {
+        "theme": "environment-and-waste",
+        "statements": 10,
+        "gathered": 10,
+        "representingGroups": 6,
+        "largestGroupHits": 10,
+        "largestGroupSize": 10,
+        "score": 1
+      },
+      {
+        "theme": "digital-services",
+        "statements": 10,
+        "gathered": 10,
+        "representingGroups": 6,
+        "largestGroupHits": 10,
+        "largestGroupSize": 10,
+        "score": 1
+      },
+      {
+        "theme": "parks-and-green-space",
+        "statements": 10,
+        "gathered": 10,
+        "representingGroups": 6,
+        "largestGroupHits": 10,
+        "largestGroupSize": 10,
+        "score": 1
+      },
+      {
+        "theme": "education",
+        "statements": 10,
+        "gathered": 10,
+        "representingGroups": 6,
+        "largestGroupHits": 10,
+        "largestGroupSize": 12,
+        "score": 1
+      }
+    ]
+  },
+  "synth": {
+    "tp": 50,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1,
+    "recall": 1,
+    "f1": 1,
+    "predictedCount": 50,
+    "truthCount": 50,
+    "ari": 1,
+    "pairRecovery": "50/50",
+    "pairRecoveryRate": 1,
+    "falseMerges": 0,
+    "falseMergesWithinTopic": 0,
+    "falseMergeRate": 0,
+    "producedCount": 50,
+    "expectedCount": 50,
+    "fragmentedGroundTruthSynths": 0,
+    "statementsInAnySynth": 100,
+    "statementsClaimedByMultipleSynths": 0
+  },
+  "topic": {
+    "tp": 434,
+    "fp": 20,
+    "fn": 16,
+    "precision": 0.9559471365638766,
+    "recall": 0.9644444444444444,
+    "f1": 0.9601769911504425,
+    "predictedCount": 454,
+    "truthCount": 450,
+    "ari": 0.9561752988047809,
+    "producedCount": 10,
+    "expectedCount": 10
+  },
+  "coverage": {
+    "covered": 100,
+    "total": 100,
+    "rate": 1
+  },
+  "parameters": {
+    "language": "en",
+    "corpus": "scripts/seedSynthBenchmark.accuracy100.en.json",
+    "corpusSha": "8fdcaccc66dd",
+    "seed": 1234,
+    "condition": "L2",
+    "model": "gpt-5.6-luna"
+  }
+}

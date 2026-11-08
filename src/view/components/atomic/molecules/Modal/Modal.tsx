@@ -1,4 +1,5 @@
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
+import { useDialogBehaviour } from './useDialogBehaviour';
 import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 
@@ -69,6 +70,10 @@ export interface ModalProps {
 	/** ARIA label override */
 	ariaLabel?: string;
 
+	/** Id for the rendered title. When set, the dialog is named by the visible
+	 *  title through aria-labelledby instead of a duplicated aria-label. */
+	titleId?: string;
+
 	/** Accessible label for the close button. Pass a translated string —
 	 *  the default is English, which is wrong in an RTL locale. */
 	closeButtonLabel?: string;
@@ -95,20 +100,12 @@ const Modal: React.FC<ModalProps> = ({
 	className,
 	id,
 	ariaLabel,
+	titleId,
 	closeButtonLabel = 'Close modal',
 }) => {
 	const modalRef = useRef<HTMLDivElement>(null);
-	const previousActiveElement = useRef<Element | null>(null);
 
-	// Handle Escape key
-	const handleKeyDown = useCallback(
-		(e: KeyboardEvent) => {
-			if (closeOnEscape && e.key === 'Escape') {
-				onClose();
-			}
-		},
-		[closeOnEscape, onClose],
-	);
+	useDialogBehaviour({ isOpen, onClose, panelRef: modalRef, closeOnEscape, trapFocus: true });
 
 	// Handle backdrop click
 	const handleBackdropClick = useCallback(
@@ -119,33 +116,6 @@ const Modal: React.FC<ModalProps> = ({
 		},
 		[closeOnBackdrop, onClose],
 	);
-
-	// Body scroll lock and focus management
-	useEffect(() => {
-		if (isOpen) {
-			previousActiveElement.current = document.activeElement;
-			document.body.classList.add('modal-open');
-			document.addEventListener('keydown', handleKeyDown);
-
-			// Focus the modal content
-			if (modalRef.current) {
-				modalRef.current.focus();
-			}
-		} else {
-			document.body.classList.remove('modal-open');
-			document.removeEventListener('keydown', handleKeyDown);
-
-			// Restore focus
-			if (previousActiveElement.current instanceof HTMLElement) {
-				previousActiveElement.current.focus();
-			}
-		}
-
-		return () => {
-			document.body.classList.remove('modal-open');
-			document.removeEventListener('keydown', handleKeyDown);
-		};
-	}, [isOpen, handleKeyDown]);
 
 	// Build BEM classes
 	const modalClasses = clsx(
@@ -167,6 +137,8 @@ const Modal: React.FC<ModalProps> = ({
 		return null;
 	}
 
+	const labelledBy = titleId && title && !ariaLabel ? titleId : undefined;
+
 	const modalContent = (
 		<div
 			id={id}
@@ -174,7 +146,8 @@ const Modal: React.FC<ModalProps> = ({
 			onClick={handleBackdropClick}
 			role="dialog"
 			aria-modal="true"
-			aria-label={ariaLabel || title || 'Modal'}
+			aria-labelledby={labelledBy}
+			aria-label={labelledBy ? undefined : ariaLabel || title || 'Modal'}
 		>
 			<div className="modal__backdrop" aria-hidden="true" />
 
@@ -186,7 +159,11 @@ const Modal: React.FC<ModalProps> = ({
 			>
 				{(title || showCloseButton) && (
 					<div className="modal__header">
-						{title && <h3 className="modal__title">{title}</h3>}
+						{title && (
+							<h3 id={titleId} className="modal__title">
+								{title}
+							</h3>
+						)}
 						{showCloseButton && (
 							<button
 								type="button"

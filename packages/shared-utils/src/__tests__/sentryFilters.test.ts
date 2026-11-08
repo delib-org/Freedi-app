@@ -1,6 +1,7 @@
 import {
 	isFirestoreInternalCrash,
 	isBlockedServiceWorkerCrash,
+	isThirdPartyScriptCrash,
 	isTransientAuthNetworkError,
 	type SentryLikeEvent,
 	type SentryLikeException,
@@ -157,6 +158,63 @@ describe('isBlockedServiceWorkerCrash', () => {
 		});
 
 		expect(isBlockedServiceWorkerCrash(e, undefined)).toBe(false);
+	});
+});
+
+describe('isThirdPartyScriptCrash', () => {
+	it('drops a crash thrown entirely inside Microsoft Clarity', () => {
+		// The real event: Clarity dereferencing its own upload queue.
+		const e = event({
+			type: 'TypeError',
+			value: "Cannot read properties of null (reading 'sequence')",
+			stacktrace: frames(
+				'https://scripts.clarity.ms/0.8.69/clarity.js',
+				'https://scripts.clarity.ms/0.8.69/clarity.js',
+				'https://scripts.clarity.ms/0.8.69/clarity.js',
+			),
+		});
+
+		expect(isThirdPartyScriptCrash(e)).toBe(true);
+	});
+
+	it('keeps a crash that merely passes through the analytics bundle', () => {
+		const e = event({
+			type: 'TypeError',
+			value: "Cannot read properties of null (reading 'sequence')",
+			stacktrace: frames('/assets/index-abc.js', 'https://scripts.clarity.ms/0.8.69/clarity.js'),
+		});
+
+		expect(isThirdPartyScriptCrash(e)).toBe(false);
+	});
+
+	it('keeps a chained exception whose outer value is app code', () => {
+		const e = event(
+			{
+				type: 'Error',
+				value: 'Analytics init failed',
+				stacktrace: frames('/assets/main-abc.js'),
+			},
+			{
+				type: 'TypeError',
+				value: "Cannot read properties of null (reading 'sequence')",
+				stacktrace: frames('https://scripts.clarity.ms/0.8.69/clarity.js'),
+			},
+		);
+
+		expect(isThirdPartyScriptCrash(e)).toBe(false);
+	});
+
+	it('keeps an event with no frames to judge', () => {
+		const e = event({
+			type: 'TypeError',
+			value: "Cannot read properties of null (reading 'sequence')",
+		});
+
+		expect(isThirdPartyScriptCrash(e)).toBe(false);
+	});
+
+	it('keeps an event with no exception at all', () => {
+		expect(isThirdPartyScriptCrash({ message: 'something happened' })).toBe(false);
 	});
 });
 

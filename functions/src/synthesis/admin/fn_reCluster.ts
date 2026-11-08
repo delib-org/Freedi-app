@@ -6,6 +6,7 @@ import { ALLOWED_ORIGINS } from '../../config/cors';
 import { loadSynthesisSettings } from '../pipeline/loadSynthesisSettings';
 import { enqueueItem, initProgressDoc } from '../queue/enqueue';
 import { QUEUE_COLLECTION, type ProgressDoc } from '../queue/types';
+import { estimateEtaMinutes, isRunInFlight } from '../queue/runState';
 import { dissolveQuestionSynthesis } from '../derivedDocs';
 import { assertSynthesisAdmin } from './assertSynthesisAdmin';
 
@@ -46,9 +47,8 @@ function db() {
 async function isOperationInFlight(questionId: string): Promise<boolean> {
 	const snap = await db().collection(QUEUE_COLLECTION).doc(questionId).get();
 	if (!snap.exists) return false;
-	const progress = snap.data() as ProgressDoc;
 
-	return progress.status === 'running' || progress.status === 'paused';
+	return isRunInFlight(snap.data() as ProgressDoc, Date.now());
 }
 
 export const reCluster = onCall<ReClusterRequest>(
@@ -75,6 +75,8 @@ export const reCluster = onCall<ReClusterRequest>(
 
 		// 1. Clean: dissolve all prior synthesis output so the rebuild is not
 		// contaminated by stale clusters / drifted membership.
+		// Refuses first (failed-precondition, reason 'derived-docs-have-votes'),
+		// before any write, when participants voted on the merged ideas.
 		const dissolve = await dissolveQuestionSynthesis(questionId, { reversedByUserId: uid });
 
 		// 2. Rebuild: enqueue every eligible option. After the dissolve, members
@@ -135,7 +137,7 @@ export const reCluster = onCall<ReClusterRequest>(
 			membersRestored: dissolve.membersRestored,
 			orphansRestored: dissolve.orphansRestored,
 			enqueued,
-			etaMinutes: Math.ceil(enqueued / 50),
+			etaMinutes: estimateEtaMinutes(enqueued),
 		};
 	},
 );

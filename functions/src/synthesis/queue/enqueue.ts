@@ -8,6 +8,7 @@ import {
 	type ProgressDoc,
 	type QueueOperation,
 } from './types';
+import { estimateEtaMinutes, planQueueWake } from './runState';
 
 function db() {
 	return getFirestore();
@@ -18,6 +19,12 @@ interface EnqueueOptionInput {
 	kind: 'process-option';
 	optionId: string;
 	forceProcess?: boolean;
+	/**
+	 * A pipeline re-queuing the option it is processing (debounced or failed
+	 * spawn). An existing item keeps its history and counts one more attempt,
+	 * so retries are bounded by MAX_ATTEMPTS; a plain enqueue resets attempts.
+	 */
+	retry?: boolean;
 }
 
 interface EnqueueRejudgeInput {
@@ -64,7 +71,15 @@ export async function enqueueItem(input: EnqueueInput): Promise<string> {
 	};
 
 	try {
-		await ref.set(payload, { merge: true });
+		if (input.kind === 'process-option' && input.retry) {
+			await db().runTransaction(async (tx) => {
+				const snap = await tx.get(ref);
+				const attempts = snap.exists ? ((snap.data() as QueueItem).attempts ?? 0) + 1 : 0;
+				tx.set(ref, { ...payload, attempts }, { merge: true });
+			});
+		} else {
+			await ref.set(payload, { merge: true });
+		}
 
 		return itemId;
 	} catch (error) {
@@ -103,7 +118,7 @@ export async function initProgressDoc(input: InitProgressInput): Promise<void> {
 		rateHint: PROCESS_BATCH_SIZE,
 		startedAt: now,
 		lastTickAt: now,
-		etaMinutes: Math.ceil(input.enqueuedCount / PROCESS_BATCH_SIZE),
+		etaMinutes: estimateEtaMinutes(input.enqueuedCount),
 		initiatedBy: input.initiatedBy,
 	};
 	await ref.set(progress);
@@ -133,7 +148,69 @@ export async function mergeIntoProgressDoc(
 			pendingCount,
 			operation: before.operation === newOperation ? before.operation : 'mixed',
 			lastTickAt: Date.now(),
-			etaMinutes: Math.ceil(pendingCount / PROCESS_BATCH_SIZE),
+			etaMinutes: estimateEtaMinutes(pendingCount),
 		});
 	});
+}
+
+/**
+ * Make sure a worker will drain `addedCount` items just enqueued by a caller
+ * that does not own a run (re-judge revisits, claim mutations, live-trigger
+ * retries). See `planQueueWake` for the rules.
+ *
+ * A started run is written with `update` when the doc exists, so a worker
+ * lease still held from the previous run survives. Failure is logged and
+ * swallowed: the items are already queued and the next admin run picks them up.
+ */
+export async function ensureQueueRun(
+	questionId: string,
+	addedCount: number,
+	operation: QueueOperation,
+): Promise<void> {
+	if (addedCount <= 0) return;
+	const ref = db().collection(QUEUE_COLLECTION).doc(questionId);
+	try {
+		await db().runTransaction(async (tx) => {
+			const snap = await tx.get(ref);
+			const before = snap.exists ? (snap.data() as ProgressDoc) : null;
+			const action = planQueueWake(before);
+			if (action === 'leave') return;
+			const now = Date.now();
+			if (action === 'merge' && before) {
+				const pendingCount = (before.pendingCount ?? 0) + addedCount;
+				tx.update(ref, {
+					enqueuedCount: (before.enqueuedCount ?? 0) + addedCount,
+					pendingCount,
+					operation: before.operation === operation ? before.operation : 'mixed',
+					lastTickAt: now,
+					etaMinutes: estimateEtaMinutes(pendingCount),
+				});
+
+				return;
+			}
+			const run: Partial<ProgressDoc> = {
+				questionId,
+				enqueuedCount: addedCount,
+				processedCount: 0,
+				failedCount: 0,
+				pendingCount: addedCount,
+				status: 'running',
+				operation,
+				rateHint: PROCESS_BATCH_SIZE,
+				startedAt: now,
+				lastTickAt: now,
+				etaMinutes: estimateEtaMinutes(addedCount),
+				initiatedBy: 'system',
+			};
+			if (snap.exists) tx.update(ref, run);
+			else tx.set(ref, run);
+		});
+	} catch (error) {
+		logger.warn('synthesis.queue.ensureQueueRun: failed; items stay queued', {
+			questionId,
+			addedCount,
+			operation,
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
 }

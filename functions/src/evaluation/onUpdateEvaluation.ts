@@ -11,9 +11,11 @@ import { DocumentSnapshot } from 'firebase-admin/firestore';
 import type { FirestoreEvent } from 'firebase-functions/v2/firestore';
 import type { Evaluation } from '@freedi/shared-types';
 import { updateUserDemographicEvaluation } from '../fn_polarizationIndex';
-import { ActionTypes } from './evaluationTypes';
+import { ActionTypes, clampEvaluationValue } from './evaluationTypes';
+import { dropEvaluationOnTheme } from './themeGuard';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
+import { recordEvaluatorParticipation } from './evaluatorParticipation';
 import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
 import { writeHistoryEntry } from '../statements/history/writeHistoryEntry';
 import { isResearchEnabledForTopParent } from '../statements/history/isResearchEnabled';
@@ -22,7 +24,7 @@ import { isResearchEnabledForTopParent } from '../statements/history/isResearchE
 import { synthesisFlags } from '../synthesis/featureFlags';
 import {
 	enqueueClusterRecompute,
-	findClustersContainingMember,
+	findClustersAffectedByVote,
 } from '../synthesis/liveSynth/clusterRecompute';
 
 export async function updateEvaluation(
@@ -41,7 +43,9 @@ export async function updateEvaluation(
 			return;
 		}
 
-		const evaluationDiff = after.evaluation - before.evaluation;
+		const newValue = clampEvaluationValue(after.evaluation);
+		const oldValue = clampEvaluationValue(before.evaluation);
+		const evaluationDiff = newValue - oldValue;
 		const userId = after.evaluator?.uid;
 
 		if (!userId) {
@@ -52,12 +56,15 @@ export async function updateEvaluation(
 			throw new Error('statementId is required');
 		}
 
+		// Themes are not voted on: drop a stray evaluation before it feeds any counter.
+		if (await dropEvaluationOnTheme(event.data.after, after.statementId, eventId)) return;
+
 		const { statement, duplicate } = await updateStatementEvaluation({
 			statementId: after.statementId,
 			evaluationDiff,
 			action: ActionTypes.update,
-			newEvaluation: after.evaluation,
-			oldEvaluation: before.evaluation,
+			newEvaluation: newValue,
+			oldEvaluation: oldValue,
 			userId,
 			parentId: after.parentId,
 			eventId,
@@ -74,12 +81,14 @@ export async function updateEvaluation(
 			throw new Error('Failed to update statement');
 		}
 
+		// Counts the user once per question (1 read when already counted, no parent write)
+		await recordEvaluatorParticipation(statement.parentId, userId);
 		await updateParentStatementWithChosenOptions(statement.parentId);
 
 		// Update demographic evaluation (it will check if demographic question exists later on)
 		const userEvalData = {
 			userId,
-			evaluation: after.evaluation || 0,
+			evaluation: newValue,
 			demographicAnchorId: after.demographicAnchorId,
 		};
 		updateUserDemographicEvaluation(statement, userEvalData);
@@ -88,7 +97,7 @@ export async function updateEvaluation(
 		// any synth cluster. Same pattern as onCreateEvaluation. Behind
 		// `clusterAwarePolarization` flag — when OFF, no cluster work happens.
 		if (synthesisFlags.clusterAwarePolarization) {
-			findClustersContainingMember(statement.statementId)
+			findClustersAffectedByVote(statement.statementId)
 				.then(async (containingClusters) => {
 					await Promise.all(
 						containingClusters.map((c) =>

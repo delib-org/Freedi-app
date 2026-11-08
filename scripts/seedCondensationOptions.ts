@@ -547,12 +547,6 @@ async function main(): Promise<void> {
 				createdAt,
 				lastUpdate: createdAt,
 				consensus: 0,
-				// embeddings required by the condensation pipeline. Firestore
-				// canonical shape is VectorValue (so findNearest works); the
-				// trigger may overwrite with OpenAI's, that's fine.
-				embedding: FieldValue.vector(embedding),
-				embeddingModel: 'seed-synthetic-v1',
-				embeddingCreatedAt: createdAt,
 				// basic evaluation so the UI doesn't complain. Include
 				// evaluationRandomNumber + viewed so the main evaluation updater
 				// (statementEvaluationUpdater.ts) can safely overwrite the object
@@ -570,6 +564,19 @@ async function main(): Promise<void> {
 					evaluationRandomNumber: Math.random(),
 					viewed: 0,
 				},
+			});
+			// Vectors required by the condensation pipeline live in
+			// statementEmbeddings (VectorValue, so findNearest works). Written
+			// with the statement so the create trigger sees them and skips
+			// OpenAI; no model stamp, since readers drop vectors whose stamp
+			// differs from the question's model and these are synthetic.
+			batch.set(db.collection('statementEmbeddings').doc(statementId), {
+				statementId,
+				parentId: PARENT_ID,
+				embedding: FieldValue.vector(embedding),
+				embeddingContext: 'seed-synthetic-v1',
+				embeddingCreatedAt: createdAt,
+				lastUpdate: createdAt,
 			});
 		}
 		await batch.commit();

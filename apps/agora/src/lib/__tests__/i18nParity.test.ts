@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { translations, type LangCode } from '../i18n';
+import { translations } from '../locales/all';
+import type { LangCode } from '../i18n';
 
 /**
  * Six languages in one 3,700-line file, edited by hand. They had already

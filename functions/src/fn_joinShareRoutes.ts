@@ -419,10 +419,12 @@ export const serveJoinShareRoutes = onRequest(
 	{
 		...functionConfig,
 		timeoutSeconds: 30,
-		// Every human click on a shared Join link lands here, so a cold start
-		// would delay the splash screen. One warm instance keeps share links as
-		// fast as the static serve they replaced.
-		minInstances: 1,
+		// Scales to zero (no minInstances). Tal accepted a ~1-2s first-load delay
+		// on share links after idle in exchange for dropping an always-on
+		// instance that saw no traffic for a month. Nothing here relies on a warm
+		// instance: the app-shell cache is an optimisation only (a cold start
+		// refetches it from the canonical origin, bounded by SHELL_FETCH timeout).
+		// See docs/architecture/firebase-cost-2026-10/lane-d-infra.md.
 		cors: true,
 	},
 	handleShareRequest,

@@ -1,4 +1,4 @@
-import { deleteField, setDoc, updateDoc } from 'firebase/firestore';
+import { deleteField, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { number, parse } from 'valibot';
 import {
@@ -7,6 +7,7 @@ import {
 	User,
 	EvaluationUI,
 	evaluationType,
+	isTheme,
 } from '@freedi/shared-types';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import { analyticsService } from '@/services/analytics';
@@ -28,6 +29,16 @@ export async function setEvaluationToDB(
 	evaluation: number,
 	demographicAnchorId?: string,
 ): Promise<void> {
+	// Themes are navigation containers; their numbers are roll-ups of their
+	// members. Nothing is written, whichever control called us.
+	if (isTheme(statement)) {
+		logger.info('Evaluation skipped: statement is a theme', {
+			statementId: statement.statementId,
+		});
+
+		return;
+	}
+
 	try {
 		parse(number(), evaluation);
 
@@ -185,6 +196,25 @@ export function setRatingScale(statement: Statement, scale: evaluationType): voi
 	});
 }
 
+const EVALUATION_UI_PATH = 'evaluationSettings.evaluationUI';
+
+/**
+ * Dotted-path writes into evaluationSettings create the map when the statement
+ * has none, and StatementEvaluationSettingsSchema requires evaluationUI - so a
+ * map created without it fails every strict parse. Returns the field to merge
+ * into the update when (and only when) the stored map lacks evaluationUI;
+ * 'suggestions' is what every reader assumes when it is absent. An existing
+ * value is never overwritten.
+ */
+export async function missingEvaluationUIPatch(
+	statementId: string,
+): Promise<Record<string, EvaluationUI>> {
+	const snapshot = await getDoc(createStatementRef(statementId));
+	const stored = snapshot.data()?.evaluationSettings?.evaluationUI;
+
+	return stored ? {} : { [EVALUATION_UI_PATH]: EvaluationUI.suggestions };
+}
+
 export async function setAnchoredEvaluationSettings(
 	statementId: string,
 	anchoredSettings: {
@@ -201,6 +231,7 @@ export async function setAnchoredEvaluationSettings(
 
 		await updateDoc(statementRef, {
 			'evaluationSettings.anchored': anchoredSettings,
+			...(await missingEvaluationUIPatch(statementId)),
 		});
 
 		// Log event
@@ -227,6 +258,7 @@ export async function setMaxVotesPerUser(
 
 		await updateDoc(statementRef, {
 			'evaluationSettings.maxVotesPerUser': maxVotes || null,
+			...(await missingEvaluationUIPatch(statementId)),
 		});
 
 		// Log event
@@ -253,7 +285,9 @@ export async function setConfidenceIndexSettings(
 	try {
 		const statementRef = createStatementRef(statementId);
 
-		const updateData: Record<string, number | ReturnType<typeof deleteField>> = {};
+		const updateData: Record<string, number | string | ReturnType<typeof deleteField>> = {
+			...(await missingEvaluationUIPatch(statementId)),
+		};
 		if (settings.targetPopulation !== undefined) {
 			// Clearing REMOVES the field rather than writing null. A null fails
 			// the `optional(number())` schema on the way back in, and — more

@@ -11,13 +11,14 @@ import {
 	submitProposal,
 	submitThreadMessage,
 } from '../lib/proposals';
+import { flaggedNotice, isLanguageFlagged } from '../lib/language';
 import { celebrate } from '../lib/celebration';
 import { SLOW_AFTER_MS } from '../lib/confirmedWrite';
 import { stalledBanner } from '../components/StalledBanner';
 import { diffWords } from '../lib/textDiff';
 import { markThreadSeen } from '../lib/seenState';
 import { RateScale, rateOptionFor } from '../components/RateScale';
-import { requestMineFocus } from '../lib/helpedFocus';
+import { requestMineFocus, requestTeacherFocus } from '../lib/helpedFocus';
 import {
 	reWeighMoment,
 	roundTripAt,
@@ -29,6 +30,7 @@ import {
 	AgoraSession,
 	AgoraSuggestionStatus,
 	AGORA_LIMITS,
+	isAgoraTextLongEnough,
 	createAgoraThreadKey,
 } from '@freedi/shared-types';
 
@@ -43,7 +45,39 @@ import {
  * message is a child Statement of the proposal Statement, keyed into one
  * conversation by `agoraThreadUserId` (the helper's uid).
  */
+export interface ThreadChatServices {
+	getThreadMessages: typeof getThreadMessages;
+	openSuggestionsBy: typeof openSuggestionsBy;
+	resolveSuggestion: typeof resolveSuggestion;
+	submitThreadMessage: typeof submitThreadMessage;
+	markThreadSeen: typeof markThreadSeen;
+}
+/**
+ * How the page names the paper it is about. The classic chat says
+ * "proposal", the village says "note" — one page, two vocabularies, so the
+ * title at the top and the edit button both speak the room's language.
+ */
+export interface ThreadWording {
+	/** The owner's title: "My note" */
+	mine: string;
+	/** A helper's title, number included: "Note 2" */
+	theirs: string;
+	/** The owner's labelled door into the editor: "Edit my note" */
+	edit: string;
+	/** A helper's subtitle: "Conversation with the note's author" */
+	withAuthor: string;
+	/** The editor's save button: "Save my note" */
+	save: string;
+}
 export interface ThreadChatAttrs {
+	/** A visible label over the message box (the village board passes one; the classic chat shows none) */
+	paperLabel?: string;
+	/** Names the destination instead of making students infer it from an arrow. */
+	backLabel?: string;
+	/** Defaults to the classic chat's "proposal" vocabulary */
+	wording?: ThreadWording;
+	services?: ThreadChatServices;
+	canEditProposal?: boolean;
 	session: AgoraSession;
 	proposal: AgoraProposal;
 	/** The helper whose conversation this is — one thread per classmate */
@@ -131,7 +165,7 @@ export function threadEntry(options: ThreadEntryOptions): m.Children {
 				m(
 					'span.chat-entry__last',
 					{ class: last ? undefined : 'chat-entry__last--empty' },
-					last ? lastLine(last) : t('delib.chat_start'),
+					last ? lastLine(last) : t('delib.chat_open'),
 				),
 			]),
 			m('span.chat-entry__meta', [
@@ -172,6 +206,9 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	let busy = false;
 	/** The last send rejected — the words are still in the box, say so */
 	let sendFailed = false;
+	/** The language gate's sentence under the composer / the editor, or null */
+	let sendNotice: string | null = null;
+	let editNotice: string | null = null;
 	/** Un-pins `busy` if a send is still in the air when the stall clock fires */
 	let stallTimer: number | undefined;
 	/** Message count the scroller last saw — a new message pins it to the bottom */
@@ -183,7 +220,15 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	 * change is right there. Same gesture as every other Freedi surface: tap
 	 * the text, it becomes a box.
 	 */
+	let services: ThreadChatServices = {
+		getThreadMessages,
+		openSuggestionsBy,
+		resolveSuggestion,
+		submitThreadMessage,
+		markThreadSeen,
+	};
 	let editing = false;
+	let canEditProposal = true;
 	let editDraft = '';
 	let savingEdit = false;
 	/**
@@ -217,42 +262,53 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		dom.scrollTop = dom.scrollHeight;
 	}
 
-	/** The quoted proposal: a plain line, or the box it becomes when tapped */
+	/**
+	 * The quoted proposal — the OBJECT this whole page is about, so it sits
+	 * directly under its title — or the box it becomes once the owner opens it.
+	 *
+	 * The owner's way in is a labelled button, not a pencil glyph on a tappable
+	 * card: "tap the text to edit" was a tooltip nobody hovers on a phone, and
+	 * the one question this page kept getting was "how do I change my note".
+	 */
 	function proposalQuote(
 		session: AgoraSession,
 		proposal: AgoraProposal,
 		anonName: string,
-		canEdit: boolean,
+		owner: boolean,
+		wording: ThreadWording,
 	): m.Children {
-		if (!canEdit) return m('p.chat-page__proposal', proposal.statement);
-
-		if (!editing) {
+		if (!owner || !canEditProposal || !editing) {
 			return m(
-				'button.chat-page__proposal.chat-page__proposal--editable',
+				'section.chat-page__proposal',
 				{
-					type: 'button',
-					title: t('delib.tap_to_edit'),
-					'aria-label': t('delib.tap_to_edit'),
-					onclick: () => {
-						editing = true;
-						editDraft = proposal.statement;
-					},
+					class: owner ? 'chat-page__proposal--mine' : undefined,
+					'aria-label': owner ? wording.mine : wording.theirs,
 				},
 				[
-					m('span.chat-page__proposal-text', proposal.statement),
-					m(
-						'span.chat-page__proposal-pencil',
-						{ 'aria-hidden': 'true' },
-						m(Icon, { name: 'edit', size: 16 }),
-					),
+					m('h2.chat-page__title', owner ? wording.mine : wording.theirs),
+					m('p.chat-page__proposal-text', proposal.statement),
+					owner && canEditProposal
+						? m(
+								'button.btn.btn--secondary.btn--sm.chat-page__edit-open',
+								{
+									type: 'button',
+									onclick: () => {
+										editing = true;
+										editDraft = proposal.statement;
+									},
+								},
+								iconLabel('edit', wording.edit),
+							)
+						: null,
 				],
 			);
 		}
 
 		const text = editDraft.trim();
-		const changed = text !== proposal.statement && text.length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
+		const changed = text !== proposal.statement && isAgoraTextLongEnough(text);
 
 		return m('.chat-page__edit', [
+			m('h2.chat-page__title', wording.mine),
 			// The thanked idea, pinned where the weaving happens. A QUOTE, never a
 			// paste: the student rewrites their own text with it in view.
 			pinnedIdea
@@ -268,10 +324,11 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					])
 				: null,
 			m('textarea.text-input.chat-page__edit-input', {
+				dir: 'auto',
 				value: editDraft,
 				rows: 3,
 				maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
-				'aria-label': t('delib.my_proposal'),
+				'aria-label': wording.mine,
 				oncreate: (node: m.VnodeDOM) => {
 					(node.dom as HTMLTextAreaElement).focus();
 				},
@@ -279,6 +336,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					editDraft = (event.target as HTMLTextAreaElement).value;
 				},
 			}),
+			editNotice ? m('p.join__error', { role: 'alert' }, editNotice) : null,
 			m('.delib__actions.delib__actions--tight', [
 				m(
 					'button.btn.btn--ghost.btn--sm',
@@ -296,6 +354,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 						disabled: !changed || savingEdit,
 						onclick: () => {
 							savingEdit = true;
+							editNotice = null;
 							submitProposal(session, anonName, text, proposal.statementId)
 								.then(() => {
 									editing = false;
@@ -308,6 +367,12 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 									acknowledgeSave();
 								})
 								.catch((error: unknown) => {
+									// Refused by the language gate: the draft stays, the box says why
+									if (isLanguageFlagged(error)) {
+										editNotice = flaggedNotice(error);
+
+										return;
+									}
 									console.error('[Chat] Update proposal failed:', error);
 								})
 								.finally(() => {
@@ -316,7 +381,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 								});
 						},
 					},
-					t('delib.update_proposal'),
+					wording.save,
 				),
 			]),
 		]);
@@ -338,13 +403,15 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 				'button.btn.btn--ghost.btn--sm',
 				{
 					onclick: () => {
-						resolveSuggestion(
-							session.sessionId,
-							message.statementId,
-							AgoraSuggestionStatus.declined,
-						).catch((error: unknown) => {
-							console.error('[Chat] Decline suggestion failed:', error);
-						});
+						services
+							.resolveSuggestion(
+								session.sessionId,
+								message.statementId,
+								AgoraSuggestionStatus.declined,
+							)
+							.catch((error: unknown) => {
+								console.error('[Chat] Decline suggestion failed:', error);
+							});
 					},
 				},
 				t('delib.no_thanks'),
@@ -363,22 +430,24 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 							from: message.anonName ?? '',
 							variant: message.statementId.charCodeAt(0) % 2 === 0 ? 1 : 2,
 						};
-						editing = true;
+						editing = canEditProposal;
 						editDraft = proposal.statement;
 
-						resolveSuggestion(
-							session.sessionId,
-							message.statementId,
-							AgoraSuggestionStatus.thanked,
-						).catch((error: unknown) => {
-							// resolveSuggestion has already rolled the decision back; undo
-							// the handoff so the student is not left editing on a promise
-							// that failed.
-							pinnedIdea = null;
-							editing = false;
-							m.redraw();
-							console.error('[Chat] Thank suggestion failed:', error);
-						});
+						services
+							.resolveSuggestion(
+								session.sessionId,
+								message.statementId,
+								AgoraSuggestionStatus.thanked,
+							)
+							.catch((error: unknown) => {
+								// resolveSuggestion has already rolled the decision back; undo
+								// the handoff so the student is not left editing on a promise
+								// that failed.
+								pinnedIdea = null;
+								editing = false;
+								m.redraw();
+								console.error('[Chat] Thank suggestion failed:', error);
+							});
 					},
 				},
 				iconLabel('thanks', t('delib.thank')),
@@ -575,9 +644,6 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 								cheerRoundTrip(session, proposal.statementId);
 							},
 						}),
-						// Said out loud, every time: keeping or lowering a rating is a
-						// real answer, not a rudeness
-						m('p.chat-system__free', t('thread.reweigh_free')),
 					]
 				: m('.chat-system__gate', [
 						m(
@@ -683,9 +749,13 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 				// moved: a line that says "still 45" every lap teaches nothing
 				supportNow !== undefined && moment.bridgeDelta !== 0
 					? m('p.chat-system__bridge.chat-system__bridge--aside', [
-							t('thread.score_bridge', {
-								range: `⁦${moment.bridgeNow - moment.bridgeDelta} → ${moment.bridgeNow}⁩`,
-							}),
+							iconLabel(
+								'bridge',
+								t('thread.score_bridge', {
+									range: `⁦${moment.bridgeNow - moment.bridgeDelta} → ${moment.bridgeNow}⁩`,
+								}),
+								18,
+							),
 							deltaChip(moment.bridgeDelta),
 						])
 					: null,
@@ -737,6 +807,23 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		// What HAPPENED, as opposed to what someone said
 		if (isSystemKind(message)) return systemLine(message, role);
 		const mine = message.creatorId === userId;
+		// Taken down by the teacher. Only ever my own — a classmate's hidden
+		// line never reaches this client — so it reads as a note to me.
+		if (message.hidden) {
+			return m(
+				'.thread__msg.thread__msg--mine.thread__msg--removed',
+				{ key: message.statementId, id: `msg-` },
+				[
+					m('p.thread__text', t('moderation.removed_short')),
+					m(
+						'button.btn.btn--ghost.btn--sm',
+						{ type: 'button', onclick: () => requestTeacherFocus() },
+						t('moderation.talk_to_teacher'),
+					),
+					m('span.thread__time', formatMessageTime(message.createdAt)),
+				],
+			);
+		}
 		const decidable =
 			role === 'owner' &&
 			!mine &&
@@ -761,6 +848,9 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					? m('span.thread__tag', iconLabel('idea', t('delib.thread_suggestion_tag')))
 					: null,
 				m('p.thread__text', message.statement),
+				mine && message.teacherEdited
+					? m('span.moderation__edited', t('moderation.edited_by_teacher'))
+					: null,
 				m('span.thread__time', formatMessageTime(message.createdAt)),
 				decidable ? decision(session, proposal, message) : statusChip(message),
 				// Said once, where the button is: a thank-you is not just
@@ -794,10 +884,18 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		},
 
 		view(vnode) {
+			services = vnode.attrs.services ?? {
+				getThreadMessages,
+				openSuggestionsBy,
+				resolveSuggestion,
+				submitThreadMessage,
+				markThreadSeen,
+			};
+			canEditProposal = vnode.attrs.canEditProposal !== false;
 			const { session, proposal, helperUid, role, userId, anonName, proposalNumber, onBack } =
 				vnode.attrs;
 			const threadKey = createAgoraThreadKey(proposal.statementId, helperUid);
-			const messages = getThreadMessages(proposal.statementId, helperUid);
+			const messages = services.getThreadMessages(proposal.statementId, helperUid);
 
 			// Standing on this page IS reading the conversation
 			if (document.visibilityState === 'visible') {
@@ -805,7 +903,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					(max, message) => (message.creatorId !== userId ? Math.max(max, message.createdAt) : max),
 					0,
 				);
-				if (newest > 0) markThreadSeen(threadKey, newest);
+				if (newest > 0) services.markThreadSeen(threadKey, newest);
 			}
 
 			// ONE open improvement idea at a time, per conversation. With the
@@ -815,17 +913,27 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 			// thanks or no thanks — the box offers the next idea. Helping stays
 			// earnable every lap without anyone queueing ideas nobody asked for.
 			const kind =
-				role === 'helper' && openSuggestionsBy(proposal.statementId, userId) === 0
+				role === 'helper' && services.openSuggestionsBy(proposal.statementId, userId) === 0
 					? AgoraMessageKind.suggestion
 					: AgoraMessageKind.chat;
 			const helperName =
 				messages.find((message) => message.creatorId === helperUid)?.anonName ?? '';
-			const title =
-				role === 'owner'
-					? helperName
-						? t('delib.chat_with', { name: helperName })
-						: t('delib.chat_with_author')
-					: t('delib.chat_with_author');
+			// The paper is the OBJECT and the conversation is ABOUT it, so the
+			// title names the paper ("My note" / "Note 2") and the line under it
+			// names the conversation — a number on your own note said nothing.
+			// `creatorId` is the truth about whose paper this is; `role` only says
+			// which side the caller thinks I am standing on.
+			const owner = proposal.creatorId === userId;
+			const wording: ThreadWording = vnode.attrs.wording ?? {
+				mine: t('delib.my_proposal'),
+				theirs: t('delib.proposal_number', { n: proposalNumber }),
+				edit: t('delib.edit_proposal'),
+				withAuthor: t('delib.chat_with_author'),
+				save: t('delib.update_proposal'),
+			};
+			const subtitle = owner
+				? t(helperName ? 'delib.chat_with' : 'delib.chat_with_classmate', { name: helperName })
+				: wording.withAuthor;
 
 			// The two closing moments of the improvement cycle. `creatorId` is the
 			// truth about who is standing here — `role` is caller-supplied and can
@@ -872,19 +980,14 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 			return m('.shell.shell--chat', [
 				m('.chat-page', [
 					m('header.chat-page__bar', [
-						m(
-							'button.chat-page__back',
-							{ type: 'button', 'aria-label': t('common.back'), onclick: onBack },
+						m('button.chat-page__back', { type: 'button', onclick: onBack }, [
 							m('span', { 'aria-hidden': 'true' }, isRTL() ? '→' : '←'),
-						),
-						m('.chat-page__who', [
-							m('span.chat-page__title', title),
-							m('span.chat-page__sub', t('delib.proposal_number', { n: proposalNumber })),
+							m('span', vnode.attrs.backLabel ?? t('common.back')),
 						]),
 					]),
 					// The proposal this conversation is about — and, for the person
 					// who wrote it, the place to change it
-					proposalQuote(session, proposal, anonName, proposal.creatorId === userId),
+					proposalQuote(session, proposal, anonName, owner, wording),
 					savedAck
 						? m(
 								'p.chat-page__saved-ack',
@@ -892,6 +995,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 								iconLabel('check', t('delib.saved_ack')),
 							)
 						: null,
+					m('h3.chat-page__conversation', subtitle),
 					m(
 						'.chat-page__list',
 						{
@@ -909,14 +1013,29 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					// A send still in the air after the stall clock — the words are
 					// safe in the box below, and this line says why nothing moved
 					stalledBanner(),
-					sendFailed ? m('p.join__error', { role: 'alert' }, t('delib.send_failed')) : null,
+					sendNotice
+						? m('p.join__error', { role: 'alert' }, sendNotice)
+						: sendFailed
+							? m('p.join__error', { role: 'alert' }, t('delib.send_failed'))
+							: null,
 					m('.chat-page__composer', [
+						vnode.attrs.paperLabel
+							? m(
+									'label.chat-page__label',
+									{ for: `chat-input-${proposal.statementId}` },
+									owner && helperName
+										? t('delib.reply_to', { name: helperName })
+										: vnode.attrs.paperLabel,
+								)
+							: null,
 						m('textarea.text-input.chat-page__input', {
+							dir: 'auto',
+							id: `chat-input-${proposal.statementId}`,
 							value: draft,
 							rows: 2,
-							placeholder: t(
-								role === 'owner' ? 'delib.thread_reply_placeholder' : 'delib.thread_placeholder',
-							),
+							// A placeholder never repeats its label: only the owner's reply
+							// box has words of its own to add
+							placeholder: role === 'owner' ? t('delib.thread_reply_placeholder') : undefined,
 							oninput: (event: InputEvent) => {
 								draft = (event.target as HTMLTextAreaElement).value;
 							},
@@ -926,7 +1045,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 								kind === AgoraMessageKind.suggestion ? 'btn--primary' : 'btn--secondary'
 							}`,
 							{
-								disabled: busy || draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
+								disabled: busy || !isAgoraTextLongEnough(draft),
 								onclick: () => {
 									// The draft is NOT cleared here. Firestore queues a write
 									// on a wedged connection and never settles the promise, so
@@ -938,12 +1057,14 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 									const text = draft.trim();
 									busy = true;
 									sendFailed = false;
+									sendNotice = null;
 									window.clearTimeout(stallTimer);
 									stallTimer = window.setTimeout(() => {
 										busy = false;
 										m.redraw();
 									}, SLOW_AFTER_MS);
-									submitThreadMessage(session, proposal, anonName, text, kind, helperUid)
+									services
+										.submitThreadMessage(session, proposal, anonName, text, kind, helperUid)
 										.then(() => {
 											// Confirmed — now the words may leave the box (unless
 											// the student already started typing something new)
@@ -953,6 +1074,11 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 											}
 										})
 										.catch((error: unknown) => {
+											if (isLanguageFlagged(error)) {
+												sendNotice = flaggedNotice(error);
+
+												return;
+											}
 											sendFailed = true;
 											console.error('[Chat] Thread message failed:', error);
 										})

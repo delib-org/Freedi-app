@@ -68,6 +68,12 @@ export const OdysseyJourneySchema = object({
 	 * islands they have not deliberated yet.
 	 */
 	deliberationVisits: optional(record(string(), number())),
+	/**
+	 * The language the player reads the voyage in ('he' | 'en' | 'ar'), written
+	 * when they first save and whenever they switch. The email digest speaks it.
+	 * Absent on journeys from before the game had languages — read as Hebrew.
+	 */
+	lang: optional(string()),
 	createdAt: number(),
 	lastUpdate: number(),
 });

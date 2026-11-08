@@ -89,9 +89,9 @@
 
   // Strongly Agree (+1) - Enthusiastic green
   &--strongly-agree {
-    background: var(--rating-strongly-agree, #dcfce7);
+    background: var(--rating-strongly-agree, var(--mc-surface-tint, #dcfce7));
     border-color: var(--rating-strongly-agree-border, #22c55e);
-    color: var(--rating-strongly-agree-text, #166534);
+    color: var(--rating-strongly-agree-text, var(--mc-text-strong, #166534));
 
     &:hover:not(.rating-button--disabled) {
       background: var(--rating-strongly-agree-hover, #bbf7d0);
@@ -100,7 +100,7 @@
 
   // Agree (+0.5) - Soft green
   &--agree {
-    background: var(--rating-agree, #d1fae5);
+    background: var(--rating-agree, var(--mc-surface-tint, #d1fae5));
     border-color: var(--rating-agree-border, #6ee7b7);
     color: var(--rating-agree-text, #059669);
 
@@ -111,18 +111,18 @@
 
   // Neutral (0) - Gray/thinking
   &--neutral {
-    background: var(--rating-neutral, #f1f5f9);
-    border-color: var(--rating-neutral-border, #cbd5e1);
-    color: var(--rating-neutral-text, #64748b);
+    background: var(--rating-neutral, var(--mc-surface-muted, #f1f5f9));
+    border-color: var(--rating-neutral-border, var(--mc-border, #cbd5e1));
+    color: var(--rating-neutral-text, var(--mc-text-muted, #64748b));
 
     &:hover:not(.rating-button--disabled) {
-      background: var(--rating-neutral-hover, #e2e8f0);
+      background: var(--rating-neutral-hover, var(--mc-surface-subtle, #e2e8f0));
     }
   }
 
   // Disagree (-0.5) - Soft orange/yellow
   &--disagree {
-    background: var(--rating-disagree, #fef3c7);
+    background: var(--rating-disagree, var(--mc-surface-tint, #fef3c7));
     border-color: var(--rating-disagree-border, #fcd34d);
     color: var(--rating-disagree-text, #d97706);
 
@@ -147,18 +147,18 @@
 
   // Meh (0) - Soft gray
   &--reaction-meh {
-    background: var(--reaction-meh, #f1f5f9);
-    border-color: var(--reaction-meh-border, #cbd5e1);
-    color: var(--reaction-meh-text, #64748b);
+    background: var(--reaction-meh, var(--mc-surface-muted, #f1f5f9));
+    border-color: var(--reaction-meh-border, var(--mc-border, #cbd5e1));
+    color: var(--reaction-meh-text, var(--mc-text-muted, #64748b));
 
     &:hover:not(.rating-button--disabled) {
-      background: var(--reaction-meh-hover, #e2e8f0);
+      background: var(--reaction-meh-hover, var(--mc-surface-subtle, #e2e8f0));
     }
   }
 
   // Okay (0.25) - Soft blue
   &--reaction-okay {
-    background: var(--reaction-okay, #e0f2fe);
+    background: var(--reaction-okay, var(--mc-surface-tint, #e0f2fe));
     border-color: var(--reaction-okay-border, #7dd3fc);
     color: var(--reaction-okay-text, #0284c7);
 
@@ -169,7 +169,7 @@
 
   // Like (0.5) - Soft green
   &--reaction-good {
-    background: var(--reaction-good, #d1fae5);
+    background: var(--reaction-good, var(--mc-surface-tint, #d1fae5));
     border-color: var(--reaction-good-border, #6ee7b7);
     color: var(--reaction-good-text, #059669);
 
@@ -180,7 +180,7 @@
 
   // Great (0.75) - Warm amber
   &--reaction-great {
-    background: var(--reaction-great, #fef3c7);
+    background: var(--reaction-great, var(--mc-surface-tint, #fef3c7));
     border-color: var(--reaction-great-border, #fcd34d);
     color: var(--reaction-great-text, #d97706);
 

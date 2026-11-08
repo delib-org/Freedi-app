@@ -33,7 +33,7 @@
 }
 
 .card {
-  background: var(--white, white);
+  background: var(--var(--mc-surface, white), var(--mc-surface, white));
   padding: 3rem 2rem;
   border-radius: 20px;
   text-align: center;
@@ -64,7 +64,7 @@
 
 .title {
   font-size: 1.7rem;
-  color: var(--text-title, #3d4d71);
+  color: var(--text-title, var(--mc-text-strong, #3d4d71));
   margin: 1rem 0 0.5rem 0;
   font-weight: 500;
 
@@ -75,7 +75,7 @@
 
 .message {
   font-size: 1rem;
-  color: var(--text-caption, #5a6b8c);
+  color: var(--text-caption, var(--mc-text, #5a6b8c));
   line-height: 1.6;
   margin: 0 0 1.5rem 0;
 
@@ -116,7 +116,7 @@
 
 .solutionText {
   font-size: 0.9rem;
-  color: var(--text-title, #3d4d71);
+  color: var(--text-title, var(--mc-text-strong, #3d4d71));
   font-style: italic;
   line-height: 1.5;
   margin: 0;
@@ -228,4 +228,17 @@
   .continueButton:hover {
     transform: none;
   }
+}
+
+// Partial outcome (part of a split submission was refused): a quiet caveat
+// under the success message, not an error.
+.note {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-muted, #555);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  text-align: center;
 }

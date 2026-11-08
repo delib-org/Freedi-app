@@ -13,6 +13,7 @@ import {
 	User,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
+import { embeddingCache } from '../services/embedding-cache-service';
 import { generateGroupedTitle } from './titleGeneration';
 import {
 	hashIntegratedOptions,
@@ -21,6 +22,7 @@ import {
 	reconcileGroups,
 } from './reconciler';
 import {
+	clusterVoteSourceIds,
 	computeClusterEvaluationFromRawEvals,
 	fetchEvaluationsForIds,
 	recomputeClusterEvaluation,
@@ -58,23 +60,6 @@ function cosine(a: number[], b: number[]): number {
 	if (na === 0 || nb === 0) return 0;
 
 	return dot / (Math.sqrt(na) * Math.sqrt(nb));
-}
-
-/**
- * Firestore stores vector embeddings as a `VectorValue` object (so
- * findNearest queries work), not as a plain array. Accept either shape.
- */
-function extractEmbedding(raw: unknown): number[] | null {
-	if (!raw) return null;
-	if (Array.isArray(raw)) return raw as number[];
-	if (typeof raw === 'object' && raw !== null && 'toArray' in raw) {
-		const vectorValue = raw as { toArray: () => number[] };
-		const arr = vectorValue.toArray();
-
-		return Array.isArray(arr) ? arr : null;
-	}
-
-	return null;
 }
 
 interface Candidate {
@@ -251,8 +236,8 @@ export async function runCondensationPipeline(
 	//    and passing the admin-configured eligibility filters (min avg
 	//    evaluation + min evaluator count). Creator-forced overrides bypass
 	//    the eligibility filters because drag-drop is explicit admin intent.
-	//    Embeddings on statements are stored as Firestore VectorValue, not
-	//    plain arrays — extractEmbedding() normalizes both shapes.
+	//    Vectors come from the embedding store, which also drops ones from a
+	//    different embedding model.
 	const minAverage =
 		typeof config.minAverageForClustering === 'number' && config.minAverageForClustering > -1
 			? config.minAverageForClustering
@@ -280,6 +265,8 @@ export async function runCondensationPipeline(
 		return true;
 	}
 
+	const vectors = await embeddingCache.getBatchEmbeddings(originals.map((s) => s.statementId));
+
 	let filteredOutByEligibility = 0;
 	const candidates: Candidate[] = originals
 		.filter((s) => !standaloneOverrides.has(s.statementId))
@@ -290,7 +277,7 @@ export async function runCondensationPipeline(
 			return false;
 		})
 		.map((s) => {
-			const embedding = extractEmbedding((s as unknown as { embedding?: unknown }).embedding);
+			const embedding = vectors.get(s.statementId);
 
 			return embedding
 				? {
@@ -442,7 +429,7 @@ export async function runCondensationPipeline(
 	// (no per-group Firestore round-trip).
 	const evalSourceIds = [
 		...candidates.map((c) => c.id),
-		...existingClusters.map((c) => c.statementId),
+		...existingClusters.flatMap((c) => [c.statementId, ...(c.absorbedClusterIds ?? [])]),
 	];
 	const allFetchedEvals = await fetchEvaluationsForIds(evalSourceIds);
 	const preloadedEvals = new Map<string, Evaluation[]>();
@@ -494,17 +481,26 @@ export async function runCondensationPipeline(
 			// Compute the aggregated evaluation this cluster WOULD have — include
 			// direct evaluations on the existing cluster (for `update` kind) plus
 			// every member's evaluations.
+			const existingCluster = group.existingClusterId
+				? existingClusterById.get(group.existingClusterId)
+				: undefined;
 			const evalFetchIds =
-				group.kind === 'update' && group.existingClusterId
-					? [group.existingClusterId, ...group.sourceIds]
+				group.kind === 'update' && existingCluster
+					? clusterVoteSourceIds(existingCluster.statementId, {
+							integratedOptions: group.sourceIds,
+							absorbedClusterIds: existingCluster.absorbedClusterIds,
+						})
 					: group.sourceIds;
 			const memberEvals: Evaluation[] = evalFetchIds.flatMap((id) => preloadedEvals.get(id) ?? []);
-			const existingClusterEval = group.existingClusterId
-				? existingClusterById.get(group.existingClusterId)?.evaluation
-				: undefined;
+			const existingClusterEval = existingCluster?.evaluation;
 			const { evaluation: evaluationSnapshot } = computeClusterEvaluationFromRawEvals(
 				memberEvals,
-				{},
+				group.kind === 'update' && existingCluster
+					? {
+							clusterStatementId: existingCluster.statementId,
+							absorbedClusterIds: existingCluster.absorbedClusterIds,
+						}
+					: {},
 				existingClusterEval?.evaluationRandomNumber,
 				existingClusterEval?.viewed,
 			);
@@ -648,13 +644,20 @@ async function applyGroup({
 		// Pre-compute aggregated evaluation from the new member set + any
 		// direct evaluations on the existing cluster itself, so the cluster's
 		// `evaluation` / `consensus` update atomically with its `integratedOptions`.
-		const updateEvalIds = [existing.statementId, ...group.sourceIds];
+		// Same counting rule as every other cluster writer (clusterVoteRule.ts).
+		const updateEvalIds = clusterVoteSourceIds(existing.statementId, {
+			integratedOptions: group.sourceIds,
+			absorbedClusterIds: existing.absorbedClusterIds,
+		});
 		const updateMemberEvals: Evaluation[] = updateEvalIds.flatMap(
 			(id) => preloadedEvals.get(id) ?? [],
 		);
 		const { evaluation: updatedEvaluation } = computeClusterEvaluationFromRawEvals(
 			updateMemberEvals,
-			{},
+			{
+				clusterStatementId: existing.statementId,
+				absorbedClusterIds: existing.absorbedClusterIds,
+			},
 			existing.evaluation?.evaluationRandomNumber,
 			existing.evaluation?.viewed,
 		);

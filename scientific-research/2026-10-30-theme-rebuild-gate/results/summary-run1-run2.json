@@ -1,0 +1,247 @@
+{
+ "rows": [
+  {
+   "run": "en-seed42-themefix",
+   "rebuild": {
+    "run1": {
+     "synth_f1": 1,
+     "topic_f1": 0.846,
+     "topic_p": 0.777,
+     "topic_r": 0.929,
+     "themes": 9,
+     "other": 0
+    },
+    "run2": {
+     "synth_f1": 1,
+     "topic_f1": 0.808,
+     "topic_p": 0.831,
+     "topic_r": 0.787,
+     "themes": 11,
+     "other": 0
+    }
+   },
+   "live": {
+    "synth_f1": 1,
+    "topic_f1": 0.652,
+    "topic_p": 0.74,
+    "topic_r": 0.582,
+    "themes": 16
+   }
+  },
+  {
+   "run": "en-seed42-consolidated",
+   "rebuild": {
+    "run1": {
+     "synth_f1": 1,
+     "topic_f1": 0.912,
+     "topic_p": 0.952,
+     "topic_r": 0.876,
+     "themes": 11,
+     "other": 1
+    },
+    "run2": {
+     "synth_f1": 1,
+     "topic_f1": 0.894,
+     "topic_p": 0.979,
+     "topic_r": 0.822,
+     "themes": 12,
+     "other": 1
+    }
+   },
+   "live": {
+    "synth_f1": 1,
+    "topic_f1": 0.775,
+    "topic_p": 0.755,
+    "topic_r": 0.796,
+    "themes": 11
+   }
+  },
+  {
+   "run": "en-seed7-consolidated",
+   "rebuild": {
+    "run1": {
+     "synth_f1": 1,
+     "topic_f1": 0.882,
+     "topic_p": 0.87,
+     "topic_r": 0.893,
+     "themes": 10,
+     "other": 0
+    },
+    "run2": {
+     "synth_f1": 1,
+     "topic_f1": 0.941,
+     "topic_p": 0.954,
+     "topic_r": 0.929,
+     "themes": 10,
+     "other": 1
+    }
+   },
+   "live": {
+    "synth_f1": 1,
+    "topic_f1": 0.763,
+    "topic_p": 0.687,
+    "topic_r": 0.858,
+    "themes": 10
+   }
+  },
+  {
+   "run": "en-seed1234-consolidated",
+   "rebuild": {
+    "run1": {
+     "synth_f1": 1,
+     "topic_f1": 0.895,
+     "topic_p": 0.916,
+     "topic_r": 0.876,
+     "themes": 11,
+     "other": 0
+    },
+    "run2": {
+     "synth_f1": 1,
+     "topic_f1": 0.851,
+     "topic_p": 0.863,
+     "topic_r": 0.84,
+     "themes": 11,
+     "other": 0
+    }
+   },
+   "live": {
+    "synth_f1": 1,
+    "topic_f1": 0.711,
+    "topic_p": 0.792,
+    "topic_r": 0.644,
+    "themes": 17
+   }
+  },
+  {
+   "run": "en-seed42-filingfix",
+   "rebuild": {
+    "run1": {
+     "synth_f1": 0.99,
+     "topic_f1": 0.834,
+     "topic_p": 0.924,
+     "topic_r": 0.76,
+     "themes": 12,
+     "other": 2
+    },
+    "run2": {
+     "synth_f1": 0.99,
+     "topic_f1": 0.886,
+     "topic_p": 0.949,
+     "topic_r": 0.831,
+     "themes": 11,
+     "other": 2
+    }
+   },
+   "live": {
+    "synth_f1": 0.99,
+    "topic_f1": 0.77,
+    "topic_p": 0.793,
+    "topic_r": 0.749,
+    "themes": 14
+   }
+  },
+  {
+   "run": "he-seed42-large-formulation",
+   "rebuild": {
+    "run1": {
+     "synth_f1": 0.857,
+     "topic_f1": 0.854,
+     "topic_p": 0.932,
+     "topic_r": 0.789,
+     "themes": 13,
+     "other": 1
+    },
+    "run2": {
+     "synth_f1": 0.857,
+     "topic_f1": 0.722,
+     "topic_p": 0.832,
+     "topic_r": 0.638,
+     "themes": 15,
+     "other": 1
+    }
+   },
+   "live": {
+    "synth_f1": 0.857,
+    "topic_f1": 0.658,
+    "topic_p": 0.658,
+    "topic_r": 0.658,
+    "themes": 11
+   }
+  },
+  {
+   "run": "he-seed42-large-judgedattach",
+   "rebuild": {
+    "run1": {
+     "synth_f1": 0.947,
+     "topic_f1": 0.805,
+     "topic_p": 0.952,
+     "topic_r": 0.698,
+     "themes": 15,
+     "other": 1
+    },
+    "run2": {
+     "synth_f1": 0.947,
+     "topic_f1": 0.945,
+     "topic_p": 0.981,
+     "topic_r": 0.911,
+     "themes": 11,
+     "other": 0
+    }
+   },
+   "live": {
+    "synth_f1": 0.947,
+    "topic_f1": 0.91,
+    "topic_p": 0.934,
+    "topic_r": 0.887,
+    "themes": 10
+   }
+  },
+  {
+   "run": "he-seed42-large-recall",
+   "rebuild": {
+    "run1": {
+     "synth_f1": 0.882,
+     "topic_f1": 0.883,
+     "topic_p": 0.978,
+     "topic_r": 0.804,
+     "themes": 13,
+     "other": 1
+    },
+    "run2": {
+     "synth_f1": 0.882,
+     "topic_f1": 0.883,
+     "topic_p": 0.978,
+     "topic_r": 0.804,
+     "themes": 14,
+     "other": 0
+    }
+   },
+   "live": {
+    "synth_f1": 0.882,
+    "topic_f1": 0.816,
+    "topic_p": 0.917,
+    "topic_r": 0.736,
+    "themes": 12
+   }
+  }
+ ],
+ "gate": {
+  "run1": {
+   "mean": 0.864,
+   "every_run_ge_live": false,
+   "passed": false
+  },
+  "run2": {
+   "mean": 0.866,
+   "every_run_ge_live": true,
+   "passed": true
+  },
+  "strict_all": false,
+  "paired": {
+   "overall_mean": 0.865,
+   "every_cell_mean_ge_live": false,
+   "passed": false
+  }
+ },
+ "usd": 0.355
+}

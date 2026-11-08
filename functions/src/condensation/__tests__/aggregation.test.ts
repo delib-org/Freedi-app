@@ -1,5 +1,5 @@
 import { computeClusterEvaluationFromRawEvals } from '../aggregation';
-import type { Evaluation } from '@freedi/shared-types';
+import { calcAgreement, calcAgreementIndex, type Evaluation } from '@freedi/shared-types';
 
 /**
  * `computeClusterEvaluationFromRawEvals` is the pure core of cluster
@@ -120,7 +120,7 @@ describe('computeClusterEvaluationFromRawEvals', () => {
 		expect(evaluation.numberOfEvaluators).toBe(1);
 	});
 
-	describe('directVoteWins option', () => {
+	describe('unified cluster vote rule (clusterStatementId set)', () => {
 		// Live-synth model: each evaluator counts once on a cluster Y.
 		// If they cast a direct vote on Y, that wins over their member votes.
 		// Member-only voters fall back to the average of their member votes.
@@ -136,7 +136,6 @@ describe('computeClusterEvaluationFromRawEvals', () => {
 			];
 
 			const { evaluation, perUserAverages } = computeClusterEvaluationFromRawEvals(evals, {
-				directVoteWins: true,
 				clusterStatementId: 'Y',
 			});
 
@@ -153,7 +152,6 @@ describe('computeClusterEvaluationFromRawEvals', () => {
 			];
 
 			const { perUserAverages } = computeClusterEvaluationFromRawEvals(evals, {
-				directVoteWins: true,
 				clusterStatementId: 'Y',
 			});
 
@@ -176,7 +174,6 @@ describe('computeClusterEvaluationFromRawEvals', () => {
 			];
 
 			const { evaluation, perUserAverages } = computeClusterEvaluationFromRawEvals(evals, {
-				directVoteWins: true,
 				clusterStatementId: 'Y',
 			});
 
@@ -189,38 +186,82 @@ describe('computeClusterEvaluationFromRawEvals', () => {
 			expect(evaluation.sumEvaluations).toBeCloseTo(1);
 		});
 
-		it('falls back to average behavior when directVoteWins=true but clusterStatementId missing', () => {
-			// Safety: the option requires both flags. Without clusterStatementId
-			// we cannot identify the direct vote; preserve historical semantics
-			// (per-user average) rather than silently breaking.
+		it('is a plain per-user average when no clusterStatementId is given', () => {
 			const evals: Evaluation[] = [
 				evalRec({ evaluatorId: 'A', statementId: 'X1', value: 1 }),
 				evalRec({ evaluatorId: 'A', statementId: 'Y', value: -1 }),
 			];
 
-			const { perUserAverages } = computeClusterEvaluationFromRawEvals(evals, {
-				directVoteWins: true,
-			});
+			const { perUserAverages } = computeClusterEvaluationFromRawEvals(evals);
 
-			// Average of (1, -1) = 0; same as historical behavior.
 			expect(perUserAverages.get('A')).toBeCloseTo(0);
 		});
 
-		it('matches historical average behavior when directVoteWins is false (default)', () => {
-			// Regression guard: existing condensation pipeline callers don't
-			// pass directVoteWins. Their math must stay identical.
+		it('counts a direct vote on an absorbed cluster, and the own direct vote still wins', () => {
+			// Z was absorbed into Y. A voted only on Z; B voted on both Z and Y; C on member X1.
 			const evals: Evaluation[] = [
-				evalRec({ evaluatorId: 'A', statementId: 'X1', value: 1 }),
-				evalRec({ evaluatorId: 'A', statementId: 'Y', value: 0 }),
+				evalRec({ evaluatorId: 'A', statementId: 'Z', value: 1 }),
+				evalRec({ evaluatorId: 'A', statementId: 'X1', value: -1 }),
+				evalRec({ evaluatorId: 'B', statementId: 'Z', value: -1 }),
+				evalRec({ evaluatorId: 'B', statementId: 'Y', value: 0.5 }),
+				evalRec({ evaluatorId: 'C', statementId: 'X1', value: 0.2 }),
 			];
 
-			const withFalse = computeClusterEvaluationFromRawEvals(evals, {
+			const { evaluation, perUserAverages } = computeClusterEvaluationFromRawEvals(evals, {
 				clusterStatementId: 'Y',
+				absorbedClusterIds: ['Z'],
 			});
-			const withDefault = computeClusterEvaluationFromRawEvals(evals);
 
-			expect(withFalse.perUserAverages.get('A')).toBeCloseTo(0.5);
-			expect(withDefault.perUserAverages.get('A')).toBeCloseTo(0.5);
+			expect(evaluation.numberOfEvaluators).toBe(3);
+			expect(perUserAverages.get('A')).toBeCloseTo(1); // absorbed direct beats member average
+			expect(perUserAverages.get('B')).toBeCloseTo(0.5); // own direct beats absorbed direct
+			expect(perUserAverages.get('C')).toBeCloseTo(0.2);
 		});
+	});
+});
+
+describe('computeClusterEvaluationFromRawEvals — explicit N', () => {
+	const evals: Evaluation[] = [
+		evalRec({ evaluatorId: 'A', statementId: 'X', value: 1 }),
+		evalRec({ evaluatorId: 'B', statementId: 'X', value: 0.5 }),
+		evalRec({ evaluatorId: 'C', statementId: 'Y', value: -0.5 }),
+		evalRec({ evaluatorId: 'D', statementId: 'Y', value: 0 }),
+	];
+	const sum = 1;
+	const sumSq = 1 + 0.25 + 0.25 + 0;
+	const n = 4;
+
+	it('uses the same N-corrected formula as a plain option and sets stakeholderCount', () => {
+		const N = 40;
+		const { evaluation } = computeClusterEvaluationFromRawEvals(evals, { targetPopulation: N });
+
+		expect(evaluation.numberOfEvaluators).toBe(n);
+		expect(evaluation.sumEvaluations).toBeCloseTo(sum);
+		expect(evaluation.agreement).toBe(calcAgreement(sum, sumSq, n, N));
+		expect(evaluation.agreementIndex).toBe(calcAgreementIndex(sum, sumSq, n, N));
+		expect(evaluation.stakeholderCount).toBe(N);
+		// the correction must actually change the result, or the test proves nothing
+		expect(evaluation.agreement).not.toBe(calcAgreement(sum, sumSq, n));
+	});
+
+	it('floors stakeholderCount at the number of evaluators', () => {
+		const { evaluation } = computeClusterEvaluationFromRawEvals(evals, { targetPopulation: 2 });
+
+		expect(evaluation.stakeholderCount).toBe(n);
+	});
+
+	it('without N uses the uncorrected 3-arg formula and omits stakeholderCount', () => {
+		const { evaluation } = computeClusterEvaluationFromRawEvals(evals);
+
+		expect(evaluation.agreement).toBe(calcAgreement(sum, sumSq, n));
+		expect(evaluation.agreementIndex).toBe(calcAgreementIndex(sum, sumSq, n));
+		expect('stakeholderCount' in evaluation).toBe(false);
+	});
+
+	it('treats a non-positive N as absent', () => {
+		const { evaluation } = computeClusterEvaluationFromRawEvals(evals, { targetPopulation: 0 });
+
+		expect(evaluation.agreement).toBe(calcAgreement(sum, sumSq, n));
+		expect('stakeholderCount' in evaluation).toBe(false);
 	});
 });

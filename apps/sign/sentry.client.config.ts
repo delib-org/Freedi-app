@@ -5,6 +5,7 @@
 import * as Sentry from "@sentry/nextjs";
 import {
   isFirestoreInternalCrash,
+  isLocalRuntime,
   isTransientAuthNetworkError,
 } from "@freedi/shared-utils";
 
@@ -20,8 +21,9 @@ Sentry.init({
   // so tag every event with the app that produced it.
   initialScope: { tags: { app: "sign" } },
 
-  // Only send errors in production
-  enabled: process.env.NODE_ENV === "production",
+  // Only send errors in production, and never from a developer's machine:
+  // `next start` on localhost is NODE_ENV=production too.
+  enabled: process.env.NODE_ENV === "production" && !isLocalRuntime(),
 
   // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
   tracesSampleRate: 1,

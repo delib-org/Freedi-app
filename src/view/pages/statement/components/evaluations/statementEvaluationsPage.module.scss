@@ -135,6 +135,18 @@
         .ideaImage {
             width: 15rem;
             height: 22.9rem;
-        }       
+        }
     }
+}
+
+.addingStatementWrapper {
+	gap: 24px;
+	.header {
+		width: 100%;
+		max-width: 60ch;
+		gap: 24px;
+	}
+	.titleSpan {
+		color: var(--space-ink);
+	}
 }

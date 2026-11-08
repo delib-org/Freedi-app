@@ -6,8 +6,10 @@ import {
 	PENNANT_COLORS,
 	TWEEN_NEEDLE_MS,
 	TWEEN_SWEEP_MS,
+	mirrorX,
 } from '../lib/stageConstants';
 import type { StageCommand } from '../lib/stageBus';
+import { t } from '../i18n/i18n';
 import { stageState } from './stageState';
 import { SeaScene } from './SeaScene';
 
@@ -34,7 +36,7 @@ export class CompassScene extends SeaScene {
 		this.petals = [];
 		this.pennants = [];
 		this.sweepPlayed = false;
-		this.boat = this.spawnBoat(this.W * 0.82, this.H * 0.8, 0.12);
+		this.boat = this.spawnBoat(this.boatX(), this.H * 0.8, 0.12);
 		this.buildRose();
 		stageState.compassLit.forEach((lit, index) => {
 			if (lit) this.lightPetal(index, false);
@@ -43,8 +45,13 @@ export class CompassScene extends SeaScene {
 	}
 
 	protected layout(): void {
-		if (this.boat) this.moveBoat(this.boat, this.W * 0.82, this.H * 0.8);
+		if (this.boat) this.moveBoat(this.boat, this.boatX(), this.H * 0.8);
 		this.rose?.setPosition(this.roseX(), this.roseY());
+	}
+
+	/** The boat rides at anchor on the reader's starting side. */
+	private boatX(): number {
+		return mirrorX(this.W * 0.82, this.W);
 	}
 
 	private roseX(): number {
@@ -157,7 +164,8 @@ export class CompassScene extends SeaScene {
 			});
 		}
 		for (let i = this.pennants.length; i < target; i++) {
-			const x = this.roseX() + this.roseRadius() + 30 + i * 34;
+			// hoisted on the side the reader's eye leaves the rose toward
+			const x = mirrorX(this.roseX() + this.roseRadius() + 30 + i * 34, this.W);
 			const y = this.H * 0.3 + i * 10;
 			const pennant = this.add
 				.image(x, y - (animate && !this.reducedMotion ? 40 : 0), 'pennant')
@@ -170,7 +178,7 @@ export class CompassScene extends SeaScene {
 		}
 	}
 
-	/** All four winds answered: one full sweep, settle north, "הצפון שלך". */
+	/** All four winds answered: one full sweep, settle north, "your north". */
 	private playSweep(): void {
 		if (this.sweepPlayed || !this.needle || !this.rose) return;
 		this.sweepPlayed = true;
@@ -186,10 +194,10 @@ export class CompassScene extends SeaScene {
 			ease: 'Cubic.inOut',
 			onComplete: () => this.needle?.setRotation(0),
 		});
-		this.northText = this.hebrewLabel(
+		this.northText = this.textLabel(
 			this.rose.x,
 			this.rose.y + this.roseRadius() + 28,
-			'הצפון שלך',
+			t('stage.yourNorth'),
 			16,
 			'#e8b958',
 		)

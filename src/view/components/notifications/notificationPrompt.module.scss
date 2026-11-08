@@ -73,7 +73,7 @@
   &-enable {
     background-color: var(--btn-primary);
     border: none;
-    color: white;
+    color: var(--btn-primary-text);
 
     &:hover {
       background-color: var(--btn-primary-hover, #2a56c6);

@@ -56,23 +56,35 @@ describe('findSimilarStatements - Optimized', () => {
 	});
 
 	describe('Content moderation', () => {
-		it('should reject inappropriate content', async () => {
+		it('should reject inappropriate content and discard any search result', async () => {
 			jest.spyOn(aiService, 'checkForInappropriateContent').mockResolvedValue({
 				isInappropriate: true,
+				category: 'profanity',
+			});
+			jest.spyOn(cachedStatementService, 'getCachedParentStatement').mockResolvedValue({
+				statement: 'parent question',
+			} as Partial<Statement> as Statement);
+			// The search runs alongside moderation and would have answered
+			jest.spyOn(cachedAiService, 'getCachedSimilarityResponse').mockResolvedValue({
+				similarStatements: [],
+				userText: 'test user input',
 			});
 
-			await findSimilarStatements(mockRequest as Request, mockResponse as Response);
+			await findSimilarStatements(
+				mockRequest as Request,
+				mockResponse as Response,
+				'test-creator-id',
+			);
 
 			expect(mockStatus).toHaveBeenCalledWith(400);
+			expect(mockSend).toHaveBeenCalledTimes(1);
 			expect(mockSend).toHaveBeenCalledWith(
 				expect.objectContaining({
 					ok: false,
 					error: 'Input contains inappropriate content',
+					category: 'profanity',
 				}),
 			);
-
-			// Ensure no further processing happens
-			expect(cachedAiService.getCachedSimilarityResponse).not.toHaveBeenCalled();
 		});
 
 		it('should never cache inappropriate content checks', async () => {
@@ -80,7 +92,11 @@ describe('findSimilarStatements - Optimized', () => {
 				isInappropriate: false,
 			});
 
-			await findSimilarStatements(mockRequest as Request, mockResponse as Response);
+			await findSimilarStatements(
+				mockRequest as Request,
+				mockResponse as Response,
+				'test-creator-id',
+			);
 
 			// Content check should always be called fresh, never cached
 			expect(checkSpy).toHaveBeenCalledWith('test user input');
@@ -128,7 +144,11 @@ describe('findSimilarStatements - Optimized', () => {
 				},
 			);
 
-			await findSimilarStatements(mockRequest as Request, mockResponse as Response);
+			await findSimilarStatements(
+				mockRequest as Request,
+				mockResponse as Response,
+				'test-creator-id',
+			);
 
 			expect(mockStatus).toHaveBeenCalledWith(200);
 			expect(mockSend).toHaveBeenCalledWith(
@@ -187,7 +207,11 @@ describe('findSimilarStatements - Optimized', () => {
 				.spyOn(cachedAiService, 'saveCachedSimilarityResponse')
 				.mockResolvedValue();
 
-			await findSimilarStatements(mockRequest as Request, mockResponse as Response);
+			await findSimilarStatements(
+				mockRequest as Request,
+				mockResponse as Response,
+				'test-creator-id',
+			);
 
 			// Verify response was saved to cache (now with 5 params including threshold)
 			expect(saveSpy).toHaveBeenCalledWith(
@@ -249,7 +273,11 @@ describe('findSimilarStatements - Optimized', () => {
 				description: 'Description',
 			});
 
-			await findSimilarStatements(mockRequest as Request, mockResponse as Response);
+			await findSimilarStatements(
+				mockRequest as Request,
+				mockResponse as Response,
+				'test-creator-id',
+			);
 
 			// Parent should be called first (to get threshold), then sub-statements
 			expect(parentSpy).toHaveBeenCalledWith('test-statement-id');
@@ -302,7 +330,11 @@ describe('findSimilarStatements - Optimized', () => {
 				description: 'Description',
 			});
 
-			await findSimilarStatements(mockRequest as Request, mockResponse as Response);
+			await findSimilarStatements(
+				mockRequest as Request,
+				mockResponse as Response,
+				'test-creator-id',
+			);
 
 			// Both should be called (parallel execution)
 			expect(validationSpy).toHaveBeenCalled();
@@ -324,7 +356,11 @@ describe('findSimilarStatements - Optimized', () => {
 
 			jest.spyOn(cachedStatementService, 'getCachedSubStatements').mockResolvedValue([]);
 
-			await findSimilarStatements(mockRequest as Request, mockResponse as Response);
+			await findSimilarStatements(
+				mockRequest as Request,
+				mockResponse as Response,
+				'test-creator-id',
+			);
 
 			expect(mockStatus).toHaveBeenCalledWith(404);
 			expect(mockSend).toHaveBeenCalledWith({
@@ -363,7 +399,11 @@ describe('findSimilarStatements - Optimized', () => {
 
 			jest.spyOn(cachedAiService, 'getCachedSimilarStatements').mockResolvedValue([]);
 
-			await findSimilarStatements(mockRequest as Request, mockResponse as Response);
+			await findSimilarStatements(
+				mockRequest as Request,
+				mockResponse as Response,
+				'test-creator-id',
+			);
 
 			expect(mockStatus).toHaveBeenCalledWith(403);
 			expect(mockSend).toHaveBeenCalledWith({
@@ -377,7 +417,11 @@ describe('findSimilarStatements - Optimized', () => {
 				.spyOn(cachedStatementService, 'getCachedParentStatement')
 				.mockRejectedValue(new Error('Database error'));
 
-			await findSimilarStatements(mockRequest as Request, mockResponse as Response);
+			await findSimilarStatements(
+				mockRequest as Request,
+				mockResponse as Response,
+				'test-creator-id',
+			);
 
 			expect(mockStatus).toHaveBeenCalledWith(500);
 			expect(mockSend).toHaveBeenCalledWith({
@@ -406,7 +450,11 @@ describe('findSimilarStatements - Optimized', () => {
 				generatedDescription: 'Test Description',
 			});
 
-			await findSimilarStatements(mockRequest as Request, mockResponse as Response);
+			await findSimilarStatements(
+				mockRequest as Request,
+				mockResponse as Response,
+				'test-creator-id',
+			);
 
 			expect(mockSend).toHaveBeenCalledWith(
 				expect.objectContaining({

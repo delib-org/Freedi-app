@@ -4,6 +4,7 @@ import { Collections, StatementType, type Statement } from '@freedi/shared-types
 import { groupEquivalentThemes, type ThemeOption } from '../../services/integration-ai-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
+import { absorbedClusterIdsUpdate } from '../../condensation/absorbedClusters';
 import { isTopicCluster } from './clusterOps';
 
 /**
@@ -139,6 +140,27 @@ async function recordJudged(parentId: string, fingerprint: string): Promise<void
 	}
 }
 
+/**
+ * Two sub-topics of the same split must not be merged back together.
+ *
+ * `splitThemes` divides a catch-all heading because the merge judge's notion of
+ * "same area" is exactly what let the catch-all form; offered the sub-topics
+ * it would, on a narrow question, see them as one area again, and the two
+ * sweeps would undo each other every 10 minutes. A sibling may still merge
+ * into an UNRELATED heading — only the pairing the split just made is refused.
+ */
+function containsSplitSiblings(members: Statement[]): boolean {
+	const seen = new Set<string>();
+	for (const m of members) {
+		const origin = (m as unknown as { splitFrom?: string }).splitFrom;
+		if (!origin) continue;
+		if (seen.has(origin)) return true;
+		seen.add(origin);
+	}
+
+	return false;
+}
+
 export interface ConsolidateResult {
 	merges: number;
 	themesBefore: number;
@@ -201,6 +223,13 @@ export async function consolidateThemes(
 	for (const group of groups.slice(0, MAX_MERGES_PER_SWEEP)) {
 		const members = group.ids.map((id) => byId.get(id)).filter((t): t is Statement => Boolean(t));
 		if (members.length < 2) continue;
+		if (containsSplitSiblings(members)) {
+			logger.info('synthesis.consolidateThemes: group of split siblings refused', {
+				parentId,
+				ids: members.map((m) => m.statementId),
+			});
+			continue;
+		}
 
 		// Survivor: most members, ties to earliest created.
 		const survivor = [...members].sort((a, b) => {
@@ -222,6 +251,8 @@ export async function consolidateThemes(
 			batch.update(db().collection(Collections.statements).doc(survivor.statementId), {
 				statement: group.title,
 				integratedOptions: nextMembers,
+				// The donors' direct votes keep counting for the survivor.
+				...absorbedClusterIdsUpdate(survivor.statementId, donors),
 				lastUpdate: Date.now(),
 			});
 			for (const donor of donors) {

@@ -23,7 +23,7 @@
 }
 
 .toast {
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 1rem 1.25rem;
@@ -80,7 +80,7 @@
   &__title {
     font-weight: 600;
     font-size: 0.95rem;
-    color: #2c3e50;
+    color: var(--mc-text-strong, #2c3e50);
     margin: 0;
   }
 
@@ -89,6 +89,21 @@
     color: #7f8c8d;
     margin: 0;
     line-height: 1.4;
+  }
+
+  &__action {
+    background: none;
+    border: none;
+    color: var(--btn-primary, #5f88e5);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0 0.25rem;
+    flex-shrink: 0;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   &__close {
@@ -103,7 +118,7 @@
     transition: color 0.2s ease;
 
     &:hover {
-      color: #2c3e50;
+      color: var(--mc-text-strong, #2c3e50);
     }
 
     &:focus {

@@ -1,0 +1,17 @@
+.savedFlash {
+	display: inline-block;
+	min-inline-size: 4.5rem;
+	font-size: var(--font-size-small);
+	font-weight: var(--font-weight-semibold);
+	color: var(--text-success);
+	opacity: 0;
+	transition: opacity 0.2s ease;
+
+	&[data-active='true'] {
+		opacity: 1;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+}

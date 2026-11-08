@@ -42,7 +42,7 @@
 
 	&:hover {
 		background: var(--btn-primary);
-		color: #ffffff;
+		color: var(--btn-primary-text);
 	}
 
 	&:focus-visible {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { logError } from '@/lib/utils/errorHandling';
 import { logger } from '@/lib/utils/logger';
@@ -29,7 +30,9 @@ export async function POST(
   try {
     const { id: statementId } = await params;
     const body = await request.json();
-    const { email, userId, source } = body;
+    const { email, source } = body;
+    // Optional: a subscriber need not be signed in, but a uid is only ever the caller's own.
+    const userId = await getVerifiedUserId(request);
 
     // Validate email
     if (!email || typeof email !== 'string') {
@@ -93,7 +96,7 @@ export async function POST(
     };
 
     // Only add userId if it's a valid non-empty string (Firestore rejects undefined values)
-    if (typeof userId === 'string' && userId.trim().length > 0) {
+    if (userId) {
       subscription.userId = userId;
     }
 

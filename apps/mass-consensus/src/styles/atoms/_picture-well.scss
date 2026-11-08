@@ -1,0 +1,136 @@
+@use '../mixins' as *;
+
+// Picture Well - the spot on an admin card row that takes a picture:
+// tap to pick, drop a file, see the thumbnail and its upload state.
+
+.picture-well {
+  position: relative;
+  flex-shrink: 0;
+  inline-size: 96px;
+  block-size: 64px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 8px;
+  border: 2px dashed var(--border-light, #e2e8f0);
+  background: var(--bg-muted, #f7fafc);
+  color: var(--text-muted, #718096);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s, background-color 0.2s;
+
+  &:hover:not(:disabled),
+  &--dragover {
+    border-color: var(--btn-primary);
+    background: var(--card-default);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+
+  &--filled {
+    border-style: solid;
+    border-color: transparent;
+    background: var(--card-default);
+  }
+
+  &--error {
+    border-color: var(--rating-strongly-disagree-border);
+  }
+
+  &--disabled {
+    cursor: default;
+  }
+
+  &__thumb {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    pointer-events: none;
+  }
+
+  &__icon {
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  &__label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  // Dims the thumbnail and spins while the picture travels
+  &__spinner {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.6);
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset-block-start: calc(50% - 12px);
+      inset-inline-start: calc(50% - 12px);
+      inline-size: 24px;
+      block-size: 24px;
+      border: 3px solid var(--border-light, #e2e8f0);
+      border-block-start-color: var(--btn-primary);
+      border-radius: 50%;
+      animation: picture-well-spin 0.8s linear infinite;
+    }
+  }
+
+  &__badge {
+    position: absolute;
+    inset-block-end: 4px;
+    inset-inline-end: 4px;
+    inline-size: 20px;
+    block-size: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    background: var(--agree, #22c55e);
+
+    &--error {
+      background: var(--rating-strongly-disagree-border);
+    }
+  }
+
+  &__input {
+    display: none;
+  }
+
+  @include mobile {
+    inline-size: 56px;
+    block-size: 56px;
+
+    &__label {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &__spinner::after {
+      animation: none;
+    }
+  }
+}
+
+@keyframes picture-well-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

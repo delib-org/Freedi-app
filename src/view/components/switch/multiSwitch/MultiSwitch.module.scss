@@ -59,11 +59,11 @@
 	.active {
 		background-color: var(--btn-primary);
 		border-color: var(--btn-primary);
-		color: var(--white);
+		color: var(--btn-primary-text);
 		box-shadow: 0 2px 8px rgba(95, 136, 229, 0.3);
 
 		svg {
-			color: var(--white);
+			color: var(--btn-primary-text);
 		}
 
 		&:hover {
@@ -71,7 +71,7 @@
 			border-color: var(--btn-primary-hover);
 
 			svg {
-				color: var(--white);
+				color: var(--btn-primary-text);
 			}
 		}
 	}

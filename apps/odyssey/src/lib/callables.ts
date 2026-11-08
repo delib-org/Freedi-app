@@ -3,6 +3,11 @@ import type {
 	AdvanceCivicStageResponse,
 	AgoraStage,
 	MintAgoraHandoffResponse,
+	OdysseyFeedbackRequest,
+	OdysseyFeedbackResponse,
+	OdysseyTranslateGameRequest,
+	OdysseyTranslateGameResponse,
+	OdysseyTranslationLang,
 	ProvisionCivicSessionsRequest,
 	ProvisionCivicSessionsResponse,
 	UpdateCivicFlowRequest,
@@ -11,9 +16,10 @@ import type {
 import { functions, httpsCallable } from './firebase';
 
 /**
- * The only two things Odyssey asks a server to do. Everything else in this
- * game is a direct Firestore write — these two need privileges the player
- * does not have: minting a sign-in token, and opening Agora sessions.
+ * The things Odyssey asks a server to do. Everything else in this game is a
+ * direct Firestore write — these need privileges the player does not have:
+ * minting a sign-in token, opening Agora sessions, and mailing a letter to the
+ * developers from an account no client may hold credentials for.
  *
  * The request/response shapes live in shared-types and are imported by the
  * functions too — a drift between the two sides is a compile error.
@@ -22,6 +28,11 @@ import { functions, httpsCallable } from './firebase';
 export type {
 	AdvanceCivicStageRequest,
 	MintAgoraHandoffResponse,
+	OdysseyFeedbackRequest,
+	OdysseyFeedbackResponse,
+	OdysseyTranslateGameRequest,
+	OdysseyTranslateGameResponse,
+	OdysseyTranslationLang,
 	ProvisionCivicSessionsRequest,
 	ProvisionCivicSessionsResponse,
 	ProvisionedCivicSession,
@@ -84,4 +95,59 @@ export async function advanceCivicStage(sessionId: string, stage: AgoraStage): P
 		'agoraAdvanceStage',
 	);
 	await call({ sessionId, stage });
+}
+
+/**
+ * Admin action: (re)translate the game's Hebrew content into `lang`.
+ *
+ * The server hashes every Hebrew field and re-translates only the ones that
+ * changed since the last run, so pressing the button after an edit is cheap;
+ * `force` re-translates everything. The result counts fields, not screens.
+ */
+export async function translateGame(
+	gameId: string,
+	lang: OdysseyTranslationLang,
+	force = false,
+): Promise<OdysseyTranslateGameResponse> {
+	return callTranslateGame({ gameId, lang, force });
+}
+
+/**
+ * How many fields of `lang` are out of date — the admin status line. Calls
+ * no model and writes nothing; `translated` is the count that a press of the
+ * button would translate.
+ */
+export async function countStaleTranslations(
+	gameId: string,
+	lang: OdysseyTranslationLang,
+): Promise<OdysseyTranslateGameResponse> {
+	return callTranslateGame({ gameId, lang, dryRun: true });
+}
+
+async function callTranslateGame(
+	request: OdysseyTranslateGameRequest,
+): Promise<OdysseyTranslateGameResponse> {
+	const call = httpsCallable<OdysseyTranslateGameRequest, OdysseyTranslateGameResponse>(
+		functions,
+		'odysseyTranslateGame',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/**
+ * Send one letter to the developers. Requires an authenticated caller — see
+ * `submitFeedback()` in lib/feedback.ts, which guarantees one.
+ */
+export async function submitOdysseyFeedback(
+	input: OdysseyFeedbackRequest,
+): Promise<OdysseyFeedbackResponse> {
+	const call = httpsCallable<OdysseyFeedbackRequest, OdysseyFeedbackResponse>(
+		functions,
+		'odysseyFeedbackSubmit',
+	);
+	const result = await call(input);
+
+	return result.data;
 }

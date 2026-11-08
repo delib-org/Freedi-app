@@ -1,23 +1,29 @@
+/**
+ * Firebase client: the app and Auth only.
+ *
+ * Every page loads this file (AuthProvider sits in the root layout), so it
+ * deliberately does not touch Firestore, Storage or Functions — together they
+ * are ~150KB gzipped. Import those from firestoreClient / storageClient /
+ * functionsClient where they are used, or lazily via loadFirestore().
+ */
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   getAuth,
+  initializeAuth,
+  Auth,
   GoogleAuthProvider,
   signInWithPopup,
+  signInAnonymously,
   signOut,
   onAuthStateChanged,
   User,
   browserLocalPersistence,
-  setPersistence,
   connectAuthEmulator,
 } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getStorage, connectStorageEmulator } from 'firebase/storage';
-import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import { logError } from '../utils/errorHandling';
-
-// Region for all Cloud Functions in this project. Matches functionConfig.region
-// in @freedi/shared-types and the deploy targets (me-west1 / Tel Aviv).
-const FUNCTIONS_REGION = 'me-west1';
+import { isUserCancelledAuthError, isPopupBlockedAuthError } from './authErrors';
+import { CLIENT_EMULATORS, isClientEmulatorMode } from './clientEmulators';
+import { popupResolver, warmPopupResolver } from './popupResolver';
 
 // Firebase client configuration from environment variables
 const firebaseConfig = {
@@ -32,63 +38,38 @@ const firebaseConfig = {
 // Initialize Firebase app (singleton pattern)
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// Get Auth instance
-const auth = getAuth(app);
-
-// Get Firestore instance for client-side operations
-const db = getFirestore(app);
-
-// Get Storage instance for client-side operations
-const storage = getStorage(app);
-
-// Get Functions instance pinned to the deploy region
-const functions = getFunctions(app, FUNCTIONS_REGION);
-
-// Connect to emulators in development
-// Check if we're on localhost (development mode)
-const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-
-if (isLocalhost) {
-  console.info('[Firebase Client] Development mode - connecting to emulators');
-
-  // Connect to Auth emulator
+/**
+ * Auth without the default popup/redirect resolver.
+ *
+ * getAuth() wires in browserPopupRedirectResolver, which downloads Google's
+ * auth iframe + gapi (~100KB) on every page load just to check for a redirect
+ * result. MC only signs in with a popup, so the resolver is handed to
+ * signInWithPopup() instead, and warmGoogleSignIn() loads it ahead of the tap
+ * only on screens that show a Google sign-in button (see popupResolver.ts).
+ * Persistence stays browserLocalPersistence, as before, so existing sessions
+ * are kept.
+ */
+function createAuth(): Auth {
+  if (typeof window === 'undefined') return getAuth(app);
   try {
-    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-    console.info('[Firebase Client] Connected to Auth emulator on localhost:9099');
-  } catch (error) {
-    logError(error, { operation: 'firebaseClient.connectAuthEmulator' });
-  }
-
-  // Connect to Firestore emulator
-  try {
-    connectFirestoreEmulator(db, 'localhost', 8081);
-    console.info('[Firebase Client] Connected to Firestore emulator on localhost:8081');
-  } catch (error) {
-    logError(error, { operation: 'firebaseClient.connectFirestoreEmulator' });
-  }
-
-  // Connect to Storage emulator
-  try {
-    connectStorageEmulator(storage, 'localhost', 9199);
-    console.info('[Firebase Client] Connected to Storage emulator on localhost:9199');
-  } catch (error) {
-    logError(error, { operation: 'firebaseClient.connectStorageEmulator' });
-  }
-
-  // Connect to Functions emulator
-  try {
-    connectFunctionsEmulator(functions, 'localhost', 5001);
-    console.info('[Firebase Client] Connected to Functions emulator on localhost:5001');
-  } catch (error) {
-    logError(error, { operation: 'firebaseClient.connectFunctionsEmulator' });
+    return initializeAuth(app, { persistence: browserLocalPersistence });
+  } catch {
+    // Already initialized (dev hot reload) - reuse that instance
+    return getAuth(app);
   }
 }
 
-// Set persistence to local storage
-if (typeof window !== 'undefined') {
-  setPersistence(auth, browserLocalPersistence).catch((error) => {
-    logError(error, { operation: 'firebaseClient.setPersistence' });
-  });
+const auth = createAuth();
+
+if (isClientEmulatorMode()) {
+  console.info('[Firebase Client] Development mode - connecting to emulators');
+  try {
+    connectAuthEmulator(auth, `http://${CLIENT_EMULATORS.host}:${CLIENT_EMULATORS.authPort}`, {
+      disableWarnings: true,
+    });
+  } catch (error) {
+    logError(error, { operation: 'firebaseClient.connectAuthEmulator' });
+  }
 }
 
 // Google Auth Provider
@@ -98,14 +79,37 @@ googleProvider.setCustomParameters({
 });
 
 /**
- * Sign in with Google using popup
+ * Load Google's sign-in iframe before the user taps "Sign in with Google".
+ * signInWithPopup() waits for it before opening the window, and iOS Safari
+ * blocks a popup opened that late. Call only where a Google button is shown.
  */
-export async function signInWithGoogle(): Promise<User> {
+export function warmGoogleSignIn(): Promise<unknown> {
+  return warmPopupResolver(auth);
+}
+
+/**
+ * Sign in with Google using popup.
+ *
+ * Resolves to `null` when the user backed out (closed the popup, or opened a
+ * newer one) - that is a normal action, not an error, so it is neither logged
+ * nor reported. A blocked popup is rethrown unreported so the caller can tell
+ * the user to allow pop-ups. Every other failure is logged and rethrown.
+ */
+export async function signInWithGoogle(): Promise<User | null> {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
+    const result = await signInWithPopup(auth, googleProvider, popupResolver);
     console.info('[Firebase] Sign in successful:', result.user.email);
     return result.user;
   } catch (error) {
+    if (isUserCancelledAuthError(error)) {
+      console.info('[Firebase] Sign in cancelled by user');
+
+      return null;
+    }
+    if (isPopupBlockedAuthError(error)) {
+      console.info('[Firebase] Sign in popup was blocked by the browser');
+      throw error;
+    }
     logError(error, { operation: 'firebaseClient.signInWithGoogle' });
     throw error;
   }
@@ -118,6 +122,36 @@ export async function signInWithGoogle(): Promise<User> {
 export async function handleRedirectResult(): Promise<{ user: User; token: string } | null> {
   // No longer using redirect flow - using popup instead
   return null;
+}
+
+let anonymousSignIn: Promise<User | null> | null = null;
+
+/**
+ * Make sure a Firebase user exists, signing the visitor in anonymously if not.
+ *
+ * Participants never need an account, but every server route needs a token to
+ * prove who is calling. Concurrent callers share one sign-in.
+ *
+ * @returns The current user, or null when anonymous sign-in failed.
+ */
+export async function ensureSignedInUser(): Promise<User | null> {
+  await auth.authStateReady();
+  if (auth.currentUser) return auth.currentUser;
+
+  if (!anonymousSignIn) {
+    anonymousSignIn = signInAnonymously(auth)
+      .then((credential) => credential.user)
+      .catch((error: unknown) => {
+        logError(error, { operation: 'firebaseClient.ensureSignedInUser' });
+
+        return null;
+      })
+      .finally(() => {
+        anonymousSignIn = null;
+      });
+  }
+
+  return anonymousSignIn;
 }
 
 /**
@@ -141,12 +175,14 @@ export async function signOutUser(): Promise<void> {
  * to avoid hammering the securetoken API.
  */
 let cachedToken: string | null = null;
+let cachedTokenUid: string | null = null;
 let tokenExpiry = 0;
 const TOKEN_CACHE_MS = 5 * 60 * 1000; // 5 minutes
 
 /** Drop the in-memory token so the next read goes back to the SDK. */
 export function clearTokenCache(): void {
   cachedToken = null;
+  cachedTokenUid = null;
   tokenExpiry = 0;
 }
 
@@ -176,13 +212,16 @@ export async function getCurrentToken(
     return null;
   }
 
-  if (!options.force && cachedToken && Date.now() < tokenExpiry) {
+  // The uid check matters: going from anonymous to Google within the cache
+  // window must not send the previous account's token.
+  if (!options.force && cachedToken && cachedTokenUid === user.uid && Date.now() < tokenExpiry) {
     return cachedToken;
   }
 
   try {
     const token = await user.getIdToken(options.force === true);
     cachedToken = token;
+    cachedTokenUid = user.uid;
     tokenExpiry = Date.now() + TOKEN_CACHE_MS;
     return token;
   } catch (error) {
@@ -203,5 +242,5 @@ export function onAuthChange(callback: (user: User | null) => void): () => void 
   return onAuthStateChanged(auth, callback);
 }
 
-export { auth, app, db, storage, functions };
+export { auth, app };
 export type { User };

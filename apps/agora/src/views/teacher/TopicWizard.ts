@@ -1,21 +1,32 @@
+import { backTarget } from '../../lib/routeTrail';
 import m from 'mithril';
 import { t, getLang } from '../../lib/i18n';
 import { generateTopicPackage } from '../../lib/callables';
 import { LanguagePicker } from '../../components/LanguagePicker';
+import { TeacherNav } from '../../components/TeacherNav';
 
-/** Teacher enters a topic; the AI drafts the full journey for review */
+/** Teacher supplies the question and purpose; AI drafts a scenario for review. */
 export function TopicWizard(): m.Component {
-	let topic = '';
+	let statement = '';
+	let description = '';
+	const canGenerate = (): boolean => statement.trim().length >= 2 && description.trim().length > 0;
 	let generating = false;
 	let error = false;
+	/** A teacher who leaves mid-generation must not be yanked back when the
+	 *  draft lands: the package is still created, and shows up on the shelf. */
+	let alive = true;
 
 	function generate(): void {
-		if (generating || topic.trim().length < 2) return;
+		if (generating || !canGenerate()) return;
 		generating = true;
 		error = false;
-		generateTopicPackage({ topic: topic.trim(), language: getLang() })
+		generateTopicPackage({
+			statement: statement.trim(),
+			description: description.trim(),
+			language: getLang(),
+		})
 			.then((result) => {
-				m.route.set(`/teach/topic/${result.topicPackageId}`);
+				if (alive) m.route.set(`/teach/scenarios/${result.topicPackageId}`);
 			})
 			.catch((err: unknown) => {
 				console.error('[Wizard] Generation failed:', err);
@@ -28,32 +39,54 @@ export function TopicWizard(): m.Component {
 	}
 
 	return {
+		onremove() {
+			alive = false;
+		},
 		view() {
 			return m('.shell', [
-				m('.home-header', [
-					m(LanguagePicker),
-					m('button.btn.btn--ghost', { onclick: () => m.route.set('/teach') }, t('common.back')),
-				]),
+				m(TeacherNav, {
+					title: t('wizard.title'),
+					onBack: () => m.route.set(backTarget('/teach/scenarios')),
+					trailing: m(LanguagePicker),
+				}),
 				m('.shell__content', { style: { justifyContent: 'center', gap: 'var(--space-xl)' } }, [
-					m('h2.text-center', t('wizard.title')),
 					m('.card.stack', [
-						m('p.home-card__text', t('wizard.topic_label')),
+						m('label.home-card__text', { for: 'scenario-statement' }, t('wizard.topic_label')),
 						m('input.text-input', {
+							id: 'scenario-statement',
 							type: 'text',
-							value: topic,
+							maxlength: 200,
+							required: true,
+							value: statement,
 							placeholder: t('wizard.topic_placeholder'),
 							disabled: generating,
 							oninput: (event: InputEvent) => {
-								topic = (event.target as HTMLInputElement).value;
-							},
-							onkeydown: (event: KeyboardEvent) => {
-								if (event.key === 'Enter') generate();
+								statement = (event.target as HTMLInputElement).value;
 							},
 						}),
 						m(
+							'label.home-card__text',
+							{ for: 'scenario-description' },
+							t('wizard.description_label'),
+						),
+						m('textarea.text-input', {
+							id: 'scenario-description',
+							value: description,
+							rows: 5,
+							maxlength: 2000,
+							required: true,
+							placeholder: t('wizard.description_placeholder'),
+							disabled: generating,
+							oninput: (event: InputEvent) => {
+								description = (event.target as HTMLTextAreaElement).value;
+							},
+						}),
+						m('p.home-explanation', t('wizard.method_hint')),
+
+						m(
 							'button.btn.btn--primary.btn--full.btn--lg',
 							{
-								disabled: generating || topic.trim().length < 2,
+								disabled: generating || !canGenerate(),
 								onclick: generate,
 							},
 							generating ? t('wizard.generating') : t('wizard.generate'),

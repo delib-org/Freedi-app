@@ -14,6 +14,8 @@ import {
 	Unsubscribe,
 } from './firebase';
 import {
+	AGORA_ROUND,
+	type AgoraUnitRating,
 	Collections,
 	AgoraCharacterReview,
 	AgoraCharacterReviewSchema,
@@ -28,9 +30,14 @@ import {
 	Statement,
 	StatementType,
 	isAgoraAiUid,
+	isAgoraDeleted,
+	isAgoraHidden,
+	isTeacherEdited,
+	ModeratedDoc,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { trackWrite, clearWriteTracking } from './confirmedWrite';
+import { assertCleanLanguage } from './language';
 import { getUserState } from './user';
 import { getSessionState } from './session';
 import { emit } from './events';
@@ -63,6 +70,17 @@ export interface AgoraProposal {
 	agoraPreviousText?: string;
 	/** `award` messages: what this moment paid the helper */
 	agoraPointsAwarded?: number;
+	/**
+	 * Taken down by the teacher. Only ever true on the AUTHOR's own copy —
+	 * classmates never receive a hidden doc at all (the text is blank on the
+	 * server anyway; see agoraModeration.ts). The author keeps the row so the
+	 * square does not renumber itself around a gap.
+	 */
+	hidden?: boolean;
+	/** The teacher rewrote (part of) this text */
+	teacherEdited?: boolean;
+	/** The teacher deleted it for good: hidden, and nothing to restore */
+	deleted?: boolean;
 	consensus?: number;
 	evaluation?: {
 		agreement?: number;
@@ -87,6 +105,13 @@ export interface DeliberationState {
 	answersByQuestion: Record<string, AgoraProposal[]>;
 	/** proposalId → improvement suggestions */
 	suggestions: Record<string, AgoraProposal[]>;
+	/**
+	 * Other people's lines the teacher took down. Kept OUT of the three
+	 * collections above (so no board, count or ballot sees them) — only the
+	 * teacher's "what they wrote" screen reads them, to show and restore them.
+	 * A student's rules never deliver these docs at all.
+	 */
+	hiddenOthers: AgoraProposal[];
 	/** statementId → my rating (five-level value) + when I cast/updated it */
 	myRatings: Record<string, { value: number; updatedAt: number }>;
 	/**
@@ -107,6 +132,7 @@ const state: DeliberationState = {
 	proposals: [],
 	answersByQuestion: {},
 	suggestions: {},
+	hiddenOthers: [],
 	myRatings: {},
 	studentEvalTimes: {},
 	scores: {},
@@ -162,6 +188,9 @@ function toProposal(data: Record<string, unknown>): AgoraProposal {
 			typeof data.agoraPointsAwarded === 'number' ? data.agoraPointsAwarded : undefined,
 		consensus: typeof data.consensus === 'number' ? data.consensus : undefined,
 		evaluation: data.evaluation as AgoraProposal['evaluation'],
+		...(isAgoraHidden(data as ModeratedDoc) ? { hidden: true } : {}),
+		...(isTeacherEdited(data as ModeratedDoc) ? { teacherEdited: true } : {}),
+		...(isAgoraDeleted(data as ModeratedDoc) ? { deleted: true } : {}),
 	};
 }
 
@@ -182,10 +211,19 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 			const proposals: AgoraProposal[] = [];
 			const answersByQuestion: Record<string, AgoraProposal[]> = {};
 			const suggestions: Record<string, AgoraProposal[]> = {};
+			const hiddenOthers: AgoraProposal[] = [];
 			const challengeQuestionId = getSessionState().session?.challengeQuestionId;
 			snapshot.forEach((docSnap) => {
 				if (!docSnap.metadata.hasPendingWrites) serverConfirmed.add(docSnap.id);
+				else serverConfirmed.delete(docSnap.id);
 				const item = toProposal(docSnap.data() as Record<string, unknown>);
+				// A classmate's hidden text never enters this state: not the market,
+				// not a thread, not a count. The author keeps theirs, marked.
+				if (item.hidden && item.creatorId !== userId) {
+					hiddenOthers.push(item);
+
+					return;
+				}
 				if (item.statementType === StatementType.option) {
 					// Options split by PARENT: the challenge question's are the
 					// square's proposals; any other parent is a question stage's
@@ -219,6 +257,7 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 			state.proposals = proposals;
 			state.answersByQuestion = answersByQuestion;
 			state.suggestions = suggestions;
+			state.hiddenOthers = hiddenOthers;
 			// "Loaded" means the SERVER has spoken, not that a snapshot arrived.
 			// Against the emulator every snapshot is effectively a server one; on
 			// a real network the SDK answers from an empty cache first, and a
@@ -345,6 +384,7 @@ export function stopDeliberationListeners(): void {
 	state.proposals = [];
 	state.answersByQuestion = {};
 	state.suggestions = {};
+	state.hiddenOthers = [];
 	state.myRatings = {};
 	state.studentEvalTimes = {};
 	state.scores = {};
@@ -453,6 +493,13 @@ export async function submitProposal(
 ): Promise<void> {
 	const { user } = getUserState();
 	if (!user) throw new Error('Not authenticated');
+	// The gate first: a refused text never reaches Firestore (lib/language.ts)
+	await assertCleanLanguage({
+		sessionId: session.sessionId,
+		text,
+		statementId: existingProposalId,
+		place: 'note',
+	});
 
 	if (existingProposalId) {
 		await trackWrite(
@@ -498,6 +545,7 @@ export async function createProposal(
 ): Promise<void> {
 	const { user } = getUserState();
 	if (!user) throw new Error('Not authenticated');
+	await assertCleanLanguage({ sessionId: session.sessionId, text, place: 'note' });
 	await setDoc(
 		doc(db, Collections.statements, proposalId),
 		buildProposalStatement(session, proposalId, user.uid, anonName, text),
@@ -528,6 +576,13 @@ export async function saveAnswer(
 	if (!user) throw new Error('Not authenticated');
 	if (!item.statementId) throw new Error('Question item has no statement');
 	const statementId = answerStatementId(session.sessionId, user.uid, item.itemId);
+	await assertCleanLanguage({
+		sessionId: session.sessionId,
+		text,
+		statementId,
+		place: 'answer',
+		itemId: item.itemId,
+	});
 	await trackWrite(
 		'question.saving_answer',
 		setDoc(
@@ -548,15 +603,36 @@ export async function rateProposal(
 }
 
 /**
+ * A heart on a classmate's story. A like is the evaluation `1`, an un-like
+ * is `0` — never a delete: a deleted evaluation re-runs the effort credit
+ * when it comes back and moves the rater count under a reading finger. The
+ * round pays the author on the way up only (see AGORA_POINTS.ROUND_APPRECIATION).
+ */
+export async function likeStatement(
+	session: AgoraSession,
+	parentId: string,
+	statementId: string,
+	liked: boolean,
+): Promise<void> {
+	return rateStatement(
+		session,
+		parentId,
+		statementId,
+		liked ? AGORA_ROUND.LIKE : AGORA_ROUND.UNLIKE,
+	);
+}
+
+/**
  * Rate any option in the session — a proposal under the challenge question
- * or an answer under a question stage. The parent decides which pipeline
- * aggregates it; the shape is the same evaluation either way.
+ * (−1…+1), an answer under a question stage, or a text in a WizCol round
+ * (a like, or a 0…1 step). The parent decides which pipeline aggregates it;
+ * the shape is the same evaluation either way.
  */
 export async function rateStatement(
 	session: AgoraSession,
 	parentId: string,
 	statementId: string,
-	value: AgoraRating,
+	value: AgoraRating | AgoraUnitRating,
 ): Promise<void> {
 	const { user } = getUserState();
 	if (!user) throw new Error('Not authenticated');
@@ -580,6 +656,13 @@ export async function rateStatement(
 		'delib.saving_rating',
 		setDoc(doc(db, Collections.evaluations, evaluationId), evaluation),
 	);
+	// Landed: the hand may now owe this student the next least-read note (lib/hands.ts)
+	emit('rating:confirmed', {
+		sessionId: session.sessionId,
+		userId: user.uid,
+		parentId,
+		statementId,
+	});
 }
 
 /**
@@ -593,6 +676,7 @@ export function openSuggestionsBy(proposalId: string, userId: string): number {
 	return (state.suggestions[proposalId] ?? []).filter(
 		(suggestion) =>
 			suggestion.creatorId === userId &&
+			!suggestion.hidden &&
 			// Plain chat never occupies an idea slot — the cap guards unresolved
 			// WORK on the owner's desk, and a chat message asks nothing of them
 			isSuggestionKind(suggestion) &&
@@ -625,6 +709,12 @@ export async function submitThreadMessage(
 	) {
 		throw new Error('Too many open suggestions on this proposal');
 	}
+	await assertCleanLanguage({
+		sessionId: session.sessionId,
+		text,
+		statementId: proposal.statementId,
+		place: kind === AgoraMessageKind.suggestion ? 'improvement' : 'chat',
+	});
 	const newRef = doc(collection(db, Collections.statements));
 
 	await trackWrite(

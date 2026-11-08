@@ -1,0 +1,38 @@
+[
+  {
+    "id": "ezra",
+    "height": 1.77,
+    "vertices": 53577,
+    "triangles": 106784
+  },
+  {
+    "id": "miriam",
+    "height": 1.66,
+    "vertices": 52795,
+    "triangles": 105232
+  },
+  {
+    "id": "naama",
+    "height": 1.7,
+    "vertices": 53057,
+    "triangles": 105756
+  },
+  {
+    "id": "amir",
+    "height": 1.83,
+    "vertices": 69283,
+    "triangles": 137928
+  },
+  {
+    "id": "ruth",
+    "height": 1.67,
+    "vertices": 52539,
+    "triangles": 104740
+  },
+  {
+    "id": "noam",
+    "height": 1.78,
+    "vertices": 53394,
+    "triangles": 106428
+  }
+]

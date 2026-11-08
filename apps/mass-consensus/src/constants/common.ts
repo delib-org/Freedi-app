@@ -26,6 +26,35 @@ export const UI = {
   LOADER_TIME_UPDATE_INTERVAL: 1000,
   LOADER_CANCEL_THRESHOLD: 30, // seconds
   ANIMATION_DURATION: 200,
+  /** Quiet time after the last edit before the admin editor autosaves */
+  AUTOSAVE_DELAY: 800,
+  /** How long the "participants can't add options" notice stays up */
+  ADD_DISABLED_TOAST_MS: 5000,
+  /** Quiet time before the picker asks for "Similar by meaning" (each call costs an embedding) */
+  MEANING_SEARCH_DEBOUNCE: 600,
+  /** How long the "Undo" toast stays up after a survey question is removed */
+  UNDO_REMOVE_TOAST_MS: 10000,
+} as const;
+
+/**
+ * Limits for the admin question-picker search. Search scans everything the
+ * admin can access (any age), so these only guard against runaway reads.
+ */
+export const QUESTION_SEARCH = {
+  /** Documents read per Firestore page while scanning the admin's own questions */
+  SCAN_PAGE_SIZE: 500,
+  /** Most of the admin's own questions a single search will scan */
+  MAX_CREATOR_DOCS: 5000,
+  /** Most admin-subscription statements a single search will look up */
+  MAX_ADMIN_IDS: 1500,
+  /** Admin-subscription statements looked up when browsing without a search */
+  BROWSE_ADMIN_IDS: 90,
+  /** Most recently-removed question ids kept on a survey (newest first) */
+  MAX_REMOVED_IDS: 20,
+  /** Most sibling questions read per suggestion lookup */
+  MAX_SIBLING_DOCS: 200,
+  /** Firestore 'in' query limit */
+  IN_QUERY_BATCH: 30,
 } as const;
 
 /**
@@ -98,6 +127,11 @@ export const SWIPE = {
   CARD_ENTER_DURATION: 400, // ms
   CARD_STACK_OFFSET: 10, // px between stacked cards
 
+  // Fitting the card on screen
+  CARD_MIN_FIT_HEIGHT: 260, // px - never squash the card below this
+  CARD_BOTTOM_GAP: 8, // px - space between the card and the bottom bar
+  AXIS_LOCK_DISTANCE: 8, // px - movement before a touch on scrollable text is a scroll or a swipe
+
   // UX Flow
   PROPOSAL_PROMPT_INTERVAL: 7, // Show "propose idea" after N cards
   BATCH_SIZE: 10, // Load N cards at a time
@@ -137,6 +171,45 @@ export const ZONES = {
   CARD_DIM_OPACITY: 0.4,
   VERTICAL_SWIPE_THRESHOLD: 100, // px upward for neutral
   HORIZONTAL_SWIPE_THRESHOLD: 60, // px horizontal minimum to commit rating
+} as const;
+
+/**
+ * How strongly evaluation cards are tinted (survey setting `cardColorIntensity`).
+ * 1 = the full palette, 0 = plain white cards. Only the card background fades.
+ */
+export const CARD_COLOR_INTENSITY = {
+  MIN: 0,
+  MAX: 1,
+  DEFAULT: 1,
+  /** Admin slider step, in percent */
+  STEP_PERCENT: 10,
+  /** CSS custom property the card styles read */
+  CSS_VAR: '--card-color-intensity',
+} as const;
+
+/**
+ * Admin "Top agreements" panel: options shown per question before
+ * "show more", and the most the API returns per question.
+ */
+export const TOP_AGREEMENTS = {
+  INITIAL_VISIBLE: 10,
+  PAGE_SIZE: 10,
+  MAX_PER_QUESTION: 100,
+} as const;
+
+/**
+ * Participant accessibility settings (theme, contrast, text size).
+ * Kept in a cookie so the server renders <html> with them — no flash.
+ */
+export const ACCESSIBILITY = {
+  COOKIE: 'mc-a11y',
+  /** One year, in seconds */
+  COOKIE_MAX_AGE_S: 60 * 60 * 24 * 365,
+  /** Root font-size steps, in percent of the browser default */
+  FONT_SCALE_STEPS: [87.5, 100, 112.5, 125, 150],
+  DEFAULT_FONT_SCALE: 100,
+  THEMES: ['system', 'light', 'dark'],
+  DEFAULT_THEME: 'system',
 } as const;
 
 /**
@@ -214,6 +287,17 @@ export const COMMENT = {
 } as const;
 
 /**
+ * Card image constants (an admin's picture on a swipe card)
+ * The size cap mirrors storage.rules for statements/{statementId}/**.
+ * SVG is left out on purpose: it can carry script, and the file is public.
+ */
+export const CARD_IMAGE = {
+  MAX_BYTES: 5 * 1024 * 1024,
+  ALLOWED_TYPES: ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
+  ALT_MAX_LENGTH: 200,
+} as const;
+
+/**
  * Error messages
  */
 export const ERROR_MESSAGES = {
@@ -226,4 +310,21 @@ export const ERROR_MESSAGES = {
   SUBMIT_FAILED: 'Failed to submit solution',
   CHECK_SIMILAR_FAILED: 'Unable to check for similar solutions. Please try again.',
   MERGE_FAILED: 'Failed to merge with existing solution. Please try again.',
+  /** i18n key: the question is "admin options only" (see ADD_OPTION_CODES.DISABLED) */
+  ADD_DISABLED: "Participants can't add options to this question",
 } as const;
+
+/**
+ * Machine-readable `code` values the add-option routes (submit / merge /
+ * prepare) return with a refusal, so a client can tell them apart.
+ */
+export const ADD_OPTION_CODES = {
+  /** Participants may not add options to this question (admin options only) */
+  DISABLED: 'ADD_DISABLED',
+} as const;
+
+/**
+ * recalculateIndices may run up to 300 s on the server; the Firebase SDK gives up
+ * after 70 s by default and would show a false failure for a large question.
+ */
+export const RECALCULATE_CALL_TIMEOUT_MS = 310_000;

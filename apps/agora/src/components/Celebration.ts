@@ -2,7 +2,7 @@ import m from 'mithril';
 import { t } from '../lib/i18n';
 import { getCelebration, dismissCelebration, type CelebrationPayload } from '../lib/celebration';
 import { Icon } from './Icon';
-import { isSoundOn, playApplause, toggleSound } from '../lib/sound';
+import { isSoundOn, playApplause, playGoal, toggleSound } from '../lib/sound';
 
 const SPARK_COUNT = 18;
 
@@ -34,6 +34,7 @@ export function CelebrationOverlay(): m.Component {
 		// there is one, otherwise plain close)
 		(dom.querySelector<HTMLElement>('button.btn--primary') ?? dom).focus();
 		if (payload.sound === 'applause') playApplause();
+		if (payload.sound === 'goal') playGoal();
 	}
 
 	return {
@@ -44,6 +45,8 @@ export function CelebrationOverlay(): m.Component {
 
 				return null;
 			}
+			const isGoal = payload.kind === 'goal';
+			const headline = t(isGoal ? 'celebrate.goal' : 'celebrate.hooray');
 
 			return m(
 				'.celebration',
@@ -61,9 +64,10 @@ export function CelebrationOverlay(): m.Component {
 					m(
 						'.celebration__card',
 						{
+							class: isGoal ? 'celebration__card--goal' : undefined,
 							role: 'alertdialog',
 							'aria-modal': 'true',
-							'aria-label': `${t('celebrate.hooray')} ${payload.message}`,
+							'aria-label': `${headline} ${payload.message}`,
 							tabindex: '-1',
 							oncreate: (vnode: m.VnodeDOM) => {
 								announce(vnode.dom as HTMLElement, payload);
@@ -99,7 +103,23 @@ export function CelebrationOverlay(): m.Component {
 									}),
 								),
 							),
-							m('.celebration__hooray', { 'aria-hidden': 'true' }, t('celebrate.hooray')),
+							// The stadium: a goal at the top of the card and the ball shot
+							// up into it from the bottom edge. Decoration to a screen reader
+							// — the headline and the message already say everything it does.
+							isGoal
+								? m('.celebration__pitch', { 'aria-hidden': 'true' }, [
+										m('.celebration__goal', m('.celebration__net')),
+										m('.celebration__ball', m(Icon, { name: 'ball', size: 40 })),
+									])
+								: null,
+							m(
+								'.celebration__hooray',
+								{
+									'aria-hidden': 'true',
+									class: isGoal ? 'celebration__hooray--goal' : undefined,
+								},
+								headline,
+							),
 							m('p.celebration__message', payload.message),
 							payload.detail ? m('.celebration__detail', payload.detail) : null,
 							// The one good-news moment with no button still says where the

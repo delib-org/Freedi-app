@@ -21,7 +21,7 @@ import { createRequire } from 'node:module';
 import type { AgoraStage } from '@freedi/shared-types';
 import { preflight } from './lib/preflight.mjs';
 import { fastlane, positionStudent, proposeAs, teacherUrl } from './lib/fastlane';
-import type { AgoraStagePlanItem } from '@freedi/shared-types';
+import type { AgoraStagePlanItem, AgoraStagePlanPreset } from '@freedi/shared-types';
 
 // See lib/fastlane.ts — the package is require-only from plain Node
 const { AgoraStage: AgoraStageEnum, stagePlanPreset } = createRequire(import.meta.url)(
@@ -51,7 +51,9 @@ interface Args {
 	/** A quick game (no scenario) on the quick-decision plan, with names */
 	quick: boolean;
 	/** Which preset plan to send; absent = the session runs the legacy order */
-	plan: 'classic' | 'quickDecision' | null;
+	plan: AgoraStagePlanPreset | null;
+	/** Bots type real names at the door — the teacher's Class tab has something to show */
+	names: boolean;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -94,13 +96,29 @@ function parseArgs(argv: string[]): Args {
 		autoSeed: flag('no-seed') === undefined,
 		viewport: flag('mobile') !== undefined ? 'mobile' : 'desktop',
 		quick: flag('quick') !== undefined,
-		plan:
-			flag('plan') === 'classic'
-				? 'classic'
-				: flag('plan') === 'quickDecision' || flag('quick') !== undefined
-					? 'quickDecision'
-					: null,
+		names: flag('names') !== undefined,
+		plan: planFlag(flag('plan'), flag('quick') !== undefined),
 	};
+}
+
+const PLAN_PRESETS: readonly AgoraStagePlanPreset[] = [
+	'classic',
+	'quickDecision',
+	'wizcol',
+	'scenarioWizcol',
+];
+
+/** --plan names a preset; a bare --quick means the quick-decision preset, as it always did */
+function planFlag(raw: string | undefined, quick: boolean): AgoraStagePlanPreset | null {
+	if (raw !== undefined && raw !== '') {
+		if (!(PLAN_PRESETS as readonly string[]).includes(raw)) {
+			throw new Error(`Unknown --plan "${raw}". One of: ${PLAN_PRESETS.join(', ')}`);
+		}
+
+		return raw as AgoraStagePlanPreset;
+	}
+
+	return quick ? 'quickDecision' : null;
 }
 
 /** The preset with its question filled in — a plan with an empty question is refused */
@@ -113,6 +131,9 @@ function planFor(args: Args): AgoraStagePlanItem[] | undefined {
 			: item,
 	);
 }
+
+/** What the Class tab shows when --names is on — plainly fake, plainly names */
+const DEMO_REAL_NAMES = ['טל י.', 'דנה כ.', 'עומר ל.', 'נועה ב.', 'יובל ש.', 'מאיה ר.', 'איתן ג.', 'רוני א.'];
 
 const args = parseArgs(process.argv.slice(2));
 // A join URL is useless if nothing is serving it, but a plain state build
@@ -128,6 +149,7 @@ const result = await fastlane({
 	students: args.students,
 	proposals: args.proposals,
 	ratings: args.ratings,
+	...(args.names ? { realNames: DEMO_REAL_NAMES } : {}),
 	...(args.quick
 		? {
 				quick: {
@@ -187,8 +209,8 @@ const ARRIVED: Record<string, string> = {
 	needs: '.scene__title, .scene__text',
 	valueIdentification: '.scene__title, .shell__content',
 	positioning: 'input.camp-scale__slider',
-	question: '.question__ask',
-	deliberation: '.chat-log, .delib-hud, .proposal-dock__bar',
+	question: '.question__ask, .round__ask',
+	deliberation: '.chat-log, .delib-hud',
 	voting: '.voting__list, .voting__waiting',
 	results: '.results__total, .shell--wide',
 	ended: '.results__total, .shell--wide',
@@ -217,6 +239,13 @@ async function arrive(selector: string, label: string): Promise<void> {
 }
 
 await page.goto(result.joinUrl, { waitUntil: 'domcontentloaded' });
+
+// The door asks for a real name (for the teacher alone) before the lobby.
+// Skip it: the opened student is a person at a keyboard, not a roster row.
+const nameDoor = page.locator('input.join__name-input');
+if (await nameDoor.waitFor({ state: 'visible', timeout: 4000 }).then(() => true, () => false)) {
+	await page.locator('button.btn--ghost').first().click();
+}
 
 /**
  * The opened student joined AFTER positioning was over, so they have no camp —

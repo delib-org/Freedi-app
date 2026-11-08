@@ -1,0 +1,84 @@
+// Survey admin invitation acceptance screen
+
+.wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 2rem 1rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  max-width: 460px;
+  width: 100%;
+  padding: 2rem;
+  text-align: center;
+  background: var(--card-default, #ffffff);
+  border: 1px solid var(--btn-secondary, #e5e7eb);
+  border-radius: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-primary, #334155);
+}
+
+.message {
+  margin: 0;
+  color: var(--text-body, #475569);
+  line-height: 1.6;
+}
+
+.errorMessage {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: var(--disagree-light, #fca5a5);
+  color: var(--text-primary, #334155);
+  line-height: 1.6;
+}
+
+.button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--btn-primary, #7c9eb2);
+  color: #ffffff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--btn-primary-hover, #6b8fa3);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--text-primary, #334155);
+    outline-offset: 2px;
+  }
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--btn-secondary, #e5e7eb);
+  border-top-color: var(--btn-primary, #7c9eb2);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

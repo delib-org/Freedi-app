@@ -152,6 +152,45 @@ export function isBlockedServiceWorkerCrash(event: SentryLikeEvent, error: unkno
 	return false;
 }
 
+/**
+ * Hosts that serve third-party analytics and session-replay scripts.
+ *
+ * These bundles are fetched, versioned and minified by their vendor. When one
+ * of them throws from inside its own code there is nothing in this repository
+ * to change: we neither wrote the code nor pin its version, and the next
+ * vendor release silently replaces it.
+ */
+const THIRD_PARTY_SCRIPT_HOSTS = [
+	'clarity.ms', // Microsoft Clarity
+	'googletagmanager.com',
+	'google-analytics.com',
+	'connect.facebook.net',
+	'hotjar.com',
+] as const;
+
+/**
+ * True when every frame of every exception value sits inside a third-party
+ * analytics bundle — e.g. Clarity's "Cannot read properties of null (reading
+ * 'sequence')", thrown from its own upload queue.
+ *
+ * The check is deliberately unanimous rather than "any frame". An app-code
+ * crash that merely passes through an analytics callback still has application
+ * frames on its stack, and must still be reported.
+ */
+export function isThirdPartyScriptCrash(event: SentryLikeEvent): boolean {
+	const values = event.exception?.values ?? [];
+	if (values.length === 0) return false;
+
+	return values.every((exception) => {
+		const frames = exception.stacktrace?.frames ?? [];
+
+		// No frames means no evidence — say nothing rather than guess.
+		if (frames.length === 0) return false;
+
+		return frames.every((frame) => isInChunk(frame, THIRD_PARTY_SCRIPT_HOSTS));
+	});
+}
+
 /** Firebase Auth error codes that mean "the network was unavailable". */
 const TRANSIENT_AUTH_CODES = ['auth/network-request-failed', 'auth/timeout'];
 

@@ -1,8 +1,8 @@
 /**
  * Minimal in-memory Firestore stand-in for the organization function tests.
  * Supports: collection().doc()/where()/limit()/get(), doc get/set/update/
- * delete, batches and transactions. `update`/merge honour the `FieldValue.
- * increment` shape produced by jest.setup.ts (`{ _increment: n }`).
+ * delete, batches and transactions. `update`/merge honour the `FieldValue`
+ * shapes produced by jest.setup.ts (`{ _increment: n }`, `{ _delete: true }`).
  */
 export type Doc = Record<string, unknown>;
 
@@ -61,6 +61,8 @@ export interface FakeDb {
 	read: (collection: string, id: string) => Doc | undefined;
 	reset: () => void;
 	collection: (name: string) => FakeCollection;
+	/** Admin SDK bulk read — resolves refs in order, missing ones included. */
+	getAll: (...refs: FakeDocRef[]) => Promise<FakeSnap[]>;
 	batch: () => FakeBatch;
 	runTransaction: <T>(fn: (tx: FakeTx) => Promise<T>) => Promise<T>;
 }
@@ -71,7 +73,8 @@ function isPlainObject(value: unknown): value is Doc {
 
 /**
  * Firestore merge semantics, close enough for tests: dotted keys address
- * nested fields, nested plain objects deep-merge, `{ _increment }` adds.
+ * nested fields, nested plain objects deep-merge, `{ _increment }` adds and
+ * `{ _delete }` removes the field.
  */
 function applyMerge(existing: Doc | undefined, patch: Doc): Doc {
 	const next: Doc = { ...(existing ?? {}) };
@@ -84,6 +87,10 @@ function applyMerge(existing: Doc | undefined, patch: Doc): Doc {
 			target = target[segment] as Doc;
 		}
 		const key = path[path.length - 1];
+		if ((value as { _delete?: boolean } | null)?._delete === true) {
+			delete target[key];
+			continue;
+		}
 		const inc = (value as { _increment?: number } | null)?._increment;
 		if (typeof inc === 'number') {
 			const prev = typeof target[key] === 'number' ? (target[key] as number) : 0;
@@ -122,6 +129,8 @@ function matches(doc: Doc, filter: Filter): boolean {
 			return actual !== filter.value;
 		case 'in':
 			return Array.isArray(filter.value) && filter.value.includes(actual);
+		case 'array-contains':
+			return Array.isArray(actual) && actual.includes(filter.value);
 		case '<':
 			return actual !== undefined && compare(actual, filter.value) < 0;
 		case '<=':
@@ -251,6 +260,7 @@ export function createFakeDb(): FakeDb {
 	return {
 		store,
 		seed: (c, id, data) => void col(c).set(id, { ...data }),
+		getAll: async (...refs: FakeDocRef[]) => refs.map((ref) => snapOf(ref.collection, ref.id)),
 		read: (c, id) => col(c).get(id),
 		reset: () => store.clear(),
 		collection,

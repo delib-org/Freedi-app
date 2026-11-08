@@ -107,7 +107,7 @@ export default function SurveyNavigation({
   }, [isNavigating, canProceed, onNavigate, isLastQuestion, router, surveyId, currentIndex]);
 
   return (
-    <div className={styles.navContainer}>
+    <div className={styles.navContainer} data-mc-bottom-nav="">
       <div className={styles.navContent}>
         <button
           className={`${styles.navButton} ${styles.back} ${isNavigatingBack ? styles.loading : ''}`}

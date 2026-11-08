@@ -1,6 +1,16 @@
 import Phaser from 'phaser';
-import { COLOR_CYAN, GULL_COUNT, STAR_COUNT, STAR_COUNT_SMALL } from '../lib/stageConstants';
+import {
+	COLOR_CYAN,
+	GULL_COUNT,
+	STAR_COUNT,
+	STAR_COUNT_SMALL,
+	mirrorSign,
+	mirrorX,
+} from '../lib/stageConstants';
 import { SeaScene } from './SeaScene';
+
+/** Where the boat is moored, as composed (toward the reader's starting side). */
+const MOORING_X = 0.68;
 
 /**
  * Intro — pre-dawn harbor. Still water, twinkling stars, moored boat with
@@ -29,10 +39,16 @@ export class HarborScene extends SeaScene {
 	}
 
 	protected layout(): void {
-		if (this.boat) this.moveBoat(this.boat, this.W * 0.68, this.H * 0.78);
-		this.anchor?.setPosition(this.W * 0.68 - 40, this.H * 0.88);
-		this.anchorLine?.setTo(this.W * 0.68 - 20, this.H * 0.8, this.W * 0.68 - 40, this.H * 0.88);
-		this.lantern?.setPosition(this.W * 0.68, this.H * 0.78 - 70);
+		const x = this.mooringX();
+		const aft = mirrorSign();
+		if (this.boat) this.moveBoat(this.boat, x, this.H * 0.78);
+		this.anchor?.setPosition(x - aft * 40, this.H * 0.88);
+		this.anchorLine?.setTo(x - aft * 20, this.H * 0.8, x - aft * 40, this.H * 0.88);
+		this.lantern?.setPosition(x, this.H * 0.78 - 70);
+	}
+
+	private mooringX(): number {
+		return mirrorX(this.W * MOORING_X, this.W);
 	}
 
 	private buildStars(): void {
@@ -59,18 +75,21 @@ export class HarborScene extends SeaScene {
 	}
 
 	private buildHarbor(): void {
-		this.boat = this.spawnBoat(this.W * 0.68, this.H * 0.78, 0.16);
+		const x = this.mooringX();
+		// the anchor line runs aft of the hull, whichever way the hull faces
+		const aft = mirrorSign();
+		this.boat = this.spawnBoat(x, this.H * 0.78, 0.16);
 
 		this.anchorLine = this.add
-			.line(0, 0, this.W * 0.68 - 20, this.H * 0.8, this.W * 0.68 - 40, this.H * 0.88, COLOR_CYAN)
+			.line(0, 0, x - aft * 20, this.H * 0.8, x - aft * 40, this.H * 0.88, COLOR_CYAN)
 			.setOrigin(0, 0)
 			.setAlpha(0.5)
 			.setLineWidth(1.5)
 			.setDepth(90);
-		this.anchor = this.glyph(this.W * 0.68 - 40, this.H * 0.88, '⚓', 20).setDepth(95);
+		this.anchor = this.glyph(x - aft * 40, this.H * 0.88, '⚓', 20).setDepth(95);
 
 		this.lantern = this.add
-			.image(this.W * 0.68, this.H * 0.78 - 70, 'glow')
+			.image(x, this.H * 0.78 - 70, 'glow')
 			.setScale(1.4)
 			.setDepth(99);
 		if (!this.reducedMotion) {

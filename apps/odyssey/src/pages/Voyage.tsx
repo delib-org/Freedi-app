@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { isEarlierAnswer, voyageStartIndex } from '../lib/voyageResume';
 import { ODYSSEY_ATTITUDES, OdysseyAttitudeKey } from '@freedi/shared-types';
 import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
@@ -8,17 +9,35 @@ import { useMode } from '../lib/mode';
 import { distanceEngine } from '../lib/distance';
 import { valueToAttitude } from '../lib/evaluations';
 import { islandArtUrl } from '../lib/islandArt';
+import { relativeDistances } from '../lib/seaLayout';
 import { stageBus, type SeaDistances } from '../lib/stageBus';
-import { invitedElders, elderStageId, pickIslandRemark, type ElderRemark } from '../lib/elders';
+import {
+	invitedElders,
+	elderStageId,
+	elderIdFromStageId,
+	islandFocusStance,
+	pickElderReaction,
+} from '../lib/elders';
+import { aiPersonaNote } from '../lib/counsel';
+import { ATTITUDE_KEY } from '../lib/attitudeLabels';
+import { useT } from '../i18n/useT';
+import {
+	isShoreRowOpen,
+	openIslandSailor,
+	openShoreSailor,
+	toggleIslandSailor,
+	toggleShoreRow,
+	toggleShoreSailor,
+	type CounselState,
+} from '../lib/counselState';
 import NearbyShips, { type ShipProximity } from '../components/NearbyShips';
+import SeaChart from '../components/SeaChart';
 import ShipCard from '../components/ShipCard';
-import ElderRemarkCard from '../components/ElderRemarkCard';
-
-/**
- * What the captain's log asks when an island has no question of its own.
- * Islands carry a tailored `depthQuestion`; this is the floor.
- */
-const DEFAULT_LOG_PROMPT = 'מה חשוב לך במיוחד בסוגיה הזו, או איפה ההתלבטות?';
+import IslandStrip from '../components/IslandStrip';
+import IslandCounsel from '../components/IslandCounsel';
+import ShoreCounsel from '../components/ShoreCounsel';
+import CrewReactions from '../components/CrewReactions';
+import { nextIslandIndex } from '../lib/voyageRoute';
 
 /**
  * ההפלגה: one island (a `question` Statement) at a time. Each of its stances
@@ -27,11 +46,18 @@ const DEFAULT_LOG_PROMPT = 'מה חשוב לך במיוחד בסוגיה הזו,
  * shows the island vignette; marking an attitude plants a buoy, and after
  * each island the sea reacts — party ships sail by the updated distances
  * (only in the reaction phase, never mid-question).
+ *
+ * Two things the player can reach from every island: the strip of islands
+ * they chose (to sail to any other one), and their crew — consulted, never
+ * volunteering: a row before the shores and one line under each shore, and
+ * nothing said until a sailor is tapped (see IslandCounsel / ShoreCounsel).
  */
 export default function Voyage() {
 	const navigate = useNavigate();
+	const location = useLocation();
 	const mode = useMode();
 	const { content, journey, attitudes, text, setAttitude, updateJourney } = useGame();
+	const { t } = useT();
 
 	const selectedIslands = useMemo(() => {
 		if (!content || !journey) return [];
@@ -41,20 +67,24 @@ export default function Voyage() {
 		);
 	}, [content, journey]);
 
-	const [index, setIndex] = useState(() => {
-		const unanswered = selectedIslands.findIndex(
-			(island) => !island.stances.some((stance) => attitudes[stance.statementId] !== undefined),
-		);
-
-		return unanswered === -1 ? Math.max(0, selectedIslands.length - 1) : unanswered;
-	});
+	// Sailing from the map starts at island 1; arriving any other way resumes at
+	// the first unanswered island. See lib/voyageResume.
+	const fresh = Boolean((location.state as { fresh?: boolean } | null)?.fresh);
+	const [index, setIndex] = useState(() => voyageStartIndex(selectedIslands, attitudes, fresh));
+	/** stances marked during this visit; any other mark is an earlier answer */
+	const [markedThisVisit, setMarkedThisVisit] = useState<ReadonlySet<string>>(() => new Set());
 	const [phase, setPhase] = useState<'question' | 'reaction'>('question');
 	/** which ship the player asked about: a partyId, 'all' for the standing, or none */
 	const [asked, setAsked] = useState<string | null>(null);
 	const [depth, setDepth] = useState('');
 	const [saving, setSaving] = useState(false);
-	/** an elder's in-character answer to this island, shown only in reaction */
-	const [remark, setRemark] = useState<ElderRemark | null>(null);
+	/**
+	 * Which crew disclosure is open on this island: a sailor's island card,
+	 * or one shore's row (and at most one sailor's card in it). One across the
+	 * whole panel, never two; never persisted; marking a shore never touches
+	 * it; sailing to another island resets it (see lib/counselState).
+	 */
+	const [counsel, setCounsel] = useState<CounselState>(null);
 
 	const island = useMemo(
 		() => selectedIslands[Math.min(index, Math.max(0, selectedIslands.length - 1))] ?? null,
@@ -85,6 +115,17 @@ export default function Voyage() {
 
 		return Object.fromEntries([...partyEntries, ...elderEntries]);
 	}, [content, attitudes, parties, elders]);
+
+	// Where the ships ride: stretched across the sea by the parties' own
+	// spread, so near and far stay visible (see `relativeDistances`).
+	const seaDistances: SeaDistances = useMemo(
+		() =>
+			relativeDistances(
+				distances,
+				parties.map((party) => party.partyId),
+			),
+		[distances, parties],
+	);
 
 	// Feed the voyage scene: parties once, then the current island vignette.
 	// Ships take their positions instantly on entry (no mid-question motion).
@@ -121,8 +162,8 @@ export default function Voyage() {
 				imageUrl: island.imageUrl ?? islandArtUrl(island.sortOrder),
 			},
 		});
-		stageBus.send({ type: 'updateDistances', distances, animate: false });
-		// distances intentionally omitted: ships take a snapshot when the island
+		stageBus.send({ type: 'updateDistances', distances: seaDistances, animate: false });
+		// seaDistances intentionally omitted: ships take a snapshot when the island
 		// changes and only move again during the reaction phase
 	}, [mode, island, index, selectedIslands.length]);
 
@@ -176,6 +217,7 @@ export default function Voyage() {
 	).length;
 
 	function markAttitude(stanceIndex: number, stanceId: string, key: OdysseyAttitudeKey): void {
+		setMarkedThisVisit((current) => new Set(current).add(stanceId));
 		void setAttitude(island!.statementId, stanceId, key);
 		if (mode === 'game') {
 			stageBus.send({ type: 'attitudeMarked', stanceIndex, attitude: key });
@@ -196,27 +238,38 @@ export default function Voyage() {
 					},
 				});
 			}
-			setRemark(pickIslandRemark(elders, island!, attitudes));
 			setPhase('reaction');
 			if (mode === 'game') {
 				// the log-stamp beat, then the sea reacts
 				stageBus.send({ type: 'islandCompleted', islandId: island!.statementId });
-				stageBus.send({ type: 'updateDistances', distances, animate: true });
+				stageBus.send({ type: 'updateDistances', distances: seaDistances, animate: true });
 			}
 		} finally {
 			setSaving(false);
 		}
 	}
 
+	// Where "next" leads, so the button can say it: the island after this
+	// one, then anything skipped, then home (see lib/voyageRoute).
+	const nextIndex = nextIslandIndex(selectedIslands, attitudes, index);
+	const nextTitle = nextIndex === null ? null : selectedIslands[nextIndex].title;
+
+	function goToIsland(target: number): void {
+		setIndex(target);
+		setPhase('question');
+		setAsked(null);
+		// what Golda said on the last island must not stay open over this one
+		setCounsel(null);
+		window.scrollTo({ top: 0 });
+	}
+
 	function nextIsland(): void {
-		if (index + 1 >= selectedIslands.length) {
+		if (nextIndex === null) {
 			navigate('/summary');
 
 			return;
 		}
-		setIndex(index + 1);
-		setPhase('question');
-		setRemark(null);
+		goToIsland(nextIndex);
 	}
 
 	// Two lists, never one. See NearbyShips' `caption`.
@@ -224,29 +277,61 @@ export default function Voyage() {
 		partyId: party.partyId,
 		name: party.name,
 		color: party.color,
-		distance: distances[party.partyId] ?? null,
+		distance: seaDistances[party.partyId] ?? null,
+		trueDistance: distances[party.partyId] ?? null,
 	}));
 	const elderProximity: ShipProximity[] = elders.map((elder) => ({
 		partyId: elderStageId(elder.elderId),
 		name: `📜 ${elder.name}`,
 		color: elder.color,
-		distance: distances[elderStageId(elder.elderId)] ?? null,
+		distance: seaDistances[elderStageId(elder.elderId)] ?? null,
+		trueDistance: distances[elderStageId(elder.elderId)] ?? null,
 	}));
+	const islandImage = island.imageUrl ?? islandArtUrl(island.sortOrder);
 	const askedShip =
 		[...shipProximity, ...elderProximity].find((ship) => ship.partyId === asked) ?? null;
+	// A tapped sailor's ship answers the same shore the crew card answers —
+	// reveal phase only, which is the only phase a ship can be asked in.
+	const askedElder = elders.find((elder) => elder.elderId === elderIdFromStageId(asked ?? ''));
+	const focusStance = islandFocusStance(elders, island, attitudes);
+	const askedReaction =
+		askedElder && focusStance
+			? (pickElderReaction(
+					[askedElder],
+					island,
+					focusStance.statementId,
+					attitudes[focusStance.statementId] ?? 0,
+				)?.line ?? null)
+			: null;
 
 	return (
 		<>
-			<GameChrome stage="ההפלגה" />
+			<GameChrome stage={t('step.voyage')} />
 			<div className="page">
 				<div className="w-full max-w-3xl flex flex-col gap-4">
-					<header className="text-center fade-in">
+					<header className="text-center fade-in" key={`${island.statementId}-header`}>
+						{islandImage ? (
+							// the island itself, first: the player should see where they landed
+							// before reading what it asks
+							<img
+								src={islandImage}
+								alt=""
+								className="block mx-auto mb-2 w-auto h-32 sm:h-40 object-contain drop-shadow-lg"
+							/>
+						) : null}
 						<p className="eyebrow m-0">
-							אי {index + 1} מתוך {selectedIslands.length}
+							{t('voyage.islandCounter', { index: index + 1, total: selectedIslands.length })}
 						</p>
 						<h1 className="text-3xl font-bold text-[var(--cream)] mt-1 mb-1">{island.title}</h1>
 						<p className="text-[15px] text-[#cfe6f5] m-0">{island.issue}</p>
 					</header>
+
+					<IslandStrip
+						islands={selectedIslands}
+						attitudes={attitudes}
+						currentIndex={index}
+						onSelect={goToIsland}
+					/>
 
 					{mode === 'game' && phase === 'question' ? (
 						// window onto the island vignette and the sea
@@ -254,16 +339,32 @@ export default function Voyage() {
 					) : null}
 
 					{phase === 'question' ? (
-						<section className="panel fade-in flex flex-col gap-4" key={island.statementId}>
+						<section
+							className="panel fade-in flex flex-col gap-4"
+							key={`${island.statementId}-question`}
+						>
 							{island.opening ? (
 								<p className="text-[15px] text-[#dcecf7] italic m-0">{island.opening}</p>
 							) : null}
 							<h2 className="text-lg font-bold text-[var(--cream)] m-0">
 								⚓ {island.statement.statement}
 							</h2>
+
+							{/* The crew, before the shores: "consult before you answer" in
+							    reading order. The question stays first — the sailors' lines
+							    are about it. Keyed by island so the row remounts clean. */}
+							<IslandCounsel
+								key={island.statementId}
+								crew={elders}
+								island={island}
+								openElderId={openIslandSailor(counsel)}
+								onToggle={(elderId) =>
+									setCounsel((current) => toggleIslandSailor(current, elderId))
+								}
+							/>
+
 							<p className="text-[13px] opacity-75 m-0">
-								לפניכם {island.stances.length} חופים. סמנו את יחסכם לכל חוף — חובה לסמן לפחות אחד.
-								אין צורך לבחור תשובה אחת בלבד.
+								{t('voyage.shoresIntro', { count: island.stances.length })}
 							</p>
 
 							<div className="flex flex-col gap-3">
@@ -277,15 +378,41 @@ export default function Voyage() {
 										>
 											<p className="m-0 mb-2 text-[15px]">
 												<strong className="text-[var(--gold-strong)]">
-													חוף {stanceIndex + 1}:
+													{t('voyage.shore', { number: stanceIndex + 1 })}:
 												</strong>{' '}
 												{stance.statement}
 											</p>
+											{isEarlierAnswer(stance.statementId, attitudes, markedThisVisit) ? (
+												<p className="m-0 mb-2 text-[12px] opacity-75">
+													{t('voyage.earlierAnswer')}
+												</p>
+											) : null}
+											{/* text → consult → mark; nothing rendered with no crew */}
+											{elders.length > 0 ? (
+												<ShoreCounsel
+													crew={elders}
+													island={island}
+													stance={stance}
+													stanceIndex={stanceIndex}
+													open={isShoreRowOpen(counsel, stance.statementId)}
+													openElderId={openShoreSailor(counsel, stance.statementId)}
+													onToggleRow={() =>
+														setCounsel((current) => toggleShoreRow(current, stance.statementId))
+													}
+													onToggleElder={(elderId) =>
+														setCounsel((current) =>
+															toggleShoreSailor(current, stance.statementId, elderId),
+														)
+													}
+												/>
+											) : null}
 											<div
 												className="flex flex-wrap gap-2"
 												role="group"
-												aria-label={`יחס לחוף ${stanceIndex + 1}`}
+												aria-label={t('voyage.attitudeGroup', { number: stanceIndex + 1 })}
 											>
+												{/* The label is ours, not shared-types': ODYSSEY_ATTITUDES[].label
+												    is Hebrew and stays so for every other app. */}
 												{ODYSSEY_ATTITUDES.map((attitude) => (
 													<button
 														key={attitude.key}
@@ -299,7 +426,7 @@ export default function Voyage() {
 															)
 														}
 													>
-														{attitude.label}
+														{t(ATTITUDE_KEY[attitude.key])}
 													</button>
 												))}
 											</div>
@@ -318,13 +445,15 @@ export default function Voyage() {
 							*/}
 							<div>
 								<p className="m-0 mb-2 text-[15px]">
-									<strong>📖 יומן קברניט:</strong> {island.depthQuestion || DEFAULT_LOG_PROMPT}
+									{/* Islands carry a tailored `depthQuestion`; the default is the floor. */}
+									<strong>{t('voyage.logLabel')}</strong>{' '}
+									{island.depthQuestion || t('voyage.defaultLogPrompt')}
 								</p>
 								<textarea
 									rows={3}
 									value={depth}
 									onChange={(event) => setDepth(event.target.value)}
-									placeholder="לא חובה — התלבטות, הסתייגות, או כל מה שעוד יש לכם לומר על הסוגיה"
+									placeholder={t('voyage.logPlaceholder')}
 								/>
 							</div>
 
@@ -335,16 +464,15 @@ export default function Voyage() {
 									disabled={answeredOnIsland === 0 || saving}
 									onClick={() => void submitIsland()}
 								>
-									{saving ? 'מפליגים…' : 'להמשך המסע ⛵'}
+									{saving ? t('common.sailing') : t('voyage.continue')}
 								</button>
 								{answeredOnIsland === 0 ? (
-									<p className="text-[13px] opacity-75 m-0">סמנו יחס לפחות לחוף אחד כדי להמשיך.</p>
+									<p className="text-[13px] opacity-75 m-0">{t('voyage.markOne')}</p>
 								) : null}
 							</div>
 						</section>
 					) : (
 						<section className="fade-in flex flex-col gap-4">
-							{remark ? <ElderRemarkCard remark={remark} /> : null}
 							{mode === 'game' ? (
 								<>
 									{/* the sea itself reacts behind this window */}
@@ -354,45 +482,53 @@ export default function Voyage() {
 									{askedShip ? (
 										<ShipCard
 											ship={askedShip}
+											reaction={askedReaction}
 											onClose={() => setAsked(null)}
 											onShowAll={() => setAsked('all')}
 										/>
 									) : asked === 'all' ? (
 										<div className="panel !py-3 flex flex-col gap-2.5">
 											<div className="flex items-center gap-2">
-												<strong className="text-[15px] text-[var(--cream)]">הספינות סביבך</strong>
+												<strong className="text-[15px] text-[var(--cream)]">
+													{t('voyage.shipsAround')}
+												</strong>
 												<button
 													type="button"
-													className="mr-auto text-[13px] opacity-70 hover:opacity-100"
+													className="ms-auto text-[13px] opacity-70 hover:opacity-100"
 													onClick={() => setAsked(null)}
-													aria-label="סגירה"
+													aria-label={t('common.close')}
 												>
 													✕
 												</button>
 											</div>
-											<NearbyShips ships={shipProximity} compact onSelect={setAsked} />
+											<NearbyShips
+												ships={shipProximity}
+												compact
+												onSelect={setAsked}
+												selectedId={asked}
+											/>
 											{elderProximity.length > 0 ? (
 												<div className="border-t border-[rgba(232,185,88,0.25)] pt-2">
 													<NearbyShips
 														ships={elderProximity}
 														compact
 														onSelect={setAsked}
-														caption="📜 המלחים ששטים איתך — דמויות בינה מלאכותית, לא מפלגות"
+														selectedId={asked}
+														caption={aiPersonaNote()}
 													/>
 												</div>
 											) : null}
 											<p className="m-0 text-[12px] opacity-60 text-center">
-												עגינה זמנית — לא פסק דין ולא הוראת הצבעה.
+												{t('ships.temporaryBerth')}
 											</p>
 										</div>
 									) : (
 										<div className="panel !py-2.5 text-center text-[14px] text-[#d5ecf7] flex flex-col gap-1.5">
 											<p className="m-0">{text('voyageShipsNote')}</p>
 											<p className="m-0 text-[13px] opacity-80">
-												הספינה המוארת במרכז היא שלך. הקישו על ספינה כדי לראות כמה היא קרובה אליכם,
-												או{' '}
+												{t('voyage.litShipHint')}{' '}
 												<button type="button" className="underline" onClick={() => setAsked('all')}>
-													הציגו את כל הספינות
+													{t('voyage.showAllShips')}
 												</button>
 												.
 											</p>
@@ -402,36 +538,45 @@ export default function Voyage() {
 							) : (
 								<div className="panel flex flex-col gap-3">
 									<h2 className="text-lg font-bold text-[var(--cream)] m-0">
-										הים מגיב לבחירות שלך
+										{t('voyage.seaReacts')}
 									</h2>
-									<p className="m-0 text-[13px] opacity-80">
-										הקישו על ספינה כדי לראות כמה היא קרובה למסלול שלכם.
-									</p>
-									<NearbyShips ships={shipProximity} onSelect={setAsked} />
+									<p className="m-0 text-[13px] opacity-80">{t('voyage.tapShip')}</p>
+									{/* Parties only. A persona riding the same water as the parties reads as
+							    a claim that she is running — the reviewer who saw Golda there
+							    said so, which is why the personas keep to their own list. */}
+									<SeaChart ships={shipProximity} onSelect={setAsked} selectedId={asked} />
+									{/* The card docks right under the water: a tap on a hull is
+									    answered where the eye already is, not past two rows of chips. */}
+									{askedShip ? (
+										<ShipCard
+											ship={askedShip}
+											reaction={askedReaction}
+											onClose={() => setAsked(null)}
+											onShowAll={() => setAsked(null)}
+										/>
+									) : null}
+									<NearbyShips ships={shipProximity} onSelect={setAsked} selectedId={asked} />
 									{elderProximity.length > 0 ? (
 										<div className="border-t border-[rgba(232,185,88,0.25)] pt-3">
 											<NearbyShips
 												ships={elderProximity}
 												onSelect={setAsked}
-												caption="📜 המלחים ששטים איתך — דמויות בינה מלאכותית, לא מפלגות"
+												selectedId={asked}
+												caption={aiPersonaNote()}
 											/>
 										</div>
 									) : null}
-									{askedShip ? (
-										<ShipCard
-											ship={askedShip}
-											onClose={() => setAsked(null)}
-											onShowAll={() => setAsked(null)}
-										/>
-									) : null}
-									<p className="m-0 text-[12px] opacity-65">
-										הקרבה היא עגינה זמנית — לא פסק דין ולא הוראת הצבעה.
-									</p>
+									<p className="m-0 text-[12px] opacity-65">{t('voyage.proximityNote')}</p>
 								</div>
 							)}
+							{/* The sea's reaction first, the crew's after it, before the way on.
+							    Never in the question phase. */}
+							<CrewReactions crew={elders} island={island} attitudes={attitudes} />
 							<div className="flex justify-center">
 								<button type="button" className="btn" onClick={() => nextIsland()}>
-									{index + 1 >= selectedIslands.length ? 'אל מפת ההפלגה שלך 🗺️' : 'לאי הבא ⚓'}
+									{nextTitle === null
+										? t('voyage.toSummary')
+										: t('voyage.nextIsland', { title: nextTitle })}
 								</button>
 							</div>
 						</section>

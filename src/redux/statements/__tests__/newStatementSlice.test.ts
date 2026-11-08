@@ -47,6 +47,11 @@ import {
 	setLoading,
 	setError,
 	setShowNewStatementModal,
+	openAddStatement,
+	closeAddStatement,
+	selectAddStatementIntent,
+	selectAddStatementOrigin,
+	selectAddStatementCommit,
 	selectParentStatementForNewStatement,
 	selectNewStatementLoading,
 	selectNewStatementError,
@@ -76,6 +81,9 @@ const getInitialState = (): NewStatementState => ({
 	isLoading: false,
 	error: null,
 	showModal: false,
+	intent: null,
+	origin: null,
+	commit: 'db',
 });
 
 describe('newStatementSlice', () => {
@@ -296,6 +304,82 @@ describe('newStatementSlice', () => {
 				const result = newStatementSlice.reducer(stateWithModal, setShowNewStatementModal(false));
 				expect(result.showModal).toBe(false);
 			});
+		});
+	});
+
+	describe('openAddStatement / closeAddStatement', () => {
+		it('opens the flow with intent, origin and the child type derived from the intent', () => {
+			const state = newStatementSlice.reducer(
+				getInitialState(),
+				openAddStatement({
+					parentStatement: mockStatement as never,
+					intent: 'answer',
+					origin: 'bar',
+				}),
+			);
+			expect(state).toMatchObject({
+				showModal: true,
+				intent: 'answer',
+				origin: 'bar',
+				commit: 'db',
+				newStatement: { statementType: StatementType.option },
+			});
+			expect(state.parentStatement).toEqual(mockStatement);
+		});
+
+		it('carries the question type and a storeTemp commit', () => {
+			const state = newStatementSlice.reducer(
+				getInitialState(),
+				openAddStatement({
+					parentStatement: 'top',
+					intent: 'question',
+					origin: 'home',
+					commit: 'storeTemp',
+					questionType: QuestionType.simple as never,
+				}),
+			);
+			expect(state.commit).toBe('storeTemp');
+			expect(state.newStatement).toEqual({
+				statementType: StatementType.question,
+				questionSettings: { questionType: QuestionType.simple },
+			});
+		});
+
+		it('closeAddStatement resets everything including intent and origin', () => {
+			const opened = newStatementSlice.reducer(
+				getInitialState(),
+				openAddStatement({ parentStatement: 'top', intent: 'group', origin: 'fab' }),
+			);
+			expect(newStatementSlice.reducer(opened, closeAddStatement())).toEqual(getInitialState());
+		});
+
+		it('legacy setNewStatementModal derives intent from the statement type and origin legacy', () => {
+			const state = newStatementSlice.reducer(
+				getInitialState(),
+				setNewStatementModal({
+					parentStatement: mockStatement as never,
+					newStatement: { statementType: StatementType.question },
+					isLoading: false,
+					error: null,
+					showModal: true,
+				}),
+			);
+			expect(state.intent).toBe('question');
+			expect(state.origin).toBe('legacy');
+		});
+
+		it('selectors expose intent, origin and commit', () => {
+			const state = {
+				newStatement: {
+					...getInitialState(),
+					intent: 'answer',
+					origin: 'url',
+					commit: 'storeTemp',
+				},
+			} as { newStatement: NewStatementState };
+			expect(selectAddStatementIntent(state)).toBe('answer');
+			expect(selectAddStatementOrigin(state)).toBe('url');
+			expect(selectAddStatementCommit(state)).toBe('storeTemp');
 		});
 	});
 

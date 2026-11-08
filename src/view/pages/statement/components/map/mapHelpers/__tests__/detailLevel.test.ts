@@ -122,6 +122,17 @@ describe('applyDetailLevel', () => {
 		expect(find(tree, 'lone')?.collapsed).toBe(true);
 	});
 
+	it('a hand-folded node closes even where the level would open it', () => {
+		const tree = applyDetailLevel(fixture(), 'everything', none, new Set(['synth']));
+		expect(find(tree, 'synth')?.collapsed).toBe(true);
+		expect(find(tree, 'topic')?.collapsed).toBe(false);
+	});
+
+	it('a fold wins over an expand on the same node', () => {
+		const tree = applyDetailLevel(fixture(), 'ideas', new Set(['synth']), new Set(['synth']));
+		expect(find(tree, 'synth')?.collapsed).toBe(true);
+	});
+
 	it('never folds the root or a childless node', () => {
 		const tree = applyDetailLevel({ top: s('q'), sub: [topic('empty')] }, 'themes', none);
 		expect(tree.collapsed).toBe(false);

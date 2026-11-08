@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => {
 
 	return {
 		envDir: './env',
+		cacheDir: process.env.FREEDI_VITE_CACHE_DIR || 'node_modules/.vite',
 		plugins: [
 			react(),
 			svgr({
@@ -86,6 +87,7 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		optimizeDeps: {
+      entries: ['index.html'],
 			include: [
 				'@tiptap/react',
 				'@tiptap/starter-kit',
@@ -123,10 +125,12 @@ export default defineConfig(({ mode }) => {
 						// use-sync-external-store MUST be bundled with React to avoid initialization errors
 						if (id.includes('node_modules/react/') ||
 							id.includes('node_modules/react-dom/') ||
-							id.includes('node_modules/react-router') ||
 							id.includes('node_modules/use-sync-external-store') ||
 							id.includes('node_modules/scheduler')) {
 							return 'vendor-react';
+						}
+						if (id.includes('node_modules/react-router')) {
+							return 'vendor-router';
 						}
 						// Firebase, split by when it is actually needed.
 						// Login needs app + auth + app-check and nothing else; Firestore

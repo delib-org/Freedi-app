@@ -1,12 +1,19 @@
 import { Link } from 'react-router-dom';
+import clsx from 'clsx';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { useOrg } from '@/org/OrgContext';
 import { RoleBadge, Skeleton } from '@/components/atomic/atoms';
 import StudioPage from '../_shared/StudioPage';
-import PersonalEvents from './PersonalEvents';
 import styles from './OrgPicker.module.scss';
 
-/** `/orgs` — every organization the caller belongs to, plus personal events. */
+/**
+ * `/orgs` — the workspaces the caller can enter: their organizations, and
+ * their own events.
+ *
+ * A picker, not a dashboard. The events themselves live at `/personal`; a grid
+ * of organizations with a list of un-organized events underneath it read as
+ * though those events belonged to the organizations above them.
+ */
 export default function OrgPicker() {
 	const { t, tWithParams } = useTranslation();
 	const { orgs, memberships, isSystemAdmin, loading } = useOrg();
@@ -67,7 +74,17 @@ export default function OrgPicker() {
 				)}
 			</section>
 
-			<PersonalEvents />
+			<section className={styles.section} aria-label={t('Personal')}>
+				<Link
+					to="/personal"
+					className={clsx('card card--interactive card--elevated', styles.personalCard)}
+				>
+					<div className="card__header">
+						<span className="card__title">{t('Personal')}</span>
+					</div>
+					<p className="card__subtitle">{t('Events outside any organization')}</p>
+				</Link>
+			</section>
 		</StudioPage>
 	);
 }

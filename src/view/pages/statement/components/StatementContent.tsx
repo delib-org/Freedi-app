@@ -8,6 +8,12 @@ import useSlideAndSubStatement from '@/controllers/hooks/useSlideAndSubStatement
 import FollowMeToast from './followMeToast/FollowMeToast';
 import { TreeFilterProvider } from './treeView/TreeFilterContext';
 import styles from './StatementContent.module.scss';
+import AppThinkingSpace from '@/view/components/atomic/organisms/ThinkingSpace/AppThinkingSpace';
+import LiveDecisionBoard from '@/view/components/atomic/organisms/ThinkingSpace/LiveDecisionBoard';
+import { StatementType, QuestionType } from '@freedi/shared-types';
+import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
+import { mapViews } from '@/view/components/atomic/organisms/ThinkingSpace/MapExplorer';
+import { isResultsOrMapsView } from './questionScreen/questionTabs';
 
 interface StatementContentProps {
 	statement: Statement | null;
@@ -46,6 +52,8 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 
 	// Check if survey is mandatory and not completed
 	const isSurveyMandatory = showUserQuestions && screen !== 'settings' && !isMassConsensus;
+	// A map opens full screen with its own chrome (back, title, share, switcher).
+	const isMapScreen = mapViews.some((view) => view.id === screen);
 
 	return (
 		<div className={pageClassName}>
@@ -66,15 +74,32 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 					<div
 						className={`${styles.content} ${isSurveyMandatory ? styles['content--locked'] : ''}`}
 						aria-hidden={isSurveyMandatory || undefined}
+						{...(isSurveyMandatory ? { inert: '' } : {})}
 					>
-						<StatementHeader
-							topParentStatement={topParentStatement}
-							onActiveViewChange={handleActiveViewChange}
-						/>
+						<AppThinkingSpace
+							activeId={topParentStatement?.statementId || statement?.statementId}
+							aside={
+								statement &&
+								!isSurveyMandatory &&
+								!isResultsOrMapsView(activeView) &&
+								(!screen || ['main', 'chat', 'options', 'questions'].includes(screen)) &&
+								statement.questionSettings?.questionType !== QuestionType.compound &&
+								isStatementTypeAllowedAsChildren(statement, StatementType.option) ? (
+									<LiveDecisionBoard statement={statement} />
+								) : undefined
+							}
+						>
+							{!isMapScreen && (
+								<StatementHeader
+									topParentStatement={topParentStatement ?? undefined}
+									onActiveViewChange={handleActiveViewChange}
+								/>
+							)}
 
-						<MapProvider>
-							<Switch activeView={activeView} />
-						</MapProvider>
+							<MapProvider>
+								<Switch activeView={activeView} />
+							</MapProvider>
+						</AppThinkingSpace>
 					</div>
 					{isSurveyMandatory && <div className={styles.content__scrim} aria-hidden="true" />}
 				</div>

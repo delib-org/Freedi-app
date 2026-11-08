@@ -36,6 +36,7 @@ export type IconName =
 	// score, results, progress
 	| 'chart'
 	| 'trophy'
+	| 'ball'
 	| 'medal'
 	| 'flag'
 	| 'scales'
@@ -60,7 +61,21 @@ export type IconName =
 	| 'watch'
 	| 'target'
 	| 'mail'
+	| 'qr'
 	| 'cog'
+	| 'arrow'
+	| 'home'
+	| 'menu'
+	| 'info'
+	// the scenario library
+	| 'star'
+	| 'search'
+	| 'image'
+	| 'hide'
+	| 'lock'
+	// the lesson builder
+	| 'plus'
+	| 'trash'
 	// the rating scale
 	| 'face-strong-against'
 	| 'face-against'
@@ -172,8 +187,74 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 		['path', { d: 'M3.2 6.4 12 12.6l8.8-6.2' }],
 	],
 
+	// The lesson's door: three finder squares and a scatter of modules — read
+	// as "a QR" at 18px without trying to be a scannable one.
+	qr: [
+		['rect', { x: 3.5, y: 3.5, width: 6, height: 6, rx: 1 }],
+		['rect', { x: 14.5, y: 3.5, width: 6, height: 6, rx: 1 }],
+		['rect', { x: 3.5, y: 14.5, width: 6, height: 6, rx: 1 }],
+		['path', { d: 'M14.5 14.5h2.5v2.5M20.5 14.5v.01M14.5 20.5v.01M17.5 20.5h3v-3' }],
+	],
+
 	// Settings: a ring, its hub, and eight teeth — the plainest possible cog,
 	// because at 22px anything cleverer stops reading as one
+	// Points to inline-start in LTR; the stylesheet mirrors it under [dir=rtl],
+	// which is the rule every directional shape here follows.
+	arrow: [
+		['path', { d: 'M20 12H4.6' }],
+		['path', { d: 'M10.8 5.8 4.6 12l6.2 6.2' }],
+	],
+
+	// The way home. A house is the one navigation shape the whole world
+	// already reads, and it is symmetrical, so RTL leaves it alone.
+	home: [
+		[
+			'path',
+			{
+				d: 'M3.6 10.6 12 3.5l8.4 7.1v8.9a1.1 1.1 0 0 1-1.1 1.1h-4.5v-5.4H9.2v5.4H4.7a1.1 1.1 0 0 1-1.1-1.1z',
+			},
+		],
+	],
+
+	// Three rails: everywhere a teacher can walk to from this screen.
+	menu: [
+		['path', { d: 'M4.5 7.5h15' }],
+		['path', { d: 'M4.5 12h15' }],
+		['path', { d: 'M4.5 16.5h15' }],
+	],
+
+	// The scenario library. A star filled with the current colour (a rating),
+	// a lens, a picture frame (the cover), and an eye with a stroke through it.
+	star: [
+		[
+			'path',
+			{
+				d: 'M12 3.4l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.2l-5.1 2.9 1.1-5.7-4.3-4 5.8-.7z',
+				fill: 'currentColor',
+			},
+		],
+	],
+	search: [
+		['circle', { cx: 10.8, cy: 10.8, r: 6.3 }],
+		['path', { d: 'M15.6 15.6 20.4 20.4' }],
+	],
+	image: [
+		['rect', { x: 3.5, y: 5, width: 17, height: 14, rx: 2.2 }],
+		['circle', { cx: 9, cy: 10, r: 1.6 }],
+		['path', { d: 'M4.5 17.5l4.6-4.4 3.4 3.1 3-2.6 4 3.9' }],
+	],
+	hide: [
+		['path', { d: 'M3.2 12s3.2-6 8.8-6 8.8 6 8.8 6-3.2 6-8.8 6-8.8-6-8.8-6z' }],
+		['circle', { cx: 12, cy: 12, r: 2.6 }],
+		['path', { d: 'M4.5 4.5l15 15' }],
+	],
+	// A padlock: a door that exists but is not open to this teacher yet
+	lock: [
+		['rect', { x: 5.5, y: 10.5, width: 13, height: 9.5, rx: 2.2 }],
+		['path', { d: 'M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5' }],
+		['path', { d: 'M12 14.4v2' }],
+	],
+
 	cog: [
 		['circle', { cx: 12, cy: 12, r: 6.2 }],
 		['circle', { cx: 12, cy: 12, r: 2.4 }],
@@ -224,6 +305,15 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 		['path', { d: 'M7 4h10v5.5a5 5 0 0 1-10 0z' }],
 		['path', { d: 'M7 5.5H4.5v1.8A3.2 3.2 0 0 0 7 10.4M17 5.5h2.5v1.8a3.2 3.2 0 0 1-2.5 3.1' }],
 		['path', { d: 'M12 14.5v3.5M8.5 20.5h7' }],
+	],
+
+	// A football, head on: the centre pentagon and the five seams running
+	// off its corners. Just a circle read as a coin; just the pentagon read as
+	// a badge — it is the seams reaching the rim that make it a ball.
+	ball: [
+		['circle', { cx: 12, cy: 12, r: 8.6 }],
+		['path', { d: 'M12 8.4l3.5 2.6-1.3 4.2h-4.4L8.5 11z' }],
+		['path', { d: 'M12 8.4V3.4M15.5 11l4.6-1.6M14.2 15.2l2.8 3.9M9.8 15.2 7 19.1M8.5 11 3.9 9.4' }],
 	],
 
 	// Disc above, ribbon tails below. Hanging the disc from a closed trapezoid
@@ -365,6 +455,14 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 		['path', { d: 'M16 5.2a3.4 3.4 0 0 1 0 6.6M17.5 15.2a6.2 6.2 0 0 1 3.7 5.3' }],
 	],
 
+	// The explain button: a round i. Everything the student does not need in
+	// order to proceed hides behind it.
+	info: [
+		['circle', { cx: 12, cy: 12, r: 9 }],
+		['path', { d: 'M12 11v5.2' }],
+		['circle', { cx: 12, cy: 7.8, r: 0.6, fill: 'currentColor' }],
+	],
+
 	'sound-on': [
 		['path', { d: 'M4 9.5h3.2L12 5.5v13L7.2 14.5H4z' }],
 		['path', { d: 'M16 9.2a4 4 0 0 1 0 5.6M18.6 6.6a7.6 7.6 0 0 1 0 10.8' }],
@@ -373,6 +471,17 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 	'sound-off': [
 		['path', { d: 'M4 9.5h3.2L12 5.5v13L7.2 14.5H4z' }],
 		['path', { d: 'M16.5 10 21 14.5M21 10l-4.5 4.5' }],
+	],
+
+	/* ---- the lesson builder ---- */
+
+	plus: [['path', { d: 'M12 5v14M5 12h14' }]],
+
+	// A bin with its lid lifted a hair: reads as "remove" and not as "archive"
+	trash: [
+		['path', { d: 'M4.5 7h15M9.5 7V4.8h5V7' }],
+		['path', { d: 'M6.5 7l.9 12.2a1.6 1.6 0 0 0 1.6 1.3h6a1.6 1.6 0 0 0 1.6-1.3L17.5 7' }],
+		['path', { d: 'M10.2 11v5.5M13.8 11v5.5' }],
 	],
 
 	/* ---- the rating scale ---- */

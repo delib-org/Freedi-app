@@ -39,18 +39,60 @@ Chunk names disambiguate historical events, from before the tags existed:
 - `assets/firebase-*.js` → join, admin, agora
 - `_next/static/**` → sign, mass-consensus
 
+## Nothing reports from a developer's machine
+
+`isLocalRuntime()` in `packages/shared-utils/src/isLocalRuntime.ts` is the guard,
+and **every** `Sentry.init()` in the repo is behind it.
+
+A build flag alone was not enough. `import.meta.env.PROD` and
+`NODE_ENV === 'production'` answer "was this bundle built for production", which
+is a different question from "is this running on a developer's laptop", and the
+gap let four paths report locally:
+
+| path | why the build flag said production |
+|---|---|
+| Cloud Functions in the emulator | `functions/.env` carries the real `SENTRY_DSN` so `deploy:f:*` has one, and the emulator loads that same file |
+| chat SSR in the emulator | the `ssrChat` bundle is built once, with `PROD` baked in, and then runs locally |
+| `vite preview` | serves a production build from localhost |
+| `next start` | `NODE_ENV` is `production` there too |
+
+The 2026-09-06 `DEADLINE_EXCEEDED` issue in `agora.onProposalWritten` came from
+the first row: a wedged local Firestore emulator, filed into the production
+project as `environment: development`.
+
+The guard only trusts signals a deployment cannot produce:
+
+- a browser served from loopback, `.local`, or `.localhost`;
+- any `*_EMULATOR*` variable in the environment;
+- `NODE_ENV` of `development` or `test`;
+- a Node process with **no** deployment marker — Cloud Run sets `K_SERVICE`, the
+  functions framework sets `FUNCTION_TARGET`, Vercel sets `VERCEL`.
+
+That last one is the only inferential check, so if a new server target ever ships
+without one of those markers, its Sentry would go quiet. Set
+`SENTRY_ENABLE_IN_LOCAL=true` (or `VITE_SENTRY_ENABLE_IN_LOCAL=true` in a Vite
+app, whose env is inlined at build time and so has to be forwarded explicitly) to
+report from a local run on purpose.
+
+`functions/src/utils/sentry.ts` and `apps/chat/src/lib/sentry.ts` carry their own
+copies rather than importing this one: functions/ installs shared packages as
+packed tarballs, and chat's server bundle is externalised by adapter-node, so
+anything it imports must also exist in `functions/package.json`. Keep the three
+in step.
+
 ## Adding Sentry to a new Vite app
 
 ```ts
 // src/lib/sentry.ts
 import * as Sentry from '@sentry/browser';
-import { buildSentryOptions, isUsableDsn, setErrorReporter, type LogContext }
-  from '@freedi/shared-utils';
+import { buildSentryOptions, isLocalRuntime, isUsableDsn, setErrorReporter,
+  type LogContext } from '@freedi/shared-utils';
 
 export function initSentry(): void {
   const dsn = (import.meta.env.VITE_SENTRY_DSN_MYAPP as string | undefined)
     || (import.meta.env.VITE_SENTRY_DSN as string | undefined);
-  if (!import.meta.env.PROD || !isUsableDsn(dsn)) return;
+  const override = import.meta.env.VITE_SENTRY_ENABLE_IN_LOCAL === 'true';
+  if (isLocalRuntime(override) || !import.meta.env.PROD || !isUsableDsn(dsn)) return;
 
   Sentry.init(buildSentryOptions<Sentry.ErrorEvent>({
     dsn,

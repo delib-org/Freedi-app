@@ -134,7 +134,7 @@
 }
 
 .btn--primary {
-	color: #ffffff;
+	color: var(--btn-primary-text);
 	background: var(--btn-primary, #5f88e5);
 	border: 1px solid var(--btn-primary, #5f88e5);
 }

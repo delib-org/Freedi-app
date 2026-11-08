@@ -138,6 +138,11 @@ export interface FastlaneOptions {
 	/** The ordered stage list — passed through to agoraCreateSession */
 	stagePlan?: AgoraStagePlanItem[];
 	identity?: AgoraIdentityMode;
+	/**
+	 * Real names the bots type at the door, by index — the teacher-only
+	 * `agoraIdentities` docs the console lists. Absent means the bots skip it.
+	 */
+	realNames?: string[];
 	/** Bots' typed names in a `named` room (cycled); default "Bot N" */
 	botNames?: string[];
 }
@@ -198,6 +203,17 @@ export async function signInTeacher(sub: string): Promise<{ uid: string; idToken
 	if (!json.idToken || !json.localId) {
 		throw new Error('Teacher sign-in failed against the auth emulator');
 	}
+	// Agora is gated on approval (agoraCreateSession refuses a pending teacher):
+	// the fastlane teacher is approved the way the grandfather backfill does it.
+	await db.collection('agoraApprovedTeachers').doc(json.localId).set(
+		{
+			teacherId: json.localId,
+			via: 'granted',
+			checkedAt: Date.now(),
+			grant: { source: 'grandfathered', grantedAt: Date.now(), grantedBy: 'fastlane' },
+		},
+		{ merge: true },
+	);
 
 	return { uid: json.localId, idToken: json.idToken };
 }
@@ -382,7 +398,11 @@ export async function fastlane(options: FastlaneOptions = {}): Promise<FastlaneR
 		const botName = options.botNames?.[index % options.botNames.length] ?? `Bot ${index + 1}`;
 		const joined = await callable<{ participantId: string; anonName: string }>(
 			'agoraJoinSession',
-			{ code, ...(options.identity === 'named' ? { displayName: botName } : {}) },
+			{
+				code,
+				...(options.identity === 'named' ? { displayName: botName } : {}),
+				...(options.realNames?.[index] ? { realName: options.realNames[index] } : {}),
+			},
 			bot.idToken,
 		);
 		const campPosition = CAMP_POSITIONS[index % CAMP_POSITIONS.length];
@@ -494,7 +514,7 @@ export async function positionStudent(
  * Write a proposal FOR a real (browser) student.
  *
  * The game gates the classmates' side of the deliberation behind having
- * proposed yourself ("write first — then light the lantern"), which is right
+ * proposed yourself ("write first — then add your answer"), which is right
  * pedagogically and means a student who has not written cannot see the rate,
  * feedback or helped screens at all. Handing them a proposal opens every one
  * of them without a single keystroke.
@@ -529,4 +549,9 @@ export async function proposeAs(sessionId: string, uid: string, text?: string): 
 /** The teacher's own board for this session — handy alongside a student view. */
 export function teacherUrl(sessionId: string): string {
 	return `${VITE_HOST}/#!/teach/session/${sessionId}`;
+}
+
+/** The projector — what the class sees on the wall, with no seat behind it. */
+export function projectorUrl(sessionId: string): string {
+	return `${VITE_HOST}/#!/teach/screen/${sessionId}`;
 }

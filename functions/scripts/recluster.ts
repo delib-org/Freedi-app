@@ -43,7 +43,8 @@ if (!getApps().length) {
 	} else if (process.env.FIRESTORE_EMULATOR_HOST) {
 		// Emulator mode — admin SDK auto-uses the emulator from FIRESTORE_EMULATOR_HOST,
 		// no real credentials needed.
-		const projectId = process.env.GCLOUD_PROJECT ?? process.env.GOOGLE_CLOUD_PROJECT ?? 'freedi-test';
+		const projectId =
+			process.env.GCLOUD_PROJECT ?? process.env.GOOGLE_CLOUD_PROJECT ?? 'freedi-test';
 		initializeApp({ projectId });
 		console.info(`Initialized Firebase Admin against emulator (project: ${projectId}).`);
 	} else {

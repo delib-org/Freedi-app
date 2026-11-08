@@ -34,17 +34,22 @@ if (process.env.FIRESTORE_EMULATOR_HOST) {
 	console.error('FIRESTORE_EMULATOR_HOST is set — this is a production-repair tool. Aborting.');
 	process.exit(1);
 }
-const questionId = process.argv.find((a) => !a.startsWith('--') && a !== process.argv[0] && a !== process.argv[1]);
+const questionId = process.argv.find(
+	(a) => !a.startsWith('--') && a !== process.argv[0] && a !== process.argv[1],
+);
 const EXECUTE = process.argv.includes('--execute');
 const project = process.env.GCLOUD_PROJECT;
 if (!questionId || !project) {
-	console.error('Usage: GCLOUD_PROJECT=<proj> npx tsx scripts/cleanupProdSynthesisArtifacts.ts <questionId> [--execute]');
+	console.error(
+		'Usage: GCLOUD_PROJECT=<proj> npx tsx scripts/cleanupProdSynthesisArtifacts.ts <questionId> [--execute]',
+	);
 	process.exit(1);
 }
 if (getApps().length === 0) initializeApp({ projectId: project });
 
 const db = getFirestore();
-const short = (s: string, n = 70) => ((s ?? '').length > n ? (s ?? '').slice(0, n) + '…' : s ?? '');
+const short = (s: string, n = 70) =>
+	(s ?? '').length > n ? (s ?? '').slice(0, n) + '…' : (s ?? '');
 
 interface Doc {
 	id: string;
@@ -66,7 +71,9 @@ const isDerived = (r: Doc): boolean =>
 	!!r.liveSynthOrigin;
 
 async function main(): Promise<void> {
-	console.info(`\n# Synthesis cleanup — project=${project} question=${questionId} ${EXECUTE ? '(EXECUTE)' : '(DRY-RUN)'}\n`);
+	console.info(
+		`\n# Synthesis cleanup — project=${project} question=${questionId} ${EXECUTE ? '(EXECUTE)' : '(DRY-RUN)'}\n`,
+	);
 
 	const snap = await db
 		.collection('statements')
@@ -75,6 +82,7 @@ async function main(): Promise<void> {
 		.get();
 	const rows: Doc[] = snap.docs.map((d) => {
 		const x = d.data();
+
 		return {
 			id: x.statementId ?? d.id,
 			statement: x.statement ?? '',
@@ -94,9 +102,13 @@ async function main(): Promise<void> {
 	const trueRaw = rows.filter((r) => !isDerived(r));
 
 	console.info(`Total option-children: ${rows.length} | true raw options: ${trueRaw.length}`);
-	console.info(`\n## (1) Synthesis-output docs to HIDE (reversible — sets hide=true + archivedByCleanup=true): ${toDelete.length}`);
+	console.info(
+		`\n## (1) Synthesis-output docs to HIDE (reversible — sets hide=true + archivedByCleanup=true): ${toDelete.length}`,
+	);
 	const withVotes = toDelete.filter((r) => (r.evaluation?.numberOfEvaluators ?? 0) > 0);
-	console.info(`    of which carry user votes (preserved — hidden, not deleted): ${withVotes.length}`);
+	console.info(
+		`    of which carry user votes (preserved — hidden, not deleted): ${withVotes.length}`,
+	);
 	const day = (r: Doc) => (r.createdAt ? new Date(r.createdAt).toISOString().slice(0, 10) : '?');
 	const byDay: Record<string, number> = {};
 	toDelete.forEach((r) => (byDay[day(r)] = (byDay[day(r)] ?? 0) + 1));
@@ -111,11 +123,14 @@ async function main(): Promise<void> {
 			);
 		});
 
-	console.info(`\n## (2) Orphaned hidden options to UN-HIDE (set hide=false): ${orphanedHidden.length}`);
+	console.info(
+		`\n## (2) Orphaned hidden options to UN-HIDE (set hide=false): ${orphanedHidden.length}`,
+	);
 	orphanedHidden.forEach((r) => console.info(`    + "${short(r.statement, 90)}"`));
 
 	if (!EXECUTE) {
 		console.info(`\n(DRY-RUN — nothing written. Re-run with --execute to apply.)`);
+
 		return;
 	}
 
@@ -129,14 +144,19 @@ async function main(): Promise<void> {
 		const batch = db.batch();
 		for (const op of ops.slice(i, i + 400)) {
 			const ref = db.collection('statements').doc(op.id);
-			if (op.kind === 'hide') batch.update(ref, { hide: true, archivedByCleanup: true, lastUpdate: now });
+			if (op.kind === 'hide')
+				batch.update(ref, { hide: true, archivedByCleanup: true, lastUpdate: now });
 			else batch.update(ref, { hide: false, lastUpdate: now });
 		}
 		await batch.commit();
 		console.info(`  committed batch ${i / 400 + 1} (${Math.min(400, ops.length - i)} ops)`);
 	}
-	console.info(`\nDONE. Hid ${toDelete.length} derived docs (archivedByCleanup=true), un-hid ${orphanedHidden.length} options.`);
-	console.info(`To reverse the hide later: set hide=false where archivedByCleanup===true under this question.`);
+	console.info(
+		`\nDONE. Hid ${toDelete.length} derived docs (archivedByCleanup=true), un-hid ${orphanedHidden.length} options.`,
+	);
+	console.info(
+		`To reverse the hide later: set hide=false where archivedByCleanup===true under this question.`,
+	);
 }
 
 main()

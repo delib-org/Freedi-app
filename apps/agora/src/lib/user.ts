@@ -1,3 +1,4 @@
+import { clearTeacherNav } from './teacherNav';
 import m from 'mithril';
 import {
 	auth,
@@ -11,10 +12,12 @@ import {
 	getRedirectResult,
 	linkWithPopup,
 	onAuthStateChanged,
+	signOut,
 	User,
 } from './firebase';
 import type { FirebaseError } from './firebase';
 import { classifySignInFailure } from './signInErrors';
+import { resetLibrary } from './scenarioLibrary/state';
 
 /**
  * Identity tiers:
@@ -58,6 +61,17 @@ export function getUserState(): Readonly<UserState> {
 /** Wait for Firebase to settle auth (persisted session or null) */
 export function waitForAuthReady(): Promise<void> {
 	return authReadyPromise;
+}
+
+/**
+ * Sign the teacher out and forget what the last account saw (the nav cache and
+ * the scenario library). Nothing else: the view closes its menu and routes.
+ * Errors propagate so the caller can say the sign-out did not complete.
+ */
+export async function signOutTeacher(): Promise<void> {
+	await signOut(auth);
+	clearTeacherNav();
+	resetLibrary();
 }
 
 /**
@@ -197,6 +211,7 @@ export function initAuth(): void {
 	let authStateSettled = false;
 
 	onAuthStateChanged(auth, (user: User | null) => {
+		if (state.user?.uid !== user?.uid) clearTeacherNav();
 		state.user = user;
 		state.loading = false;
 		state.tier = user && !user.isAnonymous ? 2 : 0;

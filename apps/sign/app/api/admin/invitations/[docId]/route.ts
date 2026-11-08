@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId, getVerifiedDisplayName } from '@/lib/auth/requestIdentity';
 import { getFirebaseAdmin, getAuthAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess, generateSecureToken } from '@/lib/utils/adminAccess';
 import {
 	Collections,
@@ -26,7 +26,7 @@ export async function GET(
 ): Promise<NextResponse> {
 	try {
 		const { docId } = await params;
-		const userId = getUserIdFromCookie(request.headers.get('cookie'));
+		const userId = await getVerifiedUserId(request);
 
 		if (!userId) {
 			return NextResponse.json(
@@ -86,8 +86,8 @@ export async function POST(
 ): Promise<NextResponse> {
 	try {
 		const { docId } = await params;
-		const userId = getUserIdFromCookie(request.headers.get('cookie'));
-		const userDisplayName = getUserDisplayNameFromCookie(request.headers.get('cookie')) || 'Unknown';
+		const userId = await getVerifiedUserId(request);
+		const userDisplayName = (await getVerifiedDisplayName(request)) || 'Unknown';
 
 		if (!userId) {
 			return NextResponse.json(

@@ -5,6 +5,7 @@ import { Collections, Statement, StatementDeletion } from '@freedi/shared-types'
 import { db } from './index';
 import { logError } from './utils/errorHandling';
 import { verifyAuthToken } from './utils/httpAuth';
+import { treeScopeQuery } from './services/statement-tree-query';
 
 /** Scope of a bulk fetch: direct children only, or the whole subtree. */
 type BulkFetchMode = 'direct' | 'descendants';
@@ -90,12 +91,7 @@ export async function getBulkStatements(req: Request, res: Response): Promise<vo
 			return;
 		}
 
-		let query =
-			mode === 'direct'
-				? db.collection(Collections.statements).where('parentId', '==', rootId)
-				: db.collection(Collections.statements).where('parents', 'array-contains', rootId);
-
-		query = query.orderBy('__name__').limit(pageSize);
+		let query = treeScopeQuery(db, rootId, mode).orderBy('__name__').limit(pageSize);
 		if (cursorId) {
 			query = query.startAfter(cursorId);
 		}

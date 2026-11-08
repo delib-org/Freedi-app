@@ -1,0 +1,67 @@
+// Design tokens for Tables. Definitions live here; components only use var(--token).
+// Palette and spacing follow the Join family (docs/guides/design-guide.md).
+// Contrast: every text/background pair below is >= 4.5:1 (WCAG AA).
+
+:root {
+  // surfaces and text
+  --paper: #faf6ef;
+  --paper-soft: #f1e9dc;
+  --paper-line: #d6c8b0;
+  --card: #ffffff;
+  --ink: #1c1917;
+  --ink-muted: #4a433c;
+  --ink-soft: #6b6259;
+  --border-medium: #8a7a5e;
+
+  // brand and states
+  --brand: #1f5895;
+  --brand-ink: #ffffff;
+  --brand-soft: #e4edf7;
+  --danger: #9a2a1e;
+  --danger-soft: #fbe6e3;
+  --success: #1d6b53;
+  --success-soft: #e1f1ea;
+  --warning: #8a4a0a;
+  --warning-soft: #fbeedd;
+
+  // the two poles of the position axis (same hues as the classroom slider)
+  --side-a: #c14a25;
+  --side-a-soft: #fbece4;
+  --side-b: #4a3fa0;
+  --side-b-soft: #e3e0f1;
+  --side-center: #6b6259;
+
+  // spacing: 8-point grid
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --padding: 1rem;
+  --padding-large: 2rem;
+
+  // shape and depth
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-full: 9999px;
+  --shadow-sm: 0 2px 6px rgba(28, 25, 23, 0.08), 0 1px 2px rgba(28, 25, 23, 0.04);
+
+  // type
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.375rem;
+  --font-size-2xl: 1.75rem;
+  --font-size-display: 3.5rem;
+  --font-weight-normal: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-height-normal: 1.55;
+
+  // layout
+  --content-width: 40rem;
+  --content-width-wide: 64rem;
+  --tap-target: 48px;
+  --focus-ring: 3px solid var(--brand);
+  --transition: 150ms ease;
+}

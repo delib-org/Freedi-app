@@ -63,11 +63,11 @@
 
 		.iconContainer {
 			background-color: var(--btn-primary);
-			color: var(--white);
+			color: var(--btn-primary-text);
 
 			svg {
-				color: var(--white);
-				fill: var(--white);
+				color: var(--btn-primary-text);
+				fill: var(--btn-primary-text);
 			}
 		}
 

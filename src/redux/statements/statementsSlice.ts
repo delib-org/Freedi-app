@@ -10,6 +10,7 @@ import {
 } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 import { REDUX } from '@/constants/common';
+import { selectUserFeedActivity, type UserFeedState } from '@/redux/userFeed/userFeedSlice';
 import {
 	createStatementByIdSelector,
 	createStatementsByParentSelector,
@@ -107,6 +108,11 @@ function pruneStatements(statements: Statement[], protectedTopIds?: Set<string>)
 function protectedTreeTopIds(state: StatementsState): Set<string> {
 	return new Set(Object.values(state.fullyLoadedScopes).map((scope) => scope.treeTopId));
 }
+
+/** Fields a statement may lack — the only ones `clearStatementFields` can drop. */
+export type OptionalStatementField = {
+	[K in keyof Statement]-?: undefined extends Statement[K] ? K : never;
+}[keyof Statement];
 
 export const statementsSlice = createSlice({
 	name: 'statements',
@@ -229,6 +235,22 @@ export const statementsSlice = createSlice({
 					statementId: action.payload,
 				});
 			}
+		},
+		/**
+		 * Drops top-level fields from one statement. A Firestore `deleteField()`
+		 * never reaches Redux through `setStatement` (it merges keys), so the
+		 * writer clears the field here too.
+		 */
+		clearStatementFields: (
+			state,
+			action: PayloadAction<{ statementId: string; fields: OptionalStatementField[] }>,
+		) => {
+			const { statementId, fields } = action.payload;
+			const statement = state.statements.find((s) => s.statementId === statementId);
+			if (!statement) return;
+			fields.forEach((field) => {
+				delete statement[field];
+			});
 		},
 		setStatementSubscription: (state, action: PayloadAction<StatementSubscription>) => {
 			try {
@@ -462,6 +484,7 @@ export const {
 	setStatementSubscription,
 	setStatementsSubscription,
 	deleteStatement,
+	clearStatementFields,
 	updateStatementTop,
 	deleteSubscribedStatement,
 	setStatementOrder,
@@ -540,12 +563,14 @@ export const statementsRoomSolutions =
  * - Statement's lastChildUpdate (from full Statement in Redux)
  * - Most recent timestamp from lastSubStatements
  * - Subscription's lastUpdate
+ * - The home activity feed (userFeed.lastActivity) for top-level discussions
  */
 function getLatestChildActivity(
 	sub: StatementSubscription,
 	statementsMap: Map<string, Statement>,
+	feedActivity: Record<string, number>,
 ): number {
-	let latest = sub.lastUpdate || 0;
+	let latest = Math.max(sub.lastUpdate || 0, feedActivity[sub.statementId] || 0);
 
 	const statement = statementsMap.get(sub.statementId);
 	if (statement?.lastChildUpdate) {
@@ -561,16 +586,21 @@ function getLatestChildActivity(
 	return latest;
 }
 
+type StateWithFeed = { statements: StatementsState } & Partial<{ userFeed: UserFeedState }>;
+
 export const statementsSubscriptionsSelector = createSelector(
 	[
-		(state: { statements: StatementsState }) => state.statements.statementSubscription,
-		(state: { statements: StatementsState }) => state.statements.statements,
+		(state: StateWithFeed) => state.statements.statementSubscription,
+		(state: StateWithFeed) => state.statements.statements,
+		(state: StateWithFeed) => selectUserFeedActivity(state),
 	],
-	(statementSubscription, statements) => {
+	(statementSubscription, statements, feedActivity) => {
 		const statementsMap = new Map(statements.map((s) => [s.statementId, s]));
 
 		return [...statementSubscription].sort(
-			(a, b) => getLatestChildActivity(b, statementsMap) - getLatestChildActivity(a, statementsMap),
+			(a, b) =>
+				getLatestChildActivity(b, statementsMap, feedActivity) -
+				getLatestChildActivity(a, statementsMap, feedActivity),
 		);
 	},
 );
@@ -590,17 +620,19 @@ export const statementSelector =
 
 export const topSubscriptionsSelector = createSelector(
 	[
-		(state: { statements: StatementsState }) => state.statements.statementSubscription,
-		(state: { statements: StatementsState }) => state.statements.statements,
+		(state: StateWithFeed) => state.statements.statementSubscription,
+		(state: StateWithFeed) => state.statements.statements,
+		(state: StateWithFeed) => selectUserFeedActivity(state),
 	],
-	(statementSubscription, statements) => {
+	(statementSubscription, statements, feedActivity) => {
 		const statementsMap = new Map(statements.map((s) => [s.statementId, s]));
 
 		return statementSubscription
 			.filter((sub: StatementSubscription) => (sub.parentId || sub.statement.parentId) === 'top')
 			.sort(
 				(a, b) =>
-					getLatestChildActivity(b, statementsMap) - getLatestChildActivity(a, statementsMap),
+					getLatestChildActivity(b, statementsMap, feedActivity) -
+					getLatestChildActivity(a, statementsMap, feedActivity),
 			);
 	},
 );

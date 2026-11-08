@@ -15,6 +15,7 @@ import {
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { db } from '.';
+import { requireStatementAdmin } from './utils/httpAuth';
 
 interface ParticipantWithDemographics {
 	userId: string;
@@ -26,10 +27,8 @@ interface ParticipantWithDemographics {
 
 interface CreateRoomAssignmentsRequest {
 	statementId: string;
-	topParentId: string;
 	roomSize: number;
 	scrambleByQuestions: string[];
-	adminId: string;
 	adminName?: string;
 }
 
@@ -183,17 +182,32 @@ function calculateBalanceScore(
 /**
  * HTTP endpoint to create room assignments
  */
-export async function createRoomAssignments(req: Request, res: Response): Promise<void> {
+export async function createRoomAssignments(
+	req: Request,
+	res: Response,
+	uid: string,
+): Promise<void> {
 	try {
-		const { statementId, topParentId, roomSize, scrambleByQuestions, adminId, adminName } =
+		const { statementId, roomSize, scrambleByQuestions, adminName } =
 			req.body as CreateRoomAssignmentsRequest;
 
 		// Validate input
-		if (!statementId || !topParentId || !roomSize || !adminId) {
+		if (!statementId || !roomSize) {
 			res.status(400).json({ error: 'Missing required fields' });
 
 			return;
 		}
+
+		const statement = await requireStatementAdmin(
+			res,
+			uid,
+			statementId,
+			'roomAssignment.createRoomAssignments',
+		);
+		if (!statement) return;
+
+		// Read from the statement: the body's topParentId is the caller's claim.
+		const topParentId = statement.topParentId || statementId;
 
 		// Ensure scrambleByQuestions is an array (can be empty for random assignment)
 		const questionsToScramble = scrambleByQuestions || [];
@@ -349,7 +363,7 @@ export async function createRoomAssignments(req: Request, res: Response): Promis
 			scrambleByQuestions: questionsToScramble,
 			createdAt: now,
 			lastUpdate: now,
-			createdBy: { uid: adminId, displayName: adminName || 'Admin' },
+			createdBy: { uid, displayName: adminName || 'Admin' },
 			status: 'active',
 			totalRooms: scrambleResult.totalRooms,
 			totalParticipants: scrambleResult.totalParticipants,
@@ -414,7 +428,11 @@ export async function createRoomAssignments(req: Request, res: Response): Promis
 /**
  * HTTP endpoint to notify participants of their room assignments
  */
-export async function notifyRoomParticipants(req: Request, res: Response): Promise<void> {
+export async function notifyRoomParticipants(
+	req: Request,
+	res: Response,
+	uid: string,
+): Promise<void> {
 	try {
 		const { settingsId } = req.body as { settingsId: string };
 
@@ -433,6 +451,14 @@ export async function notifyRoomParticipants(req: Request, res: Response): Promi
 
 			return;
 		}
+
+		const admin = await requireStatementAdmin(
+			res,
+			uid,
+			(settingsDoc.data() as RoomSettings).statementId,
+			'roomAssignment.notifyRoomParticipants',
+		);
+		if (!admin) return;
 
 		// Get all participants who haven't been notified
 		const participantsSnapshot = await db
@@ -494,7 +520,7 @@ export async function notifyRoomParticipants(req: Request, res: Response): Promi
 /**
  * HTTP endpoint to get room assignments for a statement
  */
-export async function getRoomAssignments(req: Request, res: Response): Promise<void> {
+export async function getRoomAssignments(req: Request, res: Response, uid: string): Promise<void> {
 	try {
 		const { statementId } = req.query as { statementId: string };
 
@@ -503,6 +529,15 @@ export async function getRoomAssignments(req: Request, res: Response): Promise<v
 
 			return;
 		}
+
+		// Returns every participant's demographics, so it is an admin view.
+		const statement = await requireStatementAdmin(
+			res,
+			uid,
+			statementId,
+			'roomAssignment.getRoomAssignments',
+		);
+		if (!statement) return;
 
 		// Get active room settings for this statement
 		const settingsSnapshot = await db
@@ -553,12 +588,12 @@ export async function getRoomAssignments(req: Request, res: Response): Promise<v
 /**
  * HTTP endpoint to get a user's room assignment
  */
-export async function getMyRoomAssignment(req: Request, res: Response): Promise<void> {
+export async function getMyRoomAssignment(req: Request, res: Response, uid: string): Promise<void> {
 	try {
-		const { statementId, userId } = req.query as { statementId: string; userId: string };
+		const { statementId } = req.query as { statementId: string };
 
-		if (!statementId || !userId) {
-			res.status(400).json({ error: 'Missing statementId or userId' });
+		if (!statementId) {
+			res.status(400).json({ error: 'Missing statementId' });
 
 			return;
 		}
@@ -581,7 +616,7 @@ export async function getMyRoomAssignment(req: Request, res: Response): Promise<
 		const settings = settingsSnapshot.docs[0].data() as RoomSettings;
 
 		// Get user's assignment using composite ID
-		const participantId = `${settings.settingsId}--${userId}`;
+		const participantId = `${settings.settingsId}--${uid}`;
 		const participantDoc = await db
 			.collection(Collections.roomParticipants)
 			.doc(participantId)
@@ -608,12 +643,16 @@ export async function getMyRoomAssignment(req: Request, res: Response): Promise<
 /**
  * HTTP endpoint to delete room assignments
  */
-export async function deleteRoomAssignments(req: Request, res: Response): Promise<void> {
+export async function deleteRoomAssignments(
+	req: Request,
+	res: Response,
+	uid: string,
+): Promise<void> {
 	try {
-		const { settingsId, adminId } = req.body as { settingsId: string; adminId: string };
+		const { settingsId } = req.body as { settingsId: string };
 
-		if (!settingsId || !adminId) {
-			res.status(400).json({ error: 'Missing settingsId or adminId' });
+		if (!settingsId) {
+			res.status(400).json({ error: 'Missing settingsId' });
 
 			return;
 		}
@@ -627,6 +666,14 @@ export async function deleteRoomAssignments(req: Request, res: Response): Promis
 
 			return;
 		}
+
+		const admin = await requireStatementAdmin(
+			res,
+			uid,
+			(settingsDoc.data() as RoomSettings).statementId,
+			'roomAssignment.deleteRoomAssignments',
+		);
+		if (!admin) return;
 
 		// Delete all related documents using batch
 		const batch = db.batch();

@@ -1,27 +1,33 @@
-import type { ReactElement } from 'react';
+import { lazy, Suspense, type ReactElement } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { GameProvider, useGame } from './state/GameContext';
 import { useUser } from './lib/user';
 import SeaStage from './components/SeaStage';
+import FeedbackDock from './components/FeedbackDock';
 import Intro from './pages/Intro';
 import Compass from './pages/Compass';
 import MapPage from './pages/MapPage';
 import Voyage from './pages/Voyage';
 import Summary from './pages/Summary';
-import Admin from './pages/Admin';
 import Privacy from './pages/Privacy';
 import Parties from './pages/Parties';
 import Elders from './pages/Elders';
+import { useT } from './i18n/useT';
+
+// Admin is lazy: it pulls in seed.ts and with it every default island, elder,
+// counsel line and the party-stance research — none of which a player needs.
+const Admin = lazy(() => import('./pages/Admin'));
 
 /** Routes that need a signed-in user (everything except the intro). */
 function Protected({ children }: { children: ReactElement }) {
 	const { user, loading } = useUser();
 	const game = useGame();
+	const { t } = useT();
 
 	if (loading || game.loading) {
 		return (
 			<div className="page justify-center">
-				<p className="panel">מרימים את המפרשים…</p>
+				<p className="panel">{t('app.loading')}</p>
 			</div>
 		);
 	}
@@ -31,9 +37,11 @@ function Protected({ children }: { children: ReactElement }) {
 }
 
 export default function App() {
+	const { dir } = useT();
+
 	return (
 		<GameProvider>
-			<main dir="rtl">
+			<main dir={dir}>
 				<div className="ocean-bg" />
 				<SeaStage />
 				<div className="vignette" />
@@ -94,12 +102,18 @@ export default function App() {
 						path="/admin"
 						element={
 							<Protected>
-								<Admin />
+								<Suspense fallback={null}>
+									<Admin />
+								</Suspense>
 							</Protected>
 						}
 					/>
 					<Route path="*" element={<Navigate to="/" replace />} />
 				</Routes>
+				{/* Last child of <main>, so it is the last Tab stop on every page —
+				    and outside <Routes>, so a half-written letter survives a
+				    navigation. */}
+				<FeedbackDock />
 			</main>
 		</GameProvider>
 	);

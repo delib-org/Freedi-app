@@ -1,0 +1,245 @@
+import { canWritePlanItem } from './stageAccess';
+import { t } from '../i18n';
+import { AgoraStage, questionKindOf, type AgoraStagePlanItem } from '@freedi/shared-types';
+
+/**
+ * A place in the village. Three are fixed — the library (learning scenes),
+ * the study house (the meeting point) and the council (the scoreboard, the
+ * vote, the decision) — and every QUESTION of the plan, the deliberation
+ * included, has a booth of its own: `booth:<itemId>`. The plan item's stable
+ * id stays the data identity; the place is presentation only.
+ */
+export type VillagePlace = 'library' | 'challenge' | 'council' | `booth:${string}`;
+
+/** What a booth asks for — the writing desk's copy and the pavilion's colour follow it */
+export type VillageBoothKind = 'story' | 'needs' | 'vision' | 'open' | 'proposal' | 'linked';
+
+export interface VillageBooth {
+	itemId: string;
+	place: VillagePlace;
+	label: string;
+	kind: VillageBoothKind;
+	/** Position in the plan, so the world can order the booths as the lesson runs */
+	index: number;
+	/** The teacher has reached this question — its board and desk are usable */
+	open: boolean;
+	/** The question the room is on right now — the pennant flies here */
+	current: boolean;
+}
+
+/** Who moves students between stations — see `AgoraSession.villageNavigation` */
+export type VillageNavigation = 'teacher' | 'free';
+
+export interface VillagePlaceStatus {
+	/** The student may walk in: the room has reached it (the meeting point and the council always) */
+	open: boolean;
+	/** The room is here right now */
+	current: boolean;
+	/** The lesson uses this place at all — a library with no scenes stays off the map */
+	inPlan: boolean;
+}
+
+/**
+ * The fixed places' state for the village map. The council holds the
+ * scoreboard, so it is always open; the library opens with its first scene.
+ * The study house stands only when the plan holds something there — the
+ * lobby alone does not count, it is where the class waits, not a station —
+ * so a lesson that never set a place for it has no locked building on the hill.
+ */
+export function villageFixedPlaces(
+	plan: readonly AgoraStagePlanItem[],
+	currentIndex: number,
+): Record<'library' | 'challenge' | 'council', VillagePlaceStatus> {
+	const status = (place: VillagePlace): VillagePlaceStatus => {
+		const indices = plan.flatMap((item, index) =>
+			villagePlace(item) === place && item.stage !== AgoraStage.lobby ? [index] : [],
+		);
+
+		return {
+			open: indices.some((index) => index <= currentIndex),
+			current: indices.includes(currentIndex),
+			inPlan: indices.length > 0,
+		};
+	};
+
+	return {
+		library: status('library'),
+		challenge: status('challenge'),
+		council: { ...status('council'), open: true, inPlan: true },
+	};
+}
+
+export function boothPlace(itemId: string): VillagePlace {
+	return `booth:${itemId}`;
+}
+
+export function isBoothPlace(place: string): place is `booth:${string}` {
+	return place.startsWith('booth:');
+}
+
+/** The item a booth place stands for, or null for a fixed place */
+export function boothItemId(place: string): string | null {
+	return isBoothPlace(place) ? place.slice('booth:'.length) : null;
+}
+
+/** Where the teacher can call the whole class: the room's station, or any place by name */
+export type VillageCallPlace = 'current' | 'council' | 'library' | 'challenge' | `booth:${string}`;
+
+/**
+ * For the teacher's own class view only: a call older than this, met on first
+ * render, is history rather than an order. A STUDENT never judges a call by
+ * its age — `lib/flows/summons.ts` resolves it by stamps the device remembers,
+ * because the students a call is for are exactly the ones who meet it late.
+ */
+export const CALL_FRESH_MS = 120000;
+
+/**
+ * What a student's walk does when it ends at a called place: at a booth,
+ * stand at its station (the question comes on screen, the guide's bubble
+ * says what to do); at the council, open it; at any other fixed place, put
+ * the matching opened item on screen and only look.
+ */
+export function callArrival(place: string): 'station' | 'council' | 'place' {
+	if (isBoothPlace(place)) return 'station';
+	if (place === 'council') return 'council';
+
+	return 'place';
+}
+
+/**
+ * The opened plan item a called place stands for — a booth's own question,
+ * or the latest opened item that lives in a fixed building — so the flat
+ * view can follow a call too, and the stage strip agrees with the walker.
+ */
+export function calledItemIndex(
+	place: string,
+	plan: readonly AgoraStagePlanItem[],
+	currentIndex: number,
+): number {
+	const boothId = boothItemId(place);
+	let index = -1;
+	plan.forEach((item, i) => {
+		if (i > currentIndex) return;
+		if (boothId !== null ? item.itemId === boothId : villagePlace(item) === place) index = i;
+	});
+
+	return index;
+}
+
+export function villageBoothKind(item: AgoraStagePlanItem): VillageBoothKind | null {
+	if (item.stage === AgoraStage.question) return questionKindOf(item);
+	if (item.stage === AgoraStage.deliberation) return 'proposal';
+	// A task in another app stands as a booth too; it has no desk (`villageDesk` is null)
+	if (item.stage === AgoraStage.linked) return 'linked';
+
+	return null;
+}
+
+export function villagePlace(item: AgoraStagePlanItem): VillagePlace {
+	if (villageBoothKind(item) !== null) return boothPlace(item.itemId);
+	switch (item.stage) {
+		// The library is the house of knowledge: the film, the period, the
+		// teacher's videos and the background materials.
+		case AgoraStage.framing:
+		case AgoraStage.valueIdentification:
+			return 'library';
+		// The two voices of the era stand at the study house: that is where you
+		// meet people. (A presentation place only — no stored value changes.)
+		case AgoraStage.perspectives:
+		case AgoraStage.needs:
+		case AgoraStage.positioning:
+			return 'challenge';
+		case AgoraStage.voting:
+		case AgoraStage.results:
+		case AgoraStage.ended:
+			return 'council';
+		default:
+			return 'challenge';
+	}
+}
+
+/**
+ * Every booth of this lesson, in plan order — one per question, whether the
+ * teacher has reached it or not. A booth ahead of the room stands in the
+ * village closed, so the class can see the whole road; it opens when the
+ * teacher gets there.
+ */
+export function villageBooths(
+	plan: readonly AgoraStagePlanItem[],
+	currentIndex: number,
+	labelOf: (item: AgoraStagePlanItem) => string,
+): VillageBooth[] {
+	const booths: VillageBooth[] = [];
+	plan.forEach((item, index) => {
+		const kind = villageBoothKind(item);
+		if (kind === null) return;
+		booths.push({
+			itemId: item.itemId,
+			place: boothPlace(item.itemId),
+			label: item.title?.trim() || labelOf(item),
+			kind,
+			index,
+			open: index <= currentIndex,
+			current: index === currentIndex,
+		});
+	});
+
+	return booths;
+}
+
+/** The iframe may request entry, never change a stage or open a future item. */
+export function acceptsVillageEntry(
+	payload: unknown,
+	plan: readonly AgoraStagePlanItem[],
+	currentIndex: number,
+	viewingIndex: number,
+): boolean {
+	if (!payload || typeof payload !== 'object' || !('type' in payload) || !('itemId' in payload))
+		return false;
+
+	return (
+		payload.type === 'agora-village-enter' &&
+		typeof payload.itemId === 'string' &&
+		viewingIndex >= 0 &&
+		viewingIndex <= currentIndex &&
+		plan[viewingIndex]?.itemId === payload.itemId
+	);
+}
+
+/**
+ * The desk follows the item, so another question in the same building has its
+ * own paper. Its header and prompt are the student's language, addressed in
+ * the plural like the rest of the app (`village.desk.<kind>.label|prompt`).
+ */
+export function villageDesk(
+	item: AgoraStagePlanItem | undefined,
+): { label: string; prompt: string } | null {
+	if (!item || (item.stage !== AgoraStage.question && item.stage !== AgoraStage.deliberation))
+		return null;
+	const kind: VillageBoothKind =
+		item.stage === AgoraStage.question ? questionKindOf(item) : 'proposal';
+
+	return {
+		label: t(`village.desk.${kind}.label`),
+		prompt: t(`village.desk.${kind}.prompt`),
+	};
+}
+
+export function acceptsVillageWrite(
+	payload: unknown,
+	plan: readonly AgoraStagePlanItem[],
+	currentIndex: number,
+	viewingIndex: number,
+): boolean {
+	if (!payload || typeof payload !== 'object' || !('type' in payload) || !('itemId' in payload))
+		return false;
+
+	return (
+		payload.type === 'agora-village-write' &&
+		typeof payload.itemId === 'string' &&
+		canWritePlanItem(plan, currentIndex, viewingIndex) &&
+		viewingIndex >= 0 &&
+		plan[viewingIndex]?.itemId === payload.itemId &&
+		villageDesk(plan[viewingIndex]) !== null
+	);
+}

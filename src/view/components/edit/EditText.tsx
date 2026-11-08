@@ -28,6 +28,8 @@ export interface EditTextProps {
 	onEditEnd?: () => void;
 	/** Pass the full statement object to enable paragraph rendering */
 	statementObj?: Statement;
+	/** Read-only title shown instead of the stored value (editing still uses the stored value). */
+	displayValue?: string;
 }
 
 const EditText: FC<EditTextProps> = ({
@@ -51,6 +53,7 @@ const EditText: FC<EditTextProps> = ({
 	onEditStart,
 	onEditEnd,
 	statementObj,
+	displayValue,
 }) => {
 	const [isEditing, setIsEditing] = useState(false);
 	const [primaryText, setPrimaryText] = useState(value);
@@ -188,10 +191,14 @@ const EditText: FC<EditTextProps> = ({
 				{variant === 'description' ? (
 					<Text description={secondaryText} fontSize={fontSize} statementObj={statementObj} />
 				) : variant === 'statement' ? (
-					<Text statement={primaryText} fontSize={fontSize} statementObj={statementObj} />
+					<Text
+						statement={displayValue ?? primaryText}
+						fontSize={fontSize}
+						statementObj={statementObj}
+					/>
 				) : (
 					<Text
-						statement={primaryText}
+						statement={displayValue ?? primaryText}
 						description={secondaryText}
 						fontSize={fontSize}
 						statementObj={statementObj}

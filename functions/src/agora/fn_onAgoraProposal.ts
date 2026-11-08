@@ -21,6 +21,9 @@ import {
 	functionConfig,
 	getRandomUID,
 	isAgoraAiUid,
+	isAgoraHidden,
+	isTeacherTouched,
+	ModeratedDoc,
 	resolveSessionFlow,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
@@ -38,6 +41,8 @@ interface ProposalDoc {
 	parents?: string[];
 	creator?: unknown;
 	agoraChallenge?: boolean;
+	agoraModeration?: ModeratedDoc['agoraModeration'];
+	hide?: boolean;
 }
 
 /**
@@ -399,7 +404,12 @@ async function creditWeaves(
 		.get();
 	const thankedHelpers = new Set<string>();
 	siblings.forEach((docSnap) => {
-		const data = docSnap.data() as { suggestionStatus?: string; creatorId?: string };
+		const data = docSnap.data() as {
+			suggestionStatus?: string;
+			creatorId?: string;
+			hide?: boolean;
+		};
+		if (data.hide === true) return;
 		const landed =
 			data.suggestionStatus === AgoraSuggestionStatus.thanked ||
 			data.suggestionStatus === AgoraSuggestionStatus.implemented;
@@ -460,6 +470,7 @@ async function elderCouncilReads(
 	proposal: ProposalDoc,
 ): Promise<void> {
 	if (!proposal.creatorId || isAgoraAiUid(proposal.creatorId)) return;
+	if (isAgoraHidden(proposal)) return;
 	const sessionSnap = await db.collection(Collections.agoraSessions).doc(sessionId).get();
 	if (!sessionSnap.exists) return;
 	const session = sessionSnap.data() as AgoraSession;
@@ -511,6 +522,27 @@ export const onAgoraProposalWritten = onDocumentWritten(
 
 			// A real text change — not a status bump or an evaluation rollup
 			if (before && after && before.statement !== after.statement) {
+				// The teacher's hand, not the student's: no revision credit, no weave,
+				// no elders re-reading. A rewrite is still announced into the threads
+				// so helpers see the wording moved; a take-down says nothing — the
+				// author hears about it on the private thread.
+				if (isTeacherTouched(before, after)) {
+					const reworded =
+						after.agoraModeration?.editedAt !== before.agoraModeration?.editedAt &&
+						!isAgoraHidden(after);
+					if (reworded) {
+						await announceEdit(
+							sessionId,
+							statementId,
+							after,
+							before.statement ?? '',
+							event.data?.after.updateTime?.toMillis() ?? Date.now(),
+						);
+					}
+
+					return;
+				}
+
 				const creatorId = after.creatorId ?? '';
 				const revision = await stampEditBaseline(
 					sessionId,

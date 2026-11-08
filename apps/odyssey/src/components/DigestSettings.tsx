@@ -6,19 +6,22 @@ import {
 	loadDigestSettings,
 	saveDigestSettings,
 } from '../lib/notificationPrefs';
+import { useT } from '../i18n/useT';
 
 type Cadence = 'none' | 'every' | 'daily' | 'multi';
 
 const DAILY_DEFAULT_HOUR = 19;
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
+const CADENCES: readonly Cadence[] = ['none', 'every', 'daily', 'multi'];
 
 /**
- * "סיפור המסע שלכם למייל" — the async bridge's opt-in. Three cadences:
+ * "Your voyage story by email" — the async bridge's opt-in. Three cadences:
  * none, once a day at a chosen hour, or a few chosen hours a day. Push is
  * deliberately not offered — it does not work reliably for uncommitted PWA
  * users; the story arrives by email or not at all.
  */
 export default function DigestSettings({ uid, onClose }: { uid: string; onClose: () => void }) {
+	const { t } = useT();
 	const [cadence, setCadence] = useState<Cadence>('none');
 	const [hours, setHours] = useState<number[]>([DAILY_DEFAULT_HOUR]);
 	const [loading, setLoading] = useState(true);
@@ -91,34 +94,28 @@ export default function DigestSettings({ uid, onClose }: { uid: string; onClose:
 	return (
 		<div className="panel flex flex-col gap-3" data-testid="digest-settings">
 			<div className="flex items-center gap-2">
-				<strong className="text-[15px] text-[var(--cream)]">📬 סיפור המסע שלכם למייל</strong>
+				<strong className="text-[15px] text-[var(--cream)]">{t('digest.title')}</strong>
 				<button
 					type="button"
-					className="mr-auto text-[13px] opacity-70 hover:opacity-100"
+					className="ms-auto text-[13px] opacity-70 hover:opacity-100"
 					onClick={onClose}
-					aria-label="סגירה"
+					aria-label={t('common.close')}
 				>
 					✕
 				</button>
 			</div>
-			<p className="m-0 text-[13px] opacity-80">
-				מה קרה בים מאז שירדתם לחוף: מפליגים חדשים לידכם, רוחות שהתהפכו, ואתגר מזקני הדור — בשעה
-				שנוחה לכם.
-			</p>
+			<p className="m-0 text-[13px] opacity-80">{t('digest.intro')}</p>
 
 			{loading ? (
-				<p className="m-0 text-[13px] opacity-70">טוענים…</p>
+				<p className="m-0 text-[13px] opacity-70">{t('digest.loading')}</p>
 			) : (
 				<>
-					<div className="flex flex-wrap gap-2" role="radiogroup" aria-label="תדירות">
-						{(
-							[
-								['none', 'בלי מיילים'],
-								['every', 'כל עדכון'],
-								['daily', 'פעם ביום'],
-								['multi', 'כמה פעמים ביום'],
-							] as [Cadence, string][]
-						).map(([value, label]) => (
+					<div
+						className="flex flex-wrap gap-2"
+						role="radiogroup"
+						aria-label={t('digest.cadenceAria')}
+					>
+						{CADENCES.map((value) => (
 							<button
 								key={value}
 								type="button"
@@ -131,25 +128,27 @@ export default function DigestSettings({ uid, onClose }: { uid: string; onClose:
 									if (value === 'daily') setHours((current) => current.slice(0, 1));
 								}}
 							>
-								{label}
+								{t(`digest.cadence.${value}`)}
 							</button>
 						))}
 					</div>
 
 					{cadence === 'every' ? (
-						<p className="m-0 text-[13px] opacity-80">
-							ברגע שמשהו זז בים — נבדק פעם בשעה, ונשלח רק כשבאמת יש חדש.
-						</p>
+						<p className="m-0 text-[13px] opacity-80">{t('digest.everyNote')}</p>
 					) : null}
 
 					{cadence === 'daily' || cadence === 'multi' ? (
 						<div>
 							<p className="m-0 mb-2 text-[13px] opacity-80">
 								{cadence === 'daily'
-									? 'באיזו שעה?'
-									: `באילו שעות? (עד ${ODYSSEY_DIGEST_MAX_HOURS})`}
+									? t('digest.whichHour')
+									: t('digest.whichHours', { max: ODYSSEY_DIGEST_MAX_HOURS })}
 							</p>
-							<div className="flex flex-wrap gap-1.5" role="group" aria-label="שעות">
+							<div
+								className="flex flex-wrap gap-1.5"
+								role="group"
+								aria-label={t('digest.hoursAria')}
+							>
 								{HOURS.map((hour) => (
 									<button
 										key={hour}
@@ -174,12 +173,14 @@ export default function DigestSettings({ uid, onClose }: { uid: string; onClose:
 							}
 							onClick={() => void save()}
 						>
-							{saving ? 'שומרים…' : 'שמירה'}
+							{saving ? t('digest.saving') : t('digest.save')}
 						</button>
-						{saved ? <span className="text-[13px] text-[var(--gold-strong)]">נשמר ✓</span> : null}
+						{saved ? (
+							<span className="text-[13px] text-[var(--gold-strong)]">{t('digest.saved')}</span>
+						) : null}
 						{error ? (
 							<span className="text-[13px] text-[var(--gold-strong)]">
-								השמירה נכשלה — נסו שוב בעוד רגע.
+								{t('digest.saveFailed')}
 							</span>
 						) : null}
 					</div>

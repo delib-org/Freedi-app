@@ -1,4 +1,4 @@
-import type { Survey, SurveyDemographicPage } from '@freedi/shared-types';
+import type { Survey, SurveyDemographicPage, SurveyExplanationPage } from '@freedi/shared-types';
 import { SurveyStatus } from '@freedi/shared-types';
 import {
   buildSurveyFlow,
@@ -46,9 +46,64 @@ function createMockDemographicPage(overrides: Partial<SurveyDemographicPage> = {
   };
 }
 
+function createMockExplanationPage(overrides: Partial<SurveyExplanationPage> = {}): SurveyExplanationPage {
+  return {
+    explanationPageId: 'exp-page-1',
+    title: 'Before you begin',
+    content: 'Read this',
+    position: 0,
+    ...overrides,
+  };
+}
+
 // ============================================
 // buildSurveyFlow Tests
 // ============================================
+
+describe('buildSurveyFlow — pages sharing a position', () => {
+  it('keeps explanations before demographics when neither carries an order (legacy surveys)', () => {
+    const survey = createMockSurvey({
+      questionIds: ['q1'],
+      explanationPages: [createMockExplanationPage({ explanationPageId: 'exp', position: 1 })],
+      demographicPages: [createMockDemographicPage({ demographicPageId: 'demo', position: 1 })],
+    });
+
+    expect(buildSurveyFlow(survey).map((i) => i.id)).toEqual(['q1', 'exp', 'demo']);
+  });
+
+  it('lets a demographic page sit above an explanation page when the admin ordered it so', () => {
+    const survey = createMockSurvey({
+      questionIds: ['q1'],
+      explanationPages: [createMockExplanationPage({ explanationPageId: 'exp', position: 1, order: 1 })],
+      demographicPages: [createMockDemographicPage({ demographicPageId: 'demo', position: 1, order: 0 })],
+    });
+
+    expect(buildSurveyFlow(survey).map((i) => i.id)).toEqual(['q1', 'demo', 'exp']);
+  });
+
+  it('puts ordered pages before unordered ones in the same slot', () => {
+    const survey = createMockSurvey({
+      questionIds: [],
+      explanationPages: [
+        createMockExplanationPage({ explanationPageId: 'exp-old', position: 0 }),
+        createMockExplanationPage({ explanationPageId: 'exp-new', position: 0, order: 5 }),
+      ],
+      demographicPages: [createMockDemographicPage({ demographicPageId: 'demo-new', position: 0, order: 2 })],
+    });
+
+    expect(buildSurveyFlow(survey).map((i) => i.id)).toEqual(['demo-new', 'exp-new', 'exp-old']);
+  });
+
+  it('scopes order to a position: the same order in different slots does not collide', () => {
+    const survey = createMockSurvey({
+      questionIds: ['q1', 'q2'],
+      explanationPages: [createMockExplanationPage({ explanationPageId: 'exp', position: 2, order: 0 })],
+      demographicPages: [createMockDemographicPage({ demographicPageId: 'demo', position: 1, order: 0 })],
+    });
+
+    expect(buildSurveyFlow(survey).map((i) => i.id)).toEqual(['q1', 'demo', 'q2', 'exp']);
+  });
+});
 
 describe('buildSurveyFlow', () => {
   describe('with questions only (no demographics)', () => {

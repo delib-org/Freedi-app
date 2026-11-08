@@ -79,7 +79,7 @@
 		margin-inline-start: 0.4rem;
 		padding: 0.15rem 0.55rem;
 		background: var(--btn-primary, #5f88e5);
-		color: #fff;
+		color: var(--btn-primary-text);
 		border-radius: 999px;
 		font-weight: 600;
 		font-size: 0.75rem;
@@ -144,7 +144,7 @@
 
 		&--active {
 			background: var(--btn-primary, #5f88e5);
-			color: #fff;
+			color: var(--btn-primary-text);
 			box-shadow: 0 2px 6px rgba(95, 136, 229, 0.3);
 
 			&:hover,
@@ -167,7 +167,7 @@
 		border: none;
 		border-radius: 999px;
 		background: var(--btn-primary, #5f88e5);
-		color: #fff;
+		color: var(--btn-primary-text);
 		font-size: 0.8rem;
 		font-weight: 500;
 		cursor: pointer;
@@ -411,7 +411,7 @@
 
 	&--active {
 		background: var(--btn-primary, #5f88e5);
-		color: #fff;
+		color: var(--btn-primary-text);
 		box-shadow: 0 4px 14px rgba(95, 136, 229, 0.35);
 	}
 

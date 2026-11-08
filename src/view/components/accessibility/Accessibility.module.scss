@@ -30,7 +30,7 @@
 			display: flex;
 			justify-content: space-around;
 			background-color: var(--btn-primary);
-			color: white;
+			color: var(--btn-primary-text, #ffffff);
 			box-shadow: 0 0 0 0.2rem var(--btn-primary);
 		}
 
@@ -65,7 +65,7 @@
 			border-radius: 0.1rem;
 			cursor: pointer;
 			user-select: none;
-			color: var(--btn-accessibility-icons);
+			color: var(--text-title, #191e29);
 			font-size: 1.5rem;
 		}
 	}
@@ -73,9 +73,9 @@
 	.accessibilityButton {
 		height: 3.1rem;
 		width: 3.3rem;
-		color: white;
+		color: var(--btn-primary-text, #ffffff);
 		padding: 0.2rem;
-		border: solid 0.2rem var(--white);
+		border: solid 0.2rem var(--btn-primary-text, #ffffff);
 		border-left: none;
 		border-radius: 0px 10rem 10rem 0px;
 		box-shadow:
@@ -99,17 +99,17 @@
 }
 
 .lightContrast {
-	background-color: var(--btn-accessibility-light-contrast-icons);
-	color: var(--btn-accessibility-light-contrast-text-contrast);
+	background-color: var(--icons-blue-dark, #1b45a7);
+	color: #ffffff;
 	svg {
-		color: var(--btn-accessibility-light-contrast-text-contrast);
+		color: #ffffff;
 	}
 }
 
 .highContrast {
 	background-color: var(--btn-accessibility-light-contrast);
-	color: var(--btn-accessibility-light-contrast-icons);
+	color: var(--btn-accessibility-light-contrast-text, #191e29);
 	svg {
-		color: var(--btn-accessibility-light-contrast-icons);
+		color: var(--btn-accessibility-light-contrast-text, #191e29);
 	}
 }

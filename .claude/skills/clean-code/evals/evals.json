@@ -1,0 +1,38 @@
+{
+  "skill_name": "clean-code",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Review src/controllers/db/subscriptions/getSubscriptions.ts for code quality and architecture. Write your findings to review.md in the output directory. Do not modify any file in the repo.",
+      "expected_output": "A review.md ordered by severity (correctness, architecture, clarity, style) that names smells by principle and gives concrete fixes, including the file length and any layering or error-handling problems; includes a Keep section.",
+      "files": [],
+      "assertions": [
+        "Findings are ordered by severity with explicit tags (correctness/architecture/clarity/style)",
+        "Flags the file length (576 lines) as over the 300/500 line limit and proposes a split by responsibility",
+        "Each finding names the principle violated (e.g. single responsibility, catch where you can act) not just the symptom",
+        "Each finding gives a concrete fix, referencing project utilities (logError, firebaseUtils, selectorFactories, constants) where applicable",
+        "Includes a Keep section naming what the author did well",
+        "Includes a verdict line (ship / ship after fixes / needs rework)",
+        "Does not modify any file in the repo"
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Add a controller function archiveStatement that hides a statement (sets hide: true) and records who archived it and when, for the main Freedi app. Only admins of the statement's top parent may archive. Include tests. Write the new files into the output directory (mirror the paths they would have under src/), do not modify the repo.",
+      "expected_output": "A small controller using createStatementRef/updateTimestamp from firebaseUtils, Statement/User types from delib-npm, AuthorizationError + logError with operation and ids, no any, no magic values, functions under ~20 lines, plus a Jest test in __tests__ covering success, unauthorized and database failure.",
+      "files": [],
+      "assertions": [
+        "Imports Statement/User/Role types from delib-npm or shared-types rather than redeclaring them",
+        "Uses createStatementRef (or createDocRef) from @/utils/firebaseUtils instead of doc(FireStore, ...)",
+        "Uses updateTimestamp/getCurrentTimestamp/Date.now() for the archivedAt timestamp (milliseconds, no serverTimestamp)",
+        "Throws AuthorizationError when the user is not an admin of the top parent",
+        "Every catch calls logError with an operation name and statementId/userId context (no bare console.error)",
+        "No `any` type anywhere in source or tests",
+        "No magic numbers/strings for configurable values (uses constants or named values)",
+        "Each function is under ~25 lines and does one thing (permission check, write, orchestration separated)",
+        "Test file lives in __tests__/ next to the source and covers success, unauthorized, and database-failure paths",
+        "Test names read as behaviour sentences, not method names"
+      ]
+    }
+  ]
+}

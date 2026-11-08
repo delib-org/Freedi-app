@@ -22,7 +22,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     // Redirect to login if not authenticated
     if (!isLoading && !isAuthenticated) {
       console.info('[AdminLayout] Redirecting to login...');
-      router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
+      // Keep the query string: an invite link carries its token there, and
+      // dropping it would send the user back from login to a dead page.
+      const target = window.location.pathname + window.location.search;
+      router.push('/login?redirect=' + encodeURIComponent(target));
     }
   }, [isAuthenticated, isLoading, router]);
 

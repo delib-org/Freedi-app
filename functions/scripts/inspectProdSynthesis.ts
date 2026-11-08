@@ -19,7 +19,9 @@ if (process.env.FIRESTORE_EMULATOR_HOST) {
 const questionId = process.argv[2];
 const project = process.env.GCLOUD_PROJECT;
 if (!questionId || !project) {
-	console.error('Usage: GCLOUD_PROJECT=wizcol-app npx tsx scripts/inspectProdSynthesis.ts <questionId>');
+	console.error(
+		'Usage: GCLOUD_PROJECT=wizcol-app npx tsx scripts/inspectProdSynthesis.ts <questionId>',
+	);
 	process.exit(1);
 }
 if (getApps().length === 0) initializeApp({ projectId: project });
@@ -46,6 +48,7 @@ async function main(): Promise<void> {
 	const qSnap = await db.collection('statements').doc(questionId).get();
 	if (!qSnap.exists) {
 		console.error('Question not found.');
+
 		return;
 	}
 	const q = qSnap.data() ?? {};
@@ -63,6 +66,7 @@ async function main(): Promise<void> {
 
 	const rows: Row[] = snap.docs.map((d) => {
 		const x = d.data();
+
 		return {
 			id: x.statementId ?? d.id,
 			text: x.statement ?? '',
@@ -93,19 +97,29 @@ async function main(): Promise<void> {
 
 	// Membership integrity checks.
 	const memberCount = new Map<string, number>();
-	for (const s of synths) for (const m of s.integratedOptions ?? []) memberCount.set(m, (memberCount.get(m) ?? 0) + 1);
+	for (const s of synths)
+		for (const m of s.integratedOptions ?? []) memberCount.set(m, (memberCount.get(m) ?? 0) + 1);
 	const inMultiple = [...memberCount.entries()].filter(([, c]) => c > 1);
 	const assigned = new Set([...memberCount.keys()]);
 	const unassignedRaw = raw.filter((r) => !assigned.has(r.id) && !r.hide);
 
 	console.info('## Integrity');
 	console.info(`  options assigned to ≥1 synth: ${assigned.size}/${raw.length}`);
-	console.info(`  options in >1 synth (overlap): ${inMultiple.length}${inMultiple.length ? ' ⚠️' : ''}`);
-	if (inMultiple.length) inMultiple.slice(0, 10).forEach(([id, c]) => console.info(`    - ${id} in ${c} synths: "${short(byId.get(id)?.text ?? '?', 60)}"`));
+	console.info(
+		`  options in >1 synth (overlap): ${inMultiple.length}${inMultiple.length ? ' ⚠️' : ''}`,
+	);
+	if (inMultiple.length)
+		inMultiple
+			.slice(0, 10)
+			.forEach(([id, c]) =>
+				console.info(`    - ${id} in ${c} synths: "${short(byId.get(id)?.text ?? '?', 60)}"`),
+			);
 	console.info(`  visible raw options NOT in any synth: ${unassignedRaw.length}\n`);
 
 	console.info('## Synths and their members\n');
-	const sortedSynths = synths.slice().sort((a, b) => (b.integratedOptions?.length ?? 0) - (a.integratedOptions?.length ?? 0));
+	const sortedSynths = synths
+		.slice()
+		.sort((a, b) => (b.integratedOptions?.length ?? 0) - (a.integratedOptions?.length ?? 0));
 	for (const s of sortedSynths) {
 		const members = (s.integratedOptions ?? []).map((id) => byId.get(id));
 		console.info(`### SYNTH (${members.length} members): "${short(s.text, 110)}"`);
@@ -115,14 +129,17 @@ async function main(): Promise<void> {
 		});
 		// Members referenced but not found as direct children (e.g. nested).
 		const missing = (s.integratedOptions ?? []).filter((id) => !byId.get(id)).length;
-		if (missing) console.info(`    (… ${missing} member ids not found among direct option children)`);
+		if (missing)
+			console.info(`    (… ${missing} member ids not found among direct option children)`);
 		console.info('');
 	}
 
 	if (topicClusters.length) {
 		console.info('## Topic-clusters (group synths)\n');
 		for (const t of topicClusters) {
-			console.info(`### TOPIC: "${short(t.text, 100)}" → links ${(t.integratedOptions ?? []).length} synths`);
+			console.info(
+				`### TOPIC: "${short(t.text, 100)}" → links ${(t.integratedOptions ?? []).length} synths`,
+			);
 			(t.integratedOptions ?? []).forEach((id) => {
 				const child = byId.get(id);
 				console.info(`    → ${short(child?.text ?? id, 100)}`);

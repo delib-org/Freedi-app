@@ -1,0 +1,151 @@
+// The position slider: a native range over a two-colour track (same look as the
+// classroom side slider in apps/join-class). Side A is always the left end.
+
+.side-slider {
+  --thumb: 48px;
+  --track-h: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding-block-start: var(--space-md);
+
+  &__ends {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
+
+  &__character {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    max-inline-size: 45%;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    text-align: center;
+    overflow-wrap: anywhere;
+
+    &--a {
+      color: var(--side-a);
+    }
+
+    &--b {
+      color: var(--side-b);
+    }
+  }
+
+  &__face {
+    display: grid;
+    place-items: center;
+    inline-size: 56px;
+    block-size: 56px;
+    border-radius: var(--radius-full);
+    color: var(--card);
+    font-size: var(--font-size-xl);
+
+    .side-slider__character--a & {
+      background: var(--side-a);
+    }
+
+    .side-slider__character--b & {
+      background: var(--side-b);
+    }
+  }
+
+  &__field {
+    position: relative;
+    block-size: var(--thumb);
+  }
+
+  &__track {
+    position: absolute;
+    inset-inline: calc(var(--thumb) / 2);
+    inset-block-start: calc((var(--thumb) - var(--track-h)) / 2);
+    display: flex;
+    align-items: center;
+    block-size: var(--track-h);
+  }
+
+  &__half {
+    flex: 1;
+    block-size: 100%;
+
+    &--a {
+      border-start-start-radius: var(--radius-full);
+      border-end-start-radius: var(--radius-full);
+      background: var(--side-a-soft);
+    }
+
+    &--b {
+      border-start-end-radius: var(--radius-full);
+      border-end-end-radius: var(--radius-full);
+      background: var(--side-b-soft);
+    }
+  }
+
+  &__tick {
+    flex: none;
+    inline-size: 3px;
+    block-size: 24px;
+    background: var(--side-center);
+  }
+
+  &__input {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: var(--thumb);
+    margin: 0;
+    background: transparent;
+    appearance: none;
+    cursor: pointer;
+
+    &::-webkit-slider-runnable-track {
+      block-size: var(--thumb);
+      background: transparent;
+    }
+
+    &::-moz-range-track {
+      block-size: var(--thumb);
+      background: transparent;
+    }
+
+    &::-webkit-slider-thumb {
+      inline-size: var(--thumb);
+      block-size: var(--thumb);
+      box-sizing: border-box;
+      border: 3px solid var(--ink);
+      border-radius: var(--radius-full);
+      background: var(--card);
+      appearance: none;
+    }
+
+    &::-moz-range-thumb {
+      inline-size: var(--thumb);
+      block-size: var(--thumb);
+      box-sizing: border-box;
+      border: 3px solid var(--ink);
+      border-radius: var(--radius-full);
+      background: var(--card);
+    }
+  }
+
+  // "Not specified" is its own state: the thumb is hidden until the person answers.
+  &--unspecified &__input::-webkit-slider-thumb {
+    opacity: 0.35;
+    border-style: dashed;
+  }
+
+  &--unspecified &__input::-moz-range-thumb {
+    opacity: 0.35;
+    border-style: dashed;
+  }
+
+  &__word {
+    min-block-size: 1.5em;
+    text-align: center;
+    font-weight: var(--font-weight-semibold);
+  }
+}

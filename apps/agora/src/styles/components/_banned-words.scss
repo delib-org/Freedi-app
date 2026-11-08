@@ -1,0 +1,93 @@
+@use '../tokens' as *;
+
+// The teacher's list of words their students may not use (/teach/words).
+// One column: the intro, the add form, the hint, then the words as removable
+// chips. Imported by components.scss; do not import directly.
+
+.banned-words {
+	max-inline-size: 36rem;
+
+	&__intro,
+	&__hint,
+	&__count,
+	&__empty {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+	&__hint,
+	&__count {
+		font-size: var(--font-size-sm);
+	}
+
+	&__form {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: var(--space-sm);
+	}
+
+	&__field {
+		display: flex;
+		flex: 1 1 14rem;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__item {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		padding-block: var(--space-xs);
+		padding-inline: var(--space-md) var(--space-xs);
+		border: 1px solid var(--border-strong);
+		border-radius: 999px;
+		background: var(--bg-card-solid);
+		color: var(--text-primary);
+	}
+
+	&__word {
+		overflow-wrap: anywhere;
+	}
+
+	// 44px touch target around a small glyph
+	&__remove {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		inline-size: 44px;
+		block-size: 44px;
+		margin-block: calc(var(--space-xs) * -1);
+		border: 0;
+		border-radius: 50%;
+		background: transparent;
+		color: var(--text-secondary);
+		font-size: 1.25rem;
+		line-height: 1;
+		cursor: pointer;
+
+		&:hover:not(:disabled) {
+			background: var(--bg-inset);
+			color: var(--danger-ink);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--mine-ink);
+			outline-offset: 1px;
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: default;
+		}
+	}
+}

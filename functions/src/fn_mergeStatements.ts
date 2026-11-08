@@ -8,9 +8,12 @@ import {
 	ParagraphType,
 	ResearchAction,
 	getResearchLogId,
+	isMeaningfulSuggestion,
+	MIN_MEANINGFUL_WORDS,
 } from '@freedi/shared-types';
 import { mergeAndReorganizeParagraphs, ParagraphForMerge } from './services/ai-service';
 import { generateParagraphId } from './helpers';
+import { judgeAutoMerge } from './services/auto-merge-gate';
 
 interface MergeRequest {
 	/** ID of the target statement to merge into */
@@ -19,10 +22,13 @@ interface MergeRequest {
 	newContent: string;
 	/** ID of the question/parent */
 	questionId: string;
-	/** User ID of the person submitting */
-	userId: string;
 	/** Optional: User's display name */
 	userName?: string;
+	/**
+	 * True when the merge was chosen by the app (autoMergeSimilar), not by the
+	 * participant. Such merges must pass the same-idea judge first.
+	 */
+	autoMerge?: boolean;
 }
 
 interface MergeResponse {
@@ -35,6 +41,10 @@ interface MergeResponse {
 	newTitle?: string;
 	/** Error message if failed */
 	error?: string;
+	/** Auto-merge refused: the judge did not find the two to be the same idea */
+	notSameIdea?: boolean;
+	/** The judge's verdict when an auto-merge was refused */
+	verdict?: string;
 }
 
 /**
@@ -43,22 +53,36 @@ interface MergeResponse {
  * Flow:
  * 1. Create a hidden statement for the user's original input (for audit trail)
  * 2. Use AI to reorganize paragraphs of target + new content
- * 3. Update target statement with merged paragraphs and new title
+ * 3. Update target statement with merged paragraphs (the title stays)
  * 4. Create +1 evaluation for the user on the target statement
  * 5. Update counters
  */
-export async function mergeStatements(request: Request, response: Response): Promise<void> {
+export async function mergeStatements(
+	request: Request,
+	response: Response,
+	userId: string,
+): Promise<void> {
 	const startTime = Date.now();
 
 	try {
-		const { targetStatementId, newContent, questionId, userId, userName }: MergeRequest =
+		const { targetStatementId, newContent, questionId, userName, autoMerge }: MergeRequest =
 			request.body;
 
 		// Validate required fields
-		if (!targetStatementId || !newContent || !questionId || !userId) {
+		if (!targetStatementId || !newContent || !questionId) {
 			response.status(400).send({
 				ok: false,
-				error: 'Missing required fields: targetStatementId, newContent, questionId, userId',
+				error: 'Missing required fields: targetStatementId, newContent, questionId',
+			});
+
+			return;
+		}
+
+		// Keyboard noise ("ייי") must never be merged into someone's option
+		if (!isMeaningfulSuggestion(newContent)) {
+			response.status(400).send({
+				ok: false,
+				error: `Suggestion must have at least ${MIN_MEANINGFUL_WORDS} real words`,
 			});
 
 			return;
@@ -109,6 +133,55 @@ export async function mergeStatements(request: Request, response: Response): Pro
 			return;
 		}
 
+		// The target must live under this question, or a caller could fold text
+		// into any option in the database by naming a question of their own.
+		const belongsToQuestion =
+			targetStatement.parentId === questionId ||
+			(Array.isArray(targetStatement.parents) && targetStatement.parents.includes(questionId));
+		if (!belongsToQuestion) {
+			response.status(400).send({
+				ok: false,
+				error: 'Target statement does not belong to this question',
+			});
+
+			return;
+		}
+
+		// 1b. Automatic merges need the same-idea judge's 'same'. Embedding
+		// similarity alone proposed the target, and in MC it is not enough (the
+		// shared question prefix makes unrelated answers look alike). Checked
+		// here, server-side, for any merge the app chose — flagged by the client
+		// or implied by the question's own autoMergeSimilar setting — so no
+		// client path can fold an idea into an option it does not restate.
+		const isAutoMerge =
+			autoMerge === true || questionData.statementSettings?.autoMergeSimilar === true;
+		if (isAutoMerge) {
+			const decision = await judgeAutoMerge({
+				newText: newContent,
+				targetText: targetStatement.statement || '',
+				targetStatementId,
+				questionId,
+				userId,
+			});
+
+			if (!decision.allowed) {
+				logger.info('mergeStatements: auto-merge refused by judge', {
+					targetStatementId,
+					questionId,
+					verdict: decision.verdict,
+				});
+				const refused: MergeResponse = {
+					ok: false,
+					notSameIdea: true,
+					verdict: decision.verdict,
+					error: 'Not the same idea as the suggested option; add it as a new suggestion',
+				};
+				response.status(409).send(refused);
+
+				return;
+			}
+		}
+
 		// 2. Create hidden statement for the user's original input (audit trail)
 		const hiddenStatementRef = db.collection(Collections.statements).doc();
 		const now = Date.now();
@@ -150,26 +223,20 @@ export async function mergeStatements(request: Request, response: Response): Pro
 			}),
 		);
 
-		// If no paragraphs, create one from the statement text
-		if (existingParagraphs.length === 0 && targetStatement.statement) {
-			existingParagraphs.push({
-				content: targetStatement.statement,
-				sourceStatementId: targetStatement.statementId,
-			});
-		}
-
-		// 4. Use AI to merge and reorganize paragraphs
+		// 4. Use AI to merge the body lines. The title stays: people already
+		// rated this option, and a merge must not change what they rated.
+		const targetTitle: string = targetStatement.statement || '';
 		const questionContext = questionData.statement || '';
 		const mergeResult = await mergeAndReorganizeParagraphs(
 			existingParagraphs,
 			newContent,
 			hiddenStatementRef.id, // Use the hidden statement ID as source
 			questionContext,
+			targetTitle,
 		);
 
 		logger.info('AI merge result', {
 			paragraphCount: mergeResult.paragraphs.length,
-			newTitle: mergeResult.newTitle.substring(0, 50),
 		});
 
 		// 5. Convert merged paragraphs to proper Paragraph format
@@ -205,7 +272,6 @@ export async function mergeStatements(request: Request, response: Response): Pro
 			// Update target statement
 			const targetRef = db.collection(Collections.statements).doc(targetStatementId);
 			transaction.update(targetRef, {
-				statement: mergeResult.newTitle,
 				paragraphs: mergedParagraphs,
 				lastUpdate: now,
 				// Increment contributor count if this is a new contributor
@@ -223,6 +289,9 @@ export async function mergeStatements(request: Request, response: Response): Pro
 					statementId: targetStatementId,
 					parentId: questionId,
 					evaluatorId: userId,
+					// onCreateEvaluation reads evaluator.uid and throws without it, which
+					// leaves the vote uncounted. Same minimal shape the MC client writes.
+					evaluator: { uid: userId },
 					evaluation: 1, // +1 for agreement
 					createdAt: now,
 					lastUpdate: now,
@@ -242,7 +311,6 @@ export async function mergeStatements(request: Request, response: Response): Pro
 			responseTime: totalTime,
 			targetStatementId,
 			hiddenStatementId: hiddenStatementRef.id,
-			newTitle: mergeResult.newTitle.substring(0, 50),
 		});
 
 		// Research logging (non-blocking)
@@ -273,7 +341,7 @@ export async function mergeStatements(request: Request, response: Response): Pro
 			ok: true,
 			statementId: targetStatementId,
 			mergedStatementId: hiddenStatementRef.id,
-			newTitle: mergeResult.newTitle,
+			newTitle: targetTitle,
 		};
 
 		response.status(200).send(responseData);

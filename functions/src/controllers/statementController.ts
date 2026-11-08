@@ -15,14 +15,13 @@ export class StatementController {
 	/**
 	 * Get user options endpoint
 	 */
-	async getUserOptions(req: Request, res: Response): Promise<void> {
+	async getUserOptions(req: Request, res: Response, uid: string): Promise<void> {
 		try {
 			// Validate request parameters
 			const validator = new RequestValidator();
-			const userId = req.query.userId as string;
 			const parentId = req.query.parentId as string;
 
-			validator.requireString(parentId, 'parentId').requireString(userId, 'userId');
+			validator.requireString(parentId, 'parentId');
 
 			if (!validator.isValid()) {
 				res.status(400).send({
@@ -35,7 +34,7 @@ export class StatementController {
 
 			// Get statements from service
 			const statements = await this.statementService.getUserOptions({
-				userId,
+				userId: uid,
 				parentId,
 			});
 

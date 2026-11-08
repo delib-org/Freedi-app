@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId, unauthorizedResponse } from '@/lib/auth/requestIdentity';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES } from '@/constants/common';
+import { postToCloudFunction } from '@/lib/api/cloudFunction';
 
 /**
  * POST /api/statements/[id]/check-similar
@@ -14,20 +16,18 @@ export async function POST(
   const { id: questionId } = await params;
 
   try {
+    const userId = await getVerifiedUserId(request);
+    if (!userId) {
+      return unauthorizedResponse();
+    }
+
     const body = await request.json();
-    const { userInput, userId } = body;
+    const { userInput } = body;
 
     // Validate input
     if (!userInput || typeof userInput !== 'string') {
       return NextResponse.json(
         { error: 'User input is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
         { status: 400 }
       );
     }
@@ -50,35 +50,20 @@ export async function POST(
     }
 
     // Call Cloud Function
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        statementId: questionId,
-        userInput,
-        creatorId: userId,
-        generateIfNeeded: false,
-      }),
-    });
+    const result = await postToCloudFunction(endpoint, {
+      statementId: questionId,
+      userInput,
+      creatorId: userId,
+      generateIfNeeded: false,
+    }, { authorization: request.headers.get('authorization') });
 
-    // Parse response - handle non-JSON responses (e.g., gateway errors)
-    let data: Record<string, unknown>;
-    const contentType = response.headers.get('content-type') || '';
-
-    if (contentType.includes('application/json')) {
-      data = await response.json();
-    } else {
+    if (result.kind === 'unavailable') {
       // Non-JSON response (gateway error, timeout, etc.)
-      const textResponse = await response.text();
       logError(new Error('Non-JSON response from Cloud Function'), {
         operation: 'api.checkSimilar',
         userId,
         questionId,
-        metadata: {
-          status: response.status,
-          contentType,
-          responsePreview: textResponse.substring(0, 100),
-        },
+        metadata: { status: result.status, attempts: result.attempts, responsePreview: result.preview },
       });
 
       return NextResponse.json(
@@ -90,9 +75,11 @@ export async function POST(
       );
     }
 
+    const data = result.data;
+
     // Pass through the response
-    if (!response.ok) {
-      return NextResponse.json(data, { status: response.status });
+    if (!result.ok) {
+      return NextResponse.json(data, { status: result.status });
     }
 
     // Ensure no caching of similarity results

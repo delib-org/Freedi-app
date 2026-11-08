@@ -1,4 +1,5 @@
-import { FC, memo, useMemo, MouseEvent, KeyboardEvent, TouchEvent } from 'react';
+import { FC, memo, useMemo, useState, MouseEvent, KeyboardEvent, TouchEvent } from 'react';
+import clsx from 'clsx';
 import styles from './StatementChatMore.module.scss';
 
 // Icons
@@ -13,9 +14,11 @@ import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificat
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { statementsSelector } from '@/redux/statements/statementsSlice';
 import { createPredicateCountSelector } from '@/redux/utils/selectorFactories';
-import { markStatementNotificationsAsReadDB } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import UnreadBadge from '@/view/components/unreadBadge/UnreadBadge';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { AnswerChatSheet } from '@/view/components/atomic/molecules/AnswerChatSheet';
+
+export type StatementChatMoreVariant = 'bubble' | 'pill' | 'round';
 
 interface Props {
 	statement: Statement | SimpleStatement;
@@ -24,6 +27,11 @@ interface Props {
 	asButton?: boolean;
 	/** Show message count even when there are no unread notifications */
 	showMessageCount?: boolean;
+	/** 'bubble' (default) = the icon bubble; 'pill' = the answer card's שיחה pill. */
+	variant?: StatementChatMoreVariant;
+	/** Open the thread in a bottom sheet instead of navigating to the chat page.
+	 *  Off by default so every other call site keeps navigating. */
+	opensSheet?: boolean;
 }
 
 /**
@@ -45,9 +53,12 @@ const StatementChatMore: FC<Props> = ({
 	useLink = true,
 	asButton = true,
 	showMessageCount = true,
+	variant = 'bubble',
+	opensSheet = false,
 }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
+	const [isSheetOpen, setIsSheetOpen] = useState(false);
 
 	// Redux store
 	const creator = useSelector(creatorSelector);
@@ -106,6 +117,12 @@ const StatementChatMore: FC<Props> = ({
 		e.stopPropagation();
 		e.preventDefault();
 
+		if (opensSheet) {
+			setIsSheetOpen(true);
+
+			return;
+		}
+
 		if (!useLink) {
 			return;
 		}
@@ -117,12 +134,10 @@ const StatementChatMore: FC<Props> = ({
 			return;
 		}
 
-		// Mark notifications as read when navigating to chat
-		if (hasUnread) {
-			await markStatementNotificationsAsReadDB(statement.statementId);
-		}
-
-		navigate(`/statement/${statement.statementId}/chat`, {
+		// The active tab is driven by the `tab` search param, not the path
+		// segment. Without it the screen falls back to `defaultView`, so a
+		// question whose default view is Solutions would swallow this click.
+		navigate(`/statement/${statement.statementId}/chat?tab=chat`, {
 			state: { from: window.location.pathname },
 		});
 	};
@@ -146,6 +161,9 @@ const StatementChatMore: FC<Props> = ({
 		return parts.join('. ');
 	}, [displayCount, hasUnread, unreadCount, t]);
 
+	const isRound = variant === 'round';
+	const isPill = variant === 'pill' || isRound;
+
 	// Determine container class based on state
 	const containerClass = useMemo(() => {
 		const classes = [styles.chatContainer];
@@ -159,7 +177,7 @@ const StatementChatMore: FC<Props> = ({
 		return classes.join(' ');
 	}, [hasMessages]);
 
-	const content = (
+	const bubbleContent = (
 		<div className={containerClass}>
 			<div className={styles.icon}>
 				{/* Unread badge - positioned absolutely over the icon */}
@@ -183,6 +201,54 @@ const StatementChatMore: FC<Props> = ({
 		</div>
 	);
 
+	// The answer card's שיחה pill: glyph, word, count, red unread badge. With
+	// unread messages the whole pill turns yellow so it reads from across the list.
+	const pillContent = (
+		<span
+			className={clsx(
+				styles.pill,
+				isRound && styles['pill--round'],
+				hasUnread && styles['pill--unread'],
+			)}
+			data-unread={hasUnread ? 'true' : 'false'}
+			data-testid="statement-chat-more-pill"
+		>
+			<svg
+				className={styles.pillIcon}
+				width="15"
+				height="15"
+				viewBox="0 0 20 20"
+				fill="none"
+				aria-hidden="true"
+			>
+				<path
+					d="M17 11.5a2.5 2.5 0 0 1-2.5 2.5H7l-4 3V5.5A2.5 2.5 0 0 1 5.5 3h9A2.5 2.5 0 0 1 17 5.5v6z"
+					stroke="currentColor"
+					strokeWidth="1.7"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+				/>
+			</svg>
+			{!isRound && <span aria-hidden="true">{t('Conversation')}</span>}
+			{showMessageCount && displayCount > 0 && (
+				<span className={styles.pillCount} aria-hidden="true">
+					{displayCount}
+				</span>
+			)}
+			{hasUnread && (
+				<span
+					className={styles.pillUnread}
+					aria-hidden="true"
+					data-testid="statement-chat-more-unread"
+				>
+					{unreadCount}
+				</span>
+			)}
+		</span>
+	);
+
+	const content = isPill ? pillContent : bubbleContent;
+
 	const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
 		// Only allow Enter and Space to trigger navigation
 		if (e.key !== 'Enter' && e.key !== ' ') {
@@ -195,30 +261,48 @@ const StatementChatMore: FC<Props> = ({
 		e.stopPropagation();
 	};
 
-	return asButton ? (
-		<button
-			className={styles.statementChatMore}
-			aria-label={ariaLabel}
-			onClick={handleClick}
-			onTouchEnd={handleTouchEnd}
-			onKeyDown={handleKeyDown}
-			type="button"
-			data-testid="statement-chat-more-button"
-		>
-			{content}
-		</button>
-	) : (
-		<button
-			type="button"
-			className={styles.statementChatMore}
-			onClick={handleClick}
-			onTouchEnd={handleTouchEnd}
-			onKeyDown={handleKeyDown}
-			aria-label={ariaLabel}
-			data-testid="statement-chat-more-button"
-		>
-			{content}
-		</button>
+	const buttonClass = clsx(styles.statementChatMore, isPill && styles['statementChatMore--pill']);
+
+	const sheet = opensSheet && (
+		<AnswerChatSheet
+			isOpen={isSheetOpen}
+			onClose={() => setIsSheetOpen(false)}
+			answerId={statement.statementId}
+			answerText={statement.statement}
+		/>
+	);
+
+	return (
+		<>
+			{asButton ? (
+				<button
+					className={buttonClass}
+					aria-label={ariaLabel}
+					aria-haspopup={opensSheet ? 'dialog' : undefined}
+					onClick={handleClick}
+					onTouchEnd={handleTouchEnd}
+					onKeyDown={handleKeyDown}
+					type="button"
+					data-testid="statement-chat-more-button"
+				>
+					{content}
+				</button>
+			) : (
+				<button
+					type="button"
+					className={buttonClass}
+					onClick={handleClick}
+					onTouchEnd={handleTouchEnd}
+					onKeyDown={handleKeyDown}
+					aria-label={ariaLabel}
+					aria-haspopup={opensSheet ? 'dialog' : undefined}
+					data-testid="statement-chat-more-button"
+				>
+					{content}
+				</button>
+			)}
+			{sheet}
+		</>
 	);
 };
 

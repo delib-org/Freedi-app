@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useEffect, useCallback, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { SurveyWithQuestions } from '@/types/survey';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { logError } from '@/lib/utils/errorHandling';
+import { getVisibleCompletionMessage } from '@/lib/utils/completionMessage';
+import ExplanationPageBody from './ExplanationPageBody';
 import WizColAttribution from '../shared/WizColAttribution';
 import styles from './Survey.module.scss';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 const MAIN_APP_URL = process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://app.wizcol.com';
 
@@ -52,16 +54,7 @@ interface DetailedProgress {
 export default function SurveyComplete({ survey }: SurveyCompleteProps) {
   const router = useRouter();
   const { t, tWithParams } = useTranslation();
-  const { user, isLoading: isAuthLoading } = useAuth();
-
-  // Identity must match the one the survey flow wrote with
-  // (SwipeInterfaceWrapper / SurveyEntry): the Firebase uid when signed in,
-  // the anonymous id otherwise. Reading with the anonymous id while the
-  // answers were written under a Google uid makes every count read as 0.
-  const resolveUserId = useCallback(
-    () => user?.uid || getOrCreateAnonymousUser(),
-    [user?.uid]
-  );
+  const { isLoading: isAuthLoading } = useAuth();
 
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,12 +98,11 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
 
     const fetchDetailedProgress = async () => {
       try {
-        const userId = resolveUserId();
-        const params = new URLSearchParams({ userId });
+        const params = new URLSearchParams();
         if (completedIndices.length > 0) {
           params.set('completedIndices', completedIndices.join(','));
         }
-        const response = await fetch(
+        const response = await participantFetch(
           `/api/surveys/${survey.surveyId}/detailed-progress?${params.toString()}`,
           { credentials: 'include' }
         );
@@ -135,7 +127,7 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
     };
 
     fetchDetailedProgress();
-  }, [survey.surveyId, completedIndices, isAuthLoading, resolveUserId]);
+  }, [survey.surveyId, completedIndices, isAuthLoading]);
 
   // Check if user has submitted suggestions
   useEffect(() => {
@@ -143,10 +135,9 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
 
     const checkSuggestions = async () => {
       try {
-        const userId = resolveUserId();
         const results = await Promise.all(
           survey.questionIds.map((questionId) =>
-            fetch(`/api/user-solutions/${questionId}?userId=${encodeURIComponent(userId)}`)
+            participantFetch(`/api/user-solutions/${questionId}`)
               .then((res) => res.ok ? res.json() : { solutionCount: 0 })
               .catch(() => ({ solutionCount: 0 }))
           )
@@ -163,7 +154,7 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
     };
 
     checkSuggestions();
-  }, [survey.questionIds, isAuthLoading, resolveUserId]);
+  }, [survey.questionIds, isAuthLoading]);
 
   const handleEmailSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -175,7 +166,7 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
     try {
       // Subscribe to results for all questions in the survey
       const subscribePromises = survey.questionIds.map((questionId) =>
-        fetch(`/api/statements/${questionId}/subscribe`, {
+        participantFetch(`/api/statements/${questionId}/subscribe`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email }),
@@ -194,6 +185,8 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
     }
   };
 
+  const completionMessage = getVisibleCompletionMessage(survey);
+
   const handleViewQuestions = () => {
     router.push(`/s/${survey.surveyId}/q/0`);
   };
@@ -210,6 +203,12 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
 
       <h1 className={styles.completeTitle}>{t('surveyComplete')}</h1>
       <p className={styles.completeSubtitle}>{t('thankYouForParticipating')}</p>
+
+      {completionMessage && (
+        <section className={styles.completionMessage}>
+          <ExplanationPageBody page={completionMessage} />
+        </section>
+      )}
 
       <div className={styles.completeSummary}>
         <div className={styles.summaryItem}>

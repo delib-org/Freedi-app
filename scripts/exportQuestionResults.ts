@@ -49,6 +49,10 @@ import type {
   TopicBlock,
 } from "../packages/shared-types/src/models/results-export/ResultsExport";
 import {
+  computeOtherIdeas,
+  OTHER_IDEAS_EXPORT_ID,
+} from "../src/helpers/otherIdeas";
+import {
   calcAgreement,
   calcAgreementIndex,
   calcLikeMindedness,
@@ -67,7 +71,8 @@ import {
 // stakeholder count as the fourth argument to calcAgreement.
 // ----------------------------------------------------------------------
 
-const RESULTS_EXPORT_SCHEMA_VERSION = "1.0.0";
+// Keep equal to RESULTS_EXPORT_SCHEMA_VERSION in packages/shared-types.
+const RESULTS_EXPORT_SCHEMA_VERSION = "2.0.0";
 
 // ----------------------------------------------------------------------
 // CLI args
@@ -400,8 +405,6 @@ interface TopicResolution {
   topicsByOption: Map<string, string[]>;
   /** topicId → cluster doc (the cluster IS the topic in topic-cluster). */
   clusterByTopic: Map<string, SourceStatement>;
-  /** options assigned to no topic at all. */
-  unassigned: string[];
 }
 
 /**
@@ -433,12 +436,7 @@ function resolveTopics(
     }
   }
 
-  const assigned = new Set(topicsByOption.keys());
-  const unassigned = options
-    .map((o) => o.statementId)
-    .filter((id) => !assigned.has(id));
-
-  return { optionsByTopic, topicsByOption, clusterByTopic, unassigned };
+  return { optionsByTopic, topicsByOption, clusterByTopic };
 }
 
 // ----------------------------------------------------------------------
@@ -581,6 +579,88 @@ function topicAgreement(
 }
 
 // ----------------------------------------------------------------------
+// Standalone filtering + the "other-ideas" block
+// ----------------------------------------------------------------------
+
+interface FilterCounters {
+  belowFloor: number;
+  lowEvaluators: number;
+  /** ids of options the floor / min-evaluators rules dropped. */
+  filteredIds: string[];
+}
+
+/** Rank options by consensus and keep those above the floor with enough evaluators. */
+function surviveStandalones(
+  options: SourceStatement[],
+  indexes: Indexes,
+  counters: FilterCounters,
+): StandaloneSolutionEntry[] {
+  const scored = options.map((opt) => {
+    const evals = (indexes.evaluationsByStatementId.get(opt.statementId) ?? [])
+      .map((e) => e.evaluation);
+    return { opt, agg: aggregateFromValues(evals) };
+  });
+
+  scored.sort((a, b) => b.agg.stats.consensus - a.agg.stats.consensus);
+
+  const survivors: StandaloneSolutionEntry[] = [];
+  let rank = 1;
+  for (const { opt, agg } of scored) {
+    if (agg.stats.numberOfEvaluators < minEvaluators) {
+      counters.lowEvaluators++;
+      counters.filteredIds.push(opt.statementId);
+      continue;
+    }
+    if (agg.stats.consensus < consensusFloor) {
+      counters.belowFloor++;
+      counters.filteredIds.push(opt.statementId);
+      continue;
+    }
+    survivors.push(buildStandaloneEntry(opt, indexes, rank++));
+  }
+
+  return survivors;
+}
+
+/**
+ * The final TopicBlock: ideas (atoms) no visible theme holds. Same inclusion
+ * rules as theme blocks: syntheses always, standalones above the floor.
+ * Returns undefined when there are no such ideas.
+ */
+function buildOtherIdeasBlock(
+  otherAtoms: SourceStatement[],
+  indexes: Indexes,
+  counters: FilterCounters,
+): TopicBlock | undefined {
+  if (otherAtoms.length === 0) return undefined;
+
+  const synthesized = otherAtoms
+    .filter((atom) => atom.isCluster === true)
+    .map((atom) => buildSynthesizedEntry(atom, indexes));
+  const survivors = surviveStandalones(
+    otherAtoms.filter((atom) => atom.isCluster !== true),
+    indexes,
+    counters,
+  );
+
+  return {
+    topicId: OTHER_IDEAS_EXPORT_ID,
+    topicTitle: "Other ideas",
+    memberCount: otherAtoms.length,
+    displayedCount: synthesized.length + survivors.length,
+    agreement: topicAgreement(
+      synthesized,
+      survivors,
+      otherAtoms.map((atom) => atom.statementId),
+      indexes,
+    ),
+    synthesizedSolutions: synthesized,
+    standaloneSolutions: survivors,
+    isOtherIdeas: true,
+  };
+}
+
+// ----------------------------------------------------------------------
 // Main pipeline
 // ----------------------------------------------------------------------
 
@@ -599,66 +679,45 @@ async function buildExport(): Promise<ResultsExport> {
   const visibleOptions = childrenOfQuestion.filter(
     (s) => s.statementType === "option" && s.hide !== true && !s.isCluster,
   );
-  const clustersUnderQuestion = childrenOfQuestion.filter(
-    (s) => s.isCluster === true,
-  );
-  const hiddenCount = childrenOfQuestion.filter(
+  const hiddenOptions = childrenOfQuestion.filter(
     (s) => s.statementType === "option" && s.hide === true,
-  ).length;
+  );
+  const hiddenCount = hiddenOptions.length;
 
-  // 2. Resolve per-option topic assignment from the cluster Statements.
-  const topicResolution: TopicResolution =
-    clustersUnderQuestion.length > 0
-      ? resolveTopics(visibleOptions, clustersUnderQuestion)
-      : {
-          optionsByTopic: new Map(),
-          topicsByOption: new Map(),
-          clusterByTopic: new Map(),
-          unassigned: visibleOptions.map((o) => o.statementId),
-        };
+  // 2. The shared "Other ideas" rule (src/helpers/otherIdeas.ts) decides which
+  //    ideas sit in a theme and which in none — the same rule the app screens use.
+  const ideas = computeOtherIdeas(childrenOfQuestion);
+  const topicResolution: TopicResolution = resolveTopics(visibleOptions, ideas.themes);
+  const synthesesByTheme = new Map<string, SourceStatement[]>();
+  for (const atom of ideas.atoms) {
+    const themeId = ideas.themeIdByAtomId.get(atom.statementId);
+    if (!themeId || atom.isCluster !== true) continue;
+    synthesesByTheme.set(themeId, [...(synthesesByTheme.get(themeId) ?? []), atom]);
+  }
 
-  // 3. Build per-topic blocks.
+  // 3. Build per-theme blocks.
   const topics: TopicBlock[] = [];
   let totalSynthCount = 0;
   let totalAboveFloor = 0;
-  let belowFloorCount = 0;
-  let lowEvaluatorsCount = 0;
+  const filterCounters: FilterCounters = { belowFloor: 0, lowEvaluators: 0, filteredIds: [] };
 
-  for (const [topicId, memberIds] of topicResolution.optionsByTopic) {
-    const cluster = topicResolution.clusterByTopic.get(topicId);
+  for (const theme of ideas.themes) {
+    const topicId = theme.statementId;
+    const memberIds = topicResolution.optionsByTopic.get(topicId) ?? [];
+    const nestedSyntheses = synthesesByTheme.get(topicId) ?? [];
+    if (memberIds.length === 0 && nestedSyntheses.length === 0) continue;
 
-    // All topic clusters become synthesized solutions in v1.
-    const synthesized: SynthesizedSolutionEntry[] = cluster
-      ? [buildSynthesizedEntry(cluster, indexes)]
-      : [];
+    // The theme itself is a synthesized solution in v1, plus the syntheses it holds.
+    const synthesized: SynthesizedSolutionEntry[] = [
+      buildSynthesizedEntry(theme, indexes),
+      ...nestedSyntheses.map((synthesis) => buildSynthesizedEntry(synthesis, indexes)),
+    ];
 
-    // Standalones: topic members that survive the floor.
+    // Standalones: theme members that survive the floor.
     const memberOptions = memberIds
       .map((id) => indexes.statementsById.get(id))
       .filter((s): s is SourceStatement => Boolean(s));
-
-    const standalonesScored = memberOptions.map((opt) => {
-      const evals = (indexes.evaluationsByStatementId.get(opt.statementId) ?? [])
-        .map((e) => e.evaluation);
-      const agg = aggregateFromValues(evals);
-      return { opt, agg };
-    });
-
-    standalonesScored.sort((a, b) => b.agg.stats.consensus - a.agg.stats.consensus);
-
-    const survivors: StandaloneSolutionEntry[] = [];
-    let rank = 1;
-    for (const { opt, agg } of standalonesScored) {
-      if (agg.stats.numberOfEvaluators < minEvaluators) {
-        lowEvaluatorsCount++;
-        continue;
-      }
-      if (agg.stats.consensus < consensusFloor) {
-        belowFloorCount++;
-        continue;
-      }
-      survivors.push(buildStandaloneEntry(opt, indexes, rank++));
-    }
+    const survivors = surviveStandalones(memberOptions, indexes, filterCounters);
 
     totalSynthCount += synthesized.length;
     totalAboveFloor += survivors.length;
@@ -672,8 +731,8 @@ async function buildExport(): Promise<ResultsExport> {
 
     topics.push({
       topicId,
-      topicTitle: cluster?.statement ?? "(unknown topic)",
-      topicDescription: cluster?.description || undefined,
+      topicTitle: theme.statement ?? "(unknown topic)",
+      topicDescription: theme.description || undefined,
       memberCount: memberIds.length,
       displayedCount: synthesized.length + survivors.length,
       agreement: topicAgreementBlock,
@@ -687,6 +746,16 @@ async function buildExport(): Promise<ResultsExport> {
     if (b.displayedCount !== a.displayedCount) return b.displayedCount - a.displayedCount;
     return b.agreement.averageConsensus - a.agreement.averageConsensus;
   });
+  const themeTopicCount = topics.length;
+
+  // 4b. The final block: ideas no visible theme holds. Always emitted when such
+  //     ideas exist (even with zero themes) so the export never drops an idea.
+  const otherBlock = buildOtherIdeasBlock(ideas.otherAtoms, indexes, filterCounters);
+  if (otherBlock) {
+    topics.push(otherBlock);
+    totalSynthCount += otherBlock.synthesizedSolutions.length;
+    totalAboveFloor += otherBlock.standaloneSolutions.length;
+  }
 
   // 5. Question-level summary + agreement.
   const allSurvivors = topics.flatMap((t) => [
@@ -709,12 +778,11 @@ async function buildExport(): Promise<ResultsExport> {
       : 0;
 
   const filteredOut: FilteredOutBlock = {
-    count: belowFloorCount + lowEvaluatorsCount + hiddenCount + topicResolution.unassigned.length,
+    count: filterCounters.belowFloor + filterCounters.lowEvaluators + hiddenCount,
     byReason: {
-      belowConsensusFloor: belowFloorCount,
-      lowEvaluators: lowEvaluatorsCount,
+      belowConsensusFloor: filterCounters.belowFloor,
+      lowEvaluators: filterCounters.lowEvaluators,
       hidden: hiddenCount,
-      unassigned: topicResolution.unassigned.length,
     },
   };
 
@@ -734,7 +802,7 @@ async function buildExport(): Promise<ResultsExport> {
     summary: {
       totalOptions: visibleOptions.length,
       totalEvaluators: indexes.uniqueEvaluators.size,
-      topicCount: topics.length,
+      topicCount: themeTopicCount, // themes only; the other-ideas block is not a topic
       synthesizedSolutionCount: totalSynthCount,
       standaloneAboveFloorCount: totalAboveFloor,
       filteredOutCount: filteredOut.count,
@@ -755,7 +823,8 @@ async function buildExport(): Promise<ResultsExport> {
   if (includeFilteredIds) {
     // Caller asked for the long list — append at top level rather than mutate the type.
     (exportObj as unknown as { filteredOutIds?: string[] }).filteredOutIds = [
-      ...topicResolution.unassigned,
+      ...filterCounters.filteredIds,
+      ...hiddenOptions.map((s) => s.statementId),
     ];
   }
 

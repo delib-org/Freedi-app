@@ -2,6 +2,9 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getGeminiModel } from './config/gemini';
 import { functionConfig } from '@freedi/shared-types';
 import { logError } from './utils/errorHandling';
+import { fetchLinkText } from './agora/materialsExtract';
+import { enforceCallableRateLimit } from './utils/rateLimit';
+import { RATE_BUDGETS } from './config/rateBudgets';
 
 interface SummarizeLinkRequest {
 	url: string;
@@ -15,97 +18,35 @@ interface SummarizeLinkResponse {
 	domain: string;
 }
 
-/**
- * Extract title from HTML using regex
- */
-function extractTitle(html: string): string {
-	// Try <title> tag
-	const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-	if (titleMatch && titleMatch[1]) {
-		return titleMatch[1].trim();
-	}
-
-	// Try og:title meta tag
-	const ogTitleMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]+)"/i);
-	if (ogTitleMatch && ogTitleMatch[1]) {
-		return ogTitleMatch[1].trim();
-	}
-
-	// Try first h1
-	const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-	if (h1Match && h1Match[1]) {
-		return h1Match[1].trim();
-	}
-
-	return 'Untitled';
-}
+/** Page text passed to the model. Enough for a summary, and it bounds the prompt. */
+const MAX_SOURCE_CHARS = 5000;
+const UNTITLED = 'Untitled';
 
 /**
- * Extract main content from HTML
- */
-function extractContent(html: string): string {
-	// Remove script and style tags
-	let content = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-	content = content.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
-
-	// Remove HTML tags
-	content = content.replace(/<[^>]+>/g, ' ');
-
-	// Decode HTML entities
-	content = content.replace(/&nbsp;/g, ' ');
-	content = content.replace(/&amp;/g, '&');
-	content = content.replace(/&lt;/g, '<');
-	content = content.replace(/&gt;/g, '>');
-	content = content.replace(/&quot;/g, '"');
-
-	// Clean up whitespace
-	content = content.replace(/\s+/g, ' ').trim();
-
-	// Limit content length for AI processing
-	if (content.length > 5000) {
-		content = content.substring(0, 5000);
-	}
-
-	return content;
-}
-
-/**
- * Fetch webpage and extract title and content
+ * Fetch a webpage and extract its title and text through `fetchLinkText`, which
+ * blocks private addresses, re-checks every redirect, and caps time and size.
+ * The caller chooses this URL, so a plain fetch here would reach internal hosts.
  */
 async function fetchWebpage(
 	url: string,
 ): Promise<{ title: string; content: string; domain: string }> {
-	try {
-		const response = await fetch(url, {
-			headers: {
-				'User-Agent': 'Mozilla/5.0 (compatible; Freedi/1.0; +https://freedi.tech)',
-			},
-		});
-
-		if (!response.ok) {
-			throw new Error(`Failed to fetch webpage: ${response.statusText}`);
+	const fetched = await fetchLinkText(url, MAX_SOURCE_CHARS);
+	if (!fetched.ok) {
+		if (fetched.reason === 'link_invalid') {
+			throw new HttpsError('invalid-argument', 'Invalid URL format');
 		}
-
-		const html = await response.text();
-
-		// Extract title
-		const title = extractTitle(html);
-
-		// Extract content
-		const content = extractContent(html);
-
-		// Extract domain
-		const urlObj = new URL(url);
-		const domain = urlObj.hostname;
-
-		return { title, content, domain };
-	} catch (error) {
-		logError(error, {
+		logError(new Error(`Link not fetched: ${fetched.reason}`), {
 			operation: 'popperHebbian.summarizeLink.fetchWebpage',
-			metadata: { url },
+			metadata: { url, reason: fetched.reason },
 		});
 		throw new HttpsError('internal', 'Failed to fetch webpage');
 	}
+
+	return {
+		title: fetched.value.title?.trim() || UNTITLED,
+		content: fetched.value.text,
+		domain: new URL(url).hostname,
+	};
 }
 
 /**
@@ -193,6 +134,8 @@ export const summarizeLink = onCall<SummarizeLinkRequest>(
 			throw new HttpsError('invalid-argument', 'Invalid URL format');
 		}
 
+		await enforceCallableRateLimit(request, RATE_BUDGETS.summarizeLink, request.auth.uid);
+
 		try {
 			// 1. Fetch webpage
 			const { title, content, domain } = await fetchWebpage(url);
@@ -214,6 +157,7 @@ export const summarizeLink = onCall<SummarizeLinkRequest>(
 				domain,
 			};
 		} catch (error) {
+			if (error instanceof HttpsError) throw error;
 			logError(error, {
 				operation: 'popperHebbian.summarizeLink',
 				userId: request.auth?.uid,

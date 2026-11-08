@@ -2,12 +2,18 @@ import type { ReactNode } from 'react';
 import { OrganizationRole } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { useOrg } from '@/org/OrgContext';
+import { useAgoraAccess } from '../AgoraHome/useAgoraAccess';
+import { useAccessCount } from '../AccessRequests/accessCount';
 import type { AppShellNavItem } from '@/components/atomic/organisms/AppShell';
+import type { StudioScope } from './useStudioScope';
 
 /**
- * The console's side navigation, derived from the current org scope:
- * Questions → People (hidden for viewers) → Organizations (system admins).
- * Without an org (personal-only accounts) "Questions" points at the picker.
+ * The console's side navigation: the sections of the workspace you are in.
+ *
+ * Because the workspace is now named in the trail directly above the sidebar,
+ * these items need no org label of their own — adjacency says whose they are.
+ * The system-admin items are the exception: they are not inside the workspace,
+ * so they are grouped and captioned separately.
  */
 
 const QuestionsIcon: ReactNode = (
@@ -34,6 +40,13 @@ const OrganizationsIcon: ReactNode = (
 	</svg>
 );
 
+const EventsIcon: ReactNode = (
+	<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+		<rect x="3" y="5" width="18" height="16" rx="2" />
+		<path d="M3 10h18M8 3v4M16 3v4" />
+	</svg>
+);
+
 const AgoraIcon: ReactNode = (
 	<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
 		<path d="M4 10l8-6 8 6" />
@@ -42,36 +55,102 @@ const AgoraIcon: ReactNode = (
 	</svg>
 );
 
-export function useStudioNav(): AppShellNavItem[] {
-	const { t } = useTranslation();
-	const { currentOrgId, currentRole, isSystemAdmin } = useOrg();
+const RequestsIcon: ReactNode = (
+	<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+		<path d="M4 6h16v12H4z" />
+		<path d="M4 7l8 6 8-6" />
+	</svg>
+);
+
+export function useStudioNav(scope: StudioScope): AppShellNavItem[] {
+	const { t, tWithParams } = useTranslation();
+	const { currentRole, isSystemAdmin } = useOrg();
+	const agoraAccess = useAgoraAccess(scope.kind === 'agora');
+
+	// Regional coordinators and system admins decide access requests; the badge
+	// counts the ones waiting for them. Nobody else makes the call.
+	const approves = isSystemAdmin || (scope.kind === 'agora' && agoraAccess.isSupervisor);
+	const waiting = useAccessCount(approves && scope.kind !== 'none');
+	const requestsBadge = {
+		badge: waiting,
+		badgeLabel: tWithParams('{{count}} waiting for approval', { count: waiting }),
+	};
 
 	const isViewer = currentRole === OrganizationRole.viewer && !isSystemAdmin;
-	const base = currentOrgId ? `/orgs/${currentOrgId}` : '/orgs';
+	const items: AppShellNavItem[] = [];
 
-	const items: AppShellNavItem[] = [
-		{ id: 'questions', label: t('Questions'), to: base, icon: QuestionsIcon, end: true },
-	];
-
-	if (currentOrgId && !isViewer) {
-		items.push({ id: 'people', label: t('People'), to: `${base}/people`, icon: PeopleIcon });
-	}
-
-	if (isSystemAdmin) {
-		items.push({
+	const adminItems: AppShellNavItem[] = [
+		{
 			id: 'organizations',
 			label: t('Organizations'),
 			to: '/admin/orgs',
 			icon: OrganizationsIcon,
 			end: false,
-		});
-		items.push({
+		},
+		{
 			id: 'agora',
 			label: t('Agora classrooms'),
 			to: '/admin/agora',
 			icon: AgoraIcon,
 			end: false,
+		},
+		{
+			id: 'agora-requests',
+			label: t('Access requests'),
+			to: '/admin/agora/requests',
+			icon: RequestsIcon,
+			end: false,
+			...requestsBadge,
+		},
+	];
+
+	if (scope.kind === 'org' && scope.organizationId) {
+		const base = `/orgs/${scope.organizationId}`;
+		items.push({
+			id: 'questions',
+			label: t('Questions'),
+			to: base,
+			icon: QuestionsIcon,
+			end: true,
 		});
+		if (!isViewer) {
+			items.push({ id: 'people', label: t('People'), to: `${base}/people`, icon: PeopleIcon });
+		}
+	}
+
+	if (scope.kind === 'personal') {
+		items.push({ id: 'events', label: t('Events'), to: '/personal', icon: EventsIcon, end: true });
+	}
+
+	if (scope.kind === 'agora') {
+		items.push({
+			id: 'my-agora',
+			label: t('My Agora classrooms'),
+			to: '/agora',
+			icon: AgoraIcon,
+			end: true,
+		});
+		if (agoraAccess.isSupervisor) {
+			items.push({
+				id: 'access-requests',
+				label: t('Access requests'),
+				to: '/agora/requests',
+				icon: RequestsIcon,
+				end: false,
+				...requestsBadge,
+			});
+		}
+		// A coordinator who also teaches keeps their own classes one tap away.
+		if (agoraAccess.isSupervisor && agoraAccess.isTeacher) {
+			items.push({ id: 'my-classes', label: t('My classes'), to: '/agora/mine', icon: PeopleIcon });
+		}
+	}
+
+	// In the admin workspace those screens ARE the sections; anywhere else they
+	// are a separate, captioned group, because they sit outside the workspace.
+	if (scope.kind === 'admin') return adminItems;
+	if (isSystemAdmin && scope.kind !== 'none') {
+		items.push(...adminItems.map((item) => ({ ...item, group: 'system' as const })));
 	}
 
 	return items;

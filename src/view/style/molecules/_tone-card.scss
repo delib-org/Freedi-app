@@ -1,0 +1,164 @@
+// Tone Card Molecule — BEM
+// A card that wears one of the pastel tones as its surface — the playful
+// look's signature container (home cards, the question hero, follow-up
+// cards, the aside's invitation). Every tone brings its own ink, so text on
+// it reads without per-card colour rules. React wrapper: atomic/molecules/ToneCard.
+//
+// DOM:   <div class="tone-card tone-card--mint [tone-card--compact] [tone-card--interactive]">…</div>
+// Modifiers:
+//   --lilac | --mint | --yellow | --pink | --peach   the surface (default: --surface, a plain card)
+//   --compact       tighter padding, for asides and lists
+//   --interactive   lifts on hover; the wrapper adds it when the card is a link or button
+@use '../mixins' as *;
+
+.tone-card {
+	--tone-card-bg: var(--card-default);
+	--tone-card-ink: var(--text-title);
+	--tone-card-muted: var(--text-caption);
+
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm, 0.5rem);
+	padding: var(--space-lg, 1.5rem);
+	border-radius: var(--radius-card);
+	background: var(--tone-card-bg);
+	color: var(--tone-card-ink);
+	box-shadow: var(--shadow-card);
+	overflow-wrap: anywhere;
+	text-align: start;
+	transition:
+		transform var(--motion-base) var(--motion-ease),
+		box-shadow var(--motion-base) var(--motion-ease);
+
+	// Anything muted inside a tone card reads in the tone's ink at 75%, not in
+	// the page's caption colour — pastel plus grey is the one pairing that fails.
+	&--lilac,
+	&--mint,
+	&--yellow,
+	&--pink,
+	&--peach {
+		box-shadow: none;
+		--tone-card-muted: color-mix(in srgb, var(--tone-card-ink) 72%, transparent);
+	}
+
+	&--lilac {
+		--tone-card-bg: var(--tone-lilac);
+		--tone-card-ink: var(--tone-lilac-ink);
+	}
+
+	&--mint {
+		--tone-card-bg: var(--tone-mint);
+		--tone-card-ink: var(--tone-mint-ink);
+	}
+
+	&--yellow {
+		--tone-card-bg: var(--tone-yellow);
+		--tone-card-ink: var(--tone-yellow-ink);
+	}
+
+	&--pink {
+		--tone-card-bg: var(--tone-pink);
+		--tone-card-ink: var(--tone-pink-ink);
+	}
+
+	&--peach {
+		--tone-card-bg: var(--tone-peach);
+		--tone-card-ink: var(--tone-peach-ink);
+	}
+
+	&--compact {
+		padding: var(--space-md, 1rem);
+		gap: var(--space-xs, 0.25rem);
+	}
+
+	&--interactive {
+		cursor: pointer;
+		color: var(--tone-card-ink);
+		text-decoration: none;
+
+		&:hover {
+			transform: translateY(-3px);
+			box-shadow: var(--shadow-card);
+		}
+
+		&:active {
+			transform: translateY(0);
+		}
+
+		@include focus-visible;
+	}
+
+	// Elements — the parts most tone cards share.
+	&__muted {
+		color: var(--tone-card-muted);
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 1.25rem;
+		font-weight: var(--font-weight-medium);
+		line-height: var(--line-height-heading);
+		color: inherit;
+		text-align: start;
+	}
+
+	&__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm, 0.5rem);
+		margin-block-start: var(--space-xs, 0.25rem);
+	}
+
+	// The icon tile in a card's top-left: a squircle with one clipped corner.
+	&__tile {
+		display: grid;
+		place-items: center;
+		width: 2.875rem;
+		height: 2.875rem;
+		border-radius: 16px 20px 16px 7px;
+		background: color-mix(in srgb, var(--card-default) 45%, transparent);
+		color: inherit;
+		flex-shrink: 0;
+		transition: transform var(--motion-base) var(--motion-ease);
+
+		svg {
+			width: 1.375rem;
+			height: 1.375rem;
+		}
+	}
+
+	&--interactive:hover &__tile {
+		transform: rotate(-8deg);
+	}
+
+	@media (prefers-contrast: more) {
+		&--lilac,
+		&--mint,
+		&--yellow,
+		&--pink,
+		&--peach {
+			box-shadow: 0 0 0 1px var(--border-primary);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+
+		&--interactive:hover {
+			transform: none;
+		}
+
+		&--interactive:hover &__tile {
+			transform: none;
+		}
+	}
+}
+
+[data-contrast='high'] .tone-card--lilac,
+[data-contrast='high'] .tone-card--mint,
+[data-contrast='high'] .tone-card--yellow,
+[data-contrast='high'] .tone-card--pink,
+[data-contrast='high'] .tone-card--peach {
+	box-shadow: 0 0 0 1px var(--border-primary);
+}

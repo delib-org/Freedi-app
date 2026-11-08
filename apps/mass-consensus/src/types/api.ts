@@ -85,6 +85,41 @@ export interface MultiSuggestionResponse {
 }
 
 /**
+ * Similar suggestions for one piece of a split submission
+ */
+export interface PieceSimilarity {
+  similarStatements: Statement[];
+  userText: string;
+}
+
+/**
+ * Response from the combined prepare endpoint: moderation + split detection +
+ * similar suggestions in one round trip (Cloud Function `prepareSuggestion`)
+ */
+export interface PrepareSuggestionResponse {
+  ok: boolean;
+  multi: {
+    isMultipleSuggestions: boolean;
+    suggestions: DetectedSuggestion[];
+  };
+  similar: {
+    similarStatements: Statement[];
+    userText: string;
+    method?: string;
+    cached?: boolean;
+  };
+  /** Aligned with `multi.suggestions`; only when the client asked for `checkPieces` */
+  pieces?: PieceSimilarity[];
+  flaggedForReview?: boolean;
+  responseTime?: number;
+  error?: string;
+  reason?: string;
+  category?: string;
+  /** Machine-readable refusal, e.g. ADD_OPTION_CODES.DISABLED */
+  code?: string;
+}
+
+/**
  * Comment data returned from queries (subset of Statement fields)
  */
 export interface CommentData {
@@ -105,5 +140,11 @@ export type FlowState =
   | { step: 'multi-preview'; suggestions: SplitSuggestion[]; originalText: string; similarData?: SimilarCheckResponse }
   | { step: 'similar'; data: SimilarCheckResponse }
   | { step: 'submitting' }
-  | { step: 'success'; action: 'created' | 'evaluated' | 'merged'; solutionText: string }
+  | {
+      step: 'success';
+      action: 'created' | 'evaluated' | 'merged';
+      solutionText: string;
+      /** Shown under the success message when part of a split could not be added. */
+      note?: string;
+    }
   | { step: 'evaluate' };

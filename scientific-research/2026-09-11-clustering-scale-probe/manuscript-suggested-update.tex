@@ -1,0 +1,92 @@
+% ============================================================================
+% SUGGESTED text for /Users/talyaron/Documents/ChatGPT/מאמרים/output/pdf/freedi-arxiv/source/main.tex
+% Prepared 2026-09-11 from scientific-research/2026-09-11-clustering-scale-probe.
+% NOT applied. The pilot's accuracy numbers rest on PROVISIONAL (model-authored)
+% labels; do not merge the accuracy sentences until the human labels are in and
+% analyze.mjs has been re-run with --labels=annotation/labels.human.jsonl.
+% Line numbers refer to main.tex as read on 2026-09-11 (416 lines).
+% ============================================================================
+
+% ---------------------------------------------------------------------------
+% (1) After L336 (the (b_in, b_out) = (2000, 200) assumption paragraph) — ADD:
+% ---------------------------------------------------------------------------
+A price correction applies to the full-list curve. Re-reading the archived usage
+records shows that 62.9\% of its prompt tokens were billed as prompt-cache
+\emph{writes}, which the provider's 11~September~2026 schedule prices at
+$1.25\times$ the input rate, and that none were cache reads. With that surcharge
+the full-list projection rises from \$0.44 to \$0.50 at 500 proposals, from
+\$1.62 to \$1.86 at 1,000, and from \$149 to \$172 at 10,000. The local-work
+budget remains an assumption; the component measurement in
+Section~\ref{sec:scaleprobe} does not replace it.
+
+% ---------------------------------------------------------------------------
+% (2) L345--346 ("No cached input tokens were reported.") — REPLACE that sentence with:
+% ---------------------------------------------------------------------------
+No cached-input reads were reported; the cache \emph{writes} that were reported
+are billed at a premium and are included in the corrected figures above.
+
+% ---------------------------------------------------------------------------
+% (3) L348 (the 200-proposal paragraph) — REPLACE with:
+% ---------------------------------------------------------------------------
+Token accounting cannot establish an accuracy curve or a failure threshold at
+200 proposals. Long-context findings motivate controlled tests
+\citep{liu2024lost} but supply no proposal-count threshold for this task. A
+first controlled probe (Section~\ref{sec:scaleprobe}) found no decline in
+full-list judging accuracy between 100 and 500 proposals.
+
+% ---------------------------------------------------------------------------
+% (4) New subsection, suggested after the cost-projection subsection (before L350):
+% ---------------------------------------------------------------------------
+\subsection{A Budgeted Probe of Retrieve-then-Judge}\label{sec:scaleprobe}
+
+We tested one component of the mechanism in isolation: does showing the judge
+only the 15 nearest proposals by embedding cosine (B), instead of the full pool
+(A), reduce cost without an evident loss in matching decisions?
+
+\paragraph{Design.}
+\begin{itemize}
+  \item \textbf{Data.} Twenty held-out proposals from one public deliberation
+    (Pol.is, Bowling Green, 607 approved comments, CC~BY~4.0): ten with at least
+    one allowable match in the bank and ten with none.
+  \item \textbf{Pools.} Each query was judged against nested pools of 100, 200,
+    and 500 existing proposals, in two presentation orders.
+  \item \textbf{Controls.} The same model (\texttt{gpt-5.6-luna}), rubric,
+    schema, output cap, and candidate texts were used in both arms. B kept A's
+    relative order.
+  \item \textbf{Scale.} There were 240 paired judgements, at a total API cost of
+    US\$0.27.
+\end{itemize}
+
+\paragraph{Cost.} B's input stayed at about 655 tokens while A's grew linearly
+(2,734, 5,150, and 12,520 tokens). The median paired cost ratio was
+$2.6\times$, $4.3\times$, and $9.4\times$ at 100, 200, and 500 proposals
+(undiscounted list prices). Output tokens, similar in both arms, bound the saving.
+
+\paragraph{Decisions.} [PROVISIONAL --- re-derive from human labels before use.]
+\begin{itemize}
+  \item Full-list correctness did not decline from 100 to 500 proposals (28, 31,
+    and 31 of 40 cells). There were no false joins at 200 or 500.
+  \item Retrieval placed an approved target among its 15 candidates for every
+    match-present query at every size.
+  \item The judge nevertheless declined these targets more often in B: at 500
+    proposals, 6 paired cells were correct only in A and none only in B.
+  \item Its stated reasons indicate a contrast effect. When every candidate is a
+    near-variant, the judge demands closer equivalence.
+\end{itemize}
+Whether this is a loss of recall or a gain in precision depends on the adjudicated
+labels. The pairwise attachment judge used in production was not tested.
+
+\paragraph{Scope.} The probe measures a simplified component at sampled
+states. It is not a streamed run of the seven-stage pipeline and not a
+cluster-level F1 result. It uses one English discussion and one model; the
+bootstrap intervals, resampled by query, do not cover variation across discussions.
+
+% ---------------------------------------------------------------------------
+% (5) L367 (Future evaluation, "Twenty independently labelled query proposals ...
+%     requires 240 decision calls.") — REPLACE with:
+% ---------------------------------------------------------------------------
+The pilot described in Section~\ref{sec:scaleprobe} has been run; its labels
+await independent human adjudication. The next step is a streamed comparison at
+100, 200, and 500 arrivals, with at least two orders and more than one
+labelled discussion. Every provider call of the complete pipeline, including
+background maintenance, is to be metered under a shared budget.

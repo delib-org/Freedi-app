@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Statement } from '@freedi/shared-types';
+import { Statement, resolveEvaluationScaleKey } from '@freedi/shared-types';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
+import { resolveCanAddOptions } from '@/lib/utils/participantOptions';
+import { cardColorIntensityStyle } from '@/lib/utils/cardColorIntensity';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { ToastProvider } from '@/components/shared/Toast';
 import SolutionCard from './SolutionCard';
@@ -14,12 +16,15 @@ import styles from './SolutionFeed.module.css';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError } from '@/lib/utils/errorHandling';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
+import InlineMarkdown from '../shared/InlineMarkdown';
 import {
   trackPageView,
   trackEvaluation,
   trackNewBatchRequest,
   trackAddSolutionClick,
 } from '@/lib/analytics';
+import { participantFetch } from '@/lib/firebase/participantFetch';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 interface SolutionFeedClientProps {
   question: Statement;
@@ -28,6 +33,10 @@ interface SolutionFeedClientProps {
   mergedSettings?: MergedQuestionSettings;
   /** Survey context: used to stamp evaluations with a demographic anchor */
   surveyId?: string;
+  /** Position in a multi-question survey ("1) …"); omitted = no number */
+  questionNumber?: number;
+  /** Standalone page: the server found a survey that blocks participant options here */
+  blockedByServer?: boolean;
 }
 
 /**
@@ -39,8 +48,11 @@ export default function SolutionFeedClient({
   initialSolutions,
   mergedSettings,
   surveyId,
+  questionNumber,
+  blockedByServer = false,
 }: SolutionFeedClientProps) {
   const { t, tWithParams } = useTranslation();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [solutions, setSolutions] = useState<Statement[]>(initialSolutions);
   const [userId, setUserId] = useState<string>('');
   const [evaluationScores, setEvaluationScores] = useState<Map<string, number>>(new Map());
@@ -68,16 +80,18 @@ export default function SolutionFeedClient({
   const questionId = question.statementId;
   const totalOptionsCount = question.numberOfOptions || 0;
 
+  // May this participant add options at all? One answer for every gate below.
+  // An empty question keeps inviting the first idea (as before) unless adding
+  // is blocked outright ("admin options only"), which nothing reopens.
+  const blockedOutright = blockedByServer || (mergedSettings?.blockParticipantOptions ?? false);
+  const canAdd =
+    resolveCanAddOptions(mergedSettings, blockedByServer) ||
+    (solutions.length === 0 && !blockedOutright);
+
   // Use merged settings for "ask for suggestion before evaluation"
   const questionSettingsLegacy = question.questionSettings as { askUserForASolutionBeforeEvaluation?: boolean } | undefined;
-  const requiresSolution = mergedSettings?.askUserForASolutionBeforeEvaluation ??
-    questionSettingsLegacy?.askUserForASolutionBeforeEvaluation ?? true;
-
-  console.info('[SolutionFeed Debug] Settings check:', {
-    mergedSettings: mergedSettings?.askUserForASolutionBeforeEvaluation,
-    questionSettingsLegacy: questionSettingsLegacy?.askUserForASolutionBeforeEvaluation,
-    finalRequiresSolution: requiresSolution
-  });
+  const requiresSolution = canAdd && (mergedSettings?.askUserForASolutionBeforeEvaluation ??
+    questionSettingsLegacy?.askUserForASolutionBeforeEvaluation ?? true);
 
   // Check if we're in survey context (to hide bottomContainer)
   const inSurveyContext = !!mergedSettings;
@@ -85,14 +99,11 @@ export default function SolutionFeedClient({
   // Check if solutions array is empty
   const hasNoSolutions = solutions.length === 0;
 
-  // Check if participants can add suggestions
-  const canAddSuggestions = hasNoSolutions || (mergedSettings?.allowParticipantsToAddSuggestions ?? true);
-
   // Check if view progress button should be shown (admin per-question setting, defaults to true)
   const showViewProgressEnabled = mergedSettings?.showViewProgress !== false;
 
   // Ask user for solution after minimum evaluations
-  const askAfterEvaluation = mergedSettings?.askUserForASolutionAfterEvaluation ?? false;
+  const askAfterEvaluation = canAdd && (mergedSettings?.askUserForASolutionAfterEvaluation ?? false);
   const minEvaluationsForPrompt = mergedSettings?.minEvaluationsPerQuestion ?? 0;
   const [hasShownAfterEvalPrompt, setHasShownAfterEvalPrompt] = useState(false);
 
@@ -104,16 +115,13 @@ export default function SolutionFeedClient({
 
   // Check if user has submitted solutions
   useEffect(() => {
-    console.info('[SolutionFeed Debug] Effect triggered:', { userId, hasCheckedUserSolutions, requiresSolution });
     if (!userId || hasCheckedUserSolutions) return;
 
     const checkUserSolutions = async () => {
       try {
-        console.info('[SolutionFeed Debug] Checking user solutions for questionId:', questionId);
-        const response = await fetch(`/api/user-solutions/${questionId}?userId=${userId}`);
+        const response = await participantFetch(`/api/user-solutions/${questionId}`);
         if (response.ok) {
           const data = await response.json();
-          console.info('[SolutionFeed Debug] API response:', data);
           setHasSubmittedSolution(data.hasSubmitted);
           setUserSolutionCount(data.solutionCount || 0);
 
@@ -124,7 +132,6 @@ export default function SolutionFeedClient({
           }
 
           const shouldShowModal = !data.hasSubmitted && requiresSolution;
-          console.info('[SolutionFeed Debug] Should show modal?', shouldShowModal, '(hasSubmitted:', data.hasSubmitted, 'requiresSolution:', requiresSolution, ')');
           if (shouldShowModal) {
             setShowSolutionPrompt(true);
           }
@@ -180,7 +187,10 @@ export default function SolutionFeedClient({
 
   // One-time initialization: user ID and page-view tracking
   useEffect(() => {
-    const id = getOrCreateAnonymousUser();
+    if (isAuthLoading) return;
+
+    // The server only knows the Firebase uid, so "my options" must compare with it.
+    const id = user?.uid ?? getOrCreateAnonymousUser();
     setUserId(id);
     userIdRef.current = id;
 
@@ -188,7 +198,7 @@ export default function SolutionFeedClient({
       trackPageView(questionId, id);
       hasTrackedPageView.current = true;
     }
-  }, [questionId]);
+  }, [questionId, user?.uid, isAuthLoading]);
 
   // Load evaluation history when questionId changes (not when solutions change)
   useEffect(() => {
@@ -197,7 +207,7 @@ export default function SolutionFeedClient({
 
     const loadEvaluationHistory = async () => {
       try {
-        const response = await fetch(`/api/user-evaluations/${questionId}?userId=${id}`);
+        const response = await participantFetch(`/api/user-evaluations/${questionId}`);
         if (response.ok) {
           const data = await response.json();
           const evaluatedSet = new Set<string>(data.evaluatedOptionsIds || []);
@@ -218,8 +228,8 @@ export default function SolutionFeedClient({
               Promise.all(
                 evaluatedSolutionsInBatch.map(async (solution) => {
                   try {
-                    const evalResponse = await fetch(
-                      `/api/evaluations/${solution.statementId}?userId=${id}`
+                    const evalResponse = await participantFetch(
+                      `/api/evaluations/${solution.statementId}`
                     );
                     if (evalResponse.ok) {
                       const evalData = await evalResponse.json();
@@ -272,6 +282,7 @@ export default function SolutionFeedClient({
     if (!inSurveyContext) return;
 
     const handleTriggerAddSuggestion = () => {
+      if (!canAdd) return;
       trackAddSolutionClick(questionId, userId);
       setShowSolutionPrompt(true);
     };
@@ -287,7 +298,7 @@ export default function SolutionFeedClient({
       window.removeEventListener('trigger-add-suggestion', handleTriggerAddSuggestion);
       window.removeEventListener('trigger-view-progress', handleTriggerViewProgress);
     };
-  }, [inSurveyContext, questionId, userId]);
+  }, [inSurveyContext, questionId, userId, canAdd]);
 
   // Dispatch show-view-progress event when in survey context
   useEffect(() => {
@@ -351,11 +362,10 @@ export default function SolutionFeedClient({
       setAllEvaluatedIds((prev) => new Set(prev).add(solutionId));
 
       // Call API
-      const response = await fetch(`/api/evaluations/${solutionId}`, {
+      const response = await participantFetch(`/api/evaluations/${solutionId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId,
           evaluation: score,
           ...(surveyId ? { surveyId } : {}),
         }),
@@ -422,11 +432,10 @@ export default function SolutionFeedClient({
     setError(null);
 
     try {
-      const response = await fetch(`/api/statements/${questionId}/batch`, {
+      const response = await participantFetch(`/api/statements/${questionId}/batch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId,
           size: 6,
         }),
       });
@@ -474,11 +483,10 @@ export default function SolutionFeedClient({
 
     setIsLoadingBatch(true);
     try {
-      const response = await fetch(`/api/statements/${questionId}/batch`, {
+      const response = await participantFetch(`/api/statements/${questionId}/batch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId,
           size: 6,
         }),
       });
@@ -511,7 +519,27 @@ export default function SolutionFeedClient({
 
   return (
     <ToastProvider>
-      <div className={styles.feed}>
+      <div
+        className={styles.feed}
+        style={cardColorIntensityStyle(mergedSettings?.cardColorIntensity)}
+      >
+        {/* Title: the rating ask names the question, so no separate question header here */}
+        <header className={styles.titleBlock}>
+          <h1 className={styles.title}>
+            <span className={styles.titleLead}>
+              {t('Rate the answers others suggested to the question')}
+            </span>
+            <span className={styles.titleQuestion}>
+              <InlineMarkdown text={question.statement} />
+            </span>
+          </h1>
+          {getParagraphsText(question.paragraphs) && (
+            <p className={styles.description}>
+              <InlineMarkdown text={getParagraphsText(question.paragraphs)} />
+            </p>
+          )}
+        </header>
+
         {/* Error message */}
         {error && (
           <div className={styles.error}>
@@ -523,8 +551,8 @@ export default function SolutionFeedClient({
         {/* Empty state */}
         {hasNoSolutions ? (
           <div className={styles.emptyState}>
-            <h3>{t('No solutions yet')}</h3>
-            {canAddSuggestions ? (
+            <h3>{t(canAdd ? 'No solutions yet' : 'No options yet')}</h3>
+            {canAdd ? (
               <>
                 <p>{t('Be the first to submit a solution!')}</p>
                 <button
@@ -534,7 +562,7 @@ export default function SolutionFeedClient({
                     setShowSolutionPrompt(true);
                   }}
                 >
-                  {t('Add Solution')}
+                  {t('mc.addAnswer')}
                 </button>
               </>
             ) : (
@@ -543,12 +571,6 @@ export default function SolutionFeedClient({
           </div>
         ) : (
           <>
-            {/* Instructions */}
-            <div className={styles.instructions}>
-              <h3>{t('Please rate the following suggestions')}</h3>
-              <p>{t('rateInstructions')}</p>
-            </div>
-
             {/* Inline evaluation progress */}
             <EvaluationProgress
               evaluatedCount={evaluatedInBatch}
@@ -563,7 +585,7 @@ export default function SolutionFeedClient({
                   solution={solution}
                   onEvaluate={handleEvaluate}
                   currentScore={evaluationScores.get(solution.statementId)}
-                  ratingMode={question.statementSettings?.ratingMode}
+                  ratingMode={resolveEvaluationScaleKey(question.statementSettings)}
                 />
               ))}
             </div>
@@ -668,7 +690,7 @@ export default function SolutionFeedClient({
                 {t('View Progress')}
               </button>
             )}
-            {canAddSuggestions && (
+            {canAdd && (
               <button
                 className={styles.addSolutionButton}
                 onClick={() => {
@@ -676,7 +698,7 @@ export default function SolutionFeedClient({
                   setShowSolutionPrompt(true);
                 }}
               >
-                {t('Add Solution')}
+                {t('mc.addAnswer')}
               </button>
             )}
           </div>
@@ -685,17 +707,28 @@ export default function SolutionFeedClient({
         {/* Social Feed - real-time activity */}
         <SocialFeed isActive={!hasNoSolutions} />
 
-        {/* Solution prompt modal */}
-        <SolutionPromptModal
-          isOpen={showSolutionPrompt}
-          onClose={() => setShowSolutionPrompt(false)}
-          questionId={questionId}
-          userId={userId}
-          onSubmitSuccess={handleSolutionComplete}
-          questionText={question.statement}
-          questionDescription={getParagraphsText(question.paragraphs)}
-          title={requiresSolution && !hasCheckedUserSolutions ? t('Add Your Solution First') : t('Add Solution')}
-        />
+        {/* Solution prompt modal — not mounted at all when adding is blocked */}
+        {canAdd && (
+          <SolutionPromptModal
+            isOpen={showSolutionPrompt}
+            onClose={() => setShowSolutionPrompt(false)}
+            questionId={questionId}
+            userId={userId}
+            onSubmitSuccess={handleSolutionComplete}
+            questionText={question.statement}
+            questionNumber={questionNumber}
+            questionDescription={getParagraphsText(question.paragraphs)}
+            title={requiresSolution && !hasCheckedUserSolutions ? t('mc.addYourAnswerFirst') : t('mc.addAnswer')}
+            suggestionMode={mergedSettings?.suggestionMode}
+            autoSplitMultiSuggestions={
+              mergedSettings?.autoSplitMultiSuggestions ??
+              question.statementSettings?.autoSplitMultiSuggestions
+            }
+            autoMergeSimilar={
+              mergedSettings?.autoMergeSimilar ?? question.statementSettings?.autoMergeSimilar
+            }
+          />
+        )}
 
         {/* Progress/Completion screen */}
         {showCompletionScreen && (

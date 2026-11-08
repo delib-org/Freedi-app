@@ -1,18 +1,22 @@
 import m from 'mithril';
 import { t } from '../../lib/i18n';
 import { Icon } from '../../components/Icon';
-import { planItemLabel } from '../../components/StageNav';
 import {
-	addableStages,
+	addChoices,
+	addedItem,
+	canInsertAt,
+	insertionRange,
+	matchingPreset,
 	planEditorReduce,
+	stepProblems,
+	type AddChoice,
 	type PlanEditorEvent,
 } from '../../lib/flows/stagePlanEditor';
+import { AddStepSheet } from './planEditor/AddStepSheet';
+import { StepEditor } from './planEditor/StepEditor';
+import { choiceLabel, choiceOf, choiceTone, stepLine } from './planEditor/stepMeta';
 import {
 	AgoraStage,
-	CutoffBy,
-	AGORA_STAGE_PLAN,
-	defaultQuestionSelection,
-	defaultVotingTrigger,
 	validateStagePlan,
 	type AgoraStagePlanItem,
 	type AgoraStagePlanPreset,
@@ -25,7 +29,7 @@ export interface StagePlanEditorAttrs {
 	/** Items before this index are history (a running game) and render locked */
 	frozenCount: number;
 	onChange: (items: AgoraStagePlanItem[]) => void;
-	/** Offer the presets — only sensible before the game starts */
+	/** Offer the templates — only sensible before the game starts */
 	showPresets?: boolean;
 }
 
@@ -42,344 +46,399 @@ export const PLAN_ERROR_KEYS: Record<StagePlanError, string> = {
 	voting_needs_source: 'startGame.plan_error_voting_needs_source',
 	stage_needs_characters: 'startGame.plan_error_stage_needs_characters',
 	question_needs_title: 'startGame.plan_error_question_needs_title',
+	linked_needs_link: 'startGame.plan_error_linked_needs_link',
 	unknown_stage: 'startGame.plan_error_unknown_stage',
 };
 
+const PRESET_LABELS: Record<AgoraStagePlanPreset, string> = {
+	wizcol: 'startGame.plan_preset_wizcol',
+	scenarioWizcol: 'startGame.plan_preset_scenario_wizcol',
+	classic: 'startGame.plan_preset_classic',
+	quickDecision: 'startGame.plan_preset_quick',
+};
+
+/** The card's name: "My story", "Discussion" — or the question type for a question */
+function stepName(item: AgoraStagePlanItem): string {
+	return choiceLabel(choiceOf(item));
+}
+
 /**
- * The ordered stage list, as a list the admin edits in place: add a stage,
- * move it, remove it, and open the per-stage options — a question's text and
- * cutoff, a deliberation's auto-vote rule. Pure rendering over the
- * `stagePlanEditor` reducer; the parent owns the items.
+ * The lesson's steps as a list of cards the teacher edits in place
+ * (docs/ia/agora-lesson-builder.md). Each card shows its number, its type as
+ * a coloured chip and the full words students will read; a toolbar on its
+ * own line moves or removes it, and a tap opens its editor underneath. "+"
+ * between cards and "Add a step" at the end open a sheet of what can go
+ * there. Pure rendering over the `stagePlanEditor` reducer; the parent owns
+ * the items.
  */
 export function StagePlanEditor(): m.Component<StagePlanEditorAttrs> {
 	let openItemId: string | null = null;
-	let addOpen = false;
+	/** The question whose words field should take focus on its next mount */
+	let focusItemId: string | null = null;
+	/** The splice index the add-step sheet is open for */
+	let addAt: number | null = null;
+	/** A template tapped over the teacher's own edits, waiting for "replace?" */
+	let pendingPreset: AgoraStagePlanPreset | null = null;
+
+	/**
+	 * Moving a step re-sorts the list, and a card that teleports makes the
+	 * teacher lose their place. FLIP: remember where every card sat, let
+	 * Mithril reorder the DOM, put each card back where the eye left it and
+	 * release it to slide home. Armed by a move or an add only.
+	 *
+	 * offsetTop, not getBoundingClientRect: scrolling must not read as motion.
+	 */
+	const rowTops = new Map<string, number>();
+	let flipArmed = false;
+	let movedItemId: string | null = null;
+	const reducedMotion =
+		typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	const glow = (dom: HTMLElement): void => {
+		// Drop the glow first and force a reflow, so a card moved twice in a row glows twice
+		dom.classList.remove('plan-step--moved');
+		void dom.offsetWidth;
+		dom.classList.add('plan-step--moved');
+	};
+
+	const rememberRow = (dom: HTMLElement, itemId: string): void => {
+		rowTops.set(itemId, dom.offsetTop);
+		if (itemId === movedItemId && !reducedMotion) glow(dom);
+	};
+
+	const flipRow = (dom: HTMLElement, itemId: string, flip: boolean): void => {
+		const now = dom.offsetTop;
+		const before = rowTops.get(itemId);
+		rowTops.set(itemId, now);
+		if (!flip || before === undefined || reducedMotion) return;
+		const delta = before - now;
+		if (Math.abs(delta) < 2) return;
+		if (itemId === movedItemId) glow(dom);
+		dom.style.transition = 'none';
+		dom.style.transform = `translateY(${delta}px)`;
+		requestAnimationFrame(() => {
+			dom.style.transition = '';
+			dom.style.transform = '';
+		});
+	};
 
 	return {
 		view(vnode) {
 			const { items, hasCharacters, frozenCount, onChange, showPresets = false } = vnode.attrs;
 			const options = { hasCharacters, frozenCount };
-			const dispatch = (event: PlanEditorEvent): void =>
+			const dispatch = (event: PlanEditorEvent): void => {
+				if (event.kind === 'move') {
+					flipArmed = true;
+					movedItemId = event.itemId;
+				}
 				onChange(planEditorReduce(items, event, options));
+			};
+			// Hooks run after this view; they see the value the move armed, and the next render starts clean
+			const flip = flipArmed;
+			flipArmed = false;
 			const errors = validateStagePlan(items, { hasCharacters });
-			const addable = addableStages(items, { hasCharacters });
+			const problems = stepProblems(items, { hasCharacters });
+			const range = insertionRange(items, frozenCount);
+			const choices = addChoices(items, { hasCharacters });
+			const presets: AgoraStagePlanPreset[] = hasCharacters
+				? ['scenarioWizcol', 'classic']
+				: ['wizcol', 'quickDecision'];
+			const current = showPresets ? matchingPreset(items, presets, frozenCount) : null;
 
-			const numberInput = (
-				value: number,
-				attrs: { min: string; max: string; step: string },
-				onchange: (next: number) => void,
-			): m.Children =>
-				m('input.plan-editor__number[type=number]', {
-					value,
-					...attrs,
-					onchange: (event: Event) => onchange(Number((event.target as HTMLInputElement).value)),
-				});
-
-			const questionOptions = (item: AgoraStagePlanItem): m.Children => {
-				const selection = item.selection ?? defaultQuestionSelection();
-				const byThreshold = selection.cutoffBy === CutoffBy.aboveThreshold;
-
-				return m('.plan-editor__options', [
-					m('label.plan-editor__field', [
-						m('span', t('startGame.plan_question_title')),
-						m('input.plan-editor__text[type=text]', {
-							value: item.title ?? '',
-							maxlength: AGORA_STAGE_PLAN.MAX_TITLE_LENGTH,
-							placeholder: t('startGame.quick_question_ph'),
-							oninput: (event: InputEvent) =>
-								dispatch({
-									kind: 'patch',
-									itemId: item.itemId,
-									patch: { title: (event.target as HTMLInputElement).value },
-								}),
-						}),
-					]),
-					m('label.plan-editor__field', [
-						m('span', t('startGame.plan_question_explanation')),
-						m('textarea.plan-editor__textarea', {
-							value: item.explanation ?? '',
-							rows: 2,
-							maxlength: AGORA_STAGE_PLAN.MAX_EXPLANATION_LENGTH,
-							oninput: (event: InputEvent) =>
-								dispatch({
-									kind: 'patch',
-									itemId: item.itemId,
-									patch: { explanation: (event.target as HTMLTextAreaElement).value },
-								}),
-						}),
-					]),
-					m('.plan-editor__row', [
-						m('span', t('startGame.plan_cutoff')),
-						m(
-							'select.plan-editor__select',
-							{
-								onchange: (event: Event) =>
-									dispatch({
-										kind: 'patch',
-										itemId: item.itemId,
-										patch: {
-											selection: {
-												...selection,
-												cutoffBy:
-													(event.target as HTMLSelectElement).value === 'threshold'
-														? CutoffBy.aboveThreshold
-														: CutoffBy.topOptions,
-											},
-										},
-									}),
-							},
-							[
-								m(
-									'option',
-									{ value: 'top', selected: !byThreshold },
-									t('startGame.plan_cutoff_top'),
-								),
-								m(
-									'option',
-									{ value: 'threshold', selected: byThreshold },
-									t('startGame.plan_cutoff_threshold'),
-								),
-							],
-						),
-						byThreshold
-							? [
-									m('span', t('startGame.plan_cutoff_min')),
-									numberInput(
-										selection.cutoffNumber,
-										{ min: '-1', max: '1', step: '0.05' },
-										(next) =>
-											dispatch({
-												kind: 'patch',
-												itemId: item.itemId,
-												patch: { selection: { ...selection, cutoffNumber: next } },
-											}),
-									),
-								]
-							: [
-									m('span', t('startGame.plan_cutoff_n')),
-									numberInput(
-										selection.numberOfResults,
-										{ min: '1', max: '10', step: '1' },
-										(next) =>
-											dispatch({
-												kind: 'patch',
-												itemId: item.itemId,
-												patch: { selection: { ...selection, numberOfResults: next } },
-											}),
-									),
-								],
-					]),
-				]);
+			const addStep = (choice: AddChoice, at: number): void => {
+				const next = planEditorReduce(
+					items,
+					{ kind: 'add', stage: choice.stage, questionKind: choice.questionKind, at },
+					options,
+				);
+				const added = addedItem(items, next);
+				addAt = null;
+				if (added) {
+					flipArmed = true;
+					movedItemId = added.itemId;
+					// A new question opens straight into its words — a new discussion into
+					// its rule, a linked station into its link
+					if (
+						added.stage === AgoraStage.question ||
+						added.stage === AgoraStage.deliberation ||
+						added.stage === AgoraStage.linked
+					) {
+						openItemId = added.itemId;
+						focusItemId = added.stage !== AgoraStage.deliberation ? added.itemId : null;
+					}
+				}
+				onChange(next);
 			};
 
-			const deliberationOptions = (item: AgoraStagePlanItem): m.Children => {
-				const rule = item.votingTrigger ?? { ...defaultVotingTrigger(), enabled: false };
-				const patchRule = (next: Partial<typeof rule>): void =>
-					dispatch({
-						kind: 'patch',
-						itemId: item.itemId,
-						patch: { votingTrigger: { ...rule, ...next } },
-					});
-
-				return m('.plan-editor__options', [
-					m('label.plan-editor__row', [
-						m('input[type=checkbox]', {
-							checked: rule.enabled,
-							onchange: (event: Event) =>
-								patchRule({ enabled: (event.target as HTMLInputElement).checked }),
-						}),
-						m('span', t('startGame.plan_trigger')),
-					]),
-					rule.enabled
-						? [
-								m('.plan-editor__row', [
-									m('span', t('startGame.plan_trigger_single')),
-									numberInput(rule.singleMin, { min: '-1', max: '1', step: '0.05' }, (next) =>
-										patchRule({ singleMin: next }),
-									),
-								]),
-								m('.plan-editor__row', [
-									m('span', t('startGame.plan_trigger_pair')),
-									numberInput(rule.pairMin, { min: '-1', max: '1', step: '0.05' }, (next) =>
-										patchRule({ pairMin: next }),
-									),
-								]),
-								m('.plan-editor__row', [
-									m('span', t('startGame.plan_trigger_min_raters')),
-									numberInput(rule.minRaters, { min: '1', max: '50', step: '1' }, (next) =>
-										patchRule({ minRaters: next }),
-									),
-								]),
-								m('p.plan-editor__hint', t('startGame.plan_trigger_hint')),
-							]
-						: null,
-				]);
-			};
-
-			return m('.plan-editor', [
-				showPresets
-					? m('.plan-editor__presets', [
-							m('span.plan-editor__presets-label', t('startGame.plan_presets')),
-							(['quickDecision', 'classic'] as AgoraStagePlanPreset[])
-								.filter((preset) => preset !== 'classic' || hasCharacters)
-								.map((preset) =>
-									m(
-										'button.btn.btn--sm.btn--secondary',
-										{ type: 'button', onclick: () => dispatch({ kind: 'preset', preset }) },
-										t(
-											preset === 'classic'
-												? 'startGame.plan_preset_classic'
-												: 'startGame.plan_preset_quick',
-										),
-									),
-								),
-						])
-					: null,
-
-				m(
-					'ol.plan-editor__list',
-					items.map((item, index) => {
-						const frozen = index < frozenCount;
-						const fixed = item.stage === AgoraStage.lobby || item.stage === AgoraStage.results;
-						const hasOptions =
-							item.stage === AgoraStage.question || item.stage === AgoraStage.deliberation;
-						const open = openItemId === item.itemId;
-						const untitled = item.stage === AgoraStage.question && !(item.title ?? '').trim();
-
-						return m(
-							'li.plan-editor__item',
-							{
-								key: item.itemId,
-								class:
-									[
-										frozen ? 'plan-editor__item--frozen' : '',
-										open ? 'plan-editor__item--open' : '',
-										untitled ? 'plan-editor__item--invalid' : '',
-									]
-										.join(' ')
-										.trim() || undefined,
-							},
-							[
-								m('.plan-editor__head', [
-									m('span.plan-editor__index', String(index + 1)),
-									m('span.plan-editor__name', [
-										m('span.plan-editor__kind', t(`stage.${item.stage}`)),
-										item.stage === AgoraStage.question
-											? m(
-													'span.plan-editor__title',
-													untitled ? t('startGame.plan_untitled') : planItemLabel(item),
-												)
-											: null,
-									]),
-									frozen
-										? m(
-												'span.plan-editor__lock',
-												{ 'aria-hidden': 'true' },
-												m(Icon, { name: 'check', size: 14 }),
-											)
-										: m('.plan-editor__actions', [
-												hasOptions
-													? m(
-															'button.btn.btn--sm.btn--ghost',
-															{
-																type: 'button',
-																'aria-expanded': String(open),
-																onclick: () => {
-																	openItemId = open ? null : item.itemId;
-																},
-															},
-															t(open ? 'startGame.plan_options_hide' : 'startGame.plan_options'),
-														)
-													: null,
-												fixed
-													? null
-													: [
-															m(
-																'button.btn.btn--sm.btn--ghost',
-																{
-																	type: 'button',
-																	'aria-label': t('startGame.plan_up'),
-																	disabled: index - 1 < frozenCount || index - 1 <= 0,
-																	onclick: () =>
-																		dispatch({ kind: 'move', itemId: item.itemId, direction: -1 }),
-																},
-																'↑',
-															),
-															m(
-																'button.btn.btn--sm.btn--ghost',
-																{
-																	type: 'button',
-																	'aria-label': t('startGame.plan_down'),
-																	disabled: index + 1 >= items.length - 1,
-																	onclick: () =>
-																		dispatch({ kind: 'move', itemId: item.itemId, direction: 1 }),
-																},
-																'↓',
-															),
-															m(
-																'button.btn.btn--sm.btn--ghost.plan-editor__remove',
-																{
-																	type: 'button',
-																	'aria-label': t('startGame.plan_remove'),
-																	onclick: () => dispatch({ kind: 'remove', itemId: item.itemId }),
-																},
-																'✕',
-															),
-														],
-											]),
-								]),
-								open && !frozen && item.stage === AgoraStage.question
-									? questionOptions(item)
-									: null,
-								open && !frozen && item.stage === AgoraStage.deliberation
-									? deliberationOptions(item)
-									: null,
-							],
-						);
-					}),
-				),
-
-				addable.length > 0
-					? m('.plan-editor__add', [
+			const presetRow = (): m.Children =>
+				m('.plan-editor__templates', [
+					m('span.plan-editor__templates-label', { id: 'plan-templates' }, t('planb.templates')),
+					m(
+						'.plan-editor__template-chips',
+						{ role: 'group', 'aria-labelledby': 'plan-templates' },
+						presets.map((preset) =>
 							m(
-								'button.btn.btn--sm.btn--secondary',
+								'button.plan-editor__template',
 								{
+									key: preset,
 									type: 'button',
-									'aria-expanded': String(addOpen),
+									'aria-pressed': String(current === preset),
 									onclick: () => {
-										addOpen = !addOpen;
+										if (current === preset) return;
+										// Untouched: switch freely. Edited: ask before throwing the edits away
+										if (current === null) {
+											pendingPreset = preset;
+
+											return;
+										}
+										openItemId = null;
+										dispatch({ kind: 'preset', preset });
 									},
 								},
-								`+ ${t('startGame.plan_add')}`,
+								[
+									current === preset ? m(Icon, { name: 'check', size: 16 }) : null,
+									t(PRESET_LABELS[preset]),
+								],
 							),
-							addOpen
-								? m(
-										'.plan-editor__add-menu',
-										addable.map((stage) =>
-											m(
-												'button.btn.btn--sm.btn--ghost',
-												{
-													key: stage,
-													type: 'button',
-													onclick: () => {
-														dispatch({ kind: 'add', stage });
-														addOpen = false;
-														if (stage === AgoraStage.question) openItemId = null;
-													},
+						),
+					),
+					pendingPreset
+						? m(
+								'.plan-editor__confirm',
+								{ role: 'alertdialog', 'aria-labelledby': 'plan-confirm' },
+								[
+									m('p.plan-editor__confirm-text#plan-confirm', t('planb.replace_ask')),
+									m('.plan-editor__confirm-actions', [
+										m(
+											'button.btn.btn--sm.btn--primary',
+											{
+												type: 'button',
+												oncreate: (node: m.VnodeDOM) => (node.dom as HTMLElement).focus(),
+												onclick: () => {
+													const preset = pendingPreset;
+													pendingPreset = null;
+													openItemId = null;
+													if (preset) dispatch({ kind: 'preset', preset });
 												},
-												t(`stage.${stage}`),
-											),
+											},
+											t('planb.replace_yes'),
 										),
-									)
-								: null,
+										m(
+											'button.btn.btn--sm.btn--ghost',
+											{ type: 'button', onclick: () => (pendingPreset = null) },
+											t('planb.replace_no'),
+										),
+									]),
+								],
+							)
+						: null,
+				]);
+
+			/** The thin "+" between two cards: insert after step `index + 1` */
+			const insertPoint = (at: number): m.Children =>
+				m(
+					'li.plan-editor__insert',
+					{ key: `insert-${items[at]?.itemId ?? 'end'}` },
+					m(
+						'button.plan-editor__insert-btn',
+						{
+							type: 'button',
+							'aria-label': t('planb.add_here', { n: at }),
+							onclick: () => (addAt = at),
+						},
+						m('span.plan-editor__insert-plus', m(Icon, { name: 'plus', size: 16 })),
+					),
+				);
+
+			const card = (item: AgoraStagePlanItem, index: number): m.Children => {
+				const frozen = index < frozenCount;
+				const fixed = item.stage === AgoraStage.lobby || item.stage === AgoraStage.results;
+				const editable = !frozen && !fixed;
+				const hasOptions =
+					editable &&
+					(item.stage === AgoraStage.question ||
+						item.stage === AgoraStage.deliberation ||
+						item.stage === AgoraStage.linked);
+				const open = hasOptions && openItemId === item.itemId;
+				const problem = frozen ? undefined : problems.get(item.itemId);
+				const line = stepLine(item);
+				const name = stepName(item);
+				const n = index + 1;
+				const canUp = editable && index - 1 >= Math.max(frozenCount, range.first);
+				const canDown = editable && index + 1 < range.last;
+				const toggle = (): void => {
+					openItemId = open ? null : item.itemId;
+				};
+
+				const body = [
+					m(
+						'span.plan-step__num',
+						{ 'aria-hidden': 'true' },
+						frozen ? m(Icon, { name: 'check', size: 14 }) : String(n),
+					),
+					m('span.plan-step__text', [
+						m(
+							'span.plan-step__chip',
+							{ class: `plan-step__chip--${choiceTone(choiceOf(item))}` },
+							name,
+						),
+						m(
+							'span.plan-step__line',
+							{ class: line.isDefault ? 'plan-step__line--default' : undefined },
+							line.text,
+						),
+						problem ? m('span.plan-step__problem', t(PLAN_ERROR_KEYS[problem])) : null,
+					]),
+					fixed || frozen
+						? m('span.plan-step__pin', [
+								m(Icon, { name: 'lock', size: 14 }),
+								t(
+									frozen
+										? 'planb.step_done'
+										: item.stage === AgoraStage.lobby
+											? 'planb.fixed_first'
+											: 'planb.fixed_last',
+								),
+							])
+						: null,
+				];
+
+				return m(
+					'li.plan-step',
+					{
+						key: item.itemId,
+						oncreate: (node: m.VnodeDOM) => rememberRow(node.dom as HTMLElement, item.itemId),
+						onupdate: (node: m.VnodeDOM) => flipRow(node.dom as HTMLElement, item.itemId, flip),
+						class:
+							[
+								fixed ? 'plan-step--fixed' : '',
+								frozen ? 'plan-step--frozen' : '',
+								open ? 'plan-step--open' : '',
+								problem ? 'plan-step--invalid' : '',
+							]
+								.filter(Boolean)
+								.join(' ') || undefined,
+					},
+					[
+						hasOptions
+							? m(
+									'button.plan-step__main',
+									{
+										type: 'button',
+										'aria-expanded': String(open),
+										'aria-label': t('planb.edit_step', { n, name: `${name}, ${line.text}` }),
+										onclick: toggle,
+									},
+									body,
+								)
+							: m('.plan-step__main', body),
+						editable
+							? m('.plan-step__tools', [
+									hasOptions
+										? m(
+												'button.plan-step__tool.plan-step__tool--edit',
+												{ type: 'button', 'aria-expanded': String(open), onclick: toggle },
+												[
+													m(Icon, { name: open ? 'check' : 'edit', size: 18 }),
+													t(open ? 'planb.done' : 'planb.edit'),
+												],
+											)
+										: null,
+									m('span.plan-step__spacer'),
+									m(
+										'button.plan-step__tool.plan-step__tool--icon',
+										{
+											type: 'button',
+											'aria-label': t('planb.move_up', { n }),
+											disabled: !canUp,
+											onclick: () => dispatch({ kind: 'move', itemId: item.itemId, direction: -1 }),
+										},
+										m(Icon, {
+											name: 'arrow',
+											size: 20,
+											class: 'plan-step__arrow plan-step__arrow--up',
+										}),
+									),
+									m(
+										'button.plan-step__tool.plan-step__tool--icon',
+										{
+											type: 'button',
+											'aria-label': t('planb.move_down', { n }),
+											disabled: !canDown,
+											onclick: () => dispatch({ kind: 'move', itemId: item.itemId, direction: 1 }),
+										},
+										m(Icon, {
+											name: 'arrow',
+											size: 20,
+											class: 'plan-step__arrow plan-step__arrow--down',
+										}),
+									),
+									m(
+										'button.plan-step__tool.plan-step__tool--icon.plan-step__tool--remove',
+										{
+											type: 'button',
+											'aria-label': t('planb.remove', { n }),
+											onclick: () => {
+												if (openItemId === item.itemId) openItemId = null;
+												dispatch({ kind: 'remove', itemId: item.itemId });
+											},
+										},
+										m(Icon, { name: 'trash', size: 20 }),
+									),
+								])
+							: null,
+						open
+							? m(StepEditor, {
+									item,
+									index: n,
+									focusWords: focusItemId === item.itemId,
+									onFocused: () => (focusItemId = null),
+									onPatch: (patch) => dispatch({ kind: 'patch', itemId: item.itemId, patch }),
+									onDone: () => (openItemId = null),
+								})
+							: null,
+					],
+				);
+			};
+
+			const rows: m.Vnode[] = [];
+			items.forEach((item, index) => {
+				rows.push(card(item, index) as m.Vnode);
+				// A "+" after this card when a step may go there — the end has its own button
+				const at = index + 1;
+				if (choices.length > 0 && at < range.last && canInsertAt(items, at, frozenCount)) {
+					rows.push(insertPoint(at) as m.Vnode);
+				}
+			});
+
+			const afterIndex = addAt === null ? 0 : addAt - 1;
+			const afterItem = items[afterIndex];
+
+			return m('.plan-editor', [
+				showPresets ? presetRow() : null,
+				m('ol.plan-editor__list', rows),
+				choices.length > 0
+					? m('button.plan-editor__add', { type: 'button', onclick: () => (addAt = range.last) }, [
+							m('span.plan-editor__add-plus', m(Icon, { name: 'plus', size: 18 })),
+							t('planb.add'),
 						])
 					: null,
-
 				errors.length > 0
 					? m(
 							'ul.plan-editor__errors',
-							errors.map((error) => m('li.join__error', { key: error }, t(PLAN_ERROR_KEYS[error]))),
+							{ role: 'status' },
+							errors.map((error) => m('li', { key: error }, t(PLAN_ERROR_KEYS[error]))),
 						)
+					: null,
+				addAt !== null && afterItem
+					? m(AddStepSheet, {
+							choices,
+							after: { n: afterIndex + 1, name: stepName(afterItem) },
+							onPick: (choice) => {
+								if (addAt !== null) addStep(choice, addAt);
+							},
+							onClose: () => (addAt = null),
+						})
 					: null,
 			]);
 		},

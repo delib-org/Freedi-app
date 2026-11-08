@@ -9,7 +9,11 @@ const withPopulation = (targetPopulation: number): StakeholderScope => ({
 	evaluationSettings: { targetPopulation },
 });
 
-const withMembers = (numberOfMembers: number): StakeholderScope => ({ numberOfMembers });
+// chainEvaluators is a participation stat on real question docs. It is NOT part of
+// StakeholderScope any more, so the cast is deliberate: these tests prove that
+// real documents carrying it never leak into N.
+const withVoters = (chainEvaluators: number): StakeholderScope =>
+	({ evaluation: { chainEvaluators } }) as unknown as StakeholderScope;
 
 describe('resolveStakeholderCount', () => {
 	describe('when nothing is declared', () => {
@@ -17,12 +21,12 @@ describe('resolveStakeholderCount', () => {
 			// The safe default. No stakeholder set means open participation and
 			// an unbounded population, which is exactly the case the original
 			// uncorrected formula was built for.
-			expect(resolveStakeholderCount()).toEqual({ inferred: false });
-			expect(resolveStakeholderCount({}, {}, {})).toEqual({ inferred: false });
+			expect(resolveStakeholderCount()).toEqual({});
+			expect(resolveStakeholderCount({}, {}, {})).toEqual({});
 		});
 
 		it('ignores an empty evaluationSettings object', () => {
-			expect(resolveStakeholderCount({ evaluationSettings: {} })).toEqual({ inferred: false });
+			expect(resolveStakeholderCount({ evaluationSettings: {} })).toEqual({});
 		});
 	});
 
@@ -30,14 +34,13 @@ describe('resolveStakeholderCount', () => {
 		it('prefers the statement itself', () => {
 			expect(
 				resolveStakeholderCount(withPopulation(10), withPopulation(20), withPopulation(30)),
-			).toEqual({ count: 10, source: 'self', inferred: false });
+			).toEqual({ count: 10, source: 'self' });
 		});
 
 		it('falls back to the parent question', () => {
 			expect(resolveStakeholderCount({}, withPopulation(20), withPopulation(30))).toEqual({
 				count: 20,
 				source: 'parent',
-				inferred: false,
 			});
 		});
 
@@ -47,58 +50,52 @@ describe('resolveStakeholderCount', () => {
 			expect(resolveStakeholderCount({}, {}, withPopulation(500))).toEqual({
 				count: 500,
 				source: 'top',
-				inferred: false,
 			});
 		});
 	});
 
-	describe('inferring from membership', () => {
-		it('uses the group member count when nothing is declared', () => {
-			expect(resolveStakeholderCount({}, {}, withMembers(42))).toEqual({
-				count: 42,
-				source: 'topMembers',
-				inferred: true,
-			});
+	describe('never inferring from who voted', () => {
+		it("does not use the parent question's chain voter count", () => {
+			expect(resolveStakeholderCount({}, withVoters(2), {}).count).toBeUndefined();
+			expect(resolveStakeholderCount({}, withVoters(2), {})).toEqual({});
 		});
 
-		it('prefers the broadest scope among inferred counts', () => {
-			// The stakeholders of a question are the group holding it, not the
-			// subset of people who happened to subscribe to that one question.
-			expect(resolveStakeholderCount({}, withMembers(8), withMembers(42))).toEqual({
-				count: 42,
-				source: 'topMembers',
-				inferred: true,
-			});
+		it("does not use the top's voters either", () => {
+			expect(resolveStakeholderCount({}, withVoters(9), withVoters(4))).toEqual({});
+			expect(resolveStakeholderCount({}, {}, withVoters(4)).source).toBeUndefined();
 		});
 
-		it('lets a declaration anywhere beat an inferred count', () => {
-			// "Who signed up" and "who this decision is about" are the same
-			// number only by coincidence, so a human's answer always wins.
-			expect(resolveStakeholderCount({}, withPopulation(500), withMembers(42))).toEqual({
+		it('lets a declaration anywhere win over voter counts', () => {
+			expect(resolveStakeholderCount({}, withVoters(2), withPopulation(500))).toEqual({
 				count: 500,
-				source: 'parent',
-				inferred: false,
+				source: 'top',
 			});
 		});
 
 		it('never infers from the statement being voted on', () => {
-			// Self is typically the option. Its subscribers are not the
-			// stakeholders of the decision it belongs to.
-			expect(resolveStakeholderCount(withMembers(3), {}, {})).toEqual({ inferred: false });
+			expect(resolveStakeholderCount(withVoters(3), {}, {})).toEqual({});
+		});
+
+		it('ignores the subscriber count entirely', () => {
+			// The whole point of the change: opening a page auto-subscribes you,
+			// so members measure traffic. Fifteen subscribers and no votes is
+			// no electorate at all.
+			const subscribed = { numberOfMembers: 15 } as unknown as StakeholderScope;
+			expect(resolveStakeholderCount({}, subscribed, subscribed)).toEqual({});
 		});
 	});
 
 	describe('rejecting counts that are not real headcounts', () => {
 		it.each([0, -1, -500, NaN, Infinity, -Infinity])('rejects %p', (bad) => {
-			expect(resolveStakeholderCount(withPopulation(bad))).toEqual({ inferred: false });
-			expect(resolveStakeholderCount({}, {}, withMembers(bad))).toEqual({ inferred: false });
+			expect(resolveStakeholderCount(withPopulation(bad))).toEqual({});
+			expect(resolveStakeholderCount({}, withVoters(bad), {})).toEqual({});
 		});
 
 		it('rejects a null left behind by clearing the settings field', () => {
 			const cleared = {
 				evaluationSettings: { targetPopulation: null as unknown as number },
 			};
-			expect(resolveStakeholderCount(cleared)).toEqual({ inferred: false });
+			expect(resolveStakeholderCount(cleared)).toEqual({});
 		});
 
 		it('keeps walking past an invalid declaration instead of stopping', () => {
@@ -108,7 +105,6 @@ describe('resolveStakeholderCount', () => {
 			expect(resolveStakeholderCount({}, withPopulation(0), withPopulation(500))).toEqual({
 				count: 500,
 				source: 'top',
-				inferred: false,
 			});
 		});
 	});

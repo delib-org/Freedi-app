@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useId } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './OptionRooms.module.scss';
 
@@ -18,6 +18,8 @@ const RoomSizeSettings: FC<RoomSizeSettingsProps> = ({
 	disabled = false,
 }) => {
 	const { t } = useTranslation();
+	const minId = useId();
+	const maxId = useId();
 
 	const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = parseInt(e.target.value, 10);
@@ -42,8 +44,11 @@ const RoomSizeSettings: FC<RoomSizeSettingsProps> = ({
 
 			<div className={styles.optionRooms__sizeInputs}>
 				<div className={styles.optionRooms__sizeInput}>
-					<label className={styles.optionRooms__inputLabel}>{t('Minimum members per room')}</label>
+					<label htmlFor={minId} className={styles.optionRooms__inputLabel}>
+						{t('Minimum members per room')}
+					</label>
 					<input
+						id={minId}
 						type="number"
 						min={1}
 						max={maxMembers}
@@ -54,8 +59,11 @@ const RoomSizeSettings: FC<RoomSizeSettingsProps> = ({
 					/>
 				</div>
 				<div className={styles.optionRooms__sizeInput}>
-					<label className={styles.optionRooms__inputLabel}>{t('Maximum members per room')}</label>
+					<label htmlFor={maxId} className={styles.optionRooms__inputLabel}>
+						{t('Maximum members per room')}
+					</label>
 					<input
+						id={maxId}
 						type="number"
 						min={minMembers}
 						max={50}

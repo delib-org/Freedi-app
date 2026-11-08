@@ -1,0 +1,97 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed1234-consolidated",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 10,
+ "themesWithMembers": 10,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  6,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  4
+ ],
+ "ms": 22242,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 941,
+   "completion": 1155
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 1817,
+   "completion": 756
+  }
+ },
+ "usd": 0.0170126,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Affordable Housing and Tenancy",
+   "rule": "Proposals that increase affordable housing supply, improve existing homes, or strengthen renter protections belong here.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "School Learning and Student Support",
+   "rule": "Proposals that improve school facilities, teaching conditions, class learning, meals, tutoring, or extracurricular education belong here.",
+   "size": 5
+  },
+  {
+   "key": "t3",
+   "name": "Public Transit and Cycling",
+   "rule": "Proposals that improve bus service, transit affordability and information, or cycling infrastructure belong here.",
+   "size": 5
+  },
+  {
+   "key": "t4",
+   "name": "Health Care and Aging",
+   "rule": "Proposals that expand medical, mental-health, preventive, specialist, or in-home care services belong here.",
+   "size": 5
+  },
+  {
+   "key": "t5",
+   "name": "Resident Municipal Access",
+   "rule": "Proposals that make city services, information, online access, or public connectivity easier for residents to use belong here.",
+   "size": 5
+  },
+  {
+   "key": "t6",
+   "name": "Neighborhood Safety Measures",
+   "rule": "Proposals that improve emergency response, policing, surveillance, street lighting, or pedestrian traffic safety belong here.",
+   "size": 5
+  },
+  {
+   "key": "t7",
+   "name": "Environmental Sustainability and Waste",
+   "rule": "Proposals that reduce pollution or waste, expand recycling or composting, improve air monitoring, or support clean energy and urban greening belong here.",
+   "size": 6
+  },
+  {
+   "key": "t8",
+   "name": "Parks and Outdoor Recreation",
+   "rule": "Proposals that create or upgrade parks, community gardens, playgrounds, or dedicated outdoor recreation spaces belong here.",
+   "size": 4
+  },
+  {
+   "key": "t9",
+   "name": "Arts, Culture and Libraries",
+   "rule": "Proposals that expand public arts, performances, museum access, or neighborhood library services belong here.",
+   "size": 5
+  },
+  {
+   "key": "t10",
+   "name": "Local Business and Workforce",
+   "rule": "Proposals that support small businesses, local hiring, workspaces, licensing, or worker reskilling belong here.",
+   "size": 5
+  }
+ ]
+}

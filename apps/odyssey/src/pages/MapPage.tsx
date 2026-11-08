@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
 import { useGame } from '../state/GameContext';
 import { enabledIslands } from '../lib/game';
 import { islandArtUrl } from '../lib/islandArt';
+import { initialRouteSelection } from '../lib/voyageRoute';
 import { useMode } from '../lib/mode';
-import { enterIslandDeliberation, getGateState } from '../lib/agoraGate';
 import { stageBus } from '../lib/stageBus';
+import { useT } from '../i18n/useT';
+
+/** The shortest voyage: one island. A map with none chosen has nowhere to sail. */
+const ISLANDS_MIN = 1;
 
 /** Rough voyage length per the design doc: 3→~5min, 5→~8, 8→~12, 12→~20. */
 function estimateMinutes(count: number): number {
@@ -19,33 +23,45 @@ function estimateMinutes(count: number): number {
 /**
  * המפה נפתחת: the civic issues spread out as islands on the sea. Each island
  * is a Freedi `question` Statement; choosing islands only marks the journey —
- * answering happens on the voyage. In game mode the islands live on the
- * Phaser chart (tap → anchor stamp); selection state stays here in React.
+ * answering happens on the voyage. The discussion gates that used to sit here
+ * live on the summary now: a gate is the step AFTER an island, and a tester
+ * rightly asked what one was doing before the voyage had begun. In game mode
+ * the islands live on the Phaser chart (tap → anchor stamp); selection state
+ * stays here in React.
  */
 export default function MapPage() {
 	const navigate = useNavigate();
 	const mode = useMode();
 	const { content, journey, attitudes, text, updateJourney } = useGame();
+	const { t } = useT();
+	const islands = useMemo(() => (content ? enabledIslands(content) : []), [content]);
+	// Nothing ticked on a voyage not yet begun: the islands are the player's
+	// to choose. A route already being sailed comes back (see voyageRoute).
 	const [selected, setSelected] = useState<Set<string>>(
-		() => new Set(journey?.selectedIslandIds ?? []),
+		() => new Set(initialRouteSelection(journey?.selectedIslandIds, islands, attitudes)),
 	);
 	const [saving, setSaving] = useState(false);
-	const [enteringIslandId, setEnteringIslandId] = useState('');
+	/** Which island is explaining itself, one at a time (see the crew board). */
+	const [openIsland, setOpenIsland] = useState<string | null>(null);
 
-	const islands = useMemo(() => (content ? enabledIslands(content) : []), [content]);
+	useEffect(() => {
+		if (!openIsland) return;
+		const onKey = (event: KeyboardEvent): void => {
+			if (event.key === 'Escape') setOpenIsland(null);
+		};
+		const onPointer = (event: PointerEvent): void => {
+			const target = event.target;
+			if (target instanceof Element && target.closest('.speech-bubble, .bubble-toggle')) return;
+			setOpenIsland(null);
+		};
+		window.addEventListener('keydown', onKey);
+		window.addEventListener('pointerdown', onPointer);
 
-	/**
-	 * Islands this player has actually taken positions on. After the voyage the
-	 * map stops being only a place to choose from and becomes the hub of the
-	 * round trip: these are the ones with a deliberation waiting.
-	 */
-	const addressedIslands = useMemo(
-		() =>
-			islands.filter((island) =>
-				island.stances.some((stance) => attitudes[stance.statementId] !== undefined),
-			),
-		[islands, attitudes],
-	);
+		return () => {
+			window.removeEventListener('keydown', onKey);
+			window.removeEventListener('pointerdown', onPointer);
+		};
+	}, [openIsland]);
 
 	const toggle = useCallback((statementId: string): void => {
 		setSelected((current) => {
@@ -89,41 +105,13 @@ export default function MapPage() {
 
 	if (!content || !journey) return <NoGameYet />;
 
-	const agoraOrigin = text('agoraOrigin');
-	const gatedIslands = agoraOrigin
-		? addressedIslands
-				.map((island) => ({
-					island,
-					state: getGateState(island.statementId, content.game, journey),
-				}))
-				.filter((entry) => entry.state !== 'unprovisioned')
-		: [];
-
 	async function sail(): Promise<void> {
 		setSaving(true);
 		try {
 			await updateJourney({ selectedIslandIds: [...selected] });
-			navigate('/voyage');
+			navigate('/voyage', { state: { fresh: true } });
 		} finally {
 			setSaving(false);
-		}
-	}
-
-	async function enterGate(islandStatementId: string): Promise<void> {
-		if (!content || enteringIslandId) return;
-		setEnteringIslandId(islandStatementId);
-		if (mode === 'game') stageBus.send({ type: 'sailToLighthouse' });
-		try {
-			await enterIslandDeliberation({
-				islandStatementId,
-				game: content.game,
-				journey,
-				agoraOrigin,
-				updateJourney,
-			});
-		} catch (error) {
-			console.error('[Odyssey] Could not open the gate:', error);
-			setEnteringIslandId('');
 		}
 	}
 
@@ -135,96 +123,78 @@ export default function MapPage() {
 					<header className="text-center fade-in">
 						<h1 className="text-3xl font-bold text-[var(--cream)] m-0">{text('mapTitle')}</h1>
 						<p className="text-[15px] text-[#cfe6f5] mt-2 mb-0">{text('mapIntro')}</p>
-						<p className="text-[13px] opacity-75 mt-1">
-							אפשר לבחור מעט איים למסע קצר, או יותר איים למסע מלא. אין חובה לעבור בכל האיים.
-						</p>
+						<p className="text-[13px] opacity-75 mt-1">{t('map.hint')}</p>
 					</header>
 
 					{mode === 'game' ? (
 						// the islands live on the Phaser chart behind this window
 						<div className="h-[52vh]" aria-hidden="true" />
 					) : (
-						<div className="flex flex-col gap-2 fade-in">
-							{islands.map((island) => (
-								<label
-									key={island.statementId}
-									className="panel !py-3 !px-4 flex items-start gap-3 cursor-pointer"
-								>
-									<input
-										type="checkbox"
-										className="mt-1.5 w-4 h-4"
-										checked={selected.has(island.statementId)}
-										onChange={() => toggle(island.statementId)}
-									/>
-									<span>
-										<strong className="text-[var(--cream)]">{island.title}</strong>
-										<span className="opacity-80"> — {island.issue}</span>
-										<span className="block text-[13px] opacity-70 mt-0.5">
-											{island.shortExplain}
-										</span>
-									</span>
-								</label>
-							))}
+						<div className="isle-grid fade-in">
+							{islands.map((island) => {
+								const chosen = selected.has(island.statementId);
+								const art = island.imageUrl ?? islandArtUrl(island.sortOrder);
+
+								return (
+									<div key={island.statementId} className="isle-cell">
+										<button
+											type="button"
+											aria-pressed={chosen}
+											onClick={() => toggle(island.statementId)}
+											className={`isle-card ${chosen ? 'chosen' : ''}`}
+										>
+											<span className="isle-art" aria-hidden="true">
+												{art ? <img src={art} alt="" loading="lazy" /> : '🏝️'}
+											</span>
+											<span className="isle-title">{island.title}</span>
+											<span className="isle-issue">{island.issue}</span>
+											<span className="isle-state">
+												{chosen ? t('map.onRoute') : t('map.addToRoute')}
+											</span>
+										</button>
+										<button
+											type="button"
+											className="bubble-toggle"
+											aria-expanded={openIsland === island.statementId}
+											aria-controls={`isle-${island.statementId}`}
+											onClick={() =>
+												setOpenIsland((current) =>
+													current === island.statementId ? null : island.statementId,
+												)
+											}
+										>
+											{t('map.whatIsHere')}
+										</button>
+										{openIsland === island.statementId ? (
+											<div className="speech-bubble" id={`isle-${island.statementId}`}>
+												<p>{island.shortExplain}</p>
+											</div>
+										) : null}
+									</div>
+								);
+							})}
 						</div>
 					)}
 
-					{gatedIslands.length > 0 ? (
-						<section className="panel fade-in">
-							<h2 className="text-lg font-bold text-[var(--cream)] mt-0 mb-1">
-								🏛️ שערי הדיון שנפתחו לך
-							</h2>
-							<p className="text-[13px] opacity-75 mt-0 mb-3">
-								על האיים שכבר חקרת אפשר להיפגש עם אחרים ולחפש יחד פתרונות.
-							</p>
-							<div className="flex flex-col gap-2.5">
-								{gatedIslands.map(({ island, state }) => (
-									<div
-										key={island.statementId}
-										className="flex items-center gap-3 flex-wrap justify-between"
-									>
-										<span className="text-[15px]">
-											{state === 'visited' ? '⚑ ' : ''}
-											{island.title}
-										</span>
-										<button
-											type="button"
-											className="btn"
-											disabled={enteringIslandId === island.statementId}
-											onClick={() => void enterGate(island.statementId)}
-										>
-											{enteringIslandId === island.statementId
-												? 'מפליגים…'
-												: state === 'visited'
-													? 'חזרה לדיון'
-													: text('agoraButton')}
-										</button>
-									</div>
-								))}
-							</div>
-						</section>
-					) : null}
-
 					<div className="flex flex-col items-center gap-2 pb-4">
+						<p className="text-[14px] text-[var(--cream)] m-0" aria-live="polite">
+							{t('map.selectedCount', { selected: selected.size, total: islands.length })}
+						</p>
 						<button
 							type="button"
 							className="btn"
-							disabled={selected.size === 0 || saving}
+							disabled={selected.size < ISLANDS_MIN || saving}
 							onClick={() => void sail()}
 						>
 							{saving
-								? 'שומר…'
-								: selected.size === 0
-									? 'בחרו לפחות אי אחד'
-									: `מפליגים אל ${selected.size} איים (~${estimateMinutes(selected.size)} דקות)`}
+								? t('common.saving')
+								: selected.size < ISLANDS_MIN
+									? t('map.pickOne')
+									: t('map.sail', {
+											count: selected.size,
+											minutes: estimateMinutes(selected.size),
+										})}
 						</button>
-						{/* The crew screen promises more sailors can be joined later.
-						    Without a way back before the summary, that promise only
-						    comes true once the voyage is already over. */}
-						{(content.game.elders ?? []).length > 0 ? (
-							<Link className="btn-outline" to="/elders">
-								📜 לצרף מלחים לצוות
-							</Link>
-						) : null}
 					</div>
 				</div>
 			</div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections, AdminPermissionLevel } from '@freedi/shared-types';
 import { StatementWithParagraphs, Paragraph } from '@/types';
@@ -29,7 +29,7 @@ export async function GET(
 ): Promise<NextResponse> {
   try {
     const { docId } = await params;
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getVerifiedUserId(request);
 
     if (!userId) {
       return NextResponse.json(

@@ -135,6 +135,39 @@ export interface VerifiedUser {
   uid: string;
   email: string | null;
   displayName: string | null;
+  isAnonymous: boolean;
+}
+
+interface FirebaseClaims {
+  uid: string;
+  email?: string;
+  name?: unknown;
+  firebase: { sign_in_provider: string };
+}
+
+function toVerifiedUser(decoded: FirebaseClaims): VerifiedUser {
+  return {
+    uid: decoded.uid,
+    email: decoded.email ?? null,
+    displayName: typeof decoded.name === 'string' ? decoded.name : null,
+    isAnonymous: decoded.firebase.sign_in_provider === 'anonymous',
+  };
+}
+
+/** Expected outcomes of a stale browser session, not faults worth reporting. */
+const EXPIRED_CREDENTIAL_CODES = new Set([
+  'auth/id-token-expired',
+  'auth/id-token-revoked',
+  'auth/session-cookie-expired',
+  'auth/session-cookie-revoked',
+  'auth/argument-error',
+]);
+
+function reportCredentialFailure(error: unknown, operation: string): void {
+  const code = (error as { code?: string } | undefined)?.code;
+  if (code && EXPIRED_CREDENTIAL_CODES.has(code)) return;
+
+  logError(error, { operation });
 }
 
 /**
@@ -147,7 +180,8 @@ export interface VerifiedUser {
  * ID token here instead of reading a cookie.
  */
 export async function verifyAuthHeader(
-  authHeader: string | null
+  authHeader: string | null,
+  checkRevoked = false
 ): Promise<VerifiedUser | null> {
   if (!authHeader) return null;
 
@@ -155,15 +189,29 @@ export async function verifyAuthHeader(
   if (!match) return null;
 
   try {
-    const decoded = await getAuthAdmin().verifyIdToken(match[1]);
-
-    return {
-      uid: decoded.uid,
-      email: decoded.email ?? null,
-      displayName: (decoded.name as string | undefined) ?? null,
-    };
+    return toVerifiedUser(await getAuthAdmin().verifyIdToken(match[1], checkRevoked));
   } catch (error) {
-    logError(error, { operation: 'firebase.verifyAuthHeader' });
+    reportCredentialFailure(error, 'firebase.verifyAuthHeader');
+
+    return null;
+  }
+}
+
+/**
+ * Verify the signed `__session` cookie minted by POST /api/auth/session.
+ * @param checkRevoked - also ask Firebase about revocation (network call);
+ *   use on admin paths, skip on participant paths.
+ */
+export async function verifySessionCookieValue(
+  sessionCookie: string | undefined,
+  checkRevoked = false
+): Promise<VerifiedUser | null> {
+  if (!sessionCookie) return null;
+
+  try {
+    return toVerifiedUser(await getAuthAdmin().verifySessionCookie(sessionCookie, checkRevoked));
+  } catch (error) {
+    reportCredentialFailure(error, 'firebase.verifySessionCookieValue');
 
     return null;
   }

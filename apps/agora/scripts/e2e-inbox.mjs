@@ -3,11 +3,11 @@
  * whatever it lands on. Run: node scripts/e2e-inbox.mjs */
 import { chromium } from '@playwright/test';
 import { preflight } from './lib/preflight.mjs';
-import { eq, fail, mkPage as makePage, shotter, step } from './lib/e2e.mjs';
+import { eq, fail, mkPage as makePage, shotter, step, passNameDoor } from './lib/e2e.mjs';
 
 await preflight();
 
-const BASE = 'http://localhost:3009';
+const BASE = process.env.AGORA_VITE_HOST ?? 'http://localhost:3009';
 const SHOTS = 'inbox-shots';
 
 const browser = await chromium.launch();
@@ -73,6 +73,9 @@ try {
 	await teacher.waitForSelector('text=המהפכה הצרפתית', { timeout: 30000 });
 }
 await teacher.locator('text=המהפכה הצרפתית').first().click();
+// Tapping a scenario opens the start screen already holding it; the one
+// button there opens the lesson.
+await teacher.waitForURL(/teach\/start/, { timeout: 20000 });
 await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
 await teacher.waitForURL(/session/, { timeout: 20000 });
 await teacher.waitForSelector('.teacher__code', { timeout: 20000 });
@@ -81,6 +84,7 @@ console.log('JOIN CODE:', code);
 
 for (const page of [s1, s2]) {
 	await page.goto(`${BASE}/#!/join/${code}`, { waitUntil: 'domcontentloaded' });
+	await passNameDoor(page);
 	await page.waitForSelector('.lobby__name', { timeout: 15000 });
 }
 const advance = async () => {
@@ -122,7 +126,7 @@ const propose = async (page, text) => {
 	await page.waitForSelector('textarea.write-desk__textarea', { timeout: 15000 });
 	await page.locator('textarea.write-desk__textarea').fill(text);
 	await page.locator('.write-desk__cta').click();
-	await page.waitForSelector('.delib-nav', { timeout: 25000 });
+	await page.waitForSelector('.place-bar', { timeout: 25000 });
 };
 // The box starts empty, and says so — checked before a single point is paid
 step('the post box: empty at first, and honest about it');
@@ -162,7 +166,7 @@ for (let attempt = 0; attempt < 8; attempt++) {
 	try {
 		if ((await s2.locator('.chat-page__input').count()) > 0) break;
 		if ((await s2.locator('.stall-list').count()) === 0) {
-			await s2.locator('.delib-nav__item--peer').click({ timeout: 4000 });
+			await s2.locator('.place-bar__item[data-place="board"]').click({ timeout: 4000 });
 			await s2.waitForSelector('.stall__head', { timeout: 6000 });
 		}
 		if ((await s2.locator('.stall--open').count()) === 0) {

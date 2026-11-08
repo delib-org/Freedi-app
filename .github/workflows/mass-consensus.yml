@@ -1,0 +1,99 @@
+# Mass Consensus is deployed by Vercel's own Git integration, not from here.
+#
+# This workflow used to carry `deploy-preview` and `deploy-production` jobs that
+# ran `vercel deploy --prebuilt --prod`. All three of the following were true of
+# them at once:
+#
+#   * Redundant — apps/mass-consensus/vercel.json wires the Vercel Git
+#     integration, which already builds and deploys on push. Production runs
+#     whatever `main-mc` points at.
+#   * Misdirected — they fired on `main`, while the production branch is
+#     `main-mc`. Had they ever run, they would have published the wrong branch
+#     over the right one, from a second mechanism racing the first.
+#   * Impossible — `npm ci` needs a lockfile, and .gitignore ignores
+#     package-lock.json everywhere except the root, functions/ and apps/agora/.
+#     Every run since the workflow was added failed inside 15 seconds at the
+#     `setup-node` cache step, which is the only reason the first two points
+#     never became an incident.
+#
+# What is left is the half that was actually wanted: lint and typecheck for MC.
+# Nothing else covers this app — PR_Validation.yml only guards PRs to `dev` and
+# installs the root and functions.
+
+name: Mass Consensus
+
+on:
+  push:
+    branches:
+      # `main` is where the code lands; `main-mc` is what Vercel ships. Both are
+      # worth a gate, and the one that ships is worth it most.
+      - main
+      - main-mc
+    # Repeated verbatim under pull_request below: GitHub Actions does not
+    # support YAML anchors, so the two lists have to be kept in step by hand.
+    paths:
+      - 'apps/mass-consensus/**'
+      # Both resolve through their built dist/ (no tsconfig path mapping), so a
+      # change in either can break MC's typecheck without touching apps/.
+      - 'packages/shared-types/**'
+      - 'packages/engagement-core/**'
+      # Symmetric, so a change to this gate runs it.
+      - '.github/workflows/mass-consensus.yml'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'apps/mass-consensus/**'
+      - 'packages/shared-types/**'
+      - 'packages/engagement-core/**'
+      - '.github/workflows/mass-consensus.yml'
+
+concurrency:
+  group: mass-consensus-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Matches the Node that Vercel runs MC on (production reports v22.x).
+  NODE_VERSION: '22.x'
+
+jobs:
+  validate:
+    name: Validate Code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          # No cache-dependency-path: apps/mass-consensus/package-lock.json is
+          # gitignored and so absent from a fresh checkout. Naming it is what
+          # broke every previous run. The default lookup finds the root lockfile,
+          # which is tracked.
+          cache: 'npm'
+
+      # Mirrors vercel.json's installCommand and buildCommand rather than
+      # inventing a second install story: if the gate and the deploy disagree
+      # about how the app is assembled, the gate is worth nothing.
+      - name: Install workspace dependencies
+        run: npm install
+
+      - name: Build shared-types
+        working-directory: ./packages/shared-types
+        run: npm run build
+
+      - name: Build engagement-core
+        working-directory: ./packages/engagement-core
+        run: npm run build
+
+      - name: Install Mass Consensus dependencies
+        working-directory: ./apps/mass-consensus
+        run: npm install
+
+      - name: Run ESLint
+        working-directory: ./apps/mass-consensus
+        run: npm run lint
+
+      - name: Run TypeScript type checking
+        working-directory: ./apps/mass-consensus
+        run: npm run typecheck

@@ -277,7 +277,9 @@ export class ProposalSampler {
 
     return {
       totalCount: allProposals.length,
-      evaluatedCount: evaluatedIds.size,
+      // Count against the served set: evaluatedIds may also name originals a
+      // synth replaced, which are not proposals here.
+      evaluatedCount: allProposals.filter((p) => evaluatedIds.has(p.statementId)).length,
       stableCount,
       remainingCount: Math.max(0, availableCount - selectedCount),
     };

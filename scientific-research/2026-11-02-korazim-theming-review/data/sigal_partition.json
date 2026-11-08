@@ -1,0 +1,431 @@
+{
+ "IqKVla0ZHw-m": {
+  "themes": [
+   {
+    "themeId": "ijd8WTk96UYb",
+    "label": "שקט, שלווה ובנייה נמוכה",
+    "topic": "שקט, שלווה ובנייה נמוכה",
+    "reportRaters": 80,
+    "reportPro": 79,
+    "reportCon": 0
+   },
+   {
+    "themeId": "B5RsTL0qkFPV",
+    "label": "פינות נוי, פריחה והצללה",
+    "topic": "חזות הישוב",
+    "reportRaters": 66,
+    "reportPro": 64,
+    "reportCon": 0
+   },
+   {
+    "themeId": "8V1EziRtloYx",
+    "label": "חיבור לטבע ומרחבים פתוחים",
+    "topic": "חזות הישוב",
+    "reportRaters": 73,
+    "reportPro": 70,
+    "reportCon": 1
+   },
+   {
+    "themeId": "ZrirobagZpli",
+    "label": "גינון, צמחייה והצללה",
+    "topic": "חזות הישוב",
+    "reportRaters": 42,
+    "reportPro": 39,
+    "reportCon": 0
+   },
+   {
+    "themeId": "3lcTvZsJstyX",
+    "label": "ניקיון ונראות המרחב הציבורי",
+    "topic": "חזות הישוב",
+    "reportRaters": 81,
+    "reportPro": 75,
+    "reportCon": 2
+   },
+   {
+    "themeId": "TEmvM7EnWjTv",
+    "label": "יחסי שכנות ושייכות קהילתית",
+    "topic": "לכידות קהילתית",
+    "reportRaters": 86,
+    "reportPro": 82,
+    "reportCon": 2
+   },
+   {
+    "themeId": "vp9Us4UIE36-",
+    "label": "סיוע הדדי, התנדבות וחוסן",
+    "topic": "סיוע הדדי והתנדבות",
+    "reportRaters": 89,
+    "reportPro": 82,
+    "reportCon": 4
+   },
+   {
+    "themeId": "GpAckb0FjP24",
+    "label": "אירועי חגים ומסורות מקומיות",
+    "topic": "תרבות קהילתית",
+    "reportRaters": 76,
+    "reportPro": 70,
+    "reportCon": 1
+   },
+   {
+    "themeId": "86ybnHPcy7h9",
+    "label": "טקסים קהילתיים ולאומיים",
+    "topic": "תרבות קהילתית",
+    "reportRaters": 58,
+    "reportPro": 53,
+    "reportCon": 1
+   },
+   {
+    "themeId": "skE603gfaiXu",
+    "label": "מרחבי קהילה, תרבות ויוזמות",
+    "topic": "תרבות קהילתית",
+    "reportRaters": 68,
+    "reportPro": 60,
+    "reportCon": 1
+   },
+   {
+    "themeId": "sBpiUbybPVGe",
+    "label": "ותיקים וקשרים בין־דוריים",
+    "topic": "ותיקים וקשרים בין-דוריים",
+    "reportRaters": 64,
+    "reportPro": 52,
+    "reportCon": 5
+   },
+   {
+    "themeId": "HVv1cw6zWXJ-",
+    "label": "ניהול אוכלוסיית חתולי הכפר",
+    "topic": "חתולי הכפר",
+    "reportRaters": 38,
+    "reportPro": 27,
+    "reportCon": 3
+   },
+   {
+    "themeId": "1DQG2MONgORh",
+    "label": "ניהול ותקשורת קהילתית",
+    "topic": "ניהול ותקשורת קהילתית",
+    "reportRaters": 40,
+    "reportPro": 29,
+    "reportCon": 5
+   },
+   {
+    "themeId": "ahtqPERANT7e",
+    "label": "מורשת, היסטוריה ותיעוד מקומי",
+    "topic": "מורשת, היסטוריה ותיעוד מקומי",
+    "reportRaters": 24,
+    "reportPro": 19,
+    "reportCon": 3
+   },
+   {
+    "themeId": "BeM9MjzvwNNO",
+    "label": "צביון היישוב ובית הכנסת",
+    "topic": "צביון היישוב ובית הכנסת",
+    "reportRaters": 30,
+    "reportPro": 21,
+    "reportCon": 5
+   },
+   {
+    "themeId": "dTh94ZQcJ41e",
+    "label": "דרכים, שבילים ותשתיות גינון",
+    "topic": "דרכים, שבילים ותשתיות",
+    "reportRaters": 24,
+    "reportPro": 17,
+    "reportCon": 3
+   }
+  ],
+  "moves": [
+   {
+    "atomId": "N2PV49RTKdAf62pa9Oym",
+    "toTopic": "חוסן קהילתי בשעת חירום",
+    "why": "split"
+   },
+   {
+    "atomId": "tbq1biWxUXQMpbgPDnIi",
+    "toTopic": "חוסן קהילתי בשעת חירום",
+    "why": "split"
+   },
+   {
+    "atomId": "vWeCaZBmEf10",
+    "toTopic": "חוסן קהילתי בשעת חירום",
+    "why": "split"
+   },
+   {
+    "atomId": "8PFmyxpMFOGGVPbQ00wR",
+    "toTopic": "צביון היישוב ובית הכנסת",
+    "why": "move#9"
+   },
+   {
+    "atomId": "OJNB-dOWEbHY",
+    "toTopic": "שקט, שלווה ובנייה נמוכה",
+    "why": "doubly-filed: report places it here"
+   },
+   {
+    "atomId": "SGpNK3mwjXHGPSYUiqqU",
+    "toTopic": "חוסן קהילתי בשעת חירום",
+    "why": "move#12"
+   },
+   {
+    "atomId": "vtxVZgXqjH5dcamZoAy6",
+    "toTopic": "ניהול ותקשורת קהילתית",
+    "why": "move#11"
+   }
+  ],
+  "s2Merges": [
+   [
+    "לכידות קהילתית",
+    "סיוע הדדי והתנדבות",
+    "חוסן קהילתי בשעת חירום"
+   ]
+  ]
+ },
+ "WfkDISMmbduQ": {
+  "themes": [
+   {
+    "themeId": "mIxv18D99iw8",
+    "label": "חיבור בין קבוצות ותושבים",
+    "topic": "בינוי קהילה",
+    "reportRaters": 70,
+    "reportPro": 69,
+    "reportCon": 0
+   },
+   {
+    "themeId": "0sfOpzOAccHj",
+    "label": "שכנות טובה ותחושת שייכות",
+    "topic": "בינוי קהילה",
+    "reportRaters": 44,
+    "reportPro": 41,
+    "reportCon": 0
+   },
+   {
+    "themeId": "UV-RALhnFk2b",
+    "label": "הקשבה והתחשבות בין תושבים",
+    "topic": "בינוי קהילה",
+    "reportRaters": 46,
+    "reportPro": 44,
+    "reportCon": 1
+   },
+   {
+    "themeId": "YFrsHGpG7EPY",
+    "label": "חינוך ותרבות לחיזוק הקהילה",
+    "topic": "בינוי קהילה",
+    "reportRaters": 14,
+    "reportPro": 13,
+    "reportCon": 0
+   },
+   {
+    "themeId": "FvN4PkkHjYyj",
+    "label": "אירועים קהילתיים ורב־דוריים",
+    "topic": "בינוי קהילה",
+    "reportRaters": 19,
+    "reportPro": 17,
+    "reportCon": 0
+   },
+   {
+    "themeId": "GGWyBNBxymAh",
+    "label": "התנדבות וסיוע הדדי בקהילה",
+    "topic": "בינוי קהילה",
+    "reportRaters": 40,
+    "reportPro": 36,
+    "reportCon": 2
+   },
+   {
+    "themeId": "FQyr5mQ3R32d",
+    "label": "מעורבות וייצוג בקבלת החלטות",
+    "topic": "מעורבות וייצוג בקבלת החלטות",
+    "reportRaters": 26,
+    "reportPro": 26,
+    "reportCon": 0
+   },
+   {
+    "themeId": "eFX0CuIIM81I",
+    "label": "מבנים ומסגרות לגיל הרך",
+    "topic": "מבנים ומסגרות לגיל הרך",
+    "reportRaters": 40,
+    "reportPro": 36,
+    "reportCon": 2
+   },
+   {
+    "themeId": "ECM2KTci0GAq",
+    "label": "גינון, השקיה וטיפוח הכפר",
+    "topic": "שיפור פני הכפר",
+    "reportRaters": 29,
+    "reportPro": 26,
+    "reportCon": 0
+   },
+   {
+    "themeId": "H2viCMwISge1",
+    "label": "צל, עצים ושבילים",
+    "topic": "שיפור פני הכפר",
+    "reportRaters": 52,
+    "reportPro": 47,
+    "reportCon": 2
+   },
+   {
+    "themeId": "NbJ2LYfTeRtu",
+    "label": "אכיפה ויישום כללי הקבוצה",
+    "topic": "שיח ציבורי",
+    "reportRaters": 1,
+    "reportPro": 1,
+    "reportCon": 0
+   },
+   {
+    "themeId": "Ib4UMTcCwZSh",
+    "label": "הידברות ויישוב מחלוקות",
+    "topic": "שיח ציבורי",
+    "reportRaters": 10,
+    "reportPro": 9,
+    "reportCon": 0
+   },
+   {
+    "themeId": "9RHvqz-qOMIb",
+    "label": "כללי התנהלות בקבוצות ווטסאפ",
+    "topic": "שיח ציבורי",
+    "reportRaters": 21,
+    "reportPro": 20,
+    "reportCon": 0
+   },
+   {
+    "themeId": "6vmyy1bTaJz7",
+    "label": "נוער, צעירים ומנהיגות",
+    "topic": "נוער, צעירים ומנהיגות",
+    "reportRaters": 56,
+    "reportPro": 51,
+    "reportCon": 1
+   },
+   {
+    "themeId": "6whtWxsZ8O5l",
+    "label": "בחירת בעלי תפקידים ואחריותם",
+    "topic": "בחירת בעלי תפקידים ואחריותם",
+    "reportRaters": 56,
+    "reportPro": 47,
+    "reportCon": 3
+   },
+   {
+    "themeId": "CyuI1BZvVY65",
+    "label": "נגישות למידע ופרוטוקולים",
+    "topic": "נגישות למידע ופרוטוקולים",
+    "reportRaters": 23,
+    "reportPro": 21,
+    "reportCon": 1
+   },
+   {
+    "themeId": "39X4Cc761YtN",
+    "label": "מתקני ספורט ומשחק",
+    "topic": "מתקני ספורט ומשחק",
+    "reportRaters": 53,
+    "reportPro": 44,
+    "reportCon": 4
+   },
+   {
+    "themeId": "s6tLLByl7X7b",
+    "label": "הסדרת המרחב הציבורי",
+    "topic": "הסדרת המרחב הציבורי",
+    "reportRaters": 69,
+    "reportPro": 59,
+    "reportCon": 3
+   },
+   {
+    "themeId": "PMjtNwTFHRtA",
+    "label": "פיתוח ההרחבה והמרחבים הקהילתיים",
+    "topic": "פיתוח ההרחבה והמרחבים הקהילתיים",
+    "reportRaters": 53,
+    "reportPro": 46,
+    "reportCon": 4
+   },
+   {
+    "themeId": "qKeKSJcdM805",
+    "label": "ניקיון, אשפה ומיחזור",
+    "topic": "ניקיון, אשפה ומיחזור",
+    "reportRaters": 37,
+    "reportPro": 33,
+    "reportCon": 1
+   },
+   {
+    "themeId": "xf9QqAae6LsO",
+    "label": "העשרה וחוגים לילדים",
+    "topic": "העשרה וחוגים לילדים",
+    "reportRaters": 22,
+    "reportPro": 20,
+    "reportCon": 0
+   },
+   {
+    "themeId": "gu042o0wTbl6",
+    "label": "עסקים, מסחר ותיירות מקומית",
+    "topic": "עסקים, מסחר ותיירות מקומית",
+    "reportRaters": 50,
+    "reportPro": 39,
+    "reportCon": 3
+   },
+   {
+    "themeId": "OFqdY9eVn9pm",
+    "label": "מיסים, תקציב ואמצעי תשלום",
+    "topic": "מיסים, תקציב ואמצעי תשלום",
+    "reportRaters": 37,
+    "reportPro": 31,
+    "reportCon": 3
+   },
+   {
+    "themeId": "0ZQYaXBhhkdM",
+    "label": "מרחבי מועדון ובילוי למבוגרים",
+    "topic": "מרחבי מועדון ובילוי למבוגרים",
+    "reportRaters": 23,
+    "reportPro": 18,
+    "reportCon": 2
+   },
+   {
+    "themeId": "2bDZn8CH0rS2",
+    "label": "טבע, מורשת ואיכות הסביבה",
+    "topic": "טבע ואיכות הסביבה",
+    "reportRaters": 37,
+    "reportPro": 26,
+    "reportCon": 2
+   },
+   {
+    "themeId": "-tdDLlp-WAjY",
+    "label": "פעילויות פנאי ותוכן למבוגרים ומתבגרים",
+    "topic": "פעילויות פנאי ותוכן למבוגרים",
+    "reportRaters": 19,
+    "reportPro": 16,
+    "reportCon": 3
+   },
+   {
+    "themeId": "25IXa3ic4f41",
+    "label": "קבלה, הכלה וקליטת תושבים",
+    "topic": "קבלה וקליטת תושבים",
+    "reportRaters": 25,
+    "reportPro": 18,
+    "reportCon": 4
+   }
+  ],
+  "moves": [
+   {
+    "atomId": "0P9O5EJW7cWF",
+    "toTopic": "מורשת ותיעוד",
+    "why": "split"
+   },
+   {
+    "atomId": "20ioHSvq3zAn0JbpYLzM",
+    "toTopic": "מורשת ותיעוד",
+    "why": "split"
+   },
+   {
+    "atomId": "p4fcUJuas4GTPJw5QSUc",
+    "toTopic": "מורשת ותיעוד",
+    "why": "split"
+   },
+   {
+    "atomId": "FAzi5CNp92ORlVgHlTAY",
+    "toTopic": null,
+    "why": "removed#21"
+   },
+   {
+    "atomId": "-6lrcO8PfcBq",
+    "toTopic": "בינוי קהילה",
+    "why": "doubly-filed: report places it here"
+   },
+   {
+    "atomId": "YKKdQeo0Epu4",
+    "toTopic": "בינוי קהילה",
+    "why": "doubly-filed: report places it here"
+   }
+  ],
+  "s2Merges": []
+ }
+}

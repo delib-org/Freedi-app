@@ -93,6 +93,13 @@ export function resultsByParentId(parentStatement: Statement, subStatements: Sta
 		if (!parentStatement) throw new Error('No parentStatement');
 		if (!subStatements?.length) return { top: parentStatement, sub: [] };
 
+		// A retired cluster is HIDDEN, not deleted: the theme sweeps hide a merge
+		// donor (`mergedInto`) and a split parent (`splitInto`) and empty their
+		// members, so the record keeps its history. Drawn, such a shell is an
+		// empty box hanging off the question (seen on Bq-VQPMPiG7b after the
+		// 2026-09-18 split + merge). Drop them before anything is indexed.
+		subStatements = subStatements.filter((s) => !(s.isCluster && s.hide === true));
+
 		// Index every statement by id for cluster-membership lookups.
 		const byId = new Map<string, Statement>();
 		byId.set(parentStatement.statementId, parentStatement);
@@ -126,9 +133,13 @@ export function resultsByParentId(parentStatement: Statement, subStatements: Sta
 		function buildNode(statement: Statement): Results {
 			visited.add(statement.statementId);
 
-			// Direct children by parentId, excluding any absorbed into a cluster.
+			// Direct children by parentId, excluding any absorbed into a cluster
+			// and any hidden statement. A hidden option is never a loose idea —
+			// the same rule as computeOtherIdeas, which skips every hidden
+			// sibling. Merged originals (`hide` + `mergedInto`) are still drawn
+			// when the surviving cluster lists them, through the nesting below.
 			const sub: Results[] = (childrenMap.get(statement.statementId) || [])
-				.filter((child) => !absorbedIds.has(child.statementId))
+				.filter((child) => !absorbedIds.has(child.statementId) && child.hide !== true)
 				.map((child) => buildNode(child));
 
 			// Nest this cluster's members (which may themselves be clusters).

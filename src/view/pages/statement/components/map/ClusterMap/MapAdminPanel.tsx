@@ -21,6 +21,7 @@ import { logError } from '@/utils/errorHandling';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import type { LocalMapFilter } from './mapLocalFilter';
 import { resolveDefaultDetail } from '../mapHelpers/detailLevel';
+import MapThemeRebuildSection from './MapThemeRebuildSection';
 
 interface MapAdminPanelProps {
 	statement: Statement;
@@ -435,6 +436,9 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 
 				{canConfigure && (
 					<>
+						{/* Re-theme with AI — admins only; previews before it writes */}
+						<MapThemeRebuildSection questionId={statement.statementId} />
+
 						{/* Text size */}
 						<section className="admin-drawer__section">
 							<span className="admin-drawer__section-title">{t('Map text size')}</span>

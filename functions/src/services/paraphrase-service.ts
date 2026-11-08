@@ -31,6 +31,7 @@ export async function generateParaphrases(
 			temperature: 0.4,
 			maxTokens: 300,
 			jsonMode: true,
+			reasoningEffort: 'none',
 		});
 		const parsed = JSON.parse(extractJson(raw)) as { paraphrases?: unknown };
 		if (!Array.isArray(parsed.paraphrases)) return [];

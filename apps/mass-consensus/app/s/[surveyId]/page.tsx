@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         title: survey.title,
         description: survey.description || 'A new way to make decisions together',
         type: 'website',
-        images: [{ url: '/wizcol-logo.png', width: 800, height: 400, alt: 'WizCol' }],
+        images: [{ url: '/og-wizcol.png', width: 1200, height: 630, alt: 'WizCol' }],
       },
     };
   } catch {

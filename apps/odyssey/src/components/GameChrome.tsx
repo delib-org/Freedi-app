@@ -1,24 +1,26 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { logOut, useUser } from '../lib/user';
-import { toggleMode, useMode } from '../lib/mode';
+import { useUser } from '../lib/user';
 import { useGame } from '../state/GameContext';
 import { isGameAdmin } from '../lib/game';
+import { useT } from '../i18n/useT';
 import DigestSettings from './DigestSettings';
+import LanguageSwitcher from './LanguageSwitcher';
+import VoyageProgress from './VoyageProgress';
 
-/** Fixed top bar: brand, stage indicator, direct-mode toggle, user menu. */
+/** Fixed top bar: brand, stage indicator, the voyage strip, language, user menu. */
 export default function GameChrome({ stage }: { stage?: string }) {
 	const { user } = useUser();
-	const mode = useMode();
 	const { content, text } = useGame();
+	const { t } = useT();
 	const admin = content ? isGameAdmin(content.game, user?.uid) : false;
 	// The email-digest opt-in lives here, on every screen — buried at the foot
 	// of the Summary page nobody scrolled to, it may as well not have existed.
 	const [digestOpen, setDigestOpen] = useState(false);
 
 	return (
-		<nav className="topnav" dir="rtl">
-			<div className="flex items-center gap-3">
+		<nav className="topnav">
+			<div className="topnav__brand">
 				<span aria-hidden="true" className="text-xl">
 					⚓
 				</span>
@@ -27,14 +29,12 @@ export default function GameChrome({ stage }: { stage?: string }) {
 					{stage ? <div className="text-[12px] opacity-75">{stage}</div> : null}
 				</div>
 			</div>
-			<div className="flex items-center gap-2">
-				<button
-					type="button"
-					className="btn-outline !py-1.5 !px-3 !text-[13px]"
-					onClick={toggleMode}
-				>
-					{mode === 'direct' ? 'חזרה למצב הפלגה' : 'מעדיפים שאלון ישיר?'}
-				</button>
+			{/* Before the strip in the DOM so that on a phone, where the strip takes
+			    a line of its own, it is the strip that drops and not the buttons.
+			    Wide screens put it back in the middle with `order`. */}
+			<div className="topnav__actions">
+				{/* Offered before sign-in too: the door should open in your language. */}
+				<LanguageSwitcher />
 				{user ? (
 					<>
 						<button
@@ -42,36 +42,29 @@ export default function GameChrome({ stage }: { stage?: string }) {
 							className="btn-outline !py-1.5 !px-3 !text-[13px]"
 							onClick={() => setDigestOpen(true)}
 							aria-haspopup="dialog"
-							title="סיפור המסע שלכם למייל"
+							title={t('chrome.digestTitle')}
 						>
-							📬 <span className="hidden sm:inline">מייל</span>
+							📬 <span className="hidden sm:inline">{t('chrome.digestShort')}</span>
 						</button>
 						{admin ? (
 							<Link className="btn-outline !py-1.5 !px-3 !text-[13px]" to="/admin">
-								ניהול
+								{t('chrome.admin')}
 							</Link>
 						) : null}
 						<span className="text-[13px] opacity-85 hidden sm:inline">
 							{/* An anonymous sailor has neither, and rendered as empty space. */}
-							{user.isAnonymous ? 'ללא חשבון' : (user.displayName ?? user.email)}
+							{user.isAnonymous ? t('chrome.noAccount') : (user.displayName ?? user.email)}
 						</span>
-						<button
-							type="button"
-							className="btn-outline !py-1.5 !px-3 !text-[13px]"
-							onClick={() => void logOut()}
-						>
-							יציאה
-						</button>
 					</>
 				) : null}
 			</div>
+			<VoyageProgress />
 			{user && digestOpen ? (
 				<div
 					className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4 pt-16"
-					dir="rtl"
 					role="dialog"
 					aria-modal="true"
-					aria-label="סיפור המסע שלכם למייל"
+					aria-label={t('chrome.digestTitle')}
 					onClick={(event) => {
 						if (event.target === event.currentTarget) setDigestOpen(false);
 					}}

@@ -31,11 +31,18 @@ import {
 import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { TIME } from '@/constants/common';
-import { CLUSTER_PALETTE, type ClusterPaletteEntry } from '../mapHelpers/mindElixirTransform';
-import { focusEditField } from '../mapHelpers/focusEditField';
+import { computeOtherIdeas, OTHER_IDEAS_ID } from '@/helpers/otherIdeas';
+import {
+	CLUSTER_PALETTE,
+	UNGROUPED_PALETTE,
+	assignClusterColors,
+	withFrame,
+	type ClusterColor,
+} from '../mapHelpers/clusterColors';
 import { usePanZoom } from '../hooks/usePanZoom';
 import PanZoomControls from '../components/PanZoomControls';
-import ClusterCard from './ClusterCard';
+import ClusterCard, { detectTextDir } from './ClusterCard';
+import NoteFocusOverlay from './NoteFocusOverlay';
 import ClusterStack from './ClusterStack';
 import stackStyles from './ClusterStack.module.scss';
 import type { LocalMapFilter } from './mapLocalFilter';
@@ -73,9 +80,22 @@ interface Props {
 const CARD = 120;
 const GAP = 12;
 const COLS = 3;
-const PILL_RADIUS = 210;
-const PILL_W = 180; // approx pill footprint, for spacing pills around the ring
 const HUB = 120;
+// A cluster is a frame: a bordered panel with its title pill straddling the top
+// edge and its notes in a grid inside. These size the frame around the grid.
+const FRAME_PAD = 12;
+// Height the header adds to the frame's footprint: the pill (a two-line title
+// plus its "made from N responses" line, ~60px) straddling the top border, plus
+// its gap to the grid. Overestimating only spaces frames a little further apart.
+const FRAME_HEADER = 72;
+// Breathing room kept between neighbouring frames.
+const FRAME_MARGIN = 24;
+// A folded cluster is just its pill; this is the pill's footprint for spacing.
+const PILL_W = 180;
+const PILL_H = 60;
+// Frames start this far from the hub centre — clear of the hub and of the
+// "+ Add cluster" button hanging under it.
+const FRAME_BASE_RADIUS = HUB / 2 + 64;
 // Sources fanned out under a merged idea are drawn at this scale (see
 // --cluster-source-scale) inside a full-width tray row.
 const SOURCE_SCALE = 0.85;
@@ -86,8 +106,21 @@ const TRAY_PAD_Y = 55;
 // A stack's sheets peek out below the card (2 × --cluster-stack-offset).
 const STACK_EXTRA = 8;
 
-const UNGROUPED_ID = '__ungrouped__';
-const UNGROUPED_COLOR: ClusterPaletteEntry = { line: '#9aa3b2', card: '#e7eaf0', text: '#3d4d71' };
+const OTHER_IDEAS_COLOR: ClusterColor = withFrame(UNGROUPED_PALETTE);
+
+/** Every distinct statement in a results tree, root excluded. */
+function flattenStatements(results: Results): Statement[] {
+	const byId = new Map<string, Statement>();
+	const walk = (node: Results): void => {
+		for (const child of node.sub) {
+			byId.set(child.top.statementId, child.top);
+			walk(child);
+		}
+	};
+	walk(results);
+
+	return [...byId.values()];
+}
 const DRAG_MIME = 'application/x-freedi-statement-id';
 
 // Default map typography (rem). Admins override these per question via
@@ -111,74 +144,17 @@ function clampFont(value: number | undefined, fallback: number): number {
 	return Math.min(MAP_FONT_MAX, Math.max(MAP_FONT_MIN, value));
 }
 
-function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
-	const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-	if (!match) return null;
-	const value = parseInt(match[1], 16);
-
-	return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
-}
-
-function toHex(r: number, g: number, b: number): string {
-	return (
-		'#' +
-		[r, g, b]
-			.map((v) =>
-				Math.max(0, Math.min(255, Math.round(v)))
-					.toString(16)
-					.padStart(2, '0'),
-			)
-			.join('')
-	);
-}
-
-/** Build a full cluster palette (pill line, light card tint, readable text) from one chosen color. */
-function deriveClusterPalette(hex: string): ClusterPaletteEntry {
-	const rgb = hexToRgb(hex);
-	if (!rgb) return UNGROUPED_COLOR;
-	const { r, g, b } = rgb;
-
-	return {
-		line: hex,
-		card: toHex(r + (255 - r) * 0.82, g + (255 - g) * 0.82, b + (255 - b) * 0.82),
-		text: toHex(r * 0.4, g * 0.4, b * 0.4),
-	};
-}
-
-/**
- * Stable index into the palette derived from the cluster's id. Using the id
- * (not the cluster's position in the array) keeps a cluster's color fixed as
- * notes/clusters are added, removed, or re-sorted — otherwise the same cluster
- * would change color between renders.
- */
-function paletteIndexForId(id: string): number {
-	let hash = 0;
-	for (let i = 0; i < id.length; i++) {
-		hash = (hash * 31 + id.charCodeAt(i)) | 0;
-	}
-
-	return Math.abs(hash) % CLUSTER_PALETTE.length;
-}
-
-/** A cluster's color: its saved `color`, else a stable default palette slot from its id. */
-function resolveClusterColor(hex: string | undefined, clusterId: string): ClusterPaletteEntry {
-	if (!hex) return CLUSTER_PALETTE[paletteIndexForId(clusterId)];
-	const preset = CLUSTER_PALETTE.find((entry) => entry.line.toLowerCase() === hex.toLowerCase());
-
-	return preset ?? deriveClusterPalette(hex);
-}
-
 /**
  * A normalized cluster ready to render. Clusters and their members all live
  * FLAT under the question; membership is the cluster's `integratedOptions[]`
  * (resolved into `members` by resultsByParentId), so notes stay visible in the
- * main app's option list. The synthetic "Ungrouped" group holds options not in
+ * main app's option list. The synthetic "Other ideas" group holds options not in
  * any cluster.
  */
 interface BoardCluster {
 	id: string;
 	label: string;
-	color: ClusterPaletteEntry;
+	color: ClusterColor;
 	/** Members to draw — empty while the container is folded at this detail level. */
 	members: DetailResults[];
 	/** What the container holds, folded or not — for its count pill. */
@@ -187,7 +163,7 @@ interface BoardCluster {
 	collapsed: boolean;
 	/** The container itself is a merged idea (its members are the originals). */
 	isSynth: boolean;
-	/** The cluster statement (isCluster option) — null for the synthetic "Ungrouped" group. */
+	/** The cluster statement (isCluster option) — null for the synthetic "Other ideas" group. */
 	clusterStatement: Statement | null;
 	/**
 	 * Member count BEFORE the map filter hides any — so the "made from N
@@ -198,10 +174,10 @@ interface BoardCluster {
 }
 
 interface PlacedCluster extends BoardCluster {
-	pill: { x: number; y: number };
-	grid: { x: number; y: number };
+	/** Centre of the cluster's frame, relative to the hub. */
+	frame: { x: number; y: number };
 	cols: number;
-	/** Half of the grid's largest dimension — used to size the canvas. */
+	/** Half of the frame's diagonal — used to size the canvas. */
 	half: number;
 }
 
@@ -225,12 +201,12 @@ const ClusterBoard: FC<Props> = ({
 	const { t } = useTranslation();
 	const { user, creator } = useAuthentication();
 	const subject = results.top;
-	const { level, expandedIds, toggleExpanded, allowExpand } = detail;
+	const { level, expandedIds, foldedIds, toggleExpanded, allowExpand } = detail;
 	// The tree folded to the viewer's altitude; the board reads `collapsed` off
 	// each node instead of pruning, so folded containers still know their counts.
 	const leveled = useMemo(
-		() => applyDetailLevel(results, level, expandedIds),
-		[results, level, expandedIds],
+		() => applyDetailLevel(results, level, expandedIds, foldedIds),
+		[results, level, expandedIds, foldedIds],
 	);
 	const children = leveled.sub;
 	const membership = useMemo(() => buildMembershipMap(results), [results]);
@@ -309,6 +285,23 @@ const ClusterBoard: FC<Props> = ({
 
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [colorPickerId, setColorPickerId] = useState<string | null>(null);
+	// Hovering (or tapping, on touch) a cluster's title fades the other frames
+	// and thickens its hub connector so one cluster can be isolated by eye.
+	const [focusedId, setFocusedId] = useState<string | null>(null);
+	// A pressed cluster title opens the same focus box as a note: the full
+	// title, readable from afar, and (with rights) the place to edit it.
+	const [pillFocus, setPillFocus] = useState<{ id: string; rect: DOMRect } | null>(null);
+
+	useEffect(() => {
+		if (focusedId === null) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') setFocusedId(null);
+		};
+		window.addEventListener('keydown', onKey);
+
+		return () => window.removeEventListener('keydown', onKey);
+	}, [focusedId]);
+
 	const [busy, setBusy] = useState(false);
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const prevRectsRef = useRef<Map<string, { x: number; y: number; cluster: string }>>(new Map());
@@ -319,15 +312,23 @@ const ClusterBoard: FC<Props> = ({
 	);
 
 	// Split the question's children into containers (themes and top-level merged
-	// ideas → a pill + grid each) and loose originals (the "Ungrouped" block).
+	// ideas → a pill + grid each) and loose originals (the "Other ideas" block).
 	// resultsByParentId already nested each cluster's members under it via
 	// integratedOptions; applyDetailLevel folded whatever the altitude hides.
 	const boardClusters = useMemo(() => {
 		const containers: BoardCluster[] = [];
 		const loose: DetailResults[] = [];
+		// Other ideas only exists beside a theme. A top-level merged idea no
+		// theme holds is one of its atoms (the shared rule decides which).
+		const hasTheme = children.some((child) => child.kind === 'topic' && !child.top.hide);
+		const otherAtomIds = hasTheme
+			? new Set(computeOtherIdeas(flattenStatements(results)).otherAtoms.map((s) => s.statementId))
+			: new Set<string>();
 
 		children.forEach((child) => {
-			if (child.kind !== 'raw') {
+			if (child.kind === 'synth' && otherAtomIds.has(child.top.statementId)) {
+				if (passesFilter(child.top)) loose.push(child);
+			} else if (child.kind !== 'raw') {
 				const allMembers = child.sub;
 				const visibleMembers = allMembers.filter((member) => passesFilter(member.top));
 				// Drop a cluster only when the filter hid ALL of its members. A
@@ -337,7 +338,7 @@ const ClusterBoard: FC<Props> = ({
 				containers.push({
 					id: child.top.statementId,
 					label: child.top.statement,
-					color: resolveClusterColor(child.top.color, child.top.statementId),
+					color: OTHER_IDEAS_COLOR, // assigned below, once all clusters are known
 					members: child.collapsed ? [] : visibleMembers,
 					counts: countsFor(child),
 					collapsed: child.collapsed,
@@ -350,15 +351,17 @@ const ClusterBoard: FC<Props> = ({
 			}
 		});
 
-		// Ungrouped originals fold with the themes: at "themes" they are a count.
+		// Other ideas fold with the themes: at "themes" they are a count. With no
+		// theme on the board the group has no heading — its cards just sit there.
 		if (loose.length > 0) {
-			const collapsed = level === 'themes';
+			// With no theme there is nothing to fold into: show the cards.
+			const collapsed = hasTheme && level === 'themes';
 			containers.push({
-				id: UNGROUPED_ID,
-				label: t('Ungrouped'),
-				color: UNGROUPED_COLOR,
+				id: OTHER_IDEAS_ID,
+				label: hasTheme ? t('Other ideas') : '',
+				color: OTHER_IDEAS_COLOR,
 				members: collapsed ? [] : loose,
-				counts: { ideas: loose.length, merged: 0, voices: loose.length },
+				counts: countsFor({ top: subject, sub: loose }),
 				collapsed,
 				isSynth: false,
 				clusterStatement: null,
@@ -366,8 +369,27 @@ const ClusterBoard: FC<Props> = ({
 			});
 		}
 
-		return containers;
-	}, [children, t, level, passesFilter]);
+		// Colour the real clusters together so no two share a palette slot while
+		// slots remain; "Other ideas" keeps its own grey outside the palette.
+		const colors = assignClusterColors(
+			containers
+				.filter((c) => c.clusterStatement)
+				.map((c) => ({ id: c.id, color: c.clusterStatement?.color })),
+		);
+
+		return containers.map((c) => {
+			const color = colors.get(c.id);
+
+			return color ? { ...c, color } : c;
+		});
+	}, [children, results, subject, t, level, passesFilter]);
+
+	// Drop the focus if that cluster leaves the board (deleted, filtered out).
+	useEffect(() => {
+		if (focusedId !== null && !boardClusters.some((c) => c.id === focusedId)) {
+			setFocusedId(null);
+		}
+	}, [focusedId, boardClusters]);
 
 	// A merged idea inside a container fans its originals out in a tray that
 	// takes the next full-width grid row. The grid's height therefore depends on
@@ -378,32 +400,35 @@ const ClusterBoard: FC<Props> = ({
 		[],
 	);
 
-	// Place clusters on a ring. Pills sit on an inner ring near the hub; each
-	// grid then hugs its OWN pill at a radius set by that cluster's own size, so
-	// small/empty clusters stay close instead of being flung out to match the
-	// biggest cluster. Only neighbours that would actually overlap get pushed
-	// apart, using their real sizes (law of cosines on their grid centres).
+	// Place clusters on a ring around the hub. Each cluster is one FRAME (title
+	// pill + note grid) that sits at a radius set by its own size, so small/empty
+	// clusters stay close instead of being flung out to match the biggest one.
+	// Only neighbours that would actually overlap get pushed apart, using their
+	// real sizes (law of cosines on their frame centres).
 	const layout = useMemo(() => {
 		const n = Math.max(boardClusters.length, 1);
 		const angleStep = (2 * Math.PI) / n;
-		const sinHalf = Math.max(Math.sin(angleStep / 2), 0.001);
 
 		const blocks = boardClusters.map((cluster) => {
-			const canAdd = canContribute && !cluster.isSynth && !cluster.collapsed;
+			// A folded cluster is just its pill.
+			if (cluster.collapsed) {
+				return { cols: 1, w: PILL_W, h: PILL_H, half: Math.hypot(PILL_W, PILL_H) / 2 };
+			}
+			const canAdd = canContribute && !cluster.isSynth;
 			const memberCount = cluster.members.length + (canAdd ? 1 : 0);
 			const cols = Math.max(1, Math.min(COLS, memberCount || 1));
-			const w = cols * CARD + (cols - 1) * GAP;
-			const perTrayRow = Math.max(1, Math.floor((w + SOURCE_GAP) / (SOURCE + SOURCE_GAP)));
+			const gridW = cols * CARD + (cols - 1) * GAP;
+			const perTrayRow = Math.max(1, Math.floor((gridW + SOURCE_GAP) / (SOURCE + SOURCE_GAP)));
 
 			// Walk the grid's auto-placement: cards fill a row; an open stack's
 			// tray spans the full width on the row after it.
-			let h = 0;
+			let gridH = 0;
 			let col = 0;
 			let rowOpen = false;
 			let rowHasStack = false;
 			const closeRow = () => {
 				if (!rowOpen) return;
-				h += (h > 0 ? GAP : 0) + CARD + (rowHasStack ? STACK_EXTRA : 0);
+				gridH += (gridH > 0 ? GAP : 0) + CARD + (rowHasStack ? STACK_EXTRA : 0);
 				rowOpen = false;
 				rowHasStack = false;
 				col = 0;
@@ -417,47 +442,47 @@ const ClusterBoard: FC<Props> = ({
 				if (slot && isOpenStack(slot)) {
 					closeRow();
 					const trayRows = Math.ceil(slot.sub.length / perTrayRow);
-					h += GAP + TRAY_PAD_Y + trayRows * SOURCE + (trayRows - 1) * SOURCE_GAP;
+					gridH += GAP + TRAY_PAD_Y + trayRows * SOURCE + (trayRows - 1) * SOURCE_GAP;
 				}
 			}
 			closeRow();
-			if (h === 0) h = CARD;
 
-			// Bounding-circle radius of the block, for collision checks.
+			// The frame wraps the grid (or at least the pill, when the grid is empty).
+			const w = Math.max(gridW, PILL_W) + 2 * FRAME_PAD;
+			const h = gridH + FRAME_HEADER + 2 * FRAME_PAD;
+
+			// Bounding-circle radius of the frame, for collision checks.
 			return { cols, w, h, half: Math.hypot(w, h) / 2 };
 		});
 
-		// Pills on an inner ring, spaced so the pills themselves don't overlap.
-		const pillRing = n > 1 ? Math.max(PILL_RADIUS, (PILL_W + 28) / (2 * sinHalf)) : PILL_RADIUS;
-
 		const angles = boardClusters.map((_, i) => -Math.PI / 2 + i * angleStep);
 
-		// Start each grid just past its pill. The block is axis-aligned, so how far
+		// Start each frame just past the hub. The frame is axis-aligned, so how far
 		// it juts back toward the hub depends on its angle: |w/2·cosθ| + |h/2·sinθ|.
 		// Using that (instead of the diagonal) keeps short/wide clusters close.
 		const radii = blocks.map((b, i) => {
 			const a = angles[i];
 			const radialReach = Math.abs((b.w / 2) * Math.cos(a)) + Math.abs((b.h / 2) * Math.sin(a));
 
-			return pillRing + 40 + radialReach;
+			return FRAME_BASE_RADIUS + radialReach;
 		});
 
-		// Tangential (sideways-along-the-ring) extent of each axis-aligned block at
+		// Tangential (sideways-along-the-ring) extent of each axis-aligned frame at
 		// its angle — this is the room a neighbour actually needs, far less than the
-		// block's bounding circle, so we don't over-space radially-placed grids.
+		// frame's bounding circle, so we don't over-space radially-placed frames.
 		const tang = blocks.map((b, i) => {
 			const a = angles[i];
 
 			return Math.abs((b.w / 2) * Math.sin(a)) + Math.abs((b.h / 2) * Math.cos(a));
 		});
 
-		// Push apart only neighbouring grids that genuinely overlap.
+		// Push apart only neighbouring frames that genuinely overlap.
 		if (n > 1) {
 			const cos = Math.cos(angleStep);
 			for (let pass = 0; pass < 6; pass++) {
 				for (let i = 0; i < n; i++) {
 					const j = (i + 1) % n;
-					const needed = tang[i] + tang[j] + 24;
+					const needed = tang[i] + tang[j] + FRAME_MARGIN;
 					const d = Math.sqrt(radii[i] ** 2 + radii[j] ** 2 - 2 * radii[i] * radii[j] * cos);
 					if (d < needed) {
 						const bump = (needed - d) / 2 + 1;
@@ -466,27 +491,48 @@ const ClusterBoard: FC<Props> = ({
 					}
 				}
 			}
+
+			// Safety net over EVERY pair on their real axis-aligned boxes: a tall
+			// frame can still reach past a small neighbour into the one beyond it.
+			// Moving both outward along their rays widens the chord between them.
+			for (let pass = 0; pass < 12; pass++) {
+				let moved = false;
+				for (let i = 0; i < n; i++) {
+					for (let j = i + 1; j < n; j++) {
+						const dx = Math.abs(Math.cos(angles[i]) * radii[i] - Math.cos(angles[j]) * radii[j]);
+						const dy = Math.abs(Math.sin(angles[i]) * radii[i] - Math.sin(angles[j]) * radii[j]);
+						const ox = (blocks[i].w + blocks[j].w) / 2 + FRAME_MARGIN - dx;
+						const oy = (blocks[i].h + blocks[j].h) / 2 + FRAME_MARGIN - dy;
+						if (ox <= 0 || oy <= 0) continue;
+						// The chord grows by 2·sin(Δθ/2) per unit of radius on both sides.
+						const spread = Math.max(Math.sin(Math.abs(angles[i] - angles[j]) / 2), 0.05);
+						const bump = Math.min(ox, oy) / (4 * spread) + 1;
+						radii[i] += bump;
+						radii[j] += bump;
+						moved = true;
+					}
+				}
+				if (!moved) break;
+			}
 		}
 
 		return boardClusters.map((cluster, i): PlacedCluster => {
 			const angle = angles[i];
-			const dir = { x: Math.cos(angle), y: Math.sin(angle) };
 
 			return {
 				...cluster,
-				pill: { x: dir.x * pillRing, y: dir.y * pillRing },
-				grid: { x: dir.x * radii[i], y: dir.y * radii[i] },
+				frame: { x: Math.cos(angle) * radii[i], y: Math.sin(angle) * radii[i] },
 				cols: blocks[i].cols,
 				half: blocks[i].half,
 			};
 		});
 	}, [boardClusters, canContribute, isOpenStack]);
 
-	// Canvas big enough to hold the outermost grids; hub is centered.
+	// Canvas big enough to hold the outermost frames; hub is centered.
 	const reach = useMemo(() => {
-		let max = PILL_RADIUS + 240;
+		let max = FRAME_BASE_RADIUS + 240;
 		for (const l of layout) {
-			max = Math.max(max, Math.hypot(l.grid.x, l.grid.y) + l.half + 60);
+			max = Math.max(max, Math.hypot(l.frame.x, l.frame.y) + l.half + 60);
 		}
 
 		return max;
@@ -810,10 +856,10 @@ const ClusterBoard: FC<Props> = ({
 
 	// Delete a cluster: the cluster statement is removed and any overrides that
 	// pointed at it are cleared. Its notes are plain options under the question,
-	// so they survive and reappear in the "Ungrouped" block.
+	// so they survive and reappear in the "Other ideas" block.
 	const removeCluster = async (cluster: BoardCluster) => {
 		if (!cluster.clusterStatement || busy) return;
-		const confirmed = window.confirm(t('Delete this cluster? Its notes will move to Ungrouped.'));
+		const confirmed = window.confirm(t('Delete this cluster? Its notes will move to Other ideas.'));
 		if (!confirmed) return;
 		setBusy(true);
 		try {
@@ -916,10 +962,15 @@ const ClusterBoard: FC<Props> = ({
 					)}
 					<svg className={styles.connectors} width={size} height={size} aria-hidden>
 						{layout.map((l) => {
-							const x2 = cx + l.pill.x;
-							const y2 = cy + l.pill.y;
-							const c1y = cy + l.pill.y * 0.25;
-							const c2x = cx + l.pill.x * 0.75;
+							// The path runs to the frame's CENTRE and the opaque frame sits on
+							// top of it, so the visible line ends exactly at the frame's edge
+							// whatever its real (content-sized) height turns out to be.
+							const x2 = cx + l.frame.x;
+							const y2 = cy + l.frame.y;
+							const c1y = cy + l.frame.y * 0.25;
+							const c2x = cx + l.frame.x * 0.75;
+							const focused = focusedId === l.id;
+							const dimmed = focusedId !== null && !focused;
 
 							return (
 								<path
@@ -927,8 +978,8 @@ const ClusterBoard: FC<Props> = ({
 									d={`M ${cx} ${cy} C ${cx} ${c1y}, ${c2x} ${y2}, ${x2} ${y2}`}
 									fill="none"
 									stroke={l.color.line}
-									strokeWidth={2}
-									opacity={0.7}
+									strokeWidth={focused ? 3.5 : 2}
+									opacity={dimmed ? 0.25 : focused ? 1 : 0.7}
 								/>
 							);
 						})}
@@ -962,282 +1013,353 @@ const ClusterBoard: FC<Props> = ({
 							.map((c) => ({ id: c.id, label: c.label }));
 
 						return (
-							<div key={l.id}>
-								<div
-									className={`${styles.pill} ${l.isSynth ? styles.pillSynth : styles.pillTopic} ${
-										l.collapsed ? styles.pillCollapsed : ''
-									}`}
-									style={{
-										left: cx + l.pill.x,
-										top: cy + l.pill.y,
-										background: l.color.line,
+							<div
+								key={l.id}
+								className={`${styles.frame} ${l.collapsed ? styles.frameCollapsed : ''} ${
+									focusedId === l.id ? styles.frameFocused : ''
+								} ${focusedId !== null && focusedId !== l.id ? styles.frameDimmed : ''}`}
+								style={
+									{
+										left: cx + l.frame.x,
+										top: cy + l.frame.y,
 										zIndex: colorPickerId === l.id ? 12 : undefined,
-									}}
-									// Keep the pill clickable (edit/color/delete) — don't let a press
-									// on it start a canvas pan, which would swallow the double-click.
-									data-no-pan
-									onDoubleClick={canEditPill ? () => setEditingId(l.id) : undefined}
-								>
-									{editingId === l.id && l.clusterStatement ? (
-										<textarea
-											className={styles.pillEdit}
-											defaultValue={l.clusterStatement.statement}
-											// Focus on pointer devices only; on touch this would scroll
-											// the field into view and yank the map viewport.
-											ref={focusEditField}
-											onFocus={(e) => e.currentTarget.select()}
-											onBlur={(e) =>
-												saveText(l.clusterStatement as Statement, e.currentTarget.value)
+										'--cluster-line': l.color.line,
+										'--frame-bg': l.color.frame,
+									} as CSSProperties
+								}
+								onDragOver={(e) => e.preventDefault()}
+								onDrop={(e) => handleDrop(e, l.id)}
+							>
+								{(l.clusterStatement || l.label) && (
+									<div
+										className={`${styles.pill} ${l.isSynth ? styles.pillSynth : styles.pillTopic} ${
+											l.collapsed ? styles.pillCollapsed : ''
+										}`}
+										style={{ background: l.color.line }}
+										// Keep the pill clickable (open/color/delete) — don't let a press
+										// on it start a canvas pan, which would swallow the click.
+										data-no-pan
+										onClick={(e) => {
+											if (!l.clusterStatement) return;
+											if ((e.target as HTMLElement).closest('button, input, textarea')) return;
+											setPillFocus({ id: l.id, rect: e.currentTarget.getBoundingClientRect() });
+										}}
+										onPointerEnter={(e) => {
+											if (e.pointerType !== 'touch') setFocusedId(l.id);
+										}}
+										onPointerLeave={(e) => {
+											if (e.pointerType !== 'touch') {
+												setFocusedId((id) => (id === l.id ? null : id));
 											}
-											onKeyDown={(e) => {
-												if (e.key === 'Enter' && !e.shiftKey) {
-													e.preventDefault();
-													e.currentTarget.blur();
-												}
-												if (e.key === 'Escape') setEditingId(null);
-											}}
-										/>
-									) : (
-										<>
-											{l.clusterStatement && (
-												<span className={styles.pillGlyph} aria-hidden>
-													{l.isSynth ? '⧉' : '#'}
+										}}
+										onPointerUp={(e) => {
+											// Touch has no hover: a tap on the title toggles the focus
+											// (but not a tap on one of its buttons).
+											if (e.pointerType !== 'touch') return;
+											if ((e.target as HTMLElement).closest('button')) return;
+											setFocusedId((id) => (id === l.id ? null : l.id));
+										}}
+									>
+										{l.clusterStatement && (
+											<span className={styles.pillGlyph} aria-hidden>
+												{l.isSynth ? '⧉' : '#'}
+											</span>
+										)}
+										{l.label}
+
+										{editingId !== l.id && (l.collapsed || l.isSynth) && (
+											<span className={styles.pillCount}>
+												{l.isSynth
+													? t('{n} voices').replace('{n}', String(l.counts.voices))
+													: [
+															l.counts.ideas > 0 &&
+																t('{n} ideas').replace('{n}', String(l.counts.ideas)),
+															l.counts.merged > 0 &&
+																t('{n} merged').replace('{n}', String(l.counts.merged)),
+														]
+															.filter(Boolean)
+															.join(' · ')}
+											</span>
+										)}
+
+										{editingId !== l.id &&
+											(l.clusterStatement
+												? mine?.synthsContainingMine.has(l.clusterStatement.statementId)
+												: l.id === OTHER_IDEAS_ID &&
+													l.members.some((m) =>
+														mine?.synthsContainingMine.has(m.top.statementId),
+													)) && (
+												<span className={styles.pillMine} title={t('includes yours')}>
+													<span className={styles.pillMineDot} aria-hidden />
+													{t('includes yours')}
 												</span>
 											)}
-											{l.label}
-										</>
-									)}
 
-									{editingId !== l.id && (l.collapsed || l.isSynth) && (
-										<span className={styles.pillCount}>
-											{l.isSynth
-												? t('{n} voices').replace('{n}', String(l.counts.voices))
-												: [
-														l.counts.ideas > 0 &&
-															t('{n} ideas').replace('{n}', String(l.counts.ideas)),
-														l.counts.merged > 0 &&
-															t('{n} merged').replace('{n}', String(l.counts.merged)),
-													]
-														.filter(Boolean)
-														.join(' · ')}
-										</span>
-									)}
-
-									{l.clusterStatement &&
-										editingId !== l.id &&
-										mine?.synthsContainingMine.has(l.clusterStatement.statementId) && (
-											<span className={styles.pillMine} title={t('includes yours')}>
-												<span className={styles.pillMineDot} aria-hidden />
-												{t('includes yours')}
-											</span>
-										)}
-
-									{l.collapsed && allowExpand && l.clusterStatement && editingId !== l.id && (
-										<button
-											type="button"
-											className={styles.pillExpand}
-											aria-expanded={false}
-											aria-label={t('Show sources')}
-											title={t('Show sources')}
-											onClick={(e) => {
-												e.stopPropagation();
-												toggleExpanded((l.clusterStatement as Statement).statementId, true);
-											}}
-										>
-											▾
-										</button>
-									)}
-
-									{showProvenance &&
-										l.clusterStatement &&
-										editingId !== l.id &&
-										l.sourceCount > 0 && (
-											<span
-												className={styles.provenance}
-												title={t('This cluster was made from these responses')}
+										{l.collapsed && allowExpand && l.clusterStatement && editingId !== l.id && (
+											<button
+												type="button"
+												className={styles.pillExpand}
+												aria-expanded={false}
+												aria-label={t('Show sources')}
+												title={t('Show sources')}
+												onClick={(e) => {
+													e.stopPropagation();
+													toggleExpanded((l.clusterStatement as Statement).statementId, true);
+												}}
 											>
-												{t('made from {count} responses').replace('{count}', String(l.sourceCount))}
-											</span>
+												▾
+											</button>
 										)}
 
-									{canEditPill && editingId !== l.id && (
-										<button
-											type="button"
-											className={styles.colorDot}
-											aria-label={t('Change color')}
-											title={t('Change color')}
-											onClick={(e) => {
-												e.stopPropagation();
-												setColorPickerId((id) => (id === l.id ? null : l.id));
-											}}
-										/>
-									)}
-
-									{canEditPill && editingId !== l.id && (
-										<button
-											type="button"
-											className={styles.deleteDot}
-											aria-label={t('Delete cluster')}
-											title={t('Delete cluster')}
-											disabled={busy}
-											onClick={(e) => {
-												e.stopPropagation();
-												removeCluster(l);
-											}}
-										>
-											×
-										</button>
-									)}
-
-									{colorPickerId === l.id && l.clusterStatement && (
-										<div className={styles.colorPopover}>
-											{CLUSTER_PALETTE.map((entry) => (
+										{/* Any open container folds back down to its count — whether the
+									    level or a hand-expand opened it. */}
+										{!l.collapsed &&
+											allowExpand &&
+											l.clusterStatement &&
+											editingId !== l.id &&
+											l.sourceCount > 0 && (
 												<button
-													key={entry.line}
 													type="button"
-													className={styles.swatch}
-													style={{ background: entry.line }}
-													aria-label={entry.line}
-													onClick={() =>
-														setClusterColor(l.clusterStatement as Statement, entry.line)
+													className={styles.pillExpand}
+													aria-expanded
+													aria-label={t('Hide sources')}
+													title={t('Hide sources')}
+													onClick={(e) => {
+														e.stopPropagation();
+														toggleExpanded((l.clusterStatement as Statement).statementId, false);
+													}}
+												>
+													▴
+												</button>
+											)}
+
+										{showProvenance &&
+											l.clusterStatement &&
+											editingId !== l.id &&
+											l.sourceCount > 0 && (
+												<span
+													className={styles.provenance}
+													title={t('This cluster was made from these responses')}
+												>
+													{t('made from {count} responses').replace(
+														'{count}',
+														String(l.sourceCount),
+													)}
+												</span>
+											)}
+
+										{canEditPill && editingId !== l.id && (
+											<button
+												type="button"
+												className={styles.colorDot}
+												aria-label={t('Change color')}
+												title={t('Change color')}
+												onClick={(e) => {
+													e.stopPropagation();
+													setColorPickerId((id) => (id === l.id ? null : l.id));
+												}}
+											/>
+										)}
+
+										{canEditPill && editingId !== l.id && (
+											<button
+												type="button"
+												className={styles.deleteDot}
+												aria-label={t('Delete cluster')}
+												title={t('Delete cluster')}
+												disabled={busy}
+												onClick={(e) => {
+													e.stopPropagation();
+													removeCluster(l);
+												}}
+											>
+												×
+											</button>
+										)}
+
+										{colorPickerId === l.id && l.clusterStatement && (
+											<div className={styles.colorPopover}>
+												{CLUSTER_PALETTE.map((entry) => (
+													<button
+														key={entry.line}
+														type="button"
+														className={styles.swatch}
+														style={{ background: entry.line }}
+														aria-label={entry.line}
+														onClick={() =>
+															setClusterColor(l.clusterStatement as Statement, entry.line)
+														}
+													/>
+												))}
+												<input
+													type="color"
+													className={styles.colorInput}
+													defaultValue={l.color.line}
+													aria-label={t('Custom color')}
+													onChange={(e) =>
+														setClusterColor(l.clusterStatement as Statement, e.target.value)
 													}
 												/>
-											))}
-											<input
-												type="color"
-												className={styles.colorInput}
-												defaultValue={l.color.line}
-												aria-label={t('Custom color')}
-												onChange={(e) =>
-													setClusterColor(l.clusterStatement as Statement, e.target.value)
-												}
-											/>
-										</div>
-									)}
-								</div>
+											</div>
+										)}
+									</div>
+								)}
 
-								<div
-									className={styles.grid}
-									style={{
-										left: cx + l.grid.x,
-										top: cy + l.grid.y,
-										gridTemplateColumns: `repeat(${l.cols}, ${CARD}px)`,
-										gap: GAP,
-									}}
-									onDragOver={(e) => e.preventDefault()}
-									onDrop={(e) => handleDrop(e, l.id)}
-								>
-									{l.members.map((member, index) => {
-										const card = (
-											<ClusterCard
-												key={member.top.statementId}
-												statement={member.top}
-												color={l.color}
-												canManage={canManage(member.top)}
-												showEval={showEval}
-												ratingMode={ratingMode}
-												isEditing={editingId === member.top.statementId}
-												onRequestEdit={() => setEditingId(member.top.statementId)}
-												onSaveText={(value) => saveText(member.top, value)}
-												onCancelEdit={() => setEditingId(null)}
-												onDuplicate={() => duplicate(member.top, l)}
-												onDelete={() => remove(member.top)}
-												onDragStart={(e) => handleDragStart(e, member.top)}
-												clusterId={l.id}
-												moveTargets={moveTargets}
-												onMove={(targetId) => moveMember(member.top, targetId)}
-												ratable={isRatable(member.top, membership)}
-												isMine={mine?.mineIds.has(member.top.statementId)}
-												highlighted={ringedId === member.top.statementId}
-												aiTitled={member.singleSource}
-											/>
-										);
-										if (member.kind !== 'synth' || member.singleSource) return card;
-
-										const open = isOpenStack(member);
-										const columnCenter = (index % l.cols) * (CARD + GAP) + CARD / 2;
-
-										return (
-											<Fragment key={member.top.statementId}>
-												<ClusterStack
+								{!l.collapsed && (
+									<div
+										className={styles.grid}
+										style={{
+											gridTemplateColumns: `repeat(${l.cols}, ${CARD}px)`,
+											gap: GAP,
+										}}
+									>
+										{l.members.map((member, index) => {
+											const card = (
+												<ClusterCard
+													key={member.top.statementId}
+													statement={member.top}
 													color={l.color}
-													voices={member.sub.length}
-													expanded={open}
-													canExpand={allowExpand && member.sub.length > 0}
-													onToggle={() => toggleExpanded(member.top.statementId)}
-													includesMine={mine?.synthsContainingMine.has(member.top.statementId)}
-												>
-													{card}
-												</ClusterStack>
-												{open && (
-													<div
-														className={stackStyles.tray}
-														style={
-															{
-																'--tray-line': l.color.line,
-																'--tray-card': l.color.card,
-																'--stem-x': `${columnCenter}px`,
-															} as CSSProperties
+													canManage={canManage(member.top)}
+													showEval={showEval}
+													ratingMode={ratingMode}
+													isEditing={editingId === member.top.statementId}
+													onRequestEdit={() => setEditingId(member.top.statementId)}
+													onSaveText={(value) => saveText(member.top, value)}
+													onCancelEdit={() => setEditingId(null)}
+													onDuplicate={() => duplicate(member.top, l)}
+													onDelete={() => remove(member.top)}
+													onDragStart={(e) => handleDragStart(e, member.top)}
+													clusterId={l.id}
+													moveTargets={moveTargets}
+													onMove={(targetId) => moveMember(member.top, targetId)}
+													ratable={isRatable(member.top, membership)}
+													isMine={mine?.mineIds.has(member.top.statementId)}
+													highlighted={ringedId === member.top.statementId}
+													aiTitled={member.singleSource}
+												/>
+											);
+											if (member.kind !== 'synth' || member.singleSource) return card;
+
+											const open = isOpenStack(member);
+											const columnCenter = (index % l.cols) * (CARD + GAP) + CARD / 2;
+
+											return (
+												<Fragment key={member.top.statementId}>
+													<ClusterStack
+														color={l.color}
+														voices={member.sub.length}
+														expanded={open}
+														canExpand={allowExpand && member.sub.length > 0}
+														onToggle={() =>
+															toggleExpanded(member.top.statementId, member.collapsed)
 														}
-														onDragOver={(e) => e.preventDefault()}
-														onDrop={(e) => {
-															e.stopPropagation();
-															handleDrop(e, member.top.statementId);
-														}}
+														includesMine={mine?.synthsContainingMine.has(member.top.statementId)}
 													>
-														<span className={stackStyles.stem} aria-hidden />
-														<span className={stackStyles.trayLabel} style={{ color: l.color.text }}>
-															{t('Original ideas')}
-														</span>
-														{member.sub.map((source) => (
-															<ClusterCard
-																key={source.top.statementId}
-																statement={source.top}
-																color={l.color}
-																canManage={canManage(source.top)}
-																showEval={showEval}
-																ratingMode={ratingMode}
-																isEditing={editingId === source.top.statementId}
-																onRequestEdit={() => setEditingId(source.top.statementId)}
-																onSaveText={(value) => saveText(source.top, value)}
-																onCancelEdit={() => setEditingId(null)}
-																onDuplicate={() => duplicate(source.top, l)}
-																onDelete={() => remove(source.top)}
-																onDragStart={(e) => handleDragStart(e, source.top)}
-																clusterId={member.top.statementId}
-																moveTargets={moveTargets}
-																onMove={(targetId) => moveMember(source.top, targetId)}
-																ratable={isRatable(source.top, membership)}
-																compact
-																isMine={mine?.mineIds.has(source.top.statementId)}
-																highlighted={ringedId === source.top.statementId}
-															/>
-														))}
-													</div>
-												)}
-											</Fragment>
-										);
-									})}
-									{canContribute && !l.isSynth && !l.collapsed && (
-										<button
-											type="button"
-											className={styles.addCard}
-											style={{ color: l.color.text }}
-											onClick={() => addMember(l)}
-											disabled={busy}
-											aria-label={t('Add statement')}
-										>
-											+
-										</button>
-									)}
-								</div>
+														{card}
+													</ClusterStack>
+													{open && (
+														<div
+															className={stackStyles.tray}
+															style={
+																{
+																	'--tray-line': l.color.line,
+																	'--tray-card': l.color.card,
+																	'--stem-x': `${columnCenter}px`,
+																} as CSSProperties
+															}
+															onDragOver={(e) => e.preventDefault()}
+															onDrop={(e) => {
+																e.stopPropagation();
+																handleDrop(e, member.top.statementId);
+															}}
+														>
+															<span className={stackStyles.stem} aria-hidden />
+															<span
+																className={stackStyles.trayLabel}
+																style={{ color: l.color.text }}
+															>
+																{t('Original ideas')}
+															</span>
+															{member.sub.map((source) => (
+																<ClusterCard
+																	key={source.top.statementId}
+																	statement={source.top}
+																	color={l.color}
+																	canManage={canManage(source.top)}
+																	showEval={showEval}
+																	ratingMode={ratingMode}
+																	isEditing={editingId === source.top.statementId}
+																	onRequestEdit={() => setEditingId(source.top.statementId)}
+																	onSaveText={(value) => saveText(source.top, value)}
+																	onCancelEdit={() => setEditingId(null)}
+																	onDuplicate={() => duplicate(source.top, l)}
+																	onDelete={() => remove(source.top)}
+																	onDragStart={(e) => handleDragStart(e, source.top)}
+																	clusterId={member.top.statementId}
+																	moveTargets={moveTargets}
+																	onMove={(targetId) => moveMember(source.top, targetId)}
+																	ratable={isRatable(source.top, membership)}
+																	compact
+																	isMine={mine?.mineIds.has(source.top.statementId)}
+																	highlighted={ringedId === source.top.statementId}
+																/>
+															))}
+														</div>
+													)}
+												</Fragment>
+											);
+										})}
+										{canContribute && !l.isSynth && (
+											<button
+												type="button"
+												className={styles.addCard}
+												style={{ color: l.color.text }}
+												onClick={() => addMember(l)}
+												disabled={busy}
+												aria-label={t('Add statement')}
+											>
+												+
+											</button>
+										)}
+									</div>
+								)}
 							</div>
 						);
 					})}
 				</div>
 			</div>
 
-			<PanZoomControls scale={transform.scale} onZoomIn={zoomIn} onZoomOut={zoomOut} onFit={fit} />
+			{pillFocus &&
+				(() => {
+					const focused = layout.find((l) => l.id === pillFocus.id);
+					const statementToShow = focused?.clusterStatement;
+					if (!focused || !statementToShow) return null;
+
+					return (
+						<NoteFocusOverlay
+							text={statementToShow.statement}
+							dir={detectTextDir(statementToShow.statement)}
+							color={focused.color}
+							sourceRect={pillFocus.rect}
+							canEdit={canManage(statementToShow)}
+							editing={editingId === focused.id}
+							onRequestEdit={() => setEditingId(focused.id)}
+							onSave={(value) => saveText(statementToShow, value)}
+							onClose={() => {
+								if (editingId === focused.id) setEditingId(null);
+								setPillFocus(null);
+							}}
+						/>
+					);
+				})()}
+
+			<PanZoomControls
+				fixed
+				scale={transform.scale}
+				onZoomIn={zoomIn}
+				onZoomOut={zoomOut}
+				onFit={fit}
+			/>
 
 			{filterPrompts.length > 0 && (
 				<div className={styles.filterPrompt} role="alertdialog" aria-live="polite" data-no-pan>

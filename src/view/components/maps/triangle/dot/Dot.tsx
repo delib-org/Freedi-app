@@ -3,13 +3,15 @@ import styles from './Dot.module.scss';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { logError } from '@/utils/errorHandling';
+import { MapScale, placeDot } from '../dotPlacement';
 
 interface Props {
 	subStatement: Statement;
 	maxEvaluators: number;
+	scale: MapScale;
 }
 
-const Dot: FC<Props> = ({ subStatement, maxEvaluators }) => {
+const Dot: FC<Props> = ({ subStatement, maxEvaluators, scale }) => {
 	const { t } = useTranslation();
 	const randomX = useRef<number>(Math.random() * 0.04);
 	const randomY = useRef<number>(Math.random() * 0.04);
@@ -22,8 +24,19 @@ const Dot: FC<Props> = ({ subStatement, maxEvaluators }) => {
 	if (sumCon === undefined || sumPro === undefined || numberOfEvaluators === undefined) return null;
 
 	const agreement = (sumPro - sumCon) / numberOfEvaluators;
-	const bottom = sumCon / maxEvaluators + randomX.current;
-	const left = sumPro / maxEvaluators + randomY.current;
+	const { pro, con, fillOpacity } = placeDot(
+		{ sumPro, sumCon, numberOfEvaluators },
+		maxEvaluators,
+		scale,
+	);
+	const bottom = con + randomX.current;
+	const left = pro + randomY.current;
+	const color = `var(${fromAgreementToColor(agreement, agreementColors)})`;
+	// Only the fill fades with certainty; the stroke stays as is.
+	const backgroundColor =
+		fillOpacity < 1
+			? `color-mix(in srgb, ${color} ${Math.round(fillOpacity * 100)}%, transparent)`
+			: color;
 
 	function handleShowTooltip(isShow: boolean) {
 		setShow(isShow);
@@ -36,7 +49,7 @@ const Dot: FC<Props> = ({ subStatement, maxEvaluators }) => {
 			style={{
 				bottom: `${bottom * 90}%`,
 				left: `${left * 90}%`,
-				backgroundColor: `var(${fromAgreementToColor(agreement, agreementColors)})`,
+				backgroundColor,
 			}}
 			onMouseEnter={() => handleShowTooltip(true)}
 			onMouseLeave={() => handleShowTooltip(false)}

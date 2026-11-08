@@ -1,0 +1,61 @@
+.pin {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__hint {
+		margin: 0;
+		color: var(--text-meta);
+		font-size: 0.8125rem;
+		line-height: 1.5;
+	}
+
+	&__input {
+		min-height: 56px;
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--space-md);
+		background: var(--card-default);
+		color: var(--text-title);
+		font-family: var(--font-display);
+		font-size: 1.5rem;
+		letter-spacing: 0.3em;
+		text-align: center;
+
+		&::placeholder {
+			color: var(--text-faint);
+		}
+
+		&:focus-visible {
+			outline: 3px solid var(--accent-violet);
+			outline-offset: 2px;
+		}
+	}
+
+	&__error {
+		margin: 0;
+		color: var(--score-negative-ink);
+		font-size: 0.8125rem;
+	}
+
+	&__submit {
+		min-height: 48px;
+		border: 0;
+		border-radius: var(--radius-button);
+		background: var(--nav-floating-bg);
+		color: var(--nav-floating-ink);
+		font: inherit;
+		font-weight: 600;
+		font-size: 0.9375rem;
+		cursor: pointer;
+
+		&:disabled {
+			opacity: 0.45;
+			cursor: default;
+		}
+
+		&:focus-visible {
+			outline: 3px solid var(--accent-violet);
+			outline-offset: 2px;
+		}
+	}
+}

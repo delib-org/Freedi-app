@@ -1,5 +1,9 @@
 import { afterLoad } from '@/lib/deferWork';
-import { isFirestoreInternalCrash, isTransientAuthNetworkError } from '@freedi/shared-utils';
+import {
+	isFirestoreInternalCrash,
+	isLocalRuntime,
+	isTransientAuthNetworkError,
+} from '@freedi/shared-utils';
 
 /** Substring identifying join's Firebase bundle — see manualChunks in
  *  vite.config.ts. Note it is `firebase-`, not the main app's
@@ -46,7 +50,10 @@ let hasPendingUid = false;
 function resolveDsn(): string | null {
 	const dsn = import.meta.env.VITE_SENTRY_DSN as string | undefined;
 
+	// A local run never reports, however the bundle was built: `vite preview`
+	// and a prod-shaped `.env` both leave PROD true on localhost.
 	if (
+		isLocalRuntime(import.meta.env.VITE_SENTRY_ENABLE_IN_LOCAL === 'true') ||
 		!import.meta.env.PROD ||
 		!dsn ||
 		dsn === 'YOUR_SENTRY_DSN_HERE' ||

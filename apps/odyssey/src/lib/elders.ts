@@ -1,4 +1,4 @@
-import type { OdysseyElder, OdysseyGame } from '@freedi/shared-types';
+import type { OdysseyElder, OdysseyGame, Statement } from '@freedi/shared-types';
 import type { IslandContent } from './game';
 
 /**
@@ -60,6 +60,8 @@ export interface ElderRemark {
 	line: string;
 	/** true when the elder sails with the player on this marking */
 	agrees: boolean;
+	/** the marked shore the line answers */
+	stanceId: string;
 }
 
 /**
@@ -82,6 +84,23 @@ export function pickIslandRemark(
 	island: IslandContent,
 	attitudes: Record<string, number | undefined>,
 ): ElderRemark | null {
+	const focus = islandFocusStance(elders, island, attitudes);
+	if (!focus) return null;
+
+	return pickElderReaction(elders, island, focus.statementId, attitudes[focus.statementId] ?? 0);
+}
+
+/**
+ * The marked shore the crew answers after an island is submitted: a marked
+ * stance some elder declared (the clearest voice), else the first marked one;
+ * null when nothing was marked. Shared by the island remark and by a tapped
+ * sailor's own card in the reveal, so both answer the same shore.
+ */
+export function islandFocusStance(
+	elders: OdysseyElder[],
+	island: IslandContent,
+	attitudes: Record<string, number | undefined>,
+): Statement | null {
 	const marked = island.stances.filter((stance) => attitudes[stance.statementId] !== undefined);
 	if (marked.length === 0) return null;
 
@@ -90,9 +109,8 @@ export function pickIslandRemark(
 			.map((elder) => elder.positions[island.statementId])
 			.filter((id): id is string => Boolean(id)),
 	);
-	const focus = marked.find((stance) => declaredIds.has(stance.statementId)) ?? marked[0];
 
-	return pickElderReaction(elders, island, focus.statementId, attitudes[focus.statementId] ?? 0);
+	return marked.find((stance) => declaredIds.has(stance.statementId)) ?? marked[0];
 }
 
 export function pickElderReaction(
@@ -121,5 +139,5 @@ export function pickElderReaction(
 		: (elder.reactions[stanceId !== declaredId ? stanceId : (siblingId ?? '')] ?? null);
 	if (!line) return null;
 
-	return { elder, line, agrees };
+	return { elder, line, agrees, stanceId };
 }

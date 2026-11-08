@@ -1,16 +1,83 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="he" dir="rtl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#aed9f9" />
-    <meta name="description" content="Agora — classroom deliberative time-tunnel game" />
-    <title>Agora</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  </head>
-  <body>
-    <a class="skip-link" href="#app">Skip to main content</a>
-    <div id="app" role="main"></div>
-    <script type="module" src="/src/index.ts"></script>
-  </body>
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+		/>
+		<meta name="theme-color" content="#aed9f9" />
+		<meta name="description" content="Agora — classroom deliberative time-tunnel game" />
+		<title>Agora</title>
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+	</head>
+	<body>
+		<a class="skip-link" href="#app">Skip to main content</a>
+		<div id="app" role="main"></div>
+		<!--
+      Boot guard. It runs before the app's module graph is even requested, so a
+      module that fails to parse or to load (a stale shared-types build, a
+      broken deploy, an ad-blocker eating a chunk) still ends in a screen that
+      says so and offers a reload — never a blank page in front of a class.
+      Everything it catches is stashed on window.__agoraEarlyErrors and reported
+      by the app once it boots (src/lib/boot.ts). No i18n yet: the text is bilingual.
+    -->
+		<script>
+			(function () {
+				var errors = [];
+				window.__agoraEarlyErrors = errors;
+				function fallback(reason) {
+					if (window.__agoraBooted) return;
+					if (document.getElementById('agora-boot-fallback')) return;
+					var el = document.createElement('div');
+					el.id = 'agora-boot-fallback';
+					el.setAttribute('role', 'alert');
+					el.style.cssText =
+						'position:fixed;inset:0;display:grid;place-items:center;padding:24px;background:#fff6fb;color:#3d2160;font-family:system-ui,sans-serif;z-index:2147483647';
+					el.innerHTML =
+						'<div style="max-width:420px;text-align:center;background:#fff;border-radius:20px;padding:28px 24px;box-shadow:0 12px 40px rgba(61,33,96,.16)">' +
+						'<p style="font-size:1.25rem;font-weight:700;margin:0 0 8px">משהו השתבש בטעינת המשחק</p>' +
+						'<p style="margin:0 0 20px;color:#5a4a7a">The game did not load.</p>' +
+						'<button type="button" id="agora-boot-reload" style="font:inherit;font-weight:700;padding:12px 28px;border:0;border-radius:999px;background:#c2185b;color:#fff;cursor:pointer">רענון · Reload</button>' +
+						'<pre dir="ltr" style="margin:20px 0 0;text-align:left;font-size:.75rem;color:#7a6a99;white-space:pre-wrap;word-break:break-word"></pre>' +
+						'</div>';
+					el.querySelector('pre').textContent = String(reason || '').slice(0, 400);
+					document.body.appendChild(el);
+					el.querySelector('#agora-boot-reload').addEventListener('click', function () {
+						location.reload();
+					});
+				}
+				window.addEventListener('error', function (event) {
+					var error = event.error;
+					errors.push({
+						message: event.message || (error && error.message) || 'error',
+						source: event.filename || '',
+						line: event.lineno || 0,
+						stack: (error && error.stack) || '',
+						at: Date.now(),
+					});
+					fallback(event.message || (error && error.message));
+				});
+				window.addEventListener('unhandledrejection', function (event) {
+					var reason = event.reason;
+					var message = (reason && reason.message) || String(reason);
+					errors.push({
+						message: message,
+						source: '',
+						line: 0,
+						stack: (reason && reason.stack) || '',
+						at: Date.now(),
+					});
+					fallback(message);
+				});
+				// A module that never resolves (a hung dev server, a chunk the network
+				// dropped without an error) shows nothing at all — the watchdog turns
+				// that silence into the same screen.
+				setTimeout(function () {
+					if (!window.__agoraBooted) fallback('The app did not start within 20 seconds.');
+				}, 20000);
+			})();
+		</script>
+		<script type="module" src="/src/index.ts"></script>
+	</body>
 </html>

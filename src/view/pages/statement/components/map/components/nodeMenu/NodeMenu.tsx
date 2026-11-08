@@ -14,7 +14,7 @@ import ClusterButton from './clusterButton/ClusterButton';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { Statement, StatementType } from '@freedi/shared-types';
+import { Statement, StatementType, isTheme } from '@freedi/shared-types';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import Evaluation from '../../../evaluations/components/evaluation/Evaluation';
 
@@ -124,7 +124,7 @@ const NodeMenu: FC<Props> = ({
 				</button>
 				<ClusterButton selectedId={selectedId} addToIconsRef={addToIconsRef} />
 			</div>
-			{statement.statementType === StatementType.option && (
+			{statement.statementType === StatementType.option && !isTheme(statement) && (
 				<div className={styles.rateMenuContainer}>
 					<Evaluation statement={statement} />
 				</div>

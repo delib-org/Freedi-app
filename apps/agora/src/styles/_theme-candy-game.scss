@@ -1,0 +1,530 @@
+@use 'tokens' as *;
+
+// ============================================================================
+// The Candy look, part two: it plays like a game
+//
+// Part one (_theme-candy-block.scss) moved the hues. This file moves the
+// FEEL, and it spends the one thing Purple Agora refuses to spend: colour on
+// a classmate's proposal. In Purple, a classmate's card is white so that mine
+// can be the only saturated thing on the screen. In Candy every proposal is a
+// sweet of its own colour — on the square, on the results map, in its callout
+// — and MINE is still findable because raspberry is reserved for it: the
+// twelve proposal hues below do not include it.
+//
+// The colour is the proposal's NUMBER (lib/looks.ts proposalHue), not its
+// rank. A rank moves every time the class rates; a colour that moved with it
+// would stop meaning "that one". The views stamp `data-hue="N"` on the row,
+// the point, the callout, the detail, the chip; this file keys on it and the
+// other looks never see it.
+//
+// Every hue holds white text at 4.5:1 or better on its own, so a numeral on a
+// point or a tile passes the gauntlet without a ledger entry. `--i` rides
+// along for the stagger: the points pop onto the map in number order.
+// ============================================================================
+
+@mixin hue($n, $hex) {
+  [data-hue='#{$n}'] {
+    --hue: #{$hex};
+    --i: #{$n};
+  }
+}
+
+:root[data-session-theme='candy'],
+:root[data-session-theme='custom'] {
+  // --- The twelve, and mine ---
+  [data-hue='0'] {
+    --hue: var(--mine);
+    --i: 0;
+  }
+  @include hue(1, #d62839);  // cherry
+  @include hue(2, #c24a08);  // tangerine
+  @include hue(3, #7b2ff2);  // grape
+  @include hue(4, #1668d8);  // blueberry
+  @include hue(5, #12803f);  // apple
+  @include hue(6, #0b796b);  // teal
+  @include hue(7, #a648d8);  // plum
+  @include hue(8, #4a53c0);  // indigo
+  @include hue(9, #0d7c9a);  // sea
+  @include hue(10, #b5179e); // magenta
+  @include hue(11, #b45309); // caramel
+  @include hue(12, #7a4b2a); // cocoa
+
+  [data-hue] {
+    --hue-deep: color-mix(in srgb, var(--hue) 70%, black);
+    --hue-tint: color-mix(in srgb, var(--hue) 12%, white);
+    --hue-slab: color-mix(in srgb, var(--hue) 28%, white);
+  }
+
+  // The identity ramp wears the same sweets, so a classmate's avatar on the
+  // helpers board and their number tile on the square agree
+  --who-1: #d62839;
+  --who-2: #c24a08;
+  --who-3: #7b2ff2;
+  --who-4: #1668d8;
+  --who-5: #12803f;
+  --who-6: #0b796b;
+  --who-7: #a648d8;
+  --who-8: #4a53c0;
+
+  // --- The results map: every proposal is a candy on the field ---
+  .board__point {
+    background: var(--hue, var(--peer));
+    border: 3px solid var(--surface-raised);
+    color: #ffffff;
+    box-shadow:
+      0 3px 0 var(--hue-deep, var(--peer-deep)),
+      0 8px 16px -6px rgba(0, 0, 0, 0.3);
+    animation: candy-pop var(--motion-slow) var(--ease-spring) backwards;
+    animation-delay: calc(var(--i, 0) * 70ms);
+
+    &:hover,
+    &:focus-visible {
+      box-shadow:
+        0 4px 0 var(--hue-deep, var(--peer-deep)),
+        0 12px 20px -6px rgba(0, 0, 0, 0.35);
+    }
+
+    // Mine keeps its ring of light, and its raspberry
+    &--mine {
+      border-color: var(--surface-raised);
+      box-shadow:
+        0 3px 0 var(--mine-deep),
+        var(--glow-marker);
+    }
+
+    // The crown's ring is a lemon-drop halo now, not a hairline
+    &--lead {
+      border-color: var(--surface-raised);
+      border-width: 3px;
+      outline: 4px solid var(--gold);
+      outline-offset: 1px;
+    }
+
+    &--selected {
+      box-shadow:
+        0 5px 0 var(--hue-deep, var(--peer-deep)),
+        0 0 0 6px color-mix(in srgb, var(--hue, var(--peer)) 30%, transparent);
+    }
+  }
+
+  .board__point-rank {
+    font-size: var(--font-size-base);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  }
+
+  .board__point-crown {
+    filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.3));
+  }
+
+  // The callout is a sweet's wrapper: its own colour around it, a tint inside
+  .board__callout {
+    background: var(--hue-tint, var(--parchment));
+    border: 3px solid var(--hue, var(--ink));
+    border-radius: var(--radius-lg);
+    box-shadow:
+      0 4px 0 var(--hue, var(--ink)),
+      0 12px 24px -10px rgba(0, 0, 0, 0.3);
+  }
+
+  .board__callout-by,
+  .board__author {
+    color: var(--hue-deep, var(--text-secondary));
+    font-weight: 700;
+  }
+
+  // The score sits on the sweet's own tint, not on paper. --success is a mid
+  // green picked against white: on a pale blue wrapper it lands at 4.24 and
+  // misses AA. The deep rung of the same hue keeps the meaning — green is up,
+  // red is down — and buys back the ratio on every wrapper colour.
+  .board__callout-score {
+    color: color-mix(in srgb, var(--success) 88%, black);
+
+    &--against {
+      color: color-mix(in srgb, var(--danger) 88%, black);
+    }
+  }
+
+  // The detail page opens on the proposal, so the proposal opens in its colour
+  .board__detail-statement {
+    padding: var(--space-sm) var(--space-md);
+    border-inline-start: 8px solid var(--hue, var(--mine));
+    border-radius: var(--radius-md);
+    background: var(--hue-tint, var(--surface-tint));
+  }
+
+  .board__waiting-chip {
+    border-inline-start: 6px solid var(--hue, var(--peer));
+    background: var(--hue-tint, var(--bg-inset));
+  }
+
+  // --- The square: each stall is a sweet in its own wrapper ---
+  .stall {
+    border: 2px solid var(--hue-tint, var(--border-subtle));
+    border-inline-start: 8px solid var(--hue, var(--peer));
+    box-shadow:
+      0 4px 0 var(--hue-slab, #fbdcec),
+      0 12px 26px -12px rgba(0, 0, 0, 0.2);
+
+    &--open {
+      box-shadow:
+        0 6px 0 var(--hue-slab, #f6cfe3),
+        0 18px 40px -14px rgba(0, 0, 0, 0.28);
+    }
+  }
+
+  .stall__num {
+    background: var(--hue, var(--peer));
+    color: #ffffff;
+    box-shadow: 0 3px 0 var(--hue-deep, var(--peer-deep));
+    font-size: 1.2rem;
+  }
+
+  // --- The stage nav: a trail of sweets, one colour per station ---
+  .stage-nav__station:nth-child(12n + 1) { --station: #d62839; }
+  .stage-nav__station:nth-child(12n + 2) { --station: #c24a08; }
+  .stage-nav__station:nth-child(12n + 3) { --station: #7b2ff2; }
+  .stage-nav__station:nth-child(12n + 4) { --station: #1668d8; }
+  .stage-nav__station:nth-child(12n + 5) { --station: #12803f; }
+  .stage-nav__station:nth-child(12n + 6) { --station: #0b796b; }
+  .stage-nav__station:nth-child(12n + 7) { --station: #a648d8; }
+  .stage-nav__station:nth-child(12n + 8) { --station: #4a53c0; }
+  .stage-nav__station:nth-child(12n + 9) { --station: #0d7c9a; }
+  .stage-nav__station:nth-child(12n + 10) { --station: #b5179e; }
+  .stage-nav__station:nth-child(12n + 11) { --station: #b45309; }
+  .stage-nav__station:nth-child(12n + 12) { --station: #7a4b2a; }
+
+  .stage-nav__dot {
+    box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .stage-nav__station--done .stage-nav__dot {
+    background: var(--station, var(--mine));
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--station, var(--mine)) 70%, black);
+  }
+
+  .stage-nav__station--viewing {
+    box-shadow: 0 3px 0 var(--mine-deep);
+  }
+
+  .stage-nav__station--current .stage-nav__dot {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mine) 30%, transparent);
+  }
+
+  // --- The HUD: a crest that sits on a slab, laps as lemon drops ---
+  .delib-hud__crest:not(.delib-hud__crest--render) {
+    box-shadow:
+      0 4px 0 var(--mine-deep),
+      var(--glow-lantern);
+  }
+
+  .delib-hud__lap {
+    width: 12px;
+    height: 12px;
+    box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+
+    &--done {
+      background: var(--gold);
+      border-color: #e0bb00;
+    }
+
+    &--current {
+      box-shadow: 0 0 10px color-mix(in srgb, var(--mint-deep) 60%, transparent);
+    }
+  }
+
+  // A stop behind you is a lime check; the one you stand on sits on its slab
+  .delib-hud__stop--done .delib-hud__stop-icon {
+    background: var(--mint);
+    border-color: var(--mint-deep);
+    color: var(--mint-ink);
+  }
+
+  .delib-hud__stop--here .delib-hud__stop-icon {
+    box-shadow:
+      0 0 0 4px color-mix(in srgb, var(--mine) 18%, transparent),
+      0 3px 0 var(--mine-deep);
+  }
+
+  // --- Sticker type: the big words wear an outline behind the fill ---
+  // 3px, not more: Hebrew counters close up under a fat stroke, and the
+  // first cut at 5px turned the question banner's title to mush. On a light
+  // page the outline is white; on a saturated surface (the question banner,
+  // anything on-dark) it is the surface's deep rung, so white letters read
+  // as lettering rather than as a smear of white on white.
+  --sticker: var(--surface-raised);
+
+  h1,
+  h2,
+  .delib-hud__title,
+  .results__total {
+    paint-order: stroke fill;
+    -webkit-text-stroke: 3px var(--sticker);
+  }
+
+  .on-dark,
+  .question__ask,
+  .write-desk {
+    --sticker: var(--mine-deep);
+  }
+
+  .results__total {
+    animation: candy-pop var(--motion-slow) var(--ease-spring) backwards;
+    text-shadow: 0 4px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  // A podium medal is a coin: it lands with a bounce
+  .board__medal {
+    animation: candy-pop var(--motion-slow) var(--ease-spring) backwards;
+  }
+
+  // --- Cards and chips, rounder and chunkier ---
+  .card {
+    border-width: 2px;
+  }
+
+  .stall__chip,
+  .helped__chip,
+  .class-progress__chip {
+    border-radius: var(--radius-full);
+    font-weight: 700;
+  }
+}
+
+// The points and the score pop in. `backwards` on purpose: the keyframe's end
+// state must hand back to the stylesheet, or the points' hover scale and the
+// map's own transforms would be pinned to the animation's last frame forever.
+@keyframes candy-pop {
+  from {
+    transform: translate(-50%, 50%) scale(0);
+  }
+  60% {
+    transform: translate(-50%, 50%) scale(1.15);
+  }
+  to {
+    transform: translate(-50%, 50%) scale(1);
+  }
+}
+
+// The score and the medals are not translated points — they get their own
+// ramp, or the map's centring translate would throw them off their line
+:root[data-session-theme='candy'],
+:root[data-session-theme='custom'] {
+  .results__total,
+  .board__medal {
+    animation-name: candy-pop-flat;
+  }
+}
+
+@keyframes candy-pop-flat {
+  from {
+    transform: scale(0);
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+// ============================================================================
+// The rating scale: a traffic light of sweets
+//
+// Five faces, five colours, red to green with lemon in the middle — the same
+// reading the results field paints (against at the bottom, split across the
+// middle, for at the top), so the face a student presses and the colour
+// their proposal lands on say the same thing. At rest each face is a pale
+// tint of its own colour with its ink at half-black; pressed, it fills.
+// The two ends carry white when filled (cherry 4.97:1, apple 5.0:1), the
+// three bright middles carry the plum ink (tangerine 6.1:1, lemon 10:1, lime
+// 8:1) — measured, and the gauntlet renders all ten states.
+// ============================================================================
+:root[data-session-theme='candy'],
+:root[data-session-theme='custom'] {
+  .rate-scale__option {
+    --opt: var(--peer);
+    --opt-ink-on: #ffffff;
+    --opt-deep: color-mix(in srgb, var(--opt) 70%, black);
+    --opt-ink: color-mix(in srgb, var(--opt) 50%, black);
+
+    background: color-mix(in srgb, var(--opt) 16%, white);
+    border: 2px solid var(--opt);
+    color: var(--opt-ink);
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--opt) 40%, white);
+
+    &:hover {
+      box-shadow:
+        0 5px 0 color-mix(in srgb, var(--opt) 40%, white),
+        0 10px 18px -8px color-mix(in srgb, var(--opt) 50%, transparent);
+    }
+
+    &--strong-against {
+      --opt: #d62839; // cherry
+    }
+
+    &--against {
+      --opt: #ff8c1a; // tangerine
+      --opt-ink-on: #3b1f47;
+    }
+
+    &--abstain {
+      --opt: #ffd400; // lemon
+      --opt-ink-on: #3b1f47;
+    }
+
+    &--for {
+      --opt: #3ddc84; // lime
+      --opt-ink-on: #3b1f47;
+    }
+
+    &--strong-for {
+      --opt: #12803f; // apple
+    }
+  }
+
+  .rate-scale__option--selected {
+    background: var(--opt);
+    border-color: var(--opt-deep);
+    color: var(--opt-ink-on);
+    box-shadow:
+      0 0 0 3px var(--surface-raised),
+      0 0 0 6px var(--opt),
+      0 5px 0 var(--opt-deep);
+  }
+
+  .rate-scale__check {
+    background: var(--opt-deep);
+    color: #ffffff;
+  }
+
+  // --- The question stage: a banner, a sent button, answers in their colours ---
+  .question__ask {
+    @include ink-on-dark;
+
+    background: var(--grad-mine-hero);
+    border-color: var(--mine-deep);
+    box-shadow:
+      0 6px 0 var(--mine-deep),
+      0 18px 40px -14px rgba(216, 27, 122, 0.45);
+  }
+
+  .question__icon {
+    color: var(--gold);
+    filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.2));
+  }
+
+  .question__textarea {
+    border: 2px solid var(--border-strong);
+    background: var(--surface-tint);
+
+    &:focus {
+      outline: none;
+      border-color: var(--mine);
+      box-shadow: 0 0 0 4px rgba(216, 27, 122, 0.16);
+    }
+  }
+
+  // Sent: a lime gummy that says "done", not a greyed-out button that says "no"
+  .btn--done:disabled {
+    background: var(--mint);
+    color: var(--mint-ink);
+    box-shadow: 0 4px 0 var(--mint-deep);
+  }
+
+  .question__count {
+    background: var(--mine);
+    color: #ffffff;
+  }
+
+  .question__answer {
+    border: 2px solid var(--hue-tint, var(--border-subtle));
+    border-inline-start: 8px solid var(--hue, var(--peer));
+    box-shadow:
+      0 4px 0 var(--hue-slab, #fbdcec),
+      0 12px 26px -12px rgba(0, 0, 0, 0.2);
+  }
+
+  .question__number,
+  .question__who {
+    padding: 2px var(--space-sm);
+    border-radius: var(--radius-full);
+    background: var(--hue, var(--peer));
+    color: #ffffff;
+  }
+
+  // --- The workshop drawers: one colour per tool ---
+  // Three drawers that looked like three copies of one thing now read as
+  // three tools: ideas are lemon, the characters grape, the two sides' needs
+  // teal. The tone paints the chip, the edge, the title and the chevron;
+  // the count stays grape by charter (a count is a count in every drawer).
+  .workbench__section {
+    --tone: var(--peer);
+    --tone-deep: color-mix(in srgb, var(--tone) 55%, black);
+    --tone-tint: color-mix(in srgb, var(--tone) 16%, white);
+
+    border: 2px solid var(--tone-tint);
+    border-inline-start: 8px solid var(--tone);
+    box-shadow:
+      0 4px 0 color-mix(in srgb, var(--tone) 28%, white),
+      0 12px 26px -12px rgba(0, 0, 0, 0.2);
+
+    &--ideas {
+      --tone: #ffd400; // lemon
+      --tone-deep: #806a00; // lemon's ink — 5.2:1 on white
+    }
+
+    &--characters {
+      --tone: #7b2ff2; // grape
+    }
+
+    &--needs {
+      --tone: #0b796b; // teal
+    }
+
+    // The editor keeps its raspberry frame — it is MINE, not a tool
+    &--edit {
+      --tone: var(--mine);
+
+      border-inline-start-width: 2px;
+      border-color: var(--mine-light);
+    }
+  }
+
+  .workbench__icon {
+    background: var(--tone-tint);
+    border: 2px solid var(--tone);
+    color: var(--tone-deep);
+    border-radius: var(--radius-tile);
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--tone) 40%, white);
+  }
+
+  .workbench__icon--faces {
+    background: none;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .workbench__title {
+    color: var(--tone-deep);
+  }
+
+  .workbench__chevron {
+    border-color: var(--tone-deep);
+  }
+
+  // --- Confetti in candy hues ---
+  .celebration__spark {
+    &:nth-child(5n + 1) { --spark-color: #d81b7a; }
+    &:nth-child(5n + 2) { --spark-color: #1668d8; }
+    &:nth-child(5n + 3) { --spark-color: #ff8c1a; }
+    &:nth-child(5n + 4) { --spark-color: #3ddc84; }
+    &:nth-child(5n + 5) { --spark-color: #ffd400; }
+  }
+
+  .celebration__card {
+    border: 3px solid var(--mine);
+    box-shadow:
+      0 6px 0 var(--mine-deep),
+      0 0 60px rgba(216, 27, 122, 0.25);
+  }
+}

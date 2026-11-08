@@ -4,12 +4,25 @@ import { useState, useRef, useEffect } from 'react';
 import Modal from '@/components/shared/Modal';
 import { VALIDATION } from '@/constants/common';
 import { countWords } from '@/lib/utils/wordCount';
+import { pieceTextOf, piecesMeetSubmissionRules } from '@/lib/utils/splitPieces';
 import { moderationMessageKey } from '@/lib/utils/moderationMessage';
+import { isAddDisabledResponse, isMergeRefusedAsDifferentIdea } from '@/lib/utils/participantOptions';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { isMeaningfulSuggestion, MIN_MEANINGFUL_WORDS } from '@freedi/shared-types';
+import { useToast } from '@/components/shared/Toast';
 import { logError, NetworkError, ValidationError } from '@/lib/utils/errorHandling';
-import { ERROR_MESSAGES } from '@/constants/common';
-import type { FlowState, SimilarCheckResponse, MultiSuggestionResponse, SplitSuggestion } from '@/types/api';
+import { ERROR_MESSAGES, UI } from '@/constants/common';
+import type {
+  FlowState,
+  SimilarCheckResponse,
+  MultiSuggestionResponse,
+  SplitSuggestion,
+  DetectedSuggestion,
+  PieceSimilarity,
+  PrepareSuggestionResponse,
+} from '@/types/api';
 import { SuggestionMode } from '@freedi/shared-types';
+import { submitRating } from '@/controllers/swipeController';
 import SimilarSolutions from './SimilarSolutions';
 import EnhancedLoader from './EnhancedLoader';
 import SuccessMessage from './SuccessMessage';
@@ -17,6 +30,7 @@ import MultiSuggestionPreview from './MultiSuggestionPreview';
 import InlineMarkdown from '../shared/InlineMarkdown';
 import styles from './SolutionPromptModal.module.css';
 import { trackSolutionSubmitted } from '@/lib/analytics';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 interface SolutionPromptModalProps {
   isOpen: boolean;
@@ -26,6 +40,8 @@ interface SolutionPromptModalProps {
   onSubmitSuccess: () => void;
   title?: string;
   questionText?: string;
+  /** Position in a multi-question survey ("1) …"); omitted = no number */
+  questionNumber?: number;
   /** Additional description/context for the question (from paragraphs) */
   questionDescription?: string;
   /** Controls UX friction when adding new suggestions vs merging */
@@ -36,6 +52,39 @@ interface SolutionPromptModalProps {
   requiresSolution?: boolean;
   hasCheckedUserSolutions?: boolean;
   userName?: string;
+  /** Survey session id, so the author's +1 after an automatic merge carries its demographic anchor */
+  surveyId?: string;
+  /**
+   * When the AI detects several answers in one submission, submit them as
+   * separate suggestions without showing the "split?" preview.
+   */
+  autoSplitMultiSuggestions?: boolean;
+  /**
+   * When a similar suggestion already exists, merge into the closest one
+   * without showing the "merge or add new?" screen, then record the author's
+   * +1 on the merged suggestion.
+   */
+  autoMergeSimilar?: boolean;
+}
+
+/** The server refused the text (moderation, limit); the user has already been told. */
+class PrepareRefused extends Error {}
+
+/**
+ * The server says participants may not add options to this question — the
+ * admin switched it on after this tab opened. The modal closes with a notice
+ * instead of a generic failure.
+ */
+class AddDisabled extends Error {}
+
+/** Throw AddDisabled when a refusal body carries the ADD_DISABLED code. */
+function throwIfAddDisabled(body: unknown): void {
+  if (isAddDisabledResponse(body)) throw new AddDisabled();
+}
+
+interface PieceTarget {
+  text: string;
+  target: string | null;
 }
 
 const MAX_ROWS = 8;
@@ -49,20 +98,32 @@ export default function SolutionPromptModal({
   onSubmitSuccess,
   title = 'Add Your Solution',
   questionText,
+  questionNumber,
   questionDescription,
   suggestionMode = SuggestionMode.encourage,
   minWords,
   requiresSolution = false,
   hasCheckedUserSolutions: _hasCheckedUserSolutions = false,
-  userName: _userName,
+  userName,
+  surveyId,
+  autoSplitMultiSuggestions = false,
+  autoMergeSimilar = false,
 }: SolutionPromptModalProps) {
-  const { t } = useTranslation();
+  const { t, tWithParams } = useTranslation();
+  const { showToast } = useToast();
   const [text, setText] = useState('');
   const [flowState, setFlowState] = useState<FlowState>({ step: 'input' });
   const [error, setError] = useState<string | null>(null);
   const [multiSuggestions, setMultiSuggestions] = useState<SplitSuggestion[]>([]);
   const [storedSimilarData, setStoredSimilarData] = useState<SimilarCheckResponse | null>(null);
   const [isFinalSubmit, setIsFinalSubmit] = useState(false);
+  /**
+   * Per split piece (keyed by SplitSuggestion id): the text the server saw and
+   * the closest existing suggestion it found, or null for none. Lets auto-merge
+   * submit pieces without another similarity round trip. A piece edited in the
+   * preview no longer matches its `text` and is looked up again.
+   */
+  const [pieceTargets, setPieceTargets] = useState<Record<string, PieceTarget>>({});
   const [isQuestionExpanded, setIsQuestionExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -70,10 +131,13 @@ export default function SolutionPromptModal({
   const hasWordMinimum = typeof minWords === 'number' && minWords > 0;
   const wordCount = countWords(text);
   const meetsWordMinimum = !hasWordMinimum || wordCount >= (minWords as number);
+  // Keyboard noise ("ייי") must never reach the pool or be merged into an option
+  const isMeaningful = isMeaningfulSuggestion(text);
   const isValid =
     characterCount >= VALIDATION.MIN_SOLUTION_LENGTH &&
     characterCount <= VALIDATION.MAX_SOLUTION_LENGTH &&
-    meetsWordMinimum;
+    meetsWordMinimum &&
+    isMeaningful;
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -83,6 +147,7 @@ export default function SolutionPromptModal({
       setError(null);
       setMultiSuggestions([]);
       setStoredSimilarData(null);
+      setPieceTargets({});
     }
   }, [isOpen]);
 
@@ -102,7 +167,153 @@ export default function SolutionPromptModal({
     adjustTextareaHeight();
   }, [text]);
 
-  // Step 1: Check for multi-suggestions AND similar solutions in parallel
+  /**
+   * An ADD_DISABLED refusal from any path: tell the participant once and close
+   * — there is nothing to retry. Returns true when the error was that refusal.
+   */
+  const recoverFromAddDisabled = (err: unknown): boolean => {
+    if (!(err instanceof AddDisabled)) return false;
+
+    showToast({
+      type: 'info',
+      message: t(ERROR_MESSAGES.ADD_DISABLED),
+      duration: UI.ADD_DISABLED_TOAST_MS,
+    });
+    setText('');
+    setError(null);
+    setFlowState({ step: 'input' });
+    onClose();
+
+    return true;
+  };
+
+  /**
+   * Act on what the server found: several answers in one submission, a
+   * similar existing suggestion, or neither. Shared by the one-round-trip
+   * prepare path and the older two-call path.
+   */
+  const applyAnalysis = async (
+    multi: { isMultipleSuggestions: boolean; suggestions: DetectedSuggestion[] },
+    similarData: SimilarCheckResponse,
+    pieces?: PieceSimilarity[],
+  ): Promise<void> => {
+    if (multi.isMultipleSuggestions && multi.suggestions.length > 1) {
+      const stamp = Date.now();
+      const splitSuggestions: SplitSuggestion[] = multi.suggestions.map((s, i) => ({
+        id: `suggestion-${i}-${stamp}`,
+        title: s.title,
+        description: s.description,
+        originalText: s.originalText,
+        isRemoved: false,
+      }));
+
+      const targets: Record<string, PieceTarget> = {};
+      splitSuggestions.forEach((s, i) => {
+        const piece = pieces?.[i];
+        if (piece) {
+          targets[s.id] = {
+            text: pieceTextOf(multi.suggestions[i]),
+            target: piece.similarStatements[0]?.statementId ?? null,
+          };
+        }
+      });
+      setPieceTargets(targets);
+
+      if (autoSplitMultiSuggestions) {
+        // Admin chose automatic splitting: skip the preview entirely — but
+        // only when every piece would survive the submit route. A piece that
+        // is under the question's word minimum (or too short) would be
+        // refused, and silently failing is worse than asking, so those fall
+        // through to the preview where they can be edited or sent as one.
+        const eligible = piecesMeetSubmissionRules(
+          splitSuggestions.map(pieceTextOf),
+          { minWords, minChars: VALIDATION.MIN_SOLUTION_LENGTH },
+        );
+
+        if (eligible.ok) {
+          await handleConfirmMultiSuggestions(splitSuggestions, targets);
+
+          return;
+        }
+
+        console.info('↩️ auto-split skipped: pieces the server would refuse', eligible.rejected);
+      }
+
+      setMultiSuggestions(splitSuggestions);
+      // Store similar data for later (after multi-preview)
+      const hasSimilar = similarData.similarStatements?.length > 0;
+      setStoredSimilarData(hasSimilar ? similarData : null);
+      setFlowState({
+        step: 'multi-preview',
+        suggestions: splitSuggestions,
+        originalText: text,
+        similarData: hasSimilar ? similarData : undefined,
+      });
+      return;
+    }
+
+    if (similarData.similarStatements && similarData.similarStatements.length > 0) {
+      if (autoMergeSimilar) {
+        // Admin chose automatic merging: fold into the closest match and +1 it
+        await handleAutoMerge(similarData.similarStatements[0].statementId, text);
+      } else {
+        setFlowState({ step: 'similar', data: similarData });
+      }
+    } else {
+      // No similar solutions, proceed to submit
+      await handleSelectSolution(null, text);
+    }
+  };
+
+  /**
+   * One round trip: moderation, split detection and similar suggestions
+   * together. Returns null when the endpoint is not available (not deployed
+   * yet, gateway error), so the caller can use the older two-call path.
+   * Throws for a real refusal (moderation, limit reached), already reported.
+   */
+  const requestPrepare = async (): Promise<PrepareSuggestionResponse | null> => {
+    const response = await participantFetch(`/api/statements/${questionId}/prepare`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userInput: text, checkPieces: autoMergeSimilar }),
+    });
+
+    if (response.status === 400 || response.status === 403) {
+      const data: PrepareSuggestionResponse = await response.json();
+      throwIfAddDisabled(data);
+      const message =
+        response.status === 400
+          ? moderationMessageKey(data.category)
+          : data.error || ERROR_MESSAGES.LIMIT_REACHED;
+      setError(message);
+      setFlowState({ step: 'input' });
+      logError(new ValidationError(message), {
+        operation: 'SolutionPromptModal.requestPrepare',
+        userId,
+        questionId,
+        metadata: { status: response.status, category: data.category },
+      });
+      throw new PrepareRefused();
+    }
+
+    if (!response.ok) {
+      logError(new NetworkError(`prepare returned ${response.status}`), {
+        operation: 'SolutionPromptModal.requestPrepare.fallback',
+        userId,
+        questionId,
+        metadata: { status: response.status },
+      });
+
+      return null;
+    }
+
+    const data: PrepareSuggestionResponse = await response.json();
+
+    return data.ok ? data : null;
+  };
+
+  // Step 1: What does the server make of this text? One round trip when the
+  // combined endpoint is up; the older two parallel calls otherwise.
   const handleCheckSimilar = async () => {
     if (!isValid) return;
 
@@ -110,26 +321,58 @@ export default function SolutionPromptModal({
     setError(null);
 
     try {
+      const prepared = await requestPrepare();
+      if (prepared) {
+        console.info('✅ prepare result:', {
+          isMultiple: prepared.multi.isMultipleSuggestions,
+          pieces: prepared.multi.suggestions.length,
+          similar: prepared.similar.similarStatements.length,
+          responseTime: prepared.responseTime,
+        });
+        await applyAnalysis(
+          prepared.multi,
+          { ok: true, similarStatements: prepared.similar.similarStatements, userText: prepared.similar.userText },
+          prepared.pieces,
+        );
+
+        return;
+      }
+
+      await handleCheckSimilarLegacy();
+    } catch (err) {
+      if (err instanceof PrepareRefused) return;
+      if (recoverFromAddDisabled(err)) return;
+      logError(err, {
+        operation: 'SolutionPromptModal.handleCheckSimilar',
+        userId,
+        questionId,
+      });
+      setError(err instanceof Error ? err.message : ERROR_MESSAGES.CHECK_SIMILAR_FAILED);
+      setFlowState({ step: 'input' });
+    }
+  };
+
+  // Older path: multi-detect and similar-check as two parallel calls
+  const handleCheckSimilarLegacy = async () => {
+    try {
       console.info('🚀 Starting parallel API calls for multi-suggestion and similar check...');
 
       // Run both API calls in parallel with Promise.all for better performance
       const [multiResponse, similarResponse] = await Promise.all([
         // Check for multiple suggestions
-        fetch(`/api/statements/${questionId}/detect-multi`, {
+        participantFetch(`/api/statements/${questionId}/detect-multi`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userInput: text,
-            userId,
           }),
         }),
         // Check for similar solutions
-        fetch(`/api/statements/${questionId}/check-similar`, {
+        participantFetch(`/api/statements/${questionId}/check-similar`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userInput: text,
-            userId,
           }),
         }),
       ]);
@@ -212,39 +455,14 @@ export default function SolutionPromptModal({
         });
       }
 
-      // Process results: Multi-suggestion check takes priority
-      if (multiData.ok && multiData.isMultipleSuggestions && multiData.suggestions.length > 1) {
-        // Convert to SplitSuggestion format with IDs
-        const splitSuggestions: SplitSuggestion[] = multiData.suggestions.map((s, i) => ({
-          id: `suggestion-${i}-${Date.now()}`,
-          title: s.title,
-          description: s.description,
-          originalText: s.originalText,
-          isRemoved: false,
-        }));
-
-        setMultiSuggestions(splitSuggestions);
-        // Store similar data for later (after multi-preview)
-        setStoredSimilarData(similarData.similarStatements?.length > 0 ? similarData : null);
-        setFlowState({
-          step: 'multi-preview',
-          suggestions: splitSuggestions,
-          originalText: text,
-          similarData: similarData.similarStatements?.length > 0 ? similarData : undefined,
-        });
-        return;
-      }
-
-      // No multiple suggestions - check for similar
-      if (similarData.similarStatements && similarData.similarStatements.length > 0) {
-        setFlowState({ step: 'similar', data: similarData });
-      } else {
-        // No similar solutions, proceed to submit
-        await handleSelectSolution(null, text);
-      }
+      await applyAnalysis(
+        { isMultipleSuggestions: multiData.ok && multiData.isMultipleSuggestions, suggestions: multiData.suggestions },
+        similarData,
+        undefined,
+      );
     } catch (err) {
       logError(err, {
-        operation: 'SolutionPromptModal.handleCheckSimilar',
+        operation: 'SolutionPromptModal.handleCheckSimilarLegacy',
         userId,
         questionId,
       });
@@ -263,18 +481,18 @@ export default function SolutionPromptModal({
     setFlowState({ step: 'submitting' });
 
     try {
-      const response = await fetch(`/api/statements/${questionId}/submit`, {
+      const response = await participantFetch(`/api/statements/${questionId}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           solutionText: textToSubmit,
-          userId,
           existingStatementId: statementId,
         }),
       });
 
       if (!response.ok) {
         const data = await response.json();
+        throwIfAddDisabled(data);
         throw new NetworkError(data.error || ERROR_MESSAGES.SUBMIT_FAILED);
       }
 
@@ -289,6 +507,7 @@ export default function SolutionPromptModal({
         solutionText: textToSubmit,
       });
     } catch (err) {
+      if (recoverFromAddDisabled(err)) return;
       logError(err, {
         operation: 'SolutionPromptModal.handleSelectSolution',
         userId,
@@ -300,46 +519,203 @@ export default function SolutionPromptModal({
     }
   };
 
-  // Step 2b: Merge solution into existing statement (new default behavior)
+  /**
+   * Merge `solutionText` into an existing suggestion. Returns the id of the
+   * suggestion that now carries the merged content, or null when the server's
+   * same-idea judge refused the merge (the text is not the same idea as the
+   * target) — the caller then adds it as a new suggestion.
+   */
+  const mergeInto = async (
+    targetStatementId: string,
+    solutionText: string,
+    autoMerge: boolean,
+  ): Promise<string | null> => {
+    const response = await participantFetch(`/api/statements/${questionId}/merge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targetStatementId,
+        solutionText,
+        autoMerge,
+      }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      if (isMergeRefusedAsDifferentIdea(response.status, data)) {
+        console.info('↩️ merge refused by the same-idea judge; adding as new', {
+          targetStatementId,
+          verdict: data.verdict,
+        });
+
+        return null;
+      }
+      throwIfAddDisabled(data);
+      throw new NetworkError(data.error || ERROR_MESSAGES.MERGE_FAILED);
+    }
+
+    const data: { statementId?: string } = await response.json();
+
+    // Track successful merge
+    trackSolutionSubmitted(questionId, userId, false); // false = merged, not created
+
+    return data.statementId ?? targetStatementId;
+  };
+
+  /**
+   * Automatic merge: fold the text into the closest existing suggestion and
+   * record the author's +1 on it. The merge is the real outcome; a failed +1
+   * is logged but does not undo it or block the participant.
+   *
+   * The server's same-idea judge may refuse (embedding similarity alone picked
+   * the target). Then nothing was merged, no +1 goes on the target, and the
+   * text is added as its own suggestion. Returns what actually happened.
+   */
+  const mergeAndAgree = async (
+    targetStatementId: string,
+    solutionText: string,
+  ): Promise<'merged' | 'created'> => {
+    const mergedStatementId = await mergeInto(targetStatementId, solutionText, true);
+    if (mergedStatementId === null) {
+      await createSuggestion(solutionText);
+
+      return 'created';
+    }
+
+    try {
+      await submitRating(questionId, mergedStatementId, 1, userId, userName, surveyId);
+    } catch (err) {
+      logError(err, {
+        operation: 'SolutionPromptModal.mergeAndAgree.rate',
+        userId,
+        statementId: mergedStatementId,
+        metadata: { questionId },
+      });
+    }
+
+    return 'merged';
+  };
+
+  /**
+   * Find the closest existing suggestion for one piece of text, or null when
+   * nothing is similar enough. Any failure counts as "nothing similar" so the
+   * piece is still submitted as a new suggestion.
+   */
+  const findMergeTarget = async (solutionText: string): Promise<string | null> => {
+    try {
+      const response = await participantFetch(`/api/statements/${questionId}/check-similar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userInput: solutionText }),
+      });
+
+      if (!response.ok) return null;
+
+      const data: SimilarCheckResponse = await response.json();
+
+      return data.similarStatements?.[0]?.statementId ?? null;
+    } catch (err) {
+      logError(err, {
+        operation: 'SolutionPromptModal.findMergeTarget',
+        userId,
+        metadata: { questionId },
+      });
+
+      return null;
+    }
+  };
+
+  /** Create a brand-new suggestion (the author's +1 is written server-side). */
+  const createSuggestion = async (solutionText: string): Promise<void> => {
+    const response = await participantFetch(`/api/statements/${questionId}/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        solutionText,
+        existingStatementId: null,
+      }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throwIfAddDisabled(data);
+      throw new NetworkError(data.error || ERROR_MESSAGES.SUBMIT_FAILED);
+    }
+
+    const data = await response.json();
+    trackSolutionSubmitted(questionId, userId, data.action === 'created');
+  };
+
+  /**
+   * Submit one piece of a split submission: with auto-merge on, merge it into
+   * a similar suggestion when one exists; otherwise create it.
+   */
+  const submitPiece = async (
+    solutionText: string,
+    precomputedTarget?: string | null,
+  ): Promise<void> => {
+    if (autoMergeSimilar) {
+      const target =
+        precomputedTarget !== undefined ? precomputedTarget : await findMergeTarget(solutionText);
+      if (target) {
+        await mergeAndAgree(target, solutionText);
+
+        return;
+      }
+    }
+
+    await createSuggestion(solutionText);
+  };
+
+  // Step 2b: Merge solution into existing statement (participant chose "merge")
   const handleMergeSolution = async (targetStatementId: string) => {
     setIsFinalSubmit(true);
     setFlowState({ step: 'submitting' });
 
     try {
-      console.info('🔀 Merging solution into existing statement:', targetStatementId);
-
-      const response = await fetch(`/api/statements/${questionId}/merge`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          targetStatementId,
-          solutionText: text,
-          userId,
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new NetworkError(data.error || ERROR_MESSAGES.MERGE_FAILED);
-      }
-
-      await response.json();
-
-      // Track successful merge
-      trackSolutionSubmitted(questionId, userId, false); // false = merged, not created
+      const mergedStatementId = await mergeInto(targetStatementId, text, false);
+      // Refused only when the server treats this question as auto-merge;
+      // the text is then kept as its own suggestion rather than lost.
+      if (mergedStatementId === null) await createSuggestion(text);
 
       setFlowState({
         step: 'success',
-        action: 'merged',
+        action: mergedStatementId === null ? 'created' : 'merged',
         solutionText: text,
       });
     } catch (err) {
+      if (recoverFromAddDisabled(err)) return;
       logError(err, {
         operation: 'SolutionPromptModal.handleMergeSolution',
         userId,
         metadata: { questionId, targetStatementId },
       });
-      setError(err instanceof Error ? err.message : (ERROR_MESSAGES.MERGE_FAILED || ERROR_MESSAGES.SUBMIT_FAILED));
+      setError(t(ERROR_MESSAGES.MERGE_FAILED));
+      setFlowState({ step: 'input' });
+    }
+  };
+
+  // Step 2c: Automatic merge (admin turned on autoMergeSimilar)
+  const handleAutoMerge = async (targetStatementId: string, solutionText: string) => {
+    setIsFinalSubmit(true);
+    setFlowState({ step: 'submitting' });
+
+    try {
+      const action = await mergeAndAgree(targetStatementId, solutionText);
+
+      setFlowState({
+        step: 'success',
+        action,
+        solutionText,
+      });
+    } catch (err) {
+      if (recoverFromAddDisabled(err)) return;
+      logError(err, {
+        operation: 'SolutionPromptModal.handleAutoMerge',
+        userId,
+        metadata: { questionId, targetStatementId },
+      });
+      setError(t(ERROR_MESSAGES.MERGE_FAILED));
       setFlowState({ step: 'input' });
     }
   };
@@ -351,59 +727,76 @@ export default function SolutionPromptModal({
   };
 
   // Handle confirming multiple suggestions - submit each one
-  const handleConfirmMultiSuggestions = async (suggestions: SplitSuggestion[]) => {
+  const handleConfirmMultiSuggestions = async (
+    suggestions: SplitSuggestion[],
+    targets: Record<string, PieceTarget> = pieceTargets,
+  ) => {
     setIsFinalSubmit(true);
     setFlowState({ step: 'submitting' });
 
-    try {
-      // Submit each suggestion sequentially
-      for (const suggestion of suggestions) {
-        const solutionText = `${suggestion.title}: ${suggestion.description}`;
+    // One piece at a time, deliberately: the per-user option limit is counted
+    // per request, so pieces sent together race that count. Sequential also
+    // means a piece that fails cannot hide the ones already added — we report
+    // how many landed instead of a bare failure.
+    let added = 0;
+    let failure: unknown = null;
 
-        const response = await fetch(`/api/statements/${questionId}/submit`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            solutionText,
-            userId,
-            existingStatementId: null,
-            generatedTitle: suggestion.title,
-            generatedDescription: suggestion.description,
-          }),
-        });
+    for (const suggestion of suggestions) {
+      const solutionText = pieceTextOf(suggestion);
+      const known = targets[suggestion.id];
+      const precomputed = known && known.text === solutionText ? known.target : undefined;
 
-        if (!response.ok) {
-          const data = await response.json();
-          throw new NetworkError(data.error || ERROR_MESSAGES.SUBMIT_FAILED);
-        }
-
-        const data = await response.json();
-        trackSolutionSubmitted(questionId, userId, data.action === 'created');
+      try {
+        await submitPiece(solutionText, precomputed);
+        added++;
+      } catch (err) {
+        // A refusal (option limit, moderation) will refuse what follows too.
+        failure = err;
+        break;
       }
+    }
 
-      setFlowState({
-        step: 'success',
-        action: 'created',
-        solutionText: `${suggestions.length} suggestions`,
-      });
-    } catch (err) {
-      logError(err, {
+    if (failure) {
+      logError(failure, {
         operation: 'SolutionPromptModal.handleConfirmMultiSuggestions',
         userId,
         questionId,
-        metadata: { suggestionCount: suggestions.length },
+        metadata: { suggestionCount: suggestions.length, added },
       });
-      setError(err instanceof Error ? err.message : ERROR_MESSAGES.SUBMIT_FAILED);
-      setFlowState({ step: 'input' });
     }
+
+    if (added === 0) {
+      if (recoverFromAddDisabled(failure)) return;
+      setError(failure instanceof Error ? failure.message : ERROR_MESSAGES.SUBMIT_FAILED);
+      setFlowState({ step: 'input' });
+
+      return;
+    }
+
+    setFlowState({
+      step: 'success',
+      action: 'created',
+      solutionText: `${added} ${added === 1 ? t('mc.answer') : t('mc.answers')}`,
+      note:
+        added < suggestions.length
+          ? tWithParams('Added {{added}} of {{total}} ideas — the rest could not be added.', {
+              added,
+              total: suggestions.length,
+            })
+          : undefined,
+    });
   };
 
   // Handle dismissing multi-suggestion preview (submit original as-is)
   const handleDismissMulti = async () => {
     // Check if we have stored similar data
     if (storedSimilarData && storedSimilarData.similarStatements?.length > 0) {
-      // Show similar solutions
-      setFlowState({ step: 'similar', data: storedSimilarData });
+      if (autoMergeSimilar) {
+        await handleAutoMerge(storedSimilarData.similarStatements[0].statementId, text);
+      } else {
+        // Show similar solutions
+        setFlowState({ step: 'similar', data: storedSimilarData });
+      }
     } else {
       // Submit original directly
       await handleSelectSolution(null, text);
@@ -430,20 +823,14 @@ export default function SolutionPromptModal({
       <div className={styles.content}>
         {flowState.step === 'input' && (
           <>
-            {/* Explanatory Context for "Add Solution First" Feature */}
-            {requiresSolution && (
-              <div className={styles.questionContext}>
-                <p className={styles.questionText}>
-                  {t('We value your independent thinking. Share your perspective before seeing others\' ideas to help generate more diverse and creative solutions.')}
-                </p>
-              </div>
-            )}
-
             {/* Question Context Banner */}
             {questionText && (
               <div className={styles.questionContext}>
                 <span className={styles.questionLabel}>{t('Please add your answer to the following question:')}</span>
                 <p className={`${styles.questionText} ${isQuestionExpanded ? styles.questionTextExpanded : ''}`}>
+                  {questionNumber !== undefined && (
+                    <span className={styles.questionNumber}>{questionNumber})</span>
+                  )}
                   <InlineMarkdown text={questionText} />
                 </p>
                 {questionDescription && (
@@ -485,6 +872,9 @@ export default function SolutionPromptModal({
               {hasWordMinimum && !meetsWordMinimum && (
                 <span className={styles.hint}> ({t('minimum')} {minWords} {t('words')})</span>
               )}
+              {characterCount >= VALIDATION.MIN_SOLUTION_LENGTH && meetsWordMinimum && !isMeaningful && (
+                <span className={styles.hint}> ({t('minimum')} {MIN_MEANINGFUL_WORDS} {t('words')})</span>
+              )}
             </div>
 
             {error && <p className={styles.error}>{t(error)}</p>}
@@ -495,7 +885,7 @@ export default function SolutionPromptModal({
                 onClick={handleCheckSimilar}
                 disabled={!isValid}
               >
-                {t('Add Your Idea')}
+                {t('Add Your Answer')}
               </button>
               <span className={styles.orSeparator}>— {t('or')} —</span>
               <button
@@ -547,6 +937,7 @@ export default function SolutionPromptModal({
           <SuccessMessage
             action={flowState.action}
             solutionText={flowState.solutionText}
+            note={flowState.note}
             onComplete={handleSuccess}
           />
         )}

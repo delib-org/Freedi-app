@@ -6,6 +6,7 @@
  */
 
 import { Statement } from '@freedi/shared-types';
+import { auth } from '@/lib/firebase';
 
 const FUNCTIONS_REGION = 'me-west1';
 const REQUEST_TIMEOUT_MS = 45000;
@@ -85,9 +86,13 @@ function getEndpoint(): string {
 /** POST the payload to the function, racing a 45s timeout. */
 export async function requestImprovedDraft(payload: ImprovePayload): Promise<ImproveResult> {
 	const request = (async () => {
+		await auth.authStateReady();
+		const idToken = await auth.currentUser?.getIdToken();
+		if (!idToken) throw new Error('improveSuggestion needs a signed-in user');
+
 		const response = await fetch(getEndpoint(), {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
+			headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
 			body: JSON.stringify(payload),
 		});
 

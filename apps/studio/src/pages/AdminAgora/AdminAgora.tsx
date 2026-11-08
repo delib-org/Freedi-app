@@ -12,7 +12,11 @@ import { Button, EmptyState, SegmentedControl, Skeleton, Tag } from '@/component
 import ProgressStat from '@/components/atomic/atoms/ProgressStat/ProgressStat';
 import StudioPage from '../_shared/StudioPage';
 import { useGrace } from '../_shared/useGrace';
+import { useAccessCount } from '../AccessRequests/accessCount';
 import OpenSchoolModal from './OpenSchoolModal';
+import SystemTrends from './SystemTrends';
+import BackfillLessons from './BackfillLessons';
+import accessStyles from '../AccessRequests/AccessRequests.module.scss';
 import styles from './AdminAgora.module.scss';
 
 type PeriodId = 'day' | 'month' | 'year';
@@ -38,14 +42,46 @@ function OutcomeRow({ stats }: { stats: AgoraStatsDoc | null }) {
 	);
 }
 
+/**
+ * Which look the students played in — the favourite-design question. Counted
+ * per student, not per room, because the room's look is the teacher's pick
+ * and a student who changed it is the signal worth having.
+ */
+function LooksRow({ stats }: { stats: AgoraStatsDoc | null }) {
+	const { t } = useTranslation();
+	const byTheme = stats?.byTheme ?? {};
+	const worn: Array<{ key: string; label: string }> = [
+		{ key: 'candy', label: t('Candy') },
+		{ key: 'purple', label: t('Solid purple') },
+		{ key: 'custom', label: t('Own look') },
+	];
+
+	return (
+		<div className={styles.outcomes} aria-label={t('Favourite looks')}>
+			{worn.map((row) => (
+				<Tag key={row.key} status="open" dot>
+					{row.label}: {byTheme[row.key] ?? 0}
+				</Tag>
+			))}
+			<Tag status="frozen">
+				{t('Built a look')}: {byTheme.built ?? 0}
+			</Tag>
+			<Tag status="frozen">
+				{t('Borrowed a look')}: {byTheme.borrowed ?? 0}
+			</Tag>
+		</div>
+	);
+}
+
 /** `/admin/agora` — the Agora classroom game across every school (system admins only). */
 export default function AdminAgora() {
-	const { t } = useTranslation();
+	const { t, tWithParams } = useTranslation();
 	const { isSystemAdmin, loading: orgLoading } = useOrg();
 	const [params, setParams] = useSearchParams();
 	const [period, setPeriod] = useState<PeriodId>('month');
 	const showModal = params.get('new') === '1';
 	const denied = useGrace(!orgLoading && !isSystemAdmin);
+	const waiting = useAccessCount(isSystemAdmin);
 
 	const periodKeys = currentPeriodKeys();
 	const { data: stats } = useAgoraStats(periodKeys[period], isSystemAdmin);
@@ -69,8 +105,22 @@ export default function AdminAgora() {
 		<StudioPage
 			breadcrumb={[{ label: t('Agora classrooms') }]}
 			title={t('Agora classrooms')}
-			actions={<Button text={`+ ${t('Open school')}`} variant="primary" onClick={openModal} />}
+			actions={
+				<>
+					<BackfillLessons />
+					<Button text={`+ ${t('Open school')}`} variant="primary" onClick={openModal} />
+				</>
+			}
 		>
+			<div className={accessStyles.countLine}>
+				<Link to="/admin/agora/requests">{t('Access requests')}</Link>
+				{waiting > 0 && (
+					<Tag status="frozen" dot>
+						{tWithParams('{{count}} waiting for approval', { count: waiting })}
+					</Tag>
+				)}
+			</div>
+
 			<section className={styles.kpis} aria-label={t('Activity')}>
 				<div className={styles.kpiHeader}>
 					<h2 className={styles.sectionTitle}>{t('Activity')}</h2>
@@ -91,7 +141,11 @@ export default function AdminAgora() {
 					<ProgressStat value={stats?.studentsReached ?? 0} label={t('Students reached')} />
 				</div>
 				<OutcomeRow stats={stats} />
+				<h3 className={styles.sectionTitle}>{t('Favourite looks')}</h3>
+				<LooksRow stats={stats} />
 			</section>
+
+			<SystemTrends enabled={isSystemAdmin} />
 
 			<section aria-label={t('Schools')}>
 				<h2 className={styles.sectionTitle}>{t('Schools')}</h2>
@@ -119,8 +173,9 @@ export default function AdminAgora() {
 						<thead>
 							<tr>
 								<th scope="col">{t('School')}</th>
-								<th scope="col">{t('City')}</th>
+								<th scope="col">{t('Locality')}</th>
 								<th scope="col">{t('Classes')}</th>
+								<th scope="col">{t('Regional coordinators')}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -131,6 +186,7 @@ export default function AdminAgora() {
 									</th>
 									<td>{school.city ?? '—'}</td>
 									<td className="stat-number">{school.classCount}</td>
+									<td>{school.supervisorIds?.length ?? 0}</td>
 								</tr>
 							))}
 						</tbody>

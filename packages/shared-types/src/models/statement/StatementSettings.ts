@@ -9,8 +9,19 @@ import {
 	picklist,
 	InferOutput,
 	number,
+	pipe,
+	integer,
+	minValue,
+	maxValue,
 } from 'valibot';
 import { DeliberationType, SortType, ThemeStyle } from '../TypeEnums';
+import {
+	ClassBallotSchema,
+	ClassVoteDisplaySchema,
+	MAX_TABLE_SIZE,
+	MIN_TABLE_SIZE,
+	RoundPhaseSchema,
+} from '../classroom/classroomModel';
 
 /**
  * Join form — admin-defined contact form shown the first time a user joins
@@ -248,6 +259,66 @@ export enum evaluationType {
 export const RatingModeSchema = picklist(['agree-disagree', 'reactions']);
 export type RatingMode = InferOutput<typeof RatingModeSchema>;
 
+/**
+ * Which options the voting view lists. 'all' (or undefined) shows every
+ * option; 'positivelyEvaluated' shows only the options the group scored
+ * positively in the card-stack evaluation (consensus > 0).
+ */
+export const VotingOptionsSourceSchema = picklist(['all', 'positivelyEvaluated']);
+export type VotingOptionsSource = InferOutput<typeof VotingOptionsSourceSchema>;
+
+
+/**
+ * join-class (classroom): the step keys of a lesson. A lesson stores its own
+ * ordered list in `LessonPlan.steps` and `stepIndex` points into THAT list:
+ * lessons created before 'allProposals' existed keep their 8 stored steps, new
+ * ones get 9. Readers index `steps[stepIndex]`, never a fixed list.
+ * 'allProposals' (IA 19) sits between 'proposals' and 'vote'.
+ */
+export const LessonStepKeySchema = picklist([
+	'waiting',
+	'opening',
+	'side',
+	'tables',
+	'tableTalk',
+	'proposals',
+	'allProposals',
+	'vote',
+	'summary',
+]);
+export type LessonStepKey = InferOutput<typeof LessonStepKeySchema>;
+
+/** join-class lesson status. Absent = 'live' (lessons created before status existed). */
+export const LessonStatusSchema = picklist(['live', 'paused', 'open', 'ended']);
+export type LessonStatus = InferOutput<typeof LessonStatusSchema>;
+
+/**
+ * join-class lesson look. 'game' (the default, absent) = chunky edges, a progress
+ * path and one-shot win stamps; 'solid' = the calm look the app had before.
+ * A field of its own rather than a new ThemeStyle value: a new picklist value
+ * would break the strict parse of apps already deployed.
+ */
+export const LessonLookSchema = picklist(['game', 'solid']);
+export type LessonLook = InferOutput<typeof LessonLookSchema>;
+
+export const LessonPlanSchema = object({
+	steps: array(LessonStepKeySchema),
+	stepIndex: number(),
+	/** Added optionally: a strict parse of an older lesson must keep working. All moments in ms. */
+	status: optional(LessonStatusSchema),
+	statusAt: optional(number()),
+	/** Set while paused, cleared on resume (after the table timers are shifted). */
+	pausedAt: optional(number()),
+	/** The last time the lesson was ended or kept open. */
+	endedAt: optional(number()),
+	/** Opening step: id of the introduction video the projector shows. Absent or null = the text. Cleared on every step change. */
+	projectorVideoId: optional(nullable(string())),
+});
+export type LessonPlan = InferOutput<typeof LessonPlanSchema>;
+
+/** join-class: a sub-question is either a guiding question or the one challenge. */
+export const ClassRoleSchema = picklist(['guiding', 'challenge']);
+export type ClassRole = InferOutput<typeof ClassRoleSchema>;
 
 export const StatementSettingsSchema = object({
 	subScreens: optional(array(string())),
@@ -283,6 +354,9 @@ export const StatementSettingsSchema = object({
 	// without changing the participant evaluation mode.
 	showResults: optional(boolean()),
 	inVotingGetOnlyResults: optional(boolean()),
+	// Voting view only: undefined / 'all' = list every option;
+	// 'positivelyEvaluated' = only options with positive card-stack consensus.
+	votingOptionsSource: optional(VotingOptionsSourceSchema),
 	enableSimilaritiesSearch: optional(boolean()),
 	enableNavigationalElements: optional(boolean()),
 	show: optional(boolean()),
@@ -299,11 +373,25 @@ export const StatementSettingsSchema = object({
 	// by every evaluation surface (MC swipe/classic, main-app faces, etc.) via
 	// getEvaluationScale(ratingMode). Undefined = 'agree-disagree' (default).
 	ratingMode: optional(RatingModeSchema),
+	// How many steps the agree-disagree scale offers: 3 = -1 · 0 · +1, anything
+	// else (undefined / 5) = the classic five. A plain number rather than a
+	// third RatingMode so surfaces built before it existed still parse the
+	// Statement and fall back to five steps. Ignored in 'reactions' mode. Read
+	// it through resolveEvaluationScaleKey(statementSettings).
+	ratingSteps: optional(number()),
 	enableAIImprovement: optional(boolean()),
 	popperianDiscussionEnabled: optional(boolean()),
 	popperianPreCheckEnabled: optional(boolean()),
 	enableMultiSuggestionDetection: optional(boolean()),
 	enableAutoMerge: optional(boolean()), // if true (default), similar proposals will be automatically merged; if false, users choose
+	// Automatic AI handling of a participant's submission, mirrored here from
+	// the MC survey settings (see cascadeAutoAiHandling) so a question opened
+	// outside any survey — /q/<statementId> — behaves the way its admin set it.
+	// autoSplit: several answers in one submission are added separately instead
+	// of asking the participant; autoMerge: a submission that repeats an
+	// existing suggestion folds into it and +1s it. Undefined = off.
+	autoSplitMultiSuggestions: optional(boolean()),
+	autoMergeSimilar: optional(boolean()),
 	similarityThreshold: optional(number()), // 0-1, default 0.85 - threshold for finding similar options
 	excludedInheritedDemographicIds: optional(array(string())), // IDs of inherited demographic questions to exclude for this statement
 	enableChatPanel: optional(boolean()), // if false, the chat side panel is hidden (default: true)
@@ -351,6 +439,68 @@ export const StatementSettingsSchema = object({
 	// facilitator-led flow where `powerFollowMe` is the only way to move.
 	// Hub-scoped — only honoured on the main (top-parent) statement.
 	allowParticipantNavigation: optional(boolean()),
+	// join-class: the lesson's step plan + current step. Main (workspace) statement only.
+	lessonPlan: optional(LessonPlanSchema),
+	// join-class: 6-digit join code of the workspace (classCodes/{code}). Main statement only.
+	classCode: optional(string()),
+	// join-class: role of a sub-question in the lesson (guiding | challenge).
+	classRole: optional(ClassRoleSchema),
+	// join-class: one-line hint shown under a sub-question.
+	hint: optional(string()),
+	// join-class: frozen vote shortlist, on the challenge question.
+	ballot: optional(ClassBallotSchema),
+	// join-class: the teacher's switches for the students' vote screen, on the challenge question.
+	voteDisplay: optional(ClassVoteDisplaySchema),
+	// join-class: plenum phase on the challenge question.
+	roundPhase: optional(RoundPhaseSchema),
+	// join-class: https link of the dilemma video shown on the opening screen. Main statement only.
+	// @deprecated Superseded by `introVideos`; readers fall back to it until no lesson carries it.
+	videoUrl: optional(string()),
+	// join-class: the lesson introduction's ordered videos (0-5). Main statement only.
+	introVideos: optional(array(object({ id: string(), title: string(), url: string() }))),
+	// join-class: character names of side A and side B. Main statement only.
+	sideNames: optional(object({ a: string(), b: string() })),
+	// join-class: the question students answer on the side slider. Absent/empty = the translated default. Main statement only.
+	sideQuestion: optional(string()),
+	// join-class: what side A and side B claim, shown under their names on the slider. Empty = no claim. Main statement only.
+	sideClaims: optional(object({ a: string(), b: string() })),
+	// join-class: may students add a question of their own at Table talk? Absent = yes. Main statement only.
+	allowOwnQuestions: optional(boolean()),
+	// join-class: seconds each person speaks when answering or proposing (one of SPEAK_SECONDS_CHOICES). Absent = DEFAULT_SPEAK_SECONDS. Main statement only.
+	speakSeconds: optional(number()),
+	// join-class: turns at Proposals, everyone speaks once per turn (one of PROPOSALS_TURNS_CHOICES). Absent = DEFAULT_PROPOSALS_TURNS. Main statement only.
+	proposalsTurns: optional(number()),
+	// join-class: proposals per author, 'one' or 'unlimited'. Absent = one. A string, not a picklist (strict-parse trap): read it through proposalLimitOf. Main statement only.
+	proposalLimit: optional(string()),
+	// join-class: students without a device in the whole lesson. Server-written (classAddNoDevice, classAssignTables): phones cannot read other tables. Main statement only.
+	noDeviceCount: optional(number()),
+	// join-class: this main statement is a LESSON (a played game): one game of a lesson plan
+	// played with one class. Written only by the server (classStartLesson / the migration).
+	// `classId` null = no class (the lesson sits under the teacher home). Strings only, no
+	// picklists (strict-parse trap). Main statement only.
+	classLesson: optional(
+		object({
+			planId: string(),
+			gameId: string(),
+			classId: optional(nullable(string())),
+			className: string(),
+			lessonName: optional(string()),
+		}),
+	),
+	// join-class: this top-level group statement is a HOME holding lessons: kind 'class'
+	// (id jcClass_{classId}) or 'teacher' (id jcTeacher_{uid}). Written only by the server.
+	// Students never get() a home (firestore.rules). `kind` is a plain string on purpose.
+	classHome: optional(
+		object({
+			kind: string(),
+			classId: optional(string()),
+			uid: optional(string()),
+		}),
+	),
+	// join-class: the lesson's look, followed live by students and the projector. Absent = 'game'. Main statement only.
+	lessonLook: optional(LessonLookSchema),
+	// join-class: group size at the tables, a whole number MIN_TABLE_SIZE..MAX_TABLE_SIZE (2..8). Absent = DEFAULT_TABLE_SIZE (6). Main statement only.
+	tableSize: optional(pipe(number(), integer(), minValue(MIN_TABLE_SIZE), maxValue(MAX_TABLE_SIZE))),
 });
 
 

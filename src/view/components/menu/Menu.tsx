@@ -25,6 +25,8 @@ import { Link } from 'react-router';
 // keep in sync with the stylesheet.
 const CARD_MENU_WIDTH = 260;
 const CARD_MENU_MOBILE_MAX_WIDTH = 280;
+// Mirrors `.menuContent:not(.card)`: width: min(280px, 100vw - 16px).
+const NAV_MENU_MAX_WIDTH = 280;
 const MOBILE_BREAKPOINT = 768;
 const VIEWPORT_EDGE_MARGIN = 8;
 const MENU_BUTTON_GAP = 4;
@@ -96,8 +98,7 @@ const Menu: FC<MenuProps> = ({
 	// useLayoutEffect so the menu never paints in its in-card fallback position
 	// (which is clipped/overlapped by sibling cards' stacking contexts).
 	useLayoutEffect(() => {
-		// Apply fixed positioning for both card menus and chat menus
-		if ((!isChatMenu && !isCardMenu) || !isMenuOpen || !buttonRef.current) {
+		if (!isMenuOpen || !buttonRef.current) {
 			setMenuPosition(null);
 
 			return;
@@ -106,6 +107,25 @@ const Menu: FC<MenuProps> = ({
 		const buttonRect = buttonRef.current.getBoundingClientRect();
 		const windowHeight = window.innerHeight;
 		const windowWidth = window.innerWidth;
+
+		// Nav (hamburger) menu: open below the button and grow away from the
+		// nearer screen edge. A CSS anchor to one side of the button pushes the
+		// menu off-screen whenever the button sits on the other side (RTL puts
+		// the header button on the left).
+		if (!isChatMenu && !isCardMenu) {
+			const menuWidth = Math.min(NAV_MENU_MAX_WIDTH, windowWidth - 2 * VIEWPORT_EDGE_MARGIN);
+			const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+			let left = buttonCenterX < windowWidth / 2 ? buttonRect.left : buttonRect.right - menuWidth;
+			left = Math.max(
+				VIEWPORT_EDGE_MARGIN,
+				Math.min(left, windowWidth - menuWidth - VIEWPORT_EDGE_MARGIN),
+			);
+
+			setShowAbove(false);
+			setMenuPosition({ top: buttonRect.bottom + MENU_BUTTON_GAP, left });
+
+			return;
+		}
 		const buttonCenterY = buttonRect.top + buttonRect.height / 2;
 
 		// If button is in bottom half of screen, show menu above
@@ -141,12 +161,12 @@ const Menu: FC<MenuProps> = ({
 		setIsOpen(!isMenuOpen);
 	}, [isMenuOpen, setIsOpen]);
 
-	// Card/chat menus render in a portal at document.body: position:fixed alone
+	// Open menus render in a portal at document.body: position:fixed alone
 	// fixes geometry but NOT paint order — the menu stays trapped in the card
 	// header's stacking context (position:absolute + z-index), so later sibling
 	// cards and their "…" buttons paint over it. Portaling escapes every
 	// ancestor stacking/overflow context.
-	const usePortal = (isChatMenu || isCardMenu) && menuPosition !== null;
+	const usePortal = menuPosition !== null;
 
 	const menuContent = isMenuOpen ? (
 		<div
@@ -163,6 +183,9 @@ const Menu: FC<MenuProps> = ({
 					? {
 							position: 'fixed',
 							left: `${menuPosition.left}px`,
+							// Under dir="rtl" an over-constrained box drops `left`, so clear the
+							// stylesheet's `right` anchor.
+							right: 'auto',
 							...(showAbove
 								? { bottom: `${window.innerHeight - menuPosition.top}px`, top: 'auto' }
 								: { top: `${menuPosition.top}px`, bottom: 'auto' }),

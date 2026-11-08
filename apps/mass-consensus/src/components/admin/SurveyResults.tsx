@@ -7,6 +7,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { authedFetch } from '@/lib/api/authedFetch';
 import { Survey } from '@/types/survey';
 import ExportModal from './ExportModal';
+import TopAgreementsPanel from './TopAgreementsPanel';
 import styles from './Admin.module.scss';
 
 interface QuestionResult {
@@ -329,6 +330,9 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
           <p className={styles.resultsEmpty}>{t('noResponsesYet')}</p>
         )}
       </div>
+
+      {/* Top agreements per question (admin-only, stays inside MC) */}
+      {hasQuestions && <TopAgreementsPanel surveyId={survey.surveyId} />}
 
       {/* All Respondents Demographics */}
       {hasDemographics && (

@@ -1,7 +1,26 @@
+## 2026-09-22 — supervision and modular analytics
+
+Implementation is on `feat/agora-supervision` in the dedicated supervision
+worktree. Teacher class graphs, student drawer graphs, `/teach/activity`,
+`/supervise` school/teacher/class/student views, and Studio system/school/detail
+pages consume the shared indicator registries. Supervisor assignment and
+teacher narrowing are available on the Studio school page.
+
+Backend review fixed cross-school aggregate disclosure, permission changes
+while cached, never-played student drilldowns, late-backfill history retention,
+month-rollover heartbeat credit, and equal-timestamp backfill pagination.
+School teacher summaries use the retained 100 lesson rows and warn when that
+history is truncated. Usage is teacher-wide screen activity; lesson rows are
+school-scoped. The scope/registry invariants are recorded in CLAUDE.md.
+
+No production deployment, index creation or backfill has been performed.
+Deploy the rules/index/functions first after explicit approval, then the two
+frontends, and run backfill through Studio's historical lesson-data action.
+
 # Agora — Working Handoff
 
 **Start-here document for continuing work in a fresh chat.** Last updated
-2026-09-02.
+2026-10-07.
 
 Companion docs: `../CLAUDE.md` (the rules of the road — read that first),
 `feedback-cycle.md` (the improvement loop, and the spec `e2e-cycle.mjs`
@@ -25,6 +44,595 @@ rate others, improve each other's ideas — aiming for a solution both camps
 can live with. Cross-camp support ("bridging") is worth ~2× same-camp.
 Grounded in Tal's deliberative theory: needs vs. positions, criticism as
 service, expanding agreement, honest disagreement as an achievement.
+
+## The teacher removes a student — and approves each return (2026-10-14)
+
+Built on `feat/agora-teacher-remove-user`, **NOT deployed**. Trello "The
+teacher can remove users" — a prankster, a duplicate seat, a stranger. No
+permanent block: a removed student may knock, and the teacher approves THEM.
+
+- **Remove** — `agoraRemoveParticipant {sessionId, studentUid}` (session
+  teacher only, full account), one transaction: `session.removedUids[uid] =
+  {removedAt, anonName}` (optional shared-types field, rules-pinned), the
+  participant doc parked whole in `agoraRemovals/{sessionId}--{uid}`
+  (server-only, rules deny all) and DELETED, their `agoraHands` doc deleted
+  (dealt notes count as unread again), their `agoraIdentities` real name
+  deleted. Deleting the seat is the point: every count, census, lottery size
+  and console row is built from `agoraParticipants`, so nothing learns a
+  "removed" filter. `participantCount` is never touched (it mints pseudonyms).
+- **Knock** — `agoraJoinSession` for a removed uid seats nobody: it stamps
+  `requestedAt` (rejoin.ts `knockToRejoin`; a knock while one is pending
+  changes nothing; inside `AGORA_REJOIN.REQUEST_COOLDOWN_MS` after a "not now"
+  → `failed-precondition rejoin-cooldown`), records the real name typed at the
+  door for the teacher's card, and answers `{waiting: true}`.
+- **Answer** — `agoraResolveRejoin {sessionId, studentUid, decision}` (teacher
+  only, pending knocks only). Approve: the entry leaves `removedUids` and the
+  parked seat comes back — same pseudonym, camp, points, credit guards — so
+  their earlier notes are theirs again. Decline: `declinedAt`, the typed name
+  is deleted. Never moves the stage.
+- **Kept out while removed/waiting**: rules (`agoraRemovedFrom(sessionId)`, one
+  session `get()` only on writes that name an Agora session) refuse their
+  agora statement creates/edits, evaluations and votes in THAT session.
+  Callables that read the seat (`agoraCheckLanguage`, `agoraTeacherMessage`,
+  `agoraDealNotes`, …) refuse a missing seat.
+- **Kept**: their notes, ratings and votes. The Messages panel lists removed
+  authors' texts too (`buildTextRows {removedUids}`), so the take-down reaches
+  them.
+- **Client**: Class panel row → "Remove" (private device only) → in-app confirm
+  (`lib/flows/removeStudent.ts`). Teacher: `RejoinRequests` card ("‹pseudonym ·
+  real name› asks to come back" → Let back in / Not now), private device only,
+  stacked with the language alert in the shared `.teacher-alerts` corner.
+  Student: `views/RemovedScreen.ts` before any stage, live from the session doc
+  (`data-state` removed → waiting → declined; approval drops straight into the
+  game; `wasRemoved` holds a spinner until the seat snapshot lands).
+
+**Verify:** `npx tsx scripts/e2e-remove-student.mjs` (remove from the
+teacher's browser → removed screen survives reload → ask → waiting survives
+reload → teacher card → not now → paused re-ask → ask → let back in → same
+pseudonym and points, stage unmoved; a bot: rules refuse note/rating/vote,
+one pending knock, no self-approve, take-down still works, approved → writes
+again). Rules: `tests/rules/agora-removal.test.mjs`. Unit: shared-types
+`agoraRemoval`, functions `removeParticipant` + `rejoin`, agora
+`removeStudent` + `moderationQueue`.
+
+**Deploy (in this order):** shared-types build + functions repack →
+`deploy:rules:prod` → `deploy:f:prod -- agoraRemoveParticipant
+agoraResolveRejoin agoraJoinSession` → `deploy:agora`.
+
+## The teacher's call moves the class; the way back to 3D (2026-10-12)
+
+Built on `feat/agora-improvements`, **NOT deployed** (client + one optional
+shared-types field: `AgoraParticipant.whereabouts`; no functions, no rules
+changes — the participant rule already lets a student write their own doc
+minus the pinned fields, and `AgoraParticipantSchema` is a plain `object`, so
+old clients strip the field). Tal's report: in production session
+`4Iy3FyKmCpQ-` the teacher called the students to a booth and nobody moved.
+
+**Root cause (from the deployed code + a read-only look at the session doc).**
+The call was written (`villageCall {place:'booth:round-story', at}`), the
+deployed bundle had the move-class code. The student side dropped it:
+(1) a call was "fresh" only if under `CALL_FRESH_MS` (2 min) on FIRST sight
+— `seenCallAt`/`lastCallAt` undefined → the first call of a session was
+history for any phone that met it late (locked, backgrounded, reconnecting);
+(2) the flat view never moved anyone — a toast to tap; (3) in 3D the station
+came on screen only when the world reported arriving (or a 30 s fallback),
+and `ready` gated the walk; (4) a led NEXT left a student who had stepped
+back where they were; (5) the teacher got "students are on their way"
+whatever happened.
+
+**Model now — `lib/flows/summons.ts` (pure, tested):** a call is a standing
+order. `resolveSummons({call, currentOpenedAt, handledAt})` → `walk` /
+`retire` / nothing: handled once per stamp per device (`summonsStore`,
+sessionStorage `agora_<session>_call`), superseded only by a newer call or
+by the teacher opening a new station after it (`stageState[current].openedAt`
+is server time; `callVillage` floors the stamp above it with
+`nextCallStamp`). No wall clock, no first-render heuristic, so a late joiner
+and a phone that wakes ten minutes later walk too.
+
+- **Student (`GameController`)**: `act()` selects the called item at once in
+  BOTH worlds (the 3D walk is the picture, never the condition), shows the
+  travel card with the call kicker (`StageTransition {call}`,
+  `aria-live=assertive`), files the inbox row, and writes `whereabouts
+  {place, at, callAt}` on the participant doc (`session.reportWhereabouts`,
+  once per place — also on every station change, so the teacher always
+  knows where everyone is). A student mid-sentence (`isTypingAnswer()`) is
+  held: `CallBanner` counts `TYPING_GRACE_MS` down, "go now" / one "one more
+  moment"; their unsent first words are parked per question (`penState`
+  `parked`) and come back when they return. Led NEXT (`villageNavigation
+  !== 'free'`) now carries a student who had stepped back
+  (`stageNavReduce {kind:'session-advanced', led}`). `visibilitychange` /
+  `online` / `pageshow` redraw so a resumed phone acts on the snapshot at
+  once. The toast is gone (it said "tap to walk there"; nobody has to tap).
+- **`VillageShell`** walks whatever `call` the controller hands it, once per
+  stamp, once `ready`; only the teacher's class view (`watcher`) still skips
+  a call met on first sight.
+- **Teacher (`TeacherSession` → `MoveClassSheet {arrivals}`)**: "n of total
+  arrived at X" with a bar, the stragglers' pseudonyms, "call again"
+  (`arrivalStatus` / `arrivalPlace` — a standing call's target, else the
+  room's station); the strip's status line says "n/total arrived at X"
+  while a call stands.
+- **Way back to 3D**: the device's world is remembered
+  (`villagePrefs.villageViewPreference`, `localStorage agora_village_view`);
+  the simple view carries "Back to the 3D village" on every screen, the
+  lobby included (`viewToggle` in the same slot in every branch — never shift
+  the five children); the press retries a world that failed, and a second
+  failure shows `village.unavailable_again` (`VillageShell {retry}`) with the
+  same "continue without the village" door. `ClassView` does the same.
+
+**Verify:** `bash ../../scripts/solo.sh npx tsx scripts/e2e-move-class.mjs`
+— five browser students (village, simple view, mid-sentence, offline, late
+joiner) + four bots; NEXT moves all; gather at a past booth → every
+participant doc's `whereabouts` is `booth:round-story` with the call's
+stamp, the typist is held then goes, the offline phone catches up, the
+late joiner lands there, the sheet fills to 9/9, the reload keeps the
+handled stamp, and flat → 3D → reload keeps 3D (lobby too). Unit:
+`summons`, `stageNav` (led), `penState` (parking), `villagePrefs` (view).
+`e2e-class-view.mjs` no longer expects the toast.
+
+**Still only a classroom can confirm:** iOS Safari's socket resume after a
+long lock (the model handles any delay; the delay itself is the OS's), and
+whether 25 s of grace is right for a child mid-sentence.
+
+## Teacher class view, move-class sheet, two devices, device roles (2026-10-11)
+
+Built on `feat/agora-improvements` (287d5742d + the follow-up commit), **NOT
+deployed** (client only: `deploy:agora`; no functions, rules or shared-types
+changed — `villageCall.place` was already `string()` and unpinned, and
+`agoraAdvanceStage` already took a forward `toIndex`). Tal's ask: the teacher
+sees the room exactly as the students do, with control buttons on top, from a
+phone and a laptop at once; the phone may show real names.
+
+- **Class view** `/teach/session/:id/class` → `views/teacher/ClassView.ts`,
+  rendered by `TeacherSession` under the same `TeacherNav` + `TeacherStrip`
+  (both routes map to the same keyed component, so Board ⇄ Class keeps every
+  listener; `TeacherSession` stays the ONLY owner of `stopListening()` — the
+  class view has no `onremove` that stops anything). It is the seatless
+  render the projector already proved, under the student chrome: the 3D
+  village (`VillageShell {watcher:true, writable:false}`) or the flat view,
+  `StageNav`, the `PlaceBar` with "my note" as its one locked door
+  (`placeNavTabs({canWrite:false})` → `village.nav.hint_watcher`), the guide's
+  bubble holding `watcherDeskCard` (the prompt + an inert "students write
+  here"), the board via `VillageCommunity {readOnly:true}` (no rating, no
+  door into a conversation, no coins). **Never a teacher seat**: every count
+  reads `participants.length`. `lib/__tests__/classViewImports.test.ts` pins
+  that `ClassView.ts`/`watchBodies.ts` import no write path and mount none of
+  the five seat-gated stage views. `ProjectorScreen` now delegates to
+  `watchBodies.ts`; the council model and the paper builders moved out of
+  `GameController` into `lib/flows/villageModel.ts`; the viewing-position
+  store is `lib/stageNavStore.ts` (the same `agora_${sessionId}_viewing` key).
+  The teacher has their own viewing position like a student (walks opened
+  stations, never ahead); "Walk me to the class" is the sheet's first row when
+  they are elsewhere (`walkRequest` attr).
+- **Board ⇄ Class segment** on `TeacherNav` (`segment` attr — never folded into
+  ≡; icons only ≤600px). Remembered per device in `localStorage
+  agora.teacher.view`; the redirect runs in `view()`, not at construction,
+  because a route flip re-renders the same keyed instance.
+- **Director row**: on a phone in the class view the strip renders INSIDE
+  `.place-bar-wrap` (`PlaceBar {lead}` → `VillageShell {barLead}`,
+  `TeacherStrip {director:true}`) so `villageBubble` — which measures that
+  wrap — lifts the bubble by itself; `--village-bar-h: 136px` on the watcher
+  wrapper, `--village-chrome` = nav + `--teacher-strip-desk-h` (64px, new
+  token) + 56px on a laptop. The fixed phone strip must NOT render there (two
+  bottom bars, two `#teacher-next`).
+- **Move-class sheet** (`views/teacher/MoveClassSheet.ts`, rules in
+  `lib/flows/moveClass.ts`): the plan in order; a reached station GATHERS
+  (`callVillage(sessionId, place)` with `VillageCallPlace = 'current' |
+  'council' | 'library' | 'challenge' | 'booth:<itemId>'`), a station ahead
+  OPENS via the same advance (`toIndex` jumps allowed) behind a confirm that
+  lists what closes (unfinished count) and what is skipped. Backwards is not
+  a move. Opened from the strip's pennant "Class: {station}" (`pennant`
+  attr) and the ≡ menu. Counts are shown for the room's current item only —
+  `ProgressFacts` is derived from the current item's answers, so past rows
+  would lie.
+- **Student side of a call**: `VillageShell` walks with
+  `callArrival(place)` — a `booth:` call now arrives with `'station'` (it
+  used to arrive with `'none'` and never select the item, leaving the student
+  at a table with nothing on it); `'place'` selects the latest opened item of
+  a fixed building (`calledItemIndex`). The world's announce line is now the
+  app's words: `agora-village-go` carries `text` (`village.called_to` /
+  `village.led_to`), the state payload carries `openedText`; the Hebrew
+  literals in `world-scene.js` are only the standalone tour's fallback. A
+  fresh call also lands as a toast (`agora_called_to` in `notificationCopy`)
+  and an inbox row with the new target `{kind:'place', place}`
+  (`helpedFocus.registerPlaceNavigator`; the village replays it as a local
+  call, the flat view selects the station).
+- **Two devices** (`lib/flows/advanceLatch.ts`): `stale`
+  (`functions/failed-precondition`) while the room is already at or past the
+  intended index is "moved from your other device" — a quiet
+  `teacher-strip__status`, not the red failure; so is a pointer that moved
+  while this device was not pressing. A `villageCall.at` this device did not
+  write (`callVillage` returns its stamp) → "called to … from your other
+  device". The newest event owns the line. No presence, no lock.
+- **Device role** (`lib/flows/deviceRole.ts`, `lib/deviceRole.ts`,
+  `views/teacher/DeviceRoleSheet.ts`): `private | wall` in `localStorage
+  agora.teacher.device`. A coarse-pointer screen ≤600px is private without
+  asking; anything else is asked once ("Where is this screen? Just me / On
+  the wall") and is a wall until it answers. A wall: never subscribes to
+  `agoraIdentities` or `agoraTeacherMessages`
+  (`listenToTeacherConsole(…, {identities, threads})`, unit-tested with the
+  firebase mock; `__agoraDebug().teacherConsole.identitiesSubscribed`),
+  pseudonyms only on the Class panel (`namesHidden`), the Messages panel
+  replaced by "open this on your phone", a warning-tinted chip on the bar +
+  `.teacher-console--wall` border, and NEXT takes two taps (`ARM_MS` 3s —
+  a stray touch on a projected laptop). Wall → private asks a confirm;
+  private → wall is one tap. Civic / `collectRealNames: false` → nothing to
+  hide, no sheet. This is a UI guard, not a security boundary (the account
+  can read the names on any device); what makes it hold is the
+  never-subscribed listener. On a private device the NowCard chips and the
+  class view's author chip (`VillageCommunity {authorName, onAuthor}`) show
+  "Dana · Blue Fox"; `villageWorldPayload.test.ts` pins that
+  `VillageShell`/`VillageCommunity` never import the console and the iframe
+  payload carries pseudonyms only.
+- **Vocabulary**: teacher side says lesson/step/class (`teacherStepLabel`),
+  student-facing lines say station/village (`planItemLabel`). All keys sit in
+  one fenced block per language at the end of each `i18n.ts` language block
+  (`// --- Teacher class view (2026-10-11) …`).
+
+**Verify:** `npx tsx scripts/e2e-class-view.mjs` (desktop 1280 / 390 / 320;
+a student page; two teacher contexts; a wall context) asserts: no participant
+doc for the teacher, the locked note door, one NEXT that moves the room, the
+flip keeps the Class panel, the remembered view redirect, the director row
+inside the bar, gather → `villageCall.place === 'booth:round-story'` and the
+student's world line + toast + post box + station, the jump confirm and the
+skipped station, the quiet "moved/called from your other device" lines, the
+private NowCard names, and a wall that never subscribed, shows no name, and
+needs two taps. Shots in `output/class-view/`. Plus `classViewImports`,
+`villageModel`, `moveClass`, `villageRoute`, `advanceLatch`, `deviceRole`,
+`teacherConsole`, `villageWorldPayload` unit tests; the gauntlet has the new
+surfaces (`mock/surfaces.html`).
+
+**Gotchas:** Playwright will not `click()` an `aria-disabled` door — dispatch
+the event. `isVisible({timeout})` does not wait — `waitFor`. Fastlane seeds
+deliberation proposals, not story answers: the e2e writes bot stories with
+`buildAnswerStatement`. The disabled `btn--secondary` style is drawn for dark
+surfaces and vanishes on the bubble's paper — the watcher's pen is inert
+(`aria-disabled`, `pointer-events: none`), not `disabled`. **Later** (not
+built): a live scatter of where each student stands (needs a presence
+write), following one student, a future-station preview, a presence
+indicator for the other device.
+
+## Village news indicators (2026-10-07)
+
+In the 3D village a student had no lasting sign that a classmate wrote to
+them: the toast vanished, and the board, the desk and the bar carried nothing
+(the flat view has had its badges and chips since August). Now a card wears a
+pink "N new" chip ON THE BUTTON THAT OPENS THE CONVERSATION ("replies to my
+note" / "suggest an improvement") — a card has two doors, and Tal rejected a
+chip by the title because it did not say which. On MY note it counts every
+classmate's conversation, on a classmate's note only the one I started there;
+each row of
+"replies to my note" wears the same chip, and the board door of the
+`PlaceBar` carries the total as a badge. Opening the conversation clears all
+of it (`ThreadChat` advances the seen-state watermark); glancing at the board
+does not.
+
+Where: `lib/flows/noteNews.ts` (pure — `threadNews`, `noteNews`,
+`boardNews`, readers injected), `VillageCommunity.liveNoteNews` (the live
+binding, also the board's own `data`), `VillageShell`'s new `news` attr →
+`PlaceBar.badges`, computed in `GameController` over `stationNotes(item)` —
+the viewing station, because that is what the board door opens onto.
+
+Decisions:
+- The badge sits on the BOARD door, not "my note": the village desk is the
+  writing paper; the replies live behind the board.
+- An improvement idea counts as news here. The flat counters exclude ideas
+  because the workbench shows "open ideas" beside them; a village card shows
+  nothing else, and an unread idea without a chip is a message nobody hears.
+- `--pink-ink` now sits beside every `--pink` (base: dark, 6.1:1; the three
+  looks: white). The chip is the first pink count that passes the contrast
+  audit without the accepted ledger; the older `.stall__chip--unread` and
+  `.workbench__count` still ride the ledger with white on the base pink.
+- The chip is on the meta rung (`@include type-meta`), like the bar's badge.
+
+Gotchas:
+- `.village-note span` styles every span in a card as a bordered footer line.
+  A classed span inside a card needs a more specific rule of its own
+  (`span.village-note__head`, `.village-note .village-note__chip`).
+- The board now reads the threads of every card, so a test that mocks
+  `getOwnerThreads` must return a Map, not `undefined`.
+
+Verify: `bash ../../scripts/solo.sh npx tsx scripts/e2e-village-news.mjs`
+(both directions, the read mark on the participant doc, a 390px shot);
+`village-desk-board.mjs` still passes. Client-only; NOT deployed.
+
+## Conversation hierarchy (2026-10-07)
+
+On `codex/agora-conversation-hierarchy`, continuing the unfinished note/edit
+changes. The note has its own heading and explicit edit control; the conversation
+heading sits below it. In the village, the station becomes smaller context text.
+Owner conversation rows use the helper's existing pseudonym, with the numbered
+fallback retained. Back returns the owner to that note's replies; helpers return
+to the board. The owner's reply field names the recipient in all six languages.
+
+Reward notices remain in chronological order but have quieter styling. Award
+documents do not identify the suggestion they paid for, so they are not attached
+to individual suggestion bubbles. No reward calculation or persistence changed.
+
+Verified: 405 tests, lint, app/script typechecks, build, four-theme contrast
+gauntlet (existing accepted ledger unchanged), mobile type audit, and the expanded
+`e2e-village-news.mjs` on the solo suite. The browser test covers named headings,
+edit/cancel, both back destinations, read marks, and 320/390px layouts. Screenshots:
+`output/village-news/hierarchy-verified-*`. Client-only; not deployed.
+
+The same branch now updates the whole village notes board: the viewer's note
+appears first in DOM order, above a separate classmates section, with a translated
+“Your note” badge. Classmate numbers still come from the original station list.
+Cards and the replies overview share the note/text/actions hierarchy and theme
+tokens; unread chips remain on the conversation action. Conversation previews
+skip edit/award events so an award cannot replace the preview with empty text.
+The board inherits the active language direction instead of forcing RTL.
+
+Board verification: 405 tests, lint/typechecks/build, the expanded news browser
+test (own-first on reopen, stable peer numbers, 320/390px layouts), and
+`village-desk-board.mjs` (rating, editing, Hebrew/Spanish mobile layouts).
+The surface gauntlet now includes the personal badge, actions and conversation
+rows; all four theme audits and the text-size audit pass with the existing ledger.
+Screenshots: `output/village-news/board-final-*` and
+`output/village-desk-board/board-updated-*`. Not deployed.
+
+## Compact story and round cards (2026-10-07)
+
+The story/needs/vision prompt is now a compact heading and hint, followed by an
+owned text card and a separate classmates heading. `RoundAnswer` renders confirmed
+text with a Sent status and an explicit edit action. Editing supports cancel,
+keeps failed drafts visible, and permits retry after an optimistic snapshot;
+only the existing confirmed save closes the editor. The edit state resets with
+the plan item. Existing moderation, stage access, ratings and rewards stay in
+`RoundStage`/`lib`.
+
+Inside the village bubble, `_village-round.scss` removes the repeated guide
+invitation, reduces nested padding, uses readable regular-weight story text,
+and gives the close action a labelled 44px icon button. All copy reuses the
+existing six-language keys. Other writing desks retain their text close button.
+
+Verified: 410 tests, lint, app/script typechecks and production build; live
+Hebrew story create/edit/cancel/update and peer heart on port 3039, with the
+revision and rating confirmed in the solo Firestore emulator. The mobile
+320/390px layouts have no horizontal overflow; live story contrast/type audits
+pass. Four-theme surface checks pass with only the unchanged purple contrast
+ledger. The audit callbacks were run read-only through the in-app browser.
+`e2e-pen.mjs` now expects a reading card after save and explicitly opens the
+editor for catch-up; that standalone script was updated but not rerun.
+Local sample session: `5sl04x4aItj9`. Client-only; not deployed.
+
+## The join QR after the lobby (2026-10-14)
+
+Trello "The User can see QR even if the game started". `agoraJoinSession`
+seats anyone at any stage of an `open`/`live` session, but the QR lived only
+in the lobby. Teacher-only by Tal's call — students get no QR door.
+`components/JoinQrSheet.ts` (big QR + digits, look-sheet frame) opens from
+the console's ≡ menu ("this lesson", every device role — it shows no names).
+Beside it, after the lobby, a switch for the projector's small QR
+(`session.projectorQr`, optional boolean, absent = off; teacher-writable
+under the existing blacklist rules). The lobby's big QR always shows.
+`lib/flows/joinInvite.ts` decides both and hides everything once ended.
+
+Bug fixed on the way: the projector's QR encoded `origin/join/<code>`, a
+path the hash router never reads — scanning it opened the home page. It now
+uses `sessionJoinUrl` like the console. Verify: `npx tsx
+scripts/e2e-join-qr.mjs` (no student door in flat or village, teacher wall
+menu without names, a latecomer seated through the encoded link, projector
+switch on/off live, ended). Needs the shared-types build; client-only
+otherwise; not deployed.
+
+## Late arrivals and catch-up (2026-09-22)
+
+Joining an open/live session already worked. Earlier question stations now
+remain writable and ratable until results/end, including story, needs, vision
+and ordinary questions. `lib/flows/stageAccess.ts` supplies the same policy to
+the simple views, village desks and village board. Future stations stay closed;
+past proposal rounds and ballots retain their existing closing behavior.
+
+The carried outcome remains the snapshot made when the class left that question.
+Catch-up answers and ratings use the normal confirmed writes and evaluation
+pipeline, without replacing that snapshot or reporting progress for the room's
+current station. Students revisiting a station keep it across a teacher advance
+and refresh — except the advance to results or end, which carries everyone to
+the results (`stageNavReduce`'s `session-advanced`), since nothing is writable
+any more; explicit teacher calls still work. A delayed village load or arrival
+no longer closes a paper the student already opened.
+
+Validation: 364 unit tests, lint, app/script typechecks, production build,
+contrast and text-size audits. `npx tsx scripts/e2e-late-join.mjs` verifies a
+fresh live-session join after story/needs close, earlier answers and ratings in
+Firestore, preserved summaries, catch-up across advance, and refresh in both
+classic and village views. Client-only; not deployed.
+
+## Village navigation and settings (2026-09-22)
+
+The village has one persistent `PlaceBar`: Village, My note, All notes,
+Results. Labels exist in all six languages, stay readable at 320px, and
+locked destinations explain why they are unavailable. Settings holds style,
+ambience, reduced graphics, and the exit to the simple view; teacher messages
+are pinned in the existing inbox. Embedded world controls no longer duplicate
+the app's settings.
+
+Destination changes close the previous panel and keep the selected tab in
+sync, including notes opened from inbox messages. Returning to the village
+faces the writing guide again. Library reading does not select Results, and
+leaving during a note's flight cancels its deferred board opening. Community
+panels are nonmodal regions so the persistent navigation remains accessible;
+the settings dialog contains keyboard focus and restores it on close.
+
+Preferences live in `lib/villagePrefs.ts`, with a session fallback when browser
+storage fails. Reduced graphics disables shadows, reduces grass, and throttles
+frames. Sound remains separate from celebration sounds.
+
+Validation: 357 unit tests, lint, app/script typechecks, production build,
+contrast and text-size audits. `scripts/village-desk-board.mjs` now verifies
+destination selection, the writing/rating/editing loop, settings and keyboard
+focus, 390px Hebrew and 320px Spanish layouts, and returning from simple view.
+Screenshots are in `output/village-desk-board/verified-*.png`. Client-only;
+these changes have not been deployed.
+
+Follow-up: a Firefox user reported that the guide's “edit my note” button did
+nothing. World labels now update only when their text changes, avoiding DOM
+replacement every animation frame. The desk-board script includes a label
+stability check (not yet rerun). The production build and 12 focused unit tests
+pass. In the user's story session, keyboard activation and programmatic click
+both open the saved text correctly. Physical mouse behavior remains unverified:
+native automation did not deliver clicks to other Firefox page buttons either.
+Do not mark the reported mouse issue resolved without a successful retry.
+
+The writing bubble now reserves the measured navigation height plus a 12px
+gap, including the safe area. Previously its own placement overrode the
+panel's bottom clearance and the bar covered its lower content. Short windows
+also constrain the bubble to the available height rather than forcing overflow.
+Verified in an isolated local story session at 1280×720 and 390×740: textarea
+and Send are visible, and the bubble ends 12px above navigation. Ten placement
+tests, targeted lint, typecheck and production build pass. This does not change
+the camera or the position of the physical paper in the 3D scene.
+
+## Village personal writing desks (2026-09-10)
+
+`prototypes/olive-hill/writing-desks.js` builds timber desks, a personal paper
+and pen in the writing stations. `world-scene.js` paints confirmed own text,
+anchors a comic invitation to the station guide, and opens the paper from a
+nearby desk click, the bubble, or the keyboard-accessible entry button.
+
+The embedded `agora-village-write` message carries the current plan item ID.
+`VillageShell` checks source/origin and the live item, opens the existing
+RoundStage/QuestionStage/Deliberation writer and focuses it. Deliberation's
+`writeRequest` returns to the personal editor without advancing the lap.
+Earlier questions now support catch-up (see above); past proposal rounds remain
+read-only. Repeated questions
+keep distinct IDs. No demo localStorage or parallel proposal persistence is
+used; existing confirmed saves and point awards remain authoritative.
+
+Verified in a separate local session: physical desk click, character bubble,
+story save/reopen, empty needs paper, proposal creation (+3 points), and
+editing the same proposal from the desk. Agora tests (325), lint, typecheck
+and build pass. This is a client-only change; publish Agora hosting when ready.
+
+## Question-led scenario authoring (2026-09-10)
+
+The new-scenario wizard asks for a question (`statement`, max 200) and its
+purpose/context (`description`, max 2000). `agoraGenerateTopicPackage` sends
+both as structured topic data to `topicPrompt.ts`. The prompt follows WizCol
+without vision, stays within the teacher's scope, and no longer requires a
+historical episode, time tunnel or national health gauges. Short illustrative
+voices and needs remain compatible with the existing scenario scenes.
+
+The server pins `title` and `challengeQuestion` to the teacher's statement and
+stores `authoringBrief` separately from the editable AI draft. The editor
+shows the original purpose for review. A missing AI key now returns an error;
+it must never substitute the unrelated French Revolution fixture. Old clients
+sending `{topic, language}` are still accepted during rollout.
+
+`topicStagePlan(topic)` is shared by StartGame and the create-session fallback:
+new packages with an authoring brief use scenarioWizcol with ONLY vision
+removed; older packages keep their defaults. StartGame caches plans by topic
+id so switching scenarios neither leaks vision back in nor loses manual edits.
+Proposal development, mutual improvement, evaluation and further refinement
+remain the existing deliberation cycles before voting.
+
+Validation: Agora lint/typecheck/tests/build; shared-types `agoraTopicPlan` and
+`agoraRounds`; functions `topicGeneration`; `scripts/e2e-authoring.mjs`.
+Deployment requires rebuilding/packing shared-types, deploying
+`agoraGenerateTopicPackage` and `agoraCreateSession`, and Agora hosting.
+
+## Teacher self-serve classes (2026-09-07)
+
+Tal's rule: **the admin creates the school and attaches its teachers; each
+teacher then opens their own classes.** Before this, only a sys-admin could
+open a class (Studio, by teacher email), so a teacher who signed up alone
+saw "which class is playing?" with nothing but the guest journey — and guest
+games have no roster, no careers, no real names on the console.
+
+- **Schools carry their teachers**: `agoraSchools.teacherIds` + the
+  `teacherMap` `{uid: true}` index (same shape as on a class; absent on old
+  docs, read as empty). `agoraAdminManageSchool` gained
+  `assignTeacher`/`removeTeacher` by sign-in email (resolved server-side,
+  never stored); Studio's school page has the "teachers of this school"
+  section.
+- **`agoraTeacherClass`** (teacher callable, full account): `create` in a
+  school whose `teacherMap` holds the caller (the only school is implied;
+  more than one needs `schoolId`); `rename` / `archive` / `addTeacher` (by
+  email) / `removeTeacher` (by uid, never the last one) for the class's own
+  teachers. Class = `gradeLevel` (the grade) + `name` (the label); the
+  unique 6-char class code is issued exactly as on the admin path — one
+  helper serves both.
+- **Dashboard** reports `schools` so the start screen knows whether "new
+  class" is allowed: my classes first, then "＋ new class" (inline form:
+  grade, label, school when there is more than one), then the guest journey
+  last. No school → a quiet "ask your admin" line. The class page keeps
+  rename, archive and co-teachers behind a cog, like the console.
+- Students still claim roster spots with the class code at their first
+  game; nothing changed in the join flow.
+- **Verify:** `npx tsx scripts/e2e-teacher-classes.mjs` (or the extended
+  `e2e-class-career.mjs`); Studio typecheck/build.
+- **Deploy:** functions `agoraAdminManageSchool agoraTeacherClass
+  agoraTeacherConsole`, then `deploy:agora` and the Studio hosting.
+
+## WizCol rounds (2026-09-06) — the book's process is the default game
+
+Tal's guide *התהליך הדליברטיבי הבסיסי* (WizCol, v2.0) moves a group from
+personal stories to needs, a shared vision, and only then to solutions rated
+on a scale that protects the minority. In Agora that is a **self-paced
+digital sequence** — no tables, no clocks, no spoken turns — and it adds NO
+stage kinds: a round is a `question` item with a different evaluation type.
+The default plan for a quick game is now
+
+```
+lobby → question(story) → question(needs) → deliberation → voting → results
+```
+
+(`stagePlanPreset('wizcol')`, item ids `round-story` / `round-needs`; the
+vision round is optional — the teacher adds it in the plan editor), and a scenario game runs its character scenes as the
+prologue (`scenarioWizcol`). `StartGame` seeds both. `classic` and
+`quickDecision` still exist; `AGORA_STAGE_ORDER` is untouched, so plan-less
+and civic sessions run exactly as before. The book's opening (the goal is a
+solution most can live with; listening is the work; what happens at the
+end) lives on the lobby — a student card and the teacher's spoken lines.
+
+- **One item, four kinds.** `item.kind` is `open` (absent — the admin's own
+  question, rated −1…+1, banded C_p record: everything the question stage
+  always did) or `story` / `needs` / `vision`. The kind decides the default
+  prompt, the deal, the scale, what pays the author and what the AI writes,
+  from ONE table both client and functions read: `AGORA_ROUNDS` (shared-types
+  `rounds.ts`, `roundSpecOf(item)`, `evaluationScaleOf(item)`). `story`
+  deals 3 and takes a like; `needs` and `vision` deal 6 and take a 0…1
+  five-step rating. A round may leave `title` blank (`question_needs_title`
+  is for `open` only); the Statement text falls back to the kind.
+- **Ordinary Statements, ordinary evaluations.** Answers are option
+  Statements under the item's question Statement at
+  `${sessionId}--${uid}--${itemId}`; ratings are evaluations at
+  `${uid}--${answerId}`. A like is `1`, an un-like is `0` — never a delete —
+  so the pipeline's `mean × raters` IS the heart count (`roundLikes`). Unit
+  ratings write their step verbatim. Nothing below the challenge question
+  sees these: camps and C_p are gated on `parentId === challengeQuestionId`,
+  and the client never draws `CpBands` for a round.
+- **The reader's deal** is the square's own attention allocator
+  (`rankStalls` — least-attended first, per-student tiebreak,
+  `mergeLateArrivals`), frozen per item in sessionStorage
+  (`lib/flows/roundFlow.ts`). "Read more" extends it by another sample.
+- **Appreciation pays the author, not the reader.** A like on my story, or a
+  rating ≥ 0.5 on my need or my vision, pays me `AGORA_POINTS.ROUND_APPRECIATION`
+  (+1) into `points.appreciation`. The ledger is `roundAppreciations` on the
+  AUTHOR's participant doc keyed by evaluation id (rules-pinned), so a
+  re-rating cannot pay twice and a later downgrade never claws back. Round
+  ratings do NOT earn the reader's `RATING_CREDIT` — 3 + 6 + 6 would exhaust
+  the cap before the square opened. `fn_onAgoraEvaluation` branches on the
+  round item before the square's economy and returns; an open question keeps
+  its effort credit.
+- **Closing** goes through `closeQuestionStage` for every question item and
+  dispatches on the kind: open → the banded record as before; a round → every
+  answer travels (`outcome.selected` = all rows by `rankRoundAnswers`), no
+  bands, and the AI record depends on the kind — stories: one warm paragraph
+  on what the class has lived through; needs: a clustered list, one `• need —
+  sentence` per line; vision: ONE merged shared vision. Fixture without a
+  key: the texts joined. `CarriedContext` renders the record (pre-line) plus
+  a folded "all N" list, which is how the needs list and the vision sit beside
+  the deliberation pen and on the results.
+- **Teacher and projector.** The plan editor's question row has a kind
+  select; class pips read `roundProgress` for a round; the carry panel shows
+  hearts or means and the record once closed; the projector shows numbered
+  texts, never names.
+- **Verify:** `npx tsx scripts/e2e-wizcol.mjs`;
+  `npm run fast -- --plan=wizcol --stage=question --open`.
+- **Deploy (hosting first):** shared-types build → functions prebuild →
+  `deploy:agora` → `deploy:rules:prod` → `deploy:f:prod -- agoraCreateSession
+  agoraUpdateStagePlan agoraAdvanceStage onAgoraEvaluationWritten`.
 
 ## Stage plan (2026-09-02) — the stages are the admin's to arrange
 
@@ -81,9 +689,9 @@ guard still holds.
   Those names are readable by any signed-in user who knows the session.
 - **Free navigation**: `lib/flows/stageNav.ts` (pure) + `components/StageNav`.
   Opened stages are doors; the player's choice lives in sessionStorage and is
-  carried forward when the room advances. A past stage renders read-only
-  (deliberation → `ResultsBoard`, question → ranked list + outcome, voting →
-  tallies).
+  retained when the room advances. Earlier questions support catch-up until
+  results/end; past deliberation renders `ResultsBoard` and past voting shows
+  tallies.
 - **Admin UI**: `/teach/start` has Scenario / Quick game, names, and the
   `StagePlanEditor` (reducer `lib/flows/stagePlanEditor.ts`; presets
   `classic`, `quickDecision`). The live board shows the plan rail, the
@@ -102,6 +710,182 @@ guard still holds.
   and conditions each write on `lastUpdateTime`.
 - **Verify**: `npx tsx scripts/e2e-stage-plan.mjs` (the Vosh scenario, 53
   assertions), `npm run fast -- --quick --stage=question --open --shot=q`.
+
+## Teacher screens simplified (2026-09-07) — one console, a three-line start
+
+Built on `feat/agora-teacher-simplify`, **NOT deployed** (client only: `deploy:agora`).
+Tal's verdict was "not simple enough for the teachers"; the UX audit measured the
+advance button 1,200–1,400px down on every stage and ~48 controls before "Open
+journey" on the start screen, one of them required.
+
+- **Console** (`views/teacher/TeacherSession.ts`): `TeacherNav` carries the join
+  code as a tap-to-copy pill (`code` attr), the projector button and the cog
+  (`menuItems` fold them into the ≡ menu on a phone). `TeacherStrip.ts` is the
+  only navigation — "step i of n · name" (tap = read-only step popover) and the
+  ONE primary button, sticky under the header, a fixed bottom bar ≤600px.
+  `NowCard.ts` opens the board: one sentence (`teacher.now_*`), "3 of 4 finished",
+  chips of the unfinished (tap = thread drawer); the lobby variant is the QR +
+  code + "n joined". Class / "what they wrote" / settings open in
+  `TeacherPanel.ts` — a side panel over the board (no scrim on desktop, a sheet
+  on a phone; the thread drawer still layers over it). The students' words fold
+  behind `.teacher-peek`. Gone: the tab strip, the rail card, the code panel.
+- **Start** (`StartGame.ts`): scenario rows + "my own question" row → class chips
+  → a CLOSED "advanced settings" card → button. The own question is written on
+  its own surface, `QuestionSheet.ts` (`?question=1` on the same route: a
+  full-screen sheet ≤600px, a dialog over a scrim above; pushed when the row
+  is tapped so the phone's back closes it, replaced when the dashboard sent
+  `?mode=quick` so back leaves to the dashboard). Closing keeps the draft;
+  the row then shows the question as its title with a pencil, or "write the
+  question" while blank. The advanced card carries a live summary line and
+  folds three groups: lesson steps (presets + plan editor + rounds), students
+  (names, device), look and world (village/classic + navigation + colours).
+  `classChoice` defaults to the route class, else the only class, else
+  `'none'` when the teacher has no school (so a guest teacher's button is live
+  at once); "no class" is never highlighted by default otherwise.
+- **Dashboard** (`TeacherHome.ts`): live-lesson banners first, a dismissable
+  first-run strip (`localStorage agora.teacher.firstRunDismissed`), scenario rows
+  navigate straight to `/teach/start?topic=`, past lessons name the scenario.
+- **Vocabulary**: teacher-side keys say lesson / step / class / agreement; the new
+  `teacherStage.*` block (`lib/teacherSteps.ts`) names steps in the teacher's
+  words while `stage.*` stays the students'. `StagePlanEditor` uses it too.
+- **Styles**: `_teacher-strip.scss`, `_teacher-panel.scss` (new), additions in
+  `_teacher-nav.scss` / `_teacher-dashboard.scss`; tokens `--teacher-nav-h`,
+  `--teacher-strip-h`, `--z-panel`. `.teacher-tabs` deleted. The gauntlet has
+  the new surfaces; `teacher-panels__badge` joined the pink ledger.
+- **Scripts**: the walk is now tap scenario → `/teach/start` → one primary click →
+  `/session`. `.teacher__code` still exists (lobby now card); the cog is
+  `.teacher-nav__cog`; `.teacher-instructions` needs `.teacher-peek__summary`
+  clicked first; the count is `.teacher-now__count(--all)`.
+  `npx tsx scripts/teacher-shots.mjs --out=teacher-shots/after` shoots every
+  teacher screen, desktop and phone (one rated session walked forward — a second
+  rated session never settles behind the first one's trigger backlog).
+- **Gotcha**: a keyed `.map()` spread beside unkeyed siblings makes Mithril throw
+  "vnodes must either all have keys or none" and the dashboard sits on a spinner
+  for ever. Nest the array instead of spreading it.
+
+## Language gate (2026-10-11) — the AI reads every student text before it is written
+
+**NOT deployed.** `agoraCheckLanguage` (functions/src/agora/fn_agoraCheckLanguage.ts)
+is a callable the client asks BEFORE every student write — the note
+(`submitProposal`/`createProposal`), a question-stage answer (`saveAnswer`), a
+thread message or improvement idea (`submitThreadMessage`), all in
+`lib/proposals.ts` via `lib/language.ts::assertCleanLanguage`. The detector is
+the existing `containsBadLanguage` in `fn_profanityChecker.ts` (multi-language
+slurs/insults/threats; political opinions allowed; fails OPEN). A clean verdict
+→ the write happens as before. A refusal → in the same call the server:
+
+1. takes `AGORA_POINTS.LANGUAGE_PENALTY` (2) coins off the participant
+   (`points.total` floored at 0, `points.penalties` accumulates), bumps
+   `languageStrikes` and `lastLanguageStrikeAt` — both rules-pinned, like
+   `points`;
+2. files the words on the private teacher thread as `from: 'system'`,
+   `kind: 'language'`, `removedText` = the text, `aboutStatementId` for an
+   edit — the ONLY copy of the text; `statements` never sees it;
+3. returns `{ ok: false, reason: 'language', strikes, deducted, pointsTotal }`.
+
+Client: `LanguageFlaggedError` keeps the draft in the box and the view says
+why (`language.flagged` / `language.flagged_no_coins`) instead of "saving
+failed" — seven sites: ThreadChat (edit + composer), Deliberation (first
+desk, my paper, gap composer), QuestionStage, RoundStage/RoundAnswer
+(`saveNotice`). The first desk must NOT show the stuck-write reload on a
+refusal (it checks `isLanguageFlagged` first). A `language:flagged` event →
+`pushLocalToast(agora_language_flagged, {kind:'teacher'})`; the student's
+TeacherThreadSheet renders the `language` line (`language.notice_*`).
+Teacher: `unreadRepliesFor` now counts `from !== 'teacher'` so a strike raises
+the badge; ClassPanel rows, StudentThreadDrawer head and GameReport show
+`teacher.language_strikes` (`.class-panel__strikes`, `--danger-ink` text);
+the drawer renders the line as `teacher.notice_language` + quote.
+
+Gotchas: the callable fails open on infrastructure errors and the client
+fails open when the callable is unreachable — a missing function in an
+emulator means NO gate, silently (watch for `[Language] Check unavailable`).
+The gate adds the model's latency to every save (first-desk stuck banner at
+8 s can fire on a cold start — a reload simply retries). A student writing to
+Firestore outside the app skips the gate; the teacher's take-down is the
+backstop. Old clients drop `from: 'system'` lines until redeployed (strict
+parse) — ship hosting with the function.
+
+**Verify:** shared-types `agoraLanguage.test.ts`, functions
+`agora/__tests__/checkLanguage.test.ts`, agora `lib/__tests__/language.test.ts`.
+Not yet browser-tested against a live model.
+
+**Deploy:** shared-types build + functions repack → `deploy:rules:prod` →
+`deploy:f:prod -- agoraCheckLanguage` → `deploy:agora`.
+
+## Teacher console (2026-09-03) — names, moderation, notes, projector
+
+Built on `work/2026-09-03`, **NOT deployed**. Four things a teacher can now do
+from `/teach/session/:id`, and the wall can show:
+
+- **Real names, teacher-only.** The join screen asks every student for a real
+  name (skippable; `lib/flows/joinName.ts` decides when; `session.collectRealNames`
+  is the per-lesson switch, default on, never on civic). `agoraJoinSession`
+  writes it to `agoraIdentities/{sessionId}--{uid}` with `teacherId`
+  denormalised — the rule is `resource.data.teacherId == request.auth.uid`,
+  which the console's SDK listener (`sessionId == && teacherId ==`) can prove.
+  Never on the participant doc, never in a statement, never in a log or a
+  prompt. `expiresAt` = lesson end + 30 days for a Firestore **TTL policy that
+  still has to be created** (`gcloud firestore fields ttls update expiresAt
+  --collection-group=agoraIdentities`); the console's "forget names" deletes
+  them now. Named rooms send the typed name as both `displayName` and
+  `realName`.
+- **Moderation.** `agoraModerateStatement` (session teacher only): `hide`
+  blanks `statement` on the world-readable doc, sets the shared `hide` flag
+  (the ballot selector already honours it) plus `agoraModeration.hidden`,
+  flags `agoraScores.hidden`, darkens the `edit` announcements under it, and
+  files the words and the reason on the private thread — the ONLY copy.
+  `restore` reads them back from there. `edit` rewrites and stamps
+  `agoraModeration.editedAt`; `isTeacherTouched(before, after)` (shared-types)
+  makes `fn_onAgoraProposal` skip revision credit, weave credit and the
+  elders for a teacher's write (it still announces a rewrite). Hidden text
+  is out of `classScore`, `agreementResults`, `closeQuestionStage`, the
+  auto-open voting rule and the evaluation trigger (a rating on it moves
+  nothing). Hiding a ballot candidate is refused (`on-ballot`) — close the
+  vote first. Rules pin `hide` + `agoraModeration` and refuse ALL client
+  deletes of agora statements (the teacher's inherited admin subscription
+  used to make `isAuthorized()` a silent hard delete).
+- **Private thread.** `agoraTeacherMessages/{id}`, one doc per line, both
+  keys (`teacherId`, `studentUid`) pinned, readable by either side, written
+  only by `agoraTeacherMessage` (teacher note / student reply, quick
+  phrases as `presetKey` rendered in the student's language, thread capped)
+  and by the moderation callable (notices). NOT in `statements`: that
+  collection is world-readable and every student's deliberation listener
+  pulls the whole session. The student gets an `inAppNotifications` doc
+  (`agora_teacher_*` triggers — in `notificationCopy.ts` `LOOKS` or the
+  client drops it), a toast, an inbox row with target `{kind:'teacher'}`,
+  a mail door beside the stage nav on every stage (`StageNav.mail`), and
+  `components/TeacherThreadSheet.ts` to read and reply.
+- **Console.** `TeacherSession.ts` shrank (voting cards → `VotingCards.ts`,
+  question/trigger → `DeliberationCards.ts`) and grew three tabs: Board
+  (as before), Class (`ClassPanel.ts`: pseudonym → real name, a pip per
+  opened stage from the pure `lib/flows/classProgress.ts`, ratings given,
+  points, idle, unread-reply badge) and Messages (`MessagesPanel.ts`: every
+  student line from the pure `lib/flows/moderationQueue.ts`, reword / take
+  down with reason / put back / message). `StudentThreadDrawer.ts` is the
+  per-student thread. All reads are the listeners the console already held
+  plus `lib/teacherConsole.ts` (identities, threads).
+- **Projector.** `/teach/screen/:id` → `views/teacher/ProjectorScreen.ts`:
+  the room's current stage as a seatless student would see it (lobby map,
+  scenes via `TeacherInstructions {projector:true}`, needs board, camp
+  census, ranked answers by number, the live square, the ballot via
+  `Voting {board, projector}` — reveal follows the class setting — and the
+  results), a join-code strip on every stage, no stage nav, no HUD, no
+  names. `projectorImports.test.ts` pins that it never imports the
+  notification, inbox, seen-state or teacher-console modules. Opened from
+  the console's code panel ("Open projector" / copy link).
+
+**Verify:** `npx tsx scripts/e2e-teacher-console.mjs` (identities + rules,
+thread both ways + classmate refused, hide/restore incl. results exclusion,
+teacher edit pays nothing, marks pinned, no hard delete, forget names,
+projector when vite is up); `npm run fast -- --names --open` puts real
+names on the Class tab; rules in `tests/rules/agora-teacher.test.mjs`.
+
+**Deploy (in this order):** shared-types build → `deploy:rules:prod` →
+functions `agoraJoinSession agoraTeacherMessage agoraModerateStatement
+onAgoraProposalWritten onAgoraEvaluationWritten agoraAdvanceStage
+agoraResolveSuggestion agoraCharacterReview agoraTeacherConsole
+agoraCreateSession` → `deploy:agora` → the TTL policy. New queries are
+equality-only (no composite index expected); never `--force` an index deploy.
 
 ## Current game flow (as implemented)
 
@@ -386,6 +1170,24 @@ test.
   `@include type-meta` clears itself on descendants, so if you split a mark
   into a child span the exemption has to move down with it.
 
+## Library background materials (2026-10-14)
+
+A teacher attaches text, a PDF (drag & drop) or a web link to a scene from the
+lesson editor (`components/MaterialsEditor.ts`, under the YouTube list). The
+`agoraSceneMaterials` callable extracts plain text (PDF via `pdf-parse`, link
+via a guarded fetch + `htmlToText`) and stores it in `agoraSceneMaterials/
+{pkg}--{scene}` (caps in shared-types `AGORA_MATERIALS`: 8 items, 30k chars each,
+60k per scene). Students get a "Background materials" button on the scene
+(`components/MaterialsSheet.ts`): read, open the PDF/link, and ask the helper.
+`agoraAskMaterials` runs the language gate, takes one of the student's 15
+questions per session in a transaction (refunded if the model fails), and
+answers ONLY from the materials (`materialsPrompt.ts`). The chat lives in
+`agoraMaterialChats/{session}--{uid}` — owner-read, never client-written, never
+shown in the teacher console. A server may fetch a local URL only in the
+Functions emulator (`FUNCTIONS_EMULATOR`); in production private ranges are
+refused. Browser run: `scripts/e2e-library-materials.mjs`. Deploy order: rules
+(firestore + storage) -> `agoraSceneMaterials`, `agoraAskMaterials` -> hosting.
+
 ## Next steps (agreed direction)
 
 1. ~~Workshop-screens redesign via Google Stitch~~ — DONE 2026-07-13 (shared
@@ -425,6 +1227,20 @@ clone cannot deploy even after the site exists. Copy `.firebaserc.example`
 (committed, same content minus anything machine-specific) to `.firebaserc`.
 
 ### A hot-reloaded functions emulator stops firing triggers
+
+**Measured 2026-09-06 — it is latency, not death.** Requiring the functions
+bundle takes ~12 s (`time node -e "require('./functions/lib/functions/src/index.js')"`),
+longer than the emulator's default 10 s discovery window, so a fresh
+`emulators:start` may report "User code failed to load" — start it with
+`FUNCTIONS_DISCOVERY_TIMEOUT=90`. And every statement write fans out to a
+dozen `statements/{id}` triggers that the emulator runs one at a time, so
+after a run that wrote many statements an evaluation's event can wait
+40–90 s for its turn (a single timed write on an idle suite: 41 s), while
+every fastlane/e2e deadline is 45–60 s. The data is right when it lands;
+the scripts just stop waiting. Run the heavy suites (`e2e-voting`,
+`e2e-teacher-console`) alone on a drained suite, and read `firebase-debug.log`
+(`Beginning execution` lines) before blaming a trigger. A Firestore emulator
+that "never answers" preflight is the OOM gotcha below — restart that suite.
 
 If Firestore triggers seem not to run — scores never appear, points never move —
 check whether the functions emulator reloaded since the last one fired:
@@ -517,3 +1333,19 @@ This iteration (2026-07-13/14, on `main-sign`):
   (tokens rewrite, day sky, candy-press buttons, sunny EraMap, camps →
   purple/teal, 📘/📙 icons, WCAG-verified palette)
 - `3504c7a35` removed accidentally-tracked .claude/worktrees gitlinks
+
+### Supervision verification record
+
+- Shared types: 519 tests passed; charts: 120 passed; Agora: 356 passed.
+- Backend scope/projection tests: 11 passed; supervision Firestore rules: 9 passed.
+- Emulator e2e: supervision, class-career and teacher-classes all passed.
+  Additional equal-timestamp pagination probe passed with one session per page.
+- Both app lint/typecheck/build checks passed; root typecheck/build passed.
+  Root lint is still blocked by seven existing errors in untouched files
+  (`fn_agoraSetBallotGoalOnly`, `votingStage`, `updateChosenOptions`,
+  `draftWriter`, `userUtils.test`, `agreementData.test`, `IntroductionSection`).
+- Browser: Hebrew/English at 1280 and 390 px; teacher class/drawer, supervisor
+  school/teacher/class/student/system, unauthorized entry, Studio details and
+  OS dark mode. Keyboard tooltips, Escape, table toggles and page overflow checked.
+- Contrast surface audit passed in default/candy/civic/custom; mobile type audit passed.
+- Screenshots from this run: `/private/tmp/supervision-shots/` (temporary artifacts).

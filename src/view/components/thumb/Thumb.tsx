@@ -14,6 +14,8 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useEvaluationGuard } from '@/controllers/hooks/useEvaluationGuard';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { EvaluationCircle } from '@/view/pages/statement/components/evaluations/components/evaluation/shared/EvaluationCircle';
+import { enhancedEvaluationsThumbs } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
 import AddSolutionPrompt from '@/view/components/evaluation/AddSolutionPrompt';
 
 interface ThumbProps {
@@ -27,6 +29,8 @@ interface ThumbProps {
 	 *  outside the pair as bare numbers, which read as "0 😞 😊 0" — a number
 	 *  with no visible owner. Passing it here binds each count to its button. */
 	count?: number;
+	/** 'circle' (answer card): one big filled face like Join's, count under it. */
+	shape?: 'default' | 'circle';
 }
 
 const Thumb: FC<ThumbProps> = ({
@@ -37,6 +41,7 @@ const Thumb: FC<ThumbProps> = ({
 	setProVote,
 	enableEvaluation = true,
 	count,
+	shape = 'default',
 }) => {
 	const { creator } = useAuthentication();
 	const { t } = useTranslation();
@@ -88,29 +93,52 @@ const Thumb: FC<ThumbProps> = ({
 
 	const voteLabel = isUpVote ? t('Vote up') : t('Vote down');
 
-	const button = (
-		<button
-			className={`${styles.thumb} ${isActive ? styles.active : styles.inactive} ${!enableEvaluation ? styles.disabled : ''}`}
-			onClick={enableEvaluation ? () => handleVote(isUpVote) : undefined}
+	// The strongest like / dislike faces of the range scale: same SVGs and colours.
+	const [strongLike] = enhancedEvaluationsThumbs;
+	const strongDislike = enhancedEvaluationsThumbs[enhancedEvaluationsThumbs.length - 1];
+	const face = isUpVote ? strongLike : strongDislike;
+
+	const circleButton = (
+		<EvaluationCircle
+			color={face.colorSelected}
+			isActive={isActive}
 			disabled={!enableEvaluation}
-			aria-disabled={!enableEvaluation}
-			aria-pressed={enableEvaluation ? isActive : undefined}
-			aria-label={
-				count !== undefined
-					? `${voteLabel} (${count})`
-					: enableEvaluation
-						? voteLabel
-						: t('Voting disabled - view only')
-			}
+			label={voteLabel}
+			disabledLabel={`${voteLabel}. ${t('Voting disabled - view only')}`}
+			onClick={() => handleVote(isUpVote)}
+			testId={`thumb-${upDown}`}
+			count={count}
 		>
-			{isUpVote ? <SmileIcon /> : <FrownIcon />}
-			{count !== undefined && (
-				<span className={styles.count} aria-hidden>
-					{count}
-				</span>
-			)}
-		</button>
+			<img src={face.svg} alt="" />
+		</EvaluationCircle>
 	);
+
+	const button =
+		shape === 'circle' ? (
+			circleButton
+		) : (
+			<button
+				className={`${styles.thumb} ${isActive ? styles.active : styles.inactive} ${!enableEvaluation ? styles.disabled : ''}`}
+				onClick={enableEvaluation ? () => handleVote(isUpVote) : undefined}
+				disabled={!enableEvaluation}
+				aria-disabled={!enableEvaluation}
+				aria-pressed={enableEvaluation ? isActive : undefined}
+				aria-label={
+					count !== undefined
+						? `${voteLabel} (${count})`
+						: enableEvaluation
+							? voteLabel
+							: t('Voting disabled - view only')
+				}
+			>
+				{isUpVote ? <SmileIcon /> : <FrownIcon />}
+				{count !== undefined && (
+					<span className={styles.count} aria-hidden>
+						{count}
+					</span>
+				)}
+			</button>
+		);
 
 	if (!enableEvaluation) {
 		return (

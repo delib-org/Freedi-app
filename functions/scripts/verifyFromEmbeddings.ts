@@ -24,7 +24,9 @@ const getArg = (k: string, d: string) => {
 	return m ? m.split('=')[1] : d;
 };
 if (!dir) {
-	console.error('Usage: npx tsx scripts/verifyFromEmbeddings.ts <validation-folder> [--eps=0.8] [--seed=42]');
+	console.error(
+		'Usage: npx tsx scripts/verifyFromEmbeddings.ts <validation-folder> [--eps=0.8] [--seed=42]',
+	);
 	process.exit(1);
 }
 const EPS = Number(getArg('eps', '0.8'));
@@ -32,9 +34,17 @@ const SEED = Number(getArg('seed', '42'));
 
 const emb = JSON.parse(readFileSync(join(dir, 'embeddings.json'), 'utf-8'));
 const statements = JSON.parse(readFileSync(join(dir, 'statements.json'), 'utf-8'));
-const gtSynth = new Map<string, string>(statements.statements.map((s: { id: string; groundTruthSynth: string }) => [s.id, s.groundTruthSynth]));
+const gtSynth = new Map<string, string>(
+	statements.statements.map((s: { id: string; groundTruthSynth: string }) => [
+		s.id,
+		s.groundTruthSynth,
+	]),
+);
 
-const items = Object.entries(emb.embeddings as Record<string, number[]>).map(([id, embedding]) => ({ id, embedding }));
+const items = Object.entries(emb.embeddings as Record<string, number[]>).map(([id, embedding]) => ({
+	id,
+	embedding,
+}));
 console.info(`Loaded ${items.length} embeddings (${emb.model}, ${emb.dimensions}-d) from ${dir}`);
 console.info(`Re-clustering with bulkClusterByEmbedding(eps=${EPS}, seed=${SEED})…\n`);
 
@@ -52,15 +62,23 @@ result.clusters.forEach((c, i) => {
 	const purity = c.memberIds.length ? domCount / c.memberIds.length : 0;
 	const pure = purity === 1;
 	allPure &&= pure;
-	console.info(`  cluster ${i}: ${c.memberIds.length} members | ${(purity * 100).toFixed(0)}% pure (${domLabel})${labels.length > 1 ? ' MIXED: ' + JSON.stringify(dist) : ''}`);
+	console.info(
+		`  cluster ${i}: ${c.memberIds.length} members | ${(purity * 100).toFixed(0)}% pure (${domLabel})${labels.length > 1 ? ' MIXED: ' + JSON.stringify(dist) : ''}`,
+	);
 });
 if (result.noiseIds.length) console.info(`  noise: ${result.noiseIds.length}`);
 
 const expectClusters = new Set([...gtSynth.values()]).size;
-const ok = result.clusters.length === expectClusters && result.noiseIds.length === 0 && allPure && result.clusters.every((c) => c.memberIds.length === 10);
+const ok =
+	result.clusters.length === expectClusters &&
+	result.noiseIds.length === 0 &&
+	allPure &&
+	result.clusters.every((c) => c.memberIds.length === 10);
 console.info(
 	`\n${ok ? '✅ REPRODUCED' : '⚠️ DIFFERS'} — ${result.clusters.length} clusters (expected ${expectClusters}), ` +
 		`${result.noiseIds.length} noise, ${allPure ? 'all 100% pure' : 'NOT all pure'}.`,
 );
-console.info('(Cluster TITLES are LLM-generated and intentionally not reproduced here — only the membership structure is deterministic.)');
+console.info(
+	'(Cluster TITLES are LLM-generated and intentionally not reproduced here — only the membership structure is deterministic.)',
+);
 process.exit(ok ? 0 : 1);

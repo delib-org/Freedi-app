@@ -1,0 +1,23 @@
+\subsection{LLM-only baselines on the live corpus}
+\label{sec:llmonly}
+We wanted to test the bare-LLM shortcut on our own instrument, not only on the hard triplets. So we ran two conditions over the English 100-statement corpus, with the same three arrival orders and the same scorer, and with no embeddings, no queue, no judges and no sweeps. In \textbf{L1, one-shot batch}, a single prompt containing all 100 statements returns syntheses and topics; we ran it on the worker model and on the strong model. In \textbf{L2, incremental}, statements arrive one at a time; each call sees every current synthesis with all of its member texts verbatim, and answers join or new with a confidence. L2 ran on the worker model, with 101 calls per run. Table~\ref{tab:llmonly} reports the result, and it is not the result a reader of \S\ref{sec:whynotllm} might expect.
+
+\begin{table}[t]
+\centering\scriptsize
+\caption{Bare-LLM baselines against the production pipeline on the 100-statement English corpus, with identical arrival orders and scorer. Values are the mean and range over seeds 42, 7 and 1234. The pipeline row comes from the certified runs of \S\ref{sec:live}; its wall-clock time is dominated by the harness's settle waits and is not comparable.}
+\label{tab:llmonly}
+\resizebox{\linewidth}{!}{\begin{tabular}{lcccccc}
+\toprule
+Condition & Composite & Synth F1 & Pairs clean / false & Topic F1 & Calls; tokens & Cost / run \\
+\midrule
+L1 batch, worker model & 0.933 (0.918--0.949) & 1.000 & 50/50; 0 & 0.832 (0.796--0.873) & 1; 3.8k & \$0.003 \\
+L1 batch, strong model & 0.937 (0.918--0.955) & 1.000 & 50/50; 0 & 0.842 (0.796--0.887) & 1; 3.8k & \$0.028 \\
+L2 incremental, worker & 0.965 (0.937--0.984) & 1.000 & 50/50; 0 & 0.911 (0.844--0.960) & 101; 100k & \$0.029 \\
+Production pipeline & 0.900 (0.884--0.910) & 1.000 & 50/50; 0 & 0.750 (0.711--0.775) & $\sim$2.85/stmt, $O(k)$ tokens & -- \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+On this corpus the synthesis task is saturated. Every condition, every model and every seed produced the identical synthesis partition: the 50 ground-truth pairs and nothing else, with a cross-seed ARI of 1.000, and all 300 of L2's join-or-new decisions at confidence 0.86 or above. The pipeline produces the same partition. On theming, the bare model \emph{beats} the pipeline, mainly because it sees the whole set at once. The pipeline's residual error is fragmentation, between 10 and 17 headings for a true ten, whereas the bare model never produced more than one heading per true theme. Its one systematic loss is a taxonomy disagreement a reasonable person could defend, filing street trees and community gardens under ``environment'' rather than ``parks''. The strong model bought nothing at ten times the price.
+
+We draw three conclusions from this. The first is that \textbf{the pipeline earns its keep operationally, not through per-decision accuracy}. On a clean corpus that fits in one prompt, judgement alone is exact, and that is the ``judgement disposes'' half of our rule. What geometry adds is the other half. It gives the order-stable layer an online form. It keeps the cost per arrival at $O(k)$ tokens instead of $O(n)$: L2's per-step prompt grew linearly to 1.6k tokens at $n{=}100$, so its total cost is $\Theta(n^2)$, and at a few thousand statements its prompts reach both the context ceiling and the long-list regime of Table~\ref{tab:triplets}. It holds up where hard pairs exist (\S\ref{sec:live}, \S\ref{sec:replay}). And it bounds and caches the spend under bursts. The second conclusion is that \textbf{a benchmark that separates these methods at the synthesis layer still has to be built}: well-formed English paraphrase pairs stress no judge, and the real-data replay, where precision is 74\%, is where the judges, gates and sweeps do their work. The third conclusion is architectural, and we think it is the most useful: \textbf{theming should be batch, and synthesis should be online}. Themes only organise the page; they are not what participants agreed to. Rebuilding them from the fifty or so current syntheses in one cheap call is therefore admissible where rebuilding syntheses is not. L2's topic pass over tidy syntheses, at F1 0.91, is the design we intend to adopt in place of incremental filing.

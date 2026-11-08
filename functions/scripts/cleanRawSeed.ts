@@ -17,6 +17,7 @@
 import { readFileSync } from 'node:fs';
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { loadEmbeddingDocs } from '../src/services/statement-embedding-store';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
 	console.error('Refusing to run without FIRESTORE_EMULATOR_HOST set. Emulator-only.');
@@ -84,7 +85,14 @@ async function ensureQuestion(): Promise<void> {
 		parents: [],
 		topParentId: questionId,
 		creatorId: USER_UID,
-		creator: { uid: USER_UID, displayName: 'Clean Seeder', email: 'clean@example.com', photoURL: null, isAnonymous: false, defaultLanguage: 'en' },
+		creator: {
+			uid: USER_UID,
+			displayName: 'Clean Seeder',
+			email: 'clean@example.com',
+			photoURL: null,
+			isAnonymous: false,
+			defaultLanguage: 'en',
+		},
 		createdAt: now,
 		lastUpdate: now,
 		lastChildUpdate: now,
@@ -99,7 +107,11 @@ async function ensureQuestion(): Promise<void> {
 }
 
 async function seedOptions(): Promise<void> {
-	const existing = await db.collection('statements').where('parentId', '==', questionId).where('statementType', '==', 'option').get();
+	const existing = await db
+		.collection('statements')
+		.where('parentId', '==', questionId)
+		.where('statementType', '==', 'option')
+		.get();
 	const rawExisting = existing.docs.filter((d) => !d.data().derivedByPipeline);
 	if (rawExisting.length >= 40) {
 		console.info(`✓ ${rawExisting.length} raw options already present — skipping seed`);
@@ -107,29 +119,40 @@ async function seedOptions(): Promise<void> {
 		return;
 	}
 	const flat: string[] = [];
-	for (const t of benchmark.topics) for (const s of t.synths) for (const p of s.paraphrases) flat.push(p);
+	for (const t of benchmark.topics)
+		for (const s of t.synths) for (const p of s.paraphrases) flat.push(p);
 	console.info(`Writing ${flat.length} raw options (delay=${DELAY_MS}ms)…`);
 	for (let i = 0; i < flat.length; i++) {
 		const id = db.collection('statements').doc().id;
 		const now = Date.now();
-		await db.collection('statements').doc(id).set({
-			statementId: id,
-			statement: flat[i],
-			paragraphs: [],
-			statementType: 'option',
-			parentId: questionId,
-			parents: [questionId],
-			topParentId: questionId,
-			creatorId: USER_UID,
-			creator: { uid: USER_UID, displayName: 'Clean Seeder', email: 'clean@example.com', photoURL: null, isAnonymous: false, defaultLanguage: 'en' },
-			createdAt: now,
-			lastUpdate: now,
-			consensus: 0,
-			totalEvaluators: 0,
-			hide: false,
-			randomSeed: Math.random(),
-			evaluation: blankEval(),
-		});
+		await db
+			.collection('statements')
+			.doc(id)
+			.set({
+				statementId: id,
+				statement: flat[i],
+				paragraphs: [],
+				statementType: 'option',
+				parentId: questionId,
+				parents: [questionId],
+				topParentId: questionId,
+				creatorId: USER_UID,
+				creator: {
+					uid: USER_UID,
+					displayName: 'Clean Seeder',
+					email: 'clean@example.com',
+					photoURL: null,
+					isAnonymous: false,
+					defaultLanguage: 'en',
+				},
+				createdAt: now,
+				lastUpdate: now,
+				consensus: 0,
+				totalEvaluators: 0,
+				hide: false,
+				randomSeed: Math.random(),
+				evaluation: blankEval(),
+			});
 		if (i + 1 < flat.length) await sleep(DELAY_MS);
 	}
 	console.info(`✓ Wrote ${flat.length} raw options`);
@@ -138,10 +161,15 @@ async function seedOptions(): Promise<void> {
 async function waitForEmbeddings(): Promise<void> {
 	console.info('Waiting for embedding coverage (fn_statementCreation Task 6)…');
 	for (let attempt = 0; attempt < 60; attempt++) {
-		const snap = await db.collection('statements').where('parentId', '==', questionId).where('statementType', '==', 'option').get();
+		const snap = await db
+			.collection('statements')
+			.where('parentId', '==', questionId)
+			.where('statementType', '==', 'option')
+			.get();
 		const raw = snap.docs.filter((d) => !d.data().derivedByPipeline);
+		const stored = await loadEmbeddingDocs(raw.map((d) => d.id));
 		const withEmb = raw.filter((d) => {
-			const e = d.data().embedding;
+			const e = stored.get(d.id)?.embedding ?? d.data().embedding;
 
 			return Array.isArray(e) ? e.length > 0 : !!(e && typeof e === 'object');
 		});

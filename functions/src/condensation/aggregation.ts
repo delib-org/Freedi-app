@@ -6,7 +6,10 @@ import {
 	Evaluation,
 	Statement,
 	StatementEvaluation,
+	StakeholderScope,
 	getClusterEvaluationLinkId,
+	resolveStakeholderCount,
+	resolveSamplingQuality,
 } from '@freedi/shared-types';
 import {
 	calcAgreement,
@@ -18,6 +21,11 @@ import {
 	DEFAULT_SAMPLING_QUALITY,
 	BAYESIAN_PRIOR_K,
 } from '@freedi/shared-types';
+import { computeEffectiveClusterVote } from './clusterVoteRule';
+import { ClusterNode, collectTreeIds, computeEffectiveTreeVote } from './clusterTree';
+import { loadClusterTree } from './clusterTreeLoader';
+
+export { findClustersAffectedByEvaluation } from './clusterAncestors';
 
 // Lazy init to avoid calling getFirestore() before initializeApp()
 const db = () => getFirestore();
@@ -28,11 +36,15 @@ const db = () => getFirestore();
  * Computes the full StatementEvaluation object for a cluster statement by
  * reading evaluations from:
  *   (a) the cluster statement itself, AND
- *   (b) every statement listed in cluster.integratedOptions
+ *   (b) every statement listed in cluster.integratedOptions, and for members
+ *       that are clusters, THEIR integratedOptions, down the whole tree
  *
  * Deduplicates per evaluator: if a user evaluated the cluster and/or
- * multiple members, they are counted ONCE using the AVERAGE of their
- * evaluations across the full set. This matches `fn_clusterAggregation`'s
+ * multiple members, they are counted ONCE: a direct vote on the cluster
+ * wins, then direct votes on absorbed clusters, else the AVERAGE of their
+ * member votes. Members that are clusters themselves (theme -> synthesis ->
+ * options) are resolved the same way, recursively (see `clusterTree.ts`;
+ * `clusterVoteRule.ts` is its single-level form). This matches `fn_clusterAggregation`'s
  * framing-based dedup semantics but operates on the non-destructive
  * `integratedOptions` model (originals keep their own parentId and
  * independent evaluation).
@@ -43,29 +55,49 @@ const db = () => getFirestore();
  */
 
 interface AggregationOptions {
-	/** Target population for confidence index. Read from the cluster or its
-	 *  parent's evaluationSettings when available. */
+	/** Explicit, admin-declared N (resolveStakeholderCount). When > 0 it feeds
+	 *  the finite-population correction of agreement/agreementIndex, the
+	 *  confidence index and `stakeholderCount`, exactly like a plain option.
+	 *  Absent means open population: uncorrected formula, no stakeholderCount. */
 	targetPopulation?: number;
 	samplingQuality?: number;
 	/**
-	 * When true, a user's direct vote on the cluster (an Evaluation whose
-	 * statementId equals `clusterStatementId`) takes precedence over the
-	 * average of their member votes. Required by the live-synth path so
-	 * direct synth votes override member-vote rollup per the
-	 * "one vote per evaluator, direct-wins" model. Default false preserves
-	 * the existing condensation-pipeline semantics (per-user average).
-	 *
-	 * Requires `clusterStatementId` to be set; otherwise falls back to
-	 * average behavior.
-	 */
-	directVoteWins?: boolean;
-	/**
-	 * The statementId of the cluster being aggregated. Only used when
-	 * `directVoteWins` is true. The aggregator inspects each user's
-	 * evaluations and uses the one targeting this id (if present)
-	 * instead of the per-user average.
+	 * The statementId of the cluster being aggregated. When set, the unified
+	 * cluster counting rule applies (see `clusterVoteRule.ts`): the user's
+	 * direct vote on the cluster wins, then direct votes on absorbed
+	 * clusters, else the average of their member votes. When absent
+	 * (member-only snapshots taken before any direct vote can exist) it is a
+	 * plain per-user average.
 	 */
 	clusterStatementId?: string;
+	/** Clusters merged into this one; their direct votes count as direct-like. */
+	absorbedClusterIds?: readonly string[];
+	/**
+	 * The cluster's member tree. When present the nested rule applies per user
+	 * (`computeEffectiveTreeVote`) and `clusterStatementId` /
+	 * `absorbedClusterIds` are ignored (the tree carries them). When absent the
+	 * single-level behaviour above is unchanged.
+	 */
+	clusterTree?: ClusterNode;
+}
+
+/**
+ * ONE-LEVEL source ids: the cluster itself (direct votes), its members
+ * (`integratedOptions`) and the clusters it absorbed (`absorbedClusterIds`).
+ * Use `collectTreeIds(tree)` instead wherever the member statements are at
+ * hand: members that are themselves clusters have members of their own.
+ */
+export function clusterVoteSourceIds(
+	clusterId: string,
+	cluster: Pick<Statement, 'integratedOptions' | 'absorbedClusterIds'>,
+): string[] {
+	return Array.from(
+		new Set([
+			clusterId,
+			...(cluster.integratedOptions ?? []),
+			...(cluster.absorbedClusterIds ?? []),
+		]),
+	);
 }
 
 export async function fetchEvaluationsForIds(statementIds: string[]): Promise<Evaluation[]> {
@@ -149,26 +181,19 @@ export function computeClusterEvaluationFromRawEvals(
 	let numberOfProEvaluators = 0;
 	let numberOfConEvaluators = 0;
 
-	const directWinsActive = options.directVoteWins === true && !!options.clusterStatementId;
-	const clusterStatementId = options.clusterStatementId;
-
 	byUser.forEach((userEvals, userId) => {
-		// Direct-wins: if the user voted on the cluster itself, use that one
-		// value; ignore their member votes for the rollup. Else average across
-		// whatever they did vote on (the historical condensation behavior).
-		let effective: number;
-		if (directWinsActive) {
-			const directVote = userEvals.find((e) => e.statementId === clusterStatementId);
-			if (directVote) {
-				effective = directVote.evaluation;
-			} else {
-				const values = userEvals.map((e) => e.evaluation);
-				effective = values.reduce((a, b) => a + b, 0) / values.length;
-			}
-		} else {
-			const values = userEvals.map((e) => e.evaluation);
-			effective = values.reduce((a, b) => a + b, 0) / values.length;
-		}
+		const effective = options.clusterTree
+			? (computeEffectiveTreeVote(
+					options.clusterTree,
+					new Map(userEvals.map((e) => [e.statementId, e])),
+				) ?? 0)
+			: options.clusterStatementId
+				? (computeEffectiveClusterVote(
+						options.clusterStatementId,
+						userEvals,
+						options.absorbedClusterIds,
+					) ?? 0)
+				: userEvals.reduce((sum, e) => sum + e.evaluation, 0) / userEvals.length;
 		perUserAverages.set(userId, effective);
 		sumEvaluations += effective;
 		sumSquaredEvaluations += effective * effective;
@@ -182,11 +207,23 @@ export function computeClusterEvaluationFromRawEvals(
 	});
 
 	const averageEvaluation = calcMeanSentiment(sumEvaluations, numberOfEvaluators);
-	const consensus = calcAgreement(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
+	// Same formula as a plain option (statementEvaluationUpdater): the explicit
+	// N, when there is one, is the 4th argument of both. No N -> 3-arg form.
+	const populationSize =
+		options.targetPopulation !== undefined && options.targetPopulation > 0
+			? options.targetPopulation
+			: undefined;
+	const consensus = calcAgreement(
+		sumEvaluations,
+		sumSquaredEvaluations,
+		numberOfEvaluators,
+		populationSize,
+	);
 	const agreementIndex = calcAgreementIndex(
 		sumEvaluations,
 		sumSquaredEvaluations,
 		numberOfEvaluators,
+		populationSize,
 	);
 	const likeMindedness = calcLikeMindedness(
 		sumEvaluations,
@@ -222,9 +259,41 @@ export function computeClusterEvaluationFromRawEvals(
 		confidenceIndex,
 		evaluationRandomNumber: existingRandom ?? Math.random(),
 		viewed: existingViewed ?? 0,
+		// N is never smaller than the people who actually voted
+		...(populationSize !== undefined && {
+			stakeholderCount: Math.max(populationSize, numberOfEvaluators),
+		}),
 	};
 
 	return { evaluation, byUser, perUserAverages };
+}
+
+/**
+ * The explicit N and sampling quality that apply to a cluster: the same walk a
+ * plain option gets (self -> question -> top group), declared values only.
+ * Both fields are undefined when no admin declared them.
+ */
+export async function resolveClusterPopulation(
+	cluster: Statement,
+): Promise<Pick<AggregationOptions, 'targetPopulation' | 'samplingQuality'>> {
+	const readScope = async (id: string | undefined): Promise<StakeholderScope | undefined> => {
+		if (!id) return undefined;
+		const doc = await db().collection(Collections.statements).doc(id).get();
+
+		return doc.exists ? (doc.data() as StakeholderScope) : undefined;
+	};
+
+	const parent = await readScope(cluster.parentId);
+	const top =
+		cluster.topParentId && cluster.topParentId !== cluster.parentId
+			? await readScope(cluster.topParentId)
+			: parent;
+	const self = cluster as StakeholderScope;
+
+	return {
+		targetPopulation: resolveStakeholderCount(self, parent, top).count,
+		samplingQuality: resolveSamplingQuality(self, parent, top),
+	};
 }
 
 /**
@@ -242,9 +311,11 @@ export async function recomputeClusterEvaluation(
 	if (cluster.isCluster !== true) return null;
 
 	const integrated = cluster.integratedOptions ?? [];
-	const sourceIds = [clusterId, ...integrated]; // include direct evaluations on the cluster
-
-	const evaluations = await fetchEvaluationsForIds(sourceIds);
+	const absorbedClusterIds = cluster.absorbedClusterIds ?? [];
+	// Nested rule: members that are clusters (a synthesis under a theme) bring
+	// their own members' votes. One batched read per tree level.
+	const clusterTree = await loadClusterTree(clusterId, cluster);
+	const evaluations = await fetchEvaluationsForIds(collectTreeIds(clusterTree));
 
 	// Preserve any pre-existing evaluationRandomNumber so downstream writers
 	// (e.g. the main evaluation updater) don't trip over an undefined field,
@@ -252,9 +323,13 @@ export async function recomputeClusterEvaluation(
 	const existingRandom = cluster.evaluation?.evaluationRandomNumber;
 	const existingViewed = cluster.evaluation?.viewed;
 
+	// The same N the cluster's plain siblings use, unless the caller pinned one.
+	const population =
+		options.targetPopulation === undefined ? await resolveClusterPopulation(cluster) : {};
+
 	const { evaluation, byUser, perUserAverages } = computeClusterEvaluationFromRawEvals(
 		evaluations,
-		options,
+		{ ...population, ...options, clusterStatementId: clusterId, absorbedClusterIds, clusterTree },
 		existingRandom,
 		existingViewed,
 	);
@@ -386,33 +461,4 @@ async function syncClusterEvaluationLinks(
 	} catch (error) {
 		logger.error('condensation.syncClusterEvaluationLinks failed', { clusterId, error });
 	}
-}
-
-/**
- * Given an evaluation write, find any cluster statements that need recompute.
- * Returns the cluster statement IDs that reference the target statement via
- * `integratedOptions`, plus the target itself if it is a cluster.
- */
-export async function findClustersAffectedByEvaluation(statementId: string): Promise<string[]> {
-	const affected = new Set<string>();
-
-	// Case 1: the evaluation was on the cluster statement itself.
-	const targetDoc = await db().collection(Collections.statements).doc(statementId).get();
-	if (targetDoc.exists) {
-		const target = targetDoc.data() as Statement;
-		if (target.isCluster === true) {
-			affected.add(statementId);
-		}
-	}
-
-	// Case 2: the evaluation was on an original that is part of one or more
-	// clusters. Look up clusters via `array-contains integratedOptions`.
-	const clustersSnap = await db()
-		.collection(Collections.statements)
-		.where('integratedOptions', 'array-contains', statementId)
-		.get();
-
-	clustersSnap.docs.forEach((doc) => affected.add(doc.id));
-
-	return Array.from(affected);
 }

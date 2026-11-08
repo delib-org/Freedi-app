@@ -1,0 +1,84 @@
+@use '../tokens' as *;
+
+// A removed student knocked to come back (views/teacher/RejoinRequests.ts).
+// Lives in the shared .teacher-alerts corner (_language-alert.scss) beside
+// the language alert. Not an alarm: a question waiting for the teacher, so
+// the accent is the signature purple, not the danger red.
+//
+// Imported by components.scss; do not import directly.
+
+.rejoin-alert {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding: var(--space-md);
+	background: var(--bg-card-solid);
+	color: var(--text-primary);
+	border: 1px solid var(--border-subtle);
+	border-inline-start: 6px solid var(--mine-strong);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-raised);
+	animation: rejoin-alert-in 240ms ease-out;
+
+	&__title {
+		margin: 0;
+		font-size: var(--font-size-lg);
+		color: var(--text-primary);
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__item {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		padding-block-start: var(--space-sm);
+		border-block-start: 1px solid var(--border-subtle);
+
+		&:first-child {
+			padding-block-start: 0;
+			border-block-start: none;
+		}
+	}
+
+	&__who {
+		margin: 0;
+		font-weight: 700;
+	}
+
+	&__error {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+		color: var(--danger-ink);
+	}
+
+	&__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+	}
+}
+
+@keyframes rejoin-alert-in {
+	from {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}

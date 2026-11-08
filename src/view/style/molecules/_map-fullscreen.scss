@@ -1,0 +1,26 @@
+// Map full screen — the state class the map's expand control applies.
+//
+// DOM: <div data-map-root class="… is-map-fullscreen"> … </div>
+// Set by `useMapFullScreen`; see the hook for how the element is found.
+//
+// The class is global while the map roots are CSS modules, so the selector is
+// doubled: same-specificity module rules (the cluster board sets its own width
+// and height) would otherwise win on source order alone.
+//
+// Native full screen is requested on the same element where the browser allows
+// it. This rule is what makes the map fill the app either way — and what keeps
+// it filling on iOS Safari, which refuses element full screen outright.
+
+.is-map-fullscreen.is-map-fullscreen {
+	position: fixed;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	max-width: none;
+	max-height: none;
+	margin: 0;
+	// Over the shell rail and the page's own bars, under the map's admin drawer
+	// (9000) so map settings still open on top of it.
+	z-index: 8000;
+	background: var(--surface-background);
+}

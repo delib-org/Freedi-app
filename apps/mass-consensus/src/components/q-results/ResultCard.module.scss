@@ -1,5 +1,5 @@
 .resultCard {
-  background-color: white;
+  background-color: var(--mc-surface, white);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   overflow: hidden;
@@ -14,7 +14,7 @@
   }
 
   &--user {
-    background: linear-gradient(135deg, #fff 0%, #f0f8ff 100%);
+    background: linear-gradient(135deg, var(--mc-surface-muted, #fff) 0%, var(--mc-surface-muted, #f0f8ff) 100%);
     border: 2px solid rgba(71, 180, 239, 0.3);
     border-left: 5px solid rgba(71, 180, 239, 0.8);
   }

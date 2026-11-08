@@ -4,7 +4,7 @@
 	"scripts": {
 		"clean": "rm -rf node_modules package-lock.json && git rm -r --cache . && git reset && npm install && npm run build",
 		"lint": "eslint --ext .js,.ts . --ignore-pattern 'lib/' --ignore-pattern 'coverage/'",
-		"prebuild": "rm -f freedi-shared-types-*.tgz freedi-evidence-*.tgz freedi-deliberation-brain-*.tgz && (cd ../packages/shared-types && npm run build && npm pack && mv freedi-shared-types-*.tgz ../../functions/) && (cd ../packages/evidence && npm run build && npm pack && mv freedi-evidence-*.tgz ../../functions/) && (cd ../packages/deliberation-brain && npm run build && npm pack && mv freedi-deliberation-brain-*.tgz ../../functions/) && rm -rf node_modules/@freedi package-lock.json && npm install",
+		"prebuild": "rm -f freedi-shared-types-*.tgz freedi-evidence-*.tgz freedi-deliberation-brain-*.tgz freedi-table-assignment-*.tgz && (cd ../packages/shared-types && npm run build && npm pack && mv freedi-shared-types-*.tgz ../../functions/) && (cd ../packages/evidence && npm run build && npm pack && mv freedi-evidence-*.tgz ../../functions/) && (cd ../packages/deliberation-brain && npm run build && npm pack && mv freedi-deliberation-brain-*.tgz ../../functions/) && (cd ../packages/table-assignment && npm run build && npm pack && mv freedi-table-assignment-*.tgz ../../functions/) && rm -rf node_modules/@freedi package-lock.json && npm install",
 		"build": "tsc",
 		"dev": "tsc --watch",
 		"serve": "npm run build && firebase emulators:start --only functions",
@@ -24,20 +24,21 @@
 		"@freedi/deliberation-brain": "file:freedi-deliberation-brain-1.0.0.tgz",
 		"@freedi/evidence": "file:freedi-evidence-1.0.0.tgz",
 		"@freedi/shared-types": "file:freedi-shared-types-1.0.2.tgz",
+		"@freedi/table-assignment": "file:freedi-table-assignment-1.0.0.tgz",
 		"@sendgrid/mail": "^8.1.6",
-		"@sentry/node": "^9.42.1",
+		"@sentry/node": "^10.73.0",
 		"@sentry/sveltekit": "^10.57.0",
-		"@types/nodemailer": "^7.0.1",
 		"density-clustering": "^1.3.0",
 		"dotenv": "^16.4.5",
 		"firebase-admin": "^12.6.0",
 		"firebase-functions": "^6.3.2",
 		"franc-min": "^5.0.0",
 		"googleapis": "^168.0.0",
-		"nodemailer": "^7.0.6",
+		"nodemailer": "^10.4.0",
 		"openai": "^6.15.0",
 		"p-limit": "^3.1.0",
 		"pako": "^2.1.0",
+		"pdf-parse": "^1.1.1",
 		"typescript": "^5.6.3",
 		"umap-js": "^1.4.0",
 		"valibot": "^1.0.0-rc.1"
@@ -58,7 +59,13 @@
 	"private": true,
 	"overrides": {
 		"axios": "^1.16.1",
-		"fast-xml-parser": "^5.8.0"
+		"fast-xml-parser": "^5.8.0",
+		"trim": "^0.0.3",
+		"qs": "^6.16.0",
+		"cookie": "^0.7.2",
+		"form-data": "^4.0.6",
+		"uuid": "^11.1.1",
+		"ts-deepmerge": "^8.0.0"
 	},
 	"bundleDependencies": [
 		"@freedi/shared-types",

@@ -16,9 +16,17 @@ export interface ProgressCounts {
 
 export type ProgressFunnelVariant = 'mini' | 'full';
 
+/**
+ * What the three steps mean. A question funnels people into suggesting and
+ * then evaluating; a crowd survey funnels them into answering and finishing,
+ * and calling that "suggested" would misreport it.
+ */
+export type ProgressFunnelKind = 'question' | 'survey';
+
 export interface ProgressFunnelProps {
 	counts: ProgressCounts;
 	variant?: ProgressFunnelVariant;
+	kind?: ProgressFunnelKind;
 	className?: string;
 }
 
@@ -26,10 +34,22 @@ type FunnelStep = keyof ProgressCounts;
 
 const STEPS: readonly FunnelStep[] = ['entered', 'suggested', 'evaluated'];
 
-const STEP_KEYS: Record<FunnelStep, string> = {
-	entered: '{{count}} entered',
-	suggested: '{{count}} suggested',
-	evaluated: '{{count}} evaluated',
+const STEP_KEYS: Record<ProgressFunnelKind, Record<FunnelStep, string>> = {
+	question: {
+		entered: '{{count}} entered',
+		suggested: '{{count}} suggested',
+		evaluated: '{{count}} evaluated',
+	},
+	survey: {
+		entered: '{{count}} entered',
+		suggested: '{{count}} answered',
+		evaluated: '{{count}} finished',
+	},
+};
+
+const STEP_LABELS: Record<ProgressFunnelKind, Record<FunnelStep, string>> = {
+	question: { entered: 'entered', suggested: 'suggested', evaluated: 'evaluated' },
+	survey: { entered: 'entered', suggested: 'answered', evaluated: 'finished' },
 };
 
 function clamp01(value: number): number {
@@ -56,7 +76,12 @@ function formatCount(value: number, locale: string): string {
 	}
 }
 
-const ProgressFunnel: React.FC<ProgressFunnelProps> = ({ counts, variant = 'full', className }) => {
+const ProgressFunnel: React.FC<ProgressFunnelProps> = ({
+	counts,
+	variant = 'full',
+	kind = 'question',
+	className,
+}) => {
 	const { t, tWithParams, currentLanguage } = useTranslation();
 	const fills = computeFills(counts);
 	const isEmpty = counts.entered <= 0 && counts.suggested <= 0 && counts.evaluated <= 0;
@@ -64,7 +89,9 @@ const ProgressFunnel: React.FC<ProgressFunnelProps> = ({ counts, variant = 'full
 	const sentence = isEmpty
 		? t('No participants yet')
 		: STEPS.map((step) =>
-				tWithParams(STEP_KEYS[step], { count: formatCount(counts[step], currentLanguage) }),
+				tWithParams(STEP_KEYS[kind][step], {
+					count: formatCount(counts[step], currentLanguage),
+				}),
 			).join(', ');
 
 	const classes = clsx(
@@ -101,7 +128,7 @@ const ProgressFunnel: React.FC<ProgressFunnelProps> = ({ counts, variant = 'full
 							<span className="progress-funnel__count">
 								{formatCount(counts[step], currentLanguage)}
 							</span>
-							<span>{t(step)}</span>
+							<span>{t(STEP_LABELS[kind][step])}</span>
 						</li>
 					))}
 				</ul>

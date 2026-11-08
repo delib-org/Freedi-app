@@ -25,7 +25,7 @@
 }
 
 .modal {
-  background: white;
+  background: var(--mc-surface, white);
   border-radius: 16px;
   max-width: 360px;
   width: 100%;
@@ -62,13 +62,13 @@
   margin: 0 0 0.75rem;
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--mc-text-strong, #1a1a1a);
 }
 
 .message {
   margin: 0 0 1.5rem;
   font-size: 1rem;
-  color: #666;
+  color: var(--mc-text, #666);
   line-height: 1.5;
 }
 

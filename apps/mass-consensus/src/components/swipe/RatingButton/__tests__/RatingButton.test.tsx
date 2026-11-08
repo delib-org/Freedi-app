@@ -175,4 +175,24 @@ describe('RatingButton', () => {
       expect(onClick).toHaveBeenCalledWith(0.75);
     });
   });
+
+  describe('three-point mode', () => {
+    it('labels the ends as plain agree / disagree', () => {
+      render(<RatingButton rating={1} ratingMode="three-point" onClick={jest.fn()} />);
+      expect(screen.getByRole('button')).toHaveAttribute('aria-label', 'Agree');
+      expect(screen.getByRole('button')).toHaveClass('rating-button--strongly-agree');
+    });
+
+    it('shows a single thumb for the full value', () => {
+      render(<RatingButton rating={-1} ratingMode="three-point" onClick={jest.fn()} />);
+      expect(screen.getByTestId('rating-icon')).toHaveTextContent('icon--0.5');
+    });
+
+    it('submits the full value on click', () => {
+      const onClick = jest.fn();
+      render(<RatingButton rating={-1} ratingMode="three-point" onClick={onClick} />);
+      fireEvent.click(screen.getByRole('button'));
+      expect(onClick).toHaveBeenCalledWith(-1);
+    });
+  });
 });

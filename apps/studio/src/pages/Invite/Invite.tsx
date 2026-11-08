@@ -65,7 +65,7 @@ export default function Invite() {
 	}, [status, navigate]);
 
 	return (
-		<StudioPage breadcrumb={[{ label: t('Invitation') }]}>
+		<StudioPage>
 			<div className={styles.center}>
 				{status.kind === 'pending' && (
 					<EmptyState icon="✉️" title={t('Accepting your invitation…')} compact />

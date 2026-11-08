@@ -1,6 +1,7 @@
 import firebaseConfig from '@/controllers/db/configKey';
 import { functionConfig } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
+import { getAuthHeaders } from '@/controllers/db/authHeaders';
 
 // Helper to get environment variables
 // In tests, babel-plugin-transform-vite-meta-env transforms import.meta.env to process.env
@@ -59,9 +60,7 @@ export async function improveSuggestion(
 
 		const response = await fetch(endpoint, {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
+			headers: await getAuthHeaders(),
 			body: JSON.stringify(requestBody),
 		});
 

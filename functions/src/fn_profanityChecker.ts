@@ -2,9 +2,12 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { GEMINI_MODEL, getGenAI } from './config/gemini';
 import { functionConfig } from '@freedi/shared-types';
 import { logError } from './utils/errorHandling';
+import { enforceCallableRateLimit } from './utils/rateLimit';
+import { RATE_BUDGETS } from './config/rateBudgets';
 
-// Gemini-based profanity detection
-async function containsBadLanguage(text: string): Promise<boolean> {
+// LLM-based profanity detection (see config/gemini.ts: OpenAI-backed today).
+// Exported for the Agora language gate (agora/fn_agoraCheckLanguage.ts).
+export async function containsBadLanguage(text: string): Promise<boolean> {
 	try {
 		const model = getGenAI().getGenerativeModel({ model: GEMINI_MODEL });
 
@@ -67,11 +70,15 @@ interface CheckProfanityResponse {
 export const checkProfanity = onCall<CheckProfanityRequest>(
 	{ region: functionConfig.region },
 	async (request): Promise<CheckProfanityResponse> => {
+		if (!request.auth?.uid) {
+			throw new HttpsError('unauthenticated', 'Sign in required');
+		}
 		const { text } = request.data;
 
 		if (!text) {
 			throw new HttpsError('invalid-argument', 'Text is required');
 		}
+		await enforceCallableRateLimit(request, RATE_BUDGETS.checkProfanity, request.auth.uid);
 
 		try {
 			const isBad = await containsBadLanguage(text);

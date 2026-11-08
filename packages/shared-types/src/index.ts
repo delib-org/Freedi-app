@@ -104,6 +104,13 @@ export {
   EvaluationUI
 } from "./models/evaluation/Evaluation";
 
+// Per-question participation marker (server-only; backs the evaluator count)
+export type { EvaluationParticipant } from "./models/evaluation/EvaluationParticipant";
+export {
+  EvaluationParticipantSchema,
+  getEvaluationParticipantId,
+} from "./models/evaluation/EvaluationParticipant";
+
 // Invitation models
 export type { Invitation } from "./models/invitation/Invitation";
 export { InvitationSchema } from "./models/invitation/Invitation";
@@ -146,6 +153,7 @@ export type {
   Organization,
   OrganizationMember,
   OrganizationInvitation,
+  OrganizationActivity,
 } from "./models/organization";
 
 export {
@@ -155,9 +163,11 @@ export {
   OrganizationSchema,
   OrganizationMemberSchema,
   OrganizationInvitationSchema,
+  OrganizationActivitySchema,
   ORG_INVITE_EXPIRY_MS,
   ORG_ADMIN_ROLES,
   getOrganizationMemberId,
+  getOrganizationActivityId,
 } from "./models/organization";
 
 // Per-question participation funnel (server-maintained)
@@ -287,12 +297,19 @@ export type {
   MapSynthVisibility,
   MapDetailLevel,
   MapFilterMetric,
-  RatingMode
+  RatingMode,
+  VotingOptionsSource,
+  LessonStepKey,
+  LessonPlan,
+  LessonStatus,
+  LessonLook,
+  ClassRole
 } from "./models/statement/StatementSettings";
 
 export {
   StatementSettingsSchema,
   RatingModeSchema,
+  VotingOptionsSourceSchema,
   evaluationType,
   JoinFormFieldSchema,
   JoinFormFieldTypeSchema,
@@ -310,17 +327,27 @@ export {
   MapSettingsSchema,
   MapSynthVisibilitySchema,
   MapDetailLevelSchema,
-  MapFilterMetricSchema
+  MapFilterMetricSchema,
+  LessonStepKeySchema,
+  LessonPlanSchema,
+  LessonStatusSchema,
+  LessonLookSchema,
+  ClassRoleSchema
 } from "./models/statement/StatementSettings";
 
 export type {
   EvaluationScaleEntry,
-  EvaluationDirection
+  EvaluationDirection,
+  EvaluationScaleKey
 } from "./models/statement/evaluationScale";
 
 export {
   AGREE_DISAGREE_SCALE,
+  THREE_POINT_SCALE,
   REACTIONS_SCALE,
+  THREE_POINT_STEPS,
+  FIVE_POINT_STEPS,
+  resolveEvaluationScaleKey,
   getEvaluationScale,
   getEvaluationRange,
   isValidEvaluationValue,
@@ -548,6 +575,7 @@ export type {
   SurveyDemographicQuestion,
   SurveyDemographicAnswer,
   SurveyExplanationPage,
+  SurveyFlowPage,
 } from "./models/survey/surveyModel";
 export {
   SurveySchema,
@@ -567,7 +595,30 @@ export {
   SurveyDemographicQuestionSchema,
   SurveyDemographicAnswerSchema,
   SurveyExplanationPageSchema,
+  orderPagesAtPosition,
 } from "./models/survey/surveyModel";
+
+// Survey admin / co-admin models
+export type {
+  SurveyAdmin,
+  SurveyAdminInvitation,
+  SurveyAccess,
+  SurveyAccessLevel,
+} from "./models/survey/surveyAdminModel";
+export {
+  SurveyAdminSchema,
+  SurveyAdminInvitationSchema,
+  SurveyAdminRole,
+  SurveyAdminRoleSchema,
+  SurveyAdminInvitationStatus,
+  SurveyAdminInvitationStatusSchema,
+  INVITABLE_SURVEY_ADMIN_ROLES,
+  SURVEY_ADMIN_INVITE_EXPIRY_MS,
+  MAX_PENDING_SURVEY_ADMIN_INVITES,
+  getSurveyAdminId,
+  canEditSurvey,
+  buildSurveyAccess,
+} from "./models/survey/surveyAdminModel";
 
 // MAD Calculation utilities
 export type { MadResult } from "./utils/madCalculation";
@@ -719,6 +770,7 @@ export {
 // Embedding models
 export type {
   StatementEmbedding,
+  StatementEmbeddingDoc,
   SimilarityResult,
   EmbeddingBatchRequest,
   EmbeddingBatchResult,
@@ -729,6 +781,7 @@ export type {
 
 export {
   StatementEmbeddingSchema,
+  StatementEmbeddingDocSchema,
   SimilarityResultSchema,
   EmbeddingBatchRequestSchema,
   EmbeddingBatchResultSchema,
@@ -921,3 +974,355 @@ export * from "./models/agora";
 
 // Israeli Odyssey pre-election civic-voice game
 export * from "./models/odyssey";
+
+export * from './models/covenant/covenant';
+
+export * from './models/covenant/deliberation';
+
+// Statement search — shared scorer and request/response types
+export * from './models/search/searchModel';
+// Question "search by meaning" (searchQuestionsByMeaning callable)
+export * from './models/search/questionSearchModel';
+export {
+  normalizeSearchText,
+  normalizeWithMap,
+  editDistance,
+  scoreMatch,
+  rankCandidates,
+} from './utils/textSearch';
+export type { NormalizedText, TextMatch, RankOptions } from './utils/textSearch';
+export {
+	MIN_MEANINGFUL_WORDS,
+	countMeaningfulWords,
+	isMeaningfulSuggestion,
+} from './utils/meaningfulText';
+export {
+  NON_SEARCHABLE_STATEMENT_TYPES,
+  statementToSearchCandidate,
+  subscriptionToSearchCandidate,
+  isTopLevelSearchCandidate,
+  isSearchCandidate,
+} from './utils/searchCandidates';
+export type { SearchableStatement, SearchableSubscription } from './utils/searchCandidates';
+
+// Home activity feed (server-written; replaces subscription lastUpdate stamps)
+export type { UserFeedItem, UserFeedThrottle } from './models/userFeed/UserFeed';
+export {
+  UserFeedItemSchema,
+  UserFeedThrottleSchema,
+  USER_FEED_ROLES,
+  getUserFeedId,
+  isUserFeedRole,
+  isTopLevelSubscription,
+} from './models/userFeed/UserFeed';
+
+// join-class: classroom lesson model, callables contract, pure logic
+export {
+  CLASS_TABLES_COLLECTION,
+  CLASS_PROPOSAL_MAX_LENGTH,
+  CLASS_LANGUAGE_FLAGS_COLLECTION,
+  CLASS_LANGUAGE_FLAGS_KEPT,
+  CLASS_LANGUAGE_FLAG_TTL_DAYS,
+  ClassLanguageFlagKindSchema,
+  ClassLanguageFlagSchema,
+  CLASS_BATCH_SIZE,
+  DEFAULT_SPEAK_SECONDS,
+  SPEAK_SECONDS_CHOICES,
+  DEFAULT_PROPOSALS_TURNS,
+  PROPOSALS_TURNS_CHOICES,
+  CLASS_PROPOSAL_LIMITS,
+  DEFAULT_PROPOSAL_LIMIT,
+  NO_DEVICE_ID_PREFIX,
+  MAX_NO_DEVICE_PER_TABLE,
+  isNoDeviceId,
+  DEFAULT_GATE,
+  SIDE_MIN,
+  SIDE_MAX,
+  CAMP_A_BELOW,
+  CAMP_B_ABOVE,
+  SUPPORT_MIN,
+  SUPPORT_MAX,
+  MIN_TABLE_SIZE,
+  MAX_TABLE_SIZE,
+  DEFAULT_TABLE_SIZE,
+  TableStepSchema,
+  WritingModeSchema,
+  CampSchema,
+  RoundPhaseSchema,
+  NoDeviceMemberSchema,
+  ClassTableSchema,
+  ClassTableMarkerSchema,
+  ClassBallotSchema,
+  ClassVoteDisplaySchema,
+  ClassVoteOrderSchema,
+  ClassSubscriptionFieldsSchema,
+  CLASS_REPLY_MAX_LENGTH,
+  ClassReplyRoleSchema,
+  ClassReplyMarkerSchema,
+  ClassReplyStatementFieldsSchema,
+  SideValueSchema,
+  DecisionSupportSchema,
+  classTableId,
+} from './models/classroom/classroomModel';
+export type {
+  TableStep,
+  WritingMode,
+  Camp,
+  RoundPhase,
+  NoDeviceMember,
+  ClassTable,
+  ClassTableMarker,
+  ClassBallot,
+  ClassVoteDisplay,
+  ClassVoteOrder,
+  ClassReplyRole,
+  ClassReplyMarker,
+  ClassLanguageFlag,
+  ClassLanguageFlagKind,
+  ClassProposalLimit,
+} from './models/classroom/classroomModel';
+export {
+  campOf,
+  supportBySide,
+  decideBallot,
+  lessonStatusOf,
+  planLessonStatus,
+  notAskedUids,
+  speakerTimeOver,
+  everyoneSpoke,
+  tableDone,
+  floorOpen,
+  othersAnswered,
+  askerMayAnswer,
+  choosing,
+  allowOwnQuestionsOf,
+  lessonLookOf,
+  tableSizeOf,
+  noQuestionsLeft,
+  speakSecondsOf,
+  proposalsTurnsOf,
+  proposalLimitOf,
+  mayAddProposal,
+  noDeviceCountOf,
+  proposalsTurnOf,
+  proposalsMaxTurns,
+  proposalsTurnOver,
+  proposalsDone,
+  spokeThisTurn,
+} from './models/classroom/classroomLogic';
+export type { LessonSettingsHolder } from './models/classroom/classroomLogic';
+export {
+  CLASS_PLANS_COLLECTION,
+  CLASS_GAMES_SUBCOLLECTION,
+  CLASS_HOME_PREFIX,
+  TEACHER_HOME_PREFIX,
+  CLASS_HOME_KIND,
+  CLASS_PLAN_TITLE_MAX_LENGTH,
+  CLASS_NAME_MAX_LENGTH,
+  LESSON_NAME_MAX_LENGTH,
+  cleanLessonName,
+  CLASS_GAME_MAX_QUESTIONS,
+  CLASS_GAME_MAX_PARAGRAPHS,
+  CLASS_GAME_MAX_VIDEOS,
+  CLASS_GAME_MAX_TEXT_LENGTH,
+  ClassPlanSchema,
+  ClassGameSchema,
+  ClassGameSnapshotSchema,
+  ClassGameQuestionSchema,
+  ClassGameParagraphSchema,
+  ClassGameSettingsSchema,
+  classHomeIdOf,
+  teacherHomeIdOf,
+  isHomeId,
+  isClassHome,
+  isClassLesson,
+  cleanClassName,
+} from './models/classroom/classPlanModel';
+export type {
+  ClassPlan,
+  ClassGame,
+  ClassGameSnapshot,
+  ClassGameQuestion,
+  ClassGameParagraph,
+  ClassLessonLink,
+  ClassHomeLink,
+  ClassHomeKind,
+} from './models/classroom/classPlanModel';
+export {
+  LESSON_STEPS,
+  flattenLines,
+  compareByManualOrder,
+  isPlanQuestion,
+  isIntroParagraph,
+  snapshotFromLesson,
+  checkSnapshot,
+  lessonFromSnapshot,
+} from './models/classroom/classGameSnapshot';
+export type {
+  SnapshotProblem,
+  LessonFromSnapshotInput,
+  LessonStatements,
+} from './models/classroom/classGameSnapshot';
+export {
+  MOVE_ON_PRESSES,
+  MOVE_ON_SMALL_TABLE,
+  moveOnNeeded,
+  moveOnPressers,
+  moveOnReached,
+} from './models/classroom/moveOnLogic';
+export type {
+  SupportSubscription,
+  CampSupport,
+  SupportVerdict,
+  SupportBySide,
+  LessonStatusChange,
+} from './models/classroom/classroomLogic';
+export type {
+  ClassAssignTablesRequest,
+  ClassAssignTablesResponse,
+  ClassMoveStudentRequest,
+  ClassMoveStudentResponse,
+  ClassAddNoDeviceRequest,
+  ClassAddNoDeviceResponse,
+  ClassRequestRenameRequest,
+  ClassRequestRenameResponse,
+  ClassTableAction,
+  ClassTableStepRequest,
+  ClassTableStepResponse,
+  ClassAllTablesToRequest,
+  ClassAllTablesToResponse,
+  ClassFreezeBallotRequest,
+  ClassFreezeBallotResponse,
+  ClassCloseBallotRequest,
+  ClassCloseBallotResponse,
+  ClassPauseBallotRequest,
+  ClassPauseBallotResponse,
+  ClassResetTurnsRequest,
+  ClassResetTurnsResponse,
+  ClassResetVoteRequest,
+  ClassResetVoteResponse,
+  ClassSetItemHiddenRequest,
+  ClassSetItemHiddenResponse,
+  ClassPostReplyRequest,
+  ClassPostReplyResponse,
+  ClassPostProposalRequest,
+  ClassCastVoteForRequest,
+  ClassCastVoteForResponse,
+  ClassPostProposalResponse,
+  ClassEditProposalRequest,
+  ClassEditProposalResponse,
+  ClassCloneLessonRequest,
+  ClassStartLessonRequest,
+  ClassStartLessonResponse,
+  ClassSnapshotGameRequest,
+  ClassSnapshotGameResponse,
+  ClassCloneLessonResponse,
+  ClassSetLessonStatusRequest,
+  ClassSetLessonStatusResponse,
+  LessonStatusAction,
+} from './models/classroom/classroomCallables';
+
+// Tables (שולחנות): shared table-assignment model and callables contract
+export {
+  TABLE_ASSIGNMENT_TABLE_SIZE_DEFAULT,
+  TABLE_ASSIGNMENT_BALANCE_TOLERANCE_DEFAULT,
+  TABLE_ASSIGNMENT_MAX_PREFERENCES,
+  TABLE_ASSIGNMENT_TABLE_SIZE_MIN,
+  TABLE_ASSIGNMENT_TABLE_SIZE_MAX,
+  TABLE_ASSIGNMENT_TITLE_MAX_LENGTH,
+  TABLE_ASSIGNMENT_DESCRIPTION_MAX_LENGTH,
+  TABLE_ASSIGNMENT_FULL_NAME_MAX_LENGTH,
+  TableAssignmentStatusSchema,
+  TableAssignmentModeSchema,
+  TableAssignmentPositionQuestionSchema,
+  TableAssignmentSettingsSchema,
+  TableAssignmentSchema,
+  TableAssignmentTopicSchema,
+  TableAssignmentPreferencesSchema,
+  TableAssignmentParticipantSchema,
+  TableAssignmentRunStatusSchema,
+  TableAssignmentTableStatsSchema,
+  TableAssignmentRunTableSchema,
+  TableAssignmentMetricsSchema,
+  TableAssignmentRunSchema,
+  tableAssignmentParticipantId,
+} from './models/tableAssignment/tableAssignmentModel';
+export type {
+  TableAssignmentStatus,
+  TableAssignmentMode,
+  TableAssignmentPositionQuestion,
+  TableAssignmentSettings,
+  TableAssignment,
+  TableAssignmentTopic,
+  TableAssignmentParticipant,
+  TableAssignmentRunStatus,
+  TableAssignmentTableStats,
+  TableAssignmentRunTable,
+  TableAssignmentMetrics,
+  TableAssignmentRun,
+} from './models/tableAssignment/tableAssignmentModel';
+export type {
+  TablesCreateSessionRequest,
+  TablesCreateSessionResponse,
+  TablesTopicInput,
+  TablesSaveTopicsRequest,
+  TablesSaveTopicsResponse,
+  TablesSaveSettingsRequest,
+  TablesSaveSettingsResponse,
+  TablesSetStatusRequest,
+  TablesSetStatusResponse,
+  TablesRegisterRequest,
+  TablesRegisterResponse,
+  TablesSavePreferencesRequest,
+  TablesSavePreferencesResponse,
+  TablesJoinTableRequest,
+  TablesJoinTableResponse,
+  TablesComputePreviewRequest,
+  TablesComputePreviewResponse,
+  TablesPublishRunRequest,
+  TablesPublishRunResponse,
+} from './models/tableAssignment/tableAssignmentCallables';
+
+// Theme rebuild ("Re-theme with AI") callable contract
+export type {
+  ThemeRebuildMode,
+  ThemeRebuildRequest,
+  ThemeRebuildPreviewTheme,
+  ThemeRebuildPreviewResponse,
+  ThemeRebuildApplyResponse,
+  ThemeRebuildResponse,
+  ThemeRebuildFailureReason,
+} from './models/themeRebuild/themeRebuildCallables';
+export { THEME_SOURCE_LLM_REBUILD } from './models/themeRebuild/themeRebuildCallables';
+
+// Statement data export (shared by the main app and the fullExport callable)
+export {
+	isDerivedStatement,
+	resolveDerivedPipeline,
+} from './utils/derivedStatement';
+export type { DerivedPipeline } from './utils/derivedStatement';
+export {
+	computeOtherIdeas,
+	isTheme,
+	OTHER_IDEAS_EXPORT_ID,
+	OTHER_IDEAS_ID,
+} from './utils/otherIdeas';
+export type { IdeaNode, OtherIdeasResult } from './utils/otherIdeas';
+export {
+	PROPERTY_DOCUMENTATION,
+	anonymizeSimpleStatement,
+	extractExportableData,
+	toExportRows,
+} from './utils/exportFormat';
+export type {
+	AnonymizedSimpleStatement,
+	ExportableStatementData,
+	ExportData,
+	ExportMetadata,
+	PropertyDoc,
+	PropertyDocumentation,
+	ExportFormat,
+	FullExportMeta,
+	FullExportRequest,
+	FullExportResponse,
+} from './utils/exportFormat';

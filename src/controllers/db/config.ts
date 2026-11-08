@@ -2,9 +2,12 @@
 import { initializeApp } from 'firebase/app';
 import {
 	browserLocalPersistence,
+	browserSessionPersistence,
 	connectAuthEmulator,
 	getAuth,
-	setPersistence,
+	indexedDBLocalPersistence,
+	initializeAuth,
+	type Auth,
 } from 'firebase/auth';
 import {
 	connectFirestoreEmulator,
@@ -16,18 +19,28 @@ import {
 	type Firestore,
 } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
-import { getAnalytics, isSupported } from 'firebase/analytics';
+import { getAnalytics, isSupported, type Analytics } from 'firebase/analytics';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 // Removed import to avoid circular dependency - isProduction is inlined below
 import firebaseConfig from './configKey';
 import { initializeFirebaseAppCheck } from './appCheck';
+import { hasPersistedFirebaseUser } from '@/utils/persistedAuthUser';
+import { warmPopupResolver } from '@/controllers/auth/popupResolver';
 import { logError } from '@/utils/errorHandling';
+import { TIME } from '@/constants/common';
 import {
 	clearIndexedDBErrorRecord,
 	recordIndexedDBError,
 	setPersistentCacheEnabled,
 	shouldSkipIndexedDB,
 } from '@/utils/firestorePersistenceFallback';
+
+function isLocalRuntime(): boolean {
+	return (
+		typeof window !== 'undefined' &&
+		['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
+	);
+}
 
 // Helper to detect iOS devices
 function isIOS(): boolean {
@@ -73,7 +86,7 @@ function initializeWithMemoryCache(app: ReturnType<typeof initializeApp>): Fires
 // Initialize Firestore with appropriate cache settings based on platform
 function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Firestore {
 	const isIOSDevice = isIOS();
-	const isLocalDev = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+	const isLocalDev = isLocalRuntime();
 
 	// In local development, use memory cache to avoid stale data from emulator restarts
 	if (isLocalDev) {
@@ -155,13 +168,41 @@ export function handleFirestoreAssertionError(error: Error): void {
 	}
 }
 
+/**
+ * Auth without a default popup/redirect resolver.
+ *
+ * `getAuth()` attaches `browserPopupRedirectResolver`, and on mobile browsers
+ * and Safari Auth then loads Google's gapi iframe (iframe.js ~93 KB plus the
+ * /__/auth/iframe page) and WAITS for it before it even reads the saved user,
+ * i.e. before onAuthStateChanged and every Firestore listener. Popup sign-ins
+ * pass `popupResolver` explicitly instead, and the iframe is warmed beside
+ * startup rather than in front of it (see warmPopupIframe below).
+ */
+function createAuth(firebaseApp: ReturnType<typeof initializeApp>): Auth {
+	try {
+		return initializeAuth(firebaseApp, {
+			// localStorage first: main.tsx reads it synchronously to route a
+			// returning user, and it is what setPersistence() used to migrate to.
+			// The rest match getAuth()'s defaults so any older session is found.
+			persistence: [browserLocalPersistence, indexedDBLocalPersistence, browserSessionPersistence],
+		});
+	} catch (error) {
+		// Already initialized elsewhere (e.g. a getAuth() that ran first): reuse it.
+		logError(error, {
+			operation: 'config.createAuth',
+			metadata: { message: 'initializeAuth failed, falling back to getAuth()' },
+		});
+
+		return getAuth(firebaseApp);
+	}
+}
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 // Firebase app initialized
 
 // Inline isProduction check - needed before App Check decision
-const isProductionForAppCheck =
-	typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+const isProductionForAppCheck = typeof window !== 'undefined' && !isLocalRuntime();
 
 // Initialize App Check ONLY in production
 // In development/emulator, App Check debug token exchange fails with Google servers
@@ -171,18 +212,40 @@ const appCheck = isProductionForAppCheck ? initializeFirebaseAppCheck(app) : nul
 const FireStore = initializeFirestoreWithCache(app);
 const DB = FireStore;
 const storage = getStorage(app);
-const auth = getAuth();
+const auth = createAuth(app);
 const functions = getFunctions(app, 'me-west1');
 
+const ANALYTICS_IDLE_TIMEOUT_MS = 5 * TIME.SECOND;
+const ANALYTICS_FALLBACK_DELAY_MS = 1.5 * TIME.SECOND;
+
 // Initialize Analytics only in production and if supported
-let analytics: ReturnType<typeof getAnalytics> | null = null;
+let analytics: Analytics | null = null;
 // Inline isProduction check to avoid circular dependency
 const isProduction =
 	typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
 		? false
-		: typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+		: typeof window !== 'undefined' && !isLocalRuntime();
 
-if (isProduction) {
+/**
+ * Run after the page has loaded and the main thread is idle. Analytics pulls in
+ * gtag.js plus an Installations call; on slow 4G those competed with the auth
+ * and Firestore requests that put data on screen. Events logged before this
+ * are queued by analyticsService and flushed once `analytics` is set.
+ */
+function afterLoadWhenIdle(callback: () => void): void {
+	const whenIdle = () => {
+		if (typeof window.requestIdleCallback === 'function') {
+			window.requestIdleCallback(() => callback(), { timeout: ANALYTICS_IDLE_TIMEOUT_MS });
+		} else {
+			window.setTimeout(callback, ANALYTICS_FALLBACK_DELAY_MS);
+		}
+	};
+
+	if (document.readyState === 'complete') whenIdle();
+	else window.addEventListener('load', whenIdle, { once: true });
+}
+
+function initializeAnalytics(): void {
 	// Check both isSupported and IndexedDB availability before initializing analytics
 	Promise.all([isSupported(), isIndexedDBAvailable()])
 		.then(([supported, indexedDBAvailable]) => {
@@ -214,16 +277,39 @@ if (isProduction) {
 		});
 }
 
-setPersistence(auth, browserLocalPersistence)
-	.then(() => {
-		// Persistence set to local storage
-	})
-	.catch((error) => {
-		logError(error, {
-			operation: 'config.unknown',
-			metadata: { message: 'Error setting persistence:' },
-		});
-	});
+if (isProduction) {
+	afterLoadWhenIdle(initializeAnalytics);
+}
+
+/**
+ * Warm the popup iframe so a Google sign-in tap can open its popup at once
+ * (iOS Safari blocks popups opened after an await). A signed-out visitor is
+ * here to sign in: start now, in parallel - Auth no longer waits for it. A
+ * signed-in visitor (anonymous students may still tap "Sign in with Google")
+ * gets it after load + idle, off the path to their data.
+ */
+function warmPopupIframe(): void {
+	if (typeof window === 'undefined') return;
+	const warm = () => void warmPopupResolver(auth);
+	if (hasPersistedFirebaseUser()) afterLoadWhenIdle(warm);
+	else warm();
+}
+
+/**
+ * Emulator ports.
+ *
+ * Hardcoded for years, which was fine until two checkouts wanted emulators at
+ * once: only one process can own a port, so the second worktree's app silently
+ * talked to the first worktree's functions and new callables came back 404.
+ * The defaults are the ports everything already uses — the overrides exist so
+ * a second stack can be run alongside without editing this file (see
+ * env/ports.solo.sh).
+ */
+const emulatorPort = (name: string, fallback: number): number => {
+	const configured = import.meta.env[`VITE_EMULATOR_${name}_PORT`];
+
+	return configured ? Number(configured) : fallback;
+};
 
 //development
 if (!isProduction) {
@@ -233,8 +319,9 @@ if (!isProduction) {
 		// Check if emulators are already connected to avoid duplicate connections
 		// @ts-ignore - accessing private property for debugging
 		if (!FireStore._settings?.host?.includes('localhost')) {
-			connectFirestoreEmulator(FireStore, 'localhost', 8081);
-			console.info('Connected to Firestore emulator on localhost:8081');
+			const firestorePort = emulatorPort('FIRESTORE', 8081);
+			connectFirestoreEmulator(FireStore, 'localhost', firestorePort);
+			console.info(`Connected to Firestore emulator on localhost:${firestorePort}`);
 		}
 	} catch (error) {
 		logError(error, {
@@ -244,8 +331,9 @@ if (!isProduction) {
 	}
 
 	try {
-		connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-		console.info('Connected to Auth emulator on localhost:9099');
+		const authPort = emulatorPort('AUTH', 9099);
+		connectAuthEmulator(auth, `http://localhost:${authPort}`, { disableWarnings: true });
+		console.info(`Connected to Auth emulator on localhost:${authPort}`);
 	} catch (error) {
 		logError(error, {
 			operation: 'config.unknown',
@@ -254,8 +342,9 @@ if (!isProduction) {
 	}
 
 	try {
-		connectStorageEmulator(storage, 'localhost', 9199);
-		console.info('Connected to Storage emulator on localhost:9199');
+		const storagePort = emulatorPort('STORAGE', 9199);
+		connectStorageEmulator(storage, 'localhost', storagePort);
+		console.info(`Connected to Storage emulator on localhost:${storagePort}`);
 	} catch (error) {
 		logError(error, {
 			operation: 'config.unknown',
@@ -264,8 +353,9 @@ if (!isProduction) {
 	}
 
 	try {
-		connectFunctionsEmulator(functions, 'localhost', 5001);
-		console.info('Connected to Functions emulator on localhost:5001');
+		const functionsPort = emulatorPort('FUNCTIONS', 5001);
+		connectFunctionsEmulator(functions, 'localhost', functionsPort);
+		console.info(`Connected to Functions emulator on localhost:${functionsPort}`);
 	} catch (error) {
 		logError(error, {
 			operation: 'config.unknown',
@@ -273,6 +363,9 @@ if (!isProduction) {
 		});
 	}
 }
+
+// After the emulator hookup above: the iframe URL depends on it.
+warmPopupIframe();
 
 /**
  * Get the Firebase Functions URL based on the environment
@@ -284,7 +377,7 @@ export function getFunctionsUrl(): string {
 	const region = 'me-west1';
 
 	if (!isProduction) {
-		return `http://localhost:5001/${projectId}/${region}`;
+		return `http://localhost:${emulatorPort('FUNCTIONS', 5001)}/${projectId}/${region}`;
 	}
 
 	return `https://${region}-${projectId}.cloudfunctions.net`;

@@ -1,0 +1,200 @@
+// Card Image Modal - admin bottom sheet for the picture on a swipe card
+
+.card-image-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+
+  &__content {
+    background: var(--card-default);
+    border-radius: 16px 16px 0 0;
+    padding: 24px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: card-image-modal-slide-up 0.3s ease-out;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    margin: 0;
+  }
+
+  &__close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+
+    &:hover {
+      background: var(--rating-neutral);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__quote {
+    margin: 0;
+    background: rgba(0, 0, 0, 0.04);
+    border-inline-start: 3px solid var(--btn-primary);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--text-body);
+    max-height: 80px;
+    overflow-y: auto;
+  }
+
+  &__preview,
+  &__placeholder {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+  }
+
+  &__preview {
+    object-fit: cover;
+    display: block;
+  }
+
+  &__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    background: rgba(0, 0, 0, 0.04);
+    border: 2px dashed var(--rating-neutral);
+  }
+
+  &__file-input {
+    display: none;
+  }
+
+  &__hint {
+    margin: -4px 0 0;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
+  &__label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-body);
+  }
+
+  &__input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--rating-neutral);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: var(--btn-primary);
+    }
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+  }
+
+  &__error {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--rating-strongly-disagree-border);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 4px;
+  }
+
+  &__button {
+    min-height: 44px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.2s;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 2px;
+    }
+
+    &--primary {
+      background: var(--btn-primary);
+      color: white;
+    }
+
+    &--secondary {
+      background: var(--btn-secondary);
+      color: var(--text-primary);
+    }
+
+    &--danger {
+      background: none;
+      color: var(--rating-strongly-disagree-border);
+      margin-inline-end: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__content {
+      animation: none;
+    }
+  }
+}
+
+@keyframes card-image-modal-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}

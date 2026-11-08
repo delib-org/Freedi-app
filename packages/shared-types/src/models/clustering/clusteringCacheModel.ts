@@ -37,7 +37,7 @@ export type ClusteringTaxonomyCache = v.InferOutput<typeof ClusteringTaxonomyCac
  * `categoryKey` references TaxonomyCategorySchema.key from the taxonomy used.
  * `canonicalEmbedding` is the L2-normalized OpenAI embedding of `canonicalSentence`,
  * stored on the cache record (NOT on the Statement) to avoid colliding with the
- * existing context-aware `Statement.embedding` field.
+ * existing context-aware statement embedding (`statementEmbeddings/{id}.embedding`).
  */
 export const NormalizationActionSchema = v.object({
 	canonicalSentence: v.string(),

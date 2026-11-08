@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/browser';
 import {
   buildSentryOptions,
+  isLocalRuntime,
   isUsableDsn,
   setErrorReporter,
   type LogContext,
@@ -22,7 +23,10 @@ export function initSentry(): void {
     (import.meta.env.VITE_SENTRY_DSN_ADMIN as string | undefined) ||
     (import.meta.env.VITE_SENTRY_DSN as string | undefined);
 
-  if (!import.meta.env.PROD || !isUsableDsn(dsn)) return;
+  // A local run never reports, however the bundle was built:
+  // `vite preview` and a `.env` copied from prod both leave PROD true.
+  const override = import.meta.env.VITE_SENTRY_ENABLE_IN_LOCAL === 'true';
+  if (isLocalRuntime(override) || !import.meta.env.PROD || !isUsableDsn(dsn)) return;
 
   Sentry.init(
     buildSentryOptions<Sentry.ErrorEvent>({

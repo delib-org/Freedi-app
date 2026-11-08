@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { denyWithoutDocumentAccess, getParticipantIdentity } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, DEMOGRAPHIC_CONSTANTS } from '@freedi/shared-types';
 import { DemographicFilterOption } from '@/types/heatMap';
@@ -46,6 +47,9 @@ export async function GET(
         { status: 404 }
       );
     }
+
+    const denied = await denyWithoutDocumentAccess(db, docId, await getParticipantIdentity(request), docSnapshot.data());
+    if (denied) return denied;
 
     const document = docSnapshot.data();
     const topParentId = document?.topParentId || docId;

@@ -24,3 +24,10 @@
 	font-size: 0.9rem;
 	margin: 0.5rem 0;
 }
+
+:global(:root:has(.thinking-space)) .similarityToggle {
+	padding: 16px;
+	background: var(--space-mint);
+	border: 1px solid var(--space-line);
+	border-radius: 20px;
+}

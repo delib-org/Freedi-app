@@ -1,3 +1,4 @@
+import type { UpdateData, DocumentData } from 'firebase-admin/firestore';
 /**
  * Reversible migration: Sign official paragraphs `option` → canonical `paragraph`.
  *
@@ -40,7 +41,9 @@ import { StatementType, ParagraphType } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 
 if (process.env.FIRESTORE_EMULATOR_HOST) {
-	console.error('FIRESTORE_EMULATOR_HOST is set — this migration targets a real project. Aborting.');
+	console.error(
+		'FIRESTORE_EMULATOR_HOST is set — this migration targets a real project. Aborting.',
+	);
 	process.exit(1);
 }
 
@@ -52,7 +55,9 @@ const LIMIT = limitArg ? parseInt(limitArg, 10) : Infinity;
 const project = process.env.GCLOUD_PROJECT;
 
 if (!project) {
-	console.error('Usage: GCLOUD_PROJECT=<proj> npx tsx scripts/migrateSignParagraphsToCanonical.ts [--execute] [--revert] [--documentId=ID] [--limit=N]');
+	console.error(
+		'Usage: GCLOUD_PROJECT=<proj> npx tsx scripts/migrateSignParagraphsToCanonical.ts [--execute] [--revert] [--documentId=ID] [--limit=N]',
+	);
 	process.exit(1);
 }
 if (getApps().length === 0) initializeApp({ projectId: project });
@@ -138,7 +143,7 @@ async function main(): Promise<void> {
 				pending++;
 			} else if (REVERT && isMigrated(d)) {
 				matched++;
-				const restore: Record<string, unknown> = {
+				const restore: UpdateData<DocumentData> = {
 					statementType: StatementType.option,
 					'doc._migratedFrom': FieldValue.delete(),
 					'doc._hadOrder': FieldValue.delete(),

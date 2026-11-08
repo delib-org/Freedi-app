@@ -1,0 +1,119 @@
+{
+ "input": "scientific-research/2026-08-18-live-synth-accuracy/runs/en-seed42-filingfix",
+ "passes": [
+  {
+   "pass": 1,
+   "calls": 51,
+   "keep": {
+    "moved": 1,
+    "filed": 1,
+    "themesEmptied": 0,
+    "themes": 14,
+    "sizes": [
+     7,
+     6,
+     5,
+     5,
+     5,
+     5,
+     4,
+     4,
+     4,
+     2,
+     1,
+     1,
+     1,
+     1
+    ],
+    "unthemedAtoms": 0,
+    "atoms": 51
+   },
+   "evict": {
+    "moved": 1,
+    "filed": 1,
+    "evicted": 3,
+    "themes": 14,
+    "sizes": [
+     6,
+     6,
+     5,
+     5,
+     5,
+     4,
+     4,
+     4,
+     3,
+     2,
+     1,
+     1,
+     1,
+     1
+    ],
+    "unthemedAtoms": 3,
+    "atoms": 51
+   },
+   "moves": [
+    {
+     "atomId": "MIxO6rsXBlSr",
+     "from": "oED5mYjRhowu",
+     "to": "l5kvsicbYusF"
+    },
+    {
+     "atomId": "Zr-e2U7iYIgx",
+     "from": null,
+     "to": "vVjox6IYU50Y"
+    }
+   ]
+  },
+  {
+   "pass": 2,
+   "calls": 51,
+   "keep": {
+    "moved": 0,
+    "filed": 0,
+    "themesEmptied": 0,
+    "themes": 14,
+    "sizes": [
+     7,
+     6,
+     5,
+     5,
+     5,
+     5,
+     4,
+     4,
+     4,
+     2,
+     1,
+     1,
+     1,
+     1
+    ],
+    "unthemedAtoms": 0,
+    "atoms": 51
+   },
+   "moves": []
+  }
+ ],
+ "start": {
+  "themes": 14,
+  "sizes": [
+   8,
+   5,
+   5,
+   5,
+   5,
+   5,
+   4,
+   4,
+   4,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "unthemedAtoms": 1,
+  "atoms": 51
+ }
+}

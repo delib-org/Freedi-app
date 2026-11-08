@@ -1,0 +1,282 @@
+import { describe, it, expect } from 'vitest';
+import { Statement } from '@freedi/shared-types';
+import {
+	CLASS_CODE_LENGTH,
+	HINT_MAX_LENGTH,
+	LESSON_STEP_KEYS,
+	buildLessonPlan,
+	buildNewLessonPlan,
+	isLessonStanding,
+	lessonStatusOfMain,
+	planStepMove,
+	generateClassCode,
+	getChallengeQuestion,
+	getClassRole,
+	getGuidingQuestions,
+	isLessonStepKey,
+	isValidStepIndex,
+	lessonStepOf,
+	nextStep,
+	normalizeClassCode,
+	normalizeHint,
+	planChallengeWrites,
+	planStepKeys,
+	stepFollowMePath,
+	stepLabelKey,
+	toCodeDigits,
+} from '../lessonCore';
+
+function q(id: string, extra: Partial<Statement> = {}, role?: 'guiding' | 'challenge'): Statement {
+	return {
+		statementId: id,
+		statement: id,
+		createdAt: 1000,
+		statementSettings: role ? { classRole: role } : undefined,
+		...extra,
+	} as Statement;
+}
+
+const OLD_STEPS = [
+	'waiting',
+	'opening',
+	'side',
+	'tables',
+	'tableTalk',
+	'proposals',
+	'vote',
+	'summary',
+] as const;
+
+describe('lesson steps', () => {
+	it('a new lesson has nine steps, All proposals between Proposals and Vote', () => {
+		expect([...LESSON_STEP_KEYS]).toEqual([
+			'waiting',
+			'opening',
+			'side',
+			'tables',
+			'tableTalk',
+			'proposals',
+			'allProposals',
+			'vote',
+			'summary',
+		]);
+	});
+
+	it('nextStep walks forward and ends at summary', () => {
+		expect(nextStep('waiting')).toBe('opening');
+		expect(nextStep('proposals')).toBe('allProposals');
+		expect(nextStep('allProposals')).toBe('vote');
+		expect(nextStep('vote')).toBe('summary');
+		expect(nextStep('summary')).toBeNull();
+	});
+
+	it('validates keys and indexes', () => {
+		expect(isLessonStepKey('tables')).toBe(true);
+		expect(isLessonStepKey('nope')).toBe(false);
+		expect(isValidStepIndex(0)).toBe(true);
+		expect(isValidStepIndex(8)).toBe(true);
+		expect(isValidStepIndex(9)).toBe(false);
+		expect(isValidStepIndex(8, OLD_STEPS)).toBe(false);
+		expect(isValidStepIndex(-1)).toBe(false);
+		expect(isValidStepIndex(1.5)).toBe(false);
+	});
+
+	it('lessonStepOf defaults to the first step and reads a plan', () => {
+		expect(lessonStepOf(undefined)).toEqual({ index: 0, key: 'waiting' });
+		expect(lessonStepOf(buildLessonPlan(4))).toEqual({ index: 4, key: 'tableTalk' });
+		expect(lessonStepOf({ steps: [], stepIndex: 99 })).toEqual({ index: 0, key: 'waiting' });
+	});
+
+	it('buildLessonPlan carries all nine steps and the index', () => {
+		const plan = buildLessonPlan(2);
+		expect(plan.steps).toHaveLength(9);
+		expect(plan.stepIndex).toBe(2);
+	});
+
+	it('maps every step to its own follow-me path on the hub', () => {
+		const paths = LESSON_STEP_KEYS.map((k) => stepFollowMePath('m1', k));
+		expect(new Set(paths).size).toBe(LESSON_STEP_KEYS.length);
+		expect(paths[3]).toBe('/statement/m1?step=tables');
+	});
+
+	it('builds the i18n key of a step label', () => {
+		expect(stepLabelKey('tableTalk')).toBe('step.tableTalk');
+	});
+});
+
+describe('an old 8-step lesson (IA 19.8)', () => {
+	const oldPlan = (stepIndex: number) => ({ steps: [...OLD_STEPS], stepIndex });
+
+	it('reads its own stored steps, so index 6 is still Vote', () => {
+		expect(planStepKeys(oldPlan(6))).toEqual(OLD_STEPS);
+		expect(lessonStepOf(oldPlan(6))).toEqual({ index: 6, key: 'vote' });
+		expect(lessonStepOf(oldPlan(7))).toEqual({ index: 7, key: 'summary' });
+	});
+
+	it('index 8 is out of range for it and falls back to the first step', () => {
+		expect(lessonStepOf(oldPlan(8))).toEqual({ index: 0, key: 'waiting' });
+	});
+
+	it('nextStep follows its stored order: Proposals → Vote', () => {
+		expect(nextStep('proposals', OLD_STEPS)).toBe('vote');
+		expect(nextStep('allProposals', OLD_STEPS)).toBeNull();
+	});
+
+	it('a step move keeps the stored 8 steps', () => {
+		const plan = planStepMove(6, 'live', 1, OLD_STEPS);
+		expect(plan.steps).toEqual(OLD_STEPS);
+		expect(plan.steps[plan.stepIndex]).toBe('vote');
+	});
+
+	it('a plan with no usable steps gets the current nine', () => {
+		expect(planStepKeys(undefined)).toBe(LESSON_STEP_KEYS);
+		expect(planStepKeys({ steps: [] })).toBe(LESSON_STEP_KEYS);
+	});
+
+	it('a new lesson at index 6 is at All proposals', () => {
+		expect(lessonStepOf(buildLessonPlan(6))).toEqual({ index: 6, key: 'allProposals' });
+	});
+});
+
+describe('class roles', () => {
+	it('treats an unset role as guiding', () => {
+		expect(getClassRole(q('a'))).toBe('guiding');
+		expect(getClassRole(q('a', {}, 'challenge'))).toBe('challenge');
+	});
+
+	it('finds the challenge question, or null', () => {
+		expect(getChallengeQuestion([q('a'), q('b')])).toBeNull();
+		expect(getChallengeQuestion([q('a'), q('b', {}, 'challenge')])?.statementId).toBe('b');
+	});
+
+	it('orders guiding questions by manual order then creation time', () => {
+		const list = [
+			q('late', { createdAt: 3000 }),
+			q('ordered2', { order: 2 }),
+			q('early', { createdAt: 1000 }),
+			q('ordered1', { order: 1 }),
+			q('chal', {}, 'challenge'),
+		];
+		expect(getGuidingQuestions(list).map((x) => x.statementId)).toEqual([
+			'ordered1',
+			'ordered2',
+			'early',
+			'late',
+		]);
+	});
+
+	it('promotes one challenge and demotes the previous one', () => {
+		const list = [q('a', {}, 'challenge'), q('b'), q('c')];
+		expect(planChallengeWrites(list, 'b')).toEqual([
+			{ questionId: 'b', role: 'challenge' },
+			{ questionId: 'a', role: 'guiding' },
+		]);
+	});
+
+	it('writes only the promotion when no challenge exists or it is re-picked', () => {
+		expect(planChallengeWrites([q('a'), q('b')], 'a')).toEqual([
+			{ questionId: 'a', role: 'challenge' },
+		]);
+		expect(planChallengeWrites([q('a', {}, 'challenge')], 'a')).toEqual([
+			{ questionId: 'a', role: 'challenge' },
+		]);
+	});
+
+	it('demotes every stray challenge so exactly one remains', () => {
+		const list = [q('a', {}, 'challenge'), q('b', {}, 'challenge'), q('c')];
+		const writes = planChallengeWrites(list, 'c');
+		expect(writes.filter((w) => w.role === 'challenge')).toHaveLength(1);
+		expect(writes.filter((w) => w.role === 'guiding').map((w) => w.questionId)).toEqual(['a', 'b']);
+	});
+});
+
+describe('hint', () => {
+	it('collapses whitespace to one line and caps the length', () => {
+		expect(normalizeHint('  one\n two   three ')).toBe('one two three');
+		expect(normalizeHint('x'.repeat(HINT_MAX_LENGTH + 20))).toHaveLength(HINT_MAX_LENGTH);
+		expect(normalizeHint('   ')).toBe('');
+	});
+});
+
+describe('class code', () => {
+	it('generates six digits, keeping leading zeros', () => {
+		expect(generateClassCode(() => 0)).toBe('000000');
+		expect(generateClassCode(() => 0.999999)).toBe('999999');
+		expect(generateClassCode()).toMatch(/^\d{6}$/);
+		expect(CLASS_CODE_LENGTH).toBe(6);
+	});
+
+	it('uses the random source once per digit', () => {
+		const seq = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6];
+		let i = 0;
+		expect(generateClassCode(() => seq[i++])).toBe('123456');
+	});
+
+	it('normalizes typed codes and rejects malformed ones', () => {
+		expect(normalizeClassCode('123456')).toBe('123456');
+		expect(normalizeClassCode(' 123 456 ')).toBe('123456');
+		expect(normalizeClassCode('123-456')).toBe('123456');
+		expect(normalizeClassCode('12345')).toBeNull();
+		expect(normalizeClassCode('1234567')).toBeNull();
+		expect(normalizeClassCode('12a456')).toBeNull();
+		expect(normalizeClassCode('')).toBeNull();
+	});
+});
+
+describe('lesson status helpers', () => {
+	it('a new lesson starts at Waiting, live', () => {
+		expect(buildNewLessonPlan(1234)).toMatchObject({
+			stepIndex: 0,
+			status: 'live',
+			statusAt: 1234,
+		});
+	});
+
+	it('a main without a plan or a status is live', () => {
+		expect(lessonStatusOfMain(null)).toBe('live');
+		expect(lessonStatusOfMain(q('m'))).toBe('live');
+		expect(
+			lessonStatusOfMain({
+				statementSettings: { lessonPlan: { ...buildLessonPlan(1), status: 'ended' } },
+			} as Statement),
+		).toBe('ended');
+	});
+
+	it('paused and ended stand still; live and open do not', () => {
+		expect(isLessonStanding('paused')).toBe(true);
+		expect(isLessonStanding('ended')).toBe(true);
+		expect(isLessonStanding('live')).toBe(false);
+		expect(isLessonStanding('open')).toBe(false);
+	});
+
+	it('a step move on an open lesson writes live; otherwise only the step', () => {
+		expect(planStepMove(3, 'open', 99)).toMatchObject({
+			stepIndex: 3,
+			status: 'live',
+			statusAt: 99,
+		});
+		expect(planStepMove(3, 'live', 99).status).toBeUndefined();
+	});
+
+	it('every step move clears the projector video choice', () => {
+		expect(planStepMove(3, 'live', 99).projectorVideoId).toBeNull();
+		expect(planStepMove(1, 'open', 99).projectorVideoId).toBeNull();
+	});
+});
+
+describe('toCodeDigits (the front door input)', () => {
+	it('keeps digits only and at most six', () => {
+		expect(toCodeDigits('48a2 91-3x7')).toBe('482913');
+		expect(toCodeDigits('')).toBe('');
+	});
+
+	it('maps Arabic-Indic and Persian digits', () => {
+		expect(toCodeDigits('٤٨٢٩١٣')).toBe('482913');
+		expect(toCodeDigits('۴۸۲۹۱۳')).toBe('482913');
+	});
+
+	it('takes the code out of a pasted join link', () => {
+		expect(toCodeDigits('https://class.example.com/c/482913')).toBe('482913');
+		expect(toCodeDigits('http://localhost:3035/c/123456?x=1')).toBe('123456');
+	});
+});

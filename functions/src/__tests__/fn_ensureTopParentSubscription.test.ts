@@ -108,4 +108,18 @@ describe('ensureTopParentSubscription', () => {
 		expect((created?.statement as { statementId: string }).statementId).toBe(TOP);
 		expect(typeof created?.createdAt).toBe('number');
 	});
+
+	it('mirrors for userId, not user.uid (server admin copies store the creator as user)', async () => {
+		seedTop({ membership: { access: Access.openToAll } });
+		const ADMIN = 'inherited-admin';
+		await ensureTopParentSubscription(
+			event({ ...baseSub, role: Role.admin, userId: ADMIN, user }, `${ADMIN}--child`),
+		);
+		expect(fake.read(Collections.statementsSubscribe, `${UID}--${TOP}`)).toBeUndefined();
+		expect(fake.read(Collections.statementsSubscribe, `${ADMIN}--${TOP}`)).toMatchObject({
+			userId: ADMIN,
+			statementsSubscribeId: `${ADMIN}--${TOP}`,
+			user: { uid: ADMIN, displayName: '' },
+		});
+	});
 });

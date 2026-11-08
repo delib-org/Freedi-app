@@ -7,7 +7,6 @@ import {
 	AgoraSessionSchema,
 	AgoraParticipantSchema,
 	AgoraStage,
-	AgoraSessionMode,
 	AgoraCampCensus,
 	AgoraStagePlanItem,
 	AgoraStageState,
@@ -19,9 +18,10 @@ import {
 	resolveStagePlan,
 	tallyAgoraCamps,
 } from '@freedi/shared-types';
-import { AGORA_THEME_COLOR, ODYSSEY_THEME, ODYSSEY_THEME_COLOR } from './theme';
+import { applySessionTheme } from './theme';
 import { parse, safeParse } from 'valibot';
 import { emit } from './events';
+import { checkForAppUpdate } from './appUpdate';
 
 export interface SessionState {
 	session: AgoraSession | null;
@@ -118,38 +118,6 @@ export function getStageState(): Readonly<AgoraStageState> {
 }
 
 /**
- * Dress the app in the colours of the place the player came from.
- *
- * A civic square was opened from an Odyssey island and is usually reached by
- * walking out of one, so arriving in a different palette reads as a different
- * product rather than the next room of the same one. The attribute goes on the
- * document element, next to `dir` and `lang`, because the theme is a property
- * of the whole page and not of any one view.
- *
- * The join route sets this from the gate's own URL before the session has
- * loaded; this call is the correction, and it runs on every snapshot so a
- * session that is re-scripted mid-event repaints with it.
- */
-export function applySessionTheme(session: AgoraSession | null): void {
-	if (typeof document === 'undefined') return;
-	const odyssey = session?.sessionMode === AgoraSessionMode.civic;
-
-	if (odyssey) {
-		document.documentElement.dataset.sessionTheme = ODYSSEY_THEME;
-	} else if (session) {
-		// Only a session we have actually read may take the theme OFF — absent
-		// state must leave the join route's guess alone, or every civic square
-		// flashes purple before its own colours arrive.
-		delete document.documentElement.dataset.sessionTheme;
-	}
-
-	const meta = document.querySelector('meta[name="theme-color"]');
-	if (meta && session) {
-		meta.setAttribute('content', odyssey ? ODYSSEY_THEME_COLOR : AGORA_THEME_COLOR);
-	}
-}
-
-/**
  * The pool the class consensus divides by.
  *
  * The client computes this so the results tab moves the instant a classmate
@@ -231,7 +199,7 @@ export function listenToSession(sessionId: string, userId: string): void {
 			if (parsed.success) {
 				state.session = parsed.output;
 				state.error = null;
-				applySessionTheme(state.session);
+				applySessionTheme(state.session, state.myParticipant);
 				state.loading = false;
 				announceChallengeMove(state.session, sessionId, userId);
 			} else {
@@ -239,9 +207,16 @@ export function listenToSession(sessionId: string, userId: string): void {
 				// — it is a newer server and an older tab. Adding a stage kind to
 				// the enum used to brick every open student tab the moment the
 				// teacher opened it; the tab now says "refresh" instead.
-				const unknownStage = parsed.issues.some((issue) => issue.path?.[0]?.key === 'stage');
+				// Anywhere in the doc: the plan's items carry a stage too, so a new
+				// kind of step (a linked station) reaches an old tab as
+				// `stagePlan[i].stage` long before `stage` itself.
+				const unknownStage = parsed.issues.some(
+					(issue) => issue.path?.some((step) => step.key === 'stage') === true,
+				);
 				console.error('[Session] Invalid session doc:', parsed.issues);
 				state.error = unknownStage ? 'outdated' : 'invalid';
+				// Ask for the new bundle now; the worker reloads the page once it takes over
+				if (unknownStage) checkForAppUpdate();
 				state.loading = false;
 			}
 			m.redraw();
@@ -277,6 +252,9 @@ export function listenToSession(sessionId: string, userId: string): void {
 						participant.participantId === createAgoraParticipantId(sessionId, userId),
 				) ?? null;
 			state.participantsLoaded = true;
+			// My own pick rides on my participant doc, so the look can change on
+			// this snapshot as well as on the session's
+			applySessionTheme(state.session, state.myParticipant);
 			m.redraw();
 		},
 		(error) => {
@@ -317,11 +295,39 @@ export function reportStageProgress(
 	});
 }
 
+let lastWhereaboutsKey = '';
+
+/**
+ * Tell the teacher's console where this screen is standing — once per
+ * place, and once more when a call is answered (the stamp names the call).
+ * A courtesy signal like the progress above: the walk never waits on it.
+ */
+export function reportWhereabouts(
+	sessionId: string,
+	userId: string,
+	place: string,
+	callAt?: number,
+): void {
+	const key = `${sessionId}--${place}--${callAt ?? ''}`;
+	if (lastWhereaboutsKey === key) return;
+	lastWhereaboutsKey = key;
+	const at = Date.now();
+
+	updateDoc(doc(db, Collections.agoraParticipants, createAgoraParticipantId(sessionId, userId)), {
+		whereabouts: { place, at, ...(callAt !== undefined ? { callAt } : {}) },
+		lastActive: at,
+	}).catch((error: unknown) => {
+		console.error('[Session] Report whereabouts failed:', error);
+		lastWhereaboutsKey = '';
+	});
+}
+
 export function stopListening(): void {
 	unsubscribers.forEach((unsubscribe) => unsubscribe());
 	unsubscribers = [];
 	listeningSessionId = null;
 	lastChallengeKey = '';
+	lastWhereaboutsKey = '';
 	state.session = null;
 	state.participants = [];
 	state.myParticipant = null;

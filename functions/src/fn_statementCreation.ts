@@ -7,11 +7,6 @@ import {
 	Statement,
 	StatementSchema,
 	StatementType,
-	Role,
-	StatementSubscription,
-	StatementSubscriptionSchema,
-	createSubscription,
-	getStatementSubscriptionId,
 	SimpleStatement,
 	SourceApp,
 	statementToSimpleStatement,
@@ -25,6 +20,11 @@ import { trackStatementCreation } from './engagement/credits/trackEngagement';
 import { onStatementCreatedStats } from './fn_adminStats';
 import { recordSuggestionProgress } from './progress/statementCreationHook';
 import { generateDescriptionFromChildren } from './helpers';
+import { recordDiscussionActivity } from './userFeed/recordDiscussionActivity';
+import { onClassOptionCreated } from './classroom/autoEvaluations';
+import { logError } from './utils/errorHandling';
+import { setupAdminsForStatement } from './setupAdminsForStatement';
+import { embedNewQuestion } from './services/question-embedding-store';
 import {
 	computeHybridVector,
 	isHybridClusteringEnabled,
@@ -66,9 +66,10 @@ export async function onStatementCreated(
 		if (statement.parentId !== 'top') {
 			tasks.push(updateParentForNewChild(statement));
 
-			// REMOVED: updateTopParentSubscriptions fan-out
-			// The parent Statement doc's lastChildUpdate is the source of truth for activity.
-			// The client reads it via Redux overlay and sorts using getLatestChildActivity().
+			// New content anywhere in a discussion raises it on its members' home
+			// pages: a coalesced (once a minute) write to userFeed, which has no
+			// triggers. Replaces the removed updateTopParentSubscriptions fan-out.
+			tasks.push(recordDiscussionActivity(db, statement.topParentId).then(() => undefined));
 		}
 
 		// Task 4: Add to mass consensus (if applicable)
@@ -76,14 +77,23 @@ export async function onStatementCreated(
 			tasks.push(addStatementToMassConsensus(statement));
 		}
 
-		// Task 5: Create notifications (if not top-level)
-		if (statement.parentId !== 'top') {
+		// Task 5: Create notifications (if not top-level). A join-class reply on a
+		// proposal (IA 22) has its own notice path (classPostReply): the generic
+		// fan-out would copy a child's words and name into lastMessage, the in-app
+		// center and email.
+		if (statement.parentId !== 'top' && statement.classReply === undefined) {
 			tasks.push(createNotificationsForStatement(statement));
 		}
 
 		// Task 6: Generate embedding for option statements (async, non-blocking)
 		if (statement.statementType === 'option') {
 			tasks.push(generateEmbeddingForStatement(statement));
+		}
+
+		// Task 6b: Question vector for admin "search by meaning" — every question,
+		// top-level ones included (questionEmbeddings; never throws)
+		if (statement.statementType === StatementType.question) {
+			tasks.push(embedNewQuestion(statement));
 		}
 
 		// Task 7: Track engagement (non-blocking)
@@ -114,135 +124,28 @@ export async function onStatementCreated(
 			),
 		);
 
+		// Task 11: join-class — auto +1 by the author (and table co-authors) of an
+		// option written at a table, and lock that table's writing mode
+		if (statement.classTable) {
+			tasks.push(
+				onClassOptionCreated(db, statement)
+					.then(() => undefined)
+					.catch((err) =>
+						logError(err, {
+							operation: 'onStatementCreated.classAutoEvaluation',
+							statementId: statement.statementId,
+							metadata: { tableId: statement.classTable?.tableId },
+						}),
+					),
+			);
+		}
+
 		// Execute all tasks in parallel
 		await Promise.all(tasks);
 
 		logger.info(`Successfully processed creation of statement ${statement.statementId}`);
 	} catch (error) {
 		logger.error('Error in onStatementCreated:', error);
-	}
-}
-
-/**
- * Sets up admin subscriptions for a new statement
- * (Replaces setAdminsToNewStatement)
- */
-async function setupAdminsForStatement(statement: Statement): Promise<void> {
-	try {
-		const adminsToAdd = new Set<string>();
-
-		// Always add the creator as admin
-		adminsToAdd.add(statement.creator.uid);
-
-		// Add top group admins (if applicable)
-		const topParentId = statement.topParentId || statement.parentId;
-		if (topParentId && topParentId !== 'top' && topParentId !== statement.statementId) {
-			const topAdminsDB = await db
-				.collection(Collections.statementsSubscribe)
-				.where('statementId', '==', topParentId)
-				.where('role', '==', Role.admin)
-				.get();
-
-			topAdminsDB.docs.forEach((doc) => {
-				const adminSub = parse(StatementSubscriptionSchema, doc.data());
-				adminsToAdd.add(adminSub.user.uid);
-			});
-		}
-
-		// Add direct parent admins (if applicable)
-		const { parentId } = statement;
-		if (parentId && parentId !== 'top' && parentId !== topParentId) {
-			const parentAdminsDB = await db
-				.collection(Collections.statementsSubscribe)
-				.where('statementId', '==', parentId)
-				.where('role', '==', Role.admin)
-				.get();
-
-			parentAdminsDB.docs.forEach((doc) => {
-				const adminSub = parse(StatementSubscriptionSchema, doc.data());
-				adminsToAdd.add(adminSub.user.uid);
-			});
-		}
-
-		// Batch create all admin subscriptions
-		const MAX_INHERITED_ADMINS = 20;
-		const batch = db.batch();
-		let adminUserIds = Array.from(adminsToAdd);
-
-		// Cap inherited admins to prevent escalation in deep hierarchies
-		const otherAdmins = adminUserIds.filter((uid) => uid !== statement.creator.uid);
-		if (otherAdmins.length > MAX_INHERITED_ADMINS) {
-			logger.warn(
-				`Admin cap hit: ${otherAdmins.length} inherited admins for statement ${statement.statementId}, limiting to ${MAX_INHERITED_ADMINS}`,
-			);
-			adminUserIds = [statement.creator.uid, ...otherAdmins.slice(0, MAX_INHERITED_ADMINS)];
-		}
-
-		// Always add creator subscription first
-		const creatorSubscription = createSubscription({
-			statement,
-			role: Role.admin,
-			user: statement.creator,
-			getEmailNotification: true,
-			getInAppNotification: true,
-			getPushNotification: true,
-		});
-
-		if (creatorSubscription?.statementsSubscribeId) {
-			batch.set(
-				db
-					.collection(Collections.statementsSubscribe)
-					.doc(creatorSubscription.statementsSubscribeId),
-				creatorSubscription,
-			);
-		}
-
-		// Add other admin subscriptions
-		const otherAdminIds = adminUserIds.filter((uid) => uid !== statement.creator.uid);
-		if (otherAdminIds.length > 0) {
-			// Get user data from existing subscriptions
-			const existingSubscriptions = await db
-				.collection(Collections.statementsSubscribe)
-				.where('userId', 'in', otherAdminIds)
-				.where('statementId', 'in', [topParentId, parentId].filter(Boolean))
-				.get();
-
-			const userMap = new Map();
-			existingSubscriptions.docs.forEach((doc) => {
-				const sub = doc.data() as StatementSubscription;
-				userMap.set(sub.user.uid, sub.user);
-			});
-
-			otherAdminIds.forEach((adminId) => {
-				const user = userMap.get(adminId);
-				if (!user) return;
-
-				const statementsSubscribeId = getStatementSubscriptionId(statement.statementId, user);
-
-				if (!statementsSubscribeId) return;
-
-				const newSubscription = createSubscription({
-					statement,
-					role: Role.admin,
-					user: user,
-					getEmailNotification: true,
-					getInAppNotification: true,
-					getPushNotification: true,
-				});
-
-				if (newSubscription) {
-					batch.set(
-						db.collection(Collections.statementsSubscribe).doc(statementsSubscribeId),
-						newSubscription,
-					);
-				}
-			});
-		}
-
-		await batch.commit();
-	} catch (error) {
-		logger.error('Error in setupAdminsForStatement:', error);
-		throw error;
 	}
 }
 
@@ -425,8 +328,8 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 
 		// If a concurrent path (the live-synth onCreate trigger) already
 		// produced and saved the embedding for this statement, skip the
-		// OpenAI call. The cache lives on the statement doc itself, so a
-		// single point-read is enough to detect.
+		// OpenAI call. The cache is one doc per statement
+		// (statementEmbeddings/{id}), so a single point-read is enough to detect.
 		const existing = await embeddingCache.getBatchEmbeddings([statement.statementId]);
 		const cached = existing.get(statement.statementId);
 		if (cached && cached.length > 0) {
@@ -459,7 +362,7 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 			},
 		);
 
-		// Save embedding to the statement document (text passed so textHash
+		// Save the embedding to statementEmbeddings/{id} (text passed so textHash
 		// is written for the synthesis verdict cache; brief stored for debugging).
 		// NOTE: this never changes statement.statement — only embedding fields.
 		await embeddingCache.saveEmbedding(

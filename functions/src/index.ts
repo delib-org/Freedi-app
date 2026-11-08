@@ -11,10 +11,17 @@ import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
 // Import collection constants
-import { Collections, functionConfig } from '@freedi/shared-types';
+import { Collections, StatementType, functionConfig } from '@freedi/shared-types';
 
 // Structured error handling
 import { logError } from './utils/errorHandling';
+import {
+	createFirestoreFunction,
+	getTimestamp,
+	HOT_TRIGGER_MEMORY,
+} from './utils/createFirestoreFunction';
+
+export { getTimestamp };
 import { initFunctionsSentry } from './utils/sentry';
 
 // Before anything else, so a crash during cold start is reported too.
@@ -22,7 +29,13 @@ import { initFunctionsSentry } from './utils/sentry';
 initFunctionsSentry();
 
 // HTTP auth/authorization helpers (extracted for unit testing)
-import { verifyAuthToken, requireSystemAdmin } from './utils/httpAuth';
+import {
+	verifyAuthToken,
+	requireSystemAdmin,
+	withVerifiedUser,
+	type AuthedHttpHandler,
+} from './utils/httpAuth';
+import { RATE_BUDGETS, type RateBudget } from './config/rateBudgets';
 
 // Import function modules
 import { onChatStatementCreated } from './chat/fn_onChatStatementCreated';
@@ -46,12 +59,12 @@ import {
 	// updateNumberOfNewSubStatements,
 } from './fn_statements';
 import { updateVote } from './fn_vote';
+import { onNewSubscription, onStatementDeletionDeleteSubscriptions } from './fn_subscriptions';
 import {
-	onNewSubscription,
-	onStatementDeletionDeleteSubscriptions,
-	validateRoleChange,
-	updateStatementMemberCount,
-} from './fn_subscriptions';
+	onSubscriptionCreated,
+	onSubscriptionDeleted,
+	onSubscriptionUpdated,
+} from './fn_subscriptionLifecycle';
 import { updateParentOnChildUpdate, updateParentOnChildDelete } from './fn_statement_updates';
 import {
 	getRandomStatements,
@@ -71,6 +84,7 @@ import {
 import { findSimilarStatements } from './fn_findSimilarStatements';
 import { detectMultipleSuggestions } from './fn_detectMultipleSuggestions';
 import { mergeStatements } from './fn_mergeStatements';
+import { prepareSuggestion } from './fn_prepareSuggestion';
 import { updateApprovalResults } from './fn_approval';
 import { setImportanceToStatement } from './fn_importance';
 import { updateAgrees } from './fn_agree';
@@ -93,6 +107,7 @@ import { getCluster, recoverLastSnapshot } from './fn_clusters';
 import { getBulkStatements, writeStatementDeletionTombstone } from './fn_bulkStatements';
 import { checkProfanity } from './fn_profanityChecker';
 import { recalculateStatementEvaluations } from './fn_recalculateEvaluations';
+import { fullExport } from './fn_fullExport';
 import { deleteResearchLogs } from './fn_deleteResearchLogs';
 import { cleanupResearchLogs } from './fn_researchRetention';
 import { scheduledStatementHistorySnapshot } from './statements/history/scheduledSnapshot';
@@ -182,6 +197,9 @@ import {
 
 // Top Answers admin panel — on-demand recompute of statement.results / isChosen
 import { recomputeTopOptions } from './fn_recomputeTopOptions';
+import { reconcileEvaluatorCount } from './fn_reconcileEvaluatorCount';
+import { searchStatements } from './fn_searchStatements';
+import { searchQuestionsByMeaning } from './fn_searchQuestionsByMeaning';
 
 // Bulk Idea Synthesis (admin-triggered near-duplicate detection)
 import {
@@ -242,6 +260,10 @@ import { fn_removeOrgMember } from './organizations/fn_removeOrgMember';
 import { fn_revokeOrgInvite } from './organizations/fn_revokeOrgInvite';
 import { fn_resendOrgInvite } from './organizations/fn_resendOrgInvite';
 import { fn_createOrgStatement } from './organizations/fn_createOrgStatement';
+import { fn_linkOrgStatement } from './organizations/fn_linkOrgStatement';
+import { fn_renameOrgActivity } from './organizations/fn_renameOrgActivity';
+import { fn_unlinkOrgStatement } from './organizations/fn_unlinkOrgStatement';
+import { fn_studioSurveyStats } from './organizations/fn_studioSurveyStats';
 
 // ── "Start a question with AI" (WizCol Studio): planner, build, scheduled actions ──
 import {
@@ -300,15 +322,6 @@ const isProduction =
 /**
  * Gets current timestamp in HH:MM:SS.mmm format
  */
-export const getTimestamp = (): string => {
-	const now = new Date();
-	const hours = String(now.getHours()).padStart(2, '0');
-	const minutes = String(now.getMinutes()).padStart(2, '0');
-	const seconds = String(now.getSeconds()).padStart(2, '0');
-	const ms = String(now.getMilliseconds()).padStart(3, '0');
-
-	return `${hours}:${minutes}:${seconds}.${ms}`;
-};
 
 console.info(`[${getTimestamp()}] Environment:`, isProduction ? 'Production' : 'Development');
 
@@ -322,8 +335,13 @@ const corsConfig = isProduction
 			'https://freedi-test.web.app',
 			'https://delib-5.web.app',
 			'https://wizcol-app.web.app',
+			'https://wizcol-app.firebaseapp.com',
 			'https://app.wizcol.com',
 			'https://sign.wizcol.com',
+			// Join calls improveSuggestion from the browser
+			'https://join.wizcol.com',
+			'https://wizcol-join.web.app',
+			'https://wizcol-join.firebaseapp.com',
 		]
 	: [
 			'http://localhost:5173',
@@ -333,6 +351,8 @@ const corsConfig = isProduction
 			'http://localhost:5177',
 			'http://localhost:5178',
 			'http://localhost:5179',
+			'http://localhost:5189',
+			'http://127.0.0.1:5189',
 		];
 
 /**
@@ -462,88 +482,48 @@ const wrapAdminHttpFunction = (
 };
 
 /**
- * Creates a wrapper for Firestore triggers with standardized error handling.
- *
- * Note: Firebase trigger types (onDocumentCreated, onDocumentUpdated, onDocumentWritten,
- * onDocumentDeleted) have different event structures and incompatible generic parameters.
- * The callback's event type is preserved through the generic T, but we use a broad
- * function type for triggerType because the Firebase SDK types can't be unified.
- *
- * @param path - Document path pattern (e.g., '/statements/{statementId}')
- * @param triggerType - Firebase trigger function (onDocumentCreated, etc.)
- * @param callback - Handler function that receives the typed event
- * @param functionName - Name for logging purposes
- * @returns Configured Firebase Cloud Function
+ * HTTP function that requires a valid Firebase ID token and hands the verified
+ * uid to the handler. Anonymous users pass, so zero-signup flows keep working.
  */
-function createFirestoreFunction<T>(
-	path: string,
-	triggerType:
-		| typeof onDocumentCreated
-		| typeof onDocumentUpdated
-		| typeof onDocumentWritten
-		| typeof onDocumentDeleted,
-	callback: (event: T) => Promise<unknown>,
-	functionName: string,
-): ReturnType<typeof onDocumentCreated> {
-	// Cast to unknown first, then to a compatible function signature
-	// This is required because Firebase's trigger types have incompatible generic structures
-	const trigger = triggerType as unknown as (
-		opts: { document: string } & typeof functionConfig,
-		handler: (event: T) => Promise<void>,
-	) => ReturnType<typeof onDocumentCreated>;
+const wrapAuthedHttpFunction = (handler: AuthedHttpHandler, budget?: RateBudget) =>
+	wrapHttpFunction(withVerifiedUser(handler, budget));
 
-	return trigger(
-		{
-			document: path,
-			...functionConfig,
-		},
-		async (event: T) => {
-			const startTime = Date.now();
-			const startTimestamp = getTimestamp();
-			console.info(`[${startTimestamp}] ▶ Starting ${functionName}`);
-
-			try {
-				await callback(event);
-				const duration = Date.now() - startTime;
-				const endTimestamp = getTimestamp();
-				console.info(`[${endTimestamp}] ✓ Completed ${functionName} in ${duration}ms`);
-			} catch (error) {
-				const duration = Date.now() - startTime;
-				const endTimestamp = getTimestamp();
-				logError(error, {
-					operation: `firestoreTrigger.${functionName}`,
-					metadata: { duration, endTimestamp, path },
-				});
-				throw error;
-			}
-		},
-	);
-}
+/** Same gate for AI and embedding endpoints, with the 1GB memory tier. */
+const wrapAuthedMemoryIntensiveHttpFunction = (handler: AuthedHttpHandler, budget?: RateBudget) =>
+	wrapMemoryIntensiveHttpFunction(withVerifiedUser(handler, budget));
 
 // --------------------------
 // HTTP FUNCTIONS
 // --------------------------
-exports.getRandomStatements = wrapHttpFunction(getRandomStatements);
-exports.getTopStatements = wrapHttpFunction(getTopStatements);
-exports.getUserOptions = wrapHttpFunction(getUserOptions);
-exports.findSimilarStatements = wrapMemoryIntensiveHttpFunction(findSimilarStatements);
-exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
-exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
-exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
-exports.addFeedback = wrapHttpFunction(addFeedback);
+exports.getRandomStatements = wrapAuthedHttpFunction(getRandomStatements);
+exports.getTopStatements = wrapAuthedHttpFunction(getTopStatements);
+exports.getUserOptions = wrapAuthedHttpFunction(getUserOptions);
+exports.findSimilarStatements = wrapAuthedMemoryIntensiveHttpFunction(
+	findSimilarStatements,
+	RATE_BUDGETS.findSimilarStatements,
+);
+exports.massConsensusGetInitialData = wrapAuthedHttpFunction(getInitialMCData);
+exports.getQuestionOptions = wrapAuthedHttpFunction(getQuestionOptions);
+exports.massConsensusAddMember = wrapAuthedHttpFunction(addMassConsensusMember);
+exports.addFeedback = wrapAuthedHttpFunction(addFeedback, RATE_BUDGETS.addFeedback);
 
 // Email notification functions
-exports.addEmailSubscriber = wrapHttpFunction(addEmailSubscriber);
-exports.sendEmailToSubscribers = wrapHttpFunction(sendEmailToSubscribers);
-exports.getEmailSubscriberCount = wrapHttpFunction(getEmailSubscriberCount);
+exports.addEmailSubscriber = wrapAuthedHttpFunction(
+	addEmailSubscriber,
+	RATE_BUDGETS.addEmailSubscriber,
+);
+exports.sendEmailToSubscribers = wrapAuthedHttpFunction(sendEmailToSubscribers);
+exports.getEmailSubscriberCount = wrapAuthedHttpFunction(getEmailSubscriberCount);
+// Stays public: reachable from an emailed link with no login. See fn_emailNotifications.ts.
 exports.unsubscribeEmail = wrapHttpFunction(unsubscribeEmail);
-exports.getCluster = wrapHttpFunction(getCluster);
-exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
+exports.getCluster = wrapAuthedHttpFunction(getCluster);
+exports.recoverLastSnapshot = wrapAuthedHttpFunction(recoverLastSnapshot);
 // Bulk fetch for "Load all" (mind-map / agreement-map / collaboration-index).
 // Authenticated via Firebase ID token inside the handler (verifyAuthToken).
 exports.getBulkStatements = wrapHttpFunction(getBulkStatements);
 exports.checkProfanity = checkProfanity;
 exports.recalculateStatementEvaluations = recalculateStatementEvaluations;
+exports.fullExport = fullExport;
 exports.deleteResearchLogs = deleteResearchLogs;
 exports.cleanupResearchLogs = cleanupResearchLogs;
 exports.scheduledStatementHistorySnapshot = scheduledStatementHistorySnapshot;
@@ -551,13 +531,30 @@ exports.cleanupStatementHistory = cleanupStatementHistory;
 exports.recalculateIndices = recalculateIndices;
 exports.fixClusterIntegration = fixClusterIntegration;
 exports.setMapFilter = setMapFilter;
-exports.improveSuggestion = wrapMemoryIntensiveHttpFunction(handleImproveSuggestion);
-exports.detectMultipleSuggestions = wrapMemoryIntensiveHttpFunction(detectMultipleSuggestions);
-exports.mergeStatements = wrapMemoryIntensiveHttpFunction(mergeStatements);
-exports.detectStatementType = wrapMemoryIntensiveHttpFunction(detectStatementType);
+exports.improveSuggestion = wrapAuthedMemoryIntensiveHttpFunction(
+	handleImproveSuggestion,
+	RATE_BUDGETS.improveSuggestion,
+);
+exports.detectMultipleSuggestions = wrapAuthedMemoryIntensiveHttpFunction(
+	detectMultipleSuggestions,
+	RATE_BUDGETS.detectMultipleSuggestions,
+);
+exports.mergeStatements = wrapAuthedMemoryIntensiveHttpFunction(
+	mergeStatements,
+	RATE_BUDGETS.mergeStatements,
+);
+// One round trip for the MC "Add your idea" flow: moderation + split + similar
+exports.prepareSuggestion = wrapAuthedMemoryIntensiveHttpFunction(
+	prepareSuggestion,
+	RATE_BUDGETS.prepareSuggestion,
+);
+exports.detectStatementType = wrapAuthedMemoryIntensiveHttpFunction(
+	detectStatementType,
+	RATE_BUDGETS.detectStatementType,
+);
 
 // PHASE 4 FIX: Metrics and monitoring functions
-exports.analyzeSubscriptionPatterns = analyzeSubscriptionPatterns;
+exports.analyzeSubscriptionPatterns = wrapAdminHttpFunction(analyzeSubscriptionPatterns);
 
 // Maintenance HTTP functions (admin auth required)
 exports.maintainRole = wrapAdminHttpFunction(maintainRole);
@@ -592,6 +589,7 @@ exports.onStatementCreated = createFirestoreFunction(
 	onDocumentCreated,
 	onStatementCreated,
 	'onStatementCreated',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
 // ============================================
@@ -691,6 +689,26 @@ exports.onStatementDeletionTombstone = createFirestoreFunction(
 	'writeStatementDeletionTombstone',
 );
 
+// A deleted statement's vectors (statementEmbeddings/{id}) go with it.
+exports.onStatementDeletionEmbedding = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentDeleted,
+	async (event: {
+		params: { statementId: string };
+		data?: { data: () => { statementType?: unknown } | undefined };
+	}) => {
+		const deleted = event.data?.data();
+		await Promise.all([
+			deleteEmbeddingDoc(event.params.statementId),
+			// A deleted question's search-by-meaning vector goes too.
+			deleted?.statementType === StatementType.question
+				? deleteQuestionEmbedding(event.params.statementId)
+				: Promise.resolve(),
+		]);
+	},
+	'onStatementDeletionEmbedding',
+);
+
 // Subscription functions
 // PHASE 2 FIX: Renamed for clarity - handles waiting role subscriptions and admin notifications
 exports.handleWaitingRoleSubscriptions = createFirestoreFunction(
@@ -698,22 +716,33 @@ exports.handleWaitingRoleSubscriptions = createFirestoreFunction(
 	onDocumentWritten,
 	onNewSubscription,
 	'handleWaitingRoleSubscriptions',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
-// Validate role changes to prevent banning admins or creators
+// Subscription updates: revert bans of admins/creators, then keep the user's
+// userFeed entry in step with role changes (deployed name kept for continuity).
 exports.validateRoleChange = createFirestoreFunction(
 	`/${Collections.statementsSubscribe}/{subscriptionId}`,
 	onDocumentUpdated,
-	validateRoleChange,
+	onSubscriptionUpdated,
 	'validateRoleChange',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
-// Update statement's numberOfMembers count when subscriptions are created/deleted
-exports.updateStatementMemberCount = createFirestoreFunction(
+// Membership lifecycle: numberOfMembers + userFeed entry. Split from the old
+// onDocumentWritten `updateStatementMemberCount`, which was also invoked by
+// every subscription UPDATE (activity stamps, read-state) only to return early.
+exports.onSubscriptionCreatedMembership = createFirestoreFunction(
 	`/${Collections.statementsSubscribe}/{subscriptionId}`,
-	onDocumentWritten,
-	updateStatementMemberCount,
-	'updateStatementMemberCount',
+	onDocumentCreated,
+	onSubscriptionCreated,
+	'onSubscriptionCreatedMembership',
+);
+exports.onSubscriptionDeletedMembership = createFirestoreFunction(
+	`/${Collections.statementsSubscribe}/{subscriptionId}`,
+	onDocumentDeleted,
+	onSubscriptionDeleted,
+	'onSubscriptionDeletedMembership',
 );
 
 // New v2 functions to update statements and subscriptions efficiently
@@ -762,6 +791,7 @@ exports.newEvaluation = createFirestoreFunction(
 	onDocumentCreated,
 	newEvaluation,
 	'newEvaluation',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
 exports.deleteEvaluation = createFirestoreFunction(
@@ -769,6 +799,7 @@ exports.deleteEvaluation = createFirestoreFunction(
 	onDocumentDeleted,
 	deleteEvaluation,
 	'deleteEvaluation',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
 exports.updateEvaluation = createFirestoreFunction(
@@ -776,6 +807,7 @@ exports.updateEvaluation = createFirestoreFunction(
 	onDocumentUpdated,
 	updateEvaluation,
 	'updateEvaluation',
+	{ memory: HOT_TRIGGER_MEMORY },
 );
 
 // Results functions
@@ -833,18 +865,18 @@ exports.summarizeLink = summarizeLink;
 exports.improveProposalWithAI = improveProposalWithAI;
 
 // Room Assignment functions
-exports.createRoomAssignments = wrapHttpFunction(createRoomAssignments);
-exports.notifyRoomParticipants = wrapHttpFunction(notifyRoomParticipants);
-exports.getRoomAssignments = wrapHttpFunction(getRoomAssignments);
-exports.getMyRoomAssignment = wrapHttpFunction(getMyRoomAssignment);
-exports.deleteRoomAssignments = wrapHttpFunction(deleteRoomAssignments);
+exports.createRoomAssignments = wrapAuthedHttpFunction(createRoomAssignments);
+exports.notifyRoomParticipants = wrapAuthedHttpFunction(notifyRoomParticipants);
+exports.getRoomAssignments = wrapAuthedHttpFunction(getRoomAssignments);
+exports.getMyRoomAssignment = wrapAuthedHttpFunction(getMyRoomAssignment);
+exports.deleteRoomAssignments = wrapAuthedHttpFunction(deleteRoomAssignments);
 
 // Split Joined Option functions
-exports.splitJoinedOption = wrapHttpFunction(splitJoinedOption);
-exports.getOptionsExceedingMax = wrapHttpFunction(getOptionsExceedingMax);
-exports.getAllOptionsWithMembers = wrapHttpFunction(getAllOptionsWithMembers);
-exports.clearAllRoomsForParent = wrapHttpFunction(clearAllRoomsForParent);
-exports.cleanupDuplicateRoomSettings = wrapHttpFunction(cleanupDuplicateRoomSettings);
+exports.splitJoinedOption = wrapAuthedHttpFunction(splitJoinedOption);
+exports.getOptionsExceedingMax = wrapAuthedHttpFunction(getOptionsExceedingMax);
+exports.getAllOptionsWithMembers = wrapAuthedHttpFunction(getAllOptionsWithMembers);
+exports.clearAllRoomsForParent = wrapAuthedHttpFunction(clearAllRoomsForParent);
+exports.cleanupDuplicateRoomSettings = wrapAdminHttpFunction(cleanupDuplicateRoomSettings);
 
 // Discussion Summarization
 exports.summarizeDiscussion = summarizeDiscussion;
@@ -855,16 +887,19 @@ exports.serveOgTags = serveOgTags;
 exports.serveJoinShareRoutes = serveJoinShareRoutes;
 
 // Google Docs Import
-exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
+exports.importGoogleDoc = wrapAuthedHttpFunction(importGoogleDoc);
 
 // Document Version AI Processing (for Sign app - uses 540s timeout vs Vercel's 30s limit)
-exports.processVersionAI = wrapMemoryIntensiveHttpFunction(processVersionAI);
+exports.processVersionAI = wrapAuthedMemoryIntensiveHttpFunction(processVersionAI);
 
 // Sign Document Report AI narrative (for Sign app - uses 540s timeout vs Vercel's 30s limit)
-exports.generateDocumentReportAI = wrapMemoryIntensiveHttpFunction(generateDocumentReportAI);
+exports.generateDocumentReportAI = wrapAuthedMemoryIntensiveHttpFunction(generateDocumentReportAI);
 
 // Suggestion Refinement AI (per-suggestion synthesis + improvement from comments)
-exports.processRefinementAI = wrapMemoryIntensiveHttpFunction(processRefinementAI);
+exports.processRefinementAI = wrapAuthedMemoryIntensiveHttpFunction(
+	processRefinementAI,
+	RATE_BUDGETS.processRefinementAI,
+);
 
 // Auto-Generate Version on Suggestion Threshold
 exports.onSuggestionCreatedAutoGenerate = createFirestoreFunction(
@@ -881,6 +916,13 @@ exports.reverseIntegration = reverseIntegrationCallable;
 
 // Top Answers admin panel
 exports.recomputeTopOptions = recomputeTopOptions;
+exports.reconcileEvaluatorCount = reconcileEvaluatorCount;
+
+// Statement search (home, subscriptions, whole tree; lexical + semantic)
+exports.searchStatements = searchStatements;
+
+// Question "search by meaning" (MC survey question picker; admin scope only)
+exports.searchQuestionsByMeaning = searchQuestionsByMeaning;
 
 // Bulk Idea Synthesis
 exports.synthesizeIdeasPreview = synthesizeIdeasPreview;
@@ -888,13 +930,13 @@ exports.synthesizeIdeasExecute = synthesizeIdeasExecute;
 exports.regenerateSynthesisProposal = regenerateSynthesisProposal;
 
 // Embedding Operations (for vector-based similarity search)
-exports.generateBulkEmbeddings = wrapHttpFunction(generateBulkEmbeddings);
-exports.getEmbeddingStatus = wrapHttpFunction(getEmbeddingStatus);
-exports.regenerateEmbedding = wrapHttpFunction(regenerateEmbedding);
-exports.deleteEmbedding = wrapHttpFunction(deleteEmbedding);
+exports.generateBulkEmbeddings = wrapAdminHttpFunction(generateBulkEmbeddings);
+exports.getEmbeddingStatus = wrapAdminHttpFunction(getEmbeddingStatus);
+exports.regenerateEmbedding = wrapAdminHttpFunction(regenerateEmbedding);
+exports.deleteEmbedding = wrapAdminHttpFunction(deleteEmbedding);
 
 // Polarization Index Migration (for recalculating with demographic data)
-exports.recalculatePolarizationIndexForStatement = wrapHttpFunction(
+exports.recalculatePolarizationIndexForStatement = wrapAdminHttpFunction(
 	async (req: Request, res: Response) => {
 		const { statementId } = req.body;
 		if (!statementId) {
@@ -907,7 +949,7 @@ exports.recalculatePolarizationIndexForStatement = wrapHttpFunction(
 	},
 );
 
-exports.recalculatePolarizationIndexForParent = wrapHttpFunction(
+exports.recalculatePolarizationIndexForParent = wrapAdminHttpFunction(
 	async (req: Request, res: Response) => {
 		const { parentId } = req.body;
 		if (!parentId) {
@@ -920,7 +962,7 @@ exports.recalculatePolarizationIndexForParent = wrapHttpFunction(
 	},
 );
 
-exports.recalculatePolarizationIndexForGroup = wrapHttpFunction(
+exports.recalculatePolarizationIndexForGroup = wrapAdminHttpFunction(
 	async (req: Request, res: Response) => {
 		const { topParentId } = req.body;
 		if (!topParentId) {
@@ -967,6 +1009,12 @@ exports.fn_removeOrgMember = fn_removeOrgMember;
 exports.fn_revokeOrgInvite = fn_revokeOrgInvite;
 exports.fn_resendOrgInvite = fn_resendOrgInvite;
 exports.fn_createOrgStatement = fn_createOrgStatement;
+// Adding a question that already exists to an organization's board
+exports.fn_linkOrgStatement = fn_linkOrgStatement;
+exports.fn_renameOrgActivity = fn_renameOrgActivity;
+exports.fn_unlinkOrgStatement = fn_unlinkOrgStatement;
+// How many people answered a linked crowd survey (MC's own numbers)
+exports.fn_studioSurveyStats = fn_studioSurveyStats;
 
 // ── "Start a question with AI" (WizCol Studio) ──
 exports.fn_studioPlanStart = fn_studioPlanStart;
@@ -1121,6 +1169,7 @@ exports.synthesisJobDispatch = createFirestoreFunction(
 // acting). See plans/synthesis-100k-living-synth.md, Ship 3 §"Trigger 3" /
 // "Debounced flusher".
 export { fn_clusterRecomputeFlush } from './synthesis/liveSynth/fn_clusterRecomputeFlush';
+export { fn_nightlyClusterReconcile } from './condensation/fn_nightlyClusterReconcile';
 
 // Ship 3b — live-synth attach/spawn/dissolve triggers.
 // Both are gated by the SYNTHESIS_LIVE_SYNTH_ENABLED flag and exit
@@ -1129,6 +1178,11 @@ export { fn_clusterRecomputeFlush } from './synthesis/liveSynth/fn_clusterRecomp
 // See plans/synthesis-100k-living-synth.md, Ship 3 §"Trigger 1" / "Trigger 2".
 import { liveSynthOnOptionCreate } from './synthesis/liveSynth/onOptionCreateLive';
 import { liveSynthOnOptionUpdate } from './synthesis/liveSynth/onOptionUpdateLive';
+import { deleteEmbeddingDoc, syncEmbeddingParent } from './services/statement-embedding-store';
+import {
+	deleteQuestionEmbedding,
+	syncQuestionEmbedding,
+} from './services/question-embedding-store';
 
 exports.liveSynthOnOptionCreate = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
@@ -1145,7 +1199,18 @@ exports.liveSynthOnOptionUpdate = createFirestoreFunction(
 	onDocumentUpdated,
 	async (event: { data?: { before: { data: () => unknown }; after: { data: () => unknown } } }) => {
 		if (!event.data) return;
-		await liveSynthOnOptionUpdate(event.data.before.data(), event.data.after.data());
+		const before = event.data.before.data();
+		const after = event.data.after.data();
+		await Promise.all([
+			// Rides on this trigger (it already fires on every statement update)
+			// rather than adding another per-update function: vector search
+			// pre-filters by parentId, so the embedding doc follows a moved statement.
+			syncEmbeddingParent(before, after),
+			// Same ride for question vectors (search by meaning): re-embed on a
+			// text edit, follow a move or hide. No reads unless a question changed.
+			syncQuestionEmbedding(before, after),
+			liveSynthOnOptionUpdate(before, after),
+		]);
 	},
 	'liveSynthOnOptionUpdate',
 );
@@ -1168,6 +1233,7 @@ export { synthesizeNow } from './synthesis/admin/fn_synthesizeNow';
 export { claimRegistryFirstRun } from './synthesis/admin/fn_claimRegistryFirstRun';
 export { reCluster } from './synthesis/admin/fn_reCluster';
 export { globalCluster } from './synthesis/admin/fn_globalCluster';
+export { rebuildThemes } from './synthesis/themeRebuild/fn_rebuildThemes';
 export { reEmbedQuestion } from './synthesis/admin/fn_reEmbedQuestion';
 export { synthesizeSelected } from './synthesis/admin/fn_synthesizeSelected';
 export { rejudgeGrayBand } from './synthesis/admin/fn_rejudgeGrayBand';
@@ -1241,9 +1307,11 @@ export {
 	agoraJoinSession,
 	agoraAdvanceStage,
 	agoraUpdateStagePlan,
+	agoraRewordQuestion,
 	agoraGradeValueIdentification,
 	agoraWritingAssistant,
 	agoraSetRound,
+	agoraSetBallotGoalOnly,
 	agoraChallengeTurn,
 	agoraResolveSuggestion,
 	agoraCharacterReview,
@@ -1251,14 +1319,67 @@ export {
 	agoraGenerateTopicPackage,
 	agoraSessionSweep,
 	agoraAdminManageSchool,
+	agoraRequestAccess,
+	agoraManageAccess,
 	agoraAdminOpenClass,
 	agoraJoinClass,
 	agoraTeacherRoster,
 	agoraTeacherConsole,
+	agoraTeacherClass,
+	agoraTeacherMessage,
+	agoraModerateStatement,
+	agoraCheckLanguage,
+	agoraSetBannedWords,
+	agoraSceneMaterials,
+	agoraAskMaterials,
+	agoraSupervisorConsole,
+	agoraTeacherHeartbeat,
+	agoraAdminBackfillTeacherAggregates,
+	agoraDealNotes,
+	agoraRemoveParticipant,
+	agoraResolveRejoin,
+	agoraLibraryAccess,
+	agoraLibraryCreateTag,
+	agoraLibraryPublish,
+	agoraLibraryUnpublish,
+	agoraLibraryUse,
+	agoraLibraryTranslate,
+	agoraLibraryRate,
+	agoraLibraryModerate,
+	agoraLibraryGenerateCover,
+	agoraLibraryPost,
+	agoraLibraryHidePost,
+	agoraLibraryReport,
+	agoraLibraryResolveReport,
+	agoraLibraryMergeTags,
+	onAgoraLibraryReportCreated,
+	agoraTopicAccess,
 	onAgoraEvaluationWritten,
 	onAgoraProposalWritten,
 	onAgoraSessionFinished,
+	agoraCheckStationLink,
+	agoraMintStationHandoff,
 } from './agora';
 
+// Linked stations: a one-time code from Agora redeemed for a sign-in in another app
+export { redeemAppHandoff } from './handoff/fn_redeemAppHandoff';
+
 // Israeli Odyssey — the voyage that opens onto the civic Agora deliberations
-export { odysseyMintAgoraHandoff, odysseyDigestUnsubscribe, sendOdysseyDigests } from './odyssey';
+export {
+	odysseyMintAgoraHandoff,
+	odysseyDigestUnsubscribe,
+	sendOdysseyDigests,
+	odysseyFeedbackSubmit,
+	odysseyTranslateGame,
+} from './odyssey';
+
+export { covenantWorkflow } from './fn_covenant';
+
+// join-class classroom engine (lane C1 adds its callables inside ./classroom only)
+export * from './classroom';
+
+// Tables (table assignment): host + participant callables
+export * from './tableAssignment';
+
+export { deliberation, queueDeliberation, updateDeliberations } from './deliberation/functions';
+export { createAgreementHandoff, redeemAgreementHandoff } from './deliberation/handoff';

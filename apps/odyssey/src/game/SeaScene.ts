@@ -9,12 +9,14 @@ import {
 	COLOR_NAVY,
 	DAYPHASE_MS,
 	PARTICLES_MAX_LIVE,
-	MY_SHIP_LABEL,
 	PENNANT_COLORS,
+	STAGE_FONT,
 	TINT_DAWN,
 	TINT_GOLDEN,
 	TINT_NOON,
 	TWEEN_FADE_MS,
+	mirrorSign,
+	myShipLabel,
 } from '../lib/stageConstants';
 import type { StageCommand, StageParty } from '../lib/stageBus';
 import { stageState } from './stageState';
@@ -160,8 +162,8 @@ export abstract class SeaScene extends Phaser.Scene {
 				.setAlpha(0.75);
 			container.addAt(berth, 1);
 			const label = this.add
-				.text(0, image.displayHeight * 0.62, MY_SHIP_LABEL, {
-					fontFamily: 'Arial',
+				.text(0, image.displayHeight * 0.62, myShipLabel(), {
+					fontFamily: STAGE_FONT,
 					fontSize: '14px',
 					color: '#ffe9b0',
 					fontStyle: 'bold',
@@ -182,10 +184,11 @@ export abstract class SeaScene extends Phaser.Scene {
 			}
 		}
 
+		// Pennants fly aft of the mast — leftward as composed, rightward mirrored.
 		const pennantCount = Math.min(stageState.pennants, PENNANT_COLORS.length);
 		for (let i = 0; i < pennantCount; i++) {
 			const pennant = this.add
-				.image(-10 - i * 16, -image.displayHeight * 0.55, 'pennant')
+				.image(mirrorSign() * (-10 - i * 16), -image.displayHeight * 0.55, 'pennant')
 				.setTint(PENNANT_COLORS[i])
 				.setScale(0.8);
 			container.add(pennant);
@@ -247,7 +250,7 @@ export abstract class SeaScene extends Phaser.Scene {
 				this.add
 					// Elder ships are AI personas and must say so on the water.
 					.text(0, 44, party.isElder ? `📜 ${party.name}` : party.name, {
-						fontFamily: 'Arial',
+						fontFamily: STAGE_FONT,
 						fontSize: '13px',
 						color: '#fff4d3',
 						backgroundColor: 'rgba(6,26,48,0.85)',
@@ -419,8 +422,9 @@ export abstract class SeaScene extends Phaser.Scene {
 		});
 	}
 
-	/** Plain-Hebrew Phaser label (never mix digits/Latin into Phaser strings). */
-	protected hebrewLabel(
+	/** Plain-text Phaser label in the player's language (never mix digits into
+	 *  these strings: canvas bidi reorders a number inside RTL text). */
+	protected textLabel(
 		x: number,
 		y: number,
 		text: string,
@@ -429,7 +433,7 @@ export abstract class SeaScene extends Phaser.Scene {
 	): Phaser.GameObjects.Text {
 		return this.add
 			.text(x, y, text, {
-				fontFamily: 'Arial',
+				fontFamily: STAGE_FONT,
 				fontSize: `${fontSize}px`,
 				color,
 			})

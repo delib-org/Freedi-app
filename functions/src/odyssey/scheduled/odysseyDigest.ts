@@ -18,7 +18,7 @@ import {
 } from '@freedi/shared-types';
 import type { NotificationQueueItem, NotificationSettings } from '@freedi/shared-types';
 import { logError } from '../../utils/errorHandling';
-import { buildOdysseyDigest } from '../digest/odysseyDigestBuilder';
+import { buildOdysseyDigest, type DigestTranslationCache } from '../digest/odysseyDigestBuilder';
 import { odysseyUnsubscribeToken } from '../fn_odysseyDigestUnsubscribe';
 
 const getDb = () => getFirestore();
@@ -73,6 +73,8 @@ export async function processOdysseyDigests(): Promise<{
 	errors: number;
 }> {
 	const db = getDb();
+	// One translation read per game and language for the whole run
+	const translations: DigestTranslationCache = new Map();
 	let usersMatched = 0;
 	let digestsSent = 0;
 	let errors = 0;
@@ -111,6 +113,7 @@ export async function processOdysseyDigests(): Promise<{
 					userId: settings.userId,
 					appBaseUrl: ODYSSEY_BASE_URL,
 					unsubscribeUrl,
+					translations,
 				});
 				if (!built) continue;
 
@@ -123,8 +126,9 @@ export async function processOdysseyDigests(): Promise<{
 					body: built.digest.bodyText,
 					emailHtml: built.digest.emailHtml,
 					// Also as a header (List-Unsubscribe), not only a footer link —
-					// the header is what mail providers actually read
-					unsubscribeUrl,
+					// the header is what mail providers actually read. The digest's
+					// copy carries the reader's language for the landing page.
+					unsubscribeUrl: built.digest.unsubscribeUrl,
 					channels: [NotificationChannel.EMAIL],
 					sourceApp: SourceApp.ODYSSEY,
 					targetPath: '/map',

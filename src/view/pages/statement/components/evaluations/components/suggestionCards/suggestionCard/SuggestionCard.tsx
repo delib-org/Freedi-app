@@ -23,7 +23,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import EditableStatement from '@/view/components/edit/EditableStatement';
 import { hasParagraphsContent } from '@/utils/paragraphUtils';
 import styles from './SuggestionCard.module.scss';
-import { StatementType, Statement } from '@freedi/shared-types';
+import { StatementType, Statement, isTheme } from '@freedi/shared-types';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import JoinButtons from '@/view/pages/statement/components/joining/JoinButtons';
 import Joined from '@/view/components/joined/Joined';
@@ -33,6 +33,12 @@ import UploadImage from '@/view/components/uploadImage/UploadImage';
 import StatementImage from './StatementImage';
 import IntegrateSuggestionsModal from '@/view/components/integrateSuggestions/IntegrateSuggestionsModal';
 import RoomBadge from '@/view/components/roomBadge/RoomBadge';
+import { useSelector } from 'react-redux';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
+import MergeBadge from './MergeBadge';
+import YouTubeEmbed from './YouTubeEmbed';
+import { extractYouTubeVideo } from '@/helpers/youtubeLinks';
 
 interface Props {
 	statement: Statement | undefined;
@@ -54,6 +60,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	const { t } = useTranslation();
 	// Use parent's authorization instead of individual card authorization
 	const { isAuthorized, isAdmin } = useAuthorization(parentStatement?.statementId);
+	const creator = useSelector(creatorSelector);
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 	const minJoinMembers = parentStatement?.statementSettings?.minJoinMembers;
 	const maxJoinMembers = parentStatement?.statementSettings?.maxJoinMembers;
@@ -168,7 +175,11 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	}
 
 	const statementAge = new Date().getTime() - statement.createdAt;
-	const hasChildren = parentStatement?.statementSettings?.hasChildren;
+	// The chat bubble is governed by the parent's "Discussion chat" (hasChat)
+	// toggle. Older questions predate that flag, so fall back to the
+	// "Enable Sub-Conversations" (hasChildren) flag that used to gate it.
+	const parentSettings = parentStatement?.statementSettings;
+	const showChat = parentSettings?.hasChat ?? parentSettings?.hasChildren ?? false;
 
 	function handleRightClick(e: React.MouseEvent) {
 		e.preventDefault();
@@ -209,6 +220,13 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 			return;
 		}
 
+		// Text fields keep the browser's default: cancelling pointerdown there
+		// stops the caret from being placed and a selection from being dragged,
+		// so the card's own text could not be edited with the mouse.
+		if (target.closest('input, textarea, select, [contenteditable="true"]')) {
+			return;
+		}
+
 		// Block pointer events on non-interactive areas
 		if (!target.closest('button') && !target.closest('a') && !target.closest('[role="button"]')) {
 			e.preventDefault();
@@ -243,9 +261,19 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 					? styles['statement-evaluation-card--below-minimum']
 					: '';
 
+	// Own answer: mint chip + mint border; the face scale hides itself (Evaluation variant="card").
+	const isOwnAnswer = !!creator?.uid && statement.creatorId === creator.uid;
+	// A merged answer represents several originals (manual integration or
+	// auto-merge both write isCluster + integratedOptions).
+	const isMerged = statement.isCluster === true && (statement.integratedOptions?.length ?? 0) > 0;
+	// Options are shown without an author name by design (getCreatorDisplayName
+	// returns '' for them); the rater count lives in the results chips.
+	const bylineText = getCreatorDisplayName(statement);
+
 	const cardClassName = clsx(
 		styles['statement-evaluation-card'],
 		statusModifier,
+		isOwnAnswer && styles['statement-evaluation-card--own'],
 		statementAge < 10000 && styles['statement-evaluation-card--new'],
 		isCardMenuOpen && styles['statement-evaluation-card--menu-open'],
 	);
@@ -257,12 +285,11 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 		? ''
 		: (statement.description ?? '').trim();
 
+	const youTubeVideo = extractYouTubeVideo(statement.statement);
 	const showBadgeRow = statement.hide || showVotingWinner;
 	const showJoinRow = Boolean(enableJoining);
-	const showMetaRow =
-		(memberOfClusters && memberOfClusters.length > 0) ||
-		(showBadges ?? false) ||
-		(!image && isAdmin);
+	const showMetaRow = (memberOfClusters && memberOfClusters.length > 0) || (showBadges ?? false);
+	const showAddImage = !image && isAdmin;
 
 	return (
 		<div
@@ -323,6 +350,14 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 				</button>
 			)}
 
+			{isMerged && <MergeBadge cluster={statement} />}
+
+			{isOwnAnswer && (
+				<span className={styles.ownChip} data-testid="own-answer-chip">
+					{t('Your answer')}
+				</span>
+			)}
+
 			{/* Image - Display image at the top of card */}
 			{image && (
 				<StatementImage
@@ -338,6 +373,8 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 					fileInputRef={fileInputRef}
 				/>
 			)}
+			{/* A YouTube link in the option text plays here; the link itself is hidden from the text. */}
+			{youTubeVideo && <YouTubeEmbed embedUrl={youTubeVideo.embedUrl} />}
 			<div className={styles.body}>
 				<div className={styles.info}>
 					<div className={styles.text}>
@@ -358,6 +395,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 								className={styles.editableCard}
 								inputClassName={styles.editInput}
 								saveButtonClassName={styles.editButtons}
+								displayValue={youTubeVideo?.textWithoutLinks}
 							/>
 						</div>
 
@@ -433,16 +471,6 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 								)}
 							</div>
 						)}
-						{/* Admin-only, rare: kept off the footer so it never competes
-						    with the evaluation control for the primary action slot. */}
-						{!image && isAdmin && (
-							<button
-								onClick={() => setShowImageUpload(true)}
-								className="btn btn--small btn--secondary"
-							>
-								{t('Add Image')}
-							</button>
-						)}
 					</div>
 				)}
 
@@ -473,20 +501,35 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 					</div>
 				)}
 
-				<div className={styles.actions}>
-					<div className={styles.actionsStart}>
-						<div className={styles['evolution-element']}>
-							<Evaluation statement={statement} />
+				{bylineText && <span className={styles.bylineText}>{bylineText}</span>}
+
+				{/* Face circles, then (after you rate) the results chips. */}
+				<div className={styles['evolution-element']}>
+					{!isTheme(statement) && <Evaluation statement={statement} variant="card" />}
+				</div>
+
+				{/* Bottom row like Join: action pills at the start, the chat as a
+				    small round button at the end. */}
+				{(showAddImage || showChat) && (
+					<div className={styles.actionRow}>
+						<div className={styles.actions}>
+							{showAddImage && (
+								<button
+									type="button"
+									onClick={() => setShowImageUpload(true)}
+									className={styles.pillButton}
+								>
+									{t('Add Image')}
+								</button>
+							)}
 						</div>
-					</div>
-					<div className={styles.actionsEnd}>
-						{hasChildren && (
+						{showChat && (
 							<div className={styles.chat}>
-								<StatementChatMore statement={statement} />
+								<StatementChatMore statement={statement} variant="round" opensSheet />
 							</div>
 						)}
 					</div>
-				</div>
+				)}
 				{shouldShowAddSubQuestionModal && (
 					<CreateStatementModal
 						allowedTypes={[StatementType.question]}

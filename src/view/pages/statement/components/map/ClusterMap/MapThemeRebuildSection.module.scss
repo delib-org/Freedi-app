@@ -1,0 +1,26 @@
+// The drawer panel sits at z-index 9002 (see molecules/_admin-drawer.scss);
+// the preview dialog opened from inside it must stack above the drawer.
+$drawer-panel-z-index: 9002;
+
+.preview {
+	z-index: $drawer-panel-z-index + 1;
+}
+
+.notice {
+	margin: 0;
+	padding: 0.5rem 0.75rem;
+	border-radius: 8px;
+	font-size: 0.8rem;
+	line-height: 1.4;
+	color: var(--text-body);
+	background: var(--card-default);
+	border: 1px solid var(--border-light);
+
+	&[data-tone='success'] {
+		border-color: var(--agree);
+	}
+
+	&[data-tone='error'] {
+		border-color: var(--disagree);
+	}
+}

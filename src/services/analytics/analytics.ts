@@ -2,6 +2,9 @@ import { logEvent as firebaseLogEvent, setUserId, setUserProperties } from 'fire
 import { analytics } from '../../controllers/db/config';
 import { logger } from '../logger';
 import { store } from '../../redux/store';
+import { TIME } from '@/constants/common';
+
+const ANALYTICS_READY_WAIT_MS = 2 * TIME.MINUTE;
 
 // Event names as constants to ensure consistency
 export const AnalyticsEvents = {
@@ -42,6 +45,16 @@ export const AnalyticsEvents = {
 	// Error events
 	VALIDATION_ERROR: 'validation_error',
 	OPERATION_FAILED: 'operation_failed',
+
+	// UX overhaul funnel (see uxAnalytics.ts); every event carries uxVersion
+	UX_QUESTION_OPENED: 'ux_question_opened',
+	UX_FIRST_EVALUATION: 'ux_first_evaluation',
+	UX_ADD_ANSWER_STARTED: 'ux_add_answer_started',
+	UX_ADD_ANSWER_COMPLETED: 'ux_add_answer_completed',
+	UX_ADD_ANSWER_ABANDONED: 'ux_add_answer_abandoned',
+	UX_HOST_HUB_OPENED: 'ux_host_hub_opened',
+	UX_SETTING_CHANGED: 'ux_setting_changed',
+	UX_VIEW_SWITCHED: 'ux_view_switched',
 } as const;
 
 type EventName = (typeof AnalyticsEvents)[keyof typeof AnalyticsEvents];
@@ -122,6 +135,15 @@ interface MassConsensusVoteParams extends MassConsensusEventParams {
 	voteType: 'similar' | 'random' | 'top';
 }
 
+export type UxVersion = 'v1' | 'v2';
+
+export interface UxEventParams extends BaseEventParams {
+	uxVersion: UxVersion;
+	statementId: string;
+}
+
+export type AddAnswerStep = 'draft' | 'precheck' | 'split' | 'similarity' | 'create';
+
 // Type-safe event parameters
 type EventParams = {
 	[AnalyticsEvents.USER_SIGNUP]: UserLifecycleParams;
@@ -170,6 +192,21 @@ type EventParams = {
 	[AnalyticsEvents.PWA_INSTALLED]: PWAInstallParams;
 	[AnalyticsEvents.VALIDATION_ERROR]: ValidationErrorParams;
 	[AnalyticsEvents.OPERATION_FAILED]: { operation: string; error: string; context?: unknown };
+	[AnalyticsEvents.UX_QUESTION_OPENED]: UxEventParams & { view: string; source: 'link' | 'app' };
+	[AnalyticsEvents.UX_FIRST_EVALUATION]: UxEventParams & { msSinceOpen: number | null };
+	[AnalyticsEvents.UX_ADD_ANSWER_STARTED]: UxEventParams & { origin: string };
+	[AnalyticsEvents.UX_ADD_ANSWER_COMPLETED]: UxEventParams & {
+		origin: string;
+		msSinceStart: number | null;
+	};
+	[AnalyticsEvents.UX_ADD_ANSWER_ABANDONED]: UxEventParams & {
+		origin: string;
+		stepReached: AddAnswerStep;
+		msSinceStart: number | null;
+	};
+	[AnalyticsEvents.UX_HOST_HUB_OPENED]: UxEventParams & { section?: string };
+	[AnalyticsEvents.UX_SETTING_CHANGED]: UxEventParams & { setting: string; valueType: string };
+	[AnalyticsEvents.UX_VIEW_SWITCHED]: UxEventParams & { from: string | null; to: string };
 };
 
 class AnalyticsService {
@@ -188,10 +225,11 @@ class AnalyticsService {
 				clearInterval(checkInterval);
 				this.flushPendingEvents();
 			}
-		}, 1000);
+		}, TIME.SECOND);
 
-		// Stop checking after 10 seconds
-		setTimeout(() => clearInterval(checkInterval), 10000);
+		// Analytics starts only after page load + idle (see config.ts), which on a
+		// slow connection can be well past 10 s; keep waiting long enough to flush.
+		setTimeout(() => clearInterval(checkInterval), ANALYTICS_READY_WAIT_MS);
 	}
 
 	private flushPendingEvents() {

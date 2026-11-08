@@ -130,6 +130,7 @@ export const TYPE_RESTRICTIONS: Record<
 	[StatementType.statement]: {},
 	[StatementType.question]: {},
 	[StatementType.document]: {},
+	[StatementType.agreement]: {},
 	[StatementType.comment]: {},
 	[StatementType.paragraph]: {},
 	[StatementType.evidence]: {},

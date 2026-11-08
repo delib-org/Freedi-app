@@ -38,6 +38,7 @@ import {
   Analytics,
 } from 'firebase/analytics';
 import { logError } from '@/lib/utils/errorHandling';
+import { clearServerSession, establishServerSession } from './serverSession';
 
 // Firebase config - should match main app
 const firebaseConfig = {
@@ -89,7 +90,7 @@ export function getFirebaseAuth(): Auth {
     // Connect to auth emulator in development
     if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !authEmulatorConnected) {
       try {
-        connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+        connectAuthEmulator(auth, `http://localhost:${process.env.NEXT_PUBLIC_EMULATOR_AUTH_PORT || '9099'}`, { disableWarnings: true });
         authEmulatorConnected = true;
       } catch {
         // Already connected or emulator not available
@@ -121,7 +122,7 @@ export function getFirebaseFirestore(): Firestore {
     // Connect to Firestore emulator in development
     if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !firestoreEmulatorConnected) {
       try {
-        connectFirestoreEmulator(firestore, 'localhost', 8081);
+        connectFirestoreEmulator(firestore, 'localhost', Number(process.env.NEXT_PUBLIC_EMULATOR_FIRESTORE_PORT || 8081));
         firestoreEmulatorConnected = true;
       } catch {
         // Already connected or emulator not available
@@ -130,6 +131,17 @@ export function getFirebaseFirestore(): Firestore {
   }
 
   return firestore;
+}
+
+/**
+ * `Authorization` header for admin calls that the server forwards to a Cloud
+ * Function: a session cookie cannot be forwarded, an ID token can.
+ */
+export async function getAuthorizationHeader(): Promise<Record<string, string>> {
+  const user = getFirebaseAuth().currentUser;
+  if (!user) return {};
+
+  return { Authorization: `Bearer ${await user.getIdToken()}` };
 }
 
 /**
@@ -143,6 +155,13 @@ export async function googleLogin(): Promise<User | null> {
 
     // Set cookie for server-side access
     setCookiesFromUser(result.user);
+
+    // Awaited: callers reload right after, and the server trusts only this.
+    // Without a session every admin call would be refused, so fail the sign-in.
+    const session = await establishServerSession(result.user, { force: true });
+    if (session === 'failed') {
+      throw new Error('Could not create a server session');
+    }
 
     // Auto-accept any pending invitations for this user's email
     if (result.user.email) {
@@ -166,6 +185,7 @@ export async function anonymousLogin(): Promise<User | null> {
 
     // Set cookie for server-side access
     setCookiesFromUser(result.user);
+    await establishServerSession(result.user);
 
     return result.user;
   } catch (error) {
@@ -181,6 +201,7 @@ export async function logout(): Promise<void> {
   try {
     const authInstance = getFirebaseAuth();
     await authInstance.signOut();
+    await clearServerSession();
 
     // Clear cookies
     document.cookie = 'userId=; path=/; max-age=0';

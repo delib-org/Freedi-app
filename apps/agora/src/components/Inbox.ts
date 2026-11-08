@@ -19,7 +19,6 @@ import {
 	loadDigestSettings,
 	saveDigestSettings,
 } from '../lib/digestPrefs';
-import { maybeSuggestInstall } from '../lib/install';
 
 export interface InboxAttrs {
 	/**
@@ -29,12 +28,76 @@ export interface InboxAttrs {
 	 * Odyssey app shows. Classroom students have no voyage to be told about.
 	 */
 	digestUid?: string;
+	/**
+	 * The teacher's own thread, pinned to the top of the list.
+	 *
+	 * It used to be a second door in the stage strip — a megaphone beside an
+	 * envelope, two mail icons on one screen, each holding half the post. The
+	 * envelope is the only mail door now, and the badge counts both.
+	 */
+	pinned?: { label: string; unread: number; onOpen: () => void };
 }
 
 type DigestCadence = 'none' | 'every' | 'daily' | 'multi';
 
 const DIGEST_DEFAULT_HOUR = 19;
 const DIGEST_HOURS = Array.from({ length: 24 }, (_unused, hour) => hour);
+
+/**
+ * The rows of the open post box, every one KEYED.
+ *
+ * Mithril refuses a list that mixes keyed and unkeyed children (a hole
+ * counts as unkeyed) and throws mid-render. The pinned teacher row used to be
+ * unkeyed (or a hole) in front of the keyed news rows, so opening the box with
+ * any news in it threw on every redraw: the sheet never drew, and each failed
+ * pass left behind the nodes it had already created — the "you are at an
+ * earlier station" line stacked up once per redraw above the village.
+ */
+export function inboxListRows(
+	items: readonly InboxItem[],
+	pinned: InboxAttrs['pinned'],
+	row: (item: InboxItem) => m.Vnode,
+	close: () => void,
+): m.Vnode[] {
+	const rows: m.Vnode[] = [];
+	if (pinned) {
+		rows.push(
+			m(
+				'button.inbox__row.inbox__row--pinned',
+				{
+					key: 'inbox-pinned',
+					type: 'button',
+					class: pinned.unread > 0 ? 'inbox__row--unread' : undefined,
+					onclick: () => {
+						close();
+						pinned.onOpen();
+					},
+				},
+				[
+					m(
+						'span.inbox__icon',
+						{ 'aria-hidden': 'true' },
+						m(Icon, { name: 'megaphone', size: 20 }),
+					),
+					m('span.inbox__body', m('span.inbox__line', pinned.label)),
+					m(
+						'span.inbox__meta',
+						pinned.unread > 0
+							? m('span.inbox__dot', { 'aria-label': t('inbox.unread_mark') })
+							: null,
+					),
+				],
+			),
+		);
+	}
+	if (items.length === 0) {
+		if (!pinned) rows.push(m('p.inbox__empty', { key: 'inbox-empty' }, t('inbox.empty')));
+
+		return rows;
+	}
+
+	return [...rows, ...items.map(row)];
+}
 
 /**
  * The post box, as a button that lives in the HUD and the sheet it opens.
@@ -111,9 +174,6 @@ export function Inbox(): m.Component<InboxAttrs> {
 		void saveDigestSettings(uid, settings)
 			.then(() => {
 				digestSaved = true;
-				// A player arranging to hear about updates plainly means to come
-				// back — the other smart moment for the home-screen suggestion
-				if (settings.enabled) maybeSuggestInstall();
 			})
 			.finally(() => {
 				digestSaving = false;
@@ -221,7 +281,7 @@ export function Inbox(): m.Component<InboxAttrs> {
 		if (event.key === 'Escape') close();
 	}
 
-	function row(item: InboxItem): m.Children {
+	function row(item: InboxItem): m.Vnode {
 		const look = triggerLook(item.trigger, '');
 
 		return m(
@@ -265,9 +325,10 @@ export function Inbox(): m.Component<InboxAttrs> {
 		},
 
 		view(vnode) {
-			const unread = inboxUnreadCount();
 			const items = getInboxItems();
 			const digestUid = vnode.attrs.digestUid;
+			const pinned = vnode.attrs.pinned;
+			const unread = inboxUnreadCount() + (pinned?.unread ?? 0);
 
 			return [
 				m(
@@ -339,9 +400,7 @@ export function Inbox(): m.Component<InboxAttrs> {
 								]),
 								settingsOpen && digestUid
 									? settingsBody(digestUid)
-									: items.length === 0
-										? m('p.inbox__empty', t('inbox.empty'))
-										: m('.inbox__list', items.map(row)),
+									: m('.inbox__list', inboxListRows(items, pinned, row, close)),
 							]),
 						]
 					: null,

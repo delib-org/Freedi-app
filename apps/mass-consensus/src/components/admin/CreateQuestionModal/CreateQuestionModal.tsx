@@ -1,17 +1,25 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Statement } from '@freedi/shared-types';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { QuestionOverrideSettings, Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { authedFetch } from '@/lib/api/authedFetch';
 import { logError } from '@/lib/utils/errorHandling';
+import { SUGGESTED_SOLUTIONS_COUNT } from '@/lib/utils/solutionSuggestions';
+import { draftsToCreate } from '@/lib/utils/cardDrafts';
+import { useCardDrafts } from '@/hooks/useCardDrafts';
+import { uploadCardImage } from '@/controllers/cardImageController';
+import { CardUploadItem, runCardUploads } from '@/controllers/cardUploadQueue';
+import CardsStep from './CardsStep';
+import CardUploadPhase, { CardUploadState } from './CardUploadPhase';
 import styles from './CreateQuestionModal.module.scss';
 
 interface CreateQuestionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onQuestionCreated: (question: Statement) => void;
+  /** The question exists; `initialSettings` are its per-question overrides for the survey ("Admin options only"). */
+  onQuestionCreated: (question: Statement, initialSettings?: QuestionOverrideSettings) => void;
   /** Default parent group ID to pre-select (e.g. from existing questions in the survey) */
   defaultParentId?: string;
 }
@@ -57,9 +65,20 @@ export default function CreateQuestionModal({
   const [maxVotes, setMaxVotes] = useState(3);
   const [requireSolutionFirst, setRequireSolutionFirst] = useState(true);
 
-  // Step 3: Solutions
-  const [solutionsText, setSolutionsText] = useState('');
+  // Step 3: Cards (text, and a picture for any of them)
+  const cards = useCardDrafts();
+  const resetCards = cards.reset;
   const [skipSolutions, setSkipSolutions] = useState(false);
+  // "Admin options only": the admin's cards are the whole list; participants only rate
+  const [adminOptionsOnly, setAdminOptionsOnly] = useState(false);
+
+  // After create: the pictures upload while the modal stays open
+  const [phase, setPhase] = useState<'form' | 'uploading'>('form');
+  const [uploadItems, setUploadItems] = useState<CardUploadItem[]>([]);
+  const [uploadStates, setUploadStates] = useState<Record<string, CardUploadState>>({});
+  const uploadItemsRef = useRef<CardUploadItem[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   // General state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,8 +119,14 @@ export default function CreateQuestionModal({
     }
   }, [refreshToken, t, defaultParentId]);
 
+  // Reset only when the modal opens. Creating a question changes the parent's
+  // props (and so fetchGroups) while the pictures are still uploading here;
+  // re-running the reset then would throw the admin back to an empty form.
+  const wasOpenRef = useRef(false);
   useEffect(() => {
-    if (isOpen) {
+    const justOpened = isOpen && !wasOpenRef.current;
+    wasOpenRef.current = isOpen;
+    if (justOpened) {
       fetchGroups();
       // Reset state when modal opens
       setCurrentStep(defaultParentId ? 2 : 1);
@@ -110,24 +135,29 @@ export default function CreateQuestionModal({
       setEvaluationType('suggestions');
       setMaxVotes(3);
       setRequireSolutionFirst(true);
-      setSolutionsText('');
+      setAdminOptionsOnly(false);
+      resetCards();
       setSkipSolutions(false);
+      setPhase('form');
+      setUploadItems([]);
+      setUploadStates({});
+      uploadItemsRef.current = [];
+      setIsGenerating(false);
+      setGenerateError(null);
       setError(null);
       setIsCreatingGroup(false);
       setNewGroupName('');
     }
-  }, [isOpen, fetchGroups]);
+  }, [isOpen, fetchGroups, defaultParentId, resetCards]);
 
   // Filter groups by search query
   const filteredGroups = groups.filter((group) =>
     group.statement.toLowerCase().includes(groupSearchQuery.toLowerCase())
   );
 
-  // Parse solutions from text
-  const parsedSolutions = solutionsText
-    .split('\n')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
+  // The cards that will be created, in the order they are sent
+  const cardsToCreate = draftsToCreate(cards.drafts);
+  const parsedSolutions = cardsToCreate.map((draft) => draft.text);
 
   // Create new group
   const handleCreateGroup = async () => {
@@ -171,12 +201,101 @@ export default function CreateQuestionModal({
     }
   };
 
+  // Have the AI write the first solutions and paste them into the textarea
+  const handleGenerateSolutions = async () => {
+    if (!selectedGroupId || !questionText.trim() || isGenerating) return;
+
+    setIsGenerating(true);
+    setGenerateError(null);
+
+    try {
+      if (!(await refreshToken())) {
+        setGenerateError(t('sessionExpired') || 'Session expired');
+
+        return;
+      }
+
+      const response = await authedFetch('/api/ai/suggest-solutions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: questionText.trim(),
+          parentId: selectedGroupId,
+          count: SUGGESTED_SOLUTIONS_COUNT,
+          existing: parsedSolutions,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate solutions');
+      }
+
+      const solutions: string[] = Array.isArray(data.solutions) ? data.solutions : [];
+
+      if (solutions.length === 0) {
+        setGenerateError(
+          t('failedToGenerateSolutions') ||
+            'No solutions could be generated. Please try again.'
+        );
+
+        return;
+      }
+
+      cards.appendLines(solutions);
+    } catch (err) {
+      logError(err, {
+        operation: 'CreateQuestionModal.handleGenerateSolutions',
+        metadata: { selectedGroupId },
+      });
+      setGenerateError(
+        t('failedToGenerateSolutions') ||
+          'No solutions could be generated. Please try again.'
+      );
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const uploadPictures = async (items: CardUploadItem[]) => {
+    await runCardUploads(
+      items,
+      async (item) => {
+        await uploadCardImage({ statementId: item.statementId, file: item.file, alt: item.alt });
+      },
+      (update) =>
+        setUploadStates((prev) => ({
+          ...prev,
+          [update.key]: { status: update.status, problem: update.problem },
+        }))
+    );
+  };
+
+  const handleRetryUploads = (keys: string[]) => {
+    const items = uploadItemsRef.current.filter((item) => keys.includes(item.key));
+    void uploadPictures(items);
+  };
+
+  const isUploading = Object.values(uploadStates).some(
+    (state) => state.status === 'queued' || state.status === 'uploading'
+  );
+
+  /** Closing is refused only while a picture is mid-upload from the overlay or ×. */
+  const handleDismiss = () => {
+    if (phase === 'uploading' && isUploading) return;
+    onClose();
+  };
+
   // Create question
   const handleCreateQuestion = async () => {
     if (!selectedGroupId || !questionText.trim()) return;
 
     setIsSubmitting(true);
     setError(null);
+    const toCreate = skipSolutions ? [] : cardsToCreate;
 
     try {
       if (!(await refreshToken())) {
@@ -194,8 +313,8 @@ export default function CreateQuestionModal({
           parentId: selectedGroupId,
           evaluationType,
           maxVotesPerUser: evaluationType === 'voting' ? maxVotes : undefined,
-          askUserForASolutionBeforeEvaluation: requireSolutionFirst,
-          solutions: skipSolutions ? [] : parsedSolutions,
+          askUserForASolutionBeforeEvaluation: adminOptionsOnly ? false : requireSolutionFirst,
+          solutions: toCreate.map((draft) => draft.text),
         }),
       });
 
@@ -204,8 +323,30 @@ export default function CreateQuestionModal({
         throw new Error(errorData.error || 'Failed to create question');
       }
 
-      const data = await response.json();
-      onQuestionCreated(data.question);
+      const data = (await response.json()) as { question: Statement; solutions?: Statement[] };
+      onQuestionCreated(
+        data.question,
+        adminOptionsOnly ? { adminProvidesOptions: true, blockParticipantOptions: true } : undefined
+      );
+
+      // The route creates the cards in the order they were sent
+      const created = data.solutions ?? [];
+      const items: CardUploadItem[] = toCreate.flatMap((draft, index) =>
+        draft.file && created[index]
+          ? [{ key: draft.key, statementId: created[index].statementId, file: draft.file, alt: draft.alt }]
+          : []
+      );
+
+      if (items.length === 0) {
+        onClose();
+
+        return;
+      }
+
+      uploadItemsRef.current = items;
+      setUploadItems(items);
+      setPhase('uploading');
+      void uploadPictures(items);
     } catch (err) {
       logError(err, {
         operation: 'CreateQuestionModal.handleCreateQuestion',
@@ -224,7 +365,9 @@ export default function CreateQuestionModal({
   // Navigation
   const canContinueStep1 = selectedGroupId !== null;
   const canContinueStep2 = questionText.trim().length >= 3;
-  const canCreate = canContinueStep1 && canContinueStep2;
+  // With "Admin options only" there must be something to rate
+  const canCreate =
+    canContinueStep1 && canContinueStep2 && (!adminOptionsOnly || (!skipSolutions && cardsToCreate.length > 0));
 
   const handleNext = () => {
     if (currentStep === 1 && canContinueStep1) {
@@ -245,7 +388,7 @@ export default function CreateQuestionModal({
   if (!isOpen) return null;
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
+    <div className={styles.modalOverlay} onClick={handleDismiss}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className={styles.modalHeader}>
@@ -253,7 +396,7 @@ export default function CreateQuestionModal({
           <button
             type="button"
             className={styles.closeButton}
-            onClick={onClose}
+            onClick={handleDismiss}
             aria-label={t('close') || 'Close'}
           >
             &times;
@@ -325,7 +468,7 @@ export default function CreateQuestionModal({
               3
             </div>
             <span className={`${styles.stepLabel} ${currentStep === 3 ? styles.active : ''}`}>
-              {t('solutions') || 'Solutions'}
+              {t('Cards')}
             </span>
           </div>
         </div>
@@ -613,81 +756,43 @@ export default function CreateQuestionModal({
             </div>
           )}
 
-          {/* Step 3: Initial Solutions */}
-          {currentStep === 3 && (
-            <div>
-              <h3 className={styles.stepTitle}>
-                {t('initialSolutions') || 'Add Initial Solutions'}
-                <span style={{ fontWeight: 'normal', color: 'var(--text-muted)' }}>
-                  {' '}
-                  ({t('optional') || 'Optional'})
-                </span>
-              </h3>
-              <p className={styles.stepDescription}>
-                {t('initialSolutionsDesc') || 'Paste solutions separated by new lines'}
-              </p>
+          {/* Step 3: Cards */}
+          {currentStep === 3 && phase === 'form' && (
+            <CardsStep
+              cards={cards}
+              skip={skipSolutions}
+              onSkipChange={setSkipSolutions}
+              adminOptionsOnly={adminOptionsOnly}
+              onAdminOptionsOnlyChange={(on) => {
+                setAdminOptionsOnly(on);
+                if (on) setSkipSolutions(false);
+              }}
+              onGenerate={handleGenerateSolutions}
+              isGenerating={isGenerating}
+              canGenerate={canCreate}
+              generateError={generateError}
+              onSubmitShortcut={handleCreateQuestion}
+            />
+          )}
 
-              <textarea
-                className={styles.solutionsTextarea}
-                placeholder={
-                  t('solutionsPlaceholder') ||
-                  'Focus on customer retention\nExpand to new markets\nImprove product quality'
-                }
-                value={solutionsText}
-                onChange={(e) => setSolutionsText(e.target.value)}
-                onKeyDown={(e) => {
-                  // Allow Enter in textarea for new lines, but prevent if Ctrl/Cmd+Enter
-                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                    e.preventDefault();
-                    handleCreateQuestion();
-                  }
-                }}
-                disabled={skipSolutions}
-              />
-
-              {parsedSolutions.length > 0 && !skipSolutions && (
-                <div className={styles.solutionsPreview}>
-                  <div className={styles.previewHeader}>
-                    <span className={styles.previewTitle}>{t('preview') || 'Preview'}</span>
-                    <span className={styles.previewCount}>
-                      {parsedSolutions.length}{' '}
-                      {parsedSolutions.length === 1
-                        ? t('solution') || 'solution'
-                        : t('solutions') || 'solutions'}
-                    </span>
-                  </div>
-                  <div className={styles.previewList}>
-                    {parsedSolutions.map((solution, index) => (
-                      <div key={index} className={styles.previewItem}>
-                        <span className={styles.previewNumber}>{index + 1}</span>
-                        <span className={styles.previewText}>{solution}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {parsedSolutions.length === 0 && !skipSolutions && (
-                <div className={styles.solutionsPreview}>
-                  <div className={styles.emptyPreview}>
-                    {t('pasteYourSolutions') || 'Paste your solutions above, one per line'}
-                  </div>
-                </div>
-              )}
-
-              <label className={styles.skipOption}>
-                <input
-                  type="checkbox"
-                  checked={skipSolutions}
-                  onChange={(e) => setSkipSolutions(e.target.checked)}
-                />
-                <span>{t('skipSolutions') || "Skip - don't add solutions now"}</span>
-              </label>
-            </div>
+          {phase === 'uploading' && (
+            <CardUploadPhase
+              drafts={cardsToCreate.filter((draft) => uploadItems.some((item) => item.key === draft.key))}
+              states={uploadStates}
+              onRetry={handleRetryUploads}
+            />
           )}
         </div>
 
         {/* Footer */}
+        {phase === 'uploading' ? (
+          <div className={styles.modalFooter}>
+            <span />
+            <button type="button" className={styles.createButton} onClick={onClose}>
+              {t('Done')}
+            </button>
+          </div>
+        ) : (
         <div className={styles.modalFooter}>
           <button
             type="button"
@@ -728,6 +833,7 @@ export default function CreateQuestionModal({
             </button>
           )}
         </div>
+        )}
       </div>
     </div>
   );

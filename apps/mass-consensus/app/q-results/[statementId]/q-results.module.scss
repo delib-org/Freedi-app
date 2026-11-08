@@ -44,7 +44,7 @@
     text-align: center;
     margin-bottom: 2rem;
     padding: 1rem;
-    background-color: white;
+    background-color: var(--mc-surface, white);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
 
@@ -84,7 +84,7 @@
 }
 
 .resultCard {
-  background-color: white;
+  background-color: var(--mc-surface, white);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   overflow: hidden;
@@ -99,7 +99,7 @@
   }
 
   &--user {
-    background: linear-gradient(135deg, #fff 0%, #f0f8ff 100%);
+    background: linear-gradient(135deg, var(--mc-surface-muted, #fff) 0%, var(--mc-surface-muted, #f0f8ff) 100%);
     border: 2px solid rgba(71, 180, 239, 0.3);
     border-left: 5px solid rgba(71, 180, 239, 0.8);
   }
@@ -439,7 +439,7 @@
 }
 
 .skeletonCard {
-  background-color: white;
+  background-color: var(--mc-surface, white);
   border-radius: var(--radius-md);
   padding: 1.25rem;
   margin-bottom: 1rem;
@@ -448,7 +448,7 @@
 .skeletonTitle {
   height: 1.5rem;
   width: 70%;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, var(--mc-surface-muted, #f0f0f0) 25%, #e0e0e0 50%, var(--mc-surface-muted, #f0f0f0) 75%);
   background-size: 200% 100%;
   animation: loading 1.5s ease-in-out infinite;
   border-radius: 4px;
@@ -458,7 +458,7 @@
 .skeletonText {
   height: 1rem;
   width: 100%;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, var(--mc-surface-muted, #f0f0f0) 25%, #e0e0e0 50%, var(--mc-surface-muted, #f0f0f0) 75%);
   background-size: 200% 100%;
   animation: loading 1.5s ease-in-out infinite;
   border-radius: 4px;
@@ -478,7 +478,7 @@
 .skeletonBadge {
   height: 2rem;
   width: 80px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, var(--mc-surface-muted, #f0f0f0) 25%, #e0e0e0 50%, var(--mc-surface-muted, #f0f0f0) 75%);
   background-size: 200% 100%;
   animation: loading 1.5s ease-in-out infinite;
   border-radius: 1rem;

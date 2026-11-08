@@ -26,6 +26,27 @@
 		}
 	}
 
+	// Personal / System admin carry a glyph where an organization carries its
+	// accent dot — so the kind of workspace is readable before the name is.
+	&__glyph {
+		flex-shrink: 0;
+		inline-size: 1rem;
+		block-size: 1rem;
+		color: var(--text-meta);
+	}
+
+	// The name is the accessible name; the "switch" verb is for screen readers.
+	&__sr {
+		@include visually-hidden;
+	}
+
+	&__divider {
+		block-size: 1px;
+		margin-block: var(--space-xs);
+		padding: 0;
+		background: var(--border-light);
+	}
+
 	&__dot {
 		flex-shrink: 0;
 		inline-size: 0.625rem;
@@ -136,6 +157,34 @@
 
 	@include mobile {
 		&__trigger {
+			max-inline-size: 9rem;
+		}
+	}
+
+	// Open reads as a held-down control, and colours to the org accent so the
+	// trail's anchor is unmistakably the thing you just acted on.
+	&--open {
+		.org-switcher__trigger {
+			background: var(--org-accent-wash);
+		}
+
+		.org-switcher__trigger .org-switcher__name {
+			color: var(--org-accent);
+		}
+
+		.org-switcher__chevron {
+			transform: rotate(180deg);
+		}
+	}
+
+	@include tablet-and-below {
+		.org-switcher__trigger {
+			max-inline-size: 10rem;
+		}
+	}
+
+	@include mobile {
+		.org-switcher__trigger {
 			max-inline-size: 9rem;
 		}
 	}

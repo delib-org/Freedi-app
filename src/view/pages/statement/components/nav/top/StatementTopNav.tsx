@@ -45,7 +45,12 @@ const StatementTopNav: FC<Props> = ({
 	const navigate = useNavigate();
 	const { screen } = useParams();
 	const role = useSelector(statementSubscriptionSelector(statement?.statementId))?.role;
-	const headerStyle = useStatementColor({ statement });
+	const statementColor = useStatementColor({ statement });
+	const headerStyle = {
+		...statementColor,
+		backgroundColor: 'var(--space-paper, var(--statementBackground))',
+		color: 'var(--space-ink, var(--text-body))',
+	};
 	const topParentStatement = useAppSelector(statementSelector(statement?.topParentId));
 	const isFollowMeActive = !!topParentStatement?.followMe && topParentStatement.followMe !== '';
 

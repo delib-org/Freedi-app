@@ -139,7 +139,7 @@
 
         .closeButton {
             background-color: var(--btn-primary);
-            color: #ffffff;
+            color: var(--btn-primary-text);
 
             &:hover {
                 background-color: var(--btn-primary-hover);

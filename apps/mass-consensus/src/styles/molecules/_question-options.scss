@@ -1,0 +1,216 @@
+// Question Options - the "Options" block at the top of a question row in the
+// survey editor: mode switches, the options editor and the participant preview.
+
+.question-options {
+  container-type: inline-size;
+  border-block-start: 1px solid var(--border-light, #e2e8f0);
+  padding: var(--spacing-sm) var(--spacing-md);
+  // Clear the sticky admin header when "Pictures" scrolls the block into view
+  scroll-margin-block-start: 5rem;
+
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--spacing-xs) var(--spacing-sm);
+    margin-block-end: var(--spacing-xs);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-heading, var(--text-primary));
+  }
+
+  &__summary,
+  &__loading,
+  &__folded {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+
+  &__mode {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    background: var(--bg-muted, rgba(0, 0, 0, 0.03));
+  }
+
+  &__switches {
+    display: flex;
+    flex-direction: column;
+    margin-block-start: var(--spacing-xs);
+    // Under the master switch, past its track
+    padding-inline-start: calc(52px + var(--spacing-sm));
+    border-inline-start: 2px solid var(--border-light, #e2e8f0);
+    margin-inline-start: 1rem;
+  }
+
+  &__warning {
+    margin: var(--spacing-sm) 0 0;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--range-conflict-60, #fcd34d);
+    background: var(--range-conflict-30, #fef3c7);
+    color: var(--text-body);
+    font-size: 0.875rem;
+  }
+
+  &__error {
+    margin: var(--spacing-xs) 0;
+    font-size: 0.875rem;
+    color: var(--rating-strongly-disagree-border);
+  }
+
+  &__folded {
+    margin: var(--spacing-sm) 0 0;
+  }
+
+  // The survey form is 800px at most, so the block is ~750px on desktop:
+  // list beside a 260px phone, stacked below that
+  &__workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: var(--spacing-lg);
+    align-items: start;
+    margin-block-start: var(--spacing-md);
+  }
+
+  &__editor {
+    min-inline-size: 0;
+  }
+}
+
+@container (max-width: 640px) {
+  .question-options__workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .question-options__switches {
+    padding-inline-start: var(--spacing-sm);
+    margin-inline-start: 0.5rem;
+  }
+}
+
+// Participant preview - a phone frame around the real swipe card
+
+.participant-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  // Keep the preview in view while the admin scrolls a long list
+  position: sticky;
+  inset-block-start: 5rem;
+
+  &__title {
+    align-self: stretch;
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__phone {
+    inline-size: 100%;
+    max-inline-size: 260px;
+    padding: 8px;
+    border-radius: 28px;
+    background: var(--text-heading, #1e293b);
+    box-shadow: var(--shadow-lg);
+  }
+
+  &__screen {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    min-block-size: 400px;
+    padding: var(--spacing-md) var(--spacing-sm) var(--spacing-sm);
+    border-radius: 20px;
+    background: var(--background-solid, #f8fafb);
+    overflow: hidden;
+  }
+
+  &__empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 0;
+    padding: var(--spacing-md);
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+
+  // The survey footer, reduced to the one thing that changes: the add button
+  &__footer {
+    margin-block-start: auto;
+    display: flex;
+    justify-content: center;
+    min-block-size: 44px;
+    align-items: center;
+  }
+
+  &__add-button {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    background: var(--btn-primary);
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  &__no-add {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+
+  &__nav-button {
+    inline-size: 44px;
+    block-size: 44px;
+    border: 1px solid var(--border-light, #e2e8f0);
+    border-radius: 50%;
+    background: var(--card-default);
+    color: var(--text-body);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--btn-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__counter {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__caption {
+    margin: 0;
+    text-align: center;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
+  &__link {
+    font-size: 0.875rem;
+    color: var(--btn-primary);
+    text-decoration: underline;
+  }
+}

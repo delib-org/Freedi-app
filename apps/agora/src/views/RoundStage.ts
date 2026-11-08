@@ -1,0 +1,486 @@
+import m from 'mithril';
+import { canWriteStage } from '../lib/flows/stageAccess';
+import { t } from '../lib/i18n';
+import { Icon, iconLabel } from '../components/Icon';
+import { ExplainHint } from '../components/ExplainHint';
+import { LikeButton } from '../components/LikeButton';
+import { UnitScale } from '../components/UnitScale';
+import { CarriedContext } from '../components/CarriedContext';
+import { RoundAnswer } from '../components/RoundAnswer';
+import { proposalHue } from '../lib/looks';
+import {
+	getDeliberationState,
+	likeStatement,
+	listenToDeliberation,
+	rateStatement,
+	saveAnswer,
+	type AgoraProposal,
+} from '../lib/proposals';
+import { flaggedNotice, isLanguageFlagged } from '../lib/language';
+import { reportStageProgress } from '../lib/session';
+import { blankPen, penFor, typedInto, type Pen } from '../lib/flows/penState';
+import { requestTeacherFocus } from '../lib/helpedFocus';
+import { roundRatedCount } from '../lib/flows/roundFlow';
+import { visibleNotes } from '../lib/flows/handFlow';
+import {
+	drawMore,
+	handFor,
+	isLotteryActive,
+	parentIdOf,
+	poolExhausted,
+	requestFill,
+} from '../lib/hands';
+import {
+	AGORA_ROUND,
+	AGORA_ROUNDS,
+	handGoal,
+	isUnitRating,
+	rankRoundAnswers,
+	roundLikes,
+	isAgoraTextLongEnough,
+	roundProgress,
+	roundSpecOf,
+	type AgoraCarriedAnswer,
+	type AgoraParticipant,
+	type AgoraRoundKind,
+	type AgoraSession,
+	type AgoraStagePlanItem,
+	type AgoraUnitRating,
+} from '@freedi/shared-types';
+
+export interface RoundStageAttrs {
+	session: AgoraSession;
+	item: AgoraStagePlanItem;
+	planIndex: number;
+	myParticipant: AgoraParticipant;
+	userId: string;
+	/** The room is ON this stage. Used only for the teacher’s current-stage progress. */
+	live: boolean;
+}
+
+/** A unit mean as the cards print it: a whole percent */
+export function formatUnit(mean: number): string {
+	return `${Math.round(Math.max(0, Math.min(1, mean)) * 100)}%`;
+}
+
+function toRow(answer: AgoraProposal, named: boolean): AgoraCarriedAnswer {
+	const raters = answer.evaluation?.numberOfEvaluators ?? 0;
+
+	return {
+		statementId: answer.statementId,
+		statement: answer.statement,
+		mean: raters > 0 ? (answer.evaluation?.averageEvaluation ?? 0) : 0,
+		raters,
+		...(named && answer.anonName ? { anonName: answer.anonName } : {}),
+	};
+}
+
+/** The one figure a round prints beside a text: hearts, or the percent */
+function appreciationLine(kind: AgoraRoundKind, row: AgoraCarriedAnswer): string {
+	if (AGORA_ROUNDS[kind].scale === 'like') return t('round.likes_n', { n: roundLikes(row) });
+
+	return t('round.mean_n', { value: formatUnit(row.mean), n: row.raters });
+}
+
+/** My text, taken down by the teacher: a notice and the door to the thread */
+function removedNotice(): m.Children {
+	return m('.question__removed', { role: 'status' }, [
+		m('p.round__mine-text', t('moderation.removed_title')),
+		m(
+			'button.btn.btn--secondary.btn--sm',
+			{ type: 'button', onclick: () => requestTeacherFocus() },
+			t('moderation.talk_to_teacher'),
+		),
+	]);
+}
+
+/**
+ * One WizCol round — a question item whose kind is `story`, `needs` or
+ * `vision`: the prompt at the top, my text, then a dealt handful of
+ * classmates' texts to weigh on the round's own scale — a heart on a story,
+ * five steps on a need or a vision. Every text is an ordinary option
+ * Statement and every weighing an ordinary evaluation, so the hearts and
+ * the percents on the cards are the shared pipeline's numbers.
+ *
+ * Once the session finishes, the round becomes its record: the AI's
+ * summary over every text as it stood, with the pen and the widgets put
+ * away. Never C_p bands — those are a −1…+1 reading and this scale is not.
+ */
+export function RoundStage(): m.Component<RoundStageAttrs> {
+	let pen: Pen = blankPen;
+	let saving = false;
+	let editing = false;
+	let saveFailed = false;
+	/** Why the save failed when the language gate refused it; undefined otherwise */
+	let saveNotice: string | undefined;
+	/** Which item the last fill was asked for — a new item asks once more */
+	let askedFor = '';
+	/**
+	 * The texts whose rating is in flight, one entry per text.
+	 *
+	 * It used to be a single `ratingBusy` slot for the whole screen, and while
+	 * it held one text, every press on EVERY OTHER card was dropped on the
+	 * floor — no write, no message, nothing. A student rating a column of
+	 * classmates at the speed a 13-year-old actually taps lost most of their
+	 * answers, and the round's own counter then told them they had not read
+	 * them. Ratings of different texts are different documents and have no
+	 * reason to queue behind each other; only a second press on the SAME text
+	 * has to wait. See scripts/e2e-unit-scale.mjs.
+	 */
+	const rating = new Set<string>();
+	/**
+	 * A press that arrived while this text's own write was still going, held
+	 * until it can be sent. Changing your mind is the one thing a rating scale
+	 * exists for, and a student who taps 'quite' and then 'very' half a second
+	 * later must end up on 'very' — not back where the slower press left them.
+	 * Last press wins; only the last one is ever sent.
+	 */
+	const queued = new Map<string, AgoraUnitRating | 'like' | 'unlike'>();
+	/** Texts whose last rating never landed — the card says so rather than swallowing it */
+	const rateFailed = new Set<string>();
+	let reported = '';
+
+	return {
+		view(vnode) {
+			const { session, item, planIndex, myParticipant, userId, live } = vnode.attrs;
+			const spec = roundSpecOf(item);
+			if (!spec) return null;
+			const kind: AgoraRoundKind = spec.kind;
+			listenToDeliberation(session.sessionId, userId);
+
+			const named = session.identity === 'named';
+			const state = getDeliberationState();
+			const answers = item.statementId ? (state.answersByQuestion[item.statementId] ?? []) : [];
+			const mine = answers.find((answer) => answer.creatorId === userId);
+			const others = answers.filter(
+				(answer) => answer.creatorId !== userId && answer.hidden !== true,
+			);
+			const outcome = session.stageState?.[item.itemId]?.outcome;
+			const closed = !canWriteStage(session, item.itemId);
+			const isNeeds = kind === 'needs';
+
+			// Empty for a new question, pre-filled with my own saved answer, and
+			// otherwise left exactly as the student is typing it (lib/flows/penState)
+			const nextPen = penFor(pen, item.itemId, mine);
+			if (nextPen.itemId !== pen.itemId) {
+				// A different question: a save error from the last one is not this one's
+				saving = false;
+				editing = false;
+				saveFailed = false;
+				rating.clear();
+				queued.clear();
+				rateFailed.clear();
+			}
+			pen = nextPen;
+
+			const rated = new Set(
+				Object.keys(state.myRatings).filter(
+					(statementId) => state.myRatings[statementId] !== undefined,
+				),
+			);
+			// The deal: dealt by lottery on the server (lib/hands.ts) once the class
+			// is large enough; a small class reads everyone. Held in deal order so
+			// nothing moves under a reading finger; newcomers append.
+			const parentId = parentIdOf(session, item);
+			const active = isLotteryActive();
+			const hand = handFor(parentId);
+			if (askedFor !== item.itemId) {
+				askedFor = item.itemId;
+				requestFill();
+			}
+			const dealt = visibleNotes({
+				notes: others,
+				userId,
+				hand,
+				rated,
+				active,
+				live: !closed,
+			});
+			const dealtIds = dealt.map((row) => row.statementId);
+			const ratedCount = roundRatedCount(dealtIds, rated);
+			const goal = active ? handGoal(others.length) : Math.min(spec.sample, others.length);
+			const goalMet = mine !== undefined && ratedCount >= goal;
+			const moreLeft = active ? others.length > dealtIds.length && !poolExhausted(parentId) : false;
+
+			const progress = roundProgress(mine !== undefined, ratedCount, goal);
+			const progressKey = `${item.itemId}:${progress.done}/${progress.total}`;
+			if (live && reported !== progressKey) {
+				reported = progressKey;
+				reportStageProgress(session.sessionId, userId, item.stage, progress.done, progress.total);
+			}
+
+			async function submit(): Promise<void> {
+				const text = pen.text.trim();
+				if (!isAgoraTextLongEnough(text) || saving || closed) return;
+				saving = true;
+				saveFailed = false;
+				saveNotice = undefined;
+				m.redraw();
+				try {
+					await saveAnswer(session, item, myParticipant.anonName, text);
+					editing = false;
+				} catch (error) {
+					if (isLanguageFlagged(error)) {
+						saveNotice = flaggedNotice(error);
+					} else {
+						console.error('[Round] Saving the text failed:', error);
+					}
+					saveFailed = true;
+				} finally {
+					saving = false;
+					m.redraw();
+				}
+			}
+
+			async function weigh(
+				statementId: string,
+				value: AgoraUnitRating | 'like' | 'unlike',
+			): Promise<void> {
+				if (!item.statementId || closed) return;
+				if (rating.has(statementId)) {
+					queued.set(statementId, value);
+
+					return;
+				}
+				rating.add(statementId);
+				rateFailed.delete(statementId);
+				m.redraw();
+				try {
+					if (value === 'like' || value === 'unlike') {
+						await likeStatement(session, item.statementId, statementId, value === 'like');
+					} else {
+						await rateStatement(session, item.statementId, statementId, value);
+					}
+				} catch (error) {
+					console.error('[Round] Weighing failed:', error);
+					rateFailed.add(statementId);
+				} finally {
+					rating.delete(statementId);
+					m.redraw();
+				}
+
+				const next = queued.get(statementId);
+				if (next !== undefined) {
+					queued.delete(statementId);
+					await weigh(statementId, next);
+				}
+			}
+
+			const changed = pen.text.trim() !== (mine?.statement ?? '').trim();
+			const myRow = mine ? toRow(mine, named) : null;
+
+			const widget = (answer: AgoraProposal): m.Children => {
+				const myRating = state.myRatings[answer.statementId]?.value;
+				if (spec.scale === 'like') {
+					return m(LikeButton, {
+						liked: myRating === AGORA_ROUND.LIKE,
+						disabled: rating.has(answer.statementId),
+						onToggle: (liked) => void weigh(answer.statementId, liked ? 'like' : 'unlike'),
+					});
+				}
+
+				return m(UnitScale, {
+					ask: t(`round.${kind}.unit_ask`),
+					value: myRating !== undefined && isUnitRating(myRating) ? myRating : undefined,
+					busy: rating.has(answer.statementId),
+					failed: rateFailed.has(answer.statementId),
+					onPick: (value) => void weigh(answer.statementId, value),
+				});
+			};
+
+			const textCard = (answer: AgoraProposal, index: number, showFigure: boolean): m.Children => {
+				const row = toRow(answer, named);
+
+				return m(
+					'.card.round__text',
+					{ key: answer.statementId, 'data-hue': String(proposalHue(index + 1)) },
+					[
+						m('.round__text-head', [
+							named && answer.anonName
+								? m('span.round__who', answer.anonName)
+								: m('span.round__number', t('round.text_number', { n: index + 1 })),
+							showFigure && row.raters > 0
+								? m('span.round__figure', appreciationLine(kind, row))
+								: null,
+						]),
+						m('p.round__text-body', answer.statement),
+						closed ? null : widget(answer),
+					],
+				);
+			};
+
+			const closedRows = outcome
+				? outcome.selected
+				: rankRoundAnswers(
+						kind,
+						others.map((row) => toRow(row, named)),
+					);
+
+			return m('.shell', [
+				m('.shell__content.round', { class: `round--${kind}` }, [
+					m('section.round__ask', [
+						m(
+							'span.round__icon',
+							{ 'aria-hidden': 'true' },
+							m(Icon, {
+								name: kind === 'story' ? 'edit' : isNeeds ? 'target' : 'trend',
+								size: 28,
+							}),
+						),
+						m('h2.round__title', item.title?.trim() || t(`round.${kind}.prompt`)),
+						m('.hint-line', [
+							m(
+								'p.round__explanation.hint-line__text',
+								item.explanation?.trim() || t(`round.${kind}.hint`),
+							),
+							// The need-vs-solution example is the reason, not a step: one tap away
+							isNeeds && !item.explanation?.trim()
+								? m(ExplainHint, { text: t('round.needs.example') })
+								: null,
+						]),
+						closed && !outcome ? m('p.round__closed', t('round.closed')) : null,
+					]),
+
+					m(CarriedContext, {
+						session,
+						beforeIndex: planIndex,
+						defaultOpen: kind !== 'story',
+					}),
+
+					outcome
+						? m('.card.stack.round__outcome', [
+								m('p.teacher__section-title', t(`round.${kind}.summary_title`)),
+								outcome.summary
+									? m('p.round__summary', outcome.summary)
+									: m('p.home-explanation', iconLabel('watch', t('round.no_texts'), 18)),
+							])
+						: null,
+
+					// My text — the pen, or my words as they stand
+					m('.card.stack.round__mine', [
+						m('.round__text-head', [
+							m('h3.round__owner', t('round.your_text')),
+							myRow && myRow.raters > 0
+								? m(
+										'span.round__figure',
+										t('round.appreciated_n', {
+											n: spec.scale === 'like' ? roundLikes(myRow) : myRow.raters,
+										}),
+									)
+								: null,
+						]),
+						mine?.hidden
+							? removedNotice()
+							: closed
+								? m(
+										'p.round__mine-text',
+										{ dir: 'auto' },
+										mine ? mine.statement : t('round.no_text_given'),
+									)
+								: m(RoundAnswer, {
+										kind,
+										text: pen.text,
+										savedText: mine?.statement,
+										editing,
+										saving,
+										saveFailed,
+										saveNotice,
+										changed,
+										onEdit: () => {
+											editing = true;
+										},
+										onCancel: () => {
+											pen = typedInto(pen, mine?.statement ?? '');
+											editing = false;
+											saveFailed = false;
+											saveNotice = undefined;
+										},
+										onInput: (text: string) => {
+											pen = typedInto(pen, text);
+										},
+										onSave: () => void submit(),
+									}),
+					]),
+
+					// Classmates' texts: the dealt handful while open, every text once closed
+					m('.stack.round__others', [
+						m('.round__others-head', [
+							m('h3.round__section-title', t(`round.${kind}.read_title`)),
+							closed
+								? m('span.round__count', String(closedRows.length))
+								: mine && goal > 0
+									? m(
+											'span.round__count',
+											{ class: goalMet ? 'round__count--met' : undefined },
+											t('round.read_n_of', { n: ratedCount, total: goal }),
+										)
+									: null,
+						]),
+						closed
+							? closedRows.length === 0
+								? m('p.home-explanation', iconLabel('watch', t('round.no_texts'), 18))
+								: m(
+										'.round__list',
+										closedRows.map((row, index) =>
+											m(
+												'.card.round__text',
+												{ key: row.statementId, 'data-hue': String(proposalHue(index + 1)) },
+												[
+													m('.round__text-head', [
+														named && row.anonName
+															? m('span.round__who', row.anonName)
+															: m('span.round__number', t('round.text_number', { n: index + 1 })),
+														row.raters > 0
+															? m('span.round__figure', appreciationLine(kind, row))
+															: null,
+													]),
+													m('p.round__text-body', row.statement),
+												],
+											),
+										),
+									)
+							: !mine
+								? m('p.home-explanation', iconLabel('lock', t('round.answer_first'), 18))
+								: dealt.length === 0
+									? m('p.home-explanation', iconLabel('watch', t('round.waiting'), 18))
+									: [
+											m(
+												'.round__list',
+												dealt.map((answer, index) => textCard(answer, index, false)),
+											),
+											goalMet && goal > 0
+												? m('.round__goal', [
+														m('p.round__goal-line', iconLabel('check', t('round.goal_met'), 18)),
+														moreLeft
+															? m(
+																	'button.btn.btn--secondary.btn--sm',
+																	{
+																		type: 'button',
+																		onclick: () => {
+																			if (parentId) void drawMore(parentId);
+																		},
+																	},
+																	t('round.rate_more'),
+																)
+															: null,
+													])
+												: null,
+										],
+					]),
+				]),
+			]);
+		},
+	};
+}
+
+/** The ranked texts of a round, for a panel that wants them without the pen */
+export function rankedRoundAnswers(
+	kind: AgoraRoundKind,
+	answers: readonly AgoraProposal[],
+	named: boolean,
+): AgoraCarriedAnswer[] {
+	return rankRoundAnswers(
+		kind,
+		answers.filter((answer) => answer.hidden !== true).map((answer) => toRow(answer, named)),
+	);
+}

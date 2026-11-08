@@ -384,6 +384,16 @@ export class NotificationService {
 	}
 
 	/**
+	 * Push fields for a new statement subscription: whether push is on for this device and
+	 * the FCM token already held in memory (never requests permission or fetches a token).
+	 */
+	public getPushSubscriptionFields(): { getPushNotification: boolean; pushToken: string | null } {
+		const getPushNotification = this.isInitialized() && this.safeGetPermission() === 'granted';
+
+		return { getPushNotification, pushToken: getPushNotification ? this.token : null };
+	}
+
+	/**
 	 * Get the current user ID.
 	 */
 	public getCurrentUserId(): string | null {

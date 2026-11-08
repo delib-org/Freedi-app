@@ -1,0 +1,104 @@
+{
+ "input": "../2026-08-18-live-synth-accuracy/runs/en-seed1234-consolidated",
+ "atoms": 50,
+ "synthAtoms": 50,
+ "discovered": 11,
+ "themesWithMembers": 11,
+ "otherCount": 0,
+ "unanswered": 0,
+ "sizes": [
+  6,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  5,
+  4,
+  3,
+  2
+ ],
+ "ms": 26825,
+ "usage": {
+  "gpt-5.6-terra": {
+   "calls": 1,
+   "prompt": 941,
+   "completion": 1400
+  },
+  "gpt-5.6-luna": {
+   "calls": 2,
+   "prompt": 1877,
+   "completion": 1071
+  }
+ },
+ "usd": 0.020342600000000002,
+ "themes": [
+  {
+   "key": "t1",
+   "name": "Affordable Housing and Rentals",
+   "rule": "Policies that create, preserve, convert, improve, or make more transparent affordable housing and rental options belong here.",
+   "size": 5
+  },
+  {
+   "key": "t2",
+   "name": "Schools and Student Support",
+   "rule": "Measures concerning school facilities, teaching conditions, classroom learning, school meals, tutoring, or extracurricular education for children belong here.",
+   "size": 6
+  },
+  {
+   "key": "t3",
+   "name": "Parks, Gardens, and Trees",
+   "rule": "Measures that expand or improve parks, community gardens, street-tree canopy, or playground access belong here.",
+   "size": 4
+  },
+  {
+   "key": "t4",
+   "name": "Public Transit and Cycling",
+   "rule": "Measures that improve transit service, transit information or fares, or dedicated cycling infrastructure belong here.",
+   "size": 5
+  },
+  {
+   "key": "t5",
+   "name": "Health and Care Access",
+   "rule": "Measures that provide or speed access to physical health care, mental-health care, preventive screening, or in-home elder care belong here.",
+   "size": 5
+  },
+  {
+   "key": "t6",
+   "name": "Municipal Service Access",
+   "rule": "Measures that make city services, procedures, public information, or digital connectivity easier for residents to access belong here.",
+   "size": 5
+  },
+  {
+   "key": "t7",
+   "name": "Neighborhood Safety",
+   "rule": "Measures focused on emergency response, crime prevention, street security, or traffic-safety infrastructure belong here.",
+   "size": 5
+  },
+  {
+   "key": "t8",
+   "name": "Waste Reduction and Recycling",
+   "rule": "Measures that reduce disposable waste or expand collection, recycling, or composting systems belong here.",
+   "size": 3
+  },
+  {
+   "key": "t9",
+   "name": "Clean Energy and Air Monitoring",
+   "rule": "Measures that reduce municipal energy emissions or monitor and publish environmental air-quality conditions belong here.",
+   "size": 2
+  },
+  {
+   "key": "t10",
+   "name": "Culture and Community Amenities",
+   "rule": "Measures that provide cultural programming, public art, library access, museum access, festivals, or neighborhood recreation amenities other than parks and playgrounds belong here.",
+   "size": 5
+  },
+  {
+   "key": "t11",
+   "name": "Local Jobs and Business Support",
+   "rule": "Measures that support local businesses, workspaces, hiring, business permitting, or workers' career retraining belong here.",
+   "size": 5
+  }
+ ]
+}

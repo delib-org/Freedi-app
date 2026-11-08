@@ -58,6 +58,14 @@ export const OdysseyElderSchema = object({
 	 * the email digest as the "elder challenge" section.
 	 */
 	challenges: record(string(), string()),
+	/**
+	 * island statementId → stance statementId → what the elder says when the
+	 * player consults them about THAT shore before marking it (the voyage's
+	 * shore counsel). Optional: deployed readers parse elders authored before
+	 * it existed, and a missing line falls back to the island's `challenges`
+	 * line, labelled as being about the island.
+	 */
+	counsel: optional(record(string(), record(string(), string()))),
 	sortOrder: number(),
 	enabled: boolean(),
 });

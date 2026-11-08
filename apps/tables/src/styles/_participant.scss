@@ -1,0 +1,132 @@
+// Participant screens (mobile-first): topic picker with 1/2/3 badges, ranked list,
+// table picker for direct mode, "my table" result.
+
+.pick {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  inline-size: 100%;
+  min-block-size: var(--tap-target);
+  padding: var(--space-md);
+  border: 2px solid var(--paper-line);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+
+  &--ranked {
+    border-color: var(--brand);
+    background: var(--brand-soft);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &__badge {
+    display: grid;
+    flex: none;
+    place-items: center;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    border: 2px solid var(--border-medium);
+    border-radius: var(--radius-full);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-lg);
+
+    .pick--ranked & {
+      border-color: var(--brand);
+      background: var(--brand);
+      color: var(--brand-ink);
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    min-inline-size: 0;
+  }
+
+  &__title {
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &__text {
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+    overflow-wrap: anywhere;
+  }
+}
+
+.ranked {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+  }
+
+  &__title {
+    font-weight: var(--font-weight-semibold);
+    overflow-wrap: anywhere;
+  }
+
+  &__actions {
+    display: flex;
+    flex: none;
+  }
+}
+
+.table-pick {
+  &--mine {
+    border-color: var(--brand);
+    background: var(--brand-soft);
+  }
+
+  &__number {
+    margin: 0;
+    font-size: var(--font-size-lg);
+  }
+
+  &__topic {
+    margin: 0;
+    color: var(--brand);
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+.my-table {
+  align-items: center;
+  text-align: center;
+
+  &__label {
+    margin: 0;
+    color: var(--ink-muted);
+  }
+
+  &__number {
+    margin: 0;
+    color: var(--brand);
+    font-size: var(--font-size-display);
+    font-weight: var(--font-weight-bold);
+    line-height: 1;
+  }
+
+  &__topic {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+  }
+}

@@ -35,6 +35,7 @@
 import { readFileSync } from 'node:fs';
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { loadEmbeddingDocs } from '../src/services/statement-embedding-store';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
 	console.error('Refusing to run without FIRESTORE_EMULATOR_HOST set. Emulator-only.');
@@ -119,6 +120,8 @@ async function main(questionId: string): Promise<void> {
 		.get();
 	const raw: RawOpt[] = [];
 	const existingDerived: string[] = [];
+	// Vectors live in statementEmbeddings; older docs may still carry them.
+	const stored = await loadEmbeddingDocs(snap.docs.map((d) => d.id));
 	for (const d of snap.docs) {
 		const x = d.data();
 		if (x.derivedByPipeline) {
@@ -126,7 +129,7 @@ async function main(questionId: string): Promise<void> {
 
 			continue;
 		}
-		const e = extractEmbedding(x.embedding);
+		const e = extractEmbedding(stored.get(d.id)?.embedding ?? x.embedding);
 		if (e) raw.push({ id: x.statementId, text: x.statement ?? '', embedding: e });
 	}
 	console.info(

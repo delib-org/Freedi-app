@@ -6,20 +6,31 @@ import {
   detectLanguage,
   NextTranslationProvider,
 } from '@freedi/shared-i18n/next';
-import { COOKIE_KEY } from '@freedi/shared-i18n';
+import { COOKIE_KEY, pickTranslations } from '@freedi/shared-i18n';
+import clientTranslationKeys from '@/generated/i18nClientKeys.json';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import ConnectionLostHandler from '@/components/shared/ConnectionLostHandler';
 import { ReduxProvider } from '@/components/providers/ReduxProvider';
 import { ToastProvider } from '@/components/shared/Toast';
+import AccessibilityButton from '@/components/accessibility/AccessibilityButton';
+import { ACCESSIBILITY } from '@/constants/common';
+import { a11yHtmlAttributes, parseA11yCookie } from '@/lib/accessibility/a11yPrefs';
 import './globals.css';
 import '@/styles/atoms/_index.scss';
 import '@/styles/molecules/_index.scss';
 import '@/styles/organisms/_index.scss';
+import '@/styles/_themes.scss';
 
 export const metadata: Metadata = {
   title: 'WizCol: Mass Consensus',
   description: 'Fast crowdsourced solution platform',
+  openGraph: {
+    title: 'WizCol: Mass Consensus',
+    description: 'A new way to make decisions together',
+    type: 'website',
+    images: [{ url: '/og-wizcol.png', width: 1200, height: 630, alt: 'WizCol' }],
+  },
   icons: {
     icon: '/favicon.ico',
     apple: '/icons/logo-192px.png',
@@ -37,7 +48,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#5f88e5',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#5f88e5' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+  ],
 };
 
 export default async function RootLayout({
@@ -54,16 +68,29 @@ export default async function RootLayout({
 
   const language = await detectLanguage(cookieValue, acceptLanguage);
   const { dir, dictionary } = getTranslations(language);
+  // Only the keys MC's source uses (~1,000 of ~5,000; see
+  // scripts/generate-i18n-keys.js): this dictionary is serialized into every
+  // page's HTML, so the full one would cost ~300KB a page.
+  const clientDictionary = pickTranslations(dictionary, clientTranslationKeys);
+
+  // Participant accessibility settings, rendered onto <html> so there is no flash
+  const a11yPrefs = parseA11yCookie(cookieStore.get(ACCESSIBILITY.COOKIE)?.value);
+  const { fontSize, ...a11yAttributes } = a11yHtmlAttributes(a11yPrefs);
 
   return (
-    <html lang={language} dir={dir}>
+    <html
+      lang={language}
+      dir={dir}
+      {...a11yAttributes}
+      style={fontSize ? { fontSize } : undefined}
+    >
       <head>
         <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
       </head>
       <body suppressHydrationWarning>
         <NextTranslationProvider
           initialLanguage={language}
-          initialDictionary={dictionary}
+          initialDictionary={clientDictionary}
         >
           <ReduxProvider>
             <AuthProvider>
@@ -73,6 +100,7 @@ export default async function RootLayout({
               </ToastProvider>
             </AuthProvider>
             <ConnectionLostHandler />
+            <AccessibilityButton initialPrefs={a11yPrefs} />
           </ReduxProvider>
         </NextTranslationProvider>
         <GoogleAnalytics />

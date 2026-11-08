@@ -2,6 +2,7 @@ import { Results, Statement, StatementType } from '@freedi/shared-types';
 import { NodeObj, MindElixirData, TagObj } from 'mind-elixir';
 import { sortSiblings } from './siblingOrder';
 import { countsFor, type DetailResults } from './detailLevel';
+import { CLUSTER_PALETTE } from './clusterColors';
 
 /**
  * Style configuration for MindElixir nodes based on statement type
@@ -155,39 +156,9 @@ export function getStyleForType(
 	}
 }
 
-/**
- * Sticky-note palette for the shareable cluster board. Each first-level branch
- * gets one entry; descendants inherit it so an arm and its cards share a hue —
- * the SCAMPER board look. Concrete hex (not CSS vars) because mind-elixir paints
- * `branchColor` onto SVG connector strokes via JS, which doesn't resolve vars.
- */
-export interface ClusterPaletteEntry {
-	/** Strong color for connector lines and the branch/cluster pill. */
-	line: string;
-	/** Light tint for member sticky-note cards. */
-	card: string;
-	/** Readable text color on the card tint. */
-	text: string;
-}
-
-export const CLUSTER_PALETTE: ClusterPaletteEntry[] = [
-	{ line: '#f2c12e', card: '#fdeca8', text: '#5b4a00' }, // yellow
-	{ line: '#8b6fd6', card: '#d9ccf3', text: '#2e1d56' }, // purple
-	{ line: '#4a9fe0', card: '#c2e0f7', text: '#0f3350' }, // blue
-	{ line: '#5fbb46', card: '#cdeec0', text: '#1f3d10' }, // green
-	{ line: '#ee8a37', card: '#fbd9b5', text: '#5a2f06' }, // orange
-	{ line: '#e76fa6', card: '#f8cfe0', text: '#5a1336' }, // pink
-	{ line: '#34bdb4', card: '#bdeeea', text: '#0c3b38' }, // teal
-	{ line: '#e2554d', card: '#fae0df', text: '#5a221f' }, // red
-	{ line: '#5b6cd6', card: '#e2e5f8', text: '#242b56' }, // indigo
-	{ line: '#8cbf3f', card: '#eaf3dc', text: '#384c19' }, // lime
-	{ line: '#2bb6c4', card: '#d9f2f4', text: '#11494e' }, // cyan
-	{ line: '#c455b8', card: '#f4e0f2', text: '#4e224a' }, // magenta
-	{ line: '#d99a2b', card: '#f8edd9', text: '#573e11' }, // amber
-	{ line: '#6b7a99', card: '#e4e7ed', text: '#2b313d' }, // slate
-	{ line: '#e06b8a', card: '#f9e4ea', text: '#5a2b37' }, // rose
-	{ line: '#4ab0e0', card: '#def1f9', text: '#1e465a' }, // sky
-];
+// The cluster palette lives in clusterColors (shared with the sticky-note
+// board); re-exported here so existing imports keep working.
+export { CLUSTER_PALETTE, type ClusterPaletteEntry } from './clusterColors';
 
 /** Dark "Subject" hub style for the board root, matching the reference design. */
 const BOARD_ROOT_STYLE: MindElixirNodeStyle = {

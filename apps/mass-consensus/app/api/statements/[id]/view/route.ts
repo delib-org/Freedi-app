@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId, unauthorizedResponse } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections } from '@freedi/shared-types';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { FieldValue } from 'firebase-admin/firestore';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logError } from '@/lib/utils/errorHandling';
@@ -27,14 +27,10 @@ export async function POST(
 
   try {
     const { id: statementId } = await params;
-    const body = await request.json().catch(() => ({}));
-    const bodyUserId = typeof body.userId === 'string' ? body.userId : undefined;
-
-    const cookieUserId = getUserIdFromCookie(request.headers.get('cookie'));
-    const userId = bodyUserId || cookieUserId;
+    const userId = await getVerifiedUserId(request);
 
     if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+      return unauthorizedResponse();
     }
 
     const db = getFirestoreAdmin();

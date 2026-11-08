@@ -73,3 +73,96 @@ describe('computeQuestionRollups', () => {
 		expect(rollups.map((r) => r.status)).toEqual(['closed', 'frozen', 'open']);
 	});
 });
+
+describe('computeQuestionRollups — linked questions', () => {
+	const map: ProgressMap = { q1: progress({}) };
+
+	it('leaves an owned question unmarked', () => {
+		const [rollup] = computeQuestionRollups([question({})], map, {});
+
+		expect(rollup.linked).toBe(false);
+		expect(rollup.title).toBe('Main question');
+		expect(rollup.realTitle).toBeUndefined();
+	});
+
+	it('shows the board name and keeps the real title alongside it', () => {
+		const [rollup] = computeQuestionRollups([question({})], map, {
+			q1: { label: 'Budget round' },
+		});
+
+		expect(rollup.linked).toBe(true);
+		expect(rollup.title).toBe('Budget round');
+		expect(rollup.realTitle).toBe('Main question');
+	});
+
+	it('marks a linked question with no board name and keeps its own title', () => {
+		const [rollup] = computeQuestionRollups([question({})], map, { q1: {} });
+
+		expect(rollup.linked).toBe(true);
+		expect(rollup.title).toBe('Main question');
+		expect(rollup.realTitle).toBeUndefined();
+	});
+
+	it('does not repeat the title when the board name matches it', () => {
+		const [rollup] = computeQuestionRollups([question({})], map, {
+			q1: { label: 'Main question' },
+		});
+
+		expect(rollup.title).toBe('Main question');
+		expect(rollup.realTitle).toBeUndefined();
+	});
+
+	it('falls back to the real title when the board name is blank', () => {
+		const [rollup] = computeQuestionRollups([question({})], map, { q1: { label: '   ' } });
+
+		expect(rollup.title).toBe('Main question');
+		expect(rollup.realTitle).toBeUndefined();
+	});
+});
+
+describe('computeQuestionRollups — a linked crowd survey', () => {
+	it("uses Mass Consensus's numbers, not the funnel's, when they exist", () => {
+		// The funnel counters read as almost nothing for a survey: answering
+		// through the survey flow leaves no per-statement trail.
+		const map: ProgressMap = { q1: progress({ entered: 1, suggested: 8, evaluated: 22 }) };
+		const [rollup] = computeQuestionRollups([question({ statementId: 'q1' })], map, {
+			q1: {
+				questionIds: ['q1'],
+				surveyStats: { entered: 26, responded: 20, completed: 12 },
+			},
+		});
+
+		expect(rollup.progress).toEqual({ entered: 26, suggested: 20, evaluated: 12 });
+	});
+
+	it('counts a linked survey as one activity, not as its missing children', () => {
+		const [rollup] = computeQuestionRollups(
+			[question({ statementId: 'q1' })],
+			{},
+			{
+				q1: { surveyStats: { entered: 3, responded: 2, completed: 1 } },
+			},
+		);
+
+		expect(rollup.activityCount).toBe(1);
+	});
+
+	it('sums the covered questions when the survey has no stats yet', () => {
+		const map: ProgressMap = {
+			q1: progress({ statementId: 'q1', entered: 1, suggested: 8, evaluated: 22 }),
+			q2: progress({ statementId: 'q2', entered: 2, suggested: 10, evaluated: 19 }),
+		};
+		const [rollup] = computeQuestionRollups([question({ statementId: 'q1' })], map, {
+			q1: { questionIds: ['q1', 'q2'] },
+		});
+
+		expect(rollup.progress).toEqual({ entered: 3, suggested: 18, evaluated: 41 });
+	});
+
+	it("still reads an owned question's own record", () => {
+		const map: ProgressMap = { q1: progress({ entered: 5, suggested: 2, evaluated: 1 }) };
+		const [rollup] = computeQuestionRollups([question({ statementId: 'q1' })], map, {});
+
+		expect(rollup.progress).toEqual({ entered: 5, suggested: 2, evaluated: 1 });
+	});
+});

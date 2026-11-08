@@ -1,0 +1,133 @@
+// Access picker Molecule — BEM
+// Who can join: a vertical radio list, one label and one hint per level.
+// Five Hebrew labels never fit a segmented control at 360 px; a list does.
+// React wrapper: atomic/molecules/AccessPicker.
+// Spec: docs/ux/main-people-settings-design.md §3.3.
+//
+// DOM:
+// <fieldset class="access-picker [--saving] [--inherited]">
+//   <legend class="access-picker__legend"/>
+//   <label class="access-picker__option [--checked] [--busy]">
+//     <input class="access-picker__input" type="radio" aria-describedby="…-hint"/>
+//     <span class="access-picker__indicator" aria-hidden="true"/>
+//     <span class="access-picker__text">
+//       <span class="access-picker__label"/><span class="access-picker__hint" id="…-hint"/>
+//     </span>
+//     [<span class="access-picker__spinner"/>]
+//   </label> × n
+// </fieldset>
+@use '../mixins' as *;
+
+.access-picker {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2xs);
+	min-inline-size: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+
+	&__legend {
+		margin-block-end: var(--space-2xs);
+		padding: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+
+		@include mobile {
+			@include visually-hidden;
+		}
+	}
+
+	&__option {
+		// The visually-hidden input is absolutely positioned: anchor it to its
+		// own row, so focusing it scrolls to the option, not to somewhere else.
+		position: relative;
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-xs);
+		min-block-size: 3rem;
+		padding: var(--space-xs);
+		border: var(--hairline);
+		border-radius: var(--radius-sm);
+		background: var(--card-default);
+		cursor: pointer;
+		transition:
+			background-color var(--motion-fast) var(--motion-ease),
+			border-color var(--motion-fast) var(--motion-ease);
+
+		&:hover {
+			background: var(--bg-hover);
+		}
+
+		&--checked {
+			border-color: var(--btn-primary);
+			background: color-mix(in srgb, var(--btn-primary) 8%, transparent);
+		}
+	}
+
+	&__input {
+		@include visually-hidden;
+	}
+
+	&__indicator {
+		flex-shrink: 0;
+		inline-size: 1.25rem;
+		block-size: 1.25rem;
+		margin-block-start: 0.125rem;
+		border: 2px solid var(--text-caption);
+		border-radius: 50%;
+	}
+
+	&__input:checked + &__indicator {
+		border-color: var(--btn-primary);
+		box-shadow: inset 0 0 0 0.3rem var(--btn-primary);
+	}
+
+	&__input:focus-visible + &__indicator {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+
+	&__text {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2xs);
+		min-inline-size: 0;
+	}
+
+	&__label {
+		font-size: var(--font-size-md);
+		color: var(--text-body);
+	}
+
+	&__option--checked &__label {
+		font-weight: var(--font-weight-medium);
+	}
+
+	&__hint {
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+	}
+
+	&__spinner {
+		display: inline-flex;
+		margin-inline-start: auto;
+	}
+
+	&--saving &__option {
+		pointer-events: none;
+	}
+
+	// Inherited: the InheritanceSwitch above is the only live control.
+	&--inherited &__option {
+		opacity: 0.6;
+		cursor: default;
+		pointer-events: none;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		&__option {
+			transition: none;
+		}
+	}
+}

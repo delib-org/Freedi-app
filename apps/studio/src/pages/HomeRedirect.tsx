@@ -2,23 +2,40 @@ import { Navigate } from 'react-router-dom';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { useOrg } from '@/org/OrgContext';
 import { useGrace } from './_shared/useGrace';
+import { useAgoraAccess } from './AgoraHome/useAgoraAccess';
 
 /**
- * `/` — send the user where they most likely want to be:
- * sysadmin with no orgs → /admin/orgs; exactly one org → that org;
- * otherwise the picker (which also shows personal events).
+ * `/` — send the user to the workspace they most likely want:
+ * sysadmin with no orgs → the admin screens; exactly one org → that org;
+ * no orgs and attached to an Agora school (teacher or regional coordinator) →
+ * their Agora classrooms; no orgs at all → their own events, which is the only
+ * workspace they have;
+ * otherwise the picker.
  */
 export default function HomeRedirect() {
 	const { t } = useTranslation();
 	const { orgs, isSystemAdmin, loading } = useOrg();
-	// The system-admin flag arrives on its own snapshot with no loading state,
-	// so an org-less account waits a moment before being sent to the picker.
-	const settled = useGrace(!loading && orgs.length === 0 && !isSystemAdmin);
+	// Both flags arrive on their own snapshots, and the memberships usually come
+	// last — so an empty org list is not yet evidence of anything. Wait for it to
+	// settle before acting on it, or a system admin who belongs to two
+	// organizations is sent to the admin screens every time they open the app.
+	const settled = useGrace(!loading && orgs.length === 0);
+	// Asked only for someone who would otherwise land on `/personal`.
+	const askAgora = !loading && settled && orgs.length === 0 && !isSystemAdmin;
+	const agora = useAgoraAccess(askAgora);
 
 	if (loading) return <div className="studio-loading">{t('Loading…')}</div>;
-	if (isSystemAdmin && orgs.length === 0) return <Navigate to="/admin/orgs" replace />;
 	if (orgs.length === 1) return <Navigate to={`/orgs/${orgs[0].organizationId}`} replace />;
-	if (orgs.length === 0 && !settled) return <div className="studio-loading">{t('Loading…')}</div>;
+	if (orgs.length > 1) return <Navigate to="/orgs" replace />;
+	if (!settled) return <div className="studio-loading">{t('Loading…')}</div>;
 
-	return <Navigate to="/orgs" replace />;
+	// No organizations at all.
+	if (isSystemAdmin) return <Navigate to="/admin/orgs" replace />;
+
+	if (agora.loading) return <div className="studio-loading">{t('Loading…')}</div>;
+	if (agora.isTeacher || agora.isSupervisor) return <Navigate to="/agora" replace />;
+
+	// Nothing to pick between: their own events are the only workspace they have,
+	// and "you are not a member of any organization" is not a home screen.
+	return <Navigate to="/personal" replace />;
 }

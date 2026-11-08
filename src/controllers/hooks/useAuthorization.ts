@@ -131,17 +131,13 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 			// Auto-subscribe only once
 			if (!hasSubscription && !subscriptionAttemptedRef.current && effectiveStatement && creator) {
 				subscriptionAttemptedRef.current = true;
-				const pushNotificationsEnabled =
-					notificationService.isInitialized() &&
-					notificationService.safeGetPermission() === 'granted';
-
 				setStatementSubscriptionToDB({
 					statement: effectiveStatement,
 					creator,
 					role: Role.member,
 					getInAppNotification: true,
 					getEmailNotification: false,
-					getPushNotification: pushNotificationsEnabled,
+					...notificationService.getPushSubscriptionFields(),
 				});
 			}
 
@@ -209,17 +205,13 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 			if (!hasSubscription && !subscriptionAttemptedRef.current && effectiveStatement && creator) {
 				subscriptionAttemptedRef.current = true;
 
-				const pushNotificationsEnabled =
-					notificationService.isInitialized() &&
-					notificationService.safeGetPermission() === 'granted';
-
 				setStatementSubscriptionToDB({
 					statement: effectiveStatement,
 					creator,
 					role: Role.member,
 					getInAppNotification: true,
 					getEmailNotification: false,
-					getPushNotification: pushNotificationsEnabled,
+					...notificationService.getPushSubscriptionFields(),
 				});
 			}
 

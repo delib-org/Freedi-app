@@ -67,13 +67,19 @@ function extractVector(raw: unknown): number[] | null {
 
 (async () => {
 	const snap = await db.collection('statements').where('parentId', '==', QUESTION_ID).get();
+	// Vectors live in statementEmbeddings; older docs may still carry them.
+	const embeddedSnap = await db
+		.collection('statementEmbeddings')
+		.where('parentId', '==', QUESTION_ID)
+		.get();
+	const vectors = new Map(embeddedSnap.docs.map((doc) => [doc.id, doc.data().embedding]));
 	const docs: Doc[] = snap.docs.map((d) => {
 		const data = d.data() as Record<string, unknown>;
 
 		return {
 			statementId: (data.statementId as string) ?? d.id,
 			statement: (data.statement as string) ?? '',
-			embedding: extractVector(data.embedding),
+			embedding: extractVector(vectors.get(d.id) ?? data.embedding),
 			isCluster: data.isCluster === true,
 			integratedOptions: Array.isArray(data.integratedOptions)
 				? (data.integratedOptions as string[])

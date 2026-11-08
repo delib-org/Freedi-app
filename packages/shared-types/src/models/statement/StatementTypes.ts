@@ -23,6 +23,7 @@ import {
 	Visibility,
 } from '../TypeEnums';
 import { AgoraMessageKind, AgoraSuggestionStatus } from '../agora/agoraEnums';
+import { AgoraModerationSchema } from '../agora/agoraModeration';
 import { Role } from '../user/UserSettings';
 import { CreatorSchema, MembershipSchema, StepSchema, UserSchema } from '../user/User';
 import { ResultsSettingsSchema } from '../results/ResultsSettings';
@@ -35,6 +36,7 @@ import {
 import { StageSelectionType } from '../stage/stageTypes';
 import { SimpleStatementSchema } from './SimpleStatement';
 import { StatementSettingsSchema } from './StatementSettings';
+import { ClassReplyStatementFieldsSchema, ClassTableMarkerSchema } from '../classroom/classroomModel';
 import { UserDataSchema } from '../user/UserSettings';
 import {
 	StatementEvaluationSchema,
@@ -176,6 +178,8 @@ export const StatementSchema = object({
 	consensusValid: optional(number()), // gives a combine number of the level of consensus and its validity
 	PopperHebbianScore: optional(PopperHebbianScoreSchema), // the Popper Hebbian score of the statement
 	order: optional(number()), // the order of the statement relative to its siblings
+	sourceLessonId: optional(string()), // join-class: the lesson this lesson's plan was copied from (main statement only)
+	sourceLessonTitle: optional(string()), // join-class: that lesson's title at copy time (survives renames and deletes)
 	mapSide: optional(picklist(['left', 'right'])), // which side of the mind-map root this branch sits on (first-level nodes only)
 	elementHight: optional(number()), // the height of the statement. It is used for animation purposes
 	top: optional(number()), // the top of the statement. It is used for animation purposes
@@ -188,10 +192,26 @@ export const StatementSchema = object({
 	isSelected: optional(boolean()), // if true, the statement is selected
 	isCluster: optional(boolean()),
 	integratedOptions: optional(array(string())), // source statement IDs merged into this cluster-option (many-to-many)
+	/**
+	 * Cluster statement IDs that were merged INTO this cluster and are now hidden.
+	 * Their direct votes keep counting for this cluster (one vote per user: this
+	 * cluster's own direct vote wins, then absorbed direct votes, then the member
+	 * average). NOT members: the UI must not treat these as `integratedOptions`.
+	 * Transitive: includes the absorbed cluster's own absorbedClusterIds.
+	 */
+	absorbedClusterIds: optional(array(string())),
 	integratedInto: optional(string()), // cluster statement ID this original was merged into (set with hide:true by performIntegration; cleared on reverse)
 	derivedFromStatementId: optional(string()), // origin statement when this option was synthesized by a pipeline (e.g. compound-response decomposition)
 	derivedByPipeline: optional(picklist(['topic-cluster', 'synthesis'])), // identifies the pipeline that created this synthetic option (used for idempotent rerun)
 	synthesisRunId: optional(string()), // id of the run that produced this derived option — enables surgical per-run cleanup & provenance
+	/**
+	 * Theme provenance, set by the admin "Re-theme with AI" batch rebuild.
+	 * Plain optional strings, NOT picklist values: a new picklist value breaks
+	 * strict parses of older clients. Known value of themeSource: 'llm-rebuild'.
+	 */
+	themeSource: optional(string()),
+	themeRule: optional(string()), // one-line inclusion criterion of a rebuilt theme
+	themeRebuildRunId: optional(string()), // run id of the rebuild that last wrote this theme
 	synthesisMechanism: optional(picklist(['bulk', 'live-spawn', 'live-attach'])), // which synthesis path created this derived option
 	titleLockedByCreator: optional(boolean()), // when true, the creator has manually edited the cluster title — suppress AI regeneration
 	condensationStatus: optional(
@@ -249,6 +269,7 @@ export const StatementSchema = object({
 		object({
 			main: optional(string()), // the main image of the statement
 			more: optional(array(string())), // the other images of the statement
+			alt: optional(string()), // text alternative for the main image, read by screen readers
 		}),
 	),
 	totalEvaluators: optional(number()), // the total number of evaluators of the statement
@@ -274,6 +295,8 @@ export const StatementSchema = object({
 	chosenSolutions: optional(array(string())), // the chosen solutions of the statement
 	summary: optional(string()), // the summary of the statement - AI-generated, admin-editable; shared across all apps
 	summaryGeneratedAt: optional(number()), // when the summary was generated/last edited (ms)
+	summarySelectedIds: optional(array(string())), // sorted ids of the selected options the summary was built from; a different current selection makes the summary obsolete
+	summaryIncludesDivided: optional(boolean()), // true when the summary also covers options the group is divided on
 	evaluation: optional(StatementEvaluationSchema), // the evaluation of the statement
 	evaluationSettings: optional(StatementEvaluationSettingsSchema), // the evaluation settings of the statement
 	importanceData: optional(
@@ -301,6 +324,10 @@ export const StatementSchema = object({
 		}),
 	),
 	votingSettings: optional(VotingSettingsSchema), // the settings of the voting of the statement
+	/** join-class: set on an answer / proposal written from a table (auto +1 for coAuthors). */
+	classTable: optional(ClassTableMarkerSchema),
+	/** join-class IA 22: replies on a proposal (marker on the reply, counters on the proposal). */
+	...ClassReplyStatementFieldsSchema,
 	questionSettings: optional(QuestionSettingsSchema), // the settings of the question of the statement
 	statementSettings: optional(StatementSettingsSchema), // the settings of the statement
 	/** Activists — users who joined this option to help it happen.
@@ -314,12 +341,26 @@ export const StatementSchema = object({
 	/** Post-resolve status. Undefined before resolve. Set by `fn_resolveJoinIntents`. */
 	joinStatus: optional(picklist(['activated', 'failed'])),
 	hide: optional(boolean()), // if true, the statement is hidden
+	/**
+	 * Why the system hid this statement, when it was not a person. Plain
+	 * optional string, NOT a picklist: a new picklist value breaks strict parses
+	 * of older docs and clients. Known value: 'empty-theme' (a pipeline theme
+	 * left with no members, hidden by `hideEmptyThemes`).
+	 */
+	hiddenReason: optional(string()),
 	/** If true, admin-promoted: always shown in Join app even if below resultsSettings cutoff. */
 	forceShow: optional(boolean()),
 	/** The role of the user who created this statement. Set to Role.admin for
 	 *  organizer suggestions created from the Join app admin UI — these render
 	 *  in a separate "Organizer suggestions" section and carry a badge. */
 	creatorRole: optional(enum_(Role)),
+	isCovenantDraft: optional(boolean()), // A source-linked working draft; does not open signing.
+	deliberationEnabled: optional(boolean()),
+	agreementMeta: optional(object({
+		questionId: string(), familyId: string(), previousId: optional(string()),
+		kind: picklist(['initial', 'version', 'alternative']), sourceHash: string(), sourceIds: array(string()), introduction: string(), model: optional(string()),
+	})),
+	agreementBallot: optional(object({ questionId: string(), documentIds: array(string()), hashes: array(string()) })),
 	isDocument: optional(boolean()), // if true, this statement is treated as a document in Freedi-sign (allows options to be signable)
 	mergedInto: optional(string()), // ID of the statement this was merged into (for tracking merged proposals)
 	replyTo: optional(
@@ -374,6 +415,11 @@ export const StatementSchema = object({
 	// `agoraChallengeTurn` and pinned by rules, so a client cannot strip it and
 	// re-enter the paths it excludes.
 	agoraChallenge: optional(boolean()),
+	// The teacher's marks (hide / restore / edit) — written only by the
+	// agoraModerateStatement callable and pinned by rules, together with the
+	// shared `hide` flag it mirrors. See agoraModeration.ts for why no reason
+	// and no removed text ever sit here.
+	agoraModeration: optional(AgoraModerationSchema),
 	questionnaire: optional(QuestionnaireSchema), // if a statement is a questionnaire, it will have this field
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division
 	anchored: optional(boolean()), // if true, the statement is anchored to be represented in the evaluation.

@@ -54,8 +54,9 @@ function isUnsupportedBrowser(userAgent: string): boolean {
  * - If only legacy `userId` exists, copy it to `_uid` as HttpOnly.
  * - If neither exists, generate a new anonymous ID and set both.
  *
- * The `_uid` cookie is HttpOnly (invisible to JS, immune to XSS).
- * The legacy `userId` cookie is kept for backward-compatible client reads.
+ * These cookies only key the per-browser rate limit and client fallbacks. They
+ * are unsigned, so no route may treat them as identity: participant routes
+ * verify a Firebase ID token and server pages verify the session cookie.
  */
 export function middleware(request: NextRequest) {
 	const { pathname } = request.nextUrl;

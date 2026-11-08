@@ -1,4 +1,4 @@
-import { FC, useContext, useState } from 'react';
+import { FC, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { logError } from '@/utils/errorHandling';
 
@@ -38,6 +38,7 @@ import { QuestionType, CompoundPhase } from '@freedi/shared-types';
 import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
 import { generateParagraphId } from '@/utils/paragraphUtils';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
+import { QuestionAnswersTabContext } from '../../questionScreen/useQuestionScreenData';
 
 interface Props {
 	showNav?: boolean;
@@ -49,10 +50,15 @@ const StatementBottomNav: FC<Props> = () => {
 	const navigate = useNavigate();
 	const { user } = useAuthentication();
 
-	const [searchParams] = useSearchParams();
+	const [searchParams, setSearchParams] = useSearchParams();
+	const consumedCompose = useRef(false);
 	const activeTab = searchParams.get('tab') ?? 'chat';
 
 	const { statement } = useContext(StatementContext);
+	// On a question's Answers tab the question screen owns adding (its own
+	// button / the shell nav's "+", and `?compose=solution`) and sorting (the
+	// chip in the list header), so this bar renders nothing there.
+	const answersTabOwned = useContext(QuestionAnswersTabContext);
 	const subscription = useSelector(statementSubscriptionSelector(statementId));
 	const options = useSelector(statementOptionsSelector(statementId));
 	const allSubs = useSelector(statementSubsSelector(statementId));
@@ -108,7 +114,7 @@ const StatementBottomNav: FC<Props> = () => {
 		return true;
 	});
 
-	function handleCreateNewOption() {
+	const handleCreateNewOption = useCallback(() => {
 		if (!statement) return;
 
 		// Default to question if parent is an option or group (options can't be created under options or groups)
@@ -127,7 +133,7 @@ const StatementBottomNav: FC<Props> = () => {
 				error: null,
 			}),
 		);
-	}
+	}, [dispatch, statement]);
 
 	function handleCreateSimpleQuestion() {
 		if (!statement) return;
@@ -163,7 +169,7 @@ const StatementBottomNav: FC<Props> = () => {
 		);
 	}
 
-	const handleAddOption = () => {
+	const handleAddOption = useCallback(() => {
 		if (isHalted) return;
 		// If Popper-Hebbian mode is enabled AND pre-check is enabled, show initial idea modal first
 		if (isPopperHebbianEnabled && isPopperPreCheckEnabled) {
@@ -174,7 +180,45 @@ const StatementBottomNav: FC<Props> = () => {
 			handleCreateNewOption();
 			decreaseLearning({ addOption: true });
 		}
-	};
+	}, [
+		isHalted,
+		isPopperHebbianEnabled,
+		isPopperPreCheckEnabled,
+		decreaseLearning,
+		handleCreateNewOption,
+	]);
+
+	useEffect(() => {
+		if (searchParams.get('compose') !== 'solution') {
+			consumedCompose.current = false;
+
+			return;
+		}
+		if (
+			answersTabOwned ||
+			consumedCompose.current ||
+			!statement ||
+			!user ||
+			!(canAddOption || isAdmin) ||
+			isHalted
+		)
+			return;
+		consumedCompose.current = true;
+		const next = new URLSearchParams(searchParams);
+		next.delete('compose');
+		setSearchParams(next, { replace: true });
+		handleAddOption();
+	}, [
+		searchParams,
+		setSearchParams,
+		statement,
+		user,
+		canAddOption,
+		isAdmin,
+		isHalted,
+		handleAddOption,
+		answersTabOwned,
+	]);
 
 	function handleInitialIdeaSubmit(idea: string) {
 		setInitialIdea(idea);
@@ -249,6 +293,8 @@ const StatementBottomNav: FC<Props> = () => {
 			`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}${query ? `?${query}` : ''}`,
 		);
 	}
+
+	if (answersTabOwned) return null;
 
 	// Add mobile-only class that hides the Add button when menu is open
 	const navRootClass = [

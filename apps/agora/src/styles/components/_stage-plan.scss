@@ -1,25 +1,48 @@
+@use '../tokens' as *;
+
 // The stage plan: the student's stage navigator, the question stage, the
-// carried context card, the agreement results, the teacher's plan rail and
-// the plan editor. Imported by components.scss; do not import directly.
+// C_p bands a question leaves behind, the carried context card, the
+// agreement results, the teacher's plan rail and the plan editor.
+// Imported by components.scss; do not import directly.
 
 // --- Stage navigator: the journey as doors ---
 .stage-nav {
 	position: sticky;
 	inset-block-start: 0;
 	z-index: var(--z-header);
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
 	padding: var(--space-xs) var(--space-md);
 	background: var(--bg-card-solid);
 	border-block-end: 1px solid var(--border-subtle);
+	// A ten-station plan (the scenario's) scrolls inside its row; without this
+	// the row's overflow also widened the page, and a phone showed it shifted
+	overflow-x: clip;
 
 	&__row {
+		flex: 1 1 auto;
+		min-inline-size: 0;
 		display: flex;
 		align-items: center;
-		justify-content: center;
+		// Centred by the end stations' auto margins, not justify-content: a
+		// centred row that overflows spills past BOTH edges, and its first
+		// station is cut square and cannot be scrolled to
+		justify-content: flex-start;
 		gap: var(--space-xs);
 		max-inline-size: 720px;
 		margin-inline: auto;
+		padding-inline: 2px;
 		overflow-x: auto;
 		scrollbar-width: none;
+
+		> :first-child {
+			margin-inline-start: auto;
+		}
+
+		> :last-child {
+			margin-inline-end: auto;
+		}
 	}
 
 	&__station {
@@ -102,7 +125,9 @@
 		justify-content: center;
 		flex-wrap: wrap;
 		gap: var(--space-sm);
+		margin: var(--space-xs) var(--space-sm);
 		padding: var(--space-xs) var(--space-md);
+		border-radius: var(--radius-lg);
 		background: var(--bg-inset);
 		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
@@ -196,7 +221,7 @@
 	&__who {
 		@include type-meta;
 		font-weight: 700;
-		color: var(--peer-ink, var(--text-secondary));
+		color: var(--text-secondary);
 	}
 
 	&__agreement {
@@ -225,6 +250,150 @@
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
+	}
+}
+
+// --- C_p bands: what the room is behind, by how firmly it holds it ---
+.cp-bands {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__explain {
+		@include type-meta;
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+	// The brief: the same bands with the figures, the counts, the explainer
+	// and the raw answers left out (see CpBands.ts). What is left is a face, a
+	// label and the one sentence that says where the room stands — so the card
+	// can sit on the writing desk without burying the pen.
+	&--brief .cp-band {
+		padding: var(--space-xs) var(--space-sm);
+	}
+}
+
+.cp-band {
+	padding: var(--space-sm) var(--space-md);
+	border-radius: var(--radius-tile);
+	background: var(--bg-inset);
+	// The stripe carries the band's colour; the label carries its ink. The
+	// two are separate because the fill hues (--success, --warning) are not
+	// readable as text on the inset — see the token file's own warnings.
+	border-inline-start: 3px solid var(--band-edge, var(--text-secondary));
+
+	&--strong {
+		--band-edge: var(--success);
+		--band-ink: var(--success-ink);
+	}
+
+	&--emerging {
+		--band-edge: var(--mine);
+		--band-ink: var(--mine-ink);
+	}
+
+	&--contested {
+		--band-edge: var(--warning);
+		--band-ink: var(--text-primary);
+	}
+
+	&--unrated {
+		--band-edge: var(--border-subtle);
+		--band-ink: var(--text-secondary);
+	}
+
+	&__head {
+		display: flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: var(--space-xs) var(--space-sm);
+	}
+
+	// The face reads first and from across a room, so it is set above the
+	// label it introduces. Emoji paint their own colours — no ink token here,
+	// and nothing for the contrast gauntlet to measure.
+	&__face {
+		font-size: 1.25rem;
+		line-height: 1;
+	}
+
+	&__label {
+		font-weight: 700;
+		color: var(--band-ink, var(--text-primary));
+	}
+
+	&__score,
+	&__count,
+	&__meta {
+		@include type-meta;
+		color: var(--text-secondary);
+	}
+
+	&__count {
+		margin-inline-start: auto;
+	}
+
+	&__text {
+		margin: var(--space-xs) 0 0;
+		white-space: pre-wrap;
+	}
+
+	&__answers {
+		margin: var(--space-sm) 0 0;
+		padding-inline-start: 1.2em;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__answer {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-xs);
+	}
+
+	&__answer-text {
+		@include proposal-voice;
+	}
+
+	&__who {
+		@include type-meta;
+		font-weight: 700;
+		color: var(--text-secondary);
+	}
+}
+
+// The band an answer sits in, as a chip on the answer's own card. Same split
+// as the band card: the ring may wear the fill hue, the label may not.
+.cp-chip {
+	@include type-meta;
+	padding: 1px var(--space-sm);
+	border-radius: 999px;
+	font-weight: 700;
+	white-space: nowrap;
+	color: var(--band-ink, var(--text-primary));
+	border: 1px solid var(--band-edge, var(--border-subtle));
+
+	&--strong {
+		--band-edge: var(--success);
+		--band-ink: var(--success-ink);
+	}
+
+	&--emerging {
+		--band-edge: var(--mine);
+		--band-ink: var(--mine-ink);
+	}
+
+	&--contested {
+		--band-edge: var(--warning);
+		--band-ink: var(--text-primary);
+	}
+
+	&--unrated {
+		--band-edge: var(--border-subtle);
+		--band-ink: var(--text-secondary);
 	}
 }
 
@@ -258,9 +427,32 @@
 		font-weight: 700;
 	}
 
+	// The same chevron chip as the proposal dock and the accepted-ideas
+	// drawer — students have already learned this affordance twice. Drawn
+	// with borders rather than a glyph, so it stays RTL-safe: it rotates
+	// about the vertical, which reads the same in both directions.
 	&__fold {
-		@include type-meta;
-		color: var(--text-secondary);
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 24px;
+		height: 24px;
+		border-radius: var(--radius-full);
+		border: 1px solid var(--border-subtle);
+		transition: transform var(--motion-base) var(--ease-camera);
+
+		&::before {
+			content: '';
+			width: 7px;
+			height: 7px;
+			border-right: 2px solid var(--text-secondary);
+			border-bottom: 2px solid var(--text-secondary);
+			transform: translateY(-2px) rotate(45deg);
+		}
+	}
+
+	&--open &__fold {
+		transform: rotate(180deg);
 	}
 
 	&__list {
@@ -299,7 +491,7 @@
 	&__who {
 		@include type-meta;
 		font-weight: 700;
-		color: var(--peer-ink, var(--text-secondary));
+		color: var(--text-secondary);
 	}
 }
 
@@ -536,6 +728,27 @@
 		color: var(--mine-ink);
 	}
 
+	// "The count is on its way" — never a figure, so it must not look like
+	// one: no weight, a live dot, and it disappears the moment the aggregate
+	// lands. It says whether the silence is the class or the counting.
+	&__catchup {
+		@include type-meta;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		color: var(--text-secondary);
+		font-weight: 400;
+
+		&::before {
+			content: '';
+			inline-size: 6px;
+			block-size: 6px;
+			border-radius: 999px;
+			background: var(--mine);
+			animation: teacher-answers-pulse 1.6s var(--ease-camera) infinite;
+		}
+	}
+
 	&__text {
 		@include proposal-voice;
 		margin: 0;
@@ -554,161 +767,71 @@
 	}
 }
 
-// --- The plan editor ---
-.plan-editor {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-sm);
-
-	&__presets {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: var(--space-xs);
-	}
-
-	&__presets-label {
-		@include type-meta;
-		color: var(--text-secondary);
-	}
-
-	&__list {
-		margin: 0;
-		padding: 0;
-		list-style: none;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-xs);
-	}
-
-	&__item {
-		border: 1.5px solid var(--border-subtle);
-		border-radius: var(--radius-tile);
+// --- the cog on the stages card, and the settings it opens ---
+.teacher-settings {
+	&__toggle {
+		display: inline-grid;
+		place-items: center;
+		inline-size: 40px;
+		block-size: 40px;
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-full);
 		background: var(--bg-card-solid);
+		color: var(--text-secondary);
+		cursor: pointer;
+		transition:
+			background var(--motion-base) var(--ease-camera),
+			color var(--motion-base) var(--ease-camera),
+			transform var(--motion-base) var(--ease-camera);
 
-		&--frozen {
-			background: var(--bg-inset);
-			color: var(--text-secondary);
+		&:hover,
+		&:focus-visible {
+			color: var(--mine-ink);
+			border-color: var(--mine);
 		}
 
-		&--invalid {
-			border-color: var(--danger, var(--disagree));
+		&--on {
+			background: var(--mine-strong);
+			border-color: var(--mine-strong);
+			color: var(--text-on-lantern);
+			transform: rotate(30deg);
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+			&--on {
+				transform: none;
+			}
 		}
 	}
 
-	&__head {
-		display: flex;
-		align-items: center;
-		gap: var(--space-sm);
-		padding: var(--space-xs) var(--space-sm);
-	}
-
-	&__index {
-		@include type-meta;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		inline-size: 22px;
-		block-size: 22px;
-		border-radius: 50%;
-		background: var(--bg-inset);
-		font-weight: 700;
-	}
-
-	&__name {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		min-inline-size: 0;
-	}
-
-	&__kind {
-		font-weight: 700;
-	}
-
-	&__title {
-		font-size: var(--font-size-sm);
-		color: var(--text-secondary);
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	&__actions {
-		display: flex;
-		align-items: center;
-		gap: 2px;
-	}
-
-	&__lock {
-		display: inline-flex;
-		color: var(--text-secondary);
-	}
-
-	&__options {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-sm);
-		padding: 0 var(--space-sm) var(--space-sm);
+	&__section {
+		padding-block-start: var(--space-md);
 		border-block-start: 1px solid var(--border-subtle);
-		padding-block-start: var(--space-sm);
 	}
 
-	&__field {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-xs);
-	}
-
-	&__row {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: var(--space-sm);
-		font-size: var(--font-size-sm);
-	}
-
-	&__text,
-	&__textarea,
-	&__select,
-	&__number {
-		padding: var(--space-xs) var(--space-sm);
-		border: 1.5px solid var(--border-subtle);
-		border-radius: var(--radius-sm, 8px);
-		font: inherit;
-		background: var(--bg-card-solid);
-		color: var(--text-primary);
-	}
-
-	&__text,
-	&__textarea {
-		inline-size: 100%;
-	}
-
-	&__number {
-		inline-size: 5.5em;
-	}
-
-	&__hint {
+	&__label {
+		@include type-meta;
 		margin: 0;
-		font-size: var(--font-size-sm);
+		font-weight: 700;
 		color: var(--text-secondary);
 	}
+}
 
-	&__add {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-xs);
+@keyframes teacher-answers-pulse {
+	0%,
+	100% {
+		opacity: 0.35;
 	}
 
-	&__add-menu {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-xs);
+	50% {
+		opacity: 1;
 	}
+}
 
-	&__errors {
-		margin: 0;
-		padding-inline-start: 1.2em;
+@media (prefers-reduced-motion: reduce) {
+	.teacher-answers__catchup::before {
+		animation: none;
+		opacity: 0.8;
 	}
 }

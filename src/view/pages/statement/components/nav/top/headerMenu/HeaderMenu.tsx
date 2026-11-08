@@ -1,4 +1,4 @@
-import { FC, useRef, useState } from 'react';
+import { FC, ReactNode, useRef, useState } from 'react';
 import { Statement, Screen } from '@freedi/shared-types';
 
 // Icons
@@ -35,6 +35,10 @@ interface HeaderMenuProps {
 	onNavigateToScreen: (screen: Screen) => void;
 	onNavigateToClusterMap: () => void;
 	isFollowMeActive?: boolean;
+	/** 'tint' sits on a tinted header: no painted wrapper, language moves into the menu. */
+	variant?: 'default' | 'tint';
+	/** Extra rows appended to the menu (e.g. notification settings). */
+	extraItems?: ReactNode;
 }
 
 const HeaderMenu: FC<HeaderMenuProps> = ({
@@ -53,6 +57,8 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 	onNavigateToScreen,
 	onNavigateToClusterMap,
 	isFollowMeActive,
+	variant = 'default',
+	extraItems,
 }) => {
 	const [showLanguagePopover, setShowLanguagePopover] = useState(false);
 	const languagePillRef = useRef<HTMLButtonElement>(null);
@@ -67,13 +73,35 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 		color: headerStyle.color,
 	};
 
+	const isTint = variant === 'tint';
+	const languagePill = (
+		<span className="language-pill-anchor">
+			<LanguagePill
+				ref={languagePillRef}
+				currentLanguage={currentLanguage}
+				isOpen={showLanguagePopover}
+				onClick={() => setShowLanguagePopover((prev) => !prev)}
+			/>
+			{showLanguagePopover && (
+				<ChangeLanguage
+					onClose={() => setShowLanguagePopover(false)}
+					returnFocusRef={languagePillRef}
+					align="end"
+				/>
+			)}
+		</span>
+	);
+
 	const handleNavigateToMap = (screen: Screen) => {
 		onNavigateToScreen(screen);
 		setIsMenuOpen(false);
 	};
 
 	return (
-		<div className={styles.headerMenu} style={menuHeaderStyle}>
+		<div
+			className={isTint ? `${styles.headerMenu} ${styles['headerMenu--tint']}` : styles.headerMenu}
+			style={isTint ? undefined : menuHeaderStyle}
+		>
 			<Menu
 				statement={statement}
 				setIsOpen={setIsMenuOpen}
@@ -152,23 +180,11 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 						/>
 					</>
 				)}
+				{extraItems}
+				{isTint && <div className={styles.menuLanguage}>{languagePill}</div>}
 			</Menu>
 
-			<span className="language-pill-anchor">
-				<LanguagePill
-					ref={languagePillRef}
-					currentLanguage={currentLanguage}
-					isOpen={showLanguagePopover}
-					onClick={() => setShowLanguagePopover((prev) => !prev)}
-				/>
-				{showLanguagePopover && (
-					<ChangeLanguage
-						onClose={() => setShowLanguagePopover(false)}
-						returnFocusRef={languagePillRef}
-						align="end"
-					/>
-				)}
-			</span>
+			{variant === 'default' && languagePill}
 		</div>
 	);
 };

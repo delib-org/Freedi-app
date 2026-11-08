@@ -36,7 +36,7 @@ export const agoraWritingAssistant = onCall(
 
 		const { sessionId, text } = request.data ?? {};
 		const trimmed = (text ?? '').trim();
-		if (!sessionId || trimmed.length < AGORA_LIMITS.MIN_PROPOSAL_LENGTH) {
+		if (!sessionId || trimmed.length < AGORA_LIMITS.MIN_TEXT_LENGTH) {
 			throw new HttpsError('invalid-argument', 'sessionId and a proposal text are required');
 		}
 
