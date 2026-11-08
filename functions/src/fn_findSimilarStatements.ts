@@ -13,11 +13,15 @@ import { logModerationRejection } from './services/moderation-log-service';
  * overwhelming majority) never waits for it. The search work done for a
  * flagged submission is discarded. Moderation is never cached.
  */
-export async function findSimilarStatements(request: Request, response: Response) {
+export async function findSimilarStatements(
+	request: Request,
+	response: Response,
+	creatorId: string,
+) {
 	const startTime = Date.now();
 
 	try {
-		const { statementId, userInput, creatorId } = request.body;
+		const { statementId, userInput } = request.body;
 
 		if (!statementId || !userInput || typeof userInput !== 'string') {
 			response.status(400).send({ ok: false, error: 'Missing required fields' });

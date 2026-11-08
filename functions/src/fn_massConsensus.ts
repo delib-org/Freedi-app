@@ -39,7 +39,7 @@ export const getInitialMCData = async (req: Request, res: Response) => {
 	}
 };
 
-export const addMassConsensusMember = async (req: Request, res: Response) => {
+export const addMassConsensusMember = async (req: Request, res: Response, uid: string) => {
 	try {
 		const { statementId, lastUpdate, email, creator }: MassConsensusMember = req.body;
 
@@ -53,9 +53,10 @@ export const addMassConsensusMember = async (req: Request, res: Response) => {
 			statementId,
 			lastUpdate,
 			email,
-			creator,
+			// The member is whoever the token says, whatever uid the body claims.
+			creator: { ...creator, uid },
 		};
-		await db.collection(Collections.massConsensusMembers).doc(creator.uid).set(newMember);
+		await db.collection(Collections.massConsensusMembers).doc(uid).set(newMember);
 
 		res.send({ message: 'Member added successfully', ok: true });
 	} catch (error) {
@@ -108,7 +109,13 @@ export async function removeOptionFromMassConsensus(ev: FirestoreEvent<DocumentS
 		await db.runTransaction(async (transaction) => {
 			const parentDoc = await transaction.get(parentRef);
 			if (!parentDoc.exists) {
-				throw new Error('Parent statement does not exist');
+				// Expected: deleting a whole question deletes its options after the parent is gone.
+				logger.info('Parent statement already deleted, skipping suggestions decrement', {
+					statementId: deletedStatement.statementId,
+					parentId: deletedStatement.parentId,
+				});
+
+				return;
 			}
 
 			const parentData = parentDoc.data();

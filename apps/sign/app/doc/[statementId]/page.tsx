@@ -10,8 +10,8 @@ import {
   getUserInteractionsForDocument,
   getSuggestionCountsForDocument,
 } from '@/lib/firebase/queries';
-import { getUserFromCookies } from '@/lib/utils/user';
-import { checkAdminAccess, checkDocumentAccess } from '@/lib/utils/adminAccess';
+import { getServerUser, isVerifiedDocumentAdmin } from '@/lib/auth/requestIdentity';
+import { checkDocumentAccess } from '@/lib/utils/adminAccess';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import DocumentView from '@/components/document/DocumentView';
 import DocumentVisitTracker from '@/components/document/DocumentVisitTracker';
@@ -32,6 +32,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title: `Document Not Found - ${DEFAULT_BRAND_NAME}`,
     };
+  }
+
+  // Metadata is served to anyone, so a private document's text must not be in it
+  const { signSettings } = document as { signSettings?: { isPublic?: boolean; isHidden?: boolean } };
+  if (signSettings?.isPublic === false || signSettings?.isHidden === true) {
+    return { title: DEFAULT_BRAND_NAME };
   }
 
   return {
@@ -59,23 +65,9 @@ export default async function DocumentPage({ params }: PageProps) {
   console.info(`[Perf] getDocumentParagraphs: ${Date.now() - paraStart}ms`);
   const paragraphIds = paragraphs.map((p) => p.paragraphId);
 
-  // Get user info from cookies
+  // Get the verified session user, or the server-minted anonymous visitor
   const cookieStore = await cookies();
-  const user = getUserFromCookies(cookieStore);
-
-  // Debug: log cookie data
-  const userIdCookie = cookieStore.get('userId');
-  console.info('[DEBUG] Page cookies:', {
-    hasUserId: !!userIdCookie,
-    userId: userIdCookie?.value?.substring(0, 10) + '...',
-    user: user ? { uid: user.uid.substring(0, 10) + '...', displayName: user.displayName } : null,
-  });
-
-  // LOG FULL USER ID FOR DEBUGGING
-  console.error('====================================');
-  console.error('CURRENT USER ID (FULL):', user?.uid);
-  console.error('COOKIE USER ID (FULL):', userIdCookie?.value);
-  console.error('====================================');
+  const user = await getServerUser(cookieStore);
 
   // Fetch comment counts for all paragraphs (for all users, not just logged in)
   const commentStart = Date.now();
@@ -91,25 +83,17 @@ export default async function DocumentPage({ params }: PageProps) {
   if (user) {
     const userStart = Date.now();
     const { db } = getFirebaseAdmin();
-    const [signature, evaluations, interactions, adminAccess] = await Promise.all([
+    const [signature, evaluations, interactions, verifiedAdmin] = await Promise.all([
       getUserSignature(statementId, user.uid),
       getUserEvaluationsForDocument(paragraphIds, user.uid),
       getUserInteractionsForDocument(statementId, user.uid, paragraphIds),
-      checkAdminAccess(db, statementId, user.uid),
+      isVerifiedDocumentAdmin(db, statementId, user),
     ]);
     console.info(`[Perf] User queries (parallel): ${Date.now() - userStart}ms`);
     userSignature = signature;
     userEvaluations = evaluations;
     userInteractions = interactions;
-    isAdmin = adminAccess.isAdmin;
-
-    // Debug: log admin check result
-    console.info('[DEBUG] Admin check result:', {
-      userId: user.uid.substring(0, 10) + '...',
-      isAdmin: adminAccess.isAdmin,
-      isOwner: adminAccess.isOwner,
-      permissionLevel: adminAccess.permissionLevel,
-    });
+    isAdmin = verifiedAdmin;
   }
   console.info(`[Perf] Total page load: ${Date.now() - pageStart}ms`);
 
@@ -213,7 +197,7 @@ export default async function DocumentPage({ params }: PageProps) {
   // Enforce isPublic: private document access control
   if (!isPublic && !isAdmin) {
     // No user or anonymous user → show login prompt (Google-only)
-    if (!user || user.isAnonymous) {
+    if (!user || user.isAnonymous || !user.verified) {
       return (
         <LanguageOverrideProvider
           adminLanguage={defaultLanguage}

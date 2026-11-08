@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { SESSION_COOKIE, SESSION_MARKER_COOKIE } from '@/lib/auth/sessionCookies';
 
 /**
  * POST /api/auth/clear-session
@@ -13,6 +14,8 @@ export async function POST(): Promise<NextResponse> {
 
   const expired = { path: '/', maxAge: 0 };
   response.cookies.set('_uid', '', { ...expired, httpOnly: true });
+  response.cookies.set(SESSION_COOKIE, '', { ...expired, httpOnly: true });
+  response.cookies.set(SESSION_MARKER_COOKIE, '', expired);
   response.cookies.set('userId', '', expired);
   response.cookies.set('userDisplayName', '', expired);
 

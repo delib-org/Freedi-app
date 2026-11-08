@@ -1,5 +1,12 @@
 import { Role, StatementSubscription } from '@freedi/shared-types';
-import { actionsFor, countByFilter, kindOf, selectMembers, toMemberEntries } from '../membersLogic';
+import {
+	actionsFor,
+	countByFilter,
+	countPeople,
+	kindOf,
+	selectMembers,
+	toMemberEntries,
+} from '../membersLogic';
 
 function sub(id: string, role: Role, displayName = id): StatementSubscription {
 	return {
@@ -23,6 +30,75 @@ const subs = [
 const context = { creatorUid: 'u-tal', selfUid: 'u-maya' };
 
 describe('membersLogic', () => {
+	describe('a subscription whose user is someone else', () => {
+		const creatorCopy = {
+			statementsSubscribeId: 'u-host--s1',
+			statementId: 's1',
+			userId: 'u-host',
+			role: Role.admin,
+			user: { uid: 'u-tal', displayName: 'Tal the creator', photoURL: 'https://photo/tal.png' },
+		} as StatementSubscription;
+		const options = { ...context, unnamedLabel: 'Unnamed' };
+
+		it('is the real person: a host, with a neutral name and none of the creator photo', () => {
+			const [entry] = toMemberEntries([creatorCopy], options);
+
+			expect(entry).toMatchObject({ uid: 'u-host', kind: 'host', name: 'Unnamed' });
+			expect(entry.photoURL).toBeUndefined();
+			expect(actionsFor(entry, true)).toEqual(['removeHost']);
+		});
+
+		it('is counted as its own person, not folded into the creator', () => {
+			expect(countPeople([creatorCopy], 'u-tal')).toBe(1);
+			expect(kindOf(creatorCopy.role, 'u-host', 'u-tal')).toBe('host');
+		});
+
+		it('takes name and photo from user once it is repaired', () => {
+			const repaired = {
+				...creatorCopy,
+				user: { uid: 'u-host', displayName: 'Real Host', photoURL: 'https://photo/host.png' },
+			} as StatementSubscription;
+			const [entry] = toMemberEntries([repaired], options);
+
+			expect(entry).toMatchObject({
+				uid: 'u-host',
+				kind: 'host',
+				name: 'Real Host',
+				photoURL: 'https://photo/host.png',
+			});
+		});
+
+		it('still knows the creator by userId', () => {
+			const creator = {
+				...creatorCopy,
+				statementsSubscribeId: 'u-tal--s1',
+				userId: 'u-tal',
+			} as StatementSubscription;
+			const [entry] = toMemberEntries([creator], options);
+
+			expect(entry).toMatchObject({ uid: 'u-tal', kind: 'creator', name: 'Tal the creator' });
+		});
+
+		it('uses the neutral name for a repaired doc with no known name, too', () => {
+			const nameless = {
+				...creatorCopy,
+				user: { uid: 'u-host', displayName: '' },
+			} as StatementSubscription;
+
+			expect(toMemberEntries([nameless], options)[0].name).toBe('Unnamed');
+		});
+
+		it('falls back to user for a legacy doc with no userId', () => {
+			const legacy = { ...creatorCopy, userId: '' } as StatementSubscription;
+
+			expect(toMemberEntries([legacy], options)[0]).toMatchObject({
+				uid: 'u-tal',
+				kind: 'creator',
+				name: 'Tal the creator',
+			});
+		});
+	});
+
 	it('names each row by role, the creator first by uid, and drops unsubscribed people', () => {
 		expect(kindOf(Role.admin, 'u-tal', 'u-tal')).toBe('creator');
 		expect(kindOf(Role.creator, 'x', undefined)).toBe('creator');
@@ -34,10 +110,28 @@ describe('membersLogic', () => {
 		expect(entries.find((e) => e.id === 'maya')?.isSelf).toBe(true);
 	});
 
-	it('drops rows with no user id', () => {
-		const anonymous = { ...sub('x', Role.member), user: undefined } as StatementSubscription;
+	it('drops rows that name nobody: neither userId nor user', () => {
+		const nobody = {
+			...sub('x', Role.member),
+			userId: '',
+			user: undefined,
+		} as unknown as StatementSubscription;
 
-		expect(toMemberEntries([anonymous], context)).toEqual([]);
+		expect(toMemberEntries([nobody], context)).toEqual([]);
+		expect(countPeople([nobody], 'u-tal')).toBe(0);
+	});
+
+	it('keeps a row with a userId and no user, under the neutral name', () => {
+		const noUser = {
+			...sub('x', Role.member),
+			user: undefined,
+		} as unknown as StatementSubscription;
+
+		expect(toMemberEntries([noUser], { ...context, unnamedLabel: 'Unnamed' })[0]).toMatchObject({
+			uid: 'u-x',
+			name: 'Unnamed',
+			kind: 'member',
+		});
 	});
 
 	it('applies an optimistic role over the stored one', () => {

@@ -29,6 +29,8 @@ export class FlowState {
 	/** The own-question row is the chosen one. */
 	ownSelected = false;
 	editing = false;
+	/** The proposal the box should open on ("Edit" on a pinned card, "improve" from the replies). */
+	editRequest: string | null = null;
 	liveFor: string | null = null;
 	/** The own question this student is writing (kept while another row is chosen). */
 	ownText = '';

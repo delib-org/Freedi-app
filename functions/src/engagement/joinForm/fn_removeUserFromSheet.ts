@@ -5,6 +5,7 @@ import { Collections, Statement, functionConfig } from '@freedi/shared-types';
 import { extractSheetId, getGoogleSheetsClient } from './getGoogleSheetsClient';
 import { ALLOWED_ORIGINS } from '../../config/cors';
 import { logError } from '../../utils/errorHandling';
+import { assertStatementAdmin } from '../../progress/assertStatementAdmin';
 
 interface RemoveUserFromSheetRequest {
 	questionId: string;
@@ -29,12 +30,21 @@ export const fn_removeUserFromSheet = onCall<
 	RemoveUserFromSheetRequest,
 	Promise<RemoveUserFromSheetResult>
 >({ region: functionConfig.region, cors: [...ALLOWED_ORIGINS] }, async (request) => {
+	const callerUid = request.auth?.uid;
+	if (!callerUid) {
+		throw new HttpsError('unauthenticated', 'Sign in required');
+	}
 	const { questionId, userId } = request.data;
 
 	logger.info('[fn_removeUserFromSheet] Called', { questionId, userId });
 
 	if (!questionId || !userId) {
 		throw new HttpsError('invalid-argument', 'Missing questionId or userId');
+	}
+
+	// A person may take their own row out; removing anyone else's is an admin act.
+	if (callerUid !== userId) {
+		await assertStatementAdmin(callerUid, questionId, 'joinForm.removeUserFromSheet');
 	}
 
 	// Step 1: Load the question and verify it has a sheets-destination join form

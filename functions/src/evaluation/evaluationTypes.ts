@@ -17,6 +17,23 @@ export enum ActionTypes {
 	delete = 'delete',
 }
 
+/** The scale every app votes on; firestore.rules enforces the same bounds. */
+export const EVALUATION_MIN = -1;
+export const EVALUATION_MAX = 1;
+
+/**
+ * The value a stored evaluation may contribute to the counters. Documents
+ * written before the rules bounded the range still exist, and each one is added
+ * to `sumEvaluations` raw by the trigger, so a single 1000 would outvote a whole
+ * discussion. Applied on every side of a change, so what a delete or an update
+ * takes back is what was added. Anything that is not a finite number counts as 0.
+ */
+export function clampEvaluationValue(value: unknown): number {
+	if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
+
+	return Math.min(EVALUATION_MAX, Math.max(EVALUATION_MIN, value));
+}
+
 export interface UpdateStatementEvaluationProps {
 	statementId: string;
 	evaluationDiff: number;

@@ -96,8 +96,9 @@ const MembersSubsection: FC<MembersSubsectionProps> = ({
 				creatorUid,
 				selfUid: self?.uid,
 				roleOverrides: roleActions.roleOverrides,
+				unnamedLabel: t('people.unnamed'),
 			}),
-		[members, creatorUid, self?.uid, roleActions.roleOverrides],
+		[members, creatorUid, self?.uid, roleActions.roleOverrides, t],
 	);
 	const list = useMembersList(entries, paging);
 	const waitingById = useMemo(
@@ -150,7 +151,7 @@ const MembersSubsection: FC<MembersSubsectionProps> = ({
 		<PeopleSubsection
 			id="members"
 			title={t('people.members')}
-			summary={fillPlaceholders(t('people.summary.members'), { count: memberCount })}
+			summary={translateCount(t, 'people.summary.members', memberCount)}
 			isOpen={isOpen}
 			onToggle={onToggle}
 			toggleRef={toggleRef}

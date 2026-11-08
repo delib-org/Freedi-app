@@ -3,9 +3,9 @@ import '@/styles/console-opening.scss';
 import type { ClassTable, Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { unplacedStudents } from '@/lib/classroom/consoleHelpers';
+import { sideCount } from '@/lib/classroom/sideCount';
 import type { RosterStudent } from '@/lib/classroom/consoleHelpers';
 import { moveStudent } from './consoleActions';
-import { askConfirm } from './ConfirmDialog';
 import { consoleState } from './consoleState';
 import { dropAttrs } from './dragController';
 import { MemberChip } from './MemberChip';
@@ -29,7 +29,7 @@ export interface TablesBoardAttrs {
 	done?: boolean;
 	/** The lesson's sub-questions: a card at Table talk shows the question being answered. */
 	questions?: readonly Statement[];
-	/** Side marks appear after the Side step. */
+	/** After the Side step the board counts who chose a side (never which side). */
 	showSides: boolean;
 	/** The Opening panel (UX 15.L): while the class is unseated it takes the main column and the roster the side one. */
 	opening?: m.Children;
@@ -39,35 +39,14 @@ export interface TablesBoardAttrs {
 	// >>> allProposals END
 }
 
-/** Sides stay hidden until the teacher asks: she may be sharing her screen. Showing needs a confirm. */
-function sidesToggle(): m.Vnode {
-	const shown = consoleState.sidesVisible;
+/** "18 of 24 chose a side": visible from the Side step. The teacher sees that a student chose, never which side. */
+function sidesCountLine(students: readonly RosterStudent[]): m.Vnode {
+	const { chose, total } = sideCount(students);
 
 	return m(
-		'button.btn.btn--secondary.tables-board__sides',
-		{
-			type: 'button',
-			'data-testid': 'console-sides-toggle',
-			'aria-pressed': shown ? 'true' : 'false',
-			onclick: () => {
-				if (shown) {
-					consoleState.sidesVisible = false;
-
-					return;
-				}
-				askConfirm({
-					title: t('console.sides_confirm_title'),
-					body: t('console.sides_confirm_body'),
-					yesLabel: t('console.sides_confirm_yes'),
-					destructive: false,
-					run: () => {
-						consoleState.sidesVisible = true;
-						m.redraw();
-					},
-				});
-			},
-		},
-		t(shown ? 'console.sides_hide' : 'console.sides_show'),
+		'p.tables-board__sides-count',
+		{ 'data-testid': 'console-sides-count', role: 'status' },
+		t('console.sides_count', { chose, total }),
 	);
 }
 
@@ -84,8 +63,9 @@ function rosterCard(attrs: TablesBoardAttrs): m.Vnode {
 					attrs.students.map((s) =>
 						m(MemberChip, {
 							key: s.uid,
+							uid: s.uid,
 							name: s.name,
-							camp: attrs.showSides ? s.camp : null,
+							chosen: attrs.showSides ? s.camp !== null : undefined,
 							from: null,
 							tableNumbers: [],
 						}),
@@ -98,6 +78,7 @@ function unplacedStrip(
 	unplaced: readonly RosterStudent[],
 	tableNumbers: readonly number[],
 	mainId: string,
+	showSides: boolean,
 ): m.Vnode {
 	return m('section.unplaced', { ...dropAttrs(null), 'aria-label': t('console.unplaced_name') }, [
 		m('span.unplaced__label', `${t('console.unplaced_name')}:`),
@@ -106,7 +87,7 @@ function unplacedStrip(
 				m(MemberChip, {
 					uid: s.uid,
 					name: s.name,
-					camp: s.camp,
+					chosen: showSides ? s.camp !== null : undefined,
 					from: null,
 					tableNumbers,
 				}),
@@ -114,7 +95,7 @@ function unplacedStrip(
 					'select.unplaced__select',
 					{
 						'aria-label': `${t('console.to_table')}: ${s.name}`,
-						disabled: consoleState.held,
+						disabled: consoleState.ended,
 						onchange: (e: Event) => {
 							const el = e.target as HTMLSelectElement;
 							const n = Number(el.value);
@@ -145,13 +126,18 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 					? ` ${t('console.unplaced_live', { count: unplaced.length })}`
 					: '',
 			]),
-			attrs.showSides && attrs.students.length > 0 ? sidesToggle() : null,
+			attrs.tables.length > 0 && !consoleState.ended
+				? m('p.tables-board__hint', { 'data-testid': 'console-drag-hint' }, t('console.drag_hint'))
+				: null,
+			attrs.showSides && attrs.students.length > 0 ? sidesCountLine(attrs.students) : null,
 			attrs.tables.length === 0
 				? attrs.opening
 					? m('div.console-opening', [attrs.opening, rosterCard(attrs)])
 					: rosterCard(attrs)
 				: [
-						unplaced.length > 0 ? unplacedStrip(unplaced, tableNumbers, attrs.mainId) : null,
+						unplaced.length > 0
+							? unplacedStrip(unplaced, tableNumbers, attrs.mainId, attrs.showSides)
+							: null,
 						m(
 							'div.tables-board__grid',
 							attrs.tables.map((table) =>
@@ -166,6 +152,7 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 										?.statement,
 									mainId: attrs.mainId,
 									tableNumbers,
+									showSides: attrs.showSides,
 									ratedLine: attrs.ratedLineOf?.(table), // >>> allProposals
 								}),
 							),

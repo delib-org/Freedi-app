@@ -3,6 +3,7 @@ import type { Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import type { Board } from '@/lib/classroom/allProposalsBoard';
 import { boardCards } from '@/lib/classroom/allProposalsBoard';
+import { ownProposalCards } from './ownProposalCards';
 import { RateFaces } from './RateFaces';
 import { TextCard } from './TextCard';
 import { ReplyEntry } from '../replies/ReplyEntry';
@@ -91,16 +92,22 @@ export function boardView(input: BoardInput): m.Children {
 }
 
 export interface OwnCardInput {
-	mine: Statement | null;
-	/** The write box, shown in place of the own card while editing. */
+	/** The student's own proposals, newest first. */
+	mine: readonly Statement[];
+	uid: string;
+	/** The write box, shown in place of the own cards while editing. */
 	editor: m.Children;
 	editing: boolean;
 	/** The student may send or edit (a table to write from, and the ballot not frozen yet). */
 	canWrite: boolean;
+	/** The lesson's limit lets this student send another proposal. */
+	canAdd: boolean;
 	onToggleEdit: () => void;
+	/** "Edit" on one own proposal: the box opens on it. */
+	onEdit: (proposalId: string) => void;
 }
 
-/** "ההצעה שלי" pinned above the board, with "עריכה" until the Vote opens (IA 19.2). */
+/** "ההצעה שלי" pinned above the board (each one, if there are several), with "עריכה" until the Vote opens (IA 19.2). */
 export function ownCardView(input: OwnCardInput): m.Children {
 	if (input.editing && input.canWrite) {
 		return m('.all-proposals__own', [
@@ -112,27 +119,20 @@ export function ownCardView(input: OwnCardInput): m.Children {
 			),
 		]);
 	}
-	if (!input.mine) {
-		return input.canWrite
+
+	return [
+		ownProposalCards({
+			proposals: input.mine,
+			uid: input.uid,
+			canEdit: input.canWrite,
+			onEdit: input.onEdit,
+		}),
+		input.canWrite && input.canAdd
 			? m(
 					'button.btn.btn--tertiary.btn--small.all-proposals__write',
 					{ type: 'button', 'data-testid': 'all-proposals-write', onclick: input.onToggleEdit },
 					t('allProposals.write_mine'),
 				)
-			: null;
-	}
-
-	return m(TextCard, {
-		mine: true,
-		eyebrow: t('proposal.mine'),
-		text: input.mine.statement,
-		replies: m(ReplyEntry, { proposal: input.mine, uid: input.mine.creatorId }),
-		footer: input.canWrite
-			? m(
-					'button.btn.btn--secondary.btn--small',
-					{ type: 'button', onclick: input.onToggleEdit },
-					t('proposal.edit'),
-				)
-			: undefined,
-	});
+			: null,
+	];
 }

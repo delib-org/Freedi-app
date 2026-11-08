@@ -11,6 +11,7 @@ import {
 	DemographicTag,
 } from '@freedi/shared-types';
 import { db } from '.';
+import { requireStatementAdmin } from './utils/httpAuth';
 import {
 	ParticipantWithDemographics,
 	createDemographicKey,
@@ -24,7 +25,6 @@ export interface SplitJoinedOptionRequest {
 	parentStatementId: string;
 	roomSize: number;
 	scrambleByQuestions?: string[];
-	adminId: string;
 	adminName?: string;
 }
 
@@ -50,21 +50,15 @@ async function getActiveSettingsIdsForParent(parentStatementId: string): Promise
  * HTTP endpoint to split joined members of an option into rooms
  * Uses the joined[] array from the option statement instead of subscriptions
  */
-export async function splitJoinedOption(req: Request, res: Response): Promise<void> {
+export async function splitJoinedOption(req: Request, res: Response, uid: string): Promise<void> {
 	try {
-		const {
-			optionStatementId,
-			parentStatementId,
-			roomSize,
-			scrambleByQuestions,
-			adminId,
-			adminName,
-		} = req.body as SplitJoinedOptionRequest;
+		const { optionStatementId, parentStatementId, roomSize, scrambleByQuestions, adminName } =
+			req.body as SplitJoinedOptionRequest;
 
 		// Validate input
-		if (!optionStatementId || !parentStatementId || !roomSize || !adminId) {
+		if (!optionStatementId || !parentStatementId || !roomSize) {
 			res.status(400).json({
-				error: 'Missing required fields: optionStatementId, parentStatementId, roomSize, adminId',
+				error: 'Missing required fields: optionStatementId, parentStatementId, roomSize',
 			});
 
 			return;
@@ -75,6 +69,14 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 
 			return;
 		}
+
+		const parent = await requireStatementAdmin(
+			res,
+			uid,
+			parentStatementId,
+			'splitJoinedOption.splitJoinedOption',
+		);
+		if (!parent) return;
 
 		const questionsToScramble = scrambleByQuestions || [];
 		const useRandomAssignment = questionsToScramble.length === 0;
@@ -93,6 +95,12 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 		}
 
 		const optionData = optionDoc.data();
+		// Admin of the question says nothing about an option from some other question.
+		if (optionData?.parentId !== parentStatementId) {
+			res.status(400).json({ error: 'Option does not belong to this question' });
+
+			return;
+		}
 		const joinedMembers: Creator[] = optionData?.joined || [];
 
 		if (joinedMembers.length === 0) {
@@ -253,7 +261,7 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 			scrambleByQuestions: questionsToScramble,
 			createdAt: now,
 			lastUpdate: now,
-			createdBy: { uid: adminId, displayName: adminName || 'Admin' },
+			createdBy: { uid, displayName: adminName || 'Admin' },
 			status: 'active',
 			totalRooms: scrambleResult.totalRooms,
 			totalParticipants: scrambleResult.totalParticipants,
@@ -333,7 +341,11 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
  * HTTP endpoint to get options that exceed their maximum member limit
  * Used by admin to see which options need splitting
  */
-export async function getOptionsExceedingMax(req: Request, res: Response): Promise<void> {
+export async function getOptionsExceedingMax(
+	req: Request,
+	res: Response,
+	uid: string,
+): Promise<void> {
 	try {
 		const { parentStatementId } = req.query as { parentStatementId: string };
 
@@ -343,17 +355,16 @@ export async function getOptionsExceedingMax(req: Request, res: Response): Promi
 			return;
 		}
 
-		// Get parent statement to check maxJoinMembers setting
-		const parentDoc = await db.collection(Collections.statements).doc(parentStatementId).get();
+		// Lists who joined each option, so it is an admin view.
+		const parentData = await requireStatementAdmin(
+			res,
+			uid,
+			parentStatementId,
+			'splitJoinedOption.getOptionsExceedingMax',
+		);
+		if (!parentData) return;
 
-		if (!parentDoc.exists) {
-			res.status(404).json({ error: 'Parent statement not found' });
-
-			return;
-		}
-
-		const parentData = parentDoc.data();
-		const maxJoinMembers = parentData?.statementSettings?.maxJoinMembers;
+		const maxJoinMembers = parentData.statementSettings?.maxJoinMembers;
 
 		if (!maxJoinMembers) {
 			res.status(200).json({
@@ -412,7 +423,11 @@ export async function getOptionsExceedingMax(req: Request, res: Response): Promi
  * HTTP endpoint to get all options with at least one joined member
  * Used by admin to see all options that can have rooms assigned
  */
-export async function getAllOptionsWithMembers(req: Request, res: Response): Promise<void> {
+export async function getAllOptionsWithMembers(
+	req: Request,
+	res: Response,
+	uid: string,
+): Promise<void> {
 	try {
 		const { parentStatementId } = req.query as { parentStatementId: string };
 
@@ -422,18 +437,17 @@ export async function getAllOptionsWithMembers(req: Request, res: Response): Pro
 			return;
 		}
 
-		// Get parent statement to check settings
-		const parentDoc = await db.collection(Collections.statements).doc(parentStatementId).get();
+		// Lists who joined each option, so it is an admin view.
+		const parentData = await requireStatementAdmin(
+			res,
+			uid,
+			parentStatementId,
+			'splitJoinedOption.getAllOptionsWithMembers',
+		);
+		if (!parentData) return;
 
-		if (!parentDoc.exists) {
-			res.status(404).json({ error: 'Parent statement not found' });
-
-			return;
-		}
-
-		const parentData = parentDoc.data();
-		const maxJoinMembers = parentData?.statementSettings?.maxJoinMembers || 7;
-		const minJoinMembers = parentData?.statementSettings?.minJoinMembers || 3;
+		const maxJoinMembers = parentData.statementSettings?.maxJoinMembers || 7;
+		const minJoinMembers = parentData.statementSettings?.minJoinMembers || 3;
 
 		// Get all option statements under this parent
 		const optionsSnapshot = await db
@@ -498,7 +512,11 @@ export async function getAllOptionsWithMembers(req: Request, res: Response): Pro
  * Deletes all rooms, participants, and archives settings
  * Used before reassigning all rooms to start fresh with Room 1
  */
-export async function clearAllRoomsForParent(req: Request, res: Response): Promise<void> {
+export async function clearAllRoomsForParent(
+	req: Request,
+	res: Response,
+	uid: string,
+): Promise<void> {
 	try {
 		const { parentStatementId } = req.body as { parentStatementId: string };
 
@@ -507,6 +525,14 @@ export async function clearAllRoomsForParent(req: Request, res: Response): Promi
 
 			return;
 		}
+
+		const parent = await requireStatementAdmin(
+			res,
+			uid,
+			parentStatementId,
+			'splitJoinedOption.clearAllRoomsForParent',
+		);
+		if (!parent) return;
 
 		logger.info(`Clearing all rooms for parent: ${parentStatementId}`);
 

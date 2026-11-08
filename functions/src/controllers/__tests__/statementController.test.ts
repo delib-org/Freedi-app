@@ -36,7 +36,7 @@ describe('StatementController', () => {
 			mockService.getUserOptions = jest.fn().mockResolvedValue(mockStatements);
 
 			// Act
-			await controller.getUserOptions(mockRequest as Request, mockResponse as Response);
+			await controller.getUserOptions(mockRequest as Request, mockResponse as Response, 'user123');
 
 			// Assert
 			expect(mockService.getUserOptions).toHaveBeenCalledWith({
@@ -54,7 +54,7 @@ describe('StatementController', () => {
 			mockRequest.query = { userId: 'user123' };
 
 			// Act
-			await controller.getUserOptions(mockRequest as Request, mockResponse as Response);
+			await controller.getUserOptions(mockRequest as Request, mockResponse as Response, 'user123');
 
 			// Assert
 			expect(mockResponse.status).toHaveBeenCalledWith(400);
@@ -64,18 +64,18 @@ describe('StatementController', () => {
 			});
 		});
 
-		it('should return 400 when userId is missing', async () => {
+		it('uses the verified uid and ignores a userId in the query', async () => {
 			// Arrange
-			mockRequest.query = { parentId: 'parent123' };
+			mockRequest.query = { userId: 'forged', parentId: 'parent123' };
+			mockService.getUserOptions.mockResolvedValue([]);
 
 			// Act
-			await controller.getUserOptions(mockRequest as Request, mockResponse as Response);
+			await controller.getUserOptions(mockRequest as Request, mockResponse as Response, 'user123');
 
 			// Assert
-			expect(mockResponse.status).toHaveBeenCalledWith(400);
-			expect(mockResponse.send).toHaveBeenCalledWith({
-				error: expect.stringContaining('userId'),
-				ok: false,
+			expect(mockService.getUserOptions).toHaveBeenCalledWith({
+				userId: 'user123',
+				parentId: 'parent123',
 			});
 		});
 
@@ -85,7 +85,7 @@ describe('StatementController', () => {
 			mockService.getUserOptions = jest.fn().mockRejectedValue(new Error('Database error'));
 
 			// Act
-			await controller.getUserOptions(mockRequest as Request, mockResponse as Response);
+			await controller.getUserOptions(mockRequest as Request, mockResponse as Response, 'user123');
 
 			// Assert
 			expect(mockResponse.status).toHaveBeenCalledWith(500);

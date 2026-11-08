@@ -1,11 +1,11 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useId, useRef } from 'react';
 import clsx from 'clsx';
 
 /**
  * Checkbox Atom - Atomic Design System
  *
  * A minimal React wrapper around BEM-styled checkbox classes.
- * All styling is handled by SCSS in @freedi/shared-styles/atoms/_checkbox.scss
+ * All styling is handled by SCSS in packages/shared-styles/src/atoms/_checkbox.scss
  *
  * Supports both custom icon mode (pass icon/checkedIcon) and native box mode.
  */
@@ -56,7 +56,7 @@ export interface CheckboxProps {
 	/** HTML id attribute */
 	id?: string;
 
-	/** ARIA label override */
+	/** Accessible name when the visible label is empty or not enough */
 	ariaLabel?: string;
 }
 
@@ -80,47 +80,41 @@ const Checkbox: React.FC<CheckboxProps> = ({
 	id,
 	ariaLabel,
 }) => {
-	const handleChange = useCallback(() => {
-		if (!disabled) {
-			onChange(!checked);
-		}
-	}, [disabled, checked, onChange]);
-
-	const handleKeyDown = useCallback(
-		(e: React.KeyboardEvent<HTMLLabelElement>) => {
-			if (e.key === 'Enter' || e.key === ' ') {
-				e.preventDefault();
-				handleChange();
-			}
-		},
-		[handleChange],
-	);
-
-	const inputId = id || `checkbox-${name || label}`;
+	const inputRef = useRef<HTMLInputElement>(null);
+	const generatedId = useId();
+	const inputId = id || (name ? `checkbox-${name}` : `checkbox-${generatedId}`);
+	const isMixed = indeterminate && !checked;
 	const hasCustomIcons = icon !== undefined && checkedIcon !== undefined;
+
+	// "Mixed" exists only as a DOM property, never as an attribute.
+	useEffect(() => {
+		if (inputRef.current) inputRef.current.indeterminate = isMixed;
+	}, [isMixed]);
+
+	const handleChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			if (!disabled) onChange(e.target.checked);
+		},
+		[disabled, onChange],
+	);
 
 	// Build BEM classes
 	const checkboxClasses = clsx(
 		'checkbox', // Block
 		checked && 'checkbox--checked', // Modifier: checked
-		indeterminate && !checked && 'checkbox--indeterminate', // Modifier: indeterminate
+		isMixed && 'checkbox--indeterminate', // Modifier: indeterminate
 		disabled && 'checkbox--disabled', // Modifier: disabled
 		error && 'checkbox--error', // Modifier: error
 		size !== 'medium' && `checkbox--${size}`, // Modifier: size
 		className, // Additional classes
 	);
 
+	// The native input is the control: it takes focus, Space toggles it, and
+	// the wrapping label names it (axe: no role on the label, nothing nested).
 	return (
-		<label
-			className={checkboxClasses}
-			htmlFor={inputId}
-			onKeyDown={handleKeyDown}
-			tabIndex={0}
-			role="checkbox"
-			aria-checked={indeterminate ? 'mixed' : checked}
-			aria-label={ariaLabel || label}
-		>
+		<label className={checkboxClasses} htmlFor={inputId}>
 			<input
+				ref={inputRef}
 				type="checkbox"
 				id={inputId}
 				name={name}
@@ -128,8 +122,8 @@ const Checkbox: React.FC<CheckboxProps> = ({
 				onChange={handleChange}
 				disabled={disabled}
 				className="checkbox__input"
-				tabIndex={-1}
-				aria-hidden="true"
+				aria-label={ariaLabel || undefined}
+				aria-invalid={error || undefined}
 			/>
 
 			{hasCustomIcons ? (
@@ -143,7 +137,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
 							<polyline points="20 6 9 17 4 12" />
 						</svg>
 					)}
-					{indeterminate && !checked && (
+					{isMixed && (
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
 							<line x1="5" y1="12" x2="19" y2="12" />
 						</svg>
@@ -151,10 +145,12 @@ const Checkbox: React.FC<CheckboxProps> = ({
 				</span>
 			)}
 
-			<span className="checkbox__label">
-				{label}
-				{hint && <span className="checkbox__hint">{hint}</span>}
-			</span>
+			{(label || hint) && (
+				<span className="checkbox__label">
+					{label}
+					{hint && <span className="checkbox__hint">{hint}</span>}
+				</span>
+			)}
 		</label>
 	);
 };

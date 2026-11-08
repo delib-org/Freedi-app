@@ -19,8 +19,6 @@ const vote: Record<string, string> = {
 	'voting.paused_hint': 'El docente pausó la votación por ahora. Tu voto se conserva.',
 	'voting.closed_hint': 'La votación está cerrada. Esperamos el resumen',
 	'console.vote_settings': 'La votación',
-	'console.vote_live_results': 'Los estudiantes ven los resultados en vivo',
-	'console.vote_live_results_help': 'Cuántos votos tiene cada propuesta. Nunca quién votó qué.',
 	'voting.result_votes': '{{percent}} % · {{n}} votos',
 	'voting.result_one_vote': '{{percent}} % · 1 voto',
 	// >>> voteSummary BEGIN
@@ -56,6 +54,24 @@ const vote: Record<string, string> = {
 	'console.vote_status_closed': 'Votación cerrada',
 	'console.vote_progress': '{{voted}} de {{present}} han votado',
 	'console.vote_reset_hint': 'Cierra o pausa la votación primero',
+	'console.results_audience': 'Quién ve los resultados',
+	'console.results_audience_me': 'Solo yo',
+	'console.results_audience_class': 'Toda la clase',
+	'console.results_hint_closed':
+		'Los estudiantes solo ven su propio voto. Elige «Toda la clase» para mostrar los resultados.',
+	'console.results_chip_closed': 'Resultados ocultos para la clase',
+	'console.results_chip_shown': 'Resultados visibles para la clase',
+	'voting.results_later': 'Los resultados se mostrarán pronto',
+	'voting.closed_hidden': 'La votación está cerrada. Los resultados se mostrarán pronto',
+	'console.close_and_go_results_closed': 'Los resultados siguen ocultos para la clase',
+	'console.close_and_go_show': 'Mostrar a la clase',
+	'console.support_audience': 'Quién ve el apoyo por lado',
+	'console.support_hint_closed':
+		"La clase no ve las barras. Elige 'Toda la clase' para compartirlas.",
+	'console.support_hint_blocked': 'Primero abre los resultados a la clase',
+	'console.support_panel_private': 'Solo tú ves esto ahora.',
+	'console.support_panel_shared': 'La clase también lo ve.',
+	'summary.support_later': 'El apoyo de la clase se mostrará pronto',
 	// >>> voteSummary END
 };
 

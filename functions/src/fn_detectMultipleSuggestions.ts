@@ -39,17 +39,18 @@ interface DetectMultipleSuggestionsResponse {
 export async function detectMultipleSuggestions(
 	request: Request,
 	response: Response,
+	userId: string,
 ): Promise<void> {
 	const startTime = Date.now();
 
 	try {
-		const { userInput, questionId, userId } = request.body as DetectMultipleSuggestionsRequest;
+		const { userInput, questionId } = request.body as DetectMultipleSuggestionsRequest;
 
 		// Validate required fields
-		if (!userInput || !userId) {
+		if (!userInput) {
 			response.status(400).send({
 				ok: false,
-				error: 'Missing required fields: userInput and userId',
+				error: 'Missing required field: userInput',
 				isMultipleSuggestions: false,
 				suggestions: [],
 				originalText: userInput || '',

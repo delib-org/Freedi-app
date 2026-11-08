@@ -88,15 +88,6 @@ $tap: 44px;
     block-size: $tap;
   }
 
-  .vote-display__row {
-    min-block-size: $tap;
-  }
-
-  .vote-display__input {
-    inline-size: 24px;
-    block-size: 24px;
-  }
-
   // step strip: scrolls inside itself, 72 px per step, current one centred by StepRail.ts
   .step-rail {
     padding-inline: var(--space-sm);

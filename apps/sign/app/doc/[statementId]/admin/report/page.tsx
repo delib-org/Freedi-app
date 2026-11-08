@@ -1,4 +1,5 @@
 'use client';
+import { getAuthorizationHeader } from '@/lib/firebase/client';
 
 import { useState, useEffect, useCallback, Fragment } from 'react';
 import { useParams } from 'next/navigation';
@@ -195,6 +196,7 @@ export default function DocumentReportPage() {
 			setGenerating(true);
 			const response = await fetch(`/api/admin/report/${statementId}/narrative`, {
 				method: 'POST',
+				headers: await getAuthorizationHeader(),
 			});
 			if (!response.ok) {
 				const data = (await response.json().catch(() => null)) as { error?: string } | null;

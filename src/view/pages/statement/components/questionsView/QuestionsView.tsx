@@ -130,7 +130,7 @@ const QuestionsView: FC = () => {
 					<div className={styles.content}>
 						<div className={styles.grid}>
 							{visibleQuestions.map((question) => (
-								<SubGroupCard key={question.statementId} statement={question} />
+								<SubGroupCard key={question.statementId} statement={question} isAdmin={isAdmin} />
 							))}
 						</div>
 					</div>

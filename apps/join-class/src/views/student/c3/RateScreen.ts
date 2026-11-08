@@ -1,11 +1,10 @@
 import m from 'mithril';
 import type { Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
-import { myProposal } from '@/lib/classroom/c3Logic';
+import { myProposals } from '@/lib/classroom/c3Logic';
 import type { FlowFeed } from './FlowFeed';
 import { RatedList } from './RatedList';
-import { TextCard } from './TextCard';
-import { ReplyEntry } from '../replies/ReplyEntry';
+import { ownProposalCards } from './ownProposalCards';
 
 export interface RateScreenInput {
 	feed: FlowFeed;
@@ -18,21 +17,9 @@ export interface RateScreenInput {
 	editor: m.Children;
 	editing: boolean;
 	onToggleEdit: () => void;
+	/** "Edit" on one own proposal: the box opens on it. */
+	onEdit: (proposalId: string) => void;
 	onError: (message: string) => void;
-}
-
-function ownCard(input: RateScreenInput, mine: Statement): m.Children {
-	return m(TextCard, {
-		mine: true,
-		eyebrow: t('proposal.mine'),
-		text: mine.statement,
-		replies: m(ReplyEntry, { proposal: mine, uid: input.uid }),
-		footer: m(
-			'button.btn.btn--secondary.btn--small',
-			{ type: 'button', onclick: input.onToggleEdit },
-			t('proposal.edit'),
-		),
-	});
 }
 
 /**
@@ -51,7 +38,7 @@ export function rateBody(input: RateScreenInput): m.Children {
 		onError: input.onError,
 	});
 	if (!plenum) return list;
-	const mine = myProposal(
+	const mine = myProposals(
 		feed.options.filter((o) => o.parentId === challengeId),
 		uid,
 	);
@@ -66,7 +53,9 @@ export function rateBody(input: RateScreenInput): m.Children {
 	return [
 		m('p.flow__plenum', t('proposal.plenum_line')),
 		input.editing ? [input.editor, editDone] : null,
-		mine && !input.editing ? ownCard(input, mine) : null,
+		input.editing
+			? null
+			: ownProposalCards({ proposals: mine, uid, canEdit: true, onEdit: input.onEdit }),
 		list,
 	];
 }

@@ -668,8 +668,12 @@ service cloud.firestore {
                       resource.data.userId == request.auth.uid);
       allow delete: if isAuthenticated() &&
                        resource.data.userId == request.auth.uid;
-      allow create, update: if isAuthenticated() &&
-                               request.resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() &&
+                       request.resource.data.userId == request.auth.uid &&
+                       journeyId == request.auth.uid + '--' + request.resource.data.gameId;
+      allow update: if isAuthenticated() &&
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.userId == request.auth.uid;
     }
 
     // Odyssey "מכתב לבוני הספינה" — letters to the developers. Written ONLY by
@@ -851,6 +855,84 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // === Tables (table assignment) ===
+    // Every write goes through the tables* callables (Admin SDK): clients write
+    // nothing. Reads are scoped so a participant never sees another person's
+    // preferences or position (those live only in tableAssignmentParticipants).
+    function isTableSessionHost(sessionId) {
+      let sessionPath = /databases/$(database)/documents/tableAssignments/$(sessionId);
+      return exists(sessionPath) && get(sessionPath).data.hostUid == request.auth.uid;
+    }
+
+    // The session is readable to any signed-in user (anonymous included) once
+    // registration has opened; drafts are the host's alone.
+    function isTableSessionOpenToAll(sessionId) {
+      let sessionPath = /databases/$(database)/documents/tableAssignments/$(sessionId);
+      return exists(sessionPath) &&
+             get(sessionPath).data.status in ['registrationOpen', 'registrationClosed', 'published', 'ended'];
+    }
+
+    function isRegisteredInTableSession(sessionId) {
+      return exists(/databases/$(database)/documents/tableAssignmentParticipants/$(string(sessionId) + '_' + string(request.auth.uid)));
+    }
+
+    function mayReadTableSession(sessionId) {
+      return isTableSessionHost(sessionId) || isTableSessionOpenToAll(sessionId);
+    }
+
+    match /tableAssignments/{sessionId} {
+      allow get: if request.auth != null &&
+                    (resource == null ||
+                     resource.data.hostUid == request.auth.uid ||
+                     resource.data.status in ['registrationOpen', 'registrationClosed', 'published', 'ended']);
+      // A host lists their own sessions (query on hostUid); nobody lists anyone else's.
+      allow list: if request.auth != null && resource != null &&
+                     resource.data.hostUid == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /tableAssignmentTopics/{topicId} {
+      allow get, list: if request.auth != null && resource != null &&
+                          mayReadTableSession(resource.data.sessionId);
+      allow write: if false;
+    }
+
+    // Doc id = {sessionId}_{uid}. The owner reads their own; the host reads all.
+    match /tableAssignmentParticipants/{participantId} {
+      allow list: if request.auth != null && resource != null &&
+                     (resource.data.uid == request.auth.uid ||
+                      isTableSessionHost(resource.data.sessionId));
+      // A get of one's own not-yet-registered doc answers "missing" instead of
+      // permission-denied, so the registration screen settles quietly.
+      allow get: if request.auth != null &&
+                    (resource == null
+                       ? participantId.matches('.*_' + request.auth.uid)
+                       : (resource.data.uid == request.auth.uid ||
+                          isTableSessionHost(resource.data.sessionId)));
+      allow write: if false;
+    }
+
+    // Host reads every run (drafts and history). A registered participant reads
+    // a run only once it is published: that is what "my table" shows.
+    match /tableAssignmentRuns/{runId} {
+      allow get, list: if request.auth != null && resource != null &&
+                          (isTableSessionHost(resource.data.sessionId) ||
+                           (resource.data.status == 'published' &&
+                            isRegisteredInTableSession(resource.data.sessionId)));
+      allow write: if false;
+    }
+
+    // Direct-mode seat counters {sessionId}_{tableIndex}: { sessionId, tableIndex,
+    // topicId, count }. Counts only, no identities. The host and registered
+    // participants of the session read them (list needs a sessionId filter) so
+    // the choose-a-table screen shows free seats. Written by tablesJoinTable only.
+    match /tableAssignmentSeats/{seatId} {
+      allow get, list: if request.auth != null && resource != null &&
+                          (isTableSessionHost(resource.data.sessionId) ||
+                           isRegisteredInTableSession(resource.data.sessionId));
+      allow write: if false;
+    }
+
     // join-class language flags (IA 24.4): one doc per refused proposal / edit /
     // reply, classLanguageFlags/{flagId}. Written only by the classroom
     // callables (Admin SDK). Read only by an admin of the lesson (a get of their
@@ -1012,6 +1094,16 @@ service cloud.firestore {
         return changesJoinMembership() && parentHasJoinForm();
       }
 
+      // Authorship is what isCreator() reads, and server code credits it. Admins
+      // of a statement may edit it, but they may not make it someone else's or
+      // their own. A full-document merge keeps the same value, so it passes;
+      // a legacy document with no creatorId has nothing to protect.
+      function changesCreatorIdWithoutBeingCreator() {
+        return resource.data.get('creatorId', null) != null &&
+               request.resource.data.get('creatorId', null) != resource.data.creatorId &&
+               !isCreator();
+      }
+
       function isAllowedToUpdate() {
         // Participation first, because it needs no get() calls: joining an
         // option and voting on evidence are the hot paths, and the whole point
@@ -1129,12 +1221,48 @@ service cloud.firestore {
                request.resource.data.get('parentId', null) != null &&
                isClassChallenge(request.resource.data.parentId);
       }
+      // Its author is the server's to say too, with or without a marker on it.
       function rewordsClassProposal() {
         return resource != null &&
                resource.data.get('statementType', '') == 'option' &&
                resource.data.get('parentId', null) != null &&
-               request.resource.data.diff(resource.data).affectedKeys().hasAny(['statement', 'statementType', 'parentId']) &&
+               request.resource.data.diff(resource.data).affectedKeys().hasAny(['statement', 'statementType', 'parentId', 'creatorId', 'creator', 'classTable']) &&
                isClassChallenge(resource.data.parentId);
+      }
+      // An update may not MAKE a proposal either: moving an option under the challenge, or
+      // turning a statement already there into an option, would skip the limit and the
+      // language check. The get() is paid only when the type or the parent really changes.
+      function makesClassProposal() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasAny(['statementType', 'parentId']) &&
+               request.resource.data.get('statementType', '') == 'option' &&
+               request.resource.data.get('parentId', null) != null &&
+               isClassChallenge(request.resource.data.parentId);
+      }
+      // Who wrote something at a table is the server's to say: no client changes the author or
+      // the marker of a statement that carries a marker (a proposal, a table's answer or its
+      // own question), so nobody hands their words to a classmate. No client writes these
+      // fields; a whole-document merge with them unchanged does not count. No get() needed.
+      function changesClassAuthor() {
+        return ('classTable' in resource.data) &&
+               request.resource.data.diff(resource.data).affectedKeys().hasAny(['creatorId', 'creator', 'classTable']);
+      }
+      // join-class students without a device: the teacher enters their proposals
+      // through classPostProposal (Admin SDK), which stamps classTable.enteredByUid and
+      // writes creatorId nd_*. No client may set or move that stamp, on any statement,
+      // nor turn a statement it wrote into a no-device student's. No get() needed.
+      function classEnteredByOf(data) {
+        return ('classTable' in data) && data.classTable is map
+          ? data.classTable.get('enteredByUid', null)
+          : null;
+      }
+      function changesClassEnteredBy() {
+        return classEnteredByOf(request.resource.data) != classEnteredByOf(resource.data);
+      }
+      function claimsNoDeviceAuthor() {
+        let next = request.resource.data.get('creatorId', '');
+        return next != resource.data.get('creatorId', '') &&
+               next is string &&
+               next.matches('^nd_.*');
       }
 
       // join-class homes and lessons are made only by the server (classStartLesson,
@@ -1229,6 +1357,7 @@ service cloud.firestore {
                        !createsClassReplyFields() &&
                        !createsClassProposal() &&
                        !createsClassHomeOrLesson() &&
+                       classEnteredByOf(request.resource.data) == null &&
                        request.resource.data.creatorId == request.auth.uid &&
                        // A student the teacher removed writes nothing more
                        // into that lesson (see agoraRemovedFrom)
@@ -1239,10 +1368,15 @@ service cloud.firestore {
                        !resource.data.keys().hasAny(['agreementBallot']) &&
                        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['agreementMeta', 'agreementBallot', 'deliberationEnabled']) &&
                        !changesCreatorRole() &&
+                       !changesCreatorIdWithoutBeingCreator() &&
                        !changesOrganizationId() &&
                        !isClassReply() &&
                        !changesClassReplyFields() &&
                        !rewordsClassProposal() &&
+                       !makesClassProposal() &&
+                       !changesClassAuthor() &&
+                       !changesClassEnteredBy() &&
+                       !claimsNoDeviceAuthor() &&
                        !changesClassHomeOrLesson() &&
                        !homeWriteBlocked() &&
                        (isAgoraStatement()
@@ -1315,9 +1449,17 @@ service cloud.firestore {
       allow delete: if request.auth != null && (resource == null || resource.data.get('userId', '') == request.auth.uid);
     }
 
-    match /pushNotifications/{pushNotificationId=**} {
+    // One document per FCM token, keyed by the token. Writing means "this device
+    // is mine", so the incoming userId must be the caller. An existing document
+    // may name someone else: one browser keeps one token across sign-outs, so the
+    // next person to sign in on it has to be able to take the document over.
+    // Reads stay as they were (next batch).
+    match /pushNotifications/{pushNotificationId} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow create, update: if request.auth != null &&
+                               request.resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null &&
+                       (resource == null || resource.data.get('userId', '') == request.auth.uid);
     }
 
     // Per-user global notification settings (master mute, channels, quiet hours,
@@ -1326,9 +1468,13 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    match /askedToBeNotified/{askedToBeNotifiedId=**} {
+    // Legacy per-(token, statement) registration, same ownership as above.
+    match /askedToBeNotified/{askedToBeNotifiedId} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow create, update: if request.auth != null &&
+                               request.resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null &&
+                       (resource == null || resource.data.get('userId', '') == request.auth.uid);
     }
 
     match /statementsMeta/{statementId=**} {
@@ -1367,9 +1513,12 @@ service cloud.firestore {
       allow read: if request.auth.uid != null;
     }
     
+    // Written only by the Sign API routes (Admin SDK). The browser reads the
+    // live counts (useRealtimeSignatureCounts). A client write would be a
+    // signature in someone else's name.
     match /signatures/{signaturesId=**} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow write: if false;
     }
     
     match /agrees/{agreeId=**} {
@@ -1377,13 +1526,26 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
     
-    match /invitations/{invitationId=**} {
+    // Numeric PIN invitations (main app, InvitePanel). A PIN resolves to a
+    // pathname the app navigates to, so rewriting one would redirect everyone
+    // holding that PIN: a document is created once and never changed. The
+    // pathname must be a single-origin path, not "//host".
+    match /invitations/{invitationId} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow create: if request.auth != null &&
+                       request.resource.data.keys().hasOnly(['statementId', 'pathname', 'lastUpdate', 'number']) &&
+                       request.resource.data.statementId is string &&
+                       request.resource.data.pathname is string &&
+                       request.resource.data.pathname.matches('^/[^/\\\\].*') &&
+                       request.resource.data.lastUpdate is number &&
+                       request.resource.data.number is int &&
+                       request.resource.data.number > 0;
+      allow update, delete: if false;
     }
     
+    // No client or server code uses this collection.
     match /admins/{adminStatementId=**} {
-      allow write: if request.auth.uid == request.resource.data.user.uid;
+      allow read, write: if false;
     }
     
    match /statementsSubscribe/{statementSubId} {
@@ -1593,6 +1755,15 @@ service cloud.firestore {
                (userUidOf(after) == userUidOf(before) || userUidOf(after) == afterUser);
       }
 
+      // The roles a person may give themselves. An allow-list, because a
+      // deny-list misses whatever it did not think of: server code counts the
+      // literal 'creator' as an admin (functions/src/classroom/classroomAccess.ts)
+      // and it was never on the old list. Real creators and admins do not pass
+      // through here, they take the isAdminOrCreator() branch.
+      function isSelfGrantableRole() {
+        return request.resource.data.role in ['member', 'waiting', 'unsubscribed'];
+      }
+
       allow read: if request.auth.uid != null;
 
       // For create
@@ -1609,9 +1780,7 @@ service cloud.firestore {
                      createIdentityOk() &&
                      homeSubscriptionWriteOk() &&
                      (isAdminOrCreator() ||
-                      (request.resource.data.role != 'admin' &&
-                       request.resource.data.role != 'statement-creator' &&
-                       request.resource.data.role != 'banned' &&
+                      (isSelfGrantableRole() &&
                        classCreateOk() &&
                        (isPublic() ||
                         isOpenToAll() ||
@@ -1619,6 +1788,9 @@ service cloud.firestore {
                         (isModerated() && isWaitingRole()))));
 
       // For update
+      // The subscriber branch is already an allow-list: a person may keep their
+      // role or move to 'waiting' / 'member'. Only an admin or the real creator
+      // can set anything else.
       allow update: if request.auth.uid != null &&
                      !isTryingToBanProtectedUser() &&
                      updateIdentityOk() &&
@@ -1659,9 +1831,10 @@ service cloud.firestore {
     }
 
     // The rest of the collection rules...
+    // No app reads or writes this any more; only the Admin SDK export and
+    // restore scripts touch it.
     match /massConsensusProcesses/{statementId=**} {
-      allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow read, write: if false;
     }
     
     match /statementsSignatures/{signatureId=**} {
@@ -1673,9 +1846,11 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
 
+    // No client writes this. A write fires onSetChoseBySettings, which rewrites
+    // a question's chosen options, so it must not be reachable from a browser.
     match /choseBy/{statementId=**} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow write: if false;
     }
 
     match /statementRoomsAsked/{requestId=**} {
@@ -1683,8 +1858,9 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
 
+    // No client writes this. A write fires updateResultsSettings.
     match /resultsTriggers/{statementId=**} {
-      allow write: if request.auth.uid != null;
+      allow write: if false;
     }
 
     match /statementLobbyRooms/{statementId=**} {
@@ -1743,7 +1919,13 @@ service cloud.firestore {
     // {uid}--{statementId} (see docs/architecture/rules-inventory.md §2); the
     // synthetic agora-ai--* raters and every server aggregation use the Admin
     // SDK and bypass these rules entirely.
-    match /evaluations/{evluationId=**} {
+    //
+    // Everything below judges only the incoming document: a vote stays a direct
+    // client write with no added lookup, because every get() here is paid on
+    // every vote. The one lookup is notRemovedAgoraRater, and only for a rating
+    // that names an Agora session. Nothing here looks at the option, so anyone,
+    // anonymous included, can evaluate an option somebody else wrote.
+    match /evaluations/{evaluationDocId} {
       // Cross-user reads stay open: Odyssey's opinion map reads the whole
       // game's evaluations, and Agora derives its "who rated when" timeline
       // the same way.
@@ -1756,12 +1938,21 @@ service cloud.firestore {
                && request.resource.data.statementId is string
                && request.resource.data.evaluatorId is string
                && request.resource.data.evaluation is number
+               && request.resource.data.evaluation >= -1
+               && request.resource.data.evaluation <= 1
                && request.resource.data.updatedAt is number;
       }
 
+      // Who the vote claims to be, in all three places it says so. The trigger
+      // counts by evaluator.uid, so that is the field a forger would aim at.
+      // evaluator is optional: Flow writes the vote without it.
       function isOwnEvaluation() {
         return request.auth != null &&
-               request.resource.data.evaluatorId == request.auth.uid;
+               request.resource.data.evaluatorId == request.auth.uid &&
+               (request.resource.data.get('evaluator', null) == null ||
+                request.resource.data.evaluator.uid == request.auth.uid) &&
+               evaluationDocId == request.auth.uid + '--' + request.resource.data.statementId &&
+               request.resource.data.evaluationId == evaluationDocId;
       }
 
       // An Agora rating names its session; a student the teacher removed
@@ -1805,9 +1996,14 @@ service cloud.firestore {
     // Typing status for real-time collaboration indicators
     match /typingStatus/{typingId} {
       allow read: if request.auth != null;
-      // Users can only write their own typing status (document ID includes their userId)
-      allow create, update: if request.auth != null &&
-                              request.resource.data.userId == request.auth.uid;
+      // Users can only write their own typing status: the document id ends in
+      // their uid ({paragraphId}--{uid}), and an existing document must be theirs.
+      allow create: if request.auth != null &&
+                       request.resource.data.userId == request.auth.uid &&
+                       typingId.matches('.*--' + request.auth.uid);
+      allow update: if request.auth != null &&
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.userId == request.auth.uid;
       // Users can delete their own typing status
       // Note: resource may be null if document doesn't exist, so we check for it first
       allow delete: if request.auth != null &&
@@ -1920,6 +2116,8 @@ service cloud.firestore {
                                notRemovedAgoraVoter(request.resource.data.parentId) &&
                                classBallotOpen(request.resource.data.parentId, request.resource.data.statementId) &&
                                request.resource.data.userId == request.auth.uid &&
+                               // join-class: only classCastVoteFor (Admin SDK) says who entered a vote.
+                               !('enteredByUid' in request.resource.data) &&
                                voteId == (request.auth.uid + '--' +
                                           request.resource.data.parentId);
       // A delete is a withdrawal too, so on a class ballot it follows the same
@@ -1953,15 +2151,23 @@ service cloud.firestore {
 
     match /usersSettings/{settingId=**} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null
-        && request.resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null &&
+                       request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null &&
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.userId == request.auth.uid;
     }
 
     match /usersData/{dataId=**} {
       allow read: if request.auth.uid != null;
-      // Ensure users can only write documents where userId matches their auth uid
-      allow write: if request.auth.uid != null
-        && request.resource.data.userId == request.auth.uid;
+      // Both sides of a write must be the caller. Checking only the incoming
+      // userId let anyone overwrite another user's answers by stamping their
+      // own uid on them. No client deletes here (a delete was never allowed).
+      allow create: if request.auth != null &&
+                       request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null &&
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.userId == request.auth.uid;
     }
 
     match /usersV2/{userId} {
@@ -1977,7 +2183,11 @@ service cloud.firestore {
         return request.resource.data.get('systemAdmin', false) == existing;
       }
 
-      allow read: if request.auth != null;
+      // These documents hold email addresses. A user reads their own; the
+      // system-admin console (apps/admin) reads and lists all of them.
+      allow get: if request.auth != null &&
+                    (request.auth.uid == userId || isSystemAdminUser());
+      allow list: if isSystemAdminUser();
       // Allow users to write their own document (userId must match auth uid),
       // but never to set or change the systemAdmin privilege flag.
       allow write: if request.auth != null &&
@@ -2051,9 +2261,9 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
     
+    // No code in the repo reads or writes this collection.
     match /tokens/{token=**} {
-      allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow read, write: if false;
     }
       
     match /consultations/{consultationId} {
@@ -2267,15 +2477,26 @@ service cloud.firestore {
     // update let anyone write consent docs. Ownership can't be tied to auth.uid
     // because anonymous users store a custom userId, so auth-presence is the
     // boundary. Anonymous-auth users still satisfy `request.auth != null`.
+    //
+    // MC and Sign participants hold a browser-minted `anon_...` id that is not
+    // their Firebase uid. Any other id is a real account's uid, so it can only
+    // be written by that account: nobody can give or withdraw a signed-in
+    // person's consent. The anon_ records stay unbound until those two apps
+    // send a verified identity.
     match /researchConsent/{consentId} {
+      function mayWriteConsentFor(uid) {
+        return uid == request.auth.uid || uid.matches('^anon_.*');
+      }
       allow create: if request.auth != null &&
                      request.resource.data.userId is string &&
                      request.resource.data.topParentId is string &&
-                     request.resource.data.consentId == consentId;
+                     request.resource.data.consentId == consentId &&
+                     mayWriteConsentFor(request.resource.data.userId);
       allow read: if request.auth != null;
       allow update: if request.auth != null &&
                      request.resource.data.consentId == consentId &&
-                     request.resource.data.userId == resource.data.userId;
+                     request.resource.data.userId == resource.data.userId &&
+                     mayWriteConsentFor(resource.data.userId);
       allow delete: if false;
     }
 
@@ -2328,7 +2549,13 @@ service cloud.firestore {
         isQuestionAdmin(resource.data.questionId) ||
         isQuestionCreator(resource.data.questionId)
       );
-      allow list: if request.auth != null;
+      // These rows carry the raw invite token, so a list is a credential dump.
+      // DelegatesPanel queries `where questionId == X`; that equality is what
+      // lets the rule below be proven for the whole result.
+      allow list: if request.auth != null && (
+        isQuestionAdmin(resource.data.questionId) ||
+        isQuestionCreator(resource.data.questionId)
+      );
       allow write: if false;
     }
 
@@ -2401,9 +2628,13 @@ service cloud.firestore {
         isOrgAdmin(resource.data.organizationId) ||
         isSystemAdminUser()
       );
-      // Safe to list: only `tokenHash` (sha256) is stored — the raw invite
-      // token never touches Firestore, so a listed row is not a credential.
-      allow list: if request.auth != null;
+      // Only `tokenHash` (sha256) is stored, but the rows still hold invitees'
+      // email addresses. Studio queries `where organizationId == X` from pages
+      // only an org admin or a system admin reaches; a viewer is redirected.
+      allow list: if request.auth != null && (
+        isOrgAdmin(resource.data.organizationId) ||
+        isSystemAdminUser()
+      );
       allow write: if false;
     }
 

@@ -1,6 +1,7 @@
 import firebaseConfig from '@/controllers/db/configKey';
 import { functionConfig } from '@freedi/shared-types';
 import { logError, NetworkError } from '@/utils/errorHandling';
+import { getAuthHeaders } from '@/controllers/db/authHeaders';
 
 export interface StatementTypeDetectionResult {
 	detectedType: 'question' | 'option' | 'statement';
@@ -90,7 +91,7 @@ export async function detectStatementTypeFromAI(
 	try {
 		const response = await fetch(endpoint, {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
+			headers: await getAuthHeaders(),
 			body: JSON.stringify({
 				statementText,
 				parentStatementId,

@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { denyWithoutDocumentAccess, getParticipantIdentity, isServerMintedAnonymousId } from '@/lib/auth/requestIdentity';
+import { getParticipantId, getParticipantDisplayName, isAnonymousParticipant } from '@/lib/auth/requestIdentity';
 import { FieldValue } from 'firebase-admin/firestore';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName, isAnonymousRequest } from '@/lib/utils/user';
+import { getAnonymousDisplayName } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { isUserBlocked } from '@/lib/admin/blocklist';
 import { isDocumentFrozen, FROZEN_DOCUMENT_ERROR } from '@/lib/admin/documentStatus';
 import { logger } from '@/lib/utils/logger';
 import { logResearchAction } from '@/lib/utils/researchLogger';
 import { ResearchAction } from '@freedi/shared-types';
+
+/** A client-sent visitor id may only ever be an anonymous one, never a real uid. */
+function anonymousVisitorId(visitorId: string | null | undefined): string | null {
+  return isServerMintedAnonymousId(visitorId) ? visitorId : null;
+}
 
 interface EvaluationInput {
   evaluation: number; // -1 or 1
@@ -44,19 +51,25 @@ export async function GET(
 ) {
   try {
     const { commentId } = await params;
-    const cookieHeader = request.headers.get('cookie');
-    const userId = getUserIdFromCookie(cookieHeader);
+    const userId = await getParticipantId(request);
 
     const { searchParams } = new URL(request.url);
     const visitorId = searchParams.get('visitorId');
-    const effectiveId = userId || visitorId;
+    const effectiveId = userId || anonymousVisitorId(visitorId);
 
     const db = getFirestoreAdmin();
 
-    const snapshot = await db
-      .collection(Collections.evaluations)
-      .where('statementId', '==', commentId)
-      .get();
+    const [snapshot, commentSnap] = await Promise.all([
+      db.collection(Collections.evaluations).where('statementId', '==', commentId).get(),
+      db.collection(Collections.statements).doc(commentId).get(),
+    ]);
+
+    const denied = await denyWithoutDocumentAccess(
+      db,
+      (commentSnap.data()?.topParentId as string | undefined) || commentId,
+      await getParticipantIdentity(request)
+    );
+    if (denied) return denied;
 
     let sumEvaluation = 0;
     let userEvaluation: number | null = null;
@@ -96,13 +109,12 @@ export async function POST(
 ) {
   try {
     const { commentId } = await params;
-    const cookieHeader = request.headers.get('cookie');
-    const userId = getUserIdFromCookie(cookieHeader);
+    const userId = await getParticipantId(request);
 
     const body: EvaluationInput = await request.json();
     const { evaluation, visitorId } = body;
 
-    const effectiveId = userId || visitorId;
+    const effectiveId = userId || anonymousVisitorId(visitorId);
 
     if (!effectiveId) {
       return NextResponse.json(
@@ -131,6 +143,9 @@ export async function POST(
     const comment = commentRef.data();
 
     const evalDocumentId = comment?.topParentId || commentId;
+    const denied = await denyWithoutDocumentAccess(db, evalDocumentId, await getParticipantIdentity(request));
+    if (denied) return denied;
+
     if (await isUserBlocked(db, evalDocumentId, effectiveId)) {
       return NextResponse.json(
         { error: 'You are not permitted to contribute to this document' },
@@ -152,7 +167,7 @@ export async function POST(
     const evalDocSnap = await db.collection(Collections.statements).doc(evalDocumentId).get();
     if (
       evalDocSnap.data()?.signSettings?.requireGoogleLogin === true &&
-      isAnonymousRequest(cookieHeader)
+      (await isAnonymousParticipant(request))
     ) {
       return NextResponse.json(
         {
@@ -179,7 +194,7 @@ export async function POST(
     const isAnonymous = !userId;
     const displayName = isAnonymous
       ? getAnonymousDisplayName(effectiveId)
-      : getUserDisplayNameFromCookie(cookieHeader) || getAnonymousDisplayName(effectiveId);
+      : (await getParticipantDisplayName(request)) || getAnonymousDisplayName(effectiveId);
 
     const evaluationData = {
       evaluationId,
@@ -241,11 +256,11 @@ export async function DELETE(
 ) {
   try {
     const { commentId } = await params;
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getParticipantId(request);
 
     const { searchParams } = new URL(request.url);
     const visitorId = searchParams.get('visitorId');
-    const effectiveId = userId || visitorId;
+    const effectiveId = userId || anonymousVisitorId(visitorId);
 
     if (!effectiveId) {
       return NextResponse.json(

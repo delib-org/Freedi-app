@@ -1,6 +1,7 @@
 import {
 	CAMP_A_BELOW,
 	CAMP_B_ABOVE,
+	DEFAULT_PROPOSAL_LIMIT,
 	DEFAULT_PROPOSALS_TURNS,
 	DEFAULT_SPEAK_SECONDS,
 	DEFAULT_TABLE_SIZE,
@@ -9,6 +10,7 @@ import {
 	PROPOSALS_TURNS_CHOICES,
 	SPEAK_SECONDS_CHOICES,
 	Camp,
+	ClassProposalLimit,
 	ClassTable,
 } from './classroomModel';
 import type {
@@ -23,7 +25,13 @@ import type { LessonStatusAction } from './classroomCallables';
 export interface LessonSettingsHolder {
 	statementSettings?: Pick<
 		StatementSettings,
-		'allowOwnQuestions' | 'speakSeconds' | 'proposalsTurns' | 'lessonLook' | 'tableSize'
+		| 'allowOwnQuestions'
+		| 'speakSeconds'
+		| 'proposalsTurns'
+		| 'proposalLimit'
+		| 'noDeviceCount'
+		| 'lessonLook'
+		| 'tableSize'
 	> | null;
 }
 
@@ -65,6 +73,28 @@ export function proposalsTurnsOf(main: LessonSettingsHolder | null | undefined):
 	return typeof own === 'number' && (PROPOSALS_TURNS_CHOICES as readonly number[]).includes(own)
 		? own
 		: DEFAULT_PROPOSALS_TURNS;
+}
+
+/** How many proposals each author may send: 'unlimited' only when the teacher chose it, else one. */
+export function proposalLimitOf(main: LessonSettingsHolder | null | undefined): ClassProposalLimit {
+	return main?.statementSettings?.proposalLimit === 'unlimited'
+		? 'unlimited'
+		: DEFAULT_PROPOSAL_LIMIT;
+}
+
+/** May an author who already holds `held` proposals send another one? */
+export function mayAddProposal(limit: ClassProposalLimit, held: number): boolean {
+	return limit === 'unlimited' || held === 0;
+}
+
+/**
+ * Students without a device in the whole lesson, as the server counts them. For
+ * phones, which cannot read other tables; the teacher's screens count from the tables.
+ */
+export function noDeviceCountOf(main: LessonSettingsHolder | null | undefined): number {
+	const count = main?.statementSettings?.noDeviceCount;
+
+	return typeof count === 'number' && count > 0 ? count : 0;
 }
 
 /** The table's current turn at Proposals, 1-based; absent = the first. */

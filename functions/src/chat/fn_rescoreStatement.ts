@@ -10,6 +10,9 @@ import { Collections, StatementType, functionConfig } from '@freedi/shared-types
 import type { Statement } from '@freedi/shared-types';
 import { getScorer, type DialecticPolarity } from '@freedi/evidence';
 import './scorerV1'; // registers evidenceScorerV1
+import { isSystemAdmin } from '../utils/httpAuth';
+import { enforceCallableRateLimit } from '../utils/rateLimit';
+import { RATE_BUDGETS } from '../config/rateBudgets';
 
 const VERDICTS = 'evidenceVerdicts';
 
@@ -22,6 +25,12 @@ export const rescoreStatement = onCall<RescoreRequest>(
 	{ region: functionConfig.region },
 	async (request) => {
 		if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Auth required');
+		// Calibration tool, with no client caller: for system admins only.
+		if (!(await isSystemAdmin(request.auth.uid))) {
+			throw new HttpsError('permission-denied', 'System admin required');
+		}
+		await enforceCallableRateLimit(request, RATE_BUDGETS.rescoreStatement, request.auth.uid);
+
 		const { statementId, scorerVersion } = request.data;
 		if (!statementId) throw new HttpsError('invalid-argument', 'statementId required');
 

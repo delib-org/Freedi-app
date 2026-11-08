@@ -8,6 +8,7 @@ import type {
 	ClassGameParagraph,
 	ClassGameQuestion,
 	ClassGameSnapshot,
+	ClassProposalLimit,
 } from '@freedi/shared-types';
 import type { IntroBlock, IntroDiff, SavedBlock } from './introText';
 import type { IntroVideo } from './introVideos';
@@ -48,6 +49,7 @@ export interface GameDetails {
 	allowOwnQuestions?: boolean;
 	speakSeconds?: number;
 	proposalsTurns?: number;
+	proposalLimit?: ClassProposalLimit;
 }
 
 /** A snapshot with every `undefined` left out (deep, through plain JSON). */

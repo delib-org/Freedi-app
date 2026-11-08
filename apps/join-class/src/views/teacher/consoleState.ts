@@ -10,7 +10,7 @@ import type { Unsubscribe } from '@/lib/firebase';
  * state + m.redraw). Views read it; the actions in consoleActions.ts write it.
  */
 
-export type ConsoleView = 'tables' | 'texts';
+export type { ConsoleView } from './consoleView';
 
 export interface ActionFailure {
 	/** Plain-words label of what failed ("חלוקה לשולחנות"). */
@@ -46,8 +46,8 @@ export interface ConsoleState {
 	options: Map<string, Statement[]>;
 	/** The lesson is paused or ended: steps, seats and tables stand still (IA 13.6). */
 	held: boolean;
-	/** Teacher pressed "Show sides": names carry their side. Off by default, never persisted. */
-	sidesVisible: boolean;
+	/** The lesson has ended: the only state in which students can no longer be moved (paused still allows it). */
+	ended: boolean;
 }
 
 export const consoleState: ConsoleState = {
@@ -63,7 +63,7 @@ export const consoleState: ConsoleState = {
 	announce: '',
 	options: new Map<string, Statement[]>(),
 	held: false,
-	sidesVisible: false,
+	ended: false,
 };
 
 export function resetConsoleState(mainId: string): void {
@@ -79,7 +79,7 @@ export function resetConsoleState(mainId: string): void {
 	consoleState.announce = '';
 	consoleState.options = new Map<string, Statement[]>();
 	consoleState.held = false;
-	consoleState.sidesVisible = false;
+	consoleState.ended = false;
 }
 
 export function isBusy(key: string): boolean {

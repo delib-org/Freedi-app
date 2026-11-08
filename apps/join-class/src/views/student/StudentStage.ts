@@ -4,7 +4,11 @@ import { lessonStepOf, planStepKeys } from '@/lib/lesson';
 import { lessonStatusOfMain } from '@/lib/lessonCore';
 import { AllProposalsStep } from './steps/AllProposalsStep';
 import { setStudentStage } from '@/lib/studentStage';
-import { watchClass } from '@/lib/classroom/classState';
+import { classState, watchClass } from '@/lib/classroom/classState';
+import { needsNameForm } from '@/lib/classroom/nameGate';
+import { getCustomDisplayName } from '@/lib/store';
+import { getUserState } from '@/lib/user';
+import { NameGate } from './c2/NameGate';
 import { OpeningStep } from './steps/OpeningStep';
 import { ProposalsStep } from './steps/ProposalsStep';
 import { SideStep } from './steps/SideStep';
@@ -107,6 +111,19 @@ export const StudentStage: m.Component<StudentStageAttrs> = {
 			setStudentStage(null);
 
 			return renderState(attrs.main, status);
+		}
+		// No student reaches any step without a name: the form comes before the step (Trello dZQmKXRY).
+		if (
+			needsNameForm({
+				user: getUserState().user,
+				deviceName: getCustomDisplayName(),
+				sub: classState.mySubscription,
+				subLoaded: classState.mySubscriptionLoaded,
+			})
+		) {
+			setStudentStage(null);
+
+			return m(NameGate, { mainId: attrs.main.statementId, key: 'name-gate' });
 		}
 		const plan = attrs.main.statementSettings?.lessonPlan;
 		const step = lessonStepOf(plan);

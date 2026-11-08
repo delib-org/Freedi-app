@@ -9,7 +9,16 @@ jest.mock('../db', () => ({
 	},
 }));
 
-import { MAX_INHERITED_ADMINS, setupAdminsForStatement } from '../setupAdminsForStatement';
+const mockGetUsers = jest.fn();
+jest.mock('firebase-admin/auth', () => ({
+	getAuth: () => ({ getUsers: mockGetUsers }),
+}));
+
+import {
+	MAX_INHERITED_ADMINS,
+	PROFILE_LOOKUP_TIMEOUT_MS,
+	setupAdminsForStatement,
+} from '../setupAdminsForStatement';
 
 const TOP = 'group-1';
 const PARENT = 'question-1';
@@ -47,6 +56,8 @@ const subOf = (uid: string) => fake.read(Collections.statementsSubscribe, `${uid
 
 beforeEach(() => {
 	fake = createFakeDb();
+	mockGetUsers.mockReset();
+	mockGetUsers.mockResolvedValue({ users: [], notFound: [] });
 });
 
 describe('setupAdminsForStatement', () => {
@@ -129,6 +140,116 @@ describe('setupAdminsForStatement', () => {
 		);
 		expect(written).toHaveLength(MAX_INHERITED_ADMINS + 1);
 		expect(subOf(CREATOR)).toBeDefined();
+	});
+
+	describe('the identity on an inherited admin', () => {
+		it('holds the real person from usersV2, with no email or other personal field', async () => {
+			seedAdmin('top-admin', TOP);
+			fake.seed(Collections.users, 'top-admin', {
+				uid: 'top-admin',
+				displayName: 'Real Host',
+				photoURL: 'https://photo/host.png',
+				email: 'host@example.org',
+				systemAdmin: true,
+			});
+			await setupAdminsForStatement(newStatement());
+
+			expect(subOf('top-admin')?.user).toEqual({
+				uid: 'top-admin',
+				displayName: 'Real Host',
+				photoURL: 'https://photo/host.png',
+				isAnonymous: false,
+			});
+			expect(mockGetUsers).not.toHaveBeenCalled();
+		});
+
+		it('falls back to Auth when usersV2 has no name, keeping only the minimal fields', async () => {
+			seedAdmin('top-admin', TOP);
+			mockGetUsers.mockResolvedValue({
+				users: [
+					{
+						uid: 'top-admin',
+						displayName: 'From Auth',
+						email: 'a@example.org',
+						providerData: [{ providerId: 'google.com' }],
+					},
+				],
+				notFound: [],
+			});
+			await setupAdminsForStatement(newStatement());
+
+			expect(subOf('top-admin')?.user).toEqual({
+				uid: 'top-admin',
+				displayName: 'From Auth',
+				isAnonymous: false,
+			});
+		});
+
+		it('gives a student without a device no subscription: nobody can sign in as that id', async () => {
+			seedAdmin('top-admin', TOP);
+			const nd = 'nd_aaa';
+			await setupAdminsForStatement(
+				newStatement({
+					creatorId: nd,
+					creator: { uid: nd, displayName: '' },
+				} as Partial<Statement>),
+			);
+
+			expect(fake.read(Collections.statementsSubscribe, `${nd}--${NEW}`)).toBeUndefined();
+			expect(subOf('top-admin')?.role).toBe(Role.admin);
+		});
+
+		it('never carries the creator: no profile anywhere leaves a nameless identity', async () => {
+			seedAdmin('top-admin', TOP);
+			await setupAdminsForStatement(newStatement());
+
+			expect(subOf('top-admin')?.user).toEqual({
+				uid: 'top-admin',
+				displayName: '',
+				isAnonymous: true,
+			});
+		});
+
+		it('still sets up the admin when the Auth lookup fails', async () => {
+			seedAdmin('top-admin', TOP);
+			mockGetUsers.mockRejectedValue(new Error('auth down'));
+			await setupAdminsForStatement(newStatement());
+
+			expect(subOf('top-admin')).toMatchObject({
+				role: Role.admin,
+				user: { uid: 'top-admin', displayName: '' },
+			});
+		});
+
+		it('a hung lookup neither delays nor loses the admin doc: nameless, logged, still written', async () => {
+			const logged = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+			jest.useFakeTimers();
+			try {
+				seedAdmin('top-admin', TOP);
+				mockGetUsers.mockReturnValue(new Promise(() => undefined));
+				const setup = setupAdminsForStatement(newStatement());
+				await jest.advanceTimersByTimeAsync(PROFILE_LOOKUP_TIMEOUT_MS);
+				await setup;
+
+				expect(subOf('top-admin')).toMatchObject({
+					role: Role.admin,
+					createdAt: 1,
+					user: { uid: 'top-admin', displayName: '', isAnonymous: true },
+				});
+				expect(subOf(CREATOR)).toBeDefined();
+				expect(logged.mock.calls.flat().join(' ')).toContain('timed out');
+			} finally {
+				jest.useRealTimers();
+				logged.mockRestore();
+			}
+		});
+
+		it('leaves the creator their own identity, without a lookup', async () => {
+			await setupAdminsForStatement(newStatement());
+
+			expect(subOf(CREATOR)?.user).toEqual({ uid: CREATOR, displayName: 'Creator' });
+			expect(mockGetUsers).not.toHaveBeenCalled();
+		});
 	});
 
 	it('only the creator for a top-level statement', async () => {

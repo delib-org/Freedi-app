@@ -7,7 +7,7 @@ import {
   getUserSolutions,
 } from '@/lib/firebase/queries';
 import ResultsList from '@/components/results/ResultsList';
-import { getUserIdFromCookie } from '@/lib/utils/user';
+import { getSessionUid } from '@/lib/auth/serverSession';
 import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import styles from './results.module.css';
 
@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ResultsPage({ params, searchParams }: PageProps) {
   try {
     const cookieStore = await cookies();
-    const userId = getUserIdFromCookie(cookieStore.get('userId')?.value || null);
+    const userId = await getSessionUid(cookieStore);
     const tab = searchParams.tab || 'all';
 
     // Parallel fetch

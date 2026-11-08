@@ -22,8 +22,6 @@ interface MergeRequest {
 	newContent: string;
 	/** ID of the question/parent */
 	questionId: string;
-	/** User ID of the person submitting */
-	userId: string;
 	/** Optional: User's display name */
 	userName?: string;
 	/**
@@ -59,18 +57,22 @@ interface MergeResponse {
  * 4. Create +1 evaluation for the user on the target statement
  * 5. Update counters
  */
-export async function mergeStatements(request: Request, response: Response): Promise<void> {
+export async function mergeStatements(
+	request: Request,
+	response: Response,
+	userId: string,
+): Promise<void> {
 	const startTime = Date.now();
 
 	try {
-		const { targetStatementId, newContent, questionId, userId, userName, autoMerge }: MergeRequest =
+		const { targetStatementId, newContent, questionId, userName, autoMerge }: MergeRequest =
 			request.body;
 
 		// Validate required fields
-		if (!targetStatementId || !newContent || !questionId || !userId) {
+		if (!targetStatementId || !newContent || !questionId) {
 			response.status(400).send({
 				ok: false,
-				error: 'Missing required fields: targetStatementId, newContent, questionId, userId',
+				error: 'Missing required fields: targetStatementId, newContent, questionId',
 			});
 
 			return;
@@ -126,6 +128,20 @@ export async function mergeStatements(request: Request, response: Response): Pro
 			response.status(500).send({
 				ok: false,
 				error: 'Failed to read statement data',
+			});
+
+			return;
+		}
+
+		// The target must live under this question, or a caller could fold text
+		// into any option in the database by naming a question of their own.
+		const belongsToQuestion =
+			targetStatement.parentId === questionId ||
+			(Array.isArray(targetStatement.parents) && targetStatement.parents.includes(questionId));
+		if (!belongsToQuestion) {
+			response.status(400).send({
+				ok: false,
+				error: 'Target statement does not belong to this question',
 			});
 
 			return;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getForwardableAuthorization, getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { logger } from '@/lib/utils/logger';
 import { getFirebaseFunctionUrl } from '@/lib/utils/firebaseFunctions';
@@ -36,7 +36,7 @@ export async function POST(
 ): Promise<NextResponse> {
 	try {
 		const { docId, versionId } = await params;
-		const userId = getUserIdFromCookie(request.headers.get('cookie'));
+		const userId = await getVerifiedUserId(request);
 
 		if (!userId) {
 			return NextResponse.json(
@@ -89,10 +89,19 @@ export async function POST(
 
 		const functionUrl = `${getFirebaseFunctionUrl()}/processVersionAI`;
 
+		const authorization = await getForwardableAuthorization(request, userId);
+		if (!authorization) {
+			return NextResponse.json(
+				{ error: 'Unauthorized' },
+				{ status: 401 }
+			);
+		}
+
 		const response = await fetch(functionUrl, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
+				Authorization: authorization,
 			},
 			body: JSON.stringify({
 				versionId,

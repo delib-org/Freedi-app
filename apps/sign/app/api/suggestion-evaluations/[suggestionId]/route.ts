@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { denyWithoutDocumentAccess, getParticipantIdentity } from '@/lib/auth/requestIdentity';
+import { getParticipantId, getParticipantDisplayName } from '@/lib/auth/requestIdentity';
 import { FieldValue } from 'firebase-admin/firestore';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
+import { getAnonymousDisplayName } from '@/lib/utils/user';
 import { Collections, calcBinaryConsensus } from '@freedi/shared-types';
 import type { Statement, StatementEvaluation } from '@freedi/shared-types';
 import { isDocumentFrozen, FROZEN_DOCUMENT_ERROR } from '@/lib/admin/documentStatus';
@@ -104,13 +106,19 @@ export async function GET(
 ) {
   try {
     const { suggestionId } = await params;
-    const cookieHeader = request.headers.get('cookie');
-    const userId = getUserIdFromCookie(cookieHeader);
+    const userId = await getParticipantId(request);
 
     const db = getFirestoreAdmin();
 
     const statementSnap = await db.collection(Collections.statements).doc(suggestionId).get();
     const statementData = statementSnap.data() as Statement | undefined;
+
+    const denied = await denyWithoutDocumentAccess(
+      db,
+      statementData?.topParentId || suggestionId,
+      await getParticipantIdentity(request)
+    );
+    if (denied) return denied;
 
     const evaluation = statementData?.evaluation;
     const positiveEvaluations = evaluation?.numberOfProEvaluators || 0;
@@ -157,8 +165,7 @@ export async function POST(
 ) {
   try {
     const { suggestionId } = await params;
-    const cookieHeader = request.headers.get('cookie');
-    const userId = getUserIdFromCookie(cookieHeader);
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -197,6 +204,9 @@ export async function POST(
       );
     }
 
+    const denied = await denyWithoutDocumentAccess(db, suggestion?.topParentId || suggestionId, await getParticipantIdentity(request));
+    if (denied) return denied;
+
     if (await isDocumentFrozen(db, suggestion?.topParentId || '')) {
       return NextResponse.json(
         { error: FROZEN_DOCUMENT_ERROR },
@@ -210,7 +220,7 @@ export async function POST(
     const oldEval = oldEvalSnap.exists ? (oldEvalSnap.data()?.evaluation || 0) : 0;
     const isNew = !oldEvalSnap.exists;
 
-    const displayName = getUserDisplayNameFromCookie(cookieHeader) || getAnonymousDisplayName(userId);
+    const displayName = (await getParticipantDisplayName(request)) || getAnonymousDisplayName(userId);
 
     const evaluationData = {
       evaluationId,
@@ -262,7 +272,7 @@ export async function DELETE(
 ) {
   try {
     const { suggestionId } = await params;
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(

@@ -180,13 +180,11 @@ export function plenumOrder(proposals: readonly Statement[]): Statement[] {
 	);
 }
 
-/** The student's own proposal (latest), if any. */
-export function myProposal(proposals: readonly Statement[], uid: string): Statement | null {
-	const mine = proposals
+/** The student's own proposals, newest first: one under the default limit, several under 'unlimited'. */
+export function myProposals(proposals: readonly Statement[], uid: string): Statement[] {
+	return proposals
 		.filter((p) => p.creatorId === uid || p.classTable?.coAuthors.includes(uid))
 		.sort(newestFirst);
-
-	return mine[0] ?? null;
 }
 
 // ---- support bars ------------------------------------------------------------

@@ -9,6 +9,11 @@ export const VoteSchema = object({
 	lastUpdate: number(),
 	createdAt: number(),
 	voter: optional(UserSchema),
+	/**
+	 * join-class: the teacher who cast this vote for a student without a device.
+	 * Server-written only (classCastVoteFor; the rules refuse it from any client).
+	 */
+	enteredByUid: optional(string()),
 });
 
 export type Vote = InferOutput<typeof VoteSchema>;

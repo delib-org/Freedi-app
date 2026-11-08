@@ -1,4 +1,5 @@
 import { getFunctionsUrl } from '../config';
+import { getAuthHeaders } from '../authHeaders';
 import { logError } from '@/utils/errorHandling';
 import { logger } from '@/services/logger';
 import { store } from '@/redux/store';
@@ -109,15 +110,12 @@ export async function splitJoinedOption(params: SplitJoinedOptionParams): Promis
 		const baseUrl = getFunctionsUrl();
 		const response = await fetch(`${baseUrl}/splitJoinedOption`, {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
+			headers: await getAuthHeaders(),
 			body: JSON.stringify({
 				optionStatementId,
 				parentStatementId,
 				roomSize,
 				scrambleByQuestions: scrambleByQuestions || [],
-				adminId: creator.uid,
 				adminName: creator.displayName,
 			}),
 		});
@@ -169,9 +167,7 @@ export async function getOptionsExceedingMax(
 			`${baseUrl}/getOptionsExceedingMax?parentStatementId=${encodeURIComponent(parentStatementId)}`,
 			{
 				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-				},
+				headers: await getAuthHeaders(),
 			},
 		);
 
@@ -212,9 +208,7 @@ export async function getAllOptionsWithMembers(
 			`${baseUrl}/getAllOptionsWithMembers?parentStatementId=${encodeURIComponent(parentStatementId)}`,
 			{
 				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-				},
+				headers: await getAuthHeaders(),
 			},
 		);
 
@@ -252,9 +246,7 @@ export async function clearAllRoomsForParent(
 		const baseUrl = getFunctionsUrl();
 		const response = await fetch(`${baseUrl}/clearAllRoomsForParent`, {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
+			headers: await getAuthHeaders(),
 			body: JSON.stringify({
 				parentStatementId,
 			}),

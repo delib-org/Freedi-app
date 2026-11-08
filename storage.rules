@@ -2,46 +2,104 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    // An SVG can carry script, so a stranger's SVG must never be stored under a
+    // public download URL. lower() and the prefix match cover 'IMAGE/SVG+xml'
+    // and 'image/svg+xml; charset=utf-8', which an upload can claim.
+    function isSvg() {
+      return request.resource.contentType.lower().matches('image/svg.*');
+    }
+
+    function isSmallImage() {
+      return request.resource.size < 5 * 1024 * 1024 && isImage();
+    }
+
+    // Every legitimate upload to these paths mints a fresh name (timestamp or
+    // random id), so an object that already exists is someone else's picture.
+    function isNewObject() {
+      return resource == null;
+    }
+
+    // Cross-service reads: Storage rules may touch at most TWO Firestore
+    // documents per evaluation, so each helper below stays within that.
+    function isStatementAdmin(statementId) {
+      let subPath = /databases/(default)/documents/statementsSubscribe/$(request.auth.uid + '--' + statementId);
+      return firestore.exists(subPath) &&
+             firestore.get(subPath).data.role in ['admin', 'statement-creator'];
+    }
+
+    // Who may administer a Sign document, as apps/sign checkAdminAccess decides
+    // it: its creator, or a collaborator above viewer level. Two documents.
+    function isSignDocumentAdmin(documentId) {
+      let statementPath = /databases/(default)/documents/statements/$(documentId);
+      let collaboratorPath = /databases/(default)/documents/documentCollaborators/$(documentId)/collaborators/$(request.auth.uid);
+      return firestore.exists(statementPath) &&
+             (firestore.get(statementPath).data.get('creatorId', '') == request.auth.uid ||
+              firestore.get(statementPath).data.get('creator', {}).get('uid', '') == request.auth.uid ||
+              (firestore.exists(collaboratorPath) &&
+               firestore.get(collaboratorPath).data.permissionLevel in ['owner', 'admin']));
+    }
+
+    // Only an approved teacher or a system admin can create a topic package
+    // (firestore.rules), so owning one is what being its teacher means. The
+    // editor always loads the package before it uploads.
+    function ownsAgoraPackage(topicPackageId) {
+      let packagePath = /databases/(default)/documents/agoraTopicPackages/$(topicPackageId);
+      return firestore.exists(packagePath) &&
+             firestore.get(packagePath).data.creatorId == request.auth.uid;
+    }
+
+    // Option, chat and question pictures. Participants attach pictures here, so
+    // any signed-in user may add one, but nobody can replace an existing file.
+    // The only SVG path is an anchor icon, which only a statement admin sets.
     match /statements/{statementId}/{imagePath=**} {
       allow read;
-      allow write: if request.auth != null
-        && request.resource.size < 5 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+      allow write: if request.auth != null &&
+                      isSmallImage() &&
+                      isNewObject() &&
+                      (!isSvg() ||
+                       (request.resource.name.matches('statements/[^/]+/anchor_icons/.*') &&
+                        isStatementAdmin(statementId)));
     }
 
+    // Nothing uploads here: anchor icons live under statements/{id}/anchor_icons.
     match /anchor_icons/{statementId}/{imagePath=**} {
       allow read;
-      allow write: if request.auth != null
-        && request.resource.size < 5 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+      allow write: if false;
     }
 
+    // Sign document logos. Set from the admin settings page only, so the path
+    // is limited to the document's admins, and that is what lets it take SVG.
     match /logos/{documentId}/{imagePath=**} {
       allow read;
-      allow write: if request.auth != null
-        && request.resource.size < 5 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+      allow write: if request.auth != null &&
+                      isSmallImage() &&
+                      isSignDocumentAdmin(documentId);
     }
 
+    // Survey logos are uploaded by the MC API route through the Admin SDK.
     match /surveys/{surveyId}/logos/{imagePath=**} {
       allow read;
-      allow write: if request.auth != null
-        && request.resource.size < 5 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+      allow write: if false;
     }
 
     // Agora topic-package media: scene videos (<= 300MB) and era artwork
     // images (<= 5MB). Teachers upload during authoring; students read
-    // during the game.
+    // during the game. materials/ has its own rule below, and rules are OR-ed,
+    // so this one has to leave that folder out or it would accept a 300MB
+    // video there.
     match /agora/{topicPackageId}/{mediaPath=**} {
       allow read;
-      allow write: if request.auth != null
-        && (
-          (request.resource.size < 300 * 1024 * 1024
-            && request.resource.contentType.matches('video/.*'))
-          || (request.resource.size < 5 * 1024 * 1024
-            && request.resource.contentType.matches('image/.*'))
-        );
+      allow write: if request.auth != null &&
+                      !request.resource.name.matches('agora/[^/]+/materials/.*') &&
+                      !isSvg() &&
+                      ((request.resource.size < 300 * 1024 * 1024 &&
+                        request.resource.contentType.matches('video/.*')) ||
+                       isSmallImage()) &&
+                      ownsAgoraPackage(topicPackageId);
     }
 
     // Background-material PDFs a teacher attaches to a library scene. The
@@ -49,9 +107,10 @@ service firebase.storage {
     // students open the original by its download link.
     match /agora/{topicPackageId}/materials/{fileName} {
       allow read;
-      allow write: if request.auth != null
-        && request.resource.size < 8 * 1024 * 1024
-        && request.resource.contentType == 'application/pdf';
+      allow write: if request.auth != null &&
+                      request.resource.size < 8 * 1024 * 1024 &&
+                      request.resource.contentType == 'application/pdf' &&
+                      ownsAgoraPackage(topicPackageId);
     }
   }
 }

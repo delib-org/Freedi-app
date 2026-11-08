@@ -1,0 +1,64 @@
+name: Security Scan
+
+# Reporting only. Nothing here is wired into a deploy workflow, and the audit
+# steps never fail the job (continue-on-error), so deploys are never blocked.
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  npm-audit:
+    name: npm audit (${{ matrix.dir }})
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ['.', functions, apps/mass-consensus, apps/sign]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22.x
+      - name: Create a lockfile when the directory does not commit one
+        working-directory: ${{ matrix.dir }}
+        run: |
+          if [ ! -f package-lock.json ]; then
+            npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          fi
+      - name: npm audit (production dependencies, high and above)
+        working-directory: ${{ matrix.dir }}
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=high
+
+  secret-scan:
+    name: Secret scan (gitleaks)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      # sha256 of gitleaks_8.30.1_linux_x64.tar.gz, from the release's checksums file
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # The gitleaks-action needs a paid license on organisation repos, so the
+      # open-source binary is used directly, pinned by version and checksum.
+      - name: Install gitleaks
+        run: |
+          curl -sSfL -o gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+      - name: Scan the commits in this pull request
+        run: |
+          ./gitleaks git --config .gitleaks.toml --redact --no-banner \
+            --log-opts="origin/${{ github.base_ref }}..HEAD" .

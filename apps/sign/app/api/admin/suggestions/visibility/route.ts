@@ -5,9 +5,9 @@
  * Also supports unhiding all suggestions for a paragraph.
  */
 
+import { getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections, StatementType } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
@@ -21,8 +21,7 @@ interface VisibilityRequest {
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
 	try {
-		const cookieHeader = request.headers.get('cookie');
-		const userId = getUserIdFromCookie(cookieHeader);
+		const userId = await getVerifiedUserId(request);
 
 		if (!userId) {
 			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

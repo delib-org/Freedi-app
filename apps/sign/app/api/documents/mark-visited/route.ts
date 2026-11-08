@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { denyWithoutDocumentAccess, getParticipantIdentity } from '@/lib/auth/requestIdentity';
+import { getParticipantId, getParticipantDisplayName } from '@/lib/auth/requestIdentity';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie } from '@/lib/utils/user';
 import { Collections, Role } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 
@@ -15,8 +16,7 @@ interface MarkVisitedBody {
  */
 export async function POST(request: NextRequest) {
   try {
-    const cookieHeader = request.headers.get('cookie');
-    const userId = getUserIdFromCookie(cookieHeader);
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -41,6 +41,12 @@ export async function POST(request: NextRequest) {
 
     const { db } = getFirebaseAdmin();
     const { statementId } = body;
+
+    // This writes a `member` subscription, which is what grants access to a
+    // private document. Without this check, visiting would make you a member.
+    const denied = await denyWithoutDocumentAccess(db, statementId, await getParticipantIdentity(request));
+    if (denied) return denied;
+
     const subscriptionId = `${userId}--${statementId}`;
     const now = Date.now();
 
@@ -69,7 +75,7 @@ export async function POST(request: NextRequest) {
       // Subscription exists - just set isDocument flag
       await subRef.update({ isDocument: true, lastUpdate: now });
     } else {
-      const displayName = getUserDisplayNameFromCookie(cookieHeader) || 'Anonymous';
+      const displayName = (await getParticipantDisplayName(request)) || 'Anonymous';
 
       await subRef.set({
         role: Role.member,

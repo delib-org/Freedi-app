@@ -8,13 +8,13 @@ import {
 import { logError } from '@/utils/errorHandling';
 import { getRoomAssignmentDataForAdmin } from './getRoomAssignment';
 import { APIEndPoint } from '@/controllers/general/apiEndpoint';
+import { getAuthHeaders } from '@/controllers/db/authHeaders';
 
 interface CreateRoomAssignmentsRequest {
 	statementId: string;
 	topParentId: string;
 	roomSize: number;
 	scrambleByQuestions: string[];
-	adminId: string;
 	adminName?: string;
 }
 
@@ -61,7 +61,6 @@ export async function createRoomAssignments(
 			topParentId,
 			roomSize,
 			scrambleByQuestions,
-			adminId: user.uid,
 			adminName: user.displayName,
 		};
 
@@ -69,9 +68,7 @@ export async function createRoomAssignments(
 
 		const response = await fetch(endpoint, {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
+			headers: await getAuthHeaders(),
 			body: JSON.stringify(requestData),
 		});
 
@@ -116,9 +113,7 @@ export async function notifyRoomParticipants(
 
 		const response = await fetch(endpoint, {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
+			headers: await getAuthHeaders(),
 			body: JSON.stringify({ settingsId }),
 		});
 
@@ -159,9 +154,7 @@ export async function deleteRoomAssignments(
 
 		const response = await fetch(endpoint, {
 			method: 'DELETE',
-			headers: {
-				'Content-Type': 'application/json',
-			},
+			headers: await getAuthHeaders(),
 			body: JSON.stringify({ settingsId }),
 		});
 

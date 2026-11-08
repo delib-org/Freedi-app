@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router';
+import { UI } from '@/constants/common';
 import { parsePeopleAnchor, PeopleAnchor } from '../hostHubLogic';
 
 interface UsePeopleAnchorsOptions {
@@ -43,8 +44,12 @@ export function usePeopleAnchors({
 		setOpen((prev) => (prev.has(requested) ? prev : new Set(prev).add(requested)));
 		// After the hub's own effect, which scrolls to the People card.
 		const frame = window.requestAnimationFrame(() => revealSubsection(requested, toggles.current));
+		const cancelSettle = scrollAgainWhenSettled(requested);
 
-		return () => window.cancelAnimationFrame(frame);
+		return () => {
+			window.cancelAnimationFrame(frame);
+			cancelSettle();
+		};
 	}, [hash, key, availableKey]);
 
 	// UX 4.1 applies the default on arrival only: the first default the
@@ -73,11 +78,16 @@ export function usePeopleAnchors({
 		[open],
 	);
 
+	const cancelSettle = useRef<() => void>(() => undefined);
+	useEffect(() => () => cancelSettle.current(), []);
+
 	const jumpTo = useCallback((anchor: PeopleAnchor) => {
 		hasInteracted.current = true;
 		setOpen((prev) => (prev.has(anchor) ? prev : new Set(prev).add(anchor)));
 		window.history.replaceState(window.history.state, '', `#${anchor}`);
 		window.requestAnimationFrame(() => revealSubsection(anchor, toggles.current));
+		cancelSettle.current();
+		cancelSettle.current = scrollAgainWhenSettled(anchor);
 	}, []);
 
 	const isOpen = useCallback((anchor: PeopleAnchor) => open.has(anchor), [open]);
@@ -100,4 +110,33 @@ function revealSubsection(
 ): void {
 	document.getElementById(anchor)?.scrollIntoView?.({ block: 'start' });
 	toggles.get(anchor)?.focus({ preventScroll: true });
+}
+
+const USER_INPUT_EVENTS = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const;
+
+/**
+ * The body opens over a short move, so the page is still too short while the
+ * first scroll runs and the browser clamps it. Scroll once more when the move
+ * is over, unless the user has wheeled, touched, clicked or pressed a key since;
+ * focus is already in place and is left alone. Returns a canceller.
+ */
+function scrollAgainWhenSettled(anchor: PeopleAnchor): () => void {
+	let userMoved = false;
+	const markMoved = (): void => {
+		userMoved = true;
+	};
+	USER_INPUT_EVENTS.forEach((name) =>
+		window.addEventListener(name, markMoved, { capture: true, passive: true }),
+	);
+	const stop = (): void =>
+		USER_INPUT_EVENTS.forEach((name) => window.removeEventListener(name, markMoved, true));
+	const timer = window.setTimeout(() => {
+		stop();
+		if (!userMoved) document.getElementById(anchor)?.scrollIntoView?.({ block: 'start' });
+	}, UI.COLLAPSE_DURATION_MS + UI.COLLAPSE_FALLBACK_BUFFER_MS);
+
+	return () => {
+		window.clearTimeout(timer);
+		stop();
+	};
 }

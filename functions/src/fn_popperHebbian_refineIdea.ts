@@ -2,6 +2,8 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getGeminiModel } from './config/gemini';
 import { functionConfig } from '@freedi/shared-types';
 import { logError } from './utils/errorHandling';
+import { enforceCallableRateLimit } from './utils/rateLimit';
+import { RATE_BUDGETS } from './config/rateBudgets';
 
 interface RefinementMessage {
 	messageId: string;
@@ -39,6 +41,11 @@ const LANGUAGE_NAMES: Record<string, string> = {
 export const refineIdea = onCall<RefineIdeaRequest>(
 	{ region: functionConfig.region },
 	async (request): Promise<RefineIdeaResponse> => {
+		if (!request.auth?.uid) {
+			throw new HttpsError('unauthenticated', 'Sign in required');
+		}
+		await enforceCallableRateLimit(request, RATE_BUDGETS.refineIdea, request.auth.uid);
+
 		const {
 			userResponse,
 			conversationHistory,

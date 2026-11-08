@@ -187,11 +187,9 @@
   // FOCUS STATE
   // ============================================================================
 
-  // The input carries focus; a block that is itself focusable (older
-  // wrappers put tabindex on the label) still shows the ring.
+  // The native input carries focus; its sibling box or icon shows the ring.
   &__input:focus-visible + .checkbox__box,
-  &__input:focus-visible + .checkbox__icon,
-  &:focus-visible .checkbox__box {
+  &__input:focus-visible + .checkbox__icon {
     outline: 2px solid var(--btn-primary);
     outline-offset: 2px;
   }

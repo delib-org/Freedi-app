@@ -24,6 +24,7 @@ import {
 } from '@/lib/classroom/tableTurnConsole';
 import { addNoDevice, tableAction } from './consoleActions';
 import { consoleState, isBusy } from './consoleState';
+import { openActFor } from './actFor/actForState';
 import { MemberChip } from './MemberChip';
 import { dropAttrs } from './dragController';
 
@@ -44,6 +45,8 @@ export interface TableCardAttrs {
 	questionText?: string;
 	mainId: string;
 	tableNumbers: readonly number[];
+	/** After the Side step: each member shows whether they chose a side (never which). */
+	showSides?: boolean;
 	// >>> allProposals BEGIN
 	/** "כל ההצעות": "n/m rated everything" for this table. */
 	ratedLine?: string;
@@ -300,7 +303,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 							key: uid,
 							uid,
 							name: nameOf(uid, students),
-							camp: students.get(uid)?.camp ?? null,
+							chosen: attrs.showSides ? (students.get(uid)?.camp ?? null) !== null : undefined,
 							from: table.n,
 							tableNumbers: attrs.tableNumbers,
 							askMark: attrs.tableTalk ? askMark(table, uid, serverNow()) : undefined,
@@ -311,8 +314,8 @@ export const TableCard: m.Component<TableCardAttrs> = {
 						m(MemberChip, {
 							key: `nd:${nd.id}`,
 							name: nd.name,
-							camp: null,
 							noDevice: true,
+							onOpen: () => openActFor(nd.id),
 							from: table.n,
 							tableNumbers: attrs.tableNumbers,
 						}),

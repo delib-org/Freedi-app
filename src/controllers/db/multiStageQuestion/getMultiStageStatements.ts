@@ -5,6 +5,7 @@ import { store } from '@/redux/store';
 import { Statement, StatementSchema, functionConfig } from '@freedi/shared-types';
 import firebaseConfig from '../configKey';
 import { logError } from '@/utils/errorHandling';
+import { getAuthHeaders } from '@/controllers/db/authHeaders';
 
 export async function getFirstEvaluationOptions(statement: Statement | undefined): Promise<void> {
 	try {
@@ -16,7 +17,9 @@ export async function getFirstEvaluationOptions(statement: Statement | undefined
 				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getRandomStatements`
 				: import.meta.env.VITE_APP_RANDOM_STATEMENTS_ENDPOINT;
 
-		const response = await fetch(`${endPoint}?parentId=${statement.statementId}&limit=6`);
+		const response = await fetch(`${endPoint}?parentId=${statement.statementId}&limit=6`, {
+			headers: await getAuthHeaders(),
+		});
 		const { randomStatements, error } = await response.json();
 		if (error) throw new Error(error);
 		v.parse(randomStatements, v.array(StatementSchema));
@@ -38,7 +41,9 @@ export async function getSecondEvaluationOptions(statement: Statement | undefine
 			? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements`
 			: import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT;
 
-		const response = await fetch(`${endPoint}?parentId=${statement.statementId}&limit=10`);
+		const response = await fetch(`${endPoint}?parentId=${statement.statementId}&limit=10`, {
+			headers: await getAuthHeaders(),
+		});
 		const { topSolutions, error } = await response.json();
 		if (error) throw new Error(error);
 

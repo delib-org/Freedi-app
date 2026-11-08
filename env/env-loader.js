@@ -273,6 +273,28 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
     },
     extra: ''
   },
+  tables: {
+    path: path.join(ROOT_DIR, 'apps', 'tables'),
+    filename: '.env.local',
+    // WizCol Tables (table assignment, tables.wizcol.com). Prefer a dedicated
+    // TABLES_FIREBASE_* web app registration if present; otherwise fall back
+    // to the shared FIREBASE_* values (the JOIN_* key is restricted to Join's
+    // own domains, so it is not a fallback here).
+    mapping: {
+      'TABLES_FIREBASE_API_KEY|FIREBASE_API_KEY': 'VITE_FIREBASE_API_KEY',
+      'TABLES_FIREBASE_AUTH_DOMAIN|FIREBASE_AUTH_DOMAIN': 'VITE_FIREBASE_AUTH_DOMAIN',
+      'TABLES_FIREBASE_PROJECT_ID|FIREBASE_PROJECT_ID': 'VITE_FIREBASE_PROJECT_ID',
+      'TABLES_FIREBASE_STORAGE_BUCKET|FIREBASE_STORAGE_BUCKET': 'VITE_FIREBASE_STORAGE_BUCKET',
+      'TABLES_FIREBASE_MESSAGING_SENDER_ID|FIREBASE_MESSAGING_SENDER_ID': 'VITE_FIREBASE_MESSAGING_SENDER_ID',
+      'TABLES_FIREBASE_APP_ID|FIREBASE_APP_ID': 'VITE_FIREBASE_APP_ID',
+      'TABLES_FIREBASE_MEASUREMENT_ID|FIREBASE_MEASUREMENT_ID': 'VITE_FIREBASE_MEASUREMENT_ID',
+      // Sentry (shares the main app's project; tagged with `app: 'tables'` at runtime)
+      'SENTRY_DSN': 'VITE_SENTRY_DSN',
+      'ENVIRONMENT': 'VITE_ENVIRONMENT',
+      'APP_VERSION': 'VITE_APP_VERSION',
+    },
+    extra: ''
+  },
   studio: {
     path: path.join(ROOT_DIR, 'apps', 'studio'),
     filename: '.env.local',

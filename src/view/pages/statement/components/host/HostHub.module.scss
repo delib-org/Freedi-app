@@ -103,6 +103,15 @@
 .cardChevron {
 	color: var(--text-caption);
 	flex-shrink: 0;
+	transition: transform var(--motion-base) var(--motion-ease);
+
+	.card--open & {
+		transform: rotate(180deg);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
 }
 
 .cardBody {

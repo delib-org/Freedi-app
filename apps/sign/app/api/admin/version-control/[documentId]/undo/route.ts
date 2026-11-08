@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections, DocumentActionHistory, AuditAction } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 import { verifyAdmin, logAudit } from '@/lib/utils/versionControlHelpers';
@@ -19,7 +19,7 @@ export async function POST(
 ): Promise<NextResponse> {
 	try {
 		const { documentId } = await params;
-		const userId = getUserIdFromCookie(request.headers.get('cookie'));
+		const userId = await getVerifiedUserId(request);
 
 		if (!userId) {
 			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

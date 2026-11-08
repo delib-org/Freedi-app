@@ -1,5 +1,11 @@
 import m from 'mithril';
-import { CLASS_BATCH_SIZE, type ClassTableAction, type Statement } from '@freedi/shared-types';
+import {
+	CLASS_BATCH_SIZE,
+	mayAddProposal,
+	proposalLimitOf,
+	type ClassTableAction,
+	type Statement,
+} from '@freedi/shared-types';
 import '@/styles/student-c3.scss';
 import '@/styles/student-c3-all-proposals.scss';
 import { StudentFrame } from '@/components/StudentFrame';
@@ -10,7 +16,7 @@ import { getSubQuestions } from '@/lib/store';
 import { classState } from '@/lib/classroom/classState';
 import { classTableStep } from '@/lib/classroom/api';
 import { currentUid } from '@/lib/classroom/c3Data';
-import { myProposal } from '@/lib/classroom/c3Logic';
+import { myProposals } from '@/lib/classroom/c3Logic';
 import {
 	allProposalsPool,
 	boardProgress,
@@ -48,6 +54,8 @@ class AllProposalsState {
 	error: string | null = null;
 	retry: (() => void) | null = null;
 	editing = false;
+	/** The proposal the box should open on ("Edit" on a pinned card, "improve" from the replies). */
+	editRequest: string | null = null;
 	liveFor: string | null = null;
 }
 
@@ -184,13 +192,14 @@ export const AllProposalsScreen: m.ClassComponent<AllProposalsScreenAttrs> = {
 
 		const table = classState.table;
 		const canWrite = !!challenge && !!table && !challenge.statementSettings?.ballot;
-		const mine = myProposal(
+		const mine = myProposals(
 			feed.options.filter((o) => o.parentId === challengeId),
 			uid,
 		);
 		// "Improve my proposal" from the replies (IA 22.5) opens the pinned card's edit box.
 		if (canWrite) {
-			setImproveHandler(self, () => {
+			setImproveHandler(self, (proposalId) => {
+				self.editRequest = proposalId ?? null;
 				self.editing = true;
 			});
 		} else {
@@ -221,7 +230,9 @@ export const AllProposalsScreen: m.ClassComponent<AllProposalsScreenAttrs> = {
 			m(ErrorLine, { message: self.error, onRetry: self.retry ?? undefined }),
 			ownCardView({
 				mine,
+				uid,
 				canWrite,
+				canAdd: mayAddProposal(proposalLimitOf(main), mine.length),
 				editing: self.editing,
 				editor:
 					self.editing && table
@@ -237,10 +248,20 @@ export const AllProposalsScreen: m.ClassComponent<AllProposalsScreenAttrs> = {
 								locked: !canWrite,
 								busy: false,
 								onAction: act,
+								takeEditRequest: () => {
+									const request = self.editRequest;
+									self.editRequest = null;
+
+									return request;
+								},
 							})
 						: null,
 				onToggleEdit: () => {
 					self.editing = !self.editing;
+				},
+				onEdit: (proposalId) => {
+					self.editRequest = proposalId;
+					self.editing = true;
 				},
 			}),
 			pool.length === 0

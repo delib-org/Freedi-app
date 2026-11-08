@@ -7,6 +7,7 @@ import { google, docs_v1 } from 'googleapis';
 import { Collections } from '@freedi/shared-types';
 import { db } from './index';
 import { logError } from './utils/errorHandling';
+import { requireStatementAdmin } from './utils/httpAuth';
 
 /**
  * Paragraph types (matching the app's paragraph format)
@@ -320,7 +321,7 @@ function convertGoogleDocsToParagraphs(document: docs_v1.Schema$Document): Parag
 /**
  * Import Google Docs HTTP function
  */
-export async function importGoogleDoc(req: Request, res: Response): Promise<void> {
+export async function importGoogleDoc(req: Request, res: Response, userId: string): Promise<void> {
 	try {
 		// Only allow POST
 		if (req.method !== 'POST') {
@@ -329,7 +330,7 @@ export async function importGoogleDoc(req: Request, res: Response): Promise<void
 			return;
 		}
 
-		const { documentUrl, statementId, userId } = req.body;
+		const { documentUrl, statementId } = req.body;
 
 		// Validate inputs
 		if (!documentUrl) {
@@ -340,12 +341,6 @@ export async function importGoogleDoc(req: Request, res: Response): Promise<void
 
 		if (!statementId) {
 			res.status(400).json({ success: false, error: 'Statement ID is required' });
-
-			return;
-		}
-
-		if (!userId) {
-			res.status(401).json({ success: false, error: 'User ID is required' });
 
 			return;
 		}
@@ -362,26 +357,14 @@ export async function importGoogleDoc(req: Request, res: Response): Promise<void
 		}
 
 		// Verify user is admin of the statement
+		const statement = await requireStatementAdmin(
+			res,
+			userId,
+			statementId,
+			'importGoogleDocs.importGoogleDoc',
+		);
+		if (!statement) return;
 		const docRef = db.collection(Collections.statements).doc(statementId);
-		const docSnap = await docRef.get();
-
-		if (!docSnap.exists) {
-			res.status(404).json({ success: false, error: 'Statement not found' });
-
-			return;
-		}
-
-		const docData = docSnap.data();
-		const isAdmin = docData?.creatorId === userId || docData?.creator?.uid === userId;
-
-		if (!isAdmin) {
-			res.status(403).json({
-				success: false,
-				error: 'You do not have permission to import to this statement',
-			});
-
-			return;
-		}
 
 		// Fetch Google Doc
 		let googleDoc;

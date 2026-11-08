@@ -57,6 +57,10 @@ export const UI = {
 	DEBOUNCE_DELAY: 300,
 	THROTTLE_DELAY: 1000,
 	ANIMATION_DURATION: 200,
+	// Collapse molecule: mirrors --motion-base (180 ms) in the tokens; the buffer
+	// is how long we wait past it before ending a move that never fired transitionend.
+	COLLAPSE_DURATION_MS: 180,
+	COLLAPSE_FALLBACK_BUFFER_MS: 100,
 	MODAL_Z_INDEX: 1000,
 	TOOLTIP_DELAY: 500,
 	// Minimum gap between two animated list reorders. Live evaluation updates

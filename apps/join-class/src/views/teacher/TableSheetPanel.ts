@@ -2,12 +2,7 @@ import m from 'mithril';
 import { TeacherBackBar } from './TeacherBackBar';
 import type { ClassTable, Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
-import {
-	CAMP_MARK,
-	formatSpeakerTime,
-	tableStepKey,
-	timerLine,
-} from '@/lib/classroom/consoleHelpers';
+import { formatSpeakerTime, tableStepKey, timerLine } from '@/lib/classroom/consoleHelpers';
 import type { RosterStudent } from '@/lib/classroom/consoleHelpers';
 import { getServerOffset, remainingMs, serverNow } from '@/lib/classroom/serverClock';
 import { moveStudent } from './consoleActions';
@@ -19,10 +14,11 @@ import { getMainStatement } from '@/lib/store';
 import { noDeviceButtons, stepButtons, turnButtons } from './tableSheetTurn';
 import { targetName } from './dragController';
 import { confirmResetTurns } from './consoleConfirms';
+import { actForRowLabel, openActFor } from './actFor/actForState';
 
 /**
  * The table sheet (UX section 5): a 420 px side sheet from the end edge over a
- * dimmed board. Members with side and "move to another table" / "remove",
+ * dimmed board. Members (a mark says whether they chose a side, never which) and "move to another table" / "remove",
  * the table's current question and turn, "to writing" / "to rating",
  * "+ no device", and "close" (Escape too).
  *
@@ -53,20 +49,17 @@ function memberRow(
 	mode: TableMode,
 ): m.Vnode {
 	const name = student?.name ?? uid.slice(0, 4);
-	const camp = consoleState.sidesVisible ? (student?.camp ?? null) : null;
+	const chose = (student?.camp ?? null) !== null;
 	const now = serverNow();
 	const ask = mode === 'tableTalk' ? askMark(table, uid, now) : '';
 	const answer = mode === 'tableTalk' ? answerMark(table, uid, now) : '';
 
 	return m('li.table-sheet__member', { key: uid }, [
-		m('span.table-sheet__member-mark', { 'aria-hidden': 'true' }, camp ? CAMP_MARK[camp] : '○'),
+		m('span.table-sheet__member-mark', { 'aria-hidden': 'true' }, chose ? '●' : '○'),
 		ask ? m('span.table-sheet__member-turn', { 'aria-hidden': 'true' }, ask) : null,
 		m('span.table-sheet__member-name', name),
 		answer ? m('span.table-sheet__member-turn', { 'aria-hidden': 'true' }, answer) : null,
 		turnButtons(table, uid, name, mode, now),
-		consoleState.sidesVisible
-			? m('span.table-sheet__member-side', t(camp ? `console.side_${camp}` : 'console.side_none'))
-			: null,
 		m(
 			'select.table-sheet__select',
 			{
@@ -90,7 +83,7 @@ function memberRow(
 			{
 				type: 'button',
 				'aria-label': `${t('console.remove')}: ${name}`,
-				disabled: consoleState.held || isBusy(`move:${uid}`),
+				disabled: consoleState.ended || isBusy(`move:${uid}`),
 				onclick: () => void moveStudent(consoleState.mainId, uid, null),
 			},
 			t('console.remove'),
@@ -206,6 +199,20 @@ export const TableSheetPanel: m.Component<TableSheetPanelAttrs> = {
 										m('li.table-sheet__member.table-sheet__member--nd', { key: `nd:${nd.id}` }, [
 											m('span.table-sheet__member-name', nd.name),
 											noDeviceButtons(table, nd.id, nd.name, tableModeOf(attrs), serverNow()),
+											actForRowLabel(nd.name)
+												? m(
+														'button.btn.btn--tertiary.table-sheet__act-for',
+														{
+															type: 'button',
+															'data-testid': 'sheet-act-for',
+															onclick: () => {
+																openActFor(nd.id);
+																attrs.onClose();
+															},
+														},
+														actForRowLabel(nd.name),
+													)
+												: null,
 											m('span.table-sheet__member-side', t('console.no_device')),
 										]),
 									),

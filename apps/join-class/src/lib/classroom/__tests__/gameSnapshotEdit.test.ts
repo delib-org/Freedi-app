@@ -60,12 +60,14 @@ describe('game snapshot edits', () => {
 	it('merges details, replacing side pairs and clearing an empty side question', () => {
 		let s = setDetails(emptySnapshot(), {
 			speakSeconds: 90,
+			proposalLimit: 'unlimited',
 			sideNames: { a: 'x', b: 'y' },
 			sideQuestion: 'which?',
 			allowOwnQuestions: true,
 		});
 		expect(s.settings).toMatchObject({
 			speakSeconds: 90,
+			proposalLimit: 'unlimited',
 			sideQuestion: 'which?',
 			allowOwnQuestions: true,
 		});

@@ -412,6 +412,9 @@ $projector-band-height: 64px;
 
   &__text { font-size: 40px; }
 
+  // results closed: proposal names only, one column, no bar and no number
+  &__row--names { display: block; }
+
   &__track {
     height: 48px;
     border-radius: var(--radius-full);
@@ -433,6 +436,13 @@ $projector-band-height: 64px;
     font-weight: var(--font-weight-bold, 700);
     font-variant-numeric: tabular-nums;
   }
+}
+
+// neutral note while the results are closed to the class
+.projector-vote-note {
+  margin: 0;
+  font-size: 40px;
+  color: var(--ink-muted);
 }
 
 // ---- summary -----------------------------------------------------------------

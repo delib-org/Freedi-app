@@ -30,6 +30,7 @@ import MultiSuggestionPreview from './MultiSuggestionPreview';
 import InlineMarkdown from '../shared/InlineMarkdown';
 import styles from './SolutionPromptModal.module.css';
 import { trackSolutionSubmitted } from '@/lib/analytics';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 interface SolutionPromptModalProps {
   isOpen: boolean;
@@ -271,10 +272,10 @@ export default function SolutionPromptModal({
    * Throws for a real refusal (moderation, limit reached), already reported.
    */
   const requestPrepare = async (): Promise<PrepareSuggestionResponse | null> => {
-    const response = await fetch(`/api/statements/${questionId}/prepare`, {
+    const response = await participantFetch(`/api/statements/${questionId}/prepare`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userInput: text, userId, checkPieces: autoMergeSimilar }),
+      body: JSON.stringify({ userInput: text, checkPieces: autoMergeSimilar }),
     });
 
     if (response.status === 400 || response.status === 403) {
@@ -359,21 +360,19 @@ export default function SolutionPromptModal({
       // Run both API calls in parallel with Promise.all for better performance
       const [multiResponse, similarResponse] = await Promise.all([
         // Check for multiple suggestions
-        fetch(`/api/statements/${questionId}/detect-multi`, {
+        participantFetch(`/api/statements/${questionId}/detect-multi`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userInput: text,
-            userId,
           }),
         }),
         // Check for similar solutions
-        fetch(`/api/statements/${questionId}/check-similar`, {
+        participantFetch(`/api/statements/${questionId}/check-similar`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userInput: text,
-            userId,
           }),
         }),
       ]);
@@ -482,12 +481,11 @@ export default function SolutionPromptModal({
     setFlowState({ step: 'submitting' });
 
     try {
-      const response = await fetch(`/api/statements/${questionId}/submit`, {
+      const response = await participantFetch(`/api/statements/${questionId}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           solutionText: textToSubmit,
-          userId,
           existingStatementId: statementId,
         }),
       });
@@ -532,14 +530,12 @@ export default function SolutionPromptModal({
     solutionText: string,
     autoMerge: boolean,
   ): Promise<string | null> => {
-    const response = await fetch(`/api/statements/${questionId}/merge`, {
+    const response = await participantFetch(`/api/statements/${questionId}/merge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         targetStatementId,
         solutionText,
-        userId,
-        userName,
         autoMerge,
       }),
     });
@@ -607,10 +603,10 @@ export default function SolutionPromptModal({
    */
   const findMergeTarget = async (solutionText: string): Promise<string | null> => {
     try {
-      const response = await fetch(`/api/statements/${questionId}/check-similar`, {
+      const response = await participantFetch(`/api/statements/${questionId}/check-similar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userInput: solutionText, userId }),
+        body: JSON.stringify({ userInput: solutionText }),
       });
 
       if (!response.ok) return null;
@@ -631,12 +627,11 @@ export default function SolutionPromptModal({
 
   /** Create a brand-new suggestion (the author's +1 is written server-side). */
   const createSuggestion = async (solutionText: string): Promise<void> => {
-    const response = await fetch(`/api/statements/${questionId}/submit`, {
+    const response = await participantFetch(`/api/statements/${questionId}/submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         solutionText,
-        userId,
         existingStatementId: null,
       }),
     });

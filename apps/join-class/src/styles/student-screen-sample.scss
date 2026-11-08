@@ -1,0 +1,50 @@
+// =============================================================================
+// "Student screen" (console view ?view=student, Trello 7S3Axkzd): a phone-shaped,
+// look-only sample of what the students' phones show now. The phone is a fixed
+// 360 px wide and as tall as the board area allows on a laptop (no page scroll
+// where possible); the student screens inside fill it instead of the viewport.
+// Tokens only, BEM, logical properties (RTL-safe).
+// =============================================================================
+
+// the console bar, step rail, switch band and caption above and below the phone
+$student-screen-chrome: 360px;
+
+.student-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+
+  &__phone {
+    inline-size: min(100%, 360px);
+    block-size: clamp(420px, calc(100dvh - #{$student-screen-chrome}), 720px);
+    overflow: hidden;
+    border: 6px solid var(--ink);
+    border-radius: var(--radius-xl);
+    background: var(--paper);
+    box-shadow: var(--shadow-md);
+  }
+
+  &__screen {
+    display: flex;
+    flex-direction: column;
+    block-size: 100%;
+    // a look-only picture: no hand cursor, nothing selectable
+    cursor: default;
+    user-select: none;
+
+    // the student screens are made for the whole viewport; here they fill the phone
+    .frame {
+      block-size: 100%;
+      min-block-size: 0;
+    }
+  }
+
+  &__note {
+    margin: 0;
+    max-inline-size: 360px;
+    text-align: center;
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+  }
+}

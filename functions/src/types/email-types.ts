@@ -35,11 +35,8 @@ export interface SendEmailNotificationRequest {
 	/** Email subject */
 	subject: string;
 
-	/** Email message content (can include basic HTML) */
+	/** Email message content. Plain text: it is HTML-escaped before sending. */
 	message: string;
-
-	/** Admin user ID (for authorization) */
-	adminId: string;
 
 	/** Optional: Custom button text */
 	buttonText?: string;

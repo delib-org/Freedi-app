@@ -13,6 +13,7 @@ import {
   Auth,
   GoogleAuthProvider,
   signInWithPopup,
+  signInAnonymously,
   signOut,
   onAuthStateChanged,
   User,
@@ -123,6 +124,36 @@ export async function handleRedirectResult(): Promise<{ user: User; token: strin
   return null;
 }
 
+let anonymousSignIn: Promise<User | null> | null = null;
+
+/**
+ * Make sure a Firebase user exists, signing the visitor in anonymously if not.
+ *
+ * Participants never need an account, but every server route needs a token to
+ * prove who is calling. Concurrent callers share one sign-in.
+ *
+ * @returns The current user, or null when anonymous sign-in failed.
+ */
+export async function ensureSignedInUser(): Promise<User | null> {
+  await auth.authStateReady();
+  if (auth.currentUser) return auth.currentUser;
+
+  if (!anonymousSignIn) {
+    anonymousSignIn = signInAnonymously(auth)
+      .then((credential) => credential.user)
+      .catch((error: unknown) => {
+        logError(error, { operation: 'firebaseClient.ensureSignedInUser' });
+
+        return null;
+      })
+      .finally(() => {
+        anonymousSignIn = null;
+      });
+  }
+
+  return anonymousSignIn;
+}
+
 /**
  * Sign out the current user
  */
@@ -144,12 +175,14 @@ export async function signOutUser(): Promise<void> {
  * to avoid hammering the securetoken API.
  */
 let cachedToken: string | null = null;
+let cachedTokenUid: string | null = null;
 let tokenExpiry = 0;
 const TOKEN_CACHE_MS = 5 * 60 * 1000; // 5 minutes
 
 /** Drop the in-memory token so the next read goes back to the SDK. */
 export function clearTokenCache(): void {
   cachedToken = null;
+  cachedTokenUid = null;
   tokenExpiry = 0;
 }
 
@@ -179,13 +212,16 @@ export async function getCurrentToken(
     return null;
   }
 
-  if (!options.force && cachedToken && Date.now() < tokenExpiry) {
+  // The uid check matters: going from anonymous to Google within the cache
+  // window must not send the previous account's token.
+  if (!options.force && cachedToken && cachedTokenUid === user.uid && Date.now() < tokenExpiry) {
     return cachedToken;
   }
 
   try {
     const token = await user.getIdToken(options.force === true);
     cachedToken = token;
+    cachedTokenUid = user.uid;
     tokenExpiry = Date.now() + TOKEN_CACHE_MS;
     return token;
   } catch (error) {

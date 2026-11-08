@@ -1,9 +1,20 @@
 import m from 'mithril';
-import { allowOwnQuestionsOf, proposalsTurnsOf, speakSecondsOf } from '@freedi/shared-types';
+import {
+	allowOwnQuestionsOf,
+	proposalLimitOf,
+	proposalsTurnsOf,
+	speakSecondsOf,
+} from '@freedi/shared-types';
+import type { ClassProposalLimit } from '@freedi/shared-types';
 import { getPlanMain } from './planSource';
 import { dropDraft, getDraft, getMainId, isSaving, runSave, setDraft } from './planController';
 import { saveLessonDetails } from './planApi';
-import { OwnQuestionsSwitch, ProposalsTurnsSelect, SpeakTimeSelect } from './TableSettingsControls';
+import {
+	OwnQuestionsSwitch,
+	ProposalLimitSelect,
+	ProposalsTurnsSelect,
+	SpeakTimeSelect,
+} from './TableSettingsControls';
 
 /**
  * The plan screen's table-talk settings (IA 25): saved on the main statement
@@ -100,5 +111,37 @@ export function proposalsTurnsControl(): m.Children {
 		scope: 'plan',
 		turns: proposalsTurnsShown(),
 		onChange: commitProposalsTurns,
+	});
+}
+
+export const PROPOSAL_LIMIT_KEY = 'lesson:proposalLimit';
+
+/** The proposal limit as drawn: the teacher's pending choice, else what is saved (default one). */
+export function proposalLimitShown(): ClassProposalLimit {
+	const saved = proposalLimitOf(getPlanMain());
+	const draft = getDraft(PROPOSAL_LIMIT_KEY);
+	if (draft === undefined) return saved;
+	if (draft === saved && !isSaving(PROPOSAL_LIMIT_KEY)) {
+		dropDraft(PROPOSAL_LIMIT_KEY);
+
+		return saved;
+	}
+
+	return draft === 'unlimited' ? 'unlimited' : 'one';
+}
+
+export function commitProposalLimit(limit: ClassProposalLimit): void {
+	setDraft(PROPOSAL_LIMIT_KEY, limit);
+	runSave(PROPOSAL_LIMIT_KEY, 'save proposal limit', () =>
+		saveLessonDetails(getMainId(), { proposalLimit: limit }),
+	);
+}
+
+/** "Proposals per student", in the lesson details. */
+export function proposalLimitControl(): m.Children {
+	return m(ProposalLimitSelect, {
+		scope: 'plan',
+		limit: proposalLimitShown(),
+		onChange: commitProposalLimit,
 	});
 }

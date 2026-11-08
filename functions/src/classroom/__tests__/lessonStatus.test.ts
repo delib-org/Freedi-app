@@ -178,16 +178,12 @@ describe('table callables while the lesson is not running', () => {
 	});
 
 	it.each(cases)(
-		'classAllTablesTo, classMoveStudent, classAddNoDevice, classAssignTables refuse while %s',
+		'classAllTablesTo, classAddNoDevice, classAssignTables refuse while %s',
 		async (_name, extra) => {
 			const fake = await seatedLesson(lessonPlan(extra));
 			const db = fake.asFirestore();
 			await expectCode(
 				allTablesTo(db, TEACHER, { mainId: MAIN, step: 'rate' }),
-				'failed-precondition',
-			);
-			await expectCode(
-				moveStudent(db, TEACHER, { mainId: MAIN, uid: STUDENT, toTable: null }),
 				'failed-precondition',
 			);
 			await expectCode(
@@ -200,6 +196,18 @@ describe('table callables while the lesson is not running', () => {
 			);
 		},
 	);
+
+	it('classMoveStudent works while paused and refuses only once the lesson has ended', async () => {
+		const paused = await seatedLesson(lessonPlan({ status: 'paused', pausedAt: T0 }));
+		await moveStudent(paused.asFirestore(), TEACHER, { mainId: MAIN, uid: STUDENT, toTable: null });
+		expect(paused.read(`statementsSubscribe/${STUDENT}--${MAIN}`)?.tableId).toBeUndefined();
+
+		const ended = await seatedLesson(lessonPlan({ status: 'ended', endedAt: T0 }));
+		await expectCode(
+			moveStudent(ended.asFirestore(), TEACHER, { mainId: MAIN, uid: STUDENT, toTable: null }),
+			'failed-precondition',
+		);
+	});
 
 	it('lets live and open lessons through', async () => {
 		for (const extra of [{}, { status: 'live' }, { status: 'open', endedAt: T0 }]) {

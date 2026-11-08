@@ -1,20 +1,21 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getUserFromCookies } from '@/lib/utils/user';
+import { getServerUser } from '@/lib/auth/requestIdentity';
 import { getUserHomeDocuments } from '@/lib/firebase/homeQueries';
 import HomeClient from '@/components/home/HomeClient';
 
 export default async function HomePage() {
   const cookieStore = await cookies();
-  const user = getUserFromCookies(cookieStore);
+  const user = await getServerUser(cookieStore);
 
-  // Redirect to login if not logged in or anonymous
+  // Redirect to login if not logged in or anonymous. The redirect param lets
+  // the login page send back a signed-in user whose session was just created.
   if (!user || user.isAnonymous) {
-    redirect('/login');
+    redirect('/login?redirect=/');
   }
 
-  // Get email from cookies for invitation queries
-  const userEmail = cookieStore.get('userEmail')?.value || undefined;
+  // Email from the verified session, for invitation queries
+  const userEmail = user.email ?? undefined;
 
   // Fetch user's documents
   const { documents, groups } = await getUserHomeDocuments(user.uid, userEmail);

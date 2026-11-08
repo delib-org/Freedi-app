@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId, unauthorizedResponse } from '@/lib/auth/requestIdentity';
 import {
   saveSurveyDemographicAnswers,
   getSurveyDemographicAnswers,
   getSurveyById,
 } from '@/lib/firebase/surveys';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { logger } from '@/lib/utils/logger';
 
 interface RouteContext {
@@ -26,13 +26,10 @@ interface SaveAnswersRequest {
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const surveyId = context.params.id;
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getVerifiedUserId(request);
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID required' },
-        { status: 400 }
-      );
+      return unauthorizedResponse();
     }
 
     const answers = await getSurveyDemographicAnswers(surveyId, userId);
@@ -54,19 +51,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const surveyId = context.params.id;
     const pageId = context.params.pageId;
-    const cookieHeader = request.headers.get('cookie');
-    const userId = getUserIdFromCookie(cookieHeader);
+    const userId = await getVerifiedUserId(request);
 
     logger.info(`[POST answers] surveyId: ${surveyId}, pageId: ${pageId}`);
-    logger.info(`[POST answers] Cookie header: ${cookieHeader?.substring(0, 100)}...`);
-    logger.info(`[POST answers] Extracted userId: ${userId}`);
 
     if (!userId) {
-      logger.warn('[POST answers] No userId found in cookies');
-      return NextResponse.json(
-        { error: 'User ID required' },
-        { status: 400 }
-      );
+      return unauthorizedResponse();
     }
 
     // Verify survey exists

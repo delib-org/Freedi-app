@@ -23,6 +23,8 @@ import {
   trackNewBatchRequest,
   trackAddSolutionClick,
 } from '@/lib/analytics';
+import { participantFetch } from '@/lib/firebase/participantFetch';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 interface SolutionFeedClientProps {
   question: Statement;
@@ -50,6 +52,7 @@ export default function SolutionFeedClient({
   blockedByServer = false,
 }: SolutionFeedClientProps) {
   const { t, tWithParams } = useTranslation();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [solutions, setSolutions] = useState<Statement[]>(initialSolutions);
   const [userId, setUserId] = useState<string>('');
   const [evaluationScores, setEvaluationScores] = useState<Map<string, number>>(new Map());
@@ -116,7 +119,7 @@ export default function SolutionFeedClient({
 
     const checkUserSolutions = async () => {
       try {
-        const response = await fetch(`/api/user-solutions/${questionId}?userId=${userId}`);
+        const response = await participantFetch(`/api/user-solutions/${questionId}`);
         if (response.ok) {
           const data = await response.json();
           setHasSubmittedSolution(data.hasSubmitted);
@@ -184,7 +187,10 @@ export default function SolutionFeedClient({
 
   // One-time initialization: user ID and page-view tracking
   useEffect(() => {
-    const id = getOrCreateAnonymousUser();
+    if (isAuthLoading) return;
+
+    // The server only knows the Firebase uid, so "my options" must compare with it.
+    const id = user?.uid ?? getOrCreateAnonymousUser();
     setUserId(id);
     userIdRef.current = id;
 
@@ -192,7 +198,7 @@ export default function SolutionFeedClient({
       trackPageView(questionId, id);
       hasTrackedPageView.current = true;
     }
-  }, [questionId]);
+  }, [questionId, user?.uid, isAuthLoading]);
 
   // Load evaluation history when questionId changes (not when solutions change)
   useEffect(() => {
@@ -201,7 +207,7 @@ export default function SolutionFeedClient({
 
     const loadEvaluationHistory = async () => {
       try {
-        const response = await fetch(`/api/user-evaluations/${questionId}?userId=${id}`);
+        const response = await participantFetch(`/api/user-evaluations/${questionId}`);
         if (response.ok) {
           const data = await response.json();
           const evaluatedSet = new Set<string>(data.evaluatedOptionsIds || []);
@@ -222,8 +228,8 @@ export default function SolutionFeedClient({
               Promise.all(
                 evaluatedSolutionsInBatch.map(async (solution) => {
                   try {
-                    const evalResponse = await fetch(
-                      `/api/evaluations/${solution.statementId}?userId=${id}`
+                    const evalResponse = await participantFetch(
+                      `/api/evaluations/${solution.statementId}`
                     );
                     if (evalResponse.ok) {
                       const evalData = await evalResponse.json();
@@ -356,11 +362,10 @@ export default function SolutionFeedClient({
       setAllEvaluatedIds((prev) => new Set(prev).add(solutionId));
 
       // Call API
-      const response = await fetch(`/api/evaluations/${solutionId}`, {
+      const response = await participantFetch(`/api/evaluations/${solutionId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId,
           evaluation: score,
           ...(surveyId ? { surveyId } : {}),
         }),
@@ -427,11 +432,10 @@ export default function SolutionFeedClient({
     setError(null);
 
     try {
-      const response = await fetch(`/api/statements/${questionId}/batch`, {
+      const response = await participantFetch(`/api/statements/${questionId}/batch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId,
           size: 6,
         }),
       });
@@ -479,11 +483,10 @@ export default function SolutionFeedClient({
 
     setIsLoadingBatch(true);
     try {
-      const response = await fetch(`/api/statements/${questionId}/batch`, {
+      const response = await participantFetch(`/api/statements/${questionId}/batch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId,
           size: 6,
         }),
       });

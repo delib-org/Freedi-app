@@ -1,11 +1,10 @@
-import { HttpsError } from 'firebase-functions/v2/https';
 import {
 	Collections,
 	ODYSSEY_FEEDBACK_GLOBAL_KEY,
 	ODYSSEY_FEEDBACK_GLOBAL_PER_DAY,
 	ODYSSEY_FEEDBACK_PER_HOUR,
 } from '@freedi/shared-types';
-import { db } from '../db';
+import { reserveWindowSlot } from '../utils/rateLimit';
 
 /**
  * Throttles for the feedback letter, in the shape of `reservePlannerMessageSlot`
@@ -23,42 +22,21 @@ import { db } from '../db';
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 
-interface WindowDoc {
-	windowStart?: number;
-	count?: number;
-}
-
-/**
- * Consume one slot from a rolling window, or throw `resource-exhausted`.
- *
- * `message` is shown to nobody — the client maps the error CODE to Hebrew — but
- * it lands in Cloud Logging, so it says which budget ran out.
- */
-async function reserveSlot(
+function reserveSlot(
 	docId: string,
 	limit: number,
 	windowMs: number,
 	label: string,
 	now: number,
 ): Promise<void> {
-	const ref = db.collection(Collections.odysseyRateLimits).doc(docId);
-
-	await db.runTransaction(async (tx) => {
-		const snap = await tx.get(ref);
-		const data = (snap.data() ?? {}) as WindowDoc;
-		const windowStart = typeof data.windowStart === 'number' ? data.windowStart : 0;
-		const inWindow = now - windowStart < windowMs;
-		const count = inWindow && typeof data.count === 'number' ? data.count : 0;
-
-		if (inWindow && count >= limit) {
-			throw new HttpsError('resource-exhausted', `Odyssey feedback ${label} limit reached`);
-		}
-
-		tx.set(
-			ref,
-			{ windowStart: inWindow ? windowStart : now, count: count + 1, lastUpdate: now },
-			{ merge: true },
-		);
+	return reserveWindowSlot({
+		collection: Collections.odysseyRateLimits,
+		docId,
+		limit,
+		windowMs,
+		// Shown to nobody: the client maps the error CODE to Hebrew. It lands in Cloud Logging.
+		label: `Odyssey feedback ${label}`,
+		now,
 	});
 }
 

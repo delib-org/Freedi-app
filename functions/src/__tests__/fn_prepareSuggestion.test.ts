@@ -67,7 +67,7 @@ beforeEach(() => {
 describe('prepareSuggestion', () => {
 	it('rejects a request missing its fields', async () => {
 		const { response, status } = makeResponse();
-		await prepareSuggestion(makeRequest({ userInput: 'x' }), response);
+		await prepareSuggestion(makeRequest({ userInput: 'x' }), response, 'u1');
 		expect(status).toHaveBeenCalledWith(400);
 		expect(checkForInappropriateContent).not.toHaveBeenCalled();
 	});
@@ -86,6 +86,7 @@ describe('prepareSuggestion', () => {
 		await prepareSuggestion(
 			makeRequest({ questionId: 'q1', userInput: 'A and B', userId: 'u1' }),
 			response,
+			'u1',
 		);
 
 		expect(status).toHaveBeenCalledWith(200);
@@ -122,6 +123,7 @@ describe('prepareSuggestion', () => {
 		await prepareSuggestion(
 			makeRequest({ questionId: 'q1', userInput: 'A and B', userId: 'u1', checkPieces: true }),
 			response,
+			'u1',
 		);
 
 		const body = send.mock.calls[0][0];
@@ -150,6 +152,7 @@ describe('prepareSuggestion', () => {
 		await prepareSuggestion(
 			makeRequest({ questionId: 'q1', userInput: 'rude text', userId: 'u1' }),
 			response,
+			'u1',
 		);
 
 		// The search still ran (it started alongside moderation)…
@@ -172,6 +175,7 @@ describe('prepareSuggestion', () => {
 		await prepareSuggestion(
 			makeRequest({ questionId: 'q1', userInput: 'idea', userId: 'u1' }),
 			response,
+			'u1',
 		);
 
 		expect(send.mock.calls[0][0]).toMatchObject({ ok: true, flaggedForReview: true });
@@ -184,6 +188,7 @@ describe('prepareSuggestion', () => {
 		await prepareSuggestion(
 			makeRequest({ questionId: 'q1', userInput: 'idea', userId: 'u1' }),
 			response,
+			'u1',
 		);
 
 		expect(status).toHaveBeenCalledWith(403);
@@ -197,6 +202,7 @@ describe('prepareSuggestion', () => {
 		await prepareSuggestion(
 			makeRequest({ questionId: 'nope', userInput: 'idea', userId: 'u1' }),
 			response,
+			'u1',
 		);
 
 		expect(status).toHaveBeenCalledWith(404);

@@ -206,11 +206,13 @@ function failureText(kind: StartFailure): string {
 export interface ClassFormAttrs {
 	planId: string;
 	gameId: string;
+	/** Called after the form closes by "ביטול": the caller steps back to what it showed before. */
+	onBack?: () => void;
 }
 
 export const ClassForm: m.Component<ClassFormAttrs> = {
 	view({ attrs }) {
-		const { planId, gameId } = attrs;
+		const { planId, gameId, onBack } = attrs;
 		if (openGameId !== gameId) return null;
 		const noClasses = classesLoad === 'ready' && classes.length === 0;
 		const ready = classesLoad === 'ready';
@@ -274,6 +276,7 @@ export const ClassForm: m.Component<ClassFormAttrs> = {
 							disabled: busy,
 							onclick: () => {
 								closeClassForm();
+								onBack?.();
 							},
 						},
 						t('teacher.new.cancel'),

@@ -10,6 +10,7 @@ interface SummarizeDiscussionRequest {
 	adminPrompt?: string;
 	language?: string;
 	includeSubQuestions?: boolean;
+	includeDivided?: boolean;
 }
 
 interface SummarizeDiscussionResponse {
@@ -19,12 +20,18 @@ interface SummarizeDiscussionResponse {
 	solutionsCount: number;
 	subQuestionsCount: number;
 	generatedAt: number;
+	/** Whether the saved summary also covers options the group is divided on */
+	includeDivided: boolean;
+	/** How many divided options the server found */
+	dividedCount: number;
 }
 
 interface SummarizeDiscussionOptions {
 	language?: string;
 	/** Build the summary from answers of all sub-questions, up to 2 levels deep */
 	includeSubQuestions?: boolean;
+	/** Also cover the options the group is divided on (chosen by vote counts on the server) */
+	includeDivided?: boolean;
 }
 
 /**
@@ -68,6 +75,7 @@ export async function requestDiscussionSummary(
 			adminPrompt,
 			language: options?.language,
 			includeSubQuestions: options?.includeSubQuestions,
+			includeDivided: options?.includeDivided,
 		});
 
 		logger.info('Discussion summary requested', {

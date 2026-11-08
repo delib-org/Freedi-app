@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError } from '@/lib/utils/errorHandling';
 import styles from './AIFeedbackButton.module.css';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 interface AIFeedbackButtonProps {
   questionId: string;
@@ -29,10 +30,10 @@ export default function AIFeedbackButton({
     setError(null);
 
     try {
-      const response = await fetch('/api/ai/feedback', {
+      const response = await participantFetch('/api/ai/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questionId, userId }),
+        body: JSON.stringify({ questionId }),
       });
 
       if (!response.ok) {

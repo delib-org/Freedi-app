@@ -173,8 +173,18 @@
   color: var(--ink-muted);
 }
 
-.tables-board__sides {
-  margin-block-end: var(--space-sm);
+// "18 of 24 chose a side" and the "drag a name" hint: calm lines above the grid.
+.tables-board__sides-count,
+.tables-board__hint {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tables-board__sides-count {
+  color: var(--ink);
+  font-weight: var(--font-weight-bold);
 }
 
 .tables-board__grid {

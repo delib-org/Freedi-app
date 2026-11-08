@@ -75,39 +75,6 @@ export function getOrCreateAnonymousUser(): string {
   return newId;
 }
 
-/**
- * Get user ID from cookies (server-side).
- * Prefers the HttpOnly _uid cookie (set by middleware, XSS-proof)
- * over the legacy userId cookie.
- */
-export function getUserIdFromCookie(cookieHeader: string | null): string | null {
-  if (!cookieHeader) return null;
-
-  // Prefer secure HttpOnly cookie
-  const secureMatch = cookieHeader.match(/_uid=([^;]+)/);
-  if (secureMatch) return secureMatch[1];
-
-  // Fall back to legacy cookie
-  const legacyMatch = cookieHeader.match(/userId=([^;]+)/);
-
-  return legacyMatch ? legacyMatch[1] : null;
-}
-
-/**
- * Get user ID from Next.js cookies API (server-side)
- * @param cookieStore - Next.js cookies() return value
- */
-export function getUserIdFromCookies(cookieStore: { get: (name: string) => { value: string } | undefined }): string | null {
-  // Prefer HttpOnly _uid cookie
-  const secureCookie = cookieStore.get('_uid');
-  if (secureCookie?.value) return secureCookie.value;
-
-  // Fall back to legacy cookie
-  const legacyCookie = cookieStore.get('userId');
-
-  return legacyCookie?.value ?? null;
-}
-
 const pseudoNameAdjectives = [
   'Clear', 'Thoughtful', 'Curious', 'Insightful', 'Creative',
   'Analytical', 'Observant', 'Mindful', 'Reflective', 'Intuitive',

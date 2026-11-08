@@ -11,7 +11,7 @@ import { DocumentSnapshot } from 'firebase-admin/firestore';
 import type { FirestoreEvent } from 'firebase-functions/v2/firestore';
 import type { Evaluation } from '@freedi/shared-types';
 import { updateUserDemographicEvaluation } from '../fn_polarizationIndex';
-import { ActionTypes } from './evaluationTypes';
+import { ActionTypes, clampEvaluationValue } from './evaluationTypes';
 import { dropEvaluationOnTheme } from './themeGuard';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
@@ -43,7 +43,9 @@ export async function updateEvaluation(
 			return;
 		}
 
-		const evaluationDiff = after.evaluation - before.evaluation;
+		const newValue = clampEvaluationValue(after.evaluation);
+		const oldValue = clampEvaluationValue(before.evaluation);
+		const evaluationDiff = newValue - oldValue;
 		const userId = after.evaluator?.uid;
 
 		if (!userId) {
@@ -61,8 +63,8 @@ export async function updateEvaluation(
 			statementId: after.statementId,
 			evaluationDiff,
 			action: ActionTypes.update,
-			newEvaluation: after.evaluation,
-			oldEvaluation: before.evaluation,
+			newEvaluation: newValue,
+			oldEvaluation: oldValue,
 			userId,
 			parentId: after.parentId,
 			eventId,
@@ -86,7 +88,7 @@ export async function updateEvaluation(
 		// Update demographic evaluation (it will check if demographic question exists later on)
 		const userEvalData = {
 			userId,
-			evaluation: after.evaluation || 0,
+			evaluation: newValue,
 			demographicAnchorId: after.demographicAnchorId,
 		};
 		updateUserDemographicEvaluation(statement, userEvalData);

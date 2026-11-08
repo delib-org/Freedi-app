@@ -152,3 +152,40 @@
 		font-size: 0.72rem;
 	}
 }
+
+.foldRow {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	align-items: center;
+	gap: 0.4rem;
+	max-width: min(90vw, 520px);
+}
+
+.foldButton,
+.foldSelect {
+	border: none;
+	background: var(--card-default, #ffffff);
+	color: var(--text-body, #3d4d71);
+	font-size: 0.78rem;
+	font-weight: 500;
+	padding: 6px 12px;
+	border-radius: 20px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+	cursor: pointer;
+	white-space: nowrap;
+
+	&:hover:not(:disabled) {
+		background: var(--menu-active, #f2f6ff);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary, #5f88e5);
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.6;
+	}
+}

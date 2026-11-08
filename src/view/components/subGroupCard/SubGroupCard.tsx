@@ -2,6 +2,7 @@ import { FC, useState } from 'react';
 import styles from './SubGroupCard.module.scss';
 import { Link, NavLink, useNavigate } from 'react-router';
 import useSubGroupCard from './SubGroupCardVM';
+import SubGroupCardSummary from './SubGroupCardSummary';
 import { EvaluationUI, Statement, StatementType } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useRouteTargets } from '@/controllers/statementRouter/useRouteTargets';
@@ -14,9 +15,11 @@ import { ArrowUpRight } from 'lucide-react';
 
 interface Props {
 	statement: Statement;
+	/** Lets admins change what the question's summary covers. Defaults to false. */
+	isAdmin?: boolean;
 }
 
-const SubGroupCard: FC<Props> = ({ statement }) => {
+const SubGroupCard: FC<Props> = ({ statement, isAdmin = false }) => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const { Icon, text } = useSubGroupCard(statement);
@@ -26,6 +29,7 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 
 	try {
 		const { results = [], topVotedOption, evaluationSettings, hide } = statement;
+		const summary = statement.summary?.trim();
 		const evaluationUI = evaluationSettings?.evaluationUI;
 		const isDecidedByVoting = evaluationUI === EvaluationUI.voting;
 		const shouldSeeVoting = isDecidedByVoting && topVotedOption;
@@ -86,7 +90,10 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 						{topVotedOption.statement}
 					</NavLink>
 				) : (
-					statement.statementType === StatementType.question && (
+					statement.statementType === StatementType.question &&
+					(summary ? (
+						<SubGroupCardSummary statement={statement} summary={summary} isAdmin={isAdmin} />
+					) : (
 						<div className={styles.results}>
 							{results.length !== 0 && (
 								<NavLink to={`/statement/${results[0].parentId}/main`}>
@@ -103,7 +110,7 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 								))}
 							</ul>
 						</div>
-					)
+					))
 				)}
 				{statement.statementType === StatementType.question && (
 					<button

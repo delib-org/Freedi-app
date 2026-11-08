@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId, unauthorizedResponse } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import {
   getSurveyWithQuestions,
   getStatementIdForSurvey,
   getSurveyProgress,
 } from '@/lib/firebase/surveys';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections, StatementType, UserEvaluation } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 
@@ -35,12 +35,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
   try {
     const url = new URL(request.url);
-    const bodyUserId = url.searchParams.get('userId');
-    const cookieUserId = getUserIdFromCookie(request.headers.get('cookie'));
-    const userId = bodyUserId || cookieUserId;
+    const userId = await getVerifiedUserId(request);
 
     if (!userId) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+      return unauthorizedResponse();
     }
 
     // Client-reported completed question indices (from localStorage).

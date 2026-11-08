@@ -10,6 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import styles from './CommentsList.module.css';
+import { participantFetch } from '@/lib/firebase/participantFetch';
 
 interface CommentsListProps {
   statementId: string;
@@ -43,8 +44,8 @@ const CommentsList: React.FC<CommentsListProps> = ({ statementId }) => {
       setError(null);
 
       try {
-        const response = await fetch(
-          `/api/comments/${statementId}?userId=${encodeURIComponent(userId)}`
+        const response = await participantFetch(
+          `/api/comments/${statementId}`
         );
 
         if (response.status === 403) {

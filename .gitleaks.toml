@@ -1,0 +1,17 @@
+# Secret-scan configuration (see .github/workflows/security-scan.yml).
+title = "Freedi gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documentation and template files that carry placeholder values"
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''(^|/)README[^/]*\.md$''',
+  '''(^|/)SETUP_GUIDE[^/]*\.md$''',
+]
+regexes = [
+  # functions/scripts/reconcileJoinSheet.ts:14 - usage comment with a "..." placeholder key
+  '''-----BEGIN PRIVATE KEY-----\\n\.\.\.''',
+]
