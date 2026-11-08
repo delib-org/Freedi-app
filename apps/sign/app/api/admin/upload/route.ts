@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { Collections } from '@freedi/shared-types';
 import { getFirebaseAdmin, uploadBufferToStorage } from '@/lib/firebase/admin';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
@@ -35,9 +35,7 @@ const ALLOWED_TYPES = [
 
 export async function POST(request: NextRequest): Promise<NextResponse<UploadResponse>> {
   try {
-    // Get user from cookies
-    const cookieStore = await cookies();
-    const userId = cookieStore.get('userId')?.value;
+    const userId = await getVerifiedUserId(request);
 
     if (!userId) {
       return NextResponse.json(

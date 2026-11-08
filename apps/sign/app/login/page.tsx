@@ -44,8 +44,8 @@ export default function LoginPage() {
     return subscribeToAuthState((user) => {
       if (!user || user.isAnonymous) return;
 
-      void establishServerSession(user).then((created) => {
-        if (created) window.location.href = redirectUrl;
+      void establishServerSession(user).then((session) => {
+        if (session === 'created') window.location.href = redirectUrl;
       });
     });
   }, [serverAskedForSession, redirectUrl]);

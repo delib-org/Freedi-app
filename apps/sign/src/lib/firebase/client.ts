@@ -157,7 +157,11 @@ export async function googleLogin(): Promise<User | null> {
     setCookiesFromUser(result.user);
 
     // Awaited: callers reload right after, and the server trusts only this.
-    await establishServerSession(result.user);
+    // Without a session every admin call would be refused, so fail the sign-in.
+    const session = await establishServerSession(result.user, { force: true });
+    if (session === 'failed') {
+      throw new Error('Could not create a server session');
+    }
 
     // Auto-accept any pending invitations for this user's email
     if (result.user.email) {

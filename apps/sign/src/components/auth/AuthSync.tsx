@@ -104,7 +104,7 @@ export function AuthSync() {
 				// The server only trusts a signed session cookie. A user who was
 				// already signed in when this shipped has none yet, so a new session
 				// also means this page was rendered as signed-out and needs a reload.
-				const createdSession = await establishServerSession(user);
+				const createdSession = (await establishServerSession(user)) === 'created';
 				if (!isMountedRef.current) return;
 
 				const needsRefresh = createdSession || currentCookieUserId !== user.uid;

@@ -41,7 +41,13 @@ export async function GET(
 
     const db = getFirestoreAdmin();
     const signatureId = `${userId}--${docId}`;
-    const doc = await db.collection(Collections.signatures).doc(signatureId).get();
+
+    // In parallel, so the access check adds no round trip
+    const [denied, doc] = await Promise.all([
+      getParticipantIdentity(request).then((identity) => denyWithoutDocumentAccess(db, docId, identity)),
+      db.collection(Collections.signatures).doc(signatureId).get(),
+    ]);
+    if (denied) return denied;
 
     if (!doc.exists) {
       return NextResponse.json({ signature: null });

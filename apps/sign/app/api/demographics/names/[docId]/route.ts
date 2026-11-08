@@ -40,7 +40,7 @@ export async function GET(
       );
     }
 
-    const denied = await denyWithoutDocumentAccess(db, docId, await getParticipantIdentity(request));
+    const denied = await denyWithoutDocumentAccess(db, docId, await getParticipantIdentity(request), docSnap.data());
     if (denied) return denied;
 
     const document = docSnap.data();

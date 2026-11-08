@@ -113,6 +113,13 @@ export async function GET(
     const statementSnap = await db.collection(Collections.statements).doc(suggestionId).get();
     const statementData = statementSnap.data() as Statement | undefined;
 
+    const denied = await denyWithoutDocumentAccess(
+      db,
+      statementData?.topParentId || suggestionId,
+      await getParticipantIdentity(request)
+    );
+    if (denied) return denied;
+
     const evaluation = statementData?.evaluation;
     const positiveEvaluations = evaluation?.numberOfProEvaluators || 0;
     const negativeEvaluations = evaluation?.numberOfConEvaluators || 0;

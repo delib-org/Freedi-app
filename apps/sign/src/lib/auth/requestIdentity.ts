@@ -133,23 +133,31 @@ export async function isVerifiedDocumentAdmin(
   return (await checkAdminAccess(db, documentId, identity.uid)).isAdmin;
 }
 
-interface DocumentVisibility {
+export interface DocumentVisibility {
   signSettings?: { isPublic?: boolean; isHidden?: boolean };
 }
 
 /**
  * The same access rule the document page enforces, for the APIs that return or
  * change the same content. Hidden: admins only. Private: real signed-in members.
+ *
+ * @param loaded - the document, when the route has already read it. Saves the
+ *   read, so a public document costs no extra round trip.
  */
 export async function canAccessDocument(
   db: Firestore,
   documentId: string,
-  identity: ParticipantIdentity | null
+  identity: ParticipantIdentity | null,
+  loaded?: DocumentVisibility
 ): Promise<boolean> {
-  const snapshot = await db.collection(Collections.statements).doc(documentId).get();
-  if (!snapshot.exists) return false;
+  let document = loaded;
+  if (!document) {
+    const snapshot = await db.collection(Collections.statements).doc(documentId).get();
+    if (!snapshot.exists) return false;
+    document = snapshot.data() as DocumentVisibility;
+  }
 
-  const settings = (snapshot.data() as DocumentVisibility).signSettings;
+  const settings = document.signSettings;
   if (settings?.isHidden === true) return isVerifiedDocumentAdmin(db, documentId, identity);
   if (settings?.isPublic !== false) return true;
   if (!identity?.verified || identity.isAnonymous) return false;
@@ -161,13 +169,51 @@ export async function canAccessDocument(
 export async function denyWithoutDocumentAccess(
   db: Firestore,
   documentId: string,
-  identity: ParticipantIdentity | null
+  identity: ParticipantIdentity | null,
+  loaded?: DocumentVisibility
 ): Promise<NextResponse | null> {
-  if (await canAccessDocument(db, documentId, identity)) return null;
+  if (await canAccessDocument(db, documentId, identity, loaded)) return null;
 
   return identity?.verified
     ? NextResponse.json({ error: 'You do not have access to this document' }, { status: STATUS_FORBIDDEN })
     : NextResponse.json({ error: 'Sign in to access this document' }, { status: STATUS_UNAUTHORIZED });
+}
+
+interface DocumentScoped {
+  documentId?: string;
+  topParentId?: string;
+}
+
+/**
+ * Keep only the items whose document the caller may read.
+ *
+ * For list reads keyed by paragraph. A paragraph id does not identify its
+ * document (older paragraphs are not even statements), but the items carry it,
+ * so this needs no lookup before the query and none at all for an empty list.
+ *
+ * It checks every item rather than the first: `documentId` is chosen by whoever
+ * wrote the item, so one forged item must not unlock its neighbours.
+ */
+export async function filterAccessibleItems<T extends DocumentScoped>(
+  db: Firestore,
+  items: T[],
+  identity: ParticipantIdentity | null
+): Promise<T[]> {
+  const documentIdOf = (item: T): string | undefined => item.documentId || item.topParentId;
+  const documentIds = Array.from(new Set(items.map(documentIdOf).filter((id): id is string => Boolean(id))));
+  const allowedIds = new Set<string>();
+
+  await Promise.all(
+    documentIds.map(async (documentId) => {
+      if (await canAccessDocument(db, documentId, identity)) allowedIds.add(documentId);
+    })
+  );
+
+  return items.filter((item) => {
+    const documentId = documentIdOf(item);
+
+    return documentId !== undefined && allowedIds.has(documentId);
+  });
 }
 
 /**

@@ -59,10 +59,17 @@ export async function GET(
 
     const db = getFirestoreAdmin();
 
-    const snapshot = await db
-      .collection(Collections.evaluations)
-      .where('statementId', '==', commentId)
-      .get();
+    const [snapshot, commentSnap] = await Promise.all([
+      db.collection(Collections.evaluations).where('statementId', '==', commentId).get(),
+      db.collection(Collections.statements).doc(commentId).get(),
+    ]);
+
+    const denied = await denyWithoutDocumentAccess(
+      db,
+      (commentSnap.data()?.topParentId as string | undefined) || commentId,
+      await getParticipantIdentity(request)
+    );
+    if (denied) return denied;
 
     let sumEvaluation = 0;
     let userEvaluation: number | null = null;

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { Collections, createParagraphChildStatement, paragraphToFactoryParams, Statement, SourceApp } from '@freedi/shared-types';
 import { getFirebaseAdmin, uploadImageFromUrl } from '@/lib/firebase/admin';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
@@ -74,9 +74,7 @@ function getImageExtension(url: string): string {
 
 export async function POST(request: NextRequest): Promise<NextResponse<ImportResponse>> {
   try {
-    // Get user from cookies
-    const cookieStore = await cookies();
-    const userId = cookieStore.get('userId')?.value;
+    const userId = await getVerifiedUserId(request);
 
     if (!userId) {
       return NextResponse.json(

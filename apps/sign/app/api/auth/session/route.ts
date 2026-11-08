@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthAdmin, verifyAuthHeader } from '@/lib/firebase/admin';
 import { getVerifiedIdentity } from '@/lib/auth/requestIdentity';
 import {
+  SECURE_UID_COOKIE,
   SESSION_COOKIE,
   SESSION_MARKER_COOKIE,
   SESSION_MAX_AGE_SECONDS,
@@ -78,6 +79,7 @@ export async function DELETE(): Promise<NextResponse> {
   const expired = { path: '/', maxAge: 0 };
 
   response.cookies.set(SESSION_COOKIE, '', { ...expired, httpOnly: true });
+  response.cookies.set(SECURE_UID_COOKIE, '', { ...expired, httpOnly: true });
   response.cookies.set(SESSION_MARKER_COOKIE, '', expired);
   response.cookies.set('userId', '', expired);
   response.cookies.set('userDisplayName', '', expired);

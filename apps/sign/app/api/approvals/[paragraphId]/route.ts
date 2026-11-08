@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { denyWithoutDocumentAccess, getParticipantIdentity } from '@/lib/auth/requestIdentity';
+import { denyWithoutDocumentAccess, filterAccessibleItems, getParticipantIdentity } from '@/lib/auth/requestIdentity';
 import { getParticipantId } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections } from '@freedi/shared-types';
@@ -39,7 +39,13 @@ export async function GET(
       return NextResponse.json({ approval: null });
     }
 
-    return NextResponse.json({ approval: doc.data() });
+    const [approval] = await filterAccessibleItems(
+      db,
+      [doc.data() as { documentId?: string; topParentId?: string }],
+      await getParticipantIdentity(request)
+    );
+
+    return NextResponse.json({ approval: approval ?? null });
   } catch (error) {
     logger.error('[Approvals API] GET error:', error);
 

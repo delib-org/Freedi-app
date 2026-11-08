@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { denyWithoutDocumentAccess, getParticipantIdentity, isVerifiedDocumentAdmin } from '@/lib/auth/requestIdentity';
+import { denyWithoutDocumentAccess, filterAccessibleItems, getParticipantIdentity, isVerifiedDocumentAdmin } from '@/lib/auth/requestIdentity';
 import { getParticipantId, getParticipantDisplayName } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getAnonymousDisplayName } from '@/lib/utils/user';
@@ -48,7 +48,11 @@ export async function GET(
       .limit(QUERY_LIMITS.SUGGESTIONS)
       .get();
 
-    const statements = snapshot.docs.map((doc) => doc.data() as Statement);
+    const statements = await filterAccessibleItems(
+      db,
+      snapshot.docs.map((doc) => doc.data() as Statement),
+      await getParticipantIdentity(request)
+    );
 
     // Convert Statement[] to legacy format for backward compatibility
     const suggestions = statements.map((stmt) => ({
