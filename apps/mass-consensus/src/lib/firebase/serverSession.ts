@@ -39,7 +39,8 @@ async function createSession(user: User): Promise<boolean> {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    return response.ok;
+    // Checking the marker keeps a caller that reloads from looping when cookies are blocked.
+    return response.ok && hasSessionFor(user.uid);
   } catch (error) {
     logError(error, { operation: 'serverSession.establishServerSession', userId: user.uid });
 
