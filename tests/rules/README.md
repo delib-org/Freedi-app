@@ -14,6 +14,15 @@ The emulator port is **8081** (from `firebase.json`), not Firebase's default
 8080. Pointing this harness at 8080 quietly starts a second emulator with no
 rules loaded, and then every assertion passes for the wrong reason.
 
+`storage.test.mjs` also needs the Storage emulator, because `storage.rules`
+reads Firestore. Start both together on a `demo-` project and tell the harness
+the Storage port; without `STORAGE_EMULATOR_PORT` that suite is skipped:
+
+```bash
+firebase emulators:start --project demo-freedi-rules-storage --only firestore,storage
+STORAGE_EMULATOR_PORT=9199 npm run test:rules
+```
+
 ## Why its own `package.json`
 
 `@firebase/rules-unit-testing@5` peers on `firebase@^12` while the apps are on

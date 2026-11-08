@@ -1,22 +1,16 @@
 import { Unsubscribe } from 'firebase/auth';
-import { query, where, getDocs, getDoc, FirestoreError } from 'firebase/firestore';
+import { query, where, getDocs, FirestoreError } from 'firebase/firestore';
 import { setEvaluationToStore } from '@/redux/evaluations/evaluationsSlice';
 import { AppDispatch, store } from '@/redux/store';
 import { parse } from 'valibot';
-import {
-	Evaluation,
-	EvaluationSchema,
-	SelectionFunction,
-	Collections,
-	UserSchema,
-} from '@freedi/shared-types';
+import { Evaluation, EvaluationSchema, SelectionFunction, Collections } from '@freedi/shared-types';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import {
 	createManagedCollectionListener,
 	createManagedDocumentListener,
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
-import { createCollectionRef, createEvaluationRef, createDocRef } from '@/utils/firebaseUtils';
+import { createCollectionRef, createEvaluationRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { auth } from '@/controllers/db/config';
 
@@ -177,35 +171,27 @@ export async function getEvaluations(parentId: string): Promise<Evaluation[]> {
 			})
 			.filter((evaluation) => evaluation) as Evaluation[];
 
-		//get evaluators details if not already in db
-		const evaluatorsPromise = evaluations
-			.map((evaluation) => {
-				if (!evaluation.evaluator) {
-					const evaluatorRef = createDocRef(Collections.users, evaluation.evaluatorId);
-					const promise = getDoc(evaluatorRef);
-
-					return promise;
-				}
-			})
-			.filter((promise) => promise);
-
-		const evaluatorsDB = await Promise.all(evaluatorsPromise);
-		const evaluators = evaluatorsDB.map((evaluatorDB) => {
-			const evaluator = parse(UserSchema, evaluatorDB?.data());
-
-			return evaluator;
-		});
-
-		evaluations.forEach((evaluation) => {
-			const evaluator = evaluators.find((evaluator) => evaluator?.uid === evaluation.evaluatorId);
-
-			if (evaluator) evaluation.evaluator = evaluator;
-		});
-
-		return evaluations;
+		return evaluations.map(withNameOnly);
 	} catch (error) {
-		logError(error, { operation: 'evaluation.getEvaluation.evaluator' });
+		handleListenerError(
+			error as FirestoreError,
+			'evaluation.getEvaluation.evaluator',
+			'Error loading evaluators:',
+		);
 
 		return [] as Evaluation[];
 	}
+}
+
+/**
+ * Evaluators are named only from the map stored on the vote: usersV2 holds
+ * email addresses and is readable by its owner alone. A vote with no map stays
+ * in the list, unnamed. The stored map can itself carry an email or a photo
+ * (older clients wrote the whole profile), so only the name goes any further.
+ */
+function withNameOnly(evaluation: Evaluation): Evaluation {
+	const { evaluator, ...vote } = evaluation;
+	if (!evaluator) return vote;
+
+	return { ...vote, evaluator: { uid: evaluator.uid, displayName: evaluator.displayName } };
 }

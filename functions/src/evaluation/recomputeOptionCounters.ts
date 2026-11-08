@@ -1,5 +1,6 @@
 import { calcAgreement, calcAgreementIndex } from '@freedi/shared-types';
 import type { Evaluation, StatementEvaluation } from '@freedi/shared-types';
+import { clampEvaluationValue } from './evaluationTypes';
 
 /**
  * Pure recomputation of an option's evaluation counters from its evaluation
@@ -43,7 +44,7 @@ export function recomputeOptionCounters(
 	let sumCon = 0;
 
 	for (const e of evals) {
-		const v = e.evaluation;
+		const v = clampEvaluationValue(e.evaluation);
 		if (v > 0) {
 			numberOfProEvaluators++;
 			sumPro += v;

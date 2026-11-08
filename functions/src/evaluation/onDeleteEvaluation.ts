@@ -10,7 +10,7 @@ import { logger } from 'firebase-functions/v1';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import type { FirestoreEvent } from 'firebase-functions/v2/firestore';
 import type { Evaluation } from '@freedi/shared-types';
-import { ActionTypes } from './evaluationTypes';
+import { ActionTypes, clampEvaluationValue } from './evaluationTypes';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
 import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
@@ -22,7 +22,8 @@ export async function deleteEvaluation(event: FirestoreEvent<DocumentSnapshot>):
 		const eventId = event.id;
 
 		const evaluation = event.data.data() as Evaluation & { source?: string };
-		const { statementId, evaluation: evaluationValue } = evaluation;
+		const { statementId } = evaluation;
+		const evaluationValue = clampEvaluationValue(evaluation.evaluation);
 		const userId = evaluation.evaluator?.uid;
 
 		// Skip processing for Sign app evaluations - the Sign API route handles consensus updates directly
