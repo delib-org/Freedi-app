@@ -84,6 +84,7 @@
 		border: 1px solid var(--space-line);
 		border-radius: 40px;
 		background: var(--space-surface);
+		color: var(--space-ink);
 		box-shadow: 0 3px 12px color-mix(in srgb, var(--space-ink) 5%, transparent);
 		transition:
 			transform 160ms ease,
