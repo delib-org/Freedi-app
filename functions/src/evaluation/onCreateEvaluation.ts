@@ -11,7 +11,7 @@ import { DocumentSnapshot } from 'firebase-admin/firestore';
 import type { FirestoreEvent } from 'firebase-functions/v2/firestore';
 import type { Evaluation } from '@freedi/shared-types';
 import { updateUserDemographicEvaluation } from '../fn_polarizationIndex';
-import { ActionTypes } from './evaluationTypes';
+import { ActionTypes, clampEvaluationValue } from './evaluationTypes';
 import { dropEvaluationOnTheme } from './themeGuard';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
@@ -44,6 +44,7 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 		};
 		const { statementId, parentId } = evaluation;
 		const userId = evaluation.evaluator?.uid;
+		const evaluationValue = clampEvaluationValue(evaluation.evaluation);
 
 		// Skip processing for migrated evaluations - the migration function handles the statement update
 		if (evaluation.migratedAt) {
@@ -82,10 +83,10 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 		// which handles the logic for when to actually increment the evaluator count
 		const { statement, duplicate } = await updateStatementEvaluation({
 			statementId,
-			evaluationDiff: evaluation.evaluation,
+			evaluationDiff: evaluationValue,
 			addEvaluator: 0, // Will be calculated in updateStatementEvaluation
 			action: ActionTypes.new,
-			newEvaluation: evaluation.evaluation,
+			newEvaluation: evaluationValue,
 			oldEvaluation: 0,
 			userId,
 			parentId,
@@ -112,7 +113,7 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 		// Update demographic evaluation (it will check if demographic question exists later on)
 		const userEvalData = {
 			userId,
-			evaluation: evaluation.evaluation || 0,
+			evaluation: evaluationValue,
 			demographicAnchorId: evaluation.demographicAnchorId,
 		};
 		updateUserDemographicEvaluation(statement, userEvalData);
@@ -186,7 +187,7 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 					statement,
 					source: 'evaluation-change',
 					isResearch: true,
-					evaluationDelta: evaluation.evaluation,
+					evaluationDelta: evaluationValue,
 					evaluationAction: 'new',
 				});
 			})

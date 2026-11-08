@@ -49,6 +49,14 @@ export const fn_acceptJoinDelegateInvite = onCall(
 				'Sign in with a Google account that has an email address',
 			);
 		}
+		// The invite is bound to an address, so the address must be proven: an
+		// unverified token can claim anyone's email and accept their invitation.
+		if (tokenInfo?.email_verified !== true) {
+			throw new HttpsError(
+				'failed-precondition',
+				'Sign in with an account whose email address is verified',
+			);
+		}
 
 		const { token } = request.data ?? {};
 		if (!token || typeof token !== 'string') {

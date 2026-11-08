@@ -2,7 +2,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
 const mockRecord = jest.fn<(parentId?: string, userId?: string) => Promise<boolean>>();
 const mockRefreshResults = jest.fn<(parentId?: string) => Promise<void>>();
-const mockUpdateStatement = jest.fn<() => Promise<unknown>>();
+const mockUpdateStatement = jest.fn<(props?: unknown) => Promise<unknown>>();
 
 jest.mock('firebase-functions/v1', () => ({
 	logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
@@ -18,7 +18,7 @@ jest.mock('../themeGuard', () => ({
 	dropEvaluationOnTheme: () => Promise.resolve(false),
 }));
 jest.mock('../statementEvaluationUpdater', () => ({
-	updateStatementEvaluation: () => mockUpdateStatement(),
+	updateStatementEvaluation: (props?: unknown) => mockUpdateStatement(props),
 }));
 jest.mock('../../fn_polarizationIndex', () => ({ updateUserDemographicEvaluation: jest.fn() }));
 jest.mock('../../engagement/credits/trackEngagement', () => ({
@@ -112,5 +112,48 @@ describe('evaluation triggers and the evaluator count', () => {
 
 		expect(mockRecord).not.toHaveBeenCalled();
 		expect(mockRefreshResults).toHaveBeenCalledWith('q1');
+	});
+
+	describe('an out-of-range stored value never reaches the counters', () => {
+		it('create: adds the clamped value', async () => {
+			await newEvaluation(createEvent(1000));
+
+			expect(mockUpdateStatement).toHaveBeenCalledWith(
+				expect.objectContaining({ evaluationDiff: 1, newEvaluation: 1, oldEvaluation: 0 }),
+			);
+		});
+
+		it('update: diffs the clamped values on both sides', async () => {
+			await updateEvaluation({
+				id: 'ev-4',
+				data: {
+					before: { data: () => evaluationData(1000), id: 'd1' },
+					after: { data: () => evaluationData(-1000), id: 'd1' },
+				},
+			} as never);
+
+			expect(mockUpdateStatement).toHaveBeenCalledWith(
+				expect.objectContaining({ evaluationDiff: -2, newEvaluation: -1, oldEvaluation: 1 }),
+			);
+		});
+
+		it('delete: takes back only the clamped value', async () => {
+			await deleteEvaluation({
+				id: 'ev-5',
+				data: { id: 'd1', data: () => evaluationData(-1000) },
+			} as never);
+
+			expect(mockUpdateStatement).toHaveBeenCalledWith(
+				expect.objectContaining({ evaluationDiff: 1, newEvaluation: 0, oldEvaluation: -1 }),
+			);
+		});
+
+		it('leaves an in-range value exactly as it was', async () => {
+			await newEvaluation(createEvent(0.5));
+
+			expect(mockUpdateStatement).toHaveBeenCalledWith(
+				expect.objectContaining({ evaluationDiff: 0.5, newEvaluation: 0.5 }),
+			);
+		});
 	});
 });

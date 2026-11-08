@@ -13,6 +13,7 @@ import {
 	Visibility,
 	SourceApp,
 	createStatementObject,
+	getEvaluationRange,
 	getRandomUID,
 } from '@freedi/shared-types';
 import type { Statement, User } from '@freedi/shared-types';
@@ -171,12 +172,24 @@ async function bumpActivity(ancestorIds: string[], now: number): Promise<void> {
 	});
 }
 
+/**
+ * Admin SDK writes skip firestore.rules, so the range has to be checked here.
+ * `form.get('value')` is whatever the client posted; NaN and Infinity fail too.
+ */
+export function isEvaluationInRange(value: number): boolean {
+	const { min, max } = getEvaluationRange();
+
+	return Number.isFinite(value) && value >= min && value <= max;
+}
+
 /** Toggle a ±1 evaluation (§4.2). evaluationId = uid--statementId. */
 export async function evaluate(
 	user: SessionUser,
 	statementId: string,
 	value: number,
 ): Promise<void> {
+	if (!isEvaluationInRange(value)) throw error(400, 'Evaluation is out of range');
+
 	const statement = await getStatement(statementId);
 	if (!statement) throw error(404, 'Statement not found');
 	if (statement.statementType !== StatementType.option && statement.statementType !== StatementType.evidence) {

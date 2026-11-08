@@ -13,6 +13,7 @@ import { Collections, Evaluation, calcAgreement } from '@freedi/shared-types';
 import { db } from '../index';
 import { reconcileParentEvaluators } from './evaluatorParticipation';
 import { resolveQuestionPopulation } from './resolveQuestionPopulation';
+import { clampEvaluationValue } from './evaluationTypes';
 
 // ============================================================================
 // TYPES
@@ -89,17 +90,18 @@ export async function migrateEvaluationsToNewStatement(
 				const evaluation = doc.data() as Evaluation;
 				const userId = evaluation.evaluator?.uid;
 
-				if (!userId || evaluation.evaluation === 0) return;
+				const value = clampEvaluationValue(evaluation.evaluation);
+				if (!userId || value === 0) return;
 
 				const existing = evaluationsByUser.get(userId);
 
 				if (existing) {
 					// User already evaluated another source statement - add to their evaluations array
-					existing.evaluations.push(evaluation.evaluation);
+					existing.evaluations.push(value);
 				} else {
 					// First evaluation from this user
 					evaluationsByUser.set(userId, {
-						evaluations: [evaluation.evaluation],
+						evaluations: [value],
 						evaluator: evaluation.evaluator,
 					});
 				}
