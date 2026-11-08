@@ -1,14 +1,14 @@
 import m from 'mithril';
 import { logError } from '@freedi/shared-utils';
 import { t } from '@/lib/i18n';
-import { fetchSelectedOptions } from '@/lib/tableAssignment/data';
+import { fetchChosenOptions } from '@/lib/tableAssignment/data';
 import { classifyErrorCode } from '@/logic/topicImportErrors';
 import { draftFromStatement } from '@/logic/topics';
 import type { TopicDraft } from '@/logic/topics';
 
 /**
- * Import the selected options of a question as topics: paste the question's
- * statement id; statements with parentId == id and isSelected == true become
+ * Import the chosen options of a question as topics: paste the question's
+ * statement id; statements with parentId == id and isChosen == true become
  * drafts (title, description, consensus). A read that is not permitted shows
  * the error state; nothing is thrown at the screen.
  */
@@ -35,7 +35,7 @@ export const TopicImport: m.ClosureComponent<TopicImportAttrs> = () => {
 		m.redraw();
 
 		try {
-			const statements = await fetchSelectedOptions(id);
+			const statements = await fetchChosenOptions(id);
 
 			if (statements.length === 0) {
 				result = { kind: 'empty' };

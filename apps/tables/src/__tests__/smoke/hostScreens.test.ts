@@ -48,7 +48,7 @@ vi.mock('@/lib/tableAssignment/data', () => {
 		subscribeMyParticipant: () => sub((s) => s.me),
 		subscribeRun: () => sub((s) => s.run),
 		subscribeRuns: () => sub((s) => s.runs),
-		fetchSelectedOptions: async () => [],
+		fetchChosenOptions: async () => [],
 	};
 });
 
