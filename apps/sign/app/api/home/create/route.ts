@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedDisplayName, getVerifiedIdentity, getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie, getUserEmailFromCookie } from '@/lib/utils/user';
 import { Collections, StatementType, Access, Role, ResultsBy, CutoffBy, evaluationType } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 
@@ -142,8 +142,7 @@ async function createSubscription(
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieHeader = request.headers.get('cookie');
-    const userId = getUserIdFromCookie(cookieHeader);
+    const userId = await getVerifiedUserId(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -152,8 +151,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const displayName = getUserDisplayNameFromCookie(cookieHeader) || 'Anonymous';
-    const email = getUserEmailFromCookie(cookieHeader) || '';
+    const displayName = (await getVerifiedDisplayName(request)) || 'Anonymous';
+    const email = (await getVerifiedIdentity(request, { checkRevoked: true }))?.email ?? '';
     const body = (await request.json()) as RequestBody;
 
     if (!body.action || !body.title || body.title.trim().length === 0) {

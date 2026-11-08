@@ -2,7 +2,6 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin, verifyAuthHeader } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie } from '@/lib/utils/user';
 import {
 	Collections,
 	AdminInvitation,
@@ -33,10 +32,8 @@ export async function GET(
 		// header) rather than a cookie — email is no longer stored in cookies (PII).
 		const verifiedUser = await verifyAuthHeader(request.headers.get('authorization'));
 
-		const cookieHeader = request.headers.get('cookie');
-		const userId = verifiedUser?.uid ?? getUserIdFromCookie(cookieHeader);
-		const userDisplayName =
-			verifiedUser?.displayName || getUserDisplayNameFromCookie(cookieHeader) || 'Unknown';
+		const userId = verifiedUser?.uid ?? null;
+		const userDisplayName = verifiedUser?.displayName || 'Unknown';
 		const userEmail = verifiedUser?.email ?? null;
 
 		// If not logged in, return info to redirect to login

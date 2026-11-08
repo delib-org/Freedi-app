@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { denyWithoutDocumentAccess, getParticipantIdentity } from '@/lib/auth/requestIdentity';
+import { getParticipantId, getParticipantDisplayName, isAnonymousParticipant } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName, isAnonymousRequest } from '@/lib/utils/user';
+import { getAnonymousDisplayName } from '@/lib/utils/user';
 import { Collections, StatementType } from '@freedi/shared-types';
 import { isUserBlocked } from '@/lib/admin/blocklist';
 import { isDocumentFrozen, FROZEN_DOCUMENT_ERROR } from '@/lib/admin/documentStatus';
@@ -65,8 +67,7 @@ export async function POST(
 ) {
   try {
     const { paragraphId } = await params;
-    const cookieHeader = request.headers.get('cookie');
-    const userId = getUserIdFromCookie(cookieHeader);
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -95,6 +96,9 @@ export async function POST(
 
     const db = getFirestoreAdmin();
 
+    const denied = await denyWithoutDocumentAccess(db, documentId, await getParticipantIdentity(request));
+    if (denied) return denied;
+
     if (await isUserBlocked(db, documentId, userId)) {
       return NextResponse.json(
         { error: 'You are not permitted to contribute to this document' },
@@ -116,7 +120,7 @@ export async function POST(
     const commentDocSnap = await db.collection(Collections.statements).doc(documentId).get();
     if (
       commentDocSnap.data()?.signSettings?.requireGoogleLogin === true &&
-      isAnonymousRequest(cookieHeader)
+      (await isAnonymousParticipant(request))
     ) {
       return NextResponse.json(
         {
@@ -163,7 +167,7 @@ export async function POST(
     // Get display name. Anonymous users (no account name) fall back to the name
     // they entered in the demographic survey before the anonymous pseudo-name.
     const displayName =
-      getUserDisplayNameFromCookie(cookieHeader) ||
+      (await getParticipantDisplayName(request)) ||
       (await getDemographicName(documentId, userId)) ||
       getAnonymousDisplayName(userId);
 
@@ -223,8 +227,7 @@ export async function PUT(
 ) {
   try {
     await params; // Consume params
-    const cookieHeader = request.headers.get('cookie');
-    const userId = getUserIdFromCookie(cookieHeader);
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -306,7 +309,7 @@ export async function DELETE(
 ) {
   try {
     await params; // Consume params even if not used
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { denyWithoutDocumentAccess, getParticipantIdentity } from '@/lib/auth/requestIdentity';
+import { getParticipantId } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { isUserBlocked } from '@/lib/admin/blocklist';
 import { isDocumentFrozen, FROZEN_DOCUMENT_ERROR } from '@/lib/admin/documentStatus';
@@ -21,7 +22,7 @@ export async function GET(
 ) {
   try {
     const { paragraphId } = await params;
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -59,7 +60,7 @@ export async function POST(
 ) {
   try {
     const { paragraphId } = await params;
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -87,6 +88,9 @@ export async function POST(
     }
 
     const db = getFirestoreAdmin();
+
+    const denied = await denyWithoutDocumentAccess(db, documentId, await getParticipantIdentity(request));
+    if (denied) return denied;
 
     if (await isUserBlocked(db, documentId, userId)) {
       return NextResponse.json(
@@ -143,7 +147,7 @@ export async function DELETE(
 ) {
   try {
     const { paragraphId } = await params;
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(

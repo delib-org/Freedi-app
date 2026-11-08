@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin, verifyAuthHeader } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie } from '@/lib/utils/user';
 import {
 	Collections,
 	AdminInvitation,
@@ -29,10 +28,8 @@ export async function POST(
 		// Firebase ID token from the Authorization header to obtain a trusted email.
 		const verifiedUser = await verifyAuthHeader(request.headers.get('authorization'));
 
-		const cookieHeader = request.headers.get('cookie');
-		const userId = verifiedUser?.uid ?? getUserIdFromCookie(cookieHeader);
-		const userDisplayName =
-			verifiedUser?.displayName || getUserDisplayNameFromCookie(cookieHeader) || 'Unknown';
+		const userId = verifiedUser?.uid ?? null;
+		const userDisplayName = verifiedUser?.displayName || 'Unknown';
 		const userEmail = verifiedUser?.email ?? null;
 
 		// Must be logged in with Google (need a verified email)

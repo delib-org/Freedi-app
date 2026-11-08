@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getParticipantIdentity, isVerifiedDocumentAdmin } from '@/lib/auth/requestIdentity';
+import { getParticipantId } from '@/lib/auth/requestIdentity';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
-import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections } from '@freedi/shared-types';
 import { checkSurveyCompletion } from '@/lib/firebase/demographicQueries';
 import { DemographicMode, SurveyTriggerMode, DemographicStatusResponse } from '@/types/demographics';
@@ -17,7 +17,7 @@ export async function GET(
 ): Promise<NextResponse> {
   try {
     const { docId } = await params;
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       // Return complete status for anonymous users (they'll be prompted to login if required)
@@ -59,8 +59,7 @@ export async function GET(
     // so no client gate (auto-open modal, interaction block) ever fires for them.
     // Only pay the admin lookup when a required survey could otherwise block.
     if (mode !== 'disabled' && required) {
-      const adminAccess = await checkAdminAccess(db, docId, userId);
-      if (adminAccess.isAdmin) {
+      if (await isVerifiedDocumentAdmin(db, docId, await getParticipantIdentity(request))) {
         const response: DemographicStatusResponse = {
           status: {
             isComplete: true,

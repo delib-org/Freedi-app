@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import {
 	Collections,
@@ -20,7 +20,7 @@ export async function PATCH(
 ): Promise<NextResponse> {
 	try {
 		const { docId, userId: targetUserId } = await params;
-		const currentUserId = getUserIdFromCookie(request.headers.get('cookie'));
+		const currentUserId = await getVerifiedUserId(request);
 
 		if (!currentUserId) {
 			return NextResponse.json(
@@ -130,7 +130,7 @@ export async function DELETE(
 ): Promise<NextResponse> {
 	try {
 		const { docId, userId: targetUserId } = await params;
-		const currentUserId = getUserIdFromCookie(request.headers.get('cookie'));
+		const currentUserId = await getVerifiedUserId(request);
 
 		if (!currentUserId) {
 			return NextResponse.json(

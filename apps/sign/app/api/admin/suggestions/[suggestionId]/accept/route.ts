@@ -9,9 +9,9 @@
  * - Resets evaluations for fresh voting on new text
  */
 
+import { getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections, Statement, StatementType, ReplacementQueueStatus, PendingReplacement } from '@freedi/shared-types';
 import { executeReplacement } from '@/controllers/versionControl/executeReplacement';
@@ -28,7 +28,7 @@ export async function POST(
 ): Promise<NextResponse> {
 	try {
 		const { suggestionId } = await params;
-		const userId = getUserIdFromCookie(request.headers.get('cookie'));
+		const userId = await getVerifiedUserId(request);
 
 		if (!userId) {
 			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

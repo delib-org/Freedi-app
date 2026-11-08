@@ -6,6 +6,7 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { signInWithCustomToken } from 'firebase/auth';
 import { getFirebaseAuth, anonymousLogin } from '@/lib/firebase/client';
 import { installFirestoreErrorFilter } from '@/lib/firebase/safeSnapshot';
+import { establishServerSession } from '@/lib/firebase/serverSession';
 import { logError } from '@/lib/utils/errorHandling';
 
 /**
@@ -52,6 +53,7 @@ export function AuthSync() {
 					});
 					const login = await signInWithCustomToken(auth, result.data.token);
 					setCookiesFromUser(login.user);
+					await establishServerSession(login.user);
 					window.location.reload();
 				} catch (e) {
 					logError(e, { operation: 'AuthSync.agreementHandoff' });
@@ -95,10 +97,17 @@ export function AuthSync() {
 			if (user) {
 				// User is signed in - ensure cookies are up to date
 				const currentCookieUserId = getCookie('userId');
-				const needsRefresh = currentCookieUserId !== user.uid;
 
 				// Update cookies to keep them fresh
 				setCookiesFromUser(user);
+
+				// The server only trusts a signed session cookie. A user who was
+				// already signed in when this shipped has none yet, so a new session
+				// also means this page was rendered as signed-out and needs a reload.
+				const createdSession = await establishServerSession(user);
+				if (!isMountedRef.current) return;
+
+				const needsRefresh = createdSession || currentCookieUserId !== user.uid;
 
 				// IMPORTANT: Only reload for authenticated (non-anonymous) users
 				// Anonymous users don't need server-side admin checks, so no reload needed
@@ -210,6 +219,7 @@ export function AuthSync() {
 				const user = auth.currentUser;
 				if (user) {
 					setCookiesFromUser(user);
+					void establishServerSession(user);
 				}
 			},
 			6 * 60 * 60 * 1000,

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { denyWithoutDocumentAccess, getParticipantIdentity, isVerifiedDocumentAdmin } from '@/lib/auth/requestIdentity';
+import { getParticipantId, getParticipantDisplayName } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
-import { checkAdminAccess } from '@/lib/utils/adminAccess';
+import { getAnonymousDisplayName } from '@/lib/utils/user';
 import { isUserBlocked } from '@/lib/admin/blocklist';
 import { isDocumentFrozen, FROZEN_DOCUMENT_ERROR } from '@/lib/admin/documentStatus';
 import { getDemographicName } from '@/lib/firebase/demographicQueries';
@@ -84,8 +85,7 @@ export async function POST(
 ) {
   try {
     const { paragraphId } = await params;
-    const cookieHeader = request.headers.get('cookie');
-    const userId = getUserIdFromCookie(cookieHeader);
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -143,6 +143,9 @@ export async function POST(
 
     const db = getFirestoreAdmin();
 
+    const denied = await denyWithoutDocumentAccess(db, documentId, await getParticipantIdentity(request));
+    if (denied) return denied;
+
     if (await isUserBlocked(db, documentId, userId)) {
       return NextResponse.json(
         { error: 'You are not permitted to contribute to this document' },
@@ -158,10 +161,10 @@ export async function POST(
     }
 
     // Check if user is admin (admins can create unlimited suggestions)
-    const adminAccess = await checkAdminAccess(db, documentId, userId);
+    const isAdmin = await isVerifiedDocumentAdmin(db, documentId, await getParticipantIdentity(request));
 
     // Non-admin users are limited to one suggestion per paragraph
-    if (!adminAccess.isAdmin) {
+    if (!isAdmin) {
       const existingSuggestionSnapshot = await db
         .collection(Collections.statements)
         .where('parentId', '==', paragraphId)
@@ -181,7 +184,7 @@ export async function POST(
     // Get display name. Anonymous users (no account name) fall back to the name
     // they entered in the demographic survey before the anonymous pseudo-name.
     const displayName =
-      getUserDisplayNameFromCookie(cookieHeader) ||
+      (await getParticipantDisplayName(request)) ||
       (await getDemographicName(documentId, userId)) ||
       getAnonymousDisplayName(userId);
 
@@ -268,8 +271,7 @@ export async function PUT(
 ) {
   try {
     await params; // Consume params
-    const cookieHeader = request.headers.get('cookie');
-    const userId = getUserIdFromCookie(cookieHeader);
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -373,7 +375,7 @@ export async function DELETE(
 ) {
   try {
     await params; // Consume params even if not used
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(

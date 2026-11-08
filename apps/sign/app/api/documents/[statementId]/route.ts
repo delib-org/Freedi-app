@@ -2,6 +2,8 @@
  * API route to get document paragraphs
  */
 
+import { denyWithoutDocumentAccess, getParticipantIdentity } from '@/lib/auth/requestIdentity';
+import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { NextRequest, NextResponse } from 'next/server';
 import { getDocumentForSigning, getParagraphsFromStatement } from '@/lib/firebase/queries';
 import { logError } from '@/lib/utils/errorHandling';
@@ -23,6 +25,13 @@ export async function GET(
         { status: 400 }
       );
     }
+
+    const denied = await denyWithoutDocumentAccess(
+      getFirestoreAdmin(),
+      statementId,
+      await getParticipantIdentity(request)
+    );
+    if (denied) return denied;
 
     // Get the document
     const document = await getDocumentForSigning(statementId);

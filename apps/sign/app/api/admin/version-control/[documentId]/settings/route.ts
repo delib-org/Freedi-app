@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections, Statement, AuditAction } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 import {
@@ -45,7 +45,7 @@ export async function GET(
 ): Promise<NextResponse> {
 	try {
 		const { documentId } = await params;
-		const userId = getUserIdFromCookie(request.headers.get('cookie'));
+		const userId = await getVerifiedUserId(request);
 
 		// Verify admin access
 		const db = getFirestoreAdmin();
@@ -119,7 +119,7 @@ export async function PUT(
 ): Promise<NextResponse> {
 	try {
 		const { documentId } = await params;
-		const userId = getUserIdFromCookie(request.headers.get('cookie'));
+		const userId = await getVerifiedUserId(request);
 
 		// Verify admin access
 		const db = getFirestoreAdmin();

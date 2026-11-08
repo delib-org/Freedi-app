@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { denyWithoutDocumentAccess, getParticipantIdentity } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import {
 	Collections,
@@ -21,7 +22,7 @@ export async function GET(
 
 		const db = getFirestoreAdmin();
 
-		// Verify document exists and is public
+		// Verify document exists
 		const docRef = db.collection(Collections.statements).doc(docId);
 		const docSnap = await docRef.get();
 
@@ -32,8 +33,8 @@ export async function GET(
 			);
 		}
 
-		// Document exists - proceed to get versions
-		// Note: We could add a public access check here using docSnap.data()
+		const denied = await denyWithoutDocumentAccess(db, docId, await getParticipantIdentity(request));
+		if (denied) return denied;
 
 		// Get all published and archived versions (not drafts)
 		const versionsSnapshot = await db

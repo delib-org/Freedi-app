@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { denyWithoutDocumentAccess, getParticipantIdentity, isVerifiedDocumentAdmin } from '@/lib/auth/requestIdentity';
+import { getParticipantId, getParticipantDisplayName, isAnonymousParticipant } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie, isAnonymousRequest } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 import { logResearchAction } from '@/lib/utils/researchLogger';
 import { ResearchAction } from '@freedi/shared-types';
 import { isUserBlocked } from '@/lib/admin/blocklist';
 import { isDocumentFrozen, FROZEN_DOCUMENT_ERROR } from '@/lib/admin/documentStatus';
-import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { checkSurveyCompletion, getDemographicName } from '@/lib/firebase/demographicQueries';
 import { DemographicMode } from '@/types/demographics';
 
@@ -30,7 +30,7 @@ export async function GET(
 ) {
   try {
     const { docId } = await params;
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -68,7 +68,7 @@ export async function POST(
 ) {
   try {
     const { docId } = await params;
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    const userId = await getParticipantId(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -83,6 +83,13 @@ export async function POST(
         { status: 403 }
       );
     }
+
+    const denied = await denyWithoutDocumentAccess(
+      getFirestoreAdmin(),
+      docId,
+      await getParticipantIdentity(request)
+    );
+    if (denied) return denied;
 
     if (await isDocumentFrozen(getFirestoreAdmin(), docId)) {
       return NextResponse.json(
@@ -148,7 +155,7 @@ export async function POST(
     // and surface as "Anonymous" participants on the admin/users page.
     if (
       document?.signSettings?.requireGoogleLogin === true &&
-      isAnonymousRequest(request.headers.get('cookie'))
+      (await isAnonymousParticipant(request))
     ) {
       logger.info(`[Signatures API] Blocked anonymous write - requireGoogleLogin: ${userId} on ${docId}`);
 
@@ -170,11 +177,11 @@ export async function POST(
       const topParentId = document?.topParentId || docId;
 
       // Admins are exempt from the required demographic survey.
-      const adminAccess = mode !== 'disabled' && demographicRequired
-        ? await checkAdminAccess(db, docId, userId)
-        : null;
+      const isAdmin = mode !== 'disabled' && demographicRequired
+        ? await isVerifiedDocumentAdmin(db, docId, await getParticipantIdentity(request))
+        : false;
 
-      if (mode !== 'disabled' && demographicRequired && !adminAccess?.isAdmin) {
+      if (mode !== 'disabled' && demographicRequired && !isAdmin) {
         const surveyStatus = await checkSurveyCompletion(
           docId,
           userId,
@@ -201,7 +208,7 @@ export async function POST(
     // Resolve a display name for the admin participants list — account name, or
     // the name the signer entered in the demographic survey (anonymous users).
     const signerName =
-      getUserDisplayNameFromCookie(request.headers.get('cookie')) ||
+      (await getParticipantDisplayName(request)) ||
       (await getDemographicName(docId, userId)) ||
       undefined;
 

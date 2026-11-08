@@ -38,6 +38,7 @@ import {
   Analytics,
 } from 'firebase/analytics';
 import { logError } from '@/lib/utils/errorHandling';
+import { clearServerSession, establishServerSession } from './serverSession';
 
 // Firebase config - should match main app
 const firebaseConfig = {
@@ -133,6 +134,17 @@ export function getFirebaseFirestore(): Firestore {
 }
 
 /**
+ * `Authorization` header for admin calls that the server forwards to a Cloud
+ * Function: a session cookie cannot be forwarded, an ID token can.
+ */
+export async function getAuthorizationHeader(): Promise<Record<string, string>> {
+  const user = getFirebaseAuth().currentUser;
+  if (!user) return {};
+
+  return { Authorization: `Bearer ${await user.getIdToken()}` };
+}
+
+/**
  * Sign in with Google
  */
 export async function googleLogin(): Promise<User | null> {
@@ -143,6 +155,9 @@ export async function googleLogin(): Promise<User | null> {
 
     // Set cookie for server-side access
     setCookiesFromUser(result.user);
+
+    // Awaited: callers reload right after, and the server trusts only this.
+    await establishServerSession(result.user);
 
     // Auto-accept any pending invitations for this user's email
     if (result.user.email) {
@@ -166,6 +181,7 @@ export async function anonymousLogin(): Promise<User | null> {
 
     // Set cookie for server-side access
     setCookiesFromUser(result.user);
+    await establishServerSession(result.user);
 
     return result.user;
   } catch (error) {
@@ -181,6 +197,7 @@ export async function logout(): Promise<void> {
   try {
     const authInstance = getFirebaseAuth();
     await authInstance.signOut();
+    await clearServerSession();
 
     // Clear cookies
     document.cookie = 'userId=; path=/; max-age=0';
