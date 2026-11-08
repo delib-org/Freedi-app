@@ -5,6 +5,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { logError } from '@/utils/errorHandling';
 import { getFunctionsUrl, getMassConsensusResultsUrl } from '@/controllers/db/config';
+import { getAuthHeaders } from '@/controllers/db/authHeaders';
 import styles from './EmailNotifications.module.scss';
 import SectionTitle from '../sectionTitle/SectionTitle';
 
@@ -50,6 +51,7 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 				const functionsUrl = getFunctionsUrl();
 				const response = await fetch(
 					`${functionsUrl}/getEmailSubscriberCount?statementId=${statement.statementId}`,
+					{ headers: await getAuthHeaders() },
 				);
 
 				if (!response.ok) {
@@ -113,14 +115,11 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 			const functionsUrl = getFunctionsUrl();
 			const response = await fetch(`${functionsUrl}/sendEmailToSubscribers`, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
+				headers: await getAuthHeaders(),
 				body: JSON.stringify({
 					statementId: statement.statementId,
 					subject: subject.trim(),
 					message: message.trim(),
-					adminId: creator.uid,
 					buttonText: t('View Results'),
 					buttonUrl: getMassConsensusResultsUrl(statement.statementId),
 				}),

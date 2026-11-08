@@ -1,10 +1,55 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import type { Statement } from '@freedi/shared-types';
+
+const firebaseAuth = vi.hoisted(() => ({
+	auth: {
+		authStateReady: async () => undefined,
+		currentUser: { getIdToken: async () => 'id-token' } as {
+			getIdToken: () => Promise<string>;
+		} | null,
+	},
+}));
+vi.mock('@/lib/firebase', () => firebaseAuth);
+
 import {
 	messageToCommentContent,
 	buildImprovePayload,
 	composeDraftText,
+	requestImprovedDraft,
 } from '../improveSuggestion';
+
+describe('requestImprovedDraft', () => {
+	const signedIn = firebaseAuth.auth.currentUser;
+
+	afterEach(() => {
+		firebaseAuth.auth.currentUser = signedIn;
+		vi.unstubAllGlobals();
+	});
+
+	it('sends the ID token, including for anonymous participants', async () => {
+		const fetchMock = vi.fn(async () => ({
+			ok: true,
+			json: async () => ({ improvedTitle: 'Better' }),
+		}));
+		vi.stubGlobal('fetch', fetchMock);
+
+		await requestImprovedDraft({} as Parameters<typeof requestImprovedDraft>[0]);
+
+		const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+		expect((init.headers as Record<string, string>).Authorization).toBe('Bearer id-token');
+	});
+
+	it('fails rather than calling the function with no user', async () => {
+		firebaseAuth.auth.currentUser = null;
+		const fetchMock = vi.fn();
+		vi.stubGlobal('fetch', fetchMock);
+
+		await expect(
+			requestImprovedDraft({} as Parameters<typeof requestImprovedDraft>[0]),
+		).rejects.toThrow('signed-in');
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+});
 
 function fakeStatement(overrides: Partial<Statement>): Statement {
 	return { statementId: 'id', statement: '', description: '', ...overrides } as Statement;

@@ -29,7 +29,13 @@ import { initFunctionsSentry } from './utils/sentry';
 initFunctionsSentry();
 
 // HTTP auth/authorization helpers (extracted for unit testing)
-import { verifyAuthToken, requireSystemAdmin } from './utils/httpAuth';
+import {
+	verifyAuthToken,
+	requireSystemAdmin,
+	withVerifiedUser,
+	type AuthedHttpHandler,
+} from './utils/httpAuth';
+import { RATE_BUDGETS, type RateBudget } from './config/rateBudgets';
 
 // Import function modules
 import { onChatStatementCreated } from './chat/fn_onChatStatementCreated';
@@ -329,8 +335,13 @@ const corsConfig = isProduction
 			'https://freedi-test.web.app',
 			'https://delib-5.web.app',
 			'https://wizcol-app.web.app',
+			'https://wizcol-app.firebaseapp.com',
 			'https://app.wizcol.com',
 			'https://sign.wizcol.com',
+			// Join calls improveSuggestion from the browser
+			'https://join.wizcol.com',
+			'https://wizcol-join.web.app',
+			'https://wizcol-join.firebaseapp.com',
 		]
 	: [
 			'http://localhost:5173',
@@ -470,25 +481,43 @@ const wrapAdminHttpFunction = (
 	);
 };
 
+/**
+ * HTTP function that requires a valid Firebase ID token and hands the verified
+ * uid to the handler. Anonymous users pass, so zero-signup flows keep working.
+ */
+const wrapAuthedHttpFunction = (handler: AuthedHttpHandler, budget?: RateBudget) =>
+	wrapHttpFunction(withVerifiedUser(handler, budget));
+
+/** Same gate for AI and embedding endpoints, with the 1GB memory tier. */
+const wrapAuthedMemoryIntensiveHttpFunction = (handler: AuthedHttpHandler, budget?: RateBudget) =>
+	wrapMemoryIntensiveHttpFunction(withVerifiedUser(handler, budget));
+
 // --------------------------
 // HTTP FUNCTIONS
 // --------------------------
-exports.getRandomStatements = wrapHttpFunction(getRandomStatements);
-exports.getTopStatements = wrapHttpFunction(getTopStatements);
-exports.getUserOptions = wrapHttpFunction(getUserOptions);
-exports.findSimilarStatements = wrapMemoryIntensiveHttpFunction(findSimilarStatements);
-exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
-exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
-exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
-exports.addFeedback = wrapHttpFunction(addFeedback);
+exports.getRandomStatements = wrapAuthedHttpFunction(getRandomStatements);
+exports.getTopStatements = wrapAuthedHttpFunction(getTopStatements);
+exports.getUserOptions = wrapAuthedHttpFunction(getUserOptions);
+exports.findSimilarStatements = wrapAuthedMemoryIntensiveHttpFunction(
+	findSimilarStatements,
+	RATE_BUDGETS.findSimilarStatements,
+);
+exports.massConsensusGetInitialData = wrapAuthedHttpFunction(getInitialMCData);
+exports.getQuestionOptions = wrapAuthedHttpFunction(getQuestionOptions);
+exports.massConsensusAddMember = wrapAuthedHttpFunction(addMassConsensusMember);
+exports.addFeedback = wrapAuthedHttpFunction(addFeedback, RATE_BUDGETS.addFeedback);
 
 // Email notification functions
-exports.addEmailSubscriber = wrapHttpFunction(addEmailSubscriber);
-exports.sendEmailToSubscribers = wrapHttpFunction(sendEmailToSubscribers);
-exports.getEmailSubscriberCount = wrapHttpFunction(getEmailSubscriberCount);
+exports.addEmailSubscriber = wrapAuthedHttpFunction(
+	addEmailSubscriber,
+	RATE_BUDGETS.addEmailSubscriber,
+);
+exports.sendEmailToSubscribers = wrapAuthedHttpFunction(sendEmailToSubscribers);
+exports.getEmailSubscriberCount = wrapAuthedHttpFunction(getEmailSubscriberCount);
+// Stays public: reachable from an emailed link with no login. See fn_emailNotifications.ts.
 exports.unsubscribeEmail = wrapHttpFunction(unsubscribeEmail);
-exports.getCluster = wrapHttpFunction(getCluster);
-exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
+exports.getCluster = wrapAuthedHttpFunction(getCluster);
+exports.recoverLastSnapshot = wrapAuthedHttpFunction(recoverLastSnapshot);
 // Bulk fetch for "Load all" (mind-map / agreement-map / collaboration-index).
 // Authenticated via Firebase ID token inside the handler (verifyAuthToken).
 exports.getBulkStatements = wrapHttpFunction(getBulkStatements);
@@ -502,15 +531,30 @@ exports.cleanupStatementHistory = cleanupStatementHistory;
 exports.recalculateIndices = recalculateIndices;
 exports.fixClusterIntegration = fixClusterIntegration;
 exports.setMapFilter = setMapFilter;
-exports.improveSuggestion = wrapMemoryIntensiveHttpFunction(handleImproveSuggestion);
-exports.detectMultipleSuggestions = wrapMemoryIntensiveHttpFunction(detectMultipleSuggestions);
-exports.mergeStatements = wrapMemoryIntensiveHttpFunction(mergeStatements);
+exports.improveSuggestion = wrapAuthedMemoryIntensiveHttpFunction(
+	handleImproveSuggestion,
+	RATE_BUDGETS.improveSuggestion,
+);
+exports.detectMultipleSuggestions = wrapAuthedMemoryIntensiveHttpFunction(
+	detectMultipleSuggestions,
+	RATE_BUDGETS.detectMultipleSuggestions,
+);
+exports.mergeStatements = wrapAuthedMemoryIntensiveHttpFunction(
+	mergeStatements,
+	RATE_BUDGETS.mergeStatements,
+);
 // One round trip for the MC "Add your idea" flow: moderation + split + similar
-exports.prepareSuggestion = wrapMemoryIntensiveHttpFunction(prepareSuggestion);
-exports.detectStatementType = wrapMemoryIntensiveHttpFunction(detectStatementType);
+exports.prepareSuggestion = wrapAuthedMemoryIntensiveHttpFunction(
+	prepareSuggestion,
+	RATE_BUDGETS.prepareSuggestion,
+);
+exports.detectStatementType = wrapAuthedMemoryIntensiveHttpFunction(
+	detectStatementType,
+	RATE_BUDGETS.detectStatementType,
+);
 
 // PHASE 4 FIX: Metrics and monitoring functions
-exports.analyzeSubscriptionPatterns = analyzeSubscriptionPatterns;
+exports.analyzeSubscriptionPatterns = wrapAdminHttpFunction(analyzeSubscriptionPatterns);
 
 // Maintenance HTTP functions (admin auth required)
 exports.maintainRole = wrapAdminHttpFunction(maintainRole);
@@ -821,18 +865,18 @@ exports.summarizeLink = summarizeLink;
 exports.improveProposalWithAI = improveProposalWithAI;
 
 // Room Assignment functions
-exports.createRoomAssignments = wrapHttpFunction(createRoomAssignments);
-exports.notifyRoomParticipants = wrapHttpFunction(notifyRoomParticipants);
-exports.getRoomAssignments = wrapHttpFunction(getRoomAssignments);
-exports.getMyRoomAssignment = wrapHttpFunction(getMyRoomAssignment);
-exports.deleteRoomAssignments = wrapHttpFunction(deleteRoomAssignments);
+exports.createRoomAssignments = wrapAuthedHttpFunction(createRoomAssignments);
+exports.notifyRoomParticipants = wrapAuthedHttpFunction(notifyRoomParticipants);
+exports.getRoomAssignments = wrapAuthedHttpFunction(getRoomAssignments);
+exports.getMyRoomAssignment = wrapAuthedHttpFunction(getMyRoomAssignment);
+exports.deleteRoomAssignments = wrapAuthedHttpFunction(deleteRoomAssignments);
 
 // Split Joined Option functions
-exports.splitJoinedOption = wrapHttpFunction(splitJoinedOption);
-exports.getOptionsExceedingMax = wrapHttpFunction(getOptionsExceedingMax);
-exports.getAllOptionsWithMembers = wrapHttpFunction(getAllOptionsWithMembers);
-exports.clearAllRoomsForParent = wrapHttpFunction(clearAllRoomsForParent);
-exports.cleanupDuplicateRoomSettings = wrapHttpFunction(cleanupDuplicateRoomSettings);
+exports.splitJoinedOption = wrapAuthedHttpFunction(splitJoinedOption);
+exports.getOptionsExceedingMax = wrapAuthedHttpFunction(getOptionsExceedingMax);
+exports.getAllOptionsWithMembers = wrapAuthedHttpFunction(getAllOptionsWithMembers);
+exports.clearAllRoomsForParent = wrapAuthedHttpFunction(clearAllRoomsForParent);
+exports.cleanupDuplicateRoomSettings = wrapAdminHttpFunction(cleanupDuplicateRoomSettings);
 
 // Discussion Summarization
 exports.summarizeDiscussion = summarizeDiscussion;
@@ -843,16 +887,19 @@ exports.serveOgTags = serveOgTags;
 exports.serveJoinShareRoutes = serveJoinShareRoutes;
 
 // Google Docs Import
-exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
+exports.importGoogleDoc = wrapAuthedHttpFunction(importGoogleDoc);
 
 // Document Version AI Processing (for Sign app - uses 540s timeout vs Vercel's 30s limit)
-exports.processVersionAI = wrapMemoryIntensiveHttpFunction(processVersionAI);
+exports.processVersionAI = wrapAuthedMemoryIntensiveHttpFunction(processVersionAI);
 
 // Sign Document Report AI narrative (for Sign app - uses 540s timeout vs Vercel's 30s limit)
-exports.generateDocumentReportAI = wrapMemoryIntensiveHttpFunction(generateDocumentReportAI);
+exports.generateDocumentReportAI = wrapAuthedMemoryIntensiveHttpFunction(generateDocumentReportAI);
 
 // Suggestion Refinement AI (per-suggestion synthesis + improvement from comments)
-exports.processRefinementAI = wrapMemoryIntensiveHttpFunction(processRefinementAI);
+exports.processRefinementAI = wrapAuthedMemoryIntensiveHttpFunction(
+	processRefinementAI,
+	RATE_BUDGETS.processRefinementAI,
+);
 
 // Auto-Generate Version on Suggestion Threshold
 exports.onSuggestionCreatedAutoGenerate = createFirestoreFunction(
@@ -883,13 +930,13 @@ exports.synthesizeIdeasExecute = synthesizeIdeasExecute;
 exports.regenerateSynthesisProposal = regenerateSynthesisProposal;
 
 // Embedding Operations (for vector-based similarity search)
-exports.generateBulkEmbeddings = wrapHttpFunction(generateBulkEmbeddings);
-exports.getEmbeddingStatus = wrapHttpFunction(getEmbeddingStatus);
-exports.regenerateEmbedding = wrapHttpFunction(regenerateEmbedding);
-exports.deleteEmbedding = wrapHttpFunction(deleteEmbedding);
+exports.generateBulkEmbeddings = wrapAdminHttpFunction(generateBulkEmbeddings);
+exports.getEmbeddingStatus = wrapAdminHttpFunction(getEmbeddingStatus);
+exports.regenerateEmbedding = wrapAdminHttpFunction(regenerateEmbedding);
+exports.deleteEmbedding = wrapAdminHttpFunction(deleteEmbedding);
 
 // Polarization Index Migration (for recalculating with demographic data)
-exports.recalculatePolarizationIndexForStatement = wrapHttpFunction(
+exports.recalculatePolarizationIndexForStatement = wrapAdminHttpFunction(
 	async (req: Request, res: Response) => {
 		const { statementId } = req.body;
 		if (!statementId) {
@@ -902,7 +949,7 @@ exports.recalculatePolarizationIndexForStatement = wrapHttpFunction(
 	},
 );
 
-exports.recalculatePolarizationIndexForParent = wrapHttpFunction(
+exports.recalculatePolarizationIndexForParent = wrapAdminHttpFunction(
 	async (req: Request, res: Response) => {
 		const { parentId } = req.body;
 		if (!parentId) {
@@ -915,7 +962,7 @@ exports.recalculatePolarizationIndexForParent = wrapHttpFunction(
 	},
 );
 
-exports.recalculatePolarizationIndexForGroup = wrapHttpFunction(
+exports.recalculatePolarizationIndexForGroup = wrapAdminHttpFunction(
 	async (req: Request, res: Response) => {
 		const { topParentId } = req.body;
 		if (!topParentId) {

@@ -1,7 +1,10 @@
 import { logger } from 'firebase-functions/v1';
+import { escapeHtml, safeHttpUrl } from './utils/htmlEscape';
 
 interface BaseEmailOptions {
+	/** Plain text */
 	title?: string;
+	/** Already-safe HTML: builders escape every user-supplied value before composing it */
 	message: string;
 	buttonText?: string;
 	buttonUrl: string;
@@ -22,8 +25,12 @@ function createBaseEmailTemplate({
 	showButtonLink = true,
 	recipientName = '',
 }: BaseEmailOptions): string {
+	const safeTitle = escapeHtml(title);
+	const safeButtonText = escapeHtml(buttonText);
+	const safeUrl = escapeHtml(safeHttpUrl(buttonUrl) ?? getBaseUrl());
+
 	try {
-		const greeting = recipientName ? `Hello ${recipientName},` : 'Hello,';
+		const greeting = recipientName ? `Hello ${escapeHtml(recipientName)},` : 'Hello,';
 
 		return `<!DOCTYPE html>
 <html>
@@ -87,7 +94,7 @@ function createBaseEmailTemplate({
 <body>
     <div class="container">
         <div class="header">
-            <h2>${title}</h2>
+            <h2>${safeTitle}</h2>
         </div>
         
         <p>${greeting}</p>
@@ -97,14 +104,14 @@ function createBaseEmailTemplate({
         </div>
         
         <div class="button-container">
-            <a href="${buttonUrl}" class="button">${buttonText}</a>
+            <a href="${safeUrl}" class="button">${safeButtonText}</a>
         </div>
         
         ${
 					showButtonLink
 						? `
         <p>If you're having trouble with the button above, you can also copy and paste the following link into your browser:</p>
-        <p style="word-break: break-all;">${buttonUrl}</p>
+        <p style="word-break: break-all;">${safeUrl}</p>
         `
 						: ''
 				}
@@ -121,7 +128,7 @@ function createBaseEmailTemplate({
 	} catch (error) {
 		logger.error('Error creating base email template:', error);
 
-		return `<p>${message}</p><p><a href="${buttonUrl}">${buttonText}</a></p>`;
+		return `<p>${message}</p><p><a href="${safeUrl}">${safeButtonText}</a></p>`;
 	}
 }
 
@@ -130,7 +137,7 @@ function createBaseEmailTemplate({
  * @param options - Configuration options for the email template
  * @param options.buttonText - Text to display on the button
  * @param options.statementId - ID of the statement for the URL
- * @param options.message - Main message to display in the email
+ * @param options.message - Main message, as safe HTML: escape user-supplied values first
  * @param options.title - Title of the email
  * @param options.recipientName - Name of the email recipient
  * @returns HTML string for email body
@@ -149,7 +156,7 @@ export function createStatementEmailTemplate({
 	recipientName?: string;
 }): string {
 	try {
-		const statementUrl = `${getBaseUrl()}/statement/${statementId}`;
+		const statementUrl = `${getBaseUrl()}/statement/${encodeURIComponent(statementId)}`;
 
 		return createBaseEmailTemplate({
 			title,
@@ -162,7 +169,9 @@ export function createStatementEmailTemplate({
 		logger.error('Error creating statement email template:', error);
 		const baseUrl = getBaseUrl();
 
-		return `<p>${message}</p><p>View statement: <a href="${baseUrl}/statement/${statementId}">${baseUrl}/statement/${statementId}</a></p>`;
+		const url = escapeHtml(`${baseUrl}/statement/${encodeURIComponent(statementId)}`);
+
+		return `<p>${message}</p><p>View statement: <a href="${url}">${url}</a></p>`;
 	}
 }
 
@@ -187,9 +196,9 @@ export function createReplyNotificationEmail({
 		const limitedReplyText =
 			replyText.length > 150 ? `${replyText.substring(0, 150)}...` : replyText;
 
-		const message = `<strong>${replierName}</strong> has replied to your statement:<br>
+		const message = `<strong>${escapeHtml(replierName)}</strong> has replied to your statement:<br>
       <blockquote style="margin: 10px 0; padding: 10px; background-color: #f0f4f8; border-left: 4px solid #1f5895; font-style: italic;">
-        "${limitedReplyText}"
+        "${escapeHtml(limitedReplyText)}"
       </blockquote>`;
 
 		return createStatementEmailTemplate({
@@ -204,7 +213,9 @@ export function createReplyNotificationEmail({
 
 		return createStatementEmailTemplate({
 			statementId,
-			message: `${replierName} has replied to your statement: "${replyText.substring(0, 100)}${replyText.length > 100 ? '...' : ''}"`,
+			message: escapeHtml(
+				`${replierName} has replied to your statement: "${replyText.substring(0, 100)}${replyText.length > 100 ? '...' : ''}"`,
+			),
 			buttonText: 'View Reply',
 		});
 	}
@@ -234,7 +245,7 @@ export function createInvitationEmail({
 
 	return createStatementEmailTemplate({
 		statementId,
-		message: message || defaultMessage,
+		message: escapeHtml(message || defaultMessage),
 		title: "You've been invited to join a discussion",
 		buttonText: 'Join Discussion',
 		recipientName,
@@ -285,7 +296,7 @@ export function createStatementUpdateEmail({
 
 	return createStatementEmailTemplate({
 		statementId,
-		message,
+		message: escapeHtml(message),
 		title,
 		buttonText,
 		recipientName,
@@ -315,11 +326,11 @@ export function createMassConsensusNotificationEmail({
 }): string {
 	try {
 		const baseUrl = getBaseUrl();
-		const finalButtonUrl = buttonUrl || `${baseUrl}/statement/${statementId}`;
+		const finalButtonUrl = buttonUrl || `${baseUrl}/statement/${encodeURIComponent(statementId)}`;
 		const title = statementTitle ? `Update: ${statementTitle}` : 'Update from Freedi';
 
 		// Format message - convert newlines to <br> for HTML
-		const formattedMessage = message.replace(/\n/g, '<br>');
+		const formattedMessage = escapeHtml(message).replace(/\n/g, '<br>');
 
 		return createBaseEmailTemplate({
 			title,
@@ -333,7 +344,9 @@ export function createMassConsensusNotificationEmail({
 		logger.error('Error creating mass consensus notification email:', error);
 		const baseUrl = getBaseUrl();
 
-		return `<p>${message}</p><p><a href="${baseUrl}/statement/${statementId}">View Discussion</a></p>`;
+		const url = escapeHtml(`${baseUrl}/statement/${encodeURIComponent(statementId)}`);
+
+		return `<p>${escapeHtml(message)}</p><p><a href="${url}">View Discussion</a></p>`;
 	}
 }
 
@@ -362,8 +375,8 @@ export function createJoinDelegateInvitationEmail({
 	expiresAtMs: number;
 }): string {
 	try {
-		const safeQuestion = questionTitle?.trim() || 'a Freedi question';
-		const safeInviter = inviterName?.trim() || 'A facilitator';
+		const safeQuestion = escapeHtml(questionTitle?.trim() || 'a Freedi question');
+		const safeInviter = escapeHtml(inviterName?.trim() || 'A facilitator');
 
 		const permLines: string[] = [];
 		if (canManageOrganizer) {
@@ -398,7 +411,7 @@ This invite expires on ${expiryStr}. Click the button below and sign in with the
 	} catch (error) {
 		logger.error('Error creating join delegate invitation email:', error);
 
-		return `<p>You've been invited to help edit solutions on Freedi.</p><p><a href="${inviteLink}">Accept invite</a></p>`;
+		return `<p>You've been invited to help edit solutions on Freedi.</p><p><a href="${escapeHtml(safeHttpUrl(inviteLink) ?? getBaseUrl())}">Accept invite</a></p>`;
 	}
 }
 
@@ -422,8 +435,11 @@ export function createOrganizationInvitationEmail({
 	language: 'he' | 'en';
 }): string {
 	try {
-		const safeOrg = organizationName?.trim() || 'WizCol Studio';
-		const safeInviter = inviterName?.trim() || (language === 'he' ? 'מנהל/ת' : 'An administrator');
+		const orgName = organizationName?.trim() || 'WizCol Studio';
+		const safeOrg = escapeHtml(orgName);
+		const safeInviter = escapeHtml(
+			inviterName?.trim() || (language === 'he' ? 'מנהל/ת' : 'An administrator'),
+		);
 
 		if (language === 'he') {
 			const roleHe = role === 'owner' ? 'בעלים' : role === 'admin' ? 'מנהל/ת' : 'צופה';
@@ -436,7 +452,7 @@ ${safeInviter} הזמין/ה אותך להצטרף לארגון <strong>"${safeO
 			`.trim();
 
 			return createBaseEmailTemplate({
-				title: `הוזמנת להצטרף ל-${safeOrg}`,
+				title: `הוזמנת להצטרף ל-${orgName}`,
 				message,
 				buttonText: 'אישור ההזמנה',
 				buttonUrl: inviteLink,
@@ -452,7 +468,7 @@ Click the button below and sign in with the same Google account that received th
 		`.trim();
 
 		return createBaseEmailTemplate({
-			title: `You've been invited to ${safeOrg}`,
+			title: `You've been invited to ${orgName}`,
 			message,
 			buttonText: 'Accept invite',
 			buttonUrl: inviteLink,
@@ -461,7 +477,7 @@ Click the button below and sign in with the same Google account that received th
 	} catch (error) {
 		logger.error('Error creating organization invitation email:', error);
 
-		return `<p>You've been invited to join ${organizationName} on WizCol Studio.</p><p><a href="${inviteLink}">Accept invite</a></p>`;
+		return `<p>You've been invited to join ${escapeHtml(organizationName)} on WizCol Studio.</p><p><a href="${escapeHtml(safeHttpUrl(inviteLink) ?? getBaseUrl())}">Accept invite</a></p>`;
 	}
 }
 

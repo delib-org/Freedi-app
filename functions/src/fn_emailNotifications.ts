@@ -1,6 +1,6 @@
 import { db } from '.';
 import { logger, Request, Response } from 'firebase-functions/v1';
-import { Collections, Statement } from '@freedi/shared-types';
+import { Collections } from '@freedi/shared-types';
 import {
 	EmailSubscriber,
 	SendEmailNotificationRequest,
@@ -10,31 +10,74 @@ import {
 } from './types/email-types';
 import { createMassConsensusNotificationEmail } from './email-templates';
 import { getEmailTransporter } from './utils/emailTransporter';
+import { logError } from './utils/errorHandling';
+import { requireStatementAdmin } from './utils/httpAuth';
+import { safeHttpUrl } from './utils/htmlEscape';
+import {
+	API_RATE_LIMITS_COLLECTION,
+	passesHttpRateLimit,
+	reserveWindowSlot,
+} from './utils/rateLimit';
+import { EMAIL_RECIPIENTS_GLOBAL_PER_DAY, RATE_BUDGETS } from './config/rateBudgets';
 
 // Collection name for email subscribers
 const EMAIL_SUBSCRIBERS_COLLECTION = 'emailSubscribers';
+const MAX_EMAIL_LENGTH = 254;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Validates email format
  */
 function isValidEmail(email: string): boolean {
+	if (typeof email !== 'string' || email.length > MAX_EMAIL_LENGTH) return false;
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 	return emailRegex.test(email);
 }
 
 /**
+ * Count these addressees against the project's daily sending budget. Counted in
+ * recipients, not sends, because one send can reach a whole subscriber list.
+ */
+async function reserveRecipients(res: Response, recipients: number, uid: string): Promise<boolean> {
+	try {
+		await reserveWindowSlot({
+			collection: API_RATE_LIMITS_COLLECTION,
+			docId: 'emailRecipients__global',
+			limit: EMAIL_RECIPIENTS_GLOBAL_PER_DAY,
+			windowMs: DAY_MS,
+			label: 'email recipients global daily',
+			now: Date.now(),
+			cost: recipients,
+			expires: true,
+		});
+
+		return true;
+	} catch (error) {
+		logError(error, {
+			operation: 'emailNotifications.reserveRecipients',
+			userId: uid,
+			metadata: { recipients },
+		});
+		res
+			.status(429)
+			.json({ ok: false, message: 'Daily email limit reached', error: 'RATE_LIMITED' });
+
+		return false;
+	}
+}
+
+/**
  * Add an email subscriber for a statement
  * Called from mass-consensus app when user submits their email
  */
-export const addEmailSubscriber = async (req: Request, res: Response): Promise<void> => {
+export const addEmailSubscriber = async (
+	req: Request,
+	res: Response,
+	uid: string,
+): Promise<void> => {
 	try {
-		const {
-			email,
-			statementId,
-			userId,
-			source = 'mass-consensus',
-		} = req.body as AddEmailSubscriberRequest;
+		const { email, statementId, source = 'mass-consensus' } = req.body as AddEmailSubscriberRequest;
 
 		// Validate required fields
 		if (!email || !statementId) {
@@ -99,7 +142,7 @@ export const addEmailSubscriber = async (req: Request, res: Response): Promise<v
 			subscriberId,
 			email: email.toLowerCase(),
 			statementId,
-			userId: userId || undefined,
+			userId: uid,
 			createdAt: Date.now(),
 			isActive: true,
 			source,
@@ -120,12 +163,11 @@ export const addEmailSubscriber = async (req: Request, res: Response): Promise<v
 		};
 		res.send(response);
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-		logger.error('Error adding email subscriber', { error: errorMessage });
+		logError(error, { operation: 'emailNotifications.addEmailSubscriber', userId: uid });
 		const response: AddEmailSubscriberResponse = {
 			ok: false,
 			message: 'Failed to add email subscriber',
-			error: errorMessage,
+			error: 'INTERNAL',
 		};
 		res.status(500).send(response);
 	}
@@ -135,16 +177,26 @@ export const addEmailSubscriber = async (req: Request, res: Response): Promise<v
  * Send email notification to all subscribers of a statement
  * Called by admin from main app's statement settings
  */
-export const sendEmailToSubscribers = async (req: Request, res: Response): Promise<void> => {
+export const sendEmailToSubscribers = async (
+	req: Request,
+	res: Response,
+	uid: string,
+): Promise<void> => {
 	try {
-		const { statementId, subject, message, adminId, buttonText, buttonUrl } =
+		const { statementId, subject, message, buttonText, buttonUrl } =
 			req.body as SendEmailNotificationRequest;
 
 		// Validate required fields
-		if (!statementId || !subject || !message || !adminId) {
+		if (
+			!statementId ||
+			typeof subject !== 'string' ||
+			!subject ||
+			typeof message !== 'string' ||
+			!message
+		) {
 			const response: SendEmailNotificationResponse = {
 				ok: false,
-				message: 'Missing required fields: statementId, subject, message, and adminId are required',
+				message: 'Missing required fields: statementId, subject and message are required',
 				error: 'MISSING_FIELDS',
 			};
 			res.status(400).send(response);
@@ -152,50 +204,26 @@ export const sendEmailToSubscribers = async (req: Request, res: Response): Promi
 			return;
 		}
 
-		// Verify admin has permission (check if user is admin of the statement)
-		const subscriptionQuery = await db
-			.collection(Collections.statementsSubscribe)
-			.where('statementId', '==', statementId)
-			.where('userId', '==', adminId)
-			.limit(1)
-			.get();
-
-		if (subscriptionQuery.empty) {
+		const safeButtonUrl = safeHttpUrl(buttonUrl);
+		if (buttonUrl && !safeButtonUrl) {
 			const response: SendEmailNotificationResponse = {
 				ok: false,
-				message: 'User is not subscribed to this statement',
-				error: 'NOT_AUTHORIZED',
+				message: 'Button URL must be an http(s) address',
+				error: 'INVALID_URL',
 			};
-			res.status(403).send(response);
+			res.status(400).send(response);
 
 			return;
 		}
 
-		const userSubscription = subscriptionQuery.docs[0].data();
-		if (userSubscription.role !== 'admin' && userSubscription.role !== 'creator') {
-			const response: SendEmailNotificationResponse = {
-				ok: false,
-				message: 'Only admins can send email notifications',
-				error: 'NOT_AUTHORIZED',
-			};
-			res.status(403).send(response);
-
-			return;
-		}
-
-		// Get statement details for the email
-		const statementDoc = await db.collection(Collections.statements).doc(statementId).get();
-		if (!statementDoc.exists) {
-			const response: SendEmailNotificationResponse = {
-				ok: false,
-				message: 'Statement not found',
-				error: 'STATEMENT_NOT_FOUND',
-			};
-			res.status(404).send(response);
-
-			return;
-		}
-		const statement = statementDoc.data() as Statement;
+		// Stops fake admins: a body adminId used to be enough to pass this gate.
+		const statement = await requireStatementAdmin(
+			res,
+			uid,
+			statementId,
+			'emailNotifications.sendEmailToSubscribers',
+		);
+		if (!statement) return;
 
 		// Get all active email subscribers for this statement
 		const subscribersSnapshot = await db
@@ -215,6 +243,9 @@ export const sendEmailToSubscribers = async (req: Request, res: Response): Promi
 
 			return;
 		}
+
+		if (!(await passesHttpRateLimit(req, res, RATE_BUDGETS.sendEmailToSubscribers, uid))) return;
+		if (!(await reserveRecipients(res, subscribersSnapshot.size, uid))) return;
 
 		// Get email transporter
 		const transporter = await getEmailTransporter();
@@ -244,7 +275,7 @@ export const sendEmailToSubscribers = async (req: Request, res: Response): Promi
 					statementTitle: statement.statement,
 					message,
 					buttonText,
-					buttonUrl,
+					buttonUrl: safeButtonUrl,
 				});
 
 				await transporter.sendMail({
@@ -252,13 +283,12 @@ export const sendEmailToSubscribers = async (req: Request, res: Response): Promi
 					to: subscriber.email,
 					subject: subject,
 					html: emailHtml,
-					text: `${message}\n\nView more at: ${buttonUrl || `https://freedi.tech/statement/${statementId}`}`,
+					text: `${message}\n\nView more at: ${safeButtonUrl || `https://freedi.tech/statement/${statementId}`}`,
 				});
 
 				sentCount++;
 				logger.info('Email sent successfully', {
 					subscriberId: subscriber.subscriberId,
-					email: subscriber.email,
 					statementId,
 				});
 			} catch (emailError) {
@@ -282,17 +312,16 @@ export const sendEmailToSubscribers = async (req: Request, res: Response): Promi
 			statementId,
 			sentCount,
 			failedCount,
-			adminId,
+			adminId: uid,
 		});
 
 		res.send(response);
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-		logger.error('Error sending email notifications', { error: errorMessage });
+		logError(error, { operation: 'emailNotifications.sendEmailToSubscribers', userId: uid });
 		const response: SendEmailNotificationResponse = {
 			ok: false,
 			message: 'Failed to send email notifications',
-			error: errorMessage,
+			error: 'INTERNAL',
 		};
 		res.status(500).send(response);
 	}
@@ -302,7 +331,11 @@ export const sendEmailToSubscribers = async (req: Request, res: Response): Promi
  * Get subscriber count for a statement
  * Used by admin to see how many people will receive the notification
  */
-export const getEmailSubscriberCount = async (req: Request, res: Response): Promise<void> => {
+export const getEmailSubscriberCount = async (
+	req: Request,
+	res: Response,
+	uid: string,
+): Promise<void> => {
 	try {
 		const { statementId } = req.query as { statementId: string };
 
@@ -311,6 +344,14 @@ export const getEmailSubscriberCount = async (req: Request, res: Response): Prom
 
 			return;
 		}
+
+		const statement = await requireStatementAdmin(
+			res,
+			uid,
+			statementId,
+			'emailNotifications.getEmailSubscriberCount',
+		);
+		if (!statement) return;
 
 		const subscribersSnapshot = await db
 			.collection(EMAIL_SUBSCRIBERS_COLLECTION)
@@ -324,14 +365,18 @@ export const getEmailSubscriberCount = async (req: Request, res: Response): Prom
 			statementId,
 		});
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-		logger.error('Error getting email subscriber count', { error: errorMessage });
-		res.status(500).send({ ok: false, message: errorMessage, count: 0 });
+		logError(error, { operation: 'emailNotifications.getEmailSubscriberCount', userId: uid });
+		res.status(500).send({ ok: false, message: 'Failed to get subscriber count', count: 0 });
 	}
 };
 
 /**
- * Unsubscribe an email from notifications
+ * Unsubscribe an email from notifications.
+ *
+ * Deliberately needs no sign-in: this is an opt-out, and it must not ask someone
+ * for an account they do not have. No sent email carries a link to it yet, so
+ * there is no signed token to verify; when a link is added it should carry an
+ * HMAC of subscriberId and this body-based form should go.
  */
 export const unsubscribeEmail = async (req: Request, res: Response): Promise<void> => {
 	try {

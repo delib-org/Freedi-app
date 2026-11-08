@@ -39,7 +39,7 @@ export const getInitialMCData = async (req: Request, res: Response) => {
 	}
 };
 
-export const addMassConsensusMember = async (req: Request, res: Response) => {
+export const addMassConsensusMember = async (req: Request, res: Response, uid: string) => {
 	try {
 		const { statementId, lastUpdate, email, creator }: MassConsensusMember = req.body;
 
@@ -53,9 +53,10 @@ export const addMassConsensusMember = async (req: Request, res: Response) => {
 			statementId,
 			lastUpdate,
 			email,
-			creator,
+			// The member is whoever the token says, whatever uid the body claims.
+			creator: { ...creator, uid },
 		};
-		await db.collection(Collections.massConsensusMembers).doc(creator.uid).set(newMember);
+		await db.collection(Collections.massConsensusMembers).doc(uid).set(newMember);
 
 		res.send({ message: 'Member added successfully', ok: true });
 	} catch (error) {

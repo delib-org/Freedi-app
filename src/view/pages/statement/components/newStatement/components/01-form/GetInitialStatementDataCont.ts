@@ -1,6 +1,7 @@
 import { similarOptionsEndPoint } from '@/services/similarOptions';
 import { Statement } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
+import { getAuthHeaders } from '@/controllers/db/authHeaders';
 
 export async function getSimilarOptions(
 	statementId: string,
@@ -16,9 +17,7 @@ export async function getSimilarOptions(
 		const endPoint = similarOptionsEndPoint;
 		const response = await fetch(endPoint, {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
+			headers: await getAuthHeaders(),
 			body: JSON.stringify({
 				statementId,
 				userInput,

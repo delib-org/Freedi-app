@@ -8,6 +8,9 @@
 import { Request, Response } from 'firebase-functions/v1';
 import { getFirestore } from 'firebase-admin/firestore';
 import { logError } from './utils/errorHandling';
+import { requireSignDocumentEditor } from './utils/httpAuth';
+import { passesHttpRateLimit } from './utils/rateLimit';
+import { RATE_BUDGETS } from './config/rateBudgets';
 import { callGemini, extractJSON } from './ai/callGemini';
 import { LLM_MODEL_HEAVY } from './config/gemini';
 
@@ -777,7 +780,7 @@ ${p.content || '(empty)'}`,
 /**
  * HTTP handler for processing version AI
  */
-export async function processVersionAI(req: Request, res: Response): Promise<void> {
+export async function processVersionAI(req: Request, res: Response, uid: string): Promise<void> {
 	try {
 		if (req.method !== 'POST') {
 			res.status(405).json({ error: 'Method not allowed' });
@@ -818,6 +821,11 @@ export async function processVersionAI(req: Request, res: Response): Promise<voi
 
 			return;
 		}
+
+		if (!(await requireSignDocumentEditor(res, uid, documentId, 'versionAI.processVersionAI'))) {
+			return;
+		}
+		if (!(await passesHttpRateLimit(req, res, RATE_BUDGETS.processVersionAI, uid))) return;
 
 		// Get changes
 		const changesSnapshot = await db
