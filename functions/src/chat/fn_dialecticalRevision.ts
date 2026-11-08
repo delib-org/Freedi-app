@@ -15,6 +15,8 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { Collections, StatementType, EvidenceStatus, functionConfig } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { getGeminiModel } from '../config/gemini';
+import { enforceCallableRateLimit } from '../utils/rateLimit';
+import { RATE_BUDGETS } from '../config/rateBudgets';
 import { recomputeAncestors } from './recomputeAncestors';
 
 const REVISIONS = 'chatRevisions';
@@ -132,6 +134,12 @@ export const generateDialecticalRevision = onCall<{ statementId: string }>(
 		if (existing && existing.summary && existing.subtreeFingerprint === fingerprint) {
 			return { ...existing, cached: true };
 		}
+
+		await enforceCallableRateLimit(
+			request,
+			RATE_BUDGETS.generateDialecticalRevision,
+			request.auth.uid,
+		);
 
 		const { digest, count } = buildSubtreeDigest(statement, descendants);
 

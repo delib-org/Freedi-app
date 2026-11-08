@@ -3,11 +3,14 @@ import { logger, Request, Response } from 'firebase-functions/v1';
 import { Collections, Feedback, FeedbackSchema } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import * as nodemailer from 'nodemailer';
+import { logError } from './utils/errorHandling';
+import { escapeHtml } from './utils/htmlEscape';
 
-export const addFeedback = async (req: Request, res: Response) => {
+export const addFeedback = async (req: Request, res: Response, uid: string) => {
 	try {
-		// Parse and validate the feedback data
-		const feedback = parse(FeedbackSchema, req.body);
+		// Parse and validate the feedback data, then attribute it to the caller.
+		const submitted = parse(FeedbackSchema, req.body);
+		const feedback: Feedback = { ...submitted, creator: { ...submitted.creator, uid } };
 
 		if (!feedback.feedbackId) {
 			res.status(400).send({ error: 'Feedback ID is required', ok: false });
@@ -28,7 +31,9 @@ export const addFeedback = async (req: Request, res: Response) => {
 		}
 
 		// Save feedback to Firestore
-		await db.collection(Collections.feedback).doc(feedback.feedbackId).set(feedback);
+		// create(), not set(): feedbackId comes from the client and must not be able
+		// to overwrite feedback someone else already submitted.
+		await db.collection(Collections.feedback).doc(feedback.feedbackId).create(feedback);
 
 		// Send email notification
 		await sendFeedbackEmail(feedback);
@@ -40,9 +45,8 @@ export const addFeedback = async (req: Request, res: Response) => {
 
 		res.send({ message: 'Feedback submitted successfully', ok: true });
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-		logger.error('Error adding feedback', { error: errorMessage });
-		res.status(500).send({ error: errorMessage, ok: false });
+		logError(error, { operation: 'feedback.addFeedback', userId: uid });
+		res.status(500).send({ error: 'Failed to submit feedback', ok: false });
 	}
 };
 
@@ -75,6 +79,11 @@ async function sendFeedbackEmail(feedback: Feedback): Promise<void> {
 				pass: emailPassword,
 			},
 		});
+
+		// Every value below is written by the submitter and rendered in Tal's inbox.
+		const safeTitle = escapeHtml(feedback.statementTitle);
+		const safeName = escapeHtml(feedback.creator.displayName);
+		const safeEmail = feedback.email ? escapeHtml(feedback.email) : '';
 
 		const emailData = {
 			from: emailUser, // Sender will be the configured email account
@@ -121,11 +130,11 @@ async function sendFeedbackEmail(feedback: Feedback): Promise<void> {
 						<h2>🔔 New Feedback Received</h2>
 					</div>
 					<div class="content">
-						<p><strong>Statement:</strong> ${feedback.statementTitle}</p>
-						<p><strong>Statement ID:</strong> <code>${feedback.statementId}</code></p>
+						<p><strong>Statement:</strong> ${safeTitle}</p>
+						<p><strong>Statement ID:</strong> <code>${escapeHtml(feedback.statementId)}</code></p>
 						<div class="metadata">
-							<p><strong>User:</strong> ${feedback.creator.displayName} (${feedback.creator.uid})</p>
-							${feedback.email ? `<p><strong>User Email:</strong> <a href="mailto:${feedback.email}">${feedback.email}</a></p>` : '<p><em>No email provided</em></p>'}
+							<p><strong>User:</strong> ${safeName} (${escapeHtml(feedback.creator.uid)})</p>
+							${safeEmail ? `<p><strong>User Email:</strong> <a href="mailto:${safeEmail}">${safeEmail}</a></p>` : '<p><em>No email provided</em></p>'}
 							<p><strong>Date:</strong> ${new Date(feedback.createdAt).toLocaleString('en-US', {
 								dateStyle: 'full',
 								timeStyle: 'short',
@@ -134,7 +143,7 @@ async function sendFeedbackEmail(feedback: Feedback): Promise<void> {
 						<hr>
 						<h3>Feedback Content:</h3>
 						<div class="feedback-text">
-							${feedback.feedbackText.replace(/\n/g, '<br>')}
+							${escapeHtml(feedback.feedbackText).replace(/\n/g, '<br>')}
 						</div>
 					</div>
 				</body>

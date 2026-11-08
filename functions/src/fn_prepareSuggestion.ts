@@ -74,7 +74,11 @@ function pieceFromOutcome(outcome: SimilaritySearchOutcome, text: string): Piece
 		: emptyPiece(text);
 }
 
-export async function prepareSuggestion(request: Request, response: Response): Promise<void> {
+export async function prepareSuggestion(
+	request: Request,
+	response: Response,
+	userId: string,
+): Promise<void> {
 	const startTime = Date.now();
 	const fail = (status: number, body: Partial<PrepareSuggestionResponse>) => {
 		response.status(status).send({
@@ -87,10 +91,10 @@ export async function prepareSuggestion(request: Request, response: Response): P
 	};
 
 	try {
-		const { questionId, userInput, userId, checkPieces } = request.body as PrepareSuggestionRequest;
+		const { questionId, userInput, checkPieces } = request.body as PrepareSuggestionRequest;
 
-		if (!questionId || !userId || !userInput || typeof userInput !== 'string') {
-			fail(400, { error: 'Missing required fields: questionId, userInput and userId' });
+		if (!questionId || !userInput || typeof userInput !== 'string') {
+			fail(400, { error: 'Missing required fields: questionId and userInput' });
 
 			return;
 		}

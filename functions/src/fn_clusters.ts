@@ -11,6 +11,9 @@ import { parse } from 'valibot';
 import { db } from '.';
 import { GEMINI_MODEL, getGenAI, type CompatGenAI } from './config/gemini';
 import { logError } from './utils/errorHandling';
+import { requireStatementAdmin } from './utils/httpAuth';
+import { passesHttpRateLimit } from './utils/rateLimit';
+import { RATE_BUDGETS } from './config/rateBudgets';
 
 interface SimpleDescendants {
 	statement: string;
@@ -29,33 +32,27 @@ function ensureGenAI(): CompatGenAI {
 	return genAI;
 }
 
-export async function getCluster(req: Request, res: Response) {
+export async function getCluster(req: Request, res: Response, uid: string) {
 	try {
-		const statementId = req.body.statementId as Statement[];
-		if (!statementId || typeof statementId !== 'string') {
-			throw new Error('Invalid input: statementId is required');
-		}
-
-		const [topicDB, descendantsDB] = await Promise.all([
-			db.collection(Collections.statements).doc(statementId).get(),
-			db.collection(Collections.statements).where('parentId', '==', statementId).get(),
-		]);
-		const descendants = descendantsDB.docs
-			.map((doc) => parse(StatementSchema, doc.data()))
-			.filter((statement) => statement.isCluster !== true) as Statement[];
-
-		const topic = topicDB.data() as Statement;
-
-		if (!topic || !topic.statementId) {
-			res.status(400).send({ error: 'Invalid input: topic is required', ok: false });
-
-			return;
-		}
+		const statementId: unknown = req.body.statementId;
 		if (!statementId || typeof statementId !== 'string') {
 			res.status(400).send({ error: 'Invalid input: statementId is required', ok: false });
 
 			return;
 		}
+
+		const topic = await requireStatementAdmin(res, uid, statementId, 'clusters.getCluster');
+		if (!topic) return;
+
+		if (!(await passesHttpRateLimit(req, res, RATE_BUDGETS.getCluster, uid))) return;
+
+		const descendantsDB = await db
+			.collection(Collections.statements)
+			.where('parentId', '==', statementId)
+			.get();
+		const descendants = descendantsDB.docs
+			.map((doc) => parse(StatementSchema, doc.data()))
+			.filter((statement) => statement.isCluster !== true) as Statement[];
 
 		if (!descendants || descendants.length === 0) {
 			logger.log('No descendants found for the given statementId:', statementId);
@@ -118,8 +115,17 @@ export async function getCluster(req: Request, res: Response) {
 		//update data-base
 		const batch = db.batch();
 
+		// The model's reply is untrusted text: only statements we actually loaded may
+		// be moved, or a crafted answer could re-parent any statement by id.
+		const loadedIds = new Set(descendants.map((descendant) => descendant.statementId));
+
 		//create new statements based on the groups:
 		groups.forEach((group: Group) => {
+			const members = Array.isArray(group.statements)
+				? group.statements.filter((statement) => loadedIds.has(statement.statementId))
+				: [];
+			if (members.length === 0 || typeof group.groupName !== 'string') return;
+
 			const id = getRandomUID();
 			const groupRef = db.collection(Collections.statements).doc(id);
 			snapshot.clusters.push(id);
@@ -140,7 +146,7 @@ export async function getCluster(req: Request, res: Response) {
 				lastUpdate: new Date().getTime(),
 			};
 			batch.set(groupRef, newStatement);
-			group.statements.forEach((statement: SimpleDescendants) => {
+			members.forEach((statement: SimpleDescendants) => {
 				const statementRef = db.collection(Collections.statements).doc(statement.statementId);
 				batch.update(statementRef, {
 					parentId: id,
@@ -159,9 +165,8 @@ export async function getCluster(req: Request, res: Response) {
 
 		res.status(200).send({ text, descendants, ok: true, groups });
 	} catch (error) {
-		res
-			.status(500)
-			.send({ error: error instanceof Error ? error.message : 'Unknown server error', ok: false });
+		logError(error, { operation: 'clusters.getCluster', userId: uid });
+		res.status(500).send({ error: 'Internal Server Error', ok: false });
 	}
 }
 
@@ -183,12 +188,18 @@ function convertStringToJson(input: string): Group[] | null {
 	}
 }
 
-export const recoverLastSnapshot = async (req: Request, res: Response) => {
+export const recoverLastSnapshot = async (req: Request, res: Response, uid: string) => {
 	try {
 		const { snapshotId } = req.body;
 		if (!snapshotId || typeof snapshotId !== 'string') {
-			throw new Error('Invalid input: snapshotId is required');
+			res.status(400).send({ error: 'Invalid input: snapshotId is required', ok: false });
+
+			return;
 		}
+
+		// A snapshot is looked up by its topic's statement id.
+		const topic = await requireStatementAdmin(res, uid, snapshotId, 'clusters.recoverLastSnapshot');
+		if (!topic) return;
 
 		const snapshotsRef = db.collection(Collections.statementSnapShots);
 		const snapshotDoc = await snapshotsRef
@@ -198,7 +209,9 @@ export const recoverLastSnapshot = async (req: Request, res: Response) => {
 			.get();
 
 		if (snapshotDoc.empty) {
-			throw new Error('Snapshot not found');
+			res.status(404).send({ error: 'Snapshot not found', ok: false });
+
+			return;
 		}
 
 		const snapshotData = snapshotDoc.docs[0].data() as StatementSnapShot;
@@ -233,8 +246,7 @@ export const recoverLastSnapshot = async (req: Request, res: Response) => {
 
 		res.status(200).send({ snapshotData, ok: true });
 	} catch (error) {
-		res
-			.status(500)
-			.send({ error: error instanceof Error ? error.message : 'Unknown server error', ok: false });
+		logError(error, { operation: 'clusters.recoverLastSnapshot', userId: uid });
+		res.status(500).send({ error: 'Internal Server Error', ok: false });
 	}
 };

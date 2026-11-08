@@ -72,6 +72,7 @@ function seed(autoMergeSimilar?: boolean): void {
 		statementId: 'target',
 		statement: 'Improve public landscaping, paths and shade',
 		paragraphs: [],
+		parentId: 'q1',
 	});
 	docs.set('q1', {
 		statementId: 'q1',
@@ -86,12 +87,56 @@ beforeEach(() => {
 	mergeAndReorganizeParagraphs.mockResolvedValue({ paragraphs: [{ content: 'merged' }] });
 });
 
+describe('mergeStatements identity and scope', () => {
+	it('casts the vote as the verified uid, ignoring a forged body userId', async () => {
+		const { response } = makeResponse();
+		await mergeStatements(
+			{ body: body({ userId: 'someone-else' }) } as Request,
+			response,
+			'verified-uid',
+		);
+
+		const evaluationWrite = txSet.mock.calls.find(
+			([, data]) => (data as { evaluatorId?: string }).evaluatorId !== undefined,
+		);
+		expect((evaluationWrite?.[1] as { evaluatorId: string }).evaluatorId).toBe('verified-uid');
+	});
+
+	it('refuses a target that belongs to another question', async () => {
+		docs.set('target', {
+			statementId: 'target',
+			statement: 'x',
+			paragraphs: [],
+			parentId: 'other',
+		});
+		const { response, status } = makeResponse();
+		await mergeStatements({ body: body() } as Request, response, 'u1');
+
+		expect(status).toHaveBeenCalledWith(400);
+		expect(runTransaction).not.toHaveBeenCalled();
+	});
+
+	it('accepts a target nested under the question through a cluster', async () => {
+		docs.set('target', {
+			statementId: 'target',
+			statement: 'x',
+			paragraphs: [],
+			parentId: 'cluster',
+			parents: ['q1', 'cluster'],
+		});
+		const { response, status } = makeResponse();
+		await mergeStatements({ body: body() } as Request, response, 'u1');
+
+		expect(status).toHaveBeenCalledWith(200);
+	});
+});
+
 describe('mergeStatements auto-merge gate', () => {
 	it('merges (and records the +1) when the judge says same', async () => {
 		judgeAutoMerge.mockResolvedValue({ allowed: true, verdict: 'same', reason: '' });
 		const { response, status, send } = makeResponse();
 
-		await mergeStatements({ body: body({ autoMerge: true }) } as Request, response);
+		await mergeStatements({ body: body({ autoMerge: true }) } as Request, response, 'u1');
 
 		expect(judgeAutoMerge).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -108,7 +153,7 @@ describe('mergeStatements auto-merge gate', () => {
 		judgeAutoMerge.mockResolvedValue({ allowed: false, verdict: 'related', reason: '' });
 		const { response, status, send } = makeResponse();
 
-		await mergeStatements({ body: body({ autoMerge: true }) } as Request, response);
+		await mergeStatements({ body: body({ autoMerge: true }) } as Request, response, 'u1');
 
 		expect(status).toHaveBeenCalledWith(409);
 		expect(send).toHaveBeenCalledWith(
@@ -122,7 +167,7 @@ describe('mergeStatements auto-merge gate', () => {
 		judgeAutoMerge.mockResolvedValue({ allowed: false, verdict: 'judge-error', reason: 'x' });
 		const { response, status } = makeResponse();
 
-		await mergeStatements({ body: body({ autoMerge: true }) } as Request, response);
+		await mergeStatements({ body: body({ autoMerge: true }) } as Request, response, 'u1');
 
 		expect(status).toHaveBeenCalledWith(409);
 		expect(runTransaction).not.toHaveBeenCalled();
@@ -133,7 +178,7 @@ describe('mergeStatements auto-merge gate', () => {
 		judgeAutoMerge.mockResolvedValue({ allowed: false, verdict: 'different', reason: '' });
 		const { response, status } = makeResponse();
 
-		await mergeStatements({ body: body() } as Request, response);
+		await mergeStatements({ body: body() } as Request, response, 'u1');
 
 		expect(judgeAutoMerge).toHaveBeenCalled();
 		expect(status).toHaveBeenCalledWith(409);
@@ -144,7 +189,7 @@ describe('mergeStatements auto-merge gate', () => {
 		seed(false);
 		const { response, status } = makeResponse();
 
-		await mergeStatements({ body: body() } as Request, response);
+		await mergeStatements({ body: body() } as Request, response, 'u1');
 
 		expect(judgeAutoMerge).not.toHaveBeenCalled();
 		expect(status).toHaveBeenCalledWith(200);
@@ -157,6 +202,7 @@ describe('mergeStatements auto-merge gate', () => {
 		await mergeStatements(
 			{ body: body({ newContent: 'ייי', autoMerge: true }) } as Request,
 			response,
+			'u1',
 		);
 
 		expect(status).toHaveBeenCalledWith(400);

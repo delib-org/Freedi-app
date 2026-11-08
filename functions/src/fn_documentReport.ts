@@ -18,6 +18,9 @@ import type {
 } from '@freedi/shared-types';
 import { callLLM, extractJson } from './config/openai-chat';
 import { LLM_MODEL_HEAVY } from './config/gemini';
+import { requireSignDocumentEditor } from './utils/httpAuth';
+import { passesHttpRateLimit } from './utils/rateLimit';
+import { RATE_BUDGETS } from './config/rateBudgets';
 import { logError } from './utils/errorHandling';
 import {
 	buildNarrativeSystemPrompt,
@@ -69,14 +72,18 @@ function parseSections(rawText: string): NarrativeSection[] {
 	);
 }
 
-export async function generateDocumentReportAI(req: Request, res: Response): Promise<void> {
+export async function generateDocumentReportAI(
+	req: Request,
+	res: Response,
+	uid: string,
+): Promise<void> {
 	if (req.method !== 'POST') {
 		res.status(405).json({ error: 'Method not allowed' });
 
 		return;
 	}
 
-	const { docId, report, language, userId } = (req.body ?? {}) as GenerateNarrativeBody;
+	const { docId, report, language } = (req.body ?? {}) as GenerateNarrativeBody;
 
 	if (!docId || typeof docId !== 'string') {
 		res.status(400).json({ error: 'docId is required' });
@@ -95,6 +102,20 @@ export async function generateDocumentReportAI(req: Request, res: Response): Pro
 
 		return;
 	}
+
+	// The narrative is saved on the document, and the body supplies the report it
+	// is written from, so only an editor of that document may run this.
+	if (
+		!(await requireSignDocumentEditor(
+			res,
+			uid,
+			docId,
+			'fn_documentReport.generateDocumentReportAI',
+		))
+	) {
+		return;
+	}
+	if (!(await passesHttpRateLimit(req, res, RATE_BUDGETS.generateDocumentReportAI, uid))) return;
 
 	const narrativeLanguage =
 		typeof language === 'string' && language ? language : report.metadata.language || 'en';
@@ -127,7 +148,7 @@ export async function generateDocumentReportAI(req: Request, res: Response): Pro
 		logError(error, {
 			operation: 'fn_documentReport.generateDocumentReportAI',
 			statementId: docId,
-			userId,
+			userId: uid,
 		});
 		res.status(500).json({ error: 'Narrative generation failed' });
 	}
