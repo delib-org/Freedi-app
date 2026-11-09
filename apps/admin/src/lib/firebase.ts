@@ -57,8 +57,7 @@ function init(): void {
 	db = getFirestore(app);
 	auth = getAuth(app);
 
-	const isLocalhost =
-		typeof window !== 'undefined' && window.location.hostname === 'localhost';
+	const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
 
 	if (isLocalhost) {
 		try {

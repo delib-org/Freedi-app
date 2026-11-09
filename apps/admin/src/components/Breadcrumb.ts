@@ -33,8 +33,8 @@ export const Breadcrumb: m.Component<BreadcrumbAttrs> = {
 						target: '_blank',
 						rel: 'noopener',
 					},
-					item.title
-				)
+					item.title,
+				),
 			);
 		});
 

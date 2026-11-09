@@ -37,17 +37,12 @@ export const Sidebar: m.Component = {
 		const { user } = getAuthState();
 
 		return m('.sidebar', { class: sidebarOpen ? 'sidebar--open' : '' }, [
-			m('.sidebar__logo', [
-				m('h1', 'Freedi'),
-				m('span', 'Admin Dashboard'),
-			]),
+			m('.sidebar__logo', [m('h1', 'Freedi'), m('span', 'Admin Dashboard')]),
 			m(
 				'nav.sidebar__nav',
 				navItems.map((item) => {
 					const isActive =
-						item.path === '/'
-							? currentRoute === '/'
-							: currentRoute.startsWith(item.path);
+						item.path === '/' ? currentRoute === '/' : currentRoute.startsWith(item.path);
 
 					return m(
 						m.route.Link,
@@ -56,21 +51,13 @@ export const Sidebar: m.Component = {
 							class: `sidebar__link${isActive ? ' sidebar__link--active' : ''}`,
 							onclick: () => closeSidebar(),
 						},
-						[
-							m('span.sidebar__icon', item.icon),
-							m('span.sidebar__label', item.label),
-						]
+						[m('span.sidebar__icon', item.icon), m('span.sidebar__label', item.label)],
 					);
-				})
+				}),
 			),
 			m('.sidebar__footer', [
-				user &&
-					m('.sidebar__footer-user', user.email || user.displayName || 'Admin'),
-				m(
-					'button.sidebar__footer-signout',
-					{ onclick: () => signOutUser() },
-					'Sign out'
-				),
+				user && m('.sidebar__footer-user', user.email || user.displayName || 'Admin'),
+				m('button.sidebar__footer-signout', { onclick: () => signOutUser() }, 'Sign out'),
 			]),
 		]);
 	},

@@ -23,7 +23,20 @@ const STROKE_LINE = 2.5;
 const DOT_R = 3;
 const BAR_RX = 2;
 
-const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTH_ABBR = [
+	'Jan',
+	'Feb',
+	'Mar',
+	'Apr',
+	'May',
+	'Jun',
+	'Jul',
+	'Aug',
+	'Sep',
+	'Oct',
+	'Nov',
+	'Dec',
+];
 
 function formatDateLabel(iso: string): string {
 	// Year only: "2026" → "2026"
@@ -32,11 +45,13 @@ function formatDateLabel(iso: string): string {
 	// Month: "2026-03" → "Mar 26"
 	if (iso.length === 7) {
 		const [yyyy, mm] = iso.split('-');
+
 		return `${MONTH_ABBR[parseInt(mm, 10) - 1]} ${yyyy.slice(2)}`;
 	}
 
 	// Day: "2026-03-18" → "18/3"
 	const d = new Date(iso + 'T00:00:00');
+
 	return `${d.getDate()}/${d.getMonth() + 1}`;
 }
 
@@ -45,10 +60,7 @@ export const TimeChart: m.Component<TimeChartAttrs> = {
 		const { title, data, color, variant = 'area', height = 180 } = vnode.attrs;
 
 		if (data.length === 0) {
-			return m('.chart-card', [
-				m('.chart-card__title', title),
-				m('.chart-card__empty', 'No data'),
-			]);
+			return m('.chart-card', [m('.chart-card__title', title), m('.chart-card__empty', 'No data')]);
 		}
 
 		const maxVal = Math.max(...data.map((d) => d.count), 1);
@@ -73,22 +85,31 @@ export const TimeChart: m.Component<TimeChartAttrs> = {
 		for (const t of yTicks) {
 			svgChildren.push(
 				m('line', {
-					x1: PAD_LEFT, y1: t.y,
-					x2: VB_W - PAD_RIGHT, y2: t.y,
-					stroke: 'var(--border-color)', 'stroke-width': STROKE_GRID,
-				})
+					x1: PAD_LEFT,
+					y1: t.y,
+					x2: VB_W - PAD_RIGHT,
+					y2: t.y,
+					stroke: 'var(--border-color)',
+					'stroke-width': STROKE_GRID,
+				}),
 			);
 		}
 
 		// Y labels
 		for (const t of yTicks) {
 			svgChildren.push(
-				m('text', {
-					x: PAD_LEFT - 6, y: t.y + FONT_Y * 0.35,
-					'text-anchor': 'end',
-					fill: 'var(--text-muted)', 'font-size': FONT_Y,
-					'font-family': 'var(--font-family)',
-				}, t.label)
+				m(
+					'text',
+					{
+						x: PAD_LEFT - 6,
+						y: t.y + FONT_Y * 0.35,
+						'text-anchor': 'end',
+						fill: 'var(--text-muted)',
+						'font-size': FONT_Y,
+						'font-family': 'var(--font-family)',
+					},
+					t.label,
+				),
 			);
 		}
 
@@ -101,18 +122,23 @@ export const TimeChart: m.Component<TimeChartAttrs> = {
 				const bw = barW * 0.7;
 				svgChildren.push(
 					m('rect', {
-						x, y: PAD_TOP + plotH - barH,
-						width: Math.max(bw, 1), height: barH,
-						fill: color, rx: BAR_RX, opacity: 0.85,
-					})
+						x,
+						y: PAD_TOP + plotH - barH,
+						width: Math.max(bw, 1),
+						height: barH,
+						fill: color,
+						rx: BAR_RX,
+						opacity: 0.85,
+					}),
 				);
 			}
 		} else {
 			svgChildren.push(
 				m('path', {
 					d: areaPath(data, maxVal, plotW, plotH, PAD_LEFT, PAD_TOP),
-					fill: color, opacity: 0.15,
-				})
+					fill: color,
+					opacity: 0.15,
+				}),
 			);
 			svgChildren.push(
 				m('polyline', {
@@ -120,37 +146,45 @@ export const TimeChart: m.Component<TimeChartAttrs> = {
 						.map((d, i) => {
 							const x = PAD_LEFT + (i / Math.max(data.length - 1, 1)) * plotW;
 							const y = PAD_TOP + plotH - (d.count / maxVal) * plotH;
+
 							return `${x},${y}`;
 						})
 						.join(' '),
-					fill: 'none', stroke: color,
-					'stroke-width': STROKE_LINE, 'stroke-linejoin': 'round',
-				})
+					fill: 'none',
+					stroke: color,
+					'stroke-width': STROKE_LINE,
+					'stroke-linejoin': 'round',
+				}),
 			);
 			for (let i = 0; i < data.length; i++) {
 				const d = data[i];
 				if (d.count > 0) {
 					const x = PAD_LEFT + (i / Math.max(data.length - 1, 1)) * plotW;
 					const y = PAD_TOP + plotH - (d.count / maxVal) * plotH;
-					svgChildren.push(
-						m('circle', { cx: x, cy: y, r: DOT_R, fill: color })
-					);
+					svgChildren.push(m('circle', { cx: x, cy: y, r: DOT_R, fill: color }));
 				}
 			}
 		}
 
 		// X labels
 		for (const { i, label } of xLabels) {
-			const x = variant === 'bar'
-				? PAD_LEFT + i * barW + barW / 2
-				: PAD_LEFT + (i / Math.max(data.length - 1, 1)) * plotW;
+			const x =
+				variant === 'bar'
+					? PAD_LEFT + i * barW + barW / 2
+					: PAD_LEFT + (i / Math.max(data.length - 1, 1)) * plotW;
 			svgChildren.push(
-				m('text', {
-					x, y: height - 5,
-					'text-anchor': 'middle',
-					fill: 'var(--text-muted)', 'font-size': FONT_X,
-					'font-family': 'var(--font-family)',
-				}, label)
+				m(
+					'text',
+					{
+						x,
+						y: height - 5,
+						'text-anchor': 'middle',
+						fill: 'var(--text-muted)',
+						'font-size': FONT_X,
+						'font-family': 'var(--font-family)',
+					},
+					label,
+				),
 			);
 		}
 
@@ -159,10 +193,14 @@ export const TimeChart: m.Component<TimeChartAttrs> = {
 				m('.chart-card__title', title),
 				m('.chart-card__total', `Total: ${total.toLocaleString()}`),
 			]),
-			m('svg.chart-card__svg', {
-				viewBox: `0 0 ${VB_W} ${height}`,
-				style: { width: '100%', height: 'auto' },
-			}, svgChildren),
+			m(
+				'svg.chart-card__svg',
+				{
+					viewBox: `0 0 ${VB_W} ${height}`,
+					style: { width: '100%', height: 'auto' },
+				},
+				svgChildren,
+			),
 		]);
 	},
 };
@@ -179,9 +217,11 @@ function areaPath(
 	const points = data.map((d, i) => {
 		const x = padL + (i / n) * plotW;
 		const y = padT + plotH - (d.count / maxVal) * plotH;
+
 		return `${x},${y}`;
 	});
 	const baseline = `${padL + plotW},${padT + plotH} ${padL},${padT + plotH}`;
+
 	return `M${points.join(' L')} L${baseline} Z`;
 }
 
@@ -204,10 +244,7 @@ export const MultiTimeChart: m.Component<MultiTimeChartAttrs> = {
 		const { title, series, height = 200 } = vnode.attrs;
 
 		if (series.length === 0 || series.every((s) => s.data.length === 0)) {
-			return m('.chart-card', [
-				m('.chart-card__title', title),
-				m('.chart-card__empty', 'No data'),
-			]);
+			return m('.chart-card', [m('.chart-card__title', title), m('.chart-card__empty', 'No data')]);
 		}
 
 		const dateSet = new Set<string>();
@@ -223,6 +260,7 @@ export const MultiTimeChart: m.Component<MultiTimeChartAttrs> = {
 				layers.push({ label: s.label, color: s.color, y0: total, y1: total + val });
 				total += val;
 			}
+
 			return { date, total, layers };
 		});
 
@@ -242,20 +280,29 @@ export const MultiTimeChart: m.Component<MultiTimeChartAttrs> = {
 		for (const t of yTicks) {
 			svgChildren.push(
 				m('line', {
-					x1: PAD_LEFT, y1: t.y,
-					x2: VB_W - PAD_RIGHT, y2: t.y,
-					stroke: 'var(--border-color)', 'stroke-width': STROKE_GRID,
-				})
+					x1: PAD_LEFT,
+					y1: t.y,
+					x2: VB_W - PAD_RIGHT,
+					y2: t.y,
+					stroke: 'var(--border-color)',
+					'stroke-width': STROKE_GRID,
+				}),
 			);
 		}
 		for (const t of yTicks) {
 			svgChildren.push(
-				m('text', {
-					x: PAD_LEFT - 6, y: t.y + FONT_Y * 0.35,
-					'text-anchor': 'end',
-					fill: 'var(--text-muted)', 'font-size': FONT_Y,
-					'font-family': 'var(--font-family)',
-				}, t.label)
+				m(
+					'text',
+					{
+						x: PAD_LEFT - 6,
+						y: t.y + FONT_Y * 0.35,
+						'text-anchor': 'end',
+						fill: 'var(--text-muted)',
+						'font-size': FONT_Y,
+						'font-family': 'var(--font-family)',
+					},
+					t.label,
+				),
 			);
 		}
 
@@ -270,11 +317,13 @@ export const MultiTimeChart: m.Component<MultiTimeChartAttrs> = {
 					const y = PAD_TOP + plotH - (layer.y1 / maxVal) * plotH;
 					svgChildren.push(
 						m('rect', {
-							x, y,
+							x,
+							y,
 							width: Math.max(rectW, 1),
 							height: Math.max(h, 0.5),
-							fill: layer.color, rx: BAR_RX,
-						})
+							fill: layer.color,
+							rx: BAR_RX,
+						}),
 					);
 				}
 			}
@@ -285,12 +334,18 @@ export const MultiTimeChart: m.Component<MultiTimeChartAttrs> = {
 				const bw = plotW / dates.length;
 				const x = PAD_LEFT + i * bw + bw / 2;
 				svgChildren.push(
-					m('text', {
-						x, y: height - 5,
-						'text-anchor': 'middle',
-						fill: 'var(--text-muted)', 'font-size': FONT_X,
-						'font-family': 'var(--font-family)',
-					}, formatDateLabel(dates[i]))
+					m(
+						'text',
+						{
+							x,
+							y: height - 5,
+							'text-anchor': 'middle',
+							fill: 'var(--text-muted)',
+							'font-size': FONT_X,
+							'font-family': 'var(--font-family)',
+						},
+						formatDateLabel(dates[i]),
+					),
 				);
 			}
 		}
@@ -298,19 +353,24 @@ export const MultiTimeChart: m.Component<MultiTimeChartAttrs> = {
 		return m('.chart-card', [
 			m('.chart-card__header', [
 				m('.chart-card__title', title),
-				m('.chart-card__legend',
+				m(
+					'.chart-card__legend',
 					series.map((s) =>
 						m('.chart-card__legend-item', [
 							m('.chart-card__legend-dot', { style: { background: s.color } }),
 							s.label,
-						])
-					)
+						]),
+					),
 				),
 			]),
-			m('svg.chart-card__svg', {
-				viewBox: `0 0 ${VB_W} ${height}`,
-				style: { width: '100%', height: 'auto' },
-			}, svgChildren),
+			m(
+				'svg.chart-card__svg',
+				{
+					viewBox: `0 0 ${VB_W} ${height}`,
+					style: { width: '100%', height: 'auto' },
+				},
+				svgChildren,
+			),
 		]);
 	},
 };
