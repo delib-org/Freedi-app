@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { Statement, StatementType } from '@freedi/shared-types';
 import TreeMessageNode from '../TreeMessageNode';
 
@@ -82,27 +82,22 @@ const renderNode = (statement: Statement): void => {
 };
 
 describe('TreeMessageNode question summary', () => {
-	it('shows a closed Summary accordion on a question that has a summary', () => {
+	it('shows the Answer preview on a question that has a summary', () => {
 		renderNode(makeStatement({ summary: 'Most agree on X.' }));
-		const toggle = screen.getByRole('button', { name: 'Summary' });
 
-		expect(toggle).toHaveAttribute('aria-expanded', 'false');
-		expect(screen.queryByText('Most agree on X.')).toBeNull();
-
-		fireEvent.click(toggle);
-
+		expect(screen.getByText('chatQuestion.answerLabel')).toBeInTheDocument();
 		expect(screen.getByText('Most agree on X.')).toBeInTheDocument();
 	});
 
-	it('shows no accordion on a question without a summary', () => {
+	it('shows no Answer preview on a question without a summary', () => {
 		renderNode(makeStatement({}));
 
-		expect(screen.queryByRole('button', { name: 'Summary' })).toBeNull();
+		expect(screen.queryByText('chatQuestion.answerLabel')).toBeNull();
 	});
 
-	it('shows no accordion on a non-question even if it has a summary', () => {
+	it('shows no Answer preview on a non-question even if it has a summary', () => {
 		renderNode(makeStatement({ statementType: StatementType.statement, summary: 'Hidden' }));
 
-		expect(screen.queryByRole('button', { name: 'Summary' })).toBeNull();
+		expect(screen.queryByText('chatQuestion.answerLabel')).toBeNull();
 	});
 });

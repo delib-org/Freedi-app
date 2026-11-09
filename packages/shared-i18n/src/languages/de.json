@@ -4703,5 +4703,6 @@
   "Browser notifications must be enabled first": "Browser-Benachrichtigungen müssen zuerst aktiviert werden",
   "Please enable browser notifications first": "Bitte aktiviere zuerst die Browser-Benachrichtigungen",
   "Email Notifications": "E-Mail-Benachrichtigungen",
-  "Receive updates via email": "Updates per E-Mail erhalten"
+  "Receive updates via email": "Updates per E-Mail erhalten",
+  "chatQuestion.answerLabel": "Antwort:"
 }

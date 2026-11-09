@@ -5381,5 +5381,6 @@
   "Browser notifications must be enabled first": "Browser notifications must be enabled first",
   "Please enable browser notifications first": "Please enable browser notifications first",
   "Email Notifications": "Email Notifications",
-  "Receive updates via email": "Receive updates via email"
+  "Receive updates via email": "Receive updates via email",
+  "chatQuestion.answerLabel": "Answer:"
 }

@@ -4703,5 +4703,6 @@
   "Browser notifications must be enabled first": "Browsermeldingen moeten eerst worden ingeschakeld",
   "Please enable browser notifications first": "Schakel eerst browsermeldingen in",
   "Email Notifications": "E-mailmeldingen",
-  "Receive updates via email": "Updates per e-mail ontvangen"
+  "Receive updates via email": "Updates per e-mail ontvangen",
+  "chatQuestion.answerLabel": "Antwoord:"
 }

@@ -4822,5 +4822,6 @@
   "Browser notifications must be enabled first": "يجب تفعيل إشعارات المتصفح أولًا",
   "Please enable browser notifications first": "يرجى تفعيل إشعارات المتصفح أولًا",
   "Email Notifications": "الإشعارات بالبريد الإلكتروني",
-  "Receive updates via email": "تلقَّ التحديثات عبر البريد الإلكتروني"
+  "Receive updates via email": "تلقَّ التحديثات عبر البريد الإلكتروني",
+  "chatQuestion.answerLabel": "الإجابة:"
 }
