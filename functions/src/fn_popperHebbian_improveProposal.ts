@@ -1,9 +1,35 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { Statement, Collections, functionConfig } from '@freedi/shared-types';
 import { getGeminiModel } from './config/gemini';
 import { getParagraphsText } from './helpers';
 import { logError } from './utils/errorHandling';
+import { hasAdminSubscription } from './utils/subscriptionIdentity';
+
+/**
+ * Whether `userId` may improve `statement`: its creator, or an admin of its top
+ * parent. The admin check reads the subscription by doc id and fails closed on
+ * any lookup error (a creator is still let through, since that needs no lookup).
+ */
+export async function canImproveProposal(
+	db: Firestore,
+	statement: Pick<Statement, 'creatorId' | 'topParentId' | 'statementId'>,
+	userId: string,
+): Promise<boolean> {
+	if (statement.creatorId === userId) return true;
+	if (!statement.topParentId) return false;
+	try {
+		return await hasAdminSubscription(db, userId, [statement.topParentId]);
+	} catch (error) {
+		logError(error, {
+			operation: 'popperHebbian.improveProposal.adminCheck',
+			userId,
+			statementId: statement.statementId,
+		});
+
+		return false;
+	}
+}
 
 interface ImproveProposalRequest {
 	statementId: string;
@@ -61,22 +87,7 @@ export const improveProposalWithAI = onCall<ImproveProposalRequest>(
 		const statement = statementDoc.data() as Statement;
 
 		// 2. Check permissions: creator or admin
-		const isCreator = statement.creatorId === userId;
-
-		// Check if user is admin for this group
-		let isAdmin = false;
-		if (statement.topParentId) {
-			const membersSnapshot = await db
-				.collection(Collections.statementsSubscribe)
-				.where('statementId', '==', statement.topParentId)
-				.where('oderId', '==', userId)
-				.where('role', 'in', ['admin', 'creator'])
-				.limit(1)
-				.get();
-			isAdmin = !membersSnapshot.empty;
-		}
-
-		if (!isCreator && !isAdmin) {
+		if (!(await canImproveProposal(db, statement, userId))) {
 			throw new HttpsError(
 				'permission-denied',
 				'Only the creator or admins can improve this proposal',
