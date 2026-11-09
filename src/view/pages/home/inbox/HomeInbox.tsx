@@ -110,7 +110,7 @@ export default function HomeInbox() {
 				))}
 			</div>
 			{visible.length === 0 ? (
-				<p className={styles.inbox__empty}>{t('You have no new notifications')}</p>
+				<p className={styles.inbox__empty}>{t('Your inbox is empty')}</p>
 			) : (
 				<ul className={styles.inbox__list}>
 					{visible.map((notification) => {

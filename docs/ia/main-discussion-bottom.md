@@ -54,7 +54,7 @@ Role: participant, task: go Home from a discussion (3 steps)
 Not affected.
 
 ## 9. Open questions and assumptions
-Follow-ups, deliberately not part of this change: Notifications / Inbox synonym; input placeholder wording; tree-view reply input position (it is `position: fixed`); `--page-bottom-clearance` is never defined.
+Follow-ups, deliberately not part of this change: Notifications / Inbox synonym; input placeholder wording; tree-view reply input position (it is `position: fixed`); `--page-bottom-clearance` was thought undefined, but it is defined in `packages/shared-styles/src/tokens/_variables.scss` and reaches the main app through `src/view/style/_variables.scss` (forwarded into `style.scss`), so it resolves.
 
 ## 10. Handoff to UX
 Fixed by this spec: bar hidden on the cases above; Home as first Menu row and, on a group only, "Ask a question" as the second; chat input and send unchanged; header Inbox, Back and Host chip unchanged; gear and accessibility button unchanged.

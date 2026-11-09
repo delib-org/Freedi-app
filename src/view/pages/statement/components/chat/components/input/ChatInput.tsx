@@ -138,7 +138,7 @@ const ChatInput: FC<Props> = ({
 						adjustTextareaHeight();
 					}}
 					required
-					placeholder={t('Share a thought, a question, a possibility…')}
+					placeholder={t('Write a message…')}
 				></textarea>
 				<button
 					type="submit"
