@@ -7,6 +7,9 @@
 
 @use 'game-scope' as *;
 
+// The projector never shows text below this (projector.scss, IA 14).
+$projector-min-text: 32px;
+
 #{$game} .projector-instruction {
   font-size: 88px;
   font-weight: 800;
@@ -45,7 +48,7 @@
 
 #{$game} .projector-band__label {
   color: var(--paper-line); // ~11:1 on ink ✓ AAA
-  font-size: 30px;
+  font-size: $projector-min-text;
   font-weight: 700;
 }
 

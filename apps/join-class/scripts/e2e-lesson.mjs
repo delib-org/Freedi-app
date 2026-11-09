@@ -31,6 +31,7 @@ const TIMEOUT = 20000;
 const STUDENTS = 6;
 const PROJECTOR_VIEWPORT = { width: 1920, height: 1080 };
 const MIN_TEXT_PX = 32;
+const GATE_BAR_PX = 36;
 const WAITING_CODE_PX = 160;
 const OPENING_QUESTION_PX = 72;
 const CHALLENGE_TEXT = 'Should the school ban phones during lessons?';
@@ -455,7 +456,8 @@ async function phaseProjector() {
 	const passed = await teacher.locator('.projector-gate-bar--passed').count();
 	check('proposals: gate bars, the two above 0.6 passed', passed === 2, `${passed} passed`);
 	const trackHeight = await teacher.locator('.projector-gate-bar__track').first().evaluate((el) => parseFloat(getComputedStyle(el).height));
-	check('proposals: gate bars are 28 px', trackHeight === 28, `${trackHeight}px`);
+	// The game look (game-projector.scss, "a scoreboard") draws the gate bars at 36 px; the solid look keeps 28 px.
+	check('proposals: gate bars are 36 px', trackHeight === GATE_BAR_PX, `${trackHeight}px`);
 	await checkBand('proposals');
 	await admin.collection('statements').doc(challengeId).update({ 'statementSettings.roundPhase': 'improve' });
 	await teacher.waitForFunction(() => document.querySelectorAll('.projector-top__card').length > 0, null, { timeout: TIMEOUT });
@@ -479,7 +481,11 @@ async function phaseProjector() {
 	await checkBand('vote');
 
 	// summary: decision card + support by side + verdict
-	await admin.collection('statements').doc(challengeId).update({ 'statementSettings.ballot.decisionId': optionIds[2] });
+	// Support by side is teacher-only until she shares it (Trello 89fevjY5): share it, as the console switch does.
+	await admin.collection('statements').doc(challengeId).update({
+		'statementSettings.ballot.decisionId': optionIds[2],
+		'statementSettings.voteDisplay.supportShown': true,
+	});
 	for (const [i, d] of pupils.entries()) {
 		const camp = i < 2 ? 'a' : i >= STUDENTS - 2 ? 'b' : 'center';
 		await d.ref.update({ camp, side: camp === 'a' ? 10 : camp === 'b' ? 90 : 50, decisionSupport: 0.9 });
