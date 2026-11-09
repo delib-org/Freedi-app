@@ -1,13 +1,17 @@
-// Thin band under the header bar while inside an answer. The ink is the
-// header-accent ink token (dark on these light accents); ratios checked:
-// not chosen 9.8 (8.8 in high contrast), chosen 6.0 (9.9 in high contrast).
+// Thin band directly under the header bar while inside an answer. The ink is
+// the header-accent ink token (dark on these light accents). Contrast ratios:
+// wheat 9.8 in every mode (--header-not-chosen has no high-contrast override);
+// green 6.0 normally and 9.9 in high contrast (--header-chosen-contrast).
 // The header accents are not overridden for dark mode, so the pairs hold there.
 
 .answer-strip {
-	// Full-bleed inside the header card's 20px side padding.
-	margin-inline: -20px;
+	// Cancel the header's side padding (full-bleed) and the flex gap above, so
+	// the band touches the bar. Both values come from .header in
+	// QuestionHeader.module.scss; the gap below to the next block stays normal.
+	margin-inline: calc(-1 * var(--header-pad-inline, 20px));
+	margin-block-start: calc(-1 * var(--header-gap, 12px));
 	padding-block: 2px;
-	padding-inline: 20px;
+	padding-inline: var(--header-pad-inline, 20px);
 	min-height: 24px;
 	display: flex;
 	align-items: center;
