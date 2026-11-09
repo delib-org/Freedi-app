@@ -764,6 +764,7 @@
   "Failed to submit suggestion": "فشل في إرسال الاقتراح",
   "Failed to submit. Please try again.": "فشل في الإرسال. يرجى المحاولة مرة أخرى.",
   "Failed to summarize clusters": "فشل تلخيص المجموعات",
+  "This photo could not be processed. Please try a different photo.": "تعذرت معالجة هذه الصورة. جرّب صورة أخرى.",
   "Failed to upload image": "فشل تحميل الصورة",
   "Failed to upload logo. Please try again.": "فشل رفع الشعار. يرجى المحاولة مرة أخرى.",
   "Fallacy": "مغالطة منطقية",

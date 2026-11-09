@@ -1,72 +1,129 @@
 import React from 'react';
+import { IMAGE_UPLOAD } from '@/constants/common';
+import { ValidationError } from '@/utils/errorHandling';
+import { calculateTargetSize } from './imageDimensions';
 
-export const compressImage = (
+interface DecodedImage {
+	source: CanvasImageSource;
+	width: number;
+	height: number;
+	release: () => void;
+}
+
+/**
+ * Decode a file for drawing. createImageBitmap with imageOrientation
+ * 'from-image' applies the EXIF rotation; the <img> fallback is rotated
+ * by every current browser when drawn to a canvas.
+ */
+async function decodeImage(file: File): Promise<DecodedImage> {
+	if (typeof createImageBitmap === 'function') {
+		try {
+			const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+
+			return {
+				source: bitmap,
+				width: bitmap.width,
+				height: bitmap.height,
+				release: () => bitmap.close(),
+			};
+		} catch {
+			// fall through to the <img> path
+		}
+	}
+
+	const url = URL.createObjectURL(file);
+
+	try {
+		const img = new Image();
+		await new Promise<void>((resolve, reject) => {
+			img.onload = () => resolve();
+			img.onerror = () => reject(new ValidationError('Image could not be decoded'));
+			img.src = url;
+		});
+
+		return {
+			source: img,
+			width: img.naturalWidth,
+			height: img.naturalHeight,
+			release: () => {
+				img.src = '';
+				URL.revokeObjectURL(url);
+			},
+		};
+	} catch (error) {
+		URL.revokeObjectURL(url);
+		throw error;
+	}
+}
+
+function encode(canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob | null> {
+	return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
+}
+
+/**
+ * Shrink a photo: longest side capped at IMAGE_UPLOAD.MAX_DIMENSION_PX, then
+ * re-encoded until it is under maxSizeKB. If the target cannot be reached the
+ * smallest result is returned as long as it is under the storage limit.
+ * Rejects with ValidationError if the file cannot be decoded or stays too big.
+ */
+export const compressImage = async (
 	file: File,
 	maxSizeKB: number,
 	setProgress: React.Dispatch<React.SetStateAction<number>>,
 ): Promise<File> => {
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.readAsDataURL(file);
+	const decoded = await decodeImage(file);
+	const canvas = document.createElement('canvas');
 
-		reader.onload = (event) => {
-			const img = new Image();
-			img.src = event.target?.result as string;
+	try {
+		const ctx = canvas.getContext('2d');
+		if (!ctx) {
+			throw new ValidationError('Could not get canvas context');
+		}
 
-			img.onload = () => {
-				const canvas = document.createElement('canvas');
-				const ctx = canvas.getContext('2d');
-				if (!ctx) {
-					return reject(new Error('Could not get canvas context'));
-				}
+		let { width, height } = calculateTargetSize(
+			decoded.width,
+			decoded.height,
+			IMAGE_UPLOAD.MAX_DIMENSION_PX,
+		);
+		let quality: number = IMAGE_UPLOAD.INITIAL_QUALITY;
+		let best: Blob | null = null;
 
-				let width = img.width;
-				let height = img.height;
-				const MAX_TRIES = 10;
-				let quality = 0.8;
-				let tries = 0;
+		for (let tries = 0; tries <= IMAGE_UPLOAD.MAX_TRIES; tries++) {
+			canvas.width = Math.max(1, Math.round(width));
+			canvas.height = Math.max(1, Math.round(height));
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.drawImage(decoded.source, 0, 0, canvas.width, canvas.height);
 
-				const resize = () => {
-					canvas.width = width;
-					canvas.height = height;
-					ctx.drawImage(img, 0, 0, width, height);
+			const blob = await encode(canvas, file.type, quality);
+			if (!blob) {
+				throw new ValidationError('Image could not be encoded', { type: file.type });
+			}
 
-					// Track progress during compression
-					canvas.toBlob(
-						(blob) => {
-							if (blob) {
-								const sizeKB = blob.size / 1024;
-								const progress = Math.min((1 - quality) * 100, 100);
-								setProgress(progress);
+			if (!best || blob.size < best.size) best = blob;
+			setProgress(Math.min(((tries + 1) / (IMAGE_UPLOAD.MAX_TRIES + 1)) * 100, 99));
 
-								if (sizeKB <= maxSizeKB) {
-									setProgress(100);
-									resolve(new File([blob], file.name, { type: file.type }));
-								} else if (tries < MAX_TRIES) {
-									quality -= 0.1;
-									width *= 0.9;
-									height *= 0.9;
-									tries++;
-									resize();
-								} else {
-									reject(new Error('Unable to compress image below max size'));
-								}
-							}
-						},
-						file.type,
-						quality,
-					);
-				};
+			if (blob.size / IMAGE_UPLOAD.BYTES_PER_KB <= maxSizeKB) break;
 
-				resize();
-			};
-		};
+			quality = Math.max(IMAGE_UPLOAD.MIN_QUALITY, quality - IMAGE_UPLOAD.QUALITY_STEP);
+			width *= IMAGE_UPLOAD.DIMENSION_SHRINK_FACTOR;
+			height *= IMAGE_UPLOAD.DIMENSION_SHRINK_FACTOR;
+		}
 
-		reader.onerror = (error) =>
-			reject(
-				new Error(
-					`FileReader error: ${error instanceof Error ? error.message : JSON.stringify(error)}`,
-				),
-			);
-	});
+		if (!best || best.size >= IMAGE_UPLOAD.STORAGE_LIMIT_BYTES) {
+			throw new ValidationError('Image is too large to upload after compression', {
+				bytes: best?.size,
+				limit: IMAGE_UPLOAD.STORAGE_LIMIT_BYTES,
+			});
+		}
+
+		setProgress(100);
+
+		// blob.type is what the canvas really produced (PNG when the original
+		// type, e.g. HEIC or GIF, cannot be encoded), so use it, not file.type.
+		return new File([best], file.name, { type: best.type || file.type });
+	} finally {
+		decoded.release();
+		canvas.width = 0;
+		canvas.height = 0;
+	}
 };

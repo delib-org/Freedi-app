@@ -742,6 +742,7 @@
   "Failed to submit suggestion": "Error al enviar la sugerencia",
   "Failed to submit. Please try again.": "Error al enviar. Por favor intente de nuevo.",
   "Failed to summarize clusters": "Error al resumir los grupos",
+  "This photo could not be processed. Please try a different photo.": "No se pudo procesar esta foto. Prueba con otra foto.",
   "Failed to upload image": "Error al subir la imagen",
   "Failed to upload logo. Please try again.": "Error al subir el logo. Por favor intenta de nuevo.",
   "Fallacy": "Falacia",

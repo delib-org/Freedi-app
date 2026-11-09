@@ -51,6 +51,23 @@ export const NOTIFICATION = {
 } as const;
 
 /**
+ * Photo upload limits (main app). STORAGE_LIMIT_BYTES mirrors isSmallImage()
+ * in storage.rules, which rejects anything at or above 5 MB.
+ */
+export const IMAGE_UPLOAD = {
+	MAX_DIMENSION_PX: 1600,
+	TARGET_SIZE_KB: 200,
+	STORAGE_LIMIT_BYTES: 5 * 1024 * 1024,
+	BYTES_PER_KB: 1024,
+	INITIAL_QUALITY: 0.8,
+	MIN_QUALITY: 0.1,
+	QUALITY_STEP: 0.1,
+	DIMENSION_SHRINK_FACTOR: 0.9,
+	MAX_TRIES: 10,
+	PREVIEW_REVOKE_DELAY_MS: 1000,
+} as const;
+
+/**
  * UI constants
  */
 export const UI = {

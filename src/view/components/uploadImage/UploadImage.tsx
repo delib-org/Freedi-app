@@ -3,6 +3,7 @@ import styles from './UploadImage.module.scss';
 import { setImageLocally } from './uploadImageCont';
 import { Statement } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 type SizeVariant = 'default' | 'compact' | 'inline';
 
@@ -23,7 +24,9 @@ export default function UploadImage({
 	isAdmin = true, // Default to true for backwards compatibility
 	variant = 'default', // Default variant
 }: Props) {
+	const { t } = useTranslation();
 	const [isDragging, setIsDragging] = useState(false);
+	const [hasError, setHasError] = useState(false);
 	const [progress, setProgress] = useState(0);
 	const [showSuccess, setShowSuccess] = useState(false);
 
@@ -40,6 +43,8 @@ export default function UploadImage({
 		}
 	}, [progress]);
 
+	const handleUploadError = () => setHasError(true);
+
 	const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
 		try {
 			if (!statement) throw new Error('statement is undefined');
@@ -53,7 +58,8 @@ export default function UploadImage({
 
 			const file = event.target.files?.[0];
 			if (file) {
-				await setImageLocally(file, statement, setImage, setProgress);
+				setHasError(false);
+				await setImageLocally(file, statement, setImage, setProgress, handleUploadError, image);
 			}
 		} catch (error) {
 			logError(error, { operation: 'uploadImage.UploadImage.handleFileChange' });
@@ -79,7 +85,8 @@ export default function UploadImage({
 
 			const file = event.dataTransfer.files[0];
 
-			await setImageLocally(file, statement, setImage, setProgress);
+			setHasError(false);
+			await setImageLocally(file, statement, setImage, setProgress, handleUploadError, image);
 		} catch (error) {
 			logError(error, { operation: 'uploadImage.UploadImage.handleDrop' });
 		}
@@ -126,6 +133,12 @@ export default function UploadImage({
 			)}
 
 			{!image && progress === 0 && <p>Drag and drop an image here or click to upload</p>}
+
+			{hasError && (
+				<p className={styles.errorMessage} role="alert">
+					{t('This photo could not be processed. Please try a different photo.')}
+				</p>
+			)}
 
 			{progress > 0 && progress < 50 && !image && (
 				<div className={styles.progressContainer}>
