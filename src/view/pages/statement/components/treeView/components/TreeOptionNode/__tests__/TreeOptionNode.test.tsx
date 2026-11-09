@@ -97,7 +97,7 @@ describe('TreeOptionNode', () => {
 
 		expect(screen.getByTestId('evaluation')).toBeInTheDocument();
 		expect(mockEvaluation).toHaveBeenCalledWith(
-			expect.objectContaining({ statement, hideFaceLabels: true }),
+			expect.objectContaining({ statement, hideFaceLabels: true, compact: true }),
 		);
 	});
 });

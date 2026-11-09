@@ -37,6 +37,10 @@ interface EnhancedEvaluationProps {
 	/** Chat surfaces: never show the visible text under the faces. The
 	 *  aria-label stays. */
 	hideFaceLabels?: boolean;
+	/** Footer layout: round faces + compact chips, laid out as direct flex items
+	 *  of the host's footer (`display: contents`) so the host's action buttons
+	 *  can share the chips' row. Visibility rules stay those of `variant`. */
+	compact?: boolean;
 }
 
 const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
@@ -44,6 +48,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	enableEvaluation = true,
 	variant = 'default',
 	hideFaceLabels = false,
+	compact = false,
 }) => {
 	const { t } = useUserConfig();
 	const { creator } = useAuthentication();
@@ -83,6 +88,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	}, []);
 
 	const isCard = variant === 'card';
+	const isRound = isCard || compact;
 	const hasRated = optimisticScore !== undefined;
 	const isOwnAnswer = isCard && !!creator?.uid && statement.creatorId === creator.uid;
 	// On a card, results wait for your own rating so they cannot anchor it —
@@ -105,7 +111,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 			tone={option.tone}
 			labelKey={option.labelKey}
 			showLabel={showLabels}
-			shape={isCard ? 'circle' : 'tile'}
+			shape={isRound ? 'circle' : 'tile'}
 			statement={statement}
 			enableEvaluation={enableEvaluation}
 			onEvaluate={handleEvaluate}
@@ -113,16 +119,24 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	));
 
 	return (
-		<div className={clsx(styles.evaluation, isCard && styles['evaluation--card'])}>
+		<div
+			className={clsx(
+				styles.evaluation,
+				isCard && styles['evaluation--card'],
+				compact && styles['evaluation--compact'],
+			)}
+		>
 			{!isOwnAnswer &&
-				(isCard ? (
-					<EvaluationCircleRow
-						hasSelection={hasRated}
-						label={t('Rating scale')}
-						testId="face-scale"
-					>
-						{thumbNodes}
-					</EvaluationCircleRow>
+				(isRound ? (
+					<div className={styles.evaluation__faces}>
+						<EvaluationCircleRow
+							hasSelection={hasRated}
+							label={t('Rating scale')}
+							testId="face-scale"
+						>
+							{thumbNodes}
+						</EvaluationCircleRow>
+					</div>
 				) : (
 					<div
 						className={styles.scale}
@@ -136,7 +150,13 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 			{/* The result numbers, spelled out. They used to live only in a hover
 			    tooltip on a colour bar, so touch users never saw them. On a card
 			    they are Join's compact chips row. */}
-			{showResults && <ResultsStrip statement={statement} variant={isCard ? 'chips' : 'tiles'} />}
+			{showResults && (
+				<ResultsStrip
+					statement={statement}
+					variant={isRound ? 'chips' : 'tiles'}
+					inline={compact}
+				/>
+			)}
 			{shouldShowRevealHint(showEvaluation, visibilityInput) && (
 				<p className={styles['reveal-hint']} data-testid="results-reveal-hint">
 					{t('The result will be revealed after you rate')}

@@ -504,32 +504,34 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 				{bylineText && <span className={styles.bylineText}>{bylineText}</span>}
 
 				{/* Face circles, then (after you rate) the results chips. */}
-				<div className={styles['evolution-element']}>
-					{!isTheme(statement) && <Evaluation statement={statement} variant="card" />}
-				</div>
+				<div className={styles.cardFooter}>
+					<div className={styles['evolution-element']}>
+						{!isTheme(statement) && <Evaluation statement={statement} variant="card" compact />}
+					</div>
 
-				{/* Bottom row like Join: action pills at the start, the chat as a
+					{/* Bottom row like Join: action pills at the start, the chat as a
 				    small round button at the end. */}
-				{(showAddImage || showChat) && (
-					<div className={styles.actionRow}>
-						<div className={styles.actions}>
-							{showAddImage && (
-								<button
-									type="button"
-									onClick={() => setShowImageUpload(true)}
-									className={styles.pillButton}
-								>
-									{t('Add Image')}
-								</button>
+					{(showAddImage || showChat) && (
+						<div className={styles.actionRow}>
+							<div className={styles.actions}>
+								{showAddImage && (
+									<button
+										type="button"
+										onClick={() => setShowImageUpload(true)}
+										className={styles.pillButton}
+									>
+										{t('Add Image')}
+									</button>
+								)}
+							</div>
+							{showChat && (
+								<div className={styles.chat}>
+									<StatementChatMore statement={statement} variant="round" opensSheet />
+								</div>
 							)}
 						</div>
-						{showChat && (
-							<div className={styles.chat}>
-								<StatementChatMore statement={statement} variant="round" opensSheet />
-							</div>
-						)}
-					</div>
-				)}
+					)}
+				</div>
 				{shouldShowAddSubQuestionModal && (
 					<CreateStatementModal
 						allowedTypes={[StatementType.question]}

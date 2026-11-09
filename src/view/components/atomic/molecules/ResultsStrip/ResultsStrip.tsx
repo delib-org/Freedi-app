@@ -22,6 +22,9 @@ export interface ResultsStripProps {
 	minEvaluators?: number;
 	variant?: ResultsStripVariant;
 	className?: string;
+	/** Dissolve the strip's wrapper (`display: contents`) so the chips and the
+	 *  caption become flex items of the host's footer row. Chips only. */
+	inline?: boolean;
 }
 
 /**
@@ -38,6 +41,7 @@ const ResultsStrip: React.FC<ResultsStripProps> = ({
 	minEvaluators = DEFAULT_MIN_EVALUATORS,
 	variant = 'tiles',
 	className,
+	inline = false,
 }) => {
 	const { t } = useTranslation();
 
@@ -98,7 +102,14 @@ const ResultsStrip: React.FC<ResultsStripProps> = ({
 	);
 
 	return (
-		<div className={clsx('results-strip', isChips && 'results-strip--chips', className)}>
+		<div
+			className={clsx(
+				'results-strip',
+				isChips && 'results-strip--chips',
+				isChips && inline && 'results-strip--inline',
+				className,
+			)}
+		>
 			<div className="results-strip__items" role="group" aria-label={t('Results')}>
 				{showConsensus &&
 					item(

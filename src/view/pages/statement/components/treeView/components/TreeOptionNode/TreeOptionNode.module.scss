@@ -488,16 +488,39 @@
 		font-style: italic;
 	}
 
-	&__evaluation {
+	// One footer for the evaluation and the buttons. The compact Evaluation
+	// dissolves into this flex box: faces on their own row (order 1), then the
+	// action buttons (order 2) at the start and the result chips (order 3) at
+	// the end of ONE row, the consensus caption last (order 4).
+	&__footer {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		column-gap: 8px;
+		row-gap: 2px;
 		margin-top: 4px;
+	}
+
+	// Dissolved so the compact Evaluation's pieces are items of the footer; any
+	// other evaluation type is a single block that takes the full first row.
+	&__evaluation {
+		display: contents;
+
+		> * {
+			flex: 0 0 100%;
+			min-width: 0;
+			order: 1;
+		}
 	}
 
 	&__actions {
 		display: flex;
+		flex: 0 1 auto;
 		flex-wrap: wrap;
 		align-items: center;
 		gap: 8px;
-		margin-top: 4px;
+		min-width: 0;
+		order: 2;
 	}
 
 	&__action-btn {

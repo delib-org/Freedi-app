@@ -514,9 +514,24 @@
 // round outline button at the end.
 .actionRow {
   display: flex;
+  flex: 0 1 auto;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-xs);
+  min-width: 0;
+  order: 2;
+}
+
+// One footer for the evaluation and the action row. The compact Evaluation
+// dissolves into it: faces on their own row (order 1), then the action row
+// at the start and the result chips at the end of ONE row (orders 2 and 3),
+// the consensus caption last (order 4).
+.cardFooter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-xs);
+  row-gap: var(--space-2xs);
   margin-block-start: var(--space-2xs);
 }
 
@@ -566,10 +581,15 @@
 }
 
 .evolution-element {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  width: 100%;
+  display: contents;
+
+  // Any evaluation type other than the compact range scale is one block that
+  // takes the full first row.
+  > * {
+    flex: 0 0 100%;
+    min-width: 0;
+    order: 1;
+  }
 }
 
 // --- Merge badge + own-answer chip -------------------------------------------

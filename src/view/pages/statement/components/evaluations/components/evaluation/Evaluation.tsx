@@ -17,12 +17,17 @@ interface EvaluationProps {
 	variant?: EvaluationVariant;
 	/** Chat surfaces: no visible text under the range faces. */
 	hideFaceLabels?: boolean;
+	/** Footer layout (range / enhanced scale only): round faces and compact result
+	 *  chips whose pieces flow into the host's flex footer, so the host can put
+	 *  its action buttons on the same row as the chips. Other types ignore it. */
+	compact?: boolean;
 }
 
 const Evaluation: FC<EvaluationProps> = ({
 	statement,
 	variant = 'default',
 	hideFaceLabels = false,
+	compact = false,
 }) => {
 	const { parentStatement } = useEvaluation(statement);
 	const { isHalted } = useIsProcessHalted(parentStatement);
@@ -63,6 +68,7 @@ const Evaluation: FC<EvaluationProps> = ({
 							enableEvaluation={enableEvaluation}
 							variant={variant}
 							hideFaceLabels={hideFaceLabels}
+							compact={compact}
 						/>
 					);
 				case 'community-voice':
@@ -94,6 +100,7 @@ const Evaluation: FC<EvaluationProps> = ({
 					enableEvaluation={enableEvaluation}
 					variant={variant}
 					hideFaceLabels={hideFaceLabels}
+					compact={compact}
 				/>
 			);
 		}

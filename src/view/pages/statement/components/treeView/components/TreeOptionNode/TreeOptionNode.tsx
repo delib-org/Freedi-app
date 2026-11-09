@@ -446,44 +446,46 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 						)}
 					</>
 				)}
-				<div className={styles['tree-option-node__evaluation']}>
-					<Evaluation statement={statement} hideFaceLabels />
-				</div>
-				<div className={styles['tree-option-node__actions']}>
-					{!opensChatSheet && (
-						<button
-							className={styles['tree-option-node__action-btn']}
-							onClick={onReply ? () => onReply(statement) : handleReplyToggle}
-							aria-label={t('reply')}
-						>
-							{t('reply')}
-						</button>
-					)}
-					<DiveInIconButton
-						className={`${styles['tree-option-node__action-btn']} ${styles['tree-option-node__action-btn--icon']}`}
-						onClick={() => navigate(`/statement/${statement.statementId}`)}
-					/>
-					{!opensChatSheet && childCount > 0 && onToggleChildren && (
-						<button
-							className={styles['tree-option-node__reply-counter']}
-							onClick={handleToggleAndScroll}
-							aria-label={`${childCount} ${childCount === 1 ? t('reply') : t('replies')}`}
-						>
-							{childCount}
-						</button>
-					)}
-					{opensChatSheet ? (
-						<StatementChatMore statement={statement} variant="round" opensSheet />
-					) : (
-						<UnreadMessagesBadge statementId={statement.statementId} />
-					)}
-					<BookmarkIconButton
-						className={`${styles['tree-option-node__action-btn']} ${styles['tree-option-node__action-btn--icon']} ${styles['tree-option-node__bookmark-btn']}`}
-						activeClassName={styles['tree-option-node__bookmark-btn--active']}
-						isBookmarked={isBookmarked}
-						onClick={toggleBookmarkFn}
-					/>
-					<JoinButtons statement={statement} parentStatement={parentStatement} />
+				<div className={styles['tree-option-node__footer']}>
+					<div className={styles['tree-option-node__evaluation']}>
+						<Evaluation statement={statement} hideFaceLabels compact />
+					</div>
+					<div className={styles['tree-option-node__actions']}>
+						{!opensChatSheet && (
+							<button
+								className={styles['tree-option-node__action-btn']}
+								onClick={onReply ? () => onReply(statement) : handleReplyToggle}
+								aria-label={t('reply')}
+							>
+								{t('reply')}
+							</button>
+						)}
+						<DiveInIconButton
+							className={`${styles['tree-option-node__action-btn']} ${styles['tree-option-node__action-btn--icon']}`}
+							onClick={() => navigate(`/statement/${statement.statementId}`)}
+						/>
+						{!opensChatSheet && childCount > 0 && onToggleChildren && (
+							<button
+								className={styles['tree-option-node__reply-counter']}
+								onClick={handleToggleAndScroll}
+								aria-label={`${childCount} ${childCount === 1 ? t('reply') : t('replies')}`}
+							>
+								{childCount}
+							</button>
+						)}
+						{opensChatSheet ? (
+							<StatementChatMore statement={statement} variant="round" opensSheet />
+						) : (
+							<UnreadMessagesBadge statementId={statement.statementId} />
+						)}
+						<BookmarkIconButton
+							className={`${styles['tree-option-node__action-btn']} ${styles['tree-option-node__action-btn--icon']} ${styles['tree-option-node__bookmark-btn']}`}
+							activeClassName={styles['tree-option-node__bookmark-btn--active']}
+							isBookmarked={isBookmarked}
+							onClick={toggleBookmarkFn}
+						/>
+						<JoinButtons statement={statement} parentStatement={parentStatement} />
+					</div>
 				</div>
 				{showReplyInput && !opensChatSheet && (
 					<form className={styles['tree-option-node__reply-form']} onSubmit={handleReplySubmit}>

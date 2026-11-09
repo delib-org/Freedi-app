@@ -138,4 +138,29 @@
 			color: inherit;
 		}
 	}
+
+	// Inside a host footer: the chips take the end of the action row (order 3),
+	// the caption closes the footer on its own line (order 4). The chips are
+	// tighter here so buttons + chips fit a 360px phone.
+	&--inline {
+		display: contents;
+
+		.results-strip__items {
+			flex: 0 0 auto;
+			flex-wrap: nowrap;
+			inline-size: auto;
+			margin-inline-start: auto;
+			order: 3;
+		}
+
+		.results-strip__item {
+			min-inline-size: 3rem;
+			padding: 0.25rem 0.5rem;
+		}
+
+		.results-strip__caption {
+			flex: 0 0 100%;
+			order: 4;
+		}
+	}
 }
