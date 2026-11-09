@@ -250,11 +250,7 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 			return (
 				<div className={styles.messageWrapper} data-contribution-id={statementSub.statementId}>
 					{isOption ? (
-						<TreeOptionNode
-							statement={statementSub}
-							parentStatement={statement}
-							onReply={setReplyToStatement}
-						/>
+						<TreeOptionNode statement={statementSub} parentStatement={statement} opensChatSheet />
 					) : (
 						<TreeMessageNode
 							statement={statementSub}

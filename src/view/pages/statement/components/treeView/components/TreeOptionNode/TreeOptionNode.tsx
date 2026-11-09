@@ -24,6 +24,7 @@ import {
 import SendIcon from '@/view/components/icons/SendIcon';
 import JoinButtons from '@/view/pages/statement/components/joining/JoinButtons';
 import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
+import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 import UnreadMessagesBadge from '@/view/components/unreadBadge/UnreadMessagesBadge';
 import styles from './TreeOptionNode.module.scss';
 
@@ -40,6 +41,9 @@ interface TreeOptionNodeProps {
 	childCount?: number;
 	onToggleChildren?: () => void;
 	isNew?: boolean;
+	/** Discussion tab: one chat button opens the answer's conversation panel, replacing
+	 *  the reply button and counter. Tree view leaves this off and keeps nested replies. */
+	opensChatSheet?: boolean;
 }
 
 const TreeOptionNode: FC<TreeOptionNodeProps> = ({
@@ -50,6 +54,7 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 	childCount = 0,
 	onToggleChildren,
 	isNew,
+	opensChatSheet = false,
 }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
@@ -444,13 +449,15 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 					<Evaluation statement={statement} hideFaceLabels />
 				</div>
 				<div className={styles['tree-option-node__actions']}>
-					<button
-						className={styles['tree-option-node__action-btn']}
-						onClick={onReply ? () => onReply(statement) : handleReplyToggle}
-						aria-label={t('reply')}
-					>
-						{t('reply')}
-					</button>
+					{!opensChatSheet && (
+						<button
+							className={styles['tree-option-node__action-btn']}
+							onClick={onReply ? () => onReply(statement) : handleReplyToggle}
+							aria-label={t('reply')}
+						>
+							{t('reply')}
+						</button>
+					)}
 					<button
 						className={styles['tree-option-node__action-btn']}
 						onClick={() => navigate(`/statement/${statement.statementId}`)}
@@ -473,7 +480,7 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 							bookmark
 						</span>
 					</button>
-					{childCount > 0 && onToggleChildren && (
+					{!opensChatSheet && childCount > 0 && onToggleChildren && (
 						<button
 							className={styles['tree-option-node__reply-counter']}
 							onClick={handleToggleAndScroll}
@@ -482,10 +489,14 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 							{childCount}
 						</button>
 					)}
-					<UnreadMessagesBadge statementId={statement.statementId} />
+					{opensChatSheet ? (
+						<StatementChatMore statement={statement} variant="round" opensSheet />
+					) : (
+						<UnreadMessagesBadge statementId={statement.statementId} />
+					)}
 					<JoinButtons statement={statement} parentStatement={parentStatement} />
 				</div>
-				{showReplyInput && (
+				{showReplyInput && !opensChatSheet && (
 					<form className={styles['tree-option-node__reply-form']} onSubmit={handleReplySubmit}>
 						<textarea
 							ref={replyInputRef}

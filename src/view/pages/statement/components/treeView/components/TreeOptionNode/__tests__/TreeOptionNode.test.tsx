@@ -12,6 +12,23 @@ jest.mock('@/view/components/unreadBadge/UnreadMessagesBadge', () => ({
 	__esModule: true,
 	default: () => null,
 }));
+jest.mock(
+	'@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore',
+	() => ({
+		__esModule: true,
+		default: ({
+			statement: node,
+			sheetSubject,
+		}: {
+			statement: Statement;
+			sheetSubject?: string;
+		}) => (
+			<button type="button" data-testid="chat-button" data-subject={sheetSubject}>
+				{node.statementId}
+			</button>
+		),
+	}),
+);
 jest.mock('react-router', () => ({ useNavigate: () => jest.fn() }));
 jest.mock('@/controllers/hooks/reduxHooks', () => ({ useAppSelector: () => undefined }));
 jest.mock('@/redux/statements/statementsSlice', () => ({
@@ -82,5 +99,42 @@ describe('TreeOptionNode', () => {
 		expect(mockEvaluation).toHaveBeenCalledWith(
 			expect.objectContaining({ statement, hideFaceLabels: true }),
 		);
+	});
+});
+
+describe('TreeOptionNode chat button', () => {
+	const renderNode = (opensChatSheet: boolean): void => {
+		render(
+			<TreeOptionNode
+				statement={statement}
+				parentStatement={undefined}
+				opensChatSheet={opensChatSheet}
+				childCount={3}
+				onToggleChildren={jest.fn()}
+			/>,
+		);
+	};
+
+	it('shows one chat button in place of reply and counter on the Discussion tab', () => {
+		renderNode(true);
+
+		expect(screen.getAllByTestId('chat-button')).toHaveLength(1);
+		expect(screen.queryByRole('button', { name: 'reply' })).toBeNull();
+		expect(screen.queryByRole('button', { name: '3 replies' })).toBeNull();
+	});
+
+	it('keeps Dive in and the bookmark beside the chat button', () => {
+		renderNode(true);
+
+		expect(screen.getByRole('button', { name: 'Dive in' })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Bookmark' })).toBeInTheDocument();
+	});
+
+	it('keeps reply and the counter and no chat button in tree view', () => {
+		renderNode(false);
+
+		expect(screen.getByRole('button', { name: 'reply' })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: '3 replies' })).toBeInTheDocument();
+		expect(screen.queryByTestId('chat-button')).toBeNull();
 	});
 });
