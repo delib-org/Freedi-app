@@ -8,20 +8,25 @@ const mockNavigate = jest.fn();
 const mockState = {
 	creator: { creator: { uid: 'me' } },
 	statements: {
+		// The unread number comes from the server counter minus the person's
+		// seen marker, never from notifications.
 		statements: [
+			{ statementId: 'answer-1', parentId: 'q', descendantMessageCount: 4 },
 			{ statementId: 'm1', parentId: 'answer-1' },
 			{ statementId: 'm2', parentId: 'answer-1' },
 			{ statementId: 'm3', parentId: 'answer-1' },
+			{ statementId: 'answer-2', parentId: 'q', descendantMessageCount: 2 },
 		],
-	},
-	notifications: {
-		inAppNotifications: [
-			{ notificationId: 'n1', parentId: 'answer-1', creatorId: 'other', read: false },
-			{ notificationId: 'n2', parentId: 'answer-1', creatorId: 'other', read: true },
-			{ notificationId: 'n3', parentId: 'answer-1', creatorId: 'me', read: false },
-		],
+		statementSubscription: [{ statementId: 'answer-1', seenMessageCount: 3 }],
+		seenMessageCounts: {},
+		fetchedMessageCounts: {},
 	},
 };
+
+const mockMarkSeen = jest.fn();
+jest.mock('@/controllers/db/subscriptions/setSubscriptions', () => ({
+	markStatementSeen: (...args: unknown[]) => mockMarkSeen(...args),
+}));
 
 jest.mock('react-router', () => ({ useNavigate: () => mockNavigate }));
 jest.mock('react-redux', () => ({
@@ -80,6 +85,7 @@ describe('StatementChatMore', () => {
 		fireEvent.click(button);
 
 		expect(mockNavigate).not.toHaveBeenCalled();
+		expect(mockMarkSeen).toHaveBeenCalledWith('answer-1', 'me');
 		const sheet = screen.getByTestId('answer-chat-sheet');
 		expect(sheet).toHaveAttribute('data-answer', 'answer-1');
 		expect(sheet).toHaveTextContent('Open the park at 7');
@@ -88,7 +94,7 @@ describe('StatementChatMore', () => {
 		expect(screen.queryByTestId('answer-chat-sheet')).not.toBeInTheDocument();
 	});
 
-	it('renders the pill with the word, message count and unread badge from others only', () => {
+	it('renders the pill with the word, message count and the unread number (counter minus seen)', () => {
 		render(<StatementChatMore statement={answer} variant="pill" opensSheet />);
 
 		const pill = screen.getByTestId('statement-chat-more-pill');
@@ -98,11 +104,12 @@ describe('StatementChatMore', () => {
 		expect(screen.getByTestId('statement-chat-more-unread')).toHaveTextContent('1');
 		expect(screen.getByTestId('statement-chat-more-button')).toHaveAttribute(
 			'aria-label',
-			'3 messages. 1 unread. Click to open discussion',
+			'3 messages. unread.messageCount_one. Click to open discussion',
 		);
 	});
 
 	it('shows an idle pill when nothing is unread', () => {
+		// answer-2 has messages but this person never opened it: no subscription, no number
 		const quiet = { statementId: 'answer-2', statement: 'Quiet' } as unknown as Statement;
 		render(<StatementChatMore statement={quiet} variant="pill" opensSheet />);
 

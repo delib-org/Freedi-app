@@ -19,6 +19,7 @@ import { HOT_TRIGGER_MEMORY } from './utils/createFirestoreFunction';
 import { generateDescriptionFromChildren } from './helpers';
 import { classifyChildUpdate } from './userFeed/classifyChildUpdate';
 import { recordDiscussionActivity } from './userFeed/recordDiscussionActivity';
+import { recordMessageDeleted } from './unread/messageCounter';
 import { writeHistoryEntry } from './statements/history/writeHistoryEntry';
 import { isResearchEnabledForTopParent } from './statements/history/isResearchEnabled';
 import {
@@ -285,6 +286,9 @@ export const updateParentOnChildDelete = onDocumentDeleted(
 					subStatementsCount: FieldValue.increment(-1),
 				});
 			}
+
+			// Unread counters: -1 on every ancestor (never throws)
+			await recordMessageDeleted(db, deletedStatement);
 
 			// Update parent statement with latest children
 			await updateParentWithLatestChildren(deletedStatement.parentId);

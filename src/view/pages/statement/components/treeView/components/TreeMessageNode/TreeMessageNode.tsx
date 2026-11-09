@@ -22,6 +22,7 @@ import { useBookmark } from '@/controllers/hooks/useBookmark';
 import SendIcon from '@/view/components/icons/SendIcon';
 import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
 import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
+import UnreadMessagesBadge from '@/view/components/unreadBadge/UnreadMessagesBadge';
 import ChatQuestionSummary from './ChatQuestionSummary';
 import styles from './TreeMessageNode.module.scss';
 
@@ -333,6 +334,7 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 							{t('Drill down')}
 						</button>
 					)}
+					<UnreadMessagesBadge statementId={statement.statementId} />
 					<button
 						className={`${styles['tree-message-node__action-btn']} ${styles['tree-message-node__bookmark-btn']} ${isBookmarked ? styles['tree-message-node__bookmark-btn--active'] : ''}`}
 						onClick={toggleBookmark}

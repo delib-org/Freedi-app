@@ -8,6 +8,10 @@ jest.mock('../TreeOptionNode.module.scss', () => ({
 	__esModule: true,
 	default: new Proxy({}, { get: (_target, key) => key }),
 }));
+jest.mock('@/view/components/unreadBadge/UnreadMessagesBadge', () => ({
+	__esModule: true,
+	default: () => null,
+}));
 jest.mock('react-router', () => ({ useNavigate: () => jest.fn() }));
 jest.mock('@/controllers/hooks/reduxHooks', () => ({ useAppSelector: () => undefined }));
 jest.mock('@/redux/statements/statementsSlice', () => ({

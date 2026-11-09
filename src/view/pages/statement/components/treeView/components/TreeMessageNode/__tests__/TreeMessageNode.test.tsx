@@ -2,6 +2,10 @@ import { render, screen } from '@testing-library/react';
 import { Statement, StatementType } from '@freedi/shared-types';
 import TreeMessageNode from '../TreeMessageNode';
 
+jest.mock('@/view/components/unreadBadge/UnreadMessagesBadge', () => ({
+	__esModule: true,
+	default: () => null,
+}));
 jest.mock('react-router', () => ({ useNavigate: () => jest.fn() }));
 jest.mock('@/controllers/hooks/useTranslation', () => ({
 	useTranslation: () => ({ t: (key: string) => key }),

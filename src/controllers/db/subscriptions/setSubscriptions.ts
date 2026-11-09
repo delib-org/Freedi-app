@@ -19,6 +19,7 @@ import {
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { store } from '@/redux/store';
+import { setSeenMessageCounts } from '@/redux/statements/statementsSlice';
 import { setShowGroupDemographicModal } from '@/redux/userDemographic/userDemographicSlice';
 import {
 	getGroupDemographicQuestions,
@@ -168,26 +169,44 @@ export async function setStatementSubscriptionToDB({
  * Marks a discussion as read for a user. Runs in a transaction that only writes
  * when the new time is later than the stored one, so a stale tab or device can
  * never move lastReadTimestamp backwards. A missing subscription is left alone.
+ *
+ * `descendantMessageCount` is the statement's counter as the person sees it
+ * now. It becomes their `seenMessageCount` (never lower than what is stored),
+ * which is what clears the unread number on the card.
  */
-export async function updateLastReadTimestamp(statementId: string, userId: string): Promise<void> {
+export async function updateLastReadTimestamp(
+	statementId: string,
+	userId: string,
+	descendantMessageCount?: number,
+): Promise<void> {
 	try {
 		if (!statementId || !userId) throw new Error('statementId and userId are required');
 		const statementsSubscribeRef = createSubscriptionRef(`${userId}--${statementId}`);
 
-		await runTransaction(FireStore, async (transaction) => {
+		const seenAfter = await runTransaction(FireStore, async (transaction) => {
 			const docSnap = await transaction.get(statementsSubscribeRef);
 			// Don't create the doc - the user must be subscribed first
-			if (!docSnap.exists()) return;
+			if (!docSnap.exists()) return undefined;
 
 			const stored = Number(docSnap.data()?.lastReadTimestamp ?? 0);
+			const storedSeen = Number(docSnap.data()?.seenMessageCount ?? 0);
 			const now = Date.now();
-			if (now <= stored) return;
+			const moveSeen =
+				typeof descendantMessageCount === 'number' && descendantMessageCount > storedSeen;
+			if (now <= stored && !moveSeen) return undefined;
 
 			transaction.update(statementsSubscribeRef, {
-				lastReadTimestamp: now,
+				lastReadTimestamp: Math.max(now, stored),
 				statementId: statementId, // Include statementId to satisfy Firebase rules
+				...(moveSeen ? { seenMessageCount: descendantMessageCount } : {}),
 			});
+
+			return moveSeen ? descendantMessageCount : undefined;
 		});
+
+		if (typeof seenAfter === 'number') {
+			store.dispatch(setSeenMessageCounts([{ statementId, seenMessageCount: seenAfter }]));
+		}
 	} catch (error) {
 		// Only log non-permission errors
 		const err = error as { code?: string };
@@ -200,6 +219,20 @@ export async function updateLastReadTimestamp(statementId: string, userId: strin
 			});
 		}
 	}
+}
+
+/**
+ * Clears a card's unread number when it opens without its own screen (the
+ * answer chat sheet): marks it read with the counter the store holds now.
+ */
+export function markStatementSeen(statementId: string, userId: string | undefined): void {
+	if (!userId) return;
+	const count = store
+		.getState()
+		.statements.statements.find(
+			(statement) => statement.statementId === statementId,
+		)?.descendantMessageCount;
+	void updateLastReadTimestamp(statementId, userId, count);
 }
 
 export async function setRoleToDB(statement: Statement, role: Role, user: User): Promise<void> {

@@ -44,6 +44,10 @@ interface StatementsState {
 	screen: StatementScreen;
 	bookmarkedIds: Record<string, boolean>;
 	fullyLoadedScopes: Record<string, FullyLoadedScope>;
+	/** statementId -> messages this person has seen there. Present = they have a subscription (cards below the top level). */
+	seenMessageCounts: Record<string, number>;
+	/** statementId -> server message count fetched for Home cards whose statement doc is not in `statements`. */
+	fetchedMessageCounts: Record<string, number>;
 }
 
 interface StatementOrder {
@@ -65,6 +69,8 @@ const initialState: StatementsState = {
 	screen: StatementScreen.chat,
 	bookmarkedIds: {},
 	fullyLoadedScopes: {},
+	seenMessageCounts: {},
+	fetchedMessageCounts: {},
 };
 
 /**
@@ -279,6 +285,36 @@ export const statementsSlice = createSlice({
 				});
 			}
 		},
+		/**
+		 * Refreshes only the message counter: on statements already in the store,
+		 * and in a side map for Home cards whose statement doc is not loaded.
+		 * Home reads it one-shot; the server keeps it, no listener.
+		 */
+		setStatementMessageCounts: (
+			state,
+			action: PayloadAction<Array<{ statementId: string; count: number }>>,
+		) => {
+			const counts = new Map(action.payload.map(({ statementId, count }) => [statementId, count]));
+			action.payload.forEach(({ statementId, count }) => {
+				state.fetchedMessageCounts[statementId] = count;
+			});
+			state.statements.forEach((statement) => {
+				const count = counts.get(statement.statementId);
+				if (count !== undefined) statement.descendantMessageCount = count;
+			});
+		},
+		/** Records what this person has seen of statements; never lowers a marker. */
+		setSeenMessageCounts: (
+			state,
+			action: PayloadAction<Array<{ statementId: string; seenMessageCount: number }>>,
+		) => {
+			action.payload.forEach(({ statementId, seenMessageCount }) => {
+				const current = state.seenMessageCounts[statementId];
+				if (current === undefined || seenMessageCount > current) {
+					state.seenMessageCounts[statementId] = seenMessageCount;
+				}
+			});
+		},
 		setStatementsSubscription: (state, action: PayloadAction<StatementSubscription[]>) => {
 			try {
 				const newStatements = action.payload;
@@ -426,6 +462,8 @@ export const statementsSlice = createSlice({
 			state.statementSubscription = [];
 			state.statementSubscriptionLastUpdate = 0;
 			state.statementMembership = [];
+			state.seenMessageCounts = {};
+			state.fetchedMessageCounts = {};
 			state.screen = StatementScreen.chat;
 			state.bookmarkedIds = {};
 			state.fullyLoadedScopes = {};
@@ -483,6 +521,8 @@ export const {
 	setStatements,
 	setStatementSubscription,
 	setStatementsSubscription,
+	setStatementMessageCounts,
+	setSeenMessageCounts,
 	deleteStatement,
 	clearStatementFields,
 	updateStatementTop,

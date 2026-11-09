@@ -171,6 +171,7 @@ export const StatementSchema = object({
 		}),
 	), // I think it is relevant to Freedi-sign
 	numberOfOptions: optional(number()), // the number of options of the statement
+	descendantMessageCount: optional(number()), // chat messages + answers anywhere below this statement (server-maintained; unread = this minus the subscription's seenMessageCount)
 	consensus: pipe(
 		nullable(number()),
 		transform((v) => v ?? 0),

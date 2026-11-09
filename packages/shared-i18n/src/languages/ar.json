@@ -4823,5 +4823,7 @@
   "Please enable browser notifications first": "يرجى تفعيل إشعارات المتصفح أولًا",
   "Email Notifications": "الإشعارات بالبريد الإلكتروني",
   "Receive updates via email": "تلقَّ التحديثات عبر البريد الإلكتروني",
-  "chatQuestion.answerLabel": "الإجابة:"
+  "chatQuestion.answerLabel": "الإجابة:",
+  "unread.messageCount_one": "رسالة واحدة غير مقروءة",
+  "unread.messageCount_other": "{{count}} رسائل غير مقروءة"
 }

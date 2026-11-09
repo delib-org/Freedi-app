@@ -425,14 +425,17 @@ describe('setSubscriptions', () => {
 
 	describe('updateLastReadTimestamp', () => {
 		const runWithStoredDoc = (
-			snapshot: { exists: boolean; lastReadTimestamp?: number },
+			snapshot: { exists: boolean; lastReadTimestamp?: number; seenMessageCount?: number },
 			transactionUpdate: jest.Mock,
 		): void => {
 			mockRunTransaction.mockImplementation(async (_db, updateFn) => {
 				const transaction = {
 					get: jest.fn().mockResolvedValue({
 						exists: () => snapshot.exists,
-						data: () => ({ lastReadTimestamp: snapshot.lastReadTimestamp }),
+						data: () => ({
+							lastReadTimestamp: snapshot.lastReadTimestamp,
+							seenMessageCount: snapshot.seenMessageCount,
+						}),
 					}),
 					update: transactionUpdate,
 				};
@@ -462,6 +465,52 @@ describe('setSubscriptions', () => {
 			runWithStoredDoc({ exists: true, lastReadTimestamp: Date.now() + 60_000 }, update);
 
 			await updateLastReadTimestamp('stmt-123', 'user-123');
+
+			expect(update).not.toHaveBeenCalled();
+		});
+
+		it('records the message counter as seenMessageCount', async () => {
+			const update = jest.fn();
+			runWithStoredDoc({ exists: true, lastReadTimestamp: 1, seenMessageCount: 2 }, update);
+
+			await updateLastReadTimestamp('stmt-123', 'user-123', 7);
+
+			expect(update).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({ seenMessageCount: 7 }),
+			);
+		});
+
+		it('never lowers seenMessageCount', async () => {
+			const update = jest.fn();
+			runWithStoredDoc({ exists: true, lastReadTimestamp: 1, seenMessageCount: 9 }, update);
+
+			await updateLastReadTimestamp('stmt-123', 'user-123', 5);
+
+			const written = update.mock.calls[0][1] as Record<string, unknown>;
+			expect(written).not.toHaveProperty('seenMessageCount');
+		});
+
+		it('moves the marker even when the read timestamp would not move', async () => {
+			const update = jest.fn();
+			runWithStoredDoc(
+				{ exists: true, lastReadTimestamp: Date.now() + 60_000, seenMessageCount: 1 },
+				update,
+			);
+
+			await updateLastReadTimestamp('stmt-123', 'user-123', 3);
+
+			expect(update).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({ seenMessageCount: 3 }),
+			);
+		});
+
+		it('does not create a subscription to hold a marker', async () => {
+			const update = jest.fn();
+			runWithStoredDoc({ exists: false }, update);
+
+			await updateLastReadTimestamp('stmt-123', 'user-123', 4);
 
 			expect(update).not.toHaveBeenCalled();
 		});

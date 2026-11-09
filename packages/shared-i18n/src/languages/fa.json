@@ -5181,5 +5181,7 @@
   "Please enable browser notifications first": "لطفاً ابتدا اعلان‌های مرورگر را فعال کنید",
   "Email Notifications": "اعلان‌های ایمیلی",
   "Receive updates via email": "دریافت به‌روزرسانی‌ها از طریق ایمیل",
-  "chatQuestion.answerLabel": "پاسخ:"
+  "chatQuestion.answerLabel": "پاسخ:",
+  "unread.messageCount_one": "۱ پیام خوانده‌نشده",
+  "unread.messageCount_other": "{{count}} پیام خوانده‌نشده"
 }
