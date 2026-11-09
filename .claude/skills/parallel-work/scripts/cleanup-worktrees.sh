@@ -13,8 +13,8 @@
 
 set -uo pipefail
 
-ROOT="/Users/talyaron/Documents/Freedi-app"
-BASE="dev"
+ROOT="${PW_ROOT:-$(cd "$(git rev-parse --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd -P || echo /Users/talyaron/Documents/Freedi-app)}"
+BASE="${PW_BASE:-dev}"
 YES=0
 AGE=60
 for arg in "$@"; do case "$arg" in --yes) YES=1 ;; --base=*) BASE="${arg#--base=}" ;; --age=*) AGE="${arg#--age=}" ;; esac; done
