@@ -4,6 +4,7 @@ import { StatementType, type Statement, type StatementSubscription } from '@free
 const subscriptions: Record<string, Partial<StatementSubscription>> = {};
 const written: Array<{ id: string; data: Record<string, unknown> }> = [];
 let docReads: string[] = [];
+let failSubscriptionReads = false;
 
 jest.mock('../../index', () => {
 	const makeQuery = (filters: Array<[string, unknown]>) => ({
@@ -23,6 +24,9 @@ jest.mock('../../index', () => {
 					id,
 					get: async () => {
 						docReads.push(`${collection}/${id}`);
+						if (failSubscriptionReads && collection === 'statementsSubscribe') {
+							throw new Error('unavailable');
+						}
 						const data = collection === 'statementsSubscribe' ? subscriptions[id] : undefined;
 
 						return { exists: !!data, data: () => data };
@@ -86,6 +90,7 @@ beforeEach(() => {
 	Object.keys(subscriptions).forEach((k) => delete subscriptions[k]);
 	written.length = 0;
 	docReads = [];
+	failSubscriptionReads = false;
 });
 
 const recipients = (): string[] => written.map((w) => String(w.data.userId)).sort();
@@ -159,6 +164,15 @@ describe('answer notification gate', () => {
 			sub('alice', 'q1', { notifyOnNewAnswers: false });
 			await notifyStatementSubscribers(reply, answer);
 			expect(recipients()).toEqual(['alice']);
+		});
+
+		it('a failed author read is no veto: everyone is still notified', async () => {
+			sub('alice', 'a1');
+			sub('carol', 'a1');
+			sub('alice', 'q1', { notifyOnReplies: false });
+			failSubscriptionReads = true;
+			await notifyStatementSubscribers(reply, answer);
+			expect(recipients()).toEqual(['alice', 'carol']);
 		});
 
 		it('keeps the reply trigger type', async () => {

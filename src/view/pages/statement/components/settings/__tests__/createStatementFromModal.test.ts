@@ -61,6 +61,19 @@ describe('createStatementFromModal (legacy modal)', () => {
 		expect(announceAnswerPublished).toHaveBeenCalledWith(expect.anything(), 'n1', question);
 	});
 
+	it('a silently failed write announces nothing', async () => {
+		setStatementToDBMock.mockResolvedValue(undefined);
+		await createStatementFromModal({
+			title: 'Bike lanes',
+			creator,
+			isOptionSelected: true,
+			parentStatement: question,
+			statementType: StatementType.option,
+		});
+		expect(subscribeAuthorToAnswer).not.toHaveBeenCalled();
+		expect(announceAnswerPublished).not.toHaveBeenCalled();
+	});
+
 	it('choosing a question or a group raises nothing', async () => {
 		await createStatementFromModal({
 			title: 'Sub question',

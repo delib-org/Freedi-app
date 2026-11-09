@@ -15,6 +15,7 @@ import {
 	StatementSubscription,
 	StatementType,
 } from '@freedi/shared-types';
+import { logger } from 'firebase-functions/v1';
 import { db } from '../index';
 
 /** An option added under a question. */
@@ -51,8 +52,21 @@ export async function authorVetoesReplies(answer: Statement): Promise<boolean> {
 	const subId = getStatementSubscriptionId(answer.parentId, answer.creator);
 	if (!subId) return false;
 
-	const snap = await db.collection(Collections.statementsSubscribe).doc(subId).get();
-	if (!snap.exists) return false;
+	try {
+		const snap = await db.collection(Collections.statementsSubscribe).doc(subId).get();
+		if (!snap.exists) return false;
 
-	return (snap.data() as StatementSubscription).notifyOnReplies === false;
+		return (snap.data() as StatementSubscription).notifyOnReplies === false;
+	} catch (error) {
+		// A failed read must not cost every other subscriber their notification:
+		// no veto, deliver as before.
+		logger.warn('Could not read the answer author choice; delivering anyway', {
+			userId: authorUid,
+			answerId: answer.statementId,
+			questionId: answer.parentId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return false;
+	}
 }

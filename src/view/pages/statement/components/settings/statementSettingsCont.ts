@@ -250,7 +250,7 @@ export async function createStatementFromModal({
 
 		if (!newStatement) throw new Error('newStatement was not created');
 
-		await setStatementToDB({
+		const saved = await setStatementToDB({
 			statement: newStatement,
 			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
 		});
@@ -260,7 +260,7 @@ export async function createStatementFromModal({
 
 		// An answer made here needs the author's own subscription (replies ride on it)
 		// and raises the notification-choices prompt, like the other add paths.
-		if (statementType === StatementType.option) {
+		if (saved && statementType === StatementType.option) {
 			if (creator?.uid) await subscribeAuthorToAnswer(newStatement, creator);
 			announceAnswerPublished(store.dispatch, newStatement.statementId, parentStatement);
 		}
