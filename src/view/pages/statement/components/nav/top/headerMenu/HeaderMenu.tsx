@@ -10,6 +10,7 @@ import SettingsIcon from '@/assets/icons/settings.svg?react';
 import TriangleIcon from '@/assets/icons/triangle.svg?react';
 import HomeIcon from '@/assets/icons/homeIcon.svg?react';
 import MapIcon from '@/assets/icons/navMainPageIcon.svg?react';
+import AskIcon from '@/assets/icons/addQuestion.svg?react';
 
 // Components
 import Menu from '@/view/components/menu/Menu';
@@ -37,6 +38,8 @@ interface HeaderMenuProps {
 	onNavigateToClusterMap: () => void;
 	/** When set, the menu opens with a Home row that calls it. */
 	onNavigateHome?: () => void;
+	/** When set, the menu has an "Ask a question" row right after Home that calls it. */
+	onAskQuestion?: () => void;
 	isFollowMeActive?: boolean;
 	/** 'tint' sits on a tinted header: no painted wrapper, language moves into the menu. */
 	variant?: 'default' | 'tint';
@@ -60,6 +63,7 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 	onNavigateToScreen,
 	onNavigateToClusterMap,
 	onNavigateHome,
+	onAskQuestion,
 	isFollowMeActive,
 	variant = 'default',
 	extraItems,
@@ -128,6 +132,13 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 						label={t('Home')}
 						icon={<HomeIcon style={menuIconStyle} />}
 						onOptionClick={onNavigateHome}
+					/>
+				)}
+				{onAskQuestion && (
+					<MenuOption
+						label={t('Ask a question')}
+						icon={<AskIcon style={menuIconStyle} />}
+						onOptionClick={onAskQuestion}
 					/>
 				)}
 				<MenuOption

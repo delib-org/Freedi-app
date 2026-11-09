@@ -153,9 +153,9 @@ export function resolveActiveView(
 export const MAIN_SCREENS: readonly string[] = ['main', 'chat', 'options', 'questions'];
 
 /**
- * True when the Discussion tab of a question, answer or statement shows the
- * chat input as its only bottom control. Group discussions and compound
- * questions (phase screen, no input) keep the floating nav.
+ * True when the Discussion tab of a question, answer, group or statement shows
+ * the chat input as its only bottom control. Compound questions (phase screen,
+ * no input) keep the floating nav. A group asks its questions from the header menu.
  */
 export function showsDiscussionComposer(
 	view: string,
@@ -164,7 +164,6 @@ export function showsDiscussionComposer(
 ): boolean {
 	if (view !== 'chat' || !statement) return false;
 	if (screen && !MAIN_SCREENS.includes(screen)) return false;
-	if (statement.statementType === StatementType.group) return false;
 
 	return !isCompoundQuestion(statement);
 }

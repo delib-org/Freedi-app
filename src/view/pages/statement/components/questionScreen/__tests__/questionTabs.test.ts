@@ -168,9 +168,13 @@ describe('questionTabs', () => {
 			).toBe(true);
 		});
 
-		it('is false for a group, a compound question and a missing statement', () => {
+		it('is true on the Discussion tab of a group', () => {
 			const group = statement({ statementType: StatementType.group });
-			expect(showsDiscussionComposer('chat', undefined, group)).toBe(false);
+			expect(showsDiscussionComposer('chat', undefined, group)).toBe(true);
+			expect(showsDiscussionComposer('options', undefined, group)).toBe(false);
+		});
+
+		it('is false for a compound question and a missing statement', () => {
 			expect(showsDiscussionComposer('chat', undefined, compound())).toBe(false);
 			expect(showsDiscussionComposer('chat', undefined, null)).toBe(false);
 			expect(showsDiscussionComposer('chat', undefined, undefined)).toBe(false);
