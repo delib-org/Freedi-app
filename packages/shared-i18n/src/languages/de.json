@@ -4708,5 +4708,7 @@
   "Receive updates via email": "Updates per E-Mail erhalten",
   "chatQuestion.answerLabel": "Antwort:",
   "unread.messageCount_one": "1 ungelesene Nachricht",
-  "unread.messageCount_other": "{{count}} ungelesene Nachrichten"
+  "unread.messageCount_other": "{{count}} ungelesene Nachrichten",
+  "answerStrip.notChosen": "Antwort",
+  "answerStrip.chosen": "Gewählte Antwort"
 }

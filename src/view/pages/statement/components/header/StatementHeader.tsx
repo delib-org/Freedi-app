@@ -5,6 +5,7 @@ import { Screen, Statement, StatementType } from '@freedi/shared-types';
 
 import InvitePanel from './invitePanel/InvitePanel';
 import QuestionHeaderBar from './QuestionHeaderBar';
+import AnswerStateStrip from './AnswerStateStrip';
 import ShareModal from '@/view/components/shareModal/ShareModal';
 import QuestionTabs from '@/view/components/atomic/molecules/QuestionTabs/QuestionTabs';
 import StageProgress from '@/view/components/atomic/molecules/StageProgress/StageProgress';
@@ -181,6 +182,8 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 							setIsMenuOpen={setIsHeaderMenuOpen}
 						/>
 					)}
+
+					{statement && <AnswerStateStrip statement={statement} />}
 
 					{showsStageBar(statement) && !isMapScreen && (
 						<div className={styles.header__stages}>

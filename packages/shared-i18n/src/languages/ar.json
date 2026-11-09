@@ -4827,5 +4827,7 @@
   "Receive updates via email": "تلقَّ التحديثات عبر البريد الإلكتروني",
   "chatQuestion.answerLabel": "الإجابة:",
   "unread.messageCount_one": "رسالة واحدة غير مقروءة",
-  "unread.messageCount_other": "{{count}} رسائل غير مقروءة"
+  "unread.messageCount_other": "{{count}} رسائل غير مقروءة",
+  "answerStrip.notChosen": "إجابة",
+  "answerStrip.chosen": "إجابة مختارة"
 }
