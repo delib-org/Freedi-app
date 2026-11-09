@@ -101,13 +101,24 @@ export const storeToken = async (userId: string, token: string): Promise<void> =
  * Get token metadata from the database.
  */
 export const getTokenMetadata = async (token: string): Promise<TokenMetadata | null> => {
-	const tokenDoc = await getDoc(doc(DB, 'pushNotifications', token));
+	try {
+		const tokenDoc = await getDoc(doc(DB, 'pushNotifications', token));
 
-	if (!tokenDoc.exists()) {
-		return null;
+		if (!tokenDoc.exists()) {
+			return null;
+		}
+
+		return tokenDoc.data() as TokenMetadata;
+	} catch (error) {
+		// This browser's token is still registered to the last person who signed
+		// in here, and the rules hide that document. To us it is unregistered:
+		// null sends the caller to storeToken, which takes it over.
+		if ((error as { code?: string })?.code === 'permission-denied') {
+			return null;
+		}
+
+		throw error;
 	}
-
-	return tokenDoc.data() as TokenMetadata;
 };
 
 /**
