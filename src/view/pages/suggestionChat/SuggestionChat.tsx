@@ -50,7 +50,7 @@ const SuggestionChat = () => {
 			<p className={styles['suggestionChat__explain']}>כמה את/ה מרוצה מההצעה?</p>
 
 			<div className={styles.evaluationPanel}>
-				<Evaluation statement={statement} />
+				<Evaluation statement={statement} hideFaceLabels />
 			</div>
 
 			<p className={styles['suggestionChat__comments']}>

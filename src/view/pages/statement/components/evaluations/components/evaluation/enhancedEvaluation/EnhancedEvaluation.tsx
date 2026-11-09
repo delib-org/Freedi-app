@@ -34,12 +34,16 @@ interface EnhancedEvaluationProps {
 	/** 'card' (answer card): hides the scale on your own answer and keeps the
 	 *  results behind your own rating. 'default' keeps the old behaviour. */
 	variant?: EnhancedEvaluationVariant;
+	/** Chat surfaces: never show the visible text under the faces. The
+	 *  aria-label stays. */
+	hideFaceLabels?: boolean;
 }
 
 const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	statement,
 	enableEvaluation = true,
 	variant = 'default',
+	hideFaceLabels = false,
 }) => {
 	const { t } = useUserConfig();
 	const { creator } = useAuthentication();
@@ -71,7 +75,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 
 	// Presses on this statement's faces, this session only. Re-taps count.
 	const [pressCount, setPressCount] = useState(0);
-	const showLabels = shouldShowFaceLabels(pressCount);
+	const showLabels = !hideFaceLabels && shouldShowFaceLabels(pressCount);
 
 	const handleEvaluate = useCallback((score: number) => {
 		setOptimisticScore(score);
