@@ -36,6 +36,7 @@ interface CreateParams {
 	newStatementParent: Statement | 'top';
 	title: string;
 	newStatement: Partial<Statement>;
+	newStatementQuestionType?: string;
 	dispatch: (action: AnyAction) => void;
 }
 
@@ -114,6 +115,18 @@ describe('AskQuestionSheet', () => {
 		expect(mockCreate.mock.calls[0][0].newStatementParent).toBe('top');
 		expect(onClose).toHaveBeenCalled();
 		expect(mockNavigate).toHaveBeenCalledWith('/statement/q1');
+	});
+
+	it('asks a question of the default type (the one the old Questions-tab button used)', async () => {
+		mockCreate.mockImplementation(succeedWith('q1'));
+		renderSheet([trip], 'space-1');
+
+		fireEvent.change(screen.getByTestId('ask-question-text'), { target: { value: 'Where to?' } });
+		await submit();
+
+		const call = mockCreate.mock.calls[0][0] as CreateParams;
+		expect(call.newStatement.statementType).toBe(StatementType.question);
+		expect(call.newStatementQuestionType).toBe('simple');
 	});
 
 	it('asks inside an existing space', async () => {

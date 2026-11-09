@@ -38,6 +38,7 @@ import { QuestionType, CompoundPhase } from '@freedi/shared-types';
 import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
 import { generateParagraphId } from '@/utils/paragraphUtils';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
+import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
 import { QuestionAnswersTabContext } from '../../questionScreen/useQuestionScreenData';
 
 interface Props {
@@ -141,7 +142,10 @@ const StatementBottomNav: FC<Props> = () => {
 		dispatch(
 			setNewStatementModal({
 				parentStatement: statement,
-				newStatement: { statementType: StatementType.question },
+				newStatement: {
+					statementType: StatementType.question,
+					questionSettings: { questionType: getDefaultQuestionType() },
+				},
 				showModal: true,
 				isLoading: false,
 				error: null,
