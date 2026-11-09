@@ -20,8 +20,7 @@ export interface DataTableAttrs<T> {
 export function DataTable<T>(): m.Component<DataTableAttrs<T>> {
 	return {
 		view(vnode) {
-			const { columns, data, title, loading, emptyMessage, onRowClick } =
-				vnode.attrs;
+			const { columns, data, title, loading, emptyMessage, onRowClick } = vnode.attrs;
 
 			return m('.data-table', [
 				title && m('.data-table__header', title),
@@ -41,10 +40,10 @@ export function DataTable<T>(): m.Component<DataTableAttrs<T>> {
 													{
 														style: col.width ? { width: col.width } : {},
 													},
-													col.label
-												)
-											)
-										)
+													col.label,
+												),
+											),
+										),
 									),
 									m(
 										'tbody',
@@ -52,16 +51,12 @@ export function DataTable<T>(): m.Component<DataTableAttrs<T>> {
 											m(
 												'tr',
 												{
-													onclick: onRowClick
-														? () => onRowClick(item)
-														: undefined,
-													style: onRowClick
-														? { cursor: 'pointer' }
-														: {},
+													onclick: onRowClick ? () => onRowClick(item) : undefined,
+													style: onRowClick ? { cursor: 'pointer' } : {},
 												},
-												columns.map((col) => m('td', col.render(item)))
-											)
-										)
+												columns.map((col) => m('td', col.render(item))),
+											),
+										),
 									),
 								]),
 							]),

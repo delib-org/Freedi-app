@@ -8,7 +8,12 @@ import { Spinner } from '../components/Spinner';
 import { TimeChart, MultiTimeChart, MultiSeriesItem } from '../components/TimeChart';
 import { statementTypeBadge, sourceAppBadge } from '../components/Badge';
 import { PeriodToggle } from '../components/PeriodToggle';
-import { subscribeDashboard, unsubscribeDashboard, getDashboardState, setPeriodMode } from '../state/dashboard';
+import {
+	subscribeDashboard,
+	unsubscribeDashboard,
+	getDashboardState,
+	setPeriodMode,
+} from '../state/dashboard';
 import { whenAdmin } from '../lib/auth';
 
 // ── Color maps ───────────────────────────────────────────────────────
@@ -36,17 +41,23 @@ const appColors: Record<string, string> = {
 
 function getSubtitle(mode: string): string {
 	switch (mode) {
-		case 'monthly': return 'System-wide analytics \u2014 last 12 months';
-		case 'yearly': return 'System-wide analytics \u2014 last 5 years';
-		default: return 'System-wide analytics \u2014 last 30 days';
+		case 'monthly':
+			return 'System-wide analytics \u2014 last 12 months';
+		case 'yearly':
+			return 'System-wide analytics \u2014 last 5 years';
+		default:
+			return 'System-wide analytics \u2014 last 30 days';
 	}
 }
 
 function getPeriodLabel(mode: string): string {
 	switch (mode) {
-		case 'monthly': return 'Month';
-		case 'yearly': return 'Year';
-		default: return 'Day';
+		case 'monthly':
+			return 'Month';
+		case 'yearly':
+			return 'Year';
+		default:
+			return 'Day';
 	}
 }
 
@@ -56,10 +67,7 @@ const recentColumns: ColumnConfig<Statement>[] = [
 	{
 		key: 'statement',
 		label: 'Statement',
-		render: (s) =>
-			s.statement.length > 80
-				? s.statement.substring(0, 77) + '...'
-				: s.statement,
+		render: (s) => (s.statement.length > 80 ? s.statement.substring(0, 77) + '...' : s.statement),
 		width: '50%',
 	},
 	{
@@ -71,8 +79,7 @@ const recentColumns: ColumnConfig<Statement>[] = [
 	{
 		key: 'sourceApp',
 		label: 'App',
-		render: (s) =>
-			sourceAppBadge((s as Statement & { sourceApp?: string }).sourceApp),
+		render: (s) => sourceAppBadge((s as Statement & { sourceApp?: string }).sourceApp),
 		width: '120px',
 	},
 	{
@@ -215,14 +222,12 @@ export function DashboardView(): m.Component {
 								}),
 								m(MiniChart, {
 									title: 'Statement Types (Recent)',
-									items: Array.from(
-										state.typeBreakdown.entries()
-									).map(
+									items: Array.from(state.typeBreakdown.entries()).map(
 										([label, value]): ChartItem => ({
 											label,
 											value,
 											color: chartColors[label] || '#94A3B8',
-										})
+										}),
 									),
 								}),
 							]),
@@ -235,7 +240,7 @@ export function DashboardView(): m.Component {
 											label: s.type,
 											data: s.data,
 											color: chartColors[s.type] || '#94A3B8',
-										})
+										}),
 									),
 									height: 200,
 								}),
@@ -246,7 +251,7 @@ export function DashboardView(): m.Component {
 											label: s.app,
 											data: s.data,
 											color: appColors[s.app] || '#94A3B8',
-										})
+										}),
 									),
 									height: 200,
 								}),
@@ -256,13 +261,13 @@ export function DashboardView(): m.Component {
 				// Recent Statements (only show in daily mode)
 				state.periodMode === 'daily'
 					? [
-						m('.section-title', 'Recent Statements'),
-						m(RecentTable, {
-							columns: recentColumns,
-							data: state.recentStatements,
-							emptyMessage: 'No statements yet',
-						}),
-					]
+							m('.section-title', 'Recent Statements'),
+							m(RecentTable, {
+								columns: recentColumns,
+								data: state.recentStatements,
+								emptyMessage: 'No statements yet',
+							}),
+						]
 					: null,
 
 				state.error ? m('.data-table__empty', state.error) : null,

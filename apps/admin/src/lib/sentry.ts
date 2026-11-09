@@ -1,10 +1,10 @@
 import * as Sentry from '@sentry/browser';
 import {
-  buildSentryOptions,
-  isLocalRuntime,
-  isUsableDsn,
-  setErrorReporter,
-  type LogContext,
+	buildSentryOptions,
+	isLocalRuntime,
+	isUsableDsn,
+	setErrorReporter,
+	type LogContext,
 } from '@freedi/shared-utils';
 
 /**
@@ -19,31 +19,31 @@ import {
  * so a shared project is still splittable.
  */
 export function initSentry(): void {
-  const dsn =
-    (import.meta.env.VITE_SENTRY_DSN_ADMIN as string | undefined) ||
-    (import.meta.env.VITE_SENTRY_DSN as string | undefined);
+	const dsn =
+		(import.meta.env.VITE_SENTRY_DSN_ADMIN as string | undefined) ||
+		(import.meta.env.VITE_SENTRY_DSN as string | undefined);
 
-  // A local run never reports, however the bundle was built:
-  // `vite preview` and a `.env` copied from prod both leave PROD true.
-  const override = import.meta.env.VITE_SENTRY_ENABLE_IN_LOCAL === 'true';
-  if (isLocalRuntime(override) || !import.meta.env.PROD || !isUsableDsn(dsn)) return;
+	// A local run never reports, however the bundle was built:
+	// `vite preview` and a `.env` copied from prod both leave PROD true.
+	const override = import.meta.env.VITE_SENTRY_ENABLE_IN_LOCAL === 'true';
+	if (isLocalRuntime(override) || !import.meta.env.PROD || !isUsableDsn(dsn)) return;
 
-  Sentry.init(
-    buildSentryOptions<Sentry.ErrorEvent>({
-      dsn,
-      app: 'admin',
-      release: import.meta.env.VITE_APP_VERSION as string | undefined,
-      environment: (import.meta.env.VITE_ENVIRONMENT as string | undefined) || 'production',
-      // Matches the `firebase` entry in this app's vite manualChunks.
-      firebaseChunkNames: ['firebase-'],
-    }),
-  );
+	Sentry.init(
+		buildSentryOptions<Sentry.ErrorEvent>({
+			dsn,
+			app: 'admin',
+			release: import.meta.env.VITE_APP_VERSION as string | undefined,
+			environment: (import.meta.env.VITE_ENVIRONMENT as string | undefined) || 'production',
+			// Matches the `firebase` entry in this app's vite manualChunks.
+			firebaseChunkNames: ['firebase-'],
+		}),
+	);
 
-  setErrorReporter((error: unknown, context: LogContext) => {
-    Sentry.captureException(error, {
-      tags: context.operation ? { operation: context.operation } : undefined,
-      user: context.userId ? { id: context.userId } : undefined,
-      extra: { ...context, ...context.metadata },
-    });
-  });
+	setErrorReporter((error: unknown, context: LogContext) => {
+		Sentry.captureException(error, {
+			tags: context.operation ? { operation: context.operation } : undefined,
+			user: context.userId ? { id: context.userId } : undefined,
+			extra: { ...context, ...context.metadata },
+		});
+	});
 }

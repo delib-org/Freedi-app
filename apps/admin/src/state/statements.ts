@@ -1,10 +1,6 @@
 import m from 'mithril';
 import { Statement } from '@freedi/shared-types';
-import {
-	listenToStatements,
-	fetchStatements,
-	StatementsFilter,
-} from '../lib/queries';
+import { listenToStatements, fetchStatements, StatementsFilter } from '../lib/queries';
 import type { Unsubscribe, QueryDocumentSnapshot } from '../lib/queries';
 
 interface StatementsState {

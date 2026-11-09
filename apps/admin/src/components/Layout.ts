@@ -15,11 +15,7 @@ export function Layout(): m.Component {
 				return m('.login-screen', [
 					m('.login-screen__title', 'Freedi Admin'),
 					m('.login-screen__subtitle', 'Sign in to access the dashboard'),
-					m(
-						'button.login-screen__btn',
-						{ onclick: () => signIn() },
-						'Sign in with Google'
-					),
+					m('button.login-screen__btn', { onclick: () => signIn() }, 'Sign in with Google'),
 				]);
 			}
 
@@ -29,11 +25,7 @@ export function Layout(): m.Component {
 					m('.login-screen__denied', [
 						m('p', 'Your account does not have admin privileges.'),
 						m('p', `Signed in as: ${user.email || user.displayName}`),
-						m(
-							'button.login-screen__signout',
-							{ onclick: () => signOutUser() },
-							'Sign out'
-						),
+						m('button.login-screen__signout', { onclick: () => signOutUser() }, 'Sign out'),
 					]),
 				]);
 			}
@@ -49,9 +41,7 @@ export function Layout(): m.Component {
 					m('span.app__topbar-title', 'Freedi Admin'),
 				]),
 				// Overlay for mobile sidebar
-				isSidebarOpen()
-					? m('.app__overlay', { onclick: () => closeSidebar() })
-					: null,
+				isSidebarOpen() ? m('.app__overlay', { onclick: () => closeSidebar() }) : null,
 				m('.app__sidebar', m(Sidebar)),
 				m('.app__content', vnode.children),
 			]);
