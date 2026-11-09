@@ -1,7 +1,8 @@
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
-import { Collections, Role, functionConfig, type Statement } from '@freedi/shared-types';
+import { Collections, functionConfig, type Statement } from '@freedi/shared-types';
 import { db } from './db';
 import { logError } from './utils/errorHandling';
+import { hasAdminSubscription } from './utils/subscriptionIdentity';
 
 interface Request {
 	statementId: string;
@@ -81,7 +82,8 @@ export const removeUserEvaluations = onCall(
  * Admin on the statement itself, on its topParent, or the statement's creator.
  * Mirrors `assertSynthesisAdmin`, but also accepts an admin subscription on the
  * statement being moderated — a question's own admins must be able to ban from
- * it without holding a role on the whole group.
+ * it without holding a role on the whole group. Subscriptions are read by doc
+ * id; see `hasAdminSubscription`.
  */
 async function assertStatementAdmin(statementId: string, userId: string): Promise<void> {
 	const statementSnap = await db.collection(Collections.statements).doc(statementId).get();
@@ -96,15 +98,7 @@ async function assertStatementAdmin(statementId: string, userId: string): Promis
 		scopeIds.push(statement.topParentId);
 	}
 
-	const membership = await db
-		.collection(Collections.statementsSubscribe)
-		.where('statementId', 'in', scopeIds)
-		.where('userId', '==', userId)
-		.where('role', 'in', [Role.admin, 'creator', 'admin'])
-		.limit(1)
-		.get();
-
-	if (membership.empty) {
+	if (!(await hasAdminSubscription(db, userId, scopeIds))) {
 		throw new HttpsError('permission-denied', 'Only admins can remove another member’s votes');
 	}
 }
