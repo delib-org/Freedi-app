@@ -1,3 +1,5 @@
+@use '@/view/style/dark-scope' as *;
+
 .tree-option-node {
 	display: flex;
 	align-items: flex-start;
@@ -260,6 +262,11 @@
 	&--selected &__badge {
 		background-color: var(--approve, #57c6b2);
 		color: #fff;
+
+		// White on the teal approve fill is 2.07:1; the dark page ink is 8:1+.
+		@include dark {
+			color: var(--space-paper, #0b0f17);
+		}
 	}
 
 	&__text {
@@ -504,6 +511,12 @@
 		cursor: pointer;
 		min-height: 32px;
 		opacity: 0.7;
+
+		// Pale grey at 70% opacity only just reaches 4.5:1 on the dark card.
+		@include dark {
+			color: var(--text-meta);
+			opacity: 1;
+		}
 
 		&:hover {
 			background: var(--card-default, #f5f5f5);
