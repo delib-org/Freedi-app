@@ -3,7 +3,9 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, maximum-scale=2, user-scalable=yes" />
-		<meta name="theme-color" content="#fbfaf7" />
+		<!-- First-paint values (paper, light and dark); useSystemBarColors keeps them live afterwards. -->
+		<meta name="theme-color" content="#fbfaf7" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#0b0f17" media="(prefers-color-scheme: dark)" />
 		<meta
 			name="description"
 			content="WizCol helps communities turn different views into decisions they can stand behind."
