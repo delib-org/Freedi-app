@@ -8,6 +8,7 @@ import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
 import SettingsIcon from '@/assets/icons/settings.svg?react';
 import TriangleIcon from '@/assets/icons/triangle.svg?react';
+import HomeIcon from '@/assets/icons/homeIcon.svg?react';
 import MapIcon from '@/assets/icons/navMainPageIcon.svg?react';
 
 // Components
@@ -34,6 +35,8 @@ interface HeaderMenuProps {
 	onNavigateToSettings: () => void;
 	onNavigateToScreen: (screen: Screen) => void;
 	onNavigateToClusterMap: () => void;
+	/** When set, the menu opens with a Home row that calls it. */
+	onNavigateHome?: () => void;
 	isFollowMeActive?: boolean;
 	/** 'tint' sits on a tinted header: no painted wrapper, language moves into the menu. */
 	variant?: 'default' | 'tint';
@@ -56,6 +59,7 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 	onNavigateToSettings,
 	onNavigateToScreen,
 	onNavigateToClusterMap,
+	onNavigateHome,
 	isFollowMeActive,
 	variant = 'default',
 	extraItems,
@@ -119,6 +123,13 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 					</div>
 				}
 			>
+				{onNavigateHome && (
+					<MenuOption
+						label={t('Home')}
+						icon={<HomeIcon style={menuIconStyle} />}
+						onOptionClick={onNavigateHome}
+					/>
+				)}
 				<MenuOption
 					label={t('Share')}
 					icon={<ShareIcon style={menuIconStyle} />}

@@ -8,6 +8,7 @@ import ApproveMembers from '@/view/components/approveMembers/WaitingList';
 import NotificationBtn from '@/view/components/notificationBtn/NotificationBtn';
 import NotificationSettingsButton from '@/view/components/notifications/NotificationSettingsButton';
 import HeaderMenu from '../nav/top/headerMenu/HeaderMenu';
+import { HOME_PATH } from '@/view/components/atomic/organisms/BottomNav/bottomNavModel';
 import Back from './Back';
 import styles from './QuestionHeader.module.scss';
 
@@ -105,6 +106,10 @@ const QuestionHeaderBar: FC<QuestionHeaderBarProps> = ({
 				onNavigateToClusterMap={() => {
 					setIsMenuOpen(false);
 					navigate(`/map/${statement.statementId}`);
+				}}
+				onNavigateHome={() => {
+					setIsMenuOpen(false);
+					navigate(HOME_PATH);
 				}}
 				isFollowMeActive={isFollowMeActive}
 				extraItems={
