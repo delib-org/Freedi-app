@@ -10,7 +10,7 @@ import NewMessages from './components/newMessages/NewMessages';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import Description from '../evaluations/components/description/Description';
-import { Statement, StatementType } from '@freedi/shared-types';
+import { StatementType } from '@freedi/shared-types';
 import { hasParagraphsContent } from '@/utils/paragraphUtils';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
@@ -59,7 +59,6 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 	const [numberOfNewMessages, setNumberOfNewMessages] = useState<number>(0);
 	const [hasMore, setHasMore] = useState(true);
 	const [isLoadingMore, setIsLoadingMore] = useState(false);
-	const [replyToStatement, setReplyToStatement] = useState<Statement | null>(null);
 
 	// Refs for lazy loading
 	const isLoadingMoreRef = useRef(false);
@@ -233,10 +232,6 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 		}
 	}, [subStatements.length]);
 
-	const handleClearReply = useCallback(() => {
-		setReplyToStatement(null);
-	}, []);
-
 	// Render each statement using the tree card components (shared with the tree view) — used by Virtuoso.
 	// The wrapper establishes a new block formatting context (flow-root) so the
 	// nodes' own margins are included in Virtuoso's item measurement — escaped
@@ -322,12 +317,7 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 
 			{statement && showInput && (
 				<div className={sideChat ? styles.sideChatInputWrapper : styles.input}>
-					<ChatInput
-						statement={statement}
-						sideChat={sideChat}
-						replyToStatement={replyToStatement}
-						onClearReply={handleClearReply}
-					/>
+					<ChatInput statement={statement} sideChat={sideChat} />
 				</div>
 			)}
 		</div>
