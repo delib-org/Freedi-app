@@ -1,8 +1,9 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
 import { getFirestore } from 'firebase-admin/firestore';
-import { Collections, Role, Statement, functionConfig } from '@freedi/shared-types';
+import { Collections, Statement, functionConfig } from '@freedi/shared-types';
 import { ALLOWED_ORIGINS } from '../../config/cors';
+import { hasAdminSubscription } from '../../utils/subscriptionIdentity';
 import { synthesisFlags } from '../featureFlags';
 import { createJob, requestCancel } from './jobState';
 
@@ -54,15 +55,7 @@ async function assertAdmin(parentStatementId: string, userId: string): Promise<S
 	const parentStatement = parentDoc.data() as Statement;
 	const topParentId = parentStatement.topParentId || parentStatementId;
 
-	const membersSnapshot = await db
-		.collection(Collections.statementsSubscribe)
-		.where('statementId', '==', topParentId)
-		.where('userId', '==', userId)
-		.where('role', 'in', [Role.admin, 'creator', 'admin'])
-		.limit(1)
-		.get();
-
-	if (membersSnapshot.empty) {
+	if (!(await hasAdminSubscription(db, userId, [topParentId]))) {
 		throw new HttpsError('permission-denied', 'Only admins can run idea synthesis');
 	}
 

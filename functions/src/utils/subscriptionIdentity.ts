@@ -1,5 +1,6 @@
 import { logger } from 'firebase-functions/v1';
-import type { StatementSubscription } from '@freedi/shared-types';
+import type { Firestore } from 'firebase-admin/firestore';
+import { Collections, Role, type StatementSubscription } from '@freedi/shared-types';
 
 /**
  * The identity of a `statementsSubscribe` doc. Every admin check (the rules'
@@ -17,6 +18,13 @@ export const ELEVATED_ROLES: ReadonlySet<string> = new Set([
 	'statement-creator',
 	'creator',
 ]);
+
+/**
+ * The roles `hasAdminSubscription` accepts. Narrower than ELEVATED_ROLES on
+ * purpose: the moderation and async-synthesis checks have never accepted
+ * 'statement-creator', and reading by doc id must not change who is an admin.
+ */
+export const STATEMENT_ADMIN_ROLES: ReadonlySet<string> = new Set([Role.admin, 'creator']);
 
 export type SubscriptionFields = Pick<Partial<StatementSubscription>, 'userId' | 'statementId'> & {
 	user?: { uid?: string } | null;
@@ -42,6 +50,39 @@ export function genuineSubscriberUid(
 	if (data?.statementId !== statementId) return undefined;
 
 	return docId === expectedSubscriptionId(uid, statementId) ? uid : undefined;
+}
+
+/**
+ * True when `uid` holds an admin subscription on at least one of `statementIds`.
+ *
+ * Reads each subscription by its doc id, so a doc stored under another id (one
+ * whose fields merely claim the statement) grants nothing. The doc's fields must
+ * agree with its id as well: a doc with no `userId` was never matched by the field
+ * query this replaced, so accepting it would quietly widen who is an admin. A
+ * missing doc grants nothing.
+ */
+export async function hasAdminSubscription(
+	firestore: Firestore,
+	uid: string,
+	statementIds: readonly string[],
+): Promise<boolean> {
+	if (statementIds.length === 0) return false;
+	const subscriptions = firestore.collection(Collections.statementsSubscribe);
+	const snaps = await firestore.getAll(
+		...statementIds.map((id) => subscriptions.doc(expectedSubscriptionId(uid, id))),
+	);
+
+	// getAll returns the snapshots in the order of the references it was given.
+	return snaps.some((snap, index) => {
+		const data = snap.data() as SubscriptionFields | undefined;
+		const role = data?.role;
+
+		return (
+			typeof role === 'string' &&
+			STATEMENT_ADMIN_ROLES.has(role) &&
+			genuineSubscriberUid(snap.id, data, statementIds[index]) === uid
+		);
+	});
 }
 
 export type IdentityProblem = 'id-mismatch' | 'user-mismatch';
