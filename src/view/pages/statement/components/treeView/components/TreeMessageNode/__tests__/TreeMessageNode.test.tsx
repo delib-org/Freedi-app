@@ -28,9 +28,11 @@ jest.mock('@/controllers/hooks/reduxHooks', () => ({ useAppSelector: () => undef
 jest.mock('@/redux/statements/statementsSlice', () => ({
 	statementSubscriptionSelector: () => () => undefined,
 }));
+let mockCanPropose = false;
+
 jest.mock('@/controllers/general/helpers', () => ({
-	isAuthorized: () => false,
-	isStatementTypeAllowedAsChildren: () => false,
+	isAuthorized: () => mockCanPropose,
+	isStatementTypeAllowedAsChildren: () => mockCanPropose,
 }));
 jest.mock('@/controllers/hooks/useIsProcessHalted', () => ({
 	useIsProcessHalted: () => ({ isHalted: false }),
@@ -92,12 +94,12 @@ const makeStatement = (extra: Partial<Statement>): Statement =>
 		...extra,
 	}) as Statement;
 
-const renderNode = (statement: Statement, opensChatSheet = false): void => {
+const renderNode = (statement: Statement, opensChatSheet = false, hasChildren = false): void => {
 	render(
 		<TreeMessageNode
 			statement={statement}
-			parentStatement={undefined}
-			hasChildren={false}
+			parentStatement={mockCanPropose ? makeStatement({ statementId: 'p1' }) : undefined}
+			hasChildren={hasChildren}
 			opensChatSheet={opensChatSheet}
 		/>,
 	);
@@ -146,5 +148,40 @@ describe('TreeMessageNode chat button', () => {
 		renderNode(message, true);
 
 		expect(screen.getByRole('button', { name: 'Bookmark' })).toBeInTheDocument();
+	});
+});
+
+describe('TreeMessageNode action order', () => {
+	const names = (): string[] =>
+		screen.getAllByRole('button').map((b) => b.getAttribute('aria-label') ?? b.textContent ?? '');
+
+	afterEach(() => {
+		mockCanPropose = false;
+	});
+
+	it('orders a question card Drill down, chat, bookmark', () => {
+		renderNode(makeStatement({}), true);
+
+		expect(names()).toEqual(['Drill down', 's1', 'Bookmark']);
+	});
+
+	it('shows only chat and bookmark on a message without replies', () => {
+		renderNode(makeStatement({ statementType: StatementType.statement }), true);
+
+		expect(names()).toEqual(['s1', 'Bookmark']);
+	});
+
+	it('shows Drill down as an icon button first on a message with replies', () => {
+		renderNode(makeStatement({ statementType: StatementType.statement }), true, true);
+
+		expect(names()).toEqual(['Drill down', 's1', 'Bookmark']);
+		expect(screen.getByRole('button', { name: 'Drill down' })).toHaveTextContent('jump_to_element');
+	});
+
+	it('puts Make this a proposal after the icon buttons', () => {
+		mockCanPropose = true;
+		renderNode(makeStatement({ statementType: StatementType.statement }), true, true);
+
+		expect(names()).toEqual(['Drill down', 's1', 'Bookmark', 'Make this a proposal']);
 	});
 });
