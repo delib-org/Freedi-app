@@ -1,131 +1,208 @@
-.chatInput, .sideChatInput {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+// Message composer shared by the Discussion tab, the tree view and the
+// suggestion chat.
+//
+// Structure: ONE rounded field (.form) that holds a bare textarea (.textarea)
+// and the send button (.send) in a single flex row. Only .form draws a surface,
+// border or shadow, so there is no box inside the box in any state. Every
+// selector is a single class on purpose: element selectors such as
+// `.chatInput form textarea` out-ranked the later override block and left the
+// textarea with its own filled background (the old "inner box").
+//
+// Direction: the row follows the document direction, so the send button sits at
+// the inline end (left in Hebrew, right in English) with no per-language code.
 
-    form {
-        width: 100%;
-        display: flex;
-        max-width: var(--wrapper);
-        position: relative;
-        user-select: none;
-        cursor: pointer;
-        background-color: #4e88c7;
+$send-size: 40px;
+$field-radius: 24px;
+$field-max-height: 9rem;
 
-        @media screen and (max-width: 600px) {
-            max-width: 100%;
-        }
-
-        textarea {
-            padding: 0.5rem 70px 0.5rem 1rem;
-            resize: none;
-            outline: none;
-            border: none;
-            color: var(--text-body);
-            background-color: var(--input-active);
-            min-height: 4rem;
-            flex: auto;
-            box-shadow: 0px 2px 4px 0px rgba(181, 197, 232, 0.48);
-            box-shadow: 0px -2px 4px 0px rgba(195, 202, 217, 0.5);
-            font-size: 1rem;
-            transition: all 0.3s ease-in-out;
-
-            &::placeholder {
-                color: var(--text-caption);
-            }
-        }
-
-        button {
-            height: 100%;
-            width: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            position: absolute;
-            right: 0rem;
-            user-select: none;
-            cursor: pointer;
-            background-color: #4e88c7;
-        }
-    }
-}
-
-/* Specific styles that are not shared */
-.chatInput {
-    width: 100%;
-}
-
+.chatInput,
 .sideChatInput {
-    width: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	box-sizing: border-box;
+	padding: 12px 8px 16px;
+	background: var(--space-paper);
+}
+
+// Same specificity, declared after: only the main input clears the home
+// indicator at the bottom edge of the screen.
+.chatInput {
+	padding-block-end: calc(var(--space-md) + env(safe-area-inset-bottom, 0px));
+}
+
+.form {
+	display: flex;
+	align-items: flex-end;
+	gap: 8px;
+	width: 100%;
+	max-width: var(--wrapper);
+	box-sizing: border-box;
+	padding: 6px;
+	background: var(--input-active);
+	border: 1px solid var(--border-light);
+	border-radius: $field-radius;
+	box-shadow: var(--elevation-1);
+	transition:
+		border-color var(--motion-base) var(--motion-ease),
+		box-shadow var(--motion-base) var(--motion-ease);
+
+	// The whole field lights up, not the textarea inside it.
+	&:focus-within {
+		border-color: var(--btn-primary);
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+}
+
+.textarea {
+	flex: 1;
+	min-width: 0;
+	width: auto;
+	box-sizing: border-box;
+	// Vertical padding centres a single line in the send button's height.
+	padding: 10px 12px;
+	min-height: $send-size;
+	max-height: $field-max-height;
+	margin: 0;
+	border: 0;
+	border-radius: 0;
+	outline: none;
+	box-shadow: none;
+	background: transparent;
+	color: var(--text-body);
+	font: inherit;
+	// 16px minimum keeps iOS from zooming the page on focus.
+	font-size: 1rem;
+	line-height: 1.4;
+	resize: none;
+	// Height is set from scrollHeight in ChatInput.tsx; past the cap, scroll.
+	overflow-y: auto;
+
+	&::placeholder {
+		color: var(--text-caption);
+	}
+}
+
+// The button is a flex item beside the textarea, so long text wraps before it
+// and can never run underneath.
+.send {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: $send-size;
+	height: $send-size;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: var(--btn-primary);
+	color: var(--btn-primary-text);
+	cursor: pointer;
+	transition:
+		background-color var(--motion-base) var(--motion-ease),
+		transform var(--motion-base) var(--motion-ease);
+
+	&:hover:not(:disabled) {
+		transform: scale(1.06);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		background: var(--btn-disabled);
+		color: var(--btn-disabled-text);
+		cursor: not-allowed;
+	}
+}
+
+// The arrow points up and forward; mirror it in right-to-left so it leans
+// toward the side the button is on.
+:global([dir='rtl']) .send svg {
+	transform: scaleX(-1);
 }
 
 .eval {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    width: fit-content;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 1rem;
+	width: fit-content;
 }
 
 .replyIndicator {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.5rem 1rem;
-    background-color: var(--card-default, #f0f0f0);
-    border-inline-start: 3px solid var(--btn-primary, #5f88e5);
-    border-radius: 4px 4px 0 0;
-    max-width: var(--wrapper);
-    width: 100%;
-    box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	box-sizing: border-box;
+	width: 100%;
+	max-width: var(--wrapper);
+	margin-bottom: 8px;
+	padding: 0.5rem 1rem;
+	background: var(--space-purple-soft, var(--card-default));
+	border-inline-start: 3px solid var(--btn-primary);
+	border-radius: 10px;
 }
 
 .replyIndicatorContent {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-    overflow: hidden;
-    flex: 1;
-    min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+	overflow: hidden;
+	flex: 1;
+	min-width: 0;
 }
 
 .replyIndicatorAuthor {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--btn-primary, #5f88e5);
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--text-blue, var(--btn-primary));
 }
 
 .replyIndicatorText {
-    font-size: 0.8rem;
-    color: var(--text-paragraph, #666);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+	font-size: 0.8rem;
+	color: var(--text-paragraph);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .replyIndicatorClose {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.25rem;
-    color: var(--text-paragraph, #666);
-    flex-shrink: 0;
-    position: static;
-    width: auto;
-    height: auto;
+	flex-shrink: 0;
+	padding: 0.25rem;
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: var(--text-paragraph);
 
-    &:hover {
-        color: var(--reject, #e74c3c);
-    }
+	&:hover {
+		color: var(--reject);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
 }
 
-  .chatInput, .sideChatInput { padding: 12px 8px 16px; background: var(--space-paper); form { background: var(--space-surface); border: 1px solid var(--space-line); border-radius: 26px; box-shadow: var(--space-shadow); padding: 8px; align-items: flex-end; gap: 8px; } form:focus-within { border-color: var(--space-purple); } textarea { border: 0 !important; box-shadow: none; background: transparent; padding: 12px; min-height: 48px; max-height: 180px; overflow-y: auto !important; font-size: 14px; flex: 1; width: 0; } form button { position: static; width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; background: var(--space-purple); color: var(--space-paper); svg { width: 22px; height: 22px; } svg path { fill: var(--space-paper); } } }
-  .replyIndicator { background: var(--space-purple-soft); border-inline-start-color: var(--space-purple); border-radius: 10px; margin-bottom: 8px; }
+@media (prefers-reduced-motion: reduce) {
+	.form,
+	.send {
+		transition: none;
+	}
 
-// Last, so it wins over the shorthand padding above: the input is the bottom
-// edge of the screen, keep it clear of the home indicator.
-.chatInput {
-    padding-block-end: calc(var(--space-md) + env(safe-area-inset-bottom, 0px));
+	.send:hover:not(:disabled) {
+		transform: none;
+	}
+}
+
+// High contrast: the field edge must not depend on soft tones.
+:global([data-contrast='high']) .form {
+	border-color: currentColor;
+	box-shadow: none;
 }
