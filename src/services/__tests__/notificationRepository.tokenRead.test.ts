@@ -17,7 +17,6 @@ jest.mock('firebase/firestore', () => ({
 	collection: jest.fn(),
 	writeBatch: jest.fn(),
 	Timestamp: { now: jest.fn() },
-	arrayUnion: jest.fn(),
 }));
 
 jest.mock('@/controllers/db/config', () => ({
@@ -27,7 +26,6 @@ jest.mock('@/controllers/db/config', () => ({
 
 jest.mock('@/controllers/db/subscriptions/setSubscriptions', () => ({
 	removeTokenFromSubscription: jest.fn(),
-	addTokenToSubscription: jest.fn(),
 }));
 
 jest.mock('../platformService', () => ({

@@ -1,11 +1,10 @@
 /**
  * askedToBeNotified is legacy and owner-only, so on a shared browser the write
- * can be refused. Registration still counts: push is delivered from tokens[].
+ * can be refused. Registration still counts: push is delivered from pushNotifications.
  */
 
 const mockSetDoc = jest.fn();
 const mockDeleteDoc = jest.fn();
-const mockAddToken = jest.fn();
 const mockRemoveToken = jest.fn();
 const mockLogError = jest.fn();
 
@@ -19,25 +18,17 @@ jest.mock('firebase/firestore', () => ({
 	where: jest.fn(),
 	collection: jest.fn(),
 	writeBatch: jest.fn(),
-	arrayUnion: jest.fn(),
 	Timestamp: class {},
 }));
 
 jest.mock('@/controllers/db/config', () => ({ DB: {}, auth: { currentUser: { uid: 'user-b' } } }));
 jest.mock('@/controllers/db/subscriptions/setSubscriptions', () => ({
-	addTokenToSubscription: (...args: unknown[]) => mockAddToken(...args),
 	removeTokenFromSubscription: (...args: unknown[]) => mockRemoveToken(...args),
 }));
 jest.mock('@/utils/errorHandling', () => ({
 	logError: (...args: unknown[]) => mockLogError(...args),
 }));
 jest.mock('../platformService', () => ({ getDeviceInfo: jest.fn(() => ({ platform: 'web' })) }));
-jest.mock('../tokenSyncMarker', () => ({
-	wasTokenSyncedRecently: jest.fn(),
-	markTokenSynced: jest.fn(),
-	clearTokenSyncMarker: jest.fn(),
-}));
-jest.mock('@/utils/firebaseUtils', () => ({ getCurrentTimestamp: jest.fn(() => 1) }));
 
 import {
 	registerForStatementNotifications,
@@ -51,17 +42,17 @@ const denied = Object.assign(new Error('Missing or insufficient permissions'), {
 describe('notificationRepository legacy askedToBeNotified', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
-		mockAddToken.mockResolvedValue(undefined);
 		mockRemoveToken.mockResolvedValue(undefined);
 		mockSetDoc.mockResolvedValue(undefined);
 		mockDeleteDoc.mockResolvedValue(undefined);
 	});
 
 	describe('registerForStatementNotifications', () => {
-		it('writes tokens[] first and then the legacy doc under the token-based id', async () => {
+		it('registers the device in pushNotifications, then the legacy doc, and never a subscription', async () => {
 			await registerForStatementNotifications('user-b', 'tok', 'st-1');
 
-			expect(mockAddToken).toHaveBeenCalledWith('st-1', 'user-b', 'tok');
+			const paths = mockSetDoc.mock.calls.map(([ref]) => (ref as { path: string }).path);
+			expect(paths).toEqual(['pushNotifications/tok', 'askedToBeNotified/tok_st-1']);
 			expect(mockSetDoc).toHaveBeenCalledWith(
 				{ path: 'askedToBeNotified/tok_st-1' },
 				expect.objectContaining({ token: 'tok', userId: 'user-b', statementId: 'st-1' }),
@@ -70,18 +61,18 @@ describe('notificationRepository legacy askedToBeNotified', () => {
 		});
 
 		it('still resolves when the shared-browser legacy doc belongs to someone else', async () => {
-			mockSetDoc.mockRejectedValue(denied);
+			mockSetDoc.mockResolvedValueOnce(undefined).mockRejectedValueOnce(denied);
 
 			await expect(
 				registerForStatementNotifications('user-b', 'tok', 'st-1'),
 			).resolves.toBeUndefined();
-			expect(mockAddToken).toHaveBeenCalledWith('st-1', 'user-b', 'tok');
+			expect(mockSetDoc).toHaveBeenCalledTimes(2);
 			expect(mockLogError).not.toHaveBeenCalled();
 		});
 
 		it('rethrows any other failure of the legacy write', async () => {
 			const unavailable = Object.assign(new Error('offline'), { code: 'unavailable' });
-			mockSetDoc.mockRejectedValue(unavailable);
+			mockSetDoc.mockResolvedValueOnce(undefined).mockRejectedValueOnce(unavailable);
 
 			await expect(registerForStatementNotifications('user-b', 'tok', 'st-1')).rejects.toBe(
 				unavailable,

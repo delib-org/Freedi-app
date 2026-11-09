@@ -46,7 +46,7 @@ jest.mock('@/controllers/db/subscriptions/setSubscriptions', () => ({
 }));
 jest.mock('@/services/notificationService', () => ({
 	notificationService: {
-		getPushSubscriptionFields: () => ({ getPushNotification: false, pushToken: null }),
+		getPushSubscriptionFields: () => ({ getPushNotification: false }),
 	},
 }));
 jest.mock('@/controllers/general/helpers', () => ({

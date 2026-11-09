@@ -1,11 +1,4 @@
-import {
-	updateDoc,
-	setDoc,
-	getDoc,
-	arrayUnion,
-	arrayRemove,
-	runTransaction,
-} from 'firebase/firestore';
+import { updateDoc, setDoc, getDoc, arrayRemove, runTransaction } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import {
@@ -36,8 +29,6 @@ interface SetSubscriptionProps {
 	getInAppNotification?: boolean;
 	getEmailNotification?: boolean;
 	getPushNotification?: boolean;
-	/** FCM token already held by this device; stored so push works before any later token sync */
-	pushToken?: string | null;
 }
 
 export async function setStatementSubscriptionToDB({
@@ -47,7 +38,6 @@ export async function setStatementSubscriptionToDB({
 	getInAppNotification = true,
 	getEmailNotification = false,
 	getPushNotification = false,
-	pushToken = null,
 }: SetSubscriptionProps): Promise<void> {
 	try {
 		// Validate inputs
@@ -124,17 +114,7 @@ export async function setStatementSubscriptionToDB({
 
 		const parsedStatementSubscription = parse(StatementSubscriptionSchema, subscriptionData);
 
-		// The backend reads subscription.tokens[] for push, so a push-enabled subscription
-		// must carry this device's token from the start (no extra read: the doc is new here)
-		const tokenFields = getPushNotification && pushToken ? { tokens: arrayUnion(pushToken) } : {};
-
-		await setDoc(
-			statementsSubscribeRef,
-			{ ...parsedStatementSubscription, ...tokenFields },
-			{
-				merge: true,
-			},
-		);
+		await setDoc(statementsSubscribeRef, parsedStatementSubscription, { merge: true });
 
 		// The card gets its seen marker now, so numbers show without a reload
 		store.dispatch(
@@ -341,41 +321,10 @@ export async function updateMemberRole(
 }
 
 /**
- * Add a FCM token to a user's statement subscription
- */
-export async function addTokenToSubscription(
-	statementId: string,
-	userId: string,
-	token: string,
-): Promise<void> {
-	try {
-		const statementSubscriptionId = getStatementSubscriptionId(statementId, userId);
-		if (!statementSubscriptionId) throw new Error('Error in getting statementSubscriptionId');
-
-		const statementSubscriptionRef = createSubscriptionRef(statementSubscriptionId);
-
-		// Check if document exists
-		const docSnap = await getDoc(statementSubscriptionRef);
-
-		if (docSnap.exists()) {
-			// Document exists, use updateDoc
-			await updateDoc(statementSubscriptionRef, {
-				tokens: arrayUnion(token),
-				statementId: statementId, // Include statementId to satisfy Firebase rules
-			});
-		}
-		// If document doesn't exist, don't create it - user should be subscribed first
-		// This prevents creating incomplete subscription objects
-	} catch (error) {
-		logError(error, {
-			operation: 'subscriptions.setSubscriptions.addTokenToSubscription',
-			metadata: { message: 'Error adding token to subscription:' },
-		});
-	}
-}
-
-/**
- * Remove a FCM token from a user's statement subscription
+ * Removes an FCM token from the old `tokens[]` field of a user's subscription.
+ * The field is read-only history now: it is never added to, and only a token
+ * still listed there is removed, because `arrayRemove` on a missing field would
+ * bring the field back as an empty list.
  */
 export async function removeTokenFromSubscription(
 	statementId: string,
@@ -391,14 +340,13 @@ export async function removeTokenFromSubscription(
 		// Check if document exists before trying to update
 		const docSnap = await getDoc(statementSubscriptionRef);
 
-		if (docSnap.exists()) {
-			// Remove token from the tokens array
+		const listedTokens: unknown = docSnap.exists() ? docSnap.data()?.tokens : undefined;
+		if (Array.isArray(listedTokens) && listedTokens.includes(token)) {
 			await updateDoc(statementSubscriptionRef, {
 				tokens: arrayRemove(token),
 				statementId: statementId, // Include statementId to satisfy Firebase rules
 			});
 		}
-		// If document doesn't exist, nothing to remove from
 	} catch (error) {
 		logError(error, {
 			operation: 'subscriptions.setSubscriptions.removeTokenFromSubscription',

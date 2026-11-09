@@ -8,6 +8,7 @@ import { db } from './db';
 import { logError } from './utils/errorHandling';
 import { validateRoleChange } from './fn_subscriptions';
 import { feedRelevantChange, reconcileUserFeedEntry } from './userFeed/userFeedMembership';
+import { stripCreatedSubscriptionTokens } from './notifications/stripSubscriptionTokens';
 
 /**
  * Membership lifecycle triggers on `statementsSubscribe/{subscriptionId}`.
@@ -78,6 +79,7 @@ export async function onSubscriptionCreated(event: SnapshotEvent): Promise<void>
 	const subscription = event.data?.data() as SubscriptionData | undefined;
 	if (!subscription) return;
 
+	await stripCreatedSubscriptionTokens(db, event.params.subscriptionId, subscription);
 	await onMembershipChanged(
 		db,
 		event.params.subscriptionId,

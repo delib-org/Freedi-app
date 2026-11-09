@@ -3,7 +3,7 @@
  *
  * Client responsibilities only: detect support, register the FCM service
  * worker, request permission, and mint the FCM token. Persistence (storing the
- * token, fanning it out to subscriptions, per-question follows) is done
+ * token, per-question follows) is done
  * server-side via `/api/push` with the admin SDK — the browser just posts the
  * token it minted. Everything here dynamically imports the Firebase SDK so
  * nothing lands in the SSR/first-paint bundle.
@@ -162,13 +162,11 @@ async function postPush(body: Record<string, unknown>): Promise<ApiResult> {
 	}
 }
 
-export type EnablePushResult =
-	| { ok: true; subscriptionsSynced: number }
-	| { ok: false; reason: string };
+export type EnablePushResult = { ok: true } | { ok: false; reason: string };
 
 /**
  * Global opt-in (the header bell): mint a token and register it server-side,
- * fanning it out to the user's existing push-enabled subscriptions.
+ * which reaches all of the user's push-enabled subscriptions.
  */
 export async function enablePush(): Promise<EnablePushResult> {
 	const tokenResult = await ensurePushToken();
@@ -177,7 +175,7 @@ export async function enablePush(): Promise<EnablePushResult> {
 	const result = await postPush({ action: 'register', token: tokenResult.token });
 	if (!result.ok) return { ok: false, reason: result.reason };
 
-	return { ok: true, subscriptionsSynced: Number(result.data.subscriptionsSynced ?? 0) };
+	return { ok: true };
 }
 
 export type FollowResult = { ok: true; following: boolean } | { ok: false; reason: string };
@@ -199,7 +197,7 @@ export async function followQuestion(statementId: string): Promise<FollowResult>
 
 /** Stop push for a specific question. */
 export async function unfollowQuestion(statementId: string): Promise<FollowResult> {
-	// Best-effort: include the token so the server can drop it from `tokens[]`.
+	// Best-effort: include the token so the server can drop it from the old `tokens[]` list.
 	const tokenResult = await ensurePushToken();
 	const token = tokenResult.ok ? tokenResult.token : undefined;
 

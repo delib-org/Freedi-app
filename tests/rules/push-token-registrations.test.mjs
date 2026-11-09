@@ -187,7 +187,8 @@ describe('push token registrations', () => {
 
 		// What happens when B signs in on the browser A used, same token, same
 		// statement. The legacy write is refused and stays A's; the client swallows
-		// that refusal. B's real registration is the tokens[] write, tested with it.
+		// that refusal. B's real registration is claiming pushNotifications/{token},
+		// tested in push-tokens.test.mjs.
 		describe('shared browser', () => {
 			const SHARED_ID = 'shared-token_s1';
 			const subId = `${ME}--${STATEMENT}`;
@@ -213,8 +214,8 @@ describe('push token registrations', () => {
 				});
 			});
 
-			it('still adds the device to my own subscription, which is what delivers', async () => {
-				await assertSucceeds(
+			it('no longer adds the device to my own subscription: pushNotifications delivers', async () => {
+				await assertFails(
 					updateDoc(doc(as(ME), 'statementsSubscribe', subId), {
 						tokens: arrayUnion('shared-token'),
 						statementId: STATEMENT,
@@ -341,9 +342,9 @@ describe('push token registrations', () => {
 		});
 
 		describe('my own tokens', () => {
-			it('lets a member add their device, as addTokenToSubscription does', async () => {
+			it('refuses a member adding a device, as an old addTokenToSubscription does', async () => {
 				await resetMember();
-				await assertSucceeds(
+				await assertFails(
 					updateDoc(ref(as(VICTIM), MEMBER_SUB), {
 						tokens: arrayUnion('new-device'),
 						statementId: STATEMENT,
@@ -361,13 +362,13 @@ describe('push token registrations', () => {
 				);
 			});
 
-			it('lets a member add the first token to a doc that has none', async () => {
+			it('refuses a member adding the first token to a doc that has none', async () => {
 				await resetMember({});
-				await assertSucceeds(updateDoc(ref(as(VICTIM), MEMBER_SUB), { tokens: arrayUnion('first-device') }));
+				await assertFails(updateDoc(ref(as(VICTIM), MEMBER_SUB), { tokens: arrayUnion('first-device') }));
 			});
 
-			it('lets an admin change the tokens on their own subscription', async () => {
-				await assertSucceeds(
+			it('refuses an admin adding a device to their own subscription', async () => {
+				await assertFails(
 					updateDoc(ref(as(ADMIN), `${ADMIN}--${STATEMENT}`), {
 						tokens: arrayUnion('second-admin-device'),
 						statementId: STATEMENT,
@@ -375,7 +376,7 @@ describe('push token registrations', () => {
 				);
 			});
 
-			it('lets an admin change tokens on their own old doc that has no userId', async () => {
+			it('lets an admin remove tokens from their own old doc that has no userId', async () => {
 				const id = `${ADMIN}--legacy-owned`;
 				await seed(env, async (db) => {
 					await setDoc(doc(db, 'statements', 'legacy-owned'), {
@@ -387,9 +388,14 @@ describe('push token registrations', () => {
 						parents: [],
 						parentId: 'top',
 					});
-					await setDoc(ref(db, id), { statementId: 'legacy-owned', role: 'admin', lastUpdate: T0 });
+					await setDoc(ref(db, id), {
+						statementId: 'legacy-owned',
+						role: 'admin',
+						lastUpdate: T0,
+						tokens: ['old-doc-device'],
+					});
 				});
-				await assertSucceeds(updateDoc(ref(as(ADMIN), id), { tokens: arrayUnion('old-doc-device') }));
+				await assertSucceeds(updateDoc(ref(as(ADMIN), id), { tokens: arrayRemove('old-doc-device') }));
 			});
 
 			it('refuses an admin changing tokens on another person’s old doc that has no userId', async () => {

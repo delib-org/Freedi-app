@@ -142,6 +142,37 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 		expect(feedOf('alice')).toBeUndefined();
 	});
 
+	it('removes the token an old client sent when it joined, without registering anything', async () => {
+		const id = `dana--${DISCUSSION}`;
+		const doc = subscriptionDoc('dana', Role.member, {
+			getPushNotification: true,
+			tokens: ['device-1'],
+		});
+		mockDb.seed(Collections.pushNotifications, 'device-1', { token: 'device-1', userId: 'dana' });
+		mockDb.seed(Collections.statementsSubscribe, id, doc);
+
+		await onSubscriptionCreated(snapshotEvent(id, doc));
+
+		expect(mockDb.read(Collections.statementsSubscribe, id)?.tokens).not.toEqual(['device-1']);
+		expect(memberCount()).toBe(1);
+	});
+
+	it('does nothing when only the old tokens field changed (the strip and the cleanup)', async () => {
+		const alice = await joinAs('alice', Role.member, { tokens: ['device-1'] });
+		const before = mockDb.read(Collections.statementsSubscribe, alice) as SubscriptionDoc;
+		const { tokens: _removed, ...after } = before;
+		const feedBefore = feedOf('alice');
+		mockDb.seed(Collections.statementsSubscribe, alice, after);
+		mockDb.resetCounters();
+
+		await onSubscriptionUpdated(changeEvent(alice, before, after));
+
+		expect(_removed).toBeDefined();
+		expect(mockDb.writes).toBe(0);
+		expect(mockDb.reads).toBe(0);
+		expect(feedOf('alice')).toEqual(feedBefore);
+	});
+
 	it('gives a waiting member a feed entry (it leads to the waiting-for-approval screen)', async () => {
 		await joinAs('carol', Role.waiting);
 

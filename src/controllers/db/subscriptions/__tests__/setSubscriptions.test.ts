@@ -95,7 +95,6 @@ import {
 	setStatementSubscriptionToDB,
 	updateLastReadTimestamp,
 	updateMemberRole,
-	addTokenToSubscription,
 	removeTokenFromSubscription,
 	updateNotificationPreferences,
 } from '../setSubscriptions';
@@ -425,43 +424,16 @@ describe('setSubscriptions', () => {
 				} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
 			});
 
-			it('writes the token with the new push-enabled subscription', async () => {
+			it('never writes a token: any signed-in user can read a subscription', async () => {
 				await setStatementSubscriptionToDB({
 					statement: mockStatement,
 					creator: otherUser,
 					getPushNotification: true,
-					pushToken: 'tok-1',
-				});
-
-				expect(mockSetDoc).toHaveBeenCalledWith(
-					expect.anything(),
-					expect.objectContaining({ getPushNotification: true, tokens: { _arrayUnion: 'tok-1' } }),
-					{ merge: true },
-				);
-			});
-
-			it('creates the subscription without tokens when no token is held', async () => {
-				await setStatementSubscriptionToDB({
-					statement: mockStatement,
-					creator: otherUser,
-					getPushNotification: true,
-					pushToken: null,
 				});
 
 				expect(mockSetDoc).toHaveBeenCalledTimes(1);
 				const data = mockSetDoc.mock.calls[0][1] as Record<string, unknown>;
-				expect(data).not.toHaveProperty('tokens');
-			});
-
-			it('ignores the token when push is not enabled', async () => {
-				await setStatementSubscriptionToDB({
-					statement: mockStatement,
-					creator: otherUser,
-					getPushNotification: false,
-					pushToken: 'tok-1',
-				});
-
-				const data = mockSetDoc.mock.calls[0][1] as Record<string, unknown>;
+				expect(data.getPushNotification).toBe(true);
 				expect(data).not.toHaveProperty('tokens');
 			});
 		});
@@ -632,39 +604,12 @@ describe('setSubscriptions', () => {
 		});
 	});
 
-	describe('addTokenToSubscription', () => {
-		it('should add token when subscription exists', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => true,
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
-
-			await addTokenToSubscription('stmt-123', 'user-123', 'fcm-token-abc');
-
-			expect(mockUpdateDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				expect.objectContaining({
-					tokens: { _arrayUnion: 'fcm-token-abc' },
-					statementId: 'stmt-123',
-				}),
-			);
-		});
-
-		it('should not add token when subscription does not exist', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => false,
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
-
-			await addTokenToSubscription('stmt-123', 'user-123', 'fcm-token-abc');
-
-			expect(mockUpdateDoc).not.toHaveBeenCalled();
-		});
-	});
-
 	describe('removeTokenFromSubscription', () => {
-		it('should remove token when subscription exists', async () => {
+		it('should remove a token still listed on the subscription', async () => {
 			mockGetDoc.mockResolvedValue({
 				exists: () => true,
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+				data: () => ({ tokens: ['fcm-token-abc'] }),
+			} as unknown as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
 
 			await removeTokenFromSubscription('stmt-123', 'user-123', 'fcm-token-abc');
 
@@ -675,6 +620,17 @@ describe('setSubscriptions', () => {
 					statementId: 'stmt-123',
 				}),
 			);
+		});
+
+		it('should not write when the field is gone, so it cannot come back as an empty list', async () => {
+			mockGetDoc.mockResolvedValue({
+				exists: () => true,
+				data: () => ({ role: 'member' }),
+			} as unknown as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+
+			await removeTokenFromSubscription('stmt-123', 'user-123', 'fcm-token-abc');
+
+			expect(mockUpdateDoc).not.toHaveBeenCalled();
 		});
 
 		it('should not remove token when subscription does not exist', async () => {
