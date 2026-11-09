@@ -4686,5 +4686,21 @@
   "Could not update the summary": "De samenvatting kon niet worden bijgewerkt",
   "Show selected options only": "Alleen geselecteerde opties tonen",
   "Summary from": "Samenvatting van",
-  "The group is not split on any option": "De groep is over geen enkele optie verdeeld"
+  "The group is not split on any option": "De groep is over geen enkele optie verdeeld",
+  "Get notified about this question?": "Meldingen over deze vraag ontvangen?",
+  "Replies to my answers": "Reacties op mijn antwoorden",
+  "New answers to this question": "Nieuwe antwoorden op deze vraag",
+  "Your browser will ask for permission next.": "Je browser vraagt hierna om toestemming.",
+  "This device can't show push notifications. You can still see them in the app.": "Dit apparaat kan geen pushmeldingen tonen. Je kunt ze nog steeds in de app zien.",
+  "What to notify me about": "Waarover ik meldingen wil",
+  "How to notify me": "Hoe ik meldingen wil",
+  "Loading preferences...": "Voorkeuren laden...",
+  "In-App Notifications": "Meldingen in de app",
+  "See notifications when you're using the app": "Meldingen zien terwijl je de app gebruikt",
+  "Push Notifications": "Pushmeldingen",
+  "Get notified on all your devices even when the app is closed": "Ontvang meldingen op al je apparaten, ook als de app gesloten is",
+  "Browser notifications must be enabled first": "Browsermeldingen moeten eerst worden ingeschakeld",
+  "Please enable browser notifications first": "Schakel eerst browsermeldingen in",
+  "Email Notifications": "E-mailmeldingen",
+  "Receive updates via email": "Updates per e-mail ontvangen"
 }

@@ -101,6 +101,12 @@ describe('useCreateStatementFlow', () => {
 		});
 		expect(createWithSub.mock.calls[0][0].paragraphs[0].content).toBe('on Main St');
 		expect(onDone).toHaveBeenCalledWith(['new-1']);
+		// The prompt is raised by this hook once done, not by the writer mid-write.
+		expect(createWithSub.mock.calls[0][0].announceAnswer).toBe(false);
+		expect(dispatch).toHaveBeenCalledWith({
+			type: 'answerNotifyPrompt/answerPublished',
+			payload: { questionId: 'q1', answerId: 'new-1' },
+		});
 		expect(mockUx.addAnswerStep).toHaveBeenCalledWith('q1', 'create');
 		expect(mockUx.addAnswerCompleted).toHaveBeenCalledWith('q1');
 		expect(detect).not.toHaveBeenCalled();
@@ -119,6 +125,10 @@ describe('useCreateStatementFlow', () => {
 			expect.objectContaining({ type: 'statements/setStatement' }),
 		);
 		expect(result.current.state.createdIds).toEqual(['tmp-Temp']);
+		// Unpublished: nothing to ask about.
+		expect(dispatch).not.toHaveBeenCalledWith(
+			expect.objectContaining({ type: 'answerNotifyPrompt/answerPublished' }),
+		);
 	});
 
 	it('similarity: offers matches, supporting one evaluates it and finishes without creating', async () => {
@@ -140,6 +150,10 @@ describe('useCreateStatementFlow', () => {
 		expect(result.current.state.step).toBe('done');
 		expect(createWithSub).not.toHaveBeenCalled();
 		expect(onDone).toHaveBeenCalledWith([]);
+		// Supporting a similar answer adds nothing: no prompt.
+		expect(dispatch).not.toHaveBeenCalledWith(
+			expect.objectContaining({ type: 'answerNotifyPrompt/answerPublished' }),
+		);
 	});
 
 	it('multi split: confirmed splits create one statement each', async () => {
@@ -162,6 +176,11 @@ describe('useCreateStatementFlow', () => {
 		await waitFor(() => expect(result.current.state.step).toBe('done'));
 		expect(createWithSub).toHaveBeenCalledTimes(2);
 		expect(onDone).toHaveBeenCalledWith(['a', 'b']);
+		// A multi-split publish raises one prompt.
+		const raised = dispatch.mock.calls.filter(
+			([action]: [{ type: string }]) => action.type === 'answerNotifyPrompt/answerPublished',
+		);
+		expect(raised).toHaveLength(1);
 	});
 
 	it('pre-check: publish splits the refined text into title and paragraphs', async () => {

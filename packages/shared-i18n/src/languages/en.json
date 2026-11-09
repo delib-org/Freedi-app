@@ -5364,5 +5364,21 @@
   "Could not update the summary": "Could not update the summary",
   "Show selected options only": "Show selected options only",
   "Summary from": "Summary from",
-  "The group is not split on any option": "The group is not split on any option"
+  "The group is not split on any option": "The group is not split on any option",
+  "Get notified about this question?": "Get notified about this question?",
+  "Replies to my answers": "Replies to my answers",
+  "New answers to this question": "New answers to this question",
+  "Your browser will ask for permission next.": "Your browser will ask for permission next.",
+  "This device can't show push notifications. You can still see them in the app.": "This device can't show push notifications. You can still see them in the app.",
+  "What to notify me about": "What to notify me about",
+  "How to notify me": "How to notify me",
+  "Loading preferences...": "Loading preferences...",
+  "In-App Notifications": "In-App Notifications",
+  "See notifications when you're using the app": "See notifications when you're using the app",
+  "Push Notifications": "Push Notifications",
+  "Get notified on all your devices even when the app is closed": "Get notified on all your devices even when the app is closed",
+  "Browser notifications must be enabled first": "Browser notifications must be enabled first",
+  "Please enable browser notifications first": "Please enable browser notifications first",
+  "Email Notifications": "Email Notifications",
+  "Receive updates via email": "Receive updates via email"
 }

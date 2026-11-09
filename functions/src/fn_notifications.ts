@@ -389,6 +389,7 @@ export async function processFcmNotificationsImproved(
 	fcmSubscribers: FcmSubscriber[],
 	newStatement: Statement,
 	parentStatement: Statement | null = null,
+	kind: 'reply' | 'answer' = 'reply',
 ): Promise<SendResult> {
 	const result: SendResult = {
 		successful: 0,
@@ -430,6 +431,11 @@ export async function processFcmNotificationsImproved(
 		notificationTitle = `${creatorName} replied`;
 		notificationBody = `On: "${parentPreview}"\n\n"${statementPreview}"`;
 	}
+	// A new answer to a question is not a reply: its own title, action and type.
+	if (kind === 'answer') {
+		notificationTitle = `New answer from ${creatorName}`;
+		notificationBody = `"${statementPreview}"`;
+	}
 
 	const notificationUrl = `/statement/${newStatement.parentId}?focusId=${newStatement.statementId}`;
 	const notificationTag = `discussion-${newStatement.parentId}`;
@@ -445,10 +451,10 @@ export async function processFcmNotificationsImproved(
 			statementId: newStatement.statementId,
 			parentId: newStatement.parentId,
 			createdAt: newStatement.createdAt.toString(),
-			notificationType: 'statement_reply',
+			notificationType: kind === 'answer' ? 'new_answer' : 'statement_reply',
 			url: notificationUrl,
 			tag: notificationTag,
-			openActionTitle: 'View Reply',
+			openActionTitle: kind === 'answer' ? 'View Answer' : 'View Reply',
 			creatorPhoto: creatorPhoto,
 			creatorName: creatorName,
 			requireInteraction: 'true',

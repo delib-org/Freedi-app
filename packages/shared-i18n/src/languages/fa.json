@@ -5163,5 +5163,21 @@
   "Could not update the summary": "به‌روزرسانی خلاصه ممکن نشد",
   "Show selected options only": "نمایش فقط گزینه‌های انتخاب‌شده",
   "Summary from": "خلاصه مورخ",
-  "The group is not split on any option": "گروه درباره هیچ گزینه‌ای دو دسته نیست"
+  "The group is not split on any option": "گروه درباره هیچ گزینه‌ای دو دسته نیست",
+  "Get notified about this question?": "می‌خواهید درباره این پرسش اعلان دریافت کنید؟",
+  "Replies to my answers": "پاسخ‌ها به پاسخ‌های من",
+  "New answers to this question": "پاسخ‌های جدید به این پرسش",
+  "Your browser will ask for permission next.": "مرورگر شما در مرحله بعد اجازه می‌خواهد.",
+  "This device can't show push notifications. You can still see them in the app.": "این دستگاه نمی‌تواند اعلان‌های فشاری نمایش دهد. همچنان می‌توانید آن‌ها را در برنامه ببینید.",
+  "What to notify me about": "درباره چه چیزی اعلان بگیرم",
+  "How to notify me": "چگونه اعلان بگیرم",
+  "Loading preferences...": "در حال بارگذاری تنظیمات...",
+  "In-App Notifications": "اعلان‌های درون برنامه",
+  "See notifications when you're using the app": "هنگام استفاده از برنامه اعلان‌ها را ببینید",
+  "Push Notifications": "اعلان‌های فشاری",
+  "Get notified on all your devices even when the app is closed": "حتی وقتی برنامه بسته است در همه دستگاه‌هایتان اعلان بگیرید",
+  "Browser notifications must be enabled first": "ابتدا باید اعلان‌های مرورگر فعال شوند",
+  "Please enable browser notifications first": "لطفاً ابتدا اعلان‌های مرورگر را فعال کنید",
+  "Email Notifications": "اعلان‌های ایمیلی",
+  "Receive updates via email": "دریافت به‌روزرسانی‌ها از طریق ایمیل"
 }

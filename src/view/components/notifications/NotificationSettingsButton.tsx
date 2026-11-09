@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -28,7 +28,7 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 	const [permissionState, setPermissionState] = useState<NotificationPermission | 'unsupported'>(
 		'default',
 	);
-	const [isSupported, setIsSupported] = useState(false);
+	const [isSupported, setIsSupported] = useState<boolean>(() => notificationService.isSupported());
 	const [isMobile, setIsMobile] = useState(false);
 	const [allNotificationsOff, setAllNotificationsOff] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
@@ -97,7 +97,7 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 	}, [statementId, openSettings]);
 
 	// Handle click outside for desktop (non-portal)
-	const handleClickOutside = React.useCallback(() => {
+	const handleClickOutside = useCallback(() => {
 		if (openSettings && !isMobile) setOpenSettings(false);
 	}, [openSettings, isMobile]);
 
@@ -152,17 +152,51 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 		}
 	};
 
-	// Don't render if browser doesn't support notifications
-	if (!isSupported) {
-		return null;
-	}
+	// The entry stays reachable on every device: the choices govern in-app
+	// notifications too. Only the push area below shows the permission state.
+	const pushArea =
+		!isSupported || permissionState === 'unsupported' ? (
+			<p className={styles.permissionDenied}>
+				{t("This device can't show push notifications. You can still see them in the app.")}
+			</p>
+		) : permissionState === 'default' ? (
+			<div className={styles.permissionPrompt}>
+				<h3>{t('Enable Notifications')}</h3>
+				<p>
+					{t(
+						'To receive notifications about updates to this statement, you need to grant permission first.',
+					)}
+				</p>
+				<button className={styles.grantButton} onClick={handleRequestPermission}>
+					{t('Grant Permission')}
+				</button>
+			</div>
+		) : permissionState === 'denied' ? (
+			<div className={styles.permissionDenied}>
+				<h3>{t('Notifications Blocked')}</h3>
+				<p>{t('You have blocked notifications. To enable them:')}</p>
+				<ol>
+					<li>{t('Click the lock icon in your browser address bar')}</li>
+					<li>{t('Find "Notifications" and change to "Allow"')}</li>
+					<li>{t('Reload the page')}</li>
+				</ol>
+			</div>
+		) : null;
+
+	const panel = (
+		<>
+			{pushArea}
+			<NotificationPreferences statementId={statementId} />
+		</>
+	);
 
 	return (
 		<div className={styles.container} ref={containerRef}>
 			<button
 				className={styles.notificationButton}
 				onClick={() => setOpenSettings(!openSettings)}
-				title={t('Notification Settings')}
+				title={t('Notification settings')}
+				aria-label={t('Notification settings')}
 			>
 				{allNotificationsOff ? (
 					<BellSlashIcon style={{ color: headerStyle?.color }} />
@@ -177,31 +211,7 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 					<>
 						<div className={styles.backdrop} onClick={() => setOpenSettings(false)} />
 						<div className={styles.dropdown} ref={dropdownRef} onClick={(e) => e.stopPropagation()}>
-							{permissionState === 'default' ? (
-								<div className={styles.permissionPrompt}>
-									<h3>{t('Enable Notifications')}</h3>
-									<p>
-										{t(
-											'To receive notifications about updates to this statement, you need to grant permission first.',
-										)}
-									</p>
-									<button className={styles.grantButton} onClick={handleRequestPermission}>
-										{t('Grant Permission')}
-									</button>
-								</div>
-							) : permissionState === 'denied' ? (
-								<div className={styles.permissionDenied}>
-									<h3>{t('Notifications Blocked')}</h3>
-									<p>{t('You have blocked notifications. To enable them:')}</p>
-									<ol>
-										<li>{t('Click the lock icon in your browser address bar')}</li>
-										<li>{t('Find "Notifications" and change to "Allow"')}</li>
-										<li>{t('Reload the page')}</li>
-									</ol>
-								</div>
-							) : (
-								<NotificationPreferences statementId={statementId} />
-							)}
+							{panel}
 						</div>
 					</>,
 					document.body,
@@ -209,31 +219,7 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 
 			{openSettings && !isMobile && (
 				<div className={styles.dropdown} onClick={(e) => e.stopPropagation()}>
-					{permissionState === 'default' ? (
-						<div className={styles.permissionPrompt}>
-							<h3>{t('Enable Notifications')}</h3>
-							<p>
-								{t(
-									'To receive notifications about updates to this statement, you need to grant permission first.',
-								)}
-							</p>
-							<button className={styles.grantButton} onClick={handleRequestPermission}>
-								{t('Grant Permission')}
-							</button>
-						</div>
-					) : permissionState === 'denied' ? (
-						<div className={styles.permissionDenied}>
-							<h3>{t('Notifications Blocked')}</h3>
-							<p>{t('You have blocked notifications. To enable them:')}</p>
-							<ol>
-								<li>{t('Click the lock icon in your browser address bar')}</li>
-								<li>{t('Find "Notifications" and change to "Allow"')}</li>
-								<li>{t('Reload the page')}</li>
-							</ol>
-						</div>
-					) : (
-						<NotificationPreferences statementId={statementId} />
-					)}
+					{panel}
 				</div>
 			)}
 		</div>
