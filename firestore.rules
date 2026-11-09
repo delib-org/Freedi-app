@@ -1450,14 +1450,29 @@ service cloud.firestore {
     }
 
     // One document per FCM token, keyed by the token. Writing means "this device
-    // is mine", so the incoming userId must be the caller. An existing document
-    // may name someone else: one browser keeps one token across sign-outs, so the
-    // next person to sign in on it has to be able to take the document over.
-    // Reads stay as they were (next batch).
+    // is mine", so the incoming userId must be the caller, and the token the
+    // server pushes to must be the one in the id. An existing document may name
+    // someone else: one browser keeps one token across sign-outs, so the next
+    // person to sign in on it has to be able to take the document over.
+    //
+    // What makes that takeover safe is that only the device knows its token, so
+    // a token must never be readable by anyone else: you read your own document
+    // and query your own `userId`. The rules cannot verify a token really is the
+    // writer's device, so whoever does know a token can still claim it.
     match /pushNotifications/{pushNotificationId} {
-      allow read: if request.auth.uid != null;
-      allow create, update: if request.auth != null &&
-                               request.resource.data.userId == request.auth.uid;
+      // `resource == null` keeps the first check on a new device from failing;
+      // it needs the full token in hand, so it reveals nothing.
+      allow get: if request.auth != null &&
+                    (resource == null || resource.data.get('userId', '') == request.auth.uid);
+      allow list: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null &&
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.token == pushNotificationId;
+      // `get` with the id as default: a doc from before the field existed still
+      // accepts its owner's quiet-hours update.
+      allow update: if request.auth != null &&
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.get('token', pushNotificationId) == pushNotificationId;
       allow delete: if request.auth != null &&
                        (resource == null || resource.data.get('userId', '') == request.auth.uid);
     }
