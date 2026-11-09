@@ -4,8 +4,8 @@
   "description": "Ask questions, share ideas, and find solutions together.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8d9ca",
-  "theme_color": "#f8d9ca",
+  "background_color": "#fbfaf7",
+  "theme_color": "#fbfaf7",
   "icons": [
     {
       "src": "icons/logo-48px.png",

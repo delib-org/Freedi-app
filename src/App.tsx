@@ -5,6 +5,7 @@ import AddStatementSheetContainer from './view/pages/statement/components/addSta
 import AnswerNotifyPromptHost from './view/components/notifications/answerNotifyPrompt/AnswerNotifyPromptHost';
 import { useAuthentication } from './controllers/hooks/useAuthentication';
 import { useAuthRedirect } from './controllers/hooks/useAuthRedirect';
+import { useSystemBarColors } from './controllers/hooks/useSystemBarColors';
 import LoadingPage from './view/pages/loadingPage/LoadingPage';
 import Accessibility from './view/components/accessibility/Accessibility';
 import { ListenerStats } from './view/components/ListenerStats';
@@ -20,6 +21,9 @@ export default function App() {
 
 	// Research logging: track screen navigation
 	useResearchRouteTracking();
+
+	// Installed app: status bar follows the header on screen
+	useSystemBarColors();
 
 	// Show loading while auth check is pending or during redirect
 	// This prevents race conditions with Suspense during navigation
