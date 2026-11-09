@@ -1,0 +1,21 @@
+// Scope a rule to dark mode, for the few components that carry a light-only
+// literal colour (a tinted chat bubble) which cannot follow a token.
+//
+// Dark is on when the OS asks for it (prefers-color-scheme) unless the app is
+// pinned to light, or when the app is pinned to dark (data-theme='dark'), the
+// same two switches _brand-wizcol.scss uses. Light mode never matches, so a
+// component's light look is untouched.
+//
+// Usage, inside the rule that owns the property:
+//   .bubble { background: #dcf8c6; @include dark { background: var(--tone-mint); } }
+@mixin dark {
+	:root[data-theme='dark'] & {
+		@content;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		:root:not([data-theme='light']) & {
+			@content;
+		}
+	}
+}
