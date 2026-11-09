@@ -1483,11 +1483,24 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Legacy per-(token, statement) registration, same ownership as above.
+    // Legacy per-(token, statement) registration, id `{token}_{statementId}`.
+    // Nothing delivers from it (push goes to statementsSubscribe.tokens[]), so
+    // unlike pushNotifications there is no takeover to keep working: a document
+    // stays with the person who wrote it, and the next person on a shared
+    // browser is refused here and carries on (registerForStatementNotifications).
+    // Allowing takeover would leave the attack open, because tokens[] is still
+    // readable and it gives away this id.
     match /askedToBeNotified/{askedToBeNotifiedId} {
-      allow read: if request.auth.uid != null;
-      allow create, update: if request.auth != null &&
-                               request.resource.data.userId == request.auth.uid;
+      // `resource == null`: asking for an id that does not exist needs the full
+      // token in hand, so it reveals nothing.
+      allow get: if request.auth != null &&
+                    (resource == null || resource.data.get('userId', '') == request.auth.uid);
+      allow list: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null &&
+                       request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null &&
+                       resource.data.get('userId', '') == request.auth.uid &&
+                       request.resource.data.userId == request.auth.uid;
       allow delete: if request.auth != null &&
                        (resource == null || resource.data.get('userId', '') == request.auth.uid);
     }
@@ -1770,6 +1783,16 @@ service cloud.firestore {
                (userUidOf(after) == userUidOf(before) || userUidOf(after) == afterUser);
       }
 
+      // A subscription's push tokens decide whose device gets that person's
+      // notifications, so only that person may change them, even when an admin
+      // may change the rest of the doc (role, approval). The owner is userId;
+      // a legacy doc without one belongs to the uid its id names. A doc with no
+      // tokens field works too: adding the field counts as changing it.
+      function tokensUpdateOk() {
+        return resource.data.get('userId', statementSubId.split('--')[0]) == request.auth.uid ||
+               !request.resource.data.diff(resource.data).affectedKeys().hasAny(['tokens']);
+      }
+
       // The roles a person may give themselves. An allow-list, because a
       // deny-list misses whatever it did not think of: server code counts the
       // literal 'creator' as an admin (functions/src/classroom/classroomAccess.ts)
@@ -1809,6 +1832,7 @@ service cloud.firestore {
       allow update: if request.auth.uid != null &&
                      !isTryingToBanProtectedUser() &&
                      updateIdentityOk() &&
+                     tokensUpdateOk() &&
                      homeSubscriptionUpdateOk() &&
                      (isAdminOrCreator() ||
                       (isSubscriber() &&

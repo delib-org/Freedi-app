@@ -167,17 +167,26 @@ export const registerForStatementNotifications = async (
 	// Also update legacy collection for backward compatibility during migration
 	// TODO: Remove this after migration is complete
 	const notificationRef = doc(DB, Collections.askedToBeNotified, `${token}_${statementId}`);
-	await setDoc(
-		notificationRef,
-		{
-			token,
-			userId,
-			statementId,
-			lastUpdate: new Date(),
-			subscribed: true,
-		},
-		{ merge: true },
-	);
+	try {
+		await setDoc(
+			notificationRef,
+			{
+				token,
+				userId,
+				statementId,
+				lastUpdate: new Date(),
+				subscribed: true,
+			},
+			{ merge: true },
+		);
+	} catch (error) {
+		// On a shared browser this document can still belong to the last person
+		// who signed in here, and the rules keep it theirs. Registration is
+		// already done: push is delivered from tokens[], never from this legacy doc.
+		if ((error as { code?: string })?.code !== 'permission-denied') {
+			throw error;
+		}
+	}
 };
 
 /**
@@ -199,9 +208,10 @@ export const unregisterFromStatementNotifications = async (
 		const notificationRef = doc(DB, Collections.askedToBeNotified, `${token}_${statementId}`);
 		await deleteDoc(notificationRef);
 	} catch (error) {
-		// Silently handle if document doesn't exist in legacy collection
+		// Silently handle a legacy doc that is gone or still belongs to the last
+		// person who signed in on this browser
 		const err = error as { code?: string };
-		if (err?.code !== 'not-found') {
+		if (err?.code !== 'not-found' && err?.code !== 'permission-denied') {
 			logError(error, {
 				operation: 'services.notificationRepository.unregisterFromStatementNotifications',
 				metadata: { message: 'Error cleaning up legacy notification doc:' },
