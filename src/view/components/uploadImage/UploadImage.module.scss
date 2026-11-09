@@ -156,3 +156,11 @@
 		margin: 0;
 	}
 }
+
+.errorMessage {
+	margin: 0;
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--error-text);
+	text-align: center;
+}

@@ -742,6 +742,7 @@
   "Failed to submit suggestion": "Vorschlag konnte nicht eingereicht werden",
   "Failed to submit. Please try again.": "Übermittlung fehlgeschlagen. Bitte erneut versuchen.",
   "Failed to summarize clusters": "Cluster konnten nicht zusammengefasst werden",
+  "This photo could not be processed. Please try a different photo.": "Dieses Foto konnte nicht verarbeitet werden. Bitte versuche ein anderes Foto.",
   "Failed to upload image": "Bild-Upload fehlgeschlagen",
   "Failed to upload logo. Please try again.": "Logo-Upload fehlgeschlagen. Bitte versuchen Sie es erneut.",
   "Fallacy": "Trugschluss",
