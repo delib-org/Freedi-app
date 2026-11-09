@@ -2329,7 +2329,7 @@
   "You have been assigned to Room {{roomNumber}}": "You have been assigned to Room {{roomNumber}}",
   "You have edited the proposed text. Your edits will be applied.": "You have edited the proposed text. Your edits will be applied.",
   "You have evaluated all {{count}} available options": "You have evaluated all {{count}} available options",
-  "You have no new notifications": "You have no new notifications",
+  "Your inbox is empty": "Your inbox is empty",
   "You have no subscriptions yet": "You have no subscriptions yet",
   "You have not created any suggestions yet.": "You have not created any suggestions yet.",
   "You have rated it as": "You have rated it as",

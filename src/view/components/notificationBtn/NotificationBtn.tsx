@@ -40,7 +40,7 @@ const NotificationBtn = () => {
 				type="button"
 				ref={buttonRef}
 				className={styles.notificationBtn__trigger}
-				aria-label={`${t('Notifications')}${unreadCount ? `: ${unreadCount} ${t('unread')}` : ''}`}
+				aria-label={`${t('Inbox')}${unreadCount ? `: ${unreadCount} ${t('unread')}` : ''}`}
 				aria-expanded={open}
 				aria-controls={open ? panelId : undefined}
 				onClick={() => setOpen(!open)}

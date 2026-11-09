@@ -2186,7 +2186,7 @@
   "You have been assigned to Room {{roomNumber}}": "شما به اتاق {{roomNumber}} اختصاص یافته‌اید",
   "You have edited the proposed text. Your edits will be applied.": "شما متن پیشنهادی را ویرایش کرده‌اید. ویرایش‌های شما اعمال خواهد شد.",
   "You have evaluated all {{count}} available options": "شما همه {{count}} گزینه موجود را ارزیابی کرده‌اید",
-  "You have no new notifications": "شما اعلان جدیدی ندارید",
+  "Your inbox is empty": "صندوق شما خالی است",
   "You have not created any suggestions yet.": "شما هنوز پیشنهادی ایجاد نکرده‌اید.",
   "You have rated it as": "شما آن را امتیاز دادید به عنوان",
   "You have successfully registered to receive updates. We will send you a message when there is news.": "شما با موفقیت برای دریافت به‌روزرسانی‌ها ثبت‌نام کردید. وقتی خبری باشد برای شما پیام ارسال خواهیم کرد.",
