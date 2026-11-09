@@ -29,19 +29,17 @@ import {
 	type QueryDocumentSnapshot,
 } from 'firebase-admin/firestore';
 import { Collections } from '@freedi/shared-types';
-import { SUBSCRIPTION_TOKEN_BATCH_SIZE } from '../src/utils/removeSubscriptionTokens';
+import {
+	GRPC_ALREADY_EXISTS,
+	isUsablePushToken,
+	SUBSCRIPTION_TOKEN_BATCH_SIZE,
+} from '../src/utils/removeSubscriptionTokens';
 
 /** Subscriptions read per page. */
 export const SUBSCRIPTION_PAGE_SIZE = 1000;
 
 /** getAll() is called with this many refs at a time to keep memory bounded. */
 export const EXISTING_DOC_LOOKUP_CHUNK = 300;
-
-/** Firestore's limit on a document id, in bytes. */
-const MAX_DOC_ID_BYTES = 1500;
-
-/** gRPC status for a create() on a document that already exists. */
-const GRPC_ALREADY_EXISTS = 6;
 
 /** Marks a document as written by this script, to find or review them later. */
 export const BACKFILL_SOURCE = 'statementsSubscribe-backfill';
@@ -78,16 +76,6 @@ function toMillis(value: unknown): number {
 	return typeof timestamp?.toMillis === 'function' ? timestamp.toMillis() : 0;
 }
 
-/** True when `token` can be used as a document id. */
-function isUsableToken(token: unknown): token is string {
-	return (
-		typeof token === 'string' &&
-		token.length > 0 &&
-		!token.includes('/') &&
-		Buffer.byteLength(token) <= MAX_DOC_ID_BYTES
-	);
-}
-
 /** True when `candidate` should replace `current` as the token's owner. */
 function isBetterOwner(candidate: TokenOwner, current: TokenOwner): boolean {
 	if (candidate.updatedAt !== current.updatedAt) return candidate.updatedAt > current.updatedAt;
@@ -114,7 +102,7 @@ function collectTokens(
 	const updatedAt = Math.max(toMillis(doc.get('lastUpdate')), toMillis(doc.get('lastTokenUpdate')));
 
 	for (const token of tokens) {
-		if (!isUsableToken(token)) {
+		if (!isUsablePushToken(token)) {
 			report.malformedTokens++;
 			continue;
 		}

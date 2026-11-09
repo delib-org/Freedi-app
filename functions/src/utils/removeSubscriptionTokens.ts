@@ -7,6 +7,25 @@ export const ARRAY_CONTAINS_ANY_MAX_VALUES = 30;
 /** Firestore allows at most 500 writes in one batch. */
 export const SUBSCRIPTION_TOKEN_BATCH_SIZE = 500;
 
+/** gRPC status for a write to a document that does not exist. */
+export const GRPC_NOT_FOUND = 5;
+
+/** gRPC status for a create() on a document that already exists. */
+export const GRPC_ALREADY_EXISTS = 6;
+
+/** Firestore's limit on a document id, in bytes. */
+const MAX_DOC_ID_BYTES = 1500;
+
+/** True when `token` can be used as a `pushNotifications` document id. */
+export function isUsablePushToken(token: unknown): token is string {
+	return (
+		typeof token === 'string' &&
+		token.length > 0 &&
+		!token.includes('/') &&
+		Buffer.byteLength(token) <= MAX_DOC_ID_BYTES
+	);
+}
+
 /**
  * Removes the given FCM tokens from `statementsSubscribe.tokens[]` for one user.
  *

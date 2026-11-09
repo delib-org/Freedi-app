@@ -142,6 +142,24 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 		expect(feedOf('alice')).toBeUndefined();
 	});
 
+	it('removes the token an old client sent with the subscription that joined them', async () => {
+		const id = `dana--${DISCUSSION}`;
+		const doc = subscriptionDoc('dana', Role.member, {
+			getPushNotification: true,
+			tokens: ['device-1'],
+		});
+		mockDb.seed(Collections.statementsSubscribe, id, doc);
+
+		await onSubscriptionCreated(snapshotEvent(id, doc));
+
+		expect(mockDb.read(Collections.pushNotifications, 'device-1')).toMatchObject({
+			token: 'device-1',
+			userId: 'dana',
+		});
+		expect(mockDb.read(Collections.statementsSubscribe, id)?.tokens).not.toEqual(['device-1']);
+		expect(memberCount()).toBe(1);
+	});
+
 	it('gives a waiting member a feed entry (it leads to the waiting-for-approval screen)', async () => {
 		await joinAs('carol', Role.waiting);
 

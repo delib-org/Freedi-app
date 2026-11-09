@@ -33,7 +33,7 @@ jest.mock('@/services/notificationService', () => ({
 		initialize: (...a: unknown[]) => initialize(...a),
 		requestPermission: (...a: unknown[]) => requestPermission(...a),
 		registerForStatementNotifications: (...a: unknown[]) => registerForStatementNotifications(...a),
-		getPushSubscriptionFields: () => ({ getPushNotification: false, pushToken: null }),
+		getPushSubscriptionFields: () => ({ getPushNotification: false }),
 	},
 }));
 jest.mock('@/utils/errorHandling', () => ({ logError: jest.fn() }));

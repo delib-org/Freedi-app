@@ -1484,12 +1484,12 @@ service cloud.firestore {
     }
 
     // Legacy per-(token, statement) registration, id `{token}_{statementId}`.
-    // Nothing delivers from it (push goes to statementsSubscribe.tokens[]), so
-    // unlike pushNotifications there is no takeover to keep working: a document
-    // stays with the person who wrote it, and the next person on a shared
-    // browser is refused here and carries on (registerForStatementNotifications).
-    // Allowing takeover would leave the attack open, because tokens[] is still
-    // readable and it gives away this id.
+    // Nothing delivers from it (push goes to pushNotifications), so unlike
+    // pushNotifications there is no takeover to keep working: a document stays
+    // with the person who wrote it, and the next person on a shared browser is
+    // refused here and carries on (registerForStatementNotifications). Allowing
+    // takeover would leave the attack open, because statementsSubscribe.tokens[]
+    // stays readable until the old field is cleaned up, and it gives away this id.
     match /askedToBeNotified/{askedToBeNotifiedId} {
       // `resource == null`: asking for an id that does not exist needs the full
       // token in hand, so it reveals nothing.
@@ -1783,14 +1783,35 @@ service cloud.firestore {
                (userUidOf(after) == userUidOf(before) || userUidOf(after) == afterUser);
       }
 
-      // A subscription's push tokens decide whose device gets that person's
-      // notifications, so only that person may change them, even when an admin
-      // may change the rest of the doc (role, approval). The owner is userId;
-      // a legacy doc without one belongs to the uid its id names. A doc with no
-      // tokens field works too: adding the field counts as changing it.
+      // PUSH TOKENS ARE LEAVING THIS COLLECTION. Any signed-in user can read a
+      // subscription and rules cannot hide one field, so a device's token now
+      // lives in the owner-only pushNotifications collection. The tokens field
+      // here may only shrink: new app versions never write it, and old cached
+      // ones are refused when they try to add to it (those updates are
+      // best-effort, and the device is already registered in pushNotifications).
+      //
+      // Only the owner may remove tokens, even when an admin may change the
+      // rest of the doc (role, approval). The owner is userId; a legacy doc
+      // without one belongs to the uid its id names. A doc with no tokens field
+      // works too: adding the field counts as changing it.
       function tokensUpdateOk() {
-        return resource.data.get('userId', statementSubId.split('--')[0]) == request.auth.uid ||
-               !request.resource.data.diff(resource.data).affectedKeys().hasAny(['tokens']);
+        let before = resource.data.get('tokens', []);
+        let after = request.resource.data.get('tokens', []);
+        return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['tokens']) ||
+               (resource.data.get('userId', statementSubId.split('--')[0]) == request.auth.uid &&
+                before is list && after is list && after.hasOnly(before));
+      }
+
+      // Old cached app versions send this device's token inside the very write
+      // that creates the subscription, and that write is how they join:
+      // refusing it would silently keep them out. A rule cannot accept a write
+      // and drop one field of it, so the create stays allowed with at most the
+      // one token those versions send, and onSubscriptionCreatedMembership
+      // removes it within seconds. Tighten this to no tokens at all when the
+      // old field is retired and those versions are gone.
+      function tokensCreateOk() {
+        let tokens = request.resource.data.get('tokens', []);
+        return tokens is list && tokens.size() <= 1;
       }
 
       // The roles a person may give themselves. An allow-list, because a
@@ -1816,6 +1837,7 @@ service cloud.firestore {
       allow create: if request.auth.uid != null &&
                      request.resource.data.userId == request.auth.uid &&
                      createIdentityOk() &&
+                     tokensCreateOk() &&
                      homeSubscriptionWriteOk() &&
                      (isAdminOrCreator() ||
                       (isSelfGrantableRole() &&

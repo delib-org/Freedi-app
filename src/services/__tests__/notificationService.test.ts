@@ -39,7 +39,6 @@ jest.mock('../notificationRepository', () => ({
 	getTokenLastRefresh: jest.fn(() => Promise.resolve(new Date())),
 	registerForStatementNotifications: jest.fn(() => Promise.resolve()),
 	unregisterFromStatementNotifications: jest.fn(() => Promise.resolve()),
-	syncTokenWithSubscriptions: jest.fn(() => Promise.resolve()),
 	removeTokenFromAllSubscriptions: jest.fn(() => Promise.resolve()),
 }));
 
@@ -176,17 +175,16 @@ describe('NotificationService', () => {
 	});
 
 	describe('getPushSubscriptionFields()', () => {
-		it('returns push off and no token before a token is held', () => {
+		it('returns push off before a token is held', () => {
 			const { PushService } = require('../pushService');
 			PushService.isInitialized.mockReturnValue(true);
 
 			expect(service.getPushSubscriptionFields()).toEqual({
 				getPushNotification: false,
-				pushToken: null,
 			});
 		});
 
-		it('returns the in-memory token once initialized with permission granted', async () => {
+		it('returns push on once initialized with permission granted', async () => {
 			const { isBrowserNotificationsSupported } = require('../platformService');
 			const { PushService, initializeMessaging, getOrRefreshToken } = require('../pushService');
 			isBrowserNotificationsSupported.mockReturnValue(true);
@@ -200,11 +198,10 @@ describe('NotificationService', () => {
 
 			expect(service.getPushSubscriptionFields()).toEqual({
 				getPushNotification: true,
-				pushToken: 'mock-token',
 			});
 		});
 
-		it('returns no token when permission is not granted', async () => {
+		it('returns push off when permission is not granted', async () => {
 			const { isBrowserNotificationsSupported } = require('../platformService');
 			const { PushService, initializeMessaging, getOrRefreshToken } = require('../pushService');
 			isBrowserNotificationsSupported.mockReturnValue(true);
@@ -217,7 +214,6 @@ describe('NotificationService', () => {
 
 			expect(service.getPushSubscriptionFields()).toEqual({
 				getPushNotification: false,
-				pushToken: null,
 			});
 			PushService.safeGetPermission.mockReturnValue('granted');
 		});
@@ -386,17 +382,6 @@ describe('NotificationService', () => {
 			service.setNotificationHandler(handler);
 
 			expect(setNotificationHandler).toHaveBeenCalledWith(handler);
-		});
-	});
-
-	describe('syncTokenWithSubscriptions()', () => {
-		it('should log error if no token', async () => {
-			const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-
-			await service.syncTokenWithSubscriptions('user-123');
-
-			expect(consoleErrorSpy).toHaveBeenCalled();
-			consoleErrorSpy.mockRestore();
 		});
 	});
 
