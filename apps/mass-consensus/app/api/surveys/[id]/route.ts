@@ -7,6 +7,7 @@ import {
 } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { denySurveyPermission } from '@/lib/auth/surveyAccess';
+import { denyForeignQuestionsOnEdit, isQuestionIdList } from '@/lib/auth/surveyQuestionAccess';
 import { UpdateSurveyRequest } from '@/types/survey';
 import { logger } from '@/lib/utils/logger';
 
@@ -81,6 +82,21 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     if (denied0) return denied0;
 
     const body: UpdateSurveyRequest = await request.json();
+
+    if (body.questionIds !== undefined) {
+      const questionIds: unknown = body.questionIds;
+
+      if (!isQuestionIdList(questionIds)) {
+        return NextResponse.json(
+          { error: 'questionIds must be a list of question ids' },
+          { status: 400 }
+        );
+      }
+
+      // Before anything is written: saving the survey cascades onto these questions
+      const deniedQuestions = await denyForeignQuestionsOnEdit(existingSurvey, userId, questionIds);
+      if (deniedQuestions) return deniedQuestions;
+    }
 
     const updatedSurvey = await updateSurvey(surveyId, body);
 

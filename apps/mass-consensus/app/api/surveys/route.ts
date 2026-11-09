@@ -6,6 +6,7 @@ import {
   getSurveysSharedWithUser,
 } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
+import { denyForeignQuestionsOnCreate, isQuestionIdList } from '@/lib/auth/surveyQuestionAccess';
 import { CreateSurveyRequest } from '@/types/survey';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
@@ -117,10 +118,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const questionIds: unknown = body.questionIds ?? [];
+
+    if (!isQuestionIdList(questionIds)) {
+      return NextResponse.json(
+        { error: 'questionIds must be a list of question ids' },
+        { status: 400 }
+      );
+    }
+
+    // Before anything is written: creating the survey cascades onto these questions
+    const deniedQuestions = await denyForeignQuestionsOnCreate(userId, questionIds);
+    if (deniedQuestions) return deniedQuestions;
+
     const survey = await createSurvey(userId, {
       title: body.title.trim(),
       description: body.description?.trim(),
-      questionIds: body.questionIds || [],
+      questionIds,
       settings: body.settings,
       questionSettings: body.questionSettings,
       removedQuestionIds: body.removedQuestionIds,

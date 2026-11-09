@@ -44,6 +44,11 @@ jest.mock('@/lib/utils/logger', () => ({
 	},
 }));
 
+// The roster guard has its own tests (cascadeRosterGuard.test.ts); this file is about the values.
+jest.mock('../../surveys/questionAdminAccess', () => ({
+	keepRosterAdministeredWrites: async (_survey: unknown, writes: unknown[]) => writes,
+}));
+
 function setStatementMock(
 	id: string,
 	exists: boolean,
