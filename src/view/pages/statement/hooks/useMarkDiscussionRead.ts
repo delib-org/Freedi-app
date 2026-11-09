@@ -34,6 +34,8 @@ export function useMarkDiscussionRead({
 	const needsWriteRef = useRef<boolean>(false);
 	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const attemptRef = useRef<() => void>(() => undefined);
+	const retriesRef = useRef<number>(0);
+	const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const latestMessageCountRef = useRef<number | undefined>(descendantMessageCount);
 	const coveredMessageCountRef = useRef<number>(0);
@@ -74,10 +76,35 @@ export function useMarkDiscussionRead({
 			lastWriteAtRef.current = Date.now();
 			coveredChildUpdateRef.current = latestChildUpdateRef.current;
 			coveredMessageCountRef.current = latestMessageCountRef.current ?? 0;
-			void updateLastReadTimestamp(statementId, userId, latestMessageCountRef.current);
+			const sentChildUpdate = coveredChildUpdateRef.current;
+			const sentCount = coveredMessageCountRef.current;
+			void updateLastReadTimestamp(statementId, userId, latestMessageCountRef.current).then(
+				(found) => {
+					if (found !== false) {
+						retriesRef.current = 0;
+
+						return;
+					}
+					// No subscription doc yet (it is being created): nothing was recorded,
+					// so this attempt covers nothing. Try again shortly.
+					if (coveredChildUpdateRef.current === sentChildUpdate) coveredChildUpdateRef.current = 0;
+					if (coveredMessageCountRef.current === sentCount) coveredMessageCountRef.current = 0;
+					if (retriesRef.current >= UI.READ_MARK_MAX_RETRIES || retryTimerRef.current !== null) {
+						return;
+					}
+					retriesRef.current += 1;
+					retryTimerRef.current = setTimeout(() => {
+						retryTimerRef.current = null;
+						needsWriteRef.current = true;
+						lastWriteAtRef.current = 0;
+						attemptRef.current();
+					}, UI.READ_MARK_RETRY_MS);
+				},
+			);
 		};
 
 		attemptRef.current = attempt;
+		retriesRef.current = 0;
 
 		// Open: one immediate write (deferred until visible if the tab is hidden)
 		needsWriteRef.current = true;
@@ -94,6 +121,10 @@ export function useMarkDiscussionRead({
 		return () => {
 			document.removeEventListener('visibilitychange', handleVisibility);
 			clearTimer();
+			if (retryTimerRef.current !== null) {
+				clearTimeout(retryTimerRef.current);
+				retryTimerRef.current = null;
+			}
 			attemptRef.current = () => undefined;
 		};
 	}, [active, statementId, userId]);

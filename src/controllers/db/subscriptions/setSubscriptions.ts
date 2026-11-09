@@ -66,6 +66,9 @@ export async function setStatementSubscriptionToDB({
 		if (!statementsSubscribeId) throw new Error('Error in getting statementsSubscribeId');
 
 		const statementsSubscribeRef = createSubscriptionRef(statementsSubscribeId);
+		const statementNow = store
+			.getState()
+			.statements.statements.find((candidate) => candidate.statementId === statementId);
 
 		//check if user is already subscribed
 		const statementSubscription = await getDoc(statementsSubscribeRef);
@@ -80,6 +83,14 @@ export async function setStatementSubscriptionToDB({
 					...updateTimestamp(),
 				});
 			}
+
+			// Already there: make sure the card has a seen marker in Redux
+			const existingSeen = statementSubscription.data()?.seenMessageCount;
+			store.dispatch(
+				setSeenMessageCounts([
+					{ statementId, seenMessageCount: typeof existingSeen === 'number' ? existingSeen : 0 },
+				]),
+			);
 
 			return;
 		}
@@ -102,6 +113,10 @@ export async function setStatementSubscriptionToDB({
 			parentId: statement.parentId,
 			statementType: statement.statementType,
 			topParentId: statement.topParentId || statement.parentId,
+			// A new subscriber starts caught up: the history before they joined is not "unread"
+			...(typeof statementNow?.descendantMessageCount === 'number'
+				? { seenMessageCount: statementNow.descendantMessageCount }
+				: {}),
 		};
 
 		if (creator.uid && statement.creator?.uid && creator.uid === statement.creator.uid)
@@ -119,6 +134,13 @@ export async function setStatementSubscriptionToDB({
 			{
 				merge: true,
 			},
+		);
+
+		// The card gets its seen marker now, so numbers show without a reload
+		store.dispatch(
+			setSeenMessageCounts([
+				{ statementId, seenMessageCount: subscriptionData.seenMessageCount ?? 0 },
+			]),
 		);
 
 		// Check for group-level demographic questions when subscribing to a top-level group
@@ -178,7 +200,7 @@ export async function updateLastReadTimestamp(
 	statementId: string,
 	userId: string,
 	descendantMessageCount?: number,
-): Promise<void> {
+): Promise<boolean> {
 	try {
 		if (!statementId || !userId) throw new Error('statementId and userId are required');
 		const statementsSubscribeRef = createSubscriptionRef(`${userId}--${statementId}`);
@@ -186,27 +208,31 @@ export async function updateLastReadTimestamp(
 		const seenAfter = await runTransaction(FireStore, async (transaction) => {
 			const docSnap = await transaction.get(statementsSubscribeRef);
 			// Don't create the doc - the user must be subscribed first
-			if (!docSnap.exists()) return undefined;
+			if (!docSnap.exists()) return null;
 
 			const stored = Number(docSnap.data()?.lastReadTimestamp ?? 0);
 			const storedSeen = Number(docSnap.data()?.seenMessageCount ?? 0);
 			const now = Date.now();
 			const moveSeen =
 				typeof descendantMessageCount === 'number' && descendantMessageCount > storedSeen;
-			if (now <= stored && !moveSeen) return undefined;
+			if (now > stored || moveSeen) {
+				transaction.update(statementsSubscribeRef, {
+					lastReadTimestamp: Math.max(now, stored),
+					statementId: statementId, // Include statementId to satisfy Firebase rules
+					...(moveSeen ? { seenMessageCount: descendantMessageCount } : {}),
+				});
+			}
 
-			transaction.update(statementsSubscribeRef, {
-				lastReadTimestamp: Math.max(now, stored),
-				statementId: statementId, // Include statementId to satisfy Firebase rules
-				...(moveSeen ? { seenMessageCount: descendantMessageCount } : {}),
-			});
-
-			return moveSeen ? descendantMessageCount : undefined;
+			return moveSeen ? (descendantMessageCount as number) : storedSeen;
 		});
 
-		if (typeof seenAfter === 'number') {
-			store.dispatch(setSeenMessageCounts([{ statementId, seenMessageCount: seenAfter }]));
-		}
+		// null = no subscription doc yet: nothing recorded, the caller may retry
+		if (seenAfter === null) return false;
+
+		// Always give the card a seen marker (0 included), so later messages show a number
+		store.dispatch(setSeenMessageCounts([{ statementId, seenMessageCount: seenAfter }]));
+
+		return true;
 	} catch (error) {
 		// Only log non-permission errors
 		const err = error as { code?: string };
@@ -218,6 +244,8 @@ export async function updateLastReadTimestamp(
 				metadata: { message: 'Error updating last read timestamp:' },
 			});
 		}
+
+		return true;
 	}
 }
 

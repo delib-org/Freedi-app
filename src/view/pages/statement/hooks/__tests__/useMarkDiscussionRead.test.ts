@@ -66,6 +66,33 @@ describe('useMarkDiscussionRead', () => {
 		expect(mockWrite).toHaveBeenLastCalledWith('s1', 'u1', 15);
 	});
 
+	it('retries when the subscription doc did not exist yet, and does not count it as covered', async () => {
+		mockWrite.mockResolvedValueOnce(false);
+		render({ ...base, descendantMessageCount: 8 });
+		expect(mockWrite).toHaveBeenCalledTimes(1);
+
+		await Promise.resolve();
+		await Promise.resolve();
+		jest.advanceTimersByTime(UI.READ_MARK_RETRY_MS);
+
+		expect(mockWrite).toHaveBeenCalledTimes(2);
+		expect(mockWrite).toHaveBeenLastCalledWith('s1', 'u1', 8);
+	});
+
+	it('gives up after a few retries', async () => {
+		mockWrite.mockResolvedValue(false);
+		render({ ...base, descendantMessageCount: 8 });
+
+		for (let i = 0; i < UI.READ_MARK_MAX_RETRIES + 3; i++) {
+			await Promise.resolve();
+			await Promise.resolve();
+			jest.advanceTimersByTime(UI.READ_MARK_RETRY_MS);
+		}
+
+		expect(mockWrite).toHaveBeenCalledTimes(UI.READ_MARK_MAX_RETRIES + 1);
+		mockWrite.mockResolvedValue(undefined as never);
+	});
+
 	it('does not write before the statement has loaded or without a user', () => {
 		render({ ...base, isLoaded: false });
 		render({ ...base, userId: undefined });
