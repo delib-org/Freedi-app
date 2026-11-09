@@ -1,12 +1,71 @@
+// Lines of the summary shown before "Read more".
+$preview-lines: 3;
+$line-height: 1.6;
+// Same size as Text's description, so the preview matches the expanded text.
+$font-size: 0.95rem;
+
 .chatQuestionSummary {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.25em;
+	font-size: $font-size;
+	line-height: $line-height;
 	border-top: 1px solid var(--border-light);
 	margin-top: var(--padding);
+	padding-top: var(--padding);
 
-	&__header {
+	// Inline-start in both LTR and RTL: the first flex item.
+	&__label {
+		flex: none;
+		font-weight: 600;
+		color: var(--text-body);
+	}
+
+	&__content {
+		flex: 1;
+		min-width: 0;
 		display: flex;
-		align-items: center;
-		justify-content: space-between;
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	&__body {
 		width: 100%;
+		font-size: $font-size;
+		line-height: $line-height;
+		overflow-wrap: anywhere;
+		color: var(--text-body);
+
+		// max-height rather than -webkit-line-clamp so markdown block elements are
+		// cut cleanly too. Every descendant is flattened to the body's own font size
+		// and line height with no margins, so N lines is exactly N * line-height;
+		// !important is needed to beat Text.module.scss (paragraphs, headings, lists).
+		&--clamped {
+			max-height: #{$preview-lines * $line-height * $font-size};
+			overflow: hidden;
+
+			* {
+				margin: 0 !important;
+				padding: 0 !important;
+				border: 0 !important;
+				font-size: inherit !important;
+				line-height: inherit !important;
+			}
+
+			ul,
+			ol {
+				list-style-position: inside;
+			}
+		}
+	}
+
+	&__note {
+		margin: var(--padding) 0 0;
+		font-size: var(--font-size-small);
+		color: var(--text-meta);
+	}
+
+	&__toggle {
 		// 2.75rem = the 44px touch minimum from the design guide.
 		min-height: 2.75rem;
 		padding: 0;
@@ -14,32 +73,7 @@
 		border: 0;
 		color: var(--btn-primary);
 		font: inherit;
+		text-decoration: underline;
 		cursor: pointer;
-	}
-
-	&__chevron {
-		width: 1.25rem;
-		height: 1.25rem;
-		transition: transform 0.2s ease;
-
-		&--open {
-			transform: rotate(180deg);
-		}
-
-		@media (prefers-reduced-motion: reduce) {
-			transition: none;
-		}
-	}
-
-	&__body {
-		overflow-wrap: anywhere;
-		line-height: 1.5;
-		color: var(--text-body);
-	}
-
-	&__note {
-		margin: var(--padding) 0 0;
-		font-size: var(--font-size-small);
-		color: var(--text-meta);
 	}
 }

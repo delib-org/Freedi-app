@@ -5179,5 +5179,6 @@
   "Browser notifications must be enabled first": "ابتدا باید اعلان‌های مرورگر فعال شوند",
   "Please enable browser notifications first": "لطفاً ابتدا اعلان‌های مرورگر را فعال کنید",
   "Email Notifications": "اعلان‌های ایمیلی",
-  "Receive updates via email": "دریافت به‌روزرسانی‌ها از طریق ایمیل"
+  "Receive updates via email": "دریافت به‌روزرسانی‌ها از طریق ایمیل",
+  "chatQuestion.answerLabel": "پاسخ:"
 }
