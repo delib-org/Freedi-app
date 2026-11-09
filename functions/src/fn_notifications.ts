@@ -12,8 +12,11 @@ import { FirestoreEvent } from 'firebase-functions/v2/firestore';
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import * as admin from 'firebase-admin';
 import { getDefaultQuestionType } from './model/questionTypeDefaults';
-import { logError } from './utils/errorHandling';
-import { removeTokensFromUserSubscriptions } from './utils/removeSubscriptionTokens';
+import { removeInvalidTokens } from './notifications/removeInvalidTokens';
+import {
+	pushRecipientFromSubscription,
+	resolveFcmSubscribers,
+} from './notifications/resolvePushTokens';
 
 export interface FcmSubscriber {
 	userId: string;
@@ -188,18 +191,12 @@ export async function updateInAppNotifications(
 			(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription,
 		);
 
-		// Convert to FCM subscriber format
-		const fcmSubscribers: FcmSubscriber[] = [];
-		pushSubscribers.forEach((subscriber) => {
-			if (subscriber.tokens && subscriber.tokens.length > 0) {
-				subscriber.tokens.forEach((token) => {
-					fcmSubscribers.push({
-						userId: subscriber.userId,
-						token: token,
-					});
-				});
-			}
-		});
+		// Tokens come from the owner-only pushNotifications docs; the subscription's
+		// own tokens[] is only the fallback for someone with none there.
+		const fcmSubscribers = await resolveFcmSubscribers(
+			db,
+			pushSubscribers.map(pushRecipientFromSubscription),
+		);
 
 		//update last message in the parent statement (only if not top-level)
 		if (statement.parentId !== 'top') {
@@ -303,77 +300,6 @@ async function processInAppNotifications(
 
 // REMOVED: validateTokens — was sending a dry-run FCM message per token (2x API calls).
 // Invalid tokens are now detected directly from sendEach() error responses.
-
-/**
- * Removes invalid tokens from all relevant collections:
- * 1. pushNotifications (token metadata)
- * 2. statementsSubscribe.tokens[] (subscription tokens array)
- *
- * Legacy askedToBeNotified docs are cleaned by fn_tokenCleanup, which finds them by token.
- */
-async function removeInvalidTokens(invalidTokens: FcmSubscriber[]): Promise<void> {
-	if (invalidTokens.length === 0) return;
-
-	const batch = db.batch();
-
-	for (const subscriber of invalidTokens) {
-		// Remove from pushNotifications collection
-		const pushNotificationRef = db.doc(`${Collections.pushNotifications}/${subscriber.token}`);
-		batch.delete(pushNotificationRef);
-	}
-
-	await batch.commit();
-
-	// Remove tokens from statementsSubscribe.tokens[] arrays
-	// This requires querying subscriptions by userId and updating them
-	await removeTokensFromSubscriptions(invalidTokens);
-
-	logger.info(`Removed ${invalidTokens.length} invalid tokens from all collections`);
-}
-
-/**
- * Removes invalid tokens from statementsSubscribe.tokens[] arrays.
- * Groups tokens by userId for efficient batch updates.
- */
-async function removeTokensFromSubscriptions(invalidTokens: FcmSubscriber[]): Promise<void> {
-	if (invalidTokens.length === 0) return;
-
-	// Group tokens by userId
-	const tokensByUser = new Map<string, string[]>();
-	for (const subscriber of invalidTokens) {
-		const tokens = tokensByUser.get(subscriber.userId) || [];
-		tokens.push(subscriber.token);
-		tokensByUser.set(subscriber.userId, tokens);
-	}
-
-	// Process each user's subscriptions
-	const updatePromises: Promise<void>[] = [];
-
-	for (const [userId, tokens] of tokensByUser) {
-		updatePromises.push(removeUserTokensFromSubscriptions(userId, tokens));
-	}
-
-	await Promise.all(updatePromises);
-}
-
-/**
- * Removes specific tokens from the user's statement subscriptions that contain them.
- * Touches only affected documents and never writes `lastUpdate`.
- */
-async function removeUserTokensFromSubscriptions(userId: string, tokens: string[]): Promise<void> {
-	try {
-		const updated = await removeTokensFromUserSubscriptions(db, userId, tokens);
-		logger.info(
-			`Removed ${tokens.length} invalid tokens from ${updated} of ${userId}'s subscriptions`,
-		);
-	} catch (error) {
-		logError(error, {
-			operation: 'notifications.removeUserTokensFromSubscriptions',
-			userId,
-			metadata: { tokenCount: tokens.length },
-		});
-	}
-}
 
 /**
  * Sends FCM push notifications with improved error handling and retry logic
@@ -511,7 +437,7 @@ export async function processFcmNotificationsImproved(
 		const tokensToRemove = tokensAfterQuietHours.filter((t) =>
 			result.invalidTokens.includes(t.token),
 		);
-		await removeInvalidTokens(tokensToRemove);
+		await removeInvalidTokens(db, tokensToRemove);
 	}
 
 	return result;

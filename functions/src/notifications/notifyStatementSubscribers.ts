@@ -35,7 +35,12 @@ import {
 import { logger } from 'firebase-functions/v1';
 import { db } from '../index';
 import { getDefaultQuestionType } from '../model/questionTypeDefaults';
-import { FcmSubscriber, processFcmNotificationsImproved } from '../fn_notifications';
+import { processFcmNotificationsImproved } from '../fn_notifications';
+import {
+	pushRecipientFromSubscription,
+	resolveFcmSubscribers,
+	type PushRecipient,
+} from './resolvePushTokens';
 import { sendNotificationEmail } from './notificationEmail';
 import {
 	authorVetoesReplies,
@@ -221,7 +226,7 @@ export async function notifyStatementSubscribers(
 
 	const batch = db.batch();
 	let batchWrites = 0;
-	const fcmSubscribers: FcmSubscriber[] = [];
+	const pushRecipients: PushRecipient[] = [];
 	const emailSends: Promise<boolean>[] = [];
 
 	for (const [uid, channels] of byUid) {
@@ -259,11 +264,7 @@ export async function notifyStatementSubscribers(
 
 		if (decision.frequency === NotificationFrequency.INSTANT) {
 			// Interruptive channels delivered now.
-			if (decision.push && channels.sub.tokens && channels.sub.tokens.length > 0) {
-				for (const token of channels.sub.tokens) {
-					fcmSubscribers.push({ userId: uid, token });
-				}
-			}
+			if (decision.push) pushRecipients.push(pushRecipientFromSubscription(channels.sub));
 			if (decision.email && channels.sub.user?.email) {
 				emailSends.push(
 					sendNotificationEmail({
@@ -309,6 +310,9 @@ export async function notifyStatementSubscribers(
 
 	if (batchWrites > 0) await batch.commit();
 
+	// Looked up only for people about to get an instant push, so digest and muted
+	// subscribers cost no token reads.
+	const fcmSubscribers = await resolveFcmSubscribers(db, pushRecipients);
 	if (fcmSubscribers.length > 0) {
 		const sendResult = await processFcmNotificationsImproved(
 			fcmSubscribers,
