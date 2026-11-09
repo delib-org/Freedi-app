@@ -1,11 +1,12 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions/v1';
 import { Statement, StatementType, Collections, functionConfig } from '@freedi/shared-types';
 import { getGeminiModel, getGenAI, LLM_MODEL_HEAVY } from './config/gemini';
 import { ALLOWED_ORIGINS } from './config/cors';
 import { getParagraphsText } from './helpers';
 import { logError } from './utils/errorHandling';
+import { hasAdminSubscription } from './utils/subscriptionIdentity';
 import { stampWorkflowSummary } from './deliberation/records';
 import { filterDividedOptions, summaryCoversDivided } from './utils/dividedOptions';
 
@@ -136,28 +137,7 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 		// statement under the Firestore rules (and is what the Join app's own
 		// `isAdmin()` reads), so authorizing only top-parent subscriptions turned
 		// away facilitators who legitimately run a single hub question.
-		const isCreator = question.creatorId === userId;
-		const topParentId = question.topParentId || statementId;
-
-		async function hasAdminSubscription(scopeId: string): Promise<boolean> {
-			const snapshot = await db
-				.collection(Collections.statementsSubscribe)
-				.where('statementId', '==', scopeId)
-				.where('userId', '==', userId)
-				.where('role', 'in', ['admin', 'creator'])
-				.limit(1)
-				.get();
-
-			return !snapshot.empty;
-		}
-
-		// The top parent is checked first — it's the common case, and for a
-		// top-level question the two scopes are the same id anyway.
-		const isAdmin =
-			(await hasAdminSubscription(topParentId)) ||
-			(topParentId !== statementId && (await hasAdminSubscription(statementId)));
-
-		if (!isCreator && !isAdmin) {
+		if (!(await canSummarize(db, question, statementId, userId))) {
 			throw new HttpsError('permission-denied', 'Only admins can generate summaries');
 		}
 
@@ -626,5 +606,28 @@ export async function generateAndSaveSummary(
 			userId,
 		});
 		throw new HttpsError('internal', 'Failed to generate summary');
+	}
+}
+
+/**
+ * Whether `userId` may generate a summary for the question: its creator, or an
+ * admin of its top parent or of the question itself. Subscriptions are read by
+ * doc id and the admin check fails closed on any lookup error.
+ */
+export async function canSummarize(
+	db: Firestore,
+	question: Pick<Statement, 'creatorId' | 'topParentId'>,
+	statementId: string,
+	userId: string,
+): Promise<boolean> {
+	if (question.creatorId === userId) return true;
+	const scopeIds = [question.topParentId || statementId];
+	if (scopeIds[0] !== statementId) scopeIds.push(statementId);
+	try {
+		return await hasAdminSubscription(db, userId, scopeIds);
+	} catch (error) {
+		logError(error, { operation: 'summarizeDiscussion.adminCheck', userId, statementId });
+
+		return false;
 	}
 }
