@@ -88,13 +88,16 @@
 	--nav-scrim-to: rgba(251, 250, 247, 1);
 }
 
+// Dark elevation ladder: page #0b0f17 (darkest) -> inset #1a2133 -> card #252f46.
+// The card sits 1.44:1 above the page and carries a 1.87:1 hairline, so a card
+// reads as a card without relying on a shadow (invisible on dark).
 @mixin wizcol-dark {
-	--space-paper: #131926;
-	--space-surface: #1c2433;
-	--space-sidebar: #222b3c;
+	--space-paper: #0b0f17;
+	--space-surface: #252f46;
+	--space-sidebar: #1a2133;
 	--space-ink: #eef1f7;
 	--space-muted: #a6afc2;
-	--space-line: #323d52;
+	--space-line: #4a5876;
 	--space-purple: #eef1f7;
 	--space-purple-soft: #352d5c;
 	--space-mint: #1d4436;
@@ -102,17 +105,17 @@
 	--space-yellow: #473a12;
 	--space-yellow-ink: #fbe7a1;
 	--space-pink: #4a2b2f;
-	--space-peach: #222b3c;
+	--space-peach: #1a2133;
 	--space-coral: #a28bff;
 	--space-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
 
-	--bg-page: #131926;
-	--bg-sunken: #222b3c;
-	--border-subtle: #323d52;
+	--bg-page: #0b0f17;
+	--bg-sunken: #1a2133;
+	--border-subtle: #4a5876;
 	--border-dashed: #4a5770;
 
 	--text-meta: #a6afc2;
-	--text-faint: #7d879b;
+	--text-faint: #959eb5; // 4.9:1 on the card
 	--text-link: #8fb0f5;
 
 	--tone-lilac: #352d5c;
@@ -121,7 +124,7 @@
 	--tone-mint-ink: #c4f0db;
 	--tone-yellow: #473a12;
 	--tone-yellow-ink: #fbe7a1;
-	--tone-sunken: #222b3c;
+	--tone-sunken: #1a2133;
 	--tone-sunken-ink: #eef1f7;
 	--tone-lilac-track: rgba(230, 222, 255, 0.2);
 	--tone-glass: rgba(255, 255, 255, 0.08);
@@ -140,12 +143,12 @@
 	--badge-unread-ink: #ffffff;
 	--rating-idle: #4a5570;
 	--rating-ring: #f08a63;
-	--rating-ring-ink: #1c2433;
+	--rating-ring-ink: #252f46;
 
 	--nav-floating-bg: #2a3550;
 	--nav-floating-ink: #eef1f7;
 	--nav-floating-active-bg: #eef1f7;
-	--nav-floating-active-ink: #1c2433;
+	--nav-floating-active-ink: #252f46;
 	--shadow-floating: 0 10px 30px rgba(0, 0, 0, 0.5);
 	--shadow-sheet: 0 -10px 40px rgba(0, 0, 0, 0.45);
 	--shadow-pushed: -12px 0 32px rgba(0, 0, 0, 0.35);
@@ -153,8 +156,11 @@
 	--toggle-on: #3ecf73;
 	--toggle-off: #4a5570;
 
-	--nav-scrim-from: rgba(19, 25, 38, 0);
-	--nav-scrim-to: rgba(19, 25, 38, 1);
+	--nav-scrim-from: rgba(11, 15, 23, 0);
+	--nav-scrim-to: rgba(11, 15, 23, 1);
+
+	--card-ring: var(--space-line);
+	--card-ring-width: 1px;
 }
 
 // High contrast keeps the palette but removes every low-contrast channel:
@@ -168,6 +174,27 @@
 	--text-faint: var(--space-ink);
 	--tone-lilac-track: var(--tone-lilac-ink);
 	--rating-idle: var(--space-muted);
+	--card-ring: var(--space-ink);
+	--card-ring-width: 2px;
+}
+
+// High contrast on a dark device: pure black page, near-black card, white ink
+// (21:1 / 19:1) and a white 2px ring, instead of dark mode's soft ladder.
+@mixin wizcol-contrast-dark {
+	--space-paper: #000000;
+	--space-surface: #0b0f1a;
+	--space-sidebar: #141a2a;
+	--space-peach: #141a2a;
+	--bg-page: #000000;
+	--bg-sunken: #141a2a;
+	--tone-sunken: #141a2a;
+	--space-ink: #ffffff;
+	--text-faint: #ffffff;
+	--text-link: #a9c0ff;
+	// Tokens the brand layer does not redefine and whose light-only contrast
+	// twin would be dark-on-dark.
+	--text-disabled: #b7bfd3;
+	--icons-disabled-dark: #b7bfd3;
 }
 
 @mixin wizcol-semantic {
@@ -266,5 +293,22 @@
 @media (prefers-contrast: more) {
 	:root[data-brand='wizcol'] {
 		@include wizcol-contrast;
+	}
+}
+
+// Order matters: these must follow the dark blocks above (same specificity).
+:root[data-brand='wizcol'][data-theme='dark'][data-contrast='high'] {
+	@include wizcol-contrast-dark;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root[data-brand='wizcol'][data-contrast='high']:not([data-theme='light']) {
+		@include wizcol-contrast-dark;
+	}
+}
+
+@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+	:root[data-brand='wizcol']:not([data-theme='light']) {
+		@include wizcol-contrast-dark;
 	}
 }
