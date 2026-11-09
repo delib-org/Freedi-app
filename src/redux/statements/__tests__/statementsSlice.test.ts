@@ -289,6 +289,8 @@ describe('statementsSlice', () => {
 					screen: StatementScreen.options,
 					bookmarkedIds: {},
 					fullyLoadedScopes: {},
+					seenMessageCounts: { 'stmt-123': 3 },
+					fetchedMessageCounts: { 'stmt-123': 5 },
 				};
 
 				const newState = statementsSlice.reducer(populatedState, resetStatements());

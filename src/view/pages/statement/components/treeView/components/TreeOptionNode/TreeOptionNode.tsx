@@ -24,6 +24,7 @@ import {
 import SendIcon from '@/view/components/icons/SendIcon';
 import JoinButtons from '@/view/pages/statement/components/joining/JoinButtons';
 import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
+import UnreadMessagesBadge from '@/view/components/unreadBadge/UnreadMessagesBadge';
 import styles from './TreeOptionNode.module.scss';
 
 // Stable empty array reference shared across all non-synthesis nodes, so the
@@ -481,6 +482,7 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 							{childCount}
 						</button>
 					)}
+					<UnreadMessagesBadge statementId={statement.statementId} />
 					<JoinButtons statement={statement} parentStatement={parentStatement} />
 				</div>
 				{showReplyInput && (

@@ -5420,5 +5420,7 @@
   "Please enable browser notifications first": "נא להפעיל קודם התראות בדפדפן",
   "Email Notifications": "התראות במייל",
   "Receive updates via email": "לקבל עדכונים במייל",
-  "chatQuestion.answerLabel": "תשובה:"
+  "chatQuestion.answerLabel": "תשובה:",
+  "unread.messageCount_one": "הודעה אחת שלא נקראה",
+  "unread.messageCount_other": "{{count}} הודעות שלא נקראו"
 }

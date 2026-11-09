@@ -23,6 +23,7 @@ import { generateDescriptionFromChildren } from './helpers';
 import { recordDiscussionActivity } from './userFeed/recordDiscussionActivity';
 import { onClassOptionCreated } from './classroom/autoEvaluations';
 import { logError } from './utils/errorHandling';
+import { recordMessageCreated } from './unread/messageCounter';
 import { setupAdminsForStatement } from './setupAdminsForStatement';
 import { embedNewQuestion } from './services/question-embedding-store';
 import {
@@ -139,6 +140,10 @@ export async function onStatementCreated(
 					),
 			);
 		}
+
+		// Task 12: unread counters - +1 on every ancestor's descendantMessageCount
+		// (never throws; a failure here leaves the rest of the trigger alone)
+		tasks.push(recordMessageCreated(db, statement));
 
 		// Execute all tasks in parallel
 		await Promise.all(tasks);

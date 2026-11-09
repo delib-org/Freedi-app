@@ -36,6 +36,7 @@ export const StatementSubscriptionSchema = object({
 	tokens: optional(array(string())),
 	totalSubStatementsRead: optional(number()), // deprecated at 3/8/2024
 	lastReadTimestamp: optional(number()),
+	seenMessageCount: optional(number()), // the statement's descendantMessageCount when this person last opened it
 	user: UserSchema || CreatorSchema,
 	getInAppNotification: optional(boolean()),
 	getEmailNotification: optional(boolean()),

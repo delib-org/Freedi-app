@@ -3,6 +3,11 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { HomeQuestion, HomeSpace } from '../../homeModel';
 import HomeOverview from '../HomeOverview';
 
+jest.mock('@/view/components/unreadBadge/UnreadMessagesBadge', () => ({
+	__esModule: true,
+	default: () => null,
+}));
+
 const spaces: HomeSpace[] = [
 	{ id: 'space-1', title: 'Hatzor', tone: 'lilac', questionCount: 0, openCount: 0, hosting: true },
 ];
@@ -75,6 +80,23 @@ describe('HomeOverview', () => {
 		fireEvent.click(screen.getByRole('button', { name: 'Ask a question' }));
 
 		expect(onCreateQuestion).toHaveBeenCalledTimes(1);
+	});
+
+	it('has no sticky "New space" button under the Spaces list (the plus button adds spaces)', () => {
+		renderHome();
+		showSpaces();
+
+		expect(screen.queryByTestId('home-new-space')).not.toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: /New space/ })).not.toBeInTheDocument();
+	});
+
+	it('keeps "+ New space" on the empty screen', () => {
+		const onCreateGroup = jest.fn();
+		renderHome({ spaces: [], questions: [], onCreateGroup });
+
+		fireEvent.click(screen.getByRole('button', { name: /New space/ }));
+
+		expect(onCreateGroup).toHaveBeenCalledTimes(1);
 	});
 
 	it('labels the empty-state entry "Ask a question"', () => {

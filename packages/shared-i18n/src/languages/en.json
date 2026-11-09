@@ -5382,5 +5382,7 @@
   "Please enable browser notifications first": "Please enable browser notifications first",
   "Email Notifications": "Email Notifications",
   "Receive updates via email": "Receive updates via email",
-  "chatQuestion.answerLabel": "Answer:"
+  "chatQuestion.answerLabel": "Answer:",
+  "unread.messageCount_one": "1 unread message",
+  "unread.messageCount_other": "{{count}} unread messages"
 }

@@ -134,6 +134,11 @@ jest.mock('@/controllers/general/helpers', () => ({
 jest.mock('@/redux/store', () => ({
 	store: {
 		dispatch: jest.fn(),
+		getState: jest.fn(() => ({
+			statements: {
+				statements: [{ statementId: 'stmt-123', descendantMessageCount: 6 }],
+			},
+		})),
 	},
 }));
 
@@ -149,7 +154,10 @@ jest.mock('../../userDemographic/getUserDemographic', () => ({
 
 import { doc, updateDoc, setDoc, getDoc, runTransaction } from 'firebase/firestore';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
+import { store } from '@/redux/store';
+import { setSeenMessageCounts } from '@/redux/statements/statementsSlice';
 
+const mockStoreDispatch = store.dispatch as jest.Mock;
 const mockDoc = doc as jest.MockedFunction<typeof doc>;
 const mockUpdateDoc = updateDoc as jest.MockedFunction<typeof updateDoc>;
 const mockSetDoc = setDoc as jest.MockedFunction<typeof setDoc>;
@@ -224,10 +232,46 @@ describe('setSubscriptions', () => {
 			);
 		});
 
+		it('gives a subscription created after the tree fetch its seen marker, caught up to the counter', async () => {
+			mockGetDoc.mockResolvedValue({
+				exists: () => false,
+			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+			mockStoreDispatch.mockClear();
+
+			await setStatementSubscriptionToDB({
+				statement: mockStatement,
+				creator: { uid: 'new-member', displayName: 'New', email: 'n@example.com' },
+			});
+
+			expect(mockSetDoc).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({ seenMessageCount: 6 }),
+				{ merge: true },
+			);
+			expect(mockStoreDispatch).toHaveBeenCalledWith(
+				setSeenMessageCounts([{ statementId: 'stmt-123', seenMessageCount: 6 }]),
+			);
+		});
+
+		it('puts the marker of an existing subscription into Redux', async () => {
+			mockGetDoc.mockResolvedValue({
+				exists: () => true,
+				data: () => ({ role: Role.member, seenMessageCount: 4 }),
+			} as unknown as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+			mockStoreDispatch.mockClear();
+
+			await setStatementSubscriptionToDB({ statement: mockStatement, creator: mockCreator });
+
+			expect(mockStoreDispatch).toHaveBeenCalledWith(
+				setSeenMessageCounts([{ statementId: 'stmt-123', seenMessageCount: 4 }]),
+			);
+		});
+
 		it('should not create subscription when user is already subscribed', async () => {
 			mockGetDoc.mockResolvedValue({
 				exists: () => true,
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+				data: () => ({}),
+			} as unknown as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
 
 			await setStatementSubscriptionToDB({
 				statement: mockStatement,
@@ -425,14 +469,17 @@ describe('setSubscriptions', () => {
 
 	describe('updateLastReadTimestamp', () => {
 		const runWithStoredDoc = (
-			snapshot: { exists: boolean; lastReadTimestamp?: number },
+			snapshot: { exists: boolean; lastReadTimestamp?: number; seenMessageCount?: number },
 			transactionUpdate: jest.Mock,
 		): void => {
 			mockRunTransaction.mockImplementation(async (_db, updateFn) => {
 				const transaction = {
 					get: jest.fn().mockResolvedValue({
 						exists: () => snapshot.exists,
-						data: () => ({ lastReadTimestamp: snapshot.lastReadTimestamp }),
+						data: () => ({
+							lastReadTimestamp: snapshot.lastReadTimestamp,
+							seenMessageCount: snapshot.seenMessageCount,
+						}),
 					}),
 					update: transactionUpdate,
 				};
@@ -466,13 +513,83 @@ describe('setSubscriptions', () => {
 			expect(update).not.toHaveBeenCalled();
 		});
 
+		it('records the message counter as seenMessageCount', async () => {
+			const update = jest.fn();
+			runWithStoredDoc({ exists: true, lastReadTimestamp: 1, seenMessageCount: 2 }, update);
+
+			await updateLastReadTimestamp('stmt-123', 'user-123', 7);
+
+			expect(update).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({ seenMessageCount: 7 }),
+			);
+		});
+
+		it('never lowers seenMessageCount', async () => {
+			const update = jest.fn();
+			runWithStoredDoc({ exists: true, lastReadTimestamp: 1, seenMessageCount: 9 }, update);
+
+			await updateLastReadTimestamp('stmt-123', 'user-123', 5);
+
+			const written = update.mock.calls[0][1] as Record<string, unknown>;
+			expect(written).not.toHaveProperty('seenMessageCount');
+		});
+
+		it('moves the marker even when the read timestamp would not move', async () => {
+			const update = jest.fn();
+			runWithStoredDoc(
+				{ exists: true, lastReadTimestamp: Date.now() + 60_000, seenMessageCount: 1 },
+				update,
+			);
+
+			await updateLastReadTimestamp('stmt-123', 'user-123', 3);
+
+			expect(update).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({ seenMessageCount: 3 }),
+			);
+		});
+
+		it('does not create a subscription to hold a marker', async () => {
+			const update = jest.fn();
+			runWithStoredDoc({ exists: false }, update);
+
+			await updateLastReadTimestamp('stmt-123', 'user-123', 4);
+
+			expect(update).not.toHaveBeenCalled();
+		});
+
 		it('should not update or throw when subscription does not exist', async () => {
 			const update = jest.fn();
 			runWithStoredDoc({ exists: false }, update);
 
-			await expect(updateLastReadTimestamp('stmt-123', 'user-123')).resolves.toBeUndefined();
+			await expect(updateLastReadTimestamp('stmt-123', 'user-123')).resolves.toBe(false);
 
 			expect(update).not.toHaveBeenCalled();
+		});
+
+		it('reports a missing subscription without recording a marker, so the caller retries', async () => {
+			const update = jest.fn();
+			runWithStoredDoc({ exists: false }, update);
+			mockStoreDispatch.mockClear();
+
+			const found = await updateLastReadTimestamp('stmt-123', 'user-123', 5);
+
+			expect(found).toBe(false);
+			expect(mockStoreDispatch).not.toHaveBeenCalled();
+		});
+
+		it('gives the card a seen marker in Redux even when the counter is 0', async () => {
+			const update = jest.fn();
+			runWithStoredDoc({ exists: true, lastReadTimestamp: 1 }, update);
+			mockStoreDispatch.mockClear();
+
+			const found = await updateLastReadTimestamp('stmt-123', 'user-123', 0);
+
+			expect(found).toBe(true);
+			expect(mockStoreDispatch).toHaveBeenCalledWith(
+				setSeenMessageCounts([{ statementId: 'stmt-123', seenMessageCount: 0 }]),
+			);
 		});
 
 		it('should not run a transaction when statementId is missing', async () => {

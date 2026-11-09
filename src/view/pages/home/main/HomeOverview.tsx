@@ -153,16 +153,6 @@ export default function HomeOverview({
 								{shownSpaces.map((space) => (
 									<SpaceCard key={space.id} space={space} onOpen={openSpace} t={t} />
 								))}
-								<div className={styles.stickyAction}>
-									<button
-										type="button"
-										className={`${styles.dashedButton} ${styles['dashedButton--solid']}`}
-										onClick={onCreateGroup}
-										data-testid="home-new-space"
-									>
-										+ {t('New space')}
-									</button>
-								</div>
 							</div>
 						) : (
 							<div className={styles.home__stack}>

@@ -4704,5 +4704,7 @@
   "Please enable browser notifications first": "Schakel eerst browsermeldingen in",
   "Email Notifications": "E-mailmeldingen",
   "Receive updates via email": "Updates per e-mail ontvangen",
-  "chatQuestion.answerLabel": "Antwoord:"
+  "chatQuestion.answerLabel": "Antwoord:",
+  "unread.messageCount_one": "1 ongelezen bericht",
+  "unread.messageCount_other": "{{count}} ongelezen berichten"
 }

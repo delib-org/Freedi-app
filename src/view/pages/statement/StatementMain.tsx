@@ -19,6 +19,7 @@ import { useComponentState } from './hooks/useComponentState';
 import { useStatementViewTracking } from '@/controllers/hooks/useStatementViewTracking';
 import { analyticsService } from '@/services/analytics';
 import { useMarkDiscussionRead } from './hooks/useMarkDiscussionRead';
+import { useTreeSeenMarkers } from '@/controllers/hooks/useTreeSeenMarkers';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { closePanels } from '@/controllers/hooks/panelUtils';
 
@@ -113,12 +114,16 @@ const StatementMain: React.FC = () => {
 		}
 	}, [statementId, statement, user?.uid]);
 
+	// What this person has seen in the tree, so cards below the top level can show unread numbers
+	useTreeSeenMarkers(user?.uid, statement?.topParentId);
+
 	// Mark as read on open, then only when newer content arrives (throttled)
 	useMarkDiscussionRead({
 		statementId,
 		userId: user?.uid,
 		isLoaded: Boolean(statement),
 		lastChildUpdate: statement?.lastChildUpdate,
+		descendantMessageCount: statement?.descendantMessageCount,
 	});
 
 	// Reset new statement modal when component unmounts or navigating to a different statement

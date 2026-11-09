@@ -89,6 +89,13 @@ export const UI = {
 	// discussion stays open. Each write to a subscription doc also fires
 	// three Cloud Functions triggers.
 	READ_MARK_THROTTLE_MS: 30 * 1000,
+	// Most subscription docs one discussion tree fetch brings in for unread numbers.
+	UNREAD_TREE_SUBSCRIPTIONS_PAGE: 100,
+	// Pages one tree fetch may read (page x pages = hard cap, then it is logged).
+	UNREAD_TREE_SUBSCRIPTIONS_MAX_PAGES: 10,
+	// A mark-as-read that found no subscription doc yet is retried this often, this many times.
+	READ_MARK_RETRY_MS: 3 * 1000,
+	READ_MARK_MAX_RETRIES: 5,
 	// How long a toast carrying Undo stays (UX main-people-settings §4.8);
 	// paused while hovered or focused.
 	UNDO_TOAST_DURATION: 6 * TIME.SECOND,
