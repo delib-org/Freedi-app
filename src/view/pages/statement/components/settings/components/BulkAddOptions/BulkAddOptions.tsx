@@ -82,6 +82,8 @@ const BulkAddOptions: FC<BulkAddOptionsProps> = ({ statement }) => {
 						currentLanguage,
 						user: creator,
 						dispatch,
+						// A host seeding answers is not an answerer: no notification prompt.
+						announceAnswer: false,
 					});
 				} catch (error) {
 					logError(error, {

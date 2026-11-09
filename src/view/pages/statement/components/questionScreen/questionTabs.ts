@@ -149,6 +149,25 @@ export function resolveActiveView(
 	return getDefaultQuestionTab(statement, tabs);
 }
 
+/** Screens (the `:screen` route param) that show the question's own tabs rather than a map or settings. */
+export const MAIN_SCREENS: readonly string[] = ['main', 'chat', 'options', 'questions'];
+
+/**
+ * True when the Discussion tab of a question, answer, group or statement shows
+ * the chat input as its only bottom control. Compound questions (phase screen,
+ * no input) keep the floating nav. A group asks its questions from the header menu.
+ */
+export function showsDiscussionComposer(
+	view: string,
+	screen: string | undefined,
+	statement: Statement | null | undefined,
+): boolean {
+	if (view !== 'chat' || !statement) return false;
+	if (screen && !MAIN_SCREENS.includes(screen)) return false;
+
+	return !isCompoundQuestion(statement);
+}
+
 /** Views whose content replaces the reading column (no discussion brief, no decision board aside). */
 export function isResultsOrMapsView(view: string): boolean {
 	return ['background', 'results', 'maps', 'covenant', 'themes'].includes(view);

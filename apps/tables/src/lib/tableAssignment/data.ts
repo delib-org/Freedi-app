@@ -140,16 +140,16 @@ export function subscribeRuns(sessionId: string): Subscription<TableAssignmentRu
 }
 
 /**
- * The options a question's admin selected (statements whose parent is the
- * question and `isSelected` is true). Rejects with the Firestore error when
+ * A question's chosen options (statements whose parent is the
+ * question and `isChosen` is true). Rejects with the Firestore error when
  * the read is not permitted; the caller shows it, it does not crash.
  */
-export async function fetchSelectedOptions(questionId: string): Promise<Statement[]> {
+export async function fetchChosenOptions(questionId: string): Promise<Statement[]> {
 	const snap = await getDocs(
 		query(
 			collection(db, Collections.statements),
 			where('parentId', '==', questionId),
-			where('isSelected', '==', true),
+			where('isChosen', '==', true),
 		),
 	);
 

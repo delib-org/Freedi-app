@@ -180,7 +180,7 @@ try {
 	for (const s of students) await s.page.waitForSelector(tid('table-claim'), { timeout: TIMEOUT });
 	for (const s of students) {
 		const text = await frameText(s.page);
-		check(`1 ${s.name}: stage name, pick list, start and pass buttons`, /שיחת שולחן/.test(text) && /בחרו שאלה/.test(text) && /אני רוצה להתחיל/.test(text) && /אני רוצה לוותר/.test(text), text.slice(0, 120));
+		check(`1 ${s.name}: stage name, pick list, start and pass buttons`, /שאלות חקירה/.test(text) && /בחרו שאלה/.test(text) && /אני רוצה להתחיל/.test(text) && /אני רוצה לוותר/.test(text), text.slice(0, 120));
 		check(`1 ${s.name}: no strip, no pills, no askers row, a paper frame`, (await count(s.page, '.substeps, .substeps__pill, .askers, .talk__chips')) === 0 && !(await isDown(s.page)));
 		check(`1 ${s.name}: the teacher's questions and "+ our own" are in the list`, (await count(s.page, tid('table-pick-question'))) === seed.guidingIds.length && (await has(s.page, 'table-pick-own')), `${await count(s.page, tid('table-pick-question'))} rows`);
 	}
@@ -201,7 +201,7 @@ try {
 	await screen(winner.page, /תנו לאחרים לענות קודם/, 'winner waits');
 	check('2 the asker waits: "let others answer first", no button, a dark frame', !(await has(winner.page, 'table-answer')) && (await isDown(winner.page)) && (await count(winner.page, '.frame__action')) === 0);
 	await screen(noa.page, /אני רוצה לענות/, 'noa may answer');
-	check('2 a tablemate may answer or pass; the stage and the question are on the screen', (await has(noa.page, 'table-answer')) && (await has(noa.page, 'pass-answer')) && /שיחת שולחן/.test(await frameText(noa.page)));
+	check('2 a tablemate may answer or pass; the stage and the question are on the screen', (await has(noa.page, 'table-answer')) && (await has(noa.page, 'pass-answer')) && /שאלות חקירה/.test(await frameText(noa.page)));
 	await screen(loser.page, /אני רוצה לענות/, 'loser may answer');
 	// E2E_SHOTS_DIR=<dir>: 375x812 screenshots of the talk screens (the question in the top third).
 	const shot = async (page, name) => {
@@ -228,7 +228,7 @@ try {
 	const answerer = noa;
 	await answerer.page.click(tid('table-answer'));
 	await until(async () => (await tableDoc()).speakerUid === answerer.uid, 'floor taken');
-	await screen(answerer.page, /הדקה שלכם/, 'my minute');
+	await screen(answerer.page, /הזמן שלכם/, 'my minute');
 	check('3 the answerer sees "your minute", the clock and Finish', (await count(answerer.page, '[role=timer]')) === 1 && (await has(answerer.page, 'table-finish')) && (await isDown(answerer.page)));
 	check('3 Finish is drawn off for the first second', await answerer.page.locator(tid('table-finish')).isDisabled());
 	await screen(winner.page, /עונה/, 'others see who answers');

@@ -13,7 +13,11 @@ import LiveDecisionBoard from '@/view/components/atomic/organisms/ThinkingSpace/
 import { StatementType, QuestionType } from '@freedi/shared-types';
 import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
 import { mapViews } from '@/view/components/atomic/organisms/ThinkingSpace/MapExplorer';
-import { isResultsOrMapsView } from './questionScreen/questionTabs';
+import {
+	isResultsOrMapsView,
+	MAIN_SCREENS,
+	showsDiscussionComposer,
+} from './questionScreen/questionTabs';
 
 interface StatementContentProps {
 	statement: Statement | null;
@@ -77,12 +81,13 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 						{...(isSurveyMandatory ? { inert: '' } : {})}
 					>
 						<AppThinkingSpace
+							hideBottomNav={showsDiscussionComposer(activeView, screen, statement)}
 							activeId={topParentStatement?.statementId || statement?.statementId}
 							aside={
 								statement &&
 								!isSurveyMandatory &&
 								!isResultsOrMapsView(activeView) &&
-								(!screen || ['main', 'chat', 'options', 'questions'].includes(screen)) &&
+								(!screen || MAIN_SCREENS.includes(screen)) &&
 								statement.questionSettings?.questionType !== QuestionType.compound &&
 								isStatementTypeAllowedAsChildren(statement, StatementType.option) ? (
 									<LiveDecisionBoard statement={statement} />

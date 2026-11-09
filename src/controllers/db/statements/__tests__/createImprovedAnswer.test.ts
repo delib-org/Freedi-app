@@ -9,6 +9,14 @@ jest.mock('../createStatement', () => ({
 jest.mock('../writeStatement', () => ({
 	setStatementToDB: (...a: unknown[]) => setStatementToDB(...a),
 }));
+const subscribeAuthorToAnswer = jest.fn();
+const announceAnswerPublished = jest.fn();
+jest.mock('@/controllers/db/subscriptions/subscribeAuthorToAnswer', () => ({
+	subscribeAuthorToAnswer: (...a: unknown[]) => subscribeAuthorToAnswer(...a),
+}));
+jest.mock('@/controllers/db/subscriptions/answerPublished', () => ({
+	announceAnswerPublished: (...a: unknown[]) => announceAnswerPublished(...a),
+}));
 jest.mock('@/utils/errorHandling', () => ({
 	...jest.requireActual('@/utils/errorHandling'),
 	logError: jest.fn(),
@@ -63,6 +71,29 @@ describe('createImprovedAnswer', () => {
 			statement: expect.objectContaining({ statementId: 'a2' }),
 			parentStatement: parent,
 		});
+	});
+
+	it('writes the author an answer subscription and raises the notification prompt', async () => {
+		const creator = { uid: 'u1', displayName: 'U' };
+		setStatementToDB.mockImplementationOnce(async ({ statement }: { statement: Statement }) => ({
+			statementId: statement.statementId,
+			statement: { ...statement, creator },
+		}));
+		await createImprovedAnswer({ source, parent, text: 'New wording', reason: 'r' });
+		expect(subscribeAuthorToAnswer).toHaveBeenCalledWith(
+			expect.objectContaining({ statementId: 'a2' }),
+			creator,
+		);
+		expect(announceAnswerPublished).toHaveBeenCalledWith(expect.anything(), 'a2', parent);
+	});
+
+	it('neither subscribes nor asks when the save fails', async () => {
+		setStatementToDB.mockResolvedValueOnce(undefined);
+		await expect(
+			createImprovedAnswer({ source, parent, text: 'New wording', reason: 'r' }),
+		).rejects.toThrow();
+		expect(subscribeAuthorToAnswer).not.toHaveBeenCalled();
+		expect(announceAnswerPublished).not.toHaveBeenCalled();
 	});
 
 	it('refuses empty wording, an empty reason, and unchanged wording', async () => {

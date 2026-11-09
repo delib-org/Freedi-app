@@ -16,6 +16,7 @@ import { engagementSlice } from './engagement/engagementSlice';
 import { clusterEvaluationLinksSlice } from './clusterEvaluationLinks/clusterEvaluationLinksSlice';
 import { searchSlice } from './search/searchSlice';
 import { userFeedSlice } from './userFeed/userFeedSlice';
+import { answerNotifyPromptSlice } from './answerNotifyPrompt/answerNotifyPromptSlice';
 
 export const store = configureStore({
 	reducer: {
@@ -36,6 +37,7 @@ export const store = configureStore({
 		clusterEvaluationLinks: clusterEvaluationLinksSlice.reducer,
 		search: searchSlice.reducer,
 		userFeed: userFeedSlice.reducer,
+		answerNotifyPrompt: answerNotifyPromptSlice.reducer,
 	},
 });
 

@@ -23,6 +23,23 @@ const SIDE_B = 90;
 const SIDE_CENTER = 50;
 const SIDES_EACH = 2;
 const TURNS = 2;
+// The lesson's group size is a setting now (default 6, so six students would share ONE table);
+// the script saves 3 on the lesson, exactly as the teacher's console does, to get two tables.
+const TABLE_SIZE = 3;
+// A lesson keeps the step list it was created with (lessonCore.ts LESSON_STEP_KEYS). The shared
+// helper e2e-lesson.mjs writes the old 8-step list for the projector phase; a lesson the app creates
+// today has "כל ההצעות" (allProposals) between Proposals and Vote, so the engine phases use that list.
+const ENGINE_STEP_KEYS = [
+	'waiting',
+	'opening',
+	'side',
+	'tables',
+	'tableTalk',
+	'proposals',
+	'allProposals',
+	'vote',
+	'summary',
+];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -212,6 +229,9 @@ export const ENGINE_PHASES = [
 			// Nobody has spoken: the write shortcut is not offered, the table moves on when 2 tablemates
 			// press "move on" (Trello 1c8jfvA6/GdrAEIF9). Phones then follow the table to writing.
 			await byId(students[0].page, 'move-on');
+			// Wait for the Proposals screen itself: the Table talk screen shows "move on" too, and the phone
+			// can still be on it for a moment after the teacher moved the class.
+			await byId(students[0].page, 'table-speak');
 			check('before anyone spoke there is no write shortcut, only "move on"', !(await hasTestId(students[0], 'table-to-write')) && (await hasTestId(students[0], 'move-on')));
 			await (await byId(students[0].page, 'move-on')).click();
 			await until(async () => /1\/2|1\/3/.test((await students[0].page.getByTestId('move-on-count').first().textContent().catch(() => '')) ?? ''), 'one press is counted');
@@ -272,8 +292,12 @@ export const ENGINE_PHASES = [
 				return data?.closedAt && data?.decisionId ? data : null;
 			}, 'ballot closed with a decision');
 			check('the ballot closed with a decision', !!closed.decisionId, closed.decisionId);
-			// Results start closed and the support question shows only once they are open.
-			await admin.collection('statements').doc(challengeId).update({ 'statementSettings.voteDisplay.liveResults': true });
+			// Results start closed and the support question shows only once they are open. The projector's
+			// support bars and verdict are teacher-only until she shares them (Trello 89fevjY5): share them.
+			await admin.collection('statements').doc(challengeId).update({
+				'statementSettings.voteDisplay.liveResults': true,
+				'statementSettings.voteDisplay.supportShown': true,
+			});
 			await teacherForward(teacher, 'summary');
 			for (const student of students) {
 				await (await byId(student.page, 'support-face-5')).click();
@@ -300,7 +324,11 @@ export const ENGINE_PHASES = [
 /** Called once before the engine phases: a clean lesson at step 0, teacher on the console. */
 export async function prepareEngineLesson(ctx) {
 	await clearLessonLeftovers(ctx);
-	await ctx.setPlan(0);
+	await ctx.admin.collection('statements').doc(ctx.mid).update({
+		'statementSettings.tableSize': TABLE_SIZE,
+		'statementSettings.lessonPlan': { steps: ENGINE_STEP_KEYS, stepIndex: 0 },
+		lastUpdate: Date.now(),
+	});
 	const { teacher, mid, baseUrl } = ctx;
 	await teacher.goto(`${baseUrl}/t/${mid}`, { waitUntil: 'domcontentloaded' });
 	await teacher.locator('[data-step-key][aria-current="step"]').first().waitFor({ timeout: TURN_TIMEOUT });

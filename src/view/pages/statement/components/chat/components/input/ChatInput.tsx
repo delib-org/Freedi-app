@@ -87,7 +87,7 @@ const ChatInput: FC<Props> = ({
 		<div className={sideChat ? styles.sideChatInput : styles.chatInput}>
 			{hasEvaluation && (
 				<div className={styles.eval}>
-					<EnhancedEvaluation statement={statement} />
+					<EnhancedEvaluation statement={statement} hideFaceLabels />
 				</div>
 			)}
 			{replyToStatement && (
@@ -138,7 +138,7 @@ const ChatInput: FC<Props> = ({
 						adjustTextareaHeight();
 					}}
 					required
-					placeholder={t('Share a thought, a question, a possibility…')}
+					placeholder={t('Write a message…')}
 				></textarea>
 				<button
 					type="submit"

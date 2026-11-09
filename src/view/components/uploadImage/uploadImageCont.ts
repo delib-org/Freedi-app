@@ -4,62 +4,58 @@ import { updateStatementMainImage } from '@/controllers/db/statements/setStateme
 import { Statement } from '@freedi/shared-types';
 import React from 'react';
 import { logError } from '@/utils/errorHandling';
+import { IMAGE_UPLOAD } from '@/constants/common';
 
 export async function setImageLocally(
 	file: File,
 	statement: Statement,
 	setImage: React.Dispatch<React.SetStateAction<string>>,
 	setProgress: React.Dispatch<React.SetStateAction<number>>,
-) {
-	if (file) {
-		const img = new Image();
-		const reader = new FileReader();
+	onError?: () => void,
+	previousImage: string = '',
+): Promise<void> {
+	if (!file) return;
 
-		reader.onloadend = () => {
-			if (reader.result) {
-				img.src = reader.result as string;
+	let previewURL: string | undefined;
 
-				img.onload = async () => {
-					try {
-						// Step 1: Compress image (0-50% progress)
-						const compressedFile = await compressImage(file, 200, (compressionProgress: number) => {
-							setProgress(compressionProgress / 2); // 0-50%
-						});
+	try {
+		// Step 1: shrink + compress (0-50% progress)
+		const compressedFile = await compressImage(
+			file,
+			IMAGE_UPLOAD.TARGET_SIZE_KB,
+			(compressionProgress: number) => {
+				setProgress(compressionProgress / 2);
+			},
+		);
 
-						// Show compressed image preview
-						const previewURL = URL.createObjectURL(compressedFile);
-						setImage(previewURL);
+		// Show compressed image preview
+		previewURL = URL.createObjectURL(compressedFile);
+		setImage(previewURL);
 
-						// Step 2: Upload to Firebase (50-100% progress)
-						const imageURL = await uploadImageToStorage(
-							compressedFile,
-							statement,
-							(uploadProgress: number) => {
-								setProgress(50 + uploadProgress / 2); // 50-100%
-							},
-						);
+		// Step 2: Upload to Firebase (50-100% progress)
+		const imageURL = await uploadImageToStorage(compressedFile, statement, (uploadProgress) => {
+			setProgress(50 + uploadProgress / 2);
+		});
 
-						// Step 3: Update database and show final image
-						console.info('Firebase image URL:', imageURL);
-						await updateStatementMainImage(statement, imageURL);
-						setImage(imageURL);
-						setProgress(100);
-
-						// Clean up blob URL after a delay to ensure image loads
-						setTimeout(() => {
-							URL.revokeObjectURL(previewURL);
-						}, 1000);
-					} catch (error) {
-						logError(error, {
-							operation: 'uploadImage.uploadImageCont.compressedFile',
-							metadata: { message: 'Error uploading image:' },
-						});
-						setProgress(0);
-					}
-				};
-			}
-		};
-
-		reader.readAsDataURL(file);
+		// Step 3: Update database and show final image
+		await updateStatementMainImage(statement, imageURL);
+		setImage(imageURL);
+		setProgress(100);
+	} catch (error) {
+		logError(error, {
+			operation: 'uploadImage.uploadImageCont.setImageLocally',
+			statementId: statement.statementId,
+			metadata: { fileType: file.type, fileSize: file.size },
+		});
+		setProgress(0);
+		// The preview blob is about to be revoked; do not leave a dead URL on screen.
+		setImage(previousImage);
+		onError?.();
+	} finally {
+		const url = previewURL;
+		if (url) {
+			// Delay so the final image has time to load before the blob goes
+			setTimeout(() => URL.revokeObjectURL(url), IMAGE_UPLOAD.PREVIEW_REVOKE_DELAY_MS);
+		}
 	}
 }

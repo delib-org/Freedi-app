@@ -3,7 +3,9 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, maximum-scale=2, user-scalable=yes" />
-		<meta name="theme-color" content="#fbfaf7" />
+		<!-- First-paint values (paper, light and dark); useSystemBarColors keeps them live afterwards. -->
+		<meta name="theme-color" content="#fbfaf7" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#0b0f17" media="(prefers-color-scheme: dark)" />
 		<meta
 			name="description"
 			content="WizCol helps communities turn different views into decisions they can stand behind."
@@ -28,7 +30,7 @@
 			:root {
 				color-scheme: light dark;
 				font-family: Arial, Helvetica, sans-serif;
-				background: #f6f5f9;
+				background: #fbfaf7;
 			}
 			* {
 				box-sizing: border-box;
@@ -43,12 +45,14 @@
 			body {
 				overflow: hidden;
 			}
+			/* Literal colours: no stylesheet has loaded yet. They must equal the two
+			   theme-color metas above (#fbfaf7 light, #0b0f17 dark): no colour jump at first paint. */
 			#initial-loader {
 				display: grid;
 				width: 100%;
 				height: 100%;
 				place-items: center;
-				background: #f8d9ca;
+				background: #fbfaf7;
 				color: #171816;
 			}
 			#initial-loader span {
@@ -65,10 +69,10 @@
 			}
 			@media (prefers-color-scheme: dark) {
 				:root {
-					background: #221e2d;
+					background: #0b0f17;
 				}
 				#initial-loader {
-					background: #342c29;
+					background: #0b0f17;
 					color: #f6efff;
 				}
 			}

@@ -22,6 +22,8 @@ import {
 import { Dispatch, SetStateAction } from 'react';
 import { logError } from '@/utils/errorHandling';
 import { store } from '@/redux/store';
+import { announceAnswerPublished } from '@/controllers/db/subscriptions/answerPublished';
+import { subscribeAuthorToAnswer } from '@/controllers/db/subscriptions/subscribeAuthorToAnswer';
 import { setStatement } from '@/redux/statements/statementsSlice';
 
 // Get users that voted on options in this statement
@@ -228,6 +230,7 @@ interface CreateStatementFromModalParams {
 
 export async function createStatementFromModal({
 	title,
+	creator,
 	paragraphs,
 	parentStatement,
 	statementType,
@@ -247,13 +250,20 @@ export async function createStatementFromModal({
 
 		if (!newStatement) throw new Error('newStatement was not created');
 
-		await setStatementToDB({
+		const saved = await setStatementToDB({
 			statement: newStatement,
 			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
 		});
 
 		// Dispatch to Redux immediately so the UI updates without waiting for Firestore listener
 		store.dispatch(setStatement(newStatement));
+
+		// An answer made here needs the author's own subscription (replies ride on it)
+		// and raises the notification-choices prompt, like the other add paths.
+		if (saved && statementType === StatementType.option) {
+			if (creator?.uid) await subscribeAuthorToAnswer(newStatement, creator);
+			announceAnswerPublished(store.dispatch, newStatement.statementId, parentStatement);
+		}
 	} catch (error) {
 		logError(error, { operation: 'settings.statementSettingsCont.unknown' });
 	}

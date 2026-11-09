@@ -15,9 +15,15 @@ interface EvaluationProps {
 	/** 'card' = the answer card: no face scale on your own answer, and results
 	 *  stay hidden until you have rated (range / enhanced scale only). */
 	variant?: EvaluationVariant;
+	/** Chat surfaces: no visible text under the range faces. */
+	hideFaceLabels?: boolean;
 }
 
-const Evaluation: FC<EvaluationProps> = ({ statement, variant = 'default' }) => {
+const Evaluation: FC<EvaluationProps> = ({
+	statement,
+	variant = 'default',
+	hideFaceLabels = false,
+}) => {
 	const { parentStatement } = useEvaluation(statement);
 	const { isHalted } = useIsProcessHalted(parentStatement);
 
@@ -56,6 +62,7 @@ const Evaluation: FC<EvaluationProps> = ({ statement, variant = 'default' }) => 
 							statement={statement}
 							enableEvaluation={enableEvaluation}
 							variant={variant}
+							hideFaceLabels={hideFaceLabels}
 						/>
 					);
 				case 'community-voice':
@@ -86,6 +93,7 @@ const Evaluation: FC<EvaluationProps> = ({ statement, variant = 'default' }) => 
 					statement={statement}
 					enableEvaluation={enableEvaluation}
 					variant={variant}
+					hideFaceLabels={hideFaceLabels}
 				/>
 			);
 		}

@@ -118,7 +118,7 @@ const en: Record<string, string> = {
 	'tableAssignment.participants.empty': 'Nobody has registered yet. Send the link.',
 	'tableAssignment.participants.search': 'Search by name',
 
-	'tableAssignment.topics.empty': 'No topics yet. Add them by hand or import selected proposals.',
+	'tableAssignment.topics.empty': 'No topics yet. Add them by hand or import chosen proposals.',
 	'tableAssignment.topics.locked': 'Registration has opened, so the topic list is locked.',
 	'tableAssignment.topics.save': 'Save topics',
 	'tableAssignment.topics.unsaved': 'You have changes that are not saved.',
@@ -138,14 +138,14 @@ const en: Record<string, string> = {
 	'tableAssignment.topic.error.maxTablesInvalid':
 		'The number of tables must be a positive whole number.',
 
-	'tableAssignment.import.title': 'Import selected proposals',
+	'tableAssignment.import.title': 'Import chosen proposals',
 	'tableAssignment.import.hint':
-		'Paste the id of a question. Its selected options are imported with title, explanation and consensus.',
+		'Paste the id of a question. Its chosen options are imported with title, explanation and consensus.',
 	'tableAssignment.import.statementId': 'Question id',
 	'tableAssignment.import.button': 'Import',
 	'tableAssignment.import.reading': 'Reading…',
 	'tableAssignment.import.done': '{{count}} topics were added to the list. Remember to save.',
-	'tableAssignment.import.empty': 'This question has no selected options.',
+	'tableAssignment.import.empty': 'This question has no chosen options.',
 	'tableAssignment.import.denied': 'You do not have permission to read this question.',
 	'tableAssignment.import.failed': 'The import did not work. You can try again.',
 

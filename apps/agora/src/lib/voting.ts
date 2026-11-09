@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { db, doc, collection, query, where, setDoc, onSnapshot, Unsubscribe } from './firebase';
 import { Collections, AgoraSession, Vote, NO_VOTE, getVoteId } from '@freedi/shared-types';
+import { logError } from '@freedi/shared-utils';
 import { trackWrite } from './confirmedWrite';
 import { getUserState } from './user';
 import { getSessionState } from './session';
@@ -24,7 +25,7 @@ export interface VotingState {
 	selections: Record<string, number>;
 	/** What I voted for, or null if I have not voted (or withdrew) */
 	myVoteStatementId: string | null;
-	/** Who has voted at all — the teacher's "n of N" chips */
+	/** Who has voted at all — the teacher's per-student chips. Empty for everyone else. */
 	voterUids: Set<string>;
 	/** The question doc has answered once; "no votes yet" is a fact, not a gap */
 	loaded: boolean;
@@ -50,13 +51,17 @@ let unsubscribers: Unsubscribe[] = [];
 let listeningKey = '';
 
 /**
- * Attaches the three listeners the voting stage needs. Idempotent: views call
- * it on every redraw, and re-attaching would restart the subscriptions.
+ * Attaches the listeners the voting stage needs. Idempotent: views call it on
+ * every redraw, and re-attaching would restart the subscriptions.
+ *
+ * `isSessionTeacher` opens the one listener that reads other people's vote
+ * docs. The rules refuse it to anyone else: a vote says who chose what.
  */
 export function listenToVoting(
 	sessionId: string,
 	challengeQuestionId: string,
 	userId: string,
+	isSessionTeacher: boolean,
 ): void {
 	const key = `${sessionId}--${userId}`;
 	if (listeningKey === key) return;
@@ -92,7 +97,8 @@ export function listenToVoting(
 	);
 
 	// Who has voted — a class-sized query, and the only way the teacher knows
-	// whether to wait or to close the vote.
+	// which students to wait for. Everyone else counts from `selections`.
+	if (!isSessionTeacher) return;
 	unsubscribers.push(
 		onSnapshot(
 			query(collection(db, Collections.votes), where('parentId', '==', challengeQuestionId)),
@@ -104,6 +110,14 @@ export function listenToVoting(
 				});
 				state.voterUids = voters;
 				m.redraw();
+			},
+			(error) => {
+				logError(error, {
+					operation: 'agora.voting.listenToVoters',
+					userId,
+					statementId: challengeQuestionId,
+					metadata: { sessionId },
+				});
 			},
 		),
 	);

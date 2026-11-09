@@ -56,7 +56,7 @@ export async function compareBrowserTokens() {
 	});
 
 	// Check pushNotifications collection
-	const pushQuery = query(collection(DB, 'pushNotifications'), where('uid', '==', user.uid));
+	const pushQuery = query(collection(DB, 'pushNotifications'), where('userId', '==', user.uid));
 
 	const pushSnapshot = await getDocs(pushQuery);
 	console.info(`\n5. Found ${pushSnapshot.size} push notification records:`);

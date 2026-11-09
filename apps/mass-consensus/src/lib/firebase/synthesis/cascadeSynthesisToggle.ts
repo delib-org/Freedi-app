@@ -2,6 +2,7 @@ import { Collections, type Statement } from '@freedi/shared-types';
 import { getFirestoreAdmin } from '../admin';
 import type { Survey } from '@/types/survey';
 import { logger } from '@/lib/utils/logger';
+import { keepRosterAdministeredWrites } from '../surveys/questionAdminAccess';
 
 /**
  * Cascade the survey-level + per-question liveSynthEnabled toggles down to
@@ -97,6 +98,7 @@ export async function cascadeSynthesisToggle(survey: Survey): Promise<CascadeRes
 	const writesNeeded: {
 		ref: FirebaseFirestore.DocumentReference;
 		update: Record<string, unknown>;
+		question: Statement;
 	}[] = [];
 	let skipped = 0;
 
@@ -127,17 +129,20 @@ export async function cascadeSynthesisToggle(survey: Survey): Promise<CascadeRes
 			continue;
 		}
 
-		writesNeeded.push({ ref: docRefs[i], update });
+		writesNeeded.push({ ref: docRefs[i], update, question: statement });
 	}
 
 	if (writesNeeded.length === 0) {
 		return { surveyId, totalQuestions: questionIds.length, updated: 0, skipped, surveyOn };
 	}
 
+	const allowed = await keepRosterAdministeredWrites(survey, writesNeeded, 'cascadeSynthesisToggle');
+	skipped += writesNeeded.length - allowed.length;
+
 	// Batch writes, respecting Firestore's 500-op limit per batch.
 	let updated = 0;
-	for (let i = 0; i < writesNeeded.length; i += FIRESTORE_BATCH_LIMIT) {
-		const chunk = writesNeeded.slice(i, i + FIRESTORE_BATCH_LIMIT);
+	for (let i = 0; i < allowed.length; i += FIRESTORE_BATCH_LIMIT) {
+		const chunk = allowed.slice(i, i + FIRESTORE_BATCH_LIMIT);
 		const batch = db.batch();
 		for (const { ref, update } of chunk) {
 			batch.update(ref, update);

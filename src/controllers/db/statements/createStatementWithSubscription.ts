@@ -18,6 +18,7 @@ import { setStatementSubscriptionToDB } from '@/controllers/db/subscriptions/set
 import { notificationService } from '@/services/notificationService';
 import { validateStatementTypeHierarchy } from '@/controllers/general/helpers';
 import { logStatementCreation } from '@/controllers/db/researchLogs/researchLogger';
+import { announceAnswerPublished } from '@/controllers/db/subscriptions/answerPublished';
 
 interface CreateStatementWithSubscriptionParams {
 	newStatementParent: Statement | 'top';
@@ -34,6 +35,13 @@ interface CreateStatementWithSubscriptionParams {
 	 * Called if the server later rejects the statement (it is removed from the store).
 	 */
 	onServerWriteError?: (error: unknown) => void;
+	/**
+	 * Report a new answer (option under a question) so the notification-choices
+	 * prompt can be raised. Default true. Pass false when the caller reports it
+	 * itself after its own surface closed (the add flow), or when a host is
+	 * seeding answers in bulk.
+	 */
+	announceAnswer?: boolean;
 }
 
 export async function createStatementWithSubscription({
@@ -46,6 +54,7 @@ export async function createStatementWithSubscription({
 	user,
 	dispatch,
 	onServerWriteError,
+	announceAnswer = true,
 }: CreateStatementWithSubscriptionParams): Promise<string> {
 	const statementType = newStatement?.statementType || StatementType.question;
 
@@ -115,6 +124,10 @@ export async function createStatementWithSubscription({
 	}
 
 	const { statementId } = result;
+
+	if (announceAnswer && statementType === StatementType.option) {
+		announceAnswerPublished(dispatch, statementId, newStatementParent);
+	}
 
 	// Research logging
 	logStatementCreation(statementId, _newStatement.parentId, _newStatement.topParentId);

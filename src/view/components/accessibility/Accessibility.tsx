@@ -7,10 +7,9 @@ import styles from './Accessibility.module.scss';
 import { useAutoClose } from '@/controllers/hooks/useAutoClose';
 import useClickOutside from '@/controllers/hooks/useClickOutside';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
-import { colorMappings } from './colorContrast';
 
 export default function Accessibility() {
-	const { fontSize, changeFontSize, colorContrast, setColorContrast, t } = useUserConfig();
+	const { fontSize, changeFontSize, setColorContrast, t } = useUserConfig();
 	const { isOpen, handleOpen } = useAutoClose(10000);
 
 	const handleClickOutside = useCallback(() => {
@@ -18,16 +17,6 @@ export default function Accessibility() {
 	}, [isOpen, handleOpen]);
 
 	const accessibilityRef = useClickOutside(handleClickOutside);
-
-	useEffect(() => {
-		Object.entries(colorMappings).forEach(([key, contrastKey]) => {
-			document.documentElement.style.setProperty(key, colorContrast ? `var(${contrastKey})` : '');
-		});
-		// Surface the contrast mode as a data attribute so component styles can
-		// add HC-specific affordances (dark card borders, etc.) without relying
-		// on the OS-level prefers-contrast media query.
-		document.documentElement.dataset.contrast = colorContrast ? 'high' : 'normal';
-	}, [colorContrast]);
 
 	// Drag & Drop
 	const [position, setPosition] = React.useState({ top: 250 });

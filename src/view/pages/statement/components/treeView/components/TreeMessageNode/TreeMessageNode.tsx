@@ -1,7 +1,7 @@
 import { Lightbulb } from 'lucide-react';
 import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
 import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
-import React, { FC, useMemo, useState, useRef, useEffect, useCallback } from 'react';
+import React, { FC, memo, useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { Statement, StatementType } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -22,6 +22,7 @@ import { useBookmark } from '@/controllers/hooks/useBookmark';
 import SendIcon from '@/view/components/icons/SendIcon';
 import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
 import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
+import ChatQuestionSummary from './ChatQuestionSummary';
 import styles from './TreeMessageNode.module.scss';
 
 interface TreeMessageNodeProps {
@@ -293,6 +294,7 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 						)}
 					</div>
 				)}
+				{isQuestion && <ChatQuestionSummary statement={statement} />}
 				<div className={styles['tree-message-node__actions']}>
 					<button
 						className={styles['tree-message-node__action-btn']}
@@ -391,4 +393,4 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 	);
 };
 
-export default React.memo(TreeMessageNode);
+export default memo(TreeMessageNode);

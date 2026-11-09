@@ -27,14 +27,18 @@ import {
 	QuestionAnswersTabContext,
 	useQuestionScreenData,
 } from '../questionScreen/useQuestionScreenData';
-import { isResultsOrMapsView, QuestionView, tabOfView } from '../questionScreen/questionTabs';
+import {
+	isResultsOrMapsView,
+	MAIN_SCREENS,
+	QuestionView,
+	showsDiscussionComposer,
+	tabOfView,
+} from '../questionScreen/questionTabs';
 import { QUESTION_TABPANEL_ID } from '../header/StatementHeader';
 
 interface SwitchProps {
 	activeView: string;
 }
-
-const MAIN_SCREENS = ['main', 'chat', 'options', 'questions'];
 
 const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 	const { t } = useTranslation();
@@ -76,6 +80,7 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 	const isTabContentView = isResultsOrMapsView(activeView);
 	const showReadingHeader = !isMapScreen && !isTabContentView;
 	const onAnswersTab = onMainScreen && isQuestion && !isCompound && activeView === 'options';
+	const showsComposer = showsDiscussionComposer(activeView, screen, statement);
 	const showFab = onAnswersTab && data.canAddAnswer && !!statement;
 	// A question's framing text lives on its Background tab now.
 	const showBody = showReadingHeader && !!statement && !isQuestion;
@@ -83,7 +88,9 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 	return (
 		<main
 			ref={mainRef}
-			className={`page__main ${isMapScreen ? 'page__main--flush' : styles.questionMain}`}
+			className={`page__main ${isMapScreen ? 'page__main--flush' : styles.questionMain} ${
+				showsComposer ? styles['questionMain--withComposer'] : ''
+			}`}
 		>
 			<div
 				className={styles.panel}

@@ -1,13 +1,16 @@
 import { FC } from 'react';
 import { useNavigate } from 'react-router';
-import { Screen, Statement } from '@freedi/shared-types';
+import { Screen, Statement, StatementType } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { useOpenAskQuestion } from '@/controllers/hooks/useOpenAskQuestion';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import ApproveMembers from '@/view/components/approveMembers/WaitingList';
 import NotificationBtn from '@/view/components/notificationBtn/NotificationBtn';
 import NotificationSettingsButton from '@/view/components/notifications/NotificationSettingsButton';
 import HeaderMenu from '../nav/top/headerMenu/HeaderMenu';
+import { HOME_PATH } from '@/view/components/atomic/organisms/BottomNav/bottomNavModel';
 import Back from './Back';
 import styles from './QuestionHeader.module.scss';
 
@@ -47,6 +50,11 @@ const QuestionHeaderBar: FC<QuestionHeaderBarProps> = ({
 	const { t, currentLanguage } = useTranslation();
 	const navigate = useNavigate();
 	const topParent = useAppSelector(statementSelector(statement.topParentId));
+	const user = useAppSelector(creatorSelector);
+	const openAskQuestion = useOpenAskQuestion();
+	// A group is where questions are asked; the phone Discussion tab has no
+	// floating bar "+" any more, so the menu carries it (signed-in people only).
+	const canAskQuestion = !!user && statement.statementType === StatementType.group;
 	const isFollowMeActive = !!topParent?.followMe && topParent.followMe !== '';
 
 	function goToScreen(target: Screen | 'settings') {
@@ -106,6 +114,18 @@ const QuestionHeaderBar: FC<QuestionHeaderBarProps> = ({
 					setIsMenuOpen(false);
 					navigate(`/map/${statement.statementId}`);
 				}}
+				onNavigateHome={() => {
+					setIsMenuOpen(false);
+					navigate(HOME_PATH);
+				}}
+				onAskQuestion={
+					canAskQuestion
+						? () => {
+								setIsMenuOpen(false);
+								openAskQuestion();
+							}
+						: undefined
+				}
 				isFollowMeActive={isFollowMeActive}
 				extraItems={
 					<div className={styles.header__menuRow}>

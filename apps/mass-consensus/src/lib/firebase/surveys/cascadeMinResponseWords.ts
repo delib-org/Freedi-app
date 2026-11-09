@@ -2,6 +2,7 @@ import { Collections, type Statement } from '@freedi/shared-types';
 import { getFirestoreAdmin } from '../admin';
 import type { Survey } from '@/types/survey';
 import { logger } from '@/lib/utils/logger';
+import { keepRosterAdministeredWrites } from './questionAdminAccess';
 
 /**
  * Cascade the per-question `minResponseWords` override down to each question
@@ -65,6 +66,7 @@ export async function cascadeMinResponseWords(
 	const writesNeeded: {
 		ref: FirebaseFirestore.DocumentReference;
 		effective: number;
+		question: Statement;
 	}[] = [];
 	let skipped = 0;
 
@@ -91,16 +93,19 @@ export async function cascadeMinResponseWords(
 			continue;
 		}
 
-		writesNeeded.push({ ref: docRefs[i], effective: override });
+		writesNeeded.push({ ref: docRefs[i], effective: override, question: statement });
 	}
 
 	if (writesNeeded.length === 0) {
 		return { surveyId, totalQuestions: questionIds.length, updated: 0, skipped };
 	}
 
+	const allowed = await keepRosterAdministeredWrites(survey, writesNeeded, 'cascadeMinResponseWords');
+	skipped += writesNeeded.length - allowed.length;
+
 	let updated = 0;
-	for (let i = 0; i < writesNeeded.length; i += FIRESTORE_BATCH_LIMIT) {
-		const chunk = writesNeeded.slice(i, i + FIRESTORE_BATCH_LIMIT);
+	for (let i = 0; i < allowed.length; i += FIRESTORE_BATCH_LIMIT) {
+		const chunk = allowed.slice(i, i + FIRESTORE_BATCH_LIMIT);
 		const batch = db.batch();
 		for (const { ref, effective } of chunk) {
 			batch.update(ref, { 'statementSettings.minResponseWords': effective });

@@ -189,7 +189,6 @@ export const StatementSchema = object({
 	votes: optional(number()), // the number of votes for the statement
 	topVotedOption: optional(SimpleStatementSchema), // the top voted option of the statement
 	selections: optional(any()), // the top-options of the statement
-	isSelected: optional(boolean()), // if true, the statement is selected
 	isCluster: optional(boolean()),
 	integratedOptions: optional(array(string())), // source statement IDs merged into this cluster-option (many-to-many)
 	/**

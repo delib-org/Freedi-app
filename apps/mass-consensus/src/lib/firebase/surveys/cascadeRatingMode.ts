@@ -8,6 +8,7 @@ import {
 import { getFirestoreAdmin } from '../admin';
 import type { Survey } from '@/types/survey';
 import { logger } from '@/lib/utils/logger';
+import { keepRosterAdministeredWrites } from './questionAdminAccess';
 
 /**
  * Cascade the per-question rating-scale override (`ratingMode` + `ratingSteps`)
@@ -81,6 +82,7 @@ export async function cascadeRatingMode(
 		ref: FirebaseFirestore.DocumentReference;
 		effective: RatingMode;
 		steps: number;
+		question: Statement;
 	}[] = [];
 	let skipped = 0;
 
@@ -109,16 +111,19 @@ export async function cascadeRatingMode(
 			continue;
 		}
 
-		writesNeeded.push({ ref: docRefs[i], effective: override, steps });
+		writesNeeded.push({ ref: docRefs[i], effective: override, steps, question: statement });
 	}
 
 	if (writesNeeded.length === 0) {
 		return { surveyId, totalQuestions: questionIds.length, updated: 0, skipped };
 	}
 
+	const allowed = await keepRosterAdministeredWrites(survey, writesNeeded, 'cascadeRatingMode');
+	skipped += writesNeeded.length - allowed.length;
+
 	let updated = 0;
-	for (let i = 0; i < writesNeeded.length; i += FIRESTORE_BATCH_LIMIT) {
-		const chunk = writesNeeded.slice(i, i + FIRESTORE_BATCH_LIMIT);
+	for (let i = 0; i < allowed.length; i += FIRESTORE_BATCH_LIMIT) {
+		const chunk = allowed.slice(i, i + FIRESTORE_BATCH_LIMIT);
 		const batch = db.batch();
 		for (const { ref, effective, steps } of chunk) {
 			batch.update(ref, {

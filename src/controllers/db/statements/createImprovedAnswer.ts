@@ -2,6 +2,9 @@ import { ParagraphType, Statement, StatementType } from '@freedi/shared-types';
 import { createStatement } from './createStatement';
 import { setStatementToDB } from './writeStatement';
 import { generateParagraphId } from '@/utils/paragraphUtils';
+import { store } from '@/redux/store';
+import { announceAnswerPublished } from '@/controllers/db/subscriptions/answerPublished';
+import { subscribeAuthorToAnswer } from '@/controllers/db/subscriptions/subscribeAuthorToAnswer';
 import { logError, ValidationError } from '@/utils/errorHandling';
 
 export interface CreateImprovedAnswerInput {
@@ -62,6 +65,11 @@ export async function createImprovedAnswer({
 
 		const saved = await setStatementToDB({ statement: next, parentStatement: parent });
 		if (!saved) throw new Error('Could not save the revised answer');
+
+		// The new answer's author gets their own subscription (replies ride on it)
+		// and the notification-choices prompt, like any other new answer.
+		await subscribeAuthorToAnswer(saved.statement, saved.statement.creator);
+		announceAnswerPublished(store.dispatch, saved.statementId, parent);
 
 		return saved.statement;
 	} catch (error) {

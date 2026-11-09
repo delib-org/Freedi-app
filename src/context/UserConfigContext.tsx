@@ -210,20 +210,11 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({ children
 		};
 	}, [config.chosenLanguage]);
 
-	// Apply color contrast effect
+	// Apply color contrast: the theme layer (view/style/_theme-contrast.scss) keys off
+	// this attribute, so dark mode and high contrast resolve in the stylesheet
+	// instead of fighting over inline styles on <html>.
 	useEffect(() => {
-		const colorMappings: Record<string, string> = {
-			'--primary-color': '--high-contrast-primary',
-			'--secondary-color': '--high-contrast-secondary',
-			// Add other color mappings as needed
-		};
-
-		for (const [key, contrastKey] of Object.entries(colorMappings)) {
-			document.documentElement.style.setProperty(
-				key,
-				config.colorContrast ? `var(${contrastKey})` : '',
-			);
-		}
+		document.documentElement.dataset.contrast = config.colorContrast ? 'high' : 'normal';
 	}, [config.colorContrast]);
 
 	// Create context value

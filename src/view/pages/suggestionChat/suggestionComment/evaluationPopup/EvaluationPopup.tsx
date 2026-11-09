@@ -79,6 +79,7 @@ const EvaluationPopup: FC<Props> = ({ parentStatement }) => {
 						statement={parentStatement}
 						isActive={evaluationScore !== undefined}
 						evaluationThumb={thumb}
+						showLabel={false}
 						onEvaluate={() => {
 							/* read-only in popup */
 						}}
@@ -89,7 +90,7 @@ const EvaluationPopup: FC<Props> = ({ parentStatement }) => {
 					onClick={() => setShowAllEvaluations(false)}
 					className={styles['evaluation-popup__thumbs']}
 				>
-					<EnhancedEvaluation statement={parentStatement} />
+					<EnhancedEvaluation statement={parentStatement} hideFaceLabels />
 				</button>
 			)}
 		</div>
