@@ -87,7 +87,7 @@ const ChatInput: FC<Props> = ({
 		<div className={sideChat ? styles.sideChatInput : styles.chatInput}>
 			{hasEvaluation && (
 				<div className={styles.eval}>
-					<EnhancedEvaluation statement={statement} />
+					<EnhancedEvaluation statement={statement} hideFaceLabels />
 				</div>
 			)}
 			{replyToStatement && (
