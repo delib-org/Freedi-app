@@ -1,4 +1,4 @@
-import React, { FC, useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { memo, FC, useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Statement } from '@freedi/shared-types';
 import { Layers, Sparkles, Tags, ChevronDown, ChevronRight, RefreshCw, Undo2 } from 'lucide-react';
@@ -440,7 +440,7 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 					</>
 				)}
 				<div className={styles['tree-option-node__evaluation']}>
-					<Evaluation statement={statement} />
+					<Evaluation statement={statement} hideFaceLabels />
 				</div>
 				<div className={styles['tree-option-node__actions']}>
 					<button
@@ -514,4 +514,4 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 	);
 };
 
-export default React.memo(TreeOptionNode);
+export default memo(TreeOptionNode);
