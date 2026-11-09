@@ -261,11 +261,7 @@ export async function notifyStatementSubscribers(
 			// Interruptive channels delivered now.
 			if (decision.push && channels.sub.tokens && channels.sub.tokens.length > 0) {
 				for (const token of channels.sub.tokens) {
-					fcmSubscribers.push({
-						userId: uid,
-						token,
-						documentId: `${uid}_${statement.parentId}`,
-					});
+					fcmSubscribers.push({ userId: uid, token });
 				}
 			}
 			if (decision.email && channels.sub.user?.email) {

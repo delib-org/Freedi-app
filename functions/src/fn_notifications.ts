@@ -18,7 +18,6 @@ import { removeTokensFromUserSubscriptions } from './utils/removeSubscriptionTok
 export interface FcmSubscriber {
 	userId: string;
 	token: string;
-	documentId?: string;
 }
 
 interface SendResult {
@@ -197,7 +196,6 @@ export async function updateInAppNotifications(
 					fcmSubscribers.push({
 						userId: subscriber.userId,
 						token: token,
-						documentId: `${subscriber.userId}_${statement.parentId}`,
 					});
 				});
 			}
@@ -308,9 +306,10 @@ async function processInAppNotifications(
 
 /**
  * Removes invalid tokens from all relevant collections:
- * 1. askedToBeNotified (legacy)
- * 2. pushNotifications (token metadata)
- * 3. statementsSubscribe.tokens[] (subscription tokens array)
+ * 1. pushNotifications (token metadata)
+ * 2. statementsSubscribe.tokens[] (subscription tokens array)
+ *
+ * Legacy askedToBeNotified docs are cleaned by fn_tokenCleanup, which finds them by token.
  */
 async function removeInvalidTokens(invalidTokens: FcmSubscriber[]): Promise<void> {
 	if (invalidTokens.length === 0) return;
@@ -318,12 +317,6 @@ async function removeInvalidTokens(invalidTokens: FcmSubscriber[]): Promise<void
 	const batch = db.batch();
 
 	for (const subscriber of invalidTokens) {
-		// Remove from askedToBeNotified collection (legacy)
-		if (subscriber.documentId) {
-			const docRef = db.doc(`${Collections.askedToBeNotified}/${subscriber.documentId}`);
-			batch.delete(docRef);
-		}
-
 		// Remove from pushNotifications collection
 		const pushNotificationRef = db.doc(`${Collections.pushNotifications}/${subscriber.token}`);
 		batch.delete(pushNotificationRef);
