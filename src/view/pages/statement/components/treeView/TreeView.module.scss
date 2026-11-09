@@ -11,6 +11,12 @@
 		position: relative;
 		padding: var(--padding, 16px);
 		padding-bottom: var(--page-bottom-clearance);
+
+		// The reply input is position: fixed on phones, and the shell no longer
+		// reserves the nav's clearance on Discussion: keep the last cards reachable.
+		@media (max-width: 1023px) {
+			padding-bottom: calc(var(--space-2xl) * 2 + var(--space-md) + env(safe-area-inset-bottom, 0px));
+		}
 		flex: 1;
 	}
 

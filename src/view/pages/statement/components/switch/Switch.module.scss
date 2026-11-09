@@ -205,6 +205,13 @@
 	padding: 16px 20px 32px;
 	background: var(--bg-page);
 }
+// The chat input is the only bottom control on a phone's Discussion tab, so the
+// dead strip under it goes (the shell drops its nav clearance on its own).
+@media (max-width: 1023px) {
+	.questionMain--withComposer {
+		padding-block-end: 0;
+	}
+}
 :global(.thinking-space) :global(.page__main).questionMain {
 	padding-inline: 20px;
 	background: var(--bg-page);

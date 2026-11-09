@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { FC, useCallback, useContext, useLayoutEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { useSelector } from 'react-redux';
 import { Screen, Statement, StatementType } from '@freedi/shared-types';
@@ -98,7 +98,9 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	);
 	const activeView = resolveActiveView(tabParam, statement, tabs);
 
-	useEffect(() => {
+	// Layout effect: the parent decides whether the floating nav shows from this
+	// view, so it must land before paint or the nav blinks when opening on Answers.
+	useLayoutEffect(() => {
 		onActiveViewChange(activeView);
 	}, [activeView, onActiveViewChange]);
 
