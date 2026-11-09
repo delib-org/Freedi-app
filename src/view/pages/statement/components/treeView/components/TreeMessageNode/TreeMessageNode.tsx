@@ -22,6 +22,7 @@ import { useBookmark } from '@/controllers/hooks/useBookmark';
 import SendIcon from '@/view/components/icons/SendIcon';
 import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
 import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
+import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 import UnreadMessagesBadge from '@/view/components/unreadBadge/UnreadMessagesBadge';
 import ChatQuestionSummary from './ChatQuestionSummary';
 import styles from './TreeMessageNode.module.scss';
@@ -32,6 +33,9 @@ interface TreeMessageNodeProps {
 	hasChildren: boolean;
 	onReplySubmitted?: () => void;
 	onReply?: (statement: Statement) => void;
+	/** Discussion tab: one chat button opens the message's conversation panel, replacing
+	 *  the reply button and box. Tree view leaves this off and keeps nested replies. */
+	opensChatSheet?: boolean;
 }
 
 const SWIPE_THRESHOLD = 60;
@@ -48,6 +52,7 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 	hasChildren,
 	onReplySubmitted,
 	onReply,
+	opensChatSheet = false,
 }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
@@ -297,13 +302,15 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 				)}
 				{isQuestion && <ChatQuestionSummary statement={statement} />}
 				<div className={styles['tree-message-node__actions']}>
-					<button
-						className={styles['tree-message-node__action-btn']}
-						onClick={onReply ? () => onReply(statement) : handleReplyToggle}
-						aria-label={t('reply')}
-					>
-						{t('reply')}
-					</button>
+					{!opensChatSheet && (
+						<button
+							className={styles['tree-message-node__action-btn']}
+							onClick={onReply ? () => onReply(statement) : handleReplyToggle}
+							aria-label={t('reply')}
+						>
+							{t('reply')}
+						</button>
+					)}
 					{canPropose && (
 						<button
 							className={styles['tree-message-node__action-btn']}
@@ -334,7 +341,16 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 							{t('Drill down')}
 						</button>
 					)}
-					<UnreadMessagesBadge statementId={statement.statementId} />
+					{opensChatSheet ? (
+						<StatementChatMore
+							statement={statement}
+							variant="round"
+							opensSheet
+							sheetSubject="message"
+						/>
+					) : (
+						<UnreadMessagesBadge statementId={statement.statementId} />
+					)}
 					<button
 						className={`${styles['tree-message-node__action-btn']} ${styles['tree-message-node__bookmark-btn']} ${isBookmarked ? styles['tree-message-node__bookmark-btn--active'] : ''}`}
 						onClick={toggleBookmark}
@@ -362,7 +378,7 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 					/>
 				)}
 
-				{showReplyInput && (
+				{showReplyInput && !opensChatSheet && (
 					<form className={styles['tree-message-node__reply-form']} onSubmit={handleReplySubmit}>
 						<textarea
 							ref={replyInputRef}

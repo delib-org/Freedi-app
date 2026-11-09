@@ -28,7 +28,11 @@ export interface AnswerChatSheetProps {
 	answerId: string;
 	/** Shown as the sheet title. */
 	answerText: string;
+	/** What the thread hangs under; picks the wording. Answers by default. */
+	subject?: AnswerChatSheetSubject;
 }
+
+export type AnswerChatSheetSubject = 'answer' | 'message';
 
 const AnswerChatSheet: React.FC<AnswerChatSheetProps> = ({ isOpen, ...rest }) => {
 	// Listeners only run while open, so a list of cards costs nothing.
@@ -39,7 +43,12 @@ const AnswerChatSheet: React.FC<AnswerChatSheetProps> = ({ isOpen, ...rest }) =>
 
 type PanelProps = Omit<AnswerChatSheetProps, 'isOpen'>;
 
-const AnswerChatSheetPanel: React.FC<PanelProps> = ({ onClose, answerId, answerText }) => {
+const AnswerChatSheetPanel: React.FC<PanelProps> = ({
+	onClose,
+	answerId,
+	answerText,
+	subject = 'answer',
+}) => {
 	const { t, dir } = useTranslation();
 	const titleId = `${useId()}-answer-chat-title`;
 	const panelRef = useRef<HTMLDivElement>(null);
@@ -79,6 +88,13 @@ const AnswerChatSheetPanel: React.FC<PanelProps> = ({ onClose, answerId, answerT
 		if (listElement) listElement.scrollTop = listElement.scrollHeight;
 	}, [listElement, messages.length]);
 
+	const isMessage = subject === 'message';
+	const eyebrow = isMessage
+		? t('Conversation about the message')
+		: t('Conversation about the answer');
+	const placeholder = isMessage
+		? t('Add to the conversation about the message…')
+		: t('Add to the conversation about the answer…');
 	const canSend = draft.trim().length > 0 && !!answer;
 
 	const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
@@ -103,7 +119,7 @@ const AnswerChatSheetPanel: React.FC<PanelProps> = ({ onClose, answerId, answerT
 				<div className={styles.handle} aria-hidden="true" />
 				<div className={styles.header}>
 					<div className={styles.heading}>
-						<span className={styles.eyebrow}>{t('Conversation about the answer')}</span>
+						<span className={styles.eyebrow}>{eyebrow}</span>
 						<h2 id={titleId} className={styles.title} dir="auto">
 							{answerText}
 						</h2>
@@ -135,8 +151,8 @@ const AnswerChatSheetPanel: React.FC<PanelProps> = ({ onClose, answerId, answerT
 						className={styles.input}
 						value={draft}
 						onChange={(event) => setDraft(event.target.value)}
-						placeholder={t('Add to the conversation about the answer…')}
-						aria-label={t('Add to the conversation about the answer…')}
+						placeholder={placeholder}
+						aria-label={placeholder}
 						data-testid="answer-chat-sheet-input"
 					/>
 					<button

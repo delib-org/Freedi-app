@@ -260,7 +260,7 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 							statement={statementSub}
 							parentStatement={statement}
 							hasChildren={false}
-							onReply={setReplyToStatement}
+							opensChatSheet
 						/>
 					)}
 				</div>

@@ -6,6 +6,17 @@ jest.mock('@/view/components/unreadBadge/UnreadMessagesBadge', () => ({
 	__esModule: true,
 	default: () => null,
 }));
+jest.mock(
+	'@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore',
+	() => ({
+		__esModule: true,
+		default: ({ statement, sheetSubject }: { statement: Statement; sheetSubject?: string }) => (
+			<button type="button" data-testid="chat-button" data-subject={sheetSubject}>
+				{statement.statementId}
+			</button>
+		),
+	}),
+);
 jest.mock('react-router', () => ({ useNavigate: () => jest.fn() }));
 jest.mock('@/controllers/hooks/useTranslation', () => ({
 	useTranslation: () => ({ t: (key: string) => key }),
@@ -81,8 +92,15 @@ const makeStatement = (extra: Partial<Statement>): Statement =>
 		...extra,
 	}) as Statement;
 
-const renderNode = (statement: Statement): void => {
-	render(<TreeMessageNode statement={statement} parentStatement={undefined} hasChildren={false} />);
+const renderNode = (statement: Statement, opensChatSheet = false): void => {
+	render(
+		<TreeMessageNode
+			statement={statement}
+			parentStatement={undefined}
+			hasChildren={false}
+			opensChatSheet={opensChatSheet}
+		/>,
+	);
 };
 
 describe('TreeMessageNode question summary', () => {
@@ -103,5 +121,30 @@ describe('TreeMessageNode question summary', () => {
 		renderNode(makeStatement({ statementType: StatementType.statement, summary: 'Hidden' }));
 
 		expect(screen.queryByText('chatQuestion.answerLabel')).toBeNull();
+	});
+});
+
+describe('TreeMessageNode chat button', () => {
+	const message = makeStatement({ statementType: StatementType.statement });
+
+	it('shows one chat button with the message wording and no reply button on the Discussion tab', () => {
+		renderNode(message, true);
+
+		expect(screen.getAllByTestId('chat-button')).toHaveLength(1);
+		expect(screen.getByTestId('chat-button')).toHaveAttribute('data-subject', 'message');
+		expect(screen.queryByRole('button', { name: 'reply' })).toBeNull();
+	});
+
+	it('keeps the reply button and no chat button in tree view', () => {
+		renderNode(message, false);
+
+		expect(screen.getByRole('button', { name: 'reply' })).toBeInTheDocument();
+		expect(screen.queryByTestId('chat-button')).toBeNull();
+	});
+
+	it('keeps the bookmark action beside the chat button', () => {
+		renderNode(message, true);
+
+		expect(screen.getByRole('button', { name: 'Bookmark' })).toBeInTheDocument();
 	});
 });

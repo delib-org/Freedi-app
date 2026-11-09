@@ -17,7 +17,10 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { markStatementSeen } from '@/controllers/db/subscriptions/setSubscriptions';
 import { useUnreadMessageCount } from '@/controllers/hooks/useUnreadMessageCount';
 import { translateCount } from '@/helpers/translateCount';
-import { AnswerChatSheet } from '@/view/components/atomic/molecules/AnswerChatSheet';
+import {
+	AnswerChatSheet,
+	AnswerChatSheetSubject,
+} from '@/view/components/atomic/molecules/AnswerChatSheet';
 
 export type StatementChatMoreVariant = 'bubble' | 'pill' | 'round';
 
@@ -33,6 +36,8 @@ interface Props {
 	/** Open the thread in a bottom sheet instead of navigating to the chat page.
 	 *  Off by default so every other call site keeps navigating. */
 	opensSheet?: boolean;
+	/** Wording of the sheet: a conversation about an answer (default) or a message. */
+	sheetSubject?: AnswerChatSheetSubject;
 }
 
 /**
@@ -56,6 +61,7 @@ const StatementChatMore: FC<Props> = ({
 	showMessageCount = true,
 	variant = 'bubble',
 	opensSheet = false,
+	sheetSubject = 'answer',
 }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
@@ -255,6 +261,7 @@ const StatementChatMore: FC<Props> = ({
 			onClose={() => setIsSheetOpen(false)}
 			answerId={statement.statementId}
 			answerText={statement.statement}
+			subject={sheetSubject}
 		/>
 	);
 
