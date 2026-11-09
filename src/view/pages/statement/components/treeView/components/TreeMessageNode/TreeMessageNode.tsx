@@ -24,6 +24,7 @@ import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
 import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 import UnreadMessagesBadge from '@/view/components/unreadBadge/UnreadMessagesBadge';
+import { DiveInIconButton, BookmarkIconButton } from '../CardActionButtons/CardActionButtons';
 import ChatQuestionSummary from './ChatQuestionSummary';
 import styles from './TreeMessageNode.module.scss';
 
@@ -311,35 +312,12 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 							{t('reply')}
 						</button>
 					)}
-					{canPropose && (
-						<button
-							className={styles['tree-message-node__action-btn']}
-							onClick={makeProposal}
-							disabled={converting}
-						>
-							<Lightbulb size={14} />
-							{converting ? t('Saving...') : t('Make this a proposal')}
-						</button>
-					)}
-					{isQuestion && (
-						<button
-							className={styles['tree-message-node__action-btn']}
+					{(isQuestion || hasChildren) && (
+						<DiveInIconButton
+							className={`${styles['tree-message-node__action-btn']} ${styles['tree-message-node__action-btn--icon']}`}
 							onClick={handleDrillDown}
-							aria-label={t('Drill down')}
-						>
-							<span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-								jump_to_element
-							</span>
-						</button>
-					)}
-					{hasChildren && !isQuestion && (
-						<button
-							className={styles['tree-message-node__action-btn']}
-							onClick={handleDrillDown}
-							aria-label={t('Drill down')}
-						>
-							{t('Drill down')}
-						</button>
+							label="Drill down"
+						/>
 					)}
 					{opensChatSheet ? (
 						<StatementChatMore
@@ -351,21 +329,22 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 					) : (
 						<UnreadMessagesBadge statementId={statement.statementId} />
 					)}
-					<button
-						className={`${styles['tree-message-node__action-btn']} ${styles['tree-message-node__bookmark-btn']} ${isBookmarked ? styles['tree-message-node__bookmark-btn--active'] : ''}`}
+					<BookmarkIconButton
+						className={`${styles['tree-message-node__action-btn']} ${styles['tree-message-node__action-btn--icon']} ${styles['tree-message-node__bookmark-btn']}`}
+						activeClassName={styles['tree-message-node__bookmark-btn--active']}
+						isBookmarked={isBookmarked}
 						onClick={toggleBookmark}
-						aria-label={isBookmarked ? t('Remove bookmark') : t('Bookmark')}
-					>
-						<span
-							className="material-symbols-outlined"
-							style={{
-								fontSize: 18,
-								fontVariationSettings: isBookmarked ? "'FILL' 1" : "'FILL' 0",
-							}}
+					/>
+					{canPropose && (
+						<button
+							className={styles['tree-message-node__action-btn']}
+							onClick={makeProposal}
+							disabled={converting}
 						>
-							bookmark
-						</span>
-					</button>
+							<Lightbulb size={14} />
+							{converting ? t('Saving...') : t('Make this a proposal')}
+						</button>
+					)}
 				</div>
 
 				{conversionError && <p role="alert">{conversionError}</p>}

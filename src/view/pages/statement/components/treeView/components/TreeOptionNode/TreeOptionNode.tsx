@@ -26,6 +26,7 @@ import JoinButtons from '@/view/pages/statement/components/joining/JoinButtons';
 import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 import UnreadMessagesBadge from '@/view/components/unreadBadge/UnreadMessagesBadge';
+import { DiveInIconButton, BookmarkIconButton } from '../CardActionButtons/CardActionButtons';
 import styles from './TreeOptionNode.module.scss';
 
 // Stable empty array reference shared across all non-synthesis nodes, so the
@@ -458,28 +459,10 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 							{t('reply')}
 						</button>
 					)}
-					<button
-						className={styles['tree-option-node__action-btn']}
+					<DiveInIconButton
+						className={`${styles['tree-option-node__action-btn']} ${styles['tree-option-node__action-btn--icon']}`}
 						onClick={() => navigate(`/statement/${statement.statementId}`)}
-						aria-label={t('Dive in')}
-					>
-						{t('Dive in')}
-					</button>
-					<button
-						className={`${styles['tree-option-node__action-btn']} ${styles['tree-option-node__bookmark-btn']} ${isBookmarked ? styles['tree-option-node__bookmark-btn--active'] : ''}`}
-						onClick={toggleBookmarkFn}
-						aria-label={isBookmarked ? t('Remove bookmark') : t('Bookmark')}
-					>
-						<span
-							className="material-symbols-outlined"
-							style={{
-								fontSize: 18,
-								fontVariationSettings: isBookmarked ? "'FILL' 1" : "'FILL' 0",
-							}}
-						>
-							bookmark
-						</span>
-					</button>
+					/>
 					{!opensChatSheet && childCount > 0 && onToggleChildren && (
 						<button
 							className={styles['tree-option-node__reply-counter']}
@@ -494,6 +477,12 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 					) : (
 						<UnreadMessagesBadge statementId={statement.statementId} />
 					)}
+					<BookmarkIconButton
+						className={`${styles['tree-option-node__action-btn']} ${styles['tree-option-node__action-btn--icon']} ${styles['tree-option-node__bookmark-btn']}`}
+						activeClassName={styles['tree-option-node__bookmark-btn--active']}
+						isBookmarked={isBookmarked}
+						onClick={toggleBookmarkFn}
+					/>
 					<JoinButtons statement={statement} parentStatement={parentStatement} />
 				</div>
 				{showReplyInput && !opensChatSheet && (

@@ -1,4 +1,5 @@
 @use '@/view/style/dark-scope' as *;
+@use '@/view/style/mixins' as m;
 
 .tree-option-node {
 	display: flex;
@@ -493,6 +494,7 @@
 
 	&__actions {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		gap: 8px;
 		margin-top: 4px;
@@ -624,5 +626,17 @@
 			outline: 2px solid var(--btn-primary, #5f88e5);
 			outline-offset: -2px;
 		}
+	}
+}
+
+// Phone tap targets: every action button reaches 44px tall, icon-only ones 44px wide.
+@include m.mobile {
+	.tree-option-node__action-btn {
+		min-height: 44px;
+	}
+
+	.tree-option-node__action-btn--icon {
+		min-width: 44px;
+		justify-content: center;
 	}
 }

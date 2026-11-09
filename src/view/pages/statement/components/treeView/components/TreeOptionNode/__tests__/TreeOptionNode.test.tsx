@@ -130,6 +130,27 @@ describe('TreeOptionNode chat button', () => {
 		expect(screen.getByRole('button', { name: 'Bookmark' })).toBeInTheDocument();
 	});
 
+	it('orders the icon buttons Dive in, chat, bookmark', () => {
+		renderNode(true);
+
+		const names = screen
+			.getAllByRole('button')
+			.map((b) => b.getAttribute('aria-label') ?? b.textContent);
+
+		expect(names).toEqual(['Dive in', 's1', 'Bookmark']);
+		expect(screen.getByRole('button', { name: 'Dive in' })).toHaveTextContent('jump_to_element');
+	});
+
+	it('keeps Dive in before the bookmark in tree view', () => {
+		renderNode(false);
+
+		const names = screen
+			.getAllByRole('button')
+			.map((b) => b.getAttribute('aria-label') ?? b.textContent);
+
+		expect(names).toEqual(['reply', 'Dive in', '3 replies', 'Bookmark']);
+	});
+
 	it('keeps reply and the counter and no chat button in tree view', () => {
 		renderNode(false);
 
