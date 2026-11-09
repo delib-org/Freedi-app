@@ -7,10 +7,6 @@
 	position: relative;
 }
 
-.summarizeWrapper {
-	margin: 0 0 1rem;
-}
-
 .grid {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -19,15 +15,6 @@
 	@media screen and (max-width: 768px) {
 		grid-template-columns: 1fr;
 	}
-}
-
-.empty {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	padding: 3rem 1rem;
-	color: var(--text-body);
-	opacity: 0.6;
 }
 
 .onboarding {
@@ -86,10 +73,6 @@
 	min-width: 0;
 }
 .heading {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 24px;
 	margin-bottom: 24px;
 	h2 {
 		font-size: clamp(24px, 3vw, 34px);
@@ -111,11 +94,6 @@
 @media (max-width: 600px) {
 	.questionsView {
 		padding: 16px;
-	}
-	.heading {
-		align-items: flex-start;
-		flex-direction: column;
-		gap: 16px;
 	}
 }
 
