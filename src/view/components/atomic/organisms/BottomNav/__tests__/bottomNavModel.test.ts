@@ -41,4 +41,10 @@ describe('map screens', () => {
 		expect(shouldShowBottomNav('/statement/q1')).toBe(true);
 		expect(shouldShowBottomNav('/home')).toBe(true);
 	});
+
+	it("stays on a group's Questions tab, the only add control there (pathname ignores ?tab=questions)", () => {
+		expect(shouldShowBottomNav('/statement/g1')).toBe(true);
+		expect(shouldShowBottomNav('/statement-screen/g1')).toBe(true);
+		expect(resolveBottomNavItem('/statement/g1', '?tab=questions')).toBe('home');
+	});
 });
