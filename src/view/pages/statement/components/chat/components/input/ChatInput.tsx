@@ -2,7 +2,6 @@ import React, { FC, useState, useEffect, useRef } from 'react';
 import styles from './ChatInput.module.scss';
 import { logError } from '@/utils/errorHandling';
 import { handleAddStatement } from './StatementInputCont';
-import useStatementColor from '@/controllers/hooks/useStatementColor';
 import SendIcon from '@/view/components/icons/SendIcon';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -29,8 +28,7 @@ const ChatInput: FC<Props> = ({
 }) => {
 	if (!statement) throw new Error('No statement');
 
-	const { t, rowDirection } = useTranslation();
-	const statementColor = useStatementColor({ statement });
+	const { t, dir } = useTranslation();
 	const [message, setMessage] = useState('');
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -113,22 +111,13 @@ const ChatInput: FC<Props> = ({
 					</button>
 				</div>
 			)}
-			<form
-				onSubmit={(e) => handleSubmitInput(e)}
-				name="theForm"
-				style={{ flexDirection: rowDirection }}
-			>
+			<form className={styles.form} dir={dir} onSubmit={(e) => handleSubmitInput(e)} name="theForm">
 				<textarea
-					style={{
-						borderTop: `2px solid ${statementColor.backgroundColor}`,
-						minHeight: '40px',
-						resize: 'none',
-						overflow: 'hidden',
-					}}
+					className={styles.textarea}
 					data-cy="statement-chat-input"
-					className="page__footer__form__input"
 					aria-label={t('Share a thought')}
 					name="newStatement"
+					rows={1}
 					ref={textareaRef}
 					onKeyUp={(e) => handleKeyUp(e)}
 					value={message}
@@ -142,12 +131,12 @@ const ChatInput: FC<Props> = ({
 				></textarea>
 				<button
 					type="submit"
+					className={styles.send}
 					aria-label={t('Send message')}
 					disabled={!message.trim()}
-					style={statementColor}
 					data-cy="statement-chat-send-btn"
 				>
-					<SendIcon color={statementColor.color} />
+					<SendIcon color="currentColor" />
 				</button>
 			</form>
 		</div>
