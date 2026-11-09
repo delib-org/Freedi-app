@@ -4686,5 +4686,21 @@
   "Could not update the summary": "No se pudo actualizar el resumen",
   "Show selected options only": "Mostrar solo las opciones seleccionadas",
   "Summary from": "Resumen del",
-  "The group is not split on any option": "El grupo no está dividido en ninguna opción"
+  "The group is not split on any option": "El grupo no está dividido en ninguna opción",
+  "Get notified about this question?": "¿Recibir notificaciones sobre esta pregunta?",
+  "Replies to my answers": "Respuestas a mis respuestas",
+  "New answers to this question": "Nuevas respuestas a esta pregunta",
+  "Your browser will ask for permission next.": "Tu navegador te pedirá permiso a continuación.",
+  "This device can't show push notifications. You can still see them in the app.": "Este dispositivo no puede mostrar notificaciones push. Aún puedes verlas en la aplicación.",
+  "What to notify me about": "Sobre qué notificarme",
+  "How to notify me": "Cómo notificarme",
+  "Loading preferences...": "Cargando preferencias...",
+  "In-App Notifications": "Notificaciones en la aplicación",
+  "See notifications when you're using the app": "Ver notificaciones mientras usas la aplicación",
+  "Push Notifications": "Notificaciones push",
+  "Get notified on all your devices even when the app is closed": "Recibe avisos en todos tus dispositivos aunque la aplicación esté cerrada",
+  "Browser notifications must be enabled first": "Primero hay que activar las notificaciones del navegador",
+  "Please enable browser notifications first": "Activa primero las notificaciones del navegador",
+  "Email Notifications": "Notificaciones por correo electrónico",
+  "Receive updates via email": "Recibir novedades por correo electrónico"
 }

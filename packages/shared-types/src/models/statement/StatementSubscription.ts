@@ -49,6 +49,13 @@ export const StatementSubscriptionSchema = object({
 	branchPreferences: optional(record(string(), BranchPreferenceSchema)), // Per-branch overrides keyed by branchStatementId
 	mutedUntil: optional(number()), // Snooze this single discussion until epoch-ms; undefined/past = not muted
 
+	// Answer notification choices — live on the person's subscription to a QUESTION.
+	// `false` vetoes that event on every channel; true or absent means no veto.
+	// Absent also means "never asked", so today's behaviour continues.
+	notifyOnReplies: optional(boolean()), // replies in the chat on my answers to this question
+	notifyOnNewAnswers: optional(boolean()), // new answers added to this question
+	notifyPromptClosedAt: optional(number()), // epoch-ms the first-answer prompt was closed; marks "asked"
+
 	// Join app — marks this subscription so the corresponding top-level
 	// statement appears on the join app's Main page list. `openedInJoin` is
 	// the epoch-ms when the user last created/opened it from join; presence

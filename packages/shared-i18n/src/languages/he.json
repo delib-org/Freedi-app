@@ -5402,5 +5402,21 @@
   "Could not update the summary": "לא ניתן היה לעדכן את הסיכום",
   "Show selected options only": "הצג רק את האפשרויות שנבחרו",
   "Summary from": "סיכום מתאריך",
-  "The group is not split on any option": "הקבוצה אינה חלוקה בנוגע לאף אפשרות"
+  "The group is not split on any option": "הקבוצה אינה חלוקה בנוגע לאף אפשרות",
+  "Get notified about this question?": "לקבל התראות על השאלה הזו?",
+  "Replies to my answers": "תגובות לתשובות שלי",
+  "New answers to this question": "תשובות חדשות לשאלה הזו",
+  "Your browser will ask for permission next.": "הדפדפן יבקש אישור בשלב הבא.",
+  "This device can't show push notifications. You can still see them in the app.": "המכשיר הזה לא יכול להציג התראות דחיפה. עדיין אפשר לראות אותן באפליקציה.",
+  "What to notify me about": "על מה לקבל התראות",
+  "How to notify me": "איך לקבל התראות",
+  "Loading preferences...": "טוען העדפות...",
+  "In-App Notifications": "התראות באפליקציה",
+  "See notifications when you're using the app": "לראות התראות בזמן השימוש באפליקציה",
+  "Push Notifications": "התראות דחיפה",
+  "Get notified on all your devices even when the app is closed": "לקבל התראות בכל המכשירים שלך, גם כשהאפליקציה סגורה",
+  "Browser notifications must be enabled first": "קודם צריך להפעיל התראות בדפדפן",
+  "Please enable browser notifications first": "נא להפעיל קודם התראות בדפדפן",
+  "Email Notifications": "התראות במייל",
+  "Receive updates via email": "לקבל עדכונים במייל"
 }

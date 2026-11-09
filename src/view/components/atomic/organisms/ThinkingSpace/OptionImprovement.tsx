@@ -10,6 +10,8 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { createStatement } from '@/controllers/db/statements/createStatement';
 import { setStatementToDB } from '@/controllers/db/statements/writeStatement';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
+import { announceAnswerPublished } from '@/controllers/db/subscriptions/answerPublished';
+import { subscribeAuthorToAnswer } from '@/controllers/db/subscriptions/subscribeAuthorToAnswer';
 import { useMemo } from 'react';
 import styles from './Agreement.module.scss';
 
@@ -65,6 +67,8 @@ export default function OptionImprovement({ statement }: { statement: Statement 
 			const saved = await setStatementToDB({ statement: next, parentStatement: parent });
 			if (!saved) throw new Error(t('Could not save the draft. Please try again.'));
 			dispatch(setStatement(saved.statement));
+			await subscribeAuthorToAnswer(saved.statement, saved.statement.creator);
+			announceAnswerPublished(dispatch, saved.statementId, parent);
 			navigate(`/statement/${saved.statementId}?tab=chat`);
 		} catch (e) {
 			if (!(e instanceof Error && e.name === 'AbortError'))

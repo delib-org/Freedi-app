@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { Outlet } from 'react-router';
 import { FirstRunGate } from './view/pages/firstRun/FirstRunGate';
 import AddStatementSheetContainer from './view/pages/statement/components/addStatement/AddStatementSheetContainer';
+import AnswerNotifyPromptHost from './view/components/notifications/answerNotifyPrompt/AnswerNotifyPromptHost';
 import { useAuthentication } from './controllers/hooks/useAuthentication';
 import { useAuthRedirect } from './controllers/hooks/useAuthRedirect';
 import LoadingPage from './view/pages/loadingPage/LoadingPage';
@@ -34,6 +35,7 @@ export default function App() {
 			<FirstRunGate user={user}>
 				<Outlet />
 				<AddStatementSheetContainer />
+				<AnswerNotifyPromptHost />
 			</FirstRunGate>
 		</Suspense>
 	);

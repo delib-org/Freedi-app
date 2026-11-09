@@ -37,6 +37,12 @@ import { db } from '../index';
 import { getDefaultQuestionType } from '../model/questionTypeDefaults';
 import { FcmSubscriber, processFcmNotificationsImproved } from '../fn_notifications';
 import { sendNotificationEmail } from './notificationEmail';
+import {
+	authorVetoesReplies,
+	isNewAnswer,
+	isReplyToAnswer,
+	vetoesNewAnswers,
+} from './answerNotifyGate';
 
 export interface NotifyOptions {
 	/** Distinguishes the event for copy/analytics; defaults to STATEMENT_REPLY. */
@@ -186,6 +192,20 @@ export async function notifyStatementSubscribers(
 	pushSnap.docs.forEach((d) => upsert(d.data() as StatementSubscription, 'push'));
 	emailSnap.docs.forEach((d) => upsert(d.data() as StatementSubscription, 'email'));
 
+	// The person's own choices for this question (above everything else except
+	// that mute/frequency still apply below): `false` is a veto on every channel.
+	const newAnswer = isNewAnswer(statement, parentStatement);
+	if (newAnswer) {
+		for (const [uid, channels] of byUid) {
+			if (vetoesNewAnswers(channels.sub)) byUid.delete(uid);
+		}
+	} else if (isReplyToAnswer(statement, parentStatement)) {
+		const authorUid = parentStatement.creator?.uid;
+		if (authorUid && byUid.has(authorUid) && (await authorVetoesReplies(parentStatement))) {
+			byUid.delete(authorUid);
+		}
+	}
+
 	if (byUid.size === 0) return;
 
 	const settingsMap = await loadSettings([...byUid.keys()]);
@@ -194,8 +214,10 @@ export async function notifyStatementSubscribers(
 	const creatorImage = statement.creator.photoURL ?? null; // Firestore rejects undefined
 	const targetPath = resolveTargetPath(opts, statement);
 	const sourceApp = opts.sourceApp ?? statement.sourceApp;
-	const triggerType = opts.triggerType ?? NotificationTriggerType.STATEMENT_REPLY;
-	const emailSubject = `New reply from ${statement.creator.displayName || 'someone'}`;
+	const triggerType =
+		opts.triggerType ??
+		(newAnswer ? NotificationTriggerType.NEW_ANSWER : NotificationTriggerType.STATEMENT_REPLY);
+	const emailSubject = `${newAnswer ? 'New answer' : 'New reply'} from ${statement.creator.displayName || 'someone'}`;
 
 	const batch = db.batch();
 	let batchWrites = 0;
@@ -292,7 +314,12 @@ export async function notifyStatementSubscribers(
 	if (batchWrites > 0) await batch.commit();
 
 	if (fcmSubscribers.length > 0) {
-		const sendResult = await processFcmNotificationsImproved(fcmSubscribers, statement);
+		const sendResult = await processFcmNotificationsImproved(
+			fcmSubscribers,
+			statement,
+			null,
+			newAnswer ? 'answer' : 'reply',
+		);
 		logger.info('Push notifications processed', {
 			statementId: statement.statementId,
 			parentId: statement.parentId,

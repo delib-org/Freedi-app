@@ -4805,5 +4805,21 @@
   "Could not update the summary": "تعذّر تحديث الملخّص",
   "Show selected options only": "عرض الخيارات المحددة فقط",
   "Summary from": "ملخّص بتاريخ",
-  "The group is not split on any option": "المجموعة غير منقسمة حول أي خيار"
+  "The group is not split on any option": "المجموعة غير منقسمة حول أي خيار",
+  "Get notified about this question?": "هل تريد تلقي إشعارات عن هذا السؤال؟",
+  "Replies to my answers": "الردود على إجاباتي",
+  "New answers to this question": "إجابات جديدة على هذا السؤال",
+  "Your browser will ask for permission next.": "سيطلب المتصفح الإذن في الخطوة التالية.",
+  "This device can't show push notifications. You can still see them in the app.": "لا يمكن لهذا الجهاز عرض إشعارات الدفع. لا يزال بإمكانك رؤيتها في التطبيق.",
+  "What to notify me about": "ما الذي أريد الإشعار بشأنه",
+  "How to notify me": "كيف يتم إشعاري",
+  "Loading preferences...": "جارٍ تحميل التفضيلات...",
+  "In-App Notifications": "الإشعارات داخل التطبيق",
+  "See notifications when you're using the app": "شاهد الإشعارات عند استخدام التطبيق",
+  "Push Notifications": "إشعارات الدفع",
+  "Get notified on all your devices even when the app is closed": "تلقَّ الإشعارات على جميع أجهزتك حتى عندما يكون التطبيق مغلقًا",
+  "Browser notifications must be enabled first": "يجب تفعيل إشعارات المتصفح أولًا",
+  "Please enable browser notifications first": "يرجى تفعيل إشعارات المتصفح أولًا",
+  "Email Notifications": "الإشعارات بالبريد الإلكتروني",
+  "Receive updates via email": "تلقَّ التحديثات عبر البريد الإلكتروني"
 }
