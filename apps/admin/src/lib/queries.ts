@@ -24,6 +24,11 @@ import {
 import type { AdminStatDoc, StatsPeriodType } from '@freedi/shared-types';
 import type { Unsubscribe, QuerySnapshot, DocumentData } from 'firebase/firestore';
 
+/** The adminStats source for vote counters (see functions/src/fn_adminStats.ts). */
+const VOTES_STAT = 'votes';
+/** How many years back the all-time vote total adds up; older years have no votes. */
+const VOTE_TOTAL_YEARS = 10;
+
 // ── Time-series helpers ──────────────────────────────────────────────
 
 export interface DayBucket {
@@ -154,15 +159,6 @@ export async function fetchEvaluationsPerDay(days: number = 30): Promise<DayBuck
 	const startMs = endMs - days * 86_400_000;
 	const docs = await fetchRecentDocs(Collections.evaluations, 'updatedAt', startMs);
 	const timestamps = docs.map((d) => toMillis(d.updatedAt));
-
-	return bucketize(timestamps, startMs, endMs);
-}
-
-export async function fetchVotesPerDay(days: number = 30): Promise<DayBucket[]> {
-	const endMs = Date.now();
-	const startMs = endMs - days * 86_400_000;
-	const docs = await fetchRecentDocs(Collections.votes, 'createdAt', startMs);
-	const timestamps = docs.map((d) => toMillis(d.createdAt));
 
 	return bucketize(timestamps, startMs, endMs);
 }
@@ -336,10 +332,24 @@ export async function fetchEvaluationCount(): Promise<number> {
 	return snap.data().count;
 }
 
+/**
+ * Every vote ever cast, summed from the yearly adminStats counters. The vote
+ * docs themselves say who chose what, so the rules keep them away from this
+ * dashboard: it only ever needs how many.
+ */
 export async function fetchVoteCount(): Promise<number> {
-	const snap = await getCountFromServer(collection(db, Collections.votes));
+	const yearKeys = generateYearKeys(VOTE_TOTAL_YEARS);
+	const stats = await fetchAdminStats(VOTES_STAT, 'year', yearKeys);
 
-	return snap.data().count;
+	return sumAdminStats(stats);
+}
+
+/** Votes per day for the last `days` days, from the daily adminStats counters. */
+export async function fetchVotesPerDay(days: number): Promise<DayBucket[]> {
+	const dayKeys = generateDayKeys(days);
+	const stats = await fetchAdminStats(VOTES_STAT, 'day', dayKeys);
+
+	return statsToBuckets(stats, dayKeys);
 }
 
 export async function fetchSuggestionCount(): Promise<number> {
@@ -422,6 +432,11 @@ export async function fetchAdminStats(
 	}
 
 	return results;
+}
+
+/** Add up the `total` of a list of stat docs; a missing doc counts as zero. */
+export function sumAdminStats(stats: Array<AdminStatDoc | null>): number {
+	return stats.reduce((sum, stat) => sum + (stat?.total ?? 0), 0);
 }
 
 /**

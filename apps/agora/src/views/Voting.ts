@@ -168,7 +168,7 @@ export function Voting(): m.Component<VotingAttrs> {
 			// The projector is never a ballot, whatever the caller said
 			const readOnly = board || vnode.attrs.readOnly === true;
 			const candidates: VotingCandidate[] = session.voting?.candidates ?? [];
-			const { selections, voterUids, loaded } = getVotingState();
+			const { selections, loaded } = getVotingState();
 			// What the student sees as their vote: the tap they just made, until
 			// the server has it, and the server's copy from then on.
 			const confirmedVote = getVotingState().myVoteStatementId;
@@ -210,7 +210,7 @@ export function Voting(): m.Component<VotingAttrs> {
 
 			// Everyone always knows how much of the class has spoken
 			const classSize = getSessionState().participants.length;
-			const votedCount = voterUids.size;
+			const votedCount = total;
 
 			/**
 			 * The student's ballot IS the page, so it wears the shell. The

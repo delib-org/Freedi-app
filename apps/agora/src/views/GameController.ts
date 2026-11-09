@@ -6,7 +6,7 @@ import {
 	papersFor,
 	stationPapersFor,
 } from '../lib/flows/villageModel';
-import { getVotingState } from '../lib/voting';
+import { getVotingState, totalVotes } from '../lib/voting';
 import { readStoredNav, storeNav } from '../lib/stageNavStore';
 import { sessionVillageMode } from '../lib/flows/sessionLinks';
 import { villagePlace } from '../lib/flows/villageRoute';
@@ -1053,7 +1053,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 					case AgoraStage.voting: {
 						if (!myParticipant) return noSeatYet();
-						listenToVoting(sessionId, session.challengeQuestionId, userId);
+						listenToVoting(sessionId, session.challengeQuestionId, userId, false);
 
 						return m(Voting, { session, myParticipant, userId, readOnly: !live });
 					}
@@ -1104,7 +1104,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const council = ((): CouncilModel | undefined => {
 				if (!villageMode) return undefined;
 				if (councilNeedsVotes(plan, currentIndex) && userId) {
-					listenToVoting(sessionId, session.challengeQuestionId, userId);
+					listenToVoting(sessionId, session.challengeQuestionId, userId, false);
 				}
 				const votes = getVotingState();
 				const { proposals, scores, characterReviews } = getDeliberationState();
@@ -1116,7 +1116,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					votes: {
 						selections: votes.selections,
 						myVoteStatementId: votes.myVoteStatementId,
-						votedCount: votes.voterUids.size,
+						votedCount: totalVotes(),
 					},
 					proposals,
 					scores,

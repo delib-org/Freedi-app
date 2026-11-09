@@ -2072,12 +2072,52 @@ service cloud.firestore {
     }
 
     // One vote per user per question, and the doc id says whose it is:
-    // `{userId}--{parentId}`. Anyone signed in may read the tallies, but a
-    // vote can only be written into your own slot — otherwise any authenticated
-    // user could overwrite the whole class's ballot. Withdrawal writes
-    // statementId 'none' rather than deleting, so the counting trigger can
-    // decrement; the delete rule is here only for account cleanup.
+    // `{userId}--{parentId}`. A vote doc says who chose what, so it is a secret
+    // ballot: you read your own, and the tallies come from the counters on the
+    // question (`selections`) and from adminStats, never from these docs.
+    // A vote can only be written into your own slot — otherwise any
+    // authenticated user could overwrite the whole class's ballot. Withdrawal
+    // writes statementId 'none' rather than deleting, so the counting trigger
+    // can decrement; the delete rule is here only for account cleanup.
     match /votes/{voteId} {
+      // Judged from the id, not from resource, so a first-time voter's read of
+      // their still-empty slot succeeds while another person's slot is refused
+      // whether or not it exists: "denied" must not mean "this person voted".
+      function isOwnVoteSlot() {
+        let prefix = string(request.auth.uid) + '--';
+        return voteId.size() > prefix.size() && voteId[0:prefix.size()] == prefix;
+      }
+      function isAdminOfStatement(statementId) {
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(statementId)));
+        return exists(subPath) &&
+               get(subPath).data.get('role', '') in ['admin', 'statement-creator'];
+      }
+      // Who may see every ballot of one question: its creator (in Agora, the
+      // session's teacher, who sees which students have voted) and the admins
+      // the host screen is open to. Never a join-class challenge: nothing in
+      // the lesson needs another student's ballot, so a teacher gets the
+      // counters like everyone else. Reached only through `parentId`, which is
+      // what forces a query to be scoped to one question.
+      function mayReadQuestionBallots(parentId) {
+        let path = /databases/$(database)/documents/statements/$(cleanPath(string(parentId)));
+        let question = exists(path) ? get(path).data : null;
+        return question != null &&
+               question.get('statementSettings', {}).get('classRole', '') != 'challenge' &&
+               (question.get('creatorId', '') == request.auth.uid ||
+                isAdminOfStatement(parentId) ||
+                isAdminOfStatement(question.get('parentId', 'none')) ||
+                isAdminOfStatement(question.get('topParentId', 'none')));
+      }
+      // join-class: the teacher acting for a student without a device follows
+      // that one slot (`nd_...--{challengeId}`), and may do so before it exists.
+      // The student has no login, so the class's admin is their only reader.
+      function isNoDeviceSlotOfMyClass() {
+        let owner = voteId.split('--')[0];
+        let path = /databases/$(database)/documents/statements/$(cleanPath(voteId[owner.size() + 2:voteId.size()]));
+        return owner.size() > 3 && owner[0:3] == 'nd_' && exists(path) &&
+               get(path).data.get('statementSettings', {}).get('classRole', '') == 'challenge' &&
+               isAdminOfStatement(get(path).data.get('parentId', 'none'));
+      }
       function agreementBallotOpen(parentId, optionId) {
         let path = /databases/$(database)/documents/statements/$(parentId);
         return !exists(path) || !get(path).data.keys().hasAny(['agreementBallot']) ||
@@ -2110,7 +2150,16 @@ service cloud.firestore {
                 (optionId == 'none' || optionId in ballot.get('candidateIds', [])) &&
                 classLessonWritable(get(path).data.get('parentId', 'none')));
       }
-      allow read: if request.auth.uid != null;
+      allow get: if request.auth != null &&
+                    (isOwnVoteSlot() ||
+                     isNoDeviceSlotOfMyClass() ||
+                     (resource != null && mayReadQuestionBallots(resource.data.get('parentId', 'none'))));
+      // A query is proven from its own filters: `userId == me`, or
+      // `parentId == X` by someone entitled to X. An unfiltered list proves
+      // neither and is refused, system admins included (adminStats has the totals).
+      allow list: if request.auth != null &&
+                     (resource.data.userId == request.auth.uid ||
+                      mayReadQuestionBallots(resource.data.parentId));
       allow create, update: if request.auth.uid != null &&
                                agreementBallotOpen(request.resource.data.parentId, request.resource.data.statementId) &&
                                notRemovedAgoraVoter(request.resource.data.parentId) &&
