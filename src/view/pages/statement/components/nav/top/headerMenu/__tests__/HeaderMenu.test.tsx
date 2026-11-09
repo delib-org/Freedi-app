@@ -3,6 +3,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { Statement } from '@freedi/shared-types';
 import HeaderMenu from '../HeaderMenu';
 
+jest.mock('@/assets/icons/addQuestion.svg?react', () => ({
+	__esModule: true,
+	default: () => null,
+}));
 jest.mock('@/assets/icons/homeIcon.svg?react', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/assets/icons/disconnectIcon.svg?react', () => ({
 	__esModule: true,
@@ -40,7 +44,7 @@ jest.mock('@/view/components/atomic/atoms/LanguagePill/LanguagePill', () => ({
 
 const noop = (): void => undefined;
 
-function renderMenu(onNavigateHome?: () => void): void {
+function renderMenu(onNavigateHome?: () => void, onAskQuestion?: () => void): void {
 	render(
 		<HeaderMenu
 			statement={{ statementId: 's1', statementSettings: {} } as Statement}
@@ -58,6 +62,7 @@ function renderMenu(onNavigateHome?: () => void): void {
 			onNavigateToScreen={noop}
 			onNavigateToClusterMap={noop}
 			onNavigateHome={onNavigateHome}
+			onAskQuestion={onAskQuestion}
 		/>,
 	);
 }
@@ -77,5 +82,24 @@ describe('HeaderMenu Home row', () => {
 		renderMenu();
 
 		expect(screen.queryByText('Home')).toBeNull();
+	});
+});
+
+describe('HeaderMenu Ask a question row', () => {
+	it('puts Ask a question after Home and calls onAskQuestion', () => {
+		const onAskQuestion = jest.fn();
+		renderMenu(noop, onAskQuestion);
+
+		const buttons = screen.getAllByRole('button');
+		expect(buttons[0]).toHaveTextContent('Home');
+		expect(buttons[1]).toHaveTextContent('Ask a question');
+		fireEvent.click(buttons[1]);
+		expect(onAskQuestion).toHaveBeenCalledTimes(1);
+	});
+
+	it('renders no Ask a question row when onAskQuestion is not given', () => {
+		renderMenu(noop);
+
+		expect(screen.queryByText('Ask a question')).toBeNull();
 	});
 });
