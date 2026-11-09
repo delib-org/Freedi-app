@@ -1,5 +1,3 @@
-@use '@/view/style/dark-scope' as *;
-
 .chatMessageCard {
   display: flex;
   flex-direction: column;
@@ -28,10 +26,6 @@
       font-size: 0.75rem;
       color: #075e54;
       font-weight: 600;
-
-      @include dark {
-        color: var(--tone-mint-ink);
-      }
     }
   }
 
@@ -135,10 +129,6 @@
       color: rgba(0, 0, 0, 0.45);
       margin-top: -0.25rem;
       line-height: 1;
-
-      @include dark {
-        color: var(--text-meta);
-      }
     }
 
     .actions {
@@ -226,10 +216,6 @@
       // WhatsApp style for regular statements only
       .messageBoxStatement {
         background-color: #d9fdd3;
-
-        @include dark {
-          background-color: var(--tone-mint);
-        }
         margin-right: 0.5rem;
         border-radius: 7.5px;
         border-top-right-radius: 0;
@@ -245,10 +231,6 @@
           border-style: solid;
           border-width: 0 0 10px 8px;
           border-color: transparent transparent transparent #d9fdd3;
-
-          @include dark {
-            border-color: transparent transparent transparent var(--tone-mint);
-          }
         }
       }
     }
@@ -280,10 +262,6 @@
 
       .messageBoxStatement {
         background-color: #d9fdd3;
-
-        @include dark {
-          background-color: var(--tone-mint);
-        }
         margin-left: 0.5rem;
         border-radius: 7.5px;
         border-top-right-radius: 0;
@@ -299,10 +277,6 @@
           border-style: solid;
           border-width: 0 0 10px 8px;
           border-color: transparent transparent transparent #d9fdd3;
-
-          @include dark {
-            border-color: transparent transparent transparent var(--tone-mint);
-          }
         }
       }
     }
@@ -329,10 +303,6 @@
       .messageBox {
         direction: rtl;
         background-color: #dcf8c6;
-
-        @include dark {
-          background-color: var(--tone-mint);
-        }
         margin-right: auto;
         margin-left: 3rem;
         border-right: 4px solid;
@@ -379,10 +349,6 @@
       .messageBox {
         direction: ltr;
         background-color: #dcf8c6;
-
-        @include dark {
-          background-color: var(--tone-mint);
-        }
         margin-left: auto;
         margin-right: 3rem;
         border-left: 4px solid;
@@ -539,10 +505,6 @@
   border-radius: 4px;
   background-color: rgba(0, 0, 0, 0.04);
   cursor: pointer;
-
-  @include dark {
-    background-color: var(--tone-glass);
-  }
   text-align: start;
   width: 100%;
   box-sizing: border-box;
@@ -587,12 +549,6 @@
   opacity: 0.5;
   transition: opacity 0.15s ease, color 0.15s ease;
   white-space: nowrap;
-
-  // Half-opacity ink on the tinted dark bubble falls under 4.5:1.
-  @include dark {
-    color: var(--text-meta);
-    opacity: 1;
-  }
 
   &:hover {
     opacity: 1;
