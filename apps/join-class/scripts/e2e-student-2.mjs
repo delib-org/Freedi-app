@@ -1,12 +1,13 @@
 // E2E of the student table screens part 2 (lane C3): screens-down talk, then (at Proposals, since
 // nobody writes or rates at Table talk) write + send, rate, vote, summary. Two phones (asker +
 // non-asker) at the same table.
-// The engine (lane C1 callables) is not on this branch, so the script writes the
-// table state with the admin SDK exactly as the engine would, and asserts that a
-// failing callable shows an inline error instead of crashing.
+// The script writes the table state with the admin SDK exactly as the engine would. With the
+// functions emulator on (default) the real classTableStep answers; with E2E_ENGINE=0 and no functions
+// emulator it asserts that a failing callable shows an inline error instead of crashing.
+// The app must run at clock speed 1 (no VITE_CLASS_CLOCK_SPEED): the countdown reads about 0:3x.
 //
 // Setup (C3 ports; repo root):
-//   npx firebase emulators:start -c firebase.c3.local.json --project freedi-test --only firestore,auth,database
+//   npx firebase emulators:start -c firebase.c3.local.json --project freedi-test --only firestore,auth,database,functions
 //   (rules: firestore.rules + a read rule for classTables, until C1 adds it)
 //   FIRESTORE_EMULATOR_HOST=localhost:8133 FIREBASE_AUTH_EMULATOR_HOST=localhost:9133 GCLOUD_PROJECT=freedi-test \
 //     npx tsx apps/join-class/scripts/seed-classroom.ts --step=4 --seated --proposals --support --id=c3main
@@ -26,7 +27,10 @@ import { BASE_URL as BASE, PROJECT_ID as PROJECT } from './e2e-env.mjs';
 
 const TIMEOUT = 20000;
 const here = dirname(fileURLToPath(import.meta.url));
-const ENGINE = process.env.E2E_ENGINE === '1';
+// The engine (classTableStep and the other callables) now exists, so the functions emulator is part of
+// the setup and the real callables answer. E2E_ENGINE=0 keeps the old no-functions mode (the callable
+// must then fail with an inline error).
+const ENGINE = process.env.E2E_ENGINE !== '0';
 // seed a class at step 4 (tables talking) with proposals and support, like the engine would leave it
 execFileSync(
 	'npx',
@@ -219,6 +223,8 @@ try {
 		'statementSettings.ballot': { candidateIds: candidates, frozenAt: Date.now(), closedAt: Date.now(), decisionId: candidates[1] },
 		// Results start closed; the decision card and support faces show once they are open.
 		'statementSettings.voteDisplay.liveResults': true,
+		// The support by side is teacher-only until she shares it (Trello 89fevjY5): share it.
+		'statementSettings.voteDisplay.supportShown': true,
 	});
 	await db.doc(`statements/${mainId}`).update({ 'statementSettings.lessonPlan.stepIndex': 7 });
 	await a.page.waitForSelector('.decision__text', { timeout: TIMEOUT });
