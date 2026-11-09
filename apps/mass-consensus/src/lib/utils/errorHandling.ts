@@ -36,6 +36,13 @@ export class ValidationError extends AppError {
   }
 }
 
+export class AuthorizationError extends AppError {
+  constructor(message: string, context?: Record<string, unknown>) {
+    super(message, 'AUTHORIZATION_ERROR', context, false);
+    this.name = 'AuthorizationError';
+  }
+}
+
 export class NetworkError extends AppError {
   constructor(message: string, context?: Record<string, unknown>) {
     super(message, 'NETWORK_ERROR', context, true);

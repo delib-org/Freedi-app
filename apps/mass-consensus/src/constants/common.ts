@@ -37,6 +37,14 @@ export const UI = {
 } as const;
 
 /**
+ * Limits on the question ids a survey request may name.
+ */
+export const SURVEY_QUESTIONS = {
+  /** Most ids whose ownership one request may ask us to check (each costs several reads) */
+  MAX_IDS_CHECKED_PER_REQUEST: 200,
+} as const;
+
+/**
  * Limits for the admin question-picker search. Search scans everything the
  * admin can access (any age), so these only guard against runaway reads.
  */
