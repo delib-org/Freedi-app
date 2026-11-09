@@ -1,11 +1,7 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import type { Firestore } from 'firebase-admin/firestore';
 import { Collections, type StatementSubscription } from '@freedi/shared-types';
-import {
-	FakeDocRef,
-	FakeFirestore,
-	FirestoreCodeError,
-} from '../../userFeed/__tests__/fakeFirestore';
+import { FakeFirestore, FirestoreCodeError } from '../../userFeed/__tests__/fakeFirestore';
 
 const mockLogError = jest.fn();
 
@@ -17,11 +13,7 @@ jest.mock('../../utils/errorHandling', () => ({
 	logError: (...args: unknown[]) => mockLogError(...args),
 }));
 
-import {
-	CREATED_SUBSCRIPTION_SOURCE,
-	stripCreatedSubscriptionTokens,
-	withoutPushTokens,
-} from '../stripSubscriptionTokens';
+import { stripCreatedSubscriptionTokens, withoutPushTokens } from '../stripSubscriptionTokens';
 
 const FIELD_DELETED = '__field_deleted__';
 const SUBS = Collections.statementsSubscribe;
@@ -48,6 +40,10 @@ describe('stripCreatedSubscriptionTokens', () => {
 		fake.seed(SUBS, SUB_ID, { userId: 'u1', tokens: ['t1'] });
 	});
 
+	afterEach(() => {
+		jest.restoreAllMocks();
+	});
+
 	it('does no read or write for a subscription without the field', async () => {
 		fake.seed(SUBS, SUB_ID, { userId: 'u1' });
 		fake.resetCounters();
@@ -58,18 +54,16 @@ describe('stripCreatedSubscriptionTokens', () => {
 		expect(fake.reads).toBe(0);
 	});
 
-	it('registers an unknown device for its owner, then removes the field', async () => {
+	it('removes the field once the device is registered to its owner', async () => {
+		fake.seed(PUSH, 't1', { token: 't1', userId: 'u1' });
+
 		await stripCreatedSubscriptionTokens(db(), SUB_ID, pushSub());
 
-		expect(fake.read(PUSH, 't1')).toMatchObject({
-			token: 't1',
-			userId: 'u1',
-			source: CREATED_SUBSCRIPTION_SOURCE,
-		});
 		expect(tokensField()).toBe(FIELD_DELETED);
+		expect(fake.read(PUSH, 't1')).toEqual({ token: 't1', userId: 'u1' });
 	});
 
-	it('never takes over a token someone else already holds', async () => {
+	it('never changes a token someone else holds', async () => {
 		fake.seed(PUSH, 't1', { token: 't1', userId: 'current-owner' });
 
 		await stripCreatedSubscriptionTokens(db(), SUB_ID, pushSub());
@@ -79,10 +73,29 @@ describe('stripCreatedSubscriptionTokens', () => {
 		expect(mockLogError).not.toHaveBeenCalled();
 	});
 
-	it('does not register a token from a subscription with push off', async () => {
+	it('registers nothing and keeps the field for a token with no owner document', async () => {
+		await stripCreatedSubscriptionTokens(db(), SUB_ID, pushSub());
+
+		expect(fake.size(PUSH)).toBe(0);
+		expect(tokensField()).toEqual(['t1']);
+		expect(mockLogError).not.toHaveBeenCalled();
+	});
+
+	it('keeps the whole field when only one of its tokens has no owner document', async () => {
+		fake.seed(PUSH, 't1', { token: 't1', userId: 'u1' });
+
+		await stripCreatedSubscriptionTokens(db(), SUB_ID, pushSub({ tokens: ['t1', 't2'] }));
+
+		expect(tokensField()).toEqual(['t1']);
+		expect(fake.writesTo(SUBS)).toBe(0);
+	});
+
+	it('removes a token from a subscription with push off, without looking it up', async () => {
+		fake.resetCounters();
+
 		await stripCreatedSubscriptionTokens(db(), SUB_ID, pushSub({ getPushNotification: false }));
 
-		expect(fake.read(PUSH, 't1')).toBeUndefined();
+		expect(fake.reads).toBe(0);
 		expect(tokensField()).toBe(FIELD_DELETED);
 	});
 
@@ -93,9 +106,9 @@ describe('stripCreatedSubscriptionTokens', () => {
 		expect(tokensField()).toBe(FIELD_DELETED);
 	});
 
-	it('keeps the field when registering failed, so the fallback still reaches the device', async () => {
+	it('keeps the field and logs no token when the lookup fails', async () => {
 		jest
-			.spyOn(FakeDocRef.prototype, 'create')
+			.spyOn(FakeFirestore.prototype, 'getAll')
 			.mockRejectedValueOnce(new FirestoreCodeError(14, 'path pushNotifications/t1 unavailable'));
 
 		await stripCreatedSubscriptionTokens(db(), SUB_ID, pushSub());
@@ -103,11 +116,11 @@ describe('stripCreatedSubscriptionTokens', () => {
 		expect(tokensField()).toEqual(['t1']);
 		expect(mockLogError).toHaveBeenCalledTimes(1);
 		const logged = mockLogError.mock.calls[0][0] as Error;
-		expect(logged.message).not.toContain('t1');
-		jest.restoreAllMocks();
+		expect(logged.message).toBe('Could not strip push tokens (code 14)');
 	});
 
 	it('stays quiet when the person already left', async () => {
+		fake.seed(PUSH, 't1', { token: 't1', userId: 'u1' });
 		fake.rowsOf(SUBS).delete(SUB_ID);
 
 		await expect(stripCreatedSubscriptionTokens(db(), SUB_ID, pushSub())).resolves.toBeUndefined();

@@ -1807,8 +1807,9 @@ service cloud.firestore {
       // refusing it would silently keep them out. A rule cannot accept a write
       // and drop one field of it, so the create stays allowed with at most the
       // one token those versions send, and onSubscriptionCreatedMembership
-      // removes it within seconds. Tighten this to no tokens at all when the
-      // old field is retired and those versions are gone.
+      // removes it within seconds if the device is in pushNotifications (else
+      // the cleanup script does). Tighten this to no tokens at all when the old
+      // field is retired and those versions are gone.
       function tokensCreateOk() {
         let tokens = request.resource.data.get('tokens', []);
         return tokens is list && tokens.size() <= 1;
