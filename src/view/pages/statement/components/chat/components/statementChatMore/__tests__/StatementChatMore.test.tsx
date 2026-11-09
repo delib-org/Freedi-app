@@ -40,15 +40,17 @@ jest.mock('@/view/components/atomic/molecules/AnswerChatSheet', () => ({
 		isOpen,
 		answerId,
 		answerText,
+		subject,
 		onClose,
 	}: {
 		isOpen: boolean;
 		answerId: string;
 		answerText: string;
+		subject?: string;
 		onClose: () => void;
 	}) =>
 		isOpen ? (
-			<div data-testid="answer-chat-sheet" data-answer={answerId}>
+			<div data-testid="answer-chat-sheet" data-answer={answerId} data-subject={subject}>
 				{answerText}
 				<button type="button" onClick={onClose}>
 					close
@@ -115,5 +117,21 @@ describe('StatementChatMore', () => {
 
 		expect(screen.getByTestId('statement-chat-more-pill')).toHaveAttribute('data-unread', 'false');
 		expect(screen.queryByTestId('statement-chat-more-unread')).not.toBeInTheDocument();
+	});
+
+	it('gives the sheet the answer wording unless told otherwise', () => {
+		render(<StatementChatMore statement={answer} variant="round" opensSheet />);
+		fireEvent.click(screen.getByTestId('statement-chat-more-button'));
+
+		expect(screen.getByTestId('answer-chat-sheet')).toHaveAttribute('data-subject', 'answer');
+	});
+
+	it('passes the message wording to the sheet when sheetSubject is message', () => {
+		render(
+			<StatementChatMore statement={answer} variant="round" opensSheet sheetSubject="message" />,
+		);
+		fireEvent.click(screen.getByTestId('statement-chat-more-button'));
+
+		expect(screen.getByTestId('answer-chat-sheet')).toHaveAttribute('data-subject', 'message');
 	});
 });
