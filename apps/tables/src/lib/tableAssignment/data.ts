@@ -1,5 +1,11 @@
 import { collection, doc, getDocs, query, where } from 'firebase/firestore';
-import type { FirestoreError, Unsubscribe } from 'firebase/firestore';
+import type {
+	DocumentData,
+	FirestoreError,
+	Query,
+	QuerySnapshot,
+	Unsubscribe,
+} from 'firebase/firestore';
 import { Collections, tableAssignmentParticipantId } from '@freedi/shared-types';
 import type {
 	Statement,
@@ -62,27 +68,43 @@ export function subscribeTopics(sessionId: string): Subscription<TableAssignment
 		);
 }
 
-function rosterSubscription(
-	listenerName: string,
-	sessionId: string,
-): Subscription<TableAssignmentRosterEntry[]> {
-	return (onData, onError) =>
-		resilientQuery(
-			listenerName,
-			query(collection(db, Collections.tableAssignmentRoster), where('sessionId', '==', sessionId)),
-			(snap) => onData(snap.docs.map((d) => d.data() as TableAssignmentRosterEntry)),
-			onError,
-		);
+function rosterQuery(sessionId: string): Query<DocumentData> {
+	return query(
+		collection(db, Collections.tableAssignmentRoster),
+		where('sessionId', '==', sessionId),
+	);
+}
+
+function rosterEntries(snap: QuerySnapshot<DocumentData>): TableAssignmentRosterEntry[] {
+	return snap.docs.map((d) => d.data() as TableAssignmentRosterEntry);
 }
 
 /** The host's list of name cards. Choices and positions are not on them. */
 export function subscribeRoster(sessionId: string): Subscription<TableAssignmentRosterEntry[]> {
-	return rosterSubscription('tablesRoster', sessionId);
+	return (onData, onError) =>
+		resilientQuery(
+			'tablesRoster',
+			rosterQuery(sessionId),
+			(snap) => onData(rosterEntries(snap)),
+			onError,
+		);
 }
 
-/** A registered participant's view of the session's name cards, readable once tables are public. */
+/**
+ * A registered participant's view of the session's name cards, readable once
+ * tables are public. The read is refused the moment the person's own
+ * registration is gone (cancelled, removed, continued on another phone): that
+ * is the end of the list, not a failure.
+ */
 export function subscribeTablemates(sessionId: string): Subscription<TableAssignmentRosterEntry[]> {
-	return rosterSubscription('tablesTablemates', sessionId);
+	return (onData, onError) =>
+		resilientQuery(
+			'tablesTablemates',
+			rosterQuery(sessionId),
+			(snap) => onData(rosterEntries(snap)),
+			(error) => (error.code === 'permission-denied' ? onData([]) : onError(error)),
+			{ deniedIsFinal: true },
+		);
 }
 
 /** How many registered; 0 until the first registration writes the counter. */

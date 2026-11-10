@@ -28,11 +28,20 @@ const RESYNC_DEBOUNCE_MS = 250;
 
 type Target = Query<DocumentData> | DocumentReference<DocumentData>;
 
+export interface ListenerOptions {
+	/**
+	 * A refusal is how this read is expected to end (the person's registration
+	 * is gone): the caller is told, and nothing is logged or tried again.
+	 */
+	deniedIsFinal?: boolean;
+}
+
 interface Entry {
 	name: string;
 	target: Target;
 	onNext: (snap: DocumentSnapshot<DocumentData> | QuerySnapshot<DocumentData>) => void;
 	onError?: (error: FirestoreError) => void;
+	deniedIsFinal: boolean;
 	inner: Unsubscribe | null;
 	retryCount: number;
 	retryTimer: ReturnType<typeof setTimeout> | null;
@@ -51,6 +60,7 @@ function clearRetry(entry: Entry): void {
 function handleStreamError(entry: Entry, error: FirestoreError): void {
 	entry.inner = null;
 	entry.onError?.(error);
+	if (entry.deniedIsFinal && error.code === 'permission-denied') return;
 	logError(error, {
 		operation: 'tables.listeners.streamError',
 		metadata: { listener: entry.name, code: error.code, retry: entry.retryCount },
@@ -133,6 +143,7 @@ function register(
 	target: Target,
 	onNext: Entry['onNext'],
 	onError?: (error: FirestoreError) => void,
+	options: ListenerOptions = {},
 ): Unsubscribe {
 	installWakeHooks();
 
@@ -141,6 +152,7 @@ function register(
 		target,
 		onNext,
 		onError,
+		deniedIsFinal: options.deniedIsFinal === true,
 		inner: null,
 		retryCount: 0,
 		retryTimer: null,
@@ -173,6 +185,7 @@ export function resilientQuery(
 	target: Query<DocumentData>,
 	onNext: (snap: QuerySnapshot<DocumentData>) => void,
 	onError?: (error: FirestoreError) => void,
+	options?: ListenerOptions,
 ): Unsubscribe {
-	return register(name, target, onNext as Entry['onNext'], onError);
+	return register(name, target, onNext as Entry['onNext'], onError, options);
 }
