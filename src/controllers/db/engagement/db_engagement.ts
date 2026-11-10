@@ -103,8 +103,7 @@ export function listenToUserEngagement(): Unsubscribe {
 		if (!user) throw new Error('User not found');
 
 		const userId = user.uid;
-		const listener =
-			engagementListeners.get(userId) ?? createSharedEngagementListener(userId);
+		const listener = engagementListeners.get(userId) ?? createSharedEngagementListener(userId);
 		listener.holders += 1;
 
 		let isReleased = false;
