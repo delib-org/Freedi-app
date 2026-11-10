@@ -1,5 +1,6 @@
 import { SortType, Statement } from '@freedi/shared-types';
-import { QuestionStageIndex, STAGE_DECIDED } from '@/helpers/questionStage';
+import { isLiveResultsOn } from '@/helpers/liveResults';
+import { getQuestionStage, QuestionStageIndex, STAGE_DECIDED } from '@/helpers/questionStage';
 import { areResultsUnlocked } from '../evaluations/components/evaluation/enhancedEvaluation/resultsVisibility';
 import { getResultsAccess, ResultsAccess } from './resultsLogic';
 
@@ -106,6 +107,24 @@ export function canSeeQuestionScores(data: QuestionScoreData): boolean {
  */
 export function canSeeVoteTallies(facts: ScoreViewerFacts, hasVoted: boolean): boolean {
 	return canSeeScore({ ...facts, isOwnAnswer: false, hasRated: hasVoted });
+}
+
+/**
+ * For screens listing questions, where a question's answers and the viewer's
+ * ratings are not loaded: its results show only once they are settled, or to a host.
+ */
+export function canSeeSettledResults(question: Statement, isHost: boolean, now: number): boolean {
+	const deadline = question.questionSettings?.deadline;
+
+	return canSeeScore({
+		isHost,
+		stage: getQuestionStage({ statement: question, answerCount: 1, now }),
+		showLiveResults: isLiveResultsOn(question),
+		isDeadlinePassed: typeof deadline === 'number' && deadline > 0 && deadline <= now,
+		ratingClosed: false,
+		isOwnAnswer: false,
+		hasRated: false,
+	});
 }
 
 /** Whether this answer was written by this viewer. */

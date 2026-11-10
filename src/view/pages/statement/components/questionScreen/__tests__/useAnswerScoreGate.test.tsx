@@ -155,6 +155,34 @@ describe('useAnswerScoreGate', () => {
 describe('useQuestionScoreAccess', () => {
 	const options = [answer(), answer({ statementId: 'a2' })];
 
+	it('stays closed while the answers have not arrived, with live results on', () => {
+		const q = question({ numberOfOptions: 4 } as Partial<Statement>);
+		const { result } = renderHook(() => useQuestionScoreAccess(q), {
+			wrapper: wrapperFor({ statementRows: [q] }),
+		});
+
+		expect(result.current.canSee).toBe(false);
+		expect(result.current.facts.ratingClosed).toBe(false);
+	});
+
+	it('stays closed on an empty store when the question has no answer counter', () => {
+		const q = question();
+		const { result } = renderHook(() => useQuestionScoreAccess(q), {
+			wrapper: wrapperFor({ statementRows: [q] }),
+		});
+
+		expect(result.current.canSee).toBe(false);
+	});
+
+	it('does not lock anyone out once it is known there is nothing to rate', () => {
+		const q = question({ numberOfOptions: 0 } as Partial<Statement>);
+		const { result } = renderHook(() => useQuestionScoreAccess(q), {
+			wrapper: wrapperFor({ statementRows: [q] }),
+		});
+
+		expect(result.current.canSee).toBe(true);
+	});
+
 	it('stays closed for question-wide results before the viewer rated anything', () => {
 		const q = question();
 		const { result } = renderHook(() => useQuestionScoreAccess(q), {

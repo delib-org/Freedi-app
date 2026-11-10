@@ -11,6 +11,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { formatScore } from '@/helpers/scoreFormat';
 import SubGroupCardSummary from '@/view/components/subGroupCard/SubGroupCardSummary';
+import AgreementStatus from './AgreementStatus';
 import styles from './Agreement.module.scss';
 import processStyles from './QuestionProcess.module.scss';
 
@@ -143,7 +144,7 @@ export default function QuestionProcess({
 					</small>
 				</div>
 			)}
-			{view !== 'overview' && !!data?.sources.length && (
+			{view !== 'overview' && showScores && !!data?.sources.length && (
 				<details>
 					<summary>
 						{t(data.sources.length > 1 ? 'Original answers' : 'Source solution')} ·{' '}
@@ -151,13 +152,8 @@ export default function QuestionProcess({
 					</summary>
 					{data.sources.map((source) => (
 						<p key={source.id}>
-							<a href={`/statement/${source.id}`}>{source.text}</a>
-							{showScores && (
-								<>
-									{' '}
-									· {t('Agreement score')} <span dir="ltr">{formatScore(source.cp)}</span>
-								</>
-							)}
+							<a href={`/statement/${source.id}`}>{source.text}</a> · {t('Agreement score')}{' '}
+							<span dir="ltr">{formatScore(source.cp)}</span>
 						</p>
 					))}
 				</details>
@@ -194,19 +190,15 @@ export default function QuestionProcess({
 						{data?.agreements.map((a) => (
 							<article
 								className={styles.journey__card}
-								data-tone={a.agreed ? 'mint' : 'peach'}
+								data-tone={showScores && a.agreed ? 'mint' : 'peach'}
 								key={a.id}
 							>
-								<span>
-									{t(a.agreed ? 'Passed the agreement threshold' : 'Draft for review')}
-									{showScores && (
-										<>
-											{' '}
-											· {t('Agreement score')} <span dir="ltr">{formatScore(a.cp)}</span> ·{' '}
-											{t('People who rated')}: {a.evaluators}
-										</>
-									)}
-								</span>
+								<AgreementStatus
+									agreed={a.agreed}
+									cp={a.cp}
+									evaluators={a.evaluators}
+									showScores={showScores}
+								/>
 								<h3>{a.title}</h3>
 								<p>{a.introduction}</p>
 								{a.previousId && (

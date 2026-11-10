@@ -100,6 +100,8 @@ interface Props {
 	allowRegroup?: boolean;
 	/** Render with the sticky-note "cluster board" styling (per-branch colors). */
 	boardMode?: boolean;
+	/** Highlight chosen and voted answers: the viewer passed the score guard. */
+	showResultMarks: boolean;
 }
 
 /**
@@ -170,6 +172,7 @@ function MindElixirMap({
 	locateToken,
 	allowRegroup = false,
 	boardMode = false,
+	showResultMarks,
 }: Readonly<Props>) {
 	const navigate = useNavigate();
 	// Dragging/regrouping is allowed for admins, or for anyone when the board
@@ -490,11 +493,21 @@ function MindElixirMap({
 		const filtered =
 			filterBy === FilterType.questionsResults ? filterDescendants(leveled) : leveled;
 		const built = filtered
-			? toMindElixirData(filtered, [], formatBadge, { boardMode, markIds })
+			? toMindElixirData(filtered, [], formatBadge, { boardMode, markIds, showResultMarks })
 			: null;
 
 		return { data: built, signature: built ? JSON.stringify(built) : '' };
-	}, [descendants, filterBy, level, expandedIds, foldedIds, formatBadge, boardMode, markIds]);
+	}, [
+		descendants,
+		filterBy,
+		level,
+		expandedIds,
+		foldedIds,
+		formatBadge,
+		boardMode,
+		markIds,
+		showResultMarks,
+	]);
 
 	// The signature MindElixir is currently showing.
 	const drawnSignatureRef = useRef('');

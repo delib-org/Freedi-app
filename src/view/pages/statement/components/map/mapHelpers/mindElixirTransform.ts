@@ -190,6 +190,8 @@ export interface ToMindElixirOptions {
 	boardMode?: boolean;
 	/** Nodes that hold one of the viewer's own statements — badged "includes yours". */
 	markIds?: ReadonlySet<string>;
+	/** Highlight chosen and voted answers. Off unless the score guard allows it. */
+	showResultMarks?: boolean;
 }
 
 export function toMindElixirData(
@@ -198,7 +200,7 @@ export function toMindElixirData(
 	formatBadge: ClusterBadgeFormatter = defaultBadgeFormatter,
 	options: ToMindElixirOptions = {},
 ): MindElixirData {
-	const { boardMode = false, markIds } = options;
+	const { boardMode = false, markIds, showResultMarks = false } = options;
 
 	// depth 0 = root/subject, depth 1 = labeled branches (assigned a palette color),
 	// deeper = sticky cards inheriting their branch color.
@@ -211,7 +213,7 @@ export function toMindElixirData(
 		const clusterKind = getClusterKind(statement);
 		const isSelected =
 			selectedStatementIds.includes(statement.statementId) ||
-			!!(statement.isVoted || statement.isChosen);
+			(showResultMarks && !!(statement.isVoted || statement.isChosen));
 		// Cluster styling takes priority over type/selection styling.
 		const style = clusterKind
 			? getClusterStyle(clusterKind)

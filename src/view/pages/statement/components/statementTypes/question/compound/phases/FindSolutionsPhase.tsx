@@ -6,6 +6,8 @@ import { useCompoundSolutions } from '@/controllers/hooks/compoundQuestion/useCo
 import { createSolutionQuestion } from '@/controllers/db/compoundQuestion/createSolutionQuestion';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import ScoreGate from '../../../../questionScreen/ScoreGate';
+import { useQuestionScoreAccess } from '../../../../questionScreen/useAnswerScoreGate';
+import { orderSolutionsForViewer } from './solutionOrder';
 import styles from '../CompoundQuestion.module.scss';
 
 const FindSolutionsPhase: FC = () => {
@@ -19,11 +21,17 @@ const FindSolutionsPhase: FC = () => {
 	const mainTitle = statement?.statement ?? '';
 	const solutionQuestionId = statement?.questionSettings?.compoundSettings?.solutionQuestionId;
 
+	const { canSee } = useQuestionScoreAccess(solutionQuestion);
+	const canSeeScores = canSee || isAdmin;
 	const approvedSolutions = useMemo(() => {
+		if (!canSeeScores) return [];
 		const resultIds = new Set((solutionQuestion?.results ?? []).map((r) => r.statementId));
 
-		return solutions.filter((s) => resultIds.has(s.statementId));
-	}, [solutionQuestion?.results, solutions]);
+		return orderSolutionsForViewer(
+			solutions.filter((s) => resultIds.has(s.statementId)),
+			canSeeScores,
+		);
+	}, [solutionQuestion?.results, solutions, canSeeScores]);
 
 	const handleCreateSolutionQuestion = useCallback(async () => {
 		if (!statement || isCreating) return;
@@ -80,7 +88,7 @@ const FindSolutionsPhase: FC = () => {
 								<div key={solution.statementId} className={styles.solutionCard}>
 									<div className={styles.solutionContent}>
 										<h4 className={styles.solutionTitle}>{solution.statement}</h4>
-										<ScoreGate answer={solution}>
+										<ScoreGate answer={solution} isHost={isAdmin}>
 											<span className={styles.solutionConsensus}>
 												{Math.round((solution.consensus ?? 0) * 100)}% {t('Agreement score')}
 											</span>

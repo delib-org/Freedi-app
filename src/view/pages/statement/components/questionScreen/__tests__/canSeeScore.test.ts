@@ -1,9 +1,10 @@
-import { SortType } from '@freedi/shared-types';
+import { QuestionStep, SortType, Statement } from '@freedi/shared-types';
 import { QuestionStageIndex } from '@/helpers/questionStage';
 import {
 	canSeeQuestionScores,
 	canSeeScore,
 	CanSeeScoreInput,
+	canSeeSettledResults,
 	canSeeVoteTallies,
 	getScoreAccess,
 	guardScoreSort,
@@ -151,6 +152,36 @@ describe('canSeeQuestionScores', () => {
 		expect(
 			questionScoreFacts({ ...data, rateableCount: 0, answersComplete: false }).ratingClosed,
 		).toBe(false);
+	});
+});
+
+describe('canSeeSettledResults', () => {
+	const question = (questionSettings: object) => ({ questionSettings }) as unknown as Statement;
+	const NOW = 1000;
+
+	it('stays closed while the question is open, even with live results on', () => {
+		const live = {
+			questionSettings: { currentStep: QuestionStep.randomEvaluation },
+			statementSettings: { showEvaluation: true },
+		} as unknown as Statement;
+
+		expect(canSeeSettledResults(live, false, NOW)).toBe(false);
+	});
+
+	it('opens at Decided, after the deadline, and for a host', () => {
+		const open = question({ currentStep: QuestionStep.randomEvaluation });
+
+		expect(canSeeSettledResults(question({ currentStep: QuestionStep.finished }), false, NOW)).toBe(
+			true,
+		);
+		expect(
+			canSeeSettledResults(
+				question({ currentStep: QuestionStep.randomEvaluation, deadline: NOW - 1 }),
+				false,
+				NOW,
+			),
+		).toBe(true);
+		expect(canSeeSettledResults(open, true, NOW)).toBe(true);
 	});
 });
 

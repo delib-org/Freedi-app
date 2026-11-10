@@ -10,6 +10,7 @@ import {
 	userVotesInParentSelector,
 } from '@/redux/evaluations/evaluationsSlice';
 import {
+	fullyLoadedScopeSelector,
 	statementOptionsSelector,
 	statementSelector,
 	statementSubscriptionSelector,
@@ -38,6 +39,9 @@ export interface QuestionScoreAccess {
 	canSee: boolean;
 	facts: ScoreViewerFacts;
 }
+
+/** Stands in for the likes scan on questions where likes mean nothing. */
+const noLikesScanned = (): number => 0;
 
 /** An answer exists on any answer surface, which is all the stage rule needs. */
 const ANSWER_COUNT_ON_A_CARD = 1;
@@ -85,7 +89,11 @@ export function useAnswerScoreGate(
 	const parent = question ?? parentFromStore;
 	const creator = useAppSelector(creatorSelector);
 	const myEvaluation = useAppSelector(evaluationSelector(answer?.statementId));
-	const likesInQuestion = useAppSelector(userVotesInParentSelector(parent?.statementId));
+	const likesInQuestion = useAppSelector(
+		parent?.statementSettings?.evaluationType === 'single-like'
+			? userVotesInParentSelector(parent.statementId)
+			: noLikesScanned,
+	);
 	const voteSelect = useMemo(() => parentVoteSelector(parent?.statementId), [parent?.statementId]);
 	const votedOptionId = useAppSelector(voteSelect)?.statementId;
 	const facts = useScoreViewerFacts(parent);
@@ -119,6 +127,8 @@ export function useQuestionScoreAccess(question: Statement | undefined): Questio
 	const creator = useAppSelector(creatorSelector);
 	const optionsSelect = useMemo(() => statementOptionsSelector(statementId), [statementId]);
 	const options = useAppSelector(optionsSelect);
+	const fullyLoadedSelect = useMemo(() => fullyLoadedScopeSelector(statementId), [statementId]);
+	const isFullyLoaded = useAppSelector(fullyLoadedSelect) !== undefined;
 	const evaluationsSelect = useMemo(() => evaluationsParentSelector(statementId), [statementId]);
 	const evaluations = useAppSelector(evaluationsSelect, shallowEqual);
 	const voteSelect = useMemo(() => parentVoteSelector(statementId), [statementId]);
@@ -127,7 +137,11 @@ export function useQuestionScoreAccess(question: Statement | undefined): Questio
 	const rateableIds = rankableAnswers(options)
 		.filter((answer) => !isOwnAnswerOf(answer, creator?.uid))
 		.map((answer) => answer.statementId);
-	const scopedFacts = { ...facts, ratingClosed: facts.ratingClosed || rateableIds.length === 0 };
+	// "Nothing to rate" must be known, not merely not loaded yet: an empty store
+	// while the listener starts would otherwise open every score to everyone.
+	const answersKnown = isFullyLoaded || options.length === question?.numberOfOptions;
+	const nothingToRate = answersKnown && rateableIds.length === 0;
+	const scopedFacts = { ...facts, ratingClosed: facts.ratingClosed || nothingToRate };
 	const canSee = canSeeScore({
 		...scopedFacts,
 		isOwnAnswer: false,

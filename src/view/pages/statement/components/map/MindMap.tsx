@@ -92,7 +92,9 @@ const MindMap: FC = () => {
 
 	const [requestedFilter, setFilterBy] = useState<FilterType>(FilterType.questionsResultsOptions);
 	const { canSee: canSeeScores } = useQuestionScoreAccess(statement);
-	const canFilterByResults = statement?.statementType !== StatementType.question || canSeeScores;
+	// A map rooted above a question covers several: only its hosts see their leaders.
+	const canFilterByResults =
+		statement?.statementType === StatementType.question ? canSeeScores : _isAdmin;
 	const filterBy = canFilterByResults ? requestedFilter : FilterType.questionsResultsOptions;
 
 	// Add loading state tracking
@@ -242,6 +244,7 @@ const MindMap: FC = () => {
 					<MindElixirMap
 						descendants={results}
 						isAdmin={_isAdmin}
+						showResultMarks={canFilterByResults}
 						filterBy={filterBy}
 						level={detail.level}
 						expandedIds={detail.expandedIds}
