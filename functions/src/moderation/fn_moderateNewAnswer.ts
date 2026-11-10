@@ -259,6 +259,17 @@ function becameAnswer(before: Statement): boolean {
 }
 
 /**
+ * A main-app answer leaving for another app in the same write stays in scope:
+ * rules do not protect `sourceApp`, so that write could carry new words.
+ */
+function isInScope(before: Statement, after: Statement): boolean {
+	return (
+		isMainAppAnswer(after) ||
+		(isMainAppAnswer(before) && after.statementType === StatementType.option)
+	);
+}
+
+/**
  * Runs on every statement update, so it reads only the event's own snapshots.
  * The moderation write, counters and consensus leave the words alone and stop
  * here, and so does clearing `description`, which only removes words.
@@ -267,7 +278,7 @@ function becameAnswer(before: Statement): boolean {
  * restores it sees the current text and decides on that.
  */
 export function needsLanguageCheck(before: Statement, after: Statement): boolean {
-	if (!isMainAppAnswer(after) || isAnswerHeldByModeration(after)) return false;
+	if (!isInScope(before, after) || isAnswerHeldByModeration(after)) return false;
 	if (becameAnswer(before)) return true;
 	if (hasSameWords(answerFullText(before), answerFullText(after))) return false;
 
@@ -288,6 +299,27 @@ function leavesWordsAlone(before: Statement, after: Statement, paragraphs: State
 	);
 }
 
+/**
+ * The sync rewriting a full copy on a restored answer, when no visible paragraph
+ * has been written since the host restored it: those are the words the host
+ * ruled on. Comparing `before` cannot prove this, because a preview that omits
+ * an edited paragraph still matches the paragraphs after the edit, so it takes
+ * the server's own write times. A restore dated after this event is not trusted.
+ */
+function isUntouchedSinceRestore(
+	{ before, after, event }: { before: Statement; after: Statement; event: CheckEvent },
+	snapshot: QuerySnapshot,
+): boolean {
+	const restoredAt = after.answerModeration?.restoredAt;
+	if (restoredAt === undefined || restoredAt >= Date.parse(event.time)) return false;
+	if (becameAnswer(before) || !changedOnlyDescription(before, after)) return false;
+	if (descriptionOrigin(after.description, paragraphsIn(snapshot)) !== 'full-copy') return false;
+
+	return snapshot.docs.every(
+		(doc) => doc.data().hide === true || doc.updateTime.toMillis() <= restoredAt,
+	);
+}
+
 export async function moderateNewAnswer(event: AnswerCreatedEvent): Promise<void> {
 	const answer = event.data?.data() as Statement | undefined;
 	if (!answer || !isMainAppAnswer(answer)) return;
@@ -300,8 +332,10 @@ export async function moderateEditedAnswer(event: AnswerUpdatedEvent): Promise<v
 	const after = event.data?.after.data() as Statement | undefined;
 	if (!before || !after || !needsLanguageCheck(before, after)) return;
 
-	const paragraphs = paragraphsIn(await paragraphChildrenQuery(after.statementId).get());
+	const snapshot = await paragraphChildrenQuery(after.statementId).get();
+	const paragraphs = paragraphsIn(snapshot);
 	if (leavesWordsAlone(before, after, paragraphs)) return;
+	if (isUntouchedSinceRestore({ before, after, event }, snapshot)) return;
 
 	await checkAnswer(after, event, paragraphs);
 }

@@ -104,6 +104,23 @@ describe('updateParentOnChildUpdate: the description preview', () => {
 		expect(await editReply()).toBe('paragraph number 1 | paragraph number 2 | paragraph number 3');
 	});
 
+	const hiddenRange = (from: number, to: number): Doc[] =>
+		Array.from({ length: to - from + 1 }, (_unused, offset) =>
+			paragraph(from + offset, { hide: true }),
+		);
+
+	it('finds a visible paragraph behind hidden ones, within the scan limit', async () => {
+		seedParagraphs([paragraph(1), ...hiddenRange(2, 50)]);
+
+		expect(await editReply()).toBe('paragraph number 1');
+	});
+
+	it('reads no further than the scan limit', async () => {
+		seedParagraphs([paragraph(1), ...hiddenRange(2, 51)]);
+
+		expect(await editReply()).toBe('');
+	});
+
 	it('writes what the language check accepts as a copy of the paragraphs', async () => {
 		const paragraphs = [
 			paragraph(1),

@@ -18,6 +18,7 @@ interface Snap {
 	id: string;
 	exists: boolean;
 	data: () => Doc | undefined;
+	updateTime: { toMillis: () => number };
 }
 
 interface Ref {
@@ -93,7 +94,8 @@ function applyMerge(existing: Doc | undefined, incoming: Doc, merge: boolean): D
 
 export interface FakeDb {
 	store: Store;
-	seed: (collection: string, id: string, data: Doc) => void;
+	/** `updateTimeMs` is the server write time the snapshot reports; 0 when not given. */
+	seed: (collection: string, id: string, data: Doc, updateTimeMs?: number) => void;
 	read: (collection: string, id: string) => Doc | undefined;
 	createCalls: Array<{ collection: string; id: string }>;
 	db: {
@@ -125,6 +127,7 @@ export interface TransactionLike {
 export function createFakeDb(): FakeDb {
 	const store: Store = new Map();
 	const createCalls: FakeDb['createCalls'] = [];
+	const updateTimes = new Map<string, number>();
 
 	const col = (name: string): Map<string, Doc> => {
 		let c = store.get(name);
@@ -139,7 +142,14 @@ export function createFakeDb(): FakeDb {
 	const snapOf = (collection: string, id: string): Snap => {
 		const data = col(collection).get(id);
 
-		return { id, exists: !!data, data: () => (data ? { ...data } : undefined) };
+		const updateTimeMs = updateTimes.get(`${collection}/${id}`) ?? 0;
+
+		return {
+			id,
+			exists: !!data,
+			data: () => (data ? { ...data } : undefined),
+			updateTime: { toMillis: () => updateTimeMs },
+		};
 	};
 
 	const writeDoc = (collection: string, id: string, data: Doc, merge: boolean): void => {
@@ -214,7 +224,10 @@ export function createFakeDb(): FakeDb {
 	return {
 		store,
 		createCalls,
-		seed: (collection, id, data) => col(collection).set(id, { ...data }),
+		seed: (collection, id, data, updateTimeMs) => {
+			col(collection).set(id, { ...data });
+			if (updateTimeMs !== undefined) updateTimes.set(`${collection}/${id}`, updateTimeMs);
+		},
 		read: (collection, id) => col(collection).get(id),
 		db: {
 			collection: (name) => ({

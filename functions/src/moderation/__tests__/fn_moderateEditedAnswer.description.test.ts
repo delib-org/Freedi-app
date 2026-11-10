@@ -25,6 +25,7 @@ import {
 	CLEAN_TEXT,
 	editedAnswerFixture,
 	EVENT_ID,
+	Event,
 	EVENT_TIME,
 	Fields,
 	OFFENSIVE_TEXT,
@@ -51,15 +52,20 @@ describe('moderateEditedAnswer: description is only a copy of the paragraphs', (
 	/** What updateParentOnChildUpdate writes: the newest 3 only, joined with a bar. */
 	const NEWEST_THREE = PARAGRAPHS.slice(1).join(' | ');
 
-	function seedParagraphs(texts: string[]): void {
+	function seedParagraphs(texts: string[], updateTimeMs?: number): void {
 		texts.forEach((statement, index) => {
-			fake.seed(Collections.statements, `paragraph-${index}`, {
-				statementId: `paragraph-${index}`,
-				statement,
-				statementType: StatementType.paragraph,
-				parentId: ANSWER,
-				createdAt: index + 1,
-			});
+			fake.seed(
+				Collections.statements,
+				`paragraph-${index}`,
+				{
+					statementId: `paragraph-${index}`,
+					statement,
+					statementType: StatementType.paragraph,
+					parentId: ANSWER,
+					createdAt: index + 1,
+				},
+				updateTimeMs,
+			);
 		});
 	}
 
@@ -123,6 +129,74 @@ describe('moderateEditedAnswer: description is only a copy of the paragraphs', (
 		expect(assessLanguage).not.toHaveBeenCalled();
 		expect(stored()?.hide).toBe(false);
 		expect(notice()).toBeUndefined();
+	});
+
+	describe('a preview becoming a full copy again', () => {
+		const RESTORED_AT = EVENT_TIME - 100;
+		const restored = {
+			hide: false,
+			answerModeration: { ...RESTORED_MARK, restoredAt: RESTORED_AT },
+		};
+		const toFullCopy = (fields: Fields): Event =>
+			updated({ ...fields, description: NEWEST_THREE }, { ...fields, description: FULL_COPY });
+
+		it('does not re-hold a restored answer when no paragraph was written since', async () => {
+			seedParagraphs(PARAGRAPHS, RESTORED_AT - 1);
+
+			await moderateEditedAnswer(toFullCopy(restored));
+
+			expect(assessLanguage).not.toHaveBeenCalled();
+			expect(stored()?.hide).toBe(false);
+			expect(notice()).toBeUndefined();
+		});
+
+		it('checks a restored answer when the omitted oldest paragraph was edited after it', async () => {
+			seedParagraphs(PARAGRAPHS, RESTORED_AT + 1);
+			assessLanguage.mockResolvedValue(true);
+
+			await moderateEditedAnswer(toFullCopy(restored));
+
+			expect(assessLanguage.mock.calls[0][0]).toContain(ABUSIVE_P1);
+			expectHeldBy(EVENT_ID);
+		});
+
+		it('checks an answer never restored when the omitted oldest paragraph was edited', async () => {
+			seedParagraphs(PARAGRAPHS);
+			assessLanguage.mockResolvedValue(true);
+
+			await moderateEditedAnswer(toFullCopy({}));
+
+			expect(assessLanguage.mock.calls[0][0]).toContain(ABUSIVE_P1);
+			expectHeldBy(EVENT_ID);
+		});
+
+		it('does not trust a restore dated after the write', async () => {
+			seedParagraphs(PARAGRAPHS, RESTORED_AT);
+			assessLanguage.mockResolvedValue(false);
+			const future = {
+				hide: false,
+				answerModeration: { ...RESTORED_MARK, restoredAt: EVENT_TIME + 1 },
+			};
+
+			await moderateEditedAnswer(toFullCopy(future));
+
+			expect(assessLanguage).toHaveBeenCalledTimes(1);
+		});
+
+		it('checks words of its own even on an untouched restored answer', async () => {
+			seedParagraphs(PARAGRAPHS, RESTORED_AT - 1);
+			assessLanguage.mockResolvedValue(true);
+
+			await moderateEditedAnswer(
+				updated(
+					{ ...restored, description: NEWEST_THREE },
+					{ ...restored, description: 'words of its own' },
+				),
+			);
+
+			expect(assessLanguage).toHaveBeenCalledTimes(1);
+			expectHeldBy(EVENT_ID);
+		});
 	});
 
 	it('does not re-hold a restored answer when the preview is cleared', async () => {
@@ -243,6 +317,23 @@ describe('moderateEditedAnswer: restores and the type flip', () => {
 
 		expect(assessLanguage).toHaveBeenCalledTimes(1);
 		expectHeldBy(EVENT_ID);
+	});
+
+	it('checks new words written in the same update that moves sourceApp away', async () => {
+		assessLanguage.mockResolvedValue(true);
+
+		await moderateEditedAnswer(
+			updated({}, { sourceApp: SourceApp.MASS_CONSENSUS, statement: OFFENSIVE_TEXT }),
+		);
+
+		expect(assessLanguage).toHaveBeenCalledWith(OFFENSIVE_TEXT);
+		expectHeldBy(EVENT_ID);
+	});
+
+	it('makes no AI call when sourceApp moves away with the words unchanged', async () => {
+		await moderateEditedAnswer(updated({}, { sourceApp: SourceApp.MASS_CONSENSUS }));
+
+		expect(assessLanguage).not.toHaveBeenCalled();
 	});
 
 	it('checks words edited while sourceApp pointed at another app', async () => {

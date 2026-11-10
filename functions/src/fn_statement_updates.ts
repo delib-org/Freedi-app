@@ -176,10 +176,14 @@ export const updateParentStatementOnChildChange = onDocumentWritten(
 	},
 );
 
+/** Bounds the reads of a preview refresh on a parent with many hidden paragraphs. */
+const MAX_PARAGRAPHS_SCANNED_FOR_PREVIEW = 50;
+
 /**
  * Enough paragraphs for the preview. Hidden ones must not count, and Firestore
- * cannot filter "not hidden" on a field most documents lack, so the whole list is
- * read only in the rare case that one of the newest is hidden.
+ * cannot filter "not hidden" on a field most documents lack, so a longer read
+ * happens only in the rare case that one of the newest is hidden. Past the limit
+ * the preview may be short; the language check then treats it as not a copy.
  */
 async function readNewestParagraphs(parentId: string): Promise<Statement[]> {
 	const newestFirst = db
@@ -189,7 +193,9 @@ async function readNewestParagraphs(parentId: string): Promise<Statement[]> {
 		.orderBy('createdAt', 'desc');
 	const newest = await newestFirst.limit(DESCRIPTION_PREVIEW_PARAGRAPHS).get();
 	const isAnyHidden = newest.docs.some((doc) => doc.data().hide === true);
-	const snapshot = isAnyHidden ? await newestFirst.get() : newest;
+	const snapshot = isAnyHidden
+		? await newestFirst.limit(MAX_PARAGRAPHS_SCANNED_FOR_PREVIEW).get()
+		: newest;
 
 	return snapshot.docs.map((doc) => doc.data() as Statement);
 }
