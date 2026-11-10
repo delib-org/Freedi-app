@@ -64,6 +64,8 @@ export function fakeDataModule(): Record<string, unknown> {
 	};
 }
 
+const RANDOM_KEEPS_HOST_ORDER = 0.999999;
+
 export const ID = { id: SESSION_ID };
 export const HOME = participantHomePath(SESSION_ID);
 export const DRAFT_KEY = `freedi_tables_prefs_${SESSION_ID}_u1`;
@@ -126,7 +128,12 @@ export function useParticipantScreens(): void {
 		Object.values(mocks.api).forEach((fn) => fn.mockReset());
 		window.localStorage.clear();
 		window.localStorage.setItem('freedi_tables_lang', 'en');
+		// Just under 1 keeps the shuffled order equal to the host's, so these tests read the list as set up.
+		vi.spyOn(Math, 'random').mockReturnValue(RANDOM_KEEPS_HOST_ORDER);
 	});
 
-	afterEach(unmountAll);
+	afterEach(() => {
+		vi.restoreAllMocks();
+		unmountAll();
+	});
 }

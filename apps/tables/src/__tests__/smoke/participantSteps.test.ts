@@ -113,6 +113,19 @@ describe('rank topics', () => {
 		expect(root.querySelector('.rank-hint')?.textContent).toBe(en['tableAssignment.rank.hint.3']);
 	});
 
+	it('lists the tables in the order remembered for this person, not the host order', async () => {
+		window.localStorage.setItem(
+			`freedi_tables_order_${SESSION_ID}_u1`,
+			JSON.stringify(['c', 'a', 'b']),
+		);
+
+		const { root } = await renderScreen(ParticipantPreferences, ID);
+
+		expect(rows(root).map((row) => row.textContent ?? '')[0]).toContain('Topic c');
+		expect(rows(root)[1].textContent).toContain('Topic a');
+		expect(rows(root)[2].textContent).toContain('Topic b');
+	});
+
 	it('keeps the choices when opened again before saving', async () => {
 		saveDraft(SESSION_ID, 'u1', { ranked: ['c'], position: null }, window.localStorage);
 
