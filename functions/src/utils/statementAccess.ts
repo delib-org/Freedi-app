@@ -2,6 +2,7 @@ import { HttpsError } from 'firebase-functions/v2/https';
 import type { Firestore } from 'firebase-admin/firestore';
 import { Access, Collections, Role, type Statement } from '@freedi/shared-types';
 import { findStatementAdminSource } from '../progress/assertStatementAdmin';
+import { ancestorIds } from './statementAncestors';
 
 const OPEN_ACCESS: ReadonlySet<string> = new Set([
 	Access.public,
@@ -12,10 +13,6 @@ const OPEN_ACCESS: ReadonlySet<string> = new Set([
 
 const ACTIVE_ROLES: ReadonlySet<string> = new Set([Role.admin, Role.creator, Role.member]);
 const HOST_ROLES: ReadonlySet<string> = new Set([Role.admin, Role.creator]);
-
-/** A deeper tree than this is read only as far as its nearest levels and its top. */
-const MAX_ANCESTORS = 12;
-const TOP = 'top';
 
 export interface StatementAccess {
 	statement: Statement;
@@ -71,20 +68,6 @@ export async function resolveStatementAccess(
 interface AccessLevel {
 	statement: Statement | undefined;
 	role: string | undefined;
-}
-
-/** Nearest ancestor first, the top statement always included. */
-function ancestorIds(question: Statement): string[] {
-	const listed = [...(question.parents ?? []), question.parentId].filter(
-		(id) => !!id && id !== TOP && id !== question.statementId,
-	);
-	const nearestFirst = [...new Set(listed)].reverse().slice(0, MAX_ANCESTORS);
-	const top = question.topParentId;
-	if (top && top !== TOP && top !== question.statementId && !nearestFirst.includes(top)) {
-		nearestFirst.push(top);
-	}
-
-	return nearestFirst;
 }
 
 /** The question first, then each ancestor up to the top. */

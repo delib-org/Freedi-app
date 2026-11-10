@@ -16,6 +16,9 @@
  *  - Above LARGE_QUESTION_SUBSCRIBER_THRESHOLD, a new answer keeps the in-app
  *    write but INSTANT push/email give way to one daily digest (largeQuestionDigest).
  *
+ * Banned, waiting and unsubscribed people are left out before any of this
+ * (`loadSubscribers`), on every channel.
+ *
  * The actor (the statement's own creator) is never notified about their own post.
  * Behaviour matches the old inline code for users with NO settings doc on the
  * INSTANT path (defaults: not muted, INSTANT, all channels on).
@@ -52,6 +55,7 @@ import {
 import { commitWritesInChunks, type PendingWrite } from './chunkedWrites';
 import { scheduleLargeQuestionDigest, shouldDigestInstead } from './largeQuestionDigest';
 import { loadSettings, loadSubscribers, resolveDelivery } from './subscriberDelivery';
+import { ancestorIds } from '../utils/statementAncestors';
 
 export interface NotifyOptions {
 	/** Distinguishes the event for copy/analytics; defaults to STATEMENT_REPLY. */
@@ -83,7 +87,7 @@ export async function notifyStatementSubscribers(
 	parentStatement: Statement,
 	opts: NotifyOptions = {},
 ): Promise<void> {
-	const byUid = await loadSubscribers(db, statement.parentId);
+	const byUid = await loadSubscribers(db, statement.parentId, ancestorIds(parentStatement));
 
 	// The person's own choices for this question (above everything else except
 	// that mute/frequency still apply below): `false` is a veto on every channel.
