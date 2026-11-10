@@ -155,6 +155,11 @@ export function useCreateStatementFlow({
 		)
 			.then((result) => {
 				if (cancelled) return;
+				if (result.rejection) {
+					send({ type: 'REJECTED', reason: result.rejection.reason });
+
+					return;
+				}
 				const splits: FlowDraft[] =
 					result.ok && result.isMultipleSuggestions
 						? result.suggestions.map((s) => ({ title: s.title, description: s.description }))
@@ -181,6 +186,11 @@ export function useCreateStatementFlow({
 		getSimilarOptions(parentId, state.draft.title, user?.uid ?? '', () => undefined)
 			.then((result) => {
 				if (cancelled) return;
+				if (result?.rejected === true) {
+					send({ type: 'REJECTED', reason: result.reason });
+
+					return;
+				}
 				send({ type: 'SIMILARITY_RESULT', similar: result?.similarStatements ?? [] });
 			})
 			.catch(() => {

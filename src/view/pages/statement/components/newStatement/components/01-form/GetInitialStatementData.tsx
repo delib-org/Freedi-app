@@ -82,6 +82,12 @@ export default function GetInitialStatementData() {
 				);
 				setLoading(false);
 
+				if (result?.rejected === true) {
+					setError(result.reason);
+
+					return;
+				}
+
 				if (result && result.similarStatements && result.similarStatements.length > 0) {
 					setSimilarStatements(result.similarStatements);
 					setCurrentStep(SimilaritySteps.SIMILARITIES);
