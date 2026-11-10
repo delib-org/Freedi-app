@@ -321,3 +321,93 @@ describe('/statements — the permissive update branch', () => {
 		);
 	});
 });
+
+describe('/statements — answers hidden by the automatic check', () => {
+	let env;
+
+	before(async () => {
+		env = await makeEnv('statements-answer-moderation');
+	});
+
+	after(async () => {
+		await env?.cleanup();
+	});
+
+	const AUTHOR = 'user-author';
+	const HOST = 'user-host';
+	const QUESTION = 'question-1';
+	const MARKER = { reason: 'inappropriate-language', hiddenAt: 1, eventId: 'event-1' };
+
+	function answer(statementId, overrides = {}) {
+		return statementDoc({
+			statementId,
+			uid: AUTHOR,
+			overrides: {
+				statementType: 'option',
+				parentId: QUESTION,
+				topParentId: QUESTION,
+				...overrides,
+			},
+		});
+	}
+
+	/** The main app gives every author an admin subscription on their own answer. */
+	async function seedHiddenAnswer(statementId) {
+		await seed(env, async (db) => {
+			await setDoc(
+				doc(db, 'statements', statementId),
+				answer(statementId, { hide: true, answerModeration: MARKER }),
+			);
+			await setDoc(doc(db, 'statementsSubscribe', `${AUTHOR}--${statementId}`), {
+				role: 'admin',
+				userId: AUTHOR,
+				statementId,
+			});
+			await setDoc(doc(db, 'statementsSubscribe', `${HOST}--${QUESTION}`), {
+				role: 'admin',
+				userId: HOST,
+				statementId: QUESTION,
+			});
+		});
+	}
+
+	it('rejects creating an answer that already carries the mark', async () => {
+		const db = env.authenticatedContext(AUTHOR).firestore();
+		await assertFails(
+			setDoc(doc(db, 'statements', 'forged'), answer('forged', { answerModeration: MARKER })),
+		);
+	});
+
+	it('still lets an author create a plain answer', async () => {
+		const db = env.authenticatedContext(AUTHOR).firestore();
+		await assertSucceeds(setDoc(doc(db, 'statements', 'plain'), answer('plain')));
+	});
+
+	it('rejects the author restoring their own hidden answer', async () => {
+		await seedHiddenAnswer('by-author');
+		const db = env.authenticatedContext(AUTHOR).firestore();
+		await assertFails(updateDoc(doc(db, 'statements', 'by-author'), { hide: false }));
+	});
+
+	it('lets the question host restore it', async () => {
+		await seedHiddenAnswer('by-host');
+		const db = env.authenticatedContext(HOST).firestore();
+		await assertSucceeds(updateDoc(doc(db, 'statements', 'by-host'), { hide: false }));
+	});
+
+	it('rejects the host editing the mark', async () => {
+		await seedHiddenAnswer('mark-edit');
+		const db = env.authenticatedContext(HOST).firestore();
+		await assertFails(
+			updateDoc(doc(db, 'statements', 'mark-edit'), {
+				answerModeration: { ...MARKER, eventId: 'other' },
+			}),
+		);
+	});
+
+	it('still lets the author edit the text of a hidden answer', async () => {
+		await seedHiddenAnswer('text-edit');
+		const db = env.authenticatedContext(AUTHOR).firestore();
+		await assertSucceeds(updateDoc(doc(db, 'statements', 'text-edit'), { statement: 'reworded' }));
+	});
+});

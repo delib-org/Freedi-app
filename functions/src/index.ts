@@ -15,6 +15,7 @@ import { Collections, StatementType, functionConfig } from '@freedi/shared-types
 
 // Structured error handling
 import { logError } from './utils/errorHandling';
+import { moderateNewAnswer } from './moderation/fn_moderateNewAnswer';
 import {
 	createFirestoreFunction,
 	getTimestamp,
@@ -582,6 +583,15 @@ exports.onStatementCreated = createFirestoreFunction(
 	onStatementCreated,
 	'onStatementCreated',
 	{ memory: HOT_TRIGGER_MEMORY, maxInstances: TRIGGER_MAX_INSTANCES.statementCreate },
+);
+
+// Its own trigger because it calls an AI model, which statementDispatch does not allow.
+exports.moderateNewAnswer = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentCreated,
+	moderateNewAnswer,
+	'moderateNewAnswer',
+	{ maxInstances: TRIGGER_MAX_INSTANCES.answerModeration },
 );
 
 // ============================================

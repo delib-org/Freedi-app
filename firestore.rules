@@ -1135,6 +1135,25 @@ service cloud.firestore {
                !isCreator();
       }
 
+      // The automatic language check (moderateNewAnswer, Admin SDK) is the only
+      // writer of this mark: a client could otherwise pre-set it or strip it.
+      function changesAnswerModeration() {
+        return request.resource.data.get('answerModeration', null) !=
+               resource.data.get('answerModeration', null);
+      }
+
+      // Only the question's host puts back an answer the check hid. isAdmin() is
+      // not enough, and neither is isCreator(): the main app makes every author
+      // an admin of their own answer, so either one would let authors restore it.
+      function unhidesModeratedAnswerWithoutHost() {
+        return resource.data.get('answerModeration', null) != null &&
+               resource.data.get('hide', false) == true &&
+               request.resource.data.get('hide', false) != true &&
+               !(isSystemAdmin() ||
+                 (resource.data.get('parentId', null) != null && checkParentAdmin()) ||
+                 (resource.data.get('topParentId', null) != null && checkTopParentAdmin()));
+      }
+
       function isAllowedToUpdate() {
         // Participation first, because it needs no get() calls: joining an
         // option and voting on evidence are the hot paths, and the whole point
@@ -1387,6 +1406,7 @@ service cloud.firestore {
                        !setsOrganizationIdOnCreate() &&
                        !createsClassReplyFields() &&
                        !createsClassProposal() &&
+                       !request.resource.data.keys().hasAny(['answerModeration']) &&
                        !createsClassHomeOrLesson() &&
                        classEnteredByOf(request.resource.data) == null &&
                        request.resource.data.creatorId == request.auth.uid &&
@@ -1398,6 +1418,8 @@ service cloud.firestore {
       allow update: if request.auth.uid != null &&
                        !resource.data.keys().hasAny(['agreementBallot']) &&
                        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['agreementMeta', 'agreementBallot', 'deliberationEnabled']) &&
+                       !changesAnswerModeration() &&
+                       !unhidesModeratedAnswerWithoutHost() &&
                        !changesCreatorRole() &&
                        !changesCreatorIdWithoutBeingCreator() &&
                        !changesOrganizationId() &&

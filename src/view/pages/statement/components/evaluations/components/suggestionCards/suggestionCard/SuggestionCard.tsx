@@ -43,6 +43,7 @@ import { useIsClamped } from './hasClampedContent';
 import { useAnswerScoreGate } from '../../../../questionScreen/useAnswerScoreGate';
 import { isQuestionResultsOff } from '../../../../questionScreen/canSeeScore';
 import { resolveCardMarks } from './cardMarks';
+import { isHiddenByAutomaticCheck } from '@/helpers/answerModeration';
 
 interface Props {
 	statement: Statement | undefined;
@@ -218,6 +219,8 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 		canSeeMarks,
 	);
 
+	const canUnhide = isAuthorized && (isAdmin || !isHiddenByAutomaticCheck(statement));
+
 	function handleToggleHide(e: React.MouseEvent) {
 		e.stopPropagation();
 		toggleStatementHide(statement.statementId);
@@ -315,11 +318,11 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 							className={clsx(
 								styles.statusBadge,
 								styles['statusBadge--hidden'],
-								isAuthorized && styles['statusBadge--clickable'],
+								canUnhide && styles['statusBadge--clickable'],
 							)}
-							onClick={isAuthorized ? handleToggleHide : undefined}
-							title={isAuthorized ? t('Click to unhide') : t('Hidden from participants')}
-							aria-label={isAuthorized ? t('Unhide this card') : t('This card is hidden')}
+							onClick={canUnhide ? handleToggleHide : undefined}
+							title={canUnhide ? t('Click to unhide') : t('Hidden from participants')}
+							aria-label={canUnhide ? t('Unhide this card') : t('This card is hidden')}
 						>
 							<EyeCrossIcon />
 							<span>{t('Hidden')}</span>
@@ -339,7 +342,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 			)}
 
 			{/* Quick unhide button - appears on hover for admins on hidden cards */}
-			{statement.hide && isAuthorized && (
+			{statement.hide && canUnhide && (
 				<button
 					type="button"
 					className={styles.quickUnhideBtn}

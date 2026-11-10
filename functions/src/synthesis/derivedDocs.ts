@@ -3,6 +3,7 @@ import { Collections, Statement } from '@freedi/shared-types';
 import { logger } from 'firebase-functions';
 import { reverseIntegration, deleteEvaluationsForStatement } from '../integrate/reverseIntegration';
 import { assertNoDirectVotesOnDerivedDocs } from './derivedDocVotes';
+import { hasAnswerModerationMarker } from '../moderation/answerModerationMarker';
 
 /**
  * Shared helpers for identifying and clearing synthesis-derived documents, so a
@@ -146,7 +147,10 @@ export async function dissolveQuestionSynthesis(
 			isDerived(d) && !properClusterIds.has(d.statementId) && !manualClusterIds.has(d.statementId),
 	);
 	const realOptions = docs.filter((d) => !isDerived(d));
-	const orphanedHidden = realOptions.filter((d) => d.hide === true && !d.integratedInto);
+	// An answer the automatic check hid is not an orphan: only its host brings it back.
+	const orphanedHidden = realOptions.filter(
+		(d) => d.hide === true && !d.integratedInto && !hasAnswerModerationMarker(d),
+	);
 
 	const result: DissolveResult = {
 		clustersReversed: 0,

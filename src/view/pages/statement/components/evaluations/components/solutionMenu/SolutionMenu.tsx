@@ -20,6 +20,7 @@ import RoutePicker from '@/view/components/statementRouter/RoutePicker/RoutePick
 import { Statement, StatementType } from '@freedi/shared-types';
 import { useSelector } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { isHiddenByAutomaticCheck } from '@/helpers/answerModeration';
 
 interface Props {
 	statement: Statement;
@@ -120,7 +121,7 @@ const SolutionMenu: FC<Props> = ({
 						}}
 					/>
 				)}
-				{isAuthorized && (
+				{isAuthorized && (isAdmin || !isHiddenByAutomaticCheck(statement)) && (
 					<MenuOption
 						isOptionSelected={isHide}
 						icon={isHide ? <EyeIcon /> : <EyeCrossIcon />}

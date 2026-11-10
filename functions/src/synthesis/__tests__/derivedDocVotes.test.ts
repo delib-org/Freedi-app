@@ -201,6 +201,25 @@ describe('derived doc vote guard', () => {
 	});
 });
 
+describe('dissolveQuestionSynthesis and hidden answers', () => {
+	beforeEach(() => {
+		delete process.env.FIRESTORE_EMULATOR_HOST;
+		jest.clearAllMocks();
+	});
+
+	it('re-shows an orphan but not an answer the automatic check hid', async () => {
+		store.statements = [
+			option('orphan', { hide: true }),
+			option('moderated', { hide: true, answerModeration: { eventId: 'e' } }),
+		];
+		store.evaluations = [];
+
+		const result = await dissolveQuestionSynthesis('q1', { dryRun: true });
+
+		expect(result.orphansRestored).toBe(1);
+	});
+});
+
 describe('dissolveQuestionSynthesis vote guard', () => {
 	beforeEach(() => {
 		store.statements = [option('s1', { derivedByPipeline: 'synthesis' })];
