@@ -1,5 +1,5 @@
 import type { Firestore } from 'firebase-admin/firestore';
-import { Access, Collections, Role, type Statement } from '@freedi/shared-types';
+import { Access, Collections, Role, StatementType, type Statement } from '@freedi/shared-types';
 import { findStatementAdminSource } from '../progress/assertStatementAdmin';
 import { isSystemAdmin } from './httpAuth';
 import { ancestorIds } from './statementAncestors';
@@ -29,6 +29,8 @@ type LevelSettings = AccessLevel['statement'];
 interface TreeNode {
 	parentId: string | undefined;
 	settings: NonNullable<LevelSettings>;
+	/** An answer-type statement, whose writer may have copied its parent's setting. */
+	mayCopyParent: boolean;
 }
 
 type KnownNodes = Map<string, TreeNode | null>;
@@ -62,7 +64,11 @@ export type TreeReadAccess =
 	| { allowed: true; levels: AccessLevel[] }
 	| { allowed: false; status: number; error: string };
 
-/** A statement behind a private level: every level from it up to, not including, the root. */
+/**
+ * A statement behind a private level: the levels below the root that own a
+ * setting or are hidden. A level with neither is left out, so a child that only
+ * inherits costs no role read, and a role placed directly on one does not count.
+ */
 export interface GatedChain {
 	ids: string[];
 	settings: LevelSettings[];
@@ -83,11 +89,40 @@ function subscriptionRefs(firestore: Firestore, uid: string, statementIds: strin
 	return statementIds.map((id) => subscriptions.doc(`${uid}--${id}`));
 }
 
+const ANSWER_TYPES: ReadonlySet<string> = new Set([
+	StatementType.option,
+	StatementType.synthesis,
+	StatementType.agreement,
+]);
+
+/** A ballot is stored as a question, and only this field tells it from a real one. */
+function isAnswerType(statement: Statement): boolean {
+	return ANSWER_TYPES.has(statement.statementType) || !!statement.agreementBallot;
+}
+
 function toNode(statement: Statement): TreeNode {
 	return {
 		parentId: statement.parentId,
 		settings: { membership: statement.membership, hide: statement.hide },
+		mayCopyParent: isAnswerType(statement),
 	};
+}
+
+/**
+ * A level's settings for judging. Improved answers, ballots and agreements are
+ * written with a copy of their question's setting, so on those types a setting
+ * identical to the parent's is inherited, not the statement's own. Otherwise a
+ * member of a private question would be refused its answers. Questions and
+ * groups keep theirs: a nested secret question is its own private space.
+ */
+function ownSettings(node: TreeNode | null | undefined, known: KnownNodes): LevelSettings {
+	if (!node) return undefined;
+
+	const access = node.settings.membership?.access;
+	if (!access || !node.mayCopyParent || !node.parentId) return node.settings;
+	const parentAccess = known.get(node.parentId)?.settings.membership?.access;
+
+	return parentAccess === access ? { hide: node.settings.hide } : node.settings;
 }
 
 function rememberNode(id: string, node: TreeNode | null): void {
@@ -193,12 +228,18 @@ async function readChain(firestore: Firestore, rootId: string): Promise<TreeChai
 	const root = rootSnap.data() as Statement | undefined;
 	if (!rootSnap.exists || !root) return null;
 
-	rememberNode(rootId, toNode(root));
+	const rootNode = toNode(root);
+	rememberNode(rootId, rootNode);
+	const known: KnownNodes = new Map([[rootId, rootNode]]);
 	const walk = startWalk(rootId, root);
-	await climbAll(firestore, [walk], new Map(), { stopAtOpenOwner: false });
+	await climbAll(firestore, [walk], known, { stopAtOpenOwner: false });
 	if (walk.unsafe) return null;
 
-	return { root, ids: walk.ids, settings: walk.settings };
+	return {
+		root,
+		ids: walk.ids,
+		settings: walk.ids.map((id) => ownSettings(known.get(id), known)),
+	};
 }
 
 /**
@@ -268,6 +309,14 @@ export async function authorizeTreeRead(
 	return { allowed: false, status: FORBIDDEN, error: 'You are not a member of this space' };
 }
 
+function judgedLevels(ids: string[], settings: LevelSettings[]): GatedChain {
+	const kept = ids
+		.map((id, index) => ({ id, level: settings[index] }))
+		.filter(({ level }) => level?.membership?.access || level?.hide);
+
+	return { ids: kept.map(({ id }) => id), settings: kept.map(({ level }) => level) };
+}
+
 /**
  * Which statements of a page are governed by a private level below the root. A
  * level at or above the root needs no entry: the caller has already passed it.
@@ -287,24 +336,25 @@ export async function findPrivateGates(
 
 	const walks = page.map((statement) => startWalk(statement.statementId, statement));
 	await climbAll(firestore, walks, known, { stopId: rootId, stopAtOpenOwner: true });
+	// The walks stop below the root, but a direct child is compared with it.
+	await loadNodes(firestore, [rootId], known);
 
 	const gates = new Map<string, GatedChain>();
 	walks.forEach((walk, index) => {
 		const id = page[index].statementId;
-		const access = nearestAccess(walk.settings);
+		const settings = walk.ids.map((levelId) => ownSettings(known.get(levelId), known));
+		const access = nearestAccess(settings);
 		if (walk.unsafe) gates.set(id, { ids: [id], settings: [UNTRUSTED_LEVEL] });
-		else if (access && !isOpenAccess(access)) {
-			gates.set(id, { ids: walk.ids, settings: walk.settings });
-		}
+		else if (access && !isOpenAccess(access)) gates.set(id, judgedLevels(walk.ids, settings));
 	});
 
 	return gates;
 }
 
 /**
- * The statements this caller may not see. Each is judged on its whole chain plus
+ * The statements this caller may not see. Each is judged on its gated levels plus
  * the levels from the root up, by the same rules as the root. Roles are read
- * fresh and by document id, once per distinct level.
+ * fresh and by document id, once per distinct level that owns a setting.
  */
 export async function findRefusedStatements(
 	firestore: Firestore,

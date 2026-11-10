@@ -25,6 +25,7 @@ jest.mock('../utils/httpAuth', () => ({
 	verifyAuthToken: async (req: Request) => req.headers['x-test-uid'],
 }));
 
+import { getFirestore } from 'firebase-admin/firestore';
 import { resetFirestore } from '../services/__tests__/helpers/fakeFirestore';
 import {
 	MEMBER,
@@ -178,15 +179,18 @@ describe('roles on every level of a nested chain', () => {
 		expect((await load('outer', top, 'descendants')).ids).toEqual([a]);
 	});
 
-	it('lets a member of a level between the statement and the private one in', async () => {
+	it('ignores a membership or a ban placed directly on a level that only inherits', async () => {
 		const { top, a, b } = nestedSecrets();
 		const inner = newId('chain-inner');
 		const leaf = newId('chain-leaf');
 		childWith(inner, top, ['top', top, a, b]);
 		childWith(leaf, top, ['top', top, a, b, inner]);
-		role(MEMBER, inner, 'member');
+		role('inner-member', inner, 'member');
+		role('governing-member', b, 'member');
+		role('governing-member', inner, 'banned');
 
-		expect((await load(MEMBER, top, 'descendants')).ids).toEqual([inner, leaf].sort());
+		expect((await load('inner-member', top, 'descendants')).ids).toEqual([]);
+		expect((await load('governing-member', top, 'descendants')).ids).toContain(leaf);
 	});
 
 	it('takes a new ban into account despite a warm cache', async () => {
@@ -214,5 +218,120 @@ describe('new statements that store no access setting', () => {
 		expect((await load(OUTSIDER, top, 'descendants')).ids).toEqual([stored]);
 		expect((await load(OUTSIDER, inherits)).status).toBe(403);
 		expect((await load(OUTSIDER, stored)).status).toBe(200);
+	});
+});
+
+describe('an answer-type child with a copy of its parent’s setting', () => {
+	type ChildKind = [string, Record<string, unknown>];
+
+	const kinds: ChildKind[] = [
+		['an improved answer', { statementType: 'option' }],
+		['a ballot', { statementType: 'question', agreementBallot: { questionId: 'x' } }],
+		['an agreement', { statementType: 'agreement' }],
+	];
+
+	/** public top -> secret question -> a child carrying the same secret setting. */
+	function copied(fields: Record<string, unknown>): { top: string; q: string; child: string } {
+		const top = newId('copy-top');
+		const q = newId('copy-q');
+		const child = newId('copy-child');
+		topWith(top, 'public');
+		statement(q, {
+			parentId: top,
+			parents: ['top', top],
+			topParentId: top,
+			statementType: 'question',
+			...withAccess('secret'),
+		});
+		statement(child, {
+			parentId: q,
+			parents: ['top', top, q],
+			topParentId: top,
+			...withAccess('secret'),
+			...fields,
+		});
+
+		return { top, q, child };
+	}
+
+	describe.each(kinds)('%s', (_name, fields) => {
+		it('is open to a member of the question when the child is the root', async () => {
+			const { q, child } = copied(fields);
+			role(MEMBER, q, 'member');
+
+			expect((await load(MEMBER, child)).status).toBe(200);
+		});
+
+		it('stays on the page for a member loading the question', async () => {
+			const { q, child } = copied(fields);
+			role(MEMBER, q, 'member');
+
+			expect((await load(MEMBER, q)).ids).toEqual([child]);
+		});
+
+		it('stays on the page for a member loading from an open top', async () => {
+			const { top, q, child } = copied(fields);
+			role(MEMBER, q, 'member');
+
+			expect((await load(MEMBER, top, 'descendants')).ids).toEqual([q, child].sort());
+		});
+
+		it('is still refused to an outsider', async () => {
+			const { top, child } = copied(fields);
+
+			expect((await load(OUTSIDER, child)).status).toBe(403);
+			expect((await load(OUTSIDER, top, 'descendants')).ids).toEqual([]);
+		});
+
+		it('is still refused to someone banned on the question', async () => {
+			const { q, child } = copied(fields);
+			role(MEMBER, q, 'banned');
+
+			expect((await load(MEMBER, child)).status).toBe(403);
+		});
+	});
+
+	it('keeps a setting that differs from the parent as the child’s own', async () => {
+		const { q, child } = copied({ statementType: 'option', membership: { access: 'moderated' } });
+		role(MEMBER, q, 'member');
+
+		expect((await load(MEMBER, child)).status).toBe(403);
+		expect((await load(MEMBER, q)).ids).toEqual([]);
+	});
+
+	it('keeps a real nested question as its own private space, even with the same setting', async () => {
+		const { q, child } = copied({ statementType: 'question' });
+		role(MEMBER, q, 'member');
+
+		expect((await load(MEMBER, child)).status).toBe(403);
+		expect((await load(MEMBER, q)).ids).toEqual([]);
+	});
+});
+
+describe('read cost', () => {
+	const CHILDREN = 40;
+
+	function roleReads(spy: jest.SpyInstance): string[] {
+		return spy.mock.calls
+			.flat()
+			.filter((ref: { collection: string }) => ref.collection === 'statementsSubscribe')
+			.map((ref: { id: string }) => ref.id);
+	}
+
+	it('reads roles for the levels with a setting, not for each child that inherits', async () => {
+		const top = newId('cost-top');
+		const group = newId('cost-group');
+		topWith(top, 'public');
+		childWith(group, top, ['top', top], 'secret');
+		for (let index = 0; index < CHILDREN; index++) {
+			childWith(`${group}-child-${index}`, top, ['top', top, group]);
+		}
+		const spy = jest.spyOn(getFirestore(), 'getAll');
+
+		const result = await load(OUTSIDER, top, 'descendants');
+
+		expect(result.ids).toEqual([]);
+		expect(roleReads(spy).sort()).toEqual([`${OUTSIDER}--${group}`, `${OUTSIDER}--${top}`].sort());
+		spy.mockRestore();
 	});
 });
