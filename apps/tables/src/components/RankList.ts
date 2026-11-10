@@ -3,7 +3,9 @@ import type { TableAssignmentTopic } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { clampDragOffset, displacement, dragTargetIndex } from '@/logic/rankDrag';
 import type { RowBox } from '@/logic/rankDrag';
-import { isRankingFull, moveRank, moveRankTo, orderTopics, rankOf } from '@/logic/ranking';
+import { moveRank, moveRankTo, orderTopics, rankOf, replacedBy, toggleRank } from '@/logic/ranking';
+import { cancelFlips, flipDeltas, measureTops, playFlip, prefersReducedMotion } from '@/lib/flip';
+import type { RowTops } from '@/lib/flip';
 import { dragHandleIcon, infoIcon } from '@/components/icons';
 
 export interface RankListAttrs {
@@ -28,6 +30,24 @@ interface ActiveDrag {
 }
 
 const PICKED_ROW_SELECTOR = '.rank-row--picked';
+const ROW_SELECTOR = '.rank-row[data-topic-id]';
+const GLOW_SELECTOR = '.rank-row__glow';
+
+/** A tap that changed the list: the row that should glow once it lands, and where every row stood before. */
+interface PendingFlip {
+	landed: string | null;
+	first: RowTops | null;
+}
+
+function rowElements(list: HTMLElement): Map<string, HTMLElement> {
+	const rows = new Map<string, HTMLElement>();
+
+	list.querySelectorAll<HTMLElement>(ROW_SELECTOR).forEach((row) => {
+		if (row.dataset.topicId) rows.set(row.dataset.topicId, row);
+	});
+
+	return rows;
+}
 
 function measurePickedRows(list: HTMLElement): RowBox[] {
 	return Array.from(list.querySelectorAll<HTMLElement>(PICKED_ROW_SELECTOR)).map((row) => {
@@ -51,6 +71,7 @@ export const RankList: m.ClosureComponent<RankListAttrs> = (initial) => {
 	let list: HTMLElement | null = null;
 	let drag: ActiveDrag | null = null;
 	let announcement = '';
+	let pendingFlip: PendingFlip | null = null;
 	const explained = new Set<string>();
 
 	function titleOf(topicId: string): string {
@@ -68,6 +89,62 @@ export const RankList: m.ClosureComponent<RankListAttrs> = (initial) => {
 	function applyMove(next: string[], topicId: string): void {
 		announceMove(next, topicId);
 		latest.onReorder(next);
+	}
+
+	function announceToggle(topicId: string): void {
+		const next = toggleRank(latest.ranked, topicId);
+		const order = next.map(titleOf).join(', ');
+		const replaced = replacedBy(latest.ranked, topicId);
+
+		if (!next.includes(topicId)) {
+			announcement = t('tableAssignment.rank.removed', { topic: titleOf(topicId) });
+		} else if (replaced) {
+			announcement = t('tableAssignment.rank.replaced', {
+				topic: titleOf(topicId),
+				place: rankOf(next, topicId),
+				replaced: titleOf(replaced),
+				order,
+			});
+		} else {
+			announcement = t('tableAssignment.rank.picked', {
+				topic: titleOf(topicId),
+				place: rankOf(next, topicId),
+				order,
+			});
+		}
+	}
+
+	function handleToggle(topicId: string): void {
+		announceToggle(topicId);
+		// A tap during a drag is not animated: the dragged row owns its transform.
+		pendingFlip = drag
+			? null
+			: { landed: latest.ranked.includes(topicId) ? null : topicId, first: null };
+		latest.onToggle(topicId);
+	}
+
+	/** Before the list redraws: note where rows stand now (a slide in progress counts) and stop old slides. */
+	function rememberRows(): void {
+		if (!pendingFlip || !list || drag || prefersReducedMotion()) return;
+
+		const rows = rowElements(list);
+
+		pendingFlip.first = measureTops(rows);
+		cancelFlips(rows.values());
+	}
+
+	/** After the list redrew: slide every row that moved from where it was. */
+	function playRows(): void {
+		const flip = pendingFlip;
+
+		pendingFlip = null;
+		if (!flip?.first || !list) return;
+
+		const rows = rowElements(list);
+
+		playFlip(rows, flipDeltas(flip.first, measureTops(rows)), flip.landed, (row) =>
+			row.querySelector<HTMLElement>(GLOW_SELECTOR),
+		);
 	}
 
 	function handleMove(event: PointerEvent): void {
@@ -180,8 +257,7 @@ export const RankList: m.ClosureComponent<RankListAttrs> = (initial) => {
 						{
 							type: 'button',
 							'aria-pressed': isPicked ? 'true' : 'false',
-							'aria-disabled': !isPicked && isRankingFull(latest.ranked) ? 'true' : undefined,
-							onclick: () => latest.onToggle(topic.topicId),
+							onclick: () => handleToggle(topic.topicId),
 						},
 						[
 							m('span.rank-row__badge', { 'aria-hidden': 'true' }, isPicked ? String(rank) : ''),
@@ -229,6 +305,8 @@ export const RankList: m.ClosureComponent<RankListAttrs> = (initial) => {
 						oncreate: ({ dom }: m.VnodeDOM) => {
 							list = dom as HTMLElement;
 						},
+						onbeforeupdate: rememberRows,
+						onupdate: playRows,
 					},
 					visible.map(row),
 				),

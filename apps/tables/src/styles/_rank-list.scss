@@ -32,6 +32,16 @@
     transition: none;
   }
 
+  // Landing highlight: a brand-coloured wash that fades in and out (opacity only, driven from TS).
+  &__glow {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--brand);
+    opacity: 0;
+    pointer-events: none;
+  }
+
   &__main {
     display: flex;
     flex: 1;
@@ -135,5 +145,9 @@
 @media (prefers-reduced-motion: reduce) {
   .rank-row {
     transition: none;
+  }
+
+  .rank-row__glow {
+    display: none;
   }
 }

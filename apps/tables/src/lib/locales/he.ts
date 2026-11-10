@@ -164,7 +164,12 @@ const he: Record<string, string> = {
 	'tableAssignment.rank.hint.0': 'אפשר לבחור עד שלושה.',
 	'tableAssignment.rank.hint.1': 'אפשר להוסיף עוד שניים.',
 	'tableAssignment.rank.hint.2': 'אפשר להוסיף עוד אחד. כדי לשנות סדר, גררו את הידית.',
-	'tableAssignment.rank.hint.3': 'כדי לשנות סדר, גררו את הידית. כדי להחליף נושא, הקישו עליו.',
+	'tableAssignment.rank.hint.3': 'בחירת נושא נוסף תחליף את מספר 3. כדי להסיר נושא, הקישו עליו.',
+	'tableAssignment.rank.hint.4': 'כדי לשנות סדר, גררו את הידית. כדי להסיר נושא, הקישו עליו.',
+	'tableAssignment.rank.picked': '{{topic}} נבחר, במקום {{place}}. הסדר: {{order}}.',
+	'tableAssignment.rank.replaced':
+		'{{topic}} נבחר במקום {{place}}, והחליף את {{replaced}}, שהוסר. הסדר: {{order}}.',
+	'tableAssignment.rank.removed': '{{topic}} הוסר.',
 	'tableAssignment.rank.handle': 'שינוי המקום של {{topic}}. גוררים, או משתמשים בחיצים במקלדת.',
 	'tableAssignment.rank.note':
 		'ננסה להושיב אתכם בנושא שבחרתם. לפעמים תשבו בנושא אחר, כדי שכל שולחן יישאר תמונה קטנה של כל החדר.',
