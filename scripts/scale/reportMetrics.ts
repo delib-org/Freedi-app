@@ -68,6 +68,7 @@ export function metricsOf(run: RunResult): MetricRow[] {
 	const presence = phaseOf(run, 'presence');
 	const answer = phaseOf(run, 'new-answer');
 	const vote = phaseOf(run, 'vote');
+	const answerBatch = phaseOf(run, 'answer-batch');
 	const n = run.config.members;
 	const open = (shape: string): number => round(meanDocsDelivered(run, 'open', shape));
 	const openTotal =
@@ -78,7 +79,9 @@ export function metricsOf(run: RunResult): MetricRow[] {
 		open('answersWindow') +
 		open('presence') +
 		open('participationRatings') +
-		open('participationViewsCount');
+		open('participationViewsCount') +
+		open('questionProgress') +
+		open('batchAnswers');
 	const presenceDeliveredPerWrite = perUnit(
 		meanDocsDelivered(run, 'presence', 'presence'),
 		presence.units,
@@ -221,6 +224,18 @@ export function metricsOf(run: RunResult): MetricRow[] {
 			kind: 'measured',
 		},
 		{
+			key: 'open.progress',
+			label: 'Open: question progress doc (one read, also for hosts)',
+			value: open('questionProgress'),
+			kind: 'measured',
+		},
+		{
+			key: 'open.batchAnswers',
+			label: 'Open: Rate view batch, live copy of the cards on screen',
+			value: open('batchAnswers'),
+			kind: 'measured',
+		},
+		{
 			key: 'open.total',
 			label: 'Open: total docs per participant',
 			value: round(openTotal),
@@ -234,11 +249,25 @@ export function metricsOf(run: RunResult): MetricRow[] {
 			note: 'sampled per-participant x 1,000',
 		},
 		{
-			key: 'open.participationMs',
-			label: 'One participant download of all ratings (ms, local)',
-			value: run.participationReadMs,
+			key: 'open.answerBatch',
+			label: 'Answers returned per getAnswerBatch call (function reads, not client reads)',
+			value: open('answerBatch'),
 			kind: 'measured',
-			note: 'local only; not comparable to production',
+			note: 'not included in the open total',
+		},
+		{
+			key: 'batch.readsPerCall',
+			label: 'Docs read by functions per getAnswerBatch call',
+			value: round(perUnit(answerBatch.totalReads, answerBatch.units), 1),
+			kind: 'measured',
+			note: 'per-instance answer cache; workers on one machine',
+		},
+		{
+			key: 'ranked.topPage',
+			label: 'Ranked list: docs read for the first page',
+			value: round(meanDocsDelivered(run, 'ranked-list', 'rankedTopPage')),
+			kind: 'measured',
+			note: 'replaces downloading every answer; no listener',
 		},
 		{
 			key: 'presence.delivered',
@@ -326,7 +355,7 @@ export function metricsOf(run: RunResult): MetricRow[] {
 			label: 'Answers rated at all',
 			value: run.exposure.stats.ratedAnswers,
 			kind: 'measured',
-			note: `of ${run.exposure.stats.totalAnswers}; model: newest-first, ${run.config.ratingsPerMember} ratings each`,
+			note: `of ${run.exposure.stats.totalAnswers}; model: the sampler's batches, ${run.config.ratingsPerMember} ratings each`,
 		},
 		{
 			key: 'exposure.oldestQuarter',

@@ -44,6 +44,15 @@ export const WINDOW_SIZE = 30;
 /** `FIREBASE.FIRST_LOAD_LIMIT` in src/constants/common.ts. */
 export const HEAD_START_LIMIT = 10;
 
+/** `PRESENCE.MAX_LISTENED_PEOPLE` in src/constants/common.ts. */
+export const PRESENCE_CAP = 100;
+/** `PRESENCE.LARGE_QUESTION_PEOPLE` in src/constants/common.ts. */
+export const LARGE_QUESTION_PEOPLE = 100;
+/** `RANKED_ANSWERS.PAGE_SIZE` in src/constants/common.ts. */
+export const RANKED_PAGE_SIZE = 30;
+/** `FIREBASE.IN_QUERY_LIMIT` in src/constants/common.ts. */
+export const IN_QUERY_LIMIT = 30;
+
 /** Pacing: this many trigger-firing writes, then wait for the emulator to go quiet. */
 export const PACED_BATCH = 5;
 export const SETTLE_QUIET_MS = 1500;
@@ -82,6 +91,24 @@ export const SMALL_CONFIG: Omit<ScaleConfig, 'label' | 'onlyPhases'> = {
 		votes: 50,
 	},
 };
+
+/** The counters `isLargeForPresence` (src/helpers/presenceVisibility.ts) looks at. */
+export interface PresenceSize {
+	entered?: number;
+	asParentTotalEvaluators?: number;
+	totalEvaluators?: number;
+}
+
+/** The same rule as `isLargeForPresence`: at this size nobody writes or listens to presence. */
+export function isLargeForPresence(size: PresenceSize): boolean {
+	const people = Math.max(
+		size.entered ?? 0,
+		size.asParentTotalEvaluators ?? 0,
+		size.totalEvaluators ?? 0,
+	);
+
+	return people >= LARGE_QUESTION_PEOPLE;
+}
 
 function hostOf(hostAndPort: string): string {
 	return hostAndPort.slice(0, hostAndPort.lastIndexOf(':'));

@@ -3,7 +3,7 @@
  * is paced so the emulator's backlog does not swamp the numbers: a small batch
  * of writes, then wait until the functions emulator is quiet.
  */
-import { Collections, getVoteId } from '@freedi/shared-types';
+import { Collections, getVoteId, isAnswerBatchQuestion } from '@freedi/shared-types';
 import type { Creator, Statement } from '@freedi/shared-types';
 import type { DocumentData } from 'firebase-admin/firestore';
 import { WINDOW_SIZE, PACED_BATCH } from './config';
@@ -14,6 +14,7 @@ import { memberCreator, presenceDoc, QUESTION_ID, subscriptionFor, TOP_ID, viewD
 import type { Seeded } from './seed';
 import type { TraceTail } from './trace';
 import type { PhaseWindow } from './metrics';
+import { sampleAnswers } from './sampler';
 
 const COUNTED_COLLECTIONS = [
 	Collections.creditLedger,
@@ -99,6 +100,26 @@ function nextUnrated(
 	];
 	const answer = rotated.find((candidate) => !rated.has(candidate.statementId));
 	if (!answer) throw new Error(`No unrated answer left in the window for ${user.uid}`);
+	rated.add(answer.statementId);
+	ratedBy.set(user.uid, rated);
+
+	return answer;
+}
+
+/** What the app shows this person next: the sampler's pick above the threshold. */
+function nextToRate(
+	user: Creator,
+	answers: Statement[],
+	window: Statement[],
+	ratedBy: Map<string, Set<string>>,
+	offset: number,
+): Statement {
+	if (!isAnswerBatchQuestion(answers.length)) {
+		return nextUnrated(user, window, ratedBy, offset);
+	}
+	const rated = ratedBy.get(user.uid) ?? new Set<string>();
+	const [answer] = sampleAnswers(answers, rated, user.uid, 1);
+	if (!answer) throw new Error(`The sampler has nothing left for ${user.uid}`);
 	rated.add(answer.statementId);
 	ratedBy.set(user.uid, rated);
 
@@ -204,12 +225,12 @@ export async function runBurst(input: BurstInput): Promise<PhaseRecord[]> {
 	);
 	await runPhase('rate', config.burst.ratings, () =>
 		paced(seeded.members.slice(0, config.burst.ratings), PACED_BATCH, trace, (user, i) =>
-			rate(user, nextUnrated(user, newestWindow, ratedBy, i), i),
+			rate(user, nextToRate(user, answers, newestWindow, ratedBy, i), i),
 		),
 	);
 	await runPhase('rate-first-time', FIRST_TIME_RATERS, () =>
 		paced(arrivals.slice(0, FIRST_TIME_RATERS), PACED_BATCH, trace, (user, i) =>
-			rate(user, nextUnrated(user, newestWindow, ratedBy, i), i),
+			rate(user, nextToRate(user, answers, newestWindow, ratedBy, i), i),
 		),
 	);
 	await runPhase('rate-simultaneous', config.burst.simultaneousRatings, async () => {
@@ -218,7 +239,7 @@ export async function runBurst(input: BurstInput): Promise<PhaseRecord[]> {
 			config.burst.ratings + config.burst.simultaneousRatings,
 		);
 		await Promise.all(
-			raters.map((user, i) => rate(user, nextUnrated(user, newestWindow, ratedBy, i), i)),
+			raters.map((user, i) => rate(user, nextToRate(user, answers, newestWindow, ratedBy, i), i)),
 		);
 	});
 	await runPhase('new-answer', config.burst.newAnswers, () =>
@@ -233,6 +254,9 @@ export async function runBurst(input: BurstInput): Promise<PhaseRecord[]> {
 				return setDoc(Collections.statements, answer.statementId, answer);
 			},
 		),
+	);
+	await runPhase('answer-batch', clients.length, () =>
+		paced(clients, PACED_BATCH, trace, (client) => client.fetchAnswerBatch(QUESTION_ID)),
 	);
 	const ballot = newestWindow.slice(0, BALLOT_SIZE);
 	await runPhase('vote', config.burst.votes, () =>
