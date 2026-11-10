@@ -6,6 +6,7 @@ import { goTo } from '@/lib/navigate';
 import { safeStorage } from '@/lib/safeStorage';
 import { loadDraft, saveDraft } from '@/logic/localDraft';
 import type { ChoicesDraft } from '@/logic/localDraft';
+import { participantTopicOrder } from '@/logic/participantOrder';
 import { answerFromRecord } from '@/logic/positionStops';
 import { keepKnownTopics, rankHintIndex, toggleRank } from '@/logic/ranking';
 import { nextStep } from '@/logic/steps';
@@ -120,6 +121,8 @@ export const RankedPreferences: m.ClosureComponent<{ context: ParticipantContext
 			choices = choices ?? firstChoices(context);
 
 			const current = choices;
+			// Each person sees the tables in their own random order, drawn once and kept in this browser.
+			const ownOrder = participantTopicOrder(topics, sessionId, uid, safeStorage);
 
 			return m('.screen', [
 				m(StepHeader, {
@@ -134,7 +137,7 @@ export const RankedPreferences: m.ClosureComponent<{ context: ParticipantContext
 							})
 						: null,
 					m(RankList, {
-						topics,
+						topics: ownOrder,
 						ranked: current.ranked,
 						matches: matchesFilter,
 						onToggle: (topicId: string) =>
