@@ -14,16 +14,10 @@ import { getAuth } from 'firebase-admin/auth';
 import * as admin from 'firebase-admin';
 import { logger } from 'firebase-functions';
 import { Collections, NotificationChannel } from '@freedi/shared-types';
-import type { NotificationQueueItem } from '@freedi/shared-types';
+import type { NotificationQueueItem, RoutableQueueItem } from '@freedi/shared-types';
 import { sendNotificationEmail } from '../../notifications/notificationEmail';
 
 const getDb = () => getFirestore();
-
-/** Local until `pushTokens` joins NotificationQueueItem in shared-types. */
-export type RoutableQueueItem = NotificationQueueItem & {
-	/** Already resolved by the caller: send to exactly these and look nothing up. */
-	pushTokens?: string[];
-};
 
 interface ChannelResult {
 	channel: NotificationChannel;

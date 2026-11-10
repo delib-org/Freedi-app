@@ -1,4 +1,4 @@
-import { NotificationChannel } from '@freedi/shared-types';
+import { NotificationChannel, type RoutableQueueItem } from '@freedi/shared-types';
 
 jest.mock('firebase-functions', () => ({
 	logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
@@ -19,7 +19,7 @@ jest.mock('firebase-admin/firestore', () => ({
 	}),
 }));
 
-import { routeToChannels, type RoutableQueueItem } from '../channelRouter';
+import { routeToChannels } from '../channelRouter';
 
 function item(extra: Partial<RoutableQueueItem> = {}): RoutableQueueItem {
 	return {

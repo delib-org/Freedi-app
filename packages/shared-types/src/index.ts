@@ -917,6 +917,8 @@ export {
 
 export type {
   NotificationQueueItem,
+  RoutableQueueItem,
+  LargeQuestionDigestMarker,
   CreditRule,
   CreditTransaction,
   UserEngagement,
