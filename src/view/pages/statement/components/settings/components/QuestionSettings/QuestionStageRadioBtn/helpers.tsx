@@ -32,7 +32,7 @@ export function getStepsInfo(questionStep?: QuestionStep): StepInfo | undefined 
 
 			case QuestionStep.suggestion:
 				return {
-					name: 'Suggestions',
+					name: 'Answers',
 					icon: <LightBulbIcon className={styles.img} />,
 					color: '--settings-suggestions',
 					message: 'Please suggest a solution to the question',

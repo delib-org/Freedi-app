@@ -103,7 +103,7 @@ const StakeholderMore: FC<StakeholderMoreProps> = ({ statement }) => {
 					</button>
 					{recalcResult?.kind === 'done' && (
 						<InlineNote variant="info">
-							{`${t('Recalculated indices for')} ${recalcResult.optionsUpdated} ${t('options')}`}
+							{`${t('Recalculated indices for')} ${recalcResult.optionsUpdated} ${t('answers')}`}
 						</InlineNote>
 					)}
 					{recalcResult?.kind === 'failed' && (

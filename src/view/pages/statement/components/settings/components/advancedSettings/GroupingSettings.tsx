@@ -563,7 +563,7 @@ const GroupingSettings: FC<GroupingSettingsProps> = ({ statement, settings }) =>
 							{t('Last run')}: {new Date(statement.condensationStatus.lastRunAt).toLocaleString()}
 							{' · '}
 							{statement.condensationStatus.producedGroupCount ?? 0} {t('groups from')}{' '}
-							{statement.condensationStatus.inputCount ?? 0} {t('suggestions')}
+							{statement.condensationStatus.inputCount ?? 0} {t('answers')}
 						</p>
 					)}
 
@@ -746,7 +746,7 @@ const PreviewModal: FC<PreviewModalProps> = ({ payload, applying, onApply, onClo
 											<strong>{group.evaluationSnapshot.averageEvaluation.toFixed(2)}</strong>
 										</span>
 										<span>
-											{t('Consensus')}:{' '}
+											{t('Agreement score')}:{' '}
 											<strong>{group.evaluationSnapshot.agreement.toFixed(2)}</strong>
 										</span>
 										<span style={{ color: 'var(--agree, #2d8659)' }}>

@@ -17,7 +17,7 @@ const ACTION_LABELS: Record<string, string> = {
 	[CreditAction.DAILY_LOGIN]: 'Daily login',
 	[CreditAction.STREAK_BONUS]: 'Streak bonus',
 	[CreditAction.CONSENSUS_REACHED]: 'Consensus reached',
-	[CreditAction.SUGGESTION_ACCEPTED]: 'Suggestion accepted',
+	[CreditAction.SUGGESTION_ACCEPTED]: 'Answer accepted',
 	[CreditAction.MC_PARTICIPATION]: 'MC participation',
 	[CreditAction.INVITE_FRIEND]: 'Invited friend',
 };

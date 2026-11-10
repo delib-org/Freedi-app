@@ -44,7 +44,7 @@ const ParticipationFunnel: React.FC<ParticipationFunnelProps> = ({
 	};
 
 	addSegment(entered, '{{count}} entered');
-	addSegment(suggested, '{{count}} suggested');
+	addSegment(suggested, '{{count}} added answers');
 	addSegment(evaluated, '{{count}} evaluated');
 
 	if (segments.length === 0) return null;

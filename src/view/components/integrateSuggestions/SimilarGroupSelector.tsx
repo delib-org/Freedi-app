@@ -116,7 +116,7 @@ const SimilarGroupSelector: FC<SimilarGroupSelectorProps> = ({
 							<span>{t('evaluators')}</span>
 						</div>
 						<div className={styles.selector__consensus}>
-							<span>{t('Consensus')}:</span>
+							<span>{t('Agreement score')}:</span>
 							<div className={styles.selector__consensusBar}>
 								<div
 									className={styles.selector__consensusFill}

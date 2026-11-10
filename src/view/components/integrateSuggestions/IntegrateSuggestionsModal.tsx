@@ -339,7 +339,7 @@ const IntegrateSuggestionsModal: FC<IntegrateSuggestionsModalProps> = ({
 								{t('Integration Complete')}
 							</h3>
 							<p className={styles.integrateSuggestions__successDetails}>
-								{t('Successfully merged')} {selectedIds.length} {t('suggestions')}
+								{t('Successfully merged')} {selectedIds.length} {t('answers')}
 							</p>
 							<div className={styles.integrateSuggestions__successBadge}>
 								<span>{migratedEvaluatorsCount}</span>

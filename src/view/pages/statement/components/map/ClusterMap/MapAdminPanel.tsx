@@ -277,7 +277,7 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 		v === 'themes' ? t('Themes') : v === 'ideas' ? t('Ideas') : t('Everything');
 
 	const filterMetricLabel = (m: MapFilterMetric): string =>
-		m === 'none' ? t('None') : m === 'consensus' ? t('Consensus') : t('Average rating');
+		m === 'none' ? t('None') : m === 'consensus' ? t('Agreement score') : t('Average rating');
 
 	// The active threshold + which field it writes depend on the chosen metric.
 	const activeThreshold = filterMetric === 'average' ? minAverageEvaluation : minConsensus;

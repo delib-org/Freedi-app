@@ -50,7 +50,7 @@ describe('SearchResults', () => {
 		const headings = screen.getAllByRole('heading').map((heading) => heading.textContent);
 		expect(headings).toEqual(['Close matches', 'Similar meaning']);
 		expect(container.querySelector('mark')?.textContent).toBe('Talk');
-		expect(screen.getAllByText('Option')).toHaveLength(2);
+		expect(screen.getAllByText('Answer')).toHaveLength(2);
 	});
 
 	it('opens the chosen statement', () => {

@@ -38,7 +38,7 @@ const ResolutionPhase: FC = () => {
 								<div className={styles.solutionContent}>
 									<h4 className={styles.solutionTitle}>{solution.statement}</h4>
 									<span className={styles.solutionConsensus}>
-										{t('Consensus')}: {Math.round((solution.consensus ?? 0) * 100)}%
+										{t('Agreement score')}: {Math.round((solution.consensus ?? 0) * 100)}%
 									</span>
 								</div>
 								<div className={styles.solutionActions}>

@@ -14,7 +14,7 @@ describe('ParticipationFunnel', () => {
 		render(<ParticipationFunnel entered={18} suggested={13} evaluated={9} />);
 
 		expect(screen.getByText('18 entered')).toBeInTheDocument();
-		expect(screen.getByText('13 suggested')).toBeInTheDocument();
+		expect(screen.getByText('13 added answers')).toBeInTheDocument();
 		expect(screen.getByText('9 evaluated')).toBeInTheDocument();
 	});
 
@@ -22,7 +22,7 @@ describe('ParticipationFunnel', () => {
 		render(<ParticipationFunnel suggested={13} evaluated={9} />);
 
 		expect(screen.queryByText(/entered/)).not.toBeInTheDocument();
-		expect(screen.getByText('13 suggested')).toBeInTheDocument();
+		expect(screen.getByText('13 added answers')).toBeInTheDocument();
 	});
 
 	it('renders nothing when all counts are zero or missing', () => {
@@ -34,7 +34,9 @@ describe('ParticipationFunnel', () => {
 	it('exposes a single fluent sentence to screen readers', () => {
 		render(<ParticipationFunnel entered={18} suggested={13} evaluated={9} />);
 
-		const funnel = screen.getByLabelText('Participation: 18 entered, 13 suggested, 9 evaluated');
+		const funnel = screen.getByLabelText(
+			'Participation: 18 entered, 13 added answers, 9 evaluated',
+		);
 		expect(funnel).toBeInTheDocument();
 	});
 

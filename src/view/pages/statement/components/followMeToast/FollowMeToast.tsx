@@ -21,11 +21,11 @@ function getScreenName(path: string | undefined, t: (key: string) => string): st
 
 	const screenLabels: Record<string, string> = {
 		chat: t('Chat'),
-		options: t('Solutions'),
+		options: t('Answers'),
 		questions: t('Questions'),
 		vote: t('Vote'),
 		settings: t('Settings'),
-		'mind-map': t('Mind Map'),
+		'mind-map': t('Mind map'),
 		'agreement-map': t('Agreement Map'),
 		'polarization-index': t('Polarization Index'),
 		'sub-questions-map': t('Sub Questions Map'),

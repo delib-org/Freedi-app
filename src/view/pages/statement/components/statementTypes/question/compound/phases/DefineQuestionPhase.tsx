@@ -190,7 +190,7 @@ const DefineQuestionPhase: FC = () => {
 										<span className={styles.topSuggestionLabel}>{t('Leading suggestion')}</span>
 										<p className={styles.topSuggestionText}>{topTitleOption.statement}</p>
 										<span className={styles.topSuggestionConsensus}>
-											{t('Consensus')}: {Math.round((topTitleOption.consensus ?? 0) * 100)}%
+											{t('Agreement score')}: {Math.round((topTitleOption.consensus ?? 0) * 100)}%
 										</span>
 									</div>
 								)}

@@ -26,14 +26,14 @@ const InitialIdeaModal: FC<InitialIdeaModalProps> = ({ onSubmit, onClose }) => {
 	};
 
 	return (
-		<Modal closeModal={onClose} title={t('Share Your Idea')}>
+		<Modal closeModal={onClose} title={t('Share your answer')}>
 			<div className={styles.initialIdeaModal}>
 				<div className={styles.modalHeader}>
 					<div className={styles.headerIcon}>
 						<span className={styles.iconEmoji}>💡</span>
 					</div>
 					<div className={styles.headerContent}>
-						<h2 className={styles.modalTitle}>{t('Share Your Idea')}</h2>
+						<h2 className={styles.modalTitle}>{t('Share your answer')}</h2>
 						<p className={styles.modalSubtitle}>
 							{t(
 								'Tell us your initial idea or solution. The AI will help you refine it into a clear, testable proposal.',
