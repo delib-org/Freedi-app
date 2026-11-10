@@ -64,18 +64,53 @@ function logTruncatedCheck(answer: Statement, totalCharacters: number): void {
 	});
 }
 
+/** The body lines onStatementCreated moves into paragraph children when it splits a title. */
+function splitBodyLines(title: string): string[] {
+	return title
+		.split('\n')
+		.slice(1)
+		.filter((line) => line.trim());
+}
+
+/** The title splitStatementIntoParagraphs leaves behind for this created text. */
+function splitTitle(title: string): string {
+	return title.split('\n')[0].trim();
+}
+
 /**
- * True when the verdict no longer applies to the document. `hide` and
- * `integratedInto` count only if they appeared after creation: a value already
- * in the creation snapshot came from the client and must not switch the check off.
+ * Whether the words the verdict was given on are still the words on the
+ * document. The split that onStatementCreated runs on every multi-line title
+ * rewrites `statement` to its first line, usually before the AI answers, so
+ * that exact rewrite is not a change. Any other edit, a shortened title
+ * included, is one.
  */
-function changedSinceCreation(created: Statement, current: Statement): boolean {
-	return (
-		current.statement !== created.statement ||
-		!isDeepStrictEqual(current.paragraphs, created.paragraphs) ||
-		(current.hide === true && created.hide !== true) ||
-		(Boolean(current.integratedInto) && !created.integratedInto)
-	);
+function isSameTextAsCreated(created: Statement, current: Statement): boolean {
+	const isSameTitle =
+		current.statement === created.statement ||
+		(splitBodyLines(created.statement).length > 0 &&
+			current.statement === splitTitle(created.statement));
+
+	return isSameTitle && isDeepStrictEqual(current.paragraphs, created.paragraphs);
+}
+
+/**
+ * The current words of an edited answer. Once the split has run (it writes
+ * `description`), the later lines live in child statements, so they are taken
+ * from the creation snapshot: re-checking the first line alone would let an
+ * edit to it clear abusive text further down.
+ */
+function editedAnswerText(created: Statement, current: Statement): string {
+	const wasSplit = !created.description && Boolean(current.description);
+	const body = wasSplit ? splitBodyLines(created.statement) : [];
+
+	return [answerFullText(current), ...body].filter(Boolean).join('\n');
+}
+
+/** Cuts the text to what one AI call may see, and records when that loses some of it. */
+function limitCheckedText(answer: Statement, fullText: string): string {
+	if (fullText.length > MAX_CHECKED_CHARACTERS) logTruncatedCheck(answer, fullText.length);
+
+	return fullText.substring(0, MAX_CHECKED_CHARACTERS);
 }
 
 function rejectAfterTimeout(
@@ -116,11 +151,13 @@ async function isAnswerFlagged(text: string, answer: Statement): Promise<boolean
 	}
 }
 
+interface NoticeContext {
+	language: AnswerHiddenLanguage;
+	questionTitle?: string;
+}
+
 /** A failed read loses only the language or the question's title, never the notice. */
-async function readNoticeContext(
-	answer: Statement,
-	text: string,
-): Promise<{ language: AnswerHiddenLanguage; questionTitle?: string }> {
+async function readNoticeContext(answer: Statement, text: string): Promise<NoticeContext> {
 	try {
 		const [authorSnap, questionSnap] = await Promise.all([
 			db.collection(Collections.users).doc(answer.creatorId).get(),
@@ -142,31 +179,37 @@ async function readNoticeContext(
 	}
 }
 
+interface HoldRequest {
+	answer: Statement;
+	eventId: string;
+	noticeContext: NoticeContext;
+}
+
 /**
  * Hide, mark and notify in one transaction, so a redelivered event finds its
  * own marker and does nothing, even if a host restored the answer in between.
  * The marker is compared by event id because a marker already on the document
- * at creation would be the client's and proves nothing. Anything else that
- * changed while the check ran leaves the document as it is.
+ * at creation would be the client's and proves nothing.
+ *
+ * `hide` or `integratedInto` appearing during the wait does not stop it: an
+ * unmarked answer would come back when a cluster is later reversed or dissolved.
+ *
+ * Returns the document, unwritten, when `verdictApplies` says its words moved on.
  */
-async function hideFlaggedAnswer(answer: Statement, eventId: string, text: string): Promise<void> {
-	const { language, questionTitle } = await readNoticeContext(answer, text);
+async function holdAnswer(
+	{ answer, eventId, noticeContext }: HoldRequest,
+	verdictApplies: (current: Statement) => boolean,
+): Promise<Statement | undefined> {
 	const answerRef = db.collection(Collections.statements).doc(answer.statementId);
 	const noticeRef = db
 		.collection(Collections.inAppNotifications)
 		.doc(answerHiddenNoticeId(answer.statementId));
 
-	await db.runTransaction(async (transaction) => {
+	return db.runTransaction(async (transaction) => {
 		const current = await transaction.get(answerRef);
 		const currentAnswer = current.data() as Statement | undefined;
-		if (!currentAnswer || currentAnswer.answerModeration?.eventId === eventId) return;
-		if (changedSinceCreation(answer, currentAnswer)) {
-			console.info('moderateNewAnswer: answer changed during the check, left as it is', {
-				statementId: answer.statementId,
-			});
-
-			return;
-		}
+		if (!currentAnswer || currentAnswer.answerModeration?.eventId === eventId) return undefined;
+		if (!verdictApplies(currentAnswer)) return currentAnswer;
 
 		const now = Date.now();
 		const marker: AnswerModeration = {
@@ -179,21 +222,43 @@ async function hideFlaggedAnswer(answer: Statement, eventId: string, text: strin
 			answerModeration: marker,
 			lastUpdate: now,
 		});
-		transaction.set(noticeRef, buildAnswerHiddenNotice({ answer, language, questionTitle, now }));
+		transaction.set(noticeRef, buildAnswerHiddenNotice({ answer, ...noticeContext, now }));
+
+		return undefined;
 	});
+}
+
+/**
+ * A flagged answer is held unless its words really changed during the wait.
+ * Then the current words get one more check, and at most one: if they flag too,
+ * the answer is held even if it was edited yet again, because two flagged
+ * versions in a few seconds is not a change of heart.
+ */
+async function holdFlaggedAnswer(answer: Statement, eventId: string, text: string): Promise<void> {
+	const request = { answer, eventId, noticeContext: await readNoticeContext(answer, text) };
+	const editedAnswer = await holdAnswer(request, (current) => isSameTextAsCreated(answer, current));
+	if (!editedAnswer) return;
+
+	const editedText = limitCheckedText(answer, editedAnswerText(answer, editedAnswer));
+	if (!editedText || !(await isAnswerFlagged(editedText, answer))) {
+		console.info('moderateNewAnswer: edited during the check, left visible', {
+			statementId: answer.statementId,
+		});
+
+		return;
+	}
+	await holdAnswer(request, () => true);
 }
 
 export async function moderateNewAnswer(event: AnswerCreatedEvent): Promise<void> {
 	const answer = event.data?.data() as Statement | undefined;
 	if (!answer || !isNewMainAppAnswer(answer)) return;
 
-	const fullText = answerFullText(answer);
-	if (fullText.length > MAX_CHECKED_CHARACTERS) logTruncatedCheck(answer, fullText.length);
-	const text = fullText.substring(0, MAX_CHECKED_CHARACTERS);
+	const text = limitCheckedText(answer, answerFullText(answer));
 	if (!text || !(await isAnswerFlagged(text, answer))) return;
 
 	try {
-		await hideFlaggedAnswer(answer, event.id, text);
+		await holdFlaggedAnswer(answer, event.id, text);
 	} catch (error) {
 		logError(error, {
 			operation: OPERATION,

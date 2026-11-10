@@ -20,7 +20,7 @@ jest.mock('../../utils/errorHandling', () => ({
 }));
 
 import { answerFullText, moderateNewAnswer } from '../fn_moderateNewAnswer';
-import { answerHiddenNoticeId, pickAnswerHiddenLanguage } from '../answerHiddenNotice';
+import { answerHiddenNoticeId } from '../answerHiddenNotice';
 
 const ANSWER = 'answer-1';
 const QUESTION = 'question-1';
@@ -217,70 +217,227 @@ describe('moderateNewAnswer', () => {
 });
 
 describe('moderateNewAnswer when the document moved on during the check', () => {
-	const changeDuringCheck = (change: Record<string, unknown>): void => {
-		assessLanguage.mockImplementation(async () => {
-			await fake.db.collection(Collections.statements).doc(ANSWER).update(change);
+	const answerRef = () => fake.db.collection(Collections.statements).doc(ANSWER);
+
+	/** The first check flags, after this change lands; later checks answer `recheck`. */
+	const flagAfter = (change: Record<string, unknown>, recheck?: boolean): void => {
+		assessLanguage.mockImplementationOnce(async () => {
+			await answerRef().update(change);
 
 			return true;
 		});
+		if (recheck !== undefined) assessLanguage.mockResolvedValueOnce(recheck);
 	};
 
-	it.each([
-		['the text was edited', { statement: 'reworded' }],
-		['the description was edited', { paragraphs: [{ content: 'new' }] }],
-		['it was integrated into a cluster', { integratedInto: 'cluster-1' }],
-	])('leaves it alone when %s', async (_label, change) => {
-		const event = created();
-		changeDuringCheck(change);
+	const expectHeld = (): void => {
+		expect(stored()?.hide).toBe(true);
+		expect(marker().eventId).toBe('event-1');
+		expect(notice()?.userId).toBe(AUTHOR);
+	};
 
-		await moderateNewAnswer(event);
-
+	const expectLeftVisible = (): void => {
 		expect(stored()?.hide).toBeUndefined();
 		expect(stored()?.answerModeration).toBeUndefined();
 		expect(notice()).toBeUndefined();
+	};
+
+	describe('the title split', () => {
+		const MULTI_LINE = 'first line\nabusive second line';
+		const SPLIT = { statement: 'first line', description: 'abusive second line' };
+
+		it('holds a multi-line abusive answer after the split, with no second AI call', async () => {
+			const event = created({ statement: MULTI_LINE });
+			flagAfter(SPLIT);
+
+			await moderateNewAnswer(event);
+
+			expectHeld();
+			expect(assessLanguage).toHaveBeenCalledTimes(1);
+		});
+
+		it('recognises a title the split trimmed', async () => {
+			const event = created({ statement: '  first line  \nsecond' });
+			flagAfter({ statement: 'first line', description: 'second' });
+
+			await moderateNewAnswer(event);
+
+			expectHeld();
+			expect(assessLanguage).toHaveBeenCalledTimes(1);
+		});
+
+		it('keeps the later lines in the re-check when the title is edited after the split', async () => {
+			const event = created({ statement: MULTI_LINE });
+			flagAfter({ ...SPLIT, statement: 'a clean title' }, true);
+
+			await moderateNewAnswer(event);
+
+			expect(assessLanguage.mock.calls[1][0]).toBe('a clean title\nabusive second line');
+			expectHeld();
+		});
 	});
 
-	it('leaves it alone when a host hid it first', async () => {
-		const event = created();
-		changeDuringCheck({ hide: true });
+	describe('a real edit', () => {
+		it('stays visible when the edited text is clean, and logs no text', async () => {
+			const info = jest.spyOn(console, 'info').mockImplementation(() => undefined);
+			const event = created();
+			flagAfter({ statement: 'a kind rewording' }, false);
 
-		await moderateNewAnswer(event);
+			await moderateNewAnswer(event);
 
-		expect(stored()?.answerModeration).toBeUndefined();
-		expect(notice()).toBeUndefined();
+			expect(assessLanguage).toHaveBeenCalledTimes(2);
+			expect(assessLanguage.mock.calls[1][0]).toBe('a kind rewording');
+			expectLeftVisible();
+			expect(info).toHaveBeenCalledWith(expect.stringContaining('left visible'), {
+				statementId: ANSWER,
+			});
+			expect(JSON.stringify(info.mock.calls)).not.toContain('kind rewording');
+			info.mockRestore();
+		});
+
+		it('is held when the edited text is still abusive', async () => {
+			const event = created();
+			flagAfter({ statement: 'still offensive' }, true);
+
+			await moderateNewAnswer(event);
+
+			expect(assessLanguage).toHaveBeenCalledTimes(2);
+			expectHeld();
+		});
+
+		it('treats a shortened title as an edit, not as the split', async () => {
+			const event = created({ statement: 'keep this and offensive tail' });
+			flagAfter({ statement: 'keep this' }, false);
+
+			await moderateNewAnswer(event);
+
+			expect(assessLanguage).toHaveBeenCalledTimes(2);
+			expectLeftVisible();
+		});
+
+		it('re-checks an edited description', async () => {
+			const event = created();
+			flagAfter({ paragraphs: [{ content: 'new words' }] }, true);
+
+			await moderateNewAnswer(event);
+
+			expect(assessLanguage.mock.calls[1][0]).toContain('new words');
+			expectHeld();
+		});
+
+		it('stays visible and logs when the re-check fails', async () => {
+			const event = created();
+			flagAfter({ statement: 'changed' });
+			assessLanguage.mockRejectedValueOnce(new Error('model down'));
+
+			await moderateNewAnswer(event);
+
+			expectLeftVisible();
+			expect(logError).toHaveBeenCalledTimes(1);
+		});
+
+		it('holds without a third AI call when it is edited again during the re-check', async () => {
+			const event = created();
+			flagAfter({ statement: 'second version' });
+			assessLanguage.mockImplementationOnce(async () => {
+				await answerRef().update({ statement: 'third version' });
+
+				return true;
+			});
+
+			await moderateNewAnswer(event);
+
+			expect(assessLanguage).toHaveBeenCalledTimes(2);
+			expectHeld();
+		});
+
+		it('never re-checks a clean verdict', async () => {
+			const event = created();
+			assessLanguage.mockImplementationOnce(async () => {
+				await answerRef().update({ statement: 'changed' });
+
+				return false;
+			});
+
+			await moderateNewAnswer(event);
+
+			expect(assessLanguage).toHaveBeenCalledTimes(1);
+			expectLeftVisible();
+		});
+
+		it('treats equal paragraphs in another key order as unchanged', async () => {
+			const event = created({ paragraphs: [{ content: 'a', order: 0 }] });
+			flagAfter({ paragraphs: [{ order: 0, content: 'a' }] });
+
+			await moderateNewAnswer(event);
+
+			expectHeld();
+			expect(assessLanguage).toHaveBeenCalledTimes(1);
+		});
 	});
 
-	it('still acts on a hide the client wrote at creation', async () => {
-		assessLanguage.mockResolvedValue(true);
+	describe('hide or integration during the wait', () => {
+		it('holds an answer synthesis absorbed, so a later reversal cannot publish it', async () => {
+			const event = created();
+			flagAfter({ hide: true, integratedInto: 'cluster-1' });
 
-		await moderateNewAnswer(created({ hide: true }));
+			await moderateNewAnswer(event);
 
-		expect(marker().eventId).toBe('event-1');
-		expect(notice()).toBeDefined();
+			expectHeld();
+			expect(stored()?.integratedInto).toBe('cluster-1');
+		});
+
+		it('holds an answer that was hidden during the wait and tells the author once', async () => {
+			const event = created();
+			flagAfter({ hide: true });
+
+			await moderateNewAnswer(event);
+
+			expectHeld();
+		});
+
+		it('holds an answer the author hid and unhid during the wait', async () => {
+			const event = created();
+			flagAfter({ hide: false });
+
+			await moderateNewAnswer(event);
+
+			expectHeld();
+		});
+
+		it('still acts on a hide the client wrote at creation', async () => {
+			assessLanguage.mockResolvedValue(true);
+
+			await moderateNewAnswer(created({ hide: true }));
+
+			expectHeld();
+		});
 	});
 
-	it('treats equal paragraphs in another key order as unchanged', async () => {
-		const event = created({ paragraphs: [{ content: 'a', order: 0 }] });
-		changeDuringCheck({ paragraphs: [{ order: 0, content: 'a' }] });
+	describe('a retried event', () => {
+		it('does nothing after the answer was held through a re-check', async () => {
+			const event = created();
+			flagAfter({ statement: 'still offensive' }, true);
+			await moderateNewAnswer(event);
+			const firstHiddenAt = marker().hiddenAt;
+			assessLanguage.mockResolvedValue(true);
 
-		await moderateNewAnswer(event);
+			await moderateNewAnswer(event);
 
-		expect(stored()?.hide).toBe(true);
-	});
+			expect(marker().hiddenAt).toBe(firstHiddenAt);
+			expect(assessLanguage).toHaveBeenCalledTimes(3);
+		});
 
-	it('stays harmless on redelivery once a host recorded the restore', async () => {
-		assessLanguage.mockResolvedValue(true);
-		const event = created();
-		await moderateNewAnswer(event);
-		await fake.db
-			.collection(Collections.statements)
-			.doc(ANSWER)
-			.update({ hide: false, 'answerModeration.restoredAt': 5 });
+		it('stays harmless once a host recorded the restore', async () => {
+			assessLanguage.mockResolvedValue(true);
+			const event = created();
+			await moderateNewAnswer(event);
+			await answerRef().update({ hide: false, 'answerModeration.restoredAt': 5 });
 
-		await moderateNewAnswer(event);
+			await moderateNewAnswer(event);
 
-		expect(stored()?.hide).toBe(false);
-		expect(stored()?.answerModeration).toMatchObject({ eventId: 'event-1', restoredAt: 5 });
+			expect(stored()?.hide).toBe(false);
+			expect(stored()?.answerModeration).toMatchObject({ eventId: 'event-1', restoredAt: 5 });
+		});
 	});
 });
 
@@ -320,27 +477,5 @@ describe('answerFullText', () => {
 		}) as unknown as Statement;
 
 		expect(answerFullText(answer)).toBe('Title\nFirst\nSecond');
-	});
-});
-
-describe('pickAnswerHiddenLanguage', () => {
-	it.each([
-		['he', 'he'],
-		['ar', 'ar'],
-		['fa-IR', 'fa'],
-		['es', 'es'],
-		['de', 'de'],
-		['NL', 'nl'],
-		['en-US', 'en'],
-		['fr', 'en'],
-	])('uses the stored language %s', (storedLanguage, expected) => {
-		expect(pickAnswerHiddenLanguage(storedLanguage, 'שלום')).toBe(expected);
-	});
-
-	it('falls back to the script of the text', () => {
-		expect(pickAnswerHiddenLanguage(undefined, 'שלום hello')).toBe('he');
-		expect(pickAnswerHiddenLanguage(undefined, 'مرحبا')).toBe('ar');
-		expect(pickAnswerHiddenLanguage(undefined, 'hello')).toBe('en');
-		expect(pickAnswerHiddenLanguage(undefined, '123')).toBe('he');
 	});
 });
