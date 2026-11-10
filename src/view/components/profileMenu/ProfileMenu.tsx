@@ -7,6 +7,7 @@ import MenuOption from '@/view/components/menu/MenuOption';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { logOut } from '@/controllers/db/authenticationUtils';
 import { logError } from '@/utils/errorHandling';
+import { formatLevelLabel } from '@/helpers/engagementLabels';
 import TargetIcon from '@/assets/icons/target.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';
@@ -18,14 +19,6 @@ interface ProfileMenuProps {
 	/** Opens the Join-with-PIN invitation modal */
 	onJoinWithPin: () => void;
 }
-
-const LEVEL_LABEL_KEY: Record<EngagementLevel, string> = {
-	[EngagementLevel.OBSERVER]: 'engagement.observer',
-	[EngagementLevel.PARTICIPANT]: 'engagement.participant',
-	[EngagementLevel.CONTRIBUTOR]: 'engagement.contributor',
-	[EngagementLevel.ADVOCATE]: 'engagement.advocate',
-	[EngagementLevel.LEADER]: 'engagement.leader',
-};
 
 const ProfileMenu: FC<ProfileMenuProps> = ({
 	photoURL,
@@ -166,7 +159,7 @@ const ProfileMenu: FC<ProfileMenuProps> = ({
 							/>
 							<span className={styles.menuUserText}>
 								{displayName && <span className={styles.menuUsername}>{displayName}</span>}
-								<span className={styles.menuLevel}>{t(LEVEL_LABEL_KEY[level])}</span>
+								<span className={styles.menuLevel}>{formatLevelLabel(t, level)}</span>
 							</span>
 						</Link>
 					</div>

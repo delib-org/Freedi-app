@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { formatCreditsEarned } from '@/helpers/engagementLabels';
 
 /** Matches the creditFloat animation in _level-badge.scss */
 const TOAST_DURATION_MS = 1500;
@@ -36,7 +37,7 @@ const CreditToast: React.FC<CreditToastProps> = ({ amount, onComplete }) => {
 
 	return (
 		<span className="credit-toast" role="status" aria-live="polite">
-			{t('engagement.creditsEarned').replace('{{amount}}', String(amount))}
+			{formatCreditsEarned(t, amount)}
 		</span>
 	);
 };

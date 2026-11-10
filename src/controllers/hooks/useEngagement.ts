@@ -13,7 +13,7 @@ import {
 	listenToUserEngagement,
 	listenToRecentCredits,
 } from '@/controllers/db/engagement/db_engagement';
-import { getLevelProgress, getLevelName, getNextLevelThreshold } from '@freedi/engagement-core';
+import { getLevelProgress, getNextLevelThreshold } from '@freedi/engagement-core';
 
 /**
  * Hook to subscribe to the current user's engagement data.
@@ -41,7 +41,6 @@ export function useEngagement() {
 		};
 	}, []);
 
-	const levelName = getLevelName(level);
 	const levelProgress = getLevelProgress(totalCredits, level);
 	const nextLevelThreshold = getNextLevelThreshold(level);
 
@@ -50,7 +49,6 @@ export function useEngagement() {
 		loading,
 		recentCredits,
 		level,
-		levelName,
 		levelProgress,
 		nextLevelThreshold,
 		totalCredits,

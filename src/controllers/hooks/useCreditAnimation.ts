@@ -41,8 +41,7 @@ export function findCreditToToast(
 	// The date check skips older rows that slide into the capped window when
 	// a newer row is removed.
 	const arrived = current.filter(
-		(credit) =>
-			!knownIds.has(credit.transactionId) && credit.createdAt >= previousNewest.createdAt,
+		(credit) => !knownIds.has(credit.transactionId) && credit.createdAt >= previousNewest.createdAt,
 	);
 
 	return arrived.find((credit) => !SILENT_CREDIT_ACTIONS.has(credit.action)) ?? null;
