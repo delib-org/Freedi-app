@@ -37,13 +37,16 @@ export interface HostFrameAttrs {
 	render: (context: HostContext) => m.Children;
 }
 
+interface SignedInFrameAttrs extends HostFrameAttrs {
+	uid: string;
+}
+
 /**
- * Wraps a host screen: Google sign-in, live session (plus topics and
- * registrants when asked), the ownership check (session.hostUid) and the
- * loading / error / no-permission states. The body only renders when all of
- * it is ready and the signed-in user is the session's host.
+ * The frame once a host is signed in. The reads start here and not earlier:
+ * before sign-in the rules refuse every one of them, and a listener that was
+ * refused does not come back by itself after the host signs in.
  */
-export const HostFrame: m.ClosureComponent<HostFrameAttrs> = (initial) => {
+const SignedInFrame: m.ClosureComponent<SignedInFrameAttrs> = (initial) => {
 	const sessionId = initial.attrs.sessionId;
 	const session = new LiveValue('session', subscribeSession(sessionId));
 	const topics = new LiveValue('topics', subscribeTopics(sessionId));
@@ -69,87 +72,99 @@ export const HostFrame: m.ClosureComponent<HostFrameAttrs> = (initial) => {
 			participants.stop();
 		},
 		view({ attrs }) {
+			const { uid } = attrs;
 			const title = t(attrs.titleKey);
 			const backHref = attrs.isHome ? hostListPath() : hostHomePath(sessionId);
 			const backLabel = attrs.isHome ? t('tableAssignment.back.toList') : t('tableAssignment.back');
 
-			return m(HostGate, {
-				title,
-				backHref: hostListPath(),
-				wide: attrs.wide,
-				render: (uid: string) => {
-					const states = [session.state];
+			const states = [session.state];
 
-					if (needsTopics) states.push(topics.state);
-					if (needsParticipants) states.push(participants.state);
+			if (needsTopics) states.push(topics.state);
+			if (needsParticipants) states.push(participants.state);
 
-					const state = combineStates(states);
-					const shell = { title, backHref, backLabel, wide: attrs.wide };
+			const state = combineStates(states);
+			const shell = { title, backHref, backLabel, wide: attrs.wide };
 
-					if (state === 'loading') return m(Shell, shell, m(StateBox, { kind: 'loading' }));
-					if (state === 'denied') {
-						return m(
-							Shell,
-							shell,
-							m(StateBox, {
-								kind: 'denied',
-								backHref: hostListPath(),
-								backLabel: t('tableAssignment.back.toList'),
-							}),
-						);
-					}
-					if (state === 'error') {
-						return m(
-							Shell,
-							shell,
-							m(StateBox, {
-								kind: 'error',
-								onRetry: retryAll,
-								backHref: hostListPath(),
-								backLabel: t('tableAssignment.back.toList'),
-							}),
-						);
-					}
+			if (state === 'loading') return m(Shell, shell, m(StateBox, { kind: 'loading' }));
+			if (state === 'denied') {
+				return m(
+					Shell,
+					shell,
+					m(StateBox, {
+						kind: 'denied',
+						backHref: hostListPath(),
+						backLabel: t('tableAssignment.back.toList'),
+					}),
+				);
+			}
+			if (state === 'error') {
+				return m(
+					Shell,
+					shell,
+					m(StateBox, {
+						kind: 'error',
+						onRetry: retryAll,
+						backHref: hostListPath(),
+						backLabel: t('tableAssignment.back.toList'),
+					}),
+				);
+			}
 
-					const current = session.data;
+			const current = session.data;
 
-					if (!current) {
-						return m(
-							Shell,
-							shell,
-							m(StateBox, {
-								kind: 'error',
-								messageKey: 'tableAssignment.state.notFound',
-								backHref: hostListPath(),
-								backLabel: t('tableAssignment.back.toList'),
-							}),
-						);
-					}
-					if (current.hostUid !== uid) {
-						return m(
-							Shell,
-							shell,
-							m(StateBox, {
-								kind: 'denied',
-								messageKey: 'tableAssignment.state.notHost',
-								backHref: hostListPath(),
-								backLabel: t('tableAssignment.back.toList'),
-							}),
-						);
-					}
+			if (!current) {
+				return m(
+					Shell,
+					shell,
+					m(StateBox, {
+						kind: 'error',
+						messageKey: 'tableAssignment.state.notFound',
+						backHref: hostListPath(),
+						backLabel: t('tableAssignment.back.toList'),
+					}),
+				);
+			}
+			if (current.hostUid !== uid) {
+				return m(
+					Shell,
+					shell,
+					m(StateBox, {
+						kind: 'denied',
+						messageKey: 'tableAssignment.state.notHost',
+						backHref: hostListPath(),
+						backLabel: t('tableAssignment.back.toList'),
+					}),
+				);
+			}
 
-					return m(
-						Shell,
-						{ ...shell, title, ...attrs.shellFor?.(current) },
-						attrs.render({
-							uid,
-							session: current,
-							topics: topics.data ?? [],
-							participants: participants.data ?? [],
-						}),
-					);
-				},
-			});
+			return m(
+				Shell,
+				{ ...shell, title, ...attrs.shellFor?.(current) },
+				attrs.render({
+					uid,
+					session: current,
+					topics: topics.data ?? [],
+					participants: participants.data ?? [],
+				}),
+			);
 		},
 	};
+};
+
+/**
+ * Wraps a host screen: Google sign-in, live session (plus topics and
+ * registrants when asked), the ownership check (session.hostUid) and the
+ * loading / error / no-permission states. The body only renders when all of
+ * it is ready and the signed-in user is the session's host.
+ */
+export const HostFrame: m.Component<HostFrameAttrs> = {
+	view({ attrs }) {
+		return m(HostGate, {
+			title: t(attrs.titleKey),
+			backHref: hostListPath(),
+			wide: attrs.wide,
+			// Keyed by the host: another account starts its own reads.
+			render: (uid: string) => [m(SignedInFrame, { ...attrs, uid, key: uid })],
+		});
+	},
 };
