@@ -54,10 +54,8 @@ const StagePage = ({ showBottomNav = true, canAddAnswer = true }: Props) => {
 	// title. An `isRootStage` guard tried to catch this by comparing
 	// statementId to topParentId, but that is only true for a top-level
 	// question: every sub-question failed the check and re-printed its own
-	// title. Removed rather than re-guarded, because the remaining call sites
-	// (QuestionPage, SwitchScreen) always render the routed statement, and the
-	// one caller that renders a stage in a list already opted out via the
-	// showStageTitle prop.
+	// title. Removed rather than re-guarded, because SwitchScreen, the only
+	// call site, always renders the routed statement.
 
 	return (
 		<>

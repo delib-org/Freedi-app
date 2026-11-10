@@ -27,7 +27,7 @@ const TOP_TOLERANCE_PX = 1;
  *   GeneralHeader. Its coloured card is `.page__header__full` when present.
  * - `.homePage__header`: the home row. Full width, opaque (`--space-paper`).
  *   The `--nav-floating-bg` pill in HomeHeader is only the avatar disc.
- * - `.app-header`: my-suggestions and other pages built on the global bar.
+ * - `.app-header`: pages built on the global bar.
  * Screens with no header at the top (/my, notification settings) fall back to
  * the page background, which is what they show there.
  */

@@ -22,7 +22,6 @@ describe('getNavigationLevel', () => {
 		expect(getNavigationLevel('/statement/q1')).toBe(1);
 		expect(getNavigationLevel('/stage/q1')).toBe(1);
 		expect(getNavigationLevel('/statement-screen/q1/settings')).toBe(1);
-		expect(getNavigationLevel('/my-suggestions/statement/q1')).toBe(1);
 	});
 
 	it('puts full-screen maps deepest', () => {

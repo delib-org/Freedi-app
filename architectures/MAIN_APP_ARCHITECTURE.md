@@ -217,7 +217,6 @@ const statements = useAppSelector(state =>
 | `/statement/:statementId` | Main statement view |
 | `/statement/:statementId/:sort` | Statement with sorting |
 | `/home/addStatement` | Create new statement |
-| `/my-suggestions/statement/:id` | User's suggestions |
 | `/my-profile` | User profile |
 | `/settings` | App settings |
 

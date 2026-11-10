@@ -286,18 +286,6 @@ export const PWA = {
 } as const;
 
 /**
- * PWA Install Prompt Messages
- */
-export const PWA_MESSAGES = {
-	TITLE: 'Install FreeDi',
-	DESCRIPTION:
-		'Install FreeDi on your device for a better experience. Get quick access and work offline!',
-	INSTALL_BUTTON: 'Install',
-	CANCEL_BUTTON: 'Not now',
-	SUCCESS: 'FreeDi installed successfully!',
-} as const;
-
-/**
  * Condensation / Grouped Suggestions — cosine-similarity thresholds for
  * complete-linkage clustering. Calibrated empirically against
  * `text-embedding-3-small` on thematically cohesive short text. The pipeline
