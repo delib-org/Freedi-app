@@ -278,16 +278,16 @@ export function metricsOf(run: RunResult): MetricRow[] {
 		{
 			key: 'presence.fanOutOneWrite',
 			label: `Reads when one person's presence changes (${n} listening)`,
-			value: fanOutReads(1, n),
+			value: fanOutReads(presenceDeliveredPerWrite, n),
 			kind: 'derived',
-			note: 'measured 1:1 delivery x listeners',
+			note: 'measured delivery per write x listeners',
 		},
 		{
 			key: 'presence.arrivalAll',
 			label: `Reads when all ${POPULATION} arrive, presence on`,
-			value: fanOutReads(POPULATION, POPULATION),
+			value: fanOutReads(POPULATION * presenceDeliveredPerWrite, POPULATION),
 			kind: 'derived',
-			note: 'each arrival delivered to all present',
+			note: 'arrivals x measured delivery x people present',
 		},
 		{
 			key: 'rate.answersDelivered',
@@ -421,12 +421,13 @@ export function metricsOf(run: RunResult): MetricRow[] {
 	return rows;
 }
 
-/** Fire once per rating, so in a phase with one write per rating their count also matches. */
-const RATING_TRIGGERS: ReadonlySet<string> = new Set([
+/** Triggered by other collections; each can match the statement writes in number by chance. */
+const NON_STATEMENT_TRIGGERS: ReadonlySet<string> = new Set([
 	'newEvaluation',
 	'onChatEvaluationCreated',
 	'onEvaluationChangeRecomputeCondensationClusters',
 	'onAgoraEvaluationWritten',
+	'onNotificationQueued',
 ]);
 
 /** How many functions ran exactly once per write to a statement document. */
@@ -435,6 +436,6 @@ export function triggersPerStatementWrite(phase: PhaseCost): number {
 	if (statementWrites === 0) return 0;
 
 	return Object.entries(phase.byFunction).filter(
-		([name, cost]) => cost.invocations === statementWrites && !RATING_TRIGGERS.has(name),
+		([name, cost]) => cost.invocations === statementWrites && !NON_STATEMENT_TRIGGERS.has(name),
 	).length;
 }
