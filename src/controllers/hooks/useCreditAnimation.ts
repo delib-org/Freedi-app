@@ -3,7 +3,8 @@ import { CreditAction } from '@freedi/shared-types';
 import type { CreditTransaction } from '@freedi/shared-types';
 import { useAppSelector } from './reduxHooks';
 import { recentCreditsSelector } from '@/redux/engagement/engagementSlice';
-import { TIME } from '@/constants/common';
+import { STORAGE_KEYS, TIME } from '@/constants/common';
+import { logError } from '@/utils/errorHandling';
 
 interface CreditAnimationItem {
 	id: string;
@@ -24,28 +25,40 @@ const SILENT_CREDIT_ACTIONS: ReadonlySet<CreditAction> = new Set([
 ]);
 
 /**
- * The newest credit that arrived between two listener snapshots and may be
- * toasted, or null. The list is newest-first and capped, so its length stops
- * changing once it is full: arrival is detected from the newest id instead.
- * An empty `previous` only sets the baseline. The next snapshot can still add
- * rows the person did not just earn, such as server data replacing a cached
- * list, so a credit is toasted only when it is recent.
+ * The newest credit that may be toasted, or null. The list is newest-first and
+ * capped, so its length stops changing once it is full: arrival is detected
+ * from the newest id instead.
+ *
+ * `lastToastedId` is what this person was last shown: null when nothing was,
+ * undefined when that cannot be known because storage is unavailable. Rows at
+ * or below that id never toast, so a first snapshot can toast a credit earned
+ * away from Home without repeating on a reload. When the memory is unavailable
+ * an empty `previous` only sets the baseline, as no repeat could be prevented.
+ * A later snapshot can still add rows the person did not just earn, such as
+ * server data replacing a cached list, so a credit is toasted only when recent.
  */
 export function findCreditToToast(
 	previous: CreditTransaction[],
 	current: CreditTransaction[],
 	now: number,
+	lastToastedId?: string | null,
 ): CreditTransaction | null {
 	const previousNewest = previous[0];
-	if (!previousNewest || current[0]?.transactionId === previousNewest.transactionId) {
+	const hasNoBaseline = !previousNewest && lastToastedId === undefined;
+	const isUnchanged = current[0]?.transactionId === previousNewest?.transactionId;
+	if (hasNoBaseline || isUnchanged) {
 		return null;
 	}
 
+	const lastToastedIndex = current.findIndex((credit) => credit.transactionId === lastToastedId);
+	const notYetToasted = lastToastedIndex < 0 ? current : current.slice(0, lastToastedIndex);
 	const knownIds = new Set(previous.map((credit) => credit.transactionId));
 	// The date check skips older rows that slide into the capped window when
 	// a newer row is removed.
-	const arrived = current.filter(
-		(credit) => !knownIds.has(credit.transactionId) && credit.createdAt >= previousNewest.createdAt,
+	const arrived = notYetToasted.filter(
+		(credit) =>
+			!knownIds.has(credit.transactionId) &&
+			(!previousNewest || credit.createdAt >= previousNewest.createdAt),
 	);
 
 	return (
@@ -53,6 +66,32 @@ export function findCreditToToast(
 			(credit) => !SILENT_CREDIT_ACTIONS.has(credit.action) && now - credit.createdAt <= TIME.HOUR,
 		) ?? null
 	);
+}
+
+function lastToastedStorageKey(userId: string): string {
+	return `${STORAGE_KEYS.LAST_TOASTED_CREDIT}_${userId}`;
+}
+
+/** The id last toasted for this user; undefined when storage cannot be read. */
+function readLastToastedId(userId: string): string | null | undefined {
+	try {
+		return localStorage.getItem(lastToastedStorageKey(userId));
+	} catch (error) {
+		logError(error, { operation: 'hooks.useCreditAnimation.readLastToastedId', userId });
+
+		return undefined;
+	}
+}
+
+function rememberToastedCredit(credit: CreditTransaction): void {
+	try {
+		localStorage.setItem(lastToastedStorageKey(credit.userId), credit.transactionId);
+	} catch (error) {
+		logError(error, {
+			operation: 'hooks.useCreditAnimation.rememberToastedCredit',
+			userId: credit.userId,
+		});
+	}
 }
 
 /**
@@ -65,8 +104,16 @@ export function useCreditAnimation() {
 	const [toast, setToast] = useState<CreditAnimationItem | null>(null);
 
 	useEffect(() => {
-		const credit = findCreditToToast(prevCreditsRef.current, recentCredits, Date.now());
+		const owner = recentCredits[0]?.userId;
+		const lastToastedId = owner === undefined ? undefined : readLastToastedId(owner);
+		const credit = findCreditToToast(
+			prevCreditsRef.current,
+			recentCredits,
+			Date.now(),
+			lastToastedId,
+		);
 		if (credit) {
+			rememberToastedCredit(credit);
 			setToast({ id: credit.transactionId, amount: credit.amount });
 		}
 

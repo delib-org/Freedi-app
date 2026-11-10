@@ -191,6 +191,8 @@ export const STORAGE_KEYS = {
 	SIDEBAR_WIDTH: 'freedi_sidebar_width',
 	/** Text size (rem) chosen in the cluster board's note focus box. */
 	MAP_NOTE_FONT_REM: 'freedi_map_note_font_rem',
+	/** Prefix of the per-user key holding the id of the last credit toasted on Home. */
+	LAST_TOASTED_CREDIT: 'freedi_last_toasted_credit',
 } as const;
 
 /**
