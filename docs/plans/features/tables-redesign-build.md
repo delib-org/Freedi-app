@@ -227,9 +227,8 @@ Unit: `topicList` (comma, Arabic comma, new lines, mixed, duplicates, over-long)
 
 ## 6. Deploy order, when asked
 
-1. Build and repack `shared-types`; deploy the changed and new functions by name (`tablesRegister`, `tablesSavePreferences`, `tablesJoinTable`, `tablesSaveSettings`, `tablesCancelRegistration`, `tablesFixDetails`), region me-west1.
+1. Build and repack `shared-types`; deploy the changed and new functions by name (`tablesRegister`, `tablesSavePreferences`, `tablesJoinTable`, `tablesSaveSettings`, `tablesCancelRegistration`, `tablesFixDetails`, `tablesRemoveParticipant`, `tablesComputePreview`, `tablesPublishRun`), region me-west1.
 2. Run `scripts/backfillTablesRoster.ts` (dry run, then real) on the production project.
-3. Deploy Tables hosting.
-4. Deploy `firestore.rules` from a clean worktree.
-
-Steps 1 to 4 can ship after phase 1 alone; phases 2 and 3 are hosting only.
+3. Run `scripts/scrubTablesRunMetrics.ts` (dry run, then real): runs computed earlier still hold exact figures and a readable input hash.
+4. Deploy Tables hosting.
+5. Deploy `firestore.rules` from a clean worktree. Phase 3 adds no rules: `tableAssignmentRunInputs` is unmatched, so no client can read it.
