@@ -19,6 +19,7 @@ import {
 	deliverDigestItem,
 	isLargeQuestionDigestItem,
 } from '../../notifications/largeQuestionDigestDelivery';
+import { isRecipientExcluded } from '../../notifications/subscriberDelivery';
 
 const getDb = () => getFirestore();
 
@@ -65,6 +66,17 @@ export async function processQueueItem(
 			await docRef.update({
 				status: NotificationQueueStatus.FAILED,
 				error: `Max retries (${MAX_RETRIES}) exceeded`,
+				processedAt: Date.now(),
+			});
+
+			return;
+		}
+
+		// The item may be older than a ban: decide on the recipient's role now.
+		if (await isRecipientExcluded(getDb(), item.userId, item)) {
+			await docRef.update({
+				status: NotificationQueueStatus.SKIPPED,
+				error: 'Recipient banned, waiting or unsubscribed at delivery',
 				processedAt: Date.now(),
 			});
 

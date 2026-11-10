@@ -349,4 +349,66 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 			expect(progress()?.lastUpdate).toBeGreaterThan(5);
 		});
 	});
+
+	describe('a waiting person is let in', () => {
+		const off = { getInAppNotification: false, getPushNotification: false };
+		const subscription = (userId: string) =>
+			mockDb.read(Collections.statementsSubscribe, `${userId}--${DISCUSSION}`);
+
+		async function moveFromWaiting(userId: string, role: Role): Promise<void> {
+			const id = `${userId}--${DISCUSSION}`;
+			const before = subscriptionDoc(userId, Role.waiting, off);
+			const after = subscriptionDoc(userId, role, off);
+			mockDb.seed(Collections.statementsSubscribe, id, after);
+			await onSubscriptionUpdated(changeEvent(id, before, after));
+		}
+
+		it('turns in-app on, and push for someone with a device', async () => {
+			mockDb.seed(Collections.pushNotifications, 'token-1', { token: 'token-1', userId: 'alice' });
+
+			await moveFromWaiting('alice', Role.member);
+
+			expect(subscription('alice')).toMatchObject({
+				getInAppNotification: true,
+				getPushNotification: true,
+			});
+		});
+
+		it('leaves push off for someone with no device', async () => {
+			await moveFromWaiting('bob', Role.member);
+
+			expect(subscription('bob')).toMatchObject({
+				getInAppNotification: true,
+				getPushNotification: false,
+			});
+		});
+
+		it('does not count a device of another app', async () => {
+			mockDb.seed(Collections.pushNotifications, 'token-2', {
+				token: 'token-2',
+				userId: 'carol',
+				app: 'join-class',
+			});
+
+			await moveFromWaiting('carol', Role.member);
+
+			expect(subscription('carol')).toMatchObject({ getPushNotification: false });
+		});
+
+		it.each([Role.unsubscribed, Role.banned])('changes nothing when moved to %s', async (role) => {
+			await moveFromWaiting('dan', role);
+
+			expect(subscription('dan')).toMatchObject(off);
+		});
+
+		it('changes nothing for a member whose role did not move', async () => {
+			const id = `erin--${DISCUSSION}`;
+			const doc = subscriptionDoc('erin', Role.member, off);
+			mockDb.seed(Collections.statementsSubscribe, id, doc);
+
+			await onSubscriptionUpdated(changeEvent(id, doc, doc));
+
+			expect(subscription('erin')).toMatchObject(off);
+		});
+	});
 });
