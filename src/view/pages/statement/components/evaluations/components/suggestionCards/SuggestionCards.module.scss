@@ -39,18 +39,12 @@
 	}
 }
 
+// In the page flow at the end of the list: the shell's padding keeps it above
+// the bottom nav, and it cannot land on the stage's sticky add and sort bar.
 .submitButtonContainer {
-	position: fixed;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	background: linear-gradient(to top, var(--statementBackground) 70%, transparent);
 	padding: 1rem var(--padding);
-	z-index: 100;
 
 	@media (min-width: 768px) {
-		position: relative;
-		background: none;
 		padding: 2rem var(--padding) 1rem;
 	}
 }

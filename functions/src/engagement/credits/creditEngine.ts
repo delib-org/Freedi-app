@@ -30,6 +30,8 @@ const DIMINISHING_FACTOR = 0.9;
 /** 24-hour trial window for new users (in ms) */
 const TRIAL_DURATION_MS = 24 * 60 * 60 * 1000;
 
+type EngagementStatField = 'totalEvaluations' | 'totalOptions' | 'totalComments' | 'totalVotes';
+
 interface AwardCreditParams {
 	userId: string;
 	action: CreditAction;
@@ -187,6 +189,10 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 				engagement.dailyCreditsEarned = amount;
 				engagement.dailyCreditResetDate = today;
 				engagement.lastUpdate = Date.now();
+				if (statField) {
+					// FieldValue.increment above only applies to an update.
+					engagement[statField] = (engagement[statField] ?? 0) + 1;
+				}
 				transaction.set(engagementRef, engagement);
 			} else {
 				transaction.update(engagementRef, engagementUpdate);
@@ -380,7 +386,7 @@ function calculateLevel(totalCredits: number): EngagementLevel {
 	return EngagementLevel.OBSERVER;
 }
 
-function getStatFieldForAction(action: CreditAction): string | null {
+function getStatFieldForAction(action: CreditAction): EngagementStatField | null {
 	switch (action) {
 		case CreditAction.EVALUATE_OPTION:
 			return 'totalEvaluations';

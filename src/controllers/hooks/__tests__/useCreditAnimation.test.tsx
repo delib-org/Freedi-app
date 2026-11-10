@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { CreditAction, SourceApp } from '@freedi/shared-types';
 import type { CreditTransaction } from '@freedi/shared-types';
-import { TIME } from '@/constants/common';
+import { STORAGE_KEYS, TIME } from '@/constants/common';
 import { findCreditToToast, useCreditAnimation } from '../useCreditAnimation';
 
 let mockRecentCredits: CreditTransaction[] = [];
@@ -36,19 +36,106 @@ function fullList(newest: number): CreditTransaction[] {
 	return Array.from({ length: LISTENER_CAP }, (_, index) => credit(newest - index));
 }
 
+function rememberToasted(transactionId: string, userId = 'u1'): void {
+	localStorage.setItem(`${STORAGE_KEYS.LAST_TOASTED_CREDIT}_${userId}`, transactionId);
+}
+
 describe('useCreditAnimation', () => {
 	beforeEach(() => {
 		mockRecentCredits = [];
+		localStorage.clear();
 	});
 
-	it('does not animate the first load', () => {
+	it('stays silent on load when the newest credit was already toasted', () => {
+		rememberToasted('tx-30');
 		mockRecentCredits = fullList(30);
 		const { result } = renderHook(() => useCreditAnimation());
 
 		expect(result.current.toast).toBeNull();
 	});
 
+	describe('arriving on Home after earning a credit elsewhere', () => {
+		it('toasts the credit on the first snapshot of someone new to Home', () => {
+			mockRecentCredits = [credit(1)];
+			const { result } = renderHook(() => useCreditAnimation());
+
+			expect(result.current.toast).toEqual({ id: 'tx-1', amount: 10 });
+		});
+
+		it('does not repeat the toast on a reload or a second Home visit', () => {
+			mockRecentCredits = [credit(1)];
+			const firstVisit = renderHook(() => useCreditAnimation());
+			expect(firstVisit.result.current.toast).toEqual({ id: 'tx-1', amount: 10 });
+			firstVisit.unmount();
+
+			const secondVisit = renderHook(() => useCreditAnimation());
+
+			expect(secondVisit.result.current.toast).toBeNull();
+		});
+
+		it('toasts only a credit newer than the one last toasted', () => {
+			rememberToasted('tx-1');
+			mockRecentCredits = [credit(2), credit(1)];
+			const { result } = renderHook(() => useCreditAnimation());
+
+			expect(result.current.toast).toEqual({ id: 'tx-2', amount: 10 });
+		});
+
+		it('keeps the memory per user', () => {
+			rememberToasted('tx-1', 'someone-else');
+			mockRecentCredits = [credit(1)];
+			const { result } = renderHook(() => useCreditAnimation());
+
+			expect(result.current.toast).toEqual({ id: 'tx-1', amount: 10 });
+		});
+
+		it('stays silent for a first snapshot older than an hour', () => {
+			mockRecentCredits = [credit(1, CreditAction.CREATE_OPTION, NOW - 2 * TIME.HOUR)];
+			const { result } = renderHook(() => useCreditAnimation());
+
+			expect(result.current.toast).toBeNull();
+		});
+
+		it('stays silent for a first snapshot of a rating', () => {
+			mockRecentCredits = [credit(1, CreditAction.EVALUATE_OPTION)];
+			const { result } = renderHook(() => useCreditAnimation());
+
+			expect(result.current.toast).toBeNull();
+		});
+	});
+
+	describe('when localStorage is blocked', () => {
+		beforeEach(() => {
+			jest.spyOn(window.localStorage, 'getItem').mockImplementation(() => {
+				throw new Error('blocked');
+			});
+			jest.spyOn(window.localStorage, 'setItem').mockImplementation(() => {
+				throw new Error('blocked');
+			});
+		});
+
+		afterEach(() => jest.restoreAllMocks());
+
+		it('stays silent on load, since a repeat could not be prevented', () => {
+			mockRecentCredits = [credit(1)];
+			const { result } = renderHook(() => useCreditAnimation());
+
+			expect(result.current.toast).toBeNull();
+		});
+
+		it('still toasts a credit that arrives while Home is open', () => {
+			mockRecentCredits = [credit(1)];
+			const { result, rerender } = renderHook(() => useCreditAnimation());
+
+			mockRecentCredits = [credit(2), credit(1)];
+			rerender();
+
+			expect(result.current.toast).toEqual({ id: 'tx-2', amount: 10 });
+		});
+	});
+
 	it('toasts a new credit once the capped list is full', () => {
+		rememberToasted('tx-30');
 		mockRecentCredits = fullList(30);
 		const { result, rerender } = renderHook(() => useCreditAnimation());
 
@@ -127,8 +214,28 @@ describe('findCreditToToast', () => {
 		expect(findCreditToToast([credit(5), credit(4)], [credit(4), credit(3)], NOW)).toBeNull();
 	});
 
-	it('treats an empty previous list as the baseline', () => {
+	it('treats an empty previous list as the baseline when the memory is unavailable', () => {
 		expect(findCreditToToast([], [credit(1)], NOW)).toBeNull();
+	});
+
+	it('toasts from an empty previous list when nothing was toasted yet', () => {
+		expect(findCreditToToast([], [credit(1)], NOW, null)).toEqual(credit(1));
+	});
+
+	it('stays silent when the newest shown credit is the one last toasted', () => {
+		expect(
+			findCreditToToast([], [credit(2, CreditAction.VOTE), credit(1)], NOW, 'tx-1'),
+		).toBeNull();
+	});
+
+	it('never reaches below the last toasted credit', () => {
+		expect(findCreditToToast([], [credit(3), credit(2), credit(1)], NOW, 'tx-2')).toEqual(
+			credit(3),
+		);
+	});
+
+	it('handles an empty list with nothing toasted', () => {
+		expect(findCreditToToast([], [], NOW, null)).toBeNull();
 	});
 
 	it('handles an emptied list', () => {
