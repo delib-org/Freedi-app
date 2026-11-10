@@ -31,6 +31,9 @@ import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 import { useViewLayers } from '@/controllers/hooks/useViewLayers';
 import { useLazyLoadOptions } from '@/view/pages/statement/hooks/useLazyLoadOptions';
 import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
+import { useRankedAnswers } from '@/view/pages/statement/hooks/useRankedAnswers';
+import { rankingSourceForSort } from '@/view/pages/statement/hooks/answerRanking';
+import { Button } from '@/view/components/atomic/atoms/Button';
 import { useThrottledOrder } from '@/view/pages/statement/hooks/useThrottledOrder';
 import { usePrefersReducedMotion } from '@/controllers/hooks/usePrefersReducedMotion';
 import { UI } from '@/constants/common';
@@ -93,10 +96,16 @@ const SuggestionCards: FC = () => {
 	// only loads the newest window; this pages in the rest on demand).
 	const { sentinelRef, isLoadingMore, hasMore } = useLazyLoadOptions(statementId);
 
-	// Ranked sorts (e.g. "most agreed") must rank the COMPLETE set, not just the
-	// newest window — otherwise older high-consensus options never surface. Eagerly
-	// bulk-load all direct children when such a sort is active.
-	const { isAutoLoading } = useAutoLoadAllForSort(statementId, sort);
+	// "By agreement" reads the top answers from its index, a page at a time.
+	// Orderings no index can rank still need every answer. The Rate view asks
+	// for neither: the sampler chooses what it shows.
+	const rankingSource = isRateView ? 'window' : rankingSourceForSort(sort, statement);
+	const ranked = useRankedAnswers(statementId, rankingSource === 'top-answers');
+	const { rankedIds } = ranked;
+	const { isAutoLoading } = useAutoLoadAllForSort(
+		rankingSource === 'complete-set' ? statementId : undefined,
+		sort,
+	);
 
 	// View-layer derivation (toggle-independent, memoized): split synth / topic /
 	// raw and assign each synth to its max-overlap topic.
@@ -144,13 +153,16 @@ const SuggestionCards: FC = () => {
 			return st.creatorId === creator?.uid;
 		};
 
-		const visible = plan.flatRaw.filter(canSee);
+		const visible = plan.flatRaw.filter(
+			(st) => canSee(st) && (!rankedIds || rankedIds.has(st.statementId)),
+		);
 
 		return manualOrder?.length
 			? applyManualOrder(visible, manualOrder)
 			: sortStatements(visible, sort, randomSeed, statement);
 	}, [
 		plan.flatRaw,
+		rankedIds,
 		isAdmin,
 		showHiddenCards,
 		creator?.uid,
@@ -418,7 +430,18 @@ const SuggestionCards: FC = () => {
 					{t('Loading more…')}
 				</div>
 			)}
-			{hasRaw && hasMore && !isRateView && (
+			{ranked.hasMore && (
+				<div className={styles.lazyLoadStatus}>
+					<Button
+						text={t('Show more')}
+						variant="secondary"
+						size="small"
+						loading={ranked.isLoading}
+						onClick={ranked.loadMore}
+					/>
+				</div>
+			)}
+			{hasRaw && hasMore && rankingSource !== 'top-answers' && !isRateView && (
 				<div ref={sentinelRef} className={styles['lazyLoadSentinel']} aria-hidden="true" />
 			)}
 			{(isLoadingMore || isAutoLoading) && (

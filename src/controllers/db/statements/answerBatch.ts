@@ -34,7 +34,7 @@ export function storeSideLoadedAnswers(answers: readonly Statement[]): void {
 	store.dispatch(setStatements(fresh));
 }
 
-function parseAnswers(raw: readonly unknown[], questionId: string): Statement[] {
+export function parseAnswers(raw: readonly unknown[], questionId: string): Statement[] {
 	const answers: Statement[] = [];
 	for (const item of raw) {
 		try {

@@ -26,6 +26,7 @@ import { agreementCandidates, proposalEvidence } from './agreementData';
 import OtherIdeasSection from './OtherIdeasSection';
 import styles from './Agreement.module.scss';
 import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
+import { useRankedAnswers } from '@/view/pages/statement/hooks/useRankedAnswers';
 import { useQuestionScoreAccess } from '@/view/pages/statement/components/questionScreen/useAnswerScoreGate';
 import {
 	canSeeScore,
@@ -74,9 +75,15 @@ export default function AgreementHub({
 	);
 	const otherIdeas = useSelector(otherIdeasSelector);
 	const { canSee: showResults, facts: scoreFacts } = useQuestionScoreAccess(statement);
+	// Themes group every answer, so they need all of them. The overview only
+	// shows the leading few, which the first page of the ranking settles.
 	const { isAutoLoading } = useAutoLoadAllForSort(
-		compact || !['overview', 'themes'].includes(view) ? undefined : statement.statementId,
+		!compact && view === 'themes' ? statement.statementId : undefined,
 		SortType.accepted,
+	);
+	const topAnswers = useRankedAnswers(
+		statement.statementId,
+		!compact && view === 'overview' && showResults,
 	);
 	const candidates = useMemo(
 		() =>
@@ -352,7 +359,7 @@ export default function AgreementHub({
 							<section className={styles.journey__section}>
 								<h3>
 									{showResults
-										? fullyLoaded
+										? fullyLoaded || topAnswers.rankedIds
 											? t('Strongest common ground so far')
 											: t('Leading options among those loaded')
 										: t('Options to explore')}

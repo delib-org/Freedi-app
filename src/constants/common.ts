@@ -240,6 +240,11 @@ export const REDUX = {
 /**
  * Bulk "Load all statements" constants (getBulkStatements endpoint + delta listeners)
  */
+export const RANKED_ANSWERS = {
+	/** Answers fetched per page of a ranked list */
+	PAGE_SIZE: 30,
+} as const;
+
 export const BULK_LOAD = {
 	/** Statements fetched per HTTP page */
 	PAGE_SIZE: 500,

@@ -14,8 +14,22 @@ export interface RateBatchEntry {
 	remaining: number;
 }
 
+/** Where the next page of a ranked list starts. */
+export interface RankedCursor {
+	consensus: number;
+	statementId: string;
+}
+
+/** The top answers of a question fetched so far, best first. */
+export interface RankedPagesEntry {
+	ids: string[];
+	hasMore: boolean;
+	cursor: RankedCursor | undefined;
+}
+
 export interface AnswerViewsState {
 	rateBatches: Record<string, RateBatchEntry>;
+	rankedPages: Record<string, RankedPagesEntry>;
 	/** Questions that fall back to the plain list: the sampler failed or found 30 answers or fewer. */
 	plainListQuestions: Record<string, true>;
 	/**
@@ -36,6 +50,7 @@ interface RatingsRootState extends AnswerViewsRootState {
 
 const initialState: AnswerViewsState = {
 	rateBatches: {},
+	rankedPages: {},
 	plainListQuestions: {},
 	sideLoadedIds: {},
 };
@@ -59,6 +74,15 @@ export const answerViewsSlice = createSlice({
 		fallBackToPlainList: (state, action: PayloadAction<string>) => {
 			state.plainListQuestions[action.payload] = true;
 		},
+		addRankedPage: (state, action: PayloadAction<RankedPagesEntry & { questionId: string }>) => {
+			const { questionId, ids, hasMore, cursor } = action.payload;
+			const known = state.rankedPages[questionId]?.ids ?? [];
+			state.rankedPages[questionId] = {
+				ids: [...known, ...ids.filter((id) => !known.includes(id))],
+				hasMore,
+				cursor,
+			};
+		},
 		markSideLoaded: (state, action: PayloadAction<readonly string[]>) => {
 			action.payload.forEach((id) => {
 				state.sideLoadedIds[id] = true;
@@ -67,13 +91,23 @@ export const answerViewsSlice = createSlice({
 	},
 });
 
-export const { setRateBatch, dropRatedFromBatch, fallBackToPlainList, markSideLoaded } =
-	answerViewsSlice.actions;
+export const {
+	setRateBatch,
+	dropRatedFromBatch,
+	fallBackToPlainList,
+	addRankedPage,
+	markSideLoaded,
+} = answerViewsSlice.actions;
 
 export const rateBatchSelector =
 	(questionId: string | undefined) =>
 	(state: AnswerViewsRootState): RateBatchEntry | undefined =>
 		questionId ? state.answerViews.rateBatches[questionId] : undefined;
+
+export const rankedPagesSelector =
+	(questionId: string | undefined) =>
+	(state: AnswerViewsRootState): RankedPagesEntry | undefined =>
+		questionId ? state.answerViews.rankedPages[questionId] : undefined;
 
 export const usesPlainListSelector =
 	(questionId: string | undefined) =>
