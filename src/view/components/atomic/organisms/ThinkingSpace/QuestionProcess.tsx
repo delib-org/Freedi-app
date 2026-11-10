@@ -143,7 +143,8 @@ export default function QuestionProcess({
 			{view !== 'overview' && !!data?.sources.length && (
 				<details>
 					<summary>
-						{t('Source solution')} · {data.sources.length}
+						{t(data.sources.length > 1 ? 'Original answers' : 'Source solution')} ·{' '}
+						{data.sources.length}
 					</summary>
 					{data.sources.map((source) => (
 						<p key={source.id}>
