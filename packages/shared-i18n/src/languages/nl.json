@@ -4710,5 +4710,9 @@
   "unread.messageCount_one": "1 ongelezen bericht",
   "unread.messageCount_other": "{{count}} ongelezen berichten",
   "answerStrip.notChosen": "Antwoord",
-  "answerStrip.chosen": "Gekozen antwoord"
+  "answerStrip.chosen": "Gekozen antwoord",
+  "map.node.open": "Openen",
+  "map.node.newQuestion": "Nieuwe vraag",
+  "map.node.newAnswer": "Nieuw antwoord",
+  "Edit": "Bewerken"
 }
