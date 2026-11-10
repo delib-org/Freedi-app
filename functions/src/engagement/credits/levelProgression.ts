@@ -11,7 +11,6 @@ import { logger } from 'firebase-functions';
 import {
 	Collections,
 	EngagementLevel,
-	LEVEL_NAMES,
 	NotificationChannel,
 	NotificationFrequency,
 	NotificationQueueStatus,
@@ -19,6 +18,12 @@ import {
 	SourceApp,
 } from '@freedi/shared-types';
 import type { NotificationQueueItem } from '@freedi/shared-types';
+import { logError } from '../../utils/errorHandling';
+import { readNoticeLanguage } from '../notifications/noticeAudience';
+import { levelUpCopy } from '../notifications/noticeText';
+
+/** Stored levels run 0-4; people see 1-5. */
+const DISPLAY_LEVEL_OFFSET = 1;
 
 /**
  * Check if the user leveled up and enqueue a notification if so.
@@ -35,32 +40,38 @@ export async function checkAndNotifyLevelUp(
 	}
 
 	const db = getFirestore();
-	const levelName = LEVEL_NAMES[newLevel] || `Level ${newLevel}`;
 
-	logger.info(`User ${userId} leveled up: ${LEVEL_NAMES[oldLevel]} -> ${levelName}`);
-
-	// Enqueue a LEVEL_UP notification
-	const queueItemId = `levelup_${userId}_${newLevel}_${Date.now()}`;
-	const notification: NotificationQueueItem = {
-		queueItemId,
-		userId,
-		title: 'Level Up!',
-		body: `Congratulations! You reached ${levelName} level.`,
-		channels: [NotificationChannel.IN_APP, NotificationChannel.PUSH],
-		sourceApp,
-		targetPath: '/my/engagement',
-		deliverAt: null,
-		frequency: NotificationFrequency.INSTANT,
-		triggerType: NotificationTriggerType.LEVEL_UP,
-		status: NotificationQueueStatus.PENDING,
-		createdAt: Date.now(),
-	};
+	logger.info(`User ${userId} leveled up: ${oldLevel} -> ${newLevel}`);
 
 	try {
+		const language = await readNoticeLanguage(db, userId);
+		const copy = levelUpCopy(language, newLevel + DISPLAY_LEVEL_OFFSET);
+
+		// Enqueue a LEVEL_UP notification (in-app only: no push for levels)
+		const queueItemId = `levelup_${userId}_${newLevel}_${Date.now()}`;
+		const notification: NotificationQueueItem = {
+			queueItemId,
+			userId,
+			title: copy.title,
+			body: copy.body,
+			channels: [NotificationChannel.IN_APP],
+			sourceApp,
+			targetPath: '/my/engagement',
+			deliverAt: null,
+			frequency: NotificationFrequency.INSTANT,
+			triggerType: NotificationTriggerType.LEVEL_UP,
+			status: NotificationQueueStatus.PENDING,
+			createdAt: Date.now(),
+		};
+
 		await db.collection(Collections.notificationQueue).doc(queueItemId).set(notification);
 	} catch (error) {
 		// Non-blocking: notification failure should not break credit flow
-		logger.error('Failed to enqueue level-up notification', { userId, newLevel, error });
+		logError(error, {
+			operation: 'engagement.checkAndNotifyLevelUp',
+			userId,
+			metadata: { newLevel },
+		});
 	}
 
 	return newLevel;

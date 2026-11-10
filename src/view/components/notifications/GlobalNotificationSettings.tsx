@@ -86,7 +86,11 @@ const GlobalNotificationSettings: React.FC = () => {
 			<div className={styles.row}>
 				<div className={styles.rowMain}>
 					<h4>{t('Updates about my answers')}</h4>
-					<p>{t('A short note in the app when something changes for an answer you wrote. Never sent as a push.')}</p>
+					<p>
+						{t(
+							'A short note in the app when something changes for an answer you wrote. Never sent as a push.',
+						)}
+					</p>
 				</div>
 				<label className={styles.switch}>
 					<input

@@ -6,6 +6,9 @@
 import type { Firestore } from 'firebase-admin/firestore';
 import { Collections, NotificationFrequency, SourceApp } from '@freedi/shared-types';
 import type { NotificationSettings, User } from '@freedi/shared-types';
+import { logError } from '../../utils/errorHandling';
+import { DEFAULT_NOTICE_LANGUAGE, pickNoticeLanguage } from './noticeText';
+import type { NoticeLanguage } from './noticeText';
 
 export interface NoticeAudience {
 	/** Master mute, per-app mute, "Off" frequency and the in-app switches all allow it. */
@@ -59,4 +62,21 @@ export async function readNoticeAudiences(
 	}
 
 	return audiences;
+}
+
+/**
+ * The language for a notice with no text of the person's to go by (level and
+ * badge notices). A failed read falls back to the default: these are not capped,
+ * and losing the language is better than losing the notice.
+ */
+export async function readNoticeLanguage(db: Firestore, uid: string): Promise<NoticeLanguage> {
+	try {
+		const snap = await db.collection(Collections.users).doc(uid).get();
+
+		return pickNoticeLanguage((snap.data() as User | undefined)?.defaultLanguage);
+	} catch (error) {
+		logError(error, { operation: 'engagement.readNoticeLanguage', userId: uid });
+
+		return DEFAULT_NOTICE_LANGUAGE;
+	}
 }

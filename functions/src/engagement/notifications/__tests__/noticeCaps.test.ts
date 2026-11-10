@@ -201,9 +201,9 @@ describe('claimAnswerNotice', () => {
 			await claimAnswerNotice(claim);
 			const before = slots();
 
-			await expect(claimAnswerNotice({ ...claim, now: T0 + ANSWER_NOTICE_WINDOW_MS })).resolves.toBe(
-				'duplicate',
-			);
+			await expect(
+				claimAnswerNotice({ ...claim, now: T0 + ANSWER_NOTICE_WINDOW_MS }),
+			).resolves.toBe('duplicate');
 			expect(slots()).toBe(before);
 			expect(queued()).toBe(1);
 		});

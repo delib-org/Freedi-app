@@ -21,11 +21,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import type { DocumentReference, Firestore } from 'firebase-admin/firestore';
 import { parse } from 'valibot';
 import { AnswerNoticeStateSchema, Collections } from '@freedi/shared-types';
-import type {
-	AnswerNoticeState,
-	NoticeCapSlot,
-	NotificationQueueItem,
-} from '@freedi/shared-types';
+import type { AnswerNoticeState, NoticeCapSlot, NotificationQueueItem } from '@freedi/shared-types';
 import { logError } from '../../utils/errorHandling';
 
 const HOUR_MS = 60 * 60 * 1000;

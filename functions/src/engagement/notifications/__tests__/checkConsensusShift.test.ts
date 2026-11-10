@@ -70,8 +70,9 @@ const DUE_RATERS = BASE_RATERS + MIN_NEW_RATERS;
 const DUE_SCORE = BASE_SCORE + MIN_SCORE_CHANGE_POINTS / 100;
 
 function queued(): NotificationQueueItem[] {
-	return [...(fake.store.get(Collections.notificationQueue)?.values() ?? [])] as unknown as
-		NotificationQueueItem[];
+	return [
+		...(fake.store.get(Collections.notificationQueue)?.values() ?? []),
+	] as unknown as NotificationQueueItem[];
 }
 
 describe('checkConsensusShift', () => {
@@ -266,7 +267,9 @@ describe('checkConsensusShift', () => {
 			await checkConsensusShift(answer(DUE_RATERS, DUE_SCORE));
 
 			const { title, body } = queued()[0];
-			expect(`${title} ${body}`).not.toMatch(/\d|%|\b(increased|decreased|rose|fell|up|down|higher|lower)\b/i);
+			expect(`${title} ${body}`).not.toMatch(
+				/\d|%|\b(increased|decreased|rose|fell|up|down|higher|lower)\b/i,
+			);
 			expect(body).toBe(
 				`More people have rated your answer "${TEXT}" and its agreement score has changed. The score is shown next to your answer.`,
 			);

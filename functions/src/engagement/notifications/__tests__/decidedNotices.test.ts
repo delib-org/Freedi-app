@@ -33,7 +33,12 @@ function question(currentStep?: QuestionStep): Statement {
 	} as unknown as Statement;
 }
 
-function seedAnswer(id: string, uid: string, text: string, extra: Record<string, unknown> = {}): void {
+function seedAnswer(
+	id: string,
+	uid: string,
+	text: string,
+	extra: Record<string, unknown> = {},
+): void {
 	fake.seed(Collections.statements, id, {
 		statementId: id,
 		parentId: QUESTION,
@@ -45,8 +50,9 @@ function seedAnswer(id: string, uid: string, text: string, extra: Record<string,
 }
 
 function queued(): NotificationQueueItem[] {
-	return [...(fake.store.get(Collections.notificationQueue)?.values() ?? [])] as unknown as
-		NotificationQueueItem[];
+	return [
+		...(fake.store.get(Collections.notificationQueue)?.values() ?? []),
+	] as unknown as NotificationQueueItem[];
 }
 
 const TO_VOTING = question(QuestionStep.voting);

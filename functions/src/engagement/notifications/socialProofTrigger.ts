@@ -4,7 +4,7 @@
  * Detects evaluation milestones on user's options and triggers
  * SOCIAL_PROOF notifications.
  *
- * Milestones: 5th, 10th, 25th, 50th evaluator on a user's option.
+ * Milestones: 5, 25 and 100 people have rated a user's answer.
  * Also tells the author when an answer's agreement score has moved (see
  * checkConsensusShift for the conditions).
  */
@@ -31,7 +31,7 @@ import {
 	capBucket,
 	claimAnswerNotice,
 } from './noticeCaps';
-import { answerPreview, answerUpdateCopy, pickNoticeLanguage } from './noticeText';
+import { answerPreview, answerUpdateCopy, milestoneCopy, pickNoticeLanguage } from './noticeText';
 import type { NoticeCopy } from './noticeText';
 
 const getDb = () => getFirestore();
@@ -48,59 +48,64 @@ const ROUNDING = 10;
 /** After a check that could not send, wait this long before spending reads on another. */
 const RECHECK_AFTER_REFUSAL_MS = 60 * 60 * 1000;
 
-/** Evaluation count milestones that trigger notifications */
-const MILESTONES = [5, 10, 25, 50, 100];
+/** Rater counts that earn a "People are reading your answer" notice. */
+export const MILESTONES = [5, 25, 100];
 
 /**
- * Check if a statement's evaluation count hit a milestone.
- * Called after an evaluation is processed.
+ * Ratings landing together can both read a count past the milestone, so the
+ * next few counts still qualify. The deterministic id keeps it to one notice.
  */
-export async function checkSocialProofMilestone(
-	statement: Statement,
-	newEvaluatorCount: number,
-): Promise<void> {
+const MILESTONE_CATCH_UP = 3;
+
+function reachedMilestone(raters: number): number | undefined {
+	return MILESTONES.find((m) => raters >= m && raters < m + MILESTONE_CATCH_UP);
+}
+
+/**
+ * Tells the author when a milestone number of people have rated their answer.
+ * In-app only, so the answer's text stays off the lock screen, and subject to
+ * the same caps as the "Update on your answer" notice. Never throws.
+ */
+export async function checkSocialProofMilestone(statement: Statement): Promise<void> {
 	try {
-		// Only notify for options (not questions or groups)
-		if (statement.statementType !== 'option') return;
+		const milestone = reachedMilestone(countRaters(statement));
+		if (milestone === undefined) return;
 
-		// Check if we hit a milestone
-		const milestone = MILESTONES.find((m) => newEvaluatorCount === m);
-		if (!milestone) return;
+		const authorId = answerAuthor(statement);
+		if (!authorId) return;
 
-		// Get the option creator
-		const creatorId = statement.creator?.uid;
-		if (!creatorId) return;
+		const db = getDb();
+		const { statementId, parentId } = statement;
+		const audience = (await readNoticeAudiences(db, [authorId])).get(authorId);
+		if (!audience?.inAppOn || !audience.answerUpdatesOn) return;
 
-		const queueItemId = `social_${statement.statementId}_${milestone}_${Date.now()}`;
-		const optionPreview =
-			statement.statement.substring(0, 60) + (statement.statement.length > 60 ? '...' : '');
-
-		const notification: NotificationQueueItem = {
-			queueItemId,
-			userId: creatorId,
-			title: 'Your idea is getting attention!',
-			body: `${milestone} people have evaluated your option: "${optionPreview}"`,
-			channels: [NotificationChannel.IN_APP, NotificationChannel.PUSH],
-			sourceApp: SourceApp.MAIN,
-			targetPath: `/statement/${statement.parentId}?focusId=${statement.statementId}`,
-			deliverAt: null,
-			frequency: NotificationFrequency.INSTANT,
+		const now = Date.now();
+		const language = pickNoticeLanguage(audience.storedLanguage, statement.statement);
+		const notice = buildAnswerNotice({
+			queueItemId: `social_${statementId}_${milestone}`,
+			userId: authorId,
+			copy: milestoneCopy(language, milestone, answerPreview(statement.statement)),
+			targetPath: `/statement/${parentId}?focusId=${statementId}`,
 			triggerType: NotificationTriggerType.SOCIAL_PROOF,
-			statementId: statement.statementId,
-			parentId: statement.parentId,
-			topParentId: statement.topParentId,
-			status: NotificationQueueStatus.PENDING,
-			createdAt: Date.now(),
-		};
+			statement,
+			now,
+		});
 
-		await getDb().collection(Collections.notificationQueue).doc(queueItemId).set(notification);
+		const result = await claimAnswerNotice({
+			db,
+			notice,
+			now,
+			answerId: statementId,
+			questionId: parentId,
+			userId: authorId,
+		});
 
-		logger.info(`Social proof milestone ${milestone} for statement ${statement.statementId}`);
+		if (result === 'queued') logger.info('Milestone notice queued', { statementId, milestone });
 	} catch (error) {
-		// Non-blocking
-		logger.warn('Social proof check failed', {
+		logError(error, {
+			operation: 'engagement.checkSocialProofMilestone',
 			statementId: statement.statementId,
-			error,
+			metadata: { parentId: statement.parentId },
 		});
 	}
 }

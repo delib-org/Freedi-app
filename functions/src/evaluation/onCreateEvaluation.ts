@@ -169,12 +169,9 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 				}).catch((err) => logger.warn('Question progress tracking failed:', err));
 			}
 
-			// Check social proof milestones (non-blocking)
-			const evaluatorCount = statement.evaluation?.numberOfEvaluators ?? 0;
-			checkSocialProofMilestone(statement, evaluatorCount).catch((err) =>
-				logger.warn('Social proof check failed:', err),
-			);
-
+			// Notices about the author's answer. Awaited so the function is not
+			// frozen mid-write; neither can throw.
+			await checkSocialProofMilestone(statement);
 			await checkConsensusShift(statement);
 		}
 
