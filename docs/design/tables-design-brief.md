@@ -95,7 +95,7 @@ The mode is chosen when the assignment is created and cannot be changed later. I
 | Assignment published | View, print, recompute and publish a new version, end | My table |
 | Ended | View only | "This table assignment has ended" |
 
-Status only moves forward. Registration cannot be reopened.
+Status only moves forward. Registration cannot be reopened. In choose-a-table mode there is no publish step: seats are live, and the host goes from closed to ended.
 
 ### Host journey today
 
@@ -177,7 +177,7 @@ The target is the `wizcol` brand used by the main app, defined in `packages/shar
 | Mint tone, tint and ink | `--tone-mint`, `--tone-mint-ink` | #cdefdf, #12503a |
 | Yellow tone, tint and ink | `--tone-yellow`, `--tone-yellow-ink` | #fce9a8, #5a4200 |
 | Floating navigation | `--nav-floating-bg` | #263854 |
-| Interface and display fonts | `--font-ui`, `--font-display` | Open Sans with Rubik for Hebrew; Roboto |
+| Interface and display fonts | `--font-ui`, `--font-display` | Open Sans and Rubik; Roboto |
 
 Patterns the main app already has: rounded white cards on paper, tint-and-ink tone pairs instead of saturated fills, a floating navy bottom bar on the phone, and bottom sheets over a soft navy scrim.
 
@@ -201,7 +201,7 @@ These come from reading the code and the screens. They have not been tested with
 
 - **The results speak in statistics.** "Largest deviation of a table from the crowd" does not tell a facilitator whether the tables are good.
 - **No manual adjustment.** The host cannot move one person or keep two people apart, although the engine supports locked seats.
-- **Latecomers have no path.** Someone who registers after publishing is left without a table, and the only remedy is to recompute and publish again.
+- **Latecomers have no path.** Once registration closes, a late arrival sees "Registration is closed" and cannot get in, and the host has no way to add them.
 - **No room view.** There is no projector mode for the QR code or for who sits where, and the name search lives only on the participants screen.
 - **Table numbers are abstract.** A table cannot be given a location or a name.
 
