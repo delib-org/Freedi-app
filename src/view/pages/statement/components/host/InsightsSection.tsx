@@ -23,7 +23,7 @@ const InsightsSection: FC<InsightsSectionProps> = ({ statement }) => {
 		[statement.statementId],
 	);
 	const options = useSelector(optionsSelect);
-	const participation = useParticipationStats(statement, true, options.length);
+	const participation = useParticipationStats(statement, true, options);
 	const isSpace = statement.statementType === StatementType.group;
 
 	return (

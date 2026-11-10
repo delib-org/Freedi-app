@@ -6,7 +6,7 @@ import { isLargeForPresence } from '@/helpers/presenceVisibility';
 import { UserProfilePopover } from '@/view/components/atomic/molecules/UserProfilePopover';
 import styles from './OnlineUsersStyle.module.scss';
 
-/** Presence is decided once per open; arrivals do not trigger another read. */
+/** Presence reads only on its timer; nothing the viewer does triggers another. */
 const PRESENCE_READ_KEY = 'presence';
 
 interface OnlineUsersProps {
@@ -16,13 +16,17 @@ interface OnlineUsersProps {
 /**
  * Who is here now, for gatherings small enough to afford it. In a large
  * question nothing mounts, so there is no presence write, no listener and no
- * widget. Waits for the size before mounting, so a crowd never starts one.
+ * widget. Waits for the first size read before mounting. That read can be
+ * under the line while a crowd arrives together, so the size is checked again
+ * each minute until the question counts as large, and then never again: a
+ * crowd can hold presence on for about a minute, not longer.
  */
 const OnlineUsers: FC<OnlineUsersProps> = ({ statement }) => {
 	const statementId = statement?.statementId;
 	const { progress, isLoaded } = useQuestionProgressRead(
 		statement?.statementType === StatementType.question ? statementId : undefined,
 		PRESENCE_READ_KEY,
+		{ pollWhile: (latest) => !isLargeForPresence(statement, latest) },
 	);
 
 	if (!statementId || !isLoaded || isLargeForPresence(statement, progress)) return null;

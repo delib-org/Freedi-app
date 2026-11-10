@@ -141,6 +141,10 @@ export const JOINING = {
 export const PARTICIPATION = {
 	MIN_PUBLIC_COUNT: 5,
 	PROGRESS_REFRESH_MS: TIME.MINUTE,
+	PROGRESS_MIN_RETRY_MS: TIME.SECOND,
+	/** Counters trail their triggers a little; only a bigger gap means they are wrong. */
+	COUNTER_LAG_MIN: 1,
+	COUNTER_LAG_RATIO: 0.1,
 } as const;
 
 /**

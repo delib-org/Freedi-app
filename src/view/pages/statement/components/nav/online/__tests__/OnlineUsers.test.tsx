@@ -47,6 +47,15 @@ describe('OnlineUsers', () => {
 		expect(container.firstChild).toBeNull();
 	});
 
+	it('keeps checking the size only while the question is small', () => {
+		render(<OnlineUsers statement={question} />);
+		const { pollWhile } = mockRead.mock.calls[0][2];
+
+		expect(pollWhile({ entered: PRESENCE.LARGE_QUESTION_PEOPLE - 1 })).toBe(true);
+		expect(pollWhile(null)).toBe(true);
+		expect(pollWhile({ entered: PRESENCE.LARGE_QUESTION_PEOPLE })).toBe(false);
+	});
+
 	it('mounts no presence until the size of the question is known', () => {
 		mockRead.mockReturnValue({ progress: null, isLoaded: false });
 		const { container } = render(<OnlineUsers statement={question} />);

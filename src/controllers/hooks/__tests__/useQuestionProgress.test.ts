@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { PARTICIPATION } from '@/constants/common';
 import { getQuestionProgress } from '@/controllers/db/questionProgress/getQuestionProgress';
 import { useQuestionProgress, useQuestionProgressRead } from '../useQuestionProgress';
@@ -35,7 +35,7 @@ describe('useQuestionProgress', () => {
 	it('says when the read is still on its way', async () => {
 		const { result } = renderHook(() => useQuestionProgressRead('pending-q', '0'));
 
-		expect(result.current).toEqual({ progress: null, isLoaded: false });
+		expect(result.current).toMatchObject({ progress: null, isLoaded: false });
 		await waitFor(() => expect(result.current.isLoaded).toBe(true));
 		expect(result.current.progress).toEqual({ suggested: 8, evaluated: 11 });
 	});
@@ -43,7 +43,7 @@ describe('useQuestionProgress', () => {
 	it('counts as loaded when there is nothing to read', () => {
 		const { result } = renderHook(() => useQuestionProgressRead(undefined, '0'));
 
-		expect(result.current).toEqual({ progress: null, isLoaded: true });
+		expect(result.current).toMatchObject({ progress: null, isLoaded: true });
 	});
 
 	it('skips the read without a question id', () => {
@@ -83,6 +83,143 @@ describe('useQuestionProgress', () => {
 		const second = renderHook(() => useQuestionProgress('shared-q', '0'));
 
 		await waitFor(() => expect(second.result.current).toEqual({ suggested: 8, evaluated: 11 }));
+		expect(mockGetProgress).toHaveBeenCalledTimes(1);
+	});
+
+	it('reload drops the shared read and fetches again', async () => {
+		const { result } = renderHook(() => useQuestionProgressRead('reload-q', '0'));
+		await waitFor(() => expect(result.current.isLoaded).toBe(true));
+
+		act(() => result.current.reload());
+
+		expect(result.current.isLoaded).toBe(false);
+		await waitFor(() => expect(result.current.isLoaded).toBe(true));
+		expect(mockGetProgress).toHaveBeenCalledTimes(2);
+	});
+});
+
+describe('useQuestionProgressRead polling', () => {
+	const MINUTE = PARTICIPATION.PROGRESS_REFRESH_MS;
+	const always = () => true;
+	let visibility: DocumentVisibilityState = 'visible';
+
+	async function advance(ms: number): Promise<void> {
+		await act(async () => {
+			await jest.advanceTimersByTimeAsync(ms);
+		});
+	}
+
+	async function setVisibility(next: DocumentVisibilityState): Promise<void> {
+		visibility = next;
+		await act(async () => {
+			document.dispatchEvent(new Event('visibilitychange'));
+		});
+	}
+
+	beforeEach(() => {
+		jest.useFakeTimers();
+		visibility = 'visible';
+		Object.defineProperty(document, 'visibilityState', {
+			configurable: true,
+			get: () => visibility,
+		});
+		mockGetProgress.mockReset();
+		mockGetProgress.mockResolvedValue({ entered: 3 });
+	});
+
+	afterEach(() => {
+		jest.useRealTimers();
+		delete (document as unknown as { visibilityState?: string }).visibilityState;
+	});
+
+	it('never polls without being asked', async () => {
+		renderHook(() => useQuestionProgressRead('quiet-q', '0'));
+		await advance(MINUTE * 3);
+
+		expect(mockGetProgress).toHaveBeenCalledTimes(1);
+	});
+
+	it('reads once a minute while polling', async () => {
+		renderHook(() => useQuestionProgressRead('poll-q', '0', { pollWhile: always }));
+		await advance(0);
+		expect(mockGetProgress).toHaveBeenCalledTimes(1);
+
+		await advance(MINUTE);
+		expect(mockGetProgress).toHaveBeenCalledTimes(2);
+
+		await advance(MINUTE);
+		expect(mockGetProgress).toHaveBeenCalledTimes(3);
+	});
+
+	it('picks up a change the gate skipped when the minute is up', async () => {
+		const { rerender } = renderHook(
+			({ actionKey }) => useQuestionProgressRead('trail-q', actionKey, { pollWhile: always }),
+			{ initialProps: { actionKey: '0' } },
+		);
+		await advance(MINUTE / 2);
+		rerender({ actionKey: '1' });
+		await advance(0);
+		expect(mockGetProgress).toHaveBeenCalledTimes(1);
+
+		await advance(MINUTE / 2);
+		expect(mockGetProgress).toHaveBeenCalledTimes(2);
+	});
+
+	it('shares polled reads between two surfaces', async () => {
+		renderHook(() => useQuestionProgressRead('two-q', '0', { pollWhile: always }));
+		renderHook(() => useQuestionProgressRead('two-q', '0', { pollWhile: always }));
+		await advance(0);
+		await advance(MINUTE);
+
+		expect(mockGetProgress).toHaveBeenCalledTimes(2);
+	});
+
+	it('pauses in a hidden tab and catches up when it returns', async () => {
+		renderHook(() => useQuestionProgressRead('hidden-q', '0', { pollWhile: always }));
+		await advance(0);
+
+		await setVisibility('hidden');
+		await advance(MINUTE * 5);
+		expect(mockGetProgress).toHaveBeenCalledTimes(1);
+
+		await setVisibility('visible');
+		await advance(PARTICIPATION.PROGRESS_MIN_RETRY_MS);
+		expect(mockGetProgress).toHaveBeenCalledTimes(2);
+	});
+
+	it('stops for good once the condition ends', async () => {
+		mockGetProgress.mockResolvedValue({ entered: 500 });
+		renderHook(() =>
+			useQuestionProgressRead('stop-q', '0', {
+				pollWhile: (progress) => (progress?.entered ?? 0) < 100,
+			}),
+		);
+		await advance(MINUTE * 5);
+
+		expect(mockGetProgress).toHaveBeenCalledTimes(1);
+	});
+
+	it('keeps checking after a read that found nothing', async () => {
+		mockGetProgress.mockResolvedValue(null);
+		renderHook(() =>
+			useQuestionProgressRead('nothing-q', '0', {
+				pollWhile: (progress) => (progress?.entered ?? 0) < 100,
+			}),
+		);
+		await advance(0);
+		await advance(MINUTE);
+
+		expect(mockGetProgress).toHaveBeenCalledTimes(2);
+	});
+
+	it('clears its timer on unmount', async () => {
+		const { unmount } = renderHook(() =>
+			useQuestionProgressRead('unmount-q', '0', { pollWhile: always }),
+		);
+		await advance(0);
+		unmount();
+		await advance(MINUTE * 3);
+
 		expect(mockGetProgress).toHaveBeenCalledTimes(1);
 	});
 });
