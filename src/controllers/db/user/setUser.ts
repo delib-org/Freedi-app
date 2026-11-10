@@ -56,7 +56,8 @@ export async function setUserToDB(user: Creator) {
 				const existingUser = userDB.data() as Creator & Pick<User, 'defaultLanguage'>;
 				dispatch(setUserAdvanceUser(existingUser.advanceUser || false));
 				dispatch(setUserSystemAdmin(existingUser.systemAdmin || false));
-				syncUserLanguage(user.uid, existingUser.defaultLanguage);
+				// An offline copy may predate a stored language, so it cannot show that none exists.
+				if (!userDB.metadata.fromCache) syncUserLanguage(user.uid, existingUser.defaultLanguage);
 			}
 		} catch (error) {
 			// Non-critical error, just log it

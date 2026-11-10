@@ -20,10 +20,11 @@ jest.mock('../userLanguage', () => ({ syncUserLanguage: jest.fn() }));
 
 const USER = { uid: 'u1', displayName: 'A' } as Creator;
 
-function serverHolds(data: Record<string, unknown>): void {
+function serverHolds(data: Record<string, unknown>, fromCache = false): void {
 	jest.mocked(getDoc).mockResolvedValue({
 		exists: () => true,
 		data: () => data,
+		metadata: { fromCache },
 	} as unknown as Awaited<ReturnType<typeof getDoc>>);
 }
 
@@ -44,5 +45,13 @@ describe('setUserToDB language sync', () => {
 		await setUserToDB(USER);
 
 		expect(syncUserLanguage).toHaveBeenCalledWith('u1', undefined);
+	});
+
+	it('does not trust an offline copy of the user document', async () => {
+		serverHolds({}, true);
+
+		await setUserToDB(USER);
+
+		expect(syncUserLanguage).not.toHaveBeenCalled();
 	});
 });
