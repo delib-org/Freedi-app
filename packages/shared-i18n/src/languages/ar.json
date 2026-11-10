@@ -4829,5 +4829,9 @@
   "unread.messageCount_one": "رسالة واحدة غير مقروءة",
   "unread.messageCount_other": "{{count}} رسائل غير مقروءة",
   "answerStrip.notChosen": "إجابة",
-  "answerStrip.chosen": "إجابة مختارة"
+  "answerStrip.chosen": "إجابة مختارة",
+  "map.node.open": "فتح",
+  "map.node.newQuestion": "سؤال جديد",
+  "map.node.newAnswer": "إجابة جديدة",
+  "Edit": "تعديل"
 }

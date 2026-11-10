@@ -5426,5 +5426,8 @@
   "unread.messageCount_one": "הודעה אחת שלא נקראה",
   "unread.messageCount_other": "{{count}} הודעות שלא נקראו",
   "answerStrip.notChosen": "תשובה",
-  "answerStrip.chosen": "תשובה שנבחרה"
+  "answerStrip.chosen": "תשובה שנבחרה",
+  "map.node.open": "פתיחה",
+  "map.node.newQuestion": "שאלה חדשה",
+  "map.node.newAnswer": "תשובה חדשה"
 }

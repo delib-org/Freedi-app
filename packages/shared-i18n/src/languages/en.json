@@ -5388,5 +5388,8 @@
   "unread.messageCount_one": "1 unread message",
   "unread.messageCount_other": "{{count}} unread messages",
   "answerStrip.notChosen": "Answer",
-  "answerStrip.chosen": "Chosen answer"
+  "answerStrip.chosen": "Chosen answer",
+  "map.node.open": "Open",
+  "map.node.newQuestion": "New question",
+  "map.node.newAnswer": "New answer"
 }

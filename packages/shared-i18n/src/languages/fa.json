@@ -5187,5 +5187,8 @@
   "unread.messageCount_one": "۱ پیام خوانده‌نشده",
   "unread.messageCount_other": "{{count}} پیام خوانده‌نشده",
   "answerStrip.notChosen": "پاسخ",
-  "answerStrip.chosen": "پاسخ انتخاب‌شده"
+  "answerStrip.chosen": "پاسخ انتخاب‌شده",
+  "map.node.open": "باز کردن",
+  "map.node.newQuestion": "پرسش جدید",
+  "map.node.newAnswer": "پاسخ جدید"
 }

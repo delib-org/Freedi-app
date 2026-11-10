@@ -386,251 +386,27 @@
 			}
 		}
 
-		@media (hover: none) {
+		// Keyboard hints mean nothing without a keyboard; the "+" buttons stay.
+		@media (hover: none), (pointer: coarse) {
 			.mind-map-hints {
 				display: none;
 			}
+
+			.mind-map-add-btn {
+				width: 44px;
+				height: 44px;
+
+				&--child {
+					right: -22px;
+					margin-top: -22px;
+				}
+
+				&--sibling {
+					bottom: -22px;
+					margin-left: -22px;
+				}
+			}
 		}
-	}
-}
-
-// ========================================
-// React toolbar overlay (positioned outside MindElixir DOM)
-// ========================================
-.toolbar {
-	position: fixed;
-	// Bottom-anchored: the rating row is conditional, so a top-anchored strip
-	// would grow down over the node it belongs to.
-	transform: translate(-50%, -100%);
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-	background: var(--card-default, #ffffff);
-	border-radius: 8px;
-	padding: 4px;
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-	z-index: 100;
-	animation: toolbarFadeIn 0.15s ease-out;
-	white-space: nowrap;
-}
-
-.toolbarRow {
-	display: flex;
-	align-items: center;
-	gap: 2px;
-}
-
-.toolbarBtn {
-	width: 32px;
-	height: 32px;
-	border-radius: 6px;
-	border: none;
-	background: transparent;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 0;
-	color: var(--text-body, #555);
-	transition:
-		background 0.15s ease,
-		color 0.15s ease;
-
-	&:hover {
-		background: var(--btn-primary, #5f88e5);
-		color: var(--btn-primary-text);
-	}
-
-	&:focus-visible {
-		outline: 2px solid var(--btn-primary, #5f88e5);
-		outline-offset: -2px;
-	}
-
-	svg {
-		width: 18px;
-		height: 18px;
-	}
-}
-
-.toolbarBtnDelete {
-	&:hover {
-		background: var(--disagree, #fe6ba2);
-		color: white;
-	}
-}
-
-.toolbarBtnActive {
-	background: var(--btn-primary, #5f88e5);
-	color: var(--btn-primary-text, #ffffff);
-}
-
-// Rating row — the app's 5-point face scale, inline under the icons.
-.evaluationRow {
-	// Same construct as the option cards: the faces are listed high → low and
-	// reversed here, so the row reads unhappy → happy and mirrors in RTL the way
-	// every other rating row in the app does.
-	display: flex;
-	flex-direction: row-reverse;
-	align-items: center;
-	justify-content: space-between;
-	gap: 2px;
-	padding-top: 3px;
-	border-top: 1px solid var(--background, #eef0f3);
-}
-
-// Faces shown for an original inside a merged idea: its vote is already
-// counted through the merge, so the row is visible but inert.
-.evaluationRowReadOnly {
-	opacity: 0.55;
-
-	.evaluationBtn {
-		cursor: not-allowed;
-	}
-}
-
-.evaluationBtn {
-	width: 28px;
-	height: 28px;
-	border: none;
-	border-radius: 50%;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 0;
-	// Unpicked faces recede so the cast vote reads at a glance.
-	opacity: 0.75;
-	transition:
-		opacity 0.15s ease,
-		transform 0.15s ease,
-		box-shadow 0.15s ease;
-
-	img {
-		width: 20px;
-		height: 20px;
-	}
-
-	&:hover {
-		opacity: 1;
-		transform: scale(1.15);
-	}
-
-	&:focus-visible {
-		outline: 2px solid var(--btn-primary, #5f88e5);
-		outline-offset: 1px;
-	}
-}
-
-.evaluationBtnActive {
-	opacity: 1;
-	transform: scale(1.1);
-	box-shadow: 0 0 0 2px var(--btn-primary, #5f88e5);
-}
-
-.evaluationEmoji {
-	font-size: 1rem;
-	line-height: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.evaluationBtn {
-		transition: none;
-
-		&:hover {
-			transform: none;
-		}
-	}
-
-	.evaluationBtnActive {
-		transform: none;
-	}
-}
-
-// Type switcher popover, hanging under the node toolbar.
-.typeMenu {
-	position: absolute;
-	top: calc(100% + 6px);
-	inset-inline-start: 0;
-	display: flex;
-	flex-direction: column;
-	min-width: 9rem;
-	padding: 4px;
-	gap: 2px;
-	background: var(--card-default, #ffffff);
-	border-radius: 8px;
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-	animation: toolbarFadeIn 0.15s ease-out;
-}
-
-.typeMenuItem {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	width: 100%;
-	padding: 0.4rem 0.5rem;
-	border: none;
-	border-radius: 6px;
-	background: transparent;
-	color: var(--text-body, #3d4d71);
-	font-size: 0.85rem;
-	text-align: start;
-	cursor: pointer;
-	transition: background 0.15s ease;
-
-	&:hover:not(:disabled) {
-		background: var(--background, #eef0f3);
-	}
-
-	&:disabled {
-		opacity: 0.45;
-		cursor: not-allowed;
-	}
-
-	&:focus-visible {
-		outline: 2px solid var(--btn-primary, #5f88e5);
-		outline-offset: -2px;
-	}
-}
-
-.typeMenuItemCurrent {
-	font-weight: 700;
-}
-
-// Mirrors the node colors from `getStyleForType` so the menu reads as "this is
-// what the node will look like".
-.typeMenuSwatch {
-	width: 12px;
-	height: 12px;
-	border-radius: 3px;
-	flex-shrink: 0;
-	background: var(--card-default, #ffffff);
-
-	&[data-type='question'] {
-		background: #47b4ef;
-	}
-
-	&[data-type='option'] {
-		background: #ffe16a;
-	}
-
-	&[data-type='group'] {
-		background: #b9a1e8;
-	}
-}
-
-.toolbarDivider {
-	width: 1px;
-	height: 20px;
-	background: var(--border-color, #ddd);
-	margin: 0 2px;
-}
-
-@keyframes toolbarFadeIn {
-	from {
-		opacity: 0;
-	}
-	to {
-		opacity: 1;
 	}
 }
 

@@ -4710,5 +4710,9 @@
   "unread.messageCount_one": "1 mensaje sin leer",
   "unread.messageCount_other": "{{count}} mensajes sin leer",
   "answerStrip.notChosen": "Respuesta",
-  "answerStrip.chosen": "Respuesta elegida"
+  "answerStrip.chosen": "Respuesta elegida",
+  "map.node.open": "Abrir",
+  "map.node.newQuestion": "Nueva pregunta",
+  "map.node.newAnswer": "Nueva respuesta",
+  "Edit": "Editar"
 }

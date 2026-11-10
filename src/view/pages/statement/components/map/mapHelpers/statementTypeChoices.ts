@@ -14,9 +14,9 @@ export const MIND_MAP_TYPE_CHOICES: readonly StatementType[] = [
 
 /** Translation key for a type's display name. */
 export const TYPE_LABEL_KEYS: Record<string, string> = {
-	[StatementType.question]: 'Question',
-	[StatementType.option]: 'Option',
-	[StatementType.group]: 'Group',
+	[StatementType.question]: 'question.sheet.typeQuestion',
+	[StatementType.option]: 'question.sheet.typeAnswer',
+	[StatementType.group]: 'question.sheet.typeSpace',
 	[StatementType.statement]: 'Statement',
 };
 
