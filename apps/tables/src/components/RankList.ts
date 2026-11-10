@@ -32,6 +32,7 @@ interface ActiveDrag {
 const PICKED_ROW_SELECTOR = '.rank-row--picked';
 const ROW_SELECTOR = '.rank-row[data-topic-id]';
 const GLOW_SELECTOR = '.rank-row__glow';
+const HANDLE_SELECTOR = '.rank-row__handle';
 
 /** A tap that changed the list: the row that should glow once it lands, and where every row stood before. */
 interface PendingFlip {
@@ -72,6 +73,8 @@ export const RankList: m.ClosureComponent<RankListAttrs> = (initial) => {
 	let drag: ActiveDrag | null = null;
 	let announcement = '';
 	let pendingFlip: PendingFlip | null = null;
+	/** The row whose handle had the focus when the keyboard moved it: reordering can drop that focus. */
+	let refocusTopicId: string | null = null;
 	const explained = new Set<string>();
 
 	function titleOf(topicId: string): string {
@@ -136,10 +139,23 @@ export const RankList: m.ClosureComponent<RankListAttrs> = (initial) => {
 		cancelFlips(rows.values());
 	}
 
+	/** After a keyboard move the moved row's handle gets the focus back, so the next arrow key works. */
+	function restoreHandleFocus(): void {
+		const topicId = refocusTopicId;
+
+		refocusTopicId = null;
+		if (topicId === null || !list) return;
+
+		const handle = rowElements(list).get(topicId)?.querySelector<HTMLElement>(HANDLE_SELECTOR);
+
+		if (handle && document.activeElement !== handle) handle.focus();
+	}
+
 	/** After the list redrew: slide every row that moved from where it was. */
 	function playRows(): void {
 		const flip = pendingFlip;
 
+		restoreHandleFocus();
 		pendingFlip = null;
 		if (!flip?.first || !list) return;
 
@@ -214,7 +230,10 @@ export const RankList: m.ClosureComponent<RankListAttrs> = (initial) => {
 
 		const next = moveRank(latest.ranked, latest.ranked.indexOf(topicId), delta);
 
-		if (next.join() !== latest.ranked.join()) applyMove(next, topicId);
+		if (next.join() !== latest.ranked.join()) {
+			refocusTopicId = topicId;
+			applyMove(next, topicId);
+		}
 	}
 
 	function shiftOf(index: number, topicId: string): string | undefined {

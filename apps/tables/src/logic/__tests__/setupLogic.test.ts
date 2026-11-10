@@ -188,7 +188,7 @@ describe('setupDraft', () => {
 				question: ' Q ',
 				poleA: 'A',
 				poleB: 'B',
-				mode: 'direct',
+				mode: 'ranked',
 				expected: '12',
 				allowReturn: true,
 			}),
@@ -196,13 +196,20 @@ describe('setupDraft', () => {
 
 		expect(request).toMatchObject({
 			sessionId: 's',
-			mode: 'direct',
+			mode: 'ranked',
 			tableSize: 7,
 			balanceTolerance: 0.3,
 			positionQuestion: { label: 'Q', poleA: 'A', poleB: 'B' },
 			expectedParticipants: 12,
 			allowReturnByName: true,
 		});
+	});
+
+	it('sends no position question in direct mode, and a half-filled one does not block', () => {
+		const direct = readyDraft({ mode: 'direct', question: 'Q', poleA: 'A', poleB: '' });
+
+		expect(settingsProblem(direct)).toBeNull();
+		expect(settingsRequest('s', direct)).toMatchObject({ mode: 'direct', positionQuestion: null });
 	});
 
 	it('clears expected people when the field is empty', () => {

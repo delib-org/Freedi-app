@@ -46,6 +46,20 @@ interface Entry {
 	retryCount: number;
 	retryTimer: ReturnType<typeof setTimeout> | null;
 	active: boolean;
+	/** True once a snapshot was passed on: from then on an empty one is believed. */
+	confirmed: boolean;
+}
+
+/**
+ * A first snapshot that comes from the local cache and says "missing" or "empty" only
+ * means "nothing cached yet", e.g. a phone that is offline. It is not an answer.
+ */
+function isUnconfirmedAbsence(
+	snap: DocumentSnapshot<DocumentData> | QuerySnapshot<DocumentData>,
+): boolean {
+	if (!snap.metadata.fromCache) return false;
+
+	return 'docs' in snap ? snap.empty : !snap.exists();
 }
 
 const registry = new Set<Entry>();
@@ -90,6 +104,10 @@ function start(entry: Entry): void {
 		entry.target as Query<DocumentData>,
 		(snap) => {
 			entry.retryCount = 0;
+			if (!entry.confirmed) {
+				if (isUnconfirmedAbsence(snap)) return;
+				entry.confirmed = true;
+			}
 			entry.onNext(snap);
 		},
 		(error) => handleStreamError(entry, error),
@@ -157,6 +175,7 @@ function register(
 		retryCount: 0,
 		retryTimer: null,
 		active: true,
+		confirmed: false,
 	};
 
 	registry.add(entry);

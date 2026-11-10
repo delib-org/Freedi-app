@@ -4,7 +4,7 @@ import { t } from '@/lib/i18n';
 import { Action } from '@/lib/action';
 import { LiveValue } from '@/lib/live';
 import { goTo } from '@/lib/navigate';
-import { computeAction } from '@/lib/tableAssignment/closeAndSplit';
+import { computeActionFor } from '@/lib/tableAssignment/closeAndSplit';
 import { tablesApi } from '@/lib/tableAssignment/client';
 import { subscribeRuns } from '@/lib/tableAssignment/data';
 import { deriveDirectTables, seatCountsFromParticipants } from '@/logic/directTables';
@@ -33,6 +33,7 @@ const VERDICT_ICON_PX = 32;
 const PreviewBody: m.ClosureComponent<PreviewBodyAttrs> = (initial) => {
 	const sessionId = initial.attrs.context.session.tableAssignmentId;
 	const runs = new LiveValue('runs', subscribeRuns(sessionId));
+	const computeAction = computeActionFor(sessionId);
 	const publish = new Action('tables.host.publishRun', 'tableAssignment.error.publishStale');
 	let fixing = false;
 
@@ -150,6 +151,9 @@ const PreviewBody: m.ClosureComponent<PreviewBodyAttrs> = (initial) => {
 				),
 			]),
 			computeButton(false, canCompute, false),
+			computeAction.errorKey
+				? m('p.notice.notice--error', { role: 'alert' }, t(computeAction.errorKey))
+				: null,
 		]);
 	}
 

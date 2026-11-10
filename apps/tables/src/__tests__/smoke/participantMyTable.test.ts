@@ -48,6 +48,16 @@ describe('my table', () => {
 		];
 	}
 
+	it('says the topics are still loading or failed, instead of naming the table "unknown"', async () => {
+		published(['a']);
+		mocks.store.current.failTopicsWith = 'unavailable';
+
+		const { text } = await renderScreen(ParticipantMyTable, ID);
+
+		expect(text).toContain(en['tableAssignment.state.error']);
+		expect(text).not.toContain(en['tableAssignment.topic.unknown']);
+	});
+
 	it('waits when nothing is published', async () => {
 		registered();
 		mocks.store.current.session = makeSession({ status: 'registrationClosed' });

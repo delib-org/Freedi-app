@@ -100,6 +100,18 @@ describe('RankList rows', () => {
 	});
 });
 
+describe('RankList keyboard', () => {
+	it("gives the focus back to the moved row's handle", () => {
+		const handle = rowOf('a').querySelector<HTMLButtonElement>('.rank-row__handle');
+
+		handle?.focus();
+		handle?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+
+		expect(ranked).toEqual(['b', 'a', 'c']);
+		expect(document.activeElement).toBe(rowOf('a').querySelector('.rank-row__handle'));
+	});
+});
+
 describe('RankList animation', () => {
 	function tapFourth(): void {
 		rowOf('d').querySelector<HTMLButtonElement>('.rank-row__pick')?.click();

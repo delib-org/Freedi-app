@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { DocumentData, FirestoreError, Query } from 'firebase/firestore';
+import type { DocumentData, DocumentReference, FirestoreError, Query } from 'firebase/firestore';
 
 type ErrorHandler = (error: FirestoreError) => void;
 
@@ -9,7 +9,7 @@ const utils = vi.hoisted(() => ({ logError: vi.fn() }));
 vi.mock('firebase/firestore', () => firestore);
 vi.mock('@freedi/shared-utils', () => utils);
 
-import { resilientQuery } from '../listeners';
+import { resilientDoc, resilientQuery } from '../listeners';
 
 const TARGET = {} as Query<DocumentData>;
 const DENIED = { code: 'permission-denied' } as FirestoreError;
@@ -67,5 +67,73 @@ describe('resilientQuery', () => {
 		expect(utils.logError).toHaveBeenCalledTimes(1);
 		expect(firestore.onSnapshot).toHaveBeenCalledTimes(2);
 		stop();
+	});
+
+	describe('a first snapshot from the cache', () => {
+		type Next = (snap: unknown) => void;
+
+		function lastNext(): Next {
+			const { calls } = firestore.onSnapshot.mock;
+
+			return calls[calls.length - 1][1] as Next;
+		}
+
+		const emptyFromCache = { metadata: { fromCache: true }, empty: true, docs: [] };
+		const emptyFromServer = { metadata: { fromCache: false }, empty: true, docs: [] };
+		const missingFromCache = { metadata: { fromCache: true }, exists: () => false };
+
+		it('is not an answer when it is empty: the caller stays loading', () => {
+			const onNext = vi.fn();
+			const stop = resilientQuery('test', TARGET, onNext);
+
+			lastNext()(emptyFromCache);
+
+			expect(onNext).not.toHaveBeenCalled();
+			stop();
+		});
+
+		it('is not an answer when the document is missing', () => {
+			const onNext = vi.fn();
+			const stop = resilientDoc('test', {} as DocumentReference<DocumentData>, onNext);
+
+			lastNext()(missingFromCache);
+
+			expect(onNext).not.toHaveBeenCalled();
+			stop();
+		});
+
+		it('is passed on once the server confirms the same thing', () => {
+			const onNext = vi.fn();
+			const stop = resilientQuery('test', TARGET, onNext);
+
+			lastNext()(emptyFromCache);
+			lastNext()(emptyFromServer);
+
+			expect(onNext).toHaveBeenCalledTimes(1);
+			expect(onNext).toHaveBeenCalledWith(emptyFromServer);
+			stop();
+		});
+
+		it('is passed on when it has data', () => {
+			const onNext = vi.fn();
+			const stop = resilientQuery('test', TARGET, onNext);
+			const full = { metadata: { fromCache: true }, empty: false, docs: [{}] };
+
+			lastNext()(full);
+
+			expect(onNext).toHaveBeenCalledWith(full);
+			stop();
+		});
+
+		it('believes an empty one later: after an answer, emptiness is real', () => {
+			const onNext = vi.fn();
+			const stop = resilientQuery('test', TARGET, onNext);
+
+			lastNext()({ metadata: { fromCache: false }, empty: false, docs: [{}] });
+			lastNext()(emptyFromCache);
+
+			expect(onNext).toHaveBeenCalledTimes(2);
+			stop();
+		});
 	});
 });

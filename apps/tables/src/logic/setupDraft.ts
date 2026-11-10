@@ -101,10 +101,15 @@ function positionFields(draft: SetupDraft): TableAssignmentPositionQuestion {
 	return { label: draft.question.trim(), poleA: draft.poleA.trim(), poleB: draft.poleB.trim() };
 }
 
+/** The position question is a ranked-mode feature: in direct mode it is neither checked nor sent. */
+function isRanked(draft: SetupDraft): boolean {
+	return draft.mode === 'ranked';
+}
+
 function isPositionPartial(draft: SetupDraft): boolean {
 	const fields = Object.values(positionFields(draft));
 
-	return draft.askPosition && fields.some(Boolean) && !fields.every(Boolean);
+	return isRanked(draft) && draft.askPosition && fields.some(Boolean) && !fields.every(Boolean);
 }
 
 /** The first thing that stops the settings from being sent. */
@@ -138,7 +143,7 @@ export function settingsRequest(
 		mode: draft.mode,
 		tableSize: seats,
 		balanceTolerance: draft.tolerance,
-		positionQuestion: draft.askPosition && fields.label !== '' ? fields : null,
+		positionQuestion: isRanked(draft) && draft.askPosition && fields.label !== '' ? fields : null,
 		expectedParticipants: parseExpected(draft.expected),
 		allowReturnByName: draft.allowReturn,
 	};
