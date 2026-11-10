@@ -1420,13 +1420,135 @@ service cloud.firestore {
       // join-class HOMES (IA docs/ia/join-class-lesson-plan.md 9.3): a class or
       // teacher home (statementSettings.classHome) is a teachers-only container.
       // `get` of a home needs an admin subscription on it; every other statement
-      // keeps today's open get. `list` stays open until the staged auth gate
-      // above ships (a home's title is a class name, not student content).
+      // keeps today's open get.
       allow get: if resource == null ||
                     !isClassHomeData(resource.data) ||
                     isAdmin() ||
                     isSystemAdmin();
-      allow list: if true;
+
+      // LIST. A list rule cannot look at the results, only at what the query
+      // filters on, and it cannot read the value of `parents array-contains X`.
+      // So every statement carries `accessScope` ('open', or the id of the
+      // statement whose access setting governs it) and a list must name it.
+      //
+      // A field the query does not filter on is an error, which fails that branch
+      // of the `||` and leaves the next to decide. Read the gated field directly. `resource.data.get('x', default)` returns
+      // the default when the query does not filter on x, and passes an open scan.
+      //
+      // Budget, against a limit of ten: at most 1 read of the parent, 1 of the
+      // governing level, 6 subscriptions and 1 of usersV2. That is why a query
+      // may name only one restricted scope.
+      function subRoleAt(id) {
+        let path = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(id)));
+        return exists(path) ? get(path).data.get('role', '') : '';
+      }
+      function roleFromEnd(ids, position) {
+        return ids.size() > position ? subRoleAt(ids[ids.size() - 1 - position]) : '';
+      }
+      // The caller's role at a level, its four nearest ancestors, and the top.
+      function rolesAround(id, level) {
+        let ids = level.get('parents', []).removeAll(['top', id]);
+        let top = level.get('topParentId', 'top');
+        return [subRoleAt(id),
+                roleFromEnd(ids, 0), roleFromEnd(ids, 1), roleFromEnd(ids, 2), roleFromEnd(ids, 3),
+                (top == 'top' || top == id) ? '' : subRoleAt(top)];
+      }
+      function hasHostRole(roles) {
+        return roles.hasAny(['admin', 'statement-creator']);
+      }
+      function mayEnterLevel(id, level) {
+        let roles = rolesAround(id, level);
+        return !('banned' in roles) &&
+               (roles[0] in ['member', 'admin', 'statement-creator'] ||
+                level.get('creatorId', '') == request.auth.uid ||
+                hasHostRole(roles));
+      }
+      // A level that turns out to be open passes, so a client can name a root
+      // without reading it first. Nothing is stamped with an open level's id.
+      function mayReadRestrictedScope(scope) {
+        let path = /databases/$(database)/documents/statements/$(cleanPath(string(scope)));
+        return exists(path) &&
+               (get(path).data.get('accessScope', '') == 'open' ||
+                (request.auth != null && mayEnterLevel(scope, get(path).data)));
+      }
+      function mayReadScope(scope) {
+        return scope == 'open' || mayReadRestrictedScope(scope);
+      }
+      function statementPathOf(id) {
+        return /databases/$(database)/documents/statements/$(cleanPath(string(id)));
+      }
+      // Children that cannot be a private level of their own: answers, chat,
+      // paragraphs. These keep their old query shape, judged by the parent.
+      function asksForLeafChildren() {
+        return resource.data.statementType in ['option', 'synthesis', 'statement', 'comment', 'paragraph', 'suggestion', 'evidence'];
+      }
+      function asksForOfficialParagraphs() {
+        return resource.data.doc.isOfficialParagraph == true;
+      }
+      function asksForClusters() {
+        return resource.data.isCluster == true;
+      }
+      function mayReadChildrenOf(parentId) {
+        return exists(statementPathOf(parentId)) &&
+               mayReadScope(get(statementPathOf(parentId)).data.accessScope);
+      }
+      function isHostOfLevel(id) {
+        return request.auth != null &&
+               exists(statementPathOf(id)) &&
+               hasHostRole(rolesAround(id, get(statementPathOf(id)).data)) &&
+               !('banned' in rolesAround(id, get(statementPathOf(id)).data));
+      }
+
+      // By id: the same exposure as `get`. Range scans on the id do not pass.
+      function asksById() {
+        return statementId.size() > 0 || resource.data.statementId.size() > 0;
+      }
+      // One's own statements.
+      function asksForOwn() {
+        return request.auth != null && resource.data.creatorId == request.auth.uid;
+      }
+      // Leaf children of one parent, judged by the parent.
+      function asksForReadableLeaves() {
+        return (asksForLeafChildren() || asksForOfficialParagraphs() || asksForClusters()) &&
+               mayReadChildrenOf(resource.data.parentId);
+      }
+
+      // No-read shapes first. A host reads every child of what it hosts, and a
+      // whole tree it tops. Studio's console lists by organization.
+      allow list: if asksById() ||
+                     asksForOwn() ||
+                     ('accessScope' in resource.data && mayReadScope(resource.data.accessScope)) ||
+                     asksForReadableLeaves() ||
+                     ('parentId' in resource.data && isHostOfLevel(resource.data.parentId)) ||
+                     ('topParentId' in resource.data && isHostOfLevel(resource.data.topParentId)) ||
+                     ('organizationId' in resource.data && isOrgMember(resource.data.organizationId)) ||
+                     isSystemAdmin();
+
+      // A scope a client sends must be the true one. Absent is accepted: an old
+      // cached client does not know the field, and the create trigger stamps it.
+      function ownAccessOnCreate() {
+        return request.resource.data.get('membership', {}).get('access', null);
+      }
+      function inheritedScopeOk() {
+        let parentId = request.resource.data.get('parentId', 'top');
+        return parentId == 'top'
+          ? request.resource.data.accessScope == 'open'
+          : (!exists(statementPathOf(parentId)) ||
+             isClassHomeData(get(statementPathOf(parentId)).data) ||
+             request.resource.data.accessScope == get(statementPathOf(parentId)).data.get('accessScope', request.resource.data.accessScope));
+      }
+      function createScopeOk() {
+        return !('accessScope' in request.resource.data) ||
+               (ownAccessOnCreate() == null
+                 ? inheritedScopeOk()
+                 : (ownAccessOnCreate() in ['public', 'open', 'openToAll', 'openForRegistered']
+                     ? request.resource.data.accessScope == 'open'
+                     : request.resource.data.accessScope == statementId));
+      }
+      // Written only by the server, which recomputes it when access changes.
+      function changesAccessScope() {
+        return request.resource.data.get('accessScope', null) != resource.data.get('accessScope', null);
+      }
 
       // You may only create a statement as yourself. isCreator() cannot be
       // reused here: it reads `resource`, which is null at create time.
@@ -1441,6 +1563,7 @@ service cloud.firestore {
                        !createsClassProposal() &&
                        !request.resource.data.keys().hasAny(['answerModeration']) &&
                        !createsClassHomeOrLesson() &&
+                       createScopeOk() &&
                        classEnteredByOf(request.resource.data) == null &&
                        request.resource.data.creatorId == request.auth.uid &&
                        // A student the teacher removed writes nothing more
@@ -1457,6 +1580,7 @@ service cloud.firestore {
                        !changesCreatorRole() &&
                        !changesCreatorIdWithoutBeingCreator() &&
                        !changesOrganizationId() &&
+                       !changesAccessScope() &&
                        !isClassReply() &&
                        !changesClassReplyFields() &&
                        !rewordsClassProposal() &&
@@ -1749,6 +1873,19 @@ service cloud.firestore {
         return !isHomeSubscription() || (isSubscriber() && isRoleUnchanged());
       }
 
+      // A child with no setting of its own follows the tree. Someone already in
+      // the top may follow a question inside it (the bell, an auto-subscribe).
+      function isMemberUnderOwnTop() {
+        let statement = statementDataOf(getStatementId());
+        let topId = statement == null ? null : statement.get('topParentId', null);
+        let topSub = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(topId)));
+        return isMemberRole() &&
+               accessOf(statement) == null &&
+               topId != null &&
+               exists(topSub) &&
+               get(topSub).data.role in ['member', 'admin', 'statement-creator'];
+      }
+
       function isOpenToAll() {
         return getAccess() == "openToAll";
       }
@@ -1933,6 +2070,7 @@ service cloud.firestore {
                        (isPublic() ||
                         isOpenToAll() ||
                         isOpenForRegistered() ||
+                        isMemberUnderOwnTop() ||
                         (isModerated() && isWaitingRole()))));
 
       // For update

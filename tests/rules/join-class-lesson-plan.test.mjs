@@ -95,6 +95,7 @@ describe('join-class lesson plans and homes', () => {
 			await setDoc(doc(db, 'statementsSubscribe', `${CO}--${HOME}`), sub(CO, HOME, 'admin'));
 
 			await setDoc(doc(db, 'statements', LESSON), {
+				accessScope: 'open',
 				statementId: LESSON,
 				statement: 'Report or keep quiet?',
 				statementType: 'question',
@@ -233,9 +234,10 @@ describe('join-class lesson plans and homes', () => {
 			await assertSucceeds(getDoc(doc(db, 'classCodes', CODE)));
 			await assertSucceeds(getDoc(doc(db, 'statements', LESSON)));
 			await assertSucceeds(getDoc(doc(db, 'statements', Q)));
-			await assertSucceeds(getDocs(query(collection(db, 'statements'), where('parentId', '==', LESSON))));
+			const scope = where('accessScope', 'in', ['open', LESSON]);
+			await assertSucceeds(getDocs(query(collection(db, 'statements'), where('parentId', '==', LESSON), scope)));
 			await assertSucceeds(
-				getDocs(query(collection(db, 'statements'), where('parents', 'array-contains', LESSON))),
+				getDocs(query(collection(db, 'statements'), where('parents', 'array-contains', LESSON), scope)),
 			);
 		});
 
