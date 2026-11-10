@@ -17,6 +17,9 @@ import {
 	SourceApp,
 } from '@freedi/shared-types';
 import type { Badge, UserEngagement, NotificationQueueItem } from '@freedi/shared-types';
+import { logError } from '../../utils/errorHandling';
+import { readNoticeLanguage } from '../notifications/noticeAudience';
+import { badgeCopy } from '../notifications/noticeText';
 
 /** Badge definition with trigger criteria */
 interface BadgeDefinition {
@@ -140,16 +143,18 @@ export async function checkAndAwardBadges(
 
 	// Enqueue badge notifications (non-blocking)
 	const db = getFirestore();
+	const language = await readNoticeLanguage(db, userId);
 	const notificationPromises = newBadges.map((badge) => {
 		const queueItemId = `badge_${userId}_${badge.badgeId}_${Date.now()}`;
+		const copy = badgeCopy(language, badge.badgeId);
 		const notification: NotificationQueueItem = {
 			queueItemId,
 			userId,
-			title: 'Badge Earned!',
-			body: `You earned the "${badge.name}" badge: ${badge.description}`,
+			title: copy.title,
+			body: copy.body,
 			channels: [NotificationChannel.IN_APP],
 			sourceApp,
-			targetPath: '/profile',
+			targetPath: '/my/engagement',
 			deliverAt: null,
 			frequency: NotificationFrequency.INSTANT,
 			triggerType: NotificationTriggerType.BADGE_EARNED,
@@ -162,10 +167,10 @@ export async function checkAndAwardBadges(
 			.doc(queueItemId)
 			.set(notification)
 			.catch((error: unknown) => {
-				logger.error('Failed to enqueue badge notification', {
+				logError(error, {
+					operation: 'engagement.checkAndAwardBadges',
 					userId,
-					badgeId: badge.badgeId,
-					error,
+					metadata: { badgeId: badge.badgeId },
 				});
 			});
 	});

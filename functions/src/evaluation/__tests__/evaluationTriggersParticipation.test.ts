@@ -26,6 +26,7 @@ jest.mock('../../engagement/credits/trackEngagement', () => ({
 }));
 jest.mock('../../engagement/notifications/socialProofTrigger', () => ({
 	checkSocialProofMilestone: () => Promise.resolve(),
+	checkConsensusShift: () => Promise.resolve(),
 }));
 jest.mock('../../fn_adminStats', () => ({ onEvaluationCreatedStats: () => Promise.resolve() }));
 jest.mock('../../services/hybrid-vector-service', () => ({

@@ -13,6 +13,7 @@ import type { Evaluation } from '@freedi/shared-types';
 import { ActionTypes, clampEvaluationValue } from './evaluationTypes';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
+import { checkConsensusShift } from '../engagement/notifications/socialProofTrigger';
 import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
 import { writeHistoryEntry } from '../statements/history/writeHistoryEntry';
 import { isResearchEnabledForTopParent } from '../statements/history/isResearchEnabled';
@@ -61,6 +62,8 @@ export async function deleteEvaluation(event: FirestoreEvent<DocumentSnapshot>):
 		}
 
 		await updateParentStatementWithChosenOptions(statement.parentId);
+
+		await checkConsensusShift(statement);
 
 		// Mark hybrid embedding as stale (non-blocking)
 		markHybridEmbeddingStale(statementId).catch((err) =>

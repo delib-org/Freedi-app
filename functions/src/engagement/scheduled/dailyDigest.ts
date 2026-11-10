@@ -101,7 +101,7 @@ export async function processDailyDigests(targetHour: number): Promise<{
 					body: `${itemCount} updates across your discussions.${creditsSummary}`,
 					channels: [NotificationChannel.PUSH, NotificationChannel.EMAIL],
 					sourceApp: SourceApp.MAIN,
-					targetPath: '/notifications',
+					targetPath: '/home?view=inbox',
 					deliverAt: null,
 					frequency: NotificationFrequency.DAILY,
 					triggerType: NotificationTriggerType.DAILY_DIGEST,

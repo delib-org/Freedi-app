@@ -83,6 +83,7 @@ export const NotificationSettingsSchema = object({
 	digestHourLocal: optional(number()), // 0-23, hour to deliver the daily digest
 	weeklyDigestDay: optional(number()), // 0-6 (Sun-Sat), day for weekly digest
 	odysseyDigest: optional(OdysseyDigestSettingsSchema), // Odyssey voyage-story email cadence
+	answerUpdates: optional(boolean()), // in-app notices about the user's own answers; unset means on
 	createdAt: number(),
 	lastUpdate: number(),
 });

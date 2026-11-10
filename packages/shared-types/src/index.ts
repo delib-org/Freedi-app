@@ -225,6 +225,8 @@ export {
   ODYSSEY_DIGEST_MAX_HOURS,
   createDefaultNotificationSettings,
 } from "./models/notification/NotificationSettings";
+export type { AnswerNoticeState, NoticeCapSlot } from "./models/notification/AnswerNotice";
+export { AnswerNoticeStateSchema, NoticeCapSlotSchema } from "./models/notification/AnswerNotice";
 
 // Question models
 export type { QuestionSettings } from "./models/question/QuestionType";
