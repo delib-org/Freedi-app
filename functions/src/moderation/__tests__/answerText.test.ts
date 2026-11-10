@@ -12,6 +12,8 @@ const paragraph = (statement: string, createdAt: number, hide?: boolean): Statem
 	statementOf({ statement, createdAt, hide, statementType: StatementType.paragraph });
 
 const PARAGRAPHS = [paragraph('alpha one', 1), paragraph('beta two', 2), paragraph('gamma', 3)];
+const FOUR_PARAGRAPHS = [...PARAGRAPHS, paragraph('delta', 4)];
+const LONG_LINE = 'word '.repeat(60).trim();
 
 describe('descriptionOrigin', () => {
 	it.each<[string, string | undefined, Statement[], string]>([
@@ -19,25 +21,45 @@ describe('descriptionOrigin', () => {
 		['no paragraphs', 'alpha one', [], 'own-words'],
 		['the sync form', 'alpha one\n\nbeta two\n\ngamma', PARAGRAPHS, 'full-copy'],
 		['the same words with bars', 'alpha one | beta two | gamma', PARAGRAPHS, 'full-copy'],
-		['a preview of some paragraphs', 'beta two | gamma', PARAGRAPHS, 'partial-copy'],
-		['a preview cut mid-word', 'alpha one | beta t...', PARAGRAPHS, 'partial-copy'],
+		['the newest-3 preview', 'beta two | gamma | delta', FOUR_PARAGRAPHS, 'partial-copy'],
+		[
+			'the title split preview of all paragraphs',
+			`${LONG_LINE.substring(0, 197)}...`,
+			[paragraph(LONG_LINE, 1)],
+			'partial-copy',
+		],
 		['the sync form cut short', 'alpha one\n\n…[truncated]', PARAGRAPHS, 'full-copy'],
 		['a foreign word', 'alpha idiot', PARAGRAPHS, 'own-words'],
 		['a foreign word posing as a cut one', 'alpha idiot...', PARAGRAPHS, 'own-words'],
+		['visible words reordered into a new phrase', 'two alpha | one beta', PARAGRAPHS, 'own-words'],
+		['a preview of the wrong paragraphs', 'alpha one | gamma', FOUR_PARAGRAPHS, 'own-words'],
+		['a real word cut into a fake prefix', 'alp...', PARAGRAPHS, 'own-words'],
+		['a fake prefix before the sync mark', 'alp…[truncated]', PARAGRAPHS, 'own-words'],
 	])('reads %s', (_label, description, paragraphs, expected) => {
 		expect(descriptionOrigin(description, paragraphs)).toBe(expected);
 	});
 
-	it('counts a preview that still shows a hidden paragraph as a copy', () => {
-		const paragraphs = [paragraph('seen', 1), paragraph('hidden', 2, true)];
+	it('lets no hidden paragraph vouch for words written into the description', () => {
+		const paragraphs = [paragraph('seen', 1), paragraph('abusive words', 2, true)];
 
-		expect(descriptionOrigin('seen | hidden', paragraphs)).toBe('partial-copy');
+		expect(descriptionOrigin('abusive words', paragraphs)).toBe('own-words');
+		expect(descriptionOrigin('seen | abusive words', paragraphs)).toBe('own-words');
+	});
+
+	it('counts an answer whose paragraphs are all hidden as having none', () => {
+		expect(descriptionOrigin('abusive', [paragraph('abusive', 1, true)])).toBe('own-words');
+	});
+
+	it('does not throw on a paragraph with no text', () => {
+		const malformed = statementOf({ createdAt: 2, statement: 5 });
+
+		expect(descriptionOrigin('other', [paragraph('seen', 1), malformed])).toBe('own-words');
 	});
 });
 
 describe('answerFullText with paragraph children', () => {
 	it('uses the children in place of a description that copies them', () => {
-		const answer = statementOf({ statement: 'Title', description: 'beta two | gamma' });
+		const answer = statementOf({ statement: 'Title', description: 'alpha one | beta two | gamma' });
 
 		expect(answerFullText(answer, PARAGRAPHS)).toBe('Title\nalpha one\nbeta two\ngamma');
 	});
@@ -64,8 +86,8 @@ describe('answerFullText with paragraph children', () => {
 describe('hasSameWords', () => {
 	it.each<[string, string, string, boolean]>([
 		['a layout change', 'a\nb', 'a | b', true],
-		['a shortened copy', 'a long text', 'a lo...', true],
-		['text growing out of an ellipsis', 'a lo...', 'a long text', false],
+		['a word cut into a prefix', 'assessment', 'ass...', false],
+		['reordered words', 'a b', 'b a', false],
 		['new words', 'a b', 'a c', false],
 	])('judges %s', (_label, earlier, later, expected) => {
 		expect(hasSameWords(earlier, later)).toBe(expected);

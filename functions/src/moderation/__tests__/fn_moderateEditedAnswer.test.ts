@@ -124,11 +124,6 @@ describe('moderateEditedAnswer: what returns with no AI call', () => {
 			{ statement: 'first', description: 'second | third' },
 		],
 		[
-			'the title split shortening the description',
-			{ statement: 'first\nsecond line that runs on' },
-			{ statement: 'first', description: 'second line...' },
-		],
-		[
 			'the paragraph sync reformatting the description',
 			{ statement: 'first', description: 'second | third' },
 			{ statement: 'first', description: 'second\n\nthird' },

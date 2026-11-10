@@ -1,4 +1,4 @@
-import { Collections, StatementType } from '@freedi/shared-types';
+import { Collections, SourceApp, StatementType } from '@freedi/shared-types';
 import { createFakeDb, FakeDb } from '../../progress/__tests__/fakeDb';
 
 let fake: FakeDb = createFakeDb();
@@ -161,6 +161,62 @@ describe('moderateEditedAnswer: description is only a copy of the paragraphs', (
 		expectHeldBy(EVENT_ID);
 	});
 
+	it('makes no AI call for the title split shortening a long body', async () => {
+		const longLine = 'word '.repeat(60).trim();
+		seedParagraphs([longLine]);
+
+		await moderateEditedAnswer(
+			updated(
+				{ statement: `first\n${longLine}` },
+				{ statement: 'first', description: `${longLine.substring(0, 197)}...` },
+			),
+		);
+
+		expect(assessLanguage).not.toHaveBeenCalled();
+	});
+
+	it('checks abuse copied into the description from a hidden paragraph', async () => {
+		seedParagraphs(PARAGRAPHS.slice(1));
+		fake.seed(Collections.statements, 'paragraph-hidden', {
+			statementId: 'paragraph-hidden',
+			statement: ABUSIVE_P1,
+			statementType: StatementType.paragraph,
+			parentId: ANSWER,
+			createdAt: 9,
+			hide: true,
+		});
+		assessLanguage.mockResolvedValue(true);
+
+		await moderateEditedAnswer(updated({ description: NEWEST_THREE }, { description: ABUSIVE_P1 }));
+
+		expect(assessLanguage.mock.calls[0][0]).toContain(ABUSIVE_P1);
+		expectHeldBy(EVENT_ID);
+	});
+
+	it('checks visible words reordered into a new phrase', async () => {
+		seedParagraphs(PARAGRAPHS);
+		assessLanguage.mockResolvedValue(true);
+
+		await moderateEditedAnswer(
+			updated({ description: FULL_COPY }, { description: 'paragraph second opening abusive' }),
+		);
+
+		expect(assessLanguage).toHaveBeenCalledTimes(1);
+		expectHeldBy(EVENT_ID);
+	});
+
+	it.each<[string, Fields, Fields]>([
+		['the description', { description: 'assessment' }, { description: 'ass...' }],
+		['the title', { statement: 'assessment' }, { statement: 'ass...' }],
+	])('checks %s cut into a fake prefix', async (_label, before, after) => {
+		assessLanguage.mockResolvedValue(true);
+
+		await moderateEditedAnswer(updated(before, after));
+
+		expect(assessLanguage).toHaveBeenCalledTimes(1);
+		expectHeldBy(EVENT_ID);
+	});
+
 	it('does not read paragraph text from the shortened description on a title edit', async () => {
 		seedParagraphs(PARAGRAPHS);
 		assessLanguage.mockResolvedValue(false);
@@ -182,6 +238,20 @@ describe('moderateEditedAnswer: restores and the type flip', () => {
 			updated(
 				{ ...restored, statement: OFFENSIVE_TEXT, statementType: StatementType.statement },
 				{ ...restored, statement: OFFENSIVE_TEXT },
+			),
+		);
+
+		expect(assessLanguage).toHaveBeenCalledTimes(1);
+		expectHeldBy(EVENT_ID);
+	});
+
+	it('checks words edited while sourceApp pointed at another app', async () => {
+		assessLanguage.mockResolvedValue(true);
+
+		await moderateEditedAnswer(
+			updated(
+				{ statement: OFFENSIVE_TEXT, sourceApp: SourceApp.MASS_CONSENSUS },
+				{ statement: OFFENSIVE_TEXT },
 			),
 		);
 

@@ -250,8 +250,12 @@ async function checkAnswer(
 	}
 }
 
+/**
+ * Also true when `sourceApp` comes back to main: rules do not protect it, so
+ * words edited while it pointed elsewhere have had no check.
+ */
 function becameAnswer(before: Statement): boolean {
-	return before.statementType !== StatementType.option;
+	return !isMainAppAnswer(before);
 }
 
 /**
@@ -270,10 +274,15 @@ export function needsLanguageCheck(before: Statement, after: Statement): boolean
 	return Boolean(after.description) || !changedOnlyDescription(before, after);
 }
 
-/** The newest-3 preview a reply under the answer rewrites: nobody's words changed. */
-function isPreviewRefresh(before: Statement, after: Statement, paragraphs: Statement[]): boolean {
+/**
+ * With the paragraphs in hand: the title split moved the words without changing
+ * them, and the newest-3 preview a reply rewrites changes nobody's words.
+ */
+function leavesWordsAlone(before: Statement, after: Statement, paragraphs: Statement[]): boolean {
+	if (becameAnswer(before)) return false;
+	if (hasSameWords(answerFullText(before), answerFullText(after, paragraphs))) return true;
+
 	return (
-		!becameAnswer(before) &&
 		changedOnlyDescription(before, after) &&
 		descriptionOrigin(after.description, paragraphs) === 'partial-copy'
 	);
@@ -292,7 +301,7 @@ export async function moderateEditedAnswer(event: AnswerUpdatedEvent): Promise<v
 	if (!before || !after || !needsLanguageCheck(before, after)) return;
 
 	const paragraphs = paragraphsIn(await paragraphChildrenQuery(after.statementId).get());
-	if (isPreviewRefresh(before, after, paragraphs)) return;
+	if (leavesWordsAlone(before, after, paragraphs)) return;
 
 	await checkAnswer(after, event, paragraphs);
 }

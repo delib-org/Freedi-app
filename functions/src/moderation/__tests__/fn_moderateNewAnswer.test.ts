@@ -277,7 +277,14 @@ describe('moderateNewAnswer when the document moved on during the check', () => 
 
 		it('recognises a description the split shortened', async () => {
 			const event = created({ statement: 'first\nsecond line that runs on' });
-			flagAfter({ statement: 'first', description: 'second line...' });
+			fake.seed(Collections.statements, 'paragraph-1', {
+				statementId: 'paragraph-1',
+				statement: 'second line that runs on',
+				statementType: StatementType.paragraph,
+				parentId: ANSWER,
+				createdAt: 1,
+			});
+			flagAfter({ statement: 'first', description: 'second line that runs on' });
 
 			await moderateNewAnswer(event);
 

@@ -16,7 +16,7 @@ import {
 	functionConfig,
 } from '@freedi/shared-types';
 import { HOT_TRIGGER_MEMORY } from './utils/createFirestoreFunction';
-import { generateDescriptionFromChildren } from './helpers';
+import { DESCRIPTION_PREVIEW_PARAGRAPHS, generatePreviewFromNewestParagraphs } from './helpers';
 import { classifyChildUpdate } from './userFeed/classifyChildUpdate';
 import { recordDiscussionActivity } from './userFeed/recordDiscussionActivity';
 import { recordMessageDeleted } from './unread/messageCounter';
@@ -177,6 +177,24 @@ export const updateParentStatementOnChildChange = onDocumentWritten(
 );
 
 /**
+ * Enough paragraphs for the preview. Hidden ones must not count, and Firestore
+ * cannot filter "not hidden" on a field most documents lack, so the whole list is
+ * read only in the rare case that one of the newest is hidden.
+ */
+async function readNewestParagraphs(parentId: string): Promise<Statement[]> {
+	const newestFirst = db
+		.collection(Collections.statements)
+		.where('parentId', '==', parentId)
+		.where('statementType', '==', StatementType.paragraph)
+		.orderBy('createdAt', 'desc');
+	const newest = await newestFirst.limit(DESCRIPTION_PREVIEW_PARAGRAPHS).get();
+	const isAnyHidden = newest.docs.some((doc) => doc.data().hide === true);
+	const snapshot = isAnyHidden ? await newestFirst.get() : newest;
+
+	return snapshot.docs.map((doc) => doc.data() as Statement);
+}
+
+/**
  * Updates parent statement with the latest 3 sub-statements
  */
 async function updateParentWithLatestChildren(parentId: string) {
@@ -217,21 +235,7 @@ async function updateParentWithLatestChildren(parentId: string) {
 		// strictly from paragraph child statements — never from option,
 		// question, or other child types, otherwise option text leaks into
 		// the parent's description preview.
-		const paragraphsSnap = await db
-			.collection(Collections.statements)
-			.where('parentId', '==', parentId)
-			.where('statementType', '==', StatementType.paragraph)
-			.orderBy('createdAt', 'desc')
-			.limit(3)
-			.get();
-
-		const description = generateDescriptionFromChildren(
-			paragraphsSnap.docs.map((doc) => {
-				const stmt = doc.data() as Statement;
-
-				return { statement: stmt.statement, createdAt: stmt.createdAt };
-			}),
-		);
+		const description = generatePreviewFromNewestParagraphs(await readNewestParagraphs(parentId));
 
 		// Update parent with new sub-statements, timestamp, and description
 		await parentRef.update({
