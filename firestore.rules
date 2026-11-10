@@ -857,15 +857,16 @@ service cloud.firestore {
 
     // === Tables (table assignment) ===
     // Every write goes through the tables* callables (Admin SDK): clients write
-    // nothing. Reads are scoped so a participant never sees another person's
-    // preferences or position (those live only in tableAssignmentParticipants).
+    // nothing. Reads are scoped so nobody, the host included, reads another
+    // person's preferences or position (those live only in
+    // tableAssignmentParticipants, which only their owner can read).
     function isTableSessionHost(sessionId) {
       let sessionPath = /databases/$(database)/documents/tableAssignments/$(sessionId);
       return exists(sessionPath) && get(sessionPath).data.hostUid == request.auth.uid;
     }
 
-    // The session is readable to any signed-in user (anonymous included) once
-    // registration has opened; drafts are the host's alone.
+    // A session's topics are readable to any signed-in user (anonymous
+    // included) once registration has opened; a draft's are the host's alone.
     function isTableSessionOpenToAll(sessionId) {
       let sessionPath = /databases/$(database)/documents/tableAssignments/$(sessionId);
       return exists(sessionPath) &&
@@ -880,11 +881,18 @@ service cloud.firestore {
       return isTableSessionHost(sessionId) || isTableSessionOpenToAll(sessionId);
     }
 
+    // Who sits where is public once tables exist: after publishing, and from
+    // the start in direct mode, where people pick a table themselves.
+    function areTablemateNamesVisible(sessionId) {
+      let session = get(/databases/$(database)/documents/tableAssignments/$(sessionId)).data;
+      return session.get('publishedRunId', null) != null || session.mode == 'direct';
+    }
+
+    // Every signed-in user may get a session in any status, so the not-open
+    // screen can show the gathering's name and update by itself. Topics stay
+    // hidden until registration opens.
     match /tableAssignments/{sessionId} {
-      allow get: if request.auth != null &&
-                    (resource == null ||
-                     resource.data.hostUid == request.auth.uid ||
-                     resource.data.status in ['registrationOpen', 'registrationClosed', 'published', 'ended']);
+      allow get: if request.auth != null;
       // A host lists their own sessions (query on hostUid); nobody lists anyone else's.
       allow list: if request.auth != null && resource != null &&
                      resource.data.hostUid == request.auth.uid;
@@ -897,18 +905,41 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Doc id = {sessionId}_{uid}. The owner reads their own; the host reads all.
+    // Doc id = {sessionId}_{uid}. Choices and position: the owner only, never
+    // the host, who reads tableAssignmentRoster instead.
     match /tableAssignmentParticipants/{participantId} {
       allow list: if request.auth != null && resource != null &&
-                     (resource.data.uid == request.auth.uid ||
-                      isTableSessionHost(resource.data.sessionId));
+                     resource.data.uid == request.auth.uid;
       // A get of one's own not-yet-registered doc answers "missing" instead of
       // permission-denied, so the registration screen settles quietly.
       allow get: if request.auth != null &&
                     (resource == null
                        ? participantId.matches('.*_' + request.auth.uid)
-                       : (resource.data.uid == request.auth.uid ||
-                          isTableSessionHost(resource.data.sessionId)));
+                       : resource.data.uid == request.auth.uid);
+      allow write: if false;
+    }
+
+    // Name cards, doc id = {sessionId}_{uid}: a name and progress, no answers.
+    // The host and the owner always; other registered people once tables are public.
+    function mayReadTableRosterEntry(entry) {
+      return entry.uid == request.auth.uid ||
+             isTableSessionHost(entry.sessionId) ||
+             (isRegisteredInTableSession(entry.sessionId) &&
+              areTablemateNamesVisible(entry.sessionId));
+    }
+
+    match /tableAssignmentRoster/{entryId} {
+      allow get: if request.auth != null &&
+                    (resource == null || mayReadTableRosterEntry(resource.data));
+      allow list: if request.auth != null && resource != null &&
+                     mayReadTableRosterEntry(resource.data);
+      allow write: if false;
+    }
+
+    // How many registered, doc id = session id. Anyone who may get the session,
+    // which is every signed-in user. Written by the callables only.
+    match /tableAssignmentCounters/{sessionId} {
+      allow get: if request.auth != null;
       allow write: if false;
     }
 
