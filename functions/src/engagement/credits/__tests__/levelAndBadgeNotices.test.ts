@@ -19,6 +19,7 @@ jest.mock('../../../utils/errorHandling', () => ({
 
 import { checkAndNotifyLevelUp } from '../levelProgression';
 import { checkAndAwardBadges } from '../badgeEngine';
+import { badgeCopy } from '../../notifications/noticeText';
 
 const USER = 'u1';
 
@@ -154,10 +155,15 @@ describe('level and badge notices', () => {
 			});
 		});
 
-		it("keeps to the person's language for a badge with no words", async () => {
-			await award({ streak: { currentStreak: 3 } } as Partial<UserEngagement>);
+		it("keeps to the person's language for a badge with no words", () => {
+			expect(badgeCopy('he', 'badge_without_words').body).toBe('קיבלת תג חדש.');
+		});
 
-			expect(queued()[0].body).toBe('קיבלת תג חדש.');
+		it('awards nothing for a streak, since streak badges are gone', async () => {
+			await expect(
+				award({ streak: { currentStreak: 3 } } as Partial<UserEngagement>),
+			).resolves.toEqual([]);
+			expect(queued()).toHaveLength(0);
 		});
 
 		it('still awards the badge when the language cannot be read', async () => {
