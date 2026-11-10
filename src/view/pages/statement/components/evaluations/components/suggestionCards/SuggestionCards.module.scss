@@ -39,9 +39,21 @@
 	}
 }
 
+// Holds the fixed bar's place in the list on a phone, so the last card can
+// scroll clear of the bar as well as of the bottom nav.
+.submitButtonSlot {
+	height: 5.25rem;
+
+	@media (min-width: 768px) {
+		height: auto;
+	}
+}
+
 .submitButtonContainer {
 	position: fixed;
-	bottom: 0;
+	// The shell's clearance already includes the safe area; without a nav only
+	// the safe area is left to clear.
+	bottom: var(--bottom-nav-clearance, env(safe-area-inset-bottom, 0px));
 	left: 0;
 	right: 0;
 	background: linear-gradient(to top, var(--statementBackground) 70%, transparent);
@@ -50,6 +62,7 @@
 
 	@media (min-width: 768px) {
 		position: relative;
+		bottom: auto;
 		background: none;
 		padding: 2rem var(--padding) 1rem;
 	}
