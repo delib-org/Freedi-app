@@ -50,12 +50,39 @@ describe('isRateViewEligible', () => {
 
 	it.each([
 		['collecting', QuestionStep.suggestion],
+		['rating', QuestionStep.randomEvaluation],
 		['voting', QuestionStep.voting],
-		['decided', QuestionStep.finished],
-	])('is off in the %s stage', (_stage, currentStep) => {
+	])('is on in the %s stage, where ratings stay open', (_stage, currentStep) => {
 		expect(eligible(question({ questionSettings: { currentStep } } as Partial<Statement>))).toBe(
-			false,
+			true,
 		);
+	});
+
+	it('is off once decided', () => {
+		expect(
+			eligible(
+				question({
+					questionSettings: { currentStep: QuestionStep.finished },
+				} as Partial<Statement>),
+			),
+		).toBe(false);
+	});
+
+	it('leaves single-like and vote-limited questions on the list', () => {
+		expect(
+			eligible(
+				question({
+					statementSettings: { evaluationType: 'single-like' },
+				} as unknown as Partial<Statement>),
+			),
+		).toBe(false);
+		expect(
+			eligible(
+				question({
+					evaluationSettings: { maxVotesPerUser: 3 },
+				} as unknown as Partial<Statement>),
+			),
+		).toBe(false);
 	});
 
 	it('is on in the rating stage the host set', () => {
@@ -85,6 +112,7 @@ describe('resolveAnswersView', () => {
 	const base: ResolveAnswersViewInput = {
 		eligible: true,
 		usesPlainList: false,
+		rateFailed: false,
 		paramSort: undefined,
 		hasManualOrder: false,
 		seeAll: false,
@@ -121,6 +149,13 @@ describe('resolveAnswersView', () => {
 
 	it('falls back to the list when the sampler is unavailable', () => {
 		expect(resolveAnswersView({ ...base, usesPlainList: true }).view).toBe('list');
+	});
+
+	it('shows the list while the sampler is failing, with no way back to offer', () => {
+		expect(resolveAnswersView({ ...base, rateFailed: true })).toEqual({
+			view: 'list',
+			canReturnToRating: false,
+		});
 	});
 
 	it("keeps a host's hand-placed order", () => {

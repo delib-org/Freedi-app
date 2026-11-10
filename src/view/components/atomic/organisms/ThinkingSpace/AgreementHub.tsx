@@ -359,7 +359,7 @@ export default function AgreementHub({
 							<section className={styles.journey__section}>
 								<h3>
 									{showResults
-										? fullyLoaded || topAnswers.rankedIds
+										? fullyLoaded || topAnswers.isTopLoaded
 											? t('Strongest common ground so far')
 											: t('Leading options among those loaded')
 										: t('Options to explore')}

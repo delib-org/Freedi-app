@@ -52,7 +52,7 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 		SortType.accepted,
 	);
 	const ranked = useRankedAnswers(statement.statementId, visible && !needsCompleteSet);
-	const { rankedIds } = ranked;
+	const { isListed } = ranked;
 	const loadedSelector = useMemo(
 		() => fullyLoadedScopeSelector(statement.statementId),
 		[statement.statementId],
@@ -68,10 +68,8 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 		[data.stage, data.answers, statement.resultsSettings],
 	);
 	const rankedAnswers = useMemo(() => {
-		const all = rankAnswers(data.answers);
-
-		return rankedIds ? all.filter((answer) => rankedIds.has(answer.statementId)) : all;
-	}, [data.answers, rankedIds]);
+		return rankAnswers(data.answers).filter(isListed);
+	}, [data.answers, isListed]);
 	const caption = resultsRuleCaption(statement.resultsSettings, decided);
 	const captionText = caption.value ? t(caption.key).replace('{n}', caption.value) : t(caption.key);
 

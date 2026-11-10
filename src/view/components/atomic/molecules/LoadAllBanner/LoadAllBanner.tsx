@@ -32,7 +32,7 @@ export interface LoadAllBannerProps {
 	onLoaded?: () => void;
 }
 
-type BannerPhase = 'idle' | 'loading' | 'done';
+type BannerPhase = 'idle' | 'loading' | 'done' | 'failed';
 
 /**
  * "Showing X of N statements — Load all" banner.
@@ -119,7 +119,7 @@ const LoadAllBanner: React.FC<LoadAllBannerProps> = ({
 				statementId: rootId,
 				metadata: { mode },
 			});
-			setPhase('idle');
+			setPhase('failed');
 		}
 	}, [dispatch, rootId, mode, fullyLoadedScope, onLoaded]);
 
@@ -137,6 +137,21 @@ const LoadAllBanner: React.FC<LoadAllBannerProps> = ({
 
 	return (
 		<div className={classes} role="status" aria-live="polite">
+			{phase === 'failed' && (
+				<>
+					<span className="load-all-banner__text" role="alert">
+						{t('Could not load everything. Please try again.')}
+					</span>
+					<span className="load-all-banner__action">
+						<Button
+							text={label ?? t('Load all')}
+							variant="secondary"
+							size="small"
+							onClick={handleLoadAll}
+						/>
+					</span>
+				</>
+			)}
 			{phase === 'idle' && (totalCount !== null || alwaysOffer) && (
 				<>
 					<span className="load-all-banner__text">

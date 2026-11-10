@@ -82,6 +82,25 @@ export function getQuestionStage({ statement, answerCount, now }: StageInput): Q
 	return STAGE_RATING;
 }
 
+/** The host halted the question, or its deadline passed. */
+export function isQuestionHalted(statement: Statement | undefined, now: number): boolean {
+	const deadline = statement?.questionSettings?.deadline;
+	const isDeadlinePassed = typeof deadline === 'number' && deadline > 0 && deadline <= now;
+
+	return statement?.questionSettings?.isHalted === true || isDeadlinePassed;
+}
+
+/** Ratings stay open through Collecting and Voting; only Decided, a halt or the switch end them. */
+export function canRateQuestion(
+	statement: Statement | undefined,
+	stage: QuestionStageIndex,
+	isHalted: boolean,
+): boolean {
+	return (
+		statement?.statementSettings?.enableEvaluation !== false && !isHalted && stage !== STAGE_DECIDED
+	);
+}
+
 /** The stage bar belongs to questions only — spaces, chats and answers have no process. */
 export function showsStageBar(statement: Statement | undefined): boolean {
 	return statement?.statementType === StatementType.question;

@@ -3,7 +3,8 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 /**
  * What a large question's answer views have fetched, beyond the windowed list.
  * The statements themselves live in the statements slice; this holds which ones
- * make up a view, so cards keep reading the live documents.
+ * make up a view. A batch on screen has its own listener; a page of top answers
+ * has none and refreshes about once a minute, so no vote reaches everyone.
  */
 
 /** The batch of answers this person is rating now. */
@@ -14,9 +15,16 @@ export interface RateBatchEntry {
 	remaining: number;
 }
 
+/** A sampler call failed: when this view may try again, and how many times it has failed. */
+export interface RateBatchFailure {
+	failures: number;
+	retryAt: number;
+}
+
 /** Where the next page of a ranked list starts. */
 export interface RankedCursor {
-	consensus: number;
+	/** As stored: a document can hold null. */
+	consensus: number | null;
 	statementId: string;
 }
 
@@ -30,7 +38,8 @@ export interface RankedPagesEntry {
 export interface AnswerViewsState {
 	rateBatches: Record<string, RateBatchEntry>;
 	rankedPages: Record<string, RankedPagesEntry>;
-	/** Questions that fall back to the plain list: the sampler failed or found 30 answers or fewer. */
+	rateBatchFailures: Record<string, RateBatchFailure>;
+	/** Questions the sampler found to have 30 answers or fewer: they keep the plain list. */
 	plainListQuestions: Record<string, true>;
 	/**
 	 * Answers stored ahead of the windowed list, older than what paging has reached.
@@ -51,6 +60,7 @@ interface RatingsRootState extends AnswerViewsRootState {
 const initialState: AnswerViewsState = {
 	rateBatches: {},
 	rankedPages: {},
+	rateBatchFailures: {},
 	plainListQuestions: {},
 	sideLoadedIds: {},
 };
@@ -76,12 +86,37 @@ export const answerViewsSlice = createSlice({
 		},
 		addRankedPage: (state, action: PayloadAction<RankedPagesEntry & { questionId: string }>) => {
 			const { questionId, ids, hasMore, cursor } = action.payload;
-			const known = state.rankedPages[questionId]?.ids ?? [];
+			const previous = state.rankedPages[questionId];
+			const known = previous?.ids ?? [];
+			// A page that did not move the cursor would repeat for ever.
+			const progressed =
+				!previous ||
+				previous.cursor?.statementId !== cursor?.statementId ||
+				previous.cursor?.consensus !== cursor?.consensus;
 			state.rankedPages[questionId] = {
 				ids: [...known, ...ids.filter((id) => !known.includes(id))],
-				hasMore,
+				hasMore: hasMore && progressed,
 				cursor,
 			};
+		},
+		mergeRankedTop: (
+			state,
+			action: PayloadAction<{ questionId: string; ids: readonly string[] }>,
+		) => {
+			const entry = state.rankedPages[action.payload.questionId];
+			if (!entry) return;
+			const known = new Set(entry.ids);
+			entry.ids.push(...action.payload.ids.filter((id) => !known.has(id)));
+		},
+		recordRateBatchFailure: (
+			state,
+			action: PayloadAction<RateBatchFailure & { questionId: string }>,
+		) => {
+			const { questionId, failures, retryAt } = action.payload;
+			state.rateBatchFailures[questionId] = { failures, retryAt };
+		},
+		clearRateBatchFailure: (state, action: PayloadAction<string>) => {
+			delete state.rateBatchFailures[action.payload];
 		},
 		markSideLoaded: (state, action: PayloadAction<readonly string[]>) => {
 			action.payload.forEach((id) => {
@@ -96,6 +131,9 @@ export const {
 	dropRatedFromBatch,
 	fallBackToPlainList,
 	addRankedPage,
+	mergeRankedTop,
+	recordRateBatchFailure,
+	clearRateBatchFailure,
 	markSideLoaded,
 } = answerViewsSlice.actions;
 
@@ -108,6 +146,11 @@ export const rankedPagesSelector =
 	(questionId: string | undefined) =>
 	(state: AnswerViewsRootState): RankedPagesEntry | undefined =>
 		questionId ? state.answerViews.rankedPages[questionId] : undefined;
+
+export const rateBatchFailureSelector =
+	(questionId: string | undefined) =>
+	(state: AnswerViewsRootState): RateBatchFailure | undefined =>
+		questionId ? state.answerViews.rateBatchFailures[questionId] : undefined;
 
 export const usesPlainListSelector =
 	(questionId: string | undefined) =>

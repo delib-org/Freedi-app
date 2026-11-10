@@ -34,6 +34,20 @@ export function rankingSourceForSort(
 }
 
 /**
+ * A hand-placed order lists answers by its own ids, wherever they rank, so a
+ * list under one cannot be cut to the top page.
+ */
+export function rankingSourceForList(
+	sort: string | undefined,
+	question: Statement | undefined,
+	hasManualOrder: boolean,
+): RankingSource {
+	const source = rankingSourceForSort(sort, question);
+
+	return hasManualOrder && source === 'top-answers' ? 'complete-set' : source;
+}
+
+/**
  * The Results tab needs every answer when its rule is "all rated" or a
  * threshold: a page of top answers cannot say how many pass. Top N is enough
  * while N fits in the first page.

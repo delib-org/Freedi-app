@@ -5724,5 +5724,6 @@
   "See all answers": "Ver todas las respuestas",
   "Back to rating": "Volver a valorar",
   "{n} answers in this question": "{n} respuestas en esta pregunta",
-  "No more answers to rate right now": "No hay más respuestas por valorar ahora"
+  "No more answers to rate right now": "No hay más respuestas por valorar ahora",
+  "Could not load everything. Please try again.": "No se pudo cargar todo. Inténtalo de nuevo."
 }

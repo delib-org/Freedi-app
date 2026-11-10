@@ -15,13 +15,15 @@ jest.mock('firebase/firestore', () => ({
 }));
 jest.mock('@/utils/firebaseUtils', () => ({ createCollectionRef: () => 'statements' }));
 jest.mock('../answerBatch', () => ({
-	parseAnswers: (raw: unknown[]) => raw,
+	parseAnswers: (raw: unknown[]) => jest.requireMock('../answerBatch').__parse(raw),
+	__parse: (raw: unknown[]) => raw,
 	storeSideLoadedAnswers: (...args: unknown[]) => mockStore(...args),
 }));
 
-function docs(count: number): { docs: Array<{ data: () => unknown }> } {
+function docs(count: number): { docs: Array<{ id: string; data: () => unknown }> } {
 	return {
 		docs: Array.from({ length: count }, (_, index) => ({
+			id: `a${index}`,
 			data: () => ({ statementId: `a${index}`, consensus: 1 - index / 100 }),
 		})),
 	};
@@ -60,6 +62,33 @@ describe('fetchTopAnswers', () => {
 		expect(mockStore).toHaveBeenCalledTimes(1);
 		expect(page.ids).toEqual(['a0', 'a1']);
 		expect(page.cursor).toEqual({ consensus: 0.99, statementId: 'a1' });
+	});
+
+	it('builds the cursor from the raw document, so a parse failure cannot repeat a page', async () => {
+		const original = jest.requireMock('../answerBatch').__parse;
+		jest.requireMock('../answerBatch').__parse = () => [];
+		mockGetDocs.mockResolvedValueOnce(docs(2));
+
+		const page = await fetchTopAnswers('q', undefined);
+
+		jest.requireMock('../answerBatch').__parse = original;
+		expect(page.ids).toEqual([]);
+		expect(page.cursor).toEqual({ consensus: 0.99, statementId: 'a1' });
+	});
+
+	it('keeps a null consensus as null in the cursor', async () => {
+		mockGetDocs.mockResolvedValueOnce({ docs: [{ id: 'n', data: () => ({ consensus: null }) }] });
+
+		const page = await fetchTopAnswers('q', undefined);
+
+		expect(page.cursor).toEqual({ consensus: null, statementId: 'n' });
+	});
+
+	it('keeps the old cursor on an empty page', async () => {
+		mockGetDocs.mockResolvedValueOnce({ docs: [] });
+		const after = { consensus: 0.1, statementId: 'x' };
+
+		expect((await fetchTopAnswers('q', after)).cursor).toEqual(after);
 	});
 
 	it('has more only when the page came back full', async () => {

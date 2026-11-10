@@ -5724,5 +5724,6 @@
   "See all answers": "Alle Antworten ansehen",
   "Back to rating": "Zurück zum Bewerten",
   "{n} answers in this question": "{n} Antworten in dieser Frage",
-  "No more answers to rate right now": "Im Moment keine weiteren Antworten zu bewerten"
+  "No more answers to rate right now": "Im Moment keine weiteren Antworten zu bewerten",
+  "Could not load everything. Please try again.": "Nicht alles konnte geladen werden. Bitte versuche es noch einmal."
 }

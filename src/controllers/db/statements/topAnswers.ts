@@ -37,11 +37,17 @@ export async function fetchTopAnswers(
 		questionId,
 	);
 	storeSideLoadedAnswers(answers);
-	const last = answers[answers.length - 1];
+	// From the raw document: a page's last answer may have failed to parse.
+	const last = snapshot.docs[snapshot.docs.length - 1];
 
 	return {
 		ids: answers.map((answer) => answer.statementId),
 		hasMore: snapshot.docs.length === RANKED_ANSWERS.PAGE_SIZE,
-		cursor: last ? { consensus: last.consensus, statementId: last.statementId } : after,
+		cursor: last
+			? {
+					consensus: (last.data().consensus as number | null | undefined) ?? null,
+					statementId: last.id,
+				}
+			: after,
 	};
 }

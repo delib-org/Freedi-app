@@ -1,7 +1,11 @@
 import { CutoffBy, ResultsSettings, SortType, Statement } from '@freedi/shared-types';
 import { guardScoreSort } from '../../components/questionScreen/canSeeScore';
 import { RANKED_ANSWERS } from '@/constants/common';
-import { rankingSourceForSort, resultsNeedCompleteSet } from '../answerRanking';
+import {
+	rankingSourceForList,
+	rankingSourceForSort,
+	resultsNeedCompleteSet,
+} from '../answerRanking';
 
 const SINGLE_LIKE = {
 	statementSettings: { evaluationType: 'single-like' },
@@ -35,6 +39,20 @@ describe('rankingSourceForSort', () => {
 		expect(rankingSourceForSort(guardScoreSort(SortType.accepted, false), undefined)).toBe(
 			'window',
 		);
+	});
+});
+
+describe('rankingSourceForList', () => {
+	it('loads every answer under a hand-placed order, rather than the top page', () => {
+		expect(rankingSourceForList(SortType.accepted, undefined, true)).toBe('complete-set');
+	});
+
+	it('pages the top answers with no hand-placed order', () => {
+		expect(rankingSourceForList(SortType.accepted, undefined, false)).toBe('top-answers');
+	});
+
+	it('leaves other orderings alone', () => {
+		expect(rankingSourceForList(SortType.newest, undefined, true)).toBe('window');
 	});
 });
 

@@ -36,7 +36,7 @@ import { useViewLayers } from '@/controllers/hooks/useViewLayers';
 import { useLazyLoadOptions } from '@/view/pages/statement/hooks/useLazyLoadOptions';
 import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
 import { useRankedAnswers } from '@/view/pages/statement/hooks/useRankedAnswers';
-import { rankingSourceForSort } from '@/view/pages/statement/hooks/answerRanking';
+import { rankingSourceForList } from '@/view/pages/statement/hooks/answerRanking';
 import { Button } from '@/view/components/atomic/atoms/Button';
 import { useThrottledOrder } from '@/view/pages/statement/hooks/useThrottledOrder';
 import { usePrefersReducedMotion } from '@/controllers/hooks/usePrefersReducedMotion';
@@ -78,7 +78,11 @@ const SuggestionCards: FC = () => {
 	const { canSee: canSortByScore } = useQuestionScoreAccess(statement);
 	const answersView = useAnswersView(statement);
 	const isRateView = answersView.view === 'rate';
-	const rateBatch = useAnswerBatch(statementId, isRateView);
+	const rateBatch = useAnswerBatch(
+		statementId,
+		isRateView || answersView.isWaitingToRetryRate,
+		answersView.answerCount,
+	);
 	const sort = guardScoreSort(params.sort || defaultSort, canSortByScore);
 
 	// An admin's hand-placed order (written from the Top Answers panel or the
@@ -105,9 +109,11 @@ const SuggestionCards: FC = () => {
 	// "By agreement" reads the top answers from its index, a page at a time.
 	// Orderings no index can rank still need every answer. The Rate view asks
 	// for neither: the sampler chooses what it shows.
-	const rankingSource = isRateView ? 'window' : rankingSourceForSort(sort, statement);
+	const rankingSource = isRateView
+		? 'window'
+		: rankingSourceForList(sort, statement, (manualOrder?.length ?? 0) > 0);
 	const ranked = useRankedAnswers(statementId, rankingSource === 'top-answers');
-	const { rankedIds } = ranked;
+	const { isListed } = ranked;
 	const { isAutoLoading } = useAutoLoadAllForSort(
 		rankingSource === 'complete-set' ? statementId : undefined,
 		sort,
@@ -159,16 +165,14 @@ const SuggestionCards: FC = () => {
 			return st.creatorId === creator?.uid;
 		};
 
-		const visible = plan.flatRaw.filter(
-			(st) => canSee(st) && (!rankedIds || rankedIds.has(st.statementId)),
-		);
+		const visible = plan.flatRaw.filter((st) => canSee(st) && isListed(st));
 
 		return manualOrder?.length
 			? applyManualOrder(visible, manualOrder)
 			: sortStatements(visible, sort, randomSeed, statement);
 	}, [
 		plan.flatRaw,
-		rankedIds,
+		isListed,
 		isAdmin,
 		showHiddenCards,
 		creator?.uid,

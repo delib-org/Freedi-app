@@ -5760,5 +5760,6 @@
   "See all answers": "לכל התשובות",
   "Back to rating": "חזרה לדירוג",
   "{n} answers in this question": "{n} תשובות בשאלה זו",
-  "No more answers to rate right now": "אין כרגע עוד תשובות לדירוג"
+  "No more answers to rate right now": "אין כרגע עוד תשובות לדירוג",
+  "Could not load everything. Please try again.": "לא הצלחנו לטעון הכול. נסו שוב."
 }

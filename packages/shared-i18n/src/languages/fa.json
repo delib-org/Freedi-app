@@ -5722,5 +5722,6 @@
   "See all answers": "دیدن همه پاسخ‌ها",
   "Back to rating": "بازگشت به امتیازدهی",
   "{n} answers in this question": "{n} پاسخ در این پرسش",
-  "No more answers to rate right now": "فعلاً پاسخ دیگری برای امتیازدهی نیست"
+  "No more answers to rate right now": "فعلاً پاسخ دیگری برای امتیازدهی نیست",
+  "Could not load everything. Please try again.": "همه موارد بارگیری نشد. لطفاً دوباره تلاش کنید."
 }

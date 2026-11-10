@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import { Statement, StatementType } from '@freedi/shared-types';
 import statements from '@/redux/statements/statementsSlice';
 import answerViews from '@/redux/answerViews/answerViewsSlice';
+import { creatorSlice } from '@/redux/creator/creatorSlice';
 import { fetchTopAnswers } from '@/controllers/db/statements/topAnswers';
 import { bulkLoadStatements } from '@/controllers/db/statements/bulkLoadStatements';
 import AgreementHub from '../AgreementHub';
@@ -40,7 +41,9 @@ const question = {
 } as Statement;
 
 it('fetches every proposal only for themes, and pages the top ones for the overview', async () => {
-	const store = configureStore({ reducer: { statements, answerViews } });
+	const store = configureStore({
+		reducer: { statements, answerViews, creator: creatorSlice.reducer },
+	});
 	const view = render(
 		<Provider store={store}>
 			<AgreementHub statement={question} compact />

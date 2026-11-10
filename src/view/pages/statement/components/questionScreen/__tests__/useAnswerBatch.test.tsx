@@ -9,13 +9,20 @@ import { creatorSlice } from '@/redux/creator/creatorSlice';
 import answerViews, {
 	moreToRateSelector,
 	rateBatchSelector,
+	recordRateBatchFailure,
 	setRateBatch,
 } from '@/redux/answerViews/answerViewsSlice';
-import { AnswerBatchPage, fetchAnswerBatch } from '@/controllers/db/statements/answerBatch';
+import { RATE_VIEW } from '@/constants/common';
+import {
+	AnswerBatchPage,
+	fetchAnswerBatch,
+	listenToBatchAnswers,
+} from '@/controllers/db/statements/answerBatch';
 import { useAnswerBatch } from '../useAnswerBatch';
 
 jest.mock('@/controllers/db/statements/answerBatch', () => ({
 	fetchAnswerBatch: jest.fn(),
+	listenToBatchAnswers: jest.fn(() => jest.fn()),
 }));
 jest.mock('@/utils/errorHandling', () => ({
 	...jest.requireActual('@/utils/errorHandling'),
@@ -25,6 +32,7 @@ jest.mock('@/utils/errorHandling', () => ({
 const QUESTION = 'q';
 const UID = 'me';
 const mockFetch = fetchAnswerBatch as jest.MockedFunction<typeof fetchAnswerBatch>;
+const mockListen = listenToBatchAnswers as jest.Mock;
 
 function answer(id: string): Statement {
 	return {
@@ -76,10 +84,11 @@ function renderBatch(store: ReturnType<typeof makeStore>, active = true) {
 		<Provider store={store}>{children}</Provider>
 	);
 
-	return renderHook(({ isActive }: { isActive: boolean }) => useAnswerBatch(QUESTION, isActive), {
-		initialProps: { isActive: active },
-		wrapper,
-	});
+	return renderHook(
+		({ isActive, count = 40 }: { isActive: boolean; count?: number }) =>
+			useAnswerBatch(QUESTION, isActive, count),
+		{ initialProps: { isActive: active } as { isActive: boolean; count?: number }, wrapper },
+	);
 }
 
 function ids(list: Statement[]): string[] {
@@ -167,15 +176,143 @@ describe('useAnswerBatch', () => {
 		expect(rateBatchSelector(QUESTION)(store.getState())).toBeUndefined();
 	});
 
-	it('falls back to the plain list when the call fails, without retrying', async () => {
-		mockFetch.mockRejectedValueOnce(new Error('denied'));
+	it('records a failure for this view only and does not retry on its own', async () => {
+		mockFetch.mockRejectedValueOnce(new Error('resource-exhausted'));
 		const store = makeStore();
 		renderBatch(store);
 
 		await waitFor(() =>
-			expect(store.getState().answerViews.plainListQuestions[QUESTION]).toBe(true),
+			expect(store.getState().answerViews.rateBatchFailures[QUESTION]).toBeDefined(),
+		);
+		expect(store.getState().answerViews.plainListQuestions[QUESTION]).toBeUndefined();
+		expect(mockFetch).toHaveBeenCalledTimes(1);
+	});
+
+	it('retries when the view reopens after the backoff, and clears the failure', async () => {
+		const store = makeStore();
+		store.dispatch(recordRateBatchFailure({ questionId: QUESTION, failures: 1, retryAt: 0 }));
+		mockFetch.mockResolvedValueOnce(page(['a1']));
+		renderBatch(store);
+
+		await waitFor(() =>
+			expect(store.getState().answerViews.rateBatchFailures[QUESTION]).toBeUndefined(),
 		);
 		expect(mockFetch).toHaveBeenCalledTimes(1);
+	});
+
+	it('does not retry before the backoff has passed', () => {
+		const store = makeStore();
+		store.dispatch(
+			recordRateBatchFailure({ questionId: QUESTION, failures: 1, retryAt: Date.now() + 60_000 }),
+		);
+
+		renderBatch(store);
+
+		expect(mockFetch).not.toHaveBeenCalled();
+	});
+
+	it('retries when the tab returns', async () => {
+		const store = makeStore();
+		store.dispatch(
+			recordRateBatchFailure({ questionId: QUESTION, failures: 1, retryAt: Date.now() + 50 }),
+		);
+		renderBatch(store);
+		expect(mockFetch).not.toHaveBeenCalled();
+		mockFetch.mockResolvedValueOnce(page(['a1']));
+		await act(async () => {
+			await new Promise((resolve) => setTimeout(resolve, 80));
+			document.dispatchEvent(new Event('visibilitychange'));
+		});
+
+		await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
+	});
+
+	it('is not blocked by an answer that has since been removed', async () => {
+		const store = makeStore();
+		mockFetch.mockResolvedValueOnce(page(['a1', 'gone']));
+		const { result } = renderBatch(store);
+		await waitFor(() => expect(ids(result.current.answers)).toEqual(['a1']));
+
+		mockFetch.mockResolvedValueOnce(page(['a2']));
+		act(() => rate(store, 'a1'));
+
+		await waitFor(() => expect(ids(result.current.answers)).toEqual(['a2']));
+	});
+
+	it('does not show a card once its answer is hidden', async () => {
+		const store = makeStore();
+		mockFetch.mockResolvedValueOnce(page(['a1', 'a2']));
+		const { result } = renderBatch(store);
+		await waitFor(() => expect(result.current.answers).toHaveLength(2));
+
+		act(() => {
+			store.dispatch(setStatements([{ ...answer('a1'), hide: true }]));
+		});
+
+		expect(ids(result.current.answers)).toEqual(['a2']);
+	});
+
+	it('asks again a bounded number of times when told there is more but given nothing, then finishes', async () => {
+		jest.useFakeTimers();
+		try {
+			mockFetch.mockResolvedValue(page([]));
+			const { result } = renderBatch(makeStore());
+
+			for (let round = 0; round < RATE_VIEW.EMPTY_BATCH_RETRIES + 3; round++) {
+				await act(async () => {
+					await jest.advanceTimersByTimeAsync(RATE_VIEW.EMPTY_BATCH_RETRY_MS + 10);
+				});
+			}
+
+			expect(mockFetch).toHaveBeenCalledTimes(RATE_VIEW.EMPTY_BATCH_RETRIES + 1);
+			expect(result.current.isFinished).toBe(true);
+		} finally {
+			jest.useRealTimers();
+		}
+	});
+
+	it('asks again for later answers after finishing, at most every 30 seconds', async () => {
+		jest.useFakeTimers();
+		try {
+			mockFetch.mockResolvedValueOnce(page(['a1'], { hasMore: false, remaining: 0 }));
+			const store = makeStore();
+			const { result, rerender } = renderBatch(store);
+			await act(async () => {
+				await jest.advanceTimersByTimeAsync(0);
+			});
+			act(() => rate(store, 'a1'));
+			await act(async () => {
+				await jest.advanceTimersByTimeAsync(0);
+			});
+			expect(result.current.isFinished).toBe(true);
+
+			mockFetch.mockResolvedValue(page(['a2'], { hasMore: false, remaining: 0 }));
+			rerender({ isActive: true, count: 41 });
+			await act(async () => {
+				await jest.advanceTimersByTimeAsync(RATE_VIEW.FINISHED_REFRESH_MS - 1000);
+			});
+			expect(mockFetch).toHaveBeenCalledTimes(1);
+
+			await act(async () => {
+				await jest.advanceTimersByTimeAsync(1500);
+			});
+			expect(mockFetch).toHaveBeenCalledTimes(2);
+			expect(ids(result.current.answers)).toEqual(['a2']);
+		} finally {
+			jest.useRealTimers();
+		}
+	});
+
+	it('listens to the batch on screen only and stops when it changes or unmounts', async () => {
+		const stop = jest.fn();
+		mockListen.mockReturnValueOnce(stop);
+		mockFetch.mockResolvedValueOnce(page(['a1', 'a2']));
+		const { result, unmount } = renderBatch(makeStore());
+		await waitFor(() => expect(result.current.answers).toHaveLength(2));
+
+		expect(mockListen).toHaveBeenCalledWith(QUESTION, ['a1', 'a2']);
+		unmount();
+		expect(stop).toHaveBeenCalledTimes(1);
 	});
 });
 

@@ -14,7 +14,7 @@ import { RATE_BUDGETS } from './config/rateBudgets';
 import { logError } from './utils/errorHandling';
 import { enforceCallableRateLimit } from './utils/rateLimit';
 import { resolveBatchSize, selectAnswerBatch } from './utils/answerBatchSelection';
-import { resolveStatementAccess } from './utils/statementAccess';
+import { resolveQuestionParticipation } from './utils/statementAccess';
 
 const ANSWERS_CACHE = {
 	/** The same per-instance window as getBulkStatements: 1,000 people must not each read every answer. */
@@ -87,8 +87,8 @@ export async function executeGetAnswerBatch(
 	await enforceCallableRateLimit(request, RATE_BUDGETS.getAnswerBatch, uid);
 
 	try {
-		const { statement } = await resolveStatementAccess(db, uid, questionId);
-		if (statement.statementType !== StatementType.question) {
+		const question = await resolveQuestionParticipation(db, uid, questionId);
+		if (question.statementType !== StatementType.question) {
 			throw new HttpsError('failed-precondition', 'Only questions have batches of answers');
 		}
 

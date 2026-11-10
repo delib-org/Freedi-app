@@ -1,6 +1,6 @@
 import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { RoomParticipant, RoomSettings, Room } from '@freedi/shared-types';
+import { Collections, RoomParticipant, RoomSettings, Room } from '@freedi/shared-types';
 import { AppDispatch } from '@/redux/store';
 import {
 	setRoomSettingsArray,
@@ -12,6 +12,7 @@ import {
 	setLoading,
 } from '@/redux/roomAssignment/roomAssignmentSlice';
 import { logError } from '@/utils/errorHandling';
+import { createCollectionRef } from '@/utils/firebaseUtils';
 
 /**
  * Get user's room assignment for a specific option/statement
@@ -110,7 +111,10 @@ export function listenToUserRoomAssignments(
 	callback: (assignments: ReadonlyMap<string, RoomParticipant>) => void,
 ): () => void {
 	try {
-		const q = query(collection(FireStore, 'roomParticipants'), where('userId', '==', userId));
+		const q = query(
+			createCollectionRef(Collections.roomParticipants),
+			where('userId', '==', userId),
+		);
 
 		return onSnapshot(
 			q,

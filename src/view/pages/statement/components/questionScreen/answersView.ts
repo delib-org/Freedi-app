@@ -5,11 +5,11 @@ import {
 	StatementType,
 	isAnswerBatchQuestion,
 } from '@freedi/shared-types';
-import { getQuestionStage, STAGE_RATING } from '@/helpers/questionStage';
+import { canRateQuestion, getQuestionStage, isQuestionHalted } from '@/helpers/questionStage';
 
 /**
  * Which view the Answers tab opens on. At 30 answers or fewer nothing changes.
- * Above that, while the question is being rated, people get a few answers at a
+ * Above that, wherever people can rate, they get a few answers at a
  * time to rate; "See all answers" is the way to the full list.
  */
 
@@ -25,7 +25,11 @@ export interface RateViewEligibilityInput {
 	now: number;
 }
 
-/** The question itself is one people rate a few answers at a time. */
+/**
+ * The question itself is one people rate a few answers at a time, whichever
+ * stage it is in. Single-like and vote-limited questions ask a person to choose
+ * among all the answers, so they keep the list.
+ */
 export function isRateViewEligible({
 	statement,
 	answerCount,
@@ -34,18 +38,19 @@ export function isRateViewEligible({
 	if (statement?.statementType !== StatementType.question) return false;
 	if (!isAnswerBatchQuestion(answerCount)) return false;
 	if (statement.evaluationSettings?.evaluationUI === EvaluationUI.voting) return false;
-	if (statement.statementSettings?.enableEvaluation === false) return false;
-	if (statement.questionSettings?.isHalted === true) return false;
-	const deadline = statement.questionSettings?.deadline;
-	if (typeof deadline === 'number' && deadline > 0 && deadline <= now) return false;
+	if (statement.statementSettings?.evaluationType === 'single-like') return false;
+	if (statement.evaluationSettings?.maxVotesPerUser) return false;
+	const stage = getQuestionStage({ statement, answerCount, now });
 
-	return getQuestionStage({ statement, answerCount, now }) === STAGE_RATING;
+	return canRateQuestion(statement, stage, isQuestionHalted(statement, now));
 }
 
 export interface ResolveAnswersViewInput {
 	eligible: boolean;
-	/** The sampler failed, or found the question small after all. */
+	/** The sampler found the question small after all. */
 	usesPlainList: boolean;
+	/** The last sampler call failed; this view shows the list until a retry works. */
+	rateFailed: boolean;
 	/** The `:sort` route segment, when the reader asked for one. */
 	paramSort: string | undefined;
 	hasManualOrder: boolean;
@@ -61,11 +66,12 @@ export interface AnswersViewDecision {
 export function resolveAnswersView({
 	eligible,
 	usesPlainList,
+	rateFailed,
 	paramSort,
 	hasManualOrder,
 	seeAll,
 }: ResolveAnswersViewInput): AnswersViewDecision {
-	if (!eligible || usesPlainList || hasManualOrder) {
+	if (!eligible || usesPlainList || rateFailed || hasManualOrder) {
 		return { view: 'list', canReturnToRating: false };
 	}
 	const asksForAnotherSort = paramSort !== undefined && paramSort !== SortType.random;
