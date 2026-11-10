@@ -9,7 +9,7 @@ import type {
 import type { CallableRequest } from 'firebase-functions/v2/https';
 import { Collections } from '@freedi/shared-types';
 import type { TableAssignment, TableAssignmentTopic } from '@freedi/shared-types';
-import { MAX_ID_LENGTH } from './constants';
+import { HOST_SIGN_IN_PROVIDER, MAX_ID_LENGTH } from './constants';
 import { TablesError } from './tablesErrors';
 
 /**
@@ -41,15 +41,23 @@ export interface PreviewBudgetDoc {
 
 export interface Actor {
 	uid: string;
-	/** The token's `firebase.sign_in_provider`, for example `google.com` or `anonymous`. */
-	signInProvider?: string;
+	/** Signed in with Google, or an account with Google linked to it. */
+	hasGoogleAccount: boolean;
 }
 
 export function actorFrom<T>(request: CallableRequest<T>): Actor {
 	const uid = request.auth?.uid;
 	if (!uid) throw new TablesError('unauthenticated', 'Sign in first');
 
-	return { uid, signInProvider: request.auth?.token?.firebase?.sign_in_provider };
+	const firebase = request.auth?.token?.firebase;
+
+	return {
+		uid,
+		// A token issued after linking may still name the first provider, so the identities count too.
+		hasGoogleAccount:
+			firebase?.sign_in_provider === HOST_SIGN_IN_PROVIDER ||
+			Boolean(firebase?.identities?.[HOST_SIGN_IN_PROVIDER]?.length),
+	};
 }
 
 /** A fresh document id (chosen here so every doc is addressed by an explicit id). */
@@ -124,6 +132,14 @@ export function previewBudgetRef(
 	answersHash: string,
 ): DocumentReference {
 	return firestore.collection(PREVIEW_BUDGETS_COLLECTION).doc(`${sessionId}_${answersHash}`);
+}
+
+/** The whole session's count, in the same collection: its id has no hash after it. */
+export function sessionPreviewBudgetRef(
+	firestore: Firestore,
+	sessionId: string,
+): DocumentReference {
+	return firestore.collection(PREVIEW_BUDGETS_COLLECTION).doc(sessionId);
 }
 
 export function previewBudgetsQuery(firestore: Firestore, sessionId: string): Query {

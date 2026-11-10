@@ -267,7 +267,8 @@ export type TableAssignmentMetrics = InferOutput<typeof TableAssignmentMetricsSc
 export const TableAssignmentRunSchema = object({
 	runId: string(),
 	sessionId: string(),
-	seed: number(),
+	/** Only on older documents: with the engine, a seed lets a reader replay the seating and solve for the answers. */
+	seed: optional(number()),
 	status: TableAssignmentRunStatusSchema,
 	tables: array(TableAssignmentRunTableSchema),
 	metrics: TableAssignmentMetricsSchema,

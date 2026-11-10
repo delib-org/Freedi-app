@@ -1,3 +1,4 @@
+import type { Firestore } from 'firebase-admin/firestore';
 import type {
 	TableAssignment,
 	TableAssignmentParticipant,
@@ -11,7 +12,7 @@ import { TablesError } from '../tablesErrors';
 /** Fixtures shared by the Tables registration and fix-details suites. */
 export const HOST = 'host-1';
 /** The token shape of a host: only a Google sign-in may create a session. */
-export const GOOGLE_HOST = { uid: HOST, signInProvider: 'google.com' };
+export const GOOGLE_HOST = { uid: HOST, hasGoogleAccount: true };
 export const SID = 'session-1';
 export const NOW = 1_800_000_000_000;
 
@@ -19,6 +20,21 @@ export const participantPath = (uid: string): string => `tableAssignmentParticip
 export const rosterPath = (uid: string): string => `tableAssignmentRoster/${SID}_${uid}`;
 export const counterPath = `tableAssignmentCounters/${SID}`;
 export const seatPath = (tableIndex: number): string => `tableAssignmentSeats/${SID}_${tableIndex}`;
+
+/** Firestore serialises conflicting transactions (it re-runs the loser); a mutex gives the same outcome. */
+export function serialized(fake: FakeFirestore): Firestore {
+	const firestore = fake.asFirestore();
+	const original = firestore.runTransaction.bind(firestore);
+	let chain: Promise<unknown> = Promise.resolve();
+	firestore.runTransaction = ((fn: Parameters<typeof original>[0]) => {
+		const run = chain.then(() => original(fn));
+		chain = run.catch(() => undefined);
+
+		return run;
+	}) as typeof firestore.runTransaction;
+
+	return firestore;
+}
 
 export async function expectRefusal(
 	promise: Promise<unknown>,

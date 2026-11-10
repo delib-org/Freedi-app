@@ -1,4 +1,3 @@
-import type { Firestore } from 'firebase-admin/firestore';
 import type {
 	TableAssignment,
 	TableAssignmentParticipant,
@@ -17,30 +16,16 @@ import { computePreview } from '../fn_tablesComputePreview';
 import { publishRun } from '../fn_tablesPublishRun';
 import { buildDirectLayout } from '../directLayout';
 import { TablesError, toHttpsError } from '../tablesErrors';
+import { serialized } from './tablesTestKit';
 
 const HOST = 'host-1';
-const GOOGLE_HOST = { uid: HOST, signInProvider: 'google.com' };
+const GOOGLE_HOST = { uid: HOST, hasGoogleAccount: true };
 const SID = 'session-1';
 const NOW = 1_800_000_000_000;
 
 async function expectCode(promise: Promise<unknown>, code: string): Promise<void> {
 	await expect(promise).rejects.toBeInstanceOf(TablesError);
 	await expect(promise).rejects.toMatchObject({ code });
-}
-
-/** Firestore serialises conflicting transactions (it re-runs the loser); a mutex gives the same outcome. */
-function serialized(fake: FakeFirestore): Firestore {
-	const firestore = fake.asFirestore();
-	const original = firestore.runTransaction.bind(firestore);
-	let chain: Promise<unknown> = Promise.resolve();
-	firestore.runTransaction = ((fn: Parameters<typeof original>[0]) => {
-		const run = chain.then(() => original(fn));
-		chain = run.catch(() => undefined);
-
-		return run;
-	}) as typeof firestore.runTransaction;
-
-	return firestore;
 }
 
 function seedSession(
@@ -96,7 +81,7 @@ describe('tablesCreateSession', () => {
 		await expectCode(
 			createSession(
 				fake.asFirestore(),
-				{ uid: 'anon', signInProvider: 'anonymous' },
+				{ uid: 'anon', hasGoogleAccount: false },
 				{ title: 'T', mode: 'direct' },
 			),
 			'permission-denied',
@@ -505,16 +490,17 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 		return fake;
 	}
 
-	it('maps registrants to the engine, stores a ready run with metrics, seed and hash', async () => {
+	it('maps registrants to the engine, stores a ready run with metrics and hash', async () => {
 		const fake = seedRanked();
 		const { runId } = await computePreview(
 			fake.asFirestore(),
 			HOST,
-			{ sessionId: SID, seed: 42 },
+			{ sessionId: SID },
 			NOW,
+			() => 42,
 		);
 		const run = fake.read(`tableAssignmentRuns/${runId}`) as unknown as TableAssignmentRun;
-		expect(run).toMatchObject({ runId, sessionId: SID, seed: 42, status: 'ready', createdAt: NOW });
+		expect(run).toMatchObject({ runId, sessionId: SID, status: 'ready', createdAt: NOW });
 		expect(fake.read(`tableAssignmentRunInputs/${runId}`)?.inputHash).toMatch(/^[0-9a-f]{64}$/);
 		expect(run.inputHash).toBe('');
 		const seated = run.tables.flatMap((t) => t.memberUids).sort();
@@ -550,8 +536,9 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 		const { runId } = await computePreview(
 			fake.asFirestore(),
 			HOST,
-			{ sessionId: SID, seed: 1 },
+			{ sessionId: SID },
 			NOW,
+			() => 1,
 		);
 		const run = fake.read(`tableAssignmentRuns/${runId}`) as unknown as TableAssignmentRun;
 		const pills = run.tables.map((t) => t.closeness);
@@ -560,11 +547,11 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 		expect(run.metrics.hasEnoughPositions).toBe(true);
 	});
 
-	it('is reproducible for a seed and supersedes the older ready run', async () => {
+	it('seats the same for the same drawn seed and supersedes the older ready run', async () => {
 		const fake = seedRanked();
 		const fs = fake.asFirestore();
-		const first = await computePreview(fs, HOST, { sessionId: SID, seed: 7 }, NOW);
-		const second = await computePreview(fs, HOST, { sessionId: SID, seed: 7 }, NOW + 1);
+		const first = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 7);
+		const second = await computePreview(fs, HOST, { sessionId: SID }, NOW + 1, () => 7);
 		const a = fake.read(`tableAssignmentRuns/${first.runId}`) as unknown as TableAssignmentRun;
 		const b = fake.read(`tableAssignmentRuns/${second.runId}`) as unknown as TableAssignmentRun;
 		expect(a.status).toBe('superseded');
@@ -578,7 +565,7 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 	it('leaves a run alone when it became published before the supersede write', async () => {
 		const fake = seedRanked();
 		const fs = fake.asFirestore();
-		const first = await computePreview(fs, HOST, { sessionId: SID, seed: 1 }, NOW);
+		const first = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 1);
 		// The host publishes the ready run just as a second preview is being written.
 		const original = fs.runTransaction.bind(fs);
 		fs.runTransaction = ((fn: Parameters<typeof original>[0]) => {
@@ -592,15 +579,9 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 
 			return original(fn);
 		}) as typeof fs.runTransaction;
-		const second = await computePreview(fs, HOST, { sessionId: SID, seed: 2 }, NOW + 1);
+		const second = await computePreview(fs, HOST, { sessionId: SID }, NOW + 1, () => 2);
 		expect(fake.read(`tableAssignmentRuns/${first.runId}`)).toMatchObject({ status: 'published' });
 		expect(fake.read(`tableAssignmentRuns/${second.runId}`)).toMatchObject({ status: 'ready' });
-	});
-
-	it('uses Date.now() as the seed when the request has none', async () => {
-		const fake = seedRanked();
-		const { runId } = await computePreview(fake.asFirestore(), HOST, { sessionId: SID }, NOW);
-		expect(fake.read(`tableAssignmentRuns/${runId}`)).toMatchObject({ seed: NOW });
 	});
 
 	it('answers an engine refusal as failed-precondition with the engine message', async () => {
@@ -635,7 +616,7 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 	it('publishes a fresh run: session points at it, older published run is superseded', async () => {
 		const fake = seedRanked();
 		const fs = fake.asFirestore();
-		const first = await computePreview(fs, HOST, { sessionId: SID, seed: 1 }, NOW);
+		const first = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 1);
 		await publishRun(fs, HOST, { sessionId: SID, runId: first.runId }, NOW + 10);
 		expect(fake.read(`tableAssignments/${SID}`)).toMatchObject({
 			status: 'published',
@@ -646,7 +627,7 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 			publishedAt: NOW + 10,
 		});
 
-		const second = await computePreview(fs, HOST, { sessionId: SID, seed: 2 }, NOW + 20);
+		const second = await computePreview(fs, HOST, { sessionId: SID }, NOW + 20, () => 2);
 		await publishRun(fs, HOST, { sessionId: SID, runId: second.runId }, NOW + 30);
 		expect(fake.read(`tableAssignmentRuns/${first.runId}`)).toMatchObject({ status: 'superseded' });
 		expect(fake.read(`tableAssignmentRuns/${second.runId}`)).toMatchObject({ status: 'published' });
@@ -656,7 +637,7 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 	it('publishing the already-published run again changes nothing', async () => {
 		const fake = seedRanked();
 		const fs = fake.asFirestore();
-		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 1 }, NOW);
+		const { runId } = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 1);
 		await publishRun(fs, HOST, { sessionId: SID, runId }, NOW + 10);
 		await expect(publishRun(fs, HOST, { sessionId: SID, runId }, NOW + 99)).resolves.toEqual({
 			publishedRunId: runId,
@@ -667,7 +648,7 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 	it('rejects a stale run once preferences, positions or settings move on', async () => {
 		const fake = seedRanked();
 		const fs = fake.asFirestore();
-		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 1 }, NOW);
+		const { runId } = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 1);
 
 		seedParticipant(fake, 'u0', { preferences: ['beta'], position: 5 });
 		await expect(publishRun(fs, HOST, { sessionId: SID, runId })).rejects.toMatchObject({
@@ -678,7 +659,7 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 		expect(fake.read(`tableAssignmentRuns/${runId}`)).toMatchObject({ status: 'ready' });
 
 		// A new preview over the new input publishes fine; then a new registrant makes it stale again.
-		const fresh = await computePreview(fs, HOST, { sessionId: SID, seed: 1 }, NOW + 1);
+		const fresh = await computePreview(fs, HOST, { sessionId: SID }, NOW + 1, () => 1);
 		seedParticipant(fake, 'late', {});
 		await expect(
 			publishRun(fs, HOST, { sessionId: SID, runId: fresh.runId }),
@@ -689,7 +670,7 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 		).resolves.toBeDefined();
 
 		// Tolerance is part of the input.
-		const another = await computePreview(fs, HOST, { sessionId: SID, seed: 3 }, NOW + 2);
+		const another = await computePreview(fs, HOST, { sessionId: SID }, NOW + 2, () => 3);
 		const session = fake.read(`tableAssignments/${SID}`) as unknown as TableAssignment;
 		fake.seed(`tableAssignments/${SID}`, {
 			...session,
@@ -703,8 +684,8 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 	it('refuses a run that is not ready or belongs to another session', async () => {
 		const fake = seedRanked();
 		const fs = fake.asFirestore();
-		const first = await computePreview(fs, HOST, { sessionId: SID, seed: 1 }, NOW);
-		await computePreview(fs, HOST, { sessionId: SID, seed: 2 }, NOW + 1);
+		const first = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 1);
+		await computePreview(fs, HOST, { sessionId: SID }, NOW + 1, () => 2);
 		await expectCode(
 			publishRun(fs, HOST, { sessionId: SID, runId: first.runId }),
 			'failed-precondition',

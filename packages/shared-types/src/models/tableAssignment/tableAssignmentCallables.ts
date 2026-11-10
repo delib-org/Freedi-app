@@ -173,12 +173,11 @@ export interface TablesJoinTableResponse {
 /**
  * `tablesComputePreview` (host). Returns the id of the computed (or computing) run.
  * Refused with reason `too-few-registrants` below five people and `preview-limit`
- * after five previews over the same registrations and answers.
+ * after five previews over the same registrations and answers, or thirty in the
+ * session. The seed is the server's own: a request carrying one is refused.
  */
 export interface TablesComputePreviewRequest {
 	sessionId: string;
-	/** Same seed gives the same seating; omit for a fresh one. */
-	seed?: number;
 }
 export interface TablesComputePreviewResponse {
 	runId: string;

@@ -43,3 +43,9 @@ export const MIN_REGISTRANTS_FOR_PREVIEW = 5;
 
 /** Previews a host may compute over one unchanged set of registrations and answers. */
 export const MAX_PREVIEWS_PER_ANSWERS = 5;
+
+/** Previews a host may compute in one session: dummy registrations or removals cannot refill this. */
+export const MAX_PREVIEWS_PER_SESSION = 30;
+
+/** Seeds are drawn from this range: the engine's random generator keeps 32 bits of state. */
+export const ENGINE_SEED_RANGE = 2 ** 32;

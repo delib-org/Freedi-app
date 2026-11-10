@@ -169,6 +169,12 @@ describe('TableAssignmentRunSchema', () => {
 		expect(safeParse(TableAssignmentRunSchema, stored).success).toBe(true);
 	});
 
+	it('parses a run with no seed, as they are stored now', () => {
+		const { seed: _seed, ...withoutSeed } = valid;
+
+		expect(safeParse(TableAssignmentRunSchema, withoutSeed).success).toBe(true);
+	});
+
 	it('rejects an unknown closeness', () => {
 		const tables = [{ ...valid.tables[0], closeness: 'near' }];
 

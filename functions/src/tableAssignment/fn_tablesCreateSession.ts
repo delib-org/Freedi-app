@@ -9,7 +9,6 @@ import type {
 import { TableAssignmentModeSchema } from '@freedi/shared-types';
 import { is } from 'valibot';
 import { db } from '../db';
-import { HOST_SIGN_IN_PROVIDER } from './constants';
 import { Actor, actorFrom, newId, requireId, sessionRef } from './tablesAccess';
 import { TablesError, toHttpsError } from './tablesErrors';
 import {
@@ -30,7 +29,7 @@ export async function createSession(
 	req: TablesCreateSessionRequest,
 	now: number = Date.now(),
 ): Promise<TablesCreateSessionResponse> {
-	if (actor.signInProvider !== HOST_SIGN_IN_PROVIDER) {
+	if (!actor.hasGoogleAccount) {
 		throw new TablesError('permission-denied', 'Hosts must sign in with Google');
 	}
 	const title = requireTitle(req?.title, 'title');

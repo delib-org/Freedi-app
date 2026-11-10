@@ -416,7 +416,7 @@ describe('tablesRemoveParticipant', () => {
 		const fake = ranked('registrationClosed');
 		seedRegistration(fake, 'u5', { preferences: ['a'] });
 		const fs = fake.asFirestore();
-		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 7 }, NOW);
+		const { runId } = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 7);
 		await removeParticipant(fs, HOST, { sessionId: SID, uid: 'u4' });
 		await expectRefusal(
 			publishRun(fs, HOST, { sessionId: SID, runId }),
@@ -432,7 +432,7 @@ describe('tablesRemoveParticipant', () => {
 		seedRegistration(fake, 'u6', { preferences: ['a'] });
 		const fs = fake.asFirestore();
 		await removeParticipant(fs, HOST, { sessionId: SID, uid: 'u4' });
-		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 7 }, NOW);
+		const { runId } = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 7);
 		await expect(publishRun(fs, HOST, { sessionId: SID, runId })).resolves.toEqual({
 			publishedRunId: runId,
 		});
@@ -490,7 +490,7 @@ describe('compute and publish with name cards present', () => {
 			seedRegistration(fake, uid, { preferences: ['a'], position: index * 20 }),
 		);
 		const fs = fake.asFirestore();
-		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 3 }, NOW);
+		const { runId } = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 3);
 		await expect(publishRun(fs, HOST, { sessionId: SID, runId })).resolves.toEqual({
 			publishedRunId: runId,
 		});
@@ -504,7 +504,7 @@ describe('compute and publish with name cards present', () => {
 			seedRegistration(fake, uid, { preferences: ['a'] }),
 		);
 		const fs = fake.asFirestore();
-		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 3 }, NOW);
+		const { runId } = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 3);
 		await register(fs, 'u1', { sessionId: SID, fullName: 'New Name' });
 		await expect(publishRun(fs, HOST, { sessionId: SID, runId })).resolves.toEqual({
 			publishedRunId: runId,

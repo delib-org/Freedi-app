@@ -193,34 +193,37 @@ describe('limits on what a host can set', () => {
 });
 
 describe('who may host', () => {
-	const request = (provider: string | undefined): Parameters<typeof actorFrom>[0] =>
-		({
-			auth: { uid: 'u', token: { firebase: { sign_in_provider: provider } } },
-		}) as unknown as Parameters<typeof actorFrom>[0];
+	const actorWith = (firebase: Record<string, unknown>): ReturnType<typeof actorFrom> =>
+		actorFrom({ auth: { uid: 'u', token: { firebase } } } as unknown as Parameters<
+			typeof actorFrom
+		>[0]);
+	const create = (fake: FakeFirestore, firebase: Record<string, unknown>): Promise<unknown> =>
+		createSession(fake.asFirestore(), actorWith(firebase), { title: 'T', mode: 'direct' });
 
-	it.each(['anonymous', 'password', 'custom', undefined])('refuses %s', async (signInProvider) => {
+	it.each([
+		['anonymous', { sign_in_provider: 'anonymous', identities: {} }],
+		['a password account', { sign_in_provider: 'password', identities: { email: ['a@b.c'] } }],
+		['a custom token', { sign_in_provider: 'custom' }],
+		['no claims', {}],
+		[
+			'an empty Google identity',
+			{ sign_in_provider: 'anonymous', identities: { 'google.com': [] } },
+		],
+	])('refuses %s', async (_label, firebase) => {
 		const fake = new FakeFirestore();
 
-		await expectRefusal(
-			createSession(
-				fake.asFirestore(),
-				{ uid: 'u', signInProvider },
-				{ title: 'T', mode: 'direct' },
-			),
-			'permission-denied',
-		);
+		await expectRefusal(create(fake, firebase), 'permission-denied');
 		expect(fake.list('tableAssignments')).toHaveLength(0);
 	});
 
-	it('accepts a Google account, read from the token', async () => {
-		const fake = new FakeFirestore();
-
-		await expect(
-			createSession(fake.asFirestore(), actorFrom(request('google.com')), {
-				title: 'T',
-				mode: 'direct',
-			}),
-		).resolves.toBeDefined();
+	it.each([
+		['a Google sign-in', { sign_in_provider: 'google.com' }],
+		[
+			'an anonymous account after linking Google',
+			{ sign_in_provider: 'anonymous', identities: { 'google.com': ['1234'] } },
+		],
+	])('accepts %s', async (_label, firebase) => {
+		await expect(create(new FakeFirestore(), firebase)).resolves.toBeDefined();
 	});
 });
 

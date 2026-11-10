@@ -1,13 +1,22 @@
-import { assignTables, sideStats, tableStats } from '@freedi/table-assignment';
+import crypto from 'crypto';
+import { assignTables } from '@freedi/table-assignment';
 import type { Assignment, Participant } from '@freedi/table-assignment';
-import { tableAssignmentCloseness } from '@freedi/shared-types';
-import type { TableAssignmentRun } from '@freedi/shared-types';
+import type { TableAssignmentRun, TablesComputePreviewRequest } from '@freedi/shared-types';
 import { FakeFirestore } from '../../classroom/__tests__/fakeFirestore';
+import { ENGINE_SEED_RANGE } from '../constants';
 import { computePreview } from '../fn_tablesComputePreview';
 import { publishRun } from '../fn_tablesPublishRun';
 import { removeParticipant } from '../fn_tablesRemoveParticipant';
 import { coarseRunFields, publishedRunFields, scrubStoredRun } from '../runPrivacy';
-import { HOST, NOW, SID, seedRegistration, seedSession, seedTopics } from './tablesTestKit';
+import {
+	HOST,
+	NOW,
+	SID,
+	expectRefusal,
+	seedRegistration,
+	seedSession,
+	seedTopics,
+} from './tablesTestKit';
 
 const STOPS = [0, 25, 50, 75, 100];
 const EMPTY_STATS = { n: 0, mean: [], sd: [], deviation: 0 };
@@ -74,8 +83,9 @@ describe('what a run stores about positions', () => {
 		const { runId } = await computePreview(
 			fake.asFirestore(),
 			HOST,
-			{ sessionId: SID, seed: 3 },
+			{ sessionId: SID },
 			NOW,
+			() => 3,
 		);
 		const run = runOf(fake, runId);
 
@@ -95,8 +105,9 @@ describe('what a run stores about positions', () => {
 		const { runId } = await computePreview(
 			fake.asFirestore(),
 			HOST,
-			{ sessionId: SID, seed: 3 },
+			{ sessionId: SID },
 			NOW,
+			() => 3,
 		);
 
 		expect(runOf(fake, runId).inputHash).toBe('');
@@ -108,7 +119,7 @@ describe('what a run stores about positions', () => {
 
 		seedRoom(fake, [0, 25, 50, 75, 100, 25]);
 		const fs = fake.asFirestore();
-		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 3 }, NOW);
+		const { runId } = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 3);
 
 		await removeParticipant(fs, HOST, { sessionId: SID, uid: 'u0' });
 		await expect(publishRun(fs, HOST, { sessionId: SID, runId })).rejects.toMatchObject({
@@ -151,8 +162,9 @@ describe('what a run stores about positions', () => {
 		const { runId } = await computePreview(
 			fake.asFirestore(),
 			HOST,
-			{ sessionId: SID, seed: 1 },
+			{ sessionId: SID },
 			NOW,
+			() => 1,
 		);
 		const run = runOf(fake, runId);
 
@@ -165,7 +177,7 @@ describe('what a run stores about positions', () => {
 
 		seedRoom(fake, [0, 25, 25, 50, 75, 100, 100, 50]);
 		const fs = fake.asFirestore();
-		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 3 }, NOW);
+		const { runId } = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 3);
 
 		await publishRun(fs, HOST, { sessionId: SID, runId }, NOW);
 		const run = runOf(fake, runId);
@@ -239,64 +251,52 @@ describe('no stored field depends on positions beyond the pill', () => {
 		expect(figures.every(([, value]) => value === 0)).toBe(true);
 	});
 
-	/**
-	 * The reviewer's attack, against what is stored now: try every possible set
-	 * of answers and keep those that give the pills the host saw in five previews.
-	 */
-	it('leaves every position open after five previews', () => {
-		const truth = [25, 50, 75, 25, 50, 75];
-		const ids = truth.map((_, i) => `u${i}`);
-		const topics = [{ id: 'a' }, { id: 'b' }];
-		const asPeople = (answers: readonly number[]): Participant[] =>
-			answers.map((position, i) => ({
-				id: ids[i],
-				side: position < 0 ? undefined : [position],
-				preferences: [],
-			}));
-		const previews = [1, 2, 3, 4, 5].map((seed) =>
-			coarseRunFields(
-				assignTables(asPeople(truth), topics, {
-					tableSize: 3,
-					balanceTolerance: TOLERANCE,
-					seed,
-				}),
-			),
-		);
-		const fitsAllPills = (answers: readonly number[]): boolean => {
-			const people = asPeople(answers);
-			const population = sideStats(people);
+	it('keeps the seed out of everything stored, so the engine cannot be replayed', async () => {
+		const fake = new FakeFirestore();
 
-			return previews.every((preview) =>
-				preview.tables.every((table) => {
-					const seated = people.filter((person) => table.memberUids.includes(person.id));
+		seedRoom(fake, [0, 25, 50, 75, 100]);
+		const fs = fake.asFirestore();
+		const { runId } = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 424242);
 
-					return (
-						tableAssignmentCloseness(tableStats(seated, population), TOLERANCE) === table.closeness
-					);
-				}),
+		expect(runOf(fake, runId)).not.toHaveProperty('seed');
+		expect(JSON.stringify([...fake.docs.entries()])).not.toContain('424242');
+		await publishRun(fs, HOST, { sessionId: SID, runId }, NOW);
+		expect(runOf(fake, runId)).not.toHaveProperty('seed');
+	});
+
+	it('refuses a seed from the client, even a null one', async () => {
+		const fake = new FakeFirestore();
+
+		seedRoom(fake, [0, 25, 50, 75, 100]);
+		for (const seed of [7, 0, null, 'x']) {
+			await expectRefusal(
+				computePreview(
+					fake.asFirestore(),
+					HOST,
+					{ sessionId: SID, seed } as TablesComputePreviewRequest,
+					NOW,
+				),
+				'invalid-argument',
 			);
-		};
-		const options = [-1, ...STOPS];
-		const possible = ids.map(() => new Set<number>());
-		const answers = new Array<number>(ids.length).fill(0);
-		const tryFrom = (person: number): void => {
-			if (person === ids.length) {
-				if (fitsAllPills(answers)) answers.forEach((value, i) => possible[i].add(value));
+		}
+		expect(fake.list('tableAssignmentRuns')).toHaveLength(0);
+	});
 
-				return;
-			}
-			options.forEach((option) => {
-				answers[person] = option;
-				tryFrom(person + 1);
-			});
-		};
+	it('draws the seed at random, not from the clock', async () => {
+		const draw = jest
+			.spyOn(crypto, 'randomInt')
+			.mockImplementation((() => 77) as unknown as typeof crypto.randomInt);
+		const fake = new FakeFirestore();
 
-		tryFrom(0);
+		seedRoom(fake, [0, 25, 50, 75, 100, 25, 50, 75]);
+		const fs = fake.asFirestore();
+		const first = await computePreview(fs, HOST, { sessionId: SID }, NOW);
+		const second = await computePreview(fs, HOST, { sessionId: SID }, NOW + 123456);
 
-		possible.forEach((values, i) => {
-			expect(values.has(truth[i])).toBe(true);
-			expect(values.size).toBeGreaterThan(1);
-		});
+		expect(draw).toHaveBeenCalledTimes(2);
+		expect(draw).toHaveBeenCalledWith(0, ENGINE_SEED_RANGE);
+		expect(runOf(fake, second.runId).tables).toEqual(runOf(fake, first.runId).tables);
+		draw.mockRestore();
 	});
 });
 
@@ -350,146 +350,12 @@ describe('remove, then compute again', () => {
 
 		seedRoom(fake, [0, 25, 50, 75, 100, 25, 50, 75, 0, 100]);
 		const fs = fake.asFirestore();
-		const first = await computePreview(fs, HOST, { sessionId: SID, seed: 9 }, NOW);
+		const first = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 9);
 
 		await removeParticipant(fs, HOST, { sessionId: SID, uid: 'u3' });
-		const second = await computePreview(fs, HOST, { sessionId: SID, seed: 9 }, NOW + 1);
+		const second = await computePreview(fs, HOST, { sessionId: SID }, NOW + 1, () => 9);
 
 		expectNoFigures(runOf(fake, first.runId));
 		expectNoFigures(runOf(fake, second.runId));
-	});
-});
-
-describe('rationing previews', () => {
-	const compute = (fake: FakeFirestore, seed: number): ReturnType<typeof computePreview> =>
-		computePreview(fake.asFirestore(), HOST, { sessionId: SID, seed }, NOW + seed);
-
-	it('refuses fewer than five registrants, with a reason the client can read', async () => {
-		const fake = new FakeFirestore();
-
-		seedRoom(fake, [0, 25, 50, 75]);
-		await expect(compute(fake, 1)).rejects.toMatchObject({
-			code: 'failed-precondition',
-			reason: 'too-few-registrants',
-		});
-		expect(fake.list('tableAssignmentRuns')).toHaveLength(0);
-	});
-
-	it('computes for exactly five', async () => {
-		const fake = new FakeFirestore();
-
-		seedRoom(fake, [0, 25, 50, 75, 100]);
-		await expect(compute(fake, 1)).resolves.toBeDefined();
-	});
-
-	it('stops at five previews over the same answers and writes nothing more', async () => {
-		const fake = new FakeFirestore();
-
-		seedRoom(fake, [0, 25, 50, 75, 100, 25]);
-		for (let seed = 1; seed <= 5; seed += 1) await compute(fake, seed);
-		await expect(compute(fake, 6)).rejects.toMatchObject({
-			code: 'failed-precondition',
-			reason: 'preview-limit',
-		});
-		expect(fake.list('tableAssignmentRuns')).toHaveLength(5);
-	});
-
-	it('gives a fresh budget when an answer changes', async () => {
-		const fake = new FakeFirestore();
-
-		seedRoom(fake, [0, 25, 50, 75, 100, 25]);
-		for (let seed = 1; seed <= 5; seed += 1) await compute(fake, seed);
-		seedRegistration(fake, 'u0', { preferences: ['b'], position: 100 });
-		await expect(compute(fake, 6)).resolves.toBeDefined();
-	});
-
-	it('does not refill when the answers change and change back', async () => {
-		const fake = new FakeFirestore();
-
-		seedRoom(fake, [0, 25, 50, 75, 100, 25]);
-		for (let seed = 1; seed <= 5; seed += 1) await compute(fake, seed);
-		seedRegistration(fake, 'u0', { preferences: ['b'], position: 100 });
-		await compute(fake, 6);
-		seedRegistration(fake, 'u0', { preferences: ['a', 'b'], position: 0 });
-		await expect(compute(fake, 7)).rejects.toMatchObject({ reason: 'preview-limit' });
-	});
-
-	it('does not refill when only a setting moves: that would locate a table by sweeping the tolerance', async () => {
-		const fake = new FakeFirestore();
-
-		seedRoom(fake, [0, 25, 50, 75, 100, 25]);
-		for (let seed = 1; seed <= 5; seed += 1) await compute(fake, seed);
-		seedSession(fake, { status: 'registrationClosed' }, { tableSize: 4, balanceTolerance: 0.31 });
-		await expect(compute(fake, 6)).rejects.toMatchObject({ reason: 'preview-limit' });
-	});
-
-	it('keeps the budget in a collection only the server knows, with no answer in it', async () => {
-		const fake = new FakeFirestore();
-
-		seedRoom(fake, [0, 25, 50, 75, 100]);
-		await compute(fake, 1);
-		expect(fake.list('tableAssignmentPreviewBudgets')).toEqual([{ sessionId: SID, computed: 1 }]);
-	});
-
-	it('seats the same whatever order the registrations are read in', async () => {
-		const positions = [0, 25, 50, 75, 100, 25, 50, 75];
-		const seatingOf = async (order: readonly number[]): Promise<TableAssignmentRun['tables']> => {
-			const fake = new FakeFirestore();
-
-			seedSession(fake, { status: 'registrationClosed' }, { tableSize: 4 });
-			seedTopics(fake, ['a', 'b']);
-			order.forEach((i) =>
-				seedRegistration(fake, `u${i}`, { preferences: ['a', 'b'], position: positions[i] }),
-			);
-			const fs = fake.asFirestore();
-			const collection = fs.collection.bind(fs);
-
-			fs.collection = ((name: string) => {
-				const api = collection(name);
-				if (name !== 'tableAssignmentParticipants') return api;
-
-				return {
-					...api,
-					where: (...args: Parameters<typeof api.where>) => {
-						const query = api.where(...args);
-
-						return {
-							...query,
-							get: async () => {
-								const snap = await query.get();
-
-								return { ...snap, docs: [...snap.docs].reverse() };
-							},
-						};
-					},
-				};
-			}) as typeof fs.collection;
-			const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 4 }, NOW);
-
-			return runOf(fake, runId).tables;
-		};
-
-		const forward = await seatingOf(positions.map((_, i) => i));
-		const backward = await seatingOf(positions.map((_, i) => positions.length - 1 - i));
-
-		expect(backward).toEqual(forward);
-	});
-
-	it('writes no run when the session ended while the engine ran', async () => {
-		const fake = new FakeFirestore();
-
-		seedRoom(fake, [0, 25, 50, 75, 100]);
-		const fs = fake.asFirestore();
-		const original = fs.runTransaction.bind(fs);
-
-		fs.runTransaction = ((fn: Parameters<typeof original>[0]) => {
-			seedSession(fake, { status: 'ended' });
-
-			return original(fn);
-		}) as typeof fs.runTransaction;
-		await expect(computePreview(fs, HOST, { sessionId: SID }, NOW)).rejects.toMatchObject({
-			code: 'failed-precondition',
-		});
-		expect(fake.list('tableAssignmentRuns')).toHaveLength(0);
 	});
 });
