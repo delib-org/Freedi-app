@@ -22,23 +22,6 @@ const ESCAPED_QUOTE_PLACEHOLDER = '\u0001';
 const TRANSLATE_CALL =
 	/\bt\(\s*(?:'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\$]|\\.)*)`)\s*[,)]/g;
 
-/**
- * Keys used only in dead code that plan item 1.12 removes (QuestionPage,
- * StageExplanation and similar). Translating them would be wasted. Delete this
- * list with that code.
- */
-const DEAD_CODE_KEYS = new Set([
-	'Connected questions worth discussing',
-	"Don't show again",
-	"Don't show explanations again",
-	'New Option Graphic',
-	'Research Graphic',
-	'Solutions for discussed issue',
-	'Topic description',
-	'View My Suggestions',
-	'e.g., Focus on practical solutions, highlight consensus points...',
-]);
-
 const listSourceFiles = (directory: string): string[] =>
 	readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
 		if (entry.isDirectory()) {
@@ -79,9 +62,7 @@ const findKeysUsedByMainApp = (): string[] => {
 	const used = new Set<string>();
 	for (const file of listSourceFiles(ROOT_SRC)) {
 		const text = readFileSync(file, 'utf8');
-		for (const key of translateCallKeys(text)) {
-			if (!DEAD_CODE_KEYS.has(key)) used.add(key);
-		}
+		for (const key of translateCallKeys(text)) used.add(key);
 		for (const quote of [`'`, `"`, '`']) {
 			for (const candidate of quotedStrings(text, quote)) {
 				if (Object.prototype.hasOwnProperty.call(dictionary, candidate)) used.add(candidate);

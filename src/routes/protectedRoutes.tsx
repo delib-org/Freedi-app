@@ -9,10 +9,6 @@ import lazyWithRetry from './lazyWithRetry';
 import StatementMain from '@/view/pages/statement/StatementMain';
 
 // Lazy load rarely-used protected route components with retry on chunk failure
-const MySuggestions = lazyWithRetry(
-	() => import('@/view/pages/my-suggestions/MySuggestions'),
-	'MySuggestions',
-);
 const VotingThankYou = lazyWithRetry(
 	() => import('@/view/pages/votingThankYou/VotingThankYou'),
 	'VotingThankYou',
@@ -88,10 +84,6 @@ export const protectedRoutes: RouteObject[] = [
 	{
 		path: 'stage/:statementId/:sort',
 		element: <StatementMain />,
-	},
-	{
-		path: 'my-suggestions/statement/:statementId',
-		element: withLoadingSuspense(MySuggestions),
 	},
 	{
 		path: 'statement/:statementId/groups',

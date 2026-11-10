@@ -5,7 +5,6 @@ const preloadFunctions = {
 	statement: () => import('@/view/pages/statement/StatementMain'),
 	home: () => import('@/view/pages/home/Home'),
 	my: () => import('@/view/pages/my/My'),
-	mySuggestions: () => import('@/view/pages/my-suggestions/MySuggestions'),
 	settings: () => import('@/view/pages/statement/components/settings/StatementSettings'),
 	mindMap: () => import('@/view/pages/statement/components/map/MindMap'),
 	chat: () => import('@/view/pages/statement/components/chat/Chat'),

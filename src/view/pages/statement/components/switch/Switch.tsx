@@ -158,10 +158,8 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 					<SwitchScreen statement={statement} role={role} activeView={activeView} data={data} />
 				</QuestionAnswersTabContext.Provider>
 				{/* Admin control over which answers are marked as leading, and in what
-				    order the list reads. Mounted here rather than inside StagePage
-				    because StagePage is also rendered nested (QuestionPage,
-				    MultiStageQuestion), which would put several handles on one screen.
-				    It stays reachable from every reading tab of the question. */}
+				    order the list reads. Mounted here so it stays reachable from every
+				    reading tab of the question. */}
 				{isAdmin && statement && canHaveAnswers && !isMapScreen && !isTabContentView && (
 					<TopAnswersPanel statement={statement} />
 				)}
