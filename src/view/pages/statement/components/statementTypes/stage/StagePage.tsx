@@ -111,7 +111,7 @@ function AnswersEmptyState({ canAddAnswer }: AnswersEmptyStateProps) {
 	if (!canAddAnswer) {
 		return (
 			<div className={styles.onboarding}>
-				<p className={styles.onboarding__stepText}>{t('No suggestions yet')}</p>
+				<p className={styles.onboarding__stepText}>{t('No answers yet')}</p>
 			</div>
 		);
 	}

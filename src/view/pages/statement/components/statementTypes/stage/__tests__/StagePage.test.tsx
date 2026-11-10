@@ -39,7 +39,7 @@ const question = {
 	statementType: StatementType.question,
 } as unknown as Statement;
 
-const NO_ANSWERS_KEY = 'No suggestions yet';
+const NO_ANSWERS_KEY = 'No answers yet';
 const ADD_STEP_KEY = 'solutionsOnboarding.addSolution';
 
 function renderWith(options: Partial<Statement>[], canAddAnswer: boolean) {
