@@ -7,12 +7,8 @@ import { fullyLoadedScopeSelector } from '@/redux/statements/statementsSlice';
 import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
 import QuestionProcess from '@/view/components/atomic/organisms/ThinkingSpace/QuestionProcess';
 import { STAGE_COLLECTING, STAGE_DECIDED } from '@/helpers/questionStage';
-import {
-	getResultsAccess,
-	rankAnswers,
-	resultsRuleCaption,
-	selectLeadingAnswers,
-} from '../resultsLogic';
+import { rankAnswers, resultsRuleCaption, selectLeadingAnswers } from '../resultsLogic';
+import { getScoreAccess, questionScoreInput } from '../canSeeScore';
 import type { QuestionScreenData } from '../useQuestionScreenData';
 import AnswerResult from './AnswerResult';
 import AgreementCard from './AgreementCard';
@@ -36,13 +32,7 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 	const [showAll, setShowAll] = useState(false);
 	const listId = useId();
 
-	const access = getResultsAccess({
-		isHost: data.isHost,
-		stage: data.stage,
-		ratedCount: data.ratedCount,
-		showLiveResults: data.showLiveResults,
-		isDeadlinePassed: data.isDeadlinePassed,
-	});
+	const access = getScoreAccess(questionScoreInput(data));
 	const visible = access === 'visible';
 	const { isAutoLoading } = useAutoLoadAllForSort(
 		visible ? statement.statementId : undefined,

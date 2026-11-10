@@ -20,6 +20,8 @@ import SuggestionCard from './suggestionCard/SuggestionCard';
 import Evaluation from '../evaluation/Evaluation';
 import { applyManualOrder, includeAnswer, pinFirst, sortStatements } from './suggestionOrdering';
 import { useFocusedAnswer } from './useFocusedAnswer';
+import { useQuestionScoreAccess } from '../../../questionScreen/useAnswerScoreGate';
+import { guardScoreSort } from '../../../questionScreen/canSeeScore';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 import { useViewLayers } from '@/controllers/hooks/useViewLayers';
@@ -60,7 +62,8 @@ const SuggestionCards: FC = () => {
 	const statementId = useMemo(() => params.statementId, [params.statementId]);
 	const statement = useSelector(statementSelector(statementId));
 	const defaultSort = statement?.statementSettings?.defaultSortType || SortType.newest;
-	const sort = params.sort || defaultSort;
+	const { canSee: canSortByScore } = useQuestionScoreAccess(statement);
+	const sort = guardScoreSort(params.sort || defaultSort, canSortByScore);
 
 	// An admin's hand-placed order (written from the Top Answers panel or the
 	// Join facilitator panel) replaces the ranking — but only while the reader is

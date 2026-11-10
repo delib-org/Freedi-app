@@ -21,11 +21,14 @@ export default function QuestionProcess({
 	statement,
 	view,
 	variant = 'page',
+	showScores = true,
 }: {
 	statement: Statement;
 	view: 'overview' | 'summary' | 'covenant';
 	/** `card` = the compact סיכום card inside the Results tab. */
 	variant?: 'page' | 'card';
+	/** False leaves the agreement numbers off, for a viewer the score guard holds back. */
+	showScores?: boolean;
 }) {
 	const isCard = variant === 'card';
 	// One summary per question: the live statement's own, same as on the question card.
@@ -148,8 +151,13 @@ export default function QuestionProcess({
 					</summary>
 					{data.sources.map((source) => (
 						<p key={source.id}>
-							<a href={`/statement/${source.id}`}>{source.text}</a> · {t('Agreement score')}{' '}
-							<span dir="ltr">{formatScore(source.cp)}</span>
+							<a href={`/statement/${source.id}`}>{source.text}</a>
+							{showScores && (
+								<>
+									{' '}
+									· {t('Agreement score')} <span dir="ltr">{formatScore(source.cp)}</span>
+								</>
+							)}
 						</p>
 					))}
 				</details>
@@ -190,9 +198,14 @@ export default function QuestionProcess({
 								key={a.id}
 							>
 								<span>
-									{t(a.agreed ? 'Passed the agreement threshold' : 'Draft for review')} ·{' '}
-									{t('Agreement score')} <span dir="ltr">{formatScore(a.cp)}</span> ·{' '}
-									{t('People who rated')}: {a.evaluators}
+									{t(a.agreed ? 'Passed the agreement threshold' : 'Draft for review')}
+									{showScores && (
+										<>
+											{' '}
+											· {t('Agreement score')} <span dir="ltr">{formatScore(a.cp)}</span> ·{' '}
+											{t('People who rated')}: {a.evaluators}
+										</>
+									)}
 								</span>
 								<h3>{a.title}</h3>
 								<p>{a.introduction}</p>

@@ -29,7 +29,7 @@ import {
 	resolveCurrentSort,
 } from './answerSorting';
 import styles from './QuestionScreen.module.scss';
-import { isLiveResultsOn } from '@/helpers/liveResults';
+import { useQuestionScoreAccess } from './useAnswerScoreGate';
 
 const ICON_SIZE = 18;
 
@@ -70,14 +70,14 @@ const AnswerSortControl: FC<AnswerSortControlProps> = ({ statement, isHost }) =>
 	const children = useSelector(subsSelect);
 
 	const settings = statement.statementSettings;
-	const liveResultsOn = isLiveResultsOn(statement);
+	const { canSee: canSortByScore } = useQuestionScoreAccess(statement);
 	const sortOptions = useMemo(
 		() =>
 			getAnswerSortOptions({
-				showEvaluation: liveResultsOn,
+				canSortByScore,
 				joiningEnabled: settings?.joiningEnabled ?? false,
 			}),
-		[liveResultsOn, settings?.joiningEnabled],
+		[canSortByScore, settings?.joiningEnabled],
 	);
 
 	if (!hasEnoughAnswersToSort(options.length, children.length)) return null;
@@ -86,6 +86,7 @@ const AnswerSortControl: FC<AnswerSortControlProps> = ({ statement, isHost }) =>
 		paramSort,
 		defaultSort: settings?.defaultSortType,
 		hasManualOrder: (settings?.manualOptionOrder?.length ?? 0) > 0,
+		canSortByScore,
 	});
 	const currentOption =
 		current.kind === 'sort' ? sortOptions.find((o) => o.id === current.sort) : undefined;

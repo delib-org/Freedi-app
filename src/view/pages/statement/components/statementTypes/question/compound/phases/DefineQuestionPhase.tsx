@@ -14,6 +14,7 @@ import {
 } from '@/controllers/db/compoundQuestion/lockStatement';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { Lock, LockOpen } from 'lucide-react';
+import ScoreGate from '../../../../questionScreen/ScoreGate';
 import styles from '../CompoundQuestion.module.scss';
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
@@ -189,9 +190,11 @@ const DefineQuestionPhase: FC = () => {
 									<div className={styles.topSuggestion}>
 										<span className={styles.topSuggestionLabel}>{t('Leading suggestion')}</span>
 										<p className={styles.topSuggestionText}>{topTitleOption.statement}</p>
-										<span className={styles.topSuggestionConsensus}>
-											{t('Agreement score')}: {Math.round((topTitleOption.consensus ?? 0) * 100)}%
-										</span>
+										<ScoreGate answer={topTitleOption}>
+											<span className={styles.topSuggestionConsensus}>
+												{t('Agreement score')}: {Math.round((topTitleOption.consensus ?? 0) * 100)}%
+											</span>
+										</ScoreGate>
 									</div>
 								)}
 								<div className={styles.discussionActions}>

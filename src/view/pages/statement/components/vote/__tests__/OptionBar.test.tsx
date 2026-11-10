@@ -17,7 +17,12 @@ const makeOption = (statement: string): Statement =>
 		color: '#85d697',
 	}) as unknown as Statement;
 
-const renderBar = (selections: number, totalVotes: number, name = 'Free lunch') =>
+const renderBar = (
+	selections: number,
+	totalVotes: number,
+	name = 'Free lunch',
+	showTallies = true,
+) =>
 	render(
 		<OptionBar
 			option={makeOption(name)}
@@ -25,6 +30,7 @@ const renderBar = (selections: number, totalVotes: number, name = 'Free lunch') 
 			isSelected={false}
 			castVote={jest.fn().mockResolvedValue(undefined)}
 			totalVotes={totalVotes}
+			showTallies={showTallies}
 			order={0}
 			setStatementInfo={jest.fn()}
 			setShowInfo={jest.fn()}
@@ -59,5 +65,12 @@ describe('OptionBar (vertical)', () => {
 
 		const short = renderBar(1, 20);
 		expect(short.container.textContent).toContain('5% · 1');
+	});
+
+	it('shows no percentage, count or bar height while tallies are hidden', () => {
+		const { container } = renderBar(8, 10, 'Free lunch', false);
+
+		expect(container.textContent).not.toContain('80%');
+		expect(container.textContent).not.toContain('8');
 	});
 });

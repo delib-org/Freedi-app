@@ -5,6 +5,7 @@ import AnswerStateStrip from '../AnswerStateStrip';
 import { getAnswerState } from '../answerState';
 
 let mockParent: Statement | undefined;
+let mockCanSee = true;
 
 jest.mock('@/controllers/hooks/useTranslation', () => ({
 	useTranslation: () => ({ t: (key: string) => key }),
@@ -14,6 +15,9 @@ jest.mock('@/controllers/hooks/reduxHooks', () => ({
 }));
 jest.mock('@/redux/statements/statementsSlice', () => ({
 	statementSelector: () => () => undefined,
+}));
+jest.mock('../../questionScreen/useAnswerScoreGate', () => ({
+	useAnswerScoreGate: () => ({ canSee: mockCanSee, showRevealHint: false }),
 }));
 
 function makeStatement(statementType: StatementType, statementId = 'a1'): Statement {
@@ -80,5 +84,29 @@ describe('AnswerStateStrip', () => {
 		render(<AnswerStateStrip statement={makeStatement(StatementType.option)} />);
 
 		expect(screen.getByTestId('answer-state-strip').dataset.state).toBe('notChosen');
+	});
+});
+
+describe('AnswerStateStrip score guard', () => {
+	beforeEach(() => {
+		mockParent = makeParent(['a1']);
+	});
+
+	afterEach(() => {
+		mockCanSee = true;
+	});
+
+	it('shows the chosen state to a viewer the guard allows', () => {
+		render(<AnswerStateStrip statement={makeStatement(StatementType.option)} />);
+
+		expect(screen.getByTestId('answer-state-strip')).toBeInTheDocument();
+	});
+
+	it('says nothing about being chosen to a viewer who has not rated', () => {
+		mockCanSee = false;
+
+		render(<AnswerStateStrip statement={makeStatement(StatementType.option)} />);
+
+		expect(screen.queryByTestId('answer-state-strip')).not.toBeInTheDocument();
 	});
 });

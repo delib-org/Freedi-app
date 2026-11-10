@@ -57,7 +57,7 @@ import {
 } from '../mapHelpers/detailLevel';
 import type { MapDetailState } from '../mapHelpers/useMapDetailLevel';
 import styles from './ClusterBoard.module.scss';
-import { isLiveResultsOn } from '@/helpers/liveResults';
+import { useQuestionScoreAccess } from '../../questionScreen/useAnswerScoreGate';
 
 interface Props {
 	/** Results tree from useMindMap: top = subject, sub = clusters, cluster.sub = members. */
@@ -218,7 +218,8 @@ const ClusterBoard: FC<Props> = ({
 	// The board owner (subject creator) is always an admin of the board, even
 	// before their subscription role loads — mirrors StatementTopNav.
 	const isAdmin = isAdminRole(subscription?.role) || (!!user && subject.creatorId === user.uid);
-	const showEval = isLiveResultsOn(subject);
+	const { facts } = useQuestionScoreAccess(subject);
+	const scoreViewer = { ...facts, isHost: facts.isHost || isAdmin };
 	// How participants rate options on this board — inherited from the question
 	// so the sticky notes match every other surface (reactions vs agree/disagree).
 	const ratingMode = subject.statementSettings?.ratingMode;
@@ -1221,7 +1222,7 @@ const ClusterBoard: FC<Props> = ({
 													statement={member.top}
 													color={l.color}
 													canManage={canManage(member.top)}
-													showEval={showEval}
+													scoreViewer={scoreViewer}
 													ratingMode={ratingMode}
 													isEditing={editingId === member.top.statementId}
 													onRequestEdit={() => setEditingId(member.top.statementId)}
@@ -1287,7 +1288,7 @@ const ClusterBoard: FC<Props> = ({
 																	statement={source.top}
 																	color={l.color}
 																	canManage={canManage(source.top)}
-																	showEval={showEval}
+																	scoreViewer={scoreViewer}
 																	ratingMode={ratingMode}
 																	isEditing={editingId === source.top.statementId}
 																	onRequestEdit={() => setEditingId(source.top.statementId)}

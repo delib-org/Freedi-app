@@ -4,6 +4,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { getAnswerState } from './answerState';
+import { useAnswerScoreGate } from '../questionScreen/useAnswerScoreGate';
 import styles from './AnswerStateStrip.module.scss';
 
 interface AnswerStateStripProps {
@@ -18,9 +19,10 @@ interface AnswerStateStripProps {
 const AnswerStateStrip: FC<AnswerStateStripProps> = ({ statement }) => {
 	const { t } = useTranslation();
 	const parentStatement = useAppSelector(statementSelector(statement.parentId));
+	const { canSee } = useAnswerScoreGate(statement, parentStatement);
 	const answerState = getAnswerState(statement, parentStatement);
 
-	if (answerState === 'none') return null;
+	if (answerState === 'none' || !canSee) return null;
 
 	const isChosen = answerState === 'chosen';
 	const label = isChosen ? t('answerStrip.chosen') : t('answerStrip.notChosen');

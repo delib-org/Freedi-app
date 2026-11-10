@@ -8,6 +8,9 @@ import { bulkLoadStatements } from '@/controllers/db/statements/bulkLoadStatemen
 import AgreementHub from '../AgreementHub';
 
 jest.mock('react-router', () => ({ useNavigate: () => jest.fn() }));
+jest.mock('@/view/pages/statement/components/questionScreen/useAnswerScoreGate', () => ({
+	useQuestionScoreAccess: () => ({ canSee: true, facts: {} }),
+}));
 jest.mock('../QuestionProcess', () => ({ __esModule: true, default: () => null }));
 jest.mock(
 	'@/view/pages/statement/components/settings/components/synthesisPanel/SynthesisPanel',

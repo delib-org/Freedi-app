@@ -13,6 +13,7 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { LoadAllBanner } from '@/view/components/atomic/molecules/LoadAllBanner';
 import { StatementType, Role } from '@freedi/shared-types';
+import { useQuestionScoreAccess } from '../questionScreen/useAnswerScoreGate';
 import { useParams } from 'react-router';
 import { useMindMap } from './MindMapMV';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
@@ -89,7 +90,10 @@ const MindMap: FC = () => {
 	const { mapContext, setMapContext } = useMapContext();
 	const selectedId = mapContext?.selectedId ?? null;
 
-	const [filterBy, setFilterBy] = useState<FilterType>(FilterType.questionsResultsOptions);
+	const [requestedFilter, setFilterBy] = useState<FilterType>(FilterType.questionsResultsOptions);
+	const { canSee: canSeeScores } = useQuestionScoreAccess(statement);
+	const canFilterByResults = statement?.statementType !== StatementType.question || canSeeScores;
+	const filterBy = canFilterByResults ? requestedFilter : FilterType.questionsResultsOptions;
 
 	// Add loading state tracking
 	const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -197,27 +201,29 @@ const MindMap: FC = () => {
 			{/* What the full-screen control expands (see useMapFullScreen). */}
 			<div className={styles.mapScreen} data-map-root>
 				<div className={styles.controls}>
-					<div className={styles.filterToggle}>
-						<span className={styles.filterLabel}>
-							{showOnlySelected ? t('Selected only') : t('All')}
-						</span>
-						<button
-							type="button"
-							role="switch"
-							aria-checked={showOnlySelected}
-							aria-label={t('Show only selected options')}
-							className={`${styles.toggleSwitch} ${showOnlySelected ? styles.toggleSwitchActive : ''}`}
-							onClick={() =>
-								setFilterBy(
-									showOnlySelected
-										? FilterType.questionsResultsOptions
-										: FilterType.questionsResults,
-								)
-							}
-						>
-							<span className={styles.toggleKnob} />
-						</button>
-					</div>
+					{canFilterByResults && (
+						<div className={styles.filterToggle}>
+							<span className={styles.filterLabel}>
+								{showOnlySelected ? t('Selected only') : t('All')}
+							</span>
+							<button
+								type="button"
+								role="switch"
+								aria-checked={showOnlySelected}
+								aria-label={t('Show only selected options')}
+								className={`${styles.toggleSwitch} ${showOnlySelected ? styles.toggleSwitchActive : ''}`}
+								onClick={() =>
+									setFilterBy(
+										showOnlySelected
+											? FilterType.questionsResultsOptions
+											: FilterType.questionsResults,
+									)
+								}
+							>
+								<span className={styles.toggleKnob} />
+							</button>
+						</div>
+					)}
 					{hasClusters && (
 						<MapDetailControl
 							level={detail.level}

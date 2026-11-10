@@ -17,6 +17,7 @@ import ChatMessageMenu from '@/view/pages/statement/components/chat/components/c
 import Evaluation from '@/view/pages/statement/components/evaluations/components/evaluation/Evaluation';
 import { useBookmark } from '@/controllers/hooks/useBookmark';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+import { useAnswerScoreGate } from '../../../questionScreen/useAnswerScoreGate';
 import {
 	regenerateSynthesisProposal,
 	reverseIntegration,
@@ -72,6 +73,7 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 	// Authorize against the parent so admin actions on the imported question
 	// (regenerate / reverse synthesis) authorize via the parent subscription.
 	const { isAdmin: isParentAdmin } = useAuthorization(statement.parentId);
+	const { canSee: canSeeResultMark } = useAnswerScoreGate(statement, parentStatement);
 
 	const [isEdit, setIsEdit] = useState(false);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
@@ -208,8 +210,9 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 	}, [onToggleChildren]);
 
 	const isInResults =
-		parentStatement?.results?.some((result) => result.statementId === statement.statementId) ??
-		false;
+		canSeeResultMark &&
+		(parentStatement?.results?.some((result) => result.statementId === statement.statementId) ??
+			false);
 
 	const paragraphsKey = (statement.paragraphs ?? []).map((p) => p.content).join('\n');
 	const isFailed = statement.joinStatus === 'failed';

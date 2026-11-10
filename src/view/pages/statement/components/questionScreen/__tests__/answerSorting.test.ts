@@ -10,7 +10,7 @@ import {
 describe('answerSorting', () => {
 	describe('getAnswerSortOptions', () => {
 		it('offers newest, most updated, random and agreement by default', () => {
-			const ids = getAnswerSortOptions({ showEvaluation: true, joiningEnabled: false }).map(
+			const ids = getAnswerSortOptions({ canSortByScore: true, joiningEnabled: false }).map(
 				(o) => o.id,
 			);
 			expect(ids).toEqual([
@@ -21,8 +21,16 @@ describe('answerSorting', () => {
 			]);
 		});
 
+		it('offers no score order to a viewer who may not see scores', () => {
+			const ids = getAnswerSortOptions({ canSortByScore: false, joiningEnabled: false }).map(
+				(o) => o.id,
+			);
+			expect(ids).not.toContain(SortType.accepted);
+			expect(ids).not.toContain(SortType.averageEvaluation);
+		});
+
 		it('drops agreement when ratings are not shown', () => {
-			const ids = getAnswerSortOptions({ showEvaluation: false, joiningEnabled: false }).map(
+			const ids = getAnswerSortOptions({ canSortByScore: false, joiningEnabled: false }).map(
 				(o) => o.id,
 			);
 			expect(ids).not.toContain(SortType.accepted);
@@ -30,7 +38,7 @@ describe('answerSorting', () => {
 		});
 
 		it('swaps most updated for most joined when joining is enabled', () => {
-			const ids = getAnswerSortOptions({ showEvaluation: true, joiningEnabled: true }).map(
+			const ids = getAnswerSortOptions({ canSortByScore: true, joiningEnabled: true }).map(
 				(o) => o.id,
 			);
 			expect(ids).toContain(SortType.mostJoined);
@@ -38,7 +46,7 @@ describe('answerSorting', () => {
 		});
 
 		it('gives every option a translation key', () => {
-			for (const option of getAnswerSortOptions({ showEvaluation: true, joiningEnabled: true })) {
+			for (const option of getAnswerSortOptions({ canSortByScore: true, joiningEnabled: true })) {
 				expect(option.labelKey.length).toBeGreaterThan(0);
 			}
 		});
@@ -59,13 +67,19 @@ describe('answerSorting', () => {
 					paramSort: SortType.random,
 					defaultSort: SortType.accepted,
 					hasManualOrder: true,
+					canSortByScore: true,
 				}),
 			).toEqual({ kind: 'sort', sort: SortType.random });
 		});
 
 		it('ignores an unknown route param', () => {
 			expect(
-				resolveCurrentSort({ paramSort: 'bogus', defaultSort: undefined, hasManualOrder: false }),
+				resolveCurrentSort({
+					paramSort: 'bogus',
+					defaultSort: undefined,
+					hasManualOrder: false,
+					canSortByScore: true,
+				}),
 			).toEqual({ kind: 'sort', sort: SortType.newest });
 		});
 
@@ -75,6 +89,7 @@ describe('answerSorting', () => {
 					paramSort: undefined,
 					defaultSort: SortType.newest,
 					hasManualOrder: true,
+					canSortByScore: true,
 				}),
 			).toEqual({ kind: 'manual' });
 		});
@@ -85,11 +100,50 @@ describe('answerSorting', () => {
 					paramSort: undefined,
 					defaultSort: SortType.accepted,
 					hasManualOrder: false,
+					canSortByScore: true,
 				}),
 			).toEqual({ kind: 'sort', sort: SortType.accepted });
 			expect(
-				resolveCurrentSort({ paramSort: undefined, defaultSort: undefined, hasManualOrder: false }),
+				resolveCurrentSort({
+					paramSort: undefined,
+					defaultSort: undefined,
+					hasManualOrder: false,
+					canSortByScore: true,
+				}),
 			).toEqual({ kind: 'sort', sort: SortType.newest });
+		});
+
+		it('ignores an agreement sort in the URL for a viewer who may not see scores', () => {
+			expect(
+				resolveCurrentSort({
+					paramSort: SortType.accepted,
+					defaultSort: undefined,
+					hasManualOrder: false,
+					canSortByScore: false,
+				}),
+			).toEqual({ kind: 'sort', sort: SortType.newest });
+		});
+
+		it('does not let a saved agreement default rank the list for that viewer', () => {
+			expect(
+				resolveCurrentSort({
+					paramSort: undefined,
+					defaultSort: SortType.accepted,
+					hasManualOrder: false,
+					canSortByScore: false,
+				}),
+			).toEqual({ kind: 'sort', sort: SortType.newest });
+		});
+
+		it('keeps the host order for that viewer, since it does not come from scores', () => {
+			expect(
+				resolveCurrentSort({
+					paramSort: SortType.accepted,
+					defaultSort: undefined,
+					hasManualOrder: true,
+					canSortByScore: false,
+				}),
+			).toEqual({ kind: 'manual' });
 		});
 	});
 

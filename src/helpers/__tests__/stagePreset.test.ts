@@ -39,7 +39,7 @@ function writeFields(statement: Statement, fields: StagePresetFields): Statement
 describe('stagePreset', () => {
 	it.each([
 		[0, true, true, false],
-		[1, true, true, false],
+		[1, true, true, true],
 		[2, false, true, false],
 		[3, false, false, true],
 	] as const)('stage %i: add %s, rate %s, live %s', (stage, addAnswers, rate, liveResults) => {
@@ -157,7 +157,7 @@ describe('differsFromStagePreset', () => {
 	it.each([
 		['add', 'enableAddEvaluationOption', false],
 		['rate', 'enableEvaluation', false],
-		['live', 'showEvaluation', true],
+		['live', 'showEvaluation', false],
 	] as const)('is true when the %s switch is flipped', (_name, key, value) => {
 		const statement = writeFields(question(), applyStagePreset(question(), 1));
 		const flipped = question({

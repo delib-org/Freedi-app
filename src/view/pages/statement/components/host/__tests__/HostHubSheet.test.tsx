@@ -69,12 +69,12 @@ describe('HostHubSheet stage preset', () => {
 	});
 
 	it('shows no status line while the switches match the stage', () => {
-		renderSheet(makeStatement(false));
+		renderSheet(makeStatement(true));
 		expect(screen.queryByTestId('host-stage-differs')).not.toBeInTheDocument();
 	});
 
 	it('restores the current stage from the status line', async () => {
-		const statement = makeStatement(true);
+		const statement = makeStatement(false);
 		renderSheet(statement);
 		expect(screen.getByText('host.stageDiffers')).toBeInTheDocument();
 

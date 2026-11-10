@@ -2,7 +2,9 @@ import { FC, useContext, useState } from 'react';
 import { getStepsInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/helpers';
 import StatementInfo from './components/info/StatementInfo';
 import VotingArea from './components/votingArea/VotingArea';
-import { useOptimisticVotes } from './useOptimisticVotes';
+import { NO_VOTE, useOptimisticVotes } from './useOptimisticVotes';
+import { useQuestionScoreAccess } from '../questionScreen/useAnswerScoreGate';
+import { canSeeVoteTallies } from '../questionScreen/canSeeScore';
 import HandIcon from '@/assets/icons/handIcon.svg?react';
 import X from '@/assets/icons/x.svg?react';
 
@@ -52,6 +54,8 @@ const StatementVote: FC = () => {
 	// * Variables * //
 	const { selectionsById, totalVotes, votedOptionId, castVote, voteCountedId, dismissVoteCounted } =
 		useOptimisticVotes(statement);
+	const { facts: scoreFacts } = useQuestionScoreAccess(statement);
+	const showTallies = canSeeVoteTallies(scoreFacts, votedOptionId !== NO_VOTE);
 
 	return (
 		<>
@@ -71,11 +75,14 @@ const StatementVote: FC = () => {
 						/>
 					</Toast>
 				)}
-				<div className={styles.numberOfVotesMark}>
-					<HandIcon /> {totalVotes}
-				</div>
+				{showTallies && (
+					<div className={styles.numberOfVotesMark}>
+						<HandIcon /> {totalVotes}
+					</div>
+				)}
 				<VotingArea
 					totalVotes={totalVotes}
+					showTallies={showTallies}
 					selectionsById={selectionsById}
 					votedOptionId={votedOptionId}
 					castVote={castVote}

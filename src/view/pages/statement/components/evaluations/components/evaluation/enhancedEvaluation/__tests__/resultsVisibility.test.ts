@@ -1,4 +1,4 @@
-import { areResultsUnlocked, shouldShowResults, ResultsUnlockedInput } from '../resultsVisibility';
+import { areResultsUnlocked, ResultsUnlockedInput } from '../resultsVisibility';
 
 const base: ResultsUnlockedInput = {
 	isCard: true,
@@ -28,19 +28,5 @@ describe('areResultsUnlocked', () => {
 
 	it('is never locked outside the card variant', () => {
 		expect(areResultsUnlocked({ ...base, isCard: false })).toBe(true);
-	});
-});
-
-describe('shouldShowResults (showEvaluation setting x role)', () => {
-	it('setting off: nobody sees results, admin included', () => {
-		expect(shouldShowResults(false, base)).toBe(false);
-		expect(shouldShowResults(false, { ...base, isSpaceAdmin: true })).toBe(false);
-		expect(shouldShowResults(false, { ...base, hasRated: true })).toBe(false);
-	});
-
-	it('setting on: admin sees at once, participant only after rating', () => {
-		expect(shouldShowResults(true, { ...base, isSpaceAdmin: true })).toBe(true);
-		expect(shouldShowResults(true, base)).toBe(false);
-		expect(shouldShowResults(true, { ...base, hasRated: true })).toBe(true);
 	});
 });

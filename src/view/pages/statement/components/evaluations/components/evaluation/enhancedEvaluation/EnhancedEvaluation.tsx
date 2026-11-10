@@ -16,16 +16,11 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
 import { useSelector } from 'react-redux';
-import {
-	statementSelectorById,
-	statementSubscriptionSelector,
-} from '@/redux/statements/statementsSlice';
-import { isAdmin as isAdminRole } from '@/controllers/general/helpers';
-import { shouldShowResults, shouldShowRevealHint } from './resultsVisibility';
+import { statementSelectorById } from '@/redux/statements/statementsSlice';
+import { useAnswerScoreGate } from '../../../../questionScreen/useAnswerScoreGate';
 import { ResultsStrip } from '@/view/components/atomic/molecules/ResultsStrip';
 import { EvaluationCircle, EvaluationCircleRow } from '../shared/EvaluationCircle';
 import { FaceIcon } from '@/view/components/atomic/atoms/FaceIcon';
-import { isLiveResultsOn } from '@/helpers/liveResults';
 
 export type EnhancedEvaluationVariant = 'default' | 'card';
 
@@ -59,18 +54,11 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 
 	// Get parent statement for settings
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
-	const showEvaluation = isLiveResultsOn(parentStatement);
 
 	// Cross-app evaluation mode: reactions (positive 0..1 emoji) or the default
 	// agree-disagree faces. Read from the same shared statementSettings.ratingMode.
 	const ratingMode = parentStatement?.statementSettings?.ratingMode;
 	const thumbs = ratingMode === 'reactions' ? reactionEvaluationsThumbs : enhancedEvaluationsThumbs;
-
-	// Admin of the space (top parent subscription), same check the cluster map uses.
-	const spaceSubscription = useAppSelector(
-		statementSubscriptionSelector(statement.topParentId ?? statement.parentId),
-	);
-	const isSpaceAdmin = isAdminRole(spaceSubscription?.role);
 
 	const evaluationScore = useAppSelector(evaluationSelector(statement.statementId));
 	const [optimisticScore, setOptimisticScore] = useState<number | undefined>(evaluationScore);
@@ -95,17 +83,10 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	const isRound = isCard || compact;
 	const hasRated = optimisticScore !== undefined;
 	const isOwnAnswer = isCard && !!creator?.uid && statement.creatorId === creator.uid;
-	// On a card, results wait for your own rating so they cannot anchor it —
-	// except where you cannot rate at all (your own answer, rating disabled).
-	// Admins of the space see the score right away.
-	const visibilityInput = {
-		isCard,
-		isOwnAnswer,
+	// `hasRated` is the optimistic score, so the result opens on the tap itself.
+	const { canSee: showResults, showRevealHint } = useAnswerScoreGate(statement, parentStatement, {
 		hasRated,
-		evaluationDisabled: !enableEvaluation,
-		isSpaceAdmin,
-	};
-	const showResults = shouldShowResults(showEvaluation, visibilityInput);
+	});
 
 	const thumbNodes = options.map((option) => (
 		<EvaluationThumb
@@ -162,7 +143,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 					inline={compact}
 				/>
 			)}
-			{shouldShowRevealHint(showEvaluation, visibilityInput) && (
+			{showRevealHint && (
 				<p className={styles['reveal-hint']} data-testid="results-reveal-hint">
 					{t('The result will be revealed after you rate')}
 				</p>

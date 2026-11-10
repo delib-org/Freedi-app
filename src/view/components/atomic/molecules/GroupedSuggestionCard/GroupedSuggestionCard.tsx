@@ -21,6 +21,7 @@ import type { RootState } from '@/redux/store';
 import { useGroupMembers } from '@/controllers/hooks/useGroupMembers';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import ScoreBreakdown from './ScoreBreakdown';
+import { useAnswerScoreGate } from '@/view/pages/statement/components/questionScreen/useAnswerScoreGate';
 import CollapsibleDetails from './CollapsibleDetails';
 import { useSynthesisAdminActions } from './useSynthesisAdminActions';
 
@@ -90,6 +91,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	// Authorize against the parent deliberation: a creator/admin of the
 	// parent (or any ancestor in the trust chain) can reverse / regenerate.
 	const { isAdmin } = useAuthorization(cluster.parentId);
+	const { canSee: canSeeScores } = useAnswerScoreGate(cluster);
 
 	const integratedOptions = useMemo(
 		() => cluster.integratedOptions ?? [],
@@ -268,7 +270,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 
 	const detailsContent = (
 		<>
-			{evaluation && (
+			{evaluation && canSeeScores && (
 				<>
 					<div
 						className={clsx(
@@ -318,7 +320,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 				</>
 			)}
 
-			<ScoreBreakdown clusterId={cluster.statementId} />
+			{canSeeScores && <ScoreBreakdown clusterId={cluster.statementId} />}
 
 			{drawerVisible && (
 				<button

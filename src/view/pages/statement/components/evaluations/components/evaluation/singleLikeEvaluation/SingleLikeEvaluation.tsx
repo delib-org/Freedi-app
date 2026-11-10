@@ -16,6 +16,7 @@ import { Tooltip } from '@/view/components/tooltip/Tooltip';
 import { logError } from '@/utils/errorHandling';
 import { getPseudoName } from '@/utils/temporalNameGenerator';
 import { EvaluationCircle, EvaluationCircleRow } from '../shared/EvaluationCircle';
+import ScoreRevealHint from '../shared/ScoreRevealHint';
 import { enhancedEvaluationsThumbs } from '../enhancedEvaluation/EnhancedEvaluationModel';
 import type { EvaluationVariant } from '../Evaluation';
 import LikeChips from './LikeChips';
@@ -24,6 +25,8 @@ interface Props {
 	statement: Statement;
 	parentStatement?: Statement;
 	shouldDisplayScore?: boolean;
+	/** Say that the score appears after rating, where it would have been. */
+	showRevealHint?: boolean;
 	enableEvaluation?: boolean;
 	/** 'card' = Join's look: one filled face, results as chips. */
 	variant?: EvaluationVariant;
@@ -33,6 +36,7 @@ const SingleLikeEvaluation: FC<Props> = ({
 	statement,
 	parentStatement,
 	shouldDisplayScore = true,
+	showRevealHint = false,
 	enableEvaluation = true,
 	variant = 'default',
 }) => {
@@ -229,6 +233,7 @@ const SingleLikeEvaluation: FC<Props> = ({
 						showPercentage={totalEvaluators > 0}
 					/>
 				)}
+				{showRevealHint && <ScoreRevealHint />}
 				{modals}
 			</div>
 		);
@@ -262,6 +267,8 @@ const SingleLikeEvaluation: FC<Props> = ({
 					/>
 				</div>
 			)}
+
+			{showRevealHint && <ScoreRevealHint />}
 
 			{modals}
 		</div>

@@ -5,6 +5,7 @@ import { useCompoundPhase } from '@/controllers/hooks/compoundQuestion/useCompou
 import { useCompoundSolutions } from '@/controllers/hooks/compoundQuestion/useCompoundSolutions';
 import { createSolutionQuestion } from '@/controllers/db/compoundQuestion/createSolutionQuestion';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import ScoreGate from '../../../../questionScreen/ScoreGate';
 import styles from '../CompoundQuestion.module.scss';
 
 const FindSolutionsPhase: FC = () => {
@@ -79,9 +80,11 @@ const FindSolutionsPhase: FC = () => {
 								<div key={solution.statementId} className={styles.solutionCard}>
 									<div className={styles.solutionContent}>
 										<h4 className={styles.solutionTitle}>{solution.statement}</h4>
-										<span className={styles.solutionConsensus}>
-											{Math.round((solution.consensus ?? 0) * 100)}% {t('Agreement score')}
-										</span>
+										<ScoreGate answer={solution}>
+											<span className={styles.solutionConsensus}>
+												{Math.round((solution.consensus ?? 0) * 100)}% {t('Agreement score')}
+											</span>
+										</ScoreGate>
 									</div>
 								</div>
 							))}

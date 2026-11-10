@@ -14,7 +14,8 @@ import { statementSelectorById } from '@/redux/statements/statementsSlice';
 import { ResultsStrip } from '@/view/components/atomic/molecules/ResultsStrip';
 import { EvaluationCircle, EvaluationCircleRow } from '../shared/EvaluationCircle';
 import type { EvaluationVariant } from '../Evaluation';
-import { isLiveResultsOn } from '@/helpers/liveResults';
+import ScoreRevealHint from '../shared/ScoreRevealHint';
+import { useAnswerScoreGate } from '../../../../questionScreen/useAnswerScoreGate';
 
 interface CommunityVoiceEvaluationProps {
 	statement: Statement;
@@ -31,7 +32,7 @@ const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 	const { learning, t } = useUserConfig();
 
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
-	const showEvaluation = isLiveResultsOn(parentStatement);
+	const { canSee: showEvaluation, showRevealHint } = useAnswerScoreGate(statement, parentStatement);
 
 	const evaluationScore = useAppSelector(evaluationSelector(statement.statementId));
 
@@ -54,6 +55,7 @@ const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 					))}
 				</EvaluationCircleRow>
 				{showEvaluation && <ResultsStrip statement={statement} variant="chips" />}
+				{showRevealHint && <ScoreRevealHint />}
 			</div>
 		);
 	}
@@ -78,6 +80,7 @@ const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 			    numbers every other evaluation mode now shows. */}
 			<div className={styles['evaluation-score']}>
 				{showEvaluation && <ResultsStrip statement={statement} />}
+				{showRevealHint && <ScoreRevealHint />}
 			</div>
 		</div>
 	);

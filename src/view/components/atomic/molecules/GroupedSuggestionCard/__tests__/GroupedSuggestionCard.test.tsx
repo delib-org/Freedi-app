@@ -4,6 +4,8 @@ import { MemoryRouter } from 'react-router';
 import { Statement } from '@freedi/shared-types';
 import GroupedSuggestionCard from '../GroupedSuggestionCard';
 
+let mockCanSee = true;
+
 jest.mock('@/controllers/hooks/useTranslation', () => ({
 	useTranslation: () => ({ t: (key: string) => key, dir: 'ltr' }),
 }));
@@ -19,6 +21,9 @@ jest.mock('@/controllers/hooks/useAuthorization', () => ({
 jest.mock('@/controllers/db/integration/integrationController', () => ({
 	reverseIntegration: jest.fn(),
 	regenerateSynthesisProposal: jest.fn(),
+}));
+jest.mock('@/view/pages/statement/components/questionScreen/useAnswerScoreGate', () => ({
+	useAnswerScoreGate: () => ({ canSee: mockCanSee, showRevealHint: false }),
 }));
 jest.mock('../ScoreBreakdown', () => ({
 	__esModule: true,
@@ -127,6 +132,31 @@ describe('GroupedSuggestionCard (synthesis)', () => {
 
 		expect(screen.queryByText('Agreement score', { exact: false })).toBeNull();
 		expect(screen.getByText('+38')).toBeTruthy();
+	});
+});
+
+describe('GroupedSuggestionCard score guard', () => {
+	afterEach(() => {
+		mockCanSee = true;
+	});
+
+	it('shows no numbers to a viewer who has not rated', () => {
+		mockCanSee = false;
+
+		render(
+			<MemoryRouter>
+				<GroupedSuggestionCard
+					cluster={{ ...SYNTHESIS, consensus: 0.21 } as unknown as Statement}
+					mode="both"
+					allowDrillToOriginals
+					pipeline="synthesis"
+				/>
+			</MemoryRouter>,
+		);
+		fireEvent.click(screen.getByRole('button', { name: 'Details' }));
+
+		expect(screen.queryByText('Agreement score', { exact: false })).toBeNull();
+		expect(screen.queryByText('People who rated', { exact: false })).toBeNull();
 	});
 });
 
