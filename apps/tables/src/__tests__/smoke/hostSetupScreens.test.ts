@@ -72,6 +72,39 @@ describe('Setup', () => {
 		}
 	});
 
+	it('does not rewrite the address when the page was left before the session was created', async () => {
+		let finishCreate: (value: { session: ReturnType<typeof makeSession> }) => void = () =>
+			undefined;
+
+		mocks.api.createSession.mockReturnValue(
+			new Promise((resolve) => {
+				finishCreate = resolve;
+			}),
+		);
+		mocks.api.saveSettings.mockResolvedValue({ settings: {} });
+		mocks.api.saveTopics.mockResolvedValue({ topicIds: [] });
+		const replaceState = vi.spyOn(window.history, 'replaceState');
+
+		vi.useFakeTimers({ shouldAdvanceTime: true });
+
+		try {
+			const { root } = await renderScreen(HostNew, {});
+
+			typeInto(root.querySelector('#setup-name') as HTMLInputElement, 'Town hall');
+			await vi.advanceTimersByTimeAsync(2000);
+			expect(mocks.api.createSession).toHaveBeenCalled();
+
+			m.mount(root, null);
+			finishCreate({ session: makeSession() });
+			await vi.advanceTimersByTimeAsync(2000);
+
+			expect(replaceState).not.toHaveBeenCalled();
+		} finally {
+			replaceState.mockRestore();
+			vi.useRealTimers();
+		}
+	});
+
 	it('opens a draft with its stored values and keeps explanations when saving', async () => {
 		mocks.store.current.topics = [makeTopic('a', 0, { description: 'Keep me', maxTables: 2 })];
 		mocks.api.saveTopics.mockResolvedValue({ topicIds: ['a'] });

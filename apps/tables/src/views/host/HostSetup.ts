@@ -10,6 +10,7 @@ import { tablesApi } from '@/lib/tableAssignment/client';
 import { Autosaver } from '@/logic/autosave';
 import type { SaveOutcome } from '@/logic/autosave';
 import { clearSetupBackup, readSetupBackup, writeSetupBackup } from '@/logic/setupBackup';
+import type { BackupScope } from '@/logic/setupBackup';
 import {
 	emptySetupDraft,
 	filledTopics,
@@ -29,6 +30,8 @@ import { SetupTopics } from '@/views/host/SetupTopics';
 import { hostHomePath, hostListPath } from '@/paths';
 
 export interface SetupBodyAttrs {
+	/** The signed-in host: a saved copy of the page belongs to one host. */
+	uid: string;
 	/** Null on `/host/new`, until the name is first saved. */
 	sessionId: string | null;
 	session?: TableAssignment;
@@ -43,19 +46,41 @@ const OPERATION = 'tables.host.setup';
 
 function initialDraft(attrs: SetupBodyAttrs): SetupDraft {
 	return (
-		readSetupBackup(safeStorage, attrs.sessionId) ??
+		readSetupBackup(
+			safeStorage,
+			{ uid: attrs.uid, sessionId: attrs.sessionId },
+			attrs.session?.lastUpdate ?? null,
+		) ??
 		(attrs.session ? setupDraftFromSession(attrs.session, attrs.topics ?? []) : emptySetupDraft())
 	);
 }
 
 /** The whole gathering on one page, saved as it is typed. */
 export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) => {
+	const { uid } = first;
 	let sessionId = first.sessionId;
-	const hadBackup = readSetupBackup(safeStorage, sessionId) !== null;
+	// The server's lastUpdate the saved copy sits on top of; it follows the live session.
+	let serverUpdate: number | null = first.session?.lastUpdate ?? null;
 	const draft = initialDraft(first);
+	const hadBackup = readSetupBackup(safeStorage, { uid, sessionId }, serverUpdate) !== null;
+	/** Set in onremove: a save that finishes after the page is gone must not touch the address. */
+	let removed = false;
 	let creating: Promise<string> | null = null;
 	const open = new Action('tables.host.openRegistration', 'tableAssignment.error.statusRefused');
 	let openErrorKey: string | null = null;
+
+	function backupScope(): BackupScope {
+		return { uid, sessionId };
+	}
+
+	/** A save of ours moved the server's lastUpdate on; the answer does not carry it, so use the clock. */
+	function noteOwnSave(): void {
+		serverUpdate = Math.max(serverUpdate ?? 0, Date.now());
+	}
+
+	function saveBackup(): void {
+		writeSetupBackup(safeStorage, backupScope(), draft, serverUpdate);
+	}
 
 	function createSession(title: string): Promise<string> {
 		creating ??= tablesApi
@@ -63,10 +88,11 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 			.then((result) => {
 				const id = result.session.tableAssignmentId;
 
-				clearSetupBackup(safeStorage, sessionId);
+				clearSetupBackup(safeStorage, backupScope());
 				sessionId = id;
-				rewriteAddress(hostHomePath(id));
-				writeSetupBackup(safeStorage, id, draft);
+				serverUpdate = result.session.lastUpdate;
+				if (!removed) rewriteAddress(hostHomePath(id));
+				saveBackup();
 				// Whatever was typed before the name existed goes up now.
 				saver.touch('settings');
 				saver.touch('topics');
@@ -97,6 +123,7 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 
 		if (id === null) return 'blocked';
 		if (existed) await tablesApi.saveSettings({ sessionId: id, title });
+		noteOwnSave();
 
 		return 'saved';
 	}
@@ -107,6 +134,7 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 
 		if (request === null) return 'blocked';
 		await tablesApi.saveSettings(request);
+		noteOwnSave();
 
 		return 'saved';
 	}
@@ -131,12 +159,13 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 		const result = await tablesApi.saveTopics({ sessionId: id, topics: topicInputs(draft) });
 
 		adoptTopicIds(sent, result.topicIds);
+		noteOwnSave();
 
 		return 'saved';
 	}
 
 	function afterSaveChange(): void {
-		if (saver.state === 'saved' && !saver.hasUnsaved) clearSetupBackup(safeStorage, sessionId);
+		if (saver.state === 'saved' && !saver.hasUnsaved) clearSetupBackup(safeStorage, backupScope());
 		m.redraw();
 	}
 
@@ -147,7 +176,7 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 	);
 
 	function changed(kind: SaveKind): void {
-		writeSetupBackup(safeStorage, sessionId, draft);
+		saveBackup();
 		openErrorKey = null;
 		saver.touch(kind);
 	}
@@ -181,7 +210,7 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 		);
 
 		if (opened) {
-			clearSetupBackup(safeStorage, id);
+			clearSetupBackup(safeStorage, { uid, sessionId: id });
 			goTo(hostHomePath(id));
 		}
 	}
@@ -267,7 +296,16 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 			window.addEventListener('beforeunload', warnIfUnsaved);
 			document.addEventListener('visibilitychange', flushWhenHidden);
 		},
+		onupdate({ attrs }) {
+			const latest = attrs.session?.lastUpdate;
+
+			if (latest === undefined || latest === serverUpdate) return;
+			serverUpdate = latest;
+			// Unsaved edits sit on top of the newest server copy, or a reload would drop them.
+			if (saver.hasUnsaved && sessionId) saveBackup();
+		},
 		onremove() {
+			removed = true;
 			window.removeEventListener('beforeunload', warnIfUnsaved);
 			document.removeEventListener('visibilitychange', flushWhenHidden);
 			void saver.flush();
@@ -323,8 +361,8 @@ export const HostNew: m.Component = {
 			title: t('tableAssignment.setup.title'),
 			backHref,
 			wide: true,
-			render: () =>
-				m(Shell, { backHref, backLabel, wide: true }, m(SetupBody, { sessionId: null })),
+			render: (uid: string) =>
+				m(Shell, { backHref, backLabel, wide: true }, m(SetupBody, { uid, sessionId: null })),
 		});
 	},
 };
