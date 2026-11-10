@@ -428,6 +428,7 @@ describe('tablesRemoveParticipant', () => {
 
 	it('makes a ready preview stale: publishing it is refused like after a new registration', async () => {
 		const fake = ranked('registrationClosed');
+		seedRegistration(fake, 'u5', { preferences: ['a'] });
 		const fs = fake.asFirestore();
 		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 7 }, NOW);
 		await removeParticipant(fs, HOST, { sessionId: SID, uid: 'u4' });
@@ -441,6 +442,8 @@ describe('tablesRemoveParticipant', () => {
 
 	it('a preview computed after the removal can be published', async () => {
 		const fake = ranked('registrationClosed');
+		seedRegistration(fake, 'u5', { preferences: ['a'] });
+		seedRegistration(fake, 'u6', { preferences: ['a'] });
 		const fs = fake.asFirestore();
 		await removeParticipant(fs, HOST, { sessionId: SID, uid: 'u4' });
 		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 7 }, NOW);
@@ -497,7 +500,7 @@ describe('compute and publish with name cards present', () => {
 		const fake = new FakeFirestore();
 		seedSession(fake, { status: 'registrationClosed' });
 		seedTopics(fake, ['a', 'b']);
-		['u1', 'u2', 'u3', 'u4'].forEach((uid, index) =>
+		['u1', 'u2', 'u3', 'u4', 'u5'].forEach((uid, index) =>
 			seedRegistration(fake, uid, { preferences: ['a'], position: index * 20 }),
 		);
 		const fs = fake.asFirestore();
@@ -512,7 +515,9 @@ describe('compute and publish with name cards present', () => {
 		seedSession(fake, { status: 'published', publishedRunId: 'old' });
 		seedPublishedRun(fake, 'old', []);
 		seedTopics(fake, ['a', 'b']);
-		['u1', 'u2', 'u3', 'u4'].forEach((uid) => seedRegistration(fake, uid, { preferences: ['a'] }));
+		['u1', 'u2', 'u3', 'u4', 'u5'].forEach((uid) =>
+			seedRegistration(fake, uid, { preferences: ['a'] }),
+		);
 		const fs = fake.asFirestore();
 		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 3 }, NOW);
 		await register(fs, 'u1', { sessionId: SID, fullName: 'New Name' });

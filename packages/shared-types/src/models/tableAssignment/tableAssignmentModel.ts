@@ -15,6 +15,7 @@ import {
 	string,
 } from 'valibot';
 import { SideValueSchema } from '../classroom/classroomModel';
+import { TableAssignmentClosenessSchema } from './tableAssignmentCloseness';
 
 /**
  * Tables (שולחנות): shared table-assignment product. Data model.
@@ -209,7 +210,10 @@ export const TableAssignmentRunTableSchema = object({
 	index: NonNegativeIntSchema,
 	topicId: string(),
 	memberUids: array(string()),
+	/** Always empty on runs computed now; older documents may still hold figures. */
 	stats: TableAssignmentTableStatsSchema,
+	/** How close this table is to the room. Host previews only; absent on published and older runs. */
+	closeness: optional(TableAssignmentClosenessSchema),
 });
 export type TableAssignmentRunTable = InferOutput<typeof TableAssignmentRunTableSchema>;
 
@@ -235,11 +239,17 @@ const PreferenceMetricsSchema = object({
 	maxScore: number(),
 });
 
-/** Same shape as the engine's AssignmentMetrics (packages/table-assignment). */
+/**
+ * What a run stores about the room. `population` and `balance.max/mean` are
+ * written empty (0 and []) so no figure about positions is ever stored; older
+ * documents may still hold figures. `preferences` is empty on a published run.
+ */
 export const TableAssignmentMetricsSchema = object({
 	population: PopulationStatsSchema,
 	balance: BalanceMetricsSchema,
 	preferences: PreferenceMetricsSchema,
+	/** At least three people gave a position. Absent on older runs. */
+	hasEnoughPositions: optional(boolean()),
 });
 export type TableAssignmentMetrics = InferOutput<typeof TableAssignmentMetricsSchema>;
 

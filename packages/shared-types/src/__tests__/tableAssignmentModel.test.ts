@@ -16,6 +16,7 @@ import {
 	tableAssignmentNameKey,
 	tableAssignmentParticipantId,
 } from '../models/tableAssignment/tableAssignmentModel';
+import { tableAssignmentCloseness } from '../models/tableAssignment/tableAssignmentCloseness';
 
 const NOW = 1_700_000_000_000;
 
@@ -150,6 +151,43 @@ describe('TableAssignmentRunSchema', () => {
 
 	it('rejects an unknown run status', () => {
 		expect(safeParse(TableAssignmentRunSchema, { ...valid, status: 'draft' }).success).toBe(false);
+	});
+
+	it('parses a run in the stored shape: closeness per table, empty figures', () => {
+		const empty = { n: 0, mean: [], sd: [], deviation: 0 };
+		const stored = {
+			...valid,
+			tables: [{ ...valid.tables[0], stats: empty, closeness: 'close' }],
+			metrics: {
+				...valid.metrics,
+				population: { n: 0, mean: [], sd: [] },
+				balance: { max: 0, mean: 0, tolerance: 0.3, withinTolerance: true },
+				hasEnoughPositions: true,
+			},
+		};
+
+		expect(safeParse(TableAssignmentRunSchema, stored).success).toBe(true);
+	});
+
+	it('rejects an unknown closeness', () => {
+		const tables = [{ ...valid.tables[0], closeness: 'near' }];
+
+		expect(safeParse(TableAssignmentRunSchema, { ...valid, tables }).success).toBe(false);
+	});
+});
+
+describe('tableAssignmentCloseness', () => {
+	const tolerance = 0.3;
+
+	it('says nothing below three known positions, however far the table is', () => {
+		expect(tableAssignmentCloseness({ n: 2, deviation: 5 }, tolerance)).toBe('notEnough');
+	});
+
+	it('reads very close up to half the tolerance, close up to the tolerance, far past it', () => {
+		expect(tableAssignmentCloseness({ n: 3, deviation: 0.15 }, tolerance)).toBe('veryClose');
+		expect(tableAssignmentCloseness({ n: 3, deviation: 0.16 }, tolerance)).toBe('close');
+		expect(tableAssignmentCloseness({ n: 3, deviation: 0.3 }, tolerance)).toBe('close');
+		expect(tableAssignmentCloseness({ n: 3, deviation: 0.31 }, tolerance)).toBe('far');
 	});
 });
 

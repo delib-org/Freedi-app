@@ -1,5 +1,5 @@
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
-import type { Firestore } from 'firebase-admin/firestore';
+import type { DocumentSnapshot, Firestore } from 'firebase-admin/firestore';
 import { TableAssignmentError, assignTables } from '@freedi/table-assignment';
 import type { Participant, Topic } from '@freedi/table-assignment';
 import { functionConfig } from '@freedi/shared-types';
@@ -10,12 +10,16 @@ import type {
 	TablesComputePreviewResponse,
 } from '@freedi/shared-types';
 import { db } from '../db';
+import { MAX_PREVIEWS_PER_ANSWERS, MIN_REGISTRANTS_FOR_PREVIEW } from './constants';
 import { coarseRunFields } from './runPrivacy';
 import { loadRunInputs } from './runInputs';
+import type { PreviewBudgetDoc } from './tablesAccess';
 import {
 	actorFrom,
 	assertHost,
 	newId,
+	previewBudgetRef,
+	readSession,
 	readyRunsQuery,
 	requireId,
 	runInputRef,
@@ -33,6 +37,29 @@ function parseSeed(value: unknown): number | undefined {
 	return value;
 }
 
+function assertComputable(session: TableAssignment): void {
+	if (session.status === 'draft' || session.status === 'ended') {
+		throw new TablesError(
+			'failed-precondition',
+			`Cannot compute while the session is ${session.status}`,
+		);
+	}
+}
+
+/** Previews already computed over these answers; refuses when the budget is spent. */
+function spendablePreviews(budget: DocumentSnapshot): number {
+	const computed = (budget.data() as PreviewBudgetDoc | undefined)?.computed ?? 0;
+	if (computed >= MAX_PREVIEWS_PER_ANSWERS) {
+		throw new TablesError(
+			'failed-precondition',
+			'No more previews until a registration or an answer changes',
+			'preview-limit',
+		);
+	}
+
+	return computed;
+}
+
 /**
  * `tablesComputePreview` (host, ranked mode): runs the engine over the
  * registrants and stores the result as a 'ready' TableAssignmentRun that the
@@ -42,6 +69,10 @@ function parseSeed(value: unknown): number | undefined {
  * a hash over a handful of answers can be guessed by trying them all. The balance policy (tolerance as the
  * hard constraint, preferences maximised inside it) is the engine's; nothing
  * is re-implemented here.
+ *
+ * Every preview shows the host one more seating and one more set of closeness
+ * pills, so both are rationed: at least MIN_REGISTRANTS_FOR_PREVIEW people, and
+ * MAX_PREVIEWS_PER_ANSWERS previews over one set of registrations and answers.
  */
 export async function computePreview(
 	firestore: Firestore,
@@ -59,27 +90,32 @@ export async function computePreview(
 	if (session.mode !== 'ranked') {
 		throw new TablesError('failed-precondition', 'Only ranked sessions are computed');
 	}
-	if (session.status === 'draft' || session.status === 'ended') {
-		throw new TablesError(
-			'failed-precondition',
-			`Cannot compute while the session is ${session.status}`,
-		);
-	}
+	assertComputable(session);
 
-	const { topics, participants, inputHash } = await loadRunInputs(
+	const { topics, participants, inputHash, answersHash } = await loadRunInputs(
 		firestore,
 		(q) => q.get(),
 		session,
 	);
-	if (participants.length === 0) {
-		throw new TablesError('failed-precondition', 'Nobody has registered yet');
+	if (participants.length < MIN_REGISTRANTS_FOR_PREVIEW) {
+		throw new TablesError(
+			'failed-precondition',
+			`At least ${MIN_REGISTRANTS_FOR_PREVIEW} people must register before computing`,
+			'too-few-registrants',
+		);
 	}
+	const budgetRef = previewBudgetRef(firestore, sessionId, answersHash);
+	// A spent budget is refused before the engine runs; the transaction below has the final say.
+	spendablePreviews(await budgetRef.get());
 
-	const engineParticipants: Participant[] = participants.map((p) => ({
-		id: p.uid,
-		side: p.position === undefined ? undefined : [p.position],
-		preferences: p.preferences,
-	}));
+	// By uid, so the same seed gives the same seating whatever order the query returned.
+	const engineParticipants: Participant[] = [...participants]
+		.sort((a, b) => (a.uid < b.uid ? -1 : a.uid > b.uid ? 1 : 0))
+		.map((p) => ({
+			id: p.uid,
+			side: p.position === undefined ? undefined : [p.position],
+			preferences: p.preferences,
+		}));
 	const engineTopics: Topic[] = topics.map((t) => ({ id: t.topicId, maxTables: t.maxTables }));
 
 	let assignment: ReturnType<typeof assignTables>;
@@ -110,7 +146,13 @@ export async function computePreview(
 	// One transaction: the ready runs are read inside it, so a run the host
 	// published a moment ago is no longer 'ready' here and is never overwritten.
 	await firestore.runTransaction(async (tx) => {
-		const older = await tx.get(readyRunsQuery(firestore, sessionId));
+		// Read again here: a session ended or deleted meanwhile must not get a new run.
+		assertComputable(await readSession(tx, firestore, sessionId));
+		const [older, budget] = await Promise.all([
+			tx.get(readyRunsQuery(firestore, sessionId)),
+			tx.get(budgetRef),
+		]);
+		const computed = spendablePreviews(budget);
 		older.docs.forEach((d) => {
 			if ((d.data() as TableAssignmentRun).status === 'ready') {
 				tx.update(d.ref, { status: 'superseded' });
@@ -118,6 +160,8 @@ export async function computePreview(
 		});
 		tx.set(runRef(firestore, runId), run);
 		tx.set(runInputRef(firestore, runId), { sessionId, inputHash });
+		const spent: PreviewBudgetDoc = { sessionId, computed: computed + 1 };
+		tx.set(budgetRef, spent);
 	});
 
 	return { runId };

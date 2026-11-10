@@ -1,165 +1,120 @@
-import type { Assignment, TableStats } from '@freedi/table-assignment';
-import type { TableAssignmentRun, TableAssignmentTableStats } from '@freedi/shared-types';
+import type { Assignment } from '@freedi/table-assignment';
+import type { TableAssignmentCloseness, TableAssignmentRun } from '@freedi/shared-types';
 import {
-	RUN_DEVIATION_ROUND_STEP,
-	RUN_STATS_ROUND_STEP,
-	TABLE_STATS_MIN_KNOWN_POSITIONS,
-} from './constants';
+	TABLE_ASSIGNMENT_MIN_KNOWN_POSITIONS,
+	tableAssignmentCloseness,
+} from '@freedi/shared-types';
 
 /**
  * What a run document may say about positions. The host reads every run and
- * registered participants read the published one, so nothing stored here may
- * let either of them work out one person's answer. The engine's exact numbers
- * stay inside the function that called it: the pass or fail of the tolerance
- * check is taken from them, and only coarse values are written.
+ * registered participants read the published one. Positions have only five
+ * stops, so even rounded means and spreads, compared across a few previews,
+ * were enough to solve for each person. A run therefore stores no figure about
+ * positions: per table a closeness pill, for the room whether the tolerance
+ * held and whether enough people answered. The engine's numbers stay inside
+ * the function that called it.
+ *
+ * The figure fields stay in the document, empty, because the type requires them.
  */
 
 type StoredMetrics = TableAssignmentRun['metrics'];
 type StoredTable = TableAssignmentRun['tables'][number];
+type StoredFields = Pick<TableAssignmentRun, 'tables' | 'metrics'>;
 
-const NO_KNOWN_POSITIONS = { n: 0, mean: [], sd: [] };
+const EMPTY_POPULATION: StoredMetrics['population'] = { n: 0, mean: [], sd: [] };
+const EMPTY_TABLE_STATS: StoredTable['stats'] = { n: 0, mean: [], sd: [], deviation: 0 };
+const EMPTY_PREFERENCES: StoredMetrics['preferences'] = {
+	byRank: [],
+	none: 0,
+	noPreference: 0,
+	score: 0,
+	maxScore: 0,
+};
 
-/** Guards against 0.15 / 0.05 being 3.0000000000000004, which would climb a step on every pass. */
-const FLOAT_EPSILON = 1e-9;
-const DEVIATION_DECIMALS = 2;
-
-function toStep(value: number, step: number): number {
-	return Math.round(value / step) * step;
+function storedTable(
+	{ index, topicId, memberUids }: Pick<StoredTable, 'index' | 'topicId' | 'memberUids'>,
+	closeness: TableAssignmentCloseness,
+): StoredTable {
+	return { index, topicId, memberUids, stats: EMPTY_TABLE_STATS, closeness };
 }
 
-function coarse(values: readonly number[]): number[] {
-	return values.map((value) => toStep(value, RUN_STATS_ROUND_STEP));
-}
-
-/** How many gave a position, in steps: 0 means "fewer than the anonymity floor". */
-function coarseKnownCount(known: number): number {
-	if (known < TABLE_STATS_MIN_KNOWN_POSITIONS) return 0;
-
-	return Math.max(RUN_STATS_ROUND_STEP, toStep(known, RUN_STATS_ROUND_STEP));
-}
-
-/**
- * Up to the next step, so a table past the limit never reads as within it, and
- * capped at the limit for a table that is within it, so a rounded number never
- * contradicts the exact pass or fail.
- */
-function coarseDeviation(exact: number, tolerance: number): number {
-	const steps = Math.ceil(exact / RUN_DEVIATION_ROUND_STEP - FLOAT_EPSILON);
-	const rounded = Number((steps * RUN_DEVIATION_ROUND_STEP).toFixed(DEVIATION_DECIMALS));
-
-	return exact <= tolerance ? Math.min(rounded, tolerance) : rounded;
-}
-
-/** Too few known positions: nothing about the table's positions is stored, its distance included. */
-export function coarseTableStats(
-	stats: TableAssignmentTableStats,
-	tolerance: number,
-): TableAssignmentTableStats {
-	if (stats.n < TABLE_STATS_MIN_KNOWN_POSITIONS) return { ...NO_KNOWN_POSITIONS, deviation: 0 };
-
+function storedMetrics(
+	{ tolerance, withinTolerance }: Pick<StoredMetrics['balance'], 'tolerance' | 'withinTolerance'>,
+	preferences: StoredMetrics['preferences'],
+	hasEnoughPositions: boolean,
+): StoredMetrics {
 	return {
-		n: coarseKnownCount(stats.n),
-		mean: coarse(stats.mean),
-		sd: coarse(stats.sd),
-		deviation: coarseDeviation(stats.deviation, tolerance),
-	};
-}
-
-function coarsePopulation(population: StoredMetrics['population']): StoredMetrics['population'] {
-	if (population.n < TABLE_STATS_MIN_KNOWN_POSITIONS) return { ...NO_KNOWN_POSITIONS };
-
-	return {
-		n: coarseKnownCount(population.n),
-		mean: coarse(population.mean),
-		sd: coarse(population.sd),
-	};
-}
-
-/**
- * Worst and average distance over the tables whose stats are stored. A table
- * of one or two known positions would otherwise leak through the maximum.
- * `withinTolerance` is the exact check; a failed check always reads past the limit.
- */
-function coarseBalance(
-	tables: readonly TableStats[],
-	balance: StoredMetrics['balance'],
-): StoredMetrics['balance'] {
-	const { tolerance, withinTolerance } = balance;
-	const visible = tables
-		.filter((stats) => stats.n >= TABLE_STATS_MIN_KNOWN_POSITIONS)
-		.map((stats) => coarseDeviation(stats.deviation, tolerance));
-	const worst = Math.max(0, ...visible);
-	const average = visible.length === 0 ? 0 : visible.reduce((a, b) => a + b, 0) / visible.length;
-
-	return {
-		tolerance,
-		withinTolerance,
-		max: withinTolerance
-			? Math.min(worst, tolerance)
-			: Math.max(worst, coarseDeviation(tolerance + RUN_DEVIATION_ROUND_STEP, tolerance)),
-		mean: coarseDeviation(average, tolerance),
+		population: EMPTY_POPULATION,
+		balance: { max: 0, mean: 0, tolerance, withinTolerance },
+		preferences,
+		hasEnoughPositions,
 	};
 }
 
 /** The run's tables and metrics as they may be written, from the engine's exact result. */
-export function coarseRunFields(
-	assignment: Pick<Assignment, 'tables' | 'metrics'>,
-): Pick<TableAssignmentRun, 'tables' | 'metrics'> {
+export function coarseRunFields(assignment: Pick<Assignment, 'tables' | 'metrics'>): StoredFields {
 	const { population, balance, preferences } = assignment.metrics;
 
 	return {
-		tables: assignment.tables.map((table) => ({
-			index: table.index,
-			topicId: table.topicId,
-			memberUids: table.memberIds,
-			stats: coarseTableStats(table.stats, balance.tolerance),
-		})),
-		metrics: {
-			population: coarsePopulation(population),
-			balance: coarseBalance(
-				assignment.tables.map((table) => table.stats),
-				balance,
+		tables: assignment.tables.map((table) =>
+			storedTable(
+				{ index: table.index, topicId: table.topicId, memberUids: table.memberIds },
+				tableAssignmentCloseness(table.stats, balance.tolerance),
 			),
+		),
+		metrics: storedMetrics(
+			balance,
 			preferences,
-		},
+			population.n >= TABLE_ASSIGNMENT_MIN_KNOWN_POSITIONS,
+		),
 	};
 }
 
 /**
  * Participants read a published run and need only who sits where. The host's
- * check of the tables is over by then, so the position figures are dropped.
+ * check of the tables is over by then, so the pills and the count of who got
+ * which choice are dropped as well.
  */
-export function publishedRunFields(
-	run: Pick<TableAssignmentRun, 'tables' | 'metrics'>,
-): Pick<TableAssignmentRun, 'tables' | 'metrics'> {
+export function publishedRunFields(run: StoredFields): StoredFields {
 	return {
 		tables: run.tables.map(
-			(table: StoredTable): StoredTable => ({
-				...table,
-				stats: { ...NO_KNOWN_POSITIONS, deviation: 0 },
+			({ index, topicId, memberUids }): StoredTable => ({
+				index,
+				topicId,
+				memberUids,
+				stats: EMPTY_TABLE_STATS,
 			}),
 		),
 		metrics: {
 			...run.metrics,
-			population: { ...NO_KNOWN_POSITIONS },
+			population: EMPTY_POPULATION,
 			balance: { ...run.metrics.balance, max: 0, mean: 0 },
+			preferences: EMPTY_PREFERENCES,
 		},
 	};
 }
 
-/** An older stored run, exact figures and all, brought to what is stored today. Idempotent. */
+/**
+ * A stored run of any age brought to what is stored today. Idempotent: a pill
+ * already there is kept, since the figures it came from are gone.
+ */
 export function scrubStoredRun(
 	run: Pick<TableAssignmentRun, 'status' | 'tables' | 'metrics'>,
-): Pick<TableAssignmentRun, 'tables' | 'metrics'> {
-	const coarsened = coarseRunFields({
-		tables: run.tables.map((table) => ({
-			index: table.index,
-			topicId: table.topicId,
-			memberIds: table.memberUids,
-			stats: table.stats,
-		})),
-		metrics: run.metrics,
-	});
+): StoredFields {
+	const { population, balance, preferences, hasEnoughPositions } = run.metrics;
+	const scrubbed: StoredFields = {
+		tables: run.tables.map((table) =>
+			storedTable(
+				table,
+				table.closeness ?? tableAssignmentCloseness(table.stats, balance.tolerance),
+			),
+		),
+		metrics: storedMetrics(
+			balance,
+			preferences,
+			hasEnoughPositions ?? population.n >= TABLE_ASSIGNMENT_MIN_KNOWN_POSITIONS,
+		),
+	};
 
-	return run.status === 'published' ? publishedRunFields(coarsened) : coarsened;
+	return run.status === 'published' ? publishedRunFields(scrubbed) : scrubbed;
 }

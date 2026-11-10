@@ -33,6 +33,12 @@ export interface RunInputDoc {
 	inputHash: string;
 }
 
+/** How many previews were computed over one set of answers. No client may read it. */
+export interface PreviewBudgetDoc {
+	sessionId: string;
+	computed: number;
+}
+
 export interface Actor {
 	uid: string;
 	isAnonymous: boolean;
@@ -101,6 +107,18 @@ const RUN_INPUTS_COLLECTION = 'tableAssignmentRunInputs';
 
 export function runInputRef(firestore: Firestore, runId: string): DocumentReference {
 	return firestore.collection(RUN_INPUTS_COLLECTION).doc(runId);
+}
+
+/** Not in the rules on purpose, like the run inputs: only the functions touch it. */
+const PREVIEW_BUDGETS_COLLECTION = 'tableAssignmentPreviewBudgets';
+
+/** One document per session and set of answers, so answers changing back do not refill the budget. */
+export function previewBudgetRef(
+	firestore: Firestore,
+	sessionId: string,
+	answersHash: string,
+): DocumentReference {
+	return firestore.collection(PREVIEW_BUDGETS_COLLECTION).doc(`${sessionId}_${answersHash}`);
 }
 
 export function seatRef(

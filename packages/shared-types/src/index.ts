@@ -1237,6 +1237,12 @@ export type {
 
 // Tables (שולחנות): shared table-assignment model and callables contract
 export {
+  TABLE_ASSIGNMENT_MIN_KNOWN_POSITIONS,
+  TableAssignmentClosenessSchema,
+  tableAssignmentCloseness,
+} from './models/tableAssignment/tableAssignmentCloseness';
+export type { TableAssignmentCloseness } from './models/tableAssignment/tableAssignmentCloseness';
+export {
   TABLE_ASSIGNMENT_TABLE_SIZE_DEFAULT,
   TABLE_ASSIGNMENT_BALANCE_TOLERANCE_DEFAULT,
   TABLE_ASSIGNMENT_MAX_PREFERENCES,

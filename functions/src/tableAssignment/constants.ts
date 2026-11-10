@@ -23,13 +23,12 @@ export type TablesErrorReason =
 	| 'stale-run'
 	| 'registration-closed'
 	| 'claimed-by-name'
-	| 'seated-in-published-run';
+	| 'seated-in-published-run'
+	| 'too-few-registrants'
+	| 'preview-limit';
 
-/** A table's position mean/sd is stored only with at least this many known positions; fewer could identify a person. */
-export const TABLE_STATS_MIN_KNOWN_POSITIONS = 3;
+/** Fewer registrants than this are refused a preview: tables that small say too much about each person. */
+export const MIN_REGISTRANTS_FOR_PREVIEW = 5;
 
-/** Stored position means, spreads and known-position counts move in this step (positions are 0..100). */
-export const RUN_STATS_ROUND_STEP = 5;
-
-/** A table's stored distance from the room moves in this step (distance is in room-sd units). */
-export const RUN_DEVIATION_ROUND_STEP = 0.05;
+/** Previews a host may compute over one unchanged set of registrations and answers. */
+export const MAX_PREVIEWS_PER_ANSWERS = 5;

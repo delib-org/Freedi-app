@@ -520,17 +520,18 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 		expect(seated).toEqual(['u0', 'u1', 'u2', 'u3', 'u4', 'u5', 'u6', 'u7']);
 		expect(run.tables.every((t) => t.memberUids.length <= 4)).toBe(true);
 		expect(new Set(run.tables.map((t) => t.topicId)).size).toBeGreaterThan(0);
-		// 8 registrants, 6 with a position: 6 is stored in steps of 5.
-		expect(run.metrics.population.n).toBe(5);
+		// 8 registrants, 6 with a position: enough, and no count of them is stored.
+		expect(run.metrics.population).toEqual({ n: 0, mean: [], sd: [] });
+		expect(run.metrics.hasEnoughPositions).toBe(true);
 		expect(run.metrics.balance.tolerance).toBe(0.5);
 		const prefs = run.metrics.preferences;
 		expect(prefs.byRank.reduce((a, b) => a + b, 0) + prefs.none + prefs.noPreference).toBe(8);
 		expect(prefs.maxScore).toBeGreaterThan(0);
-		// Positions are never copied into the run: only uids and aggregate stats.
+		// Positions are never copied into the run: only uids and closeness pills.
 		expect(JSON.stringify(run.tables)).not.toContain('position');
 	});
 
-	it('suppresses position mean/sd on tables with fewer than 3 known positions', async () => {
+	it('reads not enough for tables with fewer than 3 known positions', async () => {
 		const fake = new FakeFirestore();
 		seedSession(fake, { status: 'registrationClosed' }, { tableSize: 5, balanceTolerance: 5 });
 		seedTopics(fake, [
@@ -552,17 +553,10 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 			NOW,
 		);
 		const run = fake.read(`tableAssignmentRuns/${runId}`) as unknown as TableAssignmentRun;
-		const small = run.tables.filter((t) => t.stats.n < 3);
-		const big = run.tables.filter((t) => t.stats.n >= 3);
-		expect(small.length).toBeGreaterThan(0);
-		expect(big.length).toBeGreaterThan(0);
-		small.forEach((t) => expect(t.stats).toMatchObject({ mean: [], sd: [] }));
-		big.forEach((t) => {
-			expect(t.stats.mean).toHaveLength(1);
-			expect(t.stats.sd).toHaveLength(1);
-		});
-		expect(run.metrics.population.n).toBe(5);
-		expect(run.metrics.population.mean).toHaveLength(1);
+		const pills = run.tables.map((t) => t.closeness);
+		expect(pills).toContain('notEnough');
+		expect(pills.some((pill) => pill !== 'notEnough')).toBe(true);
+		expect(run.metrics.hasEnoughPositions).toBe(true);
 	});
 
 	it('is reproducible for a seed and supersedes the older ready run', async () => {

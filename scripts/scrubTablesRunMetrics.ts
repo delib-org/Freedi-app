@@ -1,9 +1,10 @@
 /**
- * Scrub: runs computed before the privacy hardening hold exact position figures
- * and an input hash that a host or participant can read. Coarsen every run the
- * way the functions now do, drop the figures from published runs, and move the
- * hash where no client reads it. Idempotent. Run once per project, after the
- * new functions are live.
+ * Scrub: runs computed before the privacy hardening hold position figures (exact
+ * or rounded) and an input hash that a host or participant can read. Bring every
+ * run to the shape the functions now store: a closeness pill per table, no
+ * figures, and on published runs the seating only. Move the hash where no
+ * client reads it. Idempotent. Run once per project, after the new functions
+ * are live.
  *
  * Every run must name its project: unset, firebase-admin would use the ADC default.
  *
