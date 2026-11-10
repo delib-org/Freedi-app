@@ -1,4 +1,3 @@
-import OptionImprovement from '@/view/components/atomic/organisms/ThinkingSpace/OptionImprovement';
 import React, { useContext, useMemo, useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
@@ -149,12 +148,6 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 						<p className={styles.onboarding__cta}>{t('questionOnboarding.getStarted')}</p>
 					</div>
 				)}
-				{showReadingHeader &&
-					activeView === 'chat' &&
-					statement?.statementType === StatementType.option &&
-					!statement.isCluster && (
-						<OptionImprovement key={statement.statementId} statement={statement} />
-					)}
 				{onAnswersTab && statement && (
 					<div className={questionStyles.listHead}>
 						<AnswersCounter data={data} />

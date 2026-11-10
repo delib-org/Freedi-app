@@ -20,8 +20,8 @@ export const mapViews = [
 	{
 		id: Screen.clusterBoard,
 		group: 'Explore the solutions',
-		title: 'Cluster map',
-		rowTitle: 'Groups board',
+		title: 'Topics map',
+		rowTitle: 'Topics map',
 		description:
 			'Topics group related solutions. Syntheses combine equivalent wording of the same solution.',
 		rowDescription: 'Similar answers grouped into topics, ready to share',
@@ -32,7 +32,7 @@ export const mapViews = [
 	{
 		id: Screen.agreementMap,
 		group: 'Understand agreement',
-		title: 'Agreement triangle',
+		title: 'Agreement Map',
 		rowTitle: 'Agreement Map',
 		description: 'Compare support, opposition and the amount of evaluation.',
 		rowDescription: 'A triangle of agreement, opposition and uncertainty for each answer',
@@ -42,8 +42,8 @@ export const mapViews = [
 	{
 		id: Screen.polarizationIndex,
 		group: 'Understand agreement',
-		title: 'Polarization',
-		rowTitle: 'Collaboration Index',
+		title: 'Disagreement map',
+		rowTitle: 'Disagreement map',
 		description: 'See where evaluations converge or differ.',
 		rowDescription: 'How divided the group is, by audience',
 		tone: 'sunken' as MapTone,
@@ -52,7 +52,7 @@ export const mapViews = [
 	{
 		id: Screen.subQuestionsMap,
 		group: 'Understand the structure',
-		title: 'Sub-question map',
+		title: 'Questions map',
 		rowTitle: 'Questions map',
 		description: 'Follow the questions that help answer this question.',
 		rowDescription: 'The tree of follow-up questions opened from here',
