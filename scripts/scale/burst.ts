@@ -106,6 +106,21 @@ function nextUnrated(
 	return answer;
 }
 
+/**
+ * The answers as the sampler sees them mid-session. At the end of the simulated
+ * session almost every answer is stable (30 ratings), so a sampler given the
+ * final counts has nothing to offer; a burst rater stands for a rating given
+ * while answers were still open, which is when ratings actually arrive.
+ */
+function midSession(answers: Statement[]): Statement[] {
+	return answers.map((answer) => {
+		const copy = { ...answer };
+		delete copy.evaluation;
+
+		return copy;
+	});
+}
+
 /** What the app shows this person next: the sampler's pick above the threshold. */
 function nextToRate(
 	user: Creator,
@@ -118,7 +133,7 @@ function nextToRate(
 		return nextUnrated(user, window, ratedBy, offset);
 	}
 	const rated = ratedBy.get(user.uid) ?? new Set<string>();
-	const [answer] = sampleAnswers(answers, rated, user.uid, 1);
+	const [answer] = sampleAnswers(midSession(answers), rated, user.uid, 1);
 	if (!answer) throw new Error(`The sampler has nothing left for ${user.uid}`);
 	rated.add(answer.statementId);
 	ratedBy.set(user.uid, rated);
