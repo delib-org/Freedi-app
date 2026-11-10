@@ -282,8 +282,8 @@
 .info {
   display: flex;
   align-items: flex-start;
-  // [thumbnail] [title + body] [menu]; DOM order is the visual order, so the
-  // photo sits at the start in both LTR and RTL.
+  // [title + body] [menu]. A photo is not part of this row: it is a full-height
+  // column on the card itself (see --with-photo).
   gap: var(--space-sm);
   width: 100%;
   min-width: 0;
@@ -895,3 +895,19 @@
   }
 }
 
+// --- Card with a photo ---------------------------------------------------------
+// The photo is a column at the inline-start edge that runs the full height of
+// the card. StatementImage places it absolutely (inset-block: 0), so the text
+// column alone decides how tall the card is, even for a tall source image.
+// This card makes room for it with start padding, so nothing runs under it.
+.statement-evaluation-card--with-photo {
+  --card-photo-width: 7.5rem;
+
+  padding-inline-start: calc(var(--card-photo-width) + var(--space-md));
+
+  @media screen and (max-width: 600px) {
+    --card-photo-width: 5.5rem;
+
+    padding-inline-start: calc(var(--card-photo-width) + var(--space-sm));
+  }
+}

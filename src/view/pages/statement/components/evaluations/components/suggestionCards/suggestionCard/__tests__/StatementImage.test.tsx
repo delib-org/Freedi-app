@@ -91,5 +91,14 @@ describe('StatementImage', () => {
 			fireEvent.click(screen.getByTitle('Remove Image'));
 			expect(onRemove).toHaveBeenCalledTimes(1);
 		});
+
+		it('as the card photo column still offers the upload zone and a working remove control', () => {
+			const { onRemove } = renderImage(true, 'thumb');
+
+			expect(screen.getByTestId('upload-image')).toBeInTheDocument();
+
+			fireEvent.click(screen.getByTitle('Remove Image'));
+			expect(onRemove).toHaveBeenCalledTimes(1);
+		});
 	});
 });

@@ -252,6 +252,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 		isOwnAnswer && styles['statement-evaluation-card--own'],
 		statementAge < 10000 && styles['statement-evaluation-card--new'],
 		isCardMenuOpen && styles['statement-evaluation-card--menu-open'],
+		image && styles['statement-evaluation-card--with-photo'],
 	);
 
 	// Legacy inline paragraphs are rendered by EditableStatement; newer
@@ -358,25 +359,28 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 				</span>
 			)}
 
+			{/* Photo: a full-height column at the inline-start edge of the card (absolutely
+			    placed, so it follows the text column's height instead of setting it).
+			    Pressing it opens it full size. */}
+			{image && (
+				<StatementImage
+					statement={statement}
+					image={image}
+					setImage={setImage}
+					displayMode="thumb"
+					onRemove={async () => {
+						setImage('');
+						await updateStatementMainImage(statement, '');
+					}}
+					isAdmin={isAdmin}
+					fileInputRef={fileInputRef}
+				/>
+			)}
+
 			{/* A YouTube link in the option text plays here; the link itself is hidden from the text. */}
 			{youTubeVideo && <YouTubeEmbed embedUrl={youTubeVideo.embedUrl} />}
 			<div className={styles.body}>
 				<div className={styles.info}>
-					{/* Photo: a small thumbnail beside the text; pressing it opens it full size. */}
-					{image && (
-						<StatementImage
-							statement={statement}
-							image={image}
-							setImage={setImage}
-							displayMode="thumb"
-							onRemove={async () => {
-								setImage('');
-								await updateStatementMainImage(statement, '');
-							}}
-							isAdmin={isAdmin}
-							fileInputRef={fileInputRef}
-						/>
-					)}
 					<div className={clsx(styles.text, hasOverflow && styles.hasOverflow)}>
 						<div
 							className={`${styles.textContent} ${isExpanded ? styles.textContentExpanded : ''}`}
