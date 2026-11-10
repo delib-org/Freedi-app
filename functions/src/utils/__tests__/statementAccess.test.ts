@@ -207,7 +207,7 @@ describe('resolveQuestionParticipation', () => {
 		[{ top: 'public', middle: 'secret' }],
 		[{ top: 'secret', middle: 'openToAll' }],
 		[{ middle: 'openForRegistered' }],
-	])('agrees with resolveAccessScope for an outsider: %j', async (access) => {
+	])('agrees with resolveAccessScope for an outsider: %j', async (access: { top?: string; middle?: string; question?: string }) => {
 		tree(access);
 		const level = (statementId: string, value?: string) => ({
 			statementId,
