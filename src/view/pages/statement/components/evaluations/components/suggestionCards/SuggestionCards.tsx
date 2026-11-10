@@ -346,12 +346,10 @@ const SuggestionCards: FC = () => {
 				</div>
 			)}
 			{isSubmitMode && (
-				<div className={styles.submitButtonSlot}>
-					<div className={styles.submitButtonContainer}>
-						<button onClick={handleSubmit} className={styles.submitButton}>
-							{t('Submit your vote')}
-						</button>
-					</div>
+				<div className={styles.submitButtonContainer}>
+					<button onClick={handleSubmit} className={styles.submitButton}>
+						{t('Submit your vote')}
+					</button>
 				</div>
 			)}
 		</>
