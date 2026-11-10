@@ -86,6 +86,11 @@ export const UI = {
 	COLLAPSE_DURATION_MS: 180,
 	COLLAPSE_FALLBACK_BUFFER_MS: 100,
 	MODAL_Z_INDEX: 1000,
+	// Floating profile card: gap from its avatar, minimum gap from the screen
+	// edge, and how far the arrow stays from the card's corners.
+	POPOVER_ANCHOR_GAP: 8,
+	POPOVER_VIEWPORT_MARGIN: 8,
+	POPOVER_ARROW_INSET: 16,
 	TOOLTIP_DELAY: 500,
 	// Minimum gap between two animated list reorders. Live evaluation updates
 	// can reshuffle a consensus ranking many times a second; coalescing them

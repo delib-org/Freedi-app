@@ -136,6 +136,41 @@
     pointer-events: auto;
   }
 
+  // Rendered in document.body (see anchorRef): fixed coordinates come from
+  // custom properties set by the component, so no ancestor transform or
+  // overflow can trap or clip it.
+  &--portal {
+    position: fixed;
+    top: var(--popover-top, 0);
+    left: var(--popover-left, 0);
+    right: auto;
+    bottom: auto;
+    transform: translateY(-8px);
+
+    &.user-profile-popover--visible {
+      transform: translateY(0);
+    }
+
+    .user-profile-popover__arrow {
+      left: var(--popover-arrow-left, 50%);
+    }
+
+    &.user-profile-popover--above {
+      transform: translateY(8px);
+
+      &.user-profile-popover--visible {
+        transform: translateY(0);
+      }
+
+      .user-profile-popover__arrow {
+        top: 100%;
+        bottom: auto;
+        border-bottom: none;
+        border-top: 8px solid var(--card-raised);
+      }
+    }
+  }
+
   &--position-top {
     top: auto;
     bottom: calc(100% + 8px);
@@ -224,7 +259,8 @@
     }
 
     &--position-left,
-    &--position-right {
+    &--position-right,
+    &--portal {
       transform: translateX(0) translateY(0);
     }
   }
