@@ -1407,6 +1407,7 @@ export type {
 export {
 	OPEN_ACCESS_SCOPE,
 	isOpenAccessValue,
+	ownAccessSetting,
 	resolveAccessScope,
 	newStatementAccessScope,
 	stampAccessScope,

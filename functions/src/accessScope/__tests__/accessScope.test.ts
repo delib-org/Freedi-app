@@ -18,7 +18,12 @@ const statement = (fields: Partial<Statement> & { statementId: string }) => fiel
 
 function tree() {
 	const store = fakeStatementStore();
-	store.seed(S, 'group', { statementId: 'group', parentId: 'top', membership: { access: 'secret' } });
+	store.seed(S, 'group', {
+		statementId: 'group',
+		parentId: 'top',
+		topParentId: 'group',
+		membership: { access: 'secret' },
+	});
 	store.seed(S, 'q', { statementId: 'q', parentId: 'group', parents: ['group'], topParentId: 'group' });
 	store.seed(S, 'a', { statementId: 'a', parentId: 'q', parents: ['group', 'q'], topParentId: 'group' });
 
@@ -86,6 +91,34 @@ describe('scope levels', () => {
 		expect(levels.readCount).toBe(2);
 	});
 
+	it('walks parentId, so a short parents list misses no level', async () => {
+		const store = fakeStatementStore();
+		store.seed(S, 'top1', { statementId: 'top1', parentId: 'top' });
+		store.seed(S, 'mid', {
+			statementId: 'mid',
+			parentId: 'top1',
+			topParentId: 'top1',
+			membership: { access: 'secret' },
+		});
+		store.seed(S, 'q2', { statementId: 'q2', parentId: 'mid', parents: ['top1', 'mid'], topParentId: 'top1' });
+		const chat = statement({
+			statementId: 'c',
+			parentId: 'q2',
+			parents: ['top1', 'q2'],
+			topParentId: 'top1',
+		});
+		await expect(resolveStatementScope(store.db, chat)).resolves.toBe('mid');
+	});
+
+	it('stops on a cycle in the parent chain', async () => {
+		const store = fakeStatementStore();
+		store.seed(S, 'x', { statementId: 'x', parentId: 'y' });
+		store.seed(S, 'y', { statementId: 'y', parentId: 'x' });
+		await expect(
+			resolveStatementScope(store.db, statement({ statementId: 'x', parentId: 'y' })),
+		).resolves.toBe('open');
+	});
+
 	it('copes with an ancestor that no longer exists', async () => {
 		const store = fakeStatementStore();
 		const orphan = statement({ statementId: 'o', parentId: 'gone', parents: ['gone'] });
@@ -97,6 +130,7 @@ describe('runAccessScopeJob', () => {
 	const seedJob = (store: ReturnType<typeof fakeStatementStore>, generation = 1) =>
 		store.seed(Collections.accessScopeJobs, 'group', {
 			rootId: 'group',
+			topParentId: 'group',
 			status: 'pending',
 			cursor: null,
 			generation,
@@ -117,6 +151,7 @@ describe('runAccessScopeJob', () => {
 			statementId: 'q',
 			parentId: 'group',
 			parents: ['group'],
+			topParentId: 'group',
 			membership: { access: 'public' },
 		});
 		seedJob(store);
@@ -146,7 +181,7 @@ describe('runAccessScopeJob', () => {
 		const store = tree();
 		for (let i = 0; i < 4500; i += 1) {
 			const id = `c${String(i).padStart(5, '0')}`;
-			store.seed(S, id, { statementId: id, parentId: 'group', parents: ['group'] });
+			store.seed(S, id, { statementId: id, parentId: 'group', parents: ['group'], topParentId: 'group' });
 		}
 		seedJob(store);
 		await runAccessScopeJob(store.db, 'group');
@@ -192,6 +227,26 @@ describe('runAccessScopeBackfill', () => {
 		const result = await runAccessScopeBackfill(store.db, { execute: true });
 		expect(store.read(S, 'q')?.accessScope).toBe('open');
 		expect(result.ownOpenUnderRestricted).toBe(1);
+	});
+
+	it('treats a question’s setting copied onto its answer as inherited', async () => {
+		const store = tree();
+		store.seed(S, 'q', {
+			statementId: 'q',
+			parentId: 'group',
+			parents: ['group'],
+			statementType: 'question',
+			membership: { access: 'moderated' },
+		});
+		store.seed(S, 'a', {
+			statementId: 'a',
+			parentId: 'q',
+			parents: ['group', 'q'],
+			statementType: 'option',
+			membership: { access: 'moderated' },
+		});
+		await runAccessScopeBackfill(store.db, { execute: true });
+		expect(store.read(S, 'a')?.accessScope).toBe('q');
 	});
 
 	it('resumes after the cursor', async () => {

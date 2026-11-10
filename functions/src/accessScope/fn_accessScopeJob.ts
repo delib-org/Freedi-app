@@ -12,6 +12,8 @@ const PAGES_PER_RUN = 10;
 
 export interface AccessScopeJob {
 	rootId: string;
+	/** The tree to walk. `parents` is too short on many statements to find a subtree. */
+	topParentId: string;
 	status: 'pending' | 'done';
 	cursor: string | null;
 	generation: number;
@@ -26,13 +28,13 @@ interface PageResult {
 
 async function restampPage(
 	firestore: Firestore,
-	rootId: string,
+	topParentId: string,
 	cursor: string | null,
 	levels: AccessScopeLevels,
 ): Promise<PageResult> {
 	let query = firestore
 		.collection(Collections.statements)
-		.where('parents', 'array-contains', rootId)
+		.where('topParentId', '==', topParentId)
 		.orderBy('__name__')
 		.limit(PAGE_SIZE);
 	if (cursor) query = query.startAfter(cursor);
@@ -75,7 +77,7 @@ export async function runAccessScopeJob(firestore: Firestore, jobId: string): Pr
 	let cursor = job.cursor;
 	let isLast = false;
 	for (let page = 0; page < PAGES_PER_RUN && !isLast; page += 1) {
-		const result = await restampPage(firestore, job.rootId, cursor, levels);
+		const result = await restampPage(firestore, job.topParentId, cursor, levels);
 		cursor = result.lastId;
 		isLast = result.isLast;
 	}

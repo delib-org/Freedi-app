@@ -53,6 +53,8 @@ export async function restampOnAccessChange(
 		await db.collection(Collections.statements).doc(after.statementId).update({ accessScope });
 		await db.collection(Collections.accessScopeJobs).doc(after.statementId).set({
 			rootId: after.statementId,
+			topParentId:
+				after.parentId === 'top' || !after.topParentId ? after.statementId : after.topParentId,
 			status: 'pending',
 			cursor: null,
 			generation: now,

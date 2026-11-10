@@ -1,6 +1,6 @@
 import { HttpsError } from 'firebase-functions/v2/https';
 import type { Firestore } from 'firebase-admin/firestore';
-import { Access, Collections, Role, type Statement } from '@freedi/shared-types';
+import { Access, Collections, ownAccessSetting, Role, type Statement } from '@freedi/shared-types';
 import { findStatementAdminSource } from '../progress/assertStatementAdmin';
 import { ancestorIds } from './statementAncestors';
 
@@ -67,7 +67,10 @@ export async function resolveStatementAccess(
 }
 
 export interface AccessLevel {
-	statement: Pick<Statement, 'membership' | 'hide'> | undefined;
+	statement:
+		| (Pick<Statement, 'membership' | 'hide'> &
+				Partial<Pick<Statement, 'statementType' | 'agreementBallot'>>)
+		| undefined;
 	role: string | undefined;
 }
 
@@ -134,8 +137,13 @@ export function judgeAccessLevels(
 	}
 	if (isHostInTree) return 'allowed';
 
-	const ownerIndex = levels.findIndex(({ statement }) => statement?.membership?.access);
-	const access = ownerIndex >= 0 ? levels[ownerIndex].statement?.membership?.access : undefined;
+	const settingAt = (index: number): string | undefined => {
+		const statement = levels[index]?.statement;
+
+		return statement ? ownAccessSetting(statement, levels[index + 1]?.statement) : undefined;
+	};
+	const ownerIndex = levels.findIndex((_, index) => settingAt(index));
+	const access = ownerIndex >= 0 ? settingAt(ownerIndex) : undefined;
 	const governing = ownerIndex >= 0 ? levels.slice(0, ownerIndex + 1) : levels;
 	if (governing.some(({ role }) => isActiveRole(role))) return 'allowed';
 	if (access === Access.public) return 'allowed';

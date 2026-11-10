@@ -45,24 +45,20 @@ export function fakeStatementStore() {
 	};
 	const makeQuery = (
 		collection: string,
-		contains?: string,
+		equals?: { field: string; value: string },
 		pageSize = Number.MAX_SAFE_INTEGER,
 		after?: string,
 	) => ({
-		where: (_field: string, _op: string, value: string) =>
-			makeQuery(collection, value, pageSize, after),
-		orderBy: () => makeQuery(collection, contains, pageSize, after),
-		limit: (size: number) => makeQuery(collection, contains, size, after),
-		startAfter: (id: string) => makeQuery(collection, contains, pageSize, id),
+		where: (field: string, _op: string, value: string) =>
+			makeQuery(collection, { field, value }, pageSize, after),
+		orderBy: () => makeQuery(collection, equals, pageSize, after),
+		limit: (size: number) => makeQuery(collection, equals, size, after),
+		startAfter: (id: string) => makeQuery(collection, equals, pageSize, id),
 		get: async () => {
 			const ids = [...store(collection).keys()]
 				.sort()
 				.filter((id) => !after || id > after)
-				.filter((id) => {
-					const parents = store(collection).get(id)?.parents as string[] | undefined;
-
-					return !contains || (parents ?? []).includes(contains);
-				})
+				.filter((id) => !equals || store(collection).get(id)?.[equals.field] === equals.value)
 				.slice(0, pageSize);
 			const docs = ids.map((id) => snap(collection, id));
 

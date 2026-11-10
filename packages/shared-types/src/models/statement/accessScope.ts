@@ -1,4 +1,4 @@
-import { Access } from '../TypeEnums';
+import { Access, StatementType } from '../TypeEnums';
 
 /**
  * Who may read a statement, as one value the database rules can check.
@@ -23,6 +23,8 @@ const OPEN_ACCESS_VALUES: ReadonlySet<string> = new Set([
 /** The fields of one level of the tree that decide its scope. */
 export interface AccessScopeLevel {
 	statementId: string;
+	statementType?: string;
+	agreementBallot?: unknown;
 	membership?: { access?: string } | null;
 	statementSettings?: { classHome?: unknown } | null;
 }
@@ -33,6 +35,33 @@ export function isOpenAccessValue(access: string): boolean {
 
 function isClassHome(level: AccessScopeLevel): boolean {
 	return level.statementSettings?.classHome != null;
+}
+
+const ANSWER_TYPES: ReadonlySet<string> = new Set([
+	StatementType.option,
+	StatementType.synthesis,
+	StatementType.agreement,
+]);
+
+/** Something given as an answer to a question: an option, an agreement, a ballot. */
+function isAnswerType(level: Pick<AccessScopeLevel, 'statementType' | 'agreementBallot'>): boolean {
+	return level.agreementBallot != null || ANSWER_TYPES.has(level.statementType ?? '');
+}
+
+/**
+ * The access setting a level really has. Some writers used to copy a question's
+ * setting onto its answers. On a private question that child seems to own a
+ * private setting, and the question's members would be refused, so a copy on an
+ * answer-type child counts as inherited. A question or group always owns its.
+ */
+export function ownAccessSetting(
+	level: Pick<AccessScopeLevel, 'membership' | 'statementType' | 'agreementBallot'>,
+	parent?: Pick<AccessScopeLevel, 'membership'> | null,
+): string | undefined {
+	const access = level.membership?.access;
+	if (!access) return undefined;
+
+	return parent && isAnswerType(level) && parent.membership?.access === access ? undefined : access;
 }
 
 function scopeOfSetting(level: AccessScopeLevel, access: string): string {
@@ -52,15 +81,14 @@ export function resolveAccessScope(
 ): string {
 	if (isClassHome(subject)) return subject.statementId;
 
-	const own = subject.membership?.access;
-	if (own) return scopeOfSetting(subject, own);
+	const chain = [subject, ...ancestorsNearestFirst];
+	for (const [index, level] of chain.entries()) {
+		if (index > 0 && isClassHome(level)) continue;
+		const access = ownAccessSetting(level, chain[index + 1]);
+		if (access) return scopeOfSetting(level, access);
+	}
 
-	const owner = ancestorsNearestFirst.find(
-		(level) => !isClassHome(level) && Boolean(level.membership?.access),
-	);
-	const access = owner?.membership?.access;
-
-	return owner && access ? scopeOfSetting(owner, access) : OPEN_ACCESS_SCOPE;
+	return OPEN_ACCESS_SCOPE;
 }
 
 /** What a new statement needs from its parent to be stamped without reading the tree. */

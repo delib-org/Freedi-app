@@ -60,6 +60,41 @@ describe('resolveAccessScope', () => {
 		expect(resolveAccessScope(level('a'), ancestors)).toBe(OPEN_ACCESS_SCOPE);
 	});
 
+	describe('a setting copied from the question', () => {
+		const copy = (statementId: string, statementType: string, access: string) => ({
+			...level(statementId, access),
+			statementType,
+		});
+
+		it.each(['option', 'synthesis', 'agreement'])('counts as inherited on a %s', (type) => {
+			const scope = resolveAccessScope(copy('a', type, Access.secret), [level('q', Access.secret)]);
+			expect(scope).toBe('q');
+		});
+
+		it('counts as inherited on a ballot, which is a question by type', () => {
+			const ballot = { ...copy('b', 'question', Access.secret), agreementBallot: {} };
+			expect(resolveAccessScope(ballot, [level('q', Access.secret)])).toBe('q');
+		});
+
+		it('still owns it on a question or group', () => {
+			const parent = [level('p', Access.secret)];
+			expect(resolveAccessScope(copy('a', 'question', Access.secret), parent)).toBe('a');
+			expect(resolveAccessScope(copy('a', 'group', Access.secret), parent)).toBe('a');
+		});
+
+		it('still owns a different setting', () => {
+			const scope = resolveAccessScope(copy('a', 'option', Access.moderated), [
+				level('q', Access.secret),
+			]);
+			expect(scope).toBe('a');
+		});
+
+		it('applies at an ancestor too', () => {
+			const ancestors = [copy('o', 'option', Access.secret), level('q', Access.secret)];
+			expect(resolveAccessScope(level('chat'), ancestors)).toBe('q');
+		});
+	});
+
 	it('makes a class home its own scope whatever it says', () => {
 		expect(resolveAccessScope(home('h'), [])).toBe('h');
 		expect(resolveAccessScope(home('h', Access.public), [])).toBe('h');
