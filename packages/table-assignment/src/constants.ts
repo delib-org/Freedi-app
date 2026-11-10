@@ -8,3 +8,5 @@ export const MAX_IMPROVEMENT_PASSES = 60;
 export const IMPROVEMENT_EPSILON = 1e-9;
 /** A second choice counts this much of a first choice when deciding how many tables a topic gets; a third, this squared. */
 export const LOWER_RANK_DEMAND_FACTOR = 0.01;
+/** An axis whose sd is below this share of max(1, |mean|) is treated as one shared value. */
+export const CONSTANT_AXIS_RELATIVE_SD = 1e-9;
