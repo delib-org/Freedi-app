@@ -13,7 +13,9 @@ jest.mock('@/controllers/hooks/useTranslation', () => ({
 
 jest.mock('@/view/components/uploadImage/UploadImage', () => ({
 	__esModule: true,
-	default: () => <div data-testid="upload-image" />,
+	default: ({ variant }: { variant?: string }) => (
+		<div data-testid="upload-image" data-variant={variant} />
+	),
 }));
 
 const STATEMENT = { statementId: 's1', statement: 'A shared street' } as Statement;
@@ -99,6 +101,16 @@ describe('StatementImage', () => {
 
 			fireEvent.click(screen.getByTitle('Remove Image'));
 			expect(onRemove).toHaveBeenCalledTimes(1);
+		});
+
+		it.each([
+			['thumb', 'cover'],
+			['above', 'compact'],
+			['inline', 'inline'],
+		] as const)('in %s mode sizes the upload zone as %s', (displayMode, variant) => {
+			renderImage(true, displayMode);
+
+			expect(screen.getByTestId('upload-image')).toHaveAttribute('data-variant', variant);
 		});
 	});
 });

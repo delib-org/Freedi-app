@@ -15,6 +15,9 @@ interface Props {
 	fileInputRef?: React.RefObject<HTMLInputElement>;
 }
 
+// How the admin's upload zone sizes the picture in each mode.
+const UPLOAD_VARIANTS = { above: 'compact', inline: 'inline', thumb: 'cover' } as const;
+
 const StatementImage: FC<Props> = ({
 	statement,
 	image,
@@ -27,8 +30,6 @@ const StatementImage: FC<Props> = ({
 	const { t, dir } = useTranslation();
 	const [isEnlarged, setIsEnlarged] = useState(false);
 
-	// Determine variant and container class based on display mode
-	const variant = displayMode === 'inline' ? 'inline' : 'compact';
 	const containerClass = `${styles.imageContainer} ${styles[displayMode]}`;
 
 	// Float direction for inline mode
@@ -47,7 +48,7 @@ const StatementImage: FC<Props> = ({
 					image={image}
 					setImage={setImage}
 					isAdmin={isAdmin}
-					variant={variant}
+					variant={UPLOAD_VARIANTS[displayMode]}
 				/>
 			) : (
 				<>

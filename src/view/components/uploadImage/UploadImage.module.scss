@@ -61,6 +61,39 @@
 			max-height: var(--statement-image-max-height, 200px);
 		}
 	}
+
+	// Cover variant - the picture fills the box its parent gives it, edge to edge
+	// (the answer card's photo column). The zone keeps its 100% height and never
+	// sizes itself to the picture. Upload feedback floats over the photo so that
+	// it cannot squeeze it.
+	&.cover {
+		min-height: 0;
+		border-radius: 0;
+
+		.imagePreview {
+			width: 100%;
+			height: 100%;
+			max-width: none;
+			max-height: none;
+			border-radius: 0;
+			object-fit: cover;
+		}
+
+		.progressContainer,
+		.errorMessage {
+			position: absolute;
+			inset-inline: 0;
+			inset-block-end: 0;
+			width: auto;
+			max-width: none;
+			padding: var(--space-2xs);
+			background-color: var(--card-default);
+		}
+
+		p {
+			font-size: var(--font-size-xs);
+		}
+	}
 }
 
 .dropZoneActive {
