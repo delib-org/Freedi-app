@@ -271,8 +271,9 @@ describe('useAnswerBatch', () => {
 		}
 	});
 
-	it('asks again for later answers after finishing, at most every 30 seconds', async () => {
+	it('asks again for later answers after finishing, no sooner than the interval', async () => {
 		jest.useFakeTimers();
+		const random = jest.spyOn(Math, 'random').mockReturnValue(0);
 		try {
 			mockFetch.mockResolvedValueOnce(page(['a1'], { hasMore: false, remaining: 0 }));
 			const store = makeStore();
@@ -299,8 +300,37 @@ describe('useAnswerBatch', () => {
 			expect(mockFetch).toHaveBeenCalledTimes(2);
 			expect(ids(result.current.answers)).toEqual(['a2']);
 		} finally {
+			random.mockRestore();
 			jest.useRealTimers();
 		}
+	});
+
+	it('asks for the new question when the reader moved there during a call', async () => {
+		let finishFirst: (value: AnswerBatchPage) => void = () => undefined;
+		mockFetch.mockReturnValueOnce(
+			new Promise((resolve) => {
+				finishFirst = resolve;
+			}),
+		);
+		const store = makeStore();
+		const wrapper = ({ children }: { children: ReactNode }) => (
+			<Provider store={store}>{children}</Provider>
+		);
+		const { rerender } = renderHook(({ id }: { id: string }) => useAnswerBatch(id, true, 40), {
+			initialProps: { id: QUESTION },
+			wrapper,
+		});
+		expect(mockFetch).toHaveBeenCalledTimes(1);
+
+		mockFetch.mockResolvedValueOnce(page([]));
+		rerender({ id: 'other-question' });
+		expect(mockFetch).toHaveBeenCalledTimes(1);
+
+		await act(async () => {
+			finishFirst(page(['a1']));
+		});
+
+		await waitFor(() => expect(mockFetch).toHaveBeenLastCalledWith('other-question'));
 	});
 
 	it('listens to the batch on screen only and stops when it changes or unmounts', async () => {

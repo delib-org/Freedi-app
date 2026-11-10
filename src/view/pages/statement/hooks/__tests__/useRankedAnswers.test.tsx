@@ -95,12 +95,12 @@ describe('useRankedAnswers', () => {
 		const { result } = render(makeStore());
 		await waitFor(() => expect(result.current.hasMore).toBe(true));
 
-		mockFetch.mockResolvedValueOnce(page(['c'], false));
+		mockFetch.mockResolvedValueOnce(page(['c']));
 		act(() => result.current.loadMore());
 
 		await waitFor(() => expect(result.current.rankedIds).toEqual(new Set(['a', 'b', 'c'])));
 		expect(mockFetch).toHaveBeenLastCalledWith(QUESTION, { consensus: 0.5, statementId: 'b' });
-		expect(result.current.hasMore).toBe(false);
+		expect(result.current.hasMore).toBe(true);
 	});
 
 	it('does not cut a small question to the fetched page, so new answers show', async () => {
@@ -125,6 +125,55 @@ describe('useRankedAnswers', () => {
 		expect(result.current.isListed(answer('old-mine', { creatorId: 'me', createdAt: 1 }))).toBe(
 			false,
 		);
+	});
+
+	it('shows the whole store once the list has reached its end, even past a page', async () => {
+		mockFetch.mockResolvedValueOnce(page(['a'], false));
+		const { result } = render(makeStore(RANKED_ANSWERS.PAGE_SIZE + 10));
+		await waitFor(() => expect(result.current.isTopLoaded).toBe(true));
+
+		expect(result.current.rankedIds).toBeUndefined();
+		expect(result.current.isListed(answer('added-later'))).toBe(true);
+		expect(result.current.hasMore).toBe(false);
+	});
+
+	it('runs a "Show more" tapped during a refresh once the refresh ends', async () => {
+		jest.useFakeTimers();
+		try {
+			mockFetch.mockResolvedValueOnce(page(['a']));
+			const { result } = render(makeStore());
+			await act(async () => {
+				await jest.advanceTimersByTimeAsync(0);
+			});
+
+			let finishRefresh: (value: TopAnswersPage) => void = () => undefined;
+			mockFetch.mockReturnValueOnce(
+				new Promise((resolve) => {
+					finishRefresh = resolve;
+				}),
+			);
+			await act(async () => {
+				await jest.advanceTimersByTimeAsync(RANKED_ANSWERS.REFRESH_MS + 10);
+			});
+			expect(mockFetch).toHaveBeenCalledTimes(2);
+
+			mockFetch.mockResolvedValueOnce(page(['b']));
+			act(() => result.current.loadMore());
+			expect(result.current.isLoading).toBe(true);
+			expect(mockFetch).toHaveBeenCalledTimes(2);
+
+			await act(async () => {
+				finishRefresh(page(['a']));
+				await jest.advanceTimersByTimeAsync(0);
+			});
+
+			expect(mockFetch).toHaveBeenCalledTimes(3);
+			expect(mockFetch).toHaveBeenLastCalledWith(QUESTION, { consensus: 0.5, statementId: 'a' });
+			expect(result.current.isLoading).toBe(false);
+			expect(result.current.rankedIds).toEqual(new Set(['a', 'b']));
+		} finally {
+			jest.useRealTimers();
+		}
 	});
 
 	it('refreshes the top page at most once a minute while the tab is visible', async () => {

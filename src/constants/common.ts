@@ -242,7 +242,9 @@ export const REDUX = {
  */
 export const RATE_VIEW = {
 	/** While nothing is left to rate, ask again this often at most when answers are added */
-	FINISHED_REFRESH_MS: 30 * 1000,
+	FINISHED_REFRESH_MS: 60 * 1000,
+	/** Each person adds up to this much to that wait, so a crowd does not ask together */
+	FINISHED_REFRESH_SPREAD_MS: 30 * 1000,
 	/** First wait after the sampler call fails; doubles per failure */
 	FAILURE_RETRY_BASE_MS: 5 * 1000,
 	FAILURE_RETRY_MAX_MS: 5 * 60 * 1000,

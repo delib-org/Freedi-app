@@ -133,7 +133,8 @@ export async function resolveQuestionParticipation(
 		throw new HttpsError('permission-denied', 'You cannot take part in this space');
 	}
 	if (levels.some(({ statement }) => statement?.hide === true)) {
-		if ((await findStatementAdminSource(uid, question)) === null) {
+		const isHostInTree = levels.some(({ role }) => role !== undefined && HOST_ROLES.has(role));
+		if (!isHostInTree && (await findStatementAdminSource(uid, question)) === null) {
 			throw new HttpsError('not-found', 'Statement not found');
 		}
 

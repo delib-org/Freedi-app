@@ -54,6 +54,7 @@ export function useAnswerBatch(
 	const inFlightRef = useRef(false);
 	const lastAskRef = useRef<LastAsk | null>(null);
 	const emptyAnswersRef = useRef(0);
+	const finishedSpreadRef = useRef(Math.random() * RATE_VIEW.FINISHED_REFRESH_SPREAD_MS);
 	const answerCountRef = useRef(answerCount);
 	answerCountRef.current = answerCount;
 
@@ -120,6 +121,7 @@ export function useAnswerBatch(
 			lastAsk: lastAskRef.current,
 			failure,
 			now: Date.now(),
+			finishedSpreadMs: finishedSpreadRef.current,
 		});
 		if (decision.kind === 'wait') return;
 		if (decision.kind === 'ask-later') {
@@ -175,6 +177,8 @@ export function useAnswerBatch(
 			.finally(() => {
 				inFlightRef.current = false;
 				setIsLoading(false);
+				// The reader may have moved to another question during this call.
+				setWakeCount((count) => count + 1);
 			});
 	}, [
 		active,

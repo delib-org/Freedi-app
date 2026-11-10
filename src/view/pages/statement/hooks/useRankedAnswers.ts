@@ -9,11 +9,7 @@ import {
 	mergeRankedTop,
 	rankedPagesSelector,
 } from '@/redux/answerViews/answerViewsSlice';
-import {
-	fullyLoadedScopeSelector,
-	statementOptionsSelector,
-	statementSelector,
-} from '@/redux/statements/statementsSlice';
+import { fullyLoadedScopeSelector } from '@/redux/statements/statementsSlice';
 import { logError } from '@/utils/errorHandling';
 
 export interface RankedAnswers {
@@ -32,9 +28,10 @@ export interface RankedAnswers {
  * The top answers by consensus, a page at a time. Off until `enabled`, which
  * callers keep false for anyone the score guard does not let see a ranking.
  *
- * The list is cut to what was fetched only when there is more than a page: a
- * small question shows every answer as they arrive. A cut list has no listener,
- * so it refreshes its top page at most once a minute while the tab is visible.
+ * The list is cut to what was fetched only while pages remain: a small question,
+ * or a list paged to its end, shows every answer in the store as they arrive. A
+ * cut list has no listener, so it refreshes its top page at most once a minute
+ * while the tab is visible.
  * An answer this person just added always shows, wherever it ranks.
  */
 export function useRankedAnswers(questionId: string | undefined, enabled: boolean): RankedAnswers {
@@ -45,21 +42,27 @@ export function useRankedAnswers(questionId: string | undefined, enabled: boolea
 	const pages = useSelector(pagesSelect);
 	const fullySelect = useMemo(() => fullyLoadedScopeSelector(questionId), [questionId]);
 	const fullyLoaded = useSelector(fullySelect) !== undefined;
-	const question = useSelector(statementSelector(questionId));
-	const optionsSelect = useMemo(() => statementOptionsSelector(questionId), [questionId]);
-	const loadedAnswers = useSelector(optionsSelect).length;
 	const [isLoading, setIsLoading] = useState(false);
 	const inFlightRef = useRef(false);
+	const refreshingRef = useRef(false);
+	const moreQueuedRef = useRef(false);
 	const failedRef = useRef<string | undefined>(undefined);
 	const fetchedAtRef = useRef(0);
 	const openedAtRef = useRef(Date.now());
 	const cursor = pages?.cursor;
 	const active = enabled && !fullyLoaded && !!questionId;
-	const answerCount = Math.max(question?.numberOfOptions ?? 0, loadedAnswers);
-	const isCut = active && !!pages && (pages.hasMore || answerCount > RANKED_ANSWERS.PAGE_SIZE);
+	const isCut = active && !!pages && pages.hasMore;
 
 	const loadPage = useCallback(() => {
-		if (!questionId || inFlightRef.current) return;
+		if (!questionId) return;
+		// A tap during a refresh runs when the refresh ends, from the cursor it left.
+		if (refreshingRef.current) {
+			moreQueuedRef.current = true;
+			setIsLoading(true);
+
+			return;
+		}
+		if (inFlightRef.current) return;
 		inFlightRef.current = true;
 		setIsLoading(true);
 		fetchTopAnswers(questionId, cursor)
@@ -77,6 +80,9 @@ export function useRankedAnswers(questionId: string | undefined, enabled: boolea
 			});
 	}, [questionId, cursor, dispatch]);
 
+	const loadPageRef = useRef(loadPage);
+	loadPageRef.current = loadPage;
+
 	useEffect(() => {
 		if (active && !pages && failedRef.current !== questionId) loadPage();
 	}, [active, pages, questionId, loadPage]);
@@ -84,9 +90,10 @@ export function useRankedAnswers(questionId: string | undefined, enabled: boolea
 	useEffect(() => {
 		if (!isCut || !questionId) return;
 		const refresh = (): void => {
-			if (document.visibilityState !== 'visible' || inFlightRef.current) return;
+			if (document.visibilityState !== 'visible') return;
+			if (inFlightRef.current || refreshingRef.current) return;
 			if (Date.now() - fetchedAtRef.current < RANKED_ANSWERS.REFRESH_MS) return;
-			inFlightRef.current = true;
+			refreshingRef.current = true;
 			fetchTopAnswers(questionId, undefined)
 				.then(({ ids }) => {
 					fetchedAtRef.current = Date.now();
@@ -96,7 +103,12 @@ export function useRankedAnswers(questionId: string | undefined, enabled: boolea
 					logError(error, { operation: 'useRankedAnswers.refresh', statementId: questionId }),
 				)
 				.finally(() => {
-					inFlightRef.current = false;
+					refreshingRef.current = false;
+					if (moreQueuedRef.current) {
+						moreQueuedRef.current = false;
+						setIsLoading(false);
+						loadPageRef.current();
+					}
 				});
 		};
 		const timer = window.setInterval(refresh, RANKED_ANSWERS.REFRESH_MS);

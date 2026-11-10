@@ -17,6 +17,8 @@ export interface BatchRequestInput {
 	lastAsk: LastAsk | null;
 	failure: RateBatchFailure | undefined;
 	now: number;
+	/** This person's share of the spread added to the finished re-ask. */
+	finishedSpreadMs?: number;
 }
 
 export type BatchRequestDecision =
@@ -39,6 +41,7 @@ export function decideBatchRequest({
 	lastAsk,
 	failure,
 	now,
+	finishedSpreadMs = 0,
 }: BatchRequestInput): BatchRequestDecision {
 	if (failure) return lastAsk === null && now >= failure.retryAt ? ASK : WAIT;
 	if (entry && unratedShown > 0) return WAIT;
@@ -48,11 +51,10 @@ export function decideBatchRequest({
 
 	// Finished. Only new answers can change that, and at a bounded pace.
 	if (answerCount <= lastAsk.answers) return WAIT;
+	const interval = RATE_VIEW.FINISHED_REFRESH_MS + finishedSpreadMs;
 	const waited = now - lastAsk.at;
 
-	return waited >= RATE_VIEW.FINISHED_REFRESH_MS
-		? ASK
-		: { kind: 'ask-later', delayMs: RATE_VIEW.FINISHED_REFRESH_MS - waited };
+	return waited >= interval ? ASK : { kind: 'ask-later', delayMs: interval - waited };
 }
 
 /** How long a failed view waits before it may try again. */

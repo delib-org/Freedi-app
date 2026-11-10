@@ -45,14 +45,26 @@ describe('decideBatchRequest', () => {
 			expect(decideBatchRequest(input({ entry: finished })).kind).toBe('wait');
 		});
 
-		it('holds a new answer back until 30 seconds have passed', () => {
+		it('holds a new answer back until the interval has passed', () => {
 			expect(decideBatchRequest(input({ entry: finished, answerCount: 41 }))).toEqual({
 				kind: 'ask-later',
 				delayMs: RATE_VIEW.FINISHED_REFRESH_MS,
 			});
 		});
 
-		it('asks once 30 seconds have passed', () => {
+		it("adds this person's spread to the wait", () => {
+			const spread = { entry: finished, answerCount: 41, finishedSpreadMs: 7000 };
+
+			expect(
+				decideBatchRequest(input({ ...spread, now: NOW + RATE_VIEW.FINISHED_REFRESH_MS })),
+			).toEqual({ kind: 'ask-later', delayMs: 7000 });
+			expect(
+				decideBatchRequest(input({ ...spread, now: NOW + RATE_VIEW.FINISHED_REFRESH_MS + 7000 }))
+					.kind,
+			).toBe('ask');
+		});
+
+		it('asks once the interval has passed', () => {
 			expect(
 				decideBatchRequest(
 					input({ entry: finished, answerCount: 41, now: NOW + RATE_VIEW.FINISHED_REFRESH_MS }),

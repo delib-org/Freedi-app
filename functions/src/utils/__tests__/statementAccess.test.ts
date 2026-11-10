@@ -166,6 +166,21 @@ describe('resolveQuestionParticipation', () => {
 		await expect(call()).resolves.toMatchObject({ statementId: 'q' });
 	});
 
+	it('treats an admin of a middle group as an admin of a hidden question', async () => {
+		tree({ question: 'secret' }, { question: { hide: true } });
+		role('middle', 'admin');
+
+		await expect(call()).resolves.toMatchObject({ statementId: 'q' });
+		expect(mockAdminSource).not.toHaveBeenCalled();
+	});
+
+	it('does not let a plain member of a middle group reach a hidden question', async () => {
+		tree({ question: 'public' }, { question: { hide: true } });
+		role('middle', 'member');
+
+		await expect(call()).rejects.toMatchObject({ code: 'not-found' });
+	});
+
 	it('still refuses a banned admin of a hidden question', async () => {
 		mockAdminSource.mockResolvedValue('subscription');
 		tree({ question: 'secret' }, { question: { hide: true } });
