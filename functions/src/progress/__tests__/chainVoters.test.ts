@@ -62,16 +62,16 @@ describe('refreshChainVoters', () => {
 		expect(chainCount(TOP)).toBe(2);
 	});
 
-	it('mirrors the count onto the statement for the evaluation trigger to read', async () => {
-		// The trigger already holds the parent document, so putting the number
-		// there is what makes N free at the point it is used.
+	it('keeps the count off the question document, which reaches everyone present', async () => {
 		seedProgress(TOP, 2);
 		seedVoter(TOP, 'ada');
 		seedVoter(TOP, 'grace');
+		const before = { ...fake.read(Collections.statements, TOP) };
 
 		await refreshChainVoters(TOP);
 
-		expect(mirroredOnStatement(TOP)).toBe(2);
+		expect(chainCount(TOP)).toBe(2);
+		expect(fake.read(Collections.statements, TOP)).toEqual(before);
 	});
 
 	it('inherits the voters of the question above', async () => {

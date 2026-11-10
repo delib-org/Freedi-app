@@ -20,18 +20,15 @@
  *
  * A new voter in a question changes the number for that question AND for every
  * question nested below it — a fan-out that is unbounded in the tree's width.
- * Instead each question refreshes its own number whenever a vote lands in it,
- * which is precisely when the number is about to be consumed by the evaluation
- * trigger. A question nobody is voting in keeps a stale count, and that is the
- * correct behaviour rather than a tolerated one: the recorded N is meant to be
- * the N that produced the scores currently stored on its options.
+ * Instead each question refreshes its own number whenever a vote lands in it.
+ * A question nobody is voting in keeps a stale count, which is harmless for a
+ * statistic that no score depends on.
  *
  * Cost in the common case (a question with no ancestors, or none that anyone
  * votes in directly) is a single document read, and no read at all once the
  * fingerprint below stops moving.
  */
 
-import { FieldValue } from 'firebase-admin/firestore';
 import { Collections, QuestionParticipation, Statement } from '@freedi/shared-types';
 import { db } from '../db';
 import { logError } from '../utils/errorHandling';
@@ -151,22 +148,9 @@ export async function refreshChainVoters(questionId: string): Promise<number | u
 			? ((await countChainUnion(chain)) ?? Math.max(...evaluatedPerQuestion))
 			: evaluatedPerQuestion[0];
 
-		const now = Date.now();
-		const batch = db.batch();
-		batch.set(progressRef, { chainEvaluated: count, chainKey: fingerprint }, { merge: true });
-		// Mirrored onto the statement so the evaluation trigger reads it off the
-		// parent document it is already holding, at no extra cost, and so the
-		// settings screen can show the admin what N their options are using.
-		// The fingerprint can move while the union stays put (somebody who already
-		// voted up the chain votes here too): then the statement is left alone, so
-		// its lastUpdate does not move for a number that did not.
-		if (stored?.chainEvaluated !== count) {
-			batch.update(db.collection(Collections.statements).doc(questionId), {
-				'evaluation.chainEvaluators': count > 0 ? count : FieldValue.delete(),
-				lastUpdate: now,
-			});
-		}
-		await batch.commit();
+		// Kept here only, never copied onto the question document: nothing reads
+		// the copy, and a write there on every first rating reaches everyone present.
+		await progressRef.set({ chainEvaluated: count, chainKey: fingerprint }, { merge: true });
 
 		return count;
 	} catch (error) {

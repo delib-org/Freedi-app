@@ -122,6 +122,23 @@ describe('privacyExportUtils', () => {
 			expect(result.totalParticipants).toBe(2);
 		});
 
+		it('reads entrants from the progress doc for questions no longer counting on the statement', () => {
+			const parent = makeStatement({});
+			const options = [makeOption('o1', 'userA')];
+
+			const result = buildParticipationSummary(parent, options, [], { entered: 40 });
+
+			expect(result.enteredCount).toBe(40);
+		});
+
+		it('keeps views recorded on older statements when progress has fewer', () => {
+			const parent = makeStatement({ viewed: { individualViews: 90 } });
+
+			const result = buildParticipationSummary(parent, [], [], { entered: 4 });
+
+			expect(result.enteredCount).toBe(90);
+		});
+
 		it('falls back to creator.uid when creatorId is missing', () => {
 			const parent = makeStatement({});
 			const option = makeStatement({

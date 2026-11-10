@@ -8,16 +8,20 @@
  * O(N^2) over a vote). It is now maintained incrementally:
  *
  * - `evaluationParticipants/{parentId}--{userId}` marks "this user is counted".
- * - On an evaluation event a transaction creates the marker and increments the
- *   question's counters by one. If the marker already exists nothing is
- *   written, so duplicate / re-delivered / out-of-order events are idempotent
- *   and concurrent first evaluations by different users each add exactly one.
+ * - On an evaluation event a transaction creates the marker. If the marker
+ *   already exists nothing is written, so duplicate / re-delivered /
+ *   out-of-order events are idempotent and concurrent first evaluations by
+ *   different users each add exactly one marker. The markers ARE the count.
+ * - The question's counters are a copy, refreshed from an exact count of the
+ *   markers at milestones (`isCounterMilestone`), because every write to the
+ *   question document reaches everyone present. These counters are shown to
+ *   people; they are not an input to the consensus score.
  * - A neutral evaluation (value 0) is participation and counts.
  * - Once counted a participant stays counted: deleting evaluations never
  *   decrements (agreed behaviour change vs. the old scan).
- * - A real count change also stamps the question's `lastUpdate` (same write),
+ * - A copied count also stamps the question's `lastUpdate` (same write),
  *   because delta listeners (`lastUpdate > watermark`) are the only live
- *   channel for bulk-loaded scopes. No change, no write, no stamp.
+ *   channel for bulk-loaded scopes.
  *
  * `reconcileParentEvaluators` is the explicit, on-demand full recount. Full
  * scans never run in ordinary evaluation processing.
@@ -25,8 +29,7 @@
 
 import { logger } from 'firebase-functions/v1';
 import type { Firestore, Transaction, WriteBatch } from 'firebase-admin/firestore';
-import { FieldValue } from 'firebase-admin/firestore';
-import { Collections, Evaluation, Statement } from '@freedi/shared-types';
+import { Collections, Evaluation, Statement, isCounterMilestone } from '@freedi/shared-types';
 import type { EvaluationParticipant } from '@freedi/shared-types';
 import { db } from '../index';
 import { logError } from '../utils/errorHandling';
@@ -50,8 +53,9 @@ type BatchOperation = (batch: WriteBatch) => void;
 /**
  * Counts `userId` as a participant of question `parentId` if not counted yet.
  *
- * Cost when already counted: 1 read, 0 writes. First time: 2 reads
- * (marker + question), 2 writes (marker + question counters).
+ * Cost when already counted: 1 read, 0 writes. First time: 3 reads (marker,
+ * question, count of markers), 1 write (marker), plus 1 write to the question
+ * when the new count is a milestone.
  *
  * @returns true when this call added the user to the count.
  */
@@ -65,27 +69,31 @@ export async function recordEvaluatorParticipation(
 	try {
 		const markerRef = participantRef(firestore, parentId, userId);
 		const parentRef = firestore.collection(Collections.statements).doc(parentId);
+		let parent: Statement | undefined;
 
-		return await firestore.runTransaction(async (transaction: Transaction) => {
+		const added = await firestore.runTransaction(async (transaction: Transaction) => {
 			const marker = await transaction.get(markerRef);
 			if (marker.exists) return false;
 
-			const parentDoc = await transaction.get(parentRef);
+			// A plain read, not transaction.get: the question is shared by every
+			// rater, and a transactional read would queue them all behind it.
+			const parentDoc = await parentRef.get();
 			if (!parentDoc.exists) {
 				logger.warn(`recordEvaluatorParticipation: question ${parentId} not found`);
 
 				return false;
 			}
+			parent = parentDoc.data() as Statement;
 
 			const participant: EvaluationParticipant = { parentId, userId, createdAt: Date.now() };
 			transaction.create(markerRef, participant);
-			transaction.update(
-				parentRef,
-				buildCounterPatch(parentDoc.data() as Statement, FieldValue.increment(1)),
-			);
 
 			return true;
 		});
+
+		if (added && parent) await copyCountToQuestion(firestore, parentId, parent);
+
+		return added;
 	} catch (error) {
 		// Not fatal: the user's next evaluation event retries, and reconcile fixes any drift.
 		logError(error, {
@@ -94,6 +102,37 @@ export async function recordEvaluatorParticipation(
 		});
 
 		return false;
+	}
+}
+
+/**
+ * Refreshes the question's copy of the count when it reaches a milestone. The
+ * number comes from the markers, so a failed or skipped copy heals at the next
+ * milestone, and it never touches the marker that was just committed.
+ */
+async function copyCountToQuestion(
+	firestore: Firestore,
+	parentId: string,
+	parent: Statement,
+): Promise<void> {
+	try {
+		const countSnapshot = await firestore
+			.collection(Collections.evaluationParticipants)
+			.where('parentId', '==', parentId)
+			.count()
+			.get();
+		const count = countSnapshot.data().count;
+		if (!isCounterMilestone(count)) return;
+
+		await firestore
+			.collection(Collections.statements)
+			.doc(parentId)
+			.update(buildCounterPatch(parent, count));
+	} catch (error) {
+		logError(error, {
+			operation: 'evaluation.copyCountToQuestion',
+			metadata: { parentId },
+		});
 	}
 }
 

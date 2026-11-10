@@ -261,3 +261,50 @@ describe('backfill', () => {
 		expect(mockFake.list('evaluationParticipants')).toHaveLength(8);
 	});
 });
+
+describe('the question copy of the count', () => {
+	const rate = async (from: number, to: number): Promise<void> => {
+		for (let i = from; i <= to; i += 1) {
+			await recordEvaluatorParticipation(QUESTION, `user-${i}`, fsAny);
+		}
+	};
+	const markers = (): number => mockFake.list('evaluationParticipants').length;
+
+	beforeEach(() => {
+		mockFake.clear();
+		mockFake.resetCounts();
+		seedQuestion();
+	});
+
+	it('leaves the question alone between milestones while every person is still counted', async () => {
+		await rate(1, 20);
+		expect(countOf()).toBe(20);
+		const stamped = mockFake.peek(`statements/${QUESTION}`)?.lastUpdate;
+		mockFake.resetCounts();
+
+		await rate(21, 24);
+
+		expect(markers()).toBe(24);
+		expect(countOf()).toBe(20);
+		expect(mockFake.peek(`statements/${QUESTION}`)?.lastUpdate).toBe(stamped);
+		expect(mockFake.writeLog.filter((line) => line.includes(`statements/${QUESTION}`))).toEqual([]);
+	});
+
+	it('copies the exact count at the next milestone', async () => {
+		await rate(1, 25);
+
+		expect(markers()).toBe(25);
+		expect(countOf()).toBe(25);
+		expect(mockFake.peek(`statements/${QUESTION}`)?.totalEvaluators).toBe(25);
+	});
+
+	it('a reconcile still brings the question to the exact count between milestones', async () => {
+		await rate(1, 22);
+		for (let i = 1; i <= 22; i += 1) seedEvaluation(`e${i}`, `user-${i}`);
+
+		const result = await reconcileParentEvaluators(QUESTION, fsAny);
+
+		expect(result.count).toBe(22);
+		expect(countOf()).toBe(22);
+	});
+});

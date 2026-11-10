@@ -220,6 +220,43 @@ export async function recordParticipation(input: RecordParticipationInput): Prom
 	}
 }
 
+export interface RecordMemberCountInput {
+	statementId: string;
+	/** Exact current member count (a fresh recount, not a delta). */
+	members: number;
+	topParentId?: string;
+	organizationId?: string;
+	now?: number;
+}
+
+/**
+ * Stores a question's or group's exact member count on its progress doc, which
+ * has no listeners, so a join or leave does not reach everyone present.
+ * `increment(0)` keeps a freshly created doc schema-complete, as in
+ * `recordParticipation`. Throws so the caller can log with its own context.
+ */
+export async function recordMemberCount(input: RecordMemberCountInput): Promise<void> {
+	const { statementId, members } = input;
+	const now = input.now ?? Date.now();
+	const ctx = await resolveContext({ ...input, userId: '', kind: 'entered' });
+
+	await db
+		.collection(Collections.questionProgress)
+		.doc(statementId)
+		.set(
+			{
+				...baseProgressFields(statementId, ctx, now),
+				entered: FieldValue.increment(0),
+				suggested: FieldValue.increment(0),
+				evaluated: FieldValue.increment(0),
+				options: FieldValue.increment(0),
+				evaluations: FieldValue.increment(0),
+				members,
+			},
+			{ merge: true },
+		);
+}
+
 export interface TouchActivityInput {
 	statementId: string;
 	topParentId?: string;

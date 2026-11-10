@@ -457,8 +457,10 @@ describe('op counts: one new evaluation on a question with N existing evaluation
 		);
 
 		Object.keys(scenarios).forEach((name) => {
-			// after: constant in N; before: grows with N
-			expect(new Set(afterReads[name]).size).toBe(1);
+			// after: flat in N, except that a first rating bills one read per 1,000
+			// markers for the count aggregation; before: grows with N
+			const spread = Math.max(...afterReads[name]) - Math.min(...afterReads[name]);
+			expect(spread).toBeLessThanOrEqual(Math.ceil(sizes[sizes.length - 1] / 1000));
 			expect(beforeReads[name][3]).toBeGreaterThan(beforeReads[name][0] * 100);
 		});
 	}, 120000);

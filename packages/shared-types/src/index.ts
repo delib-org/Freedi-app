@@ -171,12 +171,15 @@ export {
 } from "./models/organization";
 
 // Per-question participation funnel (server-maintained)
-export type { QuestionProgress, QuestionParticipation } from "./models/progress";
+export type { QuestionProgress, QuestionParticipation, CounterProgress } from "./models/progress";
 
 export {
   QuestionProgressSchema,
   QuestionParticipationSchema,
   getQuestionParticipationId,
+  isCounterMilestone,
+  resolveMemberCount,
+  resolveViewCount,
 } from "./models/progress";
 
 // WizCol Studio — "Start a question with AI": plan sessions, diagnosis, scheduled actions

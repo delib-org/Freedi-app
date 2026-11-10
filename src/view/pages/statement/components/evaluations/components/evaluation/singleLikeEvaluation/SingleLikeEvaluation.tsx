@@ -144,7 +144,9 @@ const SingleLikeEvaluation: FC<Props> = ({
 		}
 	};
 
-	const likePercentage = totalEvaluators > 0 ? Math.round((likesCount / totalEvaluators) * 100) : 0;
+	// The question's evaluator count is copied at milestones, so it can trail the likes.
+	const likePercentage =
+		totalEvaluators > 0 ? Math.min(100, Math.round((likesCount / totalEvaluators) * 100)) : 0;
 
 	const likeButton = (
 		<button

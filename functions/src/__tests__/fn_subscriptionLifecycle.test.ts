@@ -246,4 +246,54 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 
 		expect(feedOf('alice')).toBeDefined();
 	});
+
+	describe('keeping the question document quiet', () => {
+		const progress = (id = DISCUSSION) => mockDb.read(Collections.questionProgress, id);
+		const statementLastUpdate = (): unknown =>
+			mockDb.read(Collections.statements, DISCUSSION)?.lastUpdate;
+		const joinMany = async (from: number, to: number): Promise<void> => {
+			for (let i = from; i <= to; i += 1) await joinAs(`user${i}`, Role.member);
+		};
+
+		it('stores the exact count on the progress doc for every join', async () => {
+			await joinMany(1, 3);
+
+			expect(progress()?.members).toBe(3);
+		});
+
+		it('leaves the question alone between milestones', async () => {
+			await joinMany(1, 20);
+			expect(memberCount()).toBe(20);
+			const stamped = statementLastUpdate();
+
+			await joinMany(21, 24);
+
+			expect(memberCount()).toBe(20);
+			expect(statementLastUpdate()).toBe(stamped);
+			expect(progress()?.members).toBe(24);
+		});
+
+		it('copies the exact number when a milestone is reached', async () => {
+			await joinMany(1, 25);
+
+			expect(memberCount()).toBe(25);
+			expect(progress()?.members).toBe(25);
+		});
+
+		it('recounts a leave on the progress doc too', async () => {
+			await joinMany(1, 21);
+			await leave(`user21--${DISCUSSION}`);
+
+			expect(progress()?.members).toBe(20);
+			expect(memberCount()).toBe(20);
+		});
+
+		it('writes the count straight to statements that have no progress doc', async () => {
+			const overrides = { statementType: StatementType.option };
+			for (let i = 1; i <= 21; i += 1) await joinAs(`user${i}`, Role.member, overrides);
+
+			expect(memberCount()).toBe(21);
+			expect(progress()).toBeUndefined();
+		});
+	});
 });

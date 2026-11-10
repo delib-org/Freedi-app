@@ -2,8 +2,9 @@ import { FC, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router';
 import clsx from 'clsx';
 import { useSelector } from 'react-redux';
-import { Statement } from '@freedi/shared-types';
+import { resolveMemberCount, Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useQuestionProgress } from '@/controllers/hooks/useQuestionProgress';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
 import { formatTimeRemaining } from '@/helpers/deadlineHelpers';
 import StatementBody from '@/view/components/atomic/molecules/StatementBody/StatementBody';
@@ -13,6 +14,9 @@ import { HOW_IT_WORKS_ANCHOR } from './questionTabs';
 import GroupProgress from './GroupProgress';
 import type { QuestionScreenData } from './useQuestionScreenData';
 import styles from './QuestionScreen.module.scss';
+
+/** Nothing here changes the member count, so the one read on open is enough. */
+const MEMBER_COUNT_ACTION_KEY = 'open';
 
 /** One line under each stage in "How it works" — the prototype's HOW copy. */
 const HOW_KEYS: readonly string[] = [
@@ -40,7 +44,8 @@ const BackgroundTab: FC<BackgroundTabProps> = ({ statement, data }) => {
 	const space = useSelector(statementSelectorById(statement.topParentId));
 	const hostName = statement.creator?.displayName;
 	const deadline = statement.questionSettings?.deadline;
-	const members = statement.numberOfMembers;
+	const progress = useQuestionProgress(statement.statementId, MEMBER_COUNT_ACTION_KEY);
+	const members = resolveMemberCount(progress, statement);
 
 	// Client-side navigation does not scroll to a hash by itself.
 	useEffect(() => {
