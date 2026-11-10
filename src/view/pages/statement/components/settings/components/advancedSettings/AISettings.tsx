@@ -200,7 +200,7 @@ const AISettings: FC<AISettingsProps> = ({
 			{showClustering && isQuestion && (
 				<Subsection
 					icon={Map}
-					title={t('Cluster map')}
+					title={t('Topics map')}
 					description={t(
 						'Control how the cluster map looks: text size, which layers show, and provenance.',
 					)}

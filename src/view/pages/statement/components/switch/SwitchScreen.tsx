@@ -254,7 +254,7 @@ function ViewByActiveTab({
 				return <TreeView typeFilter={QA_TYPE_FILTER} showSortNav defaultCollapsed />;
 			}
 
-			return <StagePage />;
+			return <StagePage canAddAnswer={data.canAddAnswer} />;
 		case 'questions':
 			if (isTreeView) {
 				return <TreeView typeFilter={QUESTIONS_ONLY_FILTER} showSortNav />;

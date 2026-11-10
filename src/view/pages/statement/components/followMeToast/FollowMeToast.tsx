@@ -27,8 +27,8 @@ function getScreenName(path: string | undefined, t: (key: string) => string): st
 		settings: t('Settings'),
 		'mind-map': t('Mind map'),
 		'agreement-map': t('Agreement Map'),
-		'polarization-index': t('Polarization Index'),
-		'sub-questions-map': t('Sub Questions Map'),
+		'polarization-index': t('Disagreement map'),
+		'sub-questions-map': t('Questions map'),
 	};
 
 	// Check search params first (?tab=options)

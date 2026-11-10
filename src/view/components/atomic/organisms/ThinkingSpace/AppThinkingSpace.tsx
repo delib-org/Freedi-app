@@ -127,6 +127,7 @@ export default function AppThinkingSpace({
 								onAsk={() => {
 									if (!answerCompose.compose()) setAskOpen(true);
 								}}
+								canCompose={answerCompose.canCompose}
 								t={t}
 							/>
 						) : undefined

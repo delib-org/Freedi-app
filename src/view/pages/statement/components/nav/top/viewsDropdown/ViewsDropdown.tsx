@@ -88,7 +88,7 @@ const ViewsDropdown: FC<ViewsDropdownProps> = ({ statement, screen, headerStyle,
 						onOptionClick={() => handleOptionClick(Screen.agreementMap)}
 					/>
 					<MenuOption
-						label={t('Collaboration Index')}
+						label={t('Disagreement map')}
 						icon={<TriangleIcon style={{ color: '#4E88C7' }} />}
 						onOptionClick={() => handleOptionClick(Screen.polarizationIndex)}
 					/>
@@ -99,7 +99,7 @@ const ViewsDropdown: FC<ViewsDropdownProps> = ({ statement, screen, headerStyle,
 					/>
 					{statement.statementSettings?.enableSubQuestionsMap !== false && (
 						<MenuOption
-							label={t('Statement Map')}
+							label={t('Questions map')}
 							icon={<MapIcon style={{ color: '#4E88C7' }} />}
 							onOptionClick={() => handleOptionClick(Screen.subQuestionsMap)}
 						/>

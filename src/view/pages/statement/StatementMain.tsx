@@ -4,10 +4,12 @@ import { useDispatch } from 'react-redux';
 // Components
 import LoadingPage from '../loadingPage/LoadingPage';
 import Page404 from '../page404/Page404';
-import UnAuthorizedPage from '../unAuthorizedPage/UnAuthorizedPage';
+import Page401 from '../page401/Page401';
+import WaitingPage from '../waiting/WaitingPage';
 
 // Types
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { RootState } from '@/redux/store';
 
 // Custom hooks
@@ -41,6 +43,7 @@ export const subStatementsSelector = selectSubStatementsByParent;
 
 const StatementMain: React.FC = () => {
 	const dispatch = useDispatch();
+	const { t } = useTranslation();
 	const prevStatementIdRef = React.useRef<string | undefined>(undefined);
 
 	// Use custom hooks to manage data and side effects
@@ -149,18 +152,19 @@ const StatementMain: React.FC = () => {
 			case COMPONENT_STATES.ERROR:
 				return (
 					<div className="page">
-						<h1>Error: {error}</h1>
-						<button onClick={resetError}>Retry</button>
+						<h1>{t('Something went wrong')}</h1>
+						{error && <p>{t(error)}</p>}
+						<button onClick={resetError}>{t('Retry')}</button>
 					</div>
 				);
 			case COMPONENT_STATES.NOT_FOUND:
 				return <Page404 />;
 			case COMPONENT_STATES.WAITING_APPROVAL:
-				return <h1>Waiting for approval</h1>;
+				return <WaitingPage />;
 			case COMPONENT_STATES.LOADING:
 				return <LoadingPage />;
 			case COMPONENT_STATES.UNAUTHORIZED:
-				return <UnAuthorizedPage />;
+				return <Page401 />;
 			case COMPONENT_STATES.AUTHORIZED:
 				return (
 					<StatementProvider
@@ -182,7 +186,7 @@ const StatementMain: React.FC = () => {
 					/>
 				);
 			default:
-				return <UnAuthorizedPage />;
+				return <Page401 />;
 		}
 	};
 

@@ -153,17 +153,17 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 					onOptionClick={() => handleNavigateToMap(Screen.agreementMap)}
 				/>
 				<MenuOption
-					label={t('Collaboration Index')}
+					label={t('Disagreement map')}
 					icon={<TriangleIcon style={menuIconStyle} />}
 					onOptionClick={() => handleNavigateToMap(Screen.polarizationIndex)}
 				/>
 				<MenuOption
-					label={t('Mind Map')}
+					label={t('Mind map')}
 					icon={<MapIcon style={menuIconStyle} />}
 					onOptionClick={() => handleNavigateToMap(Screen.mindMap)}
 				/>
 				<MenuOption
-					label={t('Cluster Map')}
+					label={t('Topics map')}
 					icon={<MapIcon style={menuIconStyle} />}
 					onOptionClick={() => {
 						onNavigateToClusterMap();
@@ -172,7 +172,7 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 				/>
 				{statement.statementSettings?.enableSubQuestionsMap !== false && (
 					<MenuOption
-						label={t('Statement Map')}
+						label={t('Questions map')}
 						icon={<MapIcon style={menuIconStyle} />}
 						onOptionClick={() => handleNavigateToMap(Screen.subQuestionsMap)}
 					/>
