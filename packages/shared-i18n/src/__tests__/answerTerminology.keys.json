@@ -1868,5 +1868,245 @@
 		"key": "Polarization map. Use arrow keys to move between solutions, Enter to view demographic breakdown, Escape to clear.",
 		"oldEn": null,
 		"newEn": "Disagreement map. Use arrow keys to move between answers, Enter to view demographic breakdown, Escape to clear."
+	},
+	{
+		"key": "Aggregated across all member evaluations (each user counted once).",
+		"oldEn": null,
+		"newEn": "Aggregated across all member ratings (each user counted once)."
+	},
+	{
+		"key": "Anchored sampling allows the admin to insert certain pre-defined options into the evaluation process. These options are prepared in advance and will always appear to participants, no matter what other options are being sampled.",
+		"oldEn": null,
+		"newEn": "Anchored sampling allows the admin to insert certain pre-defined answers into the rating process. These answers are prepared in advance and will always appear to participants, no matter what other answers are being sampled."
+	},
+	{
+		"key": "Choose a target group. This group will be deleted and its originals moved.",
+		"oldEn": null,
+		"newEn": "Choose a target group. This group will be deleted and its original answers moved."
+	},
+	{
+		"key": "Choose how options are sorted when first displayed",
+		"oldEn": null,
+		"newEn": "Choose how answers are sorted when first displayed"
+	},
+	{
+		"key": "Choose suggestions to merge",
+		"oldEn": null,
+		"newEn": "Choose answers to merge"
+	},
+	{
+		"key": "Default Sort Order for Options",
+		"oldEn": null,
+		"newEn": "Default sort order for answers"
+	},
+	{
+		"key": "Delete every group and return originals to the ungrouped list.",
+		"oldEn": null,
+		"newEn": "Delete every group and return the original answers to the ungrouped list."
+	},
+	{
+		"key": "Evaluate",
+		"oldEn": null,
+		"newEn": "Rate"
+	},
+	{
+		"key": "Evidence challenges this idea",
+		"oldEn": null,
+		"newEn": "Evidence challenges this answer"
+	},
+	{
+		"key": "Evidence supports this idea",
+		"oldEn": null,
+		"newEn": "Evidence supports this answer"
+	},
+	{
+		"key": "Finding similar suggestions",
+		"oldEn": null,
+		"newEn": "Finding similar answers"
+	},
+	{
+		"key": "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass, using the similarity thresholds below. Best after re-embedding.",
+		"oldEn": null,
+		"newEn": "Global cluster from scratch? This dissolves all current clusters and re-groups every answer in one pass, using the similarity thresholds below. Best after re-embedding."
+	},
+	{
+		"key": "Global cluster groups every option in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results.",
+		"oldEn": null,
+		"newEn": "Global cluster groups every answer in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results."
+	},
+	{
+		"key": "Group of {count} related suggestions: {title}",
+		"oldEn": null,
+		"newEn": "Group of {count} related answers: {title}"
+	},
+	{
+		"key": "Grouped suggestion",
+		"oldEn": null,
+		"newEn": "Grouped answer"
+	},
+	{
+		"key": "Grouped suggestion representing {count} originals",
+		"oldEn": null,
+		"newEn": "Grouped answer representing {count} original answers"
+	},
+	{
+		"key": "Hide originals",
+		"oldEn": null,
+		"newEn": "Hide original answers"
+	},
+	{
+		"key": "Like this suggestion",
+		"oldEn": null,
+		"newEn": "Like this answer"
+	},
+	{
+		"key": "Merge \"{source}\" ({sourceCount}) into \"{target}\" ({targetCount})? The source group will be deleted and its originals will be added to the target.",
+		"oldEn": null,
+		"newEn": "Merge \"{source}\" ({sourceCount}) into \"{target}\" ({targetCount})? The source group will be deleted and its original answers will be added to the target."
+	},
+	{
+		"key": "New Integrated Suggestion",
+		"oldEn": null,
+		"newEn": "New integrated answer"
+	},
+	{
+		"key": "Options cannot be created under other options",
+		"oldEn": null,
+		"newEn": "Answers cannot be created under other answers"
+	},
+	{
+		"key": "Polarization Index",
+		"oldEn": null,
+		"newEn": "Disagreement map"
+	},
+	{
+		"key": "Preview of grouped suggestions",
+		"oldEn": null,
+		"newEn": "Preview of grouped answers"
+	},
+	{
+		"key": "Questions, options and Results",
+		"oldEn": null,
+		"newEn": "Questions, answers and results"
+	},
+	{
+		"key": "Re-embed all options? This regenerates every option’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute.",
+		"oldEn": null,
+		"newEn": "Re-embed all answers? This regenerates every answer’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute."
+	},
+	{
+		"key": "Re-embed options",
+		"oldEn": null,
+		"newEn": "Re-embed answers"
+	},
+	{
+		"key": "Remove all votes and evaluations from this member",
+		"oldEn": null,
+		"newEn": "Remove all votes and ratings from this member"
+	},
+	{
+		"key": "Remove all {count} groupings? Each group will be deleted and its originals will reappear as standalone options. This cannot be undone.",
+		"oldEn": null,
+		"newEn": "Remove all {count} groupings? Each group will be deleted and its original answers will reappear as standalone answers. This cannot be undone."
+	},
+	{
+		"key": "Selected as the winning option",
+		"oldEn": null,
+		"newEn": "Selected as the winning answer"
+	},
+	{
+		"key": "Show only grouped (clustered) suggestions",
+		"oldEn": null,
+		"newEn": "Show only grouped answers"
+	},
+	{
+		"key": "Show originals",
+		"oldEn": null,
+		"newEn": "Show original answers"
+	},
+	{
+		"key": "Show voting Percentages per option",
+		"oldEn": null,
+		"newEn": "Show voting percentages per answer"
+	},
+	{
+		"key": "Sub Questions Map",
+		"oldEn": null,
+		"newEn": "Questions map"
+	},
+	{
+		"key": "Suggestions Being Merged",
+		"oldEn": null,
+		"newEn": "Answers being merged"
+	},
+	{
+		"key": "The original suggestions will be hidden after integration. All evaluations will be transferred to the new integrated suggestion.",
+		"oldEn": null,
+		"newEn": "The original answers will be hidden after integration. All ratings will be transferred to the new integrated answer."
+	},
+	{
+		"key": "Unable to find similar suggestions",
+		"oldEn": null,
+		"newEn": "Unable to find similar answers"
+	},
+	{
+		"key": "Unlike this suggestion",
+		"oldEn": null,
+		"newEn": "Unlike this answer"
+	},
+	{
+		"key": "Whether it supports, challenges, or is neutral to the idea",
+		"oldEn": null,
+		"newEn": "Whether it supports, challenges, or is neutral to the answer"
+	},
+	{
+		"key": "addOption_aria",
+		"oldEn": null,
+		"newEn": "Add an answer"
+	},
+	{
+		"key": "addSolution_aria",
+		"oldEn": null,
+		"newEn": "Add an answer"
+	},
+	{
+		"key": "eval",
+		"oldEn": null,
+		"newEn": "ratings"
+	},
+	{
+		"key": "evaluators migrated",
+		"oldEn": null,
+		"newEn": "raters moved"
+	},
+	{
+		"key": "no evaluations yet",
+		"oldEn": null,
+		"newEn": "no ratings yet"
+	},
+	{
+		"key": "originals in this group",
+		"oldEn": null,
+		"newEn": "original answers in this group"
+	},
+	{
+		"key": "selected options",
+		"oldEn": null,
+		"newEn": "selected answers"
+	},
+	{
+		"key": "suggestions selected",
+		"oldEn": null,
+		"newEn": "answers selected"
+	},
+	{
+		"key": "{count} evaluators",
+		"oldEn": null,
+		"newEn": "{count} people rated"
+	},
+	{
+		"key": "Evaluations",
+		"oldEn": "Solutions",
+		"newEn": "Ratings"
 	}
 ]

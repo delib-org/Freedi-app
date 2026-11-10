@@ -6,7 +6,12 @@
  */
 
 import en from '../languages/en.json';
+import ar from '../languages/ar.json';
+import de from '../languages/de.json';
+import es from '../languages/es.json';
+import fa from '../languages/fa.json';
 import he from '../languages/he.json';
+import nl from '../languages/nl.json';
 import keysList from './answerTerminology.keys.json';
 
 interface ReviewedKey {
@@ -23,6 +28,13 @@ const heDictionary: Dictionary = he;
 
 const BANNED_EN = /\b(options?|solutions?|suggestions?|ideas?|proposals?)\b/i;
 const BANNED_HE = /אפשרו|הצע|הציע|פתרו|רעיו/;
+const BANNED_BY_LANGUAGE: Array<[string, Dictionary, RegExp]> = [
+	['ar', ar, /اقتراح|فكرة|أفكار|خيارات|خيار(?![ا-ي])|حلول/],
+	['de', de, /L(ö|oe)sung|Vorschl|\bIdeen?\b|\bOption(en)?\b/i],
+	['es', es, /soluci[oó]n|solucion|sugerenc|\bideas?\b|propuesta|\bopci[oó]n|\bopciones\b/i],
+	['nl', nl, /oplossing|suggestie|\bidee(ën)?\b|voorstel|\bopties?\b/i],
+	['fa', fa, /راه.?حل|پیشنهاد|ایده|گزینه/],
+];
 
 const offenders = (dictionary: Dictionary, banned: RegExp): string[] =>
 	reviewed.filter(({ key }) => banned.test(dictionary[key] ?? '')).map(({ key }) => key);
@@ -54,4 +66,11 @@ describe('answer terminology (reviewed key list)', () => {
 	it('no reviewed Hebrew value uses a banned synonym', () => {
 		expect(offenders(heDictionary, BANNED_HE)).toEqual([]);
 	});
+
+	it.each(BANNED_BY_LANGUAGE)(
+		'no reviewed %s value uses a banned synonym',
+		(_name, dictionary, banned) => {
+			expect(offenders(dictionary, banned)).toEqual([]);
+		},
+	);
 });
