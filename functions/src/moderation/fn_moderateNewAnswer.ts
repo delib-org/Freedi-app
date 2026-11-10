@@ -1,17 +1,23 @@
 /**
- * Every new answer written by the main app gets one server-side language check.
- * A flagged answer is hidden, marked and its author told once; nothing is deleted.
+ * Server-side language check on main-app answers: when one is created, when its
+ * words change, and when a chat message becomes one. A flagged answer is hidden,
+ * marked and its author told; nothing is deleted.
+ *
+ * Paragraph children need no trigger of their own: fn_syncParagraphChildrenToDescription
+ * copies their text into the answer's `description`, and that write is the signal.
+ * The words judged are read from the children themselves (see answerText.ts).
  *
  * Kept out of statementDispatch on purpose: that dispatcher takes no AI calls.
  * Fails open: if the check cannot answer, the answer stays visible and it is logged.
  */
 
-import { isDeepStrictEqual } from 'node:util';
-import { FirestoreEvent, QueryDocumentSnapshot } from 'firebase-functions/v2/firestore';
+import { QuerySnapshot } from 'firebase-admin/firestore';
+import { Change, FirestoreEvent, QueryDocumentSnapshot } from 'firebase-functions/v2/firestore';
 import {
 	AnswerModeration,
 	ANSWER_MODERATION_REASON,
 	Collections,
+	isAnswerHeldByModeration,
 	SourceApp,
 	Statement,
 	StatementType,
@@ -26,6 +32,12 @@ import {
 	buildAnswerHiddenNotice,
 	pickAnswerHiddenLanguage,
 } from './answerHiddenNotice';
+import {
+	answerFullText,
+	changedOnlyDescription,
+	descriptionOrigin,
+	hasSameWords,
+} from './answerText';
 
 const OPERATION = 'moderation.moderateNewAnswer';
 
@@ -40,19 +52,23 @@ type AnswerCreatedEvent = FirestoreEvent<
 	{ statementId: string }
 >;
 
+type AnswerUpdatedEvent = FirestoreEvent<
+	Change<QueryDocumentSnapshot> | undefined,
+	{ statementId: string }
+>;
+
+/** The parts of a trigger event a verdict is tied to. */
+interface CheckEvent {
+	id: string;
+	time: string;
+}
+
 /**
  * Strict on `sourceApp`: Mass Consensus and other apps write options with no
  * `sourceApp`, so the wider isMainAppStatement() would pull them in too.
  */
-export function isNewMainAppAnswer(statement: Statement): boolean {
+export function isMainAppAnswer(statement: Statement): boolean {
 	return statement.statementType === StatementType.option && statement.sourceApp === SourceApp.MAIN;
-}
-
-/** The title and the description paragraphs, as one text for one AI call. */
-export function answerFullText(answer: Statement): string {
-	const paragraphs = (answer.paragraphs ?? []).map((paragraph) => paragraph.content);
-
-	return [answer.statement, ...paragraphs].filter(Boolean).join('\n');
 }
 
 /** Whatever lies past the limit goes unchecked, so it has to be countable. Lengths only. */
@@ -62,48 +78,6 @@ function logTruncatedCheck(answer: Statement, totalCharacters: number): void {
 		totalCharacters,
 		checkedCharacters: MAX_CHECKED_CHARACTERS,
 	});
-}
-
-/** The body lines onStatementCreated moves into paragraph children when it splits a title. */
-function splitBodyLines(title: string): string[] {
-	return title
-		.split('\n')
-		.slice(1)
-		.filter((line) => line.trim());
-}
-
-/** The title splitStatementIntoParagraphs leaves behind for this created text. */
-function splitTitle(title: string): string {
-	return title.split('\n')[0].trim();
-}
-
-/**
- * Whether the words the verdict was given on are still the words on the
- * document. The split that onStatementCreated runs on every multi-line title
- * rewrites `statement` to its first line, usually before the AI answers, so
- * that exact rewrite is not a change. Any other edit, a shortened title
- * included, is one.
- */
-function isSameTextAsCreated(created: Statement, current: Statement): boolean {
-	const isSameTitle =
-		current.statement === created.statement ||
-		(splitBodyLines(created.statement).length > 0 &&
-			current.statement === splitTitle(created.statement));
-
-	return isSameTitle && isDeepStrictEqual(current.paragraphs, created.paragraphs);
-}
-
-/**
- * The current words of an edited answer. Once the split has run (it writes
- * `description`), the later lines live in child statements, so they are taken
- * from the creation snapshot: re-checking the first line alone would let an
- * edit to it clear abusive text further down.
- */
-function editedAnswerText(created: Statement, current: Statement): string {
-	const wasSplit = !created.description && Boolean(current.description);
-	const body = wasSplit ? splitBodyLines(created.statement) : [];
-
-	return [answerFullText(current), ...body].filter(Boolean).join('\n');
 }
 
 /** Cuts the text to what one AI call may see, and records when that loses some of it. */
@@ -181,41 +155,69 @@ async function readNoticeContext(answer: Statement, text: string): Promise<Notic
 
 interface HoldRequest {
 	answer: Statement;
-	eventId: string;
+	checkedText: string;
+	event: CheckEvent;
 	noticeContext: NoticeContext;
 }
 
+function paragraphChildrenQuery(answerId: string) {
+	return db
+		.collection(Collections.statements)
+		.where('parentId', '==', answerId)
+		.where('statementType', '==', StatementType.paragraph);
+}
+
+function paragraphsIn(snapshot: QuerySnapshot): Statement[] {
+	return snapshot.docs.map((doc) => doc.data() as Statement);
+}
+
 /**
- * Hide, mark and notify in one transaction, so a redelivered event finds its
- * own marker and does nothing, even if a host restored the answer in between.
- * The marker is compared by event id because a marker already on the document
- * at creation would be the client's and proves nothing.
+ * A verdict is applied only to the words it was given on, read from the source
+ * of truth, so a preview rewriting `description` cannot discard it. If the words
+ * moved on, the edit that moved them has its own event and its own check, so the
+ * last words on the document always get a verdict.
+ *
+ * The marker is compared by event id so that a redelivered event does nothing.
+ * A restore later than the write being judged means a host has already ruled on
+ * those words, so a second event still in flight must not undo it.
+ */
+function verdictApplies(
+	{ checkedText, event }: HoldRequest,
+	current: Statement,
+	currentParagraphs: Statement[],
+): boolean {
+	const mark = current.answerModeration;
+	if (mark?.eventId === event.id) return false;
+	if (isAnswerHeldByModeration(current)) return false;
+	if (mark?.restoredAt !== undefined && mark.restoredAt >= Date.parse(event.time)) return false;
+
+	return hasSameWords(checkedText, answerFullText(current, currentParagraphs));
+}
+
+/**
+ * Hide, mark and notify in one transaction.
  *
  * `hide` or `integratedInto` appearing during the wait does not stop it: an
  * unmarked answer would come back when a cluster is later reversed or dissolved.
- *
- * Returns the document, unwritten, when `verdictApplies` says its words moved on.
  */
-async function holdAnswer(
-	{ answer, eventId, noticeContext }: HoldRequest,
-	verdictApplies: (current: Statement) => boolean,
-): Promise<Statement | undefined> {
+async function holdAnswer(request: HoldRequest): Promise<void> {
+	const { answer, event, noticeContext } = request;
 	const answerRef = db.collection(Collections.statements).doc(answer.statementId);
 	const noticeRef = db
 		.collection(Collections.inAppNotifications)
 		.doc(answerHiddenNoticeId(answer.statementId));
 
-	return db.runTransaction(async (transaction) => {
+	await db.runTransaction(async (transaction) => {
 		const current = await transaction.get(answerRef);
+		const paragraphs = await transaction.get(paragraphChildrenQuery(answer.statementId));
 		const currentAnswer = current.data() as Statement | undefined;
-		if (!currentAnswer || currentAnswer.answerModeration?.eventId === eventId) return undefined;
-		if (!verdictApplies(currentAnswer)) return currentAnswer;
+		if (!currentAnswer || !verdictApplies(request, currentAnswer, paragraphsIn(paragraphs))) return;
 
 		const now = Date.now();
 		const marker: AnswerModeration = {
 			reason: ANSWER_MODERATION_REASON,
 			hiddenAt: now,
-			eventId,
+			eventId: event.id,
 		};
 		transaction.update(answerRef, {
 			hide: true,
@@ -223,42 +225,21 @@ async function holdAnswer(
 			lastUpdate: now,
 		});
 		transaction.set(noticeRef, buildAnswerHiddenNotice({ answer, ...noticeContext, now }));
-
-		return undefined;
 	});
 }
 
-/**
- * A flagged answer is held unless its words really changed during the wait.
- * Then the current words get one more check, and at most one: if they flag too,
- * the answer is held even if it was edited yet again, because two flagged
- * versions in a few seconds is not a change of heart.
- */
-async function holdFlaggedAnswer(answer: Statement, eventId: string, text: string): Promise<void> {
-	const request = { answer, eventId, noticeContext: await readNoticeContext(answer, text) };
-	const editedAnswer = await holdAnswer(request, (current) => isSameTextAsCreated(answer, current));
-	if (!editedAnswer) return;
-
-	const editedText = limitCheckedText(answer, editedAnswerText(answer, editedAnswer));
-	if (!editedText || !(await isAnswerFlagged(editedText, answer))) {
-		console.info('moderateNewAnswer: edited during the check, left visible', {
-			statementId: answer.statementId,
-		});
-
-		return;
-	}
-	await holdAnswer(request, () => true);
-}
-
-export async function moderateNewAnswer(event: AnswerCreatedEvent): Promise<void> {
-	const answer = event.data?.data() as Statement | undefined;
-	if (!answer || !isNewMainAppAnswer(answer)) return;
-
-	const text = limitCheckedText(answer, answerFullText(answer));
+async function checkAnswer(
+	answer: Statement,
+	event: CheckEvent,
+	paragraphChildren: Statement[] = [],
+): Promise<void> {
+	const checkedText = answerFullText(answer, paragraphChildren);
+	const text = limitCheckedText(answer, checkedText);
 	if (!text || !(await isAnswerFlagged(text, answer))) return;
 
 	try {
-		await holdFlaggedAnswer(answer, event.id, text);
+		const noticeContext = await readNoticeContext(answer, text);
+		await holdAnswer({ answer, checkedText, event, noticeContext });
 	} catch (error) {
 		logError(error, {
 			operation: OPERATION,
@@ -267,4 +248,94 @@ export async function moderateNewAnswer(event: AnswerCreatedEvent): Promise<void
 			metadata: { outcome: 'flagged-but-hide-failed' },
 		});
 	}
+}
+
+/**
+ * Also true when `sourceApp` comes back to main: rules do not protect it, so
+ * words edited while it pointed elsewhere have had no check.
+ */
+function becameAnswer(before: Statement): boolean {
+	return !isMainAppAnswer(before);
+}
+
+/**
+ * A main-app answer leaving for another app in the same write stays in scope:
+ * rules do not protect `sourceApp`, so that write could carry new words.
+ */
+function isInScope(before: Statement, after: Statement): boolean {
+	return (
+		isMainAppAnswer(after) ||
+		(isMainAppAnswer(before) && after.statementType === StatementType.option)
+	);
+}
+
+/**
+ * Runs on every statement update, so it reads only the event's own snapshots.
+ * The moderation write, counters and consensus leave the words alone and stop
+ * here, and so does clearing `description`, which only removes words.
+ *
+ * An answer already held stays held whatever its words become: the host who
+ * restores it sees the current text and decides on that.
+ */
+export function needsLanguageCheck(before: Statement, after: Statement): boolean {
+	if (!isInScope(before, after) || isAnswerHeldByModeration(after)) return false;
+	if (becameAnswer(before)) return true;
+	if (hasSameWords(answerFullText(before), answerFullText(after))) return false;
+
+	return Boolean(after.description) || !changedOnlyDescription(before, after);
+}
+
+/**
+ * With the paragraphs in hand: the title split moved the words without changing
+ * them, and the newest-3 preview a reply rewrites changes nobody's words.
+ */
+function leavesWordsAlone(before: Statement, after: Statement, paragraphs: Statement[]): boolean {
+	if (becameAnswer(before)) return false;
+	if (hasSameWords(answerFullText(before), answerFullText(after, paragraphs))) return true;
+
+	return (
+		changedOnlyDescription(before, after) &&
+		descriptionOrigin(after.description, paragraphs) === 'partial-copy'
+	);
+}
+
+/**
+ * The sync rewriting a full copy on a restored answer, when no visible paragraph
+ * has been written since the host restored it: those are the words the host
+ * ruled on. Comparing `before` cannot prove this, because a preview that omits
+ * an edited paragraph still matches the paragraphs after the edit, so it takes
+ * the server's own write times. A restore dated after this event is not trusted.
+ */
+function isUntouchedSinceRestore(
+	{ before, after, event }: { before: Statement; after: Statement; event: CheckEvent },
+	snapshot: QuerySnapshot,
+): boolean {
+	const restoredAt = after.answerModeration?.restoredAt;
+	if (restoredAt === undefined || restoredAt >= Date.parse(event.time)) return false;
+	if (becameAnswer(before) || !changedOnlyDescription(before, after)) return false;
+	if (descriptionOrigin(after.description, paragraphsIn(snapshot)) !== 'full-copy') return false;
+
+	return snapshot.docs.every(
+		(doc) => doc.data().hide === true || doc.updateTime.toMillis() <= restoredAt,
+	);
+}
+
+export async function moderateNewAnswer(event: AnswerCreatedEvent): Promise<void> {
+	const answer = event.data?.data() as Statement | undefined;
+	if (!answer || !isMainAppAnswer(answer)) return;
+
+	await checkAnswer(answer, event);
+}
+
+export async function moderateEditedAnswer(event: AnswerUpdatedEvent): Promise<void> {
+	const before = event.data?.before.data() as Statement | undefined;
+	const after = event.data?.after.data() as Statement | undefined;
+	if (!before || !after || !needsLanguageCheck(before, after)) return;
+
+	const snapshot = await paragraphChildrenQuery(after.statementId).get();
+	const paragraphs = paragraphsIn(snapshot);
+	if (leavesWordsAlone(before, after, paragraphs)) return;
+	if (isUntouchedSinceRestore({ before, after, event }, snapshot)) return;
+
+	await checkAnswer(after, event, paragraphs);
 }

@@ -74,6 +74,9 @@ export function textToParagraphs(text: string): Paragraph[] | undefined {
 
 const DESCRIPTION_MAX_LENGTH = 200;
 
+/** How many paragraphs the preview on a parent's `description` is built from. */
+export const DESCRIPTION_PREVIEW_PARAGRAPHS = 3;
+
 /**
  * Generate a description string (~200 chars) from child paragraph statements.
  * Children are sorted by createdAt and joined with ' | '.
@@ -98,4 +101,32 @@ export function generateDescriptionFromChildren(
 	}
 
 	return description;
+}
+
+interface PreviewParagraph {
+	statement: string;
+	createdAt: number;
+	statementId?: string;
+	hide?: boolean;
+}
+
+/** Newest first; equal times by id, descending, which is how Firestore orders them. */
+function compareNewestFirst(a: PreviewParagraph, b: PreviewParagraph): number {
+	if (a.createdAt !== b.createdAt) return b.createdAt - a.createdAt;
+
+	return (a.statementId ?? '') < (b.statementId ?? '') ? 1 : -1;
+}
+
+/**
+ * The preview of a parent's newest visible paragraphs. The language check accepts
+ * a `description` as a copy only if it equals this exactly, so writer and check
+ * must share this one definition.
+ */
+export function generatePreviewFromNewestParagraphs(paragraphs: PreviewParagraph[]): string {
+	const newest = paragraphs
+		.filter((paragraph) => paragraph.hide !== true)
+		.sort(compareNewestFirst)
+		.slice(0, DESCRIPTION_PREVIEW_PARAGRAPHS);
+
+	return generateDescriptionFromChildren(newest);
 }

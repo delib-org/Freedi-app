@@ -19,7 +19,8 @@ jest.mock('../../utils/errorHandling', () => ({
 	logError: (...args: unknown[]) => logError(...args),
 }));
 
-import { answerFullText, moderateNewAnswer } from '../fn_moderateNewAnswer';
+import { moderateNewAnswer } from '../fn_moderateNewAnswer';
+import { answerFullText } from '../answerText';
 import { answerHiddenNoticeId } from '../answerHiddenNotice';
 
 const ANSWER = 'answer-1';
@@ -219,14 +220,13 @@ describe('moderateNewAnswer', () => {
 describe('moderateNewAnswer when the document moved on during the check', () => {
 	const answerRef = () => fake.db.collection(Collections.statements).doc(ANSWER);
 
-	/** The first check flags, after this change lands; later checks answer `recheck`. */
-	const flagAfter = (change: Record<string, unknown>, recheck?: boolean): void => {
+	/** The check flags, after this change lands. */
+	const flagAfter = (change: Record<string, unknown>): void => {
 		assessLanguage.mockImplementationOnce(async () => {
 			await answerRef().update(change);
 
 			return true;
 		});
-		if (recheck !== undefined) assessLanguage.mockResolvedValueOnce(recheck);
 	};
 
 	const expectHeld = (): void => {
@@ -265,98 +265,43 @@ describe('moderateNewAnswer when the document moved on during the check', () => 
 			expect(assessLanguage).toHaveBeenCalledTimes(1);
 		});
 
-		it('keeps the later lines in the re-check when the title is edited after the split', async () => {
-			const event = created({ statement: MULTI_LINE });
-			flagAfter({ ...SPLIT, statement: 'a clean title' }, true);
+		it('recognises the description the split joins with a bar', async () => {
+			const event = created({ statement: 'first\nsecond\nthird' });
+			flagAfter({ statement: 'first', description: 'second | third' });
 
 			await moderateNewAnswer(event);
 
-			expect(assessLanguage.mock.calls[1][0]).toBe('a clean title\nabusive second line');
 			expectHeld();
+			expect(assessLanguage).toHaveBeenCalledTimes(1);
+		});
+
+		it('recognises a description the split shortened', async () => {
+			const event = created({ statement: 'first\nsecond line that runs on' });
+			fake.seed(Collections.statements, 'paragraph-1', {
+				statementId: 'paragraph-1',
+				statement: 'second line that runs on',
+				statementType: StatementType.paragraph,
+				parentId: ANSWER,
+				createdAt: 1,
+			});
+			flagAfter({ statement: 'first', description: 'second line that runs on' });
+
+			await moderateNewAnswer(event);
+
+			expectHeld();
+			expect(assessLanguage).toHaveBeenCalledTimes(1);
 		});
 	});
 
 	describe('a real edit', () => {
-		it('stays visible when the edited text is clean, and logs no text', async () => {
-			const info = jest.spyOn(console, 'info').mockImplementation(() => undefined);
+		it.each([
+			['a new title', { statement: 'a kind rewording' }],
+			['a shortened title', { statement: 'some offensive' }],
+			['a new description', { description: 'new words' }],
+			['new paragraphs', { paragraphs: [{ content: 'new words' }] }],
+		])('leaves the verdict to the event of %s', async (_label, change) => {
 			const event = created();
-			flagAfter({ statement: 'a kind rewording' }, false);
-
-			await moderateNewAnswer(event);
-
-			expect(assessLanguage).toHaveBeenCalledTimes(2);
-			expect(assessLanguage.mock.calls[1][0]).toBe('a kind rewording');
-			expectLeftVisible();
-			expect(info).toHaveBeenCalledWith(expect.stringContaining('left visible'), {
-				statementId: ANSWER,
-			});
-			expect(JSON.stringify(info.mock.calls)).not.toContain('kind rewording');
-			info.mockRestore();
-		});
-
-		it('is held when the edited text is still abusive', async () => {
-			const event = created();
-			flagAfter({ statement: 'still offensive' }, true);
-
-			await moderateNewAnswer(event);
-
-			expect(assessLanguage).toHaveBeenCalledTimes(2);
-			expectHeld();
-		});
-
-		it('treats a shortened title as an edit, not as the split', async () => {
-			const event = created({ statement: 'keep this and offensive tail' });
-			flagAfter({ statement: 'keep this' }, false);
-
-			await moderateNewAnswer(event);
-
-			expect(assessLanguage).toHaveBeenCalledTimes(2);
-			expectLeftVisible();
-		});
-
-		it('re-checks an edited description', async () => {
-			const event = created();
-			flagAfter({ paragraphs: [{ content: 'new words' }] }, true);
-
-			await moderateNewAnswer(event);
-
-			expect(assessLanguage.mock.calls[1][0]).toContain('new words');
-			expectHeld();
-		});
-
-		it('stays visible and logs when the re-check fails', async () => {
-			const event = created();
-			flagAfter({ statement: 'changed' });
-			assessLanguage.mockRejectedValueOnce(new Error('model down'));
-
-			await moderateNewAnswer(event);
-
-			expectLeftVisible();
-			expect(logError).toHaveBeenCalledTimes(1);
-		});
-
-		it('holds without a third AI call when it is edited again during the re-check', async () => {
-			const event = created();
-			flagAfter({ statement: 'second version' });
-			assessLanguage.mockImplementationOnce(async () => {
-				await answerRef().update({ statement: 'third version' });
-
-				return true;
-			});
-
-			await moderateNewAnswer(event);
-
-			expect(assessLanguage).toHaveBeenCalledTimes(2);
-			expectHeld();
-		});
-
-		it('never re-checks a clean verdict', async () => {
-			const event = created();
-			assessLanguage.mockImplementationOnce(async () => {
-				await answerRef().update({ statement: 'changed' });
-
-				return false;
-			});
+			flagAfter(change);
 
 			await moderateNewAnswer(event);
 
@@ -414,19 +359,6 @@ describe('moderateNewAnswer when the document moved on during the check', () => 
 	});
 
 	describe('a retried event', () => {
-		it('does nothing after the answer was held through a re-check', async () => {
-			const event = created();
-			flagAfter({ statement: 'still offensive' }, true);
-			await moderateNewAnswer(event);
-			const firstHiddenAt = marker().hiddenAt;
-			assessLanguage.mockResolvedValue(true);
-
-			await moderateNewAnswer(event);
-
-			expect(marker().hiddenAt).toBe(firstHiddenAt);
-			expect(assessLanguage).toHaveBeenCalledTimes(3);
-		});
-
 		it('stays harmless once a host recorded the restore', async () => {
 			assessLanguage.mockResolvedValue(true);
 			const event = created();
@@ -470,12 +402,22 @@ describe('moderateNewAnswer on very long answers', () => {
 });
 
 describe('answerFullText', () => {
-	it('joins the title and the description paragraphs for one AI call', () => {
+	it('joins the title, description and paragraphs for one AI call', () => {
 		const answer = answerDoc({
 			statement: 'Title',
+			description: 'Body',
 			paragraphs: [{ content: 'First' }, { content: 'Second' }],
 		}) as unknown as Statement;
 
-		expect(answerFullText(answer)).toBe('Title\nFirst\nSecond');
+		expect(answerFullText(answer)).toBe('Title\nBody\nFirst\nSecond');
+	});
+
+	it.each([
+		['a string', 'not a list'],
+		['a list with a null in it', [null]],
+	])('still returns the title when paragraphs is %s', (_label, paragraphs) => {
+		const answer = answerDoc({ statement: 'Title', paragraphs }) as unknown as Statement;
+
+		expect(answerFullText(answer)).toBe('Title');
 	});
 });
