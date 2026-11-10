@@ -42,6 +42,13 @@ jest.mock('firebase-admin/firestore', () => ({
 	},
 }));
 
+// The access rules have their own suite: fn_bulkStatements.access.test.ts
+jest.mock('../utils/treeReadAccess', () => ({
+	authorizeTreeRead: async () => ({ allowed: true, levels: [] }),
+	findPrivateGates: async () => new Map(),
+	findRefusedStatements: async () => new Set(),
+}));
+
 import { getBulkStatements, writeStatementDeletionTombstone } from '../fn_bulkStatements';
 
 interface MockResponse {
