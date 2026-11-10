@@ -216,8 +216,7 @@ describe('recalculateIndices writes', () => {
 
 			const result = await call(asCaller(CREATOR));
 
-			// The first batch is the question's own participation stat.
-			expect(sizes.slice(1)).toEqual([BATCH_WRITE_LIMIT, BATCH_WRITE_LIMIT, 1]);
+			expect(sizes).toEqual([BATCH_WRITE_LIMIT, BATCH_WRITE_LIMIT, 1]);
 			expect(result.optionsUpdated).toBe(optionCount);
 			expect(isRescored('many-00000')).toBe(true);
 			expect(isRescored(`many-${String(optionCount - 1).padStart(5, '0')}`)).toBe(true);
@@ -229,8 +228,8 @@ describe('recalculateIndices writes', () => {
 			const optionCount = BATCH_WRITE_LIMIT + 1;
 			seedManyOptions(optionCount);
 			const lastOption = `many-${String(optionCount - 1).padStart(5, '0')}`;
-			// Commit 0 is the participation stat, 1 the first options, 2 the rest.
-			watchBatches(2);
+			// Commit 0 is the first options, 1 the rest.
+			watchBatches(1);
 
 			await expect(call(asCaller(CREATOR))).rejects.toMatchObject({ code: 'internal' });
 			expect(isRescored('many-00000')).toBe(true);

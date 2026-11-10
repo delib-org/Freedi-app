@@ -30,7 +30,7 @@ jest.mock('../../engagement/notifications/socialProofTrigger', () => ({
 }));
 jest.mock('../../fn_adminStats', () => ({ onEvaluationCreatedStats: () => Promise.resolve() }));
 jest.mock('../../services/hybrid-vector-service', () => ({
-	markHybridEmbeddingStale: () => Promise.resolve(),
+	markHybridEmbeddingStaleIfUsed: () => Promise.resolve(),
 }));
 jest.mock('../../statements/history/writeHistoryEntry', () => ({
 	writeHistoryEntry: () => Promise.resolve(),

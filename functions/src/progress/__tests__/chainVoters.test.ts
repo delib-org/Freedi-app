@@ -62,16 +62,16 @@ describe('refreshChainVoters', () => {
 		expect(chainCount(TOP)).toBe(2);
 	});
 
-	it('mirrors the count onto the statement for the evaluation trigger to read', async () => {
-		// The trigger already holds the parent document, so putting the number
-		// there is what makes N free at the point it is used.
+	it('keeps the count off the question document, which reaches everyone present', async () => {
 		seedProgress(TOP, 2);
 		seedVoter(TOP, 'ada');
 		seedVoter(TOP, 'grace');
+		const before = { ...fake.read(Collections.statements, TOP) };
 
 		await refreshChainVoters(TOP);
 
-		expect(mirroredOnStatement(TOP)).toBe(2);
+		expect(chainCount(TOP)).toBe(2);
+		expect(fake.read(Collections.statements, TOP)).toEqual(before);
 	});
 
 	it('inherits the voters of the question above', async () => {
@@ -104,6 +104,40 @@ describe('refreshChainVoters', () => {
 		seedVoter(SUB, 'linus');
 
 		expect(await refreshChainVoters(SUB)).toBe(1);
+	});
+
+	it('stops reading markers at the cap and falls back to the largest question', async () => {
+		const seedVoters = (questionId: string, count: number): void => {
+			for (let i = 0; i < count; i += 1) seedVoter(questionId, `${questionId}-voter-${i}`);
+			seedProgress(questionId, count);
+		};
+		seedVoters(TOP, 3000);
+		seedVoters(SUB, 3000);
+		const limits: number[] = [];
+		const realCollection = fake.db.collection;
+		fake.db.collection = (name) => {
+			const collection = realCollection(name);
+			if (name !== Collections.questionParticipation) return collection;
+
+			return {
+				...collection,
+				where: (field, op, value) => {
+					const query = collection.where(field, op, value);
+
+					return {
+						...query,
+						limit: (n: number) => {
+							limits.push(n);
+
+							return query.limit(n);
+						},
+					};
+				},
+			};
+		};
+
+		expect(await refreshChainVoters(SUB)).toBe(3000);
+		expect(limits).toEqual([5001, 2001]);
 	});
 
 	it('leaves no count when nobody has voted anywhere in the chain', async () => {

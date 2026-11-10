@@ -14,6 +14,7 @@ import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
 import { trackVoteEngagement } from './engagement/credits/trackEngagement';
 import { onVoteCreatedStats } from './fn_adminStats';
+import { logError } from './utils/errorHandling';
 
 export async function updateVote(event: FirestoreEvent<Change<DocumentSnapshot> | undefined>) {
 	if (!event?.data) return;
@@ -46,40 +47,20 @@ export async function updateVote(event: FirestoreEvent<Change<DocumentSnapshot> 
 			Object.keys(realSelections).length > 0 ? maxKeyInObject(realSelections) : undefined;
 
 		if (topVotedId) {
-			// remove previous results
-			const batch = db.batch();
+			// Checked on every vote (usually one read): an interleaved vote can leave
+			// the flags wrong, and this is what repairs them.
+			await syncLeaderFlag(newVote.parentId, topVotedId);
 
-			const previousResultsDB = await db
-				.collection(Collections.statements)
-				.where('parentId', '==', newVote.parentId)
-				.where('isVoted', '==', true)
-				.get();
-
-			previousResultsDB.forEach((resultDB) => {
-				const result = resultDB.data() as Statement;
-				const docRef = db.doc(`${Collections.statements}/${result.statementId}`);
-				batch.update(docRef, { isVoted: false });
-			});
-
-			// Commit the batch
-			await batch.commit();
-
-			//mark the new top voted option as selected
-			await db.doc(`${Collections.statements}/${topVotedId}`).update({ isVoted: true });
-
-			//check if the topVoted option is the same as the previous one
-			//if not, update the topVoted option in the parent statement
+			// Written after the flag, so a run that stops between the two leaves the
+			// old leader recorded and the next vote finishes the move.
 			if (previousTopVotedOption?.statementId !== topVotedId) {
-				//get topVoted option:
 				const topVotedOptionDB = await db.doc(`${Collections.statements}/${topVotedId}`).get();
 
 				if (!topVotedOptionDB.exists) throw new Error(`topVotedOption ${topVotedId} do not exists`);
 				const topVotedOption = topVotedOptionDB.data() as Statement;
 
-				const simpleStatement = statementToSimpleStatement(topVotedOption);
-
 				await db.doc(`${Collections.statements}/${newVote.parentId}`).update({
-					topVotedOption: simpleStatement,
+					topVotedOption: statementToSimpleStatement(topVotedOption),
 				});
 
 				logger.info(`Vote updated successfully for parentId: ${newVote.parentId}`);
@@ -128,8 +109,32 @@ export async function updateVote(event: FirestoreEvent<Change<DocumentSnapshot> 
 			}
 		}
 	} catch (error) {
-		logger.error(error);
+		logError(error, { operation: 'vote.updateVote', metadata: { voteId: event.data.after.id } });
 
 		return false;
 	}
+}
+
+/**
+ * Makes the leader the only option flagged `isVoted`, in one atomic batch.
+ * Writes nothing when that is already true: each write to an option wakes every
+ * trigger on that document.
+ */
+async function syncLeaderFlag(parentId: string, leaderId: string): Promise<void> {
+	const flagged = await db
+		.collection(Collections.statements)
+		.where('parentId', '==', parentId)
+		.where('isVoted', '==', true)
+		.get();
+
+	const staleFlags = flagged.docs.filter((doc) => doc.id !== leaderId);
+	const leaderIsFlagged = staleFlags.length < flagged.docs.length;
+	if (leaderIsFlagged && staleFlags.length === 0) return;
+
+	const batch = db.batch();
+	staleFlags.forEach((doc) => batch.update(doc.ref, { isVoted: false }));
+	if (!leaderIsFlagged) {
+		batch.update(db.doc(`${Collections.statements}/${leaderId}`), { isVoted: true });
+	}
+	await batch.commit();
 }

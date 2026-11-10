@@ -21,7 +21,9 @@ import {
 	UserDemographicQuestion,
 	UserDemographicQuestionType,
 	resolveStakeholderCount,
+	resolveViewCount,
 } from '@freedi/shared-types';
+import type { CounterProgress } from '@freedi/shared-types';
 import { fetchEvaluationsForIds } from '../condensation/aggregation';
 import { isMemberlessTheme } from '../synthesis/pipeline/hideEmptyThemes';
 import {
@@ -313,6 +315,7 @@ function buildParticipationSummary(
 	parentStatement: Statement,
 	options: Statement[],
 	evaluations: Evaluation[],
+	progress: CounterProgress,
 ): ParticipationSummary {
 	const suggesters = new Set(
 		options
@@ -326,11 +329,9 @@ function buildParticipationSummary(
 	const allEvaluators = new Set(evaluations.map((e) => e.evaluatorId).filter(Boolean));
 	const totalParticipants = new Set([...suggesters, ...allEvaluators]).size;
 
-	const recordedViews = parentStatement.viewed?.individualViews;
+	const recordedViews = resolveViewCount(progress, parentStatement);
 	const enteredCount =
-		typeof recordedViews === 'number' && recordedViews > 0
-			? Math.max(recordedViews, totalParticipants)
-			: null;
+		recordedViews !== undefined ? Math.max(recordedViews, totalParticipants) : null;
 
 	return {
 		enteredCount,
@@ -415,7 +416,16 @@ export async function buildPrivacyExport(
 	);
 	const anonymizedEvaluations = buildAnonymizedEvaluations(exportedEvaluations, options);
 	// Participation counts people, so every vote cast under the question counts.
-	const participation = buildParticipationSummary(parentStatement, options, evaluations);
+	const progressDoc = await getFirestore()
+		.collection(Collections.questionProgress)
+		.doc(statementId)
+		.get();
+	const participation = buildParticipationSummary(
+		parentStatement,
+		options,
+		evaluations,
+		progressDoc.data() as CounterProgress,
+	);
 
 	const uniqueEvaluators = participation.evaluatedCount;
 	const uniqueRespondents = new Set(answers.map((a) => a.userId)).size;

@@ -21,7 +21,12 @@ jest.mock('../embedding-service', () => ({
 
 import { embeddingCache } from '../embedding-cache-service';
 import { invalidateEmbeddingModelCache } from '../embedding-model-resolver';
-import { markHybridEmbeddingStale, saveHybridEmbedding } from '../hybrid-vector-service';
+import {
+	clearHybridSettingsCache,
+	markHybridEmbeddingStale,
+	markHybridEmbeddingStaleIfUsed,
+	saveHybridEmbedding,
+} from '../hybrid-vector-service';
 import { syncEmbeddingParent, deleteEmbeddingDoc } from '../statement-embedding-store';
 import { vectorSearchService } from '../vector-search-service';
 import { peek, resetFirestore, seed } from './helpers/fakeFirestore';
@@ -320,5 +325,42 @@ describe('tree scope (statement search)', () => {
 		);
 
 		expect(peek(EMBEDDINGS, 'a')?.topParentId).toBe('t9');
+	});
+});
+
+describe('marking a hybrid embedding stale after a rating', () => {
+	const option = (parentId: string, topParentId: string) =>
+		({ statementId: 'a', parentId, topParentId }) as unknown as Parameters<
+			typeof markHybridEmbeddingStaleIfUsed
+		>[0];
+
+	beforeEach(() => {
+		clearHybridSettingsCache();
+		embedded('a', v(1, 0, 0));
+	});
+
+	it('writes nothing for a question that does not use hybrid clustering', async () => {
+		statement('q1');
+
+		await markHybridEmbeddingStaleIfUsed(option('q1', 'q1'));
+
+		expect(peek(EMBEDDINGS, 'a')).not.toHaveProperty('hybridEmbeddingStale');
+	});
+
+	it('marks the embedding when the question turns hybrid clustering on', async () => {
+		statement('q1', { statementSettings: { enableHybridClustering: true } });
+
+		await markHybridEmbeddingStaleIfUsed(option('q1', 'q1'));
+
+		expect(peek(EMBEDDINGS, 'a')).toMatchObject({ hybridEmbeddingStale: true });
+	});
+
+	it('honours the setting inherited from the top of the tree', async () => {
+		statement('q1');
+		statement('top1', { statementSettings: { enableHybridClustering: true } });
+
+		await markHybridEmbeddingStaleIfUsed(option('q1', 'top1'));
+
+		expect(peek(EMBEDDINGS, 'a')).toMatchObject({ hybridEmbeddingStale: true });
 	});
 });

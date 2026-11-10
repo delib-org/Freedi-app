@@ -3,6 +3,7 @@
 #
 #   npm run scale:baseline                 # full + full + small, then writes docs/scale/
 #   bash scripts/scale/run.sh small        # a single size, no report rewrite
+#   SCALE_ONLY=vote bash scripts/scale/run.sh small   # one phase of a single size
 #
 # Starts the solo emulators (npm run emulators:solo) with the trace shim, runs
 # the measurement once per size, and always stops them and checks the ports.
@@ -118,7 +119,7 @@ run_one() {
 	echo "[scale] === run $label (size $size) ==="
 	start_emulators "$trace_dir"
 	SCALE_TRACE_DIR="$trace_dir" SCALE_OUT_DIR="$OUT_DIR" \
-		npx tsx scripts/scale/baseline.ts "--label=$label" "--size=$size"
+		npx tsx scripts/scale/baseline.ts "--label=$label" "--size=$size" ${SCALE_ONLY:+"--only=$SCALE_ONLY"}
 	local status=$?
 	stop_emulators
 	sleep 2

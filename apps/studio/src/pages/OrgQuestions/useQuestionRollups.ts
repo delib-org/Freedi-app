@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { resolveMemberCount } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import type { ActivityRunState } from '@freedi/event-core';
 import type { ActivityType } from '@freedi/shared-types';
@@ -112,7 +113,7 @@ export function computeQuestionRollups(
 			realTitle: label && label !== question.statement ? question.statement : undefined,
 			status: questionStatusToRunState(question.statementSettings?.questionStatus),
 			progress: counts,
-			memberCount: question.numberOfMembers ?? 0,
+			memberCount: resolveMemberCount(own, question) ?? 0,
 			// A linked survey is one activity — itself — not a count of children
 			// it does not have.
 			activityCount: link?.surveyStats ? 1 : (activityCounts[question.statementId] ?? 0),

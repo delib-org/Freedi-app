@@ -201,6 +201,7 @@ studioScheduledActionSweep
 suggestClusterTitle
 summarizeDiscussion
 summarizeLink
+syncCountersSchedule
 synthesisCancel
 synthesisJobCancel
 synthesisJobDispatch

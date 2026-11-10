@@ -67,6 +67,7 @@ export function metricsOf(run: RunResult): MetricRow[] {
 	const view = phaseOf(run, 'view');
 	const presence = phaseOf(run, 'presence');
 	const answer = phaseOf(run, 'new-answer');
+	const vote = phaseOf(run, 'vote');
 	const n = run.config.members;
 	const open = (shape: string): number => round(meanDocsDelivered(run, 'open', shape));
 	const openTotal =
@@ -157,6 +158,30 @@ export function metricsOf(run: RunResult): MetricRow[] {
 			key: 'adminStatsPerRating',
 			label: 'Global adminStats doc writes per rating',
 			value: round(perUnit(rate.writesByCollection[Collections.adminStats] ?? 0, rate.units), 2),
+			kind: 'measured',
+		},
+		{
+			key: 'writesPerVote',
+			label: 'Docs written by functions per vote',
+			value: round(perUnit(vote.totalWrites, vote.units), 1),
+			kind: 'measured',
+		},
+		{
+			key: 'optionWritesPerVote',
+			label: 'Answer doc writes per vote (leader flag)',
+			value: round(
+				perUnit(
+					(vote.writesByCollection[Collections.statements] ?? 0) - vote.questionDocWrites,
+					vote.units,
+				),
+				2,
+			),
+			kind: 'measured',
+		},
+		{
+			key: 'invocationsPerVote',
+			label: 'Function invocations per vote',
+			value: round(perUnit(vote.invocationsTotal, vote.units), 1),
 			kind: 'measured',
 		},
 		{
