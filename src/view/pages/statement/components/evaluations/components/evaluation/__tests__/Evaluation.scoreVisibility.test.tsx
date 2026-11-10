@@ -6,30 +6,49 @@ import Evaluation from '../Evaluation';
 const PHONE_WIDTH = 375;
 const DESKTOP_WIDTH = 1280;
 
-let mockShowEvaluation = true;
+let mockEvaluationType = 'like-dislike';
+let mockCanSee = true;
+let mockShowRevealHint = false;
 
 jest.mock('../EvalautionMV', () => ({
 	useEvaluation: () => ({
 		parentStatement: {
 			statementId: 'q1',
-			statementSettings: { showEvaluation: mockShowEvaluation, evaluationType: 'like-dislike' },
+			statementSettings: { evaluationType: mockEvaluationType },
 		},
 	}),
 }));
 jest.mock('@/controllers/hooks/useIsProcessHalted', () => ({
 	useIsProcessHalted: () => ({ isHalted: false }),
 }));
+jest.mock('../../../../questionScreen/useAnswerScoreGate', () => ({
+	useAnswerScoreGate: () => ({ canSee: mockCanSee, showRevealHint: mockShowRevealHint }),
+}));
+
+interface ScoredProps {
+	shouldDisplayScore: boolean;
+	showRevealHint: boolean;
+}
+
 jest.mock('../simpleEvaluation/SimpleEvaluation', () => ({
 	__esModule: true,
-	default: ({ shouldDisplayScore }: { shouldDisplayScore: boolean }) => (
-		<div data-testid="simple">{shouldDisplayScore ? 'score-on' : 'score-off'}</div>
+	default: ({ shouldDisplayScore, showRevealHint }: ScoredProps) => (
+		<div data-testid="simple">
+			{shouldDisplayScore ? 'score-on' : 'score-off'}
+			{showRevealHint ? ' hint-on' : ''}
+		</div>
+	),
+}));
+jest.mock('../singleLikeEvaluation/SingleLikeEvaluation', () => ({
+	__esModule: true,
+	default: ({ shouldDisplayScore, showRevealHint }: ScoredProps) => (
+		<div data-testid="single-like">
+			{shouldDisplayScore ? 'score-on' : 'score-off'}
+			{showRevealHint ? ' hint-on' : ''}
+		</div>
 	),
 }));
 jest.mock('../enhancedEvaluation/EnhancedEvaluation', () => ({
-	__esModule: true,
-	default: () => null,
-}));
-jest.mock('../singleLikeEvaluation/SingleLikeEvaluation', () => ({
 	__esModule: true,
 	default: () => null,
 }));
@@ -50,10 +69,12 @@ const statement = { statementId: 'a1', parentId: 'q1', evaluation: {} } as unkno
 
 describe('Evaluation - when scores show', () => {
 	beforeEach(() => {
-		mockShowEvaluation = true;
+		mockEvaluationType = 'like-dislike';
+		mockCanSee = true;
+		mockShowRevealHint = false;
 	});
 
-	it.each([PHONE_WIDTH, DESKTOP_WIDTH])('shows scores at %dpx when results are on', (width) => {
+	it.each([PHONE_WIDTH, DESKTOP_WIDTH])('shows scores at %dpx when the guard allows', (width) => {
 		setWidth(width);
 
 		render(<Evaluation statement={statement} />);
@@ -61,17 +82,27 @@ describe('Evaluation - when scores show', () => {
 		expect(screen.getByTestId('simple')).toHaveTextContent('score-on');
 	});
 
-	it('keeps scores hidden on a phone when results are off', () => {
-		setWidth(PHONE_WIDTH);
-		mockShowEvaluation = false;
+	it('hides the score and shows the reveal hint on a two-face card before rating', () => {
+		mockCanSee = false;
+		mockShowRevealHint = true;
 
 		render(<Evaluation statement={statement} />);
 
-		expect(screen.getByTestId('simple')).toHaveTextContent('score-off');
+		expect(screen.getByTestId('simple')).toHaveTextContent('score-off hint-on');
 	});
 
-	it('keeps scores hidden on a phone for an answer chosen by a selection function', () => {
-		setWidth(PHONE_WIDTH);
+	it('hides the score and shows the reveal hint on a single-like card before rating', () => {
+		mockEvaluationType = 'single-like';
+		mockCanSee = false;
+		mockShowRevealHint = true;
+
+		render(<Evaluation statement={statement} />);
+
+		expect(screen.getByTestId('single-like')).toHaveTextContent('score-off hint-on');
+	});
+
+	it('keeps scores hidden for an answer chosen by a selection function', () => {
+		mockShowRevealHint = true;
 
 		render(
 			<Evaluation
@@ -85,5 +116,6 @@ describe('Evaluation - when scores show', () => {
 		);
 
 		expect(screen.getByTestId('simple')).toHaveTextContent('score-off');
+		expect(screen.getByTestId('simple')).not.toHaveTextContent('hint-on');
 	});
 });

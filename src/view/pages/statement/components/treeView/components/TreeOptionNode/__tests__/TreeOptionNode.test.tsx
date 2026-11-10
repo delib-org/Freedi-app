@@ -31,6 +31,9 @@ jest.mock(
 	}),
 );
 jest.mock('react-router', () => ({ useNavigate: () => jest.fn() }));
+jest.mock('@/view/pages/statement/components/questionScreen/useAnswerScoreGate', () => ({
+	useAnswerScoreGate: () => ({ canSee: true, showRevealHint: false }),
+}));
 jest.mock('@/controllers/hooks/reduxHooks', () => ({ useAppSelector: () => undefined }));
 jest.mock('@/redux/statements/statementsSlice', () => ({
 	statementSubscriptionSelector: () => () => undefined,

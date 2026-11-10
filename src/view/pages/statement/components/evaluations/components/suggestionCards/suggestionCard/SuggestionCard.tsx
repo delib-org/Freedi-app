@@ -40,7 +40,8 @@ import MergeBadge from './MergeBadge';
 import YouTubeEmbed from './YouTubeEmbed';
 import { extractYouTubeVideo } from '@/helpers/youtubeLinks';
 import { useIsClamped } from './hasClampedContent';
-import { isLiveResultsOn } from '@/helpers/liveResults';
+import { useAnswerScoreGate } from '../../../../questionScreen/useAnswerScoreGate';
+import { resolveCardMarks } from './cardMarks';
 
 interface Props {
 	statement: Statement | undefined;
@@ -66,7 +67,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 	const minJoinMembers = parentStatement?.statementSettings?.minJoinMembers;
 	const maxJoinMembers = parentStatement?.statementSettings?.maxJoinMembers;
-	const showEvaluation = isLiveResultsOn(parentStatement);
+	const { canSee: canSeeMarks } = useAnswerScoreGate(statement, parentStatement);
 	const showBadges =
 		parentStatement?.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot;
 	const isAnchored = statement?.anchored === true;
@@ -210,13 +211,11 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 		}
 	}
 
-	// Check if statement is in parent's results array (evaluation/consensus winner)
-	const isInResults =
-		parentStatement?.results?.some((result) => result.statementId === statement.statementId) ??
-		false;
-
-	// Check if statement is the voting winner (from voting screen)
-	const isVotingWinner = parentStatement?.topVotedOption?.statementId === statement.statementId;
+	const { showVotingWinner, showInResults } = resolveCardMarks(
+		statement,
+		parentStatement,
+		canSeeMarks,
+	);
 
 	function handleToggleHide(e: React.MouseEvent) {
 		e.stopPropagation();
@@ -227,12 +226,11 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	// condition paint independently. See the channel table in the stylesheet:
 	// hidden outranks voting winner outranks results winner outranks the join
 	// warning, and only the top one claims the card's rule and wash.
-	const showVotingWinner = showEvaluation && isVotingWinner;
 	const statusModifier = statement.hide
 		? styles['statement-evaluation-card--hidden']
 		: showVotingWinner
 			? styles['statement-evaluation-card--voted']
-			: showEvaluation && isInResults
+			: showInResults
 				? styles['statement-evaluation-card--winner']
 				: isBelowMinimum
 					? styles['statement-evaluation-card--below-minimum']

@@ -7,13 +7,10 @@ import { fullyLoadedScopeSelector } from '@/redux/statements/statementsSlice';
 import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
 import QuestionProcess from '@/view/components/atomic/organisms/ThinkingSpace/QuestionProcess';
 import { STAGE_COLLECTING, STAGE_DECIDED } from '@/helpers/questionStage';
-import {
-	getResultsAccess,
-	rankAnswers,
-	resultsRuleCaption,
-	selectLeadingAnswers,
-} from '../resultsLogic';
+import { rankAnswers, resultsRuleCaption, selectLeadingAnswers } from '../resultsLogic';
+import { getScoreAccess, questionScoreInput } from '../canSeeScore';
 import type { QuestionScreenData } from '../useQuestionScreenData';
+import GroupProgress from '../GroupProgress';
 import AnswerResult from './AnswerResult';
 import AgreementCard from './AgreementCard';
 import HowToReadResults from './HowToReadResults';
@@ -36,13 +33,7 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 	const [showAll, setShowAll] = useState(false);
 	const listId = useId();
 
-	const access = getResultsAccess({
-		isHost: data.isHost,
-		stage: data.stage,
-		ratedCount: data.ratedCount,
-		showLiveResults: data.showLiveResults,
-		isDeadlinePassed: data.isDeadlinePassed,
-	});
+	const access = getScoreAccess(questionScoreInput(data));
 	const visible = access === 'visible';
 	const { isAutoLoading } = useAutoLoadAllForSort(
 		visible ? statement.statementId : undefined,
@@ -80,6 +71,7 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 	if (access === 'rate-first') {
 		return (
 			<div className={styles.tab} data-testid="results-tab">
+				<GroupProgress statementId={statement.statementId} data={data} />
 				<div className={styles.gate} data-testid="results-gated">
 					<h2 className={styles.gate__title}>{t('Results are hidden until you rate')}</h2>
 					<p className={styles.gate__body}>
@@ -107,6 +99,8 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 
 	return (
 		<div className={styles.tab} data-testid="results-tab">
+			<GroupProgress statementId={statement.statementId} data={data} />
+
 			{access === 'hidden-by-host' && (
 				<p className={styles.notice} role="note">
 					{t('Results are hidden. Evaluate independently.')}

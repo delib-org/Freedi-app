@@ -7,6 +7,7 @@ import { Statement } from '@freedi/shared-types';
 import { useEvaluation } from './EvalautionMV';
 import { logError } from '@/utils/errorHandling';
 import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
+import { useAnswerScoreGate } from '../../../questionScreen/useAnswerScoreGate';
 
 export type EvaluationVariant = 'default' | 'card';
 
@@ -37,13 +38,15 @@ const Evaluation: FC<EvaluationProps> = ({
 }) => {
 	const { parentStatement } = useEvaluation(statement);
 	const { isHalted } = useIsProcessHalted(parentStatement);
+	const scoreGate = useAnswerScoreGate(statement, parentStatement);
 
 	if (!statement) return <>{footerSlot}</>;
 	try {
 		if (!parentStatement) return <>{footerSlot}</>;
 
-		let shouldDisplayScore: boolean = !!parentStatement.statementSettings?.showEvaluation;
-		if (statement.evaluation?.selectionFunction) shouldDisplayScore = false;
+		const isSelectionFunction = !!statement.evaluation?.selectionFunction;
+		const shouldDisplayScore = scoreGate.canSee && !isSelectionFunction;
+		const showRevealHint = scoreGate.showRevealHint && !isSelectionFunction;
 
 		// Check if evaluation is enabled (defaults to true for backward compatibility)
 		const enableEvaluation =
@@ -63,6 +66,7 @@ const Evaluation: FC<EvaluationProps> = ({
 								statement={statement}
 								parentStatement={parentStatement}
 								shouldDisplayScore={shouldDisplayScore}
+								showRevealHint={showRevealHint}
 								enableEvaluation={enableEvaluation}
 								variant={variant}
 							/>
@@ -98,6 +102,7 @@ const Evaluation: FC<EvaluationProps> = ({
 							<SimpleEvaluation
 								statement={statement}
 								shouldDisplayScore={shouldDisplayScore}
+								showRevealHint={showRevealHint}
 								enableEvaluation={enableEvaluation}
 								variant={variant}
 							/>
@@ -126,6 +131,7 @@ const Evaluation: FC<EvaluationProps> = ({
 				<SimpleEvaluation
 					statement={statement}
 					shouldDisplayScore={shouldDisplayScore}
+					showRevealHint={showRevealHint}
 					enableEvaluation={enableEvaluation}
 					variant={variant}
 				/>

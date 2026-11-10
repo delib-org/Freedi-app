@@ -37,6 +37,9 @@ jest.mock('@/redux/statements/statementsSlice', () => ({
 jest.mock('@/view/components/tooltip/Tooltip', () => ({
 	Tooltip: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
+jest.mock('@/view/pages/statement/components/questionScreen/useAnswerScoreGate', () => ({
+	useAnswerScoreGate: () => ({ canSee: true, showRevealHint: false }),
+}));
 jest.mock('@/view/components/atomic/molecules/ResultsStrip', () => ({
 	ResultsStrip: () => null,
 }));

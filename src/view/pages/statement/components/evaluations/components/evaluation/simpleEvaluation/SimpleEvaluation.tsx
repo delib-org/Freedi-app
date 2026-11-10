@@ -7,11 +7,14 @@ import { Statement } from '@freedi/shared-types';
 import { ResultsStrip } from '@/view/components/atomic/molecules/ResultsStrip';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { EvaluationCircleRow } from '../shared/EvaluationCircle';
+import ScoreRevealHint from '../shared/ScoreRevealHint';
 import type { EvaluationVariant } from '../Evaluation';
 
 interface Props {
 	statement: Statement;
 	shouldDisplayScore?: boolean;
+	/** Say that the score appears after rating, where it would have been. */
+	showRevealHint?: boolean;
 	enableEvaluation?: boolean;
 	/** 'card' = Join's look: centered filled faces, results as chips. */
 	variant?: EvaluationVariant;
@@ -20,6 +23,7 @@ interface Props {
 const SimpleEvaluation: FC<Props> = ({
 	statement,
 	shouldDisplayScore = true,
+	showRevealHint = false,
 	enableEvaluation = true,
 	variant = 'default',
 }) => {
@@ -80,6 +84,7 @@ const SimpleEvaluation: FC<Props> = ({
 					{thumbs('circle')}
 				</EvaluationCircleRow>
 				{shouldDisplayScore && <ResultsStrip statement={statement} variant="chips" />}
+				{showRevealHint && <ScoreRevealHint />}
 			</div>
 		);
 	}
@@ -94,6 +99,7 @@ const SimpleEvaluation: FC<Props> = ({
 			    unlabelled consensus decimal that used to sit here. Renders null
 			    on its own when there are no evaluators yet. */}
 			{shouldDisplayScore && <ResultsStrip statement={statement} className={styles.results} />}
+			{showRevealHint && <ScoreRevealHint />}
 		</div>
 	);
 };

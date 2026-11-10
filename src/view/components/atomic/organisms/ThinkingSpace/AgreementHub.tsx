@@ -26,7 +26,8 @@ import { agreementCandidates, proposalEvidence } from './agreementData';
 import OtherIdeasSection from './OtherIdeasSection';
 import styles from './Agreement.module.scss';
 import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
-import { isLiveResultsOn } from '@/helpers/liveResults';
+import { useQuestionScoreAccess } from '@/view/pages/statement/components/questionScreen/useAnswerScoreGate';
+import { isOwnAnswerOf } from '@/view/pages/statement/components/questionScreen/canSeeScore';
 
 /** Views AgreementHub still renders full-width: the covenant (under Results) and themes (under Maps). */
 export const AGREEMENT_VIEWS = ['covenant', 'themes'];
@@ -69,7 +70,7 @@ export default function AgreementHub({
 		[statement.statementId],
 	);
 	const otherIdeas = useSelector(otherIdeasSelector);
-	const showResults = isLiveResultsOn(statement);
+	const { canSee: showResults } = useQuestionScoreAccess(statement);
 	const { isAutoLoading } = useAutoLoadAllForSort(
 		compact || !['overview', 'themes'].includes(view) ? undefined : statement.statementId,
 		SortType.accepted,
@@ -100,7 +101,7 @@ export default function AgreementHub({
 	);
 	const parent = all.find((p) => p.statementId === statement.parentId);
 	const evidence = (p: Statement): React.ReactNode => {
-		if (!showResults)
+		if (!showResults && !isOwnAnswerOf(p, authorization.creator?.uid))
 			return (
 				<p className={styles.journey__muted}>{t('Results are hidden. Evaluate independently.')}</p>
 			);
@@ -201,7 +202,7 @@ export default function AgreementHub({
 	if (!compact && (view === 'summary' || view === 'covenant'))
 		return (
 			<div className={styles.journey}>
-				<QuestionProcess statement={statement} view={view} />
+				<QuestionProcess statement={statement} view={view} showScores={showResults} />
 			</div>
 		);
 
@@ -271,7 +272,7 @@ export default function AgreementHub({
 									✳
 								</span>
 							</div>
-							<QuestionProcess statement={statement} view="overview" />
+							<QuestionProcess statement={statement} view="overview" showScores={showResults} />
 							<section className={styles.journey__section} aria-label={t('Sub-questions')}>
 								<div className={styles.journey__title}>
 									<h3>

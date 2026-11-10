@@ -5,9 +5,9 @@ import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { parentVoteSelector, setVoteToStore } from '@/redux/vote/votesSlice';
 import { TIME } from '@/constants/common';
+import { NO_VOTE } from './noVote';
 
-/** Value stored in `statement.selections` / `vote.statementId` when nobody is chosen. */
-export const NO_VOTE = 'none';
+export { NO_VOTE };
 
 /**
  * How long an unconfirmed vote keeps its optimistic tally before the UI falls

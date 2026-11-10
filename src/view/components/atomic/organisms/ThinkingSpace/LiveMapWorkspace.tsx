@@ -7,7 +7,7 @@ import { buildStatementPath } from '@/routes/statementPaths';
 import ShareModal from '@/view/components/shareModal/ShareModal';
 import { availableMapViews, mapViews, MapViewId } from './MapExplorer';
 import styles from './LiveMapWorkspace.module.scss';
-import { isLiveResultsOn } from '@/helpers/liveResults';
+import { useQuestionScoreAccess } from '@/view/pages/statement/components/questionScreen/useAnswerScoreGate';
 
 /**
  * A map, full screen: back to the Maps tab, the map's title over the question,
@@ -27,8 +27,8 @@ export default function LiveMapWorkspace({
 	const navigate = useNavigate();
 	const { pathname } = useLocation();
 	const [shareOpen, setShareOpen] = useState(false);
-	const hidden =
-		!isLiveResultsOn(statement) && [Screen.agreementMap, Screen.polarizationIndex].includes(active);
+	const { canSee } = useQuestionScoreAccess(statement);
+	const hidden = !canSee && [Screen.agreementMap, Screen.polarizationIndex].includes(active);
 	const current = mapViews.find((view) => view.id === active);
 	const views = availableMapViews(statement.statementSettings);
 	const Back = dir === 'rtl' ? ChevronRight : ChevronLeft;

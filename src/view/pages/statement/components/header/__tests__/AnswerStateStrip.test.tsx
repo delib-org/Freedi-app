@@ -3,8 +3,11 @@ import { render, screen } from '@testing-library/react';
 import { Statement, StatementType } from '@freedi/shared-types';
 import AnswerStateStrip from '../AnswerStateStrip';
 import { getAnswerState } from '../answerState';
+import { listenToEvaluation } from '@/controllers/db/evaluation/getEvaluation';
 
 let mockParent: Statement | undefined;
+let mockCanSee = true;
+const mockUnsubscribe = jest.fn();
 
 jest.mock('@/controllers/hooks/useTranslation', () => ({
 	useTranslation: () => ({ t: (key: string) => key }),
@@ -14,6 +17,15 @@ jest.mock('@/controllers/hooks/reduxHooks', () => ({
 }));
 jest.mock('@/redux/statements/statementsSlice', () => ({
 	statementSelector: () => () => undefined,
+}));
+jest.mock('@/controllers/hooks/useAuthentication', () => ({
+	useAuthentication: () => ({ creator: { uid: 'u1' } }),
+}));
+jest.mock('@/controllers/db/evaluation/getEvaluation', () => ({
+	listenToEvaluation: jest.fn(() => mockUnsubscribe),
+}));
+jest.mock('../../questionScreen/useAnswerScoreGate', () => ({
+	useAnswerScoreGate: () => ({ canSee: mockCanSee, showRevealHint: false }),
 }));
 
 function makeStatement(statementType: StatementType, statementId = 'a1'): Statement {
@@ -80,5 +92,53 @@ describe('AnswerStateStrip', () => {
 		render(<AnswerStateStrip statement={makeStatement(StatementType.option)} />);
 
 		expect(screen.getByTestId('answer-state-strip').dataset.state).toBe('notChosen');
+	});
+});
+
+describe('AnswerStateStrip score guard', () => {
+	beforeEach(() => {
+		mockParent = makeParent(['a1']);
+	});
+
+	afterEach(() => {
+		mockCanSee = true;
+	});
+
+	it('shows the chosen state to a viewer the guard allows', () => {
+		render(<AnswerStateStrip statement={makeStatement(StatementType.option)} />);
+
+		expect(screen.getByTestId('answer-state-strip')).toBeInTheDocument();
+	});
+
+	it('loads the viewer’s one rating of this answer, and stops when it unmounts', () => {
+		mockUnsubscribe.mockClear();
+		(listenToEvaluation as jest.Mock).mockClear();
+
+		const { unmount } = render(
+			<AnswerStateStrip statement={makeStatement(StatementType.option)} />,
+		);
+
+		expect(listenToEvaluation).toHaveBeenCalledTimes(1);
+		expect(listenToEvaluation).toHaveBeenCalledWith('a1', 'u1');
+
+		unmount();
+
+		expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
+	});
+
+	it('loads no rating on a statement that is not an answer', () => {
+		(listenToEvaluation as jest.Mock).mockClear();
+
+		render(<AnswerStateStrip statement={makeStatement(StatementType.question)} />);
+
+		expect(listenToEvaluation).not.toHaveBeenCalled();
+	});
+
+	it('says nothing about being chosen to a viewer who has not rated', () => {
+		mockCanSee = false;
+
+		render(<AnswerStateStrip statement={makeStatement(StatementType.option)} />);
+
+		expect(screen.queryByTestId('answer-state-strip')).not.toBeInTheDocument();
 	});
 });

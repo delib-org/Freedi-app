@@ -5,13 +5,18 @@ import { useCompoundPhase } from '@/controllers/hooks/compoundQuestion/useCompou
 import { useCompoundSolutions } from '@/controllers/hooks/compoundQuestion/useCompoundSolutions';
 import { sendSolutionToSign } from '@/controllers/db/compoundQuestion/sendToSign';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import ScoreGate from '../../../../questionScreen/ScoreGate';
+import { useQuestionScoreAccess } from '../../../../questionScreen/useAnswerScoreGate';
+import { orderSolutionsForViewer } from './solutionOrder';
 import styles from '../CompoundQuestion.module.scss';
 
 const ResolutionPhase: FC = () => {
 	const { t } = useTranslation();
 	const { statement } = useContext(StatementContext);
 	const { isAdmin } = useCompoundPhase(statement);
-	const { solutions } = useCompoundSolutions(statement);
+	const { solutionQuestion, solutions: loadedSolutions } = useCompoundSolutions(statement);
+	const { canSee: canSeeScores } = useQuestionScoreAccess(solutionQuestion);
+	const solutions = orderSolutionsForViewer(loadedSolutions, canSeeScores || isAdmin);
 	const [sendingId, setSendingId] = useState<string | null>(null);
 	const signDocumentIds = statement?.questionSettings?.compoundSettings?.signDocumentIds ?? [];
 
@@ -37,9 +42,11 @@ const ResolutionPhase: FC = () => {
 							<div key={solution.statementId} className={styles.solutionCard}>
 								<div className={styles.solutionContent}>
 									<h4 className={styles.solutionTitle}>{solution.statement}</h4>
-									<span className={styles.solutionConsensus}>
-										{t('Agreement score')}: {Math.round((solution.consensus ?? 0) * 100)}%
-									</span>
+									<ScoreGate answer={solution} isHost={isAdmin}>
+										<span className={styles.solutionConsensus}>
+											{t('Agreement score')}: {Math.round((solution.consensus ?? 0) * 100)}%
+										</span>
+									</ScoreGate>
 								</div>
 								<div className={styles.solutionActions}>
 									{sentToSign ? (

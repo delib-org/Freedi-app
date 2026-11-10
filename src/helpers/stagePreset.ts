@@ -15,7 +15,7 @@ export interface StagePreset {
 
 const STAGE_PRESETS: Readonly<Record<QuestionStageIndex, StagePreset>> = {
 	0: { addAnswers: true, rate: true, liveResults: false },
-	1: { addAnswers: true, rate: true, liveResults: false },
+	1: { addAnswers: true, rate: true, liveResults: true },
 	2: { addAnswers: false, rate: true, liveResults: false },
 	3: { addAnswers: false, rate: false, liveResults: true },
 };
