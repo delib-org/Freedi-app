@@ -97,8 +97,8 @@ const LiveNowCard: FC<LiveNowCardProps> = ({ statement: propStatement, compact =
 	if (compact) {
 		const liveOn = [
 			presenterOn && t('host.presenterMode'),
-			(settings.enableEvaluation ?? true) && t('host.acceptingResponses'),
-			(settings.showEvaluation ?? false) && t('Show live results'),
+			(settings.enableEvaluation ?? true) && t('Participants can rate and vote'),
+			(settings.showEvaluation ?? false) && t('Participants see live results'),
 		].filter(Boolean) as string[];
 
 		return (
@@ -131,7 +131,7 @@ const LiveNowCard: FC<LiveNowCardProps> = ({ statement: propStatement, compact =
 							ariaLabel={t('host.presenterMode')}
 						/>
 						<Chip
-							label={t('host.acceptingResponses')}
+							label={t('Participants can rate and vote')}
 							icon={<Vote size={14} aria-hidden="true" />}
 							selected={settings.enableEvaluation ?? true}
 							onClick={() =>
@@ -139,7 +139,7 @@ const LiveNowCard: FC<LiveNowCardProps> = ({ statement: propStatement, compact =
 							}
 						/>
 						<Chip
-							label={t('Show live results')}
+							label={t('Participants see live results')}
 							icon={<PieChart size={14} aria-hidden="true" />}
 							selected={settings.showEvaluation ?? false}
 							onClick={() => toggleSetting('showEvaluation', !(settings.showEvaluation ?? false))}
@@ -207,7 +207,7 @@ const LiveNowCard: FC<LiveNowCardProps> = ({ statement: propStatement, compact =
 				<ToggleSwitch
 					isChecked={settings.enableEvaluation ?? true}
 					onChange={(checked) => toggleSetting('enableEvaluation', checked)}
-					label={t('host.acceptingResponses')}
+					label={t('Participants can rate and vote')}
 					description={t('Off = participants can see but not rate or vote')}
 					icon={Vote}
 					data-testid="accepting-responses"
@@ -216,7 +216,7 @@ const LiveNowCard: FC<LiveNowCardProps> = ({ statement: propStatement, compact =
 				<ToggleSwitch
 					isChecked={settings.showEvaluation ?? false}
 					onChange={(checked) => toggleSetting('showEvaluation', checked)}
-					label={t('Show live results')}
+					label={t('Participants see live results')}
 					description={t('Participants see scores while responding (may bias them)')}
 					icon={PieChart}
 					data-testid="live-results"
