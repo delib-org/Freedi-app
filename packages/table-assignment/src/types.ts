@@ -21,6 +21,17 @@ export interface Topic {
 	maxTables?: number;
 }
 
+/**
+ * A table that already exists. Its members never move and it keeps its topic.
+ * Members no longer among the participants are dropped from it; newcomers may
+ * fill its free seats. Throws when a member is pinned twice, the table is
+ * larger than tableSize, or the topic is unknown.
+ */
+export interface PinnedTable {
+	topicId: string;
+	memberIds: readonly string[];
+}
+
 export interface AssignmentOptions {
 	/** Seats per table, the hard upper bound. Default TABLE_SIZE_DEFAULT. */
 	tableSize?: number;
@@ -41,10 +52,11 @@ export interface AssignmentOptions {
 	/** Seed of the lottery. The same seed and input always give the same output. */
 	seed?: number;
 	/**
-	 * Seats already taken (participant id → table index) that a re-run must not
-	 * move. Lets a facilitator seat latecomers without reshuffling the room.
+	 * Tables a re-run must keep, in this order, at the front of the output.
+	 * Lets a facilitator seat latecomers without reshuffling the room; see
+	 * PinnedTable.
 	 */
-	locked?: Readonly<Record<string, number>>;
+	pinnedTables?: ReadonlyArray<PinnedTable>;
 }
 
 export interface TableStats {

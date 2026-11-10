@@ -179,7 +179,8 @@ function trySwap(
 	);
 	if (phase === 'preference' && gain < 0) return false;
 	if (phase === 'balance' && state.score.maxDeviation <= options.tolerance) return false;
-	if ((phase === 'balance' || gain === 0) && noSideToTrade(participants[pa], participants[pb])) return false;
+	if ((phase === 'balance' || gain === 0) && noSideToTrade(participants[pa], participants[pb]))
+		return false;
 
 	state.seating[a][ia] = pb;
 	state.seating[b][ib] = pa;
@@ -193,7 +194,9 @@ function trySwap(
 		swapTries: 0,
 	};
 	const accepted =
-		phase === 'balance' ? evensOut(state.score, next) : accepts(state.score, next, options.tolerance);
+		phase === 'balance'
+			? evensOut(state.score, next)
+			: accepts(state.score, next, options.tolerance);
 	if (!accepted) {
 		state.seating[a][ia] = pa;
 		state.seating[b][ib] = pb;

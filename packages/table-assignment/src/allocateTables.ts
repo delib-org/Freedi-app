@@ -3,7 +3,7 @@ import { preferenceRank } from './preferences';
 import { TableAssignmentError } from './errors';
 import { LOWER_RANK_DEMAND_FACTOR } from './constants';
 
-interface TopicDemand {
+export interface TopicDemand {
 	topicId: string;
 	weight: number;
 	maxTables: number;
@@ -24,12 +24,13 @@ export function allocateTables(
 	topics: readonly Topic[],
 	tableSize: number,
 	maxRanked: number,
+	existing: ExistingTables = {},
 ): TablePlan[] {
-	const seats = participants.length;
+	const seats = existing.seats ?? participants.length;
 	if (seats === 0 || topics.length === 0) return [];
 
 	const tableCount = Math.ceil(seats / tableSize);
-	const demand = topicDemand(participants, topics, maxRanked);
+	const demand = topicDemand(participants, topics, maxRanked, existing.tablesPerTopic);
 	const tablesPerTopic = apportion(demand, tableCount);
 	const plans = expand(demand, tablesPerTopic);
 	assertEveryoneFits(plans, seats, tableSize);
@@ -37,15 +38,25 @@ export function allocateTables(
 	return sizeEvenly(plans, seats);
 }
 
-function topicDemand(
+/** Tables that exist already: only `seats` more seats are planned, and each topic's cap counts what it has. */
+export interface ExistingTables {
+	seats?: number;
+	tablesPerTopic?: ReadonlyMap<string, number>;
+}
+
+export function topicDemand(
 	participants: readonly Participant[],
 	topics: readonly Topic[],
 	maxRanked: number,
+	tablesPerTopic: ReadonlyMap<string, number> = new Map(),
 ): TopicDemand[] {
 	const demand = topics.map<TopicDemand>((topic) => ({
 		topicId: topic.id,
 		weight: 0,
-		maxTables: topic.maxTables ?? Number.POSITIVE_INFINITY,
+		maxTables: Math.max(
+			0,
+			(topic.maxTables ?? Number.POSITIVE_INFINITY) - (tablesPerTopic.get(topic.id) ?? 0),
+		),
 	}));
 	for (const entry of demand) {
 		for (const participant of participants) {

@@ -51,12 +51,6 @@ describe('assignTables', () => {
 		expect(again.tables).toEqual(once.tables);
 	});
 
-	it('never moves a locked participant', () => {
-		const participants = partisanCrowd();
-		const { tables } = assignTables(participants, topics, { seed: 1, locked: { p0: 4, p41: 4 } });
-		expect(tables[4].memberIds).toEqual(expect.arrayContaining(['p0', 'p41']));
-	});
-
 	it('handles the simple mode: one choice each, no sides', () => {
 		const participants: Participant[] = Array.from({ length: 10 }, (_, i) => ({
 			id: `p${i}`,

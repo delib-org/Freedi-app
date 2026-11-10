@@ -12,10 +12,15 @@ interface Scenario {
 	shape: SideShape;
 	correlation: Correlation;
 	undeclaredShare: number;
+	/** Everyone stands at the same position. */
+	identical?: boolean;
 }
 
 const TOPICS: Topic[] = Array.from({ length: 6 }, (_, i) => ({ id: `t${i}` }));
 const TOLERANCE = 0.3;
+const IDENTICAL_POSITION = 100;
+const PINNED_FIRST_ROOM = 100;
+const PINNED_LATECOMERS = 25;
 
 function gaussian(rng: Rng, mean: number, sd: number): number {
 	const u = 1 - rng.next();
@@ -61,7 +66,7 @@ function shuffleCopy<T>(items: readonly T[], rng: Rng): T[] {
 
 function crowd(scenario: Scenario, rng: Rng): Participant[] {
 	return Array.from({ length: scenario.n }, (_, i) => {
-		const side = drawSide(scenario.shape, rng);
+		const side = scenario.identical ? IDENTICAL_POSITION : drawSide(scenario.shape, rng);
 		const declared = rng.next() >= scenario.undeclaredShare;
 
 		return { id: `p${i}`, side: declared ? [side] : undefined, preferences: drawPreferences(side, scenario.correlation, rng) };
@@ -128,5 +133,37 @@ for (const n of [30, 100, 300]) {
 }
 scenarios.push({ n: 100, shape: 'polarized', correlation: 'strong', undeclaredShare: 0.2 });
 
+scenarios.push({ n: 100, shape: 'uniform', correlation: 'none', undeclaredShare: 0.5 });
+scenarios.push({ n: 300, shape: 'polarized', correlation: 'strong', undeclaredShare: 0.5 });
+scenarios.push({ n: 100, shape: 'uniform', correlation: 'none', undeclaredShare: 0, identical: true });
+
+/** Seat a first room, then re-run with latecomers while keeping everyone already seated. */
+function pinnedRerun(seed: number): Record<string, string | number> {
+	const rng = createRng(seed);
+	const everyone = crowd({ n: PINNED_FIRST_ROOM + PINNED_LATECOMERS, shape: 'uniform', correlation: 'none', undeclaredShare: 0.1 }, rng);
+	const first = assignTables(everyone.slice(0, PINNED_FIRST_ROOM), TOPICS, { seed });
+	const pinnedTables = first.tables.map((t) => ({ topicId: t.topicId, memberIds: t.memberIds }));
+	const second = assignTables(everyone, TOPICS, { seed: seed + 1, pinnedTables });
+	const moved = first.tables.reduce(
+		(count, table, t) => count + table.memberIds.filter((id) => !second.tables[t].memberIds.includes(id)).length,
+		0,
+	);
+	const { preferences: p, balance: b } = second.metrics;
+
+	return {
+		first: PINNED_FIRST_ROOM,
+		latecomers: PINNED_LATECOMERS,
+		'tables before': first.tables.length,
+		'tables after': second.tables.length,
+		'seated people moved': moved,
+		'1st': pct(p.byRank[0], everyone.length - p.noPreference),
+		'dev max': b.max.toFixed(2),
+		ok: b.withinTolerance ? 'yes' : 'NO',
+	};
+}
+
 console.info(`tolerance ${TOLERANCE} sd, ${TOPICS.length} topics, table size 7, seed 42`);
 console.table(scenarios.map((scenario) => runScenario(scenario, 42)));
+
+console.info('pinned re-run: seated people stay, latecomers fill free seats');
+console.table([pinnedRerun(42), pinnedRerun(43)]);
