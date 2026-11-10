@@ -45,6 +45,82 @@ describe('useAuthorization on the shared verdict', () => {
 		mockCreator = { uid: 'u1', isAnonymous: false };
 	});
 
+	describe('a level governed by a private level below the top', () => {
+		beforeEach(() => {
+			mockStatements = {
+				child: {
+					statementId: 'child',
+					topParentId: 'top1',
+					accessScope: 'mid',
+					creator: { uid: 'host' },
+				},
+				mid: {
+					statementId: 'mid',
+					topParentId: 'top1',
+					accessScope: 'mid',
+					creator: { uid: 'host' },
+					membership: { access: Access.secret },
+				},
+				top1: {
+					statementId: 'top1',
+					topParentId: 'top1',
+					accessScope: 'open',
+					creator: { uid: 'host' },
+					membership: { access: Access.openToAll },
+				},
+			};
+		});
+
+		it('refuses an outsider on a direct landing, so ProtectedLayout shows Page401', async () => {
+			const { result } = renderHook(() => useAuthorization('child'));
+
+			await waitFor(() => expect(result.current.error).toBe(true));
+			expect(result.current.isAuthorized).toBe(false);
+			expect(setStatementSubscriptionToDB).not.toHaveBeenCalled();
+		});
+
+		it('lets a member of that level in', async () => {
+			mockSubscriptions = { mid: { role: Role.member } };
+
+			const { result } = renderHook(() => useAuthorization('child'));
+
+			await waitFor(() => expect(result.current.isAuthorized).toBe(true));
+		});
+
+		it('files a waiting request at that level when it is moderated', async () => {
+			(mockStatements.mid as { membership: { access: Access } }).membership.access = Access.moderated;
+
+			const { result } = renderHook(() => useAuthorization('child'));
+
+			await waitFor(() => expect(result.current.isWaitingForApproval).toBe(true));
+			expect(setStatementSubscriptionToDB).toHaveBeenCalledWith(
+				expect.objectContaining({
+					role: Role.waiting,
+					statement: expect.objectContaining({ statementId: 'mid' }),
+				}),
+			);
+		});
+
+		it('stays loading until the governing level arrives, rather than refusing', async () => {
+			delete mockStatements.mid;
+
+			const { result } = renderHook(() => useAuthorization('child'));
+
+			await waitFor(() => expect(result.current.loading).toBe(true));
+			expect(result.current.error).toBe(false);
+		});
+	});
+
+	it('lets someone in when no level has a setting', async () => {
+		mockStatements = {
+			s1: { statementId: 's1', topParentId: 's1', accessScope: 'open', creator: { uid: 'host' } },
+		};
+
+		const { result } = renderHook(() => useAuthorization('s1'));
+
+		await waitFor(() => expect(result.current.isAuthorized).toBe(true));
+	});
+
 	it('lets a public visitor in and subscribes them once', async () => {
 		group(Access.public);
 

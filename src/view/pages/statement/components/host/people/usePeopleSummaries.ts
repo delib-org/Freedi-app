@@ -5,6 +5,7 @@ import { statementSelector } from '@/redux/statements/statementsSlice';
 import { translateCount } from '@/helpers/translateCount';
 import { accessCopyKeys } from '@/helpers/peopleLabels';
 import { isAccessInherited, resolveEffectiveAccess } from '@/helpers/effectiveAccess';
+import { getInheritedLevelId } from '@/helpers/entryVerdict';
 import {
 	isStakeholderCountInherited,
 	resolveInheritedStakeholders,
@@ -43,7 +44,8 @@ export function usePeopleSummaries({
 	const isTopLevel = statement.parentId === 'top';
 	const sameAsGroup = t('people.sameAsGroup');
 
-	const access = resolveEffectiveAccess(statement, topParent);
+	const governing = useAppSelector(statementSelector(getInheritedLevelId(statement)));
+	const access = resolveEffectiveAccess(statement, governing);
 	const isJoinInherited = !isTopLevel && isAccessInherited(statement);
 
 	const declaredStakeholders = statement.evaluationSettings?.targetPopulation;

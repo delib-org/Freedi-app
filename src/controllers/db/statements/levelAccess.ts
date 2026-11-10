@@ -5,6 +5,7 @@ import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import {
 	EntryVerdict,
 	getEntryVerdict,
+	getLevelAccess,
 	getLevelsAbove,
 	getSubscriptionScopeId,
 	isProvenOpen,
@@ -97,10 +98,11 @@ function readRole(scopeId: string | undefined, uid: string | undefined): Promise
 function isKnownOpen(levelId: string, person: Person | undefined): boolean {
 	const state = store.getState();
 	const level = statementSelector(levelId)(state);
-	const topParent = statementSelector(level?.topParentId)(state);
-	const subscription = statementSubscriptionSelector(getSubscriptionScopeId(level))(state);
+	const scopeId = getSubscriptionScopeId(level);
+	const governing = statementSelector(scopeId)(state);
+	const subscription = statementSubscriptionSelector(scopeId)(state);
 
-	return isProvenOpen(level, topParent, subscription, person);
+	return isProvenOpen(level, governing, subscription, person);
 }
 
 /** Judges one level for one person. Read-only: unlike useAuthorization it never subscribes or files a request. */
@@ -114,13 +116,12 @@ export async function readLevelVerdict(
 	const level = await readLevel(levelId, uid);
 	if (!level) return 'gone';
 
-	const inheritsAccess = !level.membership?.access && level.topParentId !== levelId;
-	const topParent = inheritsAccess ? await readLevel(level.topParentId, uid) : level;
-	const access = level.membership?.access || topParent?.membership?.access;
-	const role =
-		access === Access.public ? undefined : await readRole(getSubscriptionScopeId(level), uid);
+	const scopeId = getSubscriptionScopeId(level);
+	const governing = scopeId && scopeId !== levelId ? await readLevel(scopeId, uid) : level;
+	const access = getLevelAccess(level, governing);
+	const role = access === Access.public ? undefined : await readRole(scopeId, uid);
 
-	return getEntryVerdict(level, topParent, role ? { role } : undefined, person);
+	return getEntryVerdict(level, governing, role ? { role } : undefined, person);
 }
 
 /** The nearest level above the statement the person may enter, or undefined for Home. */

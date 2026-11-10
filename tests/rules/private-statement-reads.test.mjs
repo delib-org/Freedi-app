@@ -7,6 +7,7 @@ import {
 	doc,
 	documentId,
 	getCountFromServer,
+	getDoc,
 	getDocs,
 	limit,
 	or,
@@ -387,6 +388,16 @@ describe('listing /statements', () => {
 		it('a root that names itself and turns out to be open passes for anyone', async () => {
 			await assertSucceeds(getDocs(query(statementsAs(ANONYMOUS), where('parents', 'array-contains', 'ns-top'), where('accessScope', 'in', ['open', 'ns-top']))));
 		});
+	});
+
+	describe('a direct landing on a closed level', () => {
+		// The client gate needs the document to tell closed from gone. Were this
+		// refused, ProtectedLayout would take the read failure for a deletion.
+		for (const uid of [OUTSIDER, BANNED, WAITING, ANONYMOUS, SIGNED_OUT]) {
+			it(`still lets ${labelOf(uid)} read the one document`, async () => {
+				await assertSucceeds(getDoc(doc(contextOf(uid).firestore(), 'statements', 'pg-q')));
+			});
+		}
 	});
 
 	describe('writing accessScope', () => {
