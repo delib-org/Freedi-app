@@ -1,5 +1,20 @@
 import { SortType, Statement } from '@freedi/shared-types';
-import { applyManualOrder, pinFirst, sortStatements } from '../suggestionOrdering';
+import { applyManualOrder, includeAnswer, pinFirst, sortStatements } from '../suggestionOrdering';
+
+describe('includeAnswer', () => {
+	const list = ['a', 'b'].map((id) => ({ statementId: id }) as Statement);
+
+	it('adds an answer the list does not hold', () => {
+		const old = { statementId: 'old' } as Statement;
+
+		expect(includeAnswer(list, old)).toEqual([old, ...list]);
+	});
+
+	it('never duplicates, so paging can reach the same answer later', () => {
+		expect(includeAnswer(list, { statementId: 'b' } as Statement)).toBe(list);
+		expect(includeAnswer(list, undefined)).toBe(list);
+	});
+});
 
 describe('pinFirst', () => {
 	const list = ['a', 'b', 'c'].map((id) => ({ statementId: id }) as Statement);

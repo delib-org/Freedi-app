@@ -5,19 +5,16 @@ import { Statement, StatementType } from '@freedi/shared-types';
 import { UI } from '@/constants/common';
 import { useFocusedAnswer } from '../useFocusedAnswer';
 
-const mockDispatch = jest.fn();
 const mockGetStatementFromDB = jest.fn();
 let mockLoaded = false;
 
 jest.mock('react-redux', () => ({
-	useDispatch: () => mockDispatch,
 	useSelector: () => (mockLoaded ? { statementId: 'loaded' } : undefined),
 }));
 jest.mock('@/controllers/db/statements/getStatement', () => ({
 	getStatementFromDB: (...args: unknown[]) => mockGetStatementFromDB(...args),
 }));
 jest.mock('@/redux/statements/statementsSlice', () => ({
-	setStatement: (statement: Statement) => ({ type: 'setStatement', payload: statement }),
 	statementSelectorById: () => () => undefined,
 }));
 jest.mock('@/utils/errorHandling', () => ({ logError: jest.fn() }));
@@ -28,9 +25,27 @@ function wrapper(url: string) {
 	};
 }
 
-function renderFocused(url: string, shownIds: ReadonlySet<string>) {
+function option(id: string, overrides: Partial<Statement> = {}): Statement {
+	return {
+		statementId: id,
+		parentId: 'q1',
+		statementType: StatementType.option,
+		...overrides,
+	} as Statement;
+}
+
+async function flush(): Promise<void> {
+	await act(async () => {
+		await Promise.resolve();
+	});
+}
+
+function renderFocused(url: string, shownIds: ReadonlySet<string>, isSortChosen = false) {
 	return renderHook(
-		({ ids }) => ({ focused: useFocusedAnswer('q1', ids), search: useLocation().search }),
+		({ ids }) => ({
+			focused: useFocusedAnswer('q1', ids, isSortChosen),
+			search: useLocation().search,
+		}),
 		{ wrapper: wrapper(url), initialProps: { ids: shownIds } },
 	);
 }
@@ -75,43 +90,62 @@ describe('useFocusedAnswer', () => {
 		jest.useRealTimers();
 	});
 
-	it('loads one document when the answer is not in the store', async () => {
-		const answer = {
-			statementId: 'old',
-			parentId: 'q1',
-			statementType: StatementType.option,
-		} as Statement;
+	it('holds an answer that is not in the store, without storing it', async () => {
+		const answer = option('old');
 		mockGetStatementFromDB.mockResolvedValue(answer);
-		renderFocused('/statement/q1?focusId=old', new Set());
+		const { result } = renderFocused('/statement/q1?focusId=old', new Set());
 
-		await waitFor(() =>
-			expect(mockDispatch).toHaveBeenCalledWith({ type: 'setStatement', payload: answer }),
-		);
+		await waitFor(() => expect(result.current.focused.focusedAnswer).toBe(answer));
 		expect(mockGetStatementFromDB).toHaveBeenCalledTimes(1);
 		expect(mockGetStatementFromDB).toHaveBeenCalledWith('old');
+		expect(result.current.focused.ringId).toBe('old');
 	});
 
 	it('does not fail when the answer no longer exists', async () => {
 		const { result } = renderFocused('/statement/q1?focusId=gone', new Set(['a1']));
 
 		await waitFor(() => expect(mockGetStatementFromDB).toHaveBeenCalledWith('gone'));
-		expect(mockDispatch).not.toHaveBeenCalled();
+		await flush();
+		expect(result.current.focused.focusedAnswer).toBeUndefined();
 		expect(result.current.focused.ringId).toBeUndefined();
 		expect(sessionStorage.getItem('focusedAnswer:q1')).toBeNull();
 	});
 
-	it('ignores a focusId that points at a chat message', async () => {
-		mockGetStatementFromDB.mockResolvedValue({
-			statementId: 'm1',
-			parentId: 'q1',
-			statementType: StatementType.statement,
-		} as Statement);
-		renderFocused('/statement/q1?focusId=m1', new Set());
+	it.each([
+		['a chat message', { statementType: StatementType.statement }],
+		['a hidden answer', { hide: true }],
+		['an answer of another question', { parentId: 'q2' }],
+	])('never brings in %s', async (_label, overrides) => {
+		mockGetStatementFromDB.mockResolvedValue(option('x', overrides));
+		const { result } = renderFocused('/statement/q1?focusId=x', new Set());
 
 		await waitFor(() => expect(mockGetStatementFromDB).toHaveBeenCalled());
-		await act(async () => {
-			await Promise.resolve();
-		});
-		expect(mockDispatch).not.toHaveBeenCalled();
+		await flush();
+		expect(result.current.focused.focusedAnswer).toBeUndefined();
+		expect(result.current.focused.ringId).toBeUndefined();
+	});
+
+	it('does not pin when the reader chose a sort, and that ends an earlier pin', () => {
+		sessionStorage.setItem('focusedAnswer:q1', 'a1');
+		const { result } = renderFocused('/statement/q1', new Set(['a1']), true);
+
+		expect(result.current.focused.pinnedId).toBeUndefined();
+		expect(sessionStorage.getItem('focusedAnswer:q1')).toBeNull();
+	});
+
+	it('still rings a card under a chosen sort, without pinning it or fetching', () => {
+		mockLoaded = true;
+		const { result } = renderFocused('/statement/q1?focusId=a1', new Set(['a1']), true);
+
+		expect(result.current.focused.pinnedId).toBeUndefined();
+		expect(result.current.focused.ringId).toBe('a1');
+		expect(sessionStorage.getItem('focusedAnswer:q1')).toBeNull();
+	});
+
+	it('does not fetch an answer that a chosen sort has no place for', async () => {
+		renderFocused('/statement/q1?focusId=old', new Set(), true);
+		await flush();
+
+		expect(mockGetStatementFromDB).not.toHaveBeenCalled();
 	});
 });

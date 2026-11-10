@@ -18,7 +18,7 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 import SuggestionCard from './suggestionCard/SuggestionCard';
 import Evaluation from '../evaluation/Evaluation';
-import { applyManualOrder, pinFirst, sortStatements } from './suggestionOrdering';
+import { applyManualOrder, includeAnswer, pinFirst, sortStatements } from './suggestionOrdering';
 import { useFocusedAnswer } from './useFocusedAnswer';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
@@ -166,14 +166,23 @@ const SuggestionCards: FC = () => {
 	});
 
 	// The pin applies after the throttle, so a just-added answer leads at once.
+	// A `:sort` in the URL is the reader asking for a ranking, and that wins here too.
 	const shownIds = useMemo(
 		() => new Set([...orderedFlatRaw, ...plan.topLevelSynths].map(getStatementId)),
 		[orderedFlatRaw, plan.topLevelSynths],
 	);
-	const { pinnedId, ringId, ringRef } = useFocusedAnswer(statementId, shownIds);
+	const { pinnedId, focusedAnswer, ringId, ringRef } = useFocusedAnswer(
+		statementId,
+		shownIds,
+		params.sort !== undefined,
+	);
 	const displayedFlatRaw = useMemo(
-		() => pinFirst(orderedFlatRaw, pinnedId),
-		[orderedFlatRaw, pinnedId],
+		() =>
+			pinFirst(
+				effectiveLayers.raw ? includeAnswer(orderedFlatRaw, focusedAnswer) : orderedFlatRaw,
+				pinnedId,
+			),
+		[orderedFlatRaw, focusedAnswer, effectiveLayers.raw, pinnedId],
 	);
 	const displayedSynths = useMemo(
 		() => pinFirst(plan.topLevelSynths, pinnedId),
