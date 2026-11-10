@@ -5386,5 +5386,7 @@
   "Receive updates via email": "Receive updates via email",
   "chatQuestion.answerLabel": "Answer:",
   "unread.messageCount_one": "1 unread message",
-  "unread.messageCount_other": "{{count}} unread messages"
+  "unread.messageCount_other": "{{count}} unread messages",
+  "answerStrip.notChosen": "Answer",
+  "answerStrip.chosen": "Chosen answer"
 }

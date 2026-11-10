@@ -5424,5 +5424,7 @@
   "Receive updates via email": "לקבל עדכונים במייל",
   "chatQuestion.answerLabel": "תשובה:",
   "unread.messageCount_one": "הודעה אחת שלא נקראה",
-  "unread.messageCount_other": "{{count}} הודעות שלא נקראו"
+  "unread.messageCount_other": "{{count}} הודעות שלא נקראו",
+  "answerStrip.notChosen": "תשובה",
+  "answerStrip.chosen": "תשובה שנבחרה"
 }
