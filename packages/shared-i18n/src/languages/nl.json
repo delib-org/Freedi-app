@@ -4095,6 +4095,8 @@
   "question.share": "Delen",
   "question.addAnswerCta": "Toevoegen",
   "question.answerAdded": "Je antwoord is toegevoegd. Anderen kunnen het nu beoordelen.",
+  "question.ratedAllNotice": "Je hebt voorlopig alle antwoorden beoordeeld. Je beoordelingen tellen mee voor het resultaat van de groep.",
+  "question.voteCounted": "Je stem is geteld.",
   "Background": "Achtergrond",
   "Background from the host": "Achtergrond van de host",
   "host": "host",

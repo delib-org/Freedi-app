@@ -4600,6 +4600,8 @@
   "question.share": "اشتراک‌گذاری",
   "question.addAnswerCta": "افزودن",
   "question.answerAdded": "پاسخ شما افزوده شد. اکنون دیگران می‌توانند به آن امتیاز دهند.",
+  "question.ratedAllNotice": "فعلاً به همهٔ پاسخ‌ها امتیاز داده‌اید. امتیازهای شما در نتیجهٔ گروه به حساب می‌آید.",
+  "question.voteCounted": "رأی شما شمرده شد.",
   "Background": "پیش‌زمینه",
   "Background from the host": "پیش‌زمینه از میزبان",
   "host": "میزبان",

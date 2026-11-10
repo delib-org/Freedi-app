@@ -10,7 +10,10 @@ import { createDocRef, createTimestamps } from '@/utils/firebaseUtils';
 import { Collections } from '@freedi/shared-types';
 import { logVote } from '@/controllers/db/researchLogs/researchLogger';
 
-export async function setVoteToDB(option: Statement, creator: User) {
+export async function setVoteToDB(
+	option: Statement,
+	creator: User,
+): Promise<'cast' | 'removed' | 'failed'> {
 	try {
 		//vote reference
 		const voteId = getVoteId(creator.uid, option.parentId);
@@ -73,10 +76,14 @@ export async function setVoteToDB(option: Statement, creator: User) {
 				userId: creator.uid,
 			});
 		}
+
+		return isRemovingVote ? 'removed' : 'cast';
 	} catch (error) {
 		logger.error('Failed to set vote', error, {
 			statementId: option.statementId,
 			userId: creator.uid,
 		});
+
+		return 'failed';
 	}
 }

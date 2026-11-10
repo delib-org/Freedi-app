@@ -19,7 +19,7 @@ import {
 	isHostRole,
 } from './questionScreenLogic';
 import { getQuestionStage, QuestionStageIndex, STAGE_DECIDED } from '@/helpers/questionStage';
-import { areAnswersComplete, countRated, rankableAnswers } from './resultsLogic';
+import { areAnswersComplete, countRated, latestRatingAt, rankableAnswers } from './resultsLogic';
 import { isLiveResultsOn } from '@/helpers/liveResults';
 
 /**
@@ -40,6 +40,8 @@ export interface QuestionScreenData {
 	/** Answers the viewer can rate (not their own). */
 	rateableCount: number;
 	ratedCount: number;
+	/** When the viewer last rated one of those answers, or 0. */
+	lastRatedAt: number;
 	/** False while the store may hold only part of the answers: the two counts are then partial. */
 	answersComplete: boolean;
 	isDeadlinePassed: boolean;
@@ -77,11 +79,8 @@ export function useQuestionScreenData(statement: Statement | undefined): Questio
 	return useMemo(() => {
 		const answers = rankableAnswers(options);
 		const rateable = answers.filter((a) => !isOwn(a, userId));
-		const ratedCount = countRated(
-			evaluations,
-			rateable.map((a) => a.statementId),
-			userId,
-		);
+		const rateableIds = rateable.map((a) => a.statementId);
+		const ratedCount = countRated(evaluations, rateableIds, userId);
 		const now = Date.now();
 		const deadline = statement?.questionSettings?.deadline;
 		const isDeadlinePassed = typeof deadline === 'number' && deadline > 0 && deadline <= now;
@@ -101,6 +100,7 @@ export function useQuestionScreenData(statement: Statement | undefined): Questio
 			answers,
 			rateableCount: rateable.length,
 			ratedCount,
+			lastRatedAt: latestRatingAt(evaluations, rateableIds, userId),
 			answersComplete: areAnswersComplete({
 				loadedAnswers: options.length,
 				loadedChildren,

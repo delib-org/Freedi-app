@@ -341,3 +341,19 @@ export function countRated(
 
 	return rated.size;
 }
+
+/** When the viewer last rated one of these answers, or 0 if never. */
+export function latestRatingAt(
+	evaluations: ReadonlyArray<{ statementId: string; evaluatorId?: string; updatedAt: number }>,
+	answerIds: readonly string[],
+	userId: string | undefined,
+): number {
+	if (!userId) return 0;
+	const ids = new Set(answerIds);
+
+	return evaluations.reduce(
+		(latest, e) =>
+			e.evaluatorId === userId && ids.has(e.statementId) ? Math.max(latest, e.updatedAt) : latest,
+		0,
+	);
+}

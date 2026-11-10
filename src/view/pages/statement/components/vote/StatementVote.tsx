@@ -13,6 +13,7 @@ import styles from './StatementVote.module.scss';
 
 // Helpers
 import Toast from '@/view/components/toast/Toast';
+import ActionToast from '@/view/components/atomic/molecules/ActionToast';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { StatementContext } from '../../StatementCont';
 import { Statement, QuestionStep } from '@freedi/shared-types';
@@ -49,7 +50,8 @@ const StatementVote: FC = () => {
 	const [statementInfo, setStatementInfo] = useState<Statement | undefined>(undefined);
 
 	// * Variables * //
-	const { selectionsById, totalVotes, votedOptionId, castVote } = useOptimisticVotes(statement);
+	const { selectionsById, totalVotes, votedOptionId, castVote, voteCountedId, dismissVoteCounted } =
+		useOptimisticVotes(statement);
 
 	return (
 		<>
@@ -86,6 +88,14 @@ const StatementVote: FC = () => {
 				<Modal>
 					<StatementInfo statement={statementInfo} setShowInfo={setIsStatementInfoModalOpen} />
 				</Modal>
+			)}
+			{voteCountedId > 0 && (
+				<ActionToast
+					key={voteCountedId}
+					message={t('question.voteCounted')}
+					variant="success"
+					onDismiss={dismissVoteCounted}
+				/>
 			)}
 		</>
 	);

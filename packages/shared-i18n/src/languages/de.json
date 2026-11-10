@@ -4095,6 +4095,8 @@
   "question.share": "Teilen",
   "question.addAnswerCta": "Hinzufügen",
   "question.answerAdded": "Deine Antwort wurde hinzugefügt. Andere können sie jetzt bewerten.",
+  "question.ratedAllNotice": "Du hast vorerst alle Antworten bewertet. Deine Bewertungen fließen in das Ergebnis der Gruppe ein.",
+  "question.voteCounted": "Deine Stimme wurde gezählt.",
   "Background": "Hintergrund",
   "Background from the host": "Hintergrund von der Gastgeberin / vom Gastgeber",
   "host": "Gastgeber:in",

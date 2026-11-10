@@ -4095,6 +4095,8 @@
   "question.share": "Compartir",
   "question.addAnswerCta": "Añadir",
   "question.answerAdded": "Tu respuesta se ha añadido. Ahora otras personas pueden valorarla.",
+  "question.ratedAllNotice": "Has valorado todas las respuestas por ahora. Tus valoraciones cuentan para el resultado del grupo.",
+  "question.voteCounted": "Tu voto se ha contado.",
   "Background": "Contexto",
   "Background from the host": "Contexto de quien anfitriona",
   "host": "anfitrión/a",

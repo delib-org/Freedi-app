@@ -4215,6 +4215,8 @@
   "question.share": "مشاركة",
   "question.addAnswerCta": "إضافة",
   "question.answerAdded": "تمت إضافة إجابتك. يمكن للآخرين الآن تقييمها.",
+  "question.ratedAllNotice": "لقد قيّمت كل الإجابات المتاحة حاليًا. تقييماتك تُحتسب في نتيجة المجموعة.",
+  "question.voteCounted": "تم احتساب صوتك.",
   "Background": "خلفية",
   "Background from the host": "خلفية من المضيف/ة",
   "host": "المضيف/ة",

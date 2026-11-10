@@ -4801,6 +4801,8 @@
   "question.share": "Share",
   "question.addAnswerCta": "Add",
   "question.answerAdded": "Your answer was added. Others can now rate it.",
+  "question.ratedAllNotice": "You've rated all the answers for now. Your ratings count toward the group's result.",
+  "question.voteCounted": "Your vote was counted.",
   "Background": "Background",
   "Background from the host": "Background from the host",
   "host": "host",

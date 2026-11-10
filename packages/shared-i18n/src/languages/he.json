@@ -4839,6 +4839,8 @@
   "question.share": "שיתוף",
   "question.addAnswerCta": "להוסיף",
   "question.answerAdded": "התשובה שלך נוספה. עכשיו אחרים יכולים לדרג אותה.",
+  "question.ratedAllNotice": "דירגת את כל התשובות שיש כרגע. הדירוגים שלך נספרים בתוצאה של הקבוצה.",
+  "question.voteCounted": "ההצבעה שלך נספרה.",
   "Background": "רקע",
   "Background from the host": "רקע מהמארח/ת",
   "host": "מארח/ת",
