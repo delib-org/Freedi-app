@@ -1,11 +1,16 @@
 import { CutoffBy, ResultsSettings, Statement, defaultResultsSettings } from '@freedi/shared-types';
 import { getConsensusScore } from '@/redux/utils/selectorFactories';
-import { QuestionStageIndex, STAGE_COLLECTING, STAGE_DECIDED } from '@/helpers/questionStage';
+import {
+	QuestionStageIndex,
+	STAGE_COLLECTING,
+	STAGE_DECIDED,
+	STAGE_VOTING,
+} from '@/helpers/questionStage';
 
 /**
  * Pure decisions behind the Results tab and the answers counter: who may read
  * results right now, which answers count as "leading" under the question's own
- * results selection, and the one-line hint above the answers list.
+ * results selection, and the one-line cue under the stage bar.
  */
 
 export type ResultsAccess = 'visible' | 'rate-first' | 'hidden-by-host';
@@ -163,27 +168,89 @@ export function scorePercent(score: number): number {
 	return Math.round(((clamped + 1) / 2) * 100);
 }
 
-export interface RateHintInput {
-	canRate: boolean;
+export interface StageCueInput {
 	stage: QuestionStageIndex;
-	rated: number;
-	total: number;
+	/** Host halt, or the deadline passed. */
+	isHalted: boolean;
+	canRate: boolean;
+	canAddAnswer: boolean;
+	/** `evaluationUI === voting`: the question's answers are voted on, not rated. */
+	usesVotingUI: boolean;
+	hasVoted: boolean;
+	ratedCount: number;
+	rateableCount: number;
 }
 
-/** The hint beside the "{rated}/{total}" counter above the answers list. */
-export function getRateHint({ canRate, stage, rated, total }: RateHintInput): Caption {
-	if (!canRate) {
-		return {
-			key:
-				stage === STAGE_COLLECTING
-					? 'Still collecting ideas — rating opens later'
-					: 'Rating is closed',
-		};
-	}
-	if (rated === 0) return { key: 'Rate each answer on its own — what could you live with?' };
-	if (rated < total) return { key: '{n} more to rate', value: String(total - rated) };
+type RateProgress = 'nothing' | 'none' | 'some' | 'all';
+type RateRow = Readonly<Record<RateProgress, string>>;
 
-	return { key: 'You rated them all. Thank you!' };
+const COLLECTING_ADD_AND_RATE: RateRow = {
+	nothing: 'noneToRateAdd',
+	none: 'addOrRate',
+	some: 'moreToRateAdd',
+	all: 'ratedAllAdd',
+};
+const RATING_ADD_AND_RATE: RateRow = {
+	nothing: 'noneToRateAdd',
+	none: 'rateEach',
+	some: 'moreToRate',
+	all: 'ratedAllAdd',
+};
+const RATE_ONLY: RateRow = {
+	nothing: 'noneToRate',
+	none: 'rateEach',
+	some: 'moreToRate',
+	all: 'ratedAll',
+};
+
+function rateProgress(ratedCount: number, rateableCount: number): RateProgress {
+	if (rateableCount === 0) return 'nothing';
+	if (ratedCount === 0) return 'none';
+
+	return ratedCount < rateableCount ? 'some' : 'all';
+}
+
+function votingCueName({ canRate, canAddAnswer, hasVoted, rateableCount }: StageCueInput): string {
+	if (!canRate) return canAddAnswer ? 'votingClosedAdd' : 'votingClosedRead';
+	if (hasVoted) return canAddAnswer ? 'votedAdd' : 'voted';
+	if (rateableCount === 0) return canAddAnswer ? 'noneToVoteAdd' : 'noneToVote';
+
+	return canAddAnswer ? 'voteOrAdd' : 'voteOne';
+}
+
+function ratingCueName(input: StageCueInput): string {
+	const { stage, canRate, canAddAnswer, ratedCount, rateableCount } = input;
+	const isCollecting = stage === STAGE_COLLECTING;
+	if (!canRate) {
+		if (isCollecting) return canAddAnswer ? 'addRatingLater' : 'collectingRead';
+
+		return canAddAnswer ? 'ratingClosedAdd' : 'ratingClosedRead';
+	}
+	const collectingOrRating = isCollecting ? COLLECTING_ADD_AND_RATE : RATING_ADD_AND_RATE;
+
+	return (canAddAnswer ? collectingOrRating : RATE_ONLY)[rateProgress(ratedCount, rateableCount)];
+}
+
+/**
+ * The one line under the stage bar that says what to do now. Decided first,
+ * then a halted question, then the voting table for anyone who can vote on a
+ * voting UI, whatever the stage says, and otherwise the table of the actual stage.
+ */
+export function getStageCue(input: StageCueInput): Caption {
+	const { stage, isHalted, canRate, usesVotingUI, ratedCount, rateableCount } = input;
+	if (stage === STAGE_DECIDED) return { key: 'stageCue.over' };
+	if (isHalted) return { key: 'stageCue.closed' };
+
+	const name =
+		stage === STAGE_VOTING || (canRate && usesVotingUI)
+			? votingCueName(input)
+			: ratingCueName(input);
+	const isCounting = name === 'moreToRate' || name === 'moreToRateAdd';
+
+	return {
+		key: `stageCue.${name}`,
+		...(isCounting ? { value: String(rateableCount - ratedCount) } : {}),
+	};
 }
 
 /** How many of these answers the viewer rated (their own evaluation rows). */

@@ -33,6 +33,13 @@
 		text-overflow: ellipsis;
 	}
 
+	&__caption {
+		margin: 8px 0 0;
+		font-size: 13px;
+		line-height: 1.35;
+		color: var(--tone-lilac-ink);
+	}
+
 	&__stage--done &__bar {
 		background: var(--accent-violet);
 	}

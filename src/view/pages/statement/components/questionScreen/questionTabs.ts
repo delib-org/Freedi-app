@@ -18,6 +18,9 @@ export const QUESTION_TAB_ORDER = [
 ] as const;
 export type QuestionTabId = (typeof QUESTION_TAB_ORDER)[number];
 
+/** Where the stage cue's "How it works" link lands on the Background tab. */
+export const HOW_IT_WORKS_ANCHOR = 'how-it-works';
+
 /** Full-width sub-views that live under a tab (the covenant under Results, themes under Maps). */
 export type QuestionSubView = 'covenant' | 'themes';
 

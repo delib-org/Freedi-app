@@ -1,10 +1,12 @@
 import { createContext, useMemo } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
-import { Statement } from '@freedi/shared-types';
+import { EvaluationUI, Statement } from '@freedi/shared-types';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { statementOptionsSelector } from '@/redux/statements/statementsSlice';
 import { evaluationsParentSelector } from '@/redux/evaluations/evaluationsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { parentVoteSelector } from '@/redux/vote/votesSlice';
+import { NO_VOTE } from '../vote/useOptimisticVotes';
 import {
 	canParticipantsAddAnswers,
 	getAddAnswerState,
@@ -37,6 +39,8 @@ export interface QuestionScreenData {
 	canRate: boolean;
 	showLiveResults: boolean;
 	canAddAnswer: boolean;
+	usesVotingUI: boolean;
+	hasVoted: boolean;
 }
 
 function isOwn(answer: Statement, userId: string | undefined): boolean {
@@ -55,6 +59,8 @@ export function useQuestionScreenData(statement: Statement | undefined): Questio
 	const options = useSelector(optionsSelect);
 	const evaluationsSelect = useMemo(() => evaluationsParentSelector(statementId), [statementId]);
 	const evaluations = useSelector(evaluationsSelect, shallowEqual);
+	const voteSelect = useMemo(() => parentVoteSelector(statementId), [statementId]);
+	const votedOptionId = useSelector(voteSelect)?.statementId;
 
 	return useMemo(() => {
 		const answers = rankableAnswers(options);
@@ -94,6 +100,8 @@ export function useQuestionScreenData(statement: Statement | undefined): Questio
 				isAddAnswerEnabled(addState) &&
 				stage !== STAGE_DECIDED &&
 				(isHost || authorization.isAuthorized),
+			usesVotingUI: statement?.evaluationSettings?.evaluationUI === EvaluationUI.voting,
+			hasVoted: votedOptionId !== undefined && votedOptionId !== NO_VOTE,
 		};
-	}, [options, evaluations, userId, statement, isHost, authorization.isAuthorized]);
+	}, [options, evaluations, votedOptionId, userId, statement, isHost, authorization.isAuthorized]);
 }

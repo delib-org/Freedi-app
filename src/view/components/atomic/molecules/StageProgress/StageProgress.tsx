@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 import clsx from 'clsx';
 import styles from './StageProgress.module.scss';
 
@@ -9,6 +9,8 @@ export interface StageProgressProps {
 	activeIndex: number;
 	/** Accessible name, e.g. "Question stage". */
 	ariaLabel: string;
+	/** One line under the bar, e.g. what to do at this stage. */
+	caption?: ReactNode;
 	className?: string;
 }
 
@@ -17,28 +19,41 @@ export interface StageProgressProps {
  * lilac question header. Done = violet, active = header ink, future = track.
  * An ordered list with aria-current="step" on the active stage.
  */
-const StageProgress: FC<StageProgressProps> = ({ stages, activeIndex, ariaLabel, className }) => (
-	<ol
-		className={clsx(styles.stages, className)}
-		aria-label={ariaLabel}
-		data-testid="stage-progress"
-	>
-		{stages.map((label, index) => {
-			const state = index < activeIndex ? 'done' : index === activeIndex ? 'active' : 'future';
+const StageProgress: FC<StageProgressProps> = ({
+	stages,
+	activeIndex,
+	ariaLabel,
+	caption,
+	className,
+}) => (
+	<>
+		<ol
+			className={clsx(styles.stages, className)}
+			aria-label={ariaLabel}
+			data-testid="stage-progress"
+		>
+			{stages.map((label, index) => {
+				const state = index < activeIndex ? 'done' : index === activeIndex ? 'active' : 'future';
 
-			return (
-				<li
-					key={label}
-					className={clsx(styles.stages__stage, styles[`stages__stage--${state}`])}
-					aria-current={state === 'active' ? 'step' : undefined}
-					data-state={state}
-				>
-					<span className={styles.stages__bar} aria-hidden="true" />
-					<span className={styles.stages__label}>{label}</span>
-				</li>
-			);
-		})}
-	</ol>
+				return (
+					<li
+						key={label}
+						className={clsx(styles.stages__stage, styles[`stages__stage--${state}`])}
+						aria-current={state === 'active' ? 'step' : undefined}
+						data-state={state}
+					>
+						<span className={styles.stages__bar} aria-hidden="true" />
+						<span className={styles.stages__label}>{label}</span>
+					</li>
+				);
+			})}
+		</ol>
+		{caption && (
+			<p className={styles.stages__caption} data-testid="stage-progress-caption">
+				{caption}
+			</p>
+		)}
+	</>
 );
 
 export default StageProgress;
