@@ -1,5 +1,5 @@
-import { FC, useEffect, useState } from 'react';
-import { Statement, StatementType } from '@freedi/shared-types';
+import { FC, useEffect, useRef, useState } from 'react';
+import { Online, Statement, StatementType } from '@freedi/shared-types';
 import { useOnlineUsers } from '@/controllers/hooks/useOnlineUsers';
 import { useQuestionProgressRead } from '@/controllers/hooks/useQuestionProgress';
 import { isLargeForPresence } from '@/helpers/presenceVisibility';
@@ -47,10 +47,16 @@ const OnlineUsersList: FC<{ statementId: string }> = ({ statementId }) => {
 	// IMPORTANT: This hook must be called before any conditional returns
 	useEffect(() => {
 		if (clickedUserId) {
+			const handleKeyDown = (e: KeyboardEvent): void => {
+				if (e.key === 'Escape') setClickedUserId(null);
+			};
+
 			document.addEventListener('click', handleClickOutside);
+			document.addEventListener('keydown', handleKeyDown);
 
 			return () => {
 				document.removeEventListener('click', handleClickOutside);
+				document.removeEventListener('keydown', handleKeyDown);
 			};
 		}
 
@@ -87,42 +93,14 @@ const OnlineUsersList: FC<{ statementId: string }> = ({ statementId }) => {
 					hoveredUserId === online.user.uid || clickedUserId === online.user.uid;
 
 				return (
-					<div
+					<OnlineUserItem
 						key={online.user.uid}
-						className={styles.userItem}
-						onMouseEnter={() => handleMouseEnter(online.user.uid)}
-						onMouseLeave={handleMouseLeave}
-						onClick={(e) => {
-							e.stopPropagation();
-							handleClick(online.user.uid);
-						}}
-					>
-						{online.user.photoURL ? (
-							<img
-								src={online.user.photoURL}
-								alt={online.user.displayName}
-								className={`${styles.avatar} ${styles.avatarImage} ${
-									online.tabInFocus ? styles.activeRing : ''
-								}`}
-							/>
-						) : (
-							<div
-								className={`${styles.avatar} ${styles.avatarDefault} ${
-									online.tabInFocus ? styles.activeRing : ''
-								}`}
-							>
-								<span className={styles.initial}>
-									{online.user.displayName?.charAt(0).toUpperCase()}
-								</span>
-							</div>
-						)}
-
-						<UserProfilePopover
-							user={online.user}
-							isActive={online.tabInFocus}
-							visible={isPopoverVisible}
-						/>
-					</div>
+						online={online}
+						isPopoverVisible={isPopoverVisible}
+						onEnter={() => handleMouseEnter(online.user.uid)}
+						onLeave={handleMouseLeave}
+						onToggle={() => handleClick(online.user.uid)}
+					/>
 				);
 			})}
 			{hiddenCount > 0 && (
@@ -130,6 +108,58 @@ const OnlineUsersList: FC<{ statementId: string }> = ({ statementId }) => {
 					<div className={styles.moreUsers}>+{hiddenCount}</div>
 				</div>
 			)}
+		</div>
+	);
+};
+
+interface OnlineUserItemProps {
+	online: Online;
+	isPopoverVisible: boolean;
+	onEnter: () => void;
+	onLeave: () => void;
+	onToggle: () => void;
+}
+
+/** One avatar. Its profile card renders in document.body, anchored to this element. */
+const OnlineUserItem: FC<OnlineUserItemProps> = ({
+	online,
+	isPopoverVisible,
+	onEnter,
+	onLeave,
+	onToggle,
+}) => {
+	const itemRef = useRef<HTMLDivElement>(null);
+	const ringClass = online.tabInFocus ? styles.activeRing : '';
+
+	return (
+		<div
+			ref={itemRef}
+			className={styles.userItem}
+			onMouseEnter={onEnter}
+			onMouseLeave={onLeave}
+			onClick={(e) => {
+				e.stopPropagation();
+				onToggle();
+			}}
+		>
+			{online.user.photoURL ? (
+				<img
+					src={online.user.photoURL}
+					alt={online.user.displayName}
+					className={`${styles.avatar} ${styles.avatarImage} ${ringClass}`}
+				/>
+			) : (
+				<div className={`${styles.avatar} ${styles.avatarDefault} ${ringClass}`}>
+					<span className={styles.initial}>{online.user.displayName?.charAt(0).toUpperCase()}</span>
+				</div>
+			)}
+
+			<UserProfilePopover
+				user={online.user}
+				isActive={online.tabInFocus}
+				visible={isPopoverVisible}
+				anchorRef={itemRef}
+			/>
 		</div>
 	);
 };
