@@ -15,6 +15,25 @@
 	min-width: 0;
 }
 
+// Footer layout (`compact`): the wrapper dissolves so the faces, the chips and
+// the hint become flex items of the host's footer. `order` puts the faces
+// first; the host's action row (order 2) and the chips (order 3) share the
+// next line, and the hint / caption close it.
+.evaluation--compact {
+	display: contents;
+}
+
+.evaluation__faces {
+	flex: 0 0 100%;
+	min-width: 0;
+	order: 1;
+}
+
+.evaluation--compact .reveal-hint {
+	flex: 0 0 100%;
+	order: 4;
+}
+
 .scale {
 	display: flex;
 	flex-direction: row;

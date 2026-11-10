@@ -194,4 +194,14 @@ describe('ResultsStrip - stakeholder coverage', () => {
 		expect(screen.getByText('Evaluators')).toBeInTheDocument();
 		expect(container.querySelector('.results-strip__item--primary')).toHaveTextContent('42%');
 	});
+
+	it('adds the inline class only on chips', () => {
+		const statement = makeStatement(0.5, { numberOfEvaluators: 4, sumPro: 3, sumCon: 1 });
+		const chips = render(<ResultsStrip statement={statement} variant="chips" inline />);
+		expect(chips.container.querySelector('.results-strip--inline')).not.toBeNull();
+		chips.unmount();
+
+		const tiles = render(<ResultsStrip statement={statement} variant="tiles" inline />);
+		expect(tiles.container.querySelector('.results-strip--inline')).toBeNull();
+	});
 });

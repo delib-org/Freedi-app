@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { render, screen } from '@testing-library/react';
 import { Statement } from '@freedi/shared-types';
 import TreeOptionNode from '../TreeOptionNode';
@@ -62,7 +63,7 @@ jest.mock('@/view/pages/statement/components/evaluations/components/evaluation/E
 	default: (props: Record<string, unknown>) => {
 		mockEvaluation(props);
 
-		return <div data-testid="evaluation" />;
+		return <div data-testid="evaluation">{props.footerSlot as ReactNode}</div>;
 	},
 }));
 jest.mock('@/controllers/hooks/useBookmark', () => ({
@@ -97,7 +98,7 @@ describe('TreeOptionNode', () => {
 
 		expect(screen.getByTestId('evaluation')).toBeInTheDocument();
 		expect(mockEvaluation).toHaveBeenCalledWith(
-			expect.objectContaining({ statement, hideFaceLabels: true }),
+			expect.objectContaining({ statement, hideFaceLabels: true, compact: true }),
 		);
 	});
 });
