@@ -33,9 +33,9 @@ describe('LeadingSuggestion', () => {
 		expect(screen.getByText('The best title')).toBeInTheDocument();
 	});
 
-	it('shows a host the leader even before the discussion is loaded', () => {
+	it('gives a host no way past the guard', () => {
 		render(<LeadingSuggestion option={option} isHost />);
 
-		expect(screen.getByTestId('leading-suggestion')).toBeInTheDocument();
+		expect(screen.queryByTestId('leading-suggestion')).not.toBeInTheDocument();
 	});
 });

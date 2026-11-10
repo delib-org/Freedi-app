@@ -78,8 +78,20 @@ describe('SubGroupCard results before they are settled', () => {
 		expect(screen.queryByText('Vote leader')).not.toBeInTheDocument();
 	});
 
-	it('shows them to a host', () => {
+	it('hides them from a host while results are off', () => {
 		renderCard(buildQuestion(open as Partial<Statement>), true);
+
+		expect(screen.queryByText('Chosen result')).not.toBeInTheDocument();
+	});
+
+	it('shows them to a host while results are on', () => {
+		renderCard(
+			buildQuestion({
+				...open,
+				statementSettings: { showEvaluation: true },
+			} as Partial<Statement>),
+			true,
+		);
 
 		expect(screen.getByText('Chosen result')).toBeInTheDocument();
 	});

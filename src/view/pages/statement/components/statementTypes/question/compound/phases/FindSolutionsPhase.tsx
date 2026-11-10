@@ -21,8 +21,7 @@ const FindSolutionsPhase: FC = () => {
 	const mainTitle = statement?.statement ?? '';
 	const solutionQuestionId = statement?.questionSettings?.compoundSettings?.solutionQuestionId;
 
-	const { canSee } = useQuestionScoreAccess(solutionQuestion);
-	const canSeeScores = canSee || isAdmin;
+	const { canSee: canSeeScores } = useQuestionScoreAccess(solutionQuestion, { isHost: isAdmin });
 	const approvedSolutions = useMemo(() => {
 		if (!canSeeScores) return [];
 		const resultIds = new Set((solutionQuestion?.results ?? []).map((r) => r.statementId));

@@ -153,22 +153,6 @@ export function getSortChips(statement: Statement | undefined): SortChipDef[] {
 }
 
 /**
- * Participants only see results once the host shows live results or the
- * question's clock has run out. Hosts always see them.
- */
-export function canSeeResults({
-	isHost,
-	showLiveResults,
-	isDeadlinePassed,
-}: {
-	isHost: boolean;
-	showLiveResults: boolean;
-	isDeadlinePassed: boolean;
-}): boolean {
-	return isHost || showLiveResults || isDeadlinePassed;
-}
-
-/**
  * Whether a discussion message can be turned into an answer from an inline
  * action: it is a plain message, its question can hold answers, the viewer
  * may edit it, and the question is not halted.

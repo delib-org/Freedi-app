@@ -27,6 +27,7 @@ const SimilarGroupSelector: FC<SimilarGroupSelectorProps> = ({
 	similarStatements,
 	selectedIds,
 	onSelectionChange,
+	showScores,
 }) => {
 	const { t } = useTranslation();
 
@@ -115,18 +116,20 @@ const SimilarGroupSelector: FC<SimilarGroupSelectorProps> = ({
 							<span className={styles.selector__metaValue}>{statement.numberOfEvaluators}</span>
 							<span>{t('evaluators')}</span>
 						</div>
-						<div className={styles.selector__consensus}>
-							<span>{t('Agreement score')}:</span>
-							<div className={styles.selector__consensusBar}>
-								<div
-									className={styles.selector__consensusFill}
-									style={{ width: `${consensusPercent}%` }}
-								/>
+						{showScores && (
+							<div className={styles.selector__consensus}>
+								<span>{t('Agreement score')}:</span>
+								<div className={styles.selector__consensusBar}>
+									<div
+										className={styles.selector__consensusFill}
+										style={{ width: `${consensusPercent}%` }}
+									/>
+								</div>
+								<span className={styles.selector__metaValue}>
+									{formatConsensus(statement.consensus)}
+								</span>
 							</div>
-							<span className={styles.selector__metaValue}>
-								{formatConsensus(statement.consensus)}
-							</span>
-						</div>
+						)}
 					</div>
 				</div>
 			</div>

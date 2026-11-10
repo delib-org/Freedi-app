@@ -15,8 +15,8 @@ const ResolutionPhase: FC = () => {
 	const { statement } = useContext(StatementContext);
 	const { isAdmin } = useCompoundPhase(statement);
 	const { solutionQuestion, solutions: loadedSolutions } = useCompoundSolutions(statement);
-	const { canSee: canSeeScores } = useQuestionScoreAccess(solutionQuestion);
-	const solutions = orderSolutionsForViewer(loadedSolutions, canSeeScores || isAdmin);
+	const { canSee: canSeeScores } = useQuestionScoreAccess(solutionQuestion, { isHost: isAdmin });
+	const solutions = orderSolutionsForViewer(loadedSolutions, canSeeScores);
 	const [sendingId, setSendingId] = useState<string | null>(null);
 	const signDocumentIds = statement?.questionSettings?.compoundSettings?.signDocumentIds ?? [];
 

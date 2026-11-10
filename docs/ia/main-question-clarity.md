@@ -279,7 +279,7 @@ The same three labels and keys are used in `HostHubSheet`, `LiveNowCard` (full a
 |---|---|---|---|---|---|
 | Add | `enableAdd*Option` | Participants can add answers | המשתתפים יכולים להוסיף תשובות | `Participants can add answers` | `host.allowAddAnswers` |
 | Rate | `enableEvaluation` | Participants can rate and vote | המשתתפים יכולים לדרג ולהצביע | new `Participants can rate and vote` | `Accepting ratings`, `host.acceptingResponses`, `Accepting responses` |
-| Live | `showEvaluation` | Participants see live results | המשתתפים רואים תוצאות בזמן אמת | new `Participants see live results` | `Live results for participants`, `Show live results` |
+| Live | `showEvaluation` | Show live results | הצגת תוצאות חיות | `Participants see live results` (key kept, value changed: the switch now governs hosts and authors too) | `Live results for participants` |
 
 The rate switch names voting because it controls voting too.
 

@@ -10,6 +10,7 @@ import {
 	guardScoreSort,
 	hasRatedForScore,
 	isOwnAnswerOf,
+	isQuestionResultsOff,
 	QuestionScoreData,
 	questionScoreFacts,
 	shouldHintScoreReveal,
@@ -43,19 +44,19 @@ function input(
 
 /** Viewer × stage × live results, with the answer the owner's rule requires. */
 const MATRIX: ReadonlyArray<readonly [Viewer, QuestionStageIndex, boolean, boolean]> = [
-	['author', 0, false, true],
+	['author', 0, false, false],
 	['author', 0, true, true],
-	['author', 1, false, true],
+	['author', 1, false, false],
 	['author', 1, true, true],
-	['author', 2, false, true],
+	['author', 2, false, false],
 	['author', 2, true, true],
 	['author', 3, false, true],
 	['author', 3, true, true],
-	['host', 0, false, true],
+	['host', 0, false, false],
 	['host', 0, true, true],
-	['host', 1, false, true],
+	['host', 1, false, false],
 	['host', 1, true, true],
-	['host', 2, false, true],
+	['host', 2, false, false],
 	['host', 2, true, true],
 	['host', 3, false, true],
 	['host', 3, true, true],
@@ -90,8 +91,16 @@ describe('canSeeScore', () => {
 		expect(canSeeScore({ ...input('unrated', 1, false), ratingClosed: true })).toBe(false);
 	});
 
-	it('opens when the deadline passed, whatever the switch says', () => {
-		expect(canSeeScore({ ...input('unrated', 1, false), isDeadlinePassed: true })).toBe(true);
+	it.each(['author', 'host', 'rated', 'unrated'] as const)(
+		'opens for %s when the deadline passed, whatever the switch says',
+		(viewer) => {
+			expect(canSeeScore({ ...input(viewer, 1, false), isDeadlinePassed: true })).toBe(true);
+		},
+	);
+
+	it('lets nothing open results that are off, not even a closed rating', () => {
+		expect(canSeeScore({ ...input('host', 1, false), ratingClosed: true })).toBe(false);
+		expect(canSeeScore({ ...input('author', 1, false), ratingClosed: true })).toBe(false);
 	});
 });
 
@@ -106,9 +115,21 @@ describe('getScoreAccess', () => {
 		expect(getScoreAccess(input('rated', 1, false))).toBe('hidden-by-host');
 	});
 
+	it('reports results off to hosts and authors the same way', () => {
+		expect(getScoreAccess(input('host', 1, false))).toBe('hidden-by-host');
+		expect(getScoreAccess(input('author', 1, false))).toBe('hidden-by-host');
+	});
+
+	it('keeps a settled question readable with the switch off', () => {
+		expect(getScoreAccess(input('host', 3, false))).toBe('visible');
+		expect(getScoreAccess({ ...input('unrated', 1, false), isDeadlinePassed: true })).toBe(
+			'visible',
+		);
+	});
+
 	it('is visible once the viewer may see scores', () => {
 		expect(getScoreAccess(input('rated', 1, true))).toBe('visible');
-		expect(getScoreAccess(input('host', 1, false))).toBe('visible');
+		expect(getScoreAccess(input('host', 1, true))).toBe('visible');
 	});
 });
 
@@ -118,6 +139,8 @@ describe('shouldHintScoreReveal', () => {
 		expect(shouldHintScoreReveal(input('unrated', 1, false))).toBe(false);
 		expect(shouldHintScoreReveal(input('rated', 1, true))).toBe(false);
 		expect(shouldHintScoreReveal(input('host', 1, true))).toBe(false);
+		expect(shouldHintScoreReveal(input('host', 1, false))).toBe(false);
+		expect(shouldHintScoreReveal(input('author', 1, false))).toBe(false);
 	});
 });
 
@@ -168,9 +191,7 @@ describe('canSeeSettledResults', () => {
 		expect(canSeeSettledResults(live, false, NOW)).toBe(false);
 	});
 
-	it('opens at Decided, after the deadline, and for a host', () => {
-		const open = question({ currentStep: QuestionStep.randomEvaluation });
-
+	it('opens at Decided and after the deadline, with the switch off', () => {
 		expect(canSeeSettledResults(question({ currentStep: QuestionStep.finished }), false, NOW)).toBe(
 			true,
 		);
@@ -181,7 +202,42 @@ describe('canSeeSettledResults', () => {
 				NOW,
 			),
 		).toBe(true);
-		expect(canSeeSettledResults(open, true, NOW)).toBe(true);
+	});
+
+	it('opens for a host only while results are on', () => {
+		const step = { currentStep: QuestionStep.randomEvaluation };
+		const off = question(step);
+		const on = {
+			questionSettings: step,
+			statementSettings: { showEvaluation: true },
+		} as unknown as Statement;
+
+		expect(canSeeSettledResults(off, true, NOW)).toBe(false);
+		expect(canSeeSettledResults(on, true, NOW)).toBe(true);
+	});
+});
+
+describe('isQuestionResultsOff', () => {
+	const NOW = 1000;
+	const build = (showEvaluation: boolean, questionSettings: object) =>
+		({ questionSettings, statementSettings: { showEvaluation } }) as unknown as Statement;
+	const step = QuestionStep.randomEvaluation;
+
+	it('is true with the switch off on an open question, and on an unknown one', () => {
+		expect(isQuestionResultsOff(build(false, { currentStep: step }), NOW)).toBe(true);
+		expect(isQuestionResultsOff(undefined, NOW)).toBe(true);
+	});
+
+	it('is false with the switch on', () => {
+		expect(isQuestionResultsOff(build(true, { currentStep: step }), NOW)).toBe(false);
+	});
+
+	it('is false once the question is settled', () => {
+		const finished = build(false, { currentStep: QuestionStep.finished });
+		const expired = build(false, { currentStep: step, deadline: NOW - 1 });
+
+		expect(isQuestionResultsOff(finished, NOW)).toBe(false);
+		expect(isQuestionResultsOff(expired, NOW)).toBe(false);
 	});
 });
 
@@ -203,12 +259,38 @@ describe('canSeeVoteTallies', () => {
 		expect(canSeeVoteTallies({ ...facts, showLiveResults: false }, true)).toBe(false);
 	});
 
-	it('keeps showing tallies to a host', () => {
-		expect(canSeeVoteTallies({ ...facts, isHost: true, showLiveResults: false }, false)).toBe(true);
+	it('hides tallies from a host and a voter while results are off', () => {
+		const off = { ...facts, showLiveResults: false };
+
+		expect(canSeeVoteTallies({ ...off, isHost: true }, false)).toBe(false);
+		expect(canSeeVoteTallies({ ...off, isHost: true }, true)).toBe(false);
+		expect(canSeeVoteTallies(off, true)).toBe(false);
+	});
+
+	it('shows tallies to anyone once the question is settled, with the switch off', () => {
+		const off = { ...facts, showLiveResults: false };
+
+		expect(canSeeVoteTallies({ ...off, stage: 3 }, false)).toBe(true);
+		expect(canSeeVoteTallies({ ...off, isDeadlinePassed: true }, false)).toBe(true);
+	});
+
+	it('keeps showing tallies to a host while results are on', () => {
+		expect(canSeeVoteTallies({ ...facts, isHost: true }, false)).toBe(true);
 	});
 });
 
 describe('guardScoreSort', () => {
+	it.each(['author', 'host', 'rated', 'unrated'] as const)(
+		'falls back for %s when results are off, and keeps the order once settled',
+		(viewer) => {
+			const off = canSeeScore(input(viewer, 1, false));
+			const settled = canSeeScore(input(viewer, 3, false));
+
+			expect(guardScoreSort(SortType.accepted, off)).toBe(SortType.newest);
+			expect(guardScoreSort(SortType.accepted, settled)).toBe(SortType.accepted);
+		},
+	);
+
 	it('falls back to newest for a viewer who may not see the score order', () => {
 		expect(guardScoreSort(SortType.accepted, false)).toBe(SortType.newest);
 		expect(guardScoreSort(SortType.averageEvaluation, false)).toBe(SortType.newest);

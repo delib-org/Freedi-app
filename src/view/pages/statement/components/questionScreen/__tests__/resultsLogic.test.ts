@@ -5,6 +5,7 @@ import {
 	areAnswersComplete,
 	getStageCue,
 	getResultsAccess,
+	hiddenResultsNoticeKey,
 	rankAnswers,
 	resultsRuleCaption,
 	scoreLabelKey,
@@ -57,7 +58,7 @@ describe('resultsLogic', () => {
 			);
 		});
 
-		it('hosts always see results', () => {
+		it('hides results from hosts too while they are off and the question is open', () => {
 			expect(
 				getResultsAccess({
 					...base,
@@ -66,7 +67,33 @@ describe('resultsLogic', () => {
 					ratedCount: 0,
 					showLiveResults: false,
 				}),
+			).toBe('hidden-by-host');
+		});
+
+		it('shows results to a host with the switch off once the question is settled', () => {
+			const host = { ...base, isHost: true, ratedCount: 0, showLiveResults: false };
+
+			expect(getResultsAccess({ ...host, stage: 3 })).toBe('visible');
+			expect(getResultsAccess({ ...host, stage: 1, isDeadlinePassed: true })).toBe('visible');
+		});
+
+		it('keeps showing hosts results while they are on', () => {
+			expect(
+				getResultsAccess({
+					...base,
+					isHost: true,
+					stage: 1,
+					ratedCount: 0,
+					showLiveResults: true,
+				}),
 			).toBe('visible');
+		});
+	});
+
+	describe('hiddenResultsNoticeKey', () => {
+		it('tells a host about the switch, and leaves a participant the current text', () => {
+			expect(hiddenResultsNoticeKey(true)).toBe('question.resultsOffHostNotice');
+			expect(hiddenResultsNoticeKey(false)).toBe('Results are hidden. Evaluate independently.');
 		});
 	});
 

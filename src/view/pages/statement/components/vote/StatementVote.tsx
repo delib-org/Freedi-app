@@ -5,6 +5,7 @@ import VotingArea from './components/votingArea/VotingArea';
 import { NO_VOTE, useOptimisticVotes } from './useOptimisticVotes';
 import { useQuestionScoreAccess } from '../questionScreen/useAnswerScoreGate';
 import { canSeeVoteTallies } from '../questionScreen/canSeeScore';
+import { areResultsOffForEveryone } from '../questionScreen/resultsLogic';
 import HandIcon from '@/assets/icons/handIcon.svg?react';
 import X from '@/assets/icons/x.svg?react';
 
@@ -20,9 +21,8 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { StatementContext } from '../../StatementCont';
 import { Statement, QuestionStep } from '@freedi/shared-types';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
-import { sortByConsensus } from '@/redux/utils/selectorFactories';
 import { useSelector } from 'react-redux';
-import { filterVotingOptions } from './votingOptionsFilter';
+import { filterVotingOptions, topVotingOptions } from './votingOptionsFilter';
 
 const StatementVote: FC = () => {
 	// * Hooks * //
@@ -37,8 +37,9 @@ const StatementVote: FC = () => {
 		statement?.statementSettings?.votingOptionsSource,
 	);
 
+	const { facts: scoreFacts } = useQuestionScoreAccess(statement);
 	const subStatements = inVotingGetOnlyResults
-		? _subStatements.sort(sortByConsensus).slice(0, topOptionsCount)
+		? topVotingOptions(_subStatements, topOptionsCount, areResultsOffForEveryone(scoreFacts))
 		: _subStatements;
 
 	const currentStep = statement?.questionSettings?.currentStep;
@@ -54,7 +55,6 @@ const StatementVote: FC = () => {
 	// * Variables * //
 	const { selectionsById, totalVotes, votedOptionId, castVote, voteCountedId, dismissVoteCounted } =
 		useOptimisticVotes(statement);
-	const { facts: scoreFacts } = useQuestionScoreAccess(statement);
 	const showTallies = canSeeVoteTallies(scoreFacts, votedOptionId !== NO_VOTE);
 
 	return (

@@ -2,7 +2,6 @@ import { EvaluationUI, Role, SortType, Statement, StatementType } from '@freedi/
 import {
 	buildQuestionSegments,
 	canParticipantsAddAnswers,
-	canSeeResults,
 	getAddAnswerState,
 	getSortChips,
 	isAddAnswerEnabled,
@@ -214,23 +213,6 @@ describe('questionScreenLogic', () => {
 			).map((c) => c.id);
 			expect(joining).toContain(SortType.mostJoined);
 			expect(joining).not.toContain(SortType.mostUpdated);
-		});
-	});
-
-	describe('canSeeResults', () => {
-		it('hosts always, participants after live results or the deadline', () => {
-			expect(canSeeResults({ isHost: true, showLiveResults: false, isDeadlinePassed: false })).toBe(
-				true,
-			);
-			expect(
-				canSeeResults({ isHost: false, showLiveResults: false, isDeadlinePassed: false }),
-			).toBe(false);
-			expect(canSeeResults({ isHost: false, showLiveResults: true, isDeadlinePassed: false })).toBe(
-				true,
-			);
-			expect(canSeeResults({ isHost: false, showLiveResults: false, isDeadlinePassed: true })).toBe(
-				true,
-			);
 		});
 	});
 });

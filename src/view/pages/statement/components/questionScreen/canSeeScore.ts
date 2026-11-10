@@ -2,7 +2,7 @@ import { SortType, Statement } from '@freedi/shared-types';
 import { isLiveResultsOn } from '@/helpers/liveResults';
 import { getQuestionStage, QuestionStageIndex, STAGE_DECIDED } from '@/helpers/questionStage';
 import { areResultsUnlocked } from '../evaluations/components/evaluation/enhancedEvaluation/resultsVisibility';
-import { getResultsAccess, ResultsAccess } from './resultsLogic';
+import { areResultsOffForEveryone, getResultsAccess, ResultsAccess } from './resultsLogic';
 
 /**
  * The one guard for showing agreement to a person. Every participant score
@@ -10,15 +10,22 @@ import { getResultsAccess, ResultsAccess } from './resultsLogic';
  * anything. The owner's rule: nothing shows agreement before the person has
  * rated, because a number seen first anchors the rating that follows.
  *
- * Two deliberate exceptions: an author always sees the score of their own
- * answer, which they cannot rate anyway, and a host keeps seeing scores.
+ * Results off comes first: while the "Show live results" switch is off and the
+ * question is not settled (Decided, or deadline passed), nobody sees agreement,
+ * hosts and authors included.
+ *
+ * While results can be shown, two deliberate exceptions to rating first: an
+ * author always sees the score of their own answer, which they cannot rate
+ * anyway, and a host keeps seeing scores.
+ *
+ * This is a display rule. Score fields stay on the statement documents.
  */
 
 /** Facts about the question and the viewer, the same for every answer on screen. */
 export interface ScoreViewerFacts {
 	isHost: boolean;
 	stage: QuestionStageIndex;
-	/** `statementSettings.showEvaluation`, the host's "live results for participants". */
+	/** `statementSettings.showEvaluation`, the "Show live results" switch. */
 	showLiveResults: boolean;
 	isDeadlinePassed: boolean;
 	/** Nothing is left for this viewer to rate, so there is nothing to anchor. */
@@ -33,6 +40,7 @@ export interface CanSeeScoreInput extends ScoreViewerFacts {
 
 export function canSeeScore(input: CanSeeScoreInput): boolean {
 	const { isHost, isOwnAnswer, hasRated, ratingClosed, stage, isDeadlinePassed } = input;
+	if (areResultsOffForEveryone(input)) return false;
 	if (isOwnAnswer) return true;
 
 	const unlocked = areResultsUnlocked({
@@ -109,18 +117,37 @@ export function canSeeVoteTallies(facts: ScoreViewerFacts, hasVoted: boolean): b
 	return canSeeScore({ ...facts, isOwnAnswer: false, hasRated: hasVoted });
 }
 
-/**
- * For screens listing questions, where a question's answers and the viewer's
- * ratings are not loaded: its results show only once they are settled, or to a host.
- */
-export function canSeeSettledResults(question: Statement, isHost: boolean, now: number): boolean {
-	const deadline = question.questionSettings?.deadline;
+/** A question's own switch and clock, for screens without a viewer's facts. */
+function questionSwitchFacts(
+	question: Statement | undefined,
+	now: number,
+): Pick<ScoreViewerFacts, 'stage' | 'showLiveResults' | 'isDeadlinePassed'> {
+	const deadline = question?.questionSettings?.deadline;
 
-	return canSeeScore({
-		isHost,
+	return {
 		stage: getQuestionStage({ statement: question, answerCount: 1, now }),
 		showLiveResults: isLiveResultsOn(question),
 		isDeadlinePassed: typeof deadline === 'number' && deadline > 0 && deadline <= now,
+	};
+}
+
+/**
+ * For host tools that have no reveal-after-rating of their own: only the
+ * results-off rule applies to them. An unknown question counts as off.
+ */
+export function isQuestionResultsOff(question: Statement | undefined, now: number): boolean {
+	return areResultsOffForEveryone(questionSwitchFacts(question, now));
+}
+
+/**
+ * For screens listing questions, where a question's answers and the viewer's
+ * ratings are not loaded: its results show only once they are settled, or to a
+ * host while results are on.
+ */
+export function canSeeSettledResults(question: Statement, isHost: boolean, now: number): boolean {
+	return canSeeScore({
+		isHost,
+		...questionSwitchFacts(question, now),
 		ratingClosed: false,
 		isOwnAnswer: false,
 		hasRated: false,

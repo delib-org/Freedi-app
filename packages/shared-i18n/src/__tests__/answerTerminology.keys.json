@@ -522,7 +522,7 @@
 	{
 		"key": "Participants see live results",
 		"oldEn": null,
-		"newEn": "Participants see live results"
+		"newEn": "Show live results"
 	},
 	{
 		"key": "host.allowAddAnswersDesc",

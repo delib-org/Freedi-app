@@ -115,7 +115,7 @@ describe('useAnswerScoreGate', () => {
 		expect(result.current.canSee).toBe(true);
 	});
 
-	it('always shows authors their own score, even with live results off', () => {
+	it('hides an author their own score while results are off', () => {
 		const q = question({
 			statementSettings: { showEvaluation: false, evaluationType: 'range' },
 		} as Partial<Statement>);
@@ -123,13 +123,57 @@ describe('useAnswerScoreGate', () => {
 			wrapper: wrapperFor({ statementRows: [q] }),
 		});
 
+		expect(result.current.canSee).toBe(false);
+	});
+
+	it('always shows authors their own score while results are on', () => {
+		const q = question();
+		const { result } = renderHook(() => useAnswerScoreGate(answer({ creatorId: VIEWER }), q), {
+			wrapper: wrapperFor({ statementRows: [q] }),
+		});
+
 		expect(result.current.canSee).toBe(true);
 	});
 
-	it('keeps showing a host the score with live results off', () => {
+	it("takes the caller's host fact while results are on, and not while they are off", () => {
+		const on = question();
+		const off = question({
+			statementSettings: { showEvaluation: false, evaluationType: 'range' },
+		} as Partial<Statement>);
+		const render = (q: Statement) =>
+			renderHook(() => useAnswerScoreGate(answer(), q, { isHost: true }), {
+				wrapper: wrapperFor({ statementRows: [q] }),
+			}).result.current.canSee;
+
+		expect(render(on)).toBe(true);
+		expect(render(off)).toBe(false);
+	});
+
+	it('shows a host the score once a results-off question is settled', () => {
+		const q = question({
+			statementSettings: { showEvaluation: false, evaluationType: 'range' },
+			questionSettings: { deadline: 1 },
+		} as Partial<Statement>);
+		const { result } = renderHook(() => useAnswerScoreGate(answer(), q), {
+			wrapper: wrapperFor({ statementRows: [q], role: Role.admin }),
+		});
+
+		expect(result.current.canSee).toBe(true);
+	});
+
+	it('hides the score from a host while results are off', () => {
 		const q = question({
 			statementSettings: { showEvaluation: false, evaluationType: 'range' },
 		} as Partial<Statement>);
+		const { result } = renderHook(() => useAnswerScoreGate(answer(), q), {
+			wrapper: wrapperFor({ statementRows: [q], role: Role.admin }),
+		});
+
+		expect(result.current).toEqual({ canSee: false, showRevealHint: false });
+	});
+
+	it('keeps showing a host the score while results are on', () => {
+		const q = question();
 		const { result } = renderHook(() => useAnswerScoreGate(answer(), q), {
 			wrapper: wrapperFor({ statementRows: [q], role: Role.admin }),
 		});

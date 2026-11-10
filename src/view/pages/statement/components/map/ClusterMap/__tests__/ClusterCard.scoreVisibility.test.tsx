@@ -101,8 +101,16 @@ describe('ClusterCard score guard', () => {
 		expect(screen.getByTitle('Agreement score')).toBeInTheDocument();
 	});
 
-	it('shows a host the score with live results off', () => {
+	it('hides the score from a host and an author with live results off', () => {
 		renderCard({ scoreViewer: { ...facts, isHost: true, showLiveResults: false } });
+		expect(screen.queryByTitle('Agreement score')).not.toBeInTheDocument();
+
+		renderCard({ isMine: true, scoreViewer: { ...facts, showLiveResults: false } });
+		expect(screen.queryByTitle('Agreement score')).not.toBeInTheDocument();
+	});
+
+	it('shows a host the score with live results on', () => {
+		renderCard({ scoreViewer: { ...facts, isHost: true } });
 
 		expect(screen.getByTitle('Agreement score')).toBeInTheDocument();
 	});
