@@ -90,6 +90,8 @@
   }
 
   &__decline {
+    // Holds its own hidden radio: without this the radio covers the whole page.
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
