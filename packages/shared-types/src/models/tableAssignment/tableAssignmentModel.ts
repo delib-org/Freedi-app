@@ -43,6 +43,10 @@ export const TABLE_ASSIGNMENT_TITLE_MAX_LENGTH = 200;
 export const TABLE_ASSIGNMENT_DESCRIPTION_MAX_LENGTH = 2000;
 /** Longest participant full name. */
 export const TABLE_ASSIGNMENT_FULL_NAME_MAX_LENGTH = 100;
+/** The balance tolerance behind each strictness choice. Any other stored number is a custom value. */
+export const TABLE_ASSIGNMENT_STRICTNESS = { strict: 0.15, balanced: 0.3, flexible: 0.45 } as const;
+/** The five stops a participant answers the position question on. */
+export const TABLE_ASSIGNMENT_POSITION_STOPS = [0, 25, 50, 75, 100] as const;
 
 /** Lifecycle of one TableAssignment: draft, registration open/closed, published, ended. */
 export const TableAssignmentStatusSchema = picklist([
@@ -87,6 +91,10 @@ export const TableAssignmentSettingsSchema = object({
 		TABLE_ASSIGNMENT_BALANCE_TOLERANCE_DEFAULT,
 	),
 	positionQuestion: optional(TableAssignmentPositionQuestionSchema),
+	/** How many people the host expects; only feeds the setup summary, never the seating. */
+	expectedParticipants: optional(pipe(number(), integer(), minValue(1))),
+	/** Lets a person take over a registration by typing the same full name. Absent means off. */
+	allowReturnByName: optional(boolean()),
 });
 export type TableAssignmentSettings = InferOutput<typeof TableAssignmentSettingsSchema>;
 
@@ -131,6 +139,7 @@ export const TableAssignmentPreferencesSchema = pipe(
  * A registrant (נרשם/ת). Collection `tableAssignmentParticipants`,
  * doc id `${sessionId}_${uid}` (see tableAssignmentParticipantId).
  * `position` missing means "not specified" (לא צוין), never the middle.
+ * Private to its owner: the host reads names from the roster, never this.
  */
 export const TableAssignmentParticipantSchema = object({
 	sessionId: string(),
@@ -141,8 +150,39 @@ export const TableAssignmentParticipantSchema = object({
 	/** Direct mode: the table the participant joined. */
 	chosenTableIndex: optional(NonNegativeIntSchema),
 	registeredAt: MillisSchema,
+	/** This registration took over another one by full name, so it cannot be cancelled. */
+	claimedByName: optional(boolean()),
 });
 export type TableAssignmentParticipant = InferOutput<typeof TableAssignmentParticipantSchema>;
+
+/**
+ * A registrant's name card. Collection `tableAssignmentRoster`, same doc id as
+ * the private record. What the host sees: a name and progress, never an answer.
+ */
+export const TableAssignmentRosterEntrySchema = object({
+	sessionId: string(),
+	uid: string(),
+	fullName: pipe(string(), minLength(1), maxLength(TABLE_ASSIGNMENT_FULL_NAME_MAX_LENGTH)),
+	/** See tableAssignmentNameKey. */
+	nameKey: string(),
+	registeredAt: MillisSchema,
+	hasPreferences: boolean(),
+	/** Direct mode: the table the participant joined. */
+	chosenTableIndex: optional(NonNegativeIntSchema),
+});
+export type TableAssignmentRosterEntry = InferOutput<typeof TableAssignmentRosterEntrySchema>;
+
+/** How many registered. Collection `tableAssignmentCounters`, doc id = session id. */
+export const TableAssignmentCounterSchema = object({
+	sessionId: string(),
+	registered: NonNegativeIntSchema,
+});
+export type TableAssignmentCounter = InferOutput<typeof TableAssignmentCounterSchema>;
+
+/** Two spellings of one full name compare equal: spacing, case and Unicode form are ignored. */
+export function tableAssignmentNameKey(fullName: string): string {
+	return fullName.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+}
 
 export function tableAssignmentParticipantId(sessionId: string, uid: string): string {
 	return `${sessionId}_${uid}`;

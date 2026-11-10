@@ -179,4 +179,7 @@ export enum Collections {
     tableAssignmentTopics = 'tableAssignmentTopics',
     tableAssignmentParticipants = 'tableAssignmentParticipants',
     tableAssignmentRuns = 'tableAssignmentRuns',
+    tableAssignmentRoster = 'tableAssignmentRoster',
+    tableAssignmentCounters = 'tableAssignmentCounters',
+    tableAssignmentSeats = 'tableAssignmentSeats',
 }
