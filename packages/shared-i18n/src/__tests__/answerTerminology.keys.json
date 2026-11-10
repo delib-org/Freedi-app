@@ -1,0 +1,2112 @@
+[
+	{
+		"key": "{n} answers",
+		"oldEn": null,
+		"newEn": "{n} answers"
+	},
+	{
+		"key": "answers",
+		"oldEn": null,
+		"newEn": "answers"
+	},
+	{
+		"key": "What do you think the solution is?",
+		"oldEn": "What do you think the solution is?",
+		"newEn": "What is your answer?"
+	},
+	{
+		"key": "Checking whether someone already suggested something similar…",
+		"oldEn": "Checking whether someone already suggested something similar…",
+		"newEn": "Checking whether someone already wrote something similar…"
+	},
+	{
+		"key": "Mark as a Solution",
+		"oldEn": "Mark as a Solution",
+		"newEn": "Turn into an answer"
+	},
+	{
+		"key": "Convert to Solution",
+		"oldEn": "Convert to Solution",
+		"newEn": "Turn into an answer"
+	},
+	{
+		"key": "Make this a proposal",
+		"oldEn": "Make this a proposal",
+		"newEn": "Turn into an answer"
+	},
+	{
+		"key": "Mark as a Question",
+		"oldEn": "Mark as a Question",
+		"newEn": "Turn into a question"
+	},
+	{
+		"key": "Convert to Question",
+		"oldEn": "Convert to Question",
+		"newEn": "Turn into a question"
+	},
+	{
+		"key": "Unmark as a Solution",
+		"oldEn": "Unmark as a Solution",
+		"newEn": "Turn back into a message"
+	},
+	{
+		"key": "Unmark as a Question",
+		"oldEn": "Unmark as a Question",
+		"newEn": "Turn back into a message"
+	},
+	{
+		"key": "This looks like a solution",
+		"oldEn": "This looks like a solution",
+		"newEn": "This looks like an answer"
+	},
+	{
+		"key": "Could not turn this thought into a proposal. Please try again.",
+		"oldEn": "Could not turn this thought into a proposal. Please try again.",
+		"newEn": "Could not turn this message into an answer. Please try again."
+	},
+	{
+		"key": "improve.title",
+		"oldEn": "Improve this answer together",
+		"newEn": "Improve this answer together"
+	},
+	{
+		"key": "improve.propose",
+		"oldEn": "Suggest improved wording",
+		"newEn": "Write a better wording"
+	},
+	{
+		"key": "improve.submit",
+		"oldEn": "Create revised answer",
+		"newEn": "Add as a new answer"
+	},
+	{
+		"key": "improve.compareSource",
+		"oldEn": "Compare the source answer",
+		"newEn": "See the original answer"
+	},
+	{
+		"key": "Improve Suggestion",
+		"oldEn": "Improve Suggestion",
+		"newEn": "Improve this answer"
+	},
+	{
+		"key": "Combined answer",
+		"oldEn": null,
+		"newEn": "Combined answer"
+	},
+	{
+		"key": "Original Suggestion",
+		"oldEn": "Original Suggestion",
+		"newEn": "Original answer"
+	},
+	{
+		"key": "Original ideas",
+		"oldEn": "Original ideas",
+		"newEn": "Original answer"
+	},
+	{
+		"key": "AI proposals",
+		"oldEn": "AI proposals",
+		"newEn": "Answers combined with AI"
+	},
+	{
+		"key": "Open ideas",
+		"oldEn": "Open ideas",
+		"newEn": "Participants' answers"
+	},
+	{
+		"key": "Theme · distinct positions",
+		"oldEn": "Theme · distinct positions",
+		"newEn": "Topic · different positions"
+	},
+	{
+		"key": "Themes & synthesis",
+		"oldEn": "Themes & synthesis",
+		"newEn": "Topics and combined answers"
+	},
+	{
+		"key": "Other ideas",
+		"oldEn": "Other ideas",
+		"newEn": "Other answers"
+	},
+	{
+		"key": "Ideas that stand on their own.",
+		"oldEn": "Ideas that stand on their own.",
+		"newEn": "Answers that stand on their own."
+	},
+	{
+		"key": "solutionsOnboarding.shareSolution",
+		"oldEn": "Share your solution",
+		"newEn": "Share your answer"
+	},
+	{
+		"key": "solutionsOnboarding.shareSolutionDesc",
+		"oldEn": "This is where everyone's ideas come together. Suggest solutions and evaluate others' proposals.",
+		"newEn": "This is where everyone's answers come together."
+	},
+	{
+		"key": "solutionsOnboarding.addSolution",
+		"oldEn": "Add a solution",
+		"newEn": "Add an answer"
+	},
+	{
+		"key": "solutionsOnboarding.addSolutionDesc",
+		"oldEn": "Tap the + button below to add your solution directly.",
+		"newEn": "Tap the + button or \"Add an answer\"."
+	},
+	{
+		"key": "solutionsOnboarding.convertFromDiscussion",
+		"oldEn": "Or convert from discussion",
+		"newEn": "Or start in the Discussion"
+	},
+	{
+		"key": "solutionsOnboarding.convertFromDiscussionDesc",
+		"oldEn": "You can also write in the Discussion tab and convert any message to a solution using the message menu.",
+		"newEn": "Write in the Discussion tab and turn any message into an answer from its menu."
+	},
+	{
+		"key": "questionOnboarding.addSolutions",
+		"oldEn": "Add solutions",
+		"newEn": "Add answers"
+	},
+	{
+		"key": "questionOnboarding.addSolutionsDesc",
+		"oldEn": "Go to the Solutions tab to suggest solutions directly, or write here and convert any message to a solution using the message menu.",
+		"newEn": "Go to the Answers tab to add an answer, or write here and turn any message into an answer from its menu."
+	},
+	{
+		"key": "questionOnboarding.startConversationDesc",
+		"oldEn": "Write your thoughts, ideas, or reactions in the discussion below.",
+		"newEn": "Write your thoughts or reactions in the discussion below."
+	},
+	{
+		"key": "questionOnboarding.askQuestionsDesc",
+		"oldEn": "You can also convert discussion messages into questions to break the topic into sub-topics.",
+		"newEn": "You can also turn discussion messages into questions to break the topic into smaller parts."
+	},
+	{
+		"key": "Be the first to share your idea!",
+		"oldEn": "Be the first to share your idea!",
+		"newEn": "Be the first to add an answer!"
+	},
+	{
+		"key": "No answers yet",
+		"oldEn": null,
+		"newEn": "No answers yet"
+	},
+	{
+		"key": "Press \"Add an answer\" to add your suggestion",
+		"oldEn": "Press \"Add an answer\" to add your suggestion",
+		"newEn": "Press \"Add an answer\" to write yours"
+	},
+	{
+		"key": "Press the + button to add your suggestion",
+		"oldEn": "Press the + button to add your suggestion",
+		"newEn": "Press the + button to write yours"
+	},
+	{
+		"key": "stageCue.addOrRate",
+		"oldEn": null,
+		"newEn": "Add an answer, or rate the ones already here."
+	},
+	{
+		"key": "stageCue.addRatingLater",
+		"oldEn": null,
+		"newEn": "Add an answer. Rating opens later."
+	},
+	{
+		"key": "stageCue.noneToRateAdd",
+		"oldEn": null,
+		"newEn": "No answers to rate yet. Add one."
+	},
+	{
+		"key": "stageCue.noneToRate",
+		"oldEn": null,
+		"newEn": "No answers to rate yet."
+	},
+	{
+		"key": "stageCue.rateEach",
+		"oldEn": null,
+		"newEn": "Rate each answer on its own. What could you live with?"
+	},
+	{
+		"key": "stageCue.moreToRate",
+		"oldEn": null,
+		"newEn": "{n} more to rate."
+	},
+	{
+		"key": "stageCue.moreToRateAdd",
+		"oldEn": null,
+		"newEn": "{n} more to rate. You can also add an answer."
+	},
+	{
+		"key": "stageCue.ratedAll",
+		"oldEn": null,
+		"newEn": "You rated them all. Thank you!"
+	},
+	{
+		"key": "stageCue.ratedAllAdd",
+		"oldEn": null,
+		"newEn": "You rated them all. Have another answer?"
+	},
+	{
+		"key": "stageCue.collectingRead",
+		"oldEn": null,
+		"newEn": "Answers are still coming in. You can read them."
+	},
+	{
+		"key": "stageCue.ratingClosedAdd",
+		"oldEn": null,
+		"newEn": "Rating is closed. You can still add an answer."
+	},
+	{
+		"key": "stageCue.ratingClosedRead",
+		"oldEn": null,
+		"newEn": "Rating is closed. You can still read the answers."
+	},
+	{
+		"key": "stageCue.voteOne",
+		"oldEn": null,
+		"newEn": "Vote for one answer."
+	},
+	{
+		"key": "stageCue.voteOrAdd",
+		"oldEn": null,
+		"newEn": "Vote for one answer, or add a new one."
+	},
+	{
+		"key": "stageCue.voted",
+		"oldEn": null,
+		"newEn": "Your vote is in. Thank you!"
+	},
+	{
+		"key": "stageCue.votedAdd",
+		"oldEn": null,
+		"newEn": "Your vote is in. You can still add an answer."
+	},
+	{
+		"key": "stageCue.noneToVote",
+		"oldEn": null,
+		"newEn": "No answers to vote on yet."
+	},
+	{
+		"key": "stageCue.noneToVoteAdd",
+		"oldEn": null,
+		"newEn": "No answers to vote on yet. Add one."
+	},
+	{
+		"key": "stageCue.votingClosedAdd",
+		"oldEn": null,
+		"newEn": "Voting is closed. You can still add an answer."
+	},
+	{
+		"key": "stageCue.votingClosedRead",
+		"oldEn": null,
+		"newEn": "Voting is closed. You can still read the answers."
+	},
+	{
+		"key": "stageCue.closed",
+		"oldEn": null,
+		"newEn": "This question is closed. You can still read the answers."
+	},
+	{
+		"key": "stageCue.over",
+		"oldEn": null,
+		"newEn": "The process is over. Read the result."
+	},
+	{
+		"key": "Everyone proposes an answer. Duplicates are checked quietly.",
+		"oldEn": "Everyone proposes an answer. Duplicates are checked quietly.",
+		"newEn": "Everyone adds answers."
+	},
+	{
+		"key": "Rate each answer on its own — what could you live with?",
+		"oldEn": "Rate each answer on its own — what could you live with?",
+		"newEn": "Rate each answer on its own: what could you live with?"
+	},
+	{
+		"key": "If needed, vote between the leading answers.",
+		"oldEn": "If needed, vote between the leading answers.",
+		"newEn": "If needed, vote between the leading answers."
+	},
+	{
+		"key": "Agreement score",
+		"oldEn": null,
+		"newEn": "Agreement score"
+	},
+	{
+		"key": "scoreTip.agreement",
+		"oldEn": null,
+		"newEn": "A score between minus 100 and plus 100: the average rating, lowered while only a few people have rated."
+	},
+	{
+		"key": "scoreTip.average",
+		"oldEn": null,
+		"newEn": "All the ratings averaged, between minus 100 and plus 100, not the percentage of people in favor."
+	},
+	{
+		"key": "People who rated",
+		"oldEn": null,
+		"newEn": "People who rated"
+	},
+	{
+		"key": "scoreTip.people",
+		"oldEn": null,
+		"newEn": "How many people rated this answer."
+	},
+	{
+		"key": "scoreTip.peopleOf",
+		"oldEn": null,
+		"newEn": "{n} of the {total} people this question concerns rated this answer."
+	},
+	{
+		"key": "Oppose",
+		"oldEn": "Oppose",
+		"newEn": "Rated against"
+	},
+	{
+		"key": "scoreTip.against",
+		"oldEn": null,
+		"newEn": "How many people gave this answer a rating below zero."
+	},
+	{
+		"key": "scoreTip.votes",
+		"oldEn": null,
+		"newEn": "How many people voted for this answer."
+	},
+	{
+		"key": "Liked by",
+		"oldEn": null,
+		"newEn": "Liked by"
+	},
+	{
+		"key": "scoreTip.liked",
+		"oldEn": null,
+		"newEn": "The percentage of people who rated this answer and liked it."
+	},
+	{
+		"key": "Too few ratings so far",
+		"oldEn": null,
+		"newEn": "Too few ratings so far"
+	},
+	{
+		"key": "scoreTip.band.tooFew",
+		"oldEn": null,
+		"newEn": "Wait for a few more ratings before reading this answer's score."
+	},
+	{
+		"key": "scoreTip.band.broad",
+		"oldEn": null,
+		"newEn": "Rated well by the people who rated it, and by enough of them."
+	},
+	{
+		"key": "scoreTip.band.partial",
+		"oldEn": null,
+		"newEn": "Leaning toward agreement, with room to improve."
+	},
+	{
+		"key": "Split",
+		"oldEn": "Split",
+		"newEn": "No clear agreement"
+	},
+	{
+		"key": "scoreTip.band.split",
+		"oldEn": null,
+		"newEn": "No clear direction yet: ratings are mixed or there are still few of them."
+	},
+	{
+		"key": "Opposition",
+		"oldEn": "Opposition",
+		"newEn": "Low agreement"
+	},
+	{
+		"key": "scoreTip.band.low",
+		"oldEn": null,
+		"newEn": "The ratings of this answer are low."
+	},
+	{
+		"key": "Consensus will show after {n} evaluators",
+		"oldEn": "Consensus will show after {n} evaluators",
+		"newEn": "Agreement score shows after {n} people rate"
+	},
+	{
+		"key": "Results are hidden. Evaluate independently.",
+		"oldEn": "Results are hidden. Evaluate independently.",
+		"newEn": "Results are hidden for now."
+	},
+	{
+		"key": "Top {n} by agreement",
+		"oldEn": "Top {n} by agreement",
+		"newEn": "Top {n} by agreement score"
+	},
+	{
+		"key": "By consensus · top {n}",
+		"oldEn": "By consensus · top {n}",
+		"newEn": "Top {n} by agreement score"
+	},
+	{
+		"key": "Above the agreement threshold ({n})",
+		"oldEn": "Above the agreement threshold ({n})",
+		"newEn": "Agreement score of {n} or more"
+	},
+	{
+		"key": "By consensus · threshold {n}",
+		"oldEn": "By consensus · threshold {n}",
+		"newEn": "Agreement score of {n} or more"
+	},
+	{
+		"key": "Every rated answer, by agreement",
+		"oldEn": "Every rated answer, by agreement",
+		"newEn": "Every rated answer, by agreement score"
+	},
+	{
+		"key": "Candidates ranked by confidence-adjusted consensus.",
+		"oldEn": "Candidates ranked by confidence-adjusted consensus.",
+		"newEn": "Answers ranked by agreement score."
+	},
+	{
+		"key": "Candidates, not a decision: answers most of the group can live with, not just a majority.",
+		"oldEn": "Candidates, not a decision: answers most of the group can live with, not just a majority.",
+		"newEn": "Candidates, not a decision: the answers with the highest agreement score so far."
+	},
+	{
+		"key": "The decision: the answer the whole group can live with.",
+		"oldEn": "The decision: the answer the whole group can live with.",
+		"newEn": "This is what the group decided."
+	},
+	{
+		"key": "Summaries update every 24 hours when agreed proposals change. Drafts start when all selected proposals reach 70% Cp.",
+		"oldEn": "Summaries update every 24 hours when agreed proposals change. Drafts start when all selected proposals reach 70% Cp.",
+		"newEn": "Summaries update every 24 hours when the leading answers change. Drafts start when all selected answers reach an agreement score of 70."
+	},
+	{
+		"key": "Read the introduction here. Develop and evaluate the full wording in Sign. Each agreement needs its own 70% Cp.",
+		"oldEn": "Read the introduction here. Develop and evaluate the full wording in Sign. Each agreement needs its own 70% Cp.",
+		"newEn": "Read the introduction here. Develop and rate the full wording in Sign. Each agreement needs its own agreement score of 70."
+	},
+	{
+		"key": "results.howToRead",
+		"oldEn": null,
+		"newEn": "How to read the results"
+	},
+	{
+		"key": "results.howToRead1",
+		"oldEn": null,
+		"newEn": "Every answer gets an agreement score between minus 100 and plus 100. It starts from the average rating and is lowered while only a few people have rated."
+	},
+	{
+		"key": "results.howToRead2",
+		"oldEn": null,
+		"newEn": "The score is not the percentage of people in favor. If half the group loves an answer and half rejects it, its score ends up low."
+	},
+	{
+		"key": "results.howToRead3",
+		"oldEn": null,
+		"newEn": "More ratings make the picture clearer, but they do not erase disagreement."
+	},
+	{
+		"key": "results.howToRead4",
+		"oldEn": null,
+		"newEn": "Answers that say the same thing can be combined into one. A combined answer is not a decision of the group."
+	},
+	{
+		"key": "Participants can add answers",
+		"oldEn": "Participants can add answers",
+		"newEn": "Participants can add answers"
+	},
+	{
+		"key": "Participants can rate and vote",
+		"oldEn": null,
+		"newEn": "Participants can rate and vote"
+	},
+	{
+		"key": "Participants see live results",
+		"oldEn": null,
+		"newEn": "Participants see live results"
+	},
+	{
+		"key": "host.allowAddAnswersDesc",
+		"oldEn": "Off = only hosts can add answers; participants can still rate or vote",
+		"newEn": "Off = only hosts can add answers; participants can still rate or vote"
+	},
+	{
+		"key": "host.liveDesc",
+		"oldEn": "Presenter mode, PIN and QR, accepting answers, live results, close date",
+		"newEn": "Presenter mode, PIN and QR, who can add, rate and vote, live results, close date"
+	},
+	{
+		"key": "host.stageDiffers",
+		"oldEn": null,
+		"newEn": "Switches differ from this stage's settings"
+	},
+	{
+		"key": "host.applyStagePreset",
+		"oldEn": null,
+		"newEn": "Restore stage settings"
+	},
+	{
+		"key": "host.stagePresetApplied",
+		"oldEn": null,
+		"newEn": "Stage settings restored"
+	},
+	{
+		"key": "Mind Map",
+		"oldEn": "Mind Map",
+		"newEn": "Mind map"
+	},
+	{
+		"key": "Topics map",
+		"oldEn": null,
+		"newEn": "Topics map"
+	},
+	{
+		"key": "Agreement Map",
+		"oldEn": "Agreement Map",
+		"newEn": "Agreement map"
+	},
+	{
+		"key": "Disagreement map",
+		"oldEn": null,
+		"newEn": "Disagreement map"
+	},
+	{
+		"key": "No access. Ask the host to invite you.",
+		"oldEn": null,
+		"newEn": "You don't have access to this page. Ask the host to invite you."
+	},
+	{
+		"key": "Sign in with another account",
+		"oldEn": null,
+		"newEn": "Sign in with another account"
+	},
+	{
+		"key": "Share your answer",
+		"oldEn": null,
+		"newEn": "Share your answer"
+	},
+	{
+		"key": "Added answers",
+		"oldEn": null,
+		"newEn": "Added answers"
+	},
+	{
+		"key": "{{count}} added answers",
+		"oldEn": null,
+		"newEn": "{{count}} added answers"
+	},
+	{
+		"key": "Answer accepted",
+		"oldEn": null,
+		"newEn": "Answer accepted"
+	},
+	{
+		"key": "Rate ideas",
+		"oldEn": "Rate ideas",
+		"newEn": "Rate answers"
+	},
+	{
+		"key": "Everyone scores each suggestion",
+		"oldEn": "Everyone scores each suggestion",
+		"newEn": "Everyone scores each answer"
+	},
+	{
+		"key": "Each person picks a single option",
+		"oldEn": "Each person picks a single option",
+		"newEn": "Each person picks a single answer"
+	},
+	{
+		"key": "Check every option you accept",
+		"oldEn": "Check every option you accept",
+		"newEn": "Check every answer you accept"
+	},
+	{
+		"key": "Sort ideas into clusters together",
+		"oldEn": "Sort ideas into clusters together",
+		"newEn": "Sort answers into groups together"
+	},
+	{
+		"key": "What each participant taps on a suggestion",
+		"oldEn": "What each participant taps on a suggestion",
+		"newEn": "What each participant taps on an answer"
+	},
+	{
+		"key": "Let participants discuss the question and comment on each option",
+		"oldEn": "Let participants discuss the question and comment on each option",
+		"newEn": "Let participants discuss the question and comment on each answer"
+	},
+	{
+		"key": "Ask for their own idea first",
+		"oldEn": "Ask for their own idea first",
+		"newEn": "Ask for their own answer first"
+	},
+	{
+		"key": "Participants must suggest before they can rate others",
+		"oldEn": "Participants must suggest before they can rate others",
+		"newEn": "Participants must add an answer before they can rate others"
+	},
+	{
+		"key": "Collect ideas only (no rating yet)",
+		"oldEn": "Collect ideas only (no rating yet)",
+		"newEn": "Collect answers only (no rating yet)"
+	},
+	{
+		"key": "Gather suggestions now, open rating later",
+		"oldEn": "Gather suggestions now, open rating later",
+		"newEn": "Gather answers now, open rating later"
+	},
+	{
+		"key": "Your new option does not meet the current filter yet.",
+		"oldEn": "Your new option does not meet the current filter yet.",
+		"newEn": "Your new answer does not meet the current filter yet."
+	},
+	{
+		"key": "Untitled option",
+		"oldEn": "Untitled option",
+		"newEn": "Untitled answer"
+	},
+	{
+		"key": "1 new solution",
+		"oldEn": "1 new solution",
+		"newEn": "1 new answer"
+	},
+	{
+		"key": "AI Idea Refinery",
+		"oldEn": "AI Idea Refinery",
+		"newEn": "AI Answer Refinery"
+	},
+	{
+		"key": "AI reviews and refines options before posting",
+		"oldEn": "AI reviews and refines options before posting",
+		"newEn": "AI reviews and refines answers before posting"
+	},
+	{
+		"key": "AI-merged paraphrases of the same idea",
+		"oldEn": "AI-merged paraphrases of the same idea",
+		"newEn": "AI-merged rewordings of the same answer"
+	},
+	{
+		"key": "Add Solution",
+		"oldEn": "Add Suggestion",
+		"newEn": "Add an answer"
+	},
+	{
+		"key": "Add Your Solution First",
+		"oldEn": "Add Your Suggestion First",
+		"newEn": "Add your answer first"
+	},
+	{
+		"key": "Add new option here",
+		"oldEn": "Add new option here",
+		"newEn": "Add a new answer here"
+	},
+	{
+		"key": "Add {{count}} options",
+		"oldEn": "Add {{count}} options",
+		"newEn": "Add {{count}} answers"
+	},
+	{
+		"key": "Added {{count}} options",
+		"oldEn": "Added {{count}} options",
+		"newEn": "Added {{count}} answers"
+	},
+	{
+		"key": "Allow drill-down to originals",
+		"oldEn": "Allow drill-down to originals",
+		"newEn": "Allow drill-down to original answers"
+	},
+	{
+		"key": "Already counted in the synthesized proposal above",
+		"oldEn": "Already counted in the synthesized proposal above",
+		"newEn": "Already counted in the combined answer above"
+	},
+	{
+		"key": "Analyzing your suggestion...",
+		"oldEn": "Analyzing your suggestion...",
+		"newEn": "Analyzing your answer..."
+	},
+	{
+		"key": "Automatically detect and group similar suggestions",
+		"oldEn": "Automatically detect and group similar suggestions",
+		"newEn": "Automatically detect and group similar answers"
+	},
+	{
+		"key": "Be the first to add a claim, comment, or evidence about this idea.",
+		"oldEn": "Be the first to add a claim, comment, or evidence about this idea.",
+		"newEn": "Be the first to add a claim, comment, or evidence about this answer."
+	},
+	{
+		"key": "Builds the summary from the options that passed the cutoff of each sub-question, up to 2 levels deep",
+		"oldEn": "Builds the summary from the options that passed the cutoff of each sub-question, up to 2 levels deep",
+		"newEn": "Builds the summary from the answers that passed the cutoff of each sub-question, up to 2 levels deep"
+	},
+	{
+		"key": "Built from {count} source ideas",
+		"oldEn": "Built from {count} source ideas",
+		"newEn": "Built from {count} original answers"
+	},
+	{
+		"key": "Bulk add options",
+		"oldEn": "Bulk add options",
+		"newEn": "Bulk add answers"
+	},
+	{
+		"key": "Continue with this suggestion",
+		"oldEn": "Continue with this suggestion",
+		"newEn": "Continue with this answer"
+	},
+	{
+		"key": "Create solutions discussion",
+		"oldEn": "Create solutions discussion",
+		"newEn": "Create answers discussion"
+	},
+	{
+		"key": "Creates a new grouped suggestion that represents several similar originals. Originals stay live and evaluations aggregate into the group.",
+		"oldEn": "Creates a new grouped suggestion that represents several similar originals. Originals stay live and evaluations aggregate into the group.",
+		"newEn": "Creates a new grouped answer that represents several similar original answers. The original answers stay live and their ratings add up into the group."
+	},
+	{
+		"key": "Define how to select top options",
+		"oldEn": "Define how to select top options",
+		"newEn": "Define how to select top answers"
+	},
+	{
+		"key": "Describe your idea in a few sentences. The AI will help you develop it further.",
+		"oldEn": "Describe your idea in a few sentences. The AI will help you develop it further.",
+		"newEn": "Describe your answer in a few sentences. The AI will help you develop it further."
+	},
+	{
+		"key": "Display only highest-rated options in voting view",
+		"oldEn": "Display only highest-rated options in voting view",
+		"newEn": "Display only highest-rated answers in voting view"
+	},
+	{
+		"key": "Drop an original here to keep it standalone (excluded from grouping).",
+		"oldEn": "Drop an original here to keep it standalone (excluded from grouping).",
+		"newEn": "Drop an original answer here to keep it standalone (excluded from grouping)."
+	},
+	{
+		"key": "During the intent phase, users mark options as conditional picks. When you resolve, options below the minimum threshold release their intents and users whose picks didn't pass are prompted to choose from the activated ones.",
+		"oldEn": "During the intent phase, users mark options as conditional picks. When you resolve, options below the minimum threshold release their intents and users whose picks didn't pass are prompted to choose from the activated ones.",
+		"newEn": "During the intent phase, users mark answers as conditional picks. When you resolve, answers below the minimum threshold release their intents and users whose picks didn't pass are prompted to choose from the activated ones."
+	},
+	{
+		"key": "Enter custom tooltip text (e.g., \"Priority option selected by moderator\")",
+		"oldEn": "Enter custom tooltip text (e.g., \"Priority option selected by moderator\")",
+		"newEn": "Enter custom tooltip text (e.g., \"Priority answer selected by moderator\")"
+	},
+	{
+		"key": "Failed to add options at line {{line}}",
+		"oldEn": "Failed to add options at line {{line}}",
+		"newEn": "Failed to add answers at line {{line}}"
+	},
+	{
+		"key": "Failed to find similar suggestions",
+		"oldEn": "Failed to find similar suggestions",
+		"newEn": "Failed to find similar answers"
+	},
+	{
+		"key": "Failed to integrate suggestions",
+		"oldEn": "Failed to integrate suggestions",
+		"newEn": "Failed to integrate answers"
+	},
+	{
+		"key": "Find Solutions",
+		"oldEn": "Find Solutions",
+		"newEn": "Find Answers"
+	},
+	{
+		"key": "Finding similar ideas from the community...",
+		"oldEn": "Finding similar ideas from the community...",
+		"newEn": "Finding similar answers from the community..."
+	},
+	{
+		"key": "Generates an aggregated, topic-grouped report ready for AI analysis. Combines similar suggestions, recomputes consensus, and adds demographic breakdowns under k-anonymity.",
+		"oldEn": "Generates an aggregated, topic-grouped report ready for AI analysis. Combines similar suggestions, recomputes consensus, and adds demographic breakdowns under k-anonymity.",
+		"newEn": "Generates an aggregated, topic-grouped report ready for AI analysis. Combines similar answers, recomputes agreement scores, and adds demographic breakdowns under k-anonymity."
+	},
+	{
+		"key": "Go to solutions discussion",
+		"oldEn": "Go to solutions discussion",
+		"newEn": "Go to the answers discussion"
+	},
+	{
+		"key": "Group similar suggestions",
+		"oldEn": "Group similar suggestions",
+		"newEn": "Group similar answers"
+	},
+	{
+		"key": "Grouping related suggestions together...",
+		"oldEn": "Grouping related suggestions together...",
+		"newEn": "Grouping related answers together..."
+	},
+	{
+		"key": "Here are options that did — feel free to join one:",
+		"oldEn": "Here are options that did — feel free to join one:",
+		"newEn": "Here are answers that did — feel free to join one:"
+	},
+	{
+		"key": "Hide source ideas",
+		"oldEn": "Hide source ideas",
+		"newEn": "Hide original answers"
+	},
+	{
+		"key": "How to evaluate and select top options",
+		"oldEn": "How to evaluate and select top options",
+		"newEn": "How to rate and select top answers"
+	},
+	{
+		"key": "How would you like to improve this suggestion?",
+		"oldEn": "How would you like to improve this suggestion?",
+		"newEn": "How would you like to improve this answer?"
+	},
+	{
+		"key": "Idea is Ready!",
+		"oldEn": "Idea is Ready!",
+		"newEn": "Answer is ready!"
+	},
+	{
+		"key": "In the Popperian spirit, ideas that face strong challenges should evolve. Create an improved version that addresses the evidence while keeping what works.",
+		"oldEn": "In the Popperian spirit, ideas that face strong challenges should evolve. Create an improved version that addresses the evidence while keeping what works.",
+		"newEn": "In the Popperian spirit, answers that face strong challenges should evolve. Create an improved version that addresses the evidence while keeping what works."
+	},
+	{
+		"key": "Integrate Similar Suggestions",
+		"oldEn": "Integrate Similar Suggestions",
+		"newEn": "Integrate Similar Answers"
+	},
+	{
+		"key": "Leading suggestion",
+		"oldEn": "Leading suggestion",
+		"newEn": "Leading answer"
+	},
+	{
+		"key": "Leave empty for automatic summary of top suggestions",
+		"oldEn": "Leave empty for automatic summary of top suggestions",
+		"newEn": "Leave empty for automatic summary of top answers"
+	},
+	{
+		"key": "Ranking all options",
+		"oldEn": "Ranking all options",
+		"newEn": "Ranking all answers"
+	},
+	{
+		"key": "Making your idea testable and falsifiable",
+		"oldEn": "Making your idea testable and falsifiable",
+		"newEn": "Making your answer testable and falsifiable"
+	},
+	{
+		"key": "Method of selecting leading options",
+		"oldEn": "Method of selecting leading options",
+		"newEn": "Method of selecting leading answers"
+	},
+	{
+		"key": "Multiple Suggestions Detected",
+		"oldEn": "Multiple Suggestions Detected",
+		"newEn": "Multiple Answers Detected"
+	},
+	{
+		"key": "Multiple pieces of evidence challenge this idea. Consider addressing the main concerns raised.",
+		"oldEn": "Multiple pieces of evidence challenge this idea. Consider addressing the main concerns raised.",
+		"newEn": "Multiple pieces of evidence challenge this answer. Consider addressing the main concerns raised."
+	},
+	{
+		"key": "New solutions",
+		"oldEn": "{{count}} new solutions",
+		"newEn": "{{count}} new answers"
+	},
+	{
+		"key": "No options activated on this question.",
+		"oldEn": "No options activated on this question.",
+		"newEn": "No answers activated on this question."
+	},
+	{
+		"key": "No options with participants yet",
+		"oldEn": "No options with participants yet",
+		"newEn": "No answers with participants yet"
+	},
+	{
+		"key": "No originals found.",
+		"oldEn": "No originals found.",
+		"newEn": "No original answers found."
+	},
+	{
+		"key": "No similar suggestions found",
+		"oldEn": "No similar suggestions found",
+		"newEn": "No similar answers found"
+	},
+	{
+		"key": "No solutions available yet",
+		"oldEn": "No solutions available yet",
+		"newEn": "No answers available yet"
+	},
+	{
+		"key": "Number of anchored options in evaluation",
+		"oldEn": "Number of anchored options in evaluation",
+		"newEn": "Number of anchored answers in rating"
+	},
+	{
+		"key": "Only cluster well-evaluated options",
+		"oldEn": "Only cluster well-evaluated options",
+		"newEn": "Only cluster well-rated answers"
+	},
+	{
+		"key": "Options Selection Criteria",
+		"oldEn": "Options Selection Criteria",
+		"newEn": "Answer Selection Criteria"
+	},
+	{
+		"key": "Options that fail these thresholds stay ungrouped. Leave blank to include everything.",
+		"oldEn": "Options that fail these thresholds stay ungrouped. Leave blank to include everything.",
+		"newEn": "Answers that fail these thresholds stay ungrouped. Leave blank to include everything."
+	},
+	{
+		"key": "Original Idea",
+		"oldEn": "Original Idea",
+		"newEn": "Original answer"
+	},
+	{
+		"key": "Original suggestions represented by this group",
+		"oldEn": "Original suggestions represented by this group",
+		"newEn": "Original answers represented by this group"
+	},
+	{
+		"key": "Paste options, one per line. Use a dash (—) for an optional description.",
+		"oldEn": "Paste options, one per line. Use a dash (—) for an optional description.",
+		"newEn": "Paste answers, one per line. Use a dash (—) for an optional description."
+	},
+	{
+		"key": "Please chose your preferred solution",
+		"oldEn": "Please chose your preferred solution",
+		"newEn": "Please choose your preferred answer"
+	},
+	{
+		"key": "Please evaluate each solution in the next set of solutions. For each solution, indicate your rating using the smiley (positive) or frown (negative) icons",
+		"oldEn": "Please evaluate each solution in the next set of solutions. For each solution, indicate your rating using the smiley (positive) or frown (negative) icons",
+		"newEn": "Please rate each answer in the next set of answers. For each answer, indicate your rating using the smiley (positive) or frown (negative) icons"
+	},
+	{
+		"key": "Please evaluate the top solutions",
+		"oldEn": "Please evaluate the top solutions",
+		"newEn": "Please rate the top answers"
+	},
+	{
+		"key": "Please remove a vote from another option to vote for this one",
+		"oldEn": "Please remove a vote from another option to vote for this one",
+		"newEn": "Please remove a vote from another answer to vote for this one"
+	},
+	{
+		"key": "Please submit your own solution before evaluating others.",
+		"oldEn": "Please submit your own solution before evaluating others.",
+		"newEn": "Please add your own answer before rating others."
+	},
+	{
+		"key": "Please suggest a solution to the question",
+		"oldEn": "Please suggest a solution to the question",
+		"newEn": "Please add an answer to the question"
+	},
+	{
+		"key": "Please write the description of your suggestion here...",
+		"oldEn": "Please write the description of your suggestion here...",
+		"newEn": "Please write the description of your answer here..."
+	},
+	{
+		"key": "Preview of synthesized source ideas",
+		"oldEn": "Preview of synthesized source ideas",
+		"newEn": "Preview of the combined original answers"
+	},
+	{
+		"key": "Processed {{processed}} options, fixed {{fixed}} inconsistencies",
+		"oldEn": "Processed {{processed}} options, fixed {{fixed}} inconsistencies",
+		"newEn": "Processed {{processed}} answers, fixed {{fixed}} inconsistencies"
+	},
+	{
+		"key": "Read full proposal",
+		"oldEn": "Read full proposal",
+		"newEn": "Read the full answer"
+	},
+	{
+		"key": "Refined Idea",
+		"oldEn": "Refined Idea",
+		"newEn": "Refined answer"
+	},
+	{
+		"key": "Regenerate proposal",
+		"oldEn": "Regenerate proposal",
+		"newEn": "Regenerate combined answer"
+	},
+	{
+		"key": "Regenerate proposal (admin)",
+		"oldEn": "Regenerate proposal (admin)",
+		"newEn": "Regenerate combined answer (admin)"
+	},
+	{
+		"key": "Regenerate this synthesized proposal? The AI will redraft the title, description, and sections from the {count} source ideas. Existing evaluations on the proposal stay intact.",
+		"oldEn": "Regenerate this synthesized proposal? The AI will redraft the title, description, and sections from the {count} source ideas. Existing evaluations on the proposal stay intact.",
+		"newEn": "Regenerate this combined answer? The AI will redraft the title, description, and sections from the {count} original answers. Existing ratings on this answer stay intact."
+	},
+	{
+		"key": "Regenerating proposal failed. Please try again.",
+		"oldEn": "Regenerating proposal failed. Please try again.",
+		"newEn": "Regenerating this answer failed. Please try again."
+	},
+	{
+		"key": "Represents {count} suggestions",
+		"oldEn": "Represents {count} suggestions",
+		"newEn": "Represents {count} answers"
+	},
+	{
+		"key": "Restrict the number of options users can vote for",
+		"oldEn": "Restrict the number of options users can vote for",
+		"newEn": "Restrict the number of answers users can vote for"
+	},
+	{
+		"key": "Reverse this synthesis? The {count} source ideas will be restored as separate proposals and the synthesized proposal will be hidden. Direct evaluations on the synthesis will be deleted; evaluations on each source idea remain intact.",
+		"oldEn": "Reverse this synthesis? The {count} source ideas will be restored as separate proposals and the synthesized proposal will be hidden. Direct evaluations on the synthesis will be deleted; evaluations on each source idea remain intact.",
+		"newEn": "Undo this combined answer? The {count} original answers will be restored as separate answers and the combined answer will be hidden. Direct ratings on the combined answer will be deleted; ratings on each original answer remain intact."
+	},
+	{
+		"key": "Review and edit the integrated suggestion",
+		"oldEn": "Review and edit the integrated suggestion",
+		"newEn": "Review and edit the integrated answer"
+	},
+	{
+		"key": "Select at least 2 suggestions to integrate",
+		"oldEn": "Select at least 2 suggestions to integrate",
+		"newEn": "Select at least 2 answers to integrate"
+	},
+	{
+		"key": "Select suggestions to integrate",
+		"oldEn": "Select suggestions to integrate",
+		"newEn": "Select answers to integrate"
+	},
+	{
+		"key": "Show only selected options",
+		"oldEn": "Show only selected options",
+		"newEn": "Show only selected answers"
+	},
+	{
+		"key": "Show only solutions with at least",
+		"oldEn": "Show only solutions with at least",
+		"newEn": "Show only answers with at least"
+	},
+	{
+		"key": "Show source ideas",
+		"oldEn": "Show source ideas",
+		"newEn": "Show original answers"
+	},
+	{
+		"key": "Show {count} originals",
+		"oldEn": "Show {count} originals",
+		"newEn": "Show {count} original answers"
+	},
+	{
+		"key": "Similar Suggestions",
+		"oldEn": "Similar Suggestions",
+		"newEn": "Similar Answers"
+	},
+	{
+		"key": "Similar ideas found!",
+		"oldEn": "Similar ideas found!",
+		"newEn": "Similar answers found!"
+	},
+	{
+		"key": "Some evidence challenges aspects of this idea. You may want to refine or clarify it.",
+		"oldEn": "Some evidence challenges aspects of this idea. You may want to refine or clarify it.",
+		"newEn": "Some evidence challenges aspects of this answer. You may want to refine or clarify it."
+	},
+	{
+		"key": "Source ideas synthesized into this proposal",
+		"oldEn": "Source ideas synthesized into this proposal",
+		"newEn": "Original answers combined into this answer"
+	},
+	{
+		"key": "Strong challenges suggest this idea needs rethinking",
+		"oldEn": "Strong challenges suggest this idea needs rethinking",
+		"newEn": "Strong challenges show this answer needs rethinking"
+	},
+	{
+		"key": "Strong evidence supports this idea",
+		"oldEn": "Strong evidence supports this idea",
+		"newEn": "Strong evidence supports this answer"
+	},
+	{
+		"key": "Suggest solutions",
+		"oldEn": "Suggest solutions",
+		"newEn": "Add answers"
+	},
+	{
+		"key": "Suggest solutions for",
+		"oldEn": "Suggest solutions for",
+		"newEn": "Add answers for"
+	},
+	{
+		"key": "Synthesized from {count} source ideas:",
+		"oldEn": "Synthesized from {count} source ideas:",
+		"newEn": "Combined from {count} original answers:"
+	},
+	{
+		"key": "Synthesized proposal merging {count} similar suggestions",
+		"oldEn": "Synthesized proposal merging {count} similar suggestions",
+		"newEn": "Combined answer merging {count} similar answers"
+	},
+	{
+		"key": "Tell us your initial idea or solution. The AI will help you refine it into a clear, testable proposal.",
+		"oldEn": "Tell us your initial idea or solution. The AI will help you refine it into a clear, testable proposal.",
+		"newEn": "Tell us your first answer. The AI will help you refine it into a clear, testable answer."
+	},
+	{
+		"key": "The facilitator will open a solutions discussion soon where you can suggest solutions.",
+		"oldEn": "The facilitator will open a solutions discussion soon where you can suggest solutions.",
+		"newEn": "The facilitator will open an answers discussion soon where you can add answers."
+	},
+	{
+		"key": "The score to be considered as a top option",
+		"oldEn": "The score to be considered as a top option",
+		"newEn": "The score to be considered as a top answer"
+	},
+	{
+		"key": "The source ideas span incompatible directions.",
+		"oldEn": "The source ideas span incompatible directions.",
+		"newEn": "The original answers span incompatible directions."
+	},
+	{
+		"key": "These options reached critical mass. Keep up to",
+		"oldEn": "These options reached critical mass. Keep up to",
+		"newEn": "These answers reached critical mass. Keep up to"
+	},
+	{
+		"key": "This helps ensure everyone contributes their ideas to the discussion.",
+		"oldEn": "This helps ensure everyone contributes their ideas to the discussion.",
+		"newEn": "This helps ensure everyone contributes their answers to the discussion."
+	},
+	{
+		"key": "This idea faces significant challenges from the community. Strong evidence contradicts key aspects of the proposal.",
+		"oldEn": "This idea faces significant challenges from the community. Strong evidence contradicts key aspects of the proposal.",
+		"newEn": "This answer faces significant challenges from the community. Strong evidence contradicts key aspects of it."
+	},
+	{
+		"key": "This is a one-time, irreversible action. Options below the threshold will release their intents and be marked as failed. Make sure the intent phase is complete.",
+		"oldEn": "This is a one-time, irreversible action. Options below the threshold will release their intents and be marked as failed. Make sure the intent phase is complete.",
+		"newEn": "This is a one-time, irreversible action. Answers below the threshold will release their intents and be marked as failed. Make sure the intent phase is complete."
+	},
+	{
+		"key": "Time to Evolve This Idea",
+		"oldEn": "Time to Evolve This Idea",
+		"newEn": "Time to evolve this answer"
+	},
+	{
+		"key": "Toggle visibility of hidden suggestion cards",
+		"oldEn": "Toggle visibility of hidden suggestion cards",
+		"newEn": "Toggle visibility of hidden answer cards"
+	},
+	{
+		"key": "Top options",
+		"oldEn": "Top options",
+		"newEn": "Top answers"
+	},
+	{
+		"key": "Top options to be selected",
+		"oldEn": "Top options to be selected",
+		"newEn": "Top answers to be selected"
+	},
+	{
+		"key": "Top solutions",
+		"oldEn": "Top solutions",
+		"newEn": "Top answers"
+	},
+	{
+		"key": "Topic cluster representing {count} suggestions",
+		"oldEn": "Topic cluster representing {count} suggestions",
+		"newEn": "Topic representing {count} answers"
+	},
+	{
+		"key": "Undo the last grouping run? Cluster statements from the last run will be removed.",
+		"oldEn": "Undo the last grouping run? Cluster statements from the last run will be removed.",
+		"newEn": "Undo the last grouping run? Answers grouped in the last run will be removed."
+	},
+	{
+		"key": "Ungroup this suggestion? Originals will appear as standalone options.",
+		"oldEn": "Ungroup this suggestion? Originals will appear as standalone options.",
+		"newEn": "Ungroup this answer? The original answers will appear as standalone answers."
+	},
+	{
+		"key": "Users can vote for up to {{count}} options",
+		"oldEn": "Users can vote for up to {{count}} options",
+		"newEn": "Users can vote for up to {{count}} answers"
+	},
+	{
+		"key": "View {count} originals",
+		"oldEn": "View {count} originals",
+		"newEn": "View {count} original answers"
+	},
+	{
+		"key": "View {count} source ideas",
+		"oldEn": "View {count} source ideas",
+		"newEn": "View {count} original answers"
+	},
+	{
+		"key": "We detected multiple ideas in your submission. You can submit them separately for better visibility and voting.",
+		"oldEn": "We detected multiple ideas in your submission. You can submit them separately for better visibility and voting.",
+		"newEn": "We detected multiple answers in what you wrote. You can submit them separately for better visibility and voting."
+	},
+	{
+		"key": "We found existing ideas similar to yours. Consider joining an existing discussion for greater impact.",
+		"oldEn": "We found existing ideas similar to yours. Consider joining an existing discussion for greater impact.",
+		"newEn": "We found existing answers similar to yours. Consider joining an existing discussion for greater impact."
+	},
+	{
+		"key": "We'll help you find similar ideas from the community",
+		"oldEn": "We'll help you find similar ideas from the community",
+		"newEn": "We'll help you find similar answers from the community"
+	},
+	{
+		"key": "When an option exceeds the maximum, it will be split into smaller rooms",
+		"oldEn": "When an option exceeds the maximum, it will be split into smaller rooms",
+		"newEn": "When an answer exceeds the maximum, it will be split into smaller rooms"
+	},
+	{
+		"key": "When showing groups only, voters can click to view the original suggestions a group represents.",
+		"oldEn": "When showing groups only, voters can click to view the original suggestions a group represents.",
+		"newEn": "When showing groups only, voters can click to view the original answers a group represents."
+	},
+	{
+		"key": "Would you like to choose this suggestion",
+		"oldEn": "Would you like to choose this suggestion",
+		"newEn": "Would you like to choose this answer"
+	},
+	{
+		"key": "Your Idea",
+		"oldEn": "Your Idea",
+		"newEn": "Your answer"
+	},
+	{
+		"key": "Your idea",
+		"oldEn": "Your idea",
+		"newEn": "Your answer"
+	},
+	{
+		"key": "Your suggestion",
+		"oldEn": "Your suggestion",
+		"newEn": "Your answer"
+	},
+	{
+		"key": "engagement.optionsCreated",
+		"oldEn": "Options Created",
+		"newEn": "Answers created"
+	},
+	{
+		"key": "new solution",
+		"oldEn": "new solution",
+		"newEn": "new answer"
+	},
+	{
+		"key": "new solutions",
+		"oldEn": "new solutions",
+		"newEn": "new answers"
+	},
+	{
+		"key": "or join an existing idea",
+		"oldEn": "or join an existing idea",
+		"newEn": "or join an existing answer"
+	},
+	{
+		"key": "solutions in this cluster",
+		"oldEn": "solutions in this cluster",
+		"newEn": "answers in this topic"
+	},
+	{
+		"key": "source ideas synthesized into this proposal",
+		"oldEn": "source ideas synthesized into this proposal",
+		"newEn": "original answers combined into this answer"
+	},
+	{
+		"key": "{count} evaluators · {direct} direct + {inherited} inherited from {originals} originals",
+		"oldEn": "{count} evaluators · {direct} direct + {inherited} inherited from {originals} originals",
+		"newEn": "{count} people rated · {direct} direct + {inherited} inherited from {originals} original answers"
+	},
+	{
+		"key": "Background trigger merges similar new options into clusters automatically. ON by default for Mass-Consensus questions; toggle off to require manual synthesis.",
+		"oldEn": "Background trigger merges similar new options into clusters automatically. ON by default for Mass-Consensus questions; toggle off to require manual synthesis.",
+		"newEn": "Background trigger merges similar new answers into clusters automatically. ON by default for Mass-Consensus questions; toggle off to require manual synthesis."
+	},
+	{
+		"key": "Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.",
+		"oldEn": "Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.",
+		"newEn": "Background trigger merges similar new answers into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question."
+	},
+	{
+		"key": "When a user types a new suggestion, show them similar existing ones so they can vote rather than duplicate.",
+		"oldEn": "When a user types a new suggestion, show them similar existing ones so they can vote rather than duplicate.",
+		"newEn": "When a user types a new answer, show them similar existing ones so they can vote rather than duplicate."
+	},
+	{
+		"key": "Detect multi-idea submissions",
+		"oldEn": "Detect multi-idea submissions",
+		"newEn": "Detect multi-answer submissions"
+	},
+	{
+		"key": "Detect when users submit multiple ideas in one entry and offer to split them.",
+		"oldEn": "Detect when users submit multiple ideas in one entry and offer to split them.",
+		"newEn": "Detect when users submit multiple answers in one entry and offer to split them."
+	},
+	{
+		"key": "Finding similar ideas",
+		"oldEn": "Finding similar ideas",
+		"newEn": "Finding similar answers"
+	},
+	{
+		"key": "Detects when two submissions express the same idea. The threshold here tunes how strict \"similar\" means for every feature below.",
+		"oldEn": "Detects when two submissions express the same idea. The threshold here tunes how strict \"similar\" means for every feature below.",
+		"newEn": "Detects when two answers say the same thing. The threshold here tunes how strict \"similar\" means for every feature below."
+	},
+	{
+		"key": "What happens at the moment a user submits a suggestion — in submission order.",
+		"oldEn": "What happens at the moment a user submits a suggestion — in submission order.",
+		"newEn": "What happens at the moment a user submits an answer — in submission order."
+	},
+	{
+		"key": "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.",
+		"oldEn": "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.",
+		"newEn": "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging."
+	},
+	{
+		"key": "Minimum evaluators per option",
+		"oldEn": "Minimum evaluators per option",
+		"newEn": "Minimum raters per answer"
+	},
+	{
+		"key": "Synthesize all eligible options? This runs in the background.",
+		"oldEn": "Synthesize all eligible options? This runs in the background.",
+		"newEn": "Synthesize all eligible answers? This runs in the background."
+	},
+	{
+		"key": "Synthesize selected options",
+		"oldEn": "Synthesize selected options",
+		"newEn": "Synthesize selected answers"
+	},
+	{
+		"key": "Search options…",
+		"oldEn": "Search options…",
+		"newEn": "Search answers…"
+	},
+	{
+		"key": "Search options",
+		"oldEn": "Search options",
+		"newEn": "Search answers"
+	},
+	{
+		"key": "No options match the current filter",
+		"oldEn": "No options match the current filter",
+		"newEn": "No answers match the current filter"
+	},
+	{
+		"key": "Automatically cluster equivalent participant ideas into a single proposal so duplicates do not dilute the signal.",
+		"oldEn": "Automatically cluster equivalent participant ideas into a single proposal so duplicates do not dilute the signal.",
+		"newEn": "Automatically cluster equivalent participant answers into a single combined answer so duplicates do not dilute the signal."
+	},
+	{
+		"key": "When should an option be eligible?",
+		"oldEn": "When should an option be eligible?",
+		"newEn": "When should an answer be eligible?"
+	},
+	{
+		"key": "Gate by how many people have evaluated the option.",
+		"oldEn": "Gate by how many people have evaluated the option.",
+		"newEn": "Gate by how many people have rated the answer."
+	},
+	{
+		"key": "Gate by how much agreement the option has reached.",
+		"oldEn": "Gate by how much agreement the option has reached.",
+		"newEn": "Gate by how much agreement the answer has reached."
+	},
+	{
+		"key": "Options will only be synthesized after this many people evaluate them.",
+		"oldEn": "Options will only be synthesized after this many people evaluate them.",
+		"newEn": "Answers will only be synthesized after this many people rate them."
+	},
+	{
+		"key": "Options will only be synthesized once their consensus score reaches this value.",
+		"oldEn": "Options will only be synthesized once their consensus score reaches this value.",
+		"newEn": "Answers will only be synthesized once their agreement score reaches this value."
+	},
+	{
+		"key": "These knobs control when two options are considered the same idea. The defaults work for most questions — only change them if you know why.",
+		"oldEn": "These knobs control when two options are considered the same idea. The defaults work for most questions — only change them if you know why.",
+		"newEn": "These knobs control when two answers are considered the same. The defaults work for most questions — only change them if you know why."
+	},
+	{
+		"key": "options exist but none have crossed the threshold yet.",
+		"oldEn": "options exist but none have crossed the threshold yet.",
+		"newEn": "answers exist but none have crossed the threshold yet."
+	},
+	{
+		"key": "Show all options instead",
+		"oldEn": "Show all options instead",
+		"newEn": "Show all answers instead"
+	},
+	{
+		"key": "Try clearing the search or filters to see more options.",
+		"oldEn": "Try clearing the search or filters to see more options.",
+		"newEn": "Try clearing the search or filters to see more answers."
+	},
+	{
+		"key": "Trigger a run above to start clustering eligible options.",
+		"oldEn": "Trigger a run above to start clustering eligible options.",
+		"newEn": "Trigger a run above to start clustering eligible answers."
+	},
+	{
+		"key": "Runs automatically as options arrive or cross the threshold.",
+		"oldEn": "Runs automatically as options arrive or cross the threshold.",
+		"newEn": "Runs automatically as answers arrive or cross the threshold."
+	},
+	{
+		"key": "Triggers on every new option and on every threshold crossing.",
+		"oldEn": "Triggers on every new option and on every threshold crossing.",
+		"newEn": "Triggers on every new answer and on every threshold crossing."
+	},
+	{
+		"key": "Label every idea in simple terms from the first statement, and catch same-meaning suggestions that use different words. Turning it on runs a first pass over existing statements.",
+		"oldEn": "Label every idea in simple terms from the first statement, and catch same-meaning suggestions that use different words. Turning it on runs a first pass over existing statements.",
+		"newEn": "Label every answer in simple terms from the first statement, and catch same-meaning answers that use different words. Turning it on runs a first pass over existing statements."
+	},
+	{
+		"key": "Premium AI model for proposals",
+		"oldEn": "Premium AI model for proposals",
+		"newEn": "Premium AI model for combined answers"
+	},
+	{
+		"key": "Use premium AI model for proposals",
+		"oldEn": "Use premium AI model for proposals",
+		"newEn": "Use premium AI model for combined answers"
+	},
+	{
+		"key": "The standard model is used by default — it is cheaper and merges proposals safely. Turn this on for a high-stakes event to use the premium model, which writes tighter proposals and catches slightly more duplicate suggestions (mainly in Hebrew), at higher cost.",
+		"oldEn": "The standard model is used by default — it is cheaper and merges proposals safely. Turn this on for a high-stakes event to use the premium model, which writes tighter proposals and catches slightly more duplicate suggestions (mainly in Hebrew), at higher cost.",
+		"newEn": "The standard model is used by default — it is cheaper and merges answers safely. Turn this on for a high-stakes event to use the premium model, which writes tighter combined answers and catches slightly more duplicates (mainly in Hebrew), at higher cost."
+	},
+	{
+		"key": "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.",
+		"oldEn": "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.",
+		"newEn": "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original answers) and rebuilds them. Use this if the clusters look wrong."
+	},
+	{
+		"key": "Delete this cluster? Its notes will move to Other ideas.",
+		"oldEn": "Delete this cluster? Its notes will move to Other ideas.",
+		"newEn": "Delete this cluster? Its notes will move to Other answers."
+	},
+	{
+		"key": "This sets the question to crowd-consensus mode so a large crowd can suggest and rate answers anonymously. You can undo this at any time.",
+		"oldEn": "This sets the question to crowd-consensus mode so a large crowd can suggest and rate answers anonymously. You can undo this at any time.",
+		"newEn": "This sets the question to crowd-consensus mode so a large crowd can add and rate answers anonymously. You can undo this at any time."
+	},
+	{
+		"key": "This statement has options under it",
+		"oldEn": "This statement has options under it",
+		"newEn": "This statement has answers under it"
+	},
+	{
+		"key": "Options cannot contain other options",
+		"oldEn": "Options cannot contain other options",
+		"newEn": "Answers cannot contain other answers"
+	},
+	{
+		"key": "Groups cannot contain options",
+		"oldEn": "Groups cannot contain options",
+		"newEn": "Groups cannot contain answers"
+	},
+	{
+		"key": "Ideas",
+		"oldEn": "Ideas",
+		"newEn": "Answers"
+	},
+	{
+		"key": "{n} ideas",
+		"oldEn": "{n} ideas",
+		"newEn": "{n} answers"
+	},
+	{
+		"key": "My ideas",
+		"oldEn": "My ideas",
+		"newEn": "My answers"
+	},
+	{
+		"key": "Show where my ideas ended up",
+		"oldEn": "Show where my ideas ended up",
+		"newEn": "Show where my answers ended up"
+	},
+	{
+		"key": "Counted into the merged idea",
+		"oldEn": "Counted into the merged idea",
+		"newEn": "Counted into the combined answer"
+	},
+	{
+		"key": "How deep the map opens when someone first arrives: themes only, merged ideas, or every original statement.",
+		"oldEn": "How deep the map opens when someone first arrives: themes only, merged ideas, or every original statement.",
+		"newEn": "How deep the map opens when someone first arrives: topics only, combined answers, or every original answer."
+	},
+	{
+		"key": "Let viewers open themes and merged ideas past the default depth.",
+		"oldEn": "Let viewers open themes and merged ideas past the default depth.",
+		"newEn": "Let viewers open topics and combined answers past the default depth."
+	},
+	{
+		"key": "Taking shape",
+		"oldEn": "Taking shape",
+		"newEn": "Taking shape"
+	},
+	{
+		"key": "Possibilities worth exploring",
+		"oldEn": "Possibilities worth exploring",
+		"newEn": "Answers worth exploring"
+	},
+	{
+		"key": "Room for a first idea",
+		"oldEn": "Room for a first idea",
+		"newEn": "Room for a first answer"
+	},
+	{
+		"key": "A proposal gives everyone something to build on.",
+		"oldEn": "A proposal gives everyone something to build on.",
+		"newEn": "An answer gives everyone something to build on."
+	},
+	{
+		"key": "original contributions",
+		"oldEn": "original contributions",
+		"newEn": "original answers"
+	},
+	{
+		"key": "An individual proposal",
+		"oldEn": "An individual proposal",
+		"newEn": "An individual answer"
+	},
+	{
+		"key": "Explore proposals",
+		"oldEn": "Explore proposals",
+		"newEn": "Explore answers"
+	},
+	{
+		"key": "What would make an idea work better for you?",
+		"oldEn": "What would make an idea work better for you?",
+		"newEn": "What would make this answer work better for you?"
+	},
+	{
+		"key": "Add a possibility",
+		"oldEn": "Add a possibility",
+		"newEn": "Add an answer"
+	},
+	{
+		"key": "Related ideas can share a theme. Only equivalent proposals are synthesized. A synthesis is not a group decision.",
+		"oldEn": "Related ideas can share a theme. Only equivalent proposals are synthesized. A synthesis is not a group decision.",
+		"newEn": "Related answers can share a topic. Only answers that mean the same thing are combined. A combined answer is not a group decision."
+	},
+	{
+		"key": "An average shows sentiment, not the percentage of people in favor. More evaluations help us understand a proposal; they do not erase disagreement.",
+		"oldEn": "An average shows sentiment, not the percentage of people in favor. More evaluations help us understand a proposal; they do not erase disagreement.",
+		"newEn": "An average shows how people rated, not the percentage of people in favor. More ratings help us understand an answer; they do not erase disagreement."
+	},
+	{
+		"key": "Explore the idea map",
+		"oldEn": "Explore the idea map",
+		"newEn": "Explore the map"
+	},
+	{
+		"key": "Discuss concerns below. Offer better wording as a new option so earlier evaluations stay with the original.",
+		"oldEn": "Discuss concerns below. Offer better wording as a new option so earlier evaluations stay with the original.",
+		"newEn": "Discuss concerns below. Offer better wording as a new answer so earlier ratings stay with the original."
+	},
+	{
+		"key": "From options to shared wording",
+		"oldEn": "From options to shared wording",
+		"newEn": "From answers to shared wording"
+	},
+	{
+		"key": "Improve the option together",
+		"oldEn": "Improve the option together",
+		"newEn": "Improve this answer together"
+	},
+	{
+		"key": "Strongest common ground so far",
+		"oldEn": "Strongest common ground so far",
+		"newEn": "Strongest common ground so far"
+	},
+	{
+		"key": "Explore options",
+		"oldEn": "Explore options",
+		"newEn": "Explore answers"
+	},
+	{
+		"key": "Options to explore",
+		"oldEn": "Options to explore",
+		"newEn": "Answers to explore"
+	},
+	{
+		"key": "Equivalent proposals synthesized",
+		"oldEn": "Equivalent proposals synthesized",
+		"newEn": "Equivalent answers combined"
+	},
+	{
+		"key": "Loading the complete set of options…",
+		"oldEn": "Loading the complete set of options…",
+		"newEn": "Loading all the answers…"
+	},
+	{
+		"key": "Inspect original proposals",
+		"oldEn": "Inspect original proposals",
+		"newEn": "See the original answers"
+	},
+	{
+		"key": "These are candidate options, not adopted decisions.",
+		"oldEn": "These are candidate options, not adopted decisions.",
+		"newEn": "These are candidate answers, not adopted decisions."
+	},
+	{
+		"key": "Compare the source option",
+		"oldEn": "Compare the source option",
+		"newEn": "See the original answer"
+	},
+	{
+		"key": "Explore all options",
+		"oldEn": "Explore all options",
+		"newEn": "Explore all answers"
+	},
+	{
+		"key": "No options yet. Begin with a proposal or a question.",
+		"oldEn": "No options yet. Begin with a proposal or a question.",
+		"newEn": "No answers yet. Begin with an answer or a question."
+	},
+	{
+		"key": "Create revised option",
+		"oldEn": "Create revised option",
+		"newEn": "Add as a new answer"
+	},
+	{
+		"key": "Propose improved wording",
+		"oldEn": "Propose improved wording",
+		"newEn": "Write a better wording"
+	},
+	{
+		"key": "Proposed wording",
+		"oldEn": "Proposed wording",
+		"newEn": "Better wording"
+	},
+	{
+		"key": "Leading options among those loaded",
+		"oldEn": "Leading options among those loaded",
+		"newEn": "Leading answers among those loaded"
+	},
+	{
+		"key": "Loaded options only; the complete ranking is not available yet.",
+		"oldEn": "Loaded options only; the complete ranking is not available yet.",
+		"newEn": "Loaded answers only; the complete ranking is not available yet."
+	},
+	{
+		"key": "Explore solutions and sub-questions. Each sub-question has its own solutions and can branch further.",
+		"oldEn": "Explore solutions and sub-questions. Each sub-question has its own solutions and can branch further.",
+		"newEn": "Explore answers and sub-questions. Each sub-question has its own answers and can branch further."
+	},
+	{
+		"key": "Explore the solutions",
+		"oldEn": "Explore the solutions",
+		"newEn": "Explore the answers"
+	},
+	{
+		"key": "Follow questions, solutions and their connections.",
+		"oldEn": "Follow questions, solutions and their connections.",
+		"newEn": "Follow questions, answers and their connections."
+	},
+	{
+		"key": "Topics group related solutions. Syntheses combine equivalent wording of the same solution.",
+		"oldEn": "Topics group related solutions. Syntheses combine equivalent wording of the same solution.",
+		"newEn": "Topics group related answers. Combined answers merge equivalent wording of the same answer."
+	},
+	{
+		"key": "Source solution",
+		"oldEn": "Source solution",
+		"newEn": "Original answer"
+	},
+	{
+		"key": "Draft an agreement from agreed proposals",
+		"oldEn": "Draft an agreement from agreed proposals",
+		"newEn": "Draft an agreement from agreed answers"
+	},
+	{
+		"key": "Summary of agreed proposals",
+		"oldEn": "Summary of agreed proposals",
+		"newEn": "Summary of agreed answers"
+	},
+	{
+		"key": "Agreed proposals have changed since the last summary.",
+		"oldEn": "Agreed proposals have changed since the last summary.",
+		"newEn": "Agreed answers have changed since the last summary."
+	},
+	{
+		"key": "Invite people to propose, evaluate and find a way forward together.",
+		"oldEn": "Invite people to propose, evaluate and find a way forward together.",
+		"newEn": "Invite people to add answers, rate them and find a way forward together."
+	},
+	{
+		"key": "No agreements yet. Start with proposals that pass the cutoff.",
+		"oldEn": "No agreements yet. Start with proposals that pass the cutoff.",
+		"newEn": "No agreements yet. Start with answers that pass the cutoff."
+	},
+	{
+		"key": "Explore related ideas, inspect syntheses, and follow the questions that need more work.",
+		"oldEn": "Explore related ideas, inspect syntheses, and follow the questions that need more work.",
+		"newEn": "Explore related answers, see combined answers, and follow the questions that need more work."
+	},
+	{
+		"key": "Themes organize related positions. Synthesis combines equivalent proposals. New compromises need fresh evaluation.",
+		"oldEn": "Themes organize related positions. Synthesis combines equivalent proposals. New compromises need fresh evaluation.",
+		"newEn": "Topics organize related positions. Combined answers bring together answers that mean the same thing. New compromises need new ratings."
+	},
+	{
+		"key": "question.sheet.splitChip",
+		"oldEn": "Looks like {{count}} ideas — split?",
+		"newEn": "Looks like {{count}} answers — split?"
+	},
+	{
+		"key": "host.aiDesc",
+		"oldEn": "Similar-idea detection, checks when people submit, Popper-Hebbian mode, moderation log",
+		"newEn": "Similar-answer detection, checks when people submit, Popper-Hebbian mode, moderation log"
+	},
+	{
+		"key": "Still collecting ideas — rating opens later",
+		"oldEn": "Still collecting ideas — rating opens later",
+		"newEn": "Still collecting answers — rating opens later"
+	},
+	{
+		"key": "Looking for similar ideas…",
+		"oldEn": "Looking for similar ideas…",
+		"newEn": "Looking for similar answers…"
+	},
+	{
+		"key": "Everyone scores each suggestion, one card at a time",
+		"oldEn": "Everyone scores each suggestion, one card at a time",
+		"newEn": "Everyone scores each answer, one card at a time"
+	},
+	{
+		"key": "Options shown in voting",
+		"oldEn": "Options shown in voting",
+		"newEn": "Answers shown in voting"
+	},
+	{
+		"key": "Show all options",
+		"oldEn": "Show all options",
+		"newEn": "Show all answers"
+	},
+	{
+		"key": "Only options selected in the card-stack evaluation",
+		"oldEn": "Only options selected in the card-stack evaluation",
+		"newEn": "Only answers selected in the card-stack rating"
+	},
+	{
+		"key": "Options the group rated positively in the card-stack evaluation",
+		"oldEn": "Options the group rated positively in the card-stack evaluation",
+		"newEn": "Answers the group rated positively in the card-stack rating"
+	},
+	{
+		"key": "{n} other ideas are not in a theme",
+		"oldEn": "{n} other ideas are not in a theme",
+		"newEn": "{n} other answers are not in a topic"
+	},
+	{
+		"key": "Rebuilds the themes from all ideas at once. Merged ideas are not changed.",
+		"oldEn": "Rebuilds the themes from all ideas at once. Merged ideas are not changed.",
+		"newEn": "Rebuilds the topics from all answers at once. Combined answers are not changed."
+	},
+	{
+		"key": "There are no ideas to group yet.",
+		"oldEn": "There are no ideas to group yet.",
+		"newEn": "There are no answers to group yet."
+	},
+	{
+		"key": "Ideas placed",
+		"oldEn": "Ideas placed",
+		"newEn": "Answers placed"
+	},
+	{
+		"key": "Ideas the AI could not sort",
+		"oldEn": "Ideas the AI could not sort",
+		"newEn": "Answers the AI could not sort"
+	},
+	{
+		"key": "They are under Other ideas. Run the preview again to retry them.",
+		"oldEn": "They are under Other ideas. Run the preview again to retry them.",
+		"newEn": "They are under Other answers. Run the preview again to retry them."
+	},
+	{
+		"key": "Let AI regroup all ideas into themes. You'll see a preview before anything changes.",
+		"oldEn": "Let AI regroup all ideas into themes. You'll see a preview before anything changes.",
+		"newEn": "Let AI regroup all answers into topics. You'll see a preview before anything changes."
+	},
+	{
+		"key": "Show selected options only",
+		"oldEn": "Show selected options only",
+		"newEn": "Show selected answers only"
+	},
+	{
+		"key": "The group is not split on any option",
+		"oldEn": "The group is not split on any option",
+		"newEn": "The group is not split on any answer"
+	},
+	{
+		"key": "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.",
+		"oldEn": "This question already has votes on its merged ideas. Rebuilding would delete them, so it is blocked.",
+		"newEn": "This question already has votes on its combined answers. Rebuilding would delete them, so it is blocked."
+	},
+	{
+		"key": "Control how the cluster map looks: text size, which layers show, and provenance.",
+		"oldEn": "Control how the cluster map looks: text size, which layers show, and provenance.",
+		"newEn": "Control how the Topics map looks: text size, which layers show, and provenance."
+	},
+	{
+		"key": "Show Sub-Questions Map",
+		"oldEn": "Show Sub-Questions Map",
+		"newEn": "Show Questions map"
+	},
+	{
+		"key": "Polarization map. Use arrow keys to move between solutions, Enter to view demographic breakdown, Escape to clear.",
+		"oldEn": null,
+		"newEn": "Disagreement map. Use arrow keys to move between answers, Enter to view demographic breakdown, Escape to clear."
+	},
+	{
+		"key": "Aggregated across all member evaluations (each user counted once).",
+		"oldEn": null,
+		"newEn": "Aggregated across all member ratings (each user counted once)."
+	},
+	{
+		"key": "Anchored sampling allows the admin to insert certain pre-defined options into the evaluation process. These options are prepared in advance and will always appear to participants, no matter what other options are being sampled.",
+		"oldEn": null,
+		"newEn": "Anchored sampling allows the admin to insert certain pre-defined answers into the rating process. These answers are prepared in advance and will always appear to participants, no matter what other answers are being sampled."
+	},
+	{
+		"key": "Choose a target group. This group will be deleted and its originals moved.",
+		"oldEn": null,
+		"newEn": "Choose a target group. This group will be deleted and its original answers moved."
+	},
+	{
+		"key": "Choose how options are sorted when first displayed",
+		"oldEn": null,
+		"newEn": "Choose how answers are sorted when first displayed"
+	},
+	{
+		"key": "Choose suggestions to merge",
+		"oldEn": null,
+		"newEn": "Choose answers to merge"
+	},
+	{
+		"key": "Default Sort Order for Options",
+		"oldEn": null,
+		"newEn": "Default sort order for answers"
+	},
+	{
+		"key": "Delete every group and return originals to the ungrouped list.",
+		"oldEn": null,
+		"newEn": "Delete every group and return the original answers to the ungrouped list."
+	},
+	{
+		"key": "Evaluate",
+		"oldEn": null,
+		"newEn": "Rate"
+	},
+	{
+		"key": "Evidence challenges this idea",
+		"oldEn": null,
+		"newEn": "Evidence challenges this answer"
+	},
+	{
+		"key": "Evidence supports this idea",
+		"oldEn": null,
+		"newEn": "Evidence supports this answer"
+	},
+	{
+		"key": "Finding similar suggestions",
+		"oldEn": null,
+		"newEn": "Finding similar answers"
+	},
+	{
+		"key": "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass, using the similarity thresholds below. Best after re-embedding.",
+		"oldEn": null,
+		"newEn": "Global cluster from scratch? This dissolves all current clusters and re-groups every answer in one pass, using the similarity thresholds below. Best after re-embedding."
+	},
+	{
+		"key": "Global cluster groups every option in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results.",
+		"oldEn": null,
+		"newEn": "Global cluster groups every answer in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results."
+	},
+	{
+		"key": "Group of {count} related suggestions: {title}",
+		"oldEn": null,
+		"newEn": "Group of {count} related answers: {title}"
+	},
+	{
+		"key": "Grouped suggestion",
+		"oldEn": null,
+		"newEn": "Grouped answer"
+	},
+	{
+		"key": "Grouped suggestion representing {count} originals",
+		"oldEn": null,
+		"newEn": "Grouped answer representing {count} original answers"
+	},
+	{
+		"key": "Hide originals",
+		"oldEn": null,
+		"newEn": "Hide original answers"
+	},
+	{
+		"key": "Like this suggestion",
+		"oldEn": null,
+		"newEn": "Like this answer"
+	},
+	{
+		"key": "Merge \"{source}\" ({sourceCount}) into \"{target}\" ({targetCount})? The source group will be deleted and its originals will be added to the target.",
+		"oldEn": null,
+		"newEn": "Merge \"{source}\" ({sourceCount}) into \"{target}\" ({targetCount})? The source group will be deleted and its original answers will be added to the target."
+	},
+	{
+		"key": "New Integrated Suggestion",
+		"oldEn": null,
+		"newEn": "New integrated answer"
+	},
+	{
+		"key": "Options cannot be created under other options",
+		"oldEn": null,
+		"newEn": "Answers cannot be created under other answers"
+	},
+	{
+		"key": "Polarization Index",
+		"oldEn": null,
+		"newEn": "Disagreement map"
+	},
+	{
+		"key": "Preview of grouped suggestions",
+		"oldEn": null,
+		"newEn": "Preview of grouped answers"
+	},
+	{
+		"key": "Questions, options and Results",
+		"oldEn": null,
+		"newEn": "Questions, answers and results"
+	},
+	{
+		"key": "Re-embed all options? This regenerates every option’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute.",
+		"oldEn": null,
+		"newEn": "Re-embed all answers? This regenerates every answer’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute."
+	},
+	{
+		"key": "Re-embed options",
+		"oldEn": null,
+		"newEn": "Re-embed answers"
+	},
+	{
+		"key": "Remove all votes and evaluations from this member",
+		"oldEn": null,
+		"newEn": "Remove all votes and ratings from this member"
+	},
+	{
+		"key": "Remove all {count} groupings? Each group will be deleted and its originals will reappear as standalone options. This cannot be undone.",
+		"oldEn": null,
+		"newEn": "Remove all {count} groupings? Each group will be deleted and its original answers will reappear as standalone answers. This cannot be undone."
+	},
+	{
+		"key": "Selected as the winning option",
+		"oldEn": null,
+		"newEn": "Selected as the winning answer"
+	},
+	{
+		"key": "Show only grouped (clustered) suggestions",
+		"oldEn": null,
+		"newEn": "Show only grouped answers"
+	},
+	{
+		"key": "Show originals",
+		"oldEn": null,
+		"newEn": "Show original answers"
+	},
+	{
+		"key": "Show voting Percentages per option",
+		"oldEn": null,
+		"newEn": "Show voting percentages per answer"
+	},
+	{
+		"key": "Sub Questions Map",
+		"oldEn": null,
+		"newEn": "Questions map"
+	},
+	{
+		"key": "Suggestions Being Merged",
+		"oldEn": null,
+		"newEn": "Answers being merged"
+	},
+	{
+		"key": "The original suggestions will be hidden after integration. All evaluations will be transferred to the new integrated suggestion.",
+		"oldEn": null,
+		"newEn": "The original answers will be hidden after integration. All ratings will be transferred to the new integrated answer."
+	},
+	{
+		"key": "Unable to find similar suggestions",
+		"oldEn": null,
+		"newEn": "Unable to find similar answers"
+	},
+	{
+		"key": "Unlike this suggestion",
+		"oldEn": null,
+		"newEn": "Unlike this answer"
+	},
+	{
+		"key": "Whether it supports, challenges, or is neutral to the idea",
+		"oldEn": null,
+		"newEn": "Whether it supports, challenges, or is neutral to the answer"
+	},
+	{
+		"key": "addOption_aria",
+		"oldEn": null,
+		"newEn": "Add an answer"
+	},
+	{
+		"key": "addSolution_aria",
+		"oldEn": null,
+		"newEn": "Add an answer"
+	},
+	{
+		"key": "eval",
+		"oldEn": null,
+		"newEn": "ratings"
+	},
+	{
+		"key": "evaluators migrated",
+		"oldEn": null,
+		"newEn": "raters moved"
+	},
+	{
+		"key": "no evaluations yet",
+		"oldEn": null,
+		"newEn": "no ratings yet"
+	},
+	{
+		"key": "originals in this group",
+		"oldEn": null,
+		"newEn": "original answers in this group"
+	},
+	{
+		"key": "selected options",
+		"oldEn": null,
+		"newEn": "selected answers"
+	},
+	{
+		"key": "suggestions selected",
+		"oldEn": null,
+		"newEn": "answers selected"
+	},
+	{
+		"key": "{count} evaluators",
+		"oldEn": null,
+		"newEn": "{count} people rated"
+	},
+	{
+		"key": "Evaluations",
+		"oldEn": "Solutions",
+		"newEn": "Ratings"
+	}
+]

@@ -329,9 +329,9 @@ const ClusterCard: FC<Props> = ({
 			<div className={styles.cardFooter}>
 				{showEval ? (
 					<div className={styles.evalStats}>
-						<span title={t('Consensus')}>≈{Math.round(consensus * 100)}</span>
-						<span title={t('Evaluators')}>👤{numberOfEvaluators}</span>
-						<span title={t('Average')}>⌀{average.toFixed(1)}</span>
+						<span title={t('Agreement score')}>≈{Math.round(consensus * 100)}</span>
+						<span title={t('People who rated')}>👤{numberOfEvaluators}</span>
+						<span title={t('Average rating')}>⌀{average.toFixed(1)}</span>
 					</div>
 				) : (
 					<span />

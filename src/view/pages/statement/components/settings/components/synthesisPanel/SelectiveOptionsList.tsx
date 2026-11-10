@@ -223,7 +223,7 @@ const SelectiveOptionsList: FC<Props> = ({
 													<span className={styles.row__metric} title={t('Number of evaluators')}>
 														{evals}
 													</span>
-													<span className={styles.row__metric} title={t('Consensus score')}>
+													<span className={styles.row__metric} title={t('Agreement score')}>
 														{cons.toFixed(2)}
 													</span>
 												</span>

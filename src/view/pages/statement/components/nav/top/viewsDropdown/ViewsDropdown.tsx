@@ -93,7 +93,7 @@ const ViewsDropdown: FC<ViewsDropdownProps> = ({ statement, screen, headerStyle,
 						onOptionClick={() => handleOptionClick(Screen.polarizationIndex)}
 					/>
 					<MenuOption
-						label={t('Mind Map')}
+						label={t('Mind map')}
 						icon={<MapIcon style={{ color: '#4E88C7' }} />}
 						onOptionClick={() => handleOptionClick(Screen.mindMap)}
 					/>

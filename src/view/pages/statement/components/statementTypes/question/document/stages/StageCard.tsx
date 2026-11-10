@@ -27,7 +27,7 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 
 	const getTitle = () => {
 		if (isDescription) return 'Description';
-		if (isSuggestions) return 'Suggestions';
+		if (isSuggestions) return 'Answers';
 
 		return statement.statement;
 	};

@@ -284,7 +284,7 @@ const Tabs: FC<TabsProps> = ({
 					title={isOptionDisabled ? t('Options cannot be created under other options') : ''}
 					disabled={isOptionDisabled}
 				>
-					{t('Option')}
+					{t('Answer')}
 					{isOptionChosen && <div className={styles.block} />}
 				</button>
 			)}
@@ -318,7 +318,7 @@ const CreateStatementButtons: FC<CreateStatementButtonsProps> = ({
 	return (
 		<div className={styles.createStatementButtons}>
 			<Button
-				text={isLoading ? t('Checking...') : t(`Add ${isOption ? 'Option' : 'Question'}`)}
+				text={isLoading ? t('Checking...') : t(isOption ? 'Add an answer' : 'Add Question')}
 				buttonType={ButtonType.PRIMARY}
 				data-cy="add-statement-simple"
 				disabled={isLoading}

@@ -240,7 +240,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 							</span>
 							<span aria-hidden="true">·</span>
 							<span className={styles.header__stat}>
-								{t('Suggested')} <b>{participation.suggested}</b>
+								{t('Added answers')} <b>{participation.suggested}</b>
 							</span>
 							<span aria-hidden="true">·</span>
 							<span className={styles.header__stat}>

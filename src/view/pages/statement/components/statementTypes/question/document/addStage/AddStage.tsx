@@ -80,7 +80,7 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 					<option value="" disabled>
 						{t('Define how to select top options')}
 					</option>
-					<option value={StageSelectionType.consensus}>{t('Consensus')}</option>
+					<option value={StageSelectionType.consensus}>{t('Agreement score')}</option>
 					<option value={StageSelectionType.voting}>{t('Voting')}</option>
 					<option value={StageSelectionType.checkbox}>{t('Checkbox')}</option>
 				</select>

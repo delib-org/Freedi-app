@@ -55,7 +55,7 @@ const QuestionSelector: FC<QuestionSelectorProps> = ({
 						<span className={styles.questionSelector__questionText}>{question.question}</span>
 						{optionCount > 0 && (
 							<span className={styles.questionSelector__optionCount}>
-								{optionCount} {t('options')}
+								{optionCount} {t('answers')}
 							</span>
 						)}
 					</div>

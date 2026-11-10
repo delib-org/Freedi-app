@@ -80,7 +80,7 @@ const FindSolutionsPhase: FC = () => {
 									<div className={styles.solutionContent}>
 										<h4 className={styles.solutionTitle}>{solution.statement}</h4>
 										<span className={styles.solutionConsensus}>
-											{Math.round((solution.consensus ?? 0) * 100)}% {t('Consensus')}
+											{Math.round((solution.consensus ?? 0) * 100)}% {t('Agreement score')}
 										</span>
 									</div>
 								</div>
