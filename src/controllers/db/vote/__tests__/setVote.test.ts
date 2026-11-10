@@ -387,11 +387,20 @@ describe('setVote', () => {
 			});
 		});
 
+		it.each([
+			[false, 'cast'],
+			[true, 'removed'],
+		])('should report the outcome when removing is %s', async (isRemoving, outcome) => {
+			mockedRunTransaction.mockResolvedValue(isRemoving);
+
+			await expect(setVoteToDB(mockOption as never, mockUser as never)).resolves.toBe(outcome);
+		});
+
 		it('should not throw when transaction fails', async () => {
 			mockedRunTransaction.mockRejectedValue(new Error('Firebase error'));
 
-			// Should not throw
-			await expect(setVoteToDB(mockOption as never, mockUser as never)).resolves.toBeUndefined();
+			// Should not throw, and must not report the vote as counted
+			await expect(setVoteToDB(mockOption as never, mockUser as never)).resolves.toBe('failed');
 		});
 
 		it('should not track analytics when transaction fails', async () => {

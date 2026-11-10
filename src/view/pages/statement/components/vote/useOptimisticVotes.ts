@@ -34,6 +34,9 @@ export interface OptimisticVotes {
 	votedOptionId: string;
 	/** Toggles the vote for an option and writes it to the DB. */
 	castVote: (option: Statement) => Promise<void>;
+	/** Changes each time the database confirms a new vote; 0 while there is nothing to say. */
+	voteCountedId: number;
+	dismissVoteCounted: () => void;
 }
 
 const sumSelections = (selections: Record<string, number>): number =>
@@ -54,6 +57,8 @@ export function useOptimisticVotes(statement: Statement | undefined): Optimistic
 	const { creator } = useAuthentication();
 	const vote = useAppSelector(parentVoteSelector(statement?.statementId));
 	const [pending, setPending] = useState<PendingVote | null>(null);
+	const [voteCountedId, setVoteCountedId] = useState(0);
+	const dismissVoteCounted = useCallback(() => setVoteCountedId(0), []);
 
 	const serverSelections = statement?.selections;
 
@@ -126,7 +131,8 @@ export function useOptimisticVotes(statement: Statement | undefined): Optimistic
 				}),
 			);
 
-			await setVoteToDB(option, creator);
+			const outcome = await setVoteToDB(option, creator);
+			if (outcome === 'cast') setVoteCountedId((current) => current + 1);
 		},
 		[creator, statement, vote?.statementId, dispatch],
 	);
@@ -136,5 +142,7 @@ export function useOptimisticVotes(statement: Statement | undefined): Optimistic
 		totalVotes: sumSelections(selectionsById),
 		votedOptionId,
 		castVote,
+		voteCountedId,
+		dismissVoteCounted,
 	};
 }

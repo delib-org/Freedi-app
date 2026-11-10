@@ -16,8 +16,14 @@ const flow = {
 	abandon: jest.fn(),
 };
 
+let mockOnDone: (createdIds: string[]) => void = () => undefined;
+
 jest.mock('../../addStatement/useCreateStatementFlow', () => ({
-	useCreateStatementFlow: () => flow,
+	useCreateStatementFlow: (options: { onDone: (createdIds: string[]) => void }) => {
+		mockOnDone = options.onDone;
+
+		return flow;
+	},
 }));
 jest.mock('@/controllers/hooks/useTranslation', () => ({
 	useTranslation: () => ({ t: (key: string) => key }),
@@ -38,6 +44,10 @@ jest.mock('../../popperHebbian/refinery/IdeaRefineryModal', () => ({
 const statement = { statementId: 'q1' } as unknown as Statement;
 const HINT = 'add-answer-similar-hint';
 
+function renderSheet(): void {
+	render(<AddAnswerSheet statement={statement} onClose={jest.fn()} onAnswerAdded={jest.fn()} />);
+}
+
 describe('AddAnswerSheet', () => {
 	beforeEach(() => {
 		flow.state = { ...initialFlowState };
@@ -45,23 +55,49 @@ describe('AddAnswerSheet', () => {
 	});
 
 	it('does not promise a similarity check that will not run', () => {
-		render(<AddAnswerSheet statement={statement} onClose={jest.fn()} />);
+		renderSheet();
 
 		expect(screen.queryByTestId(HINT)).not.toBeInTheDocument();
 	});
 
 	it('shows the hint when the check is on', () => {
 		flow.config = { ...flow.config, similarity: true };
-		render(<AddAnswerSheet statement={statement} onClose={jest.fn()} />);
+		renderSheet();
 
 		expect(screen.getByTestId(HINT)).toBeInTheDocument();
 	});
 
 	it('shows the moderator message with the draft still open', () => {
 		flow.state = { ...initialFlowState, rejection: 'Please rephrase' };
-		render(<AddAnswerSheet statement={statement} onClose={jest.fn()} />);
+		renderSheet();
 
 		expect(screen.getByRole('alert')).toHaveTextContent('Please rephrase');
 		expect(screen.getByTestId('add-answer-text')).toBeInTheDocument();
+	});
+
+	it('reports the last created answer and closes', () => {
+		const onClose = jest.fn();
+		const onAnswerAdded = jest.fn();
+		render(
+			<AddAnswerSheet statement={statement} onClose={onClose} onAnswerAdded={onAnswerAdded} />,
+		);
+
+		mockOnDone(['a1', 'a2']);
+
+		expect(onAnswerAdded).toHaveBeenCalledWith('a2');
+		expect(onClose).toHaveBeenCalled();
+	});
+
+	it('closes without reporting when a similar answer was supported instead', () => {
+		const onClose = jest.fn();
+		const onAnswerAdded = jest.fn();
+		render(
+			<AddAnswerSheet statement={statement} onClose={onClose} onAnswerAdded={onAnswerAdded} />,
+		);
+
+		mockOnDone([]);
+
+		expect(onAnswerAdded).not.toHaveBeenCalled();
+		expect(onClose).toHaveBeenCalled();
 	});
 });

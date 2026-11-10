@@ -1,6 +1,7 @@
 import { CutoffBy, ResultsBy, Statement, StatementType } from '@freedi/shared-types';
 import {
 	countRated,
+	latestRatingAt,
 	areAnswersComplete,
 	getStageCue,
 	getResultsAccess,
@@ -407,6 +408,19 @@ describe('resultsLogic', () => {
 			});
 			expect(getStageCue({ ...base, stage: 1 }).value).toBeUndefined();
 		});
+	});
+
+	it('latestRatingAt reads only own ratings among these answers', () => {
+		const evaluations = [
+			{ statementId: 'a', evaluatorId: 'me', updatedAt: 10 },
+			{ statementId: 'b', evaluatorId: 'me', updatedAt: 30 },
+			{ statementId: 'c', evaluatorId: 'me', updatedAt: 99 },
+			{ statementId: 'a', evaluatorId: 'other', updatedAt: 50 },
+		];
+
+		expect(latestRatingAt(evaluations, ['a', 'b'], 'me')).toBe(30);
+		expect(latestRatingAt(evaluations, ['a'], undefined)).toBe(0);
+		expect(latestRatingAt([], ['a'], 'me')).toBe(0);
 	});
 
 	it('countRated counts distinct own ratings among these answers', () => {

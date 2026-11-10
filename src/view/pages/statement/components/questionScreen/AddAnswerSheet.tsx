@@ -14,6 +14,8 @@ import styles from './QuestionScreen.module.scss';
 interface AddAnswerSheetProps {
 	statement: Statement;
 	onClose: () => void;
+	/** Called when an answer was really published; supporting a similar one is not that. */
+	onAnswerAdded: (answerId: string) => void;
 }
 
 /** First line is the answer, anything after it its description. */
@@ -35,7 +37,7 @@ export function draftFromText(text: string): { title: string; description: strin
  * A failed similarity check resolves to "nothing similar", so it never blocks;
  * a moderation refusal is different: it keeps the draft open and publishes nothing.
  */
-const AddAnswerSheet: FC<AddAnswerSheetProps> = ({ statement, onClose }) => {
+const AddAnswerSheet: FC<AddAnswerSheetProps> = ({ statement, onClose, onAnswerAdded }) => {
 	const { t } = useTranslation();
 	const textId = useId();
 	const [text, setText] = useState('');
@@ -45,7 +47,11 @@ const AddAnswerSheet: FC<AddAnswerSheetProps> = ({ statement, onClose }) => {
 		intent: 'answer',
 		origin: 'fab',
 		commit: 'db',
-		onDone: onClose,
+		onDone: (createdIds) => {
+			const lastCreatedId = createdIds[createdIds.length - 1];
+			if (lastCreatedId) onAnswerAdded(lastCreatedId);
+			onClose();
+		},
 	});
 	const { state } = flow;
 

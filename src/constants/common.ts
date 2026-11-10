@@ -100,6 +100,10 @@ export const UI = {
 	UNDO_TOAST_DURATION: 6 * TIME.SECOND,
 	// How long the short "Undone" confirmation stays.
 	UNDONE_TOAST_DURATION: 2 * TIME.SECOND,
+	// How long the ring stays on an answer opened from `?focusId=`.
+	FOCUSED_ANSWER_RING_DURATION: 6 * TIME.SECOND,
+	// New ratings needed before "you've rated all the answers" may be said again.
+	RATED_ALL_REPEAT_MIN_RATINGS: 3,
 	// People › Members: rows shown first, and how many "Show more" adds (UX §4.4).
 	MEMBERS_INITIAL_COUNT: 10,
 	MEMBERS_LOAD_MORE_COUNT: 20,

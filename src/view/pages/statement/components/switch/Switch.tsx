@@ -21,6 +21,7 @@ import ConversationWelcome from '@/view/components/atomic/organisms/ThinkingSpac
 import { mapViews } from '@/view/components/atomic/organisms/ThinkingSpace/MapExplorer';
 import AnswersCounter from '../questionScreen/AnswersCounter';
 import AddAnswerFab from '../questionScreen/AddAnswerFab';
+import RatedAllNotice from '../questionScreen/RatedAllNotice';
 import AnswerSortControl from '../questionScreen/AnswerSortControl';
 import {
 	QuestionAnswersTabContext,
@@ -165,6 +166,7 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 				)}
 			</div>
 			{showFab && statement && <AddAnswerFab statement={statement} />}
+			{isQuestion && statement && <RatedAllNotice key={statement.statementId} data={data} />}
 		</main>
 	);
 };
