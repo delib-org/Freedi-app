@@ -1,12 +1,10 @@
-import { FC, useContext, useEffect, useState } from 'react';
+import { FC, useContext, useState } from 'react';
 import { getStepsInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/helpers';
 import StatementInfo from './components/info/StatementInfo';
 import VotingArea from './components/votingArea/VotingArea';
 import { useOptimisticVotes } from './useOptimisticVotes';
 import HandIcon from '@/assets/icons/handIcon.svg?react';
 import X from '@/assets/icons/x.svg?react';
-import { getToVoteOnParent } from '@/controllers/db/vote/getVotes';
-import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 
 // Custom components
 import Button from '@/view/components/buttons/button/Button';
@@ -21,17 +19,11 @@ import { Statement, QuestionStep } from '@freedi/shared-types';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { sortByConsensus } from '@/redux/utils/selectorFactories';
 import { useSelector } from 'react-redux';
-import { setVoteToStore } from '@/redux/vote/votesSlice';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { filterVotingOptions } from './votingOptionsFilter';
-
-let getVoteFromDB = false;
 
 const StatementVote: FC = () => {
 	// * Hooks * //
-	const dispatch = useAppDispatch();
 	const { t } = useTranslation();
-	const { user } = useAuthentication();
 	const { statement } = useContext(StatementContext);
 	const inVotingGetOnlyResults = statement?.statementSettings?.inVotingGetOnlyResults;
 	const topOptionsCount = statement?.resultsSettings?.numberOfResults ?? 3;
@@ -58,22 +50,6 @@ const StatementVote: FC = () => {
 
 	// * Variables * //
 	const { selectionsById, totalVotes, votedOptionId, castVote } = useOptimisticVotes(statement);
-
-	useEffect(() => {
-		const parentId = statement?.statementId;
-		if (getVoteFromDB || !user?.uid || !parentId) return;
-
-		getToVoteOnParent(parentId, user.uid, (option: Statement) =>
-			dispatch(
-				setVoteToStore({
-					parentId,
-					optionId: option.statementId,
-					userId: user.uid,
-				}),
-			),
-		);
-		getVoteFromDB = true;
-	}, [statement?.statementId, dispatch, user?.uid]);
 
 	return (
 		<>

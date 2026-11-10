@@ -15,6 +15,7 @@ import { updateStatementText } from '@/controllers/db/statements/updateStatement
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useParticipationStats } from '@/controllers/hooks/useParticipationStats';
+import { useLoadOwnVote } from '@/controllers/hooks/useLoadOwnVote';
 import { logError } from '@/utils/errorHandling';
 import { renderInlineMarkdown } from '@/helpers/inlineMarkdownHelpers';
 import { relevantNotifications } from '@/utils/engagementNavigation';
@@ -54,6 +55,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	const { statement } = useContext(StatementContext);
 	const { role } = useAuthorization(statement?.statementId);
 	const isHost = isHostRole(role);
+	useLoadOwnVote(statement);
 
 	const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
 	const [showInvitationPanel, setShowInvitationPanel] = useState(false);
