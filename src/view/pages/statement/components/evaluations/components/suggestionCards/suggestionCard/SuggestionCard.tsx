@@ -39,7 +39,7 @@ import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
 import MergeBadge from './MergeBadge';
 import YouTubeEmbed from './YouTubeEmbed';
 import { extractYouTubeVideo } from '@/helpers/youtubeLinks';
-import { hasClampedContent } from './hasClampedContent';
+import { useIsClamped } from './hasClampedContent';
 
 interface Props {
 	statement: Statement | undefined;
@@ -119,40 +119,15 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	// Dropped: on a list where every card is the same type it encoded nothing,
 	// and it competed with the status rule for the same edge.
 
-	// Check if text is clamped and add overflow class
-	useEffect(() => {
-		const checkOverflow = () => {
-			const textContainer = textContainerRef.current;
-			if (textContainer) {
-				const textElement = textContainer.parentElement;
-
-				if (textElement) {
-					// Always show button when expanded (to allow collapsing)
-					if (isExpanded) {
-						textElement.classList.add(styles.hasOverflow);
-					} else {
-						// Only show when actually overflowing. The description is
-						// clamped independently of the title, so a short title with a
-						// long body still needs the expand affordance.
-						const description = descriptionRef.current;
-						const isOverflowing =
-							hasClampedContent(textContainer) ||
-							(!!description && description.scrollHeight > description.clientHeight);
-						if (isOverflowing) {
-							textElement.classList.add(styles.hasOverflow);
-						} else {
-							textElement.classList.remove(styles.hasOverflow);
-						}
-					}
-				}
-			}
-		};
-
-		// Add a small delay to ensure rendering is complete
-		const timeoutId = setTimeout(checkOverflow, 50);
-
-		return () => clearTimeout(timeoutId);
-	}, [statement?.statement, statement?.description, isExpanded]);
+	// "Show more" appears only when the title or the body is really cut off. The
+	// description is clamped independently of the title, so a short title with a
+	// long body still needs it. Re-measured on resize and when fonts arrive.
+	const isCutOff = useIsClamped(
+		[textContainerRef, descriptionRef],
+		isExpanded,
+		`${statement?.statement ?? ''}|${statement?.description ?? ''}|${statement?.paragraphs?.length ?? 0}`,
+	);
+	const hasOverflow = isCutOff || isExpanded;
 
 	async function handleSetOption() {
 		try {
@@ -402,7 +377,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 							fileInputRef={fileInputRef}
 						/>
 					)}
-					<div className={styles.text}>
+					<div className={clsx(styles.text, hasOverflow && styles.hasOverflow)}>
 						<div
 							className={`${styles.textContent} ${isExpanded ? styles.textContentExpanded : ''}`}
 							ref={textContainerRef}

@@ -41,4 +41,16 @@ describe('hasClampedContent', () => {
 
 		expect(hasClampedContent(container)).toBe(true);
 	});
+
+	it('is true when the clamped body is a <p> or a <ul>', () => {
+		for (const tag of ['p', 'ul', 'blockquote']) {
+			const container = document.createElement('div');
+			const body = document.createElement(tag);
+			container.appendChild(body);
+			withHeights(container, 60, 60);
+			withHeights(body, 90, 40);
+
+			expect(hasClampedContent(container)).toBe(true);
+		}
+	});
 });
