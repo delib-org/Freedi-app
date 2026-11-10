@@ -3,50 +3,29 @@ import { useEngagement } from '@/controllers/hooks/useEngagement';
 import Back from '@/view/pages/statement/components/header/Back';
 import LevelBadge from '@/view/components/atomic/atoms/LevelBadge/LevelBadge';
 import LevelProgress from '@/view/components/atomic/atoms/LevelProgress/LevelProgress';
-import StreakIndicator from '@/view/components/atomic/atoms/StreakIndicator/StreakIndicator';
 import PeopleLoader from '@/view/components/loaders/PeopleLoader';
-import { CreditAction } from '@freedi/shared-types';
+import { formatCreditsEarned, formatLevelLabel } from '@/helpers/engagementLabels';
+import { formatRelativeTime } from '@/helpers/relativeTime';
+import {
+	getBadgeIcon,
+	getBadgeText,
+	getCreditActionLabel,
+	isCreditActionListed,
+} from './engagementDisplay';
 
-const ACTION_LABELS: Record<string, string> = {
-	[CreditAction.JOIN_DISCUSSION]: 'Joined discussion',
-	[CreditAction.EVALUATE_OPTION]: 'Evaluated option',
-	[CreditAction.CREATE_OPTION]: 'Created option',
-	[CreditAction.COMMENT]: 'Commented',
-	[CreditAction.VOTE]: 'Voted',
-	[CreditAction.SIGN_DOCUMENT]: 'Signed document',
-	[CreditAction.DAILY_LOGIN]: 'Daily login',
-	[CreditAction.STREAK_BONUS]: 'Streak bonus',
-	[CreditAction.CONSENSUS_REACHED]: 'Consensus reached',
-	[CreditAction.SUGGESTION_ACCEPTED]: 'Answer accepted',
-	[CreditAction.MC_PARTICIPATION]: 'MC participation',
-	[CreditAction.INVITE_FRIEND]: 'Invited friend',
-};
-
-function formatTimeAgo(timestamp: number): string {
-	const diff = Date.now() - timestamp;
-	const minutes = Math.floor(diff / 60000);
-	if (minutes < 1) return 'just now';
-	if (minutes < 60) return `${minutes}m ago`;
-	const hours = Math.floor(minutes / 60);
-	if (hours < 24) return `${hours}h ago`;
-	const days = Math.floor(hours / 24);
-
-	return `${days}d ago`;
-}
+const RECENT_ACTIVITY_LIMIT = 10;
 
 const EngagementDashboard = () => {
-	const { t, dir } = useTranslation();
+	const { t, dir, currentLanguage } = useTranslation();
 	const {
 		engagement,
 		loading,
 		recentCredits,
 		level,
-		levelName,
 		levelProgress,
 		nextLevelThreshold,
 		totalCredits,
 		badges,
-		currentStreak,
 	} = useEngagement();
 
 	if (loading) {
@@ -76,6 +55,10 @@ const EngagementDashboard = () => {
 		);
 	}
 
+	const activity = recentCredits
+		.filter((credit) => isCreditActionListed(credit.action))
+		.slice(0, RECENT_ACTIVITY_LIMIT);
+
 	return (
 		<div className="page">
 			<div className="page__header app-header app-header--sticky">
@@ -97,19 +80,15 @@ const EngagementDashboard = () => {
 			</div>
 
 			<div className="engagement-dashboard" role="region" aria-label={t('engagement.myImpact')}>
-				{/* Level + Streak header */}
+				{/* Level header */}
 				<section className="engagement-dashboard__header" aria-label={t('engagement.currentLevel')}>
 					<div className="engagement-dashboard__level-section">
-						<LevelBadge level={level} size="large" />
+						<LevelBadge level={level} size="large" iconOnly />
 						<dl className="engagement-dashboard__level-info">
 							<dt className="engagement-dashboard__level-label">{t('engagement.currentLevel')}</dt>
-							<dd className="engagement-dashboard__level-name">{levelName}</dd>
+							<dd className="engagement-dashboard__level-name">{formatLevelLabel(t, level)}</dd>
 						</dl>
 					</div>
-					<StreakIndicator
-						count={currentStreak}
-						lastActiveDate={engagement?.streak?.lastActiveDate}
-					/>
 				</section>
 
 				{/* Progress to next level */}
@@ -169,19 +148,24 @@ const EngagementDashboard = () => {
 					<h2 className="engagement-dashboard__section-title">{t('engagement.badges')}</h2>
 					{badges.length > 0 ? (
 						<div className="engagement-dashboard__badges-grid" role="list">
-							{badges.map((badge) => (
-								<div
-									key={badge.badgeId}
-									className="engagement-dashboard__badge"
-									role="listitem"
-									aria-label={`${badge.name}: ${badge.description}`}
-								>
-									<span className="engagement-dashboard__badge-icon" aria-hidden="true">
-										{badge.icon}
-									</span>
-									<span className="engagement-dashboard__badge-name">{badge.name}</span>
-								</div>
-							))}
+							{badges.map((badge) => {
+								const BadgeIcon = getBadgeIcon(badge.icon);
+								const { name, description } = getBadgeText(t, badge);
+
+								return (
+									<div
+										key={badge.badgeId}
+										className="engagement-dashboard__badge"
+										role="listitem"
+										aria-label={`${name}: ${description}`}
+									>
+										<span className="engagement-dashboard__badge-icon" aria-hidden="true">
+											<BadgeIcon />
+										</span>
+										<span className="engagement-dashboard__badge-name">{name}</span>
+									</div>
+								);
+							})}
 						</div>
 					) : (
 						<div className="engagement-dashboard__empty">
@@ -197,25 +181,25 @@ const EngagementDashboard = () => {
 					aria-label={t('engagement.recentActivity')}
 				>
 					<h2 className="engagement-dashboard__section-title">{t('engagement.recentActivity')}</h2>
-					{recentCredits.length > 0 ? (
+					{activity.length > 0 ? (
 						<div className="engagement-dashboard__activity-list" role="list">
-							{recentCredits.slice(0, 10).map((credit) => (
+							{activity.map((credit) => (
 								<div
 									key={credit.transactionId}
 									className="engagement-dashboard__activity-item"
 									role="listitem"
 								>
 									<span className="engagement-dashboard__activity-action">
-										{ACTION_LABELS[credit.action] ?? credit.action}
+										{getCreditActionLabel(t, credit.action)}
 									</span>
 									<span
 										className="engagement-dashboard__activity-amount"
-										aria-label={`plus ${credit.amount} credits`}
+										aria-label={formatCreditsEarned(t, credit.amount)}
 									>
 										+{credit.amount}
 									</span>
 									<time className="engagement-dashboard__activity-time">
-										{formatTimeAgo(credit.createdAt)}
+										{formatRelativeTime(credit.createdAt, Date.now(), currentLanguage)}
 									</time>
 								</div>
 							))}

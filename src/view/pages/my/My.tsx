@@ -6,14 +6,11 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
-import {
-	currentStreakSelector,
-	userEngagementSelector,
-	userLevelSelector,
-} from '@/redux/engagement/engagementSlice';
+import { userEngagementSelector, userLevelSelector } from '@/redux/engagement/engagementSlice';
 import { setUserAdvanceUserToDB } from '@/controllers/db/user/setUser';
 import { logOut } from '@/controllers/db/authenticationUtils';
 import { logError } from '@/utils/errorHandling';
+import { getDisplayLevel } from '@/helpers/engagementLabels';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import AccessibilitySheet from './AccessibilitySheet';
 import styles from './Me.module.scss';
@@ -26,7 +23,6 @@ const My = () => {
 	const { fontSize, changeFontSize, colorContrast, setColorContrast } = useUserConfig();
 	const engagement = useAppSelector(userEngagementSelector);
 	const level = useAppSelector(userLevelSelector);
-	const streak = useAppSelector(currentStreakSelector);
 	const [selectedImage, setSelectedImage] = useState<string | null>(null);
 	const [languageOpen, setLanguageOpen] = useState(false);
 	const [accessibilityOpen, setAccessibilityOpen] = useState(false);
@@ -70,8 +66,8 @@ const My = () => {
 	}
 
 	const impact = [
-		{ value: level, label: t('Level') },
-		{ value: streak, label: t('Day streak') },
+		{ value: getDisplayLevel(level), label: t('Level') },
+		{ value: engagement?.totalOptions ?? 0, label: t('Answers added') },
 		{ value: engagement?.totalEvaluations ?? 0, label: t('Ratings') },
 	];
 

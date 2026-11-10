@@ -7,14 +7,13 @@ import {
 	userLevelSelector,
 	totalCreditsSelector,
 	userBadgesSelector,
-	currentStreakSelector,
 	isTrialModeSelector,
 } from '@/redux/engagement/engagementSlice';
 import {
 	listenToUserEngagement,
 	listenToRecentCredits,
 } from '@/controllers/db/engagement/db_engagement';
-import { getLevelProgress, getLevelName, getNextLevelThreshold } from '@freedi/engagement-core';
+import { getLevelProgress, getNextLevelThreshold } from '@freedi/engagement-core';
 
 /**
  * Hook to subscribe to the current user's engagement data.
@@ -30,7 +29,6 @@ export function useEngagement() {
 	const level = useAppSelector(userLevelSelector);
 	const totalCredits = useAppSelector(totalCreditsSelector);
 	const badges = useAppSelector(userBadgesSelector);
-	const currentStreak = useAppSelector(currentStreakSelector);
 	const isTrialMode = useAppSelector(isTrialModeSelector);
 
 	useEffect(() => {
@@ -43,7 +41,6 @@ export function useEngagement() {
 		};
 	}, []);
 
-	const levelName = getLevelName(level);
 	const levelProgress = getLevelProgress(totalCredits, level);
 	const nextLevelThreshold = getNextLevelThreshold(level);
 
@@ -52,12 +49,10 @@ export function useEngagement() {
 		loading,
 		recentCredits,
 		level,
-		levelName,
 		levelProgress,
 		nextLevelThreshold,
 		totalCredits,
 		badges,
-		currentStreak,
 		isTrialMode,
 	};
 }
