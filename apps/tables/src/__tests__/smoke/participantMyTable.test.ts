@@ -2,9 +2,24 @@
 import { describe, expect, it, vi } from 'vitest';
 import en from '@/lib/locales/en';
 import { ParticipantMyTable } from '@/views/participant/ParticipantMyTable';
-import { makeParticipant, makeRosterEntry, makeRun, makeSession, NOW } from '../fixtures';
+import {
+	makeParticipant,
+	makeRosterEntry,
+	makeRun,
+	makeSession,
+	NOW,
+	SESSION_ID,
+} from '../fixtures';
 import { renderScreen } from './testHarness';
-import { HOME, ID, mocks, registered, useParticipantScreens } from './participantMocks';
+import {
+	clickButton,
+	HOME,
+	ID,
+	mocks,
+	registered,
+	settle,
+	useParticipantScreens,
+} from './participantMocks';
 
 vi.mock('@/lib/firebase', () => ({ app: {}, auth: {}, db: {}, functions: {} }));
 vi.mock('@/lib/tableAssignment/client', async () => ({
@@ -131,6 +146,72 @@ describe('my table', () => {
 		const { text } = await renderScreen(ParticipantMyTable, ID);
 
 		expect(text).toContain(en['tableAssignment.myTable.chooseAnother']);
+	});
+
+	describe('cancelling a seat in free mode', () => {
+		const CANCEL = en['tableAssignment.cancelParticipation'];
+
+		function seated(
+			status: 'registrationOpen' | 'registrationClosed',
+			claimedByName = false,
+		): void {
+			mocks.store.current.session = makeSession({ mode: 'direct', status });
+			mocks.store.current.me = makeParticipant('u1', { chosenTableIndex: 0, claimedByName });
+		}
+
+		it('asks first, and cancels only on the second button', async () => {
+			mocks.api.cancelRegistration.mockResolvedValue({ cancelled: true });
+			seated('registrationOpen');
+
+			const { root } = await renderScreen(ParticipantMyTable, ID);
+
+			clickButton(root, CANCEL);
+			await settle();
+
+			expect(root.querySelector('[role="dialog"]')?.textContent).toContain(
+				en['tableAssignment.cancel.title'],
+			);
+			expect(mocks.api.cancelRegistration).not.toHaveBeenCalled();
+
+			clickButton(root, en['tableAssignment.cancel.confirm']);
+			await settle();
+
+			expect(mocks.api.cancelRegistration).toHaveBeenCalledWith({ sessionId: SESSION_ID });
+		});
+
+		it('goes to the link once the record is gone', async () => {
+			mocks.api.cancelRegistration.mockResolvedValue({ cancelled: true });
+			seated('registrationOpen');
+
+			const { root } = await renderScreen(ParticipantMyTable, ID);
+
+			clickButton(root, CANCEL);
+			await settle();
+			clickButton(root, en['tableAssignment.cancel.confirm']);
+			await settle();
+			mocks.pushMyRecord(null);
+			await settle();
+
+			expect(mocks.replaceWith).toHaveBeenCalledWith(HOME);
+		});
+
+		it('is hidden after registration closes', async () => {
+			seated('registrationClosed');
+
+			const { text } = await renderScreen(ParticipantMyTable, ID);
+
+			expect(text).toContain('Topic a');
+			expect(text).not.toContain(CANCEL);
+		});
+
+		it('is hidden on a registration continued by name', async () => {
+			seated('registrationOpen', true);
+
+			const { text } = await renderScreen(ParticipantMyTable, ID);
+
+			expect(text).toContain(en['tableAssignment.myTable.chooseAnother']);
+			expect(text).not.toContain(CANCEL);
+		});
 	});
 
 	it('still shows the seat when the names cannot be read', async () => {

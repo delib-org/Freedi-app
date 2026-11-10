@@ -3,7 +3,7 @@ import type { TableAssignmentParticipant, TableAssignmentTopic } from '@freedi/s
 import { t } from '@/lib/i18n';
 import { checkIcon } from '@/components/icons';
 import type { ParticipantContext } from '@/components/ParticipantFrame';
-import { CancelDialog } from '@/views/participant/CancelDialog';
+import { CancelParticipation } from '@/views/participant/CancelDialog';
 import { participantScreenPath } from '@/paths';
 
 const FIRST_NAME_SEPARATOR = /\s+/;
@@ -121,57 +121,29 @@ function savedHeader(name: string, titleKey: string, showLead: boolean): m.Vnode
 }
 
 /** Saved and waiting, before and after registration closes. */
-export const ParticipantWaiting: m.ClosureComponent<{ context: ParticipantContext }> = () => {
-	let confirmingCancel = false;
+export const ParticipantWaiting: m.Component<{ context: ParticipantContext }> = {
+	view({ attrs }) {
+		const { context } = attrs;
+		const { me, session } = context;
 
-	return {
-		view({ attrs }) {
-			const { context } = attrs;
-			const { me, session, uid } = context;
+		if (!me) return null;
 
-			if (!me) return null;
+		const isOpen = session.status === 'registrationOpen';
+		const name = firstName(me.fullName);
+		const answered = hasAnswers(me);
 
-			const isOpen = session.status === 'registrationOpen';
-			const name = firstName(me.fullName);
-			const answered = hasAnswers(me);
-			// A registration continued by name cannot be cancelled: the server refuses it too.
-			const canCancel = isOpen && !me.claimedByName;
-
-			return m('.screen', [
-				!answered && isOpen
-					? unfinishedPrompt(context, name)
-					: savedHeader(
-							name,
-							answered
-								? 'tableAssignment.waiting.title'
-								: 'tableAssignment.waiting.registeredTitle',
-							answered,
-						),
-				detailsCard(context, me, isOpen && answered),
-				whatHappensNow(isOpen),
-				isOpen ? null : m('p.notice', { role: 'note' }, t('tableAssignment.waiting.closedNote')),
-				canCancel
-					? m(
-							'button.btn.btn--text',
-							{
-								type: 'button',
-								onclick: () => {
-									confirmingCancel = true;
-								},
-							},
-							t('tableAssignment.cancelParticipation'),
-						)
-					: null,
-				confirmingCancel && canCancel
-					? m(CancelDialog, {
-							sessionId: session.tableAssignmentId,
-							uid,
-							onClose: () => {
-								confirmingCancel = false;
-							},
-						})
-					: null,
-			]);
-		},
-	};
+		return m('.screen', [
+			!answered && isOpen
+				? unfinishedPrompt(context, name)
+				: savedHeader(
+						name,
+						answered ? 'tableAssignment.waiting.title' : 'tableAssignment.waiting.registeredTitle',
+						answered,
+					),
+			detailsCard(context, me, isOpen && answered),
+			whatHappensNow(isOpen),
+			isOpen ? null : m('p.notice', { role: 'note' }, t('tableAssignment.waiting.closedNote')),
+			m(CancelParticipation, { context }),
+		]);
+	},
 };

@@ -210,6 +210,13 @@ const he: Record<string, string> = {
 	'tableAssignment.cancelled.body':
 		'הפרטים והבחירות שלכם נמחקו. שינוי תוכניות? אפשר להירשם שוב כל עוד ההרשמה פתוחה.',
 	'tableAssignment.cancelled.again': 'הרשמה מחדש',
+	'tableAssignment.cancelled.bodyClosed':
+		'הפרטים והבחירות שלכם נמחקו. ההרשמה כבר נסגרה. רוצים בכל זאת להצטרף? כדאי לדבר עם המארח.',
+	'tableAssignment.removed.title': 'ההרשמה שלכם הוסרה',
+	'tableAssignment.removed.body': 'המארח הסיר את ההרשמה. אם זו טעות, כדאי לדבר איתו.',
+	'tableAssignment.removed.titleMaybeMoved': 'ההרשמה שלכם כבר לא כאן',
+	'tableAssignment.removed.bodyMaybeMoved':
+		'ההרשמה המשיכה במכשיר אחר לפי השם המלא, או שהמארח הסיר אותה. אם זו טעות, כדאי לדבר איתו.',
 	'tableAssignment.returnByName.title': 'כבר נרשם מישהו בשם {{name}}. זה אתם?',
 	'tableAssignment.returnByName.body':
 		'אם זה אתם, תענו מחדש והתשובות החדשות יחליפו את הקודמות. התשובות הקודמות לא יוצגו, כדי לשמור על הפרטיות.',

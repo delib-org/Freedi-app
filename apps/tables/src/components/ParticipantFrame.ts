@@ -18,7 +18,8 @@ import {
 import type { Subscription } from '@/lib/tableAssignment/data';
 import { combineStates } from '@/logic/loadable';
 import type { LoadState } from '@/logic/loadable';
-import { loadMemory, rememberRegistration } from '@/logic/localDraft';
+import { loadMemory, registrationLoss, rememberRegistration } from '@/logic/localDraft';
+import type { RegistrationLoss } from '@/logic/localDraft';
 import { Shell } from '@/components/Shell';
 import { StateBox } from '@/components/StateBox';
 import { participantHomePath } from '@/paths';
@@ -33,8 +34,8 @@ export interface ParticipantContext {
 	retryTopics: () => void;
 	/** The participant's own registration; null while not registered. */
 	me: TableAssignmentParticipant | null;
-	/** This browser held a registration that no longer exists. */
-	cancelled: boolean;
+	/** Why a registration this browser held no longer exists; null when none is missing. */
+	lost: RegistrationLoss | null;
 	/** How many registered, when `counter` was asked and is readable. */
 	registeredCount: number | null;
 	/**
@@ -127,7 +128,7 @@ export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (init
 			topicsState: topics.state,
 			retryTopics: () => topics.retry(),
 			me: record,
-			cancelled: record === null && loadMemory(sessionId, uid, safeStorage).wasRegistered,
+			lost: record === null ? registrationLoss(loadMemory(sessionId, uid, safeStorage)) : null,
 			registeredCount: attrs.counter && counter.state === 'ready' ? (counter.data ?? 0) : null,
 			seats: attrs.occupancy && seats.state === 'ready' ? (seats.data ?? new Map()) : null,
 		};

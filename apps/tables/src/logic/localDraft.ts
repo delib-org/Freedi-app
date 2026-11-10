@@ -4,8 +4,9 @@ import type { PositionAnswer } from '@/logic/positionStops';
 /**
  * What only this browser remembers about one person in one assignment:
  * the choices between the steps and across a failed save, and whether it
- * held a registration (so a registration that disappeared reads as cancelled,
- * not as a new visitor). Storage is passed in; screens give them `safeStorage`.
+ * held a registration and whether it cancelled it (so a registration that
+ * disappeared is told apart from a new visitor, and from a removal by someone
+ * else). Storage is passed in; screens give them `safeStorage`.
  */
 
 export interface ChoicesDraft {
@@ -76,9 +77,14 @@ export interface RegistrationMemory {
 	wasRegistered: boolean;
 	/** The last full name, offered again by "register again". */
 	lastName: string;
+	/** This browser asked to cancel, so a disappearing record is the person's own doing. */
+	cancelledHere: boolean;
 }
 
-const NO_MEMORY: RegistrationMemory = { wasRegistered: false, lastName: '' };
+/** Why a registration this browser held is gone: its own cancel, or someone else's action. */
+export type RegistrationLoss = 'cancelled' | 'removed';
+
+const NO_MEMORY: RegistrationMemory = { wasRegistered: false, lastName: '', cancelledHere: false };
 
 function memoryKey(sessionId: string, uid: string): string {
 	return `${MEMORY_PREFIX}${sessionId}_${uid}`;
@@ -93,6 +99,8 @@ export function parseMemory(raw: string | null): RegistrationMemory {
 		return {
 			wasRegistered: value?.wasRegistered === true,
 			lastName: typeof value?.lastName === 'string' ? value.lastName : '',
+			// Memory written before this field existed could only end in a cancel on that screen.
+			cancelledHere: value?.wasRegistered === true && value.cancelledHere !== false,
 		};
 	} catch {
 		return NO_MEMORY;
@@ -109,7 +117,11 @@ export function rememberRegistration(
 	fullName: string,
 	storage: Writer,
 ): void {
-	const memory: RegistrationMemory = { wasRegistered: true, lastName: fullName };
+	const memory: RegistrationMemory = {
+		wasRegistered: true,
+		lastName: fullName,
+		cancelledHere: false,
+	};
 
 	storage.setItem(memoryKey(sessionId, uid), JSON.stringify(memory));
 }
@@ -119,7 +131,40 @@ export function forgetRegistration(sessionId: string, uid: string, storage: Read
 	const memory: RegistrationMemory = {
 		wasRegistered: false,
 		lastName: loadMemory(sessionId, uid, storage).lastName,
+		cancelledHere: false,
 	};
 
 	storage.setItem(memoryKey(sessionId, uid), JSON.stringify(memory));
+}
+
+function writeCancelledHere(
+	sessionId: string,
+	uid: string,
+	cancelledHere: boolean,
+	storage: Reader & Writer,
+): void {
+	const memory: RegistrationMemory = { ...loadMemory(sessionId, uid, storage), cancelledHere };
+
+	storage.setItem(memoryKey(sessionId, uid), JSON.stringify(memory));
+}
+
+/** Noted before the call: the record's removal can reach this browser before the answer does. */
+export function markCancelledHere(sessionId: string, uid: string, storage: Reader & Writer): void {
+	writeCancelledHere(sessionId, uid, true, storage);
+}
+
+/** The cancel failed, so the person is still registered and did not leave. */
+export function unmarkCancelledHere(
+	sessionId: string,
+	uid: string,
+	storage: Reader & Writer,
+): void {
+	writeCancelledHere(sessionId, uid, false, storage);
+}
+
+/** Why a held registration is gone; null when this browser holds none to miss. */
+export function registrationLoss(memory: RegistrationMemory): RegistrationLoss | null {
+	if (!memory.wasRegistered) return null;
+
+	return memory.cancelledHere ? 'cancelled' : 'removed';
 }

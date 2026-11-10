@@ -3,7 +3,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import en from '@/lib/locales/en';
 import { ParticipantHome, LegacyTopicsRedirect } from '@/views/participant/ParticipantHome';
 import { ParticipantPreferences } from '@/views/participant/ParticipantPreferences';
-import { rememberRegistration } from '@/logic/localDraft';
+import { markCancelledHere, rememberRegistration } from '@/logic/localDraft';
 import { participantScreenPath } from '@/paths';
 import { makeParticipant, makeSession, SESSION_ID } from '../fixtures';
 import { renderScreen } from './testHarness';
@@ -353,6 +353,7 @@ describe('cancel participation', () => {
 	it('shows the cancelled screen when the record is gone, and "register again" brings the name back', async () => {
 		mocks.store.current.me = null;
 		rememberRegistration(SESSION_ID, 'u1', 'Dana Levi', window.localStorage);
+		markCancelledHere(SESSION_ID, 'u1', window.localStorage);
 
 		const { text, root } = await renderScreen(ParticipantHome, ID);
 
@@ -367,6 +368,7 @@ describe('cancel participation', () => {
 		mocks.store.current.session = makeSession({ status: 'registrationClosed' });
 		mocks.store.current.me = null;
 		rememberRegistration(SESSION_ID, 'u1', 'Dana', window.localStorage);
+		markCancelledHere(SESSION_ID, 'u1', window.localStorage);
 
 		const { text } = await renderScreen(ParticipantHome, ID);
 

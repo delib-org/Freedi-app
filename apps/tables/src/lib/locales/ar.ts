@@ -220,6 +220,13 @@ const ar: Record<string, string> = {
 	'tableAssignment.cancelled.body':
 		'حُذفت تفاصيلكم واختياراتكم. تغيّرت خططكم؟ يمكنكم التسجيل من جديد ما دام التسجيل مفتوحًا.',
 	'tableAssignment.cancelled.again': 'التسجيل من جديد',
+	'tableAssignment.cancelled.bodyClosed':
+		'حُذفت تفاصيلكم واختياراتكم. أُغلق التسجيل. ما زلتم ترغبون في الانضمام؟ تحدّثوا مع المضيف.',
+	'tableAssignment.removed.title': 'أُزيل تسجيلكم',
+	'tableAssignment.removed.body': 'أزال المضيف التسجيل. إذا كان ذلك خطأً، تحدّثوا مع المضيف.',
+	'tableAssignment.removed.titleMaybeMoved': 'لم يعد تسجيلكم هنا',
+	'tableAssignment.removed.bodyMaybeMoved':
+		'تابع التسجيل على جهاز آخر بالاسم الكامل، أو أزاله المضيف. إذا كان ذلك خطأً، تحدّثوا مع المضيف.',
 	'tableAssignment.returnByName.title': 'سجّل شخص باسم {{name}} بالفعل. هل هذا أنتم؟',
 	'tableAssignment.returnByName.body':
 		'إن كان هذا أنتم، فستجيبون من جديد وستحلّ الإجابات الجديدة محل السابقة. لن تُعرض الإجابات السابقة، حفاظًا على الخصوصية.',

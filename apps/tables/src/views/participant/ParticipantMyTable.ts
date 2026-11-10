@@ -13,6 +13,7 @@ import type { ParticipantContext } from '@/components/ParticipantFrame';
 import { Redirect } from '@/components/Redirect';
 import { StateBox } from '@/components/StateBox';
 import { MyTableArt } from '@/components/TableArt';
+import { CancelParticipation } from '@/views/participant/CancelDialog';
 import { participantHomePath, participantScreenPath } from '@/paths';
 
 interface Seat {
@@ -128,13 +129,16 @@ const MyTableBody: m.ClosureComponent<{ context: ParticipantContext }> = (initia
 				seatCount: mates.length + 1,
 				mates,
 			},
-			canEditPreferences(session.status)
-				? m(
-						m.route.Link,
-						{ href: choose, class: 'btn btn--soft' },
-						t('tableAssignment.myTable.chooseAnother'),
-					)
-				: null,
+			[
+				canEditPreferences(session.status)
+					? m(
+							m.route.Link,
+							{ href: choose, class: 'btn btn--soft' },
+							t('tableAssignment.myTable.chooseAnother'),
+						)
+					: null,
+				m(CancelParticipation, { context }),
+			],
 		);
 	}
 

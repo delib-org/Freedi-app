@@ -5,12 +5,16 @@ import {
 	forgetRegistration,
 	loadDraft,
 	loadMemory,
+	markCancelledHere,
 	parseDraft,
 	parseMemory,
+	registrationLoss,
 	rememberRegistration,
 	saveDraft,
 	serializeDraft,
+	unmarkCancelledHere,
 } from '../localDraft';
+import { canCancelRegistration } from '../nextAction';
 import { participantStage } from '../participantStage';
 import type { ParticipantStage, StageInput } from '../participantStage';
 import {
@@ -132,7 +136,13 @@ describe('participantStage', () => {
 		'ranked: %s, registered %s, cancelled %s is %s',
 		(status, registered, cancelled, stage) => {
 			expect(
-				participantStage({ status, mode: 'ranked', registered, cancelled, hasChosenTable: false }),
+				participantStage({
+					status,
+					mode: 'ranked',
+					registered,
+					lost: cancelled ? 'cancelled' : null,
+					hasChosenTable: false,
+				}),
 			).toBe(stage);
 		},
 	);
@@ -149,7 +159,13 @@ describe('participantStage', () => {
 		'direct without a seat: %s, registered %s, cancelled %s is %s',
 		(status, registered, cancelled, stage) => {
 			expect(
-				participantStage({ status, mode: 'direct', registered, cancelled, hasChosenTable: false }),
+				participantStage({
+					status,
+					mode: 'direct',
+					registered,
+					lost: cancelled ? 'cancelled' : null,
+					hasChosenTable: false,
+				}),
 			).toBe(stage);
 		},
 	);
@@ -162,12 +178,55 @@ describe('participantStage', () => {
 					status,
 					mode: 'direct',
 					registered: true,
-					cancelled: false,
+					lost: null,
 					hasChosenTable: true,
 				}),
 			).toBe('myTable');
 		},
 	);
+});
+
+describe('participantStage after losing a registration', () => {
+	it.each(['registrationOpen', 'registrationClosed', 'published'] as const)(
+		'someone else removing it in %s is removed',
+		(status) => {
+			expect(
+				participantStage({
+					status,
+					mode: 'ranked',
+					registered: false,
+					lost: 'removed',
+					hasChosenTable: false,
+				}),
+			).toBe('removed');
+		},
+	);
+
+	it('a live registration outranks an old loss', () => {
+		expect(
+			participantStage({
+				status: 'registrationOpen',
+				mode: 'ranked',
+				registered: true,
+				lost: 'removed',
+				hasChosenTable: false,
+			}),
+		).toBe('waiting');
+	});
+});
+
+describe('canCancelRegistration', () => {
+	it.each(['draft', 'registrationClosed', 'published', 'ended'] as const)(
+		'is refused in %s',
+		(status) => {
+			expect(canCancelRegistration(status, {})).toBe(false);
+		},
+	);
+
+	it('is allowed while registration is open, except for a registration continued by name', () => {
+		expect(canCancelRegistration('registrationOpen', {})).toBe(true);
+		expect(canCancelRegistration('registrationOpen', { claimedByName: true })).toBe(false);
+	});
 });
 
 describe('local choices draft', () => {
@@ -226,18 +285,60 @@ describe('local choices draft', () => {
 	it('remembers that this browser was registered, and starts over with the name on offer', () => {
 		const storage = memoryStorage();
 
-		expect(loadMemory('s1', 'u1', storage)).toEqual({ wasRegistered: false, lastName: '' });
+		expect(loadMemory('s1', 'u1', storage)).toEqual({
+			wasRegistered: false,
+			lastName: '',
+			cancelledHere: false,
+		});
 		rememberRegistration('s1', 'u1', 'Dana Levi', storage);
-		expect(loadMemory('s1', 'u1', storage)).toEqual({ wasRegistered: true, lastName: 'Dana Levi' });
+		expect(loadMemory('s1', 'u1', storage)).toEqual({
+			wasRegistered: true,
+			lastName: 'Dana Levi',
+			cancelledHere: false,
+		});
 		forgetRegistration('s1', 'u1', storage);
 		expect(loadMemory('s1', 'u1', storage)).toEqual({
 			wasRegistered: false,
 			lastName: 'Dana Levi',
+			cancelledHere: false,
 		});
 	});
 
 	it('reads malformed memory as nothing remembered', () => {
-		expect(parseMemory('{')).toEqual({ wasRegistered: false, lastName: '' });
-		expect(parseMemory('null')).toEqual({ wasRegistered: false, lastName: '' });
+		const nothing = { wasRegistered: false, lastName: '', cancelledHere: false };
+
+		expect(parseMemory('{')).toEqual(nothing);
+		expect(parseMemory('null')).toEqual(nothing);
+	});
+
+	it('tells a registration this browser cancelled from one it lost', () => {
+		const storage = memoryStorage();
+
+		expect(registrationLoss(loadMemory('s1', 'u1', storage))).toBeNull();
+		rememberRegistration('s1', 'u1', 'Dana', storage);
+		expect(registrationLoss(loadMemory('s1', 'u1', storage))).toBe('removed');
+		markCancelledHere('s1', 'u1', storage);
+		expect(registrationLoss(loadMemory('s1', 'u1', storage))).toBe('cancelled');
+		unmarkCancelledHere('s1', 'u1', storage);
+		expect(registrationLoss(loadMemory('s1', 'u1', storage))).toBe('removed');
+	});
+
+	it('clears the cancel note when the record is seen again or the person starts over', () => {
+		const storage = memoryStorage();
+
+		rememberRegistration('s1', 'u1', 'Dana', storage);
+		markCancelledHere('s1', 'u1', storage);
+		rememberRegistration('s1', 'u1', 'Dana', storage);
+		expect(loadMemory('s1', 'u1', storage).cancelledHere).toBe(false);
+
+		markCancelledHere('s1', 'u1', storage);
+		forgetRegistration('s1', 'u1', storage);
+		expect(registrationLoss(loadMemory('s1', 'u1', storage))).toBeNull();
+	});
+
+	it('reads memory written before the cancel note existed as a cancel, as it always was', () => {
+		const loss = registrationLoss(parseMemory('{"wasRegistered":true,"lastName":"Dana"}'));
+
+		expect(loss).toBe('cancelled');
 	});
 });

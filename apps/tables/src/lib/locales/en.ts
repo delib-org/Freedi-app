@@ -227,6 +227,14 @@ const en: Record<string, string> = {
 	'tableAssignment.cancelled.body':
 		'Your details and choices were deleted. Change of plans? You can register again as long as registration is open.',
 	'tableAssignment.cancelled.again': 'Register again',
+	'tableAssignment.cancelled.bodyClosed':
+		'Your details and choices were deleted. Registration has closed. Still want to join? Talk to the host.',
+	'tableAssignment.removed.title': 'Your registration was removed',
+	'tableAssignment.removed.body':
+		'The host removed the registration. If this is a mistake, talk to the host.',
+	'tableAssignment.removed.titleMaybeMoved': 'Your registration is no longer here',
+	'tableAssignment.removed.bodyMaybeMoved':
+		'The registration continued on another device by full name, or the host removed it. If this is a mistake, talk to the host.',
 	'tableAssignment.returnByName.title':
 		'Someone named {{name}} has already registered. Is that you?',
 	'tableAssignment.returnByName.body':

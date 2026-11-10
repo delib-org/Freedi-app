@@ -1,4 +1,5 @@
 import m from 'mithril';
+import type { TableAssignment } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { safeStorage } from '@/lib/safeStorage';
 import { forgetRegistration, loadMemory } from '@/logic/localDraft';
@@ -13,14 +14,14 @@ import { ParticipantWaiting } from '@/views/participant/ParticipantWaiting';
 import { participantHomePath, participantScreenPath } from '@/paths';
 
 function stageOf(context: ParticipantContext): ParticipantStage {
-	const { session, me, cancelled } = context;
+	const { session, me, lost } = context;
 
 	return participantStage({
 		status: session.status,
 		mode: session.mode,
 		registered: me !== null,
 		hasChosenTable: me?.chosenTableIndex !== undefined,
-		cancelled,
+		lost,
 	});
 }
 
@@ -45,12 +46,44 @@ function plainMessage(context: ParticipantContext, messageKey: string): m.Vnode 
 	]);
 }
 
-function cancelled(context: ParticipantContext, onRegisterAgain: () => void): m.Vnode {
+interface GoneCopy {
+	titleKey: string;
+	bodyKey: string;
+}
+
+function cancelledCopy({ status }: TableAssignment): GoneCopy {
+	return {
+		titleKey: 'tableAssignment.cancelled.title',
+		bodyKey:
+			status === 'registrationOpen'
+				? 'tableAssignment.cancelled.body'
+				: 'tableAssignment.cancelled.bodyClosed',
+	};
+}
+
+/**
+ * With return by full name on, the person may have moved to another device, which
+ * this browser cannot tell from the host's removal: the words must be true of both.
+ */
+function removedCopy({ settings }: TableAssignment): GoneCopy {
+	return settings.allowReturnByName
+		? {
+				titleKey: 'tableAssignment.removed.titleMaybeMoved',
+				bodyKey: 'tableAssignment.removed.bodyMaybeMoved',
+			}
+		: { titleKey: 'tableAssignment.removed.title', bodyKey: 'tableAssignment.removed.body' };
+}
+
+function registrationGone(
+	context: ParticipantContext,
+	{ titleKey, bodyKey }: GoneCopy,
+	onRegisterAgain: () => void,
+): m.Vnode {
 	return m('.screen.screen--airy', [
 		m('.screen__center', [
 			m('span.screen__context', { dir: 'auto' }, context.session.title),
-			m('h1.screen__title.screen__title--hero', t('tableAssignment.cancelled.title')),
-			m('p.screen__text', t('tableAssignment.cancelled.body')),
+			m('h1.screen__title.screen__title--hero', t(titleKey)),
+			m('p.screen__text', t(bodyKey)),
 		]),
 		context.session.status === 'registrationOpen'
 			? m(
@@ -71,6 +104,7 @@ const HomeBody: m.ClosureComponent<{ context: ParticipantContext }> = () => {
 			const { context } = attrs;
 			const { session, uid } = context;
 			const id = session.tableAssignmentId;
+			const registerAgain = (): void => forgetRegistration(id, uid, safeStorage);
 
 			// Move on only once the record is here, so step 2 does not find it missing.
 			if (registering && context.me) {
@@ -96,7 +130,9 @@ const HomeBody: m.ClosureComponent<{ context: ParticipantContext }> = () => {
 				case 'waitingClosed':
 					return m(ParticipantWaiting, { context });
 				case 'cancelled':
-					return cancelled(context, () => forgetRegistration(id, uid, safeStorage));
+					return registrationGone(context, cancelledCopy(session), registerAgain);
+				case 'removed':
+					return registrationGone(context, removedCopy(session), registerAgain);
 				case 'myTable':
 					return m(Redirect, { to: participantScreenPath(id, 'my-table') });
 				case 'closedNotRegistered':
