@@ -91,6 +91,50 @@ describe('listenToUserEngagement', () => {
 		releaseSecond();
 	});
 
+	describe('after Firestore ends the listener with an error', () => {
+		function failListener(callIndex: number, error: Error): void {
+			(onSnapshot as jest.Mock).mock.calls[callIndex][2](error);
+		}
+
+		it('opens a new listener for the next subscriber', () => {
+			const releaseDead = listenToUserEngagement();
+			failListener(0, new Error('unavailable'));
+
+			const releaseLive = listenToUserEngagement();
+
+			expect(onSnapshot).toHaveBeenCalledTimes(2);
+
+			releaseDead();
+			releaseLive();
+		});
+
+		it('opens a new listener after a permission-denied end too', () => {
+			const releaseDead = listenToUserEngagement();
+			failListener(0, Object.assign(new Error('denied'), { code: 'permission-denied' }));
+
+			const releaseLive = listenToUserEngagement();
+
+			expect(onSnapshot).toHaveBeenCalledTimes(2);
+
+			releaseDead();
+			releaseLive();
+		});
+
+		it('keeps the new listener when an old holder of the dead one releases', () => {
+			const releaseDead = listenToUserEngagement();
+			failListener(0, new Error('unavailable'));
+			const releaseLive = listenToUserEngagement();
+
+			releaseDead();
+			const releaseJoined = listenToUserEngagement();
+
+			expect(onSnapshot).toHaveBeenCalledTimes(2);
+
+			releaseLive();
+			releaseJoined();
+		});
+	});
+
 	it('does not listen without a signed-in user', () => {
 		signInAs(null);
 		listenToUserEngagement()();

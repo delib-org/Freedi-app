@@ -28,7 +28,7 @@ interface SharedEngagementListener {
 /** One Firestore listener per user, however many screens ask for it. */
 const engagementListeners = new Map<string, SharedEngagementListener>();
 
-function startEngagementListener(userId: string): Unsubscribe {
+function startEngagementListener(userId: string, onEnded: () => void): Unsubscribe {
 	store.dispatch(setEngagementLoading(true));
 
 	return onSnapshot(
@@ -58,6 +58,9 @@ function startEngagementListener(userId: string): Unsubscribe {
 			}
 		},
 		(error: Error & { code?: string }) => {
+			// Firestore ends a listener after an error, so nobody may join it now.
+			onEnded();
+
 			if (error.code === 'permission-denied') {
 				store.dispatch(clearEngagement());
 
@@ -72,6 +75,22 @@ function startEngagementListener(userId: string): Unsubscribe {
 	);
 }
 
+function forgetEngagementListener(userId: string, listener: SharedEngagementListener): void {
+	if (engagementListeners.get(userId) === listener) {
+		engagementListeners.delete(userId);
+	}
+}
+
+function createSharedEngagementListener(userId: string): SharedEngagementListener {
+	const listener: SharedEngagementListener = { unsubscribe: () => undefined, holders: 0 };
+	engagementListeners.set(userId, listener);
+	listener.unsubscribe = startEngagementListener(userId, () =>
+		forgetEngagementListener(userId, listener),
+	);
+
+	return listener;
+}
+
 /**
  * Listen to the current user's engagement document. Joins the listener already
  * running for this user, if any. Returns a release function; the Firestore
@@ -84,12 +103,9 @@ export function listenToUserEngagement(): Unsubscribe {
 		if (!user) throw new Error('User not found');
 
 		const userId = user.uid;
-		const listener: SharedEngagementListener = engagementListeners.get(userId) ?? {
-			unsubscribe: startEngagementListener(userId),
-			holders: 0,
-		};
+		const listener =
+			engagementListeners.get(userId) ?? createSharedEngagementListener(userId);
 		listener.holders += 1;
-		engagementListeners.set(userId, listener);
 
 		let isReleased = false;
 
@@ -98,7 +114,7 @@ export function listenToUserEngagement(): Unsubscribe {
 			isReleased = true;
 			listener.holders -= 1;
 			if (listener.holders > 0) return;
-			engagementListeners.delete(userId);
+			forgetEngagementListener(userId, listener);
 			listener.unsubscribe();
 		};
 	} catch (error) {
