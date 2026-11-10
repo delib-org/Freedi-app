@@ -69,27 +69,6 @@ const BADGE_DEFINITIONS: BadgeDefinition[] = [
 		check: (e) => (e.totalOptions ?? 0) >= 5,
 	},
 	{
-		badgeId: 'streak_3',
-		name: '3-Day Streak',
-		description: 'Active for 3 days in a row',
-		icon: 'flame',
-		check: (e) => e.streak.currentStreak >= 3,
-	},
-	{
-		badgeId: 'streak_7',
-		name: 'Week Warrior',
-		description: 'Active for 7 days in a row',
-		icon: 'fire',
-		check: (e) => e.streak.currentStreak >= 7,
-	},
-	{
-		badgeId: 'streak_30',
-		name: 'Monthly Dedication',
-		description: 'Active for 30 days in a row',
-		icon: 'medal',
-		check: (e) => e.streak.currentStreak >= 30,
-	},
-	{
 		badgeId: 'first_vote',
 		name: 'Voter',
 		description: 'Cast your first vote',

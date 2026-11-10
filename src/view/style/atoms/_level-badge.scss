@@ -18,7 +18,6 @@
 	--engagement-level-2: var(--agree);          // Contributor (teal)
 	--engagement-level-3: var(--option);         // Advocate (gold)
 	--engagement-level-4: var(--group);          // Leader (purple)
-	--streak-flame: #ff6b35;
 	--credit-earn: var(--agree);
 	--progress-track: var(--border-light);
 	--progress-fill: var(--btn-primary);
@@ -214,45 +213,5 @@
 	}
 	100% {
 		opacity: 0;
-	}
-}
-
-// ============================================================================
-// STREAK INDICATOR
-// ============================================================================
-
-.streak-indicator {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.25rem;
-	font-size: 0.75rem;
-	font-weight: 600;
-	color: var(--streak-flame);
-
-	&__flame {
-		font-size: 1rem;
-		line-height: 1;
-	}
-
-	&__count {
-		line-height: 1;
-	}
-
-	&--at-risk {
-		animation: streakPulse 1.5s ease-in-out infinite;
-
-		@media (prefers-reduced-motion: reduce) {
-			animation: none;
-		}
-	}
-}
-
-@keyframes streakPulse {
-	0%,
-	100% {
-		opacity: 1;
-	}
-	50% {
-		opacity: 0.5;
 	}
 }

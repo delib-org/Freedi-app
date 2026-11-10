@@ -3,7 +3,6 @@ import { useEngagement } from '@/controllers/hooks/useEngagement';
 import Back from '@/view/pages/statement/components/header/Back';
 import LevelBadge from '@/view/components/atomic/atoms/LevelBadge/LevelBadge';
 import LevelProgress from '@/view/components/atomic/atoms/LevelProgress/LevelProgress';
-import StreakIndicator from '@/view/components/atomic/atoms/StreakIndicator/StreakIndicator';
 import PeopleLoader from '@/view/components/loaders/PeopleLoader';
 import { CreditAction } from '@freedi/shared-types';
 
@@ -46,7 +45,6 @@ const EngagementDashboard = () => {
 		nextLevelThreshold,
 		totalCredits,
 		badges,
-		currentStreak,
 	} = useEngagement();
 
 	if (loading) {
@@ -97,7 +95,7 @@ const EngagementDashboard = () => {
 			</div>
 
 			<div className="engagement-dashboard" role="region" aria-label={t('engagement.myImpact')}>
-				{/* Level + Streak header */}
+				{/* Level header */}
 				<section className="engagement-dashboard__header" aria-label={t('engagement.currentLevel')}>
 					<div className="engagement-dashboard__level-section">
 						<LevelBadge level={level} size="large" />
@@ -106,10 +104,6 @@ const EngagementDashboard = () => {
 							<dd className="engagement-dashboard__level-name">{levelName}</dd>
 						</dl>
 					</div>
-					<StreakIndicator
-						count={currentStreak}
-						lastActiveDate={engagement?.streak?.lastActiveDate}
-					/>
 				</section>
 
 				{/* Progress to next level */}

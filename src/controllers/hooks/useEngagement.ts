@@ -7,7 +7,6 @@ import {
 	userLevelSelector,
 	totalCreditsSelector,
 	userBadgesSelector,
-	currentStreakSelector,
 	isTrialModeSelector,
 } from '@/redux/engagement/engagementSlice';
 import {
@@ -30,7 +29,6 @@ export function useEngagement() {
 	const level = useAppSelector(userLevelSelector);
 	const totalCredits = useAppSelector(totalCreditsSelector);
 	const badges = useAppSelector(userBadgesSelector);
-	const currentStreak = useAppSelector(currentStreakSelector);
 	const isTrialMode = useAppSelector(isTrialModeSelector);
 
 	useEffect(() => {
@@ -57,7 +55,6 @@ export function useEngagement() {
 		nextLevelThreshold,
 		totalCredits,
 		badges,
-		currentStreak,
 		isTrialMode,
 	};
 }
