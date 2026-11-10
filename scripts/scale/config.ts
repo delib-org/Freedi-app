@@ -33,7 +33,10 @@ export interface ScaleConfig {
 		ratings: number;
 		simultaneousRatings: number;
 		newAnswers: number;
+		votes: number;
 	};
+	/** Empty runs every phase; otherwise only the named phases. */
+	onlyPhases: string[];
 }
 
 /** `CHAT.INITIAL_MESSAGES_LIMIT` in src/constants/common.ts. */
@@ -48,7 +51,7 @@ export const SETTLE_TIMEOUT_MS = 180_000;
 export const SEED_BATCH = 400;
 export const MAX_FUNCTIONS_RSS_MB = 12_000;
 
-export const FULL_CONFIG: Omit<ScaleConfig, 'label'> = {
+export const FULL_CONFIG: Omit<ScaleConfig, 'label' | 'onlyPhases'> = {
 	members: 1000,
 	answers: 300,
 	ratingsPerMember: 10,
@@ -60,10 +63,11 @@ export const FULL_CONFIG: Omit<ScaleConfig, 'label'> = {
 		ratings: 200,
 		simultaneousRatings: 15,
 		newAnswers: 3,
+		votes: 100,
 	},
 };
 
-export const SMALL_CONFIG: Omit<ScaleConfig, 'label'> = {
+export const SMALL_CONFIG: Omit<ScaleConfig, 'label' | 'onlyPhases'> = {
 	members: 200,
 	answers: 60,
 	ratingsPerMember: 10,
@@ -75,6 +79,7 @@ export const SMALL_CONFIG: Omit<ScaleConfig, 'label'> = {
 		ratings: 100,
 		simultaneousRatings: 15,
 		newAnswers: 3,
+		votes: 50,
 	},
 };
 
@@ -121,5 +126,7 @@ export function configFromArgs(argv: string[]): ScaleConfig {
 	if (size !== 'full' && size !== 'small') throw new Error(`Unknown --size=${size}`);
 	const base = size === 'small' ? SMALL_CONFIG : FULL_CONFIG;
 
-	return { ...base, label: args.get('label') ?? size };
+	const onlyPhases = (args.get('only') ?? '').split(',').filter(Boolean);
+
+	return { ...base, label: args.get('label') ?? size, onlyPhases };
 }

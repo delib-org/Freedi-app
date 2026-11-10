@@ -3,7 +3,7 @@
  * is paced so the emulator's backlog does not swamp the numbers: a small batch
  * of writes, then wait until the functions emulator is quiet.
  */
-import { Collections } from '@freedi/shared-types';
+import { Collections, getVoteId } from '@freedi/shared-types';
 import type { Creator, Statement } from '@freedi/shared-types';
 import type { DocumentData } from 'firebase-admin/firestore';
 import { WINDOW_SIZE, PACED_BATCH } from './config';
@@ -32,11 +32,16 @@ const WARMUP_FUNCTIONS = [
 	'onStatementCreated',
 	'updateStatementWithViews',
 	'onSubscriptionCreatedMembership',
+	'addVote',
 ];
 const WARMUP_PARALLEL = PACED_BATCH;
 const NEW_ANSWER_INDEX_START = 100_000;
 /** Newly arrived participants who rate once in the first-time rating phase. */
 const FIRST_TIME_RATERS = 30;
+/** Vote pattern: this many of every ten votes go to the leader, the rest spread out. */
+const LEADER_VOTES_PER_TEN = 7;
+const VOTE_PATTERN_LENGTH = 10;
+const BALLOT_SIZE = 5;
 
 export interface PhaseRecord extends PhaseWindow {
 	countsBefore: CollectionCounts;
@@ -100,6 +105,14 @@ function nextUnrated(
 	return answer;
 }
 
+/** Most votes go to one answer, so the leader rarely changes, as in a real ballot. */
+function voteTarget(index: number, ballot: Statement[]): Statement {
+	const slot = index % VOTE_PATTERN_LENGTH;
+	if (slot < LEADER_VOTES_PER_TEN) return ballot[0];
+
+	return ballot[1 + (slot % (ballot.length - 1))];
+}
+
 export async function runBurst(input: BurstInput): Promise<PhaseRecord[]> {
 	const { seeded, config, answers, ratedBy, clients, trace } = input;
 	const { db, question } = seeded;
@@ -130,7 +143,22 @@ export async function runBurst(input: BurstInput): Promise<PhaseRecord[]> {
 			ratingDoc(user, answer, RATING_VALUES[index % RATING_VALUES.length]),
 		);
 
+	const vote = (user: Creator, option: Statement): Promise<unknown> => {
+		const now = Date.now();
+		const voteId = getVoteId(user.uid, QUESTION_ID);
+
+		return setDoc(Collections.votes, voteId, {
+			voteId,
+			statementId: option.statementId,
+			parentId: QUESTION_ID,
+			userId: user.uid,
+			createdAt: now,
+			lastUpdate: now,
+		});
+	};
+
 	async function runPhase(name: string, units: number, work: () => Promise<void>): Promise<void> {
+		if (config.onlyPhases.length > 0 && !config.onlyPhases.includes(name)) return;
 		const countsBefore = await countAll(seeded);
 		clients.forEach((client) => client.setPhase(name));
 		const from = Date.now();
@@ -153,6 +181,7 @@ export async function runBurst(input: BurstInput): Promise<PhaseRecord[]> {
 			view(user),
 			rate(user, warmAnswerTarget, 0),
 			setDoc(Collections.online, `${user.uid}--${QUESTION_ID}`, presenceDoc(user, QUESTION_ID)),
+			vote(user, warmAnswerTarget),
 		]),
 	);
 	const warmAnswer = makeAnswer(NEW_ANSWER_INDEX_START, warmUsers[0], question, Date.now());
@@ -203,6 +232,12 @@ export async function runBurst(input: BurstInput): Promise<PhaseRecord[]> {
 
 				return setDoc(Collections.statements, answer.statementId, answer);
 			},
+		),
+	);
+	const ballot = newestWindow.slice(0, BALLOT_SIZE);
+	await runPhase('vote', config.burst.votes, () =>
+		paced(seeded.members.slice(0, config.burst.votes), PACED_BATCH, trace, (user, i) =>
+			vote(user, voteTarget(i, ballot)),
 		),
 	);
 
