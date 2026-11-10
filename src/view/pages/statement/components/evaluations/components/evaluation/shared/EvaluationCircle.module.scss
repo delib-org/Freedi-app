@@ -154,6 +154,37 @@
 	pointer-events: none;
 }
 
+// Five 44px targets at the normal gap are wider than a small phone's card, and
+// the card clips what sticks out. Below this width a five-circle row keeps the
+// targets at 44px and gives up the gap instead, down to the 2px that fits a
+// 320px screen. The chosen circle stops growing and its ring stays inside the
+// row's padding, so the end circles keep the whole ring.
+$five-circle-row-squeeze-width: 360px;
+$five-circle-row-count: 5;
+$five-circle-row-gaps: $five-circle-row-count - 1;
+
+@media (max-width: $five-circle-row-squeeze-width) {
+	.row:has(> :nth-child(#{$five-circle-row-count})) {
+		gap: var(
+			--circle-row-gap,
+			clamp(
+				var(--space-3xs),
+				calc((100% - #{$five-circle-row-count} * var(--circle-min, 2.75rem)) / #{$five-circle-row-gaps}),
+				var(--space-sm)
+			)
+		);
+		padding-inline: var(--space-2xs);
+
+		.circle--active,
+		.circle--active:hover:not(:disabled) {
+			transform: none;
+			box-shadow:
+				0 0 0 var(--space-3xs) var(--card-default),
+				0 0 0 var(--space-2xs) var(--rating-ring);
+		}
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.circle {
 		transition: none;

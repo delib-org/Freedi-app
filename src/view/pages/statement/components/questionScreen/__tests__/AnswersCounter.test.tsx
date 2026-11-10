@@ -27,6 +27,11 @@ describe('AnswersCounter', () => {
 		expect(screen.queryByText('2/5')).not.toBeInTheDocument();
 	});
 
+	it('shows no fraction when the question runs the voting UI', () => {
+		render(<AnswersCounter data={data({ ratedCount: 0, usesVotingUI: true })} />);
+		expect(screen.queryByText('0/5')).not.toBeInTheDocument();
+	});
+
 	it('shows no fraction when there is nothing to rate', () => {
 		render(<AnswersCounter data={data({ ratedCount: 0, rateableCount: 0 })} />);
 		expect(screen.queryByText('0/0')).not.toBeInTheDocument();
