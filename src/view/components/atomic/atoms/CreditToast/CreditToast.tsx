@@ -1,4 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
+
+/** Matches the creditFloat animation in _level-badge.scss */
+const TOAST_DURATION_MS = 1500;
 
 /**
  * CreditToast Atom - Atomic Design System
@@ -16,13 +20,14 @@ export interface CreditToastProps {
 }
 
 const CreditToast: React.FC<CreditToastProps> = ({ amount, onComplete }) => {
+	const { t } = useTranslation();
 	const [visible, setVisible] = useState(true);
 
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			setVisible(false);
 			onComplete?.();
-		}, 1500);
+		}, TOAST_DURATION_MS);
 
 		return () => clearTimeout(timer);
 	}, [onComplete]);
@@ -30,13 +35,8 @@ const CreditToast: React.FC<CreditToastProps> = ({ amount, onComplete }) => {
 	if (!visible || amount <= 0) return null;
 
 	return (
-		<span
-			className="credit-toast"
-			role="status"
-			aria-live="polite"
-			aria-label={`You earned ${amount} credits`}
-		>
-			+{amount}
+		<span className="credit-toast" role="status" aria-live="polite">
+			{t('engagement.creditsEarned').replace('{{amount}}', String(amount))}
 		</span>
 	);
 };
