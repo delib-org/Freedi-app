@@ -2,7 +2,7 @@ import React from 'react';
 import clsx from 'clsx';
 import { EngagementLevel } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { formatLevelLabel } from '@/helpers/engagementLabels';
+import { formatLevelLabel, getDisplayLevel } from '@/helpers/engagementLabels';
 
 /**
  * LevelBadge Atom - Atomic Design System
@@ -53,7 +53,7 @@ const LevelBadge: React.FC<LevelBadgeProps> = ({
 
 	return (
 		<span className={badgeClasses} title={label} aria-label={label}>
-			<span className="level-badge__icon">{level}</span>
+			<span className="level-badge__icon">{getDisplayLevel(level)}</span>
 			<span className="level-badge__name">{label}</span>
 		</span>
 	);

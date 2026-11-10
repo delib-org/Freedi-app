@@ -72,10 +72,11 @@ describe('EngagementDashboard', () => {
 		mockBadges = [];
 	});
 
-	it('shows the level as a number, never as a name', () => {
-		render(<EngagementDashboard />);
+	it('shows the level counted from 1, never as a name', () => {
+		const { container } = render(<EngagementDashboard />);
 
-		expect(screen.getAllByText('רמה 3').length).toBeGreaterThan(0);
+		expect(screen.getAllByText('רמה 4').length).toBeGreaterThan(0);
+		expect(container.querySelector('.level-badge__icon')?.textContent).toBe('4');
 		expect(screen.queryByText('Advocate')).toBeNull();
 	});
 

@@ -10,6 +10,7 @@ import { userEngagementSelector, userLevelSelector } from '@/redux/engagement/en
 import { setUserAdvanceUserToDB } from '@/controllers/db/user/setUser';
 import { logOut } from '@/controllers/db/authenticationUtils';
 import { logError } from '@/utils/errorHandling';
+import { getDisplayLevel } from '@/helpers/engagementLabels';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import AccessibilitySheet from './AccessibilitySheet';
 import styles from './Me.module.scss';
@@ -65,7 +66,7 @@ const My = () => {
 	}
 
 	const impact = [
-		{ value: level, label: t('Level') },
+		{ value: getDisplayLevel(level), label: t('Level') },
 		{ value: engagement?.totalOptions ?? 0, label: t('Answers added') },
 		{ value: engagement?.totalEvaluations ?? 0, label: t('Ratings') },
 	];
