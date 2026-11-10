@@ -4,6 +4,8 @@ import type { TableAssignment, TableAssignmentTopic } from '@freedi/shared-types
 import { logError } from '@freedi/shared-utils';
 import { t } from '@/lib/i18n';
 import { Action } from '@/lib/action';
+import { LiveValue } from '@/lib/live';
+import { subscribeSession } from '@/lib/tableAssignment/data';
 import { goTo, rewriteAddress } from '@/lib/navigate';
 import { safeStorage } from '@/lib/safeStorage';
 import { tablesApi } from '@/lib/tableAssignment/client';
@@ -59,7 +61,7 @@ function initialDraft(attrs: SetupBodyAttrs): SetupDraft {
 export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) => {
 	const { uid } = first;
 	let sessionId = first.sessionId;
-	// The server's lastUpdate the saved copy sits on top of; it follows the live session.
+	// The lastUpdate this page last received from the server's session: what the saved copy sits on.
 	let serverUpdate: number | null = first.session?.lastUpdate ?? null;
 	const draft = initialDraft(first);
 	const hadBackup = readSetupBackup(safeStorage, { uid, sessionId }, serverUpdate) !== null;
@@ -69,13 +71,20 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 	const open = new Action('tables.host.openRegistration', 'tableAssignment.error.statusRefused');
 	let openErrorKey: string | null = null;
 
-	function backupScope(): BackupScope {
-		return { uid, sessionId };
+	/**
+	 * A page that created the session itself gets no session from its parent: read it here,
+	 * so the recorded lastUpdate keeps following our own saves.
+	 */
+	let ownSession: LiveValue<TableAssignment | null> | null = null;
+
+	function followSession(id: string): void {
+		if (removed || first.session || ownSession) return;
+		ownSession = new LiveValue('setupSession', subscribeSession(id));
+		ownSession.start();
 	}
 
-	/** A save of ours moved the server's lastUpdate on; the answer does not carry it, so use the clock. */
-	function noteOwnSave(): void {
-		serverUpdate = Math.max(serverUpdate ?? 0, Date.now());
+	function backupScope(): BackupScope {
+		return { uid, sessionId };
 	}
 
 	function saveBackup(): void {
@@ -91,6 +100,7 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 				clearSetupBackup(safeStorage, backupScope());
 				sessionId = id;
 				serverUpdate = result.session.lastUpdate;
+				followSession(id);
 				if (!removed) rewriteAddress(hostHomePath(id));
 				saveBackup();
 				// Whatever was typed before the name existed goes up now.
@@ -123,7 +133,6 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 
 		if (id === null) return 'blocked';
 		if (existed) await tablesApi.saveSettings({ sessionId: id, title });
-		noteOwnSave();
 
 		return 'saved';
 	}
@@ -134,7 +143,6 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 
 		if (request === null) return 'blocked';
 		await tablesApi.saveSettings(request);
-		noteOwnSave();
 
 		return 'saved';
 	}
@@ -159,7 +167,6 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 		const result = await tablesApi.saveTopics({ sessionId: id, topics: topicInputs(draft) });
 
 		adoptTopicIds(sent, result.topicIds);
-		noteOwnSave();
 
 		return 'saved';
 	}
@@ -297,15 +304,17 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 			document.addEventListener('visibilitychange', flushWhenHidden);
 		},
 		onupdate({ attrs }) {
-			const latest = attrs.session?.lastUpdate;
+			const latest = attrs.session?.lastUpdate ?? ownSession?.data?.lastUpdate;
 
 			if (latest === undefined || latest === serverUpdate) return;
 			serverUpdate = latest;
-			// Unsaved edits sit on top of the newest server copy, or a reload would drop them.
+			// Never drop a copy here: with a save in flight or edits not yet saved, the copy is
+			// rewritten on top of the server data just received, or a reload would discard it.
 			if (saver.hasUnsaved && sessionId) saveBackup();
 		},
 		onremove() {
 			removed = true;
+			ownSession?.stop();
 			window.removeEventListener('beforeunload', warnIfUnsaved);
 			document.removeEventListener('visibilitychange', flushWhenHidden);
 			void saver.flush();

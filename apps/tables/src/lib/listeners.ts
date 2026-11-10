@@ -50,6 +50,13 @@ interface Entry {
 	confirmed: boolean;
 }
 
+/** A query snapshot where no document changed: only its metadata did (fromCache, pending writes). */
+function isMetadataOnly(
+	snap: DocumentSnapshot<DocumentData> | QuerySnapshot<DocumentData>,
+): boolean {
+	return 'docs' in snap && snap.docChanges().length === 0;
+}
+
 /**
  * A first snapshot that comes from the local cache and says "missing" or "empty" only
  * means "nothing cached yet", e.g. a phone that is offline. It is not an answer.
@@ -102,11 +109,16 @@ function start(entry: Entry): void {
 	// onSnapshot accepts a document or a query at runtime; the overload split is a typing artifact.
 	entry.inner = onSnapshot(
 		entry.target as Query<DocumentData>,
+		// Metadata changes are delivered so a cache-empty first snapshot that the server then
+		// confirms as the same empty state (a metadata-only change) is not lost.
+		{ includeMetadataChanges: true },
 		(snap) => {
 			entry.retryCount = 0;
 			if (!entry.confirmed) {
 				if (isUnconfirmedAbsence(snap)) return;
 				entry.confirmed = true;
+			} else if (isMetadataOnly(snap)) {
+				return;
 			}
 			entry.onNext(snap);
 		},

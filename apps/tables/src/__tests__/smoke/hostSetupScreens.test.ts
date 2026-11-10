@@ -3,7 +3,8 @@ import m from 'mithril';
 import { describe, expect, it, vi } from 'vitest';
 import en from '@/lib/locales/en';
 import { HostHome } from '@/views/host/HostHome';
-import { HostNew } from '@/views/host/HostSetup';
+import { HostNew, SetupBody } from '@/views/host/HostSetup';
+import { readSetupBackup } from '@/logic/setupBackup';
 import { SESSION_ID, makeSession, makeTopic } from '../fixtures';
 import { renderScreen } from './testHarness';
 import {
@@ -101,6 +102,49 @@ describe('Setup', () => {
 			expect(replaceState).not.toHaveBeenCalled();
 		} finally {
 			replaceState.mockRestore();
+			vi.useRealTimers();
+		}
+	});
+
+	it('keeps unsaved edits in the backup when the server snapshot arrives during our own save', async () => {
+		const session = makeSession({ lastUpdate: 1_000 });
+		const scope = { uid: 'host-1', sessionId: SESSION_ID };
+		let finishSave: (value: { topicIds: string[] }) => void = () => undefined;
+
+		mocks.api.saveTopics.mockReturnValue(
+			new Promise((resolve) => {
+				finishSave = resolve;
+			}),
+		);
+		vi.useFakeTimers({ shouldAdvanceTime: true });
+
+		try {
+			const root = document.createElement('div');
+			const draw = (lastUpdate: number): void =>
+				m.render(
+					root,
+					m(SetupBody, {
+						uid: 'host-1',
+						sessionId: SESSION_ID,
+						session: { ...session, lastUpdate },
+						topics: [makeTopic('a', 0)],
+					}),
+				);
+
+			document.body.appendChild(root);
+			draw(1_000);
+			typeInto(root.querySelector('.setup__topic-input') as HTMLInputElement, 'Renamed');
+			await vi.advanceTimersByTimeAsync(1000);
+			expect(mocks.api.saveTopics).toHaveBeenCalled();
+
+			// Our save is still in flight and the server's session snapshot arrives.
+			draw(2_000);
+			expect(readSetupBackup(window.localStorage, scope, 2_000)?.topics[0].title).toBe('Renamed');
+
+			finishSave({ topicIds: ['a'] });
+			await vi.advanceTimersByTimeAsync(10);
+			m.render(root, null);
+		} finally {
 			vi.useRealTimers();
 		}
 	});

@@ -2,10 +2,12 @@ import {
 	GoogleAuthProvider,
 	linkWithPopup,
 	signInAnonymously,
+	signInWithCredential,
 	signInWithPopup,
 	onAuthStateChanged,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
+import type { FirebaseError } from 'firebase/app';
 import { logError } from '@freedi/shared-utils';
 import { auth } from '@/lib/firebase';
 
@@ -62,6 +64,14 @@ export async function signInHostWithGoogle(): Promise<User> {
 				return (await linkWithPopup(current, provider)).user;
 			} catch (error) {
 				if (!isCredentialInUse(error)) throw error;
+
+				// The Google account exists as another user. The popup already gave us its
+				// credential: use it. A second popup would have no user gesture behind it.
+				const credential = GoogleAuthProvider.credentialFromError(error as FirebaseError);
+
+				if (!credential) throw error;
+
+				return (await signInWithCredential(auth, credential)).user;
 			}
 		}
 

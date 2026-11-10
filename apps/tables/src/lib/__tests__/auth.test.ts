@@ -1,8 +1,12 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const credentialFromError = vi.hoisted(() => vi.fn());
 const firebaseAuth = vi.hoisted(() => ({
-	GoogleAuthProvider: class GoogleAuthProvider {},
+	GoogleAuthProvider: class GoogleAuthProvider {
+		static credentialFromError = credentialFromError;
+	},
+	signInWithCredential: vi.fn(),
 	linkWithPopup: vi.fn(),
 	signInWithPopup: vi.fn(),
 	signInAnonymously: vi.fn(),
@@ -22,6 +26,8 @@ const GOOGLE_USER = { uid: 'g1', isAnonymous: false };
 describe('signInHostWithGoogle', () => {
 	beforeEach(() => {
 		firebaseAuth.linkWithPopup.mockReset();
+		firebaseAuth.signInWithCredential.mockReset().mockResolvedValue({ user: GOOGLE_USER });
+		credentialFromError.mockReset();
 		firebaseAuth.signInWithPopup.mockReset().mockResolvedValue({ user: GOOGLE_USER });
 		utils.logError.mockReset();
 		fakeAuth.currentUser = null;
@@ -45,13 +51,31 @@ describe('signInHostWithGoogle', () => {
 		expect(user.uid).toBe('anon-1');
 	});
 
-	it('falls back to a plain sign-in when the Google account is already another user', async () => {
+	it('signs in with the credential from the error, without opening a second popup', async () => {
+		const failure = { code: 'auth/credential-already-in-use' };
+		const credential = { providerId: 'google.com' };
+
 		fakeAuth.currentUser = { isAnonymous: true };
-		firebaseAuth.linkWithPopup.mockRejectedValue({ code: 'auth/credential-already-in-use' });
+		firebaseAuth.linkWithPopup.mockRejectedValue(failure);
+		credentialFromError.mockReturnValue(credential);
 
 		await expect(signInHostWithGoogle()).resolves.toBe(GOOGLE_USER);
-		expect(firebaseAuth.signInWithPopup).toHaveBeenCalledTimes(1);
+		expect(credentialFromError).toHaveBeenCalledWith(failure);
+		expect(firebaseAuth.signInWithCredential).toHaveBeenCalledWith(fakeAuth, credential);
+		expect(firebaseAuth.signInWithPopup).not.toHaveBeenCalled();
 		expect(utils.logError).not.toHaveBeenCalled();
+	});
+
+	it('rethrows when the error carries no credential', async () => {
+		const failure = { code: 'auth/credential-already-in-use' };
+
+		fakeAuth.currentUser = { isAnonymous: true };
+		firebaseAuth.linkWithPopup.mockRejectedValue(failure);
+		credentialFromError.mockReturnValue(null);
+
+		await expect(signInHostWithGoogle()).rejects.toBe(failure);
+		expect(firebaseAuth.signInWithCredential).not.toHaveBeenCalled();
+		expect(firebaseAuth.signInWithPopup).not.toHaveBeenCalled();
 	});
 
 	it('logs and rethrows any other link failure', async () => {
