@@ -108,8 +108,24 @@ function validate(
 			tableSize: options.tableSize,
 		});
 	}
-	if (options.restarts < 1)
-		throw new TableAssignmentError('restarts must be at least 1', { restarts: options.restarts });
+	if (!Number.isInteger(options.restarts) || options.restarts < 1)
+		throw new TableAssignmentError('restarts must be a whole number of at least 1', {
+			restarts: options.restarts,
+		});
+	if (!Number.isInteger(options.maxRanked) || options.maxRanked < 0)
+		throw new TableAssignmentError('maxRankedPreferences must be a whole number, 0 or more', {
+			maxRankedPreferences: options.maxRanked,
+		});
+	if (Number.isNaN(options.tolerance) || options.tolerance < 0)
+		throw new TableAssignmentError('balanceTolerance must be a number, 0 or more', {
+			balanceTolerance: options.tolerance,
+		});
+	if (Number.isNaN(options.maxSwapTries) || options.maxSwapTries < 0)
+		throw new TableAssignmentError('maxSwapTries must be a number, 0 or more', {
+			maxSwapTries: options.maxSwapTries,
+		});
+	assertParticipantsWellFormed(participants);
+	assertTopicsWellFormed(topics);
 	assertUniqueIds(
 		participants.map((p) => p.id),
 		'participant',
@@ -125,6 +141,34 @@ function validate(
 		});
 	if (participants.length > 0 && topics.length === 0)
 		throw new TableAssignmentError('No topics to seat people at', {});
+}
+
+function assertParticipantsWellFormed(participants: readonly Participant[]): void {
+	for (const participant of participants) {
+		if (!Array.isArray(participant.preferences)) {
+			throw new TableAssignmentError('Every participant needs a preferences array', {
+				id: participant.id,
+			});
+		}
+		if (participant.side === undefined) continue;
+		if (!Array.isArray(participant.side) || !participant.side.every(Number.isFinite)) {
+			throw new TableAssignmentError('A declared side must be an array of finite numbers', {
+				id: participant.id,
+			});
+		}
+	}
+}
+
+function assertTopicsWellFormed(topics: readonly Topic[]): void {
+	for (const topic of topics) {
+		const { maxTables } = topic;
+		if (maxTables !== undefined && (!Number.isInteger(maxTables) || maxTables < 0)) {
+			throw new TableAssignmentError('maxTables must be a whole number, 0 or more', {
+				topicId: topic.id,
+				maxTables,
+			});
+		}
+	}
 }
 
 function assertUniqueIds(ids: readonly string[], kind: string): void {
