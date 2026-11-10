@@ -370,7 +370,7 @@ It regenerates this file and `main-1000-baseline.data.json`. Compare with `git d
 
 ## After Phase 3
 
-Measured on 2026-11-10 from branch `integrate/scale-phase3` (commit `489830efb`, three full-size runs in total, two kept), with the same seed: 1,000 subscribers, 300 answers, 10 ratings each, 10 real client listeners. The two full runs differed by 0%. Full tables are in `main-1000-after-phase3.md` and `main-1000-after-phase3.data.json`; the numbers above this section are the "before" and were not regenerated. The "after" client model mirrors the code now on the branch: `scripts/scale/clients.ts` for what each participant reads, the server's own sampler for what each person rates.
+Measured on 2026-11-10 from branch `integrate/scale-phase3` (commit `489830efb`: two full-size runs and one small one), with the same seed: 1,000 subscribers, 300 answers, 10 ratings each, 10 real client listeners. The two full runs differed by 0%. Full tables are in `main-1000-after-phase3.md` and `main-1000-after-phase3.data.json`; the numbers above this section are the "before" and were not regenerated. The "after" client model mirrors the code now on the branch: `scripts/scale/clients.ts` for what each participant reads, the server's own sampler for what each person rates.
 
 ### Per participant, on opening the question
 
@@ -381,7 +381,7 @@ Measured on 2026-11-10 from branch `integrate/scale-phase3` (commit `489830efb`,
 | Presence docs read on open | 1,010 | 0 | no listener on a large question |
 | Answers read on open (head start + newest 30) | 40 | 40 | unchanged |
 | Progress doc read on open | 0 | 1 | new; replaces the ratings download |
-| Ranked list, first page | every answer (300) | 30 | one page, no listener |
+| Ranked list, first page | not measured (was every answer) | 30 | one page, no listener |
 
 The 43 is a full-size figure where every one of the 300 answers has already reached the sampler's stability target (30 ratings). The Rate batch then returns no cards, so a participant who opens earlier in the session reads up to 6 more docs through the batch listener (the small run, with some answers still open, measured 46: 43 + 3 cards).
 
@@ -404,7 +404,7 @@ The 43 is a full-size figure where every one of the 300 answers has already reac
 | New answer: question doc writes | 3 | 3 |
 | New answer: in-app notification writes | 1,116 | 1,116 |
 | New answer: function starts | 125 | 113 |
-| `getAnswerBatch` call: function reads | new | 158 (per-instance cache, 10 calls across 5 workers) |
+| `getAnswerBatch` call: function reads | new | 158 (per-instance cache; about 5 cold workers) |
 
 | derived for 1,000 people | before | after |
 |---|---:|---:|
