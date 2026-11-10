@@ -482,7 +482,7 @@ export function statementToParagraph(statement: Statement): Paragraph {
  */
 export function paragraphToFactoryParams(
 	paragraph: Paragraph,
-	host: Pick<Statement, 'statementId' | 'topParentId'>,
+	host: Pick<Statement, 'statementId' | 'topParentId'> & Partial<Pick<Statement, 'accessScope'>>,
 	creator: User,
 	opts?: { isOfficial?: boolean; sourceApp?: SourceApp },
 ): CreateParagraphChildParams {

@@ -175,10 +175,8 @@ export async function POST(
     // Generate unique ID
     const statementId = `${userId}--${Date.now()}--${Math.random().toString(36).substring(2, 9)}`;
 
-    const paragraphSnap = await db.collection(Collections.statements).doc(paragraphId).get();
-
     const comment = {
-      ...inheritedAccessScope(paragraphSnap.data()),
+      ...inheritedAccessScope(paragraphData),
       statementId,
       statement: statement.trim(),
       statementType: StatementType.statement,

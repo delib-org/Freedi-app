@@ -27,10 +27,12 @@ interface CachedTreeScopes {
 	at: number;
 }
 
-const ACTIVE_ROLES: readonly string[] = [Role.member, Role.admin, Role.creator];
-const HOST_ROLES: readonly string[] = [Role.admin, Role.creator];
-const RESTRICTED_ACCESS: readonly string[] = [Access.moderated, Access.secret];
 const MAX_TREE_SUBSCRIPTIONS = 200;
+
+const isActiveRole = (role: Role | undefined): boolean =>
+	role === Role.member || role === Role.admin || role === Role.creator;
+const isHostRole = (role: Role | undefined): boolean =>
+	role === Role.admin || role === Role.creator;
 
 const treeScopesCache = new Map<string, CachedTreeScopes>();
 
@@ -56,7 +58,7 @@ async function restrictedLevelsForHost(topParentId: string): Promise<string[]> {
 		query(
 			createCollectionRef(Collections.statements),
 			where('topParentId', '==', topParentId),
-			where('membership.access', 'in', RESTRICTED_ACCESS),
+			where('membership.access', 'in', [Access.moderated, Access.secret]),
 		),
 	);
 
@@ -98,10 +100,9 @@ async function loadTreeScopes(topParentId: string, uid: string): Promise<CachedT
 	});
 	const topRole = roles.get(topParentId);
 	const isHostOfTop =
-		(topRole !== undefined && HOST_ROLES.includes(topRole)) ||
-		store.getState().creator?.creator?.systemAdmin === true;
+		isHostRole(topRole) || store.getState().creator?.creator?.systemAdmin === true;
 	const active = [...roles.entries()]
-		.filter(([, role]) => ACTIVE_ROLES.includes(role))
+		.filter(([, role]) => isActiveRole(role))
 		.map(([statementId]) => statementId);
 	const scopes = isHostOfTop
 		? await restrictedLevelsForHost(topParentId)
@@ -136,7 +137,7 @@ export async function scopeChunksOf(statementId: string): Promise<ScopeChunks> {
 	const role = governing ? roles.get(governing) : undefined;
 	const mayReadGoverning =
 		isRestricted &&
-		((role !== undefined && ACTIVE_ROLES.includes(role)) ||
+		(isActiveRole(role) ||
 			scopes.includes(governing as string) ||
 			statement.creatorId === uid ||
 			hasHostRoleAbove(statement, roles));
@@ -148,11 +149,9 @@ export async function scopeChunksOf(statementId: string): Promise<ScopeChunks> {
 }
 
 function hasHostRoleAbove(statement: Statement, roles: Map<string, Role>): boolean {
-	return [...(statement.parents ?? []), statement.statementId].some((id) => {
-		const role = roles.get(id);
-
-		return role !== undefined && HOST_ROLES.includes(role);
-	});
+	return [...(statement.parents ?? []), statement.statementId].some((id) =>
+		isHostRole(roles.get(id)),
+	);
 }
 
 /** Starts one listener per scope chunk, once the chunks are known. */
