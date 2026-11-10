@@ -9,6 +9,7 @@
 
 import { Change, logger } from 'firebase-functions/v1';
 import { DocumentSnapshot, FieldValue, getFirestore } from 'firebase-admin/firestore';
+import type { Query, QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import type { FirestoreEvent } from 'firebase-functions/v2/firestore';
 import {
 	Collections,
@@ -19,7 +20,14 @@ import {
 } from '@freedi/shared-types';
 import { db } from '../index';
 import { logError } from '../utils/errorHandling';
-import { diffChosen, resultsUnchanged, selectChosenOptions } from './chosenOptionsSelection';
+import {
+	candidateStatus,
+	diffChosen,
+	planCandidates,
+	resultsUnchanged,
+	selectChosenOptions,
+} from './chosenOptionsSelection';
+import type { CandidatePlan } from './chosenOptionsSelection';
 import type { ChosenDiff } from './chosenOptionsSelection';
 
 // ============================================================================
@@ -55,6 +63,11 @@ export async function updateChosenOptions(
 /** Max writes in one Firestore batch. */
 const BATCH_WRITE_LIMIT = 500;
 
+/** Options read per page of the consensus query: enough for the usual top 5 and its ties. */
+const CANDIDATE_PAGE_MULTIPLIER = 2;
+const MIN_CANDIDATE_PAGE = 10;
+const THRESHOLD_CANDIDATE_PAGE = 50;
+
 /**
  * Refreshes a question's chosen options (`isChosen` flags on its options and
  * `results` / `totalResults` on the question) after its options changed.
@@ -85,7 +98,7 @@ export async function updateParentStatementWithChosenOptions(
 		// Use defaultResultsSettings if parent has no resultsSettings configured
 		const resultsSettings = parentStatement.resultsSettings || defaultResultsSettings;
 
-		const options = await loadOptions(parentId);
+		const options = await loadCandidates(parentId, planCandidates(resultsSettings));
 		const chosen = selectChosenOptions(options, resultsSettings);
 		const currentlyChosenIds = await loadCurrentlyChosenIds(parentId);
 
@@ -108,12 +121,53 @@ export async function updateParentStatementWithChosenOptions(
 	}
 }
 
-async function loadOptions(parentId: string): Promise<Statement[]> {
-	const snapshot = await db
+function optionsOf(parentId: string): Query {
+	return db
 		.collection(Collections.statements)
 		.where('parentId', '==', parentId)
-		.where('statementType', '==', StatementType.option)
-		.get();
+		.where('statementType', '==', StatementType.option);
+}
+
+function byDocumentId(a: Statement, b: Statement): number {
+	return a.statementId < b.statementId ? -1 : 1;
+}
+
+/**
+ * The options the selection can pick, read from the
+ * (parentId, statementType, consensus DESC) index one page at a time, so a
+ * rating reads a handful of documents however many answers the question has.
+ * Sorted by document id at the end: the selection is a stable sort, and that is
+ * the order a read of every option returns, so ties resolve as they always did.
+ */
+async function loadCandidates(
+	parentId: string,
+	plan: CandidatePlan | undefined,
+): Promise<Statement[]> {
+	if (!plan) return loadAllOptions(parentId);
+
+	const pageSize =
+		'top' in plan
+			? Math.max(plan.top * CANDIDATE_PAGE_MULTIPLIER, MIN_CANDIDATE_PAGE)
+			: THRESHOLD_CANDIDATE_PAGE;
+	const fetched: Statement[] = [];
+	let cursor: QueryDocumentSnapshot | undefined;
+
+	for (;;) {
+		let page = optionsOf(parentId).orderBy('consensus', 'desc').limit(pageSize);
+		if (cursor) page = page.startAfter(cursor);
+		const snapshot = await page.get();
+
+		fetched.push(...snapshot.docs.map((doc) => doc.data() as Statement));
+		const status = candidateStatus(fetched, plan, snapshot.size < pageSize);
+		if (status === 'complete') return fetched.sort(byDocumentId);
+		if (status === 'readAll') return loadAllOptions(parentId);
+
+		cursor = snapshot.docs[snapshot.docs.length - 1];
+	}
+}
+
+async function loadAllOptions(parentId: string): Promise<Statement[]> {
+	const snapshot = await optionsOf(parentId).get();
 
 	return snapshot.docs.map((doc) => doc.data() as Statement);
 }

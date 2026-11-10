@@ -49,6 +49,7 @@ deleteResearchLogs
 deleteRoomAssignments
 detectMultipleSuggestions
 detectStatementType
+drainAdminStatShardsSchedule
 ensureTopParentSubscription
 evaluationDriftCorrection
 executeIntegration

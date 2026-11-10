@@ -1,7 +1,7 @@
 /**
  * Minimal in-memory Firestore with operation counters, for the evaluation
  * cost tests. Supports exactly what the evaluation modules use: where('=='),
- * orderBy('__name__'), startAfter, limit, count(), get/set/create/update/delete,
+ * orderBy('__name__') or by one field descending, startAfter, limit, count(), get/set/create/update/delete,
  * dotted-path updates, `{__increment: n}` sentinels, batches, and transactions
  * with optimistic-concurrency retry (so concurrency tests are meaningful).
  *
@@ -196,6 +196,7 @@ type Filter = { field: string; value: unknown };
 
 class FakeCollection {
 	private orderByName = false;
+	private orderField: string | undefined;
 	private after: string | undefined;
 	private max: number | undefined;
 
@@ -216,16 +217,17 @@ class FakeCollection {
 		return next;
 	}
 
-	orderBy(_field: '__name__'): FakeCollection {
+	orderBy(field: string): FakeCollection {
 		const next = this.clone();
-		next.orderByName = true;
+		if (field === '__name__') next.orderByName = true;
+		else next.orderField = field;
 
 		return next;
 	}
 
-	startAfter(id: string): FakeCollection {
+	startAfter(cursor: string | FakeSnapshot): FakeCollection {
 		const next = this.clone();
-		next.after = id;
+		next.after = typeof cursor === 'string' ? cursor : cursor.id;
 
 		return next;
 	}
@@ -240,6 +242,7 @@ class FakeCollection {
 	private clone(): FakeCollection {
 		const next = new FakeCollection(this.fs, this.name, [...this.filters]);
 		next.orderByName = this.orderByName;
+		next.orderField = this.orderField;
 		next.after = this.after;
 		next.max = this.max;
 
@@ -250,7 +253,23 @@ class FakeCollection {
 		let rows = this.fs
 			.list(this.name)
 			.filter((row) => this.filters.every((f) => getPath(row.data, f.field) === f.value));
-		if (this.after !== undefined) rows = rows.filter((row) => row.id > this.after!);
+		const field = this.orderField;
+		if (field !== undefined) {
+			// As Firestore: a doc without the ordered field is not returned, and ties
+			// follow the last order's direction (descending).
+			rows = rows
+				.filter((row) => getPath(row.data, field) !== undefined)
+				.sort(
+					(a, b) =>
+						Number(getPath(b.data, field)) - Number(getPath(a.data, field)) ||
+						(a.id < b.id ? 1 : -1),
+				);
+			if (this.after !== undefined) {
+				rows = rows.slice(rows.findIndex((row) => row.id === this.after) + 1);
+			}
+		} else if (this.after !== undefined) {
+			rows = rows.filter((row) => row.id > this.after!);
+		}
 		if (this.max !== undefined) rows = rows.slice(0, this.max);
 
 		return rows;

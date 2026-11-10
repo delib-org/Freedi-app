@@ -22,7 +22,7 @@ import {
 	checkSocialProofMilestone,
 } from '../engagement/notifications/socialProofTrigger';
 import { onEvaluationCreatedStats } from '../fn_adminStats';
-import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
+import { markHybridEmbeddingStaleIfUsed } from '../services/hybrid-vector-service';
 import { writeHistoryEntry } from '../statements/history/writeHistoryEntry';
 import { isResearchEnabledForTopParent } from '../statements/history/isResearchEnabled';
 import { recordParticipation } from '../progress/questionProgressWriter';
@@ -176,7 +176,7 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 		}
 
 		// Mark hybrid embedding as stale (non-blocking) — sweep checks setting before processing
-		markHybridEmbeddingStale(statementId).catch((err) =>
+		markHybridEmbeddingStaleIfUsed(statement).catch((err) =>
 			logger.warn('Hybrid stale marking failed:', err),
 		);
 

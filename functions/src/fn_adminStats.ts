@@ -3,6 +3,7 @@
  *
  * Each document create/delete increments/decrements 3 stat docs (day + month + year)
  * using FieldValue.increment() with set({merge: true}) to avoid write contention.
+ * Counters that move per person go through shards: see adminStats/adminStatShards.ts.
  */
 
 import { logger } from 'firebase-functions';
@@ -10,6 +11,7 @@ import { FieldValue, QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { Collections, getAdminStatDocId } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { db } from './index';
+import { incrementShardedStat } from './adminStats/adminStatShards';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -39,6 +41,20 @@ export function getPeriodKeys(timestampMs?: number): PeriodKeys {
 interface IncrementFields {
 	/** Extra fields to increment alongside `total` (e.g. byType.option, byApp.main) */
 	[fieldPath: string]: number;
+}
+
+/** The three period documents of one collection. */
+function statPeriods(collectionName: string, periodKeys: PeriodKeys) {
+	return [
+		{ key: periodKeys.day, type: 'day' },
+		{ key: periodKeys.month, type: 'month' },
+		{ key: periodKeys.year, type: 'year' },
+	].map(({ key, type }) => ({
+		docId: getAdminStatDocId(collectionName, key),
+		collection: collectionName,
+		periodType: type,
+		periodKey: key,
+	}));
 }
 
 /**
@@ -146,7 +162,7 @@ export async function onStatementDeletedStats(statement: Statement): Promise<voi
 export async function onEvaluationCreatedStats(createdAt?: number): Promise<void> {
 	try {
 		const periodKeys = getPeriodKeys(createdAt);
-		await incrementStat('evaluations', periodKeys, {}, 1);
+		await incrementShardedStat(statPeriods('evaluations', periodKeys));
 	} catch (error) {
 		logger.warn('Admin stats: failed to track evaluation creation', { error });
 	}
@@ -158,7 +174,7 @@ export async function onEvaluationCreatedStats(createdAt?: number): Promise<void
 export async function onVoteCreatedStats(createdAt?: number): Promise<void> {
 	try {
 		const periodKeys = getPeriodKeys(createdAt);
-		await incrementStat('votes', periodKeys, {}, 1);
+		await incrementShardedStat(statPeriods('votes', periodKeys));
 	} catch (error) {
 		logger.warn('Admin stats: failed to track vote creation', { error });
 	}
@@ -170,7 +186,7 @@ export async function onVoteCreatedStats(createdAt?: number): Promise<void> {
 export async function onSubscriptionCreatedStats(createdAt?: number): Promise<void> {
 	try {
 		const periodKeys = getPeriodKeys(createdAt);
-		await incrementStat('statementsSubscribe', periodKeys, {}, 1);
+		await incrementShardedStat(statPeriods('statementsSubscribe', periodKeys));
 	} catch (error) {
 		logger.warn('Admin stats: failed to track subscription creation', { error });
 	}

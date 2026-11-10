@@ -1,5 +1,6 @@
 import { logger } from 'firebase-functions';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import { Collections } from '@freedi/shared-types';
 import type { Statement, StatementEvaluation } from '@freedi/shared-types';
 import { EMBEDDING_DIMENSIONS } from './embedding-service';
 import {
@@ -7,6 +8,8 @@ import {
 	extractEmbeddingArray,
 	isNotFoundError,
 } from './statement-embedding-store';
+
+const TOP_PARENT_ID = 'top';
 
 // Hybrid vector configuration
 const RATING_VECTOR_DIMENSIONS = 8;
@@ -180,6 +183,50 @@ export async function markHybridEmbeddingStale(statementId: string): Promise<voi
 		logger.error('Failed to mark hybrid embedding stale', { statementId, error });
 		throw error;
 	}
+}
+
+/**
+ * Marks the option's hybrid embedding stale, but only for questions that run
+ * hybrid clustering (off by default): anywhere else nothing reads the flag, and
+ * writing it would cost one document per rating.
+ */
+export async function markHybridEmbeddingStaleIfUsed(option: Statement): Promise<void> {
+	if (!(await questionUsesHybridClustering(option))) return;
+
+	await markHybridEmbeddingStale(option.statementId);
+}
+
+async function questionUsesHybridClustering(option: Statement): Promise<boolean> {
+	const [question, topParent] = await Promise.all([
+		readHybridSettings(option.parentId),
+		readHybridSettings(option.topParentId),
+	]);
+	if (!question) return false;
+
+	return isHybridClusteringEnabled(question, topParent);
+}
+
+/** Per-instance cache: a rating should not pay reads for a setting that rarely changes. */
+const hybridSettingsCache = new Map<string, { value?: Statement; expiresAt: number }>();
+const HYBRID_SETTINGS_TTL_MS = 60_000;
+const HYBRID_SETTINGS_CACHE_LIMIT = 500;
+
+async function readHybridSettings(statementId?: string): Promise<Statement | undefined> {
+	if (!statementId || statementId === TOP_PARENT_ID) return undefined;
+	const cached = hybridSettingsCache.get(statementId);
+	if (cached && cached.expiresAt > Date.now()) return cached.value;
+
+	const snapshot = await getFirestore().collection(Collections.statements).doc(statementId).get();
+	const value = snapshot.exists ? (snapshot.data() as Statement) : undefined;
+	if (hybridSettingsCache.size >= HYBRID_SETTINGS_CACHE_LIMIT) hybridSettingsCache.clear();
+	hybridSettingsCache.set(statementId, { value, expiresAt: Date.now() + HYBRID_SETTINGS_TTL_MS });
+
+	return value;
+}
+
+/** Test-only: reset the per-instance settings cache. */
+export function clearHybridSettingsCache(): void {
+	hybridSettingsCache.clear();
 }
 
 // Helper to extract embedding array from VectorValue or plain array

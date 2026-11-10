@@ -131,6 +131,8 @@ import { cleanupStaleTokens, performTokenCleanup } from './fn_tokenCleanup';
 
 // Admin Stats (KPI aggregation)
 import { performUserStatsRefresh, backfillAdminStats } from './fn_adminStats';
+import { drainAdminStatShards } from './adminStats/adminStatShards';
+import { logger } from 'firebase-functions';
 
 // Engagement System (Phase 1-3: Credits, Levels, Badges, Streaks, Notification Queue, Digests)
 import {
@@ -1139,6 +1141,20 @@ export const refreshUserStats = onSchedule(
 	},
 	async () => {
 		await performUserStatsRefresh();
+	},
+);
+
+// Moves the sharded rating, vote and join counters onto the Admin app's documents.
+export const drainAdminStatShardsSchedule = onSchedule(
+	{
+		schedule: 'every 10 minutes',
+		timeZone: 'UTC',
+		...functionConfig,
+		timeoutSeconds: 300,
+	},
+	async () => {
+		const { shards, events } = await drainAdminStatShards();
+		logger.info(`Admin stats: drained ${events} events from ${shards} shards`);
 	},
 );
 

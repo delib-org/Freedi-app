@@ -1,7 +1,7 @@
 /**
  * Minimal in-memory Firestore stand-in for the progress / nudge /
  * subscription tests. Supports the subset the code under test uses:
- * doc get/set/create/update, equality `where` queries with id ordering +
+ * doc get/set/create/update, `where` queries (`==` and `>`) with id ordering +
  * limit/startAfter, `getAll`, batches and transactions.
  *
  * `{ _increment: n }` values (the jest.setup FieldValue mock) are applied as
@@ -155,11 +155,12 @@ export function createFakeDb(): FakeDb {
 
 	const makeQuery = (
 		collection: string,
-		filters: Array<[string, unknown]>,
+		filters: Array<[string, unknown, string]>,
 		limit?: number,
 		after?: string,
 	): Query => ({
-		where: (field, _op, value) => makeQuery(collection, [...filters, [field, value]], limit, after),
+		where: (field, op, value) =>
+			makeQuery(collection, [...filters, [field, value, op]], limit, after),
 		orderBy: () => makeQuery(collection, filters, limit, after),
 		select: () => makeQuery(collection, filters, limit, after),
 		limit: (n) => makeQuery(collection, filters, n, after),
@@ -169,7 +170,13 @@ export function createFakeDb(): FakeDb {
 			if (after) ids = ids.filter((id) => id > after);
 			let docs = ids
 				.map((id) => ({ ...snapOf(collection, id), ref: makeRef(collection, id) }))
-				.filter((snap) => filters.every(([f, v]) => snap.data()?.[f] === v));
+				.filter((snap) =>
+					filters.every(([f, v, op]) => {
+						const actual = snap.data()?.[f];
+
+						return op === '>' ? Number(actual) > Number(v) : actual === v;
+					}),
+				);
 			if (limit !== undefined) docs = docs.slice(0, limit);
 
 			return { empty: docs.length === 0, size: docs.length, docs };
