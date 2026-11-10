@@ -20,6 +20,7 @@ import { setStatement } from '@/redux/statements/statementsSlice';
 import { useReadVisibleNotifications } from '@/controllers/hooks/useReadVisibleNotifications';
 import { fetchOlderSubStatements } from '@/controllers/db/statements/listenToStatements';
 import { CHAT } from '@/constants/common';
+import { useCanSeeAnswer } from '@/controllers/hooks/useAnswerVisibility';
 
 interface ChatProps {
 	sideChat?: boolean;
@@ -34,8 +35,13 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 	// Memoize per statementId — calling the selector factory inline creates a
 	// new selector (and a new array) on every render/dispatch.
 	const selectSubs = useMemo(() => statementSubsSelector(statementId), [statementId]);
-	const subStatements = useAppSelector(selectSubs);
+	const loadedSubStatements = useAppSelector(selectSubs);
 	const sideLoadedIds = useAppSelector(sideLoadedIdsSelector);
+	const canSee = useCanSeeAnswer();
+	const subStatements = useMemo(
+		() => loadedSubStatements.filter(canSee),
+		[loadedSubStatements, canSee],
+	);
 	const { user } = useAuthentication();
 	const location = useLocation();
 	const firstTimeRef = useRef(true);
@@ -81,11 +87,12 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 
 	// Keep track of the oldest message timestamp for the load-more query
 	useEffect(() => {
-		// Answers fetched ahead of the window are not part of it: paging from one
-		// would skip everything between the window and that answer.
-		const oldest = subStatements.find((sub) => !sideLoadedIds[sub.statementId]);
+		// The cursor comes from everything loaded, so a held answer cannot hide
+		// the real oldest one. Answers fetched ahead of the window are not part of
+		// it: paging from one would skip everything between the window and that answer.
+		const oldest = loadedSubStatements.find((sub) => !sideLoadedIds[sub.statementId]);
 		if (oldest) oldestCreatedAtRef.current = oldest.createdAt;
-	}, [subStatements, sideLoadedIds]);
+	}, [loadedSubStatements, sideLoadedIds]);
 
 	// Reset lazy loading state when navigating to a different statement, and arm
 	// loadMore only after the initial render/scroll has settled (see ref comment).
@@ -105,13 +112,13 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 
 	// Check if all messages are already loaded (fewer than initial limit)
 	useEffect(() => {
-		if (!initialCheckDoneRef.current && subStatements.length > 0) {
+		if (!initialCheckDoneRef.current && loadedSubStatements.length > 0) {
 			initialCheckDoneRef.current = true;
-			if (subStatements.length < CHAT.INITIAL_MESSAGES_LIMIT) {
+			if (loadedSubStatements.length < CHAT.INITIAL_MESSAGES_LIMIT) {
 				setHasMore(false);
 			}
 		}
-	}, [subStatements.length]);
+	}, [loadedSubStatements.length]);
 
 	// Fetch older messages when user scrolls to top — called by Virtuoso's startReached
 	const loadMore = useCallback(async () => {

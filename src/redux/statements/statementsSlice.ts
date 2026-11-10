@@ -690,7 +690,7 @@ export const questionsSelector = (statementId: string | undefined) =>
 	selectStatementsByParentAndType(statementId, StatementType.question);
 
 // Memoized map for O(1) subscription lookups
-const selectSubscriptionMap = createSelector(
+export const selectSubscriptionMap = createSelector(
 	[(state: { statements: StatementsState }) => state.statements.statementSubscription],
 	(subscriptions) => {
 		const map = new Map<string, StatementSubscription>();

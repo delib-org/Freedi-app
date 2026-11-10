@@ -39,6 +39,8 @@ export const TRIGGER_MAX_INSTANCES = {
 	statementWrite: 30,
 	/** New answers: rare per person, but each fans out to every subscriber. */
 	statementCreate: 20,
+	/** The language check on each new answer: its own group because it waits on an AI call. */
+	answerModeration: 20,
 	/** Arrivals: 1,000 people joining within a minute is about 17 events/s. */
 	subscriptionWrite: 20,
 	/** First view per person; same arrival curve as subscriptions. */

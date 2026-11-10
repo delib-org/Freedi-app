@@ -184,6 +184,12 @@ export {
 
 // WizCol Studio — "Start a question with AI": plan sessions, diagnosis, scheduled actions
 export * from "./models/studio";
+export type { AnswerModeration } from "./models/statement/answerModeration";
+export {
+  AnswerModerationSchema,
+  ANSWER_MODERATION_REASON,
+  isAnswerHeldByModeration,
+} from "./models/statement/answerModeration";
 
 // MassConsensus models
 export type {

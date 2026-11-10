@@ -3,6 +3,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { Statement, StatementType, SortType } from '@freedi/shared-types';
 import { sortByConsensus } from '@/redux/utils/selectorFactories';
 import { createTreeViewSelector } from '@/redux/statements/treeViewSelectors';
+import { useCanSeeAnswer } from '@/controllers/hooks/useAnswerVisibility';
 import { TreeFilterMode } from '../TreeFilterMode';
 
 interface UseTreeDataReturn {
@@ -71,6 +72,19 @@ function applySortToStatements(
 	}
 }
 
+/** Replies under a filtered answer go with it: they are only reached through their parent. */
+export function withoutHiddenAnswers(
+	tree: { childrenMap: Map<string, Statement[]>; rootChildren: Statement[] },
+	canSee: (statement: Statement) => boolean,
+): { childrenMap: Map<string, Statement[]>; rootChildren: Statement[] } {
+	const childrenMap = new Map<string, Statement[]>();
+	tree.childrenMap.forEach((children, parentId) => {
+		childrenMap.set(parentId, children.filter(canSee));
+	});
+
+	return { childrenMap, rootChildren: tree.rootChildren.filter(canSee) };
+}
+
 /**
  * Provides tree data from Redux with O(1) child lookups.
  * Supports type filtering, sorting, and selected-only option filtering.
@@ -86,8 +100,11 @@ export function useTreeData(statementId: string, options?: TreeDataOptions): Use
 		randomSeed,
 	} = options || {};
 
-	const { childrenMap: fullChildrenMap, rootChildren: fullRootChildren } = useAppSelector((state) =>
-		selectTreeView(state, statementId),
+	const selectedTree = useAppSelector((state) => selectTreeView(state, statementId));
+	const canSee = useCanSeeAnswer();
+	const { childrenMap: fullChildrenMap, rootChildren: fullRootChildren } = useMemo(
+		() => withoutHiddenAnswers(selectedTree, canSee),
+		[selectedTree, canSee],
 	);
 
 	// Build set of selected option IDs from all parent statements' results

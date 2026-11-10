@@ -134,6 +134,7 @@ massConsensusAddMember
 massConsensusGetInitialData
 mergeClusters
 mergeStatements
+moderateNewAnswer
 mirrorQuestionStatusToSurvey
 newEvaluation
 notifyRoomParticipants
