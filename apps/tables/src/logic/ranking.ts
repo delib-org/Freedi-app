@@ -80,8 +80,8 @@ export const HINT_ALL_PICKED = TABLE_ASSIGNMENT_MAX_PREFERENCES + 1;
  * and no further pick is possible.
  */
 export function rankHintIndex(ranked: readonly string[], topicCount: number): number {
-	if (ranked.length >= TABLE_ASSIGNMENT_MAX_PREFERENCES) return TABLE_ASSIGNMENT_MAX_PREFERENCES;
 	if (ranked.length > 0 && ranked.length >= topicCount) return HINT_ALL_PICKED;
+	if (ranked.length >= TABLE_ASSIGNMENT_MAX_PREFERENCES) return TABLE_ASSIGNMENT_MAX_PREFERENCES;
 
 	return ranked.length;
 }

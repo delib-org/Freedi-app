@@ -117,9 +117,12 @@ export const RankList: m.ClosureComponent<RankListAttrs> = (initial) => {
 	function handleToggle(topicId: string): void {
 		announceToggle(topicId);
 		// A tap during a drag is not animated: the dragged row owns its transform.
-		pendingFlip = drag
-			? null
-			: { landed: latest.ranked.includes(topicId) ? null : topicId, first: null };
+		const changes = toggleRank(latest.ranked, topicId).join() !== latest.ranked.join();
+
+		pendingFlip =
+			drag || !changes
+				? null
+				: { landed: latest.ranked.includes(topicId) ? null : topicId, first: null };
 		latest.onToggle(topicId);
 	}
 
@@ -179,6 +182,9 @@ export const RankList: m.ClosureComponent<RankListAttrs> = (initial) => {
 
 	function startDrag(event: PointerEvent, topicId: string): void {
 		if (event.button !== 0 || !list) return;
+
+		// A drag owns the rows' transforms: drop any slide still waiting for a redraw.
+		pendingFlip = null;
 
 		const rows = measurePickedRows(list);
 		const from = latest.ranked.indexOf(topicId);
@@ -244,6 +250,7 @@ export const RankList: m.ClosureComponent<RankListAttrs> = (initial) => {
 			'li.rank-row',
 			{
 				key: topic.topicId,
+				'data-topic-id': topic.topicId,
 				class: [
 					isPicked ? 'rank-row--picked' : '',
 					drag?.topicId === topic.topicId ? 'rank-row--dragging' : '',
@@ -284,6 +291,7 @@ export const RankList: m.ClosureComponent<RankListAttrs> = (initial) => {
 				explained.has(topic.topicId) && topic.description
 					? m('p.rank-row__details', { dir: 'auto' }, topic.description)
 					: null,
+				m('span.rank-row__glow', { 'aria-hidden': 'true' }),
 			],
 		);
 	}

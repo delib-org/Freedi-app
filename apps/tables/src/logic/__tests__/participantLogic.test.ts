@@ -94,6 +94,7 @@ describe('ranking', () => {
 		expect(rankHintIndex(['a', 'b', 'c'], 6)).toBe(3);
 		expect(rankHintIndex(['a', 'b'], 2)).toBe(4);
 		expect(rankHintIndex(['a'], 1)).toBe(4);
+		expect(rankHintIndex(['a', 'b', 'c'], 3)).toBe(4);
 	});
 
 	it('drops topics that no longer exist', () => {
