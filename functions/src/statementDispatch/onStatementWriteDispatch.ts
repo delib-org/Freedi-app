@@ -19,6 +19,28 @@ function toStatementChange(event: StatementWriteEvent): StatementChange | null {
 }
 
 /**
+ * A gate that throws is logged and counts as a match, so one malformed document
+ * can only widen what runs. Every handler still applies its own checks.
+ */
+function routeMatchesSafely(
+	statementRoute: StatementRoute,
+	change: StatementChange,
+	statementId: string,
+): boolean {
+	try {
+		return routeMatches(statementRoute, change);
+	} catch (error) {
+		logError(error, {
+			operation: `statementDispatch.gate.${statementRoute.name}`,
+			statementId,
+			metadata: { kind: change.kind },
+		});
+
+		return true;
+	}
+}
+
+/**
  * Runs the handlers whose gate matches, all at once, as separate triggers did.
  * A failing handler is logged and cannot stop the others. Nothing is rethrown:
  * none of these triggers had retries, so a throw only ever reached the logs.
@@ -33,7 +55,10 @@ export async function dispatchStatementWrite(
 	const change = toStatementChange(event);
 	if (!change) return;
 
-	const matched = routes.filter((statementRoute) => routeMatches(statementRoute, change));
+	const { statementId } = event.params;
+	const matched = routes.filter((statementRoute) =>
+		routeMatchesSafely(statementRoute, change, statementId),
+	);
 	const results = await Promise.allSettled(
 		matched.map((statementRoute) => statementRoute.invoke(event)),
 	);
@@ -42,7 +67,7 @@ export async function dispatchStatementWrite(
 		if (result.status === 'rejected') {
 			logError(result.reason, {
 				operation: `statementDispatch.${matched[index].name}`,
-				statementId: event.params.statementId,
+				statementId,
 				metadata: { kind: change.kind },
 			});
 		}

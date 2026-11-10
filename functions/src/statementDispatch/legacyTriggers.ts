@@ -17,9 +17,14 @@ import { CommitTimedEvent, skipWhenDispatcherOwns } from './cutover';
 /**
  * The old statement triggers, with their deployed names and options unchanged,
  * except that each leaves a write alone once the dispatcher owns it. They exist
- * only for the cutover. Once the cutover time has passed in production, remove
- * this file and its exports from index.ts, and run `firebase functions:delete`
- * for these names and updateOptionInMassConsensus.
+ * only for the cutover.
+ *
+ * Removal is one release, in this order (docs/scale/statement-dispatch-cutover.md,
+ * step 9). First deploy a dispatcher with the cutover check taken out, so it always
+ * owns events and no longer depends on an environment variable. Then run
+ * `firebase functions:delete` for these names and updateOptionInMassConsensus.
+ * That commit removes this file, cutover.ts, these exports from index.ts and the
+ * skipWhenDispatcherOwns wrapper on updateOptionInMassConsensus.
  */
 interface OldTrigger {
 	run: (event: never) => unknown;

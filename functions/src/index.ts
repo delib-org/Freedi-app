@@ -747,7 +747,7 @@ exports.onSubscriptionDeletedMembership = createFirestoreFunction(
 // Note: updateParentOnChildCreate is now handled in onStatementCreated
 // exports.updateParentOnChildCreate = updateParentOnChildCreate;
 // One trigger for the statement handlers that exit on a field check. Inert until
-// STATEMENT_DISPATCH_CUTOVER_MS is set; see statementDispatch/cutover.ts.
+// STATEMENT_DISPATCH_CUTOVER_MS is set; see docs/scale/statement-dispatch-cutover.md.
 export { onStatementWriteDispatch } from './statementDispatch/onStatementWriteDispatch';
 exports.updateParentOnChildUpdate = updateParentOnChildUpdate;
 exports.updateParentOnChildDelete = updateParentOnChildDelete;

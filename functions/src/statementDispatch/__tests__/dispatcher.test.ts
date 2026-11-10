@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 jest.mock('../../deliberation/functions', () => ({ queueDeliberation: { run: jest.fn() } }));
 jest.mock('../../engagement/joinForm/fn_syncOptionMembersToSheet', () => ({
@@ -42,7 +44,7 @@ import { updateOptionInMassConsensus } from '../../fn_massConsensus';
 import { mirrorQuestionStatusToSurvey } from '../../organizations/studio/mirrorQuestionStatusToSurvey';
 import { onVoteUpdate } from '../../fn_popperHebbian_onVote';
 import { logError } from '../../utils/errorHandling';
-import { CUTOVER_NOT_SET } from '../cutover';
+import { CUTOVER_NOT_SET, MIN_PLAUSIBLE_CUTOVER_MS } from '../cutover';
 import { dispatchStatementWrite } from '../onStatementWriteDispatch';
 import { STATEMENT_ROUTES } from '../routes';
 import { buildEvent, COMMIT_MS, SCENARIOS, STATEMENT_ID } from './statementWriteFixtures';
@@ -159,6 +161,41 @@ describe('dispatchStatementWrite', () => {
 
 		expect(HANDLERS.fn_syncOptionMembersToSheet).toHaveBeenCalledTimes(1);
 		expect(logError).toHaveBeenCalledTimes(1);
+	});
+
+	it('treats a throwing gate as a match and still evaluates the other routes', async () => {
+		const option = SCENARIOS.find(({ label }) => label === 'an answer text edit')?.before;
+
+		await dispatchStatementWrite(
+			buildEvent(option, { ...option, joined: 42, lastUpdate: 2 }),
+			STATEMENT_ROUTES,
+			CUTOVER_PASSED,
+		);
+
+		expect(HANDLERS.fn_syncOptionMembersToSheet).toHaveBeenCalledTimes(1);
+		expect(HANDLERS.fn_backupOptionMembership).toHaveBeenCalledTimes(1);
+		expect(HANDLERS.queueDeliberation).toHaveBeenCalledTimes(1);
+		expect(handlersThatRan()).toHaveLength(3);
+		expect(logError).toHaveBeenCalledTimes(2);
+		expect(logError).toHaveBeenCalledWith(expect.any(TypeError), {
+			operation: 'statementDispatch.gate.fn_syncOptionMembersToSheet',
+			statementId: STATEMENT_ID,
+			metadata: { kind: 'update' },
+		});
+	});
+
+	it('keeps the deploy check list in step with the routes and the floor', () => {
+		const config = JSON.parse(
+			readFileSync(
+				join(__dirname, '../../../../scripts/scale/dispatchCutover.config.json'),
+				'utf8',
+			),
+		) as { functions: string[]; minPlausibleCutoverMs: number };
+
+		expect([...config.functions].sort()).toEqual(
+			[...STATEMENT_ROUTES.map(({ name }) => name), 'onStatementWriteDispatch'].sort(),
+		);
+		expect(config.minPlausibleCutoverMs).toBe(MIN_PLAUSIBLE_CUTOVER_MS);
 	});
 
 	it('runs nothing while the cutover is not set', async () => {

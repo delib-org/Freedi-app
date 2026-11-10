@@ -1,3 +1,4 @@
+import { logger } from 'firebase-functions';
 import { logError } from '../utils/errorHandling';
 
 /**
@@ -11,16 +12,32 @@ import { logError } from '../utils/errorHandling';
  * which is the same value for every trigger that receives that write.
  *
  * Unset means no event ever belongs to the dispatcher: it stays inert and the
- * old triggers keep working exactly as before.
+ * old triggers keep working exactly as before. That is only safe while the old
+ * triggers exist, so this whole module is removed in the same release as their
+ * deletion: docs/scale/statement-dispatch-cutover.md, step 9.
  */
 export const CUTOVER_NOT_SET = Number.POSITIVE_INFINITY;
+
+/**
+ * 2026-01-01 UTC in ms. Anything earlier cannot be a planned cutover. The usual
+ * mistake is a value in seconds, which would otherwise be in the past at deploy
+ * and hand every write to the dispatcher at once.
+ */
+export const MIN_PLAUSIBLE_CUTOVER_MS = 1_767_225_600_000;
 
 const CUTOVER_ENV_KEY = 'STATEMENT_DISPATCH_CUTOVER_MS';
 
 export function parseCutoverMs(raw: string | undefined): number {
 	const parsed = Number(raw);
 
-	return raw && Number.isFinite(parsed) && parsed > 0 ? parsed : CUTOVER_NOT_SET;
+	return raw && Number.isFinite(parsed) && parsed >= MIN_PLAUSIBLE_CUTOVER_MS
+		? parsed
+		: CUTOVER_NOT_SET;
+}
+
+/** Cloud Run sets K_SERVICE; the emulator sets it too but also FUNCTIONS_EMULATOR. */
+function isDeployedFunction(): boolean {
+	return Boolean(process.env.K_SERVICE) && process.env.FUNCTIONS_EMULATOR !== 'true';
 }
 
 function loadCutoverMs(): number {
@@ -28,10 +45,17 @@ function loadCutoverMs(): number {
 	const cutoverMs = parseCutoverMs(raw);
 
 	if (raw && cutoverMs === CUTOVER_NOT_SET) {
-		logError(new Error(`${CUTOVER_ENV_KEY} is not a positive number`), {
+		logError(new Error(`${CUTOVER_ENV_KEY} is not a plausible time in ms`), {
 			operation: 'statementDispatch.loadCutoverMs',
-			metadata: { raw },
+			metadata: { raw, minimum: MIN_PLAUSIBLE_CUTOVER_MS },
 		});
+	} else if (!raw && isDeployedFunction()) {
+		// A warning, not logError: this module loads in every function of the
+		// bundle, and unset is the expected state before the cutover release.
+		logger.warn(
+			`${CUTOVER_ENV_KEY} is unset: onStatementWriteDispatch is inert. The old statement ` +
+				'triggers handle every write. If they have been deleted, 13 handlers are not running.',
+		);
 	}
 
 	return cutoverMs;

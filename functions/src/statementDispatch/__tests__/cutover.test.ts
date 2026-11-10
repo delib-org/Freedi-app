@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
 
+const mockWarn = jest.fn();
+
+jest.mock('firebase-functions', () => ({
+	logger: { warn: (message: string) => mockWarn(message) },
+}));
 jest.mock('../../utils/errorHandling', () => ({ logError: jest.fn() }));
 
 import { logError } from '../../utils/errorHandling';
@@ -8,6 +13,7 @@ import {
 	CommitTimedEvent,
 	dispatcherOwnsEvent,
 	eventCommitMs,
+	MIN_PLAUSIBLE_CUTOVER_MS,
 	parseCutoverMs,
 } from '../cutover';
 
@@ -39,7 +45,24 @@ describe('parseCutoverMs', () => {
 		expect(parseCutoverMs(String(CUTOVER_MS))).toBe(CUTOVER_MS);
 	});
 
-	it.each([undefined, '', 'tomorrow', '0', '-5', 'Infinity'])('treats %s as not set', (raw) => {
+	it('accepts the floor itself', () => {
+		expect(parseCutoverMs(String(MIN_PLAUSIBLE_CUTOVER_MS))).toBe(MIN_PLAUSIBLE_CUTOVER_MS);
+	});
+
+	it('has its floor at 2026-01-01 UTC', () => {
+		expect(MIN_PLAUSIBLE_CUTOVER_MS).toBe(Date.UTC(2026, 0, 1));
+	});
+
+	it.each([
+		undefined,
+		'',
+		'tomorrow',
+		'0',
+		'-5',
+		'Infinity',
+		String(MIN_PLAUSIBLE_CUTOVER_MS - 1),
+		String(CUTOVER_MS / 1_000), // the same moment in seconds
+	])('treats %s as not set', (raw) => {
 		expect(parseCutoverMs(raw)).toBe(CUTOVER_NOT_SET);
 	});
 });
@@ -73,6 +96,8 @@ describe('dispatcherOwnsEvent', () => {
 describe('exactly one side handles each write', () => {
 	afterEach(() => {
 		delete process.env[ENV_KEY];
+		delete process.env.K_SERVICE;
+		delete process.env.FUNCTIONS_EMULATOR;
 	});
 
 	it.each([CUTOVER_MS - 1_000, CUTOVER_MS - 1, CUTOVER_MS, CUTOVER_MS + 1, CUTOVER_MS + 1_000])(
@@ -103,5 +128,45 @@ describe('exactly one side handles each write', () => {
 
 		expect(cutover.STATEMENT_DISPATCH_CUTOVER_MS).toBe(CUTOVER_NOT_SET);
 		expect(logError).toHaveBeenCalledTimes(1);
+	});
+
+	it('reports a value in seconds and stays inert', () => {
+		const cutover = loadCutoverWithEnv(String(CUTOVER_MS / 1_000));
+
+		expect(cutover.dispatcherOwnsEvent(eventCommittedAt(CUTOVER_MS))).toBe(false);
+		expect(logError).toHaveBeenCalledTimes(1);
+	});
+
+	it('warns once when unset in a deployed function', () => {
+		process.env.K_SERVICE = 'onstatementwritedispatch';
+
+		loadCutoverWithEnv(undefined);
+
+		expect(mockWarn).toHaveBeenCalledTimes(1);
+		expect(mockWarn).toHaveBeenCalledWith(expect.stringContaining(ENV_KEY));
+		expect(logError).not.toHaveBeenCalled();
+	});
+
+	it('stays quiet when unset on the emulator', () => {
+		process.env.K_SERVICE = 'onstatementwritedispatch';
+		process.env.FUNCTIONS_EMULATOR = 'true';
+
+		loadCutoverWithEnv(undefined);
+
+		expect(mockWarn).not.toHaveBeenCalled();
+	});
+
+	it('stays quiet when unset outside a deployed function', () => {
+		loadCutoverWithEnv(undefined);
+
+		expect(mockWarn).not.toHaveBeenCalled();
+	});
+
+	it('does not warn when set in a deployed function', () => {
+		process.env.K_SERVICE = 'onstatementwritedispatch';
+
+		loadCutoverWithEnv(String(CUTOVER_MS));
+
+		expect(mockWarn).not.toHaveBeenCalled();
 	});
 });
