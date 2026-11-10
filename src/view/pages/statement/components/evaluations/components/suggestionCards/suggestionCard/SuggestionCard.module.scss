@@ -914,9 +914,9 @@
 // the card. StatementImage places it absolutely (inset-block: 0), so the text
 // column alone decides how tall the card is, even for a tall source image.
 // This card makes room for it with start padding, so the text runs beside it.
-// The rating row (cardFooter) is the exception: it breaks out of the card's
-// padding to span the full card width and sits on a card-coloured strip drawn
-// OVER the lower part of the photo, so the faces keep the whole width.
+// On phones the rating row (cardFooter) is the exception: it breaks out of the
+// card's padding to span the full card width and sits on a card-coloured strip
+// drawn OVER the lower part of the photo, so the faces keep the whole width.
 $photo-min-visible: 4.5rem; // 72px of photo stays recognisable above the strip
 
 .statement-evaluation-card--with-photo {
@@ -929,21 +929,26 @@ $photo-min-visible: 4.5rem; // 72px of photo stays recognisable above the strip
     --card-photo-width: 5.5rem;
   }
 
-  // A one-line answer must not shrink the visible photo to a sliver above the
-  // strip: the text row keeps at least this much height.
-  .info {
-    min-block-size: $photo-min-visible;
-  }
+  // Phones only: the rating row breaks out of the card's padding and sits on a
+  // card-coloured strip over the lower part of the photo. On wider screens the
+  // photo runs the full card height and the row is a plain row in the text column.
+  @media screen and (max-width: 600px) {
+    // A one-line answer must not shrink the visible photo to a sliver above the
+    // strip: the text row keeps at least this much height.
+    .info {
+      min-block-size: $photo-min-visible;
+    }
 
-  .cardFooter {
-    position: relative;
-    z-index: 2; // above the photo column (z-index 1)
-    margin-inline: calc(-1 * var(--card-photo-inset)) calc(-1 * var(--card-pad-inline));
-    margin-block-end: calc(-1 * var(--card-pad-block));
-    padding-inline: var(--card-pad-inline);
-    padding-block: var(--space-2xs) var(--card-pad-block);
-    background-color: var(--card-surface);
-    pointer-events: auto; // the strip must not pass taps through to the photo button
+    .cardFooter {
+      position: relative;
+      z-index: 2; // above the photo column (z-index 1)
+      margin-inline: calc(-1 * var(--card-photo-inset)) calc(-1 * var(--card-pad-inline));
+      margin-block-end: calc(-1 * var(--card-pad-block));
+      padding-inline: var(--card-pad-inline);
+      padding-block: var(--space-2xs) var(--card-pad-block);
+      background-color: var(--card-surface);
+      pointer-events: auto; // the strip must not pass taps through to the photo button
+    }
   }
 }
 
