@@ -122,6 +122,10 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       // Folds member evaluations into their synth (see clusterRecompute.ts);
       // without it a synth never inherits the votes of the originals it replaced.
       'SYNTHESIS_CLUSTER_AWARE_POLARIZATION': 'SYNTHESIS_CLUSTER_AWARE_POLARIZATION',
+      // Commit time (ms) from which onStatementWriteDispatch replaces the single-purpose
+      // statement triggers. Unset is the normal state until that release: the dispatcher
+      // stays inert. See functions/src/statementDispatch/cutover.ts.
+      'STATEMENT_DISPATCH_CUTOVER_MS': 'STATEMENT_DISPATCH_CUTOVER_MS',
       // WizCol Studio base URL — organization invite links (functions/src/organizations/orgAuth.ts)
       'STUDIO_APP_BASE_URL': 'STUDIO_APP_BASE_URL',
       // Sign editor links returned by the Studio Draft tool

@@ -27,6 +27,7 @@ import {
 	syncTopAnswersOnOptionDeleted,
 	syncTopAnswersOnOptionUpdated,
 } from './evaluation/topAnswerSync';
+import { TRIGGER_MAX_INSTANCES } from './config/triggerLimits';
 
 /**
  * Updates parent statement when a child statement is created
@@ -64,6 +65,7 @@ export const updateParentOnChildUpdate = onDocumentUpdated(
 		document: `${Collections.statements}/{statementId}`,
 		region: functionConfig.region,
 		memory: HOT_TRIGGER_MEMORY,
+		maxInstances: TRIGGER_MAX_INSTANCES.statementWrite,
 	},
 	async (event) => {
 		try {
