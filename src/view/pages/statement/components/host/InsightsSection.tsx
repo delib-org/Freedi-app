@@ -23,19 +23,23 @@ const InsightsSection: FC<InsightsSectionProps> = ({ statement }) => {
 		[statement.statementId],
 	);
 	const options = useSelector(optionsSelect);
-	const participation = useParticipationStats(statement, options);
+	const participation = useParticipationStats(statement, true, options.length);
 	const isSpace = statement.statementType === StatementType.group;
 
 	return (
 		<div className={styles.liveGrid} data-testid="host-insights">
-			<h3 className={styles.subheading}>{t('host.participation')}</h3>
-			<div className={styles.funnel}>
-				<ParticipationFunnel
-					entered={participation.entered}
-					suggested={participation.suggested}
-					evaluated={participation.evaluated}
-				/>
-			</div>
+			{participation && (
+				<>
+					<h3 className={styles.subheading}>{t('host.participation')}</h3>
+					<div className={styles.funnel}>
+						<ParticipationFunnel
+							entered={participation.entered}
+							suggested={participation.suggested}
+							evaluated={participation.evaluated}
+						/>
+					</div>
+				</>
+			)}
 			<div className={styles.row}>
 				<button type="button" className={styles.linkButton} onClick={() => setView('research')}>
 					<FlaskConical size={16} aria-hidden="true" />

@@ -1,13 +1,40 @@
-import React, { useState } from 'react';
+import { FC, useEffect, useState } from 'react';
+import { Statement, StatementType } from '@freedi/shared-types';
 import { useOnlineUsers } from '@/controllers/hooks/useOnlineUsers';
+import { useQuestionProgressRead } from '@/controllers/hooks/useQuestionProgress';
+import { isLargeForPresence } from '@/helpers/presenceVisibility';
 import { UserProfilePopover } from '@/view/components/atomic/molecules/UserProfilePopover';
 import styles from './OnlineUsersStyle.module.scss';
 
+/** Presence reads only on its timer; nothing the viewer does triggers another. */
+const PRESENCE_READ_KEY = 'presence';
+
 interface OnlineUsersProps {
-	statementId: string;
+	statement: Statement | undefined;
 }
 
-const OnlineUsers: React.FC<OnlineUsersProps> = ({ statementId }) => {
+/**
+ * Who is here now, for gatherings small enough to afford it. In a large
+ * question nothing mounts, so there is no presence write, no listener and no
+ * widget. Waits for the first size read before mounting. That read can be
+ * under the line while a crowd arrives together, so the size is checked again
+ * each minute until the question counts as large, and then never again: a
+ * crowd can hold presence on for about a minute, not longer.
+ */
+const OnlineUsers: FC<OnlineUsersProps> = ({ statement }) => {
+	const statementId = statement?.statementId;
+	const { progress, isLoaded } = useQuestionProgressRead(
+		statement?.statementType === StatementType.question ? statementId : undefined,
+		PRESENCE_READ_KEY,
+		{ pollWhile: (latest) => !isLargeForPresence(statement, latest) },
+	);
+
+	if (!statementId || !isLoaded || isLargeForPresence(statement, progress)) return null;
+
+	return <OnlineUsersList statementId={statementId} />;
+};
+
+const OnlineUsersList: FC<{ statementId: string }> = ({ statementId }) => {
 	const { onlineUsers, isLoading } = useOnlineUsers(statementId);
 	const [hoveredUserId, setHoveredUserId] = useState<string | null>(null);
 	const [clickedUserId, setClickedUserId] = useState<string | null>(null);
@@ -18,7 +45,7 @@ const OnlineUsers: React.FC<OnlineUsersProps> = ({ statementId }) => {
 
 	// Close clicked popover when clicking outside
 	// IMPORTANT: This hook must be called before any conditional returns
-	React.useEffect(() => {
+	useEffect(() => {
 		if (clickedUserId) {
 			document.addEventListener('click', handleClickOutside);
 

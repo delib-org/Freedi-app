@@ -14,6 +14,7 @@ import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { updateStatementText } from '@/controllers/db/statements/updateStatementFields';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useParticipationStats } from '@/controllers/hooks/useParticipationStats';
+import { useRecordQuestionView } from '@/controllers/hooks/useRecordQuestionView';
 import { useLoadOwnVote } from '@/controllers/hooks/useLoadOwnVote';
 import { logError } from '@/utils/errorHandling';
 import { renderInlineMarkdown } from '@/helpers/inlineMarkdownHelpers';
@@ -94,7 +95,8 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 		(n) => !n.read && n.parentId === statement?.statementId,
 	).length;
 
-	const participation = useParticipationStats(statement, options);
+	useRecordQuestionView(statement);
+	const participation = useParticipationStats(statement, isHost, options.length);
 
 	const tabs = useMemo(
 		() =>
@@ -259,7 +261,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 						</button>
 					)}
 
-					{isQuestion && isHost && !isMapScreen && (
+					{isQuestion && isHost && !isMapScreen && participation && (
 						<div className={styles.header__funnel} data-testid="host-funnel">
 							<span className={styles.header__stat}>
 								{t('Entered')} <b>{participation.entered}</b>

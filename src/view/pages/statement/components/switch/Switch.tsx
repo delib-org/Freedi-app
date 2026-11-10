@@ -103,7 +103,7 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 					: {})}
 			>
 				{showReadingHeader && activeView === 'chat' && <ConversationWelcome t={t} compact />}
-				{showReadingHeader && <OnlineUsers statementId={statement?.statementId} />}
+				{showReadingHeader && <OnlineUsers statement={statement} />}
 				{showBody && statement && <StatementBody host={statement} canEdit={isAdmin} />}
 				{showReadingHeader && allSubs.length === 0 && activeView === 'chat' && (
 					<div className={styles.onboarding}>
