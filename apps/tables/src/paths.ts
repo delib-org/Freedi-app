@@ -21,12 +21,8 @@ export function participantHomePath(sessionId: string): string {
 	return `/sessions/${encodeURIComponent(sessionId)}`;
 }
 
-export type ParticipantSubScreen = 'topics' | 'preferences' | 'my-table';
+export type ParticipantSubScreen = 'name' | 'preferences' | 'position' | 'my-table';
 
 export function participantScreenPath(sessionId: string, screen: ParticipantSubScreen): string {
 	return `${participantHomePath(sessionId)}/${screen}`;
-}
-
-export function participantTopicPath(sessionId: string, topicId: string): string {
-	return `${participantHomePath(sessionId)}/topics/${encodeURIComponent(topicId)}`;
 }

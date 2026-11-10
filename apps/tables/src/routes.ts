@@ -36,29 +36,20 @@ export const ROUTES: readonly RouteDef[] = [
 		titleKey: 'tableAssignment.screen.assignment',
 		role: 'host',
 	},
-	{
-		path: '/sessions/:id',
-		titleKey: 'tableAssignment.screen.participantHome',
-		role: 'participant',
-	},
-	{
-		path: '/sessions/:id/topics',
-		titleKey: 'tableAssignment.screen.topics',
-		role: 'participant',
-	},
-	{
-		path: '/sessions/:id/topics/:topicId',
-		titleKey: 'tableAssignment.screen.topic',
-		role: 'participant',
-	},
-	{
-		path: '/sessions/:id/preferences',
-		titleKey: 'tableAssignment.screen.preferences',
-		role: 'participant',
-	},
+	{ path: '/sessions/:id', titleKey: 'tableAssignment.session', role: 'participant' },
+	{ path: '/sessions/:id/name', titleKey: 'tableAssignment.editDetails', role: 'participant' },
+	{ path: '/sessions/:id/preferences', titleKey: 'tableAssignment.rank', role: 'participant' },
+	{ path: '/sessions/:id/position', titleKey: 'tableAssignment.position', role: 'participant' },
 	{
 		path: '/sessions/:id/my-table',
 		titleKey: 'tableAssignment.screen.myTable',
+		role: 'participant',
+	},
+	// Old links keep working: both land on the assignment link (IA section 5).
+	{ path: '/sessions/:id/topics', titleKey: 'tableAssignment.session', role: 'participant' },
+	{
+		path: '/sessions/:id/topics/:topicId',
+		titleKey: 'tableAssignment.session',
 		role: 'participant',
 	},
 ];

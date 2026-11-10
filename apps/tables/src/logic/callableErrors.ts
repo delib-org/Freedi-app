@@ -41,6 +41,7 @@ const REASON_KEYS: Readonly<Record<string, string>> = {
 	'table-full': 'tableAssignment.error.tableFull',
 	'stale-run': 'tableAssignment.error.publishStale',
 	'registration-closed': 'tableAssignment.error.registrationClosed',
+	'claimed-by-name': 'tableAssignment.cancel.claimed',
 };
 
 export function classifyError(error: unknown): CallableErrorKind {

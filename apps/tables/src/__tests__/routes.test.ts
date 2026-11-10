@@ -20,9 +20,12 @@ const CONCRETE_PATHS: ReadonlyArray<[string, string]> = [
 	[`/host/sessions/${SAMPLE_ID}/participants`, 'tableAssignment.screen.participants'],
 	[`/host/sessions/${SAMPLE_ID}/preview`, 'tableAssignment.screen.preview'],
 	[`/host/sessions/${SAMPLE_ID}/assignment`, 'tableAssignment.screen.assignment'],
-	[`/sessions/${SAMPLE_ID}`, 'tableAssignment.screen.participantHome'],
-	[`/sessions/${SAMPLE_ID}/topics`, 'tableAssignment.screen.topics'],
-	[`/sessions/${SAMPLE_ID}/preferences`, 'tableAssignment.screen.preferences'],
+	[`/sessions/${SAMPLE_ID}`, 'tableAssignment.session'],
+	[`/sessions/${SAMPLE_ID}/name`, 'tableAssignment.editDetails'],
+	[`/sessions/${SAMPLE_ID}/preferences`, 'tableAssignment.rank'],
+	[`/sessions/${SAMPLE_ID}/position`, 'tableAssignment.position'],
+	[`/sessions/${SAMPLE_ID}/topics`, 'tableAssignment.session'],
+	[`/sessions/${SAMPLE_ID}/topics/t1`, 'tableAssignment.session'],
 	[`/sessions/${SAMPLE_ID}/my-table`, 'tableAssignment.screen.myTable'],
 ];
 

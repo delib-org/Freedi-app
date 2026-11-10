@@ -20,6 +20,7 @@ export interface FakeStore {
 	runs: TableAssignmentRun[];
 	run: TableAssignmentRun | null;
 	hostSessions: TableAssignment[];
+	registeredCount: number;
 	/** A Firestore error code every subscription reports instead of data. */
 	failWith: string | null;
 	/** The same, for the topics subscription only. */
@@ -35,6 +36,7 @@ export function emptyStore(): FakeStore {
 		runs: [],
 		run: null,
 		hostSessions: [],
+		registeredCount: 0,
 		failWith: null,
 		failTopicsWith: null,
 	};

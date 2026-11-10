@@ -8,10 +8,11 @@ import { HostParticipants } from '@/views/host/HostParticipants';
 import { HostPreview } from '@/views/host/HostPreview';
 import { HostSettings } from '@/views/host/HostSettings';
 import { HostTopics } from '@/views/host/HostTopics';
-import { ParticipantHome } from '@/views/participant/ParticipantHome';
+import { ParticipantHome, LegacyTopicsRedirect } from '@/views/participant/ParticipantHome';
 import { ParticipantMyTable } from '@/views/participant/ParticipantMyTable';
+import { ParticipantName } from '@/views/participant/ParticipantName';
+import { ParticipantPosition } from '@/views/participant/ParticipantPosition';
 import { ParticipantPreferences } from '@/views/participant/ParticipantPreferences';
-import { ParticipantTopic, ParticipantTopics } from '@/views/participant/ParticipantTopics';
 
 /** Route params arrive as attrs; a screen declares the ones it reads, the router hands them over. */
 function routeView<Attrs>(component: m.Component<Attrs>): m.Component {
@@ -28,9 +29,11 @@ const VIEWS: Record<string, m.Component> = {
 	'/host/sessions/:id/preview': routeView(HostPreview),
 	'/host/sessions/:id/assignment': routeView(HostAssignment),
 	'/sessions/:id': routeView(ParticipantHome),
-	'/sessions/:id/topics': routeView(ParticipantTopics),
-	'/sessions/:id/topics/:topicId': routeView(ParticipantTopic),
+	'/sessions/:id/name': routeView(ParticipantName),
 	'/sessions/:id/preferences': routeView(ParticipantPreferences),
+	'/sessions/:id/position': routeView(ParticipantPosition),
+	'/sessions/:id/topics': routeView(LegacyTopicsRedirect),
+	'/sessions/:id/topics/:topicId': routeView(LegacyTopicsRedirect),
 	'/sessions/:id/my-table': routeView(ParticipantMyTable),
 };
 

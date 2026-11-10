@@ -1,311 +1,164 @@
 import m from 'mithril';
 import type { TableAssignmentTopic } from '@freedi/shared-types';
-import { SIDE_MAX, SIDE_MIN, TABLE_ASSIGNMENT_MAX_PREFERENCES } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { Action } from '@/lib/action';
-import { tablesApi } from '@/lib/tableAssignment/client';
-import { canEditPreferences } from '@/logic/nextAction';
-import { clearDraft, draftIsFresh, loadDraft, saveDraft } from '@/logic/localDraft';
-import {
-	isRankingFull,
-	keepKnownTopics,
-	moveRank,
-	rankOf,
-	requiredRanks,
-	toggleRank,
-} from '@/logic/ranking';
-import { SideSlider } from '@/components/SideSlider';
-import { StateBox } from '@/components/StateBox';
+import { goTo } from '@/lib/navigate';
+import { safeStorage } from '@/lib/safeStorage';
+import { loadDraft, saveDraft } from '@/logic/localDraft';
+import type { ChoicesDraft } from '@/logic/localDraft';
+import { answerFromRecord } from '@/logic/positionStops';
+import { keepKnownTopics, rankHintIndex, toggleRank } from '@/logic/ranking';
+import { nextStep } from '@/logic/steps';
 import type { ParticipantContext } from '@/components/ParticipantFrame';
-import { formatConsensus } from '@/logic/format';
-import { participantHomePath } from '@/paths';
+import { RankList } from '@/components/RankList';
+import { StateBox } from '@/components/StateBox';
+import { StepHeader } from '@/components/StepHeader';
+import { saveChoices } from '@/views/participant/saveChoices';
+import { participantHomePath, participantScreenPath } from '@/paths';
 
-/**
- * Ranked mode: pick up to three topics in order (tap to add, 1/2/3 badges,
- * remove, reorder), optionally place yourself on the position axis, save.
- * The choices are mirrored to localStorage on every change and restored on
- * the next visit, so a failed save never loses them.
- */
-const POSITION_UNSET = null;
+/** Above this many topics, a title filter appears (IA section 8). */
+const FILTER_FROM_TOPICS = 12;
 
-function readStorage(): Storage | null {
-	try {
-		return window.localStorage;
-	} catch {
-		return null;
-	}
+function firstChoices(context: ParticipantContext): ChoicesDraft {
+	const { session, uid, me, topics } = context;
+	const stored = loadDraft(session.tableAssignmentId, uid, safeStorage);
+	const fromRecord = {
+		ranked: me?.preferences ?? [],
+		position: me ? answerFromRecord(me) : null,
+	};
+	const draft = stored ?? fromRecord;
+	const topicIds = topics.map((topic) => topic.topicId);
+
+	return { ...draft, ranked: keepKnownTopics(draft.ranked, topicIds) };
 }
 
-function topicButton(
-	topic: TableAssignmentTopic,
-	ranked: readonly string[],
-	editable: boolean,
-	onToggle: (topicId: string) => void,
-): m.Vnode {
-	const rank = rankOf(ranked, topic.topicId);
-	const blocked = !editable || (rank === 0 && isRankingFull(ranked));
-
-	return m('li', { key: topic.topicId }, [
-		m(
-			'button.pick',
-			{
-				type: 'button',
-				class: rank > 0 ? 'pick--ranked' : '',
-				'aria-pressed': rank > 0 ? 'true' : 'false',
-				disabled: blocked && rank === 0,
-				onclick: () => onToggle(topic.topicId),
-			},
-			[
-				m('span.pick__badge', { 'aria-hidden': 'true' }, rank > 0 ? String(rank) : ''),
-				m('span.pick__body', [
-					m('span.pick__title', topic.title),
-					topic.description ? m('span.pick__text', topic.description) : null,
-					topic.consensus !== undefined
-						? m(
-								'span.badge',
-								t('tableAssignment.topic.consensus', { value: formatConsensus(topic.consensus) }),
-							)
-						: null,
-				]),
-				rank > 0
-					? m('span.visually-hidden', t('tableAssignment.preferences.rankedAs', { rank }))
-					: null,
-			],
-		),
+function filterField(value: string, onInput: (value: string) => void): m.Vnode {
+	return m('label.field', [
+		m('span.field__label.field__label--small', t('tableAssignment.topics.search')),
+		m('input.field__input', {
+			type: 'search',
+			dir: 'auto',
+			value,
+			oninput: (event: Event) => onInput((event.target as HTMLInputElement).value),
+		}),
 	]);
 }
 
+/** Step 2 in mix mode. Moves on with one button; saves only when it is the last step. */
 export const RankedPreferences: m.ClosureComponent<{ context: ParticipantContext }> = (initial) => {
 	const sessionId = initial.attrs.context.session.tableAssignmentId;
+	const uid = initial.attrs.context.uid;
 	const save = new Action(
 		'tables.participant.savePreferences',
 		'tableAssignment.error.preferencesClosed',
 	);
-	let ranked: string[] = [];
-	let position: number | null = POSITION_UNSET;
-	let seeded = false;
-	let uid = '';
-	let dirty = false;
+	let choices: ChoicesDraft | null = null;
+	let filter = '';
 
-	function seed(context: ParticipantContext): void {
-		uid = context.uid;
-		const storage = readStorage();
-		const stored = storage ? loadDraft(sessionId, context.uid, storage) : null;
-		const local = stored && draftIsFresh(stored, context.session.lastUpdate) ? stored : null;
-		const topicIds = context.topics.map((topic) => topic.topicId);
-
-		if (local) {
-			ranked = keepKnownTopics(local.ranked, topicIds);
-			position = local.position;
-			dirty = true;
-		} else {
-			ranked = keepKnownTopics(context.me?.preferences ?? [], topicIds);
-			position = context.me?.position ?? POSITION_UNSET;
-		}
-		seeded = true;
-	}
-
-	function persist(): void {
-		const storage = readStorage();
-
-		dirty = true;
+	function update(ranked: string[], position: ChoicesDraft['position']): void {
+		choices = { ranked, position };
 		save.clear();
-		if (storage) saveDraft(sessionId, uid, { ranked, position, savedAt: Date.now() }, storage);
+		saveDraft(sessionId, uid, choices, safeStorage);
 	}
 
-	async function submit(): Promise<void> {
-		const result = await save.run(
-			() =>
-				tablesApi.savePreferences({
-					sessionId,
-					preferences: ranked,
-					...(position === null ? {} : { position }),
-				}),
-			{ sessionId, count: ranked.length },
-		);
+	async function finish(context: ParticipantContext, current: ChoicesDraft): Promise<void> {
+		const next = nextStep(context.session, 'preferences');
 
-		if (result) {
-			dirty = false;
-			const storage = readStorage();
+		saveDraft(sessionId, uid, current, safeStorage);
+		if (next) {
+			goTo(participantScreenPath(sessionId, next));
 
-			if (storage) clearDraft(sessionId, uid, storage);
+			return;
 		}
+		if (await saveChoices(save, { sessionId, uid }, current)) goTo(participantHomePath(sessionId));
+	}
+
+	function matchesFilter(topic: TableAssignmentTopic): boolean {
+		return topic.title.toLocaleLowerCase().includes(filter.trim().toLocaleLowerCase());
+	}
+
+	function continueButton(context: ParticipantContext, current: ChoicesDraft): m.Vnode {
+		const isLast = nextStep(context.session, 'preferences') === null;
+		const labelKey = save.busy
+			? 'tableAssignment.saving'
+			: current.ranked.length === 0
+				? 'tableAssignment.rank.pickOne'
+				: isLast
+					? 'tableAssignment.save'
+					: 'tableAssignment.continue';
+
+		return m(
+			'button.btn.btn--primary.btn--cta',
+			{
+				type: 'button',
+				disabled: save.busy || current.ranked.length === 0,
+				onclick: () => void finish(context, current),
+			},
+			t(labelKey),
+		);
 	}
 
 	return {
 		view({ attrs }) {
-			const context = attrs.context;
-			const { session, topics, me } = context;
+			const { context } = attrs;
+			const { topics, topicsState } = context;
 			const home = participantHomePath(sessionId);
+			const back = { backHref: home, backLabel: t('tableAssignment.back') };
 
-			if (!me) {
-				return m(StateBox, {
-					kind: 'denied',
-					messageKey: 'tableAssignment.preferences.notRegistered',
-					backHref: home,
-					backLabel: t('tableAssignment.back.toHome'),
-				});
-			}
-			if (context.topicsState === 'loading') return m(StateBox, { kind: 'loading' });
-			if (context.topicsState !== 'ready') {
-				return m(StateBox, {
-					kind: context.topicsState,
-					onRetry: context.retryTopics,
-					backHref: home,
-					backLabel: t('tableAssignment.back.toHome'),
-				});
+			if (topicsState === 'loading') return m(StateBox, { kind: 'loading' });
+			if (topicsState !== 'ready') {
+				return m(StateBox, { kind: topicsState, onRetry: context.retryTopics, ...back });
 			}
 			if (topics.length === 0) {
 				return m(StateBox, {
 					kind: 'empty',
 					messageKey: 'tableAssignment.topics.notOpen',
-					backHref: home,
-					backLabel: t('tableAssignment.back.toHome'),
+					...back,
 				});
 			}
-			if (!seeded) seed(context);
 
-			const editable = canEditPreferences(session.status);
-			const question = session.settings.positionQuestion;
-			const topicMap = new Map(topics.map((topic) => [topic.topicId, topic]));
-			const needed = requiredRanks(topics.length);
+			choices = choices ?? firstChoices(context);
 
-			return [
-				m('p.notice', { role: 'note' }, t('tableAssignment.preferences.outsideChoices')),
-				!editable
-					? m('p.notice.notice--warn', { role: 'status' }, t('tableAssignment.preferences.closed'))
-					: null,
-				m('section.card', [
+			const current = choices;
+
+			return m('.screen', [
+				m(StepHeader, {
+					title: t('tableAssignment.rank.title'),
+					lead: t('tableAssignment.rank.lead'),
+					backHref: participantScreenPath(sessionId, 'name'),
+				}),
+				m('.rank-stack', [
+					topics.length > FILTER_FROM_TOPICS
+						? filterField(filter, (value) => {
+								filter = value;
+							})
+						: null,
+					m(RankList, {
+						topics,
+						ranked: current.ranked,
+						matches: matchesFilter,
+						onToggle: (topicId: string) =>
+							update(toggleRank(current.ranked, topicId), current.position),
+						onReorder: (next: string[]) => update(next, current.position),
+					}),
 					m(
-						'h2.card__title',
-						t('tableAssignment.preferences.pickTitle', {
-							count: needed || TABLE_ASSIGNMENT_MAX_PREFERENCES,
-						}),
-					),
-					m('p.card__hint', t('tableAssignment.preferences.pickHint')),
-					m(
-						'ul.stack',
-						topics.map((topic) =>
-							topicButton(topic, ranked, editable, (topicId) => {
-								ranked = toggleRank(ranked, topicId);
-								persist();
-							}),
-						),
+						'p.rank-hint',
+						{ 'aria-live': 'polite' },
+						t(`tableAssignment.rank.hint.${rankHintIndex(current.ranked, topics.length)}`),
 					),
 				]),
-				ranked.length > 0
-					? m('section.card', [
-							m('h2.card__title', t('tableAssignment.preferences.myOrder')),
-							m(
-								'ol.ranked',
-								ranked.map((topicId, index) =>
-									m('li.ranked__item', { key: topicId }, [
-										m('span.ranked__title', `${index + 1}. ${topicMap.get(topicId)?.title ?? ''}`),
-										editable
-											? m('span.ranked__actions', [
-													m(
-														'button.btn.btn--ghost',
-														{
-															type: 'button',
-															disabled: index === 0,
-															'aria-label': t('tableAssignment.topic.moveUp'),
-															onclick: () => {
-																ranked = moveRank(ranked, index, -1);
-																persist();
-															},
-														},
-														'↑',
-													),
-													m(
-														'button.btn.btn--ghost',
-														{
-															type: 'button',
-															disabled: index === ranked.length - 1,
-															'aria-label': t('tableAssignment.topic.moveDown'),
-															onclick: () => {
-																ranked = moveRank(ranked, index, 1);
-																persist();
-															},
-														},
-														'↓',
-													),
-													m(
-														'button.btn.btn--ghost',
-														{
-															type: 'button',
-															'aria-label': t('tableAssignment.preferences.remove'),
-															onclick: () => {
-																ranked = ranked.filter((id) => id !== topicId);
-																persist();
-															},
-														},
-														'×',
-													),
-												])
-											: null,
-									]),
-								),
-							),
-						])
-					: null,
-				question
-					? m('section.card', [
-							m('h2.card__title', question.label),
-							m('p.card__hint', t('tableAssignment.position.optionalHint')),
-							m(SideSlider, {
-								value: position,
-								labelA: question.poleA,
-								labelB: question.poleB,
-								onInput: editable
-									? (value: number) => {
-											position = Math.min(SIDE_MAX, Math.max(SIDE_MIN, value));
-											persist();
-										}
-									: () => undefined,
-								onClear: editable
-									? () => {
-											position = POSITION_UNSET;
-											persist();
-										}
-									: undefined,
-							}),
-						])
-					: null,
-				m('section.card.card--sticky', [
+				m('.screen__foot', [
+					m('p.notice', { role: 'note' }, t('tableAssignment.rank.note')),
 					save.errorKey
 						? m('p.notice.notice--error', { role: 'alert' }, [
 								t(save.errorKey),
 								' ',
-								t('tableAssignment.preferences.keptLocally'),
+								t('tableAssignment.choices.keptLocally'),
 							])
 						: null,
-					save.succeeded && !dirty
-						? m('p.notice.notice--ok', { role: 'status' }, t('tableAssignment.preferences.saved'))
-						: null,
-					editable
-						? m(
-								'button.btn.btn--primary',
-								{
-									type: 'button',
-									disabled: save.busy || ranked.length === 0,
-									onclick: () => void submit(),
-								},
-								t(
-									save.busy
-										? 'tableAssignment.saving'
-										: save.errorKey
-											? 'tableAssignment.retry'
-											: 'tableAssignment.preferences.save',
-								),
-							)
-						: null,
-					m(
-						m.route.Link,
-						{ href: home, class: 'btn btn--ghost' },
-						t('tableAssignment.back.toHome'),
-					),
+					continueButton(context, current),
 				]),
-			];
+			]);
 		},
 	};
 };
