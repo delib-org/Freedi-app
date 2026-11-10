@@ -134,6 +134,15 @@ export const JOINING = {
 /**
  * Cache constants
  */
+/**
+ * Group progress shown to participants.
+ * MIN_PUBLIC_COUNT equals DEFAULT_K_ANONYMITY in functions/src/fn_strategicExport.ts.
+ */
+export const PARTICIPATION = {
+	MIN_PUBLIC_COUNT: 5,
+	PROGRESS_REFRESH_MS: TIME.MINUTE,
+} as const;
+
 export const CACHE = {
 	DEFAULT_TTL: 5 * TIME.MINUTE,
 	LONG_TTL: 1 * TIME.HOUR,

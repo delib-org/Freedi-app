@@ -385,8 +385,13 @@ describe('organizations', () => {
 			await assertSucceeds(getDoc(doc(db, 'questionProgress', CHILD)));
 		});
 
-		it('rejects a stranger reading progress', async () => {
+		it('allows a signed-in participant with no role here to read progress', async () => {
 			const db = env.authenticatedContext(STRANGER).firestore();
+			await assertSucceeds(getDoc(doc(db, 'questionProgress', CHILD)));
+		});
+
+		it('rejects reading progress without signing in', async () => {
+			const db = env.unauthenticatedContext().firestore();
 			await assertFails(getDoc(doc(db, 'questionProgress', CHILD)));
 		});
 

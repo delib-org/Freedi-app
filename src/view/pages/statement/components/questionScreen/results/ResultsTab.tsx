@@ -10,6 +10,7 @@ import { STAGE_COLLECTING, STAGE_DECIDED } from '@/helpers/questionStage';
 import { rankAnswers, resultsRuleCaption, selectLeadingAnswers } from '../resultsLogic';
 import { getScoreAccess, questionScoreInput } from '../canSeeScore';
 import type { QuestionScreenData } from '../useQuestionScreenData';
+import GroupProgress from '../GroupProgress';
 import AnswerResult from './AnswerResult';
 import AgreementCard from './AgreementCard';
 import HowToReadResults from './HowToReadResults';
@@ -70,6 +71,7 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 	if (access === 'rate-first') {
 		return (
 			<div className={styles.tab} data-testid="results-tab">
+				<GroupProgress statementId={statement.statementId} data={data} />
 				<div className={styles.gate} data-testid="results-gated">
 					<h2 className={styles.gate__title}>{t('Results are hidden until you rate')}</h2>
 					<p className={styles.gate__body}>
@@ -97,6 +99,8 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 
 	return (
 		<div className={styles.tab} data-testid="results-tab">
+			<GroupProgress statementId={statement.statementId} data={data} />
+
 			{access === 'hidden-by-host' && (
 				<p className={styles.notice} role="note">
 					{t('Results are hidden. Evaluate independently.')}

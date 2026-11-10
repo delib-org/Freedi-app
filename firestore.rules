@@ -2770,26 +2770,12 @@ service cloud.firestore {
     }
 
     // Per-question participation funnel. Counters are maintained by the
-    // progress writer in functions/src/progress/ (Admin SDK). Readable by the
-    // question's admins (direct or via the top parent) and by members of the
-    // owning organization.
+    // progress writer in functions/src/progress/ (Admin SDK). Readable by any
+    // signed-in user: participants see group progress from a one-shot get, and
+    // the documents hold only aggregate counters (no user ids, no text). The
+    // k-anonymity floor on what is shown is applied by the client.
     match /questionProgress/{statementId} {
-      function isStatementAdmin(sid) {
-        let subId = string(request.auth.uid) + '--' + cleanPath(string(sid));
-        let subPath = /databases/$(database)/documents/statementsSubscribe/$(subId);
-        return exists(subPath) &&
-               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
-      }
-      allow get: if request.auth != null && (
-        isStatementAdmin(resource.data.statementId) ||
-        isStatementAdmin(resource.data.topParentId) ||
-        (resource.data.get('organizationId', null) != null &&
-         isOrgMember(resource.data.organizationId))
-      );
-      // list: any signed-in user. A list rule cannot cheaply evaluate the
-      // per-document subscription lookups above, and the documents hold only
-      // non-sensitive aggregate counters (no user ids, no text) — the same
-      // numbers every participant already sees on the question page.
+      allow get: if request.auth != null;
       allow list: if request.auth != null;
       allow write: if false;
     }

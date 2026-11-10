@@ -10,6 +10,7 @@ import StatementBody from '@/view/components/atomic/molecules/StatementBody/Stat
 import StatementDescription from '@/view/components/atomic/molecules/StatementDescription/StatementDescription';
 import { STAGE_LABEL_KEYS } from '@/helpers/questionStage';
 import { HOW_IT_WORKS_ANCHOR } from './questionTabs';
+import GroupProgress from './GroupProgress';
 import type { QuestionScreenData } from './useQuestionScreenData';
 import styles from './QuestionScreen.module.scss';
 
@@ -86,6 +87,8 @@ const BackgroundTab: FC<BackgroundTabProps> = ({ statement, data }) => {
 					</div>
 				)}
 			</article>
+
+			<GroupProgress statementId={statement.statementId} data={data} />
 
 			<section
 				ref={howRef}
