@@ -24,6 +24,7 @@ import {
 	moveRankTo,
 	orderTopics,
 	rankHintIndex,
+	replacedBy,
 	rankOf,
 	toggleRank,
 } from '../ranking';
@@ -37,12 +38,30 @@ describe('ranking', () => {
 		expect(toggleRank(['a', 'b'], 'a')).toEqual(['b']);
 	});
 
-	it('never takes more than three', () => {
+	it('never holds more than three: a fourth pick replaces number 3', () => {
 		const full = toggleRank(toggleRank(toggleRank([], 'a'), 'b'), 'c');
 
 		expect(isRankingFull(full)).toBe(true);
-		expect(toggleRank(full, 'd')).toEqual(['a', 'b', 'c']);
+		expect(toggleRank(full, 'd')).toEqual(['a', 'b', 'd']);
+		expect(toggleRank(toggleRank(full, 'd'), 'e')).toEqual(['a', 'b', 'e']);
 		expect(toggleRank(full, 'b')).toEqual(['a', 'c']);
+		expect(toggleRank(full, 'c')).toEqual(['a', 'b']);
+		expect(full).toEqual(['a', 'b', 'c']);
+	});
+
+	it('names the topic a pick pushes out, only when the list is full', () => {
+		expect(replacedBy(['a', 'b', 'c'], 'd')).toBe('c');
+		expect(replacedBy(['a', 'b', 'c'], 'b')).toBeUndefined();
+		expect(replacedBy(['a', 'b'], 'd')).toBeUndefined();
+		expect(replacedBy([], 'd')).toBeUndefined();
+	});
+
+	it('puts the pushed-out topic back in the host order, unpicked', () => {
+		const topics = [{ topicId: 'a' }, { topicId: 'b' }, { topicId: 'c' }, { topicId: 'd' }];
+		const next = toggleRank(['b', 'a', 'c'], 'd');
+
+		expect(rankOf(next, 'c')).toBe(0);
+		expect(orderTopics(topics, next).map((topic) => topic.topicId)).toEqual(['b', 'a', 'd', 'c']);
 	});
 
 	it('gives the 1/2/3 badge, 0 for unranked', () => {
@@ -73,7 +92,9 @@ describe('ranking', () => {
 		expect(rankHintIndex(['a'], 6)).toBe(1);
 		expect(rankHintIndex(['a', 'b'], 6)).toBe(2);
 		expect(rankHintIndex(['a', 'b', 'c'], 6)).toBe(3);
-		expect(rankHintIndex(['a', 'b'], 2)).toBe(3);
+		expect(rankHintIndex(['a', 'b'], 2)).toBe(4);
+		expect(rankHintIndex(['a'], 1)).toBe(4);
+		expect(rankHintIndex(['a', 'b', 'c'], 3)).toBe(4);
 	});
 
 	it('drops topics that no longer exist', () => {

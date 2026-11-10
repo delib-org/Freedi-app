@@ -176,7 +176,12 @@ const en: Record<string, string> = {
 	'tableAssignment.rank.hint.1': 'You can add two more.',
 	'tableAssignment.rank.hint.2': 'You can add one more. To change the order, drag the handle.',
 	'tableAssignment.rank.hint.3':
-		'To change the order, drag the handle. To replace a topic, tap it.',
+		'Picking another topic replaces number 3. To remove a topic, tap it.',
+	'tableAssignment.rank.hint.4': 'To change the order, drag the handle. To remove a topic, tap it.',
+	'tableAssignment.rank.picked': '{{topic}} picked, in place {{place}}. The order: {{order}}.',
+	'tableAssignment.rank.replaced':
+		'{{topic}} picked, in place {{place}}, replacing {{replaced}}, which was removed. The order: {{order}}.',
+	'tableAssignment.rank.removed': '{{topic}} removed.',
 	'tableAssignment.rank.handle': 'Change the place of {{topic}}. Drag it, or use the arrow keys.',
 	'tableAssignment.rank.note':
 		'We will try to seat you at a topic you picked. Sometimes you will sit at another topic, so that each table stays a small picture of the whole room.',

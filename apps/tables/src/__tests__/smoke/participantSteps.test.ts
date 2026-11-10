@@ -89,6 +89,30 @@ describe('rank topics', () => {
 		expect(rows(root)[0].querySelector('.rank-row__badge')?.textContent).toBe('1');
 	});
 
+	it('a fourth pick replaces number 3, which goes back to its place in the list', async () => {
+		mocks.store.current.topics = ['a', 'b', 'c', 'd'].map((id, index) => makeTopic(id, index));
+		mocks.store.current.me = makeParticipant('u1', { preferences: ['b', 'a', 'c'] });
+
+		const { root } = await renderScreen(ParticipantPreferences, ID);
+
+		picks(root)[3].click();
+		await settle();
+
+		const titles = rows(root).map((row) => row.textContent ?? '');
+
+		expect(root.querySelectorAll('.rank-row--picked')).toHaveLength(3);
+		expect(titles[0]).toContain('Topic b');
+		expect(titles[1]).toContain('Topic a');
+		expect(titles[2]).toContain('Topic d');
+		expect(titles[3]).toContain('Topic c');
+		expect(rows(root)[3].classList.contains('rank-row--picked')).toBe(false);
+		expect(picks(root)[3].hasAttribute('aria-disabled')).toBe(false);
+		expect(root.querySelector('[aria-live="polite"].visually-hidden')?.textContent).toContain(
+			'replacing Topic c',
+		);
+		expect(root.querySelector('.rank-hint')?.textContent).toBe(en['tableAssignment.rank.hint.3']);
+	});
+
 	it('keeps the choices when opened again before saving', async () => {
 		saveDraft(SESSION_ID, 'u1', { ranked: ['c'], position: null }, window.localStorage);
 

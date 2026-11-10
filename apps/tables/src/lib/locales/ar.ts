@@ -172,7 +172,13 @@ const ar: Record<string, string> = {
 	'tableAssignment.rank.hint.0': 'يمكنكم اختيار ثلاثة كحدّ أقصى.',
 	'tableAssignment.rank.hint.1': 'يمكنكم إضافة موضوعين آخرين.',
 	'tableAssignment.rank.hint.2': 'يمكنكم إضافة موضوع واحد آخر. لتغيير الترتيب، اسحبوا المقبض.',
-	'tableAssignment.rank.hint.3': 'لتغيير الترتيب، اسحبوا المقبض. لاستبدال موضوع، اضغطوا عليه.',
+	'tableAssignment.rank.hint.3':
+		'اختيار موضوع إضافي يستبدل الموضوع رقم 3. لإزالة موضوع، اضغطوا عليه.',
+	'tableAssignment.rank.hint.4': 'لتغيير الترتيب، اسحبوا المقبض. لإزالة موضوع، اضغطوا عليه.',
+	'tableAssignment.rank.picked': 'تم اختيار {{topic}} في المكان {{place}}. الترتيب: {{order}}.',
+	'tableAssignment.rank.replaced':
+		'تم اختيار {{topic}} في المكان {{place}} وحلّ محل {{replaced}} الذي أُزيل. الترتيب: {{order}}.',
+	'tableAssignment.rank.removed': 'تمت إزالة {{topic}}.',
 	'tableAssignment.rank.handle': 'تغيير مكان {{topic}}. اسحبوه، أو استخدموا مفاتيح الأسهم.',
 	'tableAssignment.rank.note':
 		'سنحاول إجلاسكم عند موضوع اخترتموه. وأحيانًا ستجلسون عند موضوع آخر، كي تبقى كل طاولة صورة مصغّرة عن القاعة كلها.',
