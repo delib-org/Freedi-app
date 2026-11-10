@@ -4923,6 +4923,7 @@
   "Participants can rate and vote": "يمكن للمشاركين التقييم والتصويت",
   "Participants see live results": "عرض النتائج المباشرة",
   "question.resultsOffHostNotice": "النتائج متوقفة للجميع، بما في ذلك أنت. فعّل \"عرض النتائج المباشرة\" لرؤيتها.",
+  "map.filterAppliesWhenResultsOn": "النتائج متوقفة، لذا سيُطبَّق هذا المرشح عند تشغيلها.",
   "host.stageDiffers": "المفاتيح تختلف عن إعدادات هذه المرحلة",
   "host.applyStagePreset": "استعادة إعدادات المرحلة",
   "host.stagePresetApplied": "تمت استعادة إعدادات المرحلة",

@@ -5519,6 +5519,7 @@
   "Participants can rate and vote": "המשתתפים יכולים לדרג ולהצביע",
   "Participants see live results": "הצגת תוצאות חיות",
   "question.resultsOffHostNotice": "התוצאות כבויות לכולם, גם לך. כדי לראות אותן, הפעילו את \"הצגת תוצאות חיות\".",
+  "map.filterAppliesWhenResultsOn": "התוצאות כבויות, לכן המסנן יחול רק כשהן יופעלו.",
   "host.stageDiffers": "המתגים שונים מהגדרות השלב",
   "host.applyStagePreset": "החזרת הגדרות השלב",
   "host.stagePresetApplied": "הגדרות השלב הוחזרו",

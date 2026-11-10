@@ -4804,6 +4804,7 @@
   "Participants can rate and vote": "Teilnehmende können bewerten und abstimmen",
   "Participants see live results": "Live-Ergebnisse anzeigen",
   "question.resultsOffHostNotice": "Die Ergebnisse sind für alle ausgeschaltet, auch für dich. Schalte „Live-Ergebnisse anzeigen“ ein, um sie zu sehen.",
+  "map.filterAppliesWhenResultsOn": "Die Ergebnisse sind ausgeschaltet. Dieser Filter gilt, sobald sie eingeschaltet sind.",
   "host.stageDiffers": "Die Schalter weichen von den Einstellungen dieser Phase ab",
   "host.applyStagePreset": "Phaseneinstellungen wiederherstellen",
   "host.stagePresetApplied": "Phaseneinstellungen wiederhergestellt",

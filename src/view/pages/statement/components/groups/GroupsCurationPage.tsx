@@ -19,6 +19,7 @@ import {
 import { Statement, StatementType } from '@freedi/shared-types';
 import ScoreBreakdown from '@/view/components/atomic/molecules/GroupedSuggestionCard/ScoreBreakdown';
 import { isQuestionResultsOff } from '../questionScreen/canSeeScore';
+import GroupAgreementMeta from './GroupAgreementMeta';
 
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -110,6 +111,7 @@ const GroupsCurationPage: FC = () => {
 	const navigate = useNavigate();
 
 	const parent = useAppSelector(statementSelector(statementId));
+	const resultsOff = isQuestionResultsOff(parent, Date.now());
 	const creator = useSelector(creatorSelector);
 
 	const selectAllChildren = useMemo(
@@ -780,13 +782,10 @@ const GroupsCurationPage: FC = () => {
 													String(cluster.evaluation.numberOfEvaluators),
 												)}
 											</span>
-											<span aria-hidden>·</span>
-											<span>
-												{t('{pct}% agree').replace(
-													'{pct}',
-													String(Math.round((cluster.evaluation.agreement ?? 0) * 100)),
-												)}
-											</span>
+											<GroupAgreementMeta
+												agreement={cluster.evaluation.agreement}
+												resultsOff={resultsOff}
+											/>
 										</>
 									)}
 									{cluster.evaluation && cluster.evaluation.numberOfEvaluators === 0 && (
@@ -931,7 +930,7 @@ const GroupsCurationPage: FC = () => {
 												{selectedCluster.description}
 											</p>
 										)}
-										{!isQuestionResultsOff(parent, Date.now()) && (
+										{!resultsOff && (
 											<div className={styles['curation-page__score-breakdown']}>
 												<ScoreBreakdown
 													clusterId={selectedCluster.statementId}

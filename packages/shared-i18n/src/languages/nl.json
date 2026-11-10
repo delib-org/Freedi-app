@@ -4804,6 +4804,7 @@
   "Participants can rate and vote": "Deelnemers kunnen beoordelen en stemmen",
   "Participants see live results": "Live resultaten tonen",
   "question.resultsOffHostNotice": "De resultaten staan voor iedereen uit, ook voor jou. Zet \"Live resultaten tonen\" aan om ze te zien.",
+  "map.filterAppliesWhenResultsOn": "De resultaten staan uit, dus dit filter geldt zodra ze aan staan.",
   "host.stageDiffers": "De schakelaars wijken af van de instellingen van deze fase",
   "host.applyStagePreset": "Instellingen van de fase herstellen",
   "host.stagePresetApplied": "Instellingen van de fase hersteld",
