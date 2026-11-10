@@ -2,6 +2,8 @@ import { StatementType } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { resetSampler, sampleAnswers } from '../sampler';
 import { isLargeForPresence } from '../config';
+import type { PhaseCost } from '../metrics';
+import { triggersPerStatementWrite } from '../reportMetrics';
 
 function answer(id: string, numberOfEvaluators: number): Statement {
 	return {
@@ -52,5 +54,21 @@ describe('isLargeForPresence', () => {
 		expect(isLargeForPresence({ entered: 100 })).toBe(true);
 		expect(isLargeForPresence({ asParentTotalEvaluators: 100 })).toBe(true);
 		expect(isLargeForPresence({ totalEvaluators: 150 })).toBe(true);
+	});
+});
+
+describe('triggersPerStatementWrite', () => {
+	it('counts statement triggers, not rating triggers that happen to match in number', () => {
+		const phase = {
+			writesByCollection: { statements: 100 },
+			byFunction: {
+				newEvaluation: { invocations: 100 },
+				queueDeliberation: { invocations: 100 },
+				updateParentOnChildUpdate: { invocations: 100 },
+				onNotificationQueued: { invocations: 7 },
+			},
+		} as unknown as PhaseCost;
+
+		expect(triggersPerStatementWrite(phase)).toBe(2);
 	});
 });

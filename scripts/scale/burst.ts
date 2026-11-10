@@ -106,18 +106,30 @@ function nextUnrated(
 	return answer;
 }
 
+/** How far through its ratings a burst rater finds an answer. */
+const MID_SESSION_SHARE = 0.5;
+
 /**
  * The answers as the sampler sees them mid-session. At the end of the simulated
  * session almost every answer is stable (30 ratings), so a sampler given the
  * final counts has nothing to offer; a burst rater stands for a rating given
- * while answers were still open, which is when ratings actually arrive.
+ * while answers were still open. The counts are scaled, not cleared: with no
+ * ratings at all the sampler's scores tie and it offers the same few answers.
  */
 function midSession(answers: Statement[]): Statement[] {
 	return answers.map((answer) => {
-		const copy = { ...answer };
-		delete copy.evaluation;
+		const { evaluation } = answer;
+		if (!evaluation) return answer;
 
-		return copy;
+		return {
+			...answer,
+			evaluation: {
+				...evaluation,
+				numberOfEvaluators: Math.ceil(evaluation.numberOfEvaluators * MID_SESSION_SHARE),
+				sumEvaluations: evaluation.sumEvaluations * MID_SESSION_SHARE,
+				sumSquaredEvaluations: (evaluation.sumSquaredEvaluations ?? 0) * MID_SESSION_SHARE,
+			},
+		};
 	});
 }
 

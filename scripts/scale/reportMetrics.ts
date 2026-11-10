@@ -421,11 +421,20 @@ export function metricsOf(run: RunResult): MetricRow[] {
 	return rows;
 }
 
+/** Fire once per rating, so in a phase with one write per rating their count also matches. */
+const RATING_TRIGGERS: ReadonlySet<string> = new Set([
+	'newEvaluation',
+	'onChatEvaluationCreated',
+	'onEvaluationChangeRecomputeCondensationClusters',
+	'onAgoraEvaluationWritten',
+]);
+
 /** How many functions ran exactly once per write to a statement document. */
 export function triggersPerStatementWrite(phase: PhaseCost): number {
 	const statementWrites = phase.writesByCollection[Collections.statements] ?? 0;
 	if (statementWrites === 0) return 0;
 
-	return Object.values(phase.byFunction).filter((cost) => cost.invocations === statementWrites)
-		.length;
+	return Object.entries(phase.byFunction).filter(
+		([name, cost]) => cost.invocations === statementWrites && !RATING_TRIGGERS.has(name),
+	).length;
 }
