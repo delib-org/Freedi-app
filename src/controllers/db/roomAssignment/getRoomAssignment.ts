@@ -102,6 +102,40 @@ export function listenToUserRoomAssignment(
 }
 
 /**
+ * One listener for every room this person is assigned to, keyed by answer, so
+ * a list of answers does not open a listener per card.
+ */
+export function listenToUserRoomAssignments(
+	userId: string,
+	callback: (assignments: ReadonlyMap<string, RoomParticipant>) => void,
+): () => void {
+	try {
+		const q = query(collection(FireStore, 'roomParticipants'), where('userId', '==', userId));
+
+		return onSnapshot(
+			q,
+			(snapshot) => {
+				const participants = snapshot.docs.map((doc) => doc.data() as RoomParticipant);
+				callback(new Map(participants.map((p) => [p.statementId, p])));
+			},
+			(error) => {
+				logError(error, {
+					operation: 'roomAssignment.getRoomAssignment.listenToUserRoomAssignments',
+					userId,
+				});
+			},
+		);
+	} catch (error) {
+		logError(error, {
+			operation: 'roomAssignment.getRoomAssignment.listenToUserRoomAssignments.setup',
+			userId,
+		});
+
+		return () => {};
+	}
+}
+
+/**
  * Alias for listenToUserRoomAssignment (for backwards compatibility)
  */
 export const listenToMyRoomAssignment = listenToUserRoomAssignment;

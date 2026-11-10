@@ -554,10 +554,8 @@ export const fullyLoadedScopeSelector =
 	(state: { statements: StatementsState }): FullyLoadedScope | undefined =>
 		rootId ? state.statements.fullyLoadedScopes[rootId] : undefined;
 
-export const statementSelectorById =
-	(statementId: string | undefined) => (state: { statements: StatementsState }) => {
-		return state.statements.statements.find((statement) => statement.statementId === statementId);
-	};
+export const statementSelectorById = (statementId: string | undefined) =>
+	statementSelector(statementId);
 
 export const statementsSelector = (state: { statements: StatementsState }) =>
 	state.statements.statements;
@@ -709,12 +707,10 @@ export const statementSubscriptionSelector =
 		statementId ? selectSubscriptionMap(state).get(statementId) : undefined;
 export const statementOrderSelector =
 	(statementId: string | undefined) => (state: { statements: StatementsState }) =>
-		state.statements.statements.find((statement) => statement.statementId === statementId)?.order ||
-		0;
+		statementSelector(statementId)(state)?.order || 0;
 export const statementElementHightSelector =
 	(statementId: string | undefined) => (state: { statements: StatementsState }) =>
-		state.statements.statements.find((statement) => statement.statementId === statementId)
-			?.elementHight || 0;
+		statementSelector(statementId)(state)?.elementHight || 0;
 export const lastUpdateStatementSubscriptionSelector = (state: { statements: StatementsState }) =>
 	state.statements.statementSubscriptionLastUpdate;
 

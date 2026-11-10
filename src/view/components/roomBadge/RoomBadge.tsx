@@ -1,10 +1,15 @@
-import { FC, useEffect, useState } from 'react';
+import { createContext, FC, useContext, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { listenToUserRoomAssignment } from '@/controllers/db/roomAssignment/getRoomAssignment';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { RoomParticipant } from '@freedi/shared-types';
 import styles from './RoomBadge.module.scss';
+
+/** Set by a list of answers: its one listener's result, so each badge need not listen. */
+export const RoomAssignmentsContext = createContext<ReadonlyMap<string, RoomParticipant> | null>(
+	null,
+);
 
 interface RoomBadgeProps {
 	statementId: string;
@@ -13,18 +18,21 @@ interface RoomBadgeProps {
 const RoomBadge: FC<RoomBadgeProps> = ({ statementId }) => {
 	const { t } = useTranslation();
 	const creator = useSelector(creatorSelector);
-	const [roomAssignment, setRoomAssignment] = useState<RoomParticipant | null>(null);
+	const fromList = useContext(RoomAssignmentsContext);
+	const [ownAssignment, setOwnAssignment] = useState<RoomParticipant | null>(null);
+	const hasList = fromList !== null;
+	const roomAssignment = fromList ? (fromList.get(statementId) ?? null) : ownAssignment;
 
 	// Listen to user's room assignment for this statement
 	useEffect(() => {
-		if (!creator?.uid || !statementId) return;
+		if (hasList || !creator?.uid || !statementId) return;
 
-		const unsubscribe = listenToUserRoomAssignment(statementId, creator.uid, setRoomAssignment);
+		const unsubscribe = listenToUserRoomAssignment(statementId, creator.uid, setOwnAssignment);
 
 		return () => {
 			unsubscribe();
 		};
-	}, [statementId, creator?.uid]);
+	}, [statementId, creator?.uid, hasList]);
 
 	// Don't render if user has no room assignment
 	if (!roomAssignment) {

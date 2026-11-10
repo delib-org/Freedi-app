@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useContext, useMemo } from 'react';
 import { shallowEqual } from 'react-redux';
 import { Statement } from '@freedi/shared-types';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -28,6 +28,7 @@ import {
 	shouldHintScoreReveal,
 } from './canSeeScore';
 import { countRated, rankableAnswers } from './resultsLogic';
+import { AnswerScoreGateContext } from './answerScoreGateContext';
 
 export interface AnswerScoreGate {
 	canSee: boolean;
@@ -74,18 +75,23 @@ function useScoreViewerFacts(question: Statement | undefined): ScoreViewerFacts 
 	};
 }
 
+interface AnswerScoreOptions {
+	hasRated?: boolean;
+	isHost?: boolean;
+}
+
 /**
- * The score guard for one answer. An unknown question fails closed, so an
- * answer whose parent has not loaded shows no score until it arrives.
- * `options.hasRated` overrides the rating read from the store, for a card
- * holding a rating the store has not caught up with yet. `options.isHost` adds
- * what the caller knows about the viewer; the results-off rule still applies.
+ * What the score guard needs to know about one answer. An unknown question fails
+ * closed, so an answer whose parent has not loaded shows no score until it
+ * arrives. `options.hasRated` overrides the rating read from the store, for a
+ * card holding a rating the store has not caught up with yet. `options.isHost`
+ * adds what the caller knows about the viewer; the results-off rule still applies.
  */
-export function useAnswerScoreGate(
+export function useAnswerScoreInput(
 	answer: Statement | undefined,
 	question?: Statement,
-	options?: { hasRated?: boolean; isHost?: boolean },
-): AnswerScoreGate {
+	options?: AnswerScoreOptions,
+): CanSeeScoreInput {
 	const parentFromStore = useAppSelector(statementSelector(answer?.parentId));
 	const parent = question ?? parentFromStore;
 	const creator = useAppSelector(creatorSelector);
@@ -108,14 +114,50 @@ export function useAnswerScoreGate(
 			myEvaluation,
 			likesInQuestion,
 		});
-	const input: CanSeeScoreInput = {
+
+	return {
 		...facts,
 		isHost: facts.isHost || options?.isHost === true,
 		isOwnAnswer: isOwnAnswerOf(answer, creator?.uid),
 		hasRated: hasRatedAnswer || hasVoted,
 	};
+}
 
+function gateOf(input: CanSeeScoreInput): AnswerScoreGate {
 	return { canSee: canSeeScore(input), showRevealHint: shouldHintScoreReveal(input) };
+}
+
+export function useAnswerScoreGate(
+	answer: Statement | undefined,
+	question?: Statement,
+	options?: AnswerScoreOptions,
+): AnswerScoreGate {
+	return gateOf(useAnswerScoreInput(answer, question, options));
+}
+
+/**
+ * The guard for parts of an answer card. Inside a card it uses the card's input
+ * and adds only what this part knows (a rating just tapped); elsewhere it works
+ * the input out itself. An undefined answer costs only empty lookups.
+ */
+export function useCardAnswerScoreGate(
+	answer: Statement | undefined,
+	question?: Statement,
+	options?: AnswerScoreOptions,
+): AnswerScoreGate {
+	const shared = useContext(AnswerScoreGateContext);
+	const fromCard = shared !== null && shared.answerId === answer?.statementId ? shared : null;
+	const own = useAnswerScoreInput(
+		fromCard ? undefined : answer,
+		fromCard ? undefined : question,
+		fromCard ? undefined : options,
+	);
+	if (!fromCard) return gateOf(own);
+
+	return gateOf({
+		...fromCard.input,
+		hasRated: fromCard.input.hasRated || options?.hasRated === true,
+	});
 }
 
 /**

@@ -40,8 +40,9 @@ import MergeBadge from './MergeBadge';
 import YouTubeEmbed from './YouTubeEmbed';
 import { extractYouTubeVideo } from '@/helpers/youtubeLinks';
 import { useIsClamped } from './hasClampedContent';
-import { useAnswerScoreGate } from '../../../../questionScreen/useAnswerScoreGate';
-import { isQuestionResultsOff } from '../../../../questionScreen/canSeeScore';
+import { useAnswerScoreInput } from '../../../../questionScreen/useAnswerScoreGate';
+import { AnswerScoreGateContext } from '../../../../questionScreen/answerScoreGateContext';
+import { canSeeScore, isQuestionResultsOff } from '../../../../questionScreen/canSeeScore';
 import { resolveCardMarks } from './cardMarks';
 
 interface Props {
@@ -68,7 +69,8 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 	const minJoinMembers = parentStatement?.statementSettings?.minJoinMembers;
 	const maxJoinMembers = parentStatement?.statementSettings?.maxJoinMembers;
-	const { canSee: canSeeMarks } = useAnswerScoreGate(statement, parentStatement);
+	const scoreInput = useAnswerScoreInput(statement, parentStatement);
+	const canSeeMarks = canSeeScore(scoreInput);
 	const showBadges =
 		parentStatement?.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot;
 	const isAnchored = statement?.anchored === true;
@@ -514,7 +516,11 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 						{isTheme(statement) ? (
 							actionRow
 						) : (
-							<Evaluation statement={statement} variant="card" compact footerSlot={actionRow} />
+							<AnswerScoreGateContext.Provider
+								value={{ answerId: statement.statementId, input: scoreInput }}
+							>
+								<Evaluation statement={statement} variant="card" compact footerSlot={actionRow} />
+							</AnswerScoreGateContext.Provider>
 						)}
 					</div>
 				</div>

@@ -22,6 +22,10 @@ import { applyManualOrder, includeAnswer, pinFirst, sortStatements } from './sug
 import { useFocusedAnswer } from './useFocusedAnswer';
 import { useQuestionScoreAccess } from '../../../questionScreen/useAnswerScoreGate';
 import { useAnswersView } from '../../../questionScreen/useAnswersView';
+import { useStableQuestion } from '../../../questionScreen/useStableQuestion';
+import { RoomAssignmentsContext } from '@/view/components/roomBadge/RoomBadge';
+import { listenToUserRoomAssignments } from '@/controllers/db/roomAssignment/getRoomAssignment';
+import type { RoomParticipant } from '@freedi/shared-types';
 import { useAnswerBatch } from '../../../questionScreen/useAnswerBatch';
 import { buildRateViewPath } from '../../../questionScreen/answerSorting';
 import { ANSWERS_VIEW_ALL, ANSWERS_VIEW_PARAM } from '../../../questionScreen/answersView';
@@ -68,6 +72,8 @@ const SuggestionCards: FC = () => {
 
 	const statementId = useMemo(() => params.statementId, [params.statementId]);
 	const statement = useSelector(statementSelector(statementId));
+	// Cards only redraw when something they read about the question changes.
+	const cardQuestion = useStableQuestion(statement);
 	const defaultSort = statement?.statementSettings?.defaultSortType || SortType.newest;
 	const { canSee: canSortByScore } = useQuestionScoreAccess(statement);
 	const answersView = useAnswersView(statement);
@@ -299,11 +305,19 @@ const SuggestionCards: FC = () => {
 	// Stable reference so memoized GroupedSuggestionCard children don't
 	// re-render on every parent render.
 	const renderRaw = useCallback(
-		(original: Statement) => (
-			<SuggestionCard parentStatement={statement ?? undefined} statement={original} />
-		),
-		[statement],
+		(original: Statement) => <SuggestionCard parentStatement={cardQuestion} statement={original} />,
+		[cardQuestion],
 	);
+
+	// One room listener for the whole list; each badge reads from it.
+	const [roomAssignments, setRoomAssignments] = useState<ReadonlyMap<string, RoomParticipant>>(
+		() => new Map(),
+	);
+	useEffect(() => {
+		if (!creator?.uid) return;
+
+		return listenToUserRoomAssignments(creator.uid, setRoomAssignments);
+	}, [creator?.uid]);
 
 	if (!statement) return null;
 	if (isQuestion && !isRateView && !hasSynth && !hasRaw) return null;
@@ -311,7 +325,7 @@ const SuggestionCards: FC = () => {
 	const isSubmitMode = statement.statementSettings?.isSubmitMode;
 
 	return (
-		<>
+		<RoomAssignmentsContext.Provider value={roomAssignments}>
 			{/* One band of list controls. Filters, view layers and participation
 			    stats used to occupy three separate bands above the list — the
 			    filter chips even rendered on the Discussion tab, which has no
@@ -414,7 +428,7 @@ const SuggestionCards: FC = () => {
 									renderOriginal={renderRaw}
 								/>
 							) : (
-								<SuggestionCard parentStatement={statement} statement={statementSub} />
+								<SuggestionCard parentStatement={cardQuestion} statement={statementSub} />
 							)}
 						</div>
 					</Flipped>
@@ -456,7 +470,7 @@ const SuggestionCards: FC = () => {
 					</button>
 				</div>
 			)}
-		</>
+		</RoomAssignmentsContext.Provider>
 	);
 };
 
