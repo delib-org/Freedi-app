@@ -40,6 +40,7 @@ import {
 import { logError } from '../utils/errorHandling';
 import { awardCredit } from '../engagement/credits/creditEngine';
 import { CreditAction, SourceApp } from '@freedi/shared-types';
+import { TRIGGER_MAX_INSTANCES } from '../config/triggerLimits';
 
 /**
  * One camp's tallies while a proposal is being recounted. Same shape as the
@@ -294,7 +295,11 @@ async function recountPerCamp(
  * Guard: returns immediately unless the evaluation carries agoraSessionId.
  */
 export const onAgoraEvaluationWritten = onDocumentWritten(
-	{ document: `${Collections.evaluations}/{evaluationId}`, ...functionConfig },
+	{
+		document: `${Collections.evaluations}/{evaluationId}`,
+		...functionConfig,
+		maxInstances: TRIGGER_MAX_INSTANCES.ratingSideEffect,
+	},
 	async (event) => {
 		const after = event.data?.after.exists ? (event.data.after.data() as Evaluation) : null;
 		const before = event.data?.before.exists ? (event.data.before.data() as Evaluation) : null;

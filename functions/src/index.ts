@@ -36,6 +36,7 @@ import {
 	type AuthedHttpHandler,
 } from './utils/httpAuth';
 import { RATE_BUDGETS, type RateBudget } from './config/rateBudgets';
+import { TRIGGER_MAX_INSTANCES } from './config/triggerLimits';
 
 // Import function modules
 import { onChatStatementCreated } from './chat/fn_onChatStatementCreated';
@@ -589,7 +590,7 @@ exports.onStatementCreated = createFirestoreFunction(
 	onDocumentCreated,
 	onStatementCreated,
 	'onStatementCreated',
-	{ memory: HOT_TRIGGER_MEMORY },
+	{ memory: HOT_TRIGGER_MEMORY, maxInstances: TRIGGER_MAX_INSTANCES.statementCreate },
 );
 
 // ============================================
@@ -600,6 +601,7 @@ exports.onChatStatementCreated = createFirestoreFunction(
 	onDocumentCreated,
 	onChatStatementCreated,
 	'onChatStatementCreated',
+	{ maxInstances: TRIGGER_MAX_INSTANCES.statementCreate },
 );
 // onDocumentWritten (not -Created): re-votes (update) and retractions (delete)
 // must recompute the option's denormalized C / average / evaluator count too.
@@ -608,6 +610,7 @@ exports.onChatEvaluationCreated = createFirestoreFunction(
 	onDocumentWritten,
 	onChatEvaluationCreated,
 	'onChatEvaluationCreated',
+	{ maxInstances: TRIGGER_MAX_INSTANCES.ratingSideEffect },
 );
 exports.ssrChat = ssrChat;
 exports.rescoreStatement = rescoreStatement;
@@ -658,6 +661,7 @@ exports.updateStatementWithViews = createFirestoreFunction(
 	onDocumentCreated,
 	updateStatementWithViews,
 	'updateStatementWithViews',
+	{ maxInstances: TRIGGER_MAX_INSTANCES.viewWrite },
 );
 
 // ── Question progress, Home surfacing & nudges (WizCol Studio) ──
@@ -669,6 +673,7 @@ exports.ensureTopParentSubscription = createFirestoreFunction(
 	onDocumentCreated,
 	ensureTopParentSubscription,
 	'ensureTopParentSubscription',
+	{ maxInstances: TRIGGER_MAX_INSTANCES.subscriptionWrite },
 );
 exports.fn_recomputeQuestionProgress = fn_recomputeQuestionProgress;
 exports.fn_nudgeQuestionSubscribers = fn_nudgeQuestionSubscribers;
@@ -716,7 +721,7 @@ exports.handleWaitingRoleSubscriptions = createFirestoreFunction(
 	onDocumentWritten,
 	onNewSubscription,
 	'handleWaitingRoleSubscriptions',
-	{ memory: HOT_TRIGGER_MEMORY },
+	{ memory: HOT_TRIGGER_MEMORY, maxInstances: TRIGGER_MAX_INSTANCES.subscriptionWrite },
 );
 
 // Subscription updates: revert bans of admins/creators, then keep the user's
@@ -726,7 +731,7 @@ exports.validateRoleChange = createFirestoreFunction(
 	onDocumentUpdated,
 	onSubscriptionUpdated,
 	'validateRoleChange',
-	{ memory: HOT_TRIGGER_MEMORY },
+	{ memory: HOT_TRIGGER_MEMORY, maxInstances: TRIGGER_MAX_INSTANCES.subscriptionWrite },
 );
 
 // Membership lifecycle: numberOfMembers + userFeed entry. Split from the old
@@ -737,12 +742,14 @@ exports.onSubscriptionCreatedMembership = createFirestoreFunction(
 	onDocumentCreated,
 	onSubscriptionCreated,
 	'onSubscriptionCreatedMembership',
+	{ maxInstances: TRIGGER_MAX_INSTANCES.subscriptionWrite },
 );
 exports.onSubscriptionDeletedMembership = createFirestoreFunction(
 	`/${Collections.statementsSubscribe}/{subscriptionId}`,
 	onDocumentDeleted,
 	onSubscriptionDeleted,
 	'onSubscriptionDeletedMembership',
+	{ maxInstances: TRIGGER_MAX_INSTANCES.subscriptionWrite },
 );
 
 // New v2 functions to update statements and subscriptions efficiently
@@ -791,7 +798,7 @@ exports.newEvaluation = createFirestoreFunction(
 	onDocumentCreated,
 	newEvaluation,
 	'newEvaluation',
-	{ memory: HOT_TRIGGER_MEMORY },
+	{ memory: HOT_TRIGGER_MEMORY, maxInstances: TRIGGER_MAX_INSTANCES.ratingWrite },
 );
 
 exports.deleteEvaluation = createFirestoreFunction(
@@ -799,7 +806,7 @@ exports.deleteEvaluation = createFirestoreFunction(
 	onDocumentDeleted,
 	deleteEvaluation,
 	'deleteEvaluation',
-	{ memory: HOT_TRIGGER_MEMORY },
+	{ memory: HOT_TRIGGER_MEMORY, maxInstances: TRIGGER_MAX_INSTANCES.ratingWrite },
 );
 
 exports.updateEvaluation = createFirestoreFunction(
@@ -807,7 +814,7 @@ exports.updateEvaluation = createFirestoreFunction(
 	onDocumentUpdated,
 	updateEvaluation,
 	'updateEvaluation',
-	{ memory: HOT_TRIGGER_MEMORY },
+	{ memory: HOT_TRIGGER_MEMORY, maxInstances: TRIGGER_MAX_INSTANCES.ratingWrite },
 );
 
 // Results functions
@@ -832,6 +839,7 @@ exports.addVote = createFirestoreFunction(
 	onDocumentWritten,
 	updateVote,
 	'addVote',
+	{ maxInstances: TRIGGER_MAX_INSTANCES.voteWrite },
 );
 
 exports.updateDocumentApproval = createFirestoreFunction(
@@ -1093,6 +1101,7 @@ exports.onNotificationQueued = createFirestoreFunction(
 		await processQueueItem(queueItemId, item);
 	},
 	'onNotificationQueued',
+	{ maxInstances: TRIGGER_MAX_INSTANCES.ratingSideEffect },
 );
 
 // HTTP endpoint to manually process pending notification queue items (admin auth required)
@@ -1192,6 +1201,7 @@ exports.liveSynthOnOptionCreate = createFirestoreFunction(
 		await liveSynthOnOptionCreate(event.data.data());
 	},
 	'liveSynthOnOptionCreate',
+	{ maxInstances: TRIGGER_MAX_INSTANCES.statementCreate },
 );
 
 exports.liveSynthOnOptionUpdate = createFirestoreFunction(
@@ -1213,6 +1223,7 @@ exports.liveSynthOnOptionUpdate = createFirestoreFunction(
 		]);
 	},
 	'liveSynthOnOptionUpdate',
+	{ maxInstances: TRIGGER_MAX_INSTANCES.statementWrite },
 );
 
 // Living-only synthesis (Day 1–5). All entry points flow into `runSinglePipeline`.
@@ -1226,6 +1237,7 @@ exports.liveSynthOnOptionEvaluationChange = createFirestoreFunction(
 		await liveSynthOnOptionEvaluationChange(event.data.before.data(), event.data.after.data());
 	},
 	'liveSynthOnOptionEvaluationChange',
+	{ maxInstances: TRIGGER_MAX_INSTANCES.statementWrite },
 );
 
 export { processSynthesisQueue } from './synthesis/queue/processSynthesisQueue';

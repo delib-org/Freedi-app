@@ -13,6 +13,7 @@ import { logError } from '../utils/errorHandling';
 import { runCondensationPipeline } from './pipeline';
 import { notifyAuthorsOfGrouping } from './authorNotifications';
 import { recomputeAffectedClusters } from './recomputeAffectedClusters';
+import { TRIGGER_MAX_INSTANCES } from '../config/triggerLimits';
 
 const db = getFirestore();
 
@@ -177,6 +178,7 @@ export const onEvaluationChangeRecomputeCondensationClusters = onDocumentWritten
 	{
 		document: `${Collections.evaluations}/{evaluationId}`,
 		region: functionConfig.region,
+		maxInstances: TRIGGER_MAX_INSTANCES.ratingSideEffect,
 	},
 	async (event) => {
 		try {
