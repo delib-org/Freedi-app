@@ -37,6 +37,8 @@ import {
 } from './utils/httpAuth';
 import { RATE_BUDGETS, type RateBudget } from './config/rateBudgets';
 import { TRIGGER_MAX_INSTANCES } from './config/triggerLimits';
+import { legacyStatementTriggers } from './statementDispatch/legacyTriggers';
+import { skipWhenDispatcherOwns } from './statementDispatch/cutover';
 
 // Import function modules
 import { onChatStatementCreated } from './chat/fn_onChatStatementCreated';
@@ -149,7 +151,6 @@ import { sendWeeklyDigests, processWeeklyDigests } from './engagement/scheduled/
 import type { NotificationQueueItem } from '@freedi/shared-types';
 
 import { triggerTopicClusterPipeline } from './fn_topicClustering';
-import { fn_syncParagraphChildrenToDescription } from './fn_syncParagraphChildrenToDescription';
 
 // Strategic export (AI-ready report)
 import { strategicExport } from './fn_strategicExport';
@@ -161,7 +162,6 @@ import { privacyExport } from './fn_privacyExport';
 import { analyzeFalsifiability } from './fn_popperHebbian_analyzeFalsifiability';
 import { refineIdea } from './fn_popperHebbian_refineIdea';
 import { onEvidencePostCreate, onEvidencePostUpdate } from './fn_popperHebbian_onEvidencePost';
-import { onVoteUpdate } from './fn_popperHebbian_onVote';
 import { summarizeLink } from './fn_popperHebbian_summarizeLink';
 import { improveProposalWithAI } from './fn_popperHebbian_improveProposal';
 
@@ -225,19 +225,11 @@ import { processRefinementAI } from './fn_refinementAI';
 import { onSuggestionCreatedAutoGenerate } from './fn_autoGenerateVersion';
 
 // Paragraph Version Control (MVP)
-import { fn_createReplacementQueueItem } from './fn_createReplacementQueueItem';
-import { fn_updateQueueConsensus } from './fn_updateQueueConsensus';
-import { fn_pruneVersionHistory } from './fn_pruneVersionHistory';
 import { fn_notifyAdminReplacementPending } from './fn_notifyAdminReplacementPending';
-import { fn_autoRemoveParagraph, fn_autoAddParagraph } from './fn_consensusActions';
 
 // Civil Activity Hub — Join Form exports
-import { fn_syncOptionMembersToSheet } from './engagement/joinForm/fn_syncOptionMembersToSheet';
 import { fn_removeUserFromSheet } from './engagement/joinForm/fn_removeUserFromSheet';
-import {
-	fn_backupJoinFormSubmission,
-	fn_backupOptionMembership,
-} from './engagement/joinForm/fn_backupJoinRegistration';
+import { fn_backupJoinFormSubmission } from './engagement/joinForm/fn_backupJoinRegistration';
 import { fn_reconcileJoinSheet } from './engagement/joinForm/fn_reconcileJoinSheet';
 import { fn_syncSubmissionToSheet } from './engagement/joinForm/fn_syncSubmissionToSheet';
 import { fn_joinOption } from './engagement/joinForm/fn_joinOption';
@@ -279,7 +271,6 @@ import {
 	fn_studioSeedOptions,
 	studioScheduledActionSweep,
 	studioPlanOutcomeSnapshot,
-	mirrorQuestionStatusToSurvey,
 } from './organizations/studio';
 
 // ── Question progress, Home surfacing & nudges (WizCol Studio) ──
@@ -301,7 +292,6 @@ import {
 import {
 	runCondensation,
 	onEvaluationChangeRecomputeCondensationClusters,
-	onStatementCreatedMarkCondensationStale,
 } from './condensation/fn_runCondensation';
 import { suggestClusterTitle } from './condensation/fn_suggestClusterTitle';
 import { mergeClusters } from './condensation/fn_mergeClusters';
@@ -756,6 +746,9 @@ exports.onSubscriptionDeletedMembership = createFirestoreFunction(
 // These are v2 functions, so we export them directly without the wrapper
 // Note: updateParentOnChildCreate is now handled in onStatementCreated
 // exports.updateParentOnChildCreate = updateParentOnChildCreate;
+// One trigger for the statement handlers that exit on a field check. Inert until
+// STATEMENT_DISPATCH_CUTOVER_MS is set; see statementDispatch/cutover.ts.
+export { onStatementWriteDispatch } from './statementDispatch/onStatementWriteDispatch';
 exports.updateParentOnChildUpdate = updateParentOnChildUpdate;
 exports.updateParentOnChildDelete = updateParentOnChildDelete;
 // REMOVED: updateSubscriptionsSimpleStatement — replaced by Snapshot + Overlay pattern
@@ -774,7 +767,7 @@ exports.removeOptionFromMassConsensus = createFirestoreFunction(
 exports.updateOptionInMassConsensus = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
 	onDocumentUpdated,
-	updateOptionInMassConsensus,
+	skipWhenDispatcherOwns(updateOptionInMassConsensus),
 	'updateOptionInMassConsensus',
 );
 
@@ -868,7 +861,7 @@ exports.analyzeFalsifiability = analyzeFalsifiability;
 exports.refineIdea = refineIdea;
 exports.onEvidencePostCreate = onEvidencePostCreate;
 exports.onEvidencePostUpdate = onEvidencePostUpdate;
-exports.onVoteUpdate = onVoteUpdate;
+exports.onVoteUpdate = legacyStatementTriggers.onVoteUpdate;
 exports.summarizeLink = summarizeLink;
 exports.improveProposalWithAI = improveProposalWithAI;
 
@@ -984,17 +977,18 @@ exports.recalculatePolarizationIndexForGroup = wrapAdminHttpFunction(
 );
 
 // Paragraph Version Control (MVP) - Sign app
-exports.fn_createReplacementQueueItem = fn_createReplacementQueueItem;
-exports.fn_updateQueueConsensus = fn_updateQueueConsensus;
-exports.fn_pruneVersionHistory = fn_pruneVersionHistory;
+exports.fn_createReplacementQueueItem = legacyStatementTriggers.fn_createReplacementQueueItem;
+exports.fn_updateQueueConsensus = legacyStatementTriggers.fn_updateQueueConsensus;
+exports.fn_pruneVersionHistory = legacyStatementTriggers.fn_pruneVersionHistory;
 exports.fn_notifyAdminReplacementPending = fn_notifyAdminReplacementPending;
-exports.fn_autoRemoveParagraph = fn_autoRemoveParagraph;
-exports.fn_autoAddParagraph = fn_autoAddParagraph;
-exports.fn_syncParagraphChildrenToDescription = fn_syncParagraphChildrenToDescription;
-exports.fn_syncOptionMembersToSheet = fn_syncOptionMembersToSheet;
+exports.fn_autoRemoveParagraph = legacyStatementTriggers.fn_autoRemoveParagraph;
+exports.fn_autoAddParagraph = legacyStatementTriggers.fn_autoAddParagraph;
+exports.fn_syncParagraphChildrenToDescription =
+	legacyStatementTriggers.fn_syncParagraphChildrenToDescription;
+exports.fn_syncOptionMembersToSheet = legacyStatementTriggers.fn_syncOptionMembersToSheet;
 exports.fn_removeUserFromSheet = fn_removeUserFromSheet;
 exports.fn_backupJoinFormSubmission = fn_backupJoinFormSubmission;
-exports.fn_backupOptionMembership = fn_backupOptionMembership;
+exports.fn_backupOptionMembership = legacyStatementTriggers.fn_backupOptionMembership;
 exports.fn_reconcileJoinSheet = fn_reconcileJoinSheet;
 exports.fn_syncSubmissionToSheet = fn_syncSubmissionToSheet;
 exports.fn_joinOption = fn_joinOption;
@@ -1038,7 +1032,7 @@ exports.fn_studioSetDocumentStatus = fn_studioSetDocumentStatus;
 exports.fn_studioSeedOptions = fn_studioSeedOptions;
 // Keeps an MC survey's status in step with its question's run state
 // (manual Open/Freeze/Close from Studio, Join, or the scheduler).
-exports.mirrorQuestionStatusToSurvey = mirrorQuestionStatusToSurvey;
+exports.mirrorQuestionStatusToSurvey = legacyStatementTriggers.mirrorQuestionStatusToSurvey;
 
 // --------------------------
 // SCHEDULED FUNCTIONS
@@ -1296,7 +1290,8 @@ exports.privacyExport = wrapAdminHttpFunction(privacyExport, {
 exports.runCondensation = runCondensation;
 exports.onEvaluationChangeRecomputeCondensationClusters =
 	onEvaluationChangeRecomputeCondensationClusters;
-exports.onStatementCreatedMarkCondensationStale = onStatementCreatedMarkCondensationStale;
+exports.onStatementCreatedMarkCondensationStale =
+	legacyStatementTriggers.onStatementCreatedMarkCondensationStale;
 exports.suggestClusterTitle = suggestClusterTitle;
 exports.mergeClusters = mergeClusters;
 exports.evaluationDriftCorrection = evaluationDriftCorrection;
@@ -1393,5 +1388,6 @@ export * from './classroom';
 // Tables (table assignment): host + participant callables
 export * from './tableAssignment';
 
-export { deliberation, queueDeliberation, updateDeliberations } from './deliberation/functions';
+export { deliberation, updateDeliberations } from './deliberation/functions';
+exports.queueDeliberation = legacyStatementTriggers.queueDeliberation;
 export { createAgreementHandoff, redeemAgreementHandoff } from './deliberation/handoff';
