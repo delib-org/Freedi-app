@@ -27,9 +27,12 @@ describe('initialRoute', () => {
 			expect(toSafeRedirectPath(target)).toBeUndefined();
 		});
 
-		it.each(['/start', '/401', '/401?x=1'])('does not return to %s', (target) => {
-			expect(toSafeRedirectPath(target)).toBeUndefined();
-		});
+		it.each(['/start', '/start/', '/401', '/401/', '/401//', '/401?x=1'])(
+			'does not return to %s',
+			(target) => {
+				expect(toSafeRedirectPath(target)).toBeUndefined();
+			},
+		);
 	});
 
 	describe('saveInitialRoute and readInitialRoute', () => {

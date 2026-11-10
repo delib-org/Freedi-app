@@ -19,7 +19,7 @@ export function toSafeRedirectPath(target: unknown): string | undefined {
 		const url = new URL(target, PARSING_ORIGIN);
 		// Checked after parsing: `/a/..//evil.com` only becomes `//evil.com` here.
 		if (url.origin !== PARSING_ORIGIN || url.pathname.startsWith('//')) return undefined;
-		if (NON_RETURN_PATHS.includes(url.pathname)) return undefined;
+		if (NON_RETURN_PATHS.includes(url.pathname.replace(/\/+$/, ''))) return undefined;
 
 		return `${url.pathname}${url.search}`;
 	} catch {
