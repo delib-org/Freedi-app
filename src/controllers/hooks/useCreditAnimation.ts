@@ -3,6 +3,7 @@ import { CreditAction } from '@freedi/shared-types';
 import type { CreditTransaction } from '@freedi/shared-types';
 import { useAppSelector } from './reduxHooks';
 import { recentCreditsSelector } from '@/redux/engagement/engagementSlice';
+import { TIME } from '@/constants/common';
 
 interface CreditAnimationItem {
 	id: string;
@@ -26,11 +27,14 @@ const SILENT_CREDIT_ACTIONS: ReadonlySet<CreditAction> = new Set([
  * The newest credit that arrived between two listener snapshots and may be
  * toasted, or null. The list is newest-first and capped, so its length stops
  * changing once it is full: arrival is detected from the newest id instead.
- * An empty `previous` is the first load, which never animates.
+ * An empty `previous` only sets the baseline. The next snapshot can still add
+ * rows the person did not just earn, such as server data replacing a cached
+ * list, so a credit is toasted only when it is recent.
  */
 export function findCreditToToast(
 	previous: CreditTransaction[],
 	current: CreditTransaction[],
+	now: number,
 ): CreditTransaction | null {
 	const previousNewest = previous[0];
 	if (!previousNewest || current[0]?.transactionId === previousNewest.transactionId) {
@@ -44,7 +48,11 @@ export function findCreditToToast(
 		(credit) => !knownIds.has(credit.transactionId) && credit.createdAt >= previousNewest.createdAt,
 	);
 
-	return arrived.find((credit) => !SILENT_CREDIT_ACTIONS.has(credit.action)) ?? null;
+	return (
+		arrived.find(
+			(credit) => !SILENT_CREDIT_ACTIONS.has(credit.action) && now - credit.createdAt <= TIME.HOUR,
+		) ?? null
+	);
 }
 
 /**
@@ -57,7 +65,7 @@ export function useCreditAnimation() {
 	const [toast, setToast] = useState<CreditAnimationItem | null>(null);
 
 	useEffect(() => {
-		const credit = findCreditToToast(prevCreditsRef.current, recentCredits);
+		const credit = findCreditToToast(prevCreditsRef.current, recentCredits, Date.now());
 		if (credit) {
 			setToast({ id: credit.transactionId, amount: credit.amount });
 		}
