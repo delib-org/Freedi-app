@@ -1,7 +1,9 @@
 .suggestions-wrapper {
 	display: flex;
 	flex-direction: column;
-	gap: var(--padding);
+	// Tight: each card-wrapper already keeps 12px of room above its card for
+	// the grouped-card ribbon, so this adds up to a 16px gap between cards.
+	gap: var(--space-2xs);
 	width: 100%;
 	overflow-x: hidden; // Prevent horizontal overflow on mobile
 }
@@ -17,7 +19,7 @@
 	// stays mounted; the browser only renders cards near the viewport.
 	// Unsupported browsers ignore both properties (graceful no-op).
 	content-visibility: auto;
-	contain-intrinsic-size: auto 192px;
+	contain-intrinsic-size: auto 140px;
 }
 
 .submitButtonContainer {

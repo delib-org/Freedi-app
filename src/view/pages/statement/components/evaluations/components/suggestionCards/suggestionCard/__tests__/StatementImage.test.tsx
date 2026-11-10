@@ -18,14 +18,14 @@ jest.mock('@/view/components/uploadImage/UploadImage', () => ({
 
 const STATEMENT = { statementId: 's1', statement: 'A shared street' } as Statement;
 
-function renderImage(isAdmin: boolean) {
+function renderImage(isAdmin: boolean, displayMode: 'above' | 'inline' | 'thumb' = 'above') {
 	const onRemove = jest.fn();
 	render(
 		<StatementImage
 			statement={STATEMENT}
 			image="https://example.com/street.jpg"
 			setImage={jest.fn()}
-			displayMode="above"
+			displayMode={displayMode}
 			onRemove={onRemove}
 			isAdmin={isAdmin}
 		/>,
@@ -61,6 +61,14 @@ describe('StatementImage', () => {
 
 			fireEvent.click(screen.getByRole('button', { name: 'Close' }));
 			expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+		});
+
+		it('as a thumbnail still opens the photo full size when pressed', () => {
+			renderImage(false, 'thumb');
+
+			fireEvent.click(screen.getByRole('button', { name: 'Enlarge image: A shared street' }));
+
+			expect(screen.getByRole('dialog', { name: 'A shared street' })).toBeInTheDocument();
 		});
 
 		it('returns to the card when zoomed out from the fitted size', () => {

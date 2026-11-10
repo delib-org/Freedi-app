@@ -27,6 +27,7 @@ import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 import UnreadMessagesBadge from '@/view/components/unreadBadge/UnreadMessagesBadge';
 import { DiveInIconButton, BookmarkIconButton } from '../CardActionButtons/CardActionButtons';
+import ReadMoreClamp from './ReadMoreClamp';
 import styles from './TreeOptionNode.module.scss';
 
 // Stable empty array reference shared across all non-synthesis nodes, so the
@@ -210,6 +211,7 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 		parentStatement?.results?.some((result) => result.statementId === statement.statementId) ??
 		false;
 
+	const paragraphsKey = (statement.paragraphs ?? []).map((p) => p.content).join('\n');
 	const isFailed = statement.joinStatus === 'failed';
 	const isCluster = statement.isCluster === true;
 	const integratedOptions = statement.integratedOptions ?? [];
@@ -333,17 +335,21 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 						</div>
 						{statement.paragraphs && statement.paragraphs.length > 0 ? (
 							<div className={styles['tree-option-node__paragraphs']}>
-								{[...statement.paragraphs]
-									.sort((a, b) => a.order - b.order)
-									.map((p) => (
-										<p key={p.paragraphId}>
-											<RichHtmlContent content={p.content} />
-										</p>
-									))}
+								<ReadMoreClamp contentKey={paragraphsKey}>
+									{[...statement.paragraphs]
+										.sort((a, b) => a.order - b.order)
+										.map((p) => (
+											<p key={p.paragraphId}>
+												<RichHtmlContent content={p.content} />
+											</p>
+										))}
+								</ReadMoreClamp>
 							</div>
 						) : statement.description ? (
 							<div className={styles['tree-option-node__description']}>
-								<RichHtmlContent content={statement.description} />
+								<ReadMoreClamp contentKey={statement.description}>
+									<RichHtmlContent content={statement.description} />
+								</ReadMoreClamp>
 							</div>
 						) : null}
 						{isSynthesis && (

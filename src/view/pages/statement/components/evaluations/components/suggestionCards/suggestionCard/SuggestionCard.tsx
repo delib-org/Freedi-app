@@ -39,6 +39,7 @@ import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
 import MergeBadge from './MergeBadge';
 import YouTubeEmbed from './YouTubeEmbed';
 import { extractYouTubeVideo } from '@/helpers/youtubeLinks';
+import { hasClampedContent } from './hasClampedContent';
 
 interface Props {
 	statement: Statement | undefined;
@@ -135,7 +136,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 						// long body still needs the expand affordance.
 						const description = descriptionRef.current;
 						const isOverflowing =
-							textContainer.scrollHeight > textContainer.clientHeight ||
+							hasClampedContent(textContainer) ||
 							(!!description && description.scrollHeight > description.clientHeight);
 						if (isOverflowing) {
 							textElement.classList.add(styles.hasOverflow);
@@ -382,25 +383,25 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 				</span>
 			)}
 
-			{/* Image - Display image at the top of card */}
-			{image && (
-				<StatementImage
-					statement={statement}
-					image={image}
-					setImage={setImage}
-					displayMode="above"
-					onRemove={async () => {
-						setImage('');
-						await updateStatementMainImage(statement, '');
-					}}
-					isAdmin={isAdmin}
-					fileInputRef={fileInputRef}
-				/>
-			)}
 			{/* A YouTube link in the option text plays here; the link itself is hidden from the text. */}
 			{youTubeVideo && <YouTubeEmbed embedUrl={youTubeVideo.embedUrl} />}
 			<div className={styles.body}>
 				<div className={styles.info}>
+					{/* Photo: a small thumbnail beside the text; pressing it opens it full size. */}
+					{image && (
+						<StatementImage
+							statement={statement}
+							image={image}
+							setImage={setImage}
+							displayMode="thumb"
+							onRemove={async () => {
+								setImage('');
+								await updateStatementMainImage(statement, '');
+							}}
+							isAdmin={isAdmin}
+							fileInputRef={fileInputRef}
+						/>
+					)}
 					<div className={styles.text}>
 						<div
 							className={`${styles.textContent} ${isExpanded ? styles.textContentExpanded : ''}`}

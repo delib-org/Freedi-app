@@ -10,8 +10,11 @@
 	display: flex;
 	flex-direction: row;
 	align-items: flex-start;
-	justify-content: center;
-	gap: var(--space-sm);
+	// A host (the one-row desktop footer) can shrink and left-align the row by
+	// setting --circle-max, --circle-min, --circle-row-gap and
+	// --circle-row-justify on an ancestor. Without them: the full-size centered row.
+	justify-content: var(--circle-row-justify, center);
+	gap: var(--circle-row-gap, var(--space-sm));
 	inline-size: 100%;
 	min-width: 0;
 	// Room for the selected circle's ring and check badge at the row's ends.
@@ -19,7 +22,7 @@
 
 	// The disabled state wraps each button in a Tooltip; the wrapper is the flex item.
 	> * {
-		flex: 0 1 3.5rem;
+		flex: 0 1 var(--circle-max, 3.5rem);
 		min-width: 0;
 	}
 }
@@ -49,8 +52,8 @@
 	align-items: center;
 	justify-content: center;
 	inline-size: 100%;
-	min-inline-size: 2.75rem;
-	max-inline-size: 3.5rem;
+	min-inline-size: var(--circle-min, 2.75rem);
+	max-inline-size: var(--circle-max, 3.5rem);
 	aspect-ratio: 1 / 1;
 	padding: 0;
 	border: 3px solid transparent;
