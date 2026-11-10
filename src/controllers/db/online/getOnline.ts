@@ -1,4 +1,4 @@
-import { query, where, onSnapshot, limit } from 'firebase/firestore';
+import { query, where, onSnapshot, limit, orderBy } from 'firebase/firestore';
 import { Collections, Online, OnlineSchema } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { PRESENCE } from '@/constants/common';
@@ -16,6 +16,7 @@ export function ListenToOnlineUsers(
 	const q = query(
 		createCollectionRef(Collections.online),
 		where('statementId', '==', statementId),
+		orderBy('lastUpdated', 'desc'),
 		limit(PRESENCE.MAX_LISTENED_PEOPLE),
 	);
 

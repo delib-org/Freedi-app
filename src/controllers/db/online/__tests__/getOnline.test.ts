@@ -1,4 +1,4 @@
-import { limit, onSnapshot } from 'firebase/firestore';
+import { limit, onSnapshot, orderBy } from 'firebase/firestore';
 import { Online } from '@freedi/shared-types';
 import { PRESENCE } from '@/constants/common';
 import { logError } from '@/utils/errorHandling';
@@ -8,6 +8,7 @@ jest.mock('firebase/firestore', () => ({
 	query: jest.fn(() => 'the-query'),
 	where: jest.fn(),
 	limit: jest.fn(),
+	orderBy: jest.fn(),
 	onSnapshot: jest.fn(() => jest.fn()),
 }));
 jest.mock('@/utils/firebaseUtils', () => ({ createCollectionRef: jest.fn() }));
@@ -34,9 +35,10 @@ describe('ListenToOnlineUsers', () => {
 		jest.restoreAllMocks();
 	});
 
-	it('caps how many people one listener can hold', () => {
+	it('holds the most recently active people, up to the cap', () => {
 		ListenToOnlineUsers('q1', jest.fn());
 
+		expect(orderBy).toHaveBeenCalledWith('lastUpdated', 'desc');
 		expect(limit).toHaveBeenCalledWith(PRESENCE.MAX_LISTENED_PEOPLE);
 		expect(mockOnSnapshot.mock.calls[0][0]).toBe('the-query');
 	});
