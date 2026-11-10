@@ -11,7 +11,7 @@ import {
 	isAddAnswerEnabled,
 	isHostRole,
 } from './questionScreenLogic';
-import { getQuestionStage, QuestionStageIndex, STAGE_DECIDED } from './questionStage';
+import { getQuestionStage, QuestionStageIndex, STAGE_DECIDED } from '@/helpers/questionStage';
 import { countRated, rankableAnswers } from './resultsLogic';
 
 /**

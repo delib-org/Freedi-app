@@ -29,7 +29,7 @@ import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificat
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import HostHubSheet from '../host/HostHubSheet';
 import { isHostRole } from '../questionScreen/questionScreenLogic';
-import { getQuestionStage, showsStageBar, STAGE_LABEL_KEYS } from '../questionScreen/questionStage';
+import { getQuestionStage, showsStageBar, STAGE_LABEL_KEYS } from '@/helpers/questionStage';
 import { buildQuestionTabs, resolveActiveView, tabOfView } from '../questionScreen/questionTabs';
 import styles from './QuestionHeader.module.scss';
 

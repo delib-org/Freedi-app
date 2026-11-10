@@ -17,8 +17,8 @@ import {
 	QuestionStageIndex,
 	STAGE_LABEL_KEYS,
 	STAGE_TO_STEP,
-} from '../questionScreen/questionStage';
-import { differsFromStagePreset } from '../questionScreen/stagePreset';
+} from '@/helpers/questionStage';
+import { differsFromStagePreset } from '@/helpers/stagePreset';
 import { buildHostHubPath, HostHubSectionId } from './hostHubLogic';
 import styles from './HostHubSheet.module.scss';
 

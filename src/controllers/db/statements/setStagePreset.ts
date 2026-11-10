@@ -2,8 +2,8 @@ import { updateDoc } from 'firebase/firestore';
 import { Statement } from '@freedi/shared-types';
 import { createStatementRef, updateTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
-import { QuestionStageIndex } from '@/view/pages/statement/components/questionScreen/questionStage';
-import { applyStagePreset } from '@/view/pages/statement/components/questionScreen/stagePreset';
+import { QuestionStageIndex } from '@/helpers/questionStage';
+import { applyStagePreset } from '@/helpers/stagePreset';
 
 /** Moves a question to a stage and sets what participants can do there, in one write. */
 export async function setStagePresetToDB(

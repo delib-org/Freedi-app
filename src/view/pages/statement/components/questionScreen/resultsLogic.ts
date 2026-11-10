@@ -1,6 +1,6 @@
 import { CutoffBy, ResultsSettings, Statement, defaultResultsSettings } from '@freedi/shared-types';
 import { getConsensusScore } from '@/redux/utils/selectorFactories';
-import { QuestionStageIndex, STAGE_COLLECTING, STAGE_DECIDED } from './questionStage';
+import { QuestionStageIndex, STAGE_COLLECTING, STAGE_DECIDED } from '@/helpers/questionStage';
 
 /**
  * Pure decisions behind the Results tab and the answers counter: who may read

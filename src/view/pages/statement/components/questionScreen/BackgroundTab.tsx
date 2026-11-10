@@ -7,7 +7,7 @@ import { statementSelectorById } from '@/redux/statements/statementsSlice';
 import { formatTimeRemaining } from '@/helpers/deadlineHelpers';
 import StatementBody from '@/view/components/atomic/molecules/StatementBody/StatementBody';
 import StatementDescription from '@/view/components/atomic/molecules/StatementDescription/StatementDescription';
-import { STAGE_LABEL_KEYS } from './questionStage';
+import { STAGE_LABEL_KEYS } from '@/helpers/questionStage';
 import type { QuestionScreenData } from './useQuestionScreenData';
 import styles from './QuestionScreen.module.scss';
 

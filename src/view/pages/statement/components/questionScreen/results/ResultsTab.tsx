@@ -6,7 +6,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { fullyLoadedScopeSelector } from '@/redux/statements/statementsSlice';
 import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
 import QuestionProcess from '@/view/components/atomic/organisms/ThinkingSpace/QuestionProcess';
-import { STAGE_COLLECTING, STAGE_DECIDED } from '../questionStage';
+import { STAGE_COLLECTING, STAGE_DECIDED } from '@/helpers/questionStage';
 import {
 	getResultsAccess,
 	rankAnswers,

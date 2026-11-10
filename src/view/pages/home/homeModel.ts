@@ -1,25 +1,16 @@
+import { Role, Statement, StatementSubscription, StatementType } from '@freedi/shared-types';
 import {
-	QuestionStep,
-	Role,
-	Statement,
-	StatementSubscription,
-	StatementType,
-} from '@freedi/shared-types';
+	getQuestionStage,
+	QuestionStageIndex,
+	showsStageBar,
+	STAGE_DECIDED,
+	STAGE_LABEL_KEYS,
+} from '@/helpers/questionStage';
 
 /** Tint cycle for spaces — the same order the prototype uses. */
 export const SPACE_TONES = ['lilac', 'mint', 'yellow'] as const;
 export type SpaceTone = (typeof SPACE_TONES)[number];
 export type HomeTone = SpaceTone | 'sunken';
-
-export type QuestionStage = 'collecting' | 'rating' | 'voting' | 'decided';
-
-/** i18n key per stage (Hebrew: אוספים · מדרגים · מצביעים · הוחלט). */
-export const STAGE_LABEL_KEY: Record<QuestionStage, string> = {
-	collecting: 'Collecting',
-	rating: 'Rating',
-	voting: 'Voting stage',
-	decided: 'Decided',
-};
 
 export type Translate = (key: string) => string;
 
@@ -38,7 +29,7 @@ export interface HomeQuestion {
 	spaceId?: string;
 	spaceTitle?: string;
 	tone: HomeTone;
-	stage?: QuestionStage;
+	stage?: QuestionStageIndex;
 	deadline?: number;
 	hosting: boolean;
 	/** Start of the newest reply, from the denormalized `statement.lastMessage`. */
@@ -52,24 +43,6 @@ export interface HomeModel {
 
 export function toneForIndex(index: number): SpaceTone {
 	return SPACE_TONES[((index % SPACE_TONES.length) + SPACE_TONES.length) % SPACE_TONES.length];
-}
-
-/** Maps the question's current step onto the four stages people see. */
-export function stageForStep(step: QuestionStep | undefined): QuestionStage | undefined {
-	switch (step) {
-		case QuestionStep.explanation:
-		case QuestionStep.suggestion:
-			return 'collecting';
-		case QuestionStep.randomEvaluation:
-		case QuestionStep.topEvaluation:
-			return 'rating';
-		case QuestionStep.voting:
-			return 'voting';
-		case QuestionStep.finished:
-			return 'decided';
-		default:
-			return undefined;
-	}
 }
 
 /**
@@ -121,7 +94,7 @@ export function formatQuestionMeta(
 ): string {
 	return [
 		question.spaceTitle,
-		question.stage ? t(STAGE_LABEL_KEY[question.stage]) : undefined,
+		question.stage !== undefined ? t(STAGE_LABEL_KEYS[question.stage]) : undefined,
 		formatClosing(question.deadline, now, locale, t),
 	]
 		.filter(Boolean)
@@ -161,6 +134,8 @@ interface BuildHomeModelArgs {
 	subscriptions: StatementSubscription[];
 	statements: Statement[];
 	userId?: string;
+	/** Injected clock, so the deadline rule is testable. */
+	now?: number;
 }
 
 /**
@@ -173,8 +148,26 @@ export function buildHomeModel({
 	subscriptions,
 	statements,
 	userId,
+	now = Date.now(),
 }: BuildHomeModelArgs): HomeModel {
 	const byId = new Map(statements.map((statement) => [statement.statementId, statement]));
+	const loadedAnswers = new Map<string, number>();
+	statements
+		.filter((statement) => statement.statementType === StatementType.option)
+		.forEach((option) =>
+			loadedAnswers.set(option.parentId, (loadedAnswers.get(option.parentId) ?? 0) + 1),
+		);
+	// Only questions have a stage. `numberOfOptions` is server-counted but absent on
+	// questions older than the counter, so answers already in the store back it up.
+	const stageOf = (statement: Statement): QuestionStageIndex | undefined => {
+		if (!showsStageBar(statement)) return undefined;
+		const answerCount = Math.max(
+			statement.numberOfOptions ?? 0,
+			loadedAnswers.get(statement.statementId) ?? 0,
+		);
+
+		return getQuestionStage({ statement, answerCount, now });
+	};
 	const mine = subscriptions.filter((sub) => sub.userId === userId && !sub.isDocument);
 	const typeOf = (sub: StatementSubscription, statement: Statement): StatementType =>
 		statement.statementType || sub.statementType;
@@ -223,7 +216,7 @@ export function buildHomeModel({
 			spaceId,
 			spaceTitle: space?.title,
 			tone: space?.tone ?? 'sunken',
-			stage: stageForStep(statement.questionSettings?.currentStep),
+			stage: stageOf(statement),
 			deadline: statement.questionSettings?.deadline,
 			hosting: isHost(sub, statement, userId),
 			lastReply: toLastReply(statement),
@@ -232,23 +225,21 @@ export function buildHomeModel({
 
 	// Counts also see questions already in the store that the person has not
 	// subscribed to, so a space does not read "no questions" before a visit.
-	const stagesBySpace = new Map<string, Map<string, QuestionStage | undefined>>();
-	const record = (spaceId: string | undefined, id: string, stage: QuestionStage | undefined) => {
+	const stagesBySpace = new Map<string, Map<string, QuestionStageIndex | undefined>>();
+	const record = (
+		spaceId: string | undefined,
+		id: string,
+		stage: QuestionStageIndex | undefined,
+	) => {
 		if (!spaceId) return;
-		const entry = stagesBySpace.get(spaceId) ?? new Map<string, QuestionStage | undefined>();
+		const entry = stagesBySpace.get(spaceId) ?? new Map<string, QuestionStageIndex | undefined>();
 		entry.set(id, stage);
 		stagesBySpace.set(spaceId, entry);
 	};
 	questions.forEach((question) => record(question.spaceId, question.id, question.stage));
 	statements
 		.filter((statement) => statement.statementType === StatementType.question)
-		.forEach((statement) =>
-			record(
-				spaceOf(statement),
-				statement.statementId,
-				stageForStep(statement.questionSettings?.currentStep),
-			),
-		);
+		.forEach((statement) => record(spaceOf(statement), statement.statementId, stageOf(statement)));
 
 	const spaces: HomeSpace[] = spaceBase.map((space) => {
 		const stages = [...(stagesBySpace.get(space.id)?.values() ?? [])];
@@ -256,7 +247,7 @@ export function buildHomeModel({
 		return {
 			...space,
 			questionCount: stages.length,
-			openCount: stages.filter((stage) => stage !== 'decided').length,
+			openCount: stages.filter((stage) => stage !== STAGE_DECIDED).length,
 		};
 	});
 
