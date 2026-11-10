@@ -63,6 +63,42 @@
   }
 }
 
+// Thumb mode: a small square beside the text, on desktop and on a phone. Its
+// button opens the photo in the lightbox. It stays 3rem (48px) on a phone so it
+// is still a comfortable tap target.
+.imageContainer.thumb {
+  --statement-image-max-height: 4rem;
+
+  display: block;
+  flex: 0 0 auto;
+  inline-size: 4rem;
+  block-size: 4rem;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+
+  .enlargeBtn,
+  .picture {
+    inline-size: 100%;
+    block-size: 100%;
+    max-height: none;
+  }
+
+  .enlargeBtn {
+    border-radius: inherit;
+  }
+
+  .picture {
+    object-fit: cover;
+    border-radius: inherit;
+  }
+
+  @media screen and (max-width: 600px) {
+    display: block;
+    inline-size: 3rem;
+    block-size: 3rem;
+  }
+}
+
 // The picture as a participant sees it: a button that opens it full screen.
 // Admins get the upload drop zone in its place.
 .enlargeBtn {

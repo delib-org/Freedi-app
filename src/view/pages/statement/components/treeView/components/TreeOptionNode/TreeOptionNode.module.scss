@@ -4,13 +4,13 @@
 .tree-option-node {
 	display: flex;
 	align-items: flex-start;
-	gap: 8px;
-	padding: 8px 10px;
+	gap: var(--space-xs);
+	padding: var(--space-xs) var(--space-sm);
 	flex: 1;
 	min-width: 0;
-	margin-top: 6px;
+	margin-top: var(--space-2xs);
 	border-inline-start: 3px solid var(--header-not-chosen, #ffe16a);
-	padding-inline-start: 10px;
+	padding-inline-start: var(--space-sm);
 	background-color: var(--card-default, #fff);
 	border-radius: 6px;
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
@@ -270,10 +270,12 @@
 		}
 	}
 
+	// Title: clearly stronger than the body below (larger, bold, strong colour).
 	&__text {
-		font-size: 0.9rem;
-		line-height: 1.4;
-		color: var(--text-body, #444);
+		font-size: var(--font-size-md);
+		font-weight: var(--font-weight-bold);
+		line-height: var(--line-height-snug);
+		color: var(--text-title, #333);
 		word-break: break-word;
 	}
 
@@ -295,26 +297,21 @@
 		padding-inline-end: 12rem;
 	}
 
-	&__description {
-		color: var(--text-secondary, #999);
-		font-size: 0.85rem;
-		line-height: 1.4;
-		margin-top: 0.25rem;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		-webkit-box-orient: vertical;
+	// Body: regular weight, body colour, a step smaller than the title. It is cut
+	// to 2 lines by ReadMoreClamp (description and paragraph children alike).
+	&__description,
+	&__paragraphs {
+		color: var(--text-body, #444);
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-regular);
+		line-height: var(--line-height-snug);
+		margin-top: var(--space-3xs);
 		word-break: break-word;
 	}
 
-	&__paragraphs {
-		margin-top: 4px;
-
-		p {
-			margin: 2px 0;
-			font-size: inherit;
-		}
+	&__paragraphs p {
+		margin: var(--space-3xs) 0;
+		font-size: inherit;
 	}
 
 	// Synthesis: proposal-first actions row — sources toggle + admin buttons.
@@ -497,8 +494,8 @@
 		flex-wrap: wrap;
 		align-items: center;
 		column-gap: 8px;
-		row-gap: 2px;
-		margin-top: 4px;
+		row-gap: var(--space-3xs);
+		margin-top: var(--space-2xs);
 	}
 
 	// Dissolved so the compact Evaluation's pieces are items of the footer; any

@@ -29,6 +29,22 @@
 	order: 1;
 }
 
+// Desktop: the faces stop taking a whole row. Smaller circles sit at the start
+// of the footer, so the faces, the host's action buttons (order 2) and the
+// result chips (order 3) share ONE row. A phone keeps the faces on their own
+// row at full tap size. DOM order is already faces, actions, chips.
+@media (min-width: 601px) {
+	.evaluation--compact .evaluation__faces {
+		--circle-max: 2.25rem;
+		--circle-min: 2.25rem;
+		--circle-row-gap: var(--space-xs);
+		--circle-row-justify: flex-start;
+
+		flex: 0 1 auto;
+		inline-size: auto;
+	}
+}
+
 .evaluation--compact .reveal-hint {
 	flex: 0 0 100%;
 	order: 4;

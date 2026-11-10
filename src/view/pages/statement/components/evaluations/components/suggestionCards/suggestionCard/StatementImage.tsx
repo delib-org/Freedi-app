@@ -9,7 +9,7 @@ interface Props {
 	statement: Statement;
 	image: string;
 	setImage: React.Dispatch<React.SetStateAction<string>>;
-	displayMode: 'above' | 'inline';
+	displayMode: 'above' | 'inline' | 'thumb';
 	onRemove: () => void;
 	isAdmin: boolean;
 	fileInputRef?: React.RefObject<HTMLInputElement>;
@@ -29,10 +29,7 @@ const StatementImage: FC<Props> = ({
 
 	// Determine variant and container class based on display mode
 	const variant = displayMode === 'inline' ? 'inline' : 'compact';
-	const containerClass =
-		displayMode === 'inline'
-			? `${styles.imageContainer} ${styles.inline}`
-			: `${styles.imageContainer} ${styles.above}`;
+	const containerClass = `${styles.imageContainer} ${styles[displayMode]}`;
 
 	// Float direction for inline mode
 	const floatStyle =
