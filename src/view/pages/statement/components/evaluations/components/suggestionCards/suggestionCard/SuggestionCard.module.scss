@@ -32,6 +32,10 @@
 // =============================================================================
 
 .statement-evaluation-card {
+  // The card's own fill; tinted states swap it. The photo card's rating strip
+  // paints the same value so it always matches (the washes are opaque).
+  --card-surface: var(--card-default);
+
   position: relative;
   display: flex;
   flex-direction: column;
@@ -39,7 +43,7 @@
   width: 100%;
   box-sizing: border-box;
   padding: var(--space-md);
-  background-color: var(--card-default);
+  background-color: var(--card-surface);
   border: 1.5px solid var(--border-subtle);
 
   // Reserved lane for the C1 status rule. Always present at full width so a
@@ -77,13 +81,15 @@
 
   &--voted {
     border-inline-start-color: var(--approve);
-    background-color: var(--wash-approve);
+    --card-surface: var(--wash-approve);
+    background-color: var(--card-surface);
   }
 
   // Below the join minimum — the one state that genuinely needs attention.
   &--below-minimum {
     border-inline-start-color: var(--warning);
-    background-color: var(--wash-warning);
+    --card-surface: var(--wash-warning);
+    background-color: var(--card-surface);
   }
 
   // At/above minimum and over maximum are healthy or admin-only conditions.
@@ -94,7 +100,8 @@
     isolation: isolate;
     border-style: dashed;
     border-color: var(--lighter);
-    background-color: var(--wash-neutral);
+    --card-surface: var(--wash-neutral);
+    background-color: var(--card-surface);
 
     .body {
       opacity: 0.55;
@@ -935,7 +942,31 @@ $photo-min-visible: 4.5rem; // 72px of photo stays recognisable above the strip
     margin-block-end: calc(-1 * var(--card-pad-block));
     padding-inline: var(--card-pad-inline);
     padding-block: var(--space-2xs) var(--card-pad-block);
-    background-color: var(--card-default);
+    background-color: var(--card-surface);
     pointer-events: auto; // the strip must not pass taps through to the photo button
+  }
+}
+
+// A hidden card dims its content, but .body's own opacity would also make the
+// rating strip see-through over the photo. Dim the content instead and keep the
+// strip's fill opaque.
+.statement-evaluation-card--hidden.statement-evaluation-card--with-photo {
+  --hidden-dim: 0.55;
+
+  &:hover {
+    --hidden-dim: 0.75;
+  }
+
+  .body,
+  &:hover .body {
+    opacity: 1;
+  }
+
+  .text,
+  .meta,
+  .joinRow,
+  .bylineText,
+  .cardFooter > * {
+    opacity: var(--hidden-dim);
   }
 }
