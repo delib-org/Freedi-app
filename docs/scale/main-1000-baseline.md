@@ -366,3 +366,65 @@ npm run scale:baseline
 ```
 
 It regenerates this file and `main-1000-baseline.data.json`. Compare with `git diff`. It needs the functions built (`npm --prefix functions run build`) and ports 9119, 8101, 5021, 5022 and 4420 free.
+
+
+## After Phase 3
+
+Measured on 2026-11-10 from branch `integrate/scale-phase3` (commit `489830efb`: two full-size runs and one small one), with the same seed: 1,000 subscribers, 300 answers, 10 ratings each, 10 real client listeners. The two full runs differed by 0%. Full tables are in `main-1000-after-phase3.md` and `main-1000-after-phase3.data.json`; the numbers above this section are the "before" and were not regenerated. The "after" client model mirrors the code now on the branch: `scripts/scale/clients.ts` for what each participant reads, the server's own sampler for what each person rates.
+
+### Per participant, on opening the question
+
+| what a participant downloads | before | after | change |
+|---|---:|---:|---|
+| Docs read on open, per participant | 10,931 | 43 (see note) | about 250x less |
+| Ratings read on open | 9,878 | 0 | hosts now read `questionProgress`, 1 doc |
+| Presence docs read on open | 1,010 | 0 | no listener on a large question |
+| Answers read on open (head start + newest 30) | 40 | 40 | unchanged |
+| Progress doc read on open | 0 | 1 | new; replaces the ratings download |
+| Ranked list, first page | not measured (was every answer) | 30 | one page, no listener |
+
+The 43 is a full-size figure where every one of the 300 answers has already reached the sampler's stability target (30 ratings). The Rate batch then returns no cards, so a participant who opens earlier in the session reads up to 6 more docs through the batch listener (the small run, with some answers still open, measured 46: 43 + 3 cards).
+
+### Per action
+
+| action and measure | before | after |
+|---|---:|---:|
+| Arrival: question doc writes | 1 | 0.01 |
+| Arrival: function invocations | 42 | 6.4 |
+| First view: question doc writes | 1 | 0 |
+| Presence write: docs delivered per listener | 1 | 0 |
+| Rating: function reads | 332.7 | 41.1 |
+| Rating: function writes | 17.1 | 15.4 |
+| Rating (returning): question doc writes | 0.02 | 0 |
+| Rating (first of a person): question doc writes | 2.03 | 0.03 |
+| Rating: answer-window docs delivered per listener | 1 | 0.03 |
+| Rating: question doc snapshots per listener | 0.02 | 0 |
+| Rating: function starts | 23.5 | 24 |
+| Statement write: functions started | 18 | 19 |
+| New answer: question doc writes | 3 | 3 |
+| New answer: in-app notification writes | 1,116 | 1,116 |
+| New answer: function starts | 125 | 113 |
+| `getAnswerBatch` call: function reads | new | 158 (per-instance cache; about 5 cold workers) |
+
+| derived for 1,000 people | before | after |
+|---|---:|---:|
+| Reads on open, everyone | 10,931,000 | 43,000 |
+| Reads from question doc writes as people arrive and view | 1,000,000 | 5,000 |
+| Listener reads for 10,000 ratings | 5,100,000 | 125,000 |
+| Function doc reads for 10,000 ratings | 3,326,600 | 410,700 |
+
+Exposure moved too, as a modelled behaviour rather than a cost: above 30 answers the sampler replaces the newest-first feed. Ratings per answer are now even, 30 for the oldest quarter and 30 for the newest (was 23.3 and 61.7), and the most-rated tenth of answers took 10% of the ratings (was 36.4%).
+
+### What these numbers cannot show
+
+- **The dispatcher stays off until a production cutover.** `onStatementWriteDispatch` is deployed but inert until `STATEMENT_DISPATCH_CUTOVER_MS` is set, so a statement write starts 19 functions here (the 18 old triggers plus the idle dispatcher), not the 6 expected after the cutover. Function starts per rating rose from 23.5 to 24 for the same reason. See `statement-dispatch-cutover.md`.
+- **Notification writes per new answer did not improve, by design.** Above the large-question threshold the in-app write is kept and instant push and email give way to one daily digest; the emulator has no push tokens and email is off, so only the in-app writes are visible.
+- **The emulator does not bill and does not enforce indexes.** Counts mirror the billing rules, but a missing composite index would pass here. `fetchTopAnswers` needs `(parentId, statementType, consensus DESC)`, which exists in `firestore.indexes.json`.
+- **Global counters still write three docs per rating.** Lane K moved contention onto shards and a 10-minute sync; the count of `adminStats` writes per rating is the same, and shard contention is not visible on one machine.
+- **Sharded and cached numbers are per-worker.** `getAnswerBatch` caches answers per instance for 30 s, so its 158 reads per call are a few cold workers reading all 300 answers, on one machine. Production depends on the number of instances.
+- **Ten listeners, not 1,000.** Multiplying up assumes each listener gets every write, as the sample shows; socket coalescing under real load is unknown.
+- **The rate phase is a mid-session model.** Burst raters choose from the sampler with half-scaled counts, because at the end of the simulated session all answers are stable and the sampler offers nothing. Without that the answer-window number would be meaningless.
+
+### Failed commits in the after run
+
+`new-answer` shows 3 failed commits: `largeQuestionDigest` uses `create()` on the per-question digest marker, and the warm-up answer had already created it, so those are expected `ALREADY_EXISTS` results. `answer-batch` shows 1: a contended rate-limit reservation, reported as a failed commit by the trace and not an error for the caller.

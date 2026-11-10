@@ -3,7 +3,7 @@
  * is paced so the emulator's backlog does not swamp the numbers: a small batch
  * of writes, then wait until the functions emulator is quiet.
  */
-import { Collections } from '@freedi/shared-types';
+import { Collections, getVoteId, isAnswerBatchQuestion } from '@freedi/shared-types';
 import type { Creator, Statement } from '@freedi/shared-types';
 import type { DocumentData } from 'firebase-admin/firestore';
 import { WINDOW_SIZE, PACED_BATCH } from './config';
@@ -14,6 +14,7 @@ import { memberCreator, presenceDoc, QUESTION_ID, subscriptionFor, TOP_ID, viewD
 import type { Seeded } from './seed';
 import type { TraceTail } from './trace';
 import type { PhaseWindow } from './metrics';
+import { sampleAnswers } from './sampler';
 
 const COUNTED_COLLECTIONS = [
 	Collections.creditLedger,
@@ -32,11 +33,16 @@ const WARMUP_FUNCTIONS = [
 	'onStatementCreated',
 	'updateStatementWithViews',
 	'onSubscriptionCreatedMembership',
+	'addVote',
 ];
 const WARMUP_PARALLEL = PACED_BATCH;
 const NEW_ANSWER_INDEX_START = 100_000;
 /** Newly arrived participants who rate once in the first-time rating phase. */
 const FIRST_TIME_RATERS = 30;
+/** Vote pattern: this many of every ten votes go to the leader, the rest spread out. */
+const LEADER_VOTES_PER_TEN = 7;
+const VOTE_PATTERN_LENGTH = 10;
+const BALLOT_SIZE = 5;
 
 export interface PhaseRecord extends PhaseWindow {
 	countsBefore: CollectionCounts;
@@ -100,6 +106,61 @@ function nextUnrated(
 	return answer;
 }
 
+/** How far through its ratings a burst rater finds an answer. */
+const MID_SESSION_SHARE = 0.5;
+
+/**
+ * The answers as the sampler sees them mid-session. At the end of the simulated
+ * session almost every answer is stable (30 ratings), so a sampler given the
+ * final counts has nothing to offer; a burst rater stands for a rating given
+ * while answers were still open. The counts are scaled, not cleared: with no
+ * ratings at all the sampler's scores tie and it offers the same few answers.
+ */
+function midSession(answers: Statement[]): Statement[] {
+	return answers.map((answer) => {
+		const { evaluation } = answer;
+		if (!evaluation) return answer;
+
+		return {
+			...answer,
+			evaluation: {
+				...evaluation,
+				numberOfEvaluators: Math.ceil(evaluation.numberOfEvaluators * MID_SESSION_SHARE),
+				sumEvaluations: evaluation.sumEvaluations * MID_SESSION_SHARE,
+				sumSquaredEvaluations: (evaluation.sumSquaredEvaluations ?? 0) * MID_SESSION_SHARE,
+			},
+		};
+	});
+}
+
+/** What the app shows this person next: the sampler's pick above the threshold. */
+function nextToRate(
+	user: Creator,
+	answers: Statement[],
+	window: Statement[],
+	ratedBy: Map<string, Set<string>>,
+	offset: number,
+): Statement {
+	if (!isAnswerBatchQuestion(answers.length)) {
+		return nextUnrated(user, window, ratedBy, offset);
+	}
+	const rated = ratedBy.get(user.uid) ?? new Set<string>();
+	const [answer] = sampleAnswers(midSession(answers), rated, user.uid, 1);
+	if (!answer) throw new Error(`The sampler has nothing left for ${user.uid}`);
+	rated.add(answer.statementId);
+	ratedBy.set(user.uid, rated);
+
+	return answer;
+}
+
+/** Most votes go to one answer, so the leader rarely changes, as in a real ballot. */
+function voteTarget(index: number, ballot: Statement[]): Statement {
+	const slot = index % VOTE_PATTERN_LENGTH;
+	if (slot < LEADER_VOTES_PER_TEN) return ballot[0];
+
+	return ballot[1 + (slot % (ballot.length - 1))];
+}
+
 export async function runBurst(input: BurstInput): Promise<PhaseRecord[]> {
 	const { seeded, config, answers, ratedBy, clients, trace } = input;
 	const { db, question } = seeded;
@@ -130,7 +191,22 @@ export async function runBurst(input: BurstInput): Promise<PhaseRecord[]> {
 			ratingDoc(user, answer, RATING_VALUES[index % RATING_VALUES.length]),
 		);
 
+	const vote = (user: Creator, option: Statement): Promise<unknown> => {
+		const now = Date.now();
+		const voteId = getVoteId(user.uid, QUESTION_ID);
+
+		return setDoc(Collections.votes, voteId, {
+			voteId,
+			statementId: option.statementId,
+			parentId: QUESTION_ID,
+			userId: user.uid,
+			createdAt: now,
+			lastUpdate: now,
+		});
+	};
+
 	async function runPhase(name: string, units: number, work: () => Promise<void>): Promise<void> {
+		if (config.onlyPhases.length > 0 && !config.onlyPhases.includes(name)) return;
 		const countsBefore = await countAll(seeded);
 		clients.forEach((client) => client.setPhase(name));
 		const from = Date.now();
@@ -153,6 +229,7 @@ export async function runBurst(input: BurstInput): Promise<PhaseRecord[]> {
 			view(user),
 			rate(user, warmAnswerTarget, 0),
 			setDoc(Collections.online, `${user.uid}--${QUESTION_ID}`, presenceDoc(user, QUESTION_ID)),
+			vote(user, warmAnswerTarget),
 		]),
 	);
 	const warmAnswer = makeAnswer(NEW_ANSWER_INDEX_START, warmUsers[0], question, Date.now());
@@ -175,12 +252,12 @@ export async function runBurst(input: BurstInput): Promise<PhaseRecord[]> {
 	);
 	await runPhase('rate', config.burst.ratings, () =>
 		paced(seeded.members.slice(0, config.burst.ratings), PACED_BATCH, trace, (user, i) =>
-			rate(user, nextUnrated(user, newestWindow, ratedBy, i), i),
+			rate(user, nextToRate(user, answers, newestWindow, ratedBy, i), i),
 		),
 	);
 	await runPhase('rate-first-time', FIRST_TIME_RATERS, () =>
 		paced(arrivals.slice(0, FIRST_TIME_RATERS), PACED_BATCH, trace, (user, i) =>
-			rate(user, nextUnrated(user, newestWindow, ratedBy, i), i),
+			rate(user, nextToRate(user, answers, newestWindow, ratedBy, i), i),
 		),
 	);
 	await runPhase('rate-simultaneous', config.burst.simultaneousRatings, async () => {
@@ -189,7 +266,7 @@ export async function runBurst(input: BurstInput): Promise<PhaseRecord[]> {
 			config.burst.ratings + config.burst.simultaneousRatings,
 		);
 		await Promise.all(
-			raters.map((user, i) => rate(user, nextUnrated(user, newestWindow, ratedBy, i), i)),
+			raters.map((user, i) => rate(user, nextToRate(user, answers, newestWindow, ratedBy, i), i)),
 		);
 	});
 	await runPhase('new-answer', config.burst.newAnswers, () =>
@@ -203,6 +280,15 @@ export async function runBurst(input: BurstInput): Promise<PhaseRecord[]> {
 
 				return setDoc(Collections.statements, answer.statementId, answer);
 			},
+		),
+	);
+	await runPhase('answer-batch', clients.length, () =>
+		paced(clients, PACED_BATCH, trace, (client) => client.fetchAnswerBatch(QUESTION_ID)),
+	);
+	const ballot = newestWindow.slice(0, BALLOT_SIZE);
+	await runPhase('vote', config.burst.votes, () =>
+		paced(seeded.members.slice(0, config.burst.votes), PACED_BATCH, trace, (user, i) =>
+			vote(user, voteTarget(i, ballot)),
 		),
 	);
 

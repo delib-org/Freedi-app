@@ -1,5 +1,5 @@
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
-import { Collections, Statement } from '@freedi/shared-types';
+import { Collections, isAnswerHeldByModeration, Statement } from '@freedi/shared-types';
 import { logger } from 'firebase-functions';
 import { reverseIntegration, deleteEvaluationsForStatement } from '../integrate/reverseIntegration';
 import { assertNoDirectVotesOnDerivedDocs } from './derivedDocVotes';
@@ -146,7 +146,10 @@ export async function dissolveQuestionSynthesis(
 			isDerived(d) && !properClusterIds.has(d.statementId) && !manualClusterIds.has(d.statementId),
 	);
 	const realOptions = docs.filter((d) => !isDerived(d));
-	const orphanedHidden = realOptions.filter((d) => d.hide === true && !d.integratedInto);
+	// An answer the automatic check hid is not an orphan: only its host brings it back.
+	const orphanedHidden = realOptions.filter(
+		(d) => d.hide === true && !d.integratedInto && !isAnswerHeldByModeration(d),
+	);
 
 	const result: DissolveResult = {
 		clustersReversed: 0,
@@ -204,8 +207,14 @@ export async function dissolveQuestionSynthesis(
 				const member = realById.get(memberId);
 				if (member && member.hide === true) {
 					const mref = db.collection(Collections.statements).doc(memberId);
-					batch.update(mref, { hide: false, integratedInto: FieldValue.delete(), lastUpdate: now });
-					result.membersRestored++;
+					// An answer the automatic check hid leaves the group but stays hidden.
+					const isHeld = isAnswerHeldByModeration(member);
+					batch.update(mref, {
+						...(isHeld ? {} : { hide: false }),
+						integratedInto: FieldValue.delete(),
+						lastUpdate: now,
+					});
+					if (!isHeld) result.membersRestored++;
 				}
 			}
 		}

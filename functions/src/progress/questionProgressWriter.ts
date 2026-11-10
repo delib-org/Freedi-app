@@ -11,11 +11,13 @@
  */
 
 import { FieldValue } from 'firebase-admin/firestore';
+import type { Firestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions/v1';
 import {
 	Collections,
 	QuestionParticipation,
 	Statement,
+	StatementType,
 	getQuestionParticipationId,
 } from '@freedi/shared-types';
 import { db } from '../db';
@@ -218,6 +220,74 @@ export async function recordParticipation(input: RecordParticipationInput): Prom
 			metadata: { kind, eventCounter },
 		});
 	}
+}
+
+export interface RecordMemberCountInput {
+	statementId: string;
+	/** Exact current member count (a fresh recount, not a delta). */
+	members: number;
+	topParentId?: string;
+	organizationId?: string;
+	now?: number;
+}
+
+/**
+ * Questions and top-level groups keep their member count on `questionProgress`.
+ * Not nested groups: Studio counts every progress doc below a top statement as
+ * one of its activities.
+ */
+export function keepsCountOnProgress(statement: Statement | undefined): statement is Statement {
+	if (statement?.statementType === StatementType.question) return true;
+
+	return statement?.statementType === StatementType.group && statement.parentId === 'top';
+}
+
+/** Current members of a statement: every role counts, Sign documents do not. */
+export async function countMembers(firestore: Firestore, statementId: string): Promise<number> {
+	const snapshot = await firestore
+		.collection(Collections.statementsSubscribe)
+		.where('statementId', '==', statementId)
+		.where('statementType', '!=', 'document')
+		.count()
+		.get();
+
+	return snapshot.data().count;
+}
+
+/**
+ * Stores a question's or group's exact member count on its progress doc, which
+ * has no listeners, so a join or leave does not reach everyone present.
+ *
+ * A join is not activity: an existing doc gets only `members` and `lastUpdate`,
+ * so `lastActivity` keeps meaning someone did something. Only a doc created
+ * here sets it, because the schema requires it, with `increment(0)` keeping the
+ * counters complete as in `recordParticipation`. Throws so the caller can log
+ * with its own context.
+ */
+export async function recordMemberCount(input: RecordMemberCountInput): Promise<void> {
+	const { statementId, members } = input;
+	const now = input.now ?? Date.now();
+	const progressRef = db.collection(Collections.questionProgress).doc(statementId);
+
+	if ((await progressRef.get()).exists) {
+		await progressRef.update({ members, lastUpdate: now });
+
+		return;
+	}
+
+	const ctx = await resolveContext({ ...input, userId: '', kind: 'entered' });
+	await progressRef.set(
+		{
+			...baseProgressFields(statementId, ctx, now),
+			entered: FieldValue.increment(0),
+			suggested: FieldValue.increment(0),
+			evaluated: FieldValue.increment(0),
+			options: FieldValue.increment(0),
+			evaluations: FieldValue.increment(0),
+			members,
+		},
+		{ merge: true },
+	);
 }
 
 export interface TouchActivityInput {

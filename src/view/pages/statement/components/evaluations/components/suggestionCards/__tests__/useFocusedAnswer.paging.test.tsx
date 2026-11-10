@@ -7,6 +7,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { Statement, StatementType } from '@freedi/shared-types';
 import { CHAT } from '@/constants/common';
 import { setStatement } from '@/redux/statements/statementsSlice';
+import answerViews from '@/redux/answerViews/answerViewsSlice';
 import { useLazyLoadOptions } from '@/view/pages/statement/hooks/useLazyLoadOptions';
 import { useFocusedAnswer } from '../useFocusedAnswer';
 
@@ -46,7 +47,7 @@ function statementsReducer(
 }
 
 function wrapper({ children }: { children: ReactNode }) {
-	const store = configureStore({ reducer: { statements: statementsReducer } });
+	const store = configureStore({ reducer: { statements: statementsReducer, answerViews } });
 
 	return (
 		<Provider store={store}>
@@ -62,7 +63,7 @@ describe('paging after an answer opened from a link', () => {
 		jest.clearAllMocks();
 		sessionStorage.clear();
 		Element.prototype.scrollIntoView = jest.fn();
-		mockFetchOlder.mockResolvedValue({ hasMore: true });
+		mockFetchOlder.mockResolvedValue({ statements: [], hasMore: true });
 		mockGetStatementFromDB.mockResolvedValue(answer('old', 1));
 		window.IntersectionObserver = jest.fn((callback: IntersectionObserverCallback) => {
 			intersect = callback;

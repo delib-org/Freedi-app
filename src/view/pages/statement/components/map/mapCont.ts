@@ -1,5 +1,5 @@
 import { getResultsDB } from '@/controllers/db/results/getResults';
-import { ResultsBy, Results, Statement } from '@freedi/shared-types';
+import { isAnswerHeldByModeration, ResultsBy, Results, Statement } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 
 export async function getResults(
@@ -146,7 +146,7 @@ export function resultsByParentId(parentStatement: Statement, subStatements: Sta
 			if (statement.isCluster && Array.isArray(statement.integratedOptions)) {
 				statement.integratedOptions.forEach((memberId) => {
 					const member = byId.get(memberId);
-					if (!member || visited.has(memberId)) return;
+					if (!member || visited.has(memberId) || isAnswerHeldByModeration(member)) return;
 					sub.push(buildNode(member));
 				});
 			}

@@ -3,13 +3,11 @@ import {
 	NotificationQueueStatus,
 	NotificationTriggerType,
 	SourceApp,
+	type LargeQuestionDigestMarker,
 	type StatementSubscription,
 } from '@freedi/shared-types';
 import type { Firestore } from 'firebase-admin/firestore';
-import {
-	LARGE_QUESTION_DIGEST_OWNER,
-	type LargeQuestionDigestMarker,
-} from '../largeQuestionDigest';
+import { LARGE_QUESTION_DIGEST_OWNER } from '../largeQuestionDigest';
 
 export const HOUR = 60 * 60 * 1000;
 export const MORNING = Date.UTC(2026, 10, 10, 6);

@@ -15,6 +15,7 @@ import { Collections, StatementType, functionConfig } from '@freedi/shared-types
 
 // Structured error handling
 import { logError } from './utils/errorHandling';
+import { moderateNewAnswer } from './moderation/fn_moderateNewAnswer';
 import {
 	createFirestoreFunction,
 	getTimestamp,
@@ -134,6 +135,8 @@ import { cleanupStaleTokens, performTokenCleanup } from './fn_tokenCleanup';
 
 // Admin Stats (KPI aggregation)
 import { performUserStatsRefresh, backfillAdminStats } from './fn_adminStats';
+import { drainAdminStatShards } from './adminStats/adminStatShards';
+import { syncQuestionCounterCopies } from './progress/syncQuestionCounterCopies';
 
 // Engagement System (Phase 1-3: Credits, Levels, Badges, Streaks, Notification Queue, Digests)
 import {
@@ -201,6 +204,7 @@ import {
 import { recomputeTopOptions } from './fn_recomputeTopOptions';
 import { reconcileEvaluatorCount } from './fn_reconcileEvaluatorCount';
 import { searchStatements } from './fn_searchStatements';
+import { getAnswerBatch } from './fn_getAnswerBatch';
 import { searchQuestionsByMeaning } from './fn_searchQuestionsByMeaning';
 
 // Bulk Idea Synthesis (admin-triggered near-duplicate detection)
@@ -584,6 +588,15 @@ exports.onStatementCreated = createFirestoreFunction(
 	{ memory: HOT_TRIGGER_MEMORY, maxInstances: TRIGGER_MAX_INSTANCES.statementCreate },
 );
 
+// Its own trigger because it calls an AI model, which statementDispatch does not allow.
+exports.moderateNewAnswer = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentCreated,
+	moderateNewAnswer,
+	'moderateNewAnswer',
+	{ maxInstances: TRIGGER_MAX_INSTANCES.answerModeration },
+);
+
 // ============================================
 // Dialectical Chat app (apps/chat)
 // ============================================
@@ -922,6 +935,7 @@ exports.reconcileEvaluatorCount = reconcileEvaluatorCount;
 
 // Statement search (home, subscriptions, whole tree; lexical + semantic)
 exports.searchStatements = searchStatements;
+exports.getAnswerBatch = getAnswerBatch;
 
 // Question "search by meaning" (MC survey question picker; admin scope only)
 exports.searchQuestionsByMeaning = searchQuestionsByMeaning;
@@ -1144,6 +1158,28 @@ export const refreshUserStats = onSchedule(
 	},
 	async () => {
 		await performUserStatsRefresh();
+	},
+);
+
+// Settles the counters kept off busy documents: the sharded rating, vote and
+// join stats, and the question document's copies of its member and rater counts.
+export const syncCountersSchedule = onSchedule(
+	{
+		schedule: 'every 10 minutes',
+		timeZone: 'UTC',
+		...functionConfig,
+		timeoutSeconds: 300,
+	},
+	async () => {
+		const [stats, copies] = await Promise.allSettled([
+			drainAdminStatShards(),
+			syncQuestionCounterCopies(),
+		]);
+		[stats, copies].forEach((result) => {
+			if (result.status === 'rejected') {
+				logError(result.reason, { operation: 'scheduled.syncCountersSchedule' });
+			}
+		});
 	},
 );
 

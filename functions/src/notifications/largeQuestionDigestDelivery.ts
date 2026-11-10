@@ -14,6 +14,7 @@ import {
 	NotificationChannel,
 	NotificationFrequency,
 	NotificationQueueStatus,
+	type RoutableQueueItem,
 	type Statement,
 	type StatementSubscription,
 } from '@freedi/shared-types';
@@ -25,7 +26,7 @@ import {
 	type Firestore,
 } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions/v1';
-import { routeToChannels, type RoutableQueueItem } from '../engagement/notifications/channelRouter';
+import { routeToChannels } from '../engagement/notifications/channelRouter';
 import { logError } from '../utils/errorHandling';
 import { vetoesNewAnswers } from './answerNotifyGate';
 import { isInQuietHours, loadQuietHours, quietHoursEndAt } from './quietHours';

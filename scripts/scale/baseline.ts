@@ -53,7 +53,6 @@ export interface RunResult {
 		questionFieldChanges: Record<string, Record<string, number>>;
 	}[];
 	questionDocBytes: number;
-	participationReadMs: number;
 	peakFunctionsRssMb: number;
 	peakWorkers: number;
 }
@@ -119,6 +118,8 @@ async function main(): Promise<void> {
 
 	await Promise.all(clients.map((client) => client.openQuestion(QUESTION_ID)));
 	await new Promise((resolve) => setTimeout(resolve, CLIENT_OPEN_SETTLE_MS));
+	clients.forEach((client) => client.setPhase('ranked-list'));
+	await Promise.all(clients.map((client) => client.openRankedList(QUESTION_ID)));
 	clients.forEach((client) => client.setPhase('idle'));
 
 	await enableTriggers();
@@ -158,7 +159,6 @@ async function main(): Promise<void> {
 			questionFieldChanges: client.questionFieldChanges,
 		})),
 		questionDocBytes: Math.max(...clients.map((client) => client.questionDocBytes)),
-		participationReadMs: Math.max(...clients.map((client) => client.participationReadMs)),
 		peakFunctionsRssMb: trace.peakRssMb,
 		peakWorkers: trace.peakWorkers,
 	};

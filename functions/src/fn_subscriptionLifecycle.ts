@@ -3,12 +3,22 @@ import type { FirestoreEvent } from 'firebase-functions/firestore';
 import type { QueryDocumentSnapshot } from 'firebase-functions/v1/firestore';
 import type { Change } from 'firebase-functions/v1';
 import { logger } from 'firebase-functions/v1';
-import { Collections, StatementSubscription } from '@freedi/shared-types';
+import {
+	Collections,
+	isCounterCopyDue,
+	Statement,
+	StatementSubscription,
+} from '@freedi/shared-types';
 import { db } from './db';
 import { logError } from './utils/errorHandling';
 import { validateRoleChange } from './fn_subscriptions';
 import { feedRelevantChange, reconcileUserFeedEntry } from './userFeed/userFeedMembership';
 import { stripCreatedSubscriptionTokens } from './notifications/stripSubscriptionTokens';
+import {
+	countMembers,
+	keepsCountOnProgress,
+	recordMemberCount,
+} from './progress/questionProgressWriter';
 
 /**
  * Membership lifecycle triggers on `statementsSubscribe/{subscriptionId}`.
@@ -33,20 +43,33 @@ type ChangeEvent = FirestoreEvent<
  * Recounts members with a count() aggregation (1 read per 1000 index entries)
  * instead of downloading every subscription doc. Same filter as before:
  * every role counts, Sign-document subscriptions do not.
+ *
+ * Questions and top-level groups keep the exact number on `questionProgress`,
+ * and copy it to the statement document only when it enters a new bucket: that
+ * document reaches everyone present, so a write per arrival costs people x
+ * people reads. Two recounts racing can land in the wrong order; the scheduled
+ * pass in progress/syncQuestionCounterCopies.ts recounts and heals that, because
+ * guarding it here would mean a transaction on a document every join shares.
  */
 export async function updateMemberCount(
 	firestore: Firestore,
 	statementId: string,
 ): Promise<number> {
-	const countSnapshot = await firestore
-		.collection(Collections.statementsSubscribe)
-		.where('statementId', '==', statementId)
-		.where('statementType', '!=', 'document')
-		.count()
-		.get();
-	const memberCount = countSnapshot.data().count;
+	const memberCount = await countMembers(firestore, statementId);
+	const statementRef = firestore.collection(Collections.statements).doc(statementId);
+	const statement = (await statementRef.get()).data() as Statement | undefined;
 
-	await firestore.collection(Collections.statements).doc(statementId).update({
+	if (keepsCountOnProgress(statement)) {
+		await recordMemberCount({
+			statementId,
+			members: memberCount,
+			topParentId: statement.topParentId,
+			organizationId: statement.organizationId,
+		});
+		if (!isCounterCopyDue(memberCount, statement.numberOfMembers)) return memberCount;
+	}
+
+	await statementRef.update({
 		numberOfMembers: memberCount,
 		lastUpdate: Date.now(),
 	});

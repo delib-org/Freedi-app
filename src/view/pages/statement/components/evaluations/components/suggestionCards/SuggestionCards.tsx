@@ -21,12 +21,25 @@ import Evaluation from '../evaluation/Evaluation';
 import { applyManualOrder, includeAnswer, pinFirst, sortStatements } from './suggestionOrdering';
 import { useFocusedAnswer } from './useFocusedAnswer';
 import { useQuestionScoreAccess } from '../../../questionScreen/useAnswerScoreGate';
+import { useAnswersView } from '../../../questionScreen/useAnswersView';
+import { useStableQuestion } from '../../../questionScreen/useStableQuestion';
+import { RoomAssignmentsContext } from '@/view/components/roomBadge/RoomBadge';
+import { listenToUserRoomAssignments } from '@/controllers/db/roomAssignment/getRoomAssignment';
+import type { RoomParticipant } from '@freedi/shared-types';
+import { useAnswerBatch } from '../../../questionScreen/useAnswerBatch';
+import { buildRateViewPath } from '../../../questionScreen/answerSorting';
+import { ANSWERS_VIEW_ALL, ANSWERS_VIEW_PARAM } from '../../../questionScreen/answersView';
 import { guardScoreSort } from '../../../questionScreen/canSeeScore';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { isHostOfAnswer } from '@/helpers/answerModeration';
+import { useAnswerHostContext } from '@/controllers/hooks/useAnswerVisibility';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 import { useViewLayers } from '@/controllers/hooks/useViewLayers';
 import { useLazyLoadOptions } from '@/view/pages/statement/hooks/useLazyLoadOptions';
 import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
+import { useRankedAnswers } from '@/view/pages/statement/hooks/useRankedAnswers';
+import { rankingSourceForList } from '@/view/pages/statement/hooks/answerRanking';
+import { Button } from '@/view/components/atomic/atoms/Button';
 import { useThrottledOrder } from '@/view/pages/statement/hooks/useThrottledOrder';
 import { usePrefersReducedMotion } from '@/controllers/hooks/usePrefersReducedMotion';
 import { UI } from '@/constants/common';
@@ -61,8 +74,17 @@ const SuggestionCards: FC = () => {
 
 	const statementId = useMemo(() => params.statementId, [params.statementId]);
 	const statement = useSelector(statementSelector(statementId));
+	// Cards only redraw when something they read about the question changes.
+	const cardQuestion = useStableQuestion(statement);
 	const defaultSort = statement?.statementSettings?.defaultSortType || SortType.newest;
 	const { canSee: canSortByScore } = useQuestionScoreAccess(statement);
+	const answersView = useAnswersView(statement);
+	const isRateView = answersView.view === 'rate';
+	const rateBatch = useAnswerBatch(
+		statementId,
+		isRateView || answersView.isWaitingToRetryRate,
+		answersView.answerCount,
+	);
 	const sort = guardScoreSort(params.sort || defaultSort, canSortByScore);
 
 	// An admin's hand-placed order (written from the Top Answers panel or the
@@ -81,15 +103,24 @@ const SuggestionCards: FC = () => {
 		creator?.uid === parentSubscription?.statement?.creatorId ||
 		parentSubscription?.role === Role.admin;
 	const { showHiddenCards } = useShowHiddenCards();
+	const answerHostContext = useAnswerHostContext();
 	const treeFilter = useTreeFilterOptional();
 	// Lazy-load older options as the user scrolls the list (the page subscription
 	// only loads the newest window; this pages in the rest on demand).
 	const { sentinelRef, isLoadingMore, hasMore } = useLazyLoadOptions(statementId);
 
-	// Ranked sorts (e.g. "most agreed") must rank the COMPLETE set, not just the
-	// newest window — otherwise older high-consensus options never surface. Eagerly
-	// bulk-load all direct children when such a sort is active.
-	const { isAutoLoading } = useAutoLoadAllForSort(statementId, sort);
+	// "By agreement" reads the top answers from its index, a page at a time.
+	// Orderings no index can rank still need every answer. The Rate view asks
+	// for neither: the sampler chooses what it shows.
+	const rankingSource = isRateView
+		? 'window'
+		: rankingSourceForList(sort, statement, (manualOrder?.length ?? 0) > 0);
+	const ranked = useRankedAnswers(statementId, rankingSource === 'top-answers');
+	const { isListed } = ranked;
+	const { isAutoLoading } = useAutoLoadAllForSort(
+		rankingSource === 'complete-set' ? statementId : undefined,
+		sort,
+	);
 
 	// View-layer derivation (toggle-independent, memoized): split synth / topic /
 	// raw and assign each synth to its max-overlap topic.
@@ -132,19 +163,21 @@ const SuggestionCards: FC = () => {
 	const visibleFlatRaw = useMemo(() => {
 		const canSee = (st: Statement): boolean => {
 			if (st.hide !== true) return true;
-			if (isAdmin) return showHiddenCards;
+			if (isAdmin || isHostOfAnswer(st, answerHostContext)) return showHiddenCards;
 
 			return st.creatorId === creator?.uid;
 		};
 
-		const visible = plan.flatRaw.filter(canSee);
+		const visible = plan.flatRaw.filter((st) => canSee(st) && isListed(st));
 
 		return manualOrder?.length
 			? applyManualOrder(visible, manualOrder)
 			: sortStatements(visible, sort, randomSeed, statement);
 	}, [
 		plan.flatRaw,
+		isListed,
 		isAdmin,
+		answerHostContext,
 		showHiddenCards,
 		creator?.uid,
 		sort,
@@ -171,22 +204,43 @@ const SuggestionCards: FC = () => {
 	// The pin applies after the throttle, so a just-added answer leads at once.
 	// A `:sort` in the URL is the reader asking for a ranking, and that wins here too.
 	const shownIds = useMemo(
-		() => new Set([...orderedFlatRaw, ...plan.topLevelSynths].map(getStatementId)),
-		[orderedFlatRaw, plan.topLevelSynths],
+		() =>
+			new Set(
+				[...orderedFlatRaw, ...plan.topLevelSynths, ...rateBatch.answers].map(getStatementId),
+			),
+		[orderedFlatRaw, plan.topLevelSynths, rateBatch.answers],
 	);
 	const { pinnedId, focusedAnswer, ringId, ringRef } = useFocusedAnswer(
 		statementId,
 		shownIds,
 		params.sort !== undefined,
 	);
-	const displayedFlatRaw = useMemo(
-		() =>
-			pinFirst(
-				effectiveLayers.raw ? includeAnswer(orderedFlatRaw, focusedAnswer) : orderedFlatRaw,
-				pinnedId,
-			),
-		[orderedFlatRaw, focusedAnswer, effectiveLayers.raw, pinnedId],
-	);
+	const pinnedInStore = useSelector(statementSelector(pinnedId));
+	const displayedFlatRaw = useMemo(() => {
+		if (isRateView) {
+			// A linked or just-added answer leads the batch without being part of it.
+			const withPinned = includeAnswer(
+				includeAnswer(rateBatch.answers, focusedAnswer),
+				pinnedInStore?.parentId === statementId ? pinnedInStore : undefined,
+			);
+
+			return pinFirst(withPinned, pinnedId);
+		}
+
+		return pinFirst(
+			effectiveLayers.raw ? includeAnswer(orderedFlatRaw, focusedAnswer) : orderedFlatRaw,
+			pinnedId,
+		);
+	}, [
+		isRateView,
+		rateBatch.answers,
+		pinnedInStore,
+		statementId,
+		orderedFlatRaw,
+		focusedAnswer,
+		effectiveLayers.raw,
+		pinnedId,
+	]);
 	const displayedSynths = useMemo(
 		() => pinFirst(plan.topLevelSynths, pinnedId),
 		[plan.topLevelSynths, pinnedId],
@@ -224,6 +278,18 @@ const SuggestionCards: FC = () => {
 		[setLayers],
 	);
 
+	const openFullList = useCallback(() => {
+		const next = new URLSearchParams(location.search);
+		next.set(ANSWERS_VIEW_PARAM, ANSWERS_VIEW_ALL);
+		navigate({ pathname: location.pathname, search: next.toString() });
+	}, [location.pathname, location.search, navigate]);
+
+	const backToRating = useCallback(() => {
+		if (!statementId) return;
+		const tab = new URLSearchParams(location.search).get('tab');
+		navigate(buildRateViewPath(location.pathname, statementId, tab));
+	}, [location.pathname, location.search, navigate, statementId]);
+
 	const handleSubmit = useCallback(() => {
 		navigate(`/statement/${statementId}/thank-you`);
 	}, [navigate, statementId]);
@@ -247,24 +313,32 @@ const SuggestionCards: FC = () => {
 	// Stable reference so memoized GroupedSuggestionCard children don't
 	// re-render on every parent render.
 	const renderRaw = useCallback(
-		(original: Statement) => (
-			<SuggestionCard parentStatement={statement ?? undefined} statement={original} />
-		),
-		[statement],
+		(original: Statement) => <SuggestionCard parentStatement={cardQuestion} statement={original} />,
+		[cardQuestion],
 	);
 
+	// One room listener for the whole list; each badge reads from it.
+	const [roomAssignments, setRoomAssignments] = useState<ReadonlyMap<string, RoomParticipant>>(
+		() => new Map(),
+	);
+	useEffect(() => {
+		if (!creator?.uid) return;
+
+		return listenToUserRoomAssignments(creator.uid, setRoomAssignments);
+	}, [creator?.uid]);
+
 	if (!statement) return null;
-	if (isQuestion && !hasSynth && !hasRaw) return null;
+	if (isQuestion && !isRateView && !hasSynth && !hasRaw) return null;
 
 	const isSubmitMode = statement.statementSettings?.isSubmitMode;
 
 	return (
-		<>
+		<RoomAssignmentsContext.Provider value={roomAssignments}>
 			{/* One band of list controls. Filters, view layers and participation
 			    stats used to occupy three separate bands above the list — the
 			    filter chips even rendered on the Discussion tab, which has no
 			    list for them to filter. */}
-			{treeFilter && (
+			{treeFilter && !isRateView && (
 				<ListToolbar
 					filterMode={treeFilter.filterMode}
 					onFilterChange={treeFilter.setFilterMode}
@@ -280,9 +354,29 @@ const SuggestionCards: FC = () => {
 				/>
 			)}
 
-			<LoadAllBanner rootId={statement.statementId} mode="direct" />
+			{isRateView ? (
+				<LoadAllBanner
+					key="see-all-answers"
+					rootId={statement.statementId}
+					mode="direct"
+					label={t('See all answers')}
+					description={t('{n} answers in this question').replace(
+						'{n}',
+						String(answersView.answerCount),
+					)}
+					alwaysOffer
+					onLoaded={openFullList}
+				/>
+			) : (
+				<LoadAllBanner key="load-all" rootId={statement.statementId} mode="direct" />
+			)}
+			{answersView.canReturnToRating && (
+				<button type="button" className={styles.backToRating} onClick={backToRating}>
+					{t('Back to rating')}
+				</button>
+			)}
 
-			{hasSynth && (
+			{hasSynth && !isRateView && (
 				<>
 					<SectionDivider
 						label={t('AI proposals')}
@@ -314,7 +408,7 @@ const SuggestionCards: FC = () => {
 				</>
 			)}
 
-			{hasSynth && hasRaw && (
+			{hasSynth && hasRaw && !isRateView && (
 				<SectionDivider
 					label={t('Open ideas')}
 					count={visibleFlatRaw.length}
@@ -332,12 +426,44 @@ const SuggestionCards: FC = () => {
 								statementSub.statementId === ringId && styles['card-wrapper--focused'],
 							)}
 						>
-							<SuggestionCard parentStatement={statement} statement={statementSub} />
+							{isRateView && statementSub.isCluster ? (
+								<GroupedSuggestionCard
+									cluster={statementSub}
+									mode="both"
+									allowDrillToOriginals
+									pipeline="synthesis"
+									evaluationSlot={<Evaluation statement={statementSub} variant="card" />}
+									renderOriginal={renderRaw}
+								/>
+							) : (
+								<SuggestionCard parentStatement={cardQuestion} statement={statementSub} />
+							)}
 						</div>
 					</Flipped>
 				))}
 			</Flipper>
-			{hasRaw && hasMore && (
+			{isRateView && rateBatch.isFinished && (
+				<p className={styles.lazyLoadStatus} role="status">
+					{t('No more answers to rate right now')}
+				</p>
+			)}
+			{isRateView && rateBatch.isLoading && (
+				<div className={styles['lazyLoadStatus']} role="status">
+					{t('Loading more…')}
+				</div>
+			)}
+			{ranked.hasMore && (
+				<div className={styles.lazyLoadStatus}>
+					<Button
+						text={t('Show more')}
+						variant="secondary"
+						size="small"
+						loading={ranked.isLoading}
+						onClick={ranked.loadMore}
+					/>
+				</div>
+			)}
+			{hasRaw && hasMore && rankingSource !== 'top-answers' && !isRateView && (
 				<div ref={sentinelRef} className={styles['lazyLoadSentinel']} aria-hidden="true" />
 			)}
 			{(isLoadingMore || isAutoLoading) && (
@@ -352,7 +478,7 @@ const SuggestionCards: FC = () => {
 					</button>
 				</div>
 			)}
-		</>
+		</RoomAssignmentsContext.Provider>
 	);
 };
 

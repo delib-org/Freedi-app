@@ -13,6 +13,8 @@ import { renderMethod } from './reportMethod';
 
 const FULL_RUN_LABELS = ['run1', 'run2'];
 const TOLERANCE_PERCENT = 10;
+/** A later comparison run writes under its own name so the baseline stays as it was. */
+const REPORT_NAME = process.env.SCALE_REPORT_NAME ?? 'main-1000-baseline';
 
 function loadRun(outDir: string, label: string): RunResult {
 	return JSON.parse(readFileSync(path.join(outDir, `${label}.json`), 'utf8')) as RunResult;
@@ -126,12 +128,12 @@ function main(): void {
 		'',
 		'## Answers rated, by age (exposure)',
 		'',
-		`Model: answers arrive over the first ${70}% of ${run1.config.members} arriving people; each person rates the first ${run1.config.ratingsPerMember} cards of the app's newest-30 query.`,
+		`Model: answers arrive over the first ${70}% of ${run1.config.members} arriving people; up to 30 answers each person rates the first ${run1.config.ratingsPerMember} cards of the app's newest-30 query; above 30 they rate the sampler's batches, ${run1.config.ratingsPerMember} ratings each.`,
 		'',
 		'| | oldest quarter | second | third | newest quarter | rated at all | unrated |',
 		'|---|---:|---:|---:|---:|---:|---:|',
 		`| rate ${run1.config.ratingsPerMember} of shown | ${run1.exposure.stats.meanByAgeQuarter.join(' | ')} | ${run1.exposure.stats.ratedAnswers} | ${run1.exposure.stats.unratedAnswers} |`,
-		`| would see all 30 (upper bound) | ${run1.exposure.ifRatedWholeWindow.meanByAgeQuarter.join(' | ')} | ${run1.exposure.ifRatedWholeWindow.ratedAnswers} | ${run1.exposure.ifRatedWholeWindow.unratedAnswers} |`,
+		`| rated every card shown (upper bound) | ${run1.exposure.ifRatedWholeWindow.meanByAgeQuarter.join(' | ')} | ${run1.exposure.ifRatedWholeWindow.ratedAnswers} | ${run1.exposure.ifRatedWholeWindow.unratedAnswers} |`,
 		'',
 		'## What changes the question document (one sample listener, first full run)',
 		'',
@@ -152,9 +154,9 @@ function main(): void {
 
 	const docsDir = path.join(process.cwd(), 'docs', 'scale');
 	mkdirSync(docsDir, { recursive: true });
-	writeFileSync(path.join(docsDir, 'main-1000-baseline.md'), markdown);
+	writeFileSync(path.join(docsDir, `${REPORT_NAME}.md`), markdown);
 	writeFileSync(
-		path.join(docsDir, 'main-1000-baseline.data.json'),
+		path.join(docsDir, `${REPORT_NAME}.data.json`),
 		JSON.stringify({ run1, run2, small }, null, 2),
 	);
 	console.info(`[scale] report written; worst difference between runs: ${stability.worstPercent}%`);

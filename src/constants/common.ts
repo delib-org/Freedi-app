@@ -260,6 +260,28 @@ export const REDUX = {
 /**
  * Bulk "Load all statements" constants (getBulkStatements endpoint + delta listeners)
  */
+export const RATE_VIEW = {
+	/** While nothing is left to rate, ask again this often at most when answers are added */
+	FINISHED_REFRESH_MS: 60 * 1000,
+	/** Each person adds up to this much to that wait, so a crowd does not ask together */
+	FINISHED_REFRESH_SPREAD_MS: 30 * 1000,
+	/** First wait after the sampler call fails; doubles per failure */
+	FAILURE_RETRY_BASE_MS: 5 * 1000,
+	FAILURE_RETRY_MAX_MS: 5 * 60 * 1000,
+	/** Times to ask again when the sampler says there is more but gives nothing new */
+	EMPTY_BATCH_RETRIES: 3,
+	EMPTY_BATCH_RETRY_MS: 1500,
+} as const;
+
+export const RANKED_ANSWERS = {
+	/** Answers fetched per page of a ranked list */
+	PAGE_SIZE: 30,
+	/** A list cut to the top pages re-reads its first page this often, tab visible only */
+	REFRESH_MS: 60 * 1000,
+	/** An answer this person added this recently shows in a cut list, wherever it ranks */
+	JUST_ADDED_WINDOW_MS: 10 * 60 * 1000,
+} as const;
+
 export const BULK_LOAD = {
 	/** Statements fetched per HTTP page */
 	PAGE_SIZE: 500,

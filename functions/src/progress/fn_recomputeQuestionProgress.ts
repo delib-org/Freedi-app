@@ -183,6 +183,12 @@ export async function recomputeQuestionProgressForAdmin(
 		evaluated: sets.evaluated.size,
 		options: sets.options,
 		evaluations: sets.evaluations,
+		// This `set` replaces the doc, and these fields are not rebuilt here. They
+		// live only on this doc: a join or leave recounts `members`, a first rating
+		// refreshes the chain pair.
+		...(existing?.members !== undefined ? { members: existing.members } : {}),
+		...(existing?.chainEvaluated !== undefined ? { chainEvaluated: existing.chainEvaluated } : {}),
+		...(existing?.chainKey !== undefined ? { chainKey: existing.chainKey } : {}),
 		lastActivity: existing?.lastActivity ?? now,
 		...(existing?.lastNudgeAt ? { lastNudgeAt: existing.lastNudgeAt } : {}),
 		lastUpdate: now,

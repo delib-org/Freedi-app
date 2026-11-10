@@ -67,6 +67,8 @@ export function metricsOf(run: RunResult): MetricRow[] {
 	const view = phaseOf(run, 'view');
 	const presence = phaseOf(run, 'presence');
 	const answer = phaseOf(run, 'new-answer');
+	const vote = phaseOf(run, 'vote');
+	const answerBatch = phaseOf(run, 'answer-batch');
 	const n = run.config.members;
 	const open = (shape: string): number => round(meanDocsDelivered(run, 'open', shape));
 	const openTotal =
@@ -77,7 +79,9 @@ export function metricsOf(run: RunResult): MetricRow[] {
 		open('answersWindow') +
 		open('presence') +
 		open('participationRatings') +
-		open('participationViewsCount');
+		open('participationViewsCount') +
+		open('questionProgress') +
+		open('batchAnswers');
 	const presenceDeliveredPerWrite = perUnit(
 		meanDocsDelivered(run, 'presence', 'presence'),
 		presence.units,
@@ -160,6 +164,30 @@ export function metricsOf(run: RunResult): MetricRow[] {
 			kind: 'measured',
 		},
 		{
+			key: 'writesPerVote',
+			label: 'Docs written by functions per vote',
+			value: round(perUnit(vote.totalWrites, vote.units), 1),
+			kind: 'measured',
+		},
+		{
+			key: 'optionWritesPerVote',
+			label: 'Answer doc writes per vote (leader flag)',
+			value: round(
+				perUnit(
+					(vote.writesByCollection[Collections.statements] ?? 0) - vote.questionDocWrites,
+					vote.units,
+				),
+				2,
+			),
+			kind: 'measured',
+		},
+		{
+			key: 'invocationsPerVote',
+			label: 'Function invocations per vote',
+			value: round(perUnit(vote.invocationsTotal, vote.units), 1),
+			kind: 'measured',
+		},
+		{
 			key: 'invocationsPerRating',
 			label: 'Function invocations per rating',
 			value: round(perUnit(rate.invocationsTotal, rate.units), 1),
@@ -196,6 +224,18 @@ export function metricsOf(run: RunResult): MetricRow[] {
 			kind: 'measured',
 		},
 		{
+			key: 'open.progress',
+			label: 'Open: question progress doc (one read, also for hosts)',
+			value: open('questionProgress'),
+			kind: 'measured',
+		},
+		{
+			key: 'open.batchAnswers',
+			label: 'Open: Rate view batch, live copy of the cards on screen',
+			value: open('batchAnswers'),
+			kind: 'measured',
+		},
+		{
 			key: 'open.total',
 			label: 'Open: total docs per participant',
 			value: round(openTotal),
@@ -209,11 +249,25 @@ export function metricsOf(run: RunResult): MetricRow[] {
 			note: 'sampled per-participant x 1,000',
 		},
 		{
-			key: 'open.participationMs',
-			label: 'One participant download of all ratings (ms, local)',
-			value: run.participationReadMs,
+			key: 'open.answerBatch',
+			label: 'Answers returned per getAnswerBatch call (function reads, not client reads)',
+			value: open('answerBatch'),
 			kind: 'measured',
-			note: 'local only; not comparable to production',
+			note: 'not included in the open total',
+		},
+		{
+			key: 'batch.readsPerCall',
+			label: 'Docs read by functions per getAnswerBatch call',
+			value: round(perUnit(answerBatch.totalReads, answerBatch.units), 1),
+			kind: 'measured',
+			note: 'per-instance answer cache; workers on one machine',
+		},
+		{
+			key: 'ranked.topPage',
+			label: 'Ranked list: docs read for the first page',
+			value: round(meanDocsDelivered(run, 'ranked-list', 'rankedTopPage')),
+			kind: 'measured',
+			note: 'replaces downloading every answer; no listener',
 		},
 		{
 			key: 'presence.delivered',
@@ -224,16 +278,16 @@ export function metricsOf(run: RunResult): MetricRow[] {
 		{
 			key: 'presence.fanOutOneWrite',
 			label: `Reads when one person's presence changes (${n} listening)`,
-			value: fanOutReads(1, n),
+			value: fanOutReads(presenceDeliveredPerWrite, n),
 			kind: 'derived',
-			note: 'measured 1:1 delivery x listeners',
+			note: 'measured delivery per write x listeners',
 		},
 		{
 			key: 'presence.arrivalAll',
 			label: `Reads when all ${POPULATION} arrive, presence on`,
-			value: fanOutReads(POPULATION, POPULATION),
+			value: fanOutReads(POPULATION * presenceDeliveredPerWrite, POPULATION),
 			kind: 'derived',
-			note: 'each arrival delivered to all present',
+			note: 'arrivals x measured delivery x people present',
 		},
 		{
 			key: 'rate.answersDelivered',
@@ -301,7 +355,7 @@ export function metricsOf(run: RunResult): MetricRow[] {
 			label: 'Answers rated at all',
 			value: run.exposure.stats.ratedAnswers,
 			kind: 'measured',
-			note: `of ${run.exposure.stats.totalAnswers}; model: newest-first, ${run.config.ratingsPerMember} ratings each`,
+			note: `of ${run.exposure.stats.totalAnswers}; model: the sampler's batches, ${run.config.ratingsPerMember} ratings each`,
 		},
 		{
 			key: 'exposure.oldestQuarter',
@@ -367,11 +421,21 @@ export function metricsOf(run: RunResult): MetricRow[] {
 	return rows;
 }
 
+/** Triggered by other collections; each can match the statement writes in number by chance. */
+const NON_STATEMENT_TRIGGERS: ReadonlySet<string> = new Set([
+	'newEvaluation',
+	'onChatEvaluationCreated',
+	'onEvaluationChangeRecomputeCondensationClusters',
+	'onAgoraEvaluationWritten',
+	'onNotificationQueued',
+]);
+
 /** How many functions ran exactly once per write to a statement document. */
 export function triggersPerStatementWrite(phase: PhaseCost): number {
 	const statementWrites = phase.writesByCollection[Collections.statements] ?? 0;
 	if (statementWrites === 0) return 0;
 
-	return Object.values(phase.byFunction).filter((cost) => cost.invocations === statementWrites)
-		.length;
+	return Object.entries(phase.byFunction).filter(
+		([name, cost]) => cost.invocations === statementWrites && !NON_STATEMENT_TRIGGERS.has(name),
+	).length;
 }

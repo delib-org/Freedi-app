@@ -11,6 +11,8 @@ export {
 	NotificationQueueStatus,
 	NotificationQueueItemSchema,
 	type NotificationQueueItem,
+	type RoutableQueueItem,
+	type LargeQuestionDigestMarker,
 } from './NotificationQueue';
 
 // Credit Model

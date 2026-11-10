@@ -15,7 +15,7 @@ import { ResultsStrip } from '@/view/components/atomic/molecules/ResultsStrip';
 import { EvaluationCircle, EvaluationCircleRow } from '../shared/EvaluationCircle';
 import type { EvaluationVariant } from '../Evaluation';
 import ScoreRevealHint from '../shared/ScoreRevealHint';
-import { useAnswerScoreGate } from '../../../../questionScreen/useAnswerScoreGate';
+import { useCardAnswerScoreGate } from '../../../../questionScreen/useAnswerScoreGate';
 
 interface CommunityVoiceEvaluationProps {
 	statement: Statement;
@@ -32,7 +32,10 @@ const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 	const { learning, t } = useUserConfig();
 
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
-	const { canSee: showEvaluation, showRevealHint } = useAnswerScoreGate(statement, parentStatement);
+	const { canSee: showEvaluation, showRevealHint } = useCardAnswerScoreGate(
+		statement,
+		parentStatement,
+	);
 
 	const evaluationScore = useAppSelector(evaluationSelector(statement.statementId));
 

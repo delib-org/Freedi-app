@@ -64,10 +64,11 @@ function makeQuery(name: 'statements' | 'evaluations', state: QueryState) {
 }
 
 const batchCommit = jest.fn();
+const batchUpdate = jest.fn();
 
 const fakeDb = {
 	collection: (name: 'statements' | 'evaluations') => makeQuery(name, { filters: [] }),
-	batch: () => ({ delete: jest.fn(), update: jest.fn(), commit: batchCommit }),
+	batch: () => ({ delete: jest.fn(), update: batchUpdate, commit: batchCommit }),
 };
 
 jest.mock('firebase-admin/firestore', () => ({
@@ -198,6 +199,58 @@ describe('derived doc vote guard', () => {
 		store.statements = [option('s1', { derivedByPipeline: 'synthesis' })];
 
 		await expect(assertNoDirectVotesOnDerivedDocs('q1')).resolves.toBeUndefined();
+	});
+});
+
+const HELD_MARK = { reason: 'inappropriate-language', hiddenAt: 1, eventId: 'e' };
+
+describe('dissolveQuestionSynthesis and hidden answers', () => {
+	beforeEach(() => {
+		delete process.env.FIRESTORE_EMULATOR_HOST;
+		jest.clearAllMocks();
+	});
+
+	it('re-shows an orphan but not an answer the automatic check hid', async () => {
+		store.statements = [
+			option('orphan', { hide: true }),
+			option('moderated', { hide: true, answerModeration: HELD_MARK }),
+		];
+		store.evaluations = [];
+
+		const result = await dissolveQuestionSynthesis('q1', { dryRun: true });
+
+		expect(result.orphansRestored).toBe(1);
+	});
+
+	it('re-shows a restored answer the check once hid, if it is an orphan again', async () => {
+		store.statements = [
+			option('restored', { hide: true, answerModeration: { ...HELD_MARK, restoredAt: 2 } }),
+		];
+		store.evaluations = [];
+
+		const result = await dissolveQuestionSynthesis('q1', { dryRun: true });
+
+		expect(result.orphansRestored).toBe(1);
+	});
+
+	it('detaches a member of a removed group but keeps a flagged one hidden', async () => {
+		store.statements = [
+			option('derived', {
+				derivedByPipeline: 'synthesis',
+				integratedOptions: ['plain', 'flagged'],
+			}),
+			option('plain', { hide: true, integratedInto: 'derived' }),
+			option('flagged', { hide: true, integratedInto: 'derived', answerModeration: HELD_MARK }),
+		];
+		store.evaluations = [];
+
+		const result = await dissolveQuestionSynthesis('q1');
+
+		const payloads = batchUpdate.mock.calls.map(([, payload]) => payload);
+		expect(payloads).toHaveLength(2);
+		expect(payloads.filter((payload) => payload.hide === false)).toHaveLength(1);
+		expect(payloads.every((payload) => 'integratedInto' in payload)).toBe(true);
+		expect(result.membersRestored).toBe(1);
 	});
 });
 

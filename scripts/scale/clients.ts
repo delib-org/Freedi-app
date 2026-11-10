@@ -11,7 +11,8 @@ import {
 	collection,
 	connectFirestoreEmulator,
 	doc,
-	getCountFromServer,
+	documentId,
+	getDoc,
 	getDocs,
 	getFirestore,
 	limit,
@@ -22,13 +23,34 @@ import {
 	where,
 } from 'firebase/firestore';
 import type { Firestore, Query, Unsubscribe } from 'firebase/firestore';
-import { Collections } from '@freedi/shared-types';
-import { HEAD_START_LIMIT, WINDOW_SIZE } from './config';
+import { connectFunctionsEmulator, getFunctions, httpsCallable } from 'firebase/functions';
+import type { Functions } from 'firebase/functions';
+import {
+	Collections,
+	functionConfig,
+	isAnswerBatchQuestion,
+	StatementType,
+} from '@freedi/shared-types';
+import type {
+	GetAnswerBatchRequest,
+	GetAnswerBatchResponse,
+	QuestionProgress,
+	Statement,
+} from '@freedi/shared-types';
+import {
+	HEAD_START_LIMIT,
+	IN_QUERY_LIMIT,
+	isLargeForPresence,
+	PRESENCE_CAP,
+	RANKED_PAGE_SIZE,
+	WINDOW_SIZE,
+} from './config';
 import { DISCUSSABLE_TYPES } from './seed';
 
 const AUTH_URL = 'http://localhost:9119';
 const FIRESTORE_HOST = 'localhost';
 const FIRESTORE_PORT = 8101;
+const FUNCTIONS_PORT = 5021;
 
 export type Shape =
 	| 'questionDoc'
@@ -38,7 +60,12 @@ export type Shape =
 	| 'answersWindow'
 	| 'presence'
 	| 'participationRatings'
-	| 'participationViewsCount';
+	| 'participationViewsCount'
+	| 'questionProgress'
+	| 'batchAnswers'
+	/** Answers returned by getAnswerBatch: function reads, not client reads. */
+	| 'answerBatch'
+	| 'rankedTopPage';
 
 export interface ProbeCount {
 	snapshots: number;
@@ -62,16 +89,19 @@ export class SampleClient {
 	readonly counts: PhaseCounts = {};
 	readonly questionFieldChanges: Record<string, Record<string, number>> = {};
 	questionDocBytes = 0;
-	participationReadMs = 0;
 	private phase = 'open';
 	private previousQuestion: Record<string, unknown> | undefined;
+	private readonly functions: Functions;
 	private readonly unsubscribers: Unsubscribe[] = [];
 
 	private constructor(
 		readonly uid: string,
 		readonly db: Firestore,
 		private readonly app: FirebaseApp,
-	) {}
+	) {
+		this.functions = getFunctions(app, functionConfig.region);
+		connectFunctionsEmulator(this.functions, FIRESTORE_HOST, FUNCTIONS_PORT);
+	}
 
 	static async connect(index: number, projectId: string): Promise<SampleClient> {
 		const app = initializeApp(
@@ -120,18 +150,69 @@ export class SampleClient {
 		);
 	}
 
+	/**
+	 * The batch the Rate view shows, from the `getAnswerBatch` callable
+	 * (useAnswerBatch, above 30 answers). The answers come back in the response,
+	 * so they cost function reads, not client reads.
+	 */
+	async fetchAnswerBatch(questionId: string): Promise<string[]> {
+		const call = httpsCallable<GetAnswerBatchRequest, GetAnswerBatchResponse>(
+			this.functions,
+			'getAnswerBatch',
+		);
+		const { data } = await call({ questionId });
+		this.bump('answerBatch', 1, data.answers.length);
+
+		return data.answers.map((answer) => answer.statementId);
+	}
+
+	/** listenToBatchAnswers: a live copy of the cards on screen, in chunks the `in` query allows. */
+	private listenToBatch(ids: string[]): void {
+		for (let start = 0; start < ids.length; start += IN_QUERY_LIMIT) {
+			this.listen(
+				'batchAnswers',
+				query(
+					collection(this.db, Collections.statements),
+					where(documentId(), 'in', ids.slice(start, start + IN_QUERY_LIMIT)),
+				),
+			);
+		}
+	}
+
+	/** fetchTopAnswers: one page by consensus, read once; a ranked list has no listener. */
+	async openRankedList(questionId: string): Promise<void> {
+		const page = await getDocs(
+			query(
+				collection(this.db, Collections.statements),
+				where('parentId', '==', questionId),
+				where('statementType', '==', StatementType.option),
+				orderBy('consensus', 'desc'),
+				orderBy(documentId(), 'desc'),
+				limit(RANKED_PAGE_SIZE),
+			),
+		);
+		this.bump('rankedTopPage', 1, page.size);
+	}
+
 	/** Everything a participant's browser does when the question screen opens. */
 	async openQuestion(questionId: string): Promise<void> {
 		const { db, uid } = this;
 
 		// listenToStatement (useStatementListeners)
-		this.unsubscribers.push(
-			onSnapshot(doc(db, Collections.statements, questionId), (snapshot) => {
-				const data = snapshot.data() as Record<string, unknown> | undefined;
-				this.bump('questionDoc', 1, 1);
-				if (data) this.recordQuestionDiff(data);
-			}),
-		);
+		const question = await new Promise<Statement | undefined>((resolve) => {
+			let isFirstSnapshot = true;
+			this.unsubscribers.push(
+				onSnapshot(doc(db, Collections.statements, questionId), (snapshot) => {
+					const data = snapshot.data() as Record<string, unknown> | undefined;
+					this.bump('questionDoc', 1, 1);
+					if (data) this.recordQuestionDiff(data);
+					if (isFirstSnapshot) {
+						isFirstSnapshot = false;
+						resolve(data as Statement | undefined);
+					}
+				}),
+			);
+		});
 		// listenToStatementSubscription (useStatementListeners)
 		this.unsubscribers.push(
 			onSnapshot(doc(db, Collections.statementsSubscribe, `${uid}--${questionId}`), () =>
@@ -152,22 +233,34 @@ export class SampleClient {
 		this.bump('answersHeadStart', 1, firstPage.size);
 		// listenToSubStatements(statementId, 'top', CHAT.INITIAL_MESSAGES_LIMIT)
 		this.listen('answersWindow', answersWindowQuery(db, questionId, WINDOW_SIZE));
-		// ListenToOnlineUsers (controllers/db/online/getOnline.ts)
-		this.listen(
-			'presence',
-			query(collection(db, Collections.online), where('statementId', '==', questionId)),
-		);
-		// useParticipationStats: all evaluations of the question, then a views count
-		const participationStart = Date.now();
-		const ratings = await getDocs(
-			query(collection(db, Collections.evaluations), where('parentId', '==', questionId)),
-		);
-		this.participationReadMs = Date.now() - participationStart;
-		this.bump('participationRatings', 1, ratings.size);
-		const views = await getCountFromServer(
-			query(collection(db, Collections.statementViews), where('statementId', '==', questionId)),
-		);
-		this.bump('participationViewsCount', 1, views.data().count > 0 ? 1 : 0);
+		// getQuestionProgress: the one-shot read behind OnlineUsers, GroupProgress and, for
+		// hosts, useParticipationStats. It replaces downloading every rating of the question,
+		// and repeats for them shared at most once a minute.
+		const progress = await getDoc(doc(db, Collections.questionProgress, questionId));
+		this.bump('questionProgress', 1, 1);
+		const counters = progress.data() as Partial<QuestionProgress> | undefined;
+		// OnlineUsers: nothing mounts on a large question, so no presence listener at all
+		if (
+			!isLargeForPresence({
+				entered: counters?.entered,
+				asParentTotalEvaluators: question?.evaluation?.asParentTotalEvaluators,
+				totalEvaluators: question?.totalEvaluators,
+			})
+		) {
+			// ListenToOnlineUsers (controllers/db/online/getOnline.ts)
+			this.listen(
+				'presence',
+				query(
+					collection(db, Collections.online),
+					where('statementId', '==', questionId),
+					limit(PRESENCE_CAP),
+				),
+			);
+		}
+		// useAnswerBatch: only above the threshold does the Answers tab open on the Rate view
+		if (isAnswerBatchQuestion(question?.numberOfOptions ?? 0)) {
+			this.listenToBatch(await this.fetchAnswerBatch(questionId));
+		}
 	}
 
 	private recordQuestionDiff(data: Record<string, unknown>): void {

@@ -1,11 +1,11 @@
 import { getDoc, updateDoc, runTransaction } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
-import { Statement } from '@freedi/shared-types';
+import { isAnswerHeldByModeration, Statement } from '@freedi/shared-types';
 
 import { parse, string } from 'valibot';
 import { logger } from '@/services/logger';
-import { createStatementRef } from '@/utils/firebaseUtils';
+import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { FOLLOW_ME } from '@/constants/common';
 
@@ -49,7 +49,13 @@ export async function toggleStatementHide(statementId: string): Promise<boolean 
 			const statementDBData = statementDB.data() as Statement;
 
 			const newHide = !(statementDBData.hide === true);
-			transaction.update(statementRef, { hide: newHide });
+			transaction.update(statementRef, {
+				hide: newHide,
+				// A restore ends the host-only lock the automatic check put on the answer.
+				...(!newHide && isAnswerHeldByModeration(statementDBData)
+					? { 'answerModeration.restoredAt': getCurrentTimestamp() }
+					: {}),
+			});
 
 			return newHide;
 		});

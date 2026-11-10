@@ -1,16 +1,23 @@
 /**
  * Exposure simulation, triggers OFF: answers appear over the first part of the
- * session, and every person, on arrival, asks the emulator the app's own query
- * for the newest 30 answers and rates the first few it returns. The query is
- * real; the behaviour (arrival order, how many cards a person rates, no
- * scrolling) is a stated model.
+ * session. Up to the threshold every person, on arrival, rates the first few of
+ * the app's newest-30 query. Above it they rate the batches the server's own
+ * sampler picks, as the Rate view does: `sampleAnswers` runs that sampler, with
+ * the same inputs, in this process. The behaviour (arrival order, how many
+ * cards a person rates) is a stated model.
  *
  * Also writes the denormalised counters the triggers would have produced, so
  * the rating burst later runs against a realistic question.
  */
 import { getDocs } from 'firebase/firestore';
 import type { DocumentData } from 'firebase-admin/firestore';
-import { Collections, getQuestionParticipationId, StatementType } from '@freedi/shared-types';
+import {
+	ANSWER_BATCH,
+	Collections,
+	getQuestionParticipationId,
+	isAnswerBatchQuestion,
+	StatementType,
+} from '@freedi/shared-types';
 import type { Creator, Statement } from '@freedi/shared-types';
 import { WINDOW_SIZE } from './config';
 import type { ScaleConfig } from './config';
@@ -20,6 +27,7 @@ import { BatchWriter, memberCreator, requireStatement } from './seed';
 import type { Seeded } from './seed';
 import { exposureStats } from './metrics';
 import type { ExposureStats } from './metrics';
+import { resetSampler, sampleAnswers } from './sampler';
 
 /** Answers arrive across this share of the arriving people. */
 const ANSWER_ARRIVAL_SHARE = 0.7;
@@ -107,6 +115,34 @@ export async function simulateExposure(
 	const shownAll = new Map<string, number>();
 	const query = answersWindowQuery(reader.db, question.statementId, WINDOW_SIZE);
 	const answerSpan = Math.max(1, Math.floor(members.length * ANSWER_ARRIVAL_SHARE));
+	resetSampler();
+
+	/** The answers as the server would read them now, with this run's ratings. */
+	const answersWithRatings = (): Statement[] =>
+		answers.map((answer) => {
+			const ratings = values.get(answer.statementId) ?? [];
+			const evaluation = evaluationBlock(ratings);
+
+			return {
+				...answer,
+				evaluation,
+				consensus: evaluation.averageEvaluation,
+				totalEvaluators: ratings.length,
+			} as unknown as Statement;
+		});
+
+	/** One person's cards: batch by batch, rating every card before asking again. */
+	const sampledCards = (uid: string): Set<string> => {
+		const statements = answersWithRatings();
+		const cards = new Set<string>();
+		while (cards.size < config.ratingsPerMember) {
+			const batch = sampleAnswers(statements, cards, uid, ANSWER_BATCH.DEFAULT_SIZE);
+			if (batch.length === 0) break;
+			batch.forEach((answer) => cards.add(answer.statementId));
+		}
+
+		return cards;
+	};
 
 	for (let i = 0; i < members.length; i += 1) {
 		const target = Math.min(config.answers, Math.floor(((i + 1) * config.answers) / answerSpan));
@@ -124,13 +160,14 @@ export async function simulateExposure(
 		}
 		await writer.flush();
 
-		const window = await getDocs(query);
-		const windowIds = window.docs.map((doc) => doc.id);
-		windowIds.forEach((id) => shownAll.set(id, (shownAll.get(id) ?? 0) + 1));
-
 		const member = members[i];
+		const shownIds = isAnswerBatchQuestion(answers.length)
+			? [...sampledCards(member.uid)]
+			: (await getDocs(query)).docs.map((doc) => doc.id);
+		shownIds.forEach((id) => shownAll.set(id, (shownAll.get(id) ?? 0) + 1));
+
 		const rated = new Set<string>();
-		for (const answerId of windowIds.slice(0, config.ratingsPerMember)) {
+		for (const answerId of shownIds.slice(0, config.ratingsPerMember)) {
 			const answer = answers.find((candidate) => candidate.statementId === answerId);
 			if (!answer) continue;
 			const value =
@@ -147,15 +184,9 @@ export async function simulateExposure(
 		await writer.flushIfFull();
 	}
 
-	for (const answer of answers) {
-		const ratings = values.get(answer.statementId) ?? [];
-		const consensus = evaluationBlock(ratings).averageEvaluation;
-		writer.set(Collections.statements, answer.statementId, {
-			...answer,
-			evaluation: evaluationBlock(ratings),
-			consensus,
-			totalEvaluators: ratings.length,
-		});
+	const rated = answersWithRatings();
+	for (const answer of rated) {
+		writer.set(Collections.statements, answer.statementId, answer);
 		await writer.flushIfFull();
 	}
 	for (const member of members) {
@@ -182,16 +213,28 @@ export async function simulateExposure(
 		numberOfOptions: config.answers,
 		viewed: { individualViews: members.length },
 	});
-	await writer.flush();
-
+	// What the progress writer would hold by now; the app's readers need it.
 	const inOrder = answers.map((answer) => values.get(answer.statementId)?.length ?? 0);
+	writer.set(Collections.questionProgress, question.statementId, {
+		statementId: question.statementId,
+		topParentId: question.topParentId,
+		entered: members.length,
+		suggested: config.answers,
+		evaluated: raters,
+		options: config.answers,
+		evaluations: inOrder.reduce((total, n) => total + n, 0),
+		members: members.length,
+		lastActivity: startedAt,
+		lastUpdate: startedAt,
+	});
+	await writer.flush();
 
 	return {
 		stats: exposureStats(inOrder),
 		ifRatedWholeWindow: exposureStats(
 			answers.map((answer) => shownAll.get(answer.statementId) ?? 0),
 		),
-		answers,
+		answers: rated,
 		ratedBy,
 		ratingsWritten: inOrder.reduce((total, n) => total + n, 0),
 	};

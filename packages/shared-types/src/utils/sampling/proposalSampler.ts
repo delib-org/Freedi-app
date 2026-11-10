@@ -5,7 +5,7 @@
  * Handles batch selection, stability checking, and priority scoring.
  */
 
-import { Statement } from '@freedi/shared-types';
+import type { Statement } from '../../models/statement/StatementTypes';
 import {
   SamplingConfig,
   DEFAULT_SAMPLING_CONFIG,
@@ -14,7 +14,14 @@ import {
   getProposalStats,
 } from './sampling';
 import { selectDiverseBatch } from './diverseBatch';
-import { logger } from './logger';
+
+/**
+ * Where the sampler reports its choices. Optional: the shared package has no
+ * logger of its own, and each caller decides whether a batch is worth logging.
+ */
+export interface SamplerLogger {
+  info: (message: string, ...args: unknown[]) => void;
+}
 
 /**
  * A proposal with its calculated priority score
@@ -74,9 +81,11 @@ export interface BatchResult {
  */
 export class ProposalSampler {
   private config: SamplingConfig;
+  private logger?: SamplerLogger;
 
-  constructor(config: Partial<SamplingConfig> = {}) {
+  constructor(config: Partial<SamplingConfig> = {}, logger?: SamplerLogger) {
     this.config = { ...DEFAULT_SAMPLING_CONFIG, ...config };
+    this.logger = logger;
   }
 
   /**
@@ -150,15 +159,17 @@ export class ProposalSampler {
     scored.sort((a, b) => b.priority - a.priority);
 
     // Log detailed priority scores for debugging Thompson Sampling
-    logger.info('[ProposalSampler] Thompson Sampling priority scores:');
-    scored.forEach((s, index) => {
-      logger.info(`  #${index + 1}: "${s.proposal.statement?.substring(0, 40)}..." ` +
-        `priority=${s.priority.toFixed(4)}, ` +
-        `evals=${s.stats.evaluationCount}, ` +
-        `mean=${s.stats.mean.toFixed(3)}, ` +
-        `sem=${s.stats.sem.toFixed(3)}, ` +
-        `stable=${s.isStable}`);
-    });
+    if (this.logger) {
+      this.logger.info('[ProposalSampler] Thompson Sampling priority scores:');
+      scored.forEach((s, index) => {
+        this.logger?.info(`  #${index + 1}: "${s.proposal.statement?.substring(0, 40)}..." ` +
+          `priority=${s.priority.toFixed(4)}, ` +
+          `evals=${s.stats.evaluationCount}, ` +
+          `mean=${s.stats.mean.toFixed(3)}, ` +
+          `sem=${s.stats.sem.toFixed(3)}, ` +
+          `stable=${s.isStable}`);
+      });
+    }
 
     return scored;
   }
@@ -201,7 +212,7 @@ export class ProposalSampler {
       return true;
     });
 
-    logger.info('[ProposalSampler] Filtering proposals:', {
+    this.logger?.info('[ProposalSampler] Filtering proposals:', {
       total: proposals.length,
       evaluated: evaluatedIds.size,
       available: available.length,
@@ -209,7 +220,7 @@ export class ProposalSampler {
     });
 
     if (available.length === 0) {
-      logger.info('[ProposalSampler] No available proposals');
+      this.logger?.info('[ProposalSampler] No available proposals');
       return [];
     }
 
@@ -226,7 +237,7 @@ export class ProposalSampler {
         ).map((s) => s.proposal)
       : scored.slice(0, count).map((s) => s.proposal);
 
-    logger.info('[ProposalSampler] Selected proposals:', {
+    this.logger?.info('[ProposalSampler] Selected proposals:', {
       selectedCount: selected.length,
       diverse: Boolean(diversity),
       clusterKeys: diversity ? selected.map((s) => diversity.clusterKeyOf(s)) : undefined,
@@ -303,6 +314,9 @@ export class ProposalSampler {
 /**
  * Create a default sampler instance
  */
-export function createSampler(config?: Partial<SamplingConfig>): ProposalSampler {
-  return new ProposalSampler(config);
+export function createSampler(
+  config?: Partial<SamplingConfig>,
+  logger?: SamplerLogger,
+): ProposalSampler {
+  return new ProposalSampler(config, logger);
 }

@@ -22,12 +22,13 @@ import {
 	NotificationQueueStatus,
 	NotificationTriggerType,
 	SourceApp,
+	type LargeQuestionDigestMarker,
 	type NotificationQueueItem,
+	type RoutableQueueItem,
 	type Statement,
 } from '@freedi/shared-types';
 import type { DocumentReference, Firestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions/v1';
-import type { RoutableQueueItem } from '../engagement/notifications/channelRouter';
 import { logError } from '../utils/errorHandling';
 import { vetoesNewAnswers } from './answerNotifyGate';
 import { CHUNK_COMMIT_MAX_ATTEMPTS } from './chunkedWrites';
@@ -63,12 +64,6 @@ const DIGEST_BODY_MAX_LENGTH = 120;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const FIRESTORE_ALREADY_EXISTS = 6;
 const QUESTION_UNAVAILABLE = 'Question gone or hidden at delivery';
-
-/** Local until these fields join NotificationQueueItem in shared-types. */
-export type LargeQuestionDigestMarker = NotificationQueueItem & {
-	firstAuthorUid?: string;
-	multipleAuthors?: boolean;
-};
 
 export interface LargeQuestionDigestResult {
 	markers: number;

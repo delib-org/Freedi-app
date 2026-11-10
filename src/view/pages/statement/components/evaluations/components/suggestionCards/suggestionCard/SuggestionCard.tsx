@@ -40,9 +40,13 @@ import MergeBadge from './MergeBadge';
 import YouTubeEmbed from './YouTubeEmbed';
 import { extractYouTubeVideo } from '@/helpers/youtubeLinks';
 import { useIsClamped } from './hasClampedContent';
-import { useAnswerScoreGate } from '../../../../questionScreen/useAnswerScoreGate';
-import { isQuestionResultsOff } from '../../../../questionScreen/canSeeScore';
+import { useAnswerScoreInput } from '../../../../questionScreen/useAnswerScoreGate';
+import { AnswerScoreGateContext } from '../../../../questionScreen/answerScoreGateContext';
+import { canSeeScore, isQuestionResultsOff } from '../../../../questionScreen/canSeeScore';
 import { resolveCardMarks } from './cardMarks';
+import { isHostOfAnswer } from '@/helpers/answerModeration';
+import { useAnswerHostContext } from '@/controllers/hooks/useAnswerVisibility';
+import { isAnswerHeldByModeration } from '@freedi/shared-types';
 
 interface Props {
 	statement: Statement | undefined;
@@ -64,11 +68,13 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	const { t } = useTranslation();
 	// Use parent's authorization instead of individual card authorization
 	const { isAuthorized, isAdmin } = useAuthorization(parentStatement?.statementId);
+	const answerHostContext = useAnswerHostContext();
 	const creator = useSelector(creatorSelector);
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 	const minJoinMembers = parentStatement?.statementSettings?.minJoinMembers;
 	const maxJoinMembers = parentStatement?.statementSettings?.maxJoinMembers;
-	const { canSee: canSeeMarks } = useAnswerScoreGate(statement, parentStatement);
+	const scoreInput = useAnswerScoreInput(statement, parentStatement);
+	const canSeeMarks = canSeeScore(scoreInput);
 	const showBadges =
 		parentStatement?.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot;
 	const isAnchored = statement?.anchored === true;
@@ -218,6 +224,11 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 		canSeeMarks,
 	);
 
+	// While the automatic check holds an answer, only its host may restore it.
+	const canUnhide = isAnswerHeldByModeration(statement)
+		? isAdmin || isHostOfAnswer(statement, answerHostContext)
+		: isAuthorized;
+
 	function handleToggleHide(e: React.MouseEvent) {
 		e.stopPropagation();
 		toggleStatementHide(statement.statementId);
@@ -299,7 +310,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 			onPointerDown={handleCardPointerDown}
 			className={cardClassName}
 			style={{
-				pointerEvents: statement.hide && !isAuthorized ? 'none' : 'auto',
+				pointerEvents: statement.hide && !isAuthorized && !canUnhide ? 'none' : 'auto',
 			}}
 			ref={elementRef}
 			id={statement.statementId}
@@ -315,11 +326,11 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 							className={clsx(
 								styles.statusBadge,
 								styles['statusBadge--hidden'],
-								isAuthorized && styles['statusBadge--clickable'],
+								canUnhide && styles['statusBadge--clickable'],
 							)}
-							onClick={isAuthorized ? handleToggleHide : undefined}
-							title={isAuthorized ? t('Click to unhide') : t('Hidden from participants')}
-							aria-label={isAuthorized ? t('Unhide this card') : t('This card is hidden')}
+							onClick={canUnhide ? handleToggleHide : undefined}
+							title={canUnhide ? t('Click to unhide') : t('Hidden from participants')}
+							aria-label={canUnhide ? t('Unhide this card') : t('This card is hidden')}
 						>
 							<EyeCrossIcon />
 							<span>{t('Hidden')}</span>
@@ -339,7 +350,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 			)}
 
 			{/* Quick unhide button - appears on hover for admins on hidden cards */}
-			{statement.hide && isAuthorized && (
+			{statement.hide && canUnhide && (
 				<button
 					type="button"
 					className={styles.quickUnhideBtn}
@@ -431,6 +442,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 							statement={statement}
 							isAuthorized={isAuthorized}
 							isAdmin={isAdmin}
+							canToggleHide={canUnhide}
 							isCardMenuOpen={isCardMenuOpen}
 							setIsCardMenuOpen={setIsCardMenuOpen}
 							isEdit={isEdit}
@@ -514,7 +526,11 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 						{isTheme(statement) ? (
 							actionRow
 						) : (
-							<Evaluation statement={statement} variant="card" compact footerSlot={actionRow} />
+							<AnswerScoreGateContext.Provider
+								value={{ answerId: statement.statementId, input: scoreInput }}
+							>
+								<Evaluation statement={statement} variant="card" compact footerSlot={actionRow} />
+							</AnswerScoreGateContext.Provider>
 						)}
 					</div>
 				</div>

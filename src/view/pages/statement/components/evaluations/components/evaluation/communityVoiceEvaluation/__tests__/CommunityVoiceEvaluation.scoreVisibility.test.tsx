@@ -46,7 +46,7 @@ jest.mock('../../shared/EvaluationCircle', () => ({
 	EvaluationCircleRow: () => null,
 }));
 jest.mock('../../../../../questionScreen/useAnswerScoreGate', () => ({
-	useAnswerScoreGate: () => ({ canSee: mockCanSee, showRevealHint: mockShowRevealHint }),
+	useCardAnswerScoreGate: () => ({ canSee: mockCanSee, showRevealHint: mockShowRevealHint }),
 }));
 
 const statement = { statementId: 'a1', parentId: 'q1' } as Statement;

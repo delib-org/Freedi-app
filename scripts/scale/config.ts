@@ -33,13 +33,25 @@ export interface ScaleConfig {
 		ratings: number;
 		simultaneousRatings: number;
 		newAnswers: number;
+		votes: number;
 	};
+	/** Empty runs every phase; otherwise only the named phases. */
+	onlyPhases: string[];
 }
 
 /** `CHAT.INITIAL_MESSAGES_LIMIT` in src/constants/common.ts. */
 export const WINDOW_SIZE = 30;
 /** `FIREBASE.FIRST_LOAD_LIMIT` in src/constants/common.ts. */
 export const HEAD_START_LIMIT = 10;
+
+/** `PRESENCE.MAX_LISTENED_PEOPLE` in src/constants/common.ts. */
+export const PRESENCE_CAP = 100;
+/** `PRESENCE.LARGE_QUESTION_PEOPLE` in src/constants/common.ts. */
+export const LARGE_QUESTION_PEOPLE = 100;
+/** `RANKED_ANSWERS.PAGE_SIZE` in src/constants/common.ts. */
+export const RANKED_PAGE_SIZE = 30;
+/** `FIREBASE.IN_QUERY_LIMIT` in src/constants/common.ts. */
+export const IN_QUERY_LIMIT = 30;
 
 /** Pacing: this many trigger-firing writes, then wait for the emulator to go quiet. */
 export const PACED_BATCH = 5;
@@ -48,7 +60,7 @@ export const SETTLE_TIMEOUT_MS = 180_000;
 export const SEED_BATCH = 400;
 export const MAX_FUNCTIONS_RSS_MB = 12_000;
 
-export const FULL_CONFIG: Omit<ScaleConfig, 'label'> = {
+export const FULL_CONFIG: Omit<ScaleConfig, 'label' | 'onlyPhases'> = {
 	members: 1000,
 	answers: 300,
 	ratingsPerMember: 10,
@@ -60,10 +72,11 @@ export const FULL_CONFIG: Omit<ScaleConfig, 'label'> = {
 		ratings: 200,
 		simultaneousRatings: 15,
 		newAnswers: 3,
+		votes: 100,
 	},
 };
 
-export const SMALL_CONFIG: Omit<ScaleConfig, 'label'> = {
+export const SMALL_CONFIG: Omit<ScaleConfig, 'label' | 'onlyPhases'> = {
 	members: 200,
 	answers: 60,
 	ratingsPerMember: 10,
@@ -75,8 +88,27 @@ export const SMALL_CONFIG: Omit<ScaleConfig, 'label'> = {
 		ratings: 100,
 		simultaneousRatings: 15,
 		newAnswers: 3,
+		votes: 50,
 	},
 };
+
+/** The counters `isLargeForPresence` (src/helpers/presenceVisibility.ts) looks at. */
+export interface PresenceSize {
+	entered?: number;
+	asParentTotalEvaluators?: number;
+	totalEvaluators?: number;
+}
+
+/** The same rule as `isLargeForPresence`: at this size nobody writes or listens to presence. */
+export function isLargeForPresence(size: PresenceSize): boolean {
+	const people = Math.max(
+		size.entered ?? 0,
+		size.asParentTotalEvaluators ?? 0,
+		size.totalEvaluators ?? 0,
+	);
+
+	return people >= LARGE_QUESTION_PEOPLE;
+}
 
 function hostOf(hostAndPort: string): string {
 	return hostAndPort.slice(0, hostAndPort.lastIndexOf(':'));
@@ -121,5 +153,7 @@ export function configFromArgs(argv: string[]): ScaleConfig {
 	if (size !== 'full' && size !== 'small') throw new Error(`Unknown --size=${size}`);
 	const base = size === 'small' ? SMALL_CONFIG : FULL_CONFIG;
 
-	return { ...base, label: args.get('label') ?? size };
+	const onlyPhases = (args.get('only') ?? '').split(',').filter(Boolean);
+
+	return { ...base, label: args.get('label') ?? size, onlyPhases };
 }

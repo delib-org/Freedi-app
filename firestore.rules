@@ -1135,6 +1135,58 @@ service cloud.firestore {
                !isCreator();
       }
 
+      // The question's host, for answers the automatic language check hid.
+      // isAdmin() is not enough, and neither is isCreator(): the main app makes
+      // every author an admin of their own answer.
+      function isHostOfAnswer() {
+        return isSystemAdmin() ||
+               (resource.data.get('parentId', null) != null && checkParentAdmin()) ||
+               (resource.data.get('topParentId', null) != null && checkTopParentAdmin());
+      }
+
+      // A host's restore may add `restoredAt` to the mark, in the same write that
+      // clears `hide`, and nothing else.
+      function isHostRecordingRestore() {
+        let before = resource.data.get('answerModeration', null);
+        let after = request.resource.data.get('answerModeration', null);
+        return before != null && after != null &&
+               before.get('restoredAt', null) == null &&
+               after.diff(before).affectedKeys().hasOnly(['restoredAt']) &&
+               after.get('restoredAt', null) is number &&
+               resource.data.get('hide', false) == true &&
+               request.resource.data.get('hide', false) != true &&
+               isHostOfAnswer();
+      }
+
+      // moderateNewAnswer (Admin SDK) writes the mark. A client could otherwise
+      // pre-set it or strip it.
+      function changesAnswerModeration() {
+        return request.resource.data.get('answerModeration', null) !=
+               resource.data.get('answerModeration', null) &&
+               !isHostRecordingRestore();
+      }
+
+      // While the check is what keeps an answer hidden, only a host brings it
+      // back. A restore records restoredAt, after which this lock is over, so
+      // an author cannot lock their own answer by hiding it later.
+      function unhidesHeldAnswerWithoutHost() {
+        let mark = resource.data.get('answerModeration', null);
+        return mark != null &&
+               mark.get('restoredAt', null) == null &&
+               resource.data.get('hide', false) == true &&
+               request.resource.data.get('hide', false) != true &&
+               !isHostOfAnswer();
+      }
+
+      // Hosts are worked out from where the answer is now, so moving it under a
+      // question the author hosts would make them its host.
+      function movesModeratedAnswerWithoutHost() {
+        return resource.data.get('answerModeration', null) != null &&
+               request.resource.data.diff(resource.data).affectedKeys()
+                 .hasAny(['parentId', 'topParentId', 'parents']) &&
+               !isHostOfAnswer();
+      }
+
       function isAllowedToUpdate() {
         // Participation first, because it needs no get() calls: joining an
         // option and voting on evidence are the hot paths, and the whole point
@@ -1387,6 +1439,7 @@ service cloud.firestore {
                        !setsOrganizationIdOnCreate() &&
                        !createsClassReplyFields() &&
                        !createsClassProposal() &&
+                       !request.resource.data.keys().hasAny(['answerModeration']) &&
                        !createsClassHomeOrLesson() &&
                        classEnteredByOf(request.resource.data) == null &&
                        request.resource.data.creatorId == request.auth.uid &&
@@ -1398,6 +1451,9 @@ service cloud.firestore {
       allow update: if request.auth.uid != null &&
                        !resource.data.keys().hasAny(['agreementBallot']) &&
                        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['agreementMeta', 'agreementBallot', 'deliberationEnabled']) &&
+                       !changesAnswerModeration() &&
+                       !unhidesHeldAnswerWithoutHost() &&
+                       !movesModeratedAnswerWithoutHost() &&
                        !changesCreatorRole() &&
                        !changesCreatorIdWithoutBeingCreator() &&
                        !changesOrganizationId() &&

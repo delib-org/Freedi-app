@@ -14,7 +14,7 @@ import { ActionTypes, clampEvaluationValue } from './evaluationTypes';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
 import { checkConsensusShift } from '../engagement/notifications/socialProofTrigger';
-import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
+import { markHybridEmbeddingStaleIfUsed } from '../services/hybrid-vector-service';
 import { writeHistoryEntry } from '../statements/history/writeHistoryEntry';
 import { isResearchEnabledForTopParent } from '../statements/history/isResearchEnabled';
 
@@ -66,7 +66,7 @@ export async function deleteEvaluation(event: FirestoreEvent<DocumentSnapshot>):
 		await checkConsensusShift(statement);
 
 		// Mark hybrid embedding as stale (non-blocking)
-		markHybridEmbeddingStale(statementId).catch((err) =>
+		markHybridEmbeddingStaleIfUsed(statement).catch((err) =>
 			logger.warn('Hybrid stale marking failed:', err),
 		);
 
