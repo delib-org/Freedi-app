@@ -1,5 +1,10 @@
 import { Access, Role, Statement } from '@freedi/shared-types';
-import { getEntryVerdict, getLevelsAbove, getSubscriptionScopeId } from '../entryVerdict';
+import {
+	getEntryVerdict,
+	getLevelsAbove,
+	getSubscriptionScopeId,
+	isProvenOpen,
+} from '../entryVerdict';
 
 const signedIn = { uid: 'u1', isAnonymous: false };
 const anonymous = { uid: 'a1', isAnonymous: true };
@@ -81,6 +86,45 @@ describe('getEntryVerdict', () => {
 
 	it('closes a level whose access is unknown', () => {
 		expect(getEntryVerdict(level(), undefined, undefined, signedIn)).toBe('closed');
+	});
+});
+
+describe('isProvenOpen', () => {
+	it('is proven by public access alone', () => {
+		expect(isProvenOpen(level(Access.public), undefined, undefined, anonymous)).toBe(true);
+	});
+
+	it("is proven by being the level's creator", () => {
+		expect(isProvenOpen(level(Access.secret, 'u1'), undefined, undefined, signedIn)).toBe(true);
+	});
+
+	it.each([Role.member, Role.admin, Role.creator])('is proven by a loaded %s role', (role) => {
+		expect(isProvenOpen(level(Access.secret), undefined, { role }, signedIn)).toBe(true);
+	});
+
+	describe.each([Access.openToAll, Access.openForRegistered])('on %s', (access) => {
+		it('is not proven by a missing subscription', () => {
+			expect(getEntryVerdict(level(access), undefined, undefined, signedIn)).toBe('open');
+			expect(isProvenOpen(level(access), undefined, undefined, signedIn)).toBe(false);
+		});
+
+		it('is proven by a loaded ordinary subscription', () => {
+			expect(isProvenOpen(level(access), undefined, { role: Role.unsubscribed }, signedIn)).toBe(
+				true,
+			);
+		});
+
+		it.each([Role.banned, Role.waiting])('is not proven by a loaded %s role', (role) => {
+			expect(isProvenOpen(level(access), undefined, { role }, signedIn)).toBe(false);
+		});
+	});
+
+	it('is not proven for an unknown level', () => {
+		expect(isProvenOpen(undefined, undefined, undefined, signedIn)).toBe(false);
+	});
+
+	it('is not proven on a closed level', () => {
+		expect(isProvenOpen(level(Access.secret), undefined, undefined, signedIn)).toBe(false);
 	});
 });
 

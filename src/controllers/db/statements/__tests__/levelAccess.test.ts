@@ -231,6 +231,57 @@ describe('levelAccess', () => {
 			expect(getDoc).not.toHaveBeenCalled();
 		});
 
+		describe.each([Access.openToAll, Access.openForRegistered])(
+			'an %s group in Redux with no subscription there',
+			(access) => {
+				const groupOnly = { statementId: 'g-question', parentId: 'group', topParentId: 'group' };
+
+				beforeEach(() => {
+					mockReduxState = {
+						statements: {
+							statements: [levelWith('group', access)],
+							statementSubscription: [],
+						},
+					};
+					statements = { group: levelWith('group', access) };
+				});
+
+				it.each([Role.banned, Role.waiting])(
+					'reads the database for a person whose doc says %s, and goes Home',
+					async (role) => {
+						subscriptions = { 'u1--group': { role } };
+
+						await expect(findUpTarget(groupOnly, person)).resolves.toBeUndefined();
+						expect(getDoc).toHaveBeenCalledTimes(1);
+					},
+				);
+
+				it('goes there when the database shows nothing against the person', async () => {
+					await expect(findUpTarget(groupOnly, person)).resolves.toBe('group');
+					expect(getDoc).toHaveBeenCalledTimes(1);
+				});
+
+				it('needs no read once an ordinary subscription is loaded', async () => {
+					mockReduxState.statements.statementSubscription = [
+						{ statementId: 'group', role: Role.unsubscribed },
+					];
+
+					await expect(findUpTarget(groupOnly, person)).resolves.toBe('group');
+					expect(getDoc).not.toHaveBeenCalled();
+				});
+
+				it.each([Role.banned, Role.waiting])(
+					'does not take a loaded %s subscription as proof',
+					async (role) => {
+						mockReduxState.statements.statementSubscription = [{ statementId: 'group', role }];
+						subscriptions = { 'u1--group': { role } };
+
+						await expect(findUpTarget(groupOnly, person)).resolves.toBeUndefined();
+					},
+				);
+			},
+		);
+
 		it('still reads when Redux cannot prove the level open', async () => {
 			mockReduxState = {
 				statements: {

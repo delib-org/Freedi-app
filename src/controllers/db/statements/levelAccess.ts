@@ -7,6 +7,7 @@ import {
 	getEntryVerdict,
 	getLevelsAbove,
 	getSubscriptionScopeId,
+	isProvenOpen,
 } from '@/helpers/entryVerdict';
 import { isRefusedRead } from '@/helpers/firestoreRefusal';
 import {
@@ -92,14 +93,14 @@ function readRole(scopeId: string | undefined, uid: string | undefined): Promise
 	return remember(roleReads, subscriptionId, () => fetchRole(subscriptionId));
 }
 
-/** Redux can prove a level open with no network; it cannot prove one closed, a subscription may just not be loaded. */
+/** True when Redux alone holds enough to call the level open, so no read is needed. */
 function isKnownOpen(levelId: string, person: Person | undefined): boolean {
 	const state = store.getState();
 	const level = statementSelector(levelId)(state);
 	const topParent = statementSelector(level?.topParentId)(state);
 	const subscription = statementSubscriptionSelector(getSubscriptionScopeId(level))(state);
 
-	return getEntryVerdict(level, topParent, subscription, person) === 'open';
+	return isProvenOpen(level, topParent, subscription, person);
 }
 
 /** Judges one level for one person. Read-only: unlike useAuthorization it never subscribes or files a request. */

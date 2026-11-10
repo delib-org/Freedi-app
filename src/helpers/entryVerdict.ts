@@ -59,6 +59,29 @@ export function getEntryVerdict(
 	return 'closed';
 }
 
+/**
+ * Whether possibly incomplete local data is enough to call a level open. On an
+ * open group, a missing subscription is not proof of "not banned": it may just
+ * not be loaded. So only public access, membership, the level's creator or a
+ * loaded subscription can prove it; anything else needs a read.
+ */
+export function isProvenOpen(
+	level: Level | undefined,
+	topParent: Pick<Level, 'membership'> | undefined,
+	subscription: Pick<StatementSubscription, 'role'> | undefined,
+	person: Person | undefined,
+): boolean {
+	if (getEntryVerdict(level, topParent, subscription, person) !== 'open') return false;
+
+	const access = level?.membership?.access || topParent?.membership?.access;
+
+	return (
+		access === Access.public ||
+		isMemberOfLevel(level, subscription?.role, person) ||
+		subscription !== undefined
+	);
+}
+
 /** Every level above a statement, nearest first, without the `top` marker or the statement itself. */
 export function getLevelsAbove(
 	statement: Pick<Statement, 'statementId' | 'parents' | 'parentId' | 'topParentId'>,
