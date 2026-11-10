@@ -20,6 +20,7 @@ import {
 	createOtherIdeasSelector,
 } from '@/redux/statements/condensationSelectors';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+import { useLevelVerdict } from '@/controllers/hooks/useLevelVerdict';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import SynthesisPanel from '@/view/pages/statement/components/settings/components/synthesisPanel/SynthesisPanel';
 import { agreementCandidates, proposalEvidence } from './agreementData';
@@ -110,6 +111,8 @@ export default function AgreementHub({
 			p.parentId === statement.statementId && p.statementType === StatementType.question && !p.hide,
 	);
 	const parent = all.find((p) => p.statementId === statement.parentId);
+	const isParentOpen =
+		useLevelVerdict(statement.parentId === 'top' ? undefined : statement.parentId) === 'open';
 	const evidence = (p: Statement): React.ReactNode => {
 		const canSeeEvidence =
 			showResults ||
@@ -255,7 +258,7 @@ export default function AgreementHub({
 				<>
 					{view === 'overview' && (
 						<>
-							{statement.parentId && statement.parentId !== 'top' && (
+							{isParentOpen && (
 								<nav aria-label={t('Question path')}>
 									<button onClick={() => navigate(`/statement/${statement.parentId}?tab=results`)}>
 										← {parent?.statement || t('Parent question')}

@@ -5,6 +5,8 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { logOut } from '@/controllers/db/authenticationUtils';
 import { saveInitialRoute, toSafeRedirectPath } from '@/helpers/initialRoute';
+import { getWayBackPath } from '@/helpers/wayBack';
+import { HOME_PATH } from '@/view/components/atomic/organisms/BottomNav/bottomNavModel';
 import { logError } from '@/utils/errorHandling';
 import clsx from 'clsx';
 
@@ -12,6 +14,8 @@ import clsx from 'clsx';
 import UnAuthorizedImage from '@/assets/images/401-img.png';
 import Cloud1 from '@/assets/images/Cloud1.png';
 import Cloud3 from '@/assets/images/Cloud3.png';
+
+const ERROR_ROUTE = '/401';
 
 const Page401 = () => {
 	const navigate = useNavigate();
@@ -22,7 +26,12 @@ const Page401 = () => {
 
 	const hasNamedAccount = !!user && !user.isAnonymous;
 	const from = (location.state as { from?: unknown } | null)?.from;
-	const returnPath = toSafeRedirectPath(from ?? `${location.pathname}${location.search}`);
+	// On /401 the closed URL arrives as `from`. Rendered in place, the URL is the
+	// closed page and `from` is the page the person came from.
+	const returnPath = toSafeRedirectPath(
+		location.pathname === ERROR_ROUTE ? from : `${location.pathname}${location.search}`,
+	);
+	const wayBackPath = getWayBackPath(from, returnPath);
 
 	const handleSignIn = async () => {
 		setIsSigningIn(true);
@@ -42,7 +51,7 @@ const Page401 = () => {
 	};
 
 	const handleGoHome = () => {
-		navigate('/', { state: { from: window.location.pathname } });
+		navigate(HOME_PATH, { state: { from: window.location.pathname } });
 	};
 
 	return (
@@ -78,7 +87,6 @@ const Page401 = () => {
 						<rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
 						<path d="M7 11V7a5 5 0 0 1 10 0v4" />
 					</svg>
-					<span>401</span>
 				</div>
 
 				{/* Main Illustration */}
@@ -92,7 +100,7 @@ const Page401 = () => {
 
 				{/* Message */}
 				<h1 id="error-title" className={styles.page401__message}>
-					{t('Oops! This door needs a key')}
+					{t('This page is private')}
 				</h1>
 
 				<p className={styles.page401__hint}>
@@ -103,9 +111,21 @@ const Page401 = () => {
 
 				{/* Action Buttons */}
 				<div className={styles.page401__actions}>
+					{wayBackPath && (
+						<button
+							type="button"
+							className={styles.page401__button}
+							onClick={() => navigate(wayBackPath)}
+						>
+							{t('Back to the question')}
+						</button>
+					)}
 					<button
 						type="button"
-						className={styles.page401__button}
+						className={clsx(
+							styles.page401__button,
+							wayBackPath && styles['page401__button--secondary'],
+						)}
 						onClick={handleSignIn}
 						disabled={isSigningIn}
 					>

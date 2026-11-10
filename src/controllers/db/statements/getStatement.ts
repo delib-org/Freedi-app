@@ -11,8 +11,12 @@ import { parse } from 'valibot';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
 import { createStatementRef, createCollectionRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
+import { isRefusedRead } from '@/helpers/firestoreRefusal';
 
-export async function getStatementFromDB(statementId: string): Promise<Statement | undefined> {
+export async function getStatementFromDB(
+	statementId: string,
+	options?: { expectRefusal?: boolean },
+): Promise<Statement | undefined> {
 	try {
 		if (!statementId) throw new Error('Statement ID is required to get statement from DB');
 		const statementRef = createStatementRef(statementId);
@@ -24,6 +28,7 @@ export async function getStatementFromDB(statementId: string): Promise<Statement
 		// Normalize statement data (converts timestamps and fills missing topParentId)
 		return normalizeStatementData(data) as Statement;
 	} catch (error) {
+		if (options?.expectRefusal && isRefusedRead(error)) return undefined;
 		logError(error, { operation: 'statements.getStatement.getStatementFromDB' });
 
 		return undefined;

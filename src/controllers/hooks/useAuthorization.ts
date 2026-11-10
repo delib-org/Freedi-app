@@ -13,6 +13,7 @@ import {
 	listenToStatementSubscription,
 } from '../db/statements/listenToStatements';
 import { notificationService } from '@/services/notificationService';
+import { getEntryVerdict, isAdminRole, isMemberOfLevel } from '@/helpers/entryVerdict';
 
 export interface AuthorizationState {
 	isAuthorized: boolean;
@@ -111,8 +112,11 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 			);
 		};
 
-		// Special handling for public access
-		if (effectiveAccess === Access.public) {
+		const verdict = getEntryVerdict(statement, topParentStatement, subscription, creator);
+
+		if (verdict === 'open') {
+			const isPublic = effectiveAccess === Access.public;
+			const isMember = isMemberOfLevel(statement, role, creator);
 			const newState = {
 				isAuthorized: true,
 				loading: false,
@@ -120,7 +124,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				errorMessage: '',
 				creator,
 				isWaitingForApproval: false,
-				role: role || Role.member,
+				role: isMember && !isPublic ? role : role || Role.member,
 				isAdmin: isAdminRole(role),
 			};
 
@@ -128,8 +132,15 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				setAuthState(newState);
 			}
 
-			// Auto-subscribe only once
-			if (!hasSubscription && !subscriptionAttemptedRef.current && effectiveStatement && creator) {
+			// Public and open groups auto-subscribe once; members already belong
+			const joinsOnEntry = isPublic || !isMember;
+			if (
+				joinsOnEntry &&
+				!hasSubscription &&
+				!subscriptionAttemptedRef.current &&
+				effectiveStatement &&
+				creator
+			) {
 				subscriptionAttemptedRef.current = true;
 				setStatementSubscriptionToDB({
 					statement: effectiveStatement,
@@ -144,28 +155,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 			return;
 		}
 
-		// Case 1: User is already a member or admin
-		if (isMemberRole(statementCreatorUid, creatorUid, role)) {
-			const newState = {
-				isAuthorized: true,
-				loading: false,
-				error: false,
-				errorMessage: '',
-				creator,
-				isWaitingForApproval: false,
-				role,
-				isAdmin: isAdminRole(role),
-			};
-
-			if (shouldUpdate(newState)) {
-				setAuthState(newState);
-			}
-
-			return;
-		}
-
-		// Case 2: User is waiting for approval
-		if (role === Role.waiting) {
+		if (verdict === 'waiting') {
 			const newState = {
 				isAuthorized: false,
 				loading: false,
@@ -179,40 +169,6 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 			if (shouldUpdate(newState)) {
 				setAuthState(newState);
-			}
-
-			return;
-		}
-
-		// Case 3: Open group - auto-subscribe as member
-		if (isOpenAccess(effectiveAccess, creatorIsAnonymous, role)) {
-			const newState = {
-				isAuthorized: true,
-				loading: false,
-				role: role || Role.member,
-				isAdmin: isAdminRole(role),
-				error: false,
-				errorMessage: '',
-				creator,
-				isWaitingForApproval: false,
-			};
-
-			if (shouldUpdate(newState)) {
-				setAuthState(newState);
-			}
-
-			// Auto-subscribe only once
-			if (!hasSubscription && !subscriptionAttemptedRef.current && effectiveStatement && creator) {
-				subscriptionAttemptedRef.current = true;
-
-				setStatementSubscriptionToDB({
-					statement: effectiveStatement,
-					creator,
-					role: Role.member,
-					getInAppNotification: true,
-					getEmailNotification: false,
-					...notificationService.getPushSubscriptionFields(),
-				});
 			}
 
 			return;
@@ -304,36 +260,6 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 };
 
 // Helper functions
-function isAdminRole(role?: Role): boolean {
-	return role === Role.admin || role === Role.creator;
-}
-
-function isMemberRole(
-	statementCreatorUid: string | undefined,
-	userId: string | undefined,
-	role?: Role,
-): boolean {
-	return (
-		role === Role.admin ||
-		role === Role.member ||
-		(!!statementCreatorUid && !!userId && statementCreatorUid === userId)
-	);
-}
-
-function isOpenAccess(
-	access: Access | undefined,
-	creatorIsAnonymous: boolean | undefined,
-	role?: Role,
-): boolean {
-	if (role === Role.banned) return false;
-
-	return (
-		access === Access.public ||
-		access === Access.openToAll ||
-		(access === Access.openForRegistered && creatorIsAnonymous === false)
-	);
-}
-
 function isModeratedGroup(access: Access | undefined, role?: Role): boolean {
 	return role !== Role.banned && access === Access.moderated;
 }
