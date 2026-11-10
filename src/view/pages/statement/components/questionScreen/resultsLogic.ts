@@ -2,6 +2,7 @@ import {
 	CutoffBy,
 	DEFAULT_MIN_EVALUATORS,
 	ResultsSettings,
+	ResultsBy,
 	Statement,
 	defaultResultsSettings,
 } from '@freedi/shared-types';
@@ -124,6 +125,17 @@ export interface Caption {
 	value?: string;
 }
 
+/**
+ * Only a consensus threshold within −1…1 is on the score's scale. Other metrics
+ * store their own raw number (12 likes), and consensus values outside the range
+ * are legacy percentages, so those are shown as stored.
+ */
+function thresholdText(resultsBy: ResultsBy, cutoffNumber: number): string {
+	const isOnScoreScale = resultsBy === ResultsBy.consensus && Math.abs(cutoffNumber) <= 1;
+
+	return isOnScoreScale ? formatScoreThreshold(cutoffNumber) : String(cutoffNumber);
+}
+
 /** The rule caption under "Leading now" / "What was chosen". */
 export function resultsRuleCaption(
 	settings: ResultsSettings | undefined,
@@ -133,7 +145,7 @@ export function resultsRuleCaption(
 	if (cutoffBy === CutoffBy.aboveThreshold) {
 		return {
 			key: decided ? 'By consensus · threshold {n}' : 'Above the agreement threshold ({n})',
-			value: formatScoreThreshold(cutoffNumber),
+			value: thresholdText(settings?.resultsBy ?? ResultsBy.consensus, cutoffNumber),
 		};
 	}
 	if (cutoffBy === CutoffBy.all) return { key: 'Every rated answer, by agreement' };

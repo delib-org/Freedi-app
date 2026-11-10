@@ -462,6 +462,42 @@ describe('resultsLogic', () => {
 		});
 	});
 
+	describe('resultsRuleCaption threshold scale', () => {
+		const captionValue = (resultsBy: ResultsBy, cutoffNumber: number): string | undefined =>
+			resultsRuleCaption({ resultsBy, cutoffBy: CutoffBy.aboveThreshold, cutoffNumber }, false)
+				.value;
+
+		it.each([
+			[ResultsBy.mostLiked, 12, '12'],
+			[ResultsBy.mostLiked, 1, '1'],
+			[ResultsBy.mostLiked, 0.5, '0.5'],
+			[ResultsBy.averageLikesDislikes, 40, '40'],
+		])('%s shows its raw value %d', (resultsBy, cutoffNumber, expected) => {
+			expect(captionValue(resultsBy, cutoffNumber)).toBe(expected);
+		});
+
+		it.each([
+			[60, '60'],
+			[-40, '-40'],
+			[1.5, '1.5'],
+		])(
+			'a legacy consensus value of %d is not squeezed onto the scale',
+			(cutoffNumber, expected) => {
+				expect(captionValue(ResultsBy.consensus, cutoffNumber)).toBe(expected);
+			},
+		);
+
+		it.each([
+			[1, '100'],
+			[-1, '−100'],
+		])(
+			'consensus at the edge of the range (%d) is still on the scale',
+			(cutoffNumber, expected) => {
+				expect(captionValue(ResultsBy.consensus, cutoffNumber)).toBe(expected);
+			},
+		);
+	});
+
 	it('shows a negative threshold on the same scale', () => {
 		expect(
 			resultsRuleCaption(

@@ -166,6 +166,24 @@ const Tooltip: React.FC<TooltipProps> = ({
 		};
 	}, [isVisible]);
 
+	// On the document, because a tooltip opened by hover has no focus to receive
+	// the key (WCAG 1.4.13). Capturing it keeps Escape from also closing a modal.
+	useEffect(() => {
+		if (!isVisible) return;
+
+		const handleEscape = (event: KeyboardEvent) => {
+			if (event.key !== 'Escape') return;
+			event.stopPropagation();
+			setIsVisible(false);
+		};
+
+		document.addEventListener('keydown', handleEscape, { capture: true });
+
+		return () => {
+			document.removeEventListener('keydown', handleEscape, { capture: true });
+		};
+	}, [isVisible]);
+
 	const handlePointerEnter = (event: React.PointerEvent) => {
 		lastPointerRef.current = pointerKindOf(event.pointerType);
 	};
@@ -199,13 +217,6 @@ const Tooltip: React.FC<TooltipProps> = ({
 	const handleBlur = () => {
 		isPressingRef.current = false;
 		setIsVisible(false);
-	};
-
-	const handleKeyDown = (event: React.KeyboardEvent) => {
-		if (event.key === 'Escape' && isVisible) {
-			event.stopPropagation();
-			setIsVisible(false);
-		}
 	};
 
 	// Build BEM classes
@@ -246,7 +257,6 @@ const Tooltip: React.FC<TooltipProps> = ({
 			onMouseLeave={handleMouseLeave}
 			onFocus={handleFocus}
 			onBlur={handleBlur}
-			onKeyDown={handleKeyDown}
 		>
 			{focusable ? (
 				<button

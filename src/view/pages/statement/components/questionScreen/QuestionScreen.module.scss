@@ -718,8 +718,8 @@
 }
 
 .howToRead {
-	padding-inline: 4px;
-	font-size: 12.5px;
+	padding-inline: var(--space-2xs);
+	font-size: var(--font-size-xs);
 	line-height: 1.6;
 	color: var(--text-meta);
 
@@ -732,7 +732,7 @@
 	}
 
 	&__line {
-		margin: 0 0 8px;
+		margin: 0 0 var(--space-xs);
 	}
 }
 

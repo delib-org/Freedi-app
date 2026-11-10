@@ -261,6 +261,49 @@ describe('Tooltip', () => {
 
 			expect(screen.getByRole('tooltip')).toBeInTheDocument();
 		});
+
+		it('Escape closes what hover opened, with focus elsewhere', () => {
+			const { container } = render(
+				<Tooltip content="Explained">
+					<span>42</span>
+				</Tooltip>,
+			);
+			fireEvent.mouseEnter(container.firstChild as HTMLElement);
+			expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+			fireEvent.keyDown(document.body, { key: 'Escape' });
+
+			expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+		});
+
+		it('other keys leave it open', () => {
+			const { container } = render(
+				<Tooltip content="Explained">
+					<span>42</span>
+				</Tooltip>,
+			);
+			fireEvent.mouseEnter(container.firstChild as HTMLElement);
+
+			fireEvent.keyDown(document.body, { key: 'a' });
+
+			expect(screen.getByRole('tooltip')).toBeInTheDocument();
+		});
+
+		it('Escape on an open tooltip does not reach a modal listening on the document', () => {
+			const onModalEscape = jest.fn();
+			document.addEventListener('keydown', onModalEscape);
+			const { container } = render(
+				<Tooltip content="Explained">
+					<span>42</span>
+				</Tooltip>,
+			);
+			fireEvent.mouseEnter(container.firstChild as HTMLElement);
+
+			fireEvent.keyDown(document.body, { key: 'Escape' });
+			document.removeEventListener('keydown', onModalEscape);
+
+			expect(onModalEscape).not.toHaveBeenCalled();
+		});
 	});
 
 	describe('keyboard', () => {
