@@ -30,14 +30,14 @@
  * gate below is a UX guard — the rules are the real enforcement.
  */
 
-import { Collections, Statement, StatementType } from '@freedi/shared-types';
+import { Collections, Statement, StatementType, readScopesOf } from '@freedi/shared-types';
 import { db, collection, doc, getDocs, query, where, writeBatch } from './firebase';
 import { isAdmin, canEditOption } from './admin';
 
 /** Firestore hard limit on writes per batch. */
 const BATCH_LIMIT = 500;
 /** Firestore hard limit on values in an `in` filter. */
-const IN_LIMIT = 30;
+const PARALLEL_READS = 30;
 
 export interface DeleteAllOptionsResult {
 	/** How many option documents were removed. */
@@ -57,27 +57,35 @@ function chunk<T>(items: T[], size: number): T[][] {
 	return out;
 }
 
-/** All statement ids whose `parentId` is one of `parentIds`. Batched into
- *  `in` queries of 30 so a question with hundreds of options still resolves
- *  in a bounded number of reads. */
-async function findChildIds(parentIds: string[]): Promise<string[]> {
-	if (parentIds.length === 0) return [];
-
+/**
+ * All statement ids whose `parentId` is one of `parentIds`, one query per parent
+ * in small groups. Rules check each parent of a list, so a `parentId in` query
+ * would run out of its document-read allowance.
+ */
+async function findChildIds(parentIds: string[], scopes: string[]): Promise<string[]> {
 	const ids: string[] = [];
-	for (const group of chunk(parentIds, IN_LIMIT)) {
-		const snap = await getDocs(
-			query(collection(db, Collections.statements), where('parentId', 'in', group)),
+	for (const group of chunk(parentIds, PARALLEL_READS)) {
+		const snaps = await Promise.all(
+			group.map((parentId) =>
+				getDocs(
+					query(
+						collection(db, Collections.statements),
+						where('parentId', '==', parentId),
+						where('accessScope', 'in', scopes),
+					),
+				),
+			),
 		);
-		for (const d of snap.docs) ids.push(d.id);
+		for (const snap of snaps) for (const d of snap.docs) ids.push(d.id);
 	}
 
 	return ids;
 }
 
 /** Every descendant of the given options, two levels deep (see module doc). */
-async function collectDescendantIds(optionIds: string[]): Promise<string[]> {
-	const level1 = await findChildIds(optionIds);
-	const level2 = await findChildIds(level1);
+async function collectDescendantIds(optionIds: string[], scopes: string[]): Promise<string[]> {
+	const level1 = await findChildIds(optionIds, scopes);
+	const level2 = await findChildIds(level1, scopes);
 
 	return [...level1, ...level2];
 }
@@ -103,7 +111,7 @@ export async function deleteOption(option: Statement): Promise<void> {
 		throw new Error('Not authorized to delete this option');
 	}
 
-	const descendants = await collectDescendantIds([option.statementId]);
+	const descendants = await collectDescendantIds([option.statementId], readScopesOf(option));
 	await deleteStatementIds([...descendants, option.statementId]);
 }
 
@@ -125,6 +133,7 @@ export async function deleteAllOptions(questionId: string): Promise<DeleteAllOpt
 	}
 
 	let optionIds: string[] = [];
+	let optionScopes: string[] = [];
 	try {
 		const snap = await getDocs(
 			query(
@@ -134,6 +143,7 @@ export async function deleteAllOptions(questionId: string): Promise<DeleteAllOpt
 			),
 		);
 		optionIds = snap.docs.map((d) => d.id);
+		optionScopes = readScopesOf(snap.docs[0]?.data());
 	} catch (err) {
 		console.error('[deleteAllOptions] failed to read options', err);
 		result.errors.push('read');
@@ -147,7 +157,7 @@ export async function deleteAllOptions(questionId: string): Promise<DeleteAllOpt
 	// options themselves so the admin gets the clean slate they asked for.
 	let descendantIds: string[] = [];
 	try {
-		descendantIds = await collectDescendantIds(optionIds);
+		descendantIds = await collectDescendantIds(optionIds, optionScopes);
 	} catch (err) {
 		console.error('[deleteAllOptions] failed to read descendants', err);
 		result.errors.push('descendants');

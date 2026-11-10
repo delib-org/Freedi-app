@@ -8,6 +8,7 @@ import {
 	type Statement,
 	type StatementSubscription,
 	type Vote,
+	readScopesOfRoot,
 } from '@freedi/shared-types';
 import { collection, db, doc, query, setDoc, updateDoc, where } from '../firebase';
 import type { Unsubscribe } from '../firebase';
@@ -56,6 +57,7 @@ export function listenClassOptions(
 		query(
 			collection(db, Collections.statements),
 			where('parents', 'array-contains', lessonId),
+			where('accessScope', 'in', readScopesOfRoot(lessonId)),
 			where('statementType', '==', StatementType.option),
 		),
 		(snap) => onData(snap.docs.map((d) => d.data() as Statement)),

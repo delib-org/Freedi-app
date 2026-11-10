@@ -30,6 +30,8 @@ import {
 	createStatementObject,
 	createParagraphChildStatement,
 	CutoffBy,
+	readScopesOf,
+	readScopesOfRoot,
 } from '@freedi/shared-types';
 import {
 	canEditOption,
@@ -1118,6 +1120,7 @@ export async function loadMainStatement(mainId: string): Promise<void> {
 	const subQ = query(
 		collection(db, Collections.statements),
 		where('parentId', '==', mainId),
+		where('accessScope', 'in', mainStatement ? readScopesOf(mainStatement) : readScopesOfRoot(mainId)),
 		where('statementType', '==', StatementType.question),
 	);
 	const subSnap = await getDocs(subQ);
@@ -1434,6 +1437,7 @@ export function subscribeSubQuestions(mainId: string): Unsubscribe {
 	const subQ = query(
 		collection(db, Collections.statements),
 		where('parentId', '==', mainId),
+		where('accessScope', 'in', mainStatement ? readScopesOf(mainStatement) : readScopesOfRoot(mainId)),
 		where('statementType', '==', StatementType.question),
 	);
 
@@ -1516,7 +1520,7 @@ export function subscribeOptions(questionId: string): Unsubscribe {
 				? incoming.filter((o) => o.creatorId === currentUid).map((o) => o.statementId)
 				: [],
 		);
-		subscribeMessageCounts(allOptions.map((o) => o.statementId));
+		subscribeMessageCounts(allOptions);
 		subscribeClusterLinks();
 		m.redraw();
 	});

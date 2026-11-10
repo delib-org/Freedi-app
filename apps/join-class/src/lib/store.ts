@@ -23,6 +23,8 @@ import {
 	Creator,
 	ThemeStyle,
 	createStatementObject,
+	readScopesOf,
+	readScopesOfRoot,
 } from '@freedi/shared-types';
 import { checkAdminStatus, isAdmin } from './admin';
 import { applyLessonLookOf } from './lessonLook';
@@ -372,6 +374,7 @@ export async function loadMainStatement(mainId: string): Promise<void> {
 	const subQ = query(
 		collection(db, Collections.statements),
 		where('parentId', '==', mainId),
+		where('accessScope', 'in', mainStatement ? readScopesOf(mainStatement) : readScopesOfRoot(mainId)),
 		where('statementType', '==', StatementType.question),
 	);
 	const subSnap = await getDocs(subQ);
@@ -524,6 +527,7 @@ export function subscribeSubQuestions(mainId: string): Unsubscribe {
 	const subQ = query(
 		collection(db, Collections.statements),
 		where('parentId', '==', mainId),
+		where('accessScope', 'in', mainStatement ? readScopesOf(mainStatement) : readScopesOfRoot(mainId)),
 		where('statementType', '==', StatementType.question),
 	);
 

@@ -6,7 +6,7 @@ import type {
 	QuerySnapshot,
 	Unsubscribe,
 } from 'firebase/firestore';
-import { Collections, tableAssignmentParticipantId } from '@freedi/shared-types';
+import { Collections, tableAssignmentParticipantId, StatementType } from '@freedi/shared-types';
 import type {
 	Statement,
 	TableAssignment,
@@ -188,6 +188,7 @@ export async function fetchChosenOptions(questionId: string): Promise<Statement[
 		query(
 			collection(db, Collections.statements),
 			where('parentId', '==', questionId),
+			where('statementType', '==', StatementType.option),
 			where('isChosen', '==', true),
 		),
 	);

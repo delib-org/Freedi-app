@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 import { collection, query, where, orderBy, limit, Unsubscribe } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
 import { safeQuerySnapshot } from '@/lib/firebase/safeSnapshot';
-import { Collections, Statement, StatementType } from '@freedi/shared-types';
+import { Collections, Statement, StatementType, readScopesOfRoot } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 import { useUIStore } from '@/store/uiStore';
 import { QUERY_LIMITS } from '@/constants/common';
@@ -146,6 +146,7 @@ export function useDocumentSuggestions(
       const q = query(
         collection(firestore, Collections.statements),
         where('topParentId', '==', documentId),
+        where('accessScope', 'in', readScopesOfRoot(documentId)),
         where('statementType', '==', StatementType.option),
         orderBy('consensus', 'desc')
       );
@@ -257,6 +258,7 @@ export function useRealtimeSuggestionCounts(
       const q = query(
         collection(firestore, Collections.statements),
         where('topParentId', '==', documentId),
+        where('accessScope', 'in', readScopesOfRoot(documentId)),
         where('statementType', '==', StatementType.option)
       );
 

@@ -7,6 +7,7 @@
 
 // Mock @freedi/shared-types before import to prevent valibot loading
 jest.mock('@freedi/shared-types', () => ({
+	newStatementAccessScope: () => undefined,
 	StatementType: {
 		statement: 'statement',
 		option: 'option',

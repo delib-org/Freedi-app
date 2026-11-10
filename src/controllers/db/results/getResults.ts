@@ -6,6 +6,7 @@ import {
 	Statement,
 	StatementSchema,
 	ResultsBy,
+	readScopesOf,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { sortByConsensus } from '@/redux/utils/selectorFactories';
@@ -14,6 +15,7 @@ import { normalizeStatementData } from '@/helpers/timestampHelpers';
 import { store } from '@/redux/store';
 import { deleteStatement, setStatement } from '@/redux/statements/statementsSlice';
 import { logError } from '@/utils/errorHandling';
+import { listenInScopes } from '@/controllers/db/statements/readScopes';
 
 export async function getResultsDB(statement: Statement): Promise<Statement[]> {
 	try {
@@ -39,7 +41,11 @@ async function getTopOptionsDB(statement: Statement): Promise<Statement[]> {
 
 		// Fetch all options under this parent (can't orderBy nested field in Firestore)
 		const topOptionsRef = collection(FireStore, Collections.statements);
-		const q = query(topOptionsRef, where('parentId', '==', statement.statementId));
+		const q = query(
+			topOptionsRef,
+			where('parentId', '==', statement.statementId),
+			where('accessScope', 'in', readScopesOf(statement)),
+		);
 		const topOptionsSnap = await getDocs(q);
 
 		const topOptions = topOptionsSnap.docs.map((doc) => {
@@ -68,12 +74,17 @@ async function getTopOptionsDB(statement: Statement): Promise<Statement[]> {
 }
 
 export function listenToDescendants(statementId: string) {
+	return listenInScopes(statementId, (scopes) => listenToDescendantsInScopes(scopes, statementId));
+}
+
+function listenToDescendantsInScopes(scopes: string[], statementId: string) {
 	const dispatch = store.dispatch;
 	try {
 		const statementsRef = collection(FireStore, Collections.statements);
 		const q = query(
 			statementsRef,
 			where('parents', 'array-contains', statementId),
+			where('accessScope', 'in', scopes),
 			where('statementType', '!=', StatementType.statement),
 			orderBy('createdAt', 'asc'),
 			limit(40),

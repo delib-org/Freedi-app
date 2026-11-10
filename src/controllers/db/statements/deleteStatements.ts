@@ -22,6 +22,8 @@ export async function deleteStatementFromDB(
 
 		//get all children and update their parentId to this statement's parentId
 		const childrenRef = createCollectionRef(Collections.statements);
+		// Unscoped on purpose: only a host deletes, and rules let a host list every
+		// child, including private ones no scope filter would name.
 		const q = query(childrenRef, where('parentId', '==', statement.statementId));
 		const children = await getDocs(q);
 		// Check if parent is a group and any child is an option

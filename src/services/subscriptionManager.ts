@@ -14,6 +14,7 @@ import { store } from '@/redux/store';
 import { setStatement } from '@/redux/statements/statementsSlice';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
 import { subscribeWhenAuthenticated } from '@/controllers/utils/subscribeWhenAuthenticated';
+import { listenInScopes } from '@/controllers/db/statements/readScopes';
 
 interface ActiveListener {
 	unsubscribe: Unsubscribe;
@@ -55,23 +56,27 @@ class SubscriptionManager {
 		);
 
 		// Listen to sub-statements
-		const subStatementsQuery = query(
-			collection(FireStore, Collections.statements),
-			where('parentId', '==', statementId),
-			orderBy('createdAt', 'desc'),
-			limit(20),
-		);
-
 		const unsubscribeSubStatements = subscribeWhenAuthenticated(() =>
-			onSnapshot(subStatementsQuery, (snapshot) => {
-				snapshot.docChanges().forEach((change) => {
-					const statement = normalizeStatementData(change.doc.data()) as Statement;
+			listenInScopes(statementId, (scopes) =>
+				onSnapshot(
+					query(
+						collection(FireStore, Collections.statements),
+						where('parentId', '==', statementId),
+						where('accessScope', 'in', scopes),
+						orderBy('createdAt', 'desc'),
+						limit(20),
+					),
+					(snapshot) => {
+						snapshot.docChanges().forEach((change) => {
+							const statement = normalizeStatementData(change.doc.data()) as Statement;
 
-					if (change.type === 'added' || change.type === 'modified') {
-						store.dispatch(setStatement(statement));
-					}
-				});
-			}),
+							if (change.type === 'added' || change.type === 'modified') {
+								store.dispatch(setStatement(statement));
+							}
+						});
+					},
+				),
+			),
 		);
 
 		// Combine unsubscribe functions

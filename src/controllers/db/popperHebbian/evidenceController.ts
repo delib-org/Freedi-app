@@ -202,6 +202,7 @@ export function listenToEvidencePosts(
 	const q = query(
 		createCollectionRef(Collections.statements),
 		where('parentId', '==', statementId),
+		where('statementType', '==', StatementType.statement),
 		where('evidence', '!=', null),
 	);
 
