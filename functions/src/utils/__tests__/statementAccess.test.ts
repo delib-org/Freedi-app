@@ -25,6 +25,7 @@ jest.mock('../../progress/assertStatementAdmin', () => ({
 	findStatementAdminSource: (...args: unknown[]) => mockAdminSource(...args),
 }));
 
+import { OPEN_ACCESS_SCOPE, resolveAccessScope } from '@freedi/shared-types';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { resetFirestore, seed } from '../../services/__tests__/helpers/fakeFirestore';
 import { resolveQuestionParticipation } from '../statementAccess';
@@ -187,6 +188,41 @@ describe('resolveQuestionParticipation', () => {
 		role('q', 'banned');
 
 		await expect(call()).rejects.toMatchObject({ code: 'permission-denied' });
+	});
+
+	it('lets anyone in when no level sets access', async () => {
+		tree();
+
+		await expect(call()).resolves.toMatchObject({ statementId: 'q' });
+	});
+
+	// The database rules enforce accessScope; this callable reads the tree. An
+	// outsider must get the same answer from both.
+	it.each([
+		[{}],
+		[{ top: 'secret' }],
+		[{ top: 'public' }],
+		[{ top: 'moderated', question: 'public' }],
+		[{ top: 'public', question: 'moderated' }],
+		[{ top: 'public', middle: 'secret' }],
+		[{ top: 'secret', middle: 'openToAll' }],
+		[{ middle: 'openForRegistered' }],
+	])('agrees with resolveAccessScope for an outsider: %j', async (access) => {
+		tree(access);
+		const level = (statementId: string, value?: string) => ({
+			statementId,
+			...(value ? { membership: { access: value } } : {}),
+		});
+		const scope = resolveAccessScope(level('q', access.question), [
+			level('middle', access.middle),
+			level('top-group', access.top),
+		]);
+
+		if (scope === OPEN_ACCESS_SCOPE) {
+			await expect(call()).resolves.toMatchObject({ statementId: 'q' });
+		} else {
+			await expect(call()).rejects.toMatchObject({ code: 'permission-denied' });
+		}
 	});
 
 	it('copes with a legacy question that has no parents list', async () => {

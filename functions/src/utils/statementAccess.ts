@@ -60,7 +60,8 @@ export async function resolveStatementAccess(
 			? statement
 			: ((await statements.doc(topParentId).get()).data() as Statement | undefined);
 	const access = statement.membership?.access ?? top?.membership?.access;
-	if (access && OPEN_ACCESS.has(access)) return { statement, topParentId };
+	// No setting at any level means open (the same answer as resolveAccessScope).
+	if (!access || OPEN_ACCESS.has(access)) return { statement, topParentId };
 
 	throw new HttpsError('permission-denied', 'You are not a member of this space');
 }
@@ -93,7 +94,9 @@ async function readAccessLevels(
 	uid: string,
 	question: Statement,
 ): Promise<AccessLevel[]> {
-	const ids = [question.statementId, ...ancestorIds(question)];
+	// No limit: with no setting meaning open, stopping short would read a private
+	// level above the limit as no setting at all.
+	const ids = [question.statementId, ...ancestorIds(question, Infinity)];
 	const statements = firestore.collection(Collections.statements);
 	const subscriptions = firestore.collection(Collections.statementsSubscribe);
 	const [statementSnaps, subscriptionSnaps] = await Promise.all([
@@ -145,7 +148,7 @@ export function judgeAccessLevels(
 /**
  * Whether the caller may take part in a question, reading the whole way up the
  * tree (see `judgeAccessLevels`). A question with no access setting at any level
- * is refused. A hidden question is `not-found` to anyone but an admin, so its
+ * is open, the same answer as resolveAccessScope. A hidden question is `not-found` to anyone but an admin, so its
  * existence is not revealed either.
  */
 export async function resolveQuestionParticipation(
@@ -158,7 +161,7 @@ export async function resolveQuestionParticipation(
 	if (!questionSnap.exists || !question) throw new HttpsError('not-found', 'Statement not found');
 
 	const levels = await readAccessLevels(firestore, uid, question);
-	const verdict = judgeAccessLevels(levels, 'closed');
+	const verdict = judgeAccessLevels(levels, 'open');
 	if (verdict === 'banned') {
 		throw new HttpsError('permission-denied', 'You cannot take part in this space');
 	}

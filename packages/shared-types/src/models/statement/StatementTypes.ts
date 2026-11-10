@@ -261,6 +261,7 @@ export const StatementSchema = object({
 	voted: optional(number()), // the number of votes for the statement
 	totalSubStatements: optional(number()), // the total number of sub statements of the statement
 	membership: optional(MembershipSchema), // the membership of the statement
+	accessScope: optional(string()), // 'open', or the id of the statement whose access setting governs this one; see accessScope.ts
 	maxConsensus: optional(number()), // the maximum consensus of the statement
 	selected: optional(boolean()), // if true, the statement is selected
 	isVoted: optional(boolean()), // if true - this is the top voted option of the statement

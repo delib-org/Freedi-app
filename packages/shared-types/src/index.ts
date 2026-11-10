@@ -1403,3 +1403,15 @@ export type {
 	FullExportRequest,
 	FullExportResponse,
 } from './utils/exportFormat';
+
+export {
+	OPEN_ACCESS_SCOPE,
+	isOpenAccessValue,
+	resolveAccessScope,
+	newStatementAccessScope,
+	stampAccessScope,
+	inheritedAccessScope,
+	readScopesOf,
+	readScopesOfRoot,
+} from "./models/statement/accessScope";
+export type { AccessScopeLevel, AccessScopeParent } from "./models/statement/accessScope";

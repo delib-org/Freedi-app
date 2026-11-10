@@ -9,6 +9,7 @@ import { Paragraph, ParagraphType, ListType } from '../paragraph/paragraphModel'
 import { StatementSettings } from './StatementSettings';
 import { SourceApp } from '../engagement/SourceApp';
 import { AgoraMessageKind, AgoraSuggestionStatus } from '../agora/agoraEnums';
+import { newStatementAccessScope } from './accessScope';
 
 /**
  * Default statement settings used when creating new statements
@@ -48,6 +49,8 @@ export interface CreateStatementParams {
 	creator: User;
 	/** Optional custom statement ID. Auto-generated if not provided */
 	statementId?: string;
+	/** The parent's `accessScope`. Without it a child is stamped by the server's create trigger. */
+	parentAccessScope?: string;
 	/** Optional list of all parent IDs in hierarchy */
 	parents?: string[];
 	/** Optional statement settings. Defaults provided if not specified */
@@ -183,6 +186,10 @@ export function createStatementObject(params: CreateStatementParams): Statement 
 			}),
 			...(params.agoraChallenge && { agoraChallenge: true }),
 		};
+		const accessScope = newStatementAccessScope(newStatement, {
+			accessScope: params.parentAccessScope,
+		});
+		if (accessScope !== undefined) newStatement.accessScope = accessScope;
 
 		// Validate against schema
 		const result = safeParse(StatementSchema, newStatement);
@@ -353,7 +360,7 @@ export interface CreateParagraphChildParams {
 	/** The paragraph text (empty for image-only paragraphs). */
 	content: string;
 	/** The host statement whose body this paragraph belongs to. */
-	host: Pick<Statement, 'statementId' | 'topParentId'>;
+	host: Pick<Statement, 'statementId' | 'topParentId'> & Partial<Pick<Statement, 'accessScope'>>;
 	/** Full creator object. */
 	creator: User;
 	/** Creator id; defaults to `creator.uid`. */
@@ -404,6 +411,7 @@ export function createParagraphChildStatement(
 		statementType: StatementType.paragraph,
 		parentId: params.host.statementId,
 		topParentId: params.host.topParentId || params.host.statementId,
+		parentAccessScope: params.host.accessScope,
 		creatorId: params.creatorId ?? params.creator.uid,
 		creator: params.creator,
 		...(params.statementId && { statementId: params.statementId }),
