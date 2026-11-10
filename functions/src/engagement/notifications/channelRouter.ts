@@ -19,6 +19,12 @@ import { sendNotificationEmail } from '../../notifications/notificationEmail';
 
 const getDb = () => getFirestore();
 
+/** Local until `pushTokens` joins NotificationQueueItem in shared-types. */
+export type RoutableQueueItem = NotificationQueueItem & {
+	/** Already resolved by the caller: send to exactly these and look nothing up. */
+	pushTokens?: string[];
+};
+
 interface ChannelResult {
 	channel: NotificationChannel;
 	success: boolean;
@@ -29,7 +35,7 @@ interface ChannelResult {
  * Route a notification to all specified channels.
  * Returns results per channel.
  */
-export async function routeToChannels(item: NotificationQueueItem): Promise<ChannelResult[]> {
+export async function routeToChannels(item: RoutableQueueItem): Promise<ChannelResult[]> {
 	const results: ChannelResult[] = [];
 
 	const channelHandlers = item.channels.map(async (channel) => {
@@ -72,26 +78,27 @@ export async function routeToChannels(item: NotificationQueueItem): Promise<Chan
 	return results;
 }
 
+async function loadStoredTokens(userId: string): Promise<string[]> {
+	const tokensSnapshot = await getDb()
+		.collection(Collections.pushNotifications)
+		.where('userId', '==', userId)
+		.get();
+
+	if (tokensSnapshot.empty) {
+		logger.info(`No push tokens for user ${userId}, skipping push`);
+
+		return [];
+	}
+
+	return tokensSnapshot.docs.map((doc) => doc.data().token as string).filter(Boolean);
+}
+
 /**
  * Send push notification via FCM.
  * Looks up user's push tokens and sends to all registered devices.
  */
-async function sendPushNotification(item: NotificationQueueItem): Promise<void> {
-	// Get user's push tokens
-	const tokensSnapshot = await getDb()
-		.collection(Collections.pushNotifications)
-		.where('userId', '==', item.userId)
-		.get();
-
-	if (tokensSnapshot.empty) {
-		logger.info(`No push tokens for user ${item.userId}, skipping push`);
-
-		return;
-	}
-
-	const tokens: string[] = tokensSnapshot.docs
-		.map((doc) => doc.data().token as string)
-		.filter(Boolean);
+async function sendPushNotification(item: RoutableQueueItem): Promise<void> {
+	const tokens = item.pushTokens ?? (await loadStoredTokens(item.userId));
 
 	if (tokens.length === 0) return;
 

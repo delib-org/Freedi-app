@@ -48,3 +48,16 @@ it('clears the badge only once sign-out is confirmed', async () => {
 		expect.objectContaining({ count: 0, userId: null }),
 	);
 });
+it('caps the app badge at the same number the screen shows', async () => {
+	owner = 'one';
+	notifications.push(
+		...Array.from({ length: 150 }, (_, i) => ({
+			...notifications[0],
+			notificationId: `extra-${i}`,
+		})),
+	);
+	renderHook(() => useBadgeSync());
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	notifications.length = 1;
+	expect(globalThis.FreeDiBadgeStore.apply).toHaveBeenCalledWith(99);
+});

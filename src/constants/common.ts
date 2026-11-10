@@ -47,6 +47,14 @@ export const NOTIFICATION = {
 	TOKEN_CHECK_INTERVAL: 24 * TIME.HOUR,
 	SERVICE_WORKER_TIMEOUT: 10 * TIME.SECOND,
 	CHECK_INTERVAL: 500,
+	/** Highest number any unread badge shows; more than this reads "99+". */
+	UNREAD_DISPLAY_MAX: 99,
+	/** One more than UNREAD_DISPLAY_MAX: enough to know the badge is at "99+". */
+	UNREAD_LISTENER_LIMIT: 100,
+	/** Client batches stay under Firestore's limit of 500 writes. */
+	MARK_READ_BATCH_SIZE: 450,
+	/** How long a message must stay on screen before it counts as read. */
+	READ_RECEIPT_DELAY_MS: 2 * TIME.SECOND,
 } as const;
 
 /**
