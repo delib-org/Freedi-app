@@ -4,6 +4,7 @@
 // when the lazily-loaded scope is truncated.
 .load-all-banner {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
@@ -16,7 +17,6 @@
 
   @include mobile {
     margin: 0 0.75rem 0.5rem;
-    flex-wrap: wrap;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -25,12 +25,22 @@
 
   // ── Elements ──
 
+  // The strip is always one line: long text is cut with an ellipsis rather
+  // than wrapping onto a second row.
   &__text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     color: var(--text-body);
     font-size: 0.875rem;
   }
 
   &__progress {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     color: var(--text-body);
     font-size: 0.875rem;
     font-variant-numeric: tabular-nums;
