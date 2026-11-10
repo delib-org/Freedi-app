@@ -1,4 +1,4 @@
-import { CSSProperties, FC, useEffect, useState, useCallback, useMemo } from 'react';
+import { CSSProperties, FC, ReactNode, useEffect, useState, useCallback, useMemo } from 'react';
 import clsx from 'clsx';
 import styles from './EnhancedEvaluation.module.scss';
 import {
@@ -41,6 +41,8 @@ interface EnhancedEvaluationProps {
 	 *  of the host's footer (`display: contents`) so the host's action buttons
 	 *  can share the chips' row. Visibility rules stay those of `variant`. */
 	compact?: boolean;
+	/** The host's action buttons, rendered between the faces and the chips. */
+	footerSlot?: ReactNode;
 }
 
 const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
@@ -49,6 +51,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	variant = 'default',
 	hideFaceLabels = false,
 	compact = false,
+	footerSlot,
 }) => {
 	const { t } = useUserConfig();
 	const { creator } = useAuthentication();
@@ -147,6 +150,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 						{thumbNodes}
 					</div>
 				))}
+			{footerSlot}
 			{/* The result numbers, spelled out. They used to live only in a hover
 			    tooltip on a colour bar, so touch users never saw them. On a card
 			    they are Join's compact chips row. */}

@@ -141,21 +141,24 @@
 
 	// Inside a host footer: the chips take the end of the action row (order 3),
 	// the caption closes the footer on its own line (order 4). The chips are
-	// tighter here so buttons + chips fit a 360px phone.
+	// tighter here so the buttons and two chips (average, evaluators) share one
+	// line on a phone. A third (consensus) chip may not fit and then wraps to
+	// the next line, under the buttons.
 	&--inline {
 		display: contents;
 
 		.results-strip__items {
 			flex: 0 0 auto;
 			flex-wrap: nowrap;
+			gap: 0.125rem;
 			inline-size: auto;
 			margin-inline-start: auto;
 			order: 3;
 		}
 
 		.results-strip__item {
-			min-inline-size: 3rem;
-			padding: 0.25rem 0.5rem;
+			min-inline-size: 2.5rem;
+			padding: var(--space-2xs) 0.25rem;
 		}
 
 		.results-strip__caption {

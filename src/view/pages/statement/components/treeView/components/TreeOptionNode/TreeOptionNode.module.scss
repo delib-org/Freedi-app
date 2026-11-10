@@ -503,14 +503,33 @@
 
 	// Dissolved so the compact Evaluation's pieces are items of the footer; any
 	// other evaluation type is a single block that takes the full first row.
+	// The actions are passed into the Evaluation (footerSlot) so the DOM order is
+	// the visual order; they are the one child that is not a full-width block.
 	&__evaluation {
 		display: contents;
 
-		> * {
+		> *:not(.tree-option-node__actions) {
 			flex: 0 0 100%;
 			min-width: 0;
 			order: 1;
 		}
+	}
+
+	// Join buttons get their own row below the buttons + chips row.
+	&__join {
+		flex: 0 0 100%;
+		min-width: 0;
+		order: 5;
+
+		&:empty {
+			display: none;
+		}
+	}
+
+	// "Reply" is words on desktop and an icon on a phone (see the mobile block).
+	&__reply-icon {
+		display: none;
+		font-size: 1.25rem;
 	}
 
 	&__actions {
@@ -656,6 +675,30 @@
 @include m.mobile {
 	.tree-option-node__action-btn {
 		min-height: 44px;
+	}
+
+	// Icon-only reply keeps the 44px target (aria-label and title stay).
+	.tree-option-node__reply-btn {
+		min-width: 44px;
+		justify-content: center;
+	}
+
+	.tree-option-node__reply-label {
+		display: none;
+	}
+
+	.tree-option-node__reply-icon {
+		display: inline-block;
+	}
+
+	// Buttons are 44px wide boxes already: no gap between them, and a small one
+	// before the chips, frees the width the two chips need on the same row.
+	.tree-option-node__actions {
+		gap: 0;
+	}
+
+	.tree-option-node__footer {
+		column-gap: var(--space-2xs);
 	}
 
 	.tree-option-node__action-btn--icon {

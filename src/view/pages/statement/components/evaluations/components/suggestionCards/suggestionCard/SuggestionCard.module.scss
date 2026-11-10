@@ -585,7 +585,7 @@
 
   // Any evaluation type other than the compact range scale is one block that
   // takes the full first row.
-  > * {
+  > *:not(.actionRow) {
     flex: 0 0 100%;
     min-width: 0;
     order: 1;

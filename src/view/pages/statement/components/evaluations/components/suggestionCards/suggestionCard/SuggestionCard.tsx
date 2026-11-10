@@ -291,6 +291,30 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	const showMetaRow = (memberOfClusters && memberOfClusters.length > 0) || (showBadges ?? false);
 	const showAddImage = !image && isAdmin;
 
+	// Bottom row like Join: action pills at the start, the chat as a small round
+	// button at the end.
+	const actionRow =
+		showAddImage || showChat ? (
+			<div className={styles.actionRow}>
+				<div className={styles.actions}>
+					{showAddImage && (
+						<button
+							type="button"
+							onClick={() => setShowImageUpload(true)}
+							className={styles.pillButton}
+						>
+							{t('Add Image')}
+						</button>
+					)}
+				</div>
+				{showChat && (
+					<div className={styles.chat}>
+						<StatementChatMore statement={statement} variant="round" opensSheet />
+					</div>
+				)}
+			</div>
+		) : null;
+
 	return (
 		<div
 			onContextMenu={(e) => handleRightClick(e)}
@@ -503,34 +527,16 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 
 				{bylineText && <span className={styles.bylineText}>{bylineText}</span>}
 
-				{/* Face circles, then (after you rate) the results chips. */}
+				{/* Face circles, the action row, then (after you rate) the results
+				    chips: one footer, the chips share the action row's line. */}
 				<div className={styles.cardFooter}>
 					<div className={styles['evolution-element']}>
-						{!isTheme(statement) && <Evaluation statement={statement} variant="card" compact />}
+						{isTheme(statement) ? (
+							actionRow
+						) : (
+							<Evaluation statement={statement} variant="card" compact footerSlot={actionRow} />
+						)}
 					</div>
-
-					{/* Bottom row like Join: action pills at the start, the chat as a
-				    small round button at the end. */}
-					{(showAddImage || showChat) && (
-						<div className={styles.actionRow}>
-							<div className={styles.actions}>
-								{showAddImage && (
-									<button
-										type="button"
-										onClick={() => setShowImageUpload(true)}
-										className={styles.pillButton}
-									>
-										{t('Add Image')}
-									</button>
-								)}
-							</div>
-							{showChat && (
-								<div className={styles.chat}>
-									<StatementChatMore statement={statement} variant="round" opensSheet />
-								</div>
-							)}
-						</div>
-					)}
 				</div>
 				{shouldShowAddSubQuestionModal && (
 					<CreateStatementModal
