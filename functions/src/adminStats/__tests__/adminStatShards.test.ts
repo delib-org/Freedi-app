@@ -16,6 +16,7 @@ jest.mock('firebase-functions/v1', () => ({
 
 import {
 	ADMIN_STAT_SHARD_COUNT,
+	discardPendingShards,
 	drainAdminStatShards,
 	getAdminStatShardId,
 	incrementShardedStat,
@@ -84,6 +85,20 @@ describe('admin stat shards', () => {
 		await drainAdminStatShards();
 
 		expect(canonical()?.total).toBe(2);
+	});
+
+	it('discards only the named collection', async () => {
+		await incrementShardedStat([PERIOD]);
+		await incrementShardedStat([{ ...PERIOD, docId: 'votes_2026-11-10', collection: 'votes' }]);
+
+		await expect(discardPendingShards('evaluations')).resolves.toBe(1);
+
+		const pendingByCollection = shardDocs().reduce<Record<string, number>>((acc, doc) => {
+			acc[String(doc.collection)] = Number(doc.pending);
+
+			return acc;
+		}, {});
+		expect(pendingByCollection).toEqual({ evaluations: 0, votes: 1 });
 	});
 
 	it('uses the shard id format the drain can find', () => {

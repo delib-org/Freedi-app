@@ -145,6 +145,17 @@ async function loadCandidates(
 ): Promise<Statement[]> {
 	if (!plan) return loadAllOptions(parentId);
 
+	try {
+		return await loadFromConsensusIndex(parentId, plan);
+	} catch (error) {
+		// A missing or still-building index must not stop results from updating.
+		logError(error, { operation: 'evaluation.loadCandidates', metadata: { parentId } });
+
+		return loadAllOptions(parentId);
+	}
+}
+
+async function loadFromConsensusIndex(parentId: string, plan: CandidatePlan): Promise<Statement[]> {
 	const pageSize =
 		'top' in plan
 			? Math.max(plan.top * CANDIDATE_PAGE_MULTIPLIER, MIN_CANDIDATE_PAGE)

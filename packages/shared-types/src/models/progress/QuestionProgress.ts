@@ -30,7 +30,7 @@ export const QuestionProgressSchema = object({
 	/**
 	 * Current members of the question or group (subscriptions, Sign documents
 	 * excluded): an exact recount on every join or leave. The statement's
-	 * `numberOfMembers` is only a milestone copy of this: see questionCounters.ts.
+	 * `numberOfMembers` is only a periodic copy of this: see questionCounters.ts.
 	 * Absent until the first join or leave after this field shipped.
 	 */
 	members: optional(number()),

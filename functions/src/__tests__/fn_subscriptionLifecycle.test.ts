@@ -107,7 +107,12 @@ const feedOf = (userId: string) => mockDb.read(Collections.userFeed, `${userId}-
 describe('subscription lifecycle (member count + userFeed)', () => {
 	beforeEach(() => {
 		mockDb = new FakeFirestore();
-		mockDb.seed(Collections.statements, DISCUSSION, { statementId: DISCUSSION, parentId: 'top' });
+		mockDb.seed(Collections.statements, DISCUSSION, {
+			statementId: DISCUSSION,
+			parentId: 'top',
+			topParentId: DISCUSSION,
+			statementType: StatementType.group,
+		});
 	});
 
 	it('counts members on join and creates their feed entry', async () => {
@@ -289,11 +294,59 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 		});
 
 		it('writes the count straight to statements that have no progress doc', async () => {
-			const overrides = { statementType: StatementType.option };
-			for (let i = 1; i <= 21; i += 1) await joinAs(`user${i}`, Role.member, overrides);
+			mockDb.seed(Collections.statements, DISCUSSION, {
+				statementId: DISCUSSION,
+				parentId: 'q1',
+				statementType: StatementType.option,
+			});
+			await joinMany(1, 21);
 
 			expect(memberCount()).toBe(21);
 			expect(progress()).toBeUndefined();
+		});
+
+		it('gives a nested group no progress doc, or Studio would list it as an activity', async () => {
+			mockDb.seed(Collections.statements, DISCUSSION, {
+				statementId: DISCUSSION,
+				parentId: 'parent-group',
+				topParentId: 'parent-group',
+				statementType: StatementType.group,
+			});
+			await joinMany(1, 21);
+
+			expect(memberCount()).toBe(21);
+			expect(progress()).toBeUndefined();
+		});
+
+		it('still copies when a burst of joins jumps past the exact milestone', async () => {
+			await joinMany(1, 20);
+			for (let i = 21; i <= 25; i += 1) {
+				const id = `seeded${i}--${DISCUSSION}`;
+				mockDb.seed(
+					Collections.statementsSubscribe,
+					id,
+					subscriptionDoc(`seeded${i}`, Role.member),
+				);
+			}
+
+			await joinAs('twenty-sixth', Role.member);
+
+			expect(memberCount()).toBe(26);
+		});
+
+		it('does not count a join as activity on an existing progress doc', async () => {
+			mockDb.seed(Collections.questionProgress, DISCUSSION, {
+				statementId: DISCUSSION,
+				topParentId: DISCUSSION,
+				entered: 3,
+				lastActivity: 5,
+				lastUpdate: 5,
+			});
+
+			await joinAs('alice', Role.member);
+
+			expect(progress()).toMatchObject({ members: 1, lastActivity: 5, entered: 3 });
+			expect(progress()?.lastUpdate).toBeGreaterThan(5);
 		});
 	});
 });

@@ -64,9 +64,12 @@ export class FakeFirestore {
 	private readonly store = new Map<string, Stored>();
 	/** Every write, in order, as `op path` - for "which docs were written" assertions. */
 	readonly writeLog: string[] = [];
+	/** A query ordered by this field throws, as Firestore does when its index is missing. */
+	failOrderBy: string | undefined;
 
 	clear(): void {
 		this.store.clear();
+		this.failOrderBy = undefined;
 		this.resetCounts();
 	}
 
@@ -281,6 +284,9 @@ class FakeCollection {
 		empty: boolean;
 		forEach: (cb: (doc: FakeSnapshot) => void) => void;
 	}> {
+		if (this.orderField !== undefined && this.orderField === this.fs.failOrderBy) {
+			throw new Error('FAILED_PRECONDITION: The query requires an index');
+		}
 		this.fs.counts.queries++;
 		const docs = this.matching().map((row) => new FakeSnapshot(row.id, row.data));
 		this.fs.counts.reads += Math.max(1, docs.length);

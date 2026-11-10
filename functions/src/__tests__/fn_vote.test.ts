@@ -69,33 +69,35 @@ const castVote = (userId: string, optionId: string) =>
 const option = (id: string): Doc | undefined => fake.read(Collections.statements, id);
 const question = (): Doc | undefined => fake.read(Collections.statements, QUESTION);
 
-/** Counts every write the trigger makes to an option document. */
-function spyOptionWrites(): { count: () => number } {
-	const original = fake.db.collection;
-	let writes = 0;
-	fake.db.collection = (name: string) => {
-		const collection = original(name);
-		if (name !== Collections.statements) return collection;
+/** Counts batch commits, and can make the next ones fail. */
+function watchBatches(failCommits = 0): { commits: () => number } {
+	const realBatch = fake.db.batch;
+	let commits = 0;
+	let failuresLeft = failCommits;
+	fake.db.batch = () => {
+		const batch = realBatch();
 
 		return {
-			...collection,
-			doc: (id: string) => {
-				const ref = collection.doc(id);
-				if (id === QUESTION) return ref;
-
-				return {
-					...ref,
-					update: async (data: Doc) => {
-						writes += 1;
-						await ref.update(data);
-					},
-				};
+			...batch,
+			commit: async () => {
+				if (failuresLeft > 0) {
+					failuresLeft -= 1;
+					throw new Error('commit failed');
+				}
+				commits += 1;
+				await batch.commit();
 			},
 		};
 	};
 
-	return { count: () => writes };
+	return { commits: () => commits };
 }
+
+const flagged = (): string[] =>
+	[...(fake.store.get(Collections.statements)?.entries() ?? [])]
+		.filter(([, doc]) => doc.isVoted === true)
+		.map(([id]) => id)
+		.sort();
 
 describe('updateVote', () => {
 	beforeEach(() => {
@@ -119,13 +121,13 @@ describe('updateVote', () => {
 
 	it('writes no option flag while the leader stays the same', async () => {
 		await castVote('u1', 'a');
-		const spy = spyOptionWrites();
+		const batches = watchBatches();
 
 		await castVote('u2', 'a');
 		await castVote('u3', 'a');
 		await castVote('u4', 'b');
 
-		expect(spy.count()).toBe(0);
+		expect(batches.commits()).toBe(0);
 		expect(question()?.selections).toEqual({ a: 3, b: 1 });
 		expect(option('a')?.isVoted).toBe(true);
 		expect(option('b')?.isVoted).toBeUndefined();
@@ -138,6 +140,56 @@ describe('updateVote', () => {
 
 		expect(option('a')?.isVoted).toBe(false);
 		expect(option('b')?.isVoted).toBe(true);
+		expect(question()?.topVotedOption).toMatchObject({ statementId: 'b' });
+	});
+
+	it('ends with one flag when votes interleave at a change of leader', async () => {
+		await castVote('u1', 'a');
+
+		await Promise.all([castVote('u2', 'b'), castVote('u3', 'b'), castVote('u4', 'a')]);
+		await castVote('u5', 'b');
+
+		expect(flagged()).toEqual(['b']);
+	});
+
+	it('repairs two flags on the next vote even when the leader has not changed', async () => {
+		fake.seed(Collections.statements, QUESTION, {
+			statementId: QUESTION,
+			topParentId: QUESTION,
+			selections: { a: 2 },
+			topVotedOption: { statementId: 'a' },
+		});
+		seedOption('a', { isVoted: true });
+		seedOption('b', { isVoted: true });
+
+		await castVote('u1', 'a');
+
+		expect(flagged()).toEqual(['a']);
+	});
+
+	it('repairs a leader left unflagged even when the question already names it', async () => {
+		fake.seed(Collections.statements, QUESTION, {
+			statementId: QUESTION,
+			topParentId: QUESTION,
+			selections: { a: 2 },
+			topVotedOption: { statementId: 'a' },
+		});
+
+		await castVote('u1', 'a');
+
+		expect(flagged()).toEqual(['a']);
+	});
+
+	it('changes nothing when a commit fails, and the next vote finishes the move', async () => {
+		await castVote('u1', 'a');
+		await castVote('u2', 'b');
+		watchBatches(1);
+
+		await castVote('u3', 'b');
+		expect(flagged()).toEqual(['a']);
+
+		await castVote('u4', 'b');
+		expect(flagged()).toEqual(['b']);
 		expect(question()?.topVotedOption).toMatchObject({ statementId: 'b' });
 	});
 

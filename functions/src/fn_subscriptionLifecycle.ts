@@ -5,7 +5,8 @@ import type { Change } from 'firebase-functions/v1';
 import { logger } from 'firebase-functions/v1';
 import {
 	Collections,
-	isCounterMilestone,
+	isCounterCopyDue,
+	Statement,
 	StatementSubscription,
 	StatementType,
 } from '@freedi/shared-types';
@@ -14,7 +15,7 @@ import { logError } from './utils/errorHandling';
 import { validateRoleChange } from './fn_subscriptions';
 import { feedRelevantChange, reconcileUserFeedEntry } from './userFeed/userFeedMembership';
 import { stripCreatedSubscriptionTokens } from './notifications/stripSubscriptionTokens';
-import { recordMemberCount } from './progress/questionProgressWriter';
+import { countMembers, recordMemberCount } from './progress/questionProgressWriter';
 
 /**
  * Membership lifecycle triggers on `statementsSubscribe/{subscriptionId}`.
@@ -29,11 +30,16 @@ import { recordMemberCount } from './progress/questionProgressWriter';
 
 type SubscriptionData = Partial<StatementSubscription>;
 
-/** Statements whose member count lives on `questionProgress`. */
-const PROGRESS_COUNTED_TYPES: Array<StatementType | undefined> = [
-	StatementType.question,
-	StatementType.group,
-];
+/**
+ * Questions and top-level groups keep their member count on `questionProgress`.
+ * Not nested groups: Studio counts every progress doc below a top statement as
+ * one of its activities.
+ */
+function keepsCountOnProgress(statement: Statement | undefined): statement is Statement {
+	if (statement?.statementType === StatementType.question) return true;
+
+	return statement?.statementType === StatementType.group && statement.parentId === 'top';
+}
 
 type SnapshotEvent = FirestoreEvent<QueryDocumentSnapshot | undefined, { subscriptionId: string }>;
 type ChangeEvent = FirestoreEvent<
@@ -46,34 +52,32 @@ type ChangeEvent = FirestoreEvent<
  * instead of downloading every subscription doc. Same filter as before:
  * every role counts, Sign-document subscriptions do not.
  *
- * Questions and groups keep the exact number on `questionProgress`, and copy it
- * to the statement document at milestones only: that document reaches everyone
- * present, so a write per arrival costs people x people reads.
+ * Questions and top-level groups keep the exact number on `questionProgress`,
+ * and copy it to the statement document only when it enters a new bucket: that
+ * document reaches everyone present, so a write per arrival costs people x
+ * people reads. Two recounts racing can land in the wrong order; the scheduled
+ * pass in progress/syncQuestionCounterCopies.ts recounts and heals that, because
+ * guarding it here would mean a transaction on a document every join shares.
  */
 export async function updateMemberCount(
 	firestore: Firestore,
 	statementId: string,
-	subscription: SubscriptionData = {},
 ): Promise<number> {
-	const countSnapshot = await firestore
-		.collection(Collections.statementsSubscribe)
-		.where('statementId', '==', statementId)
-		.where('statementType', '!=', 'document')
-		.count()
-		.get();
-	const memberCount = countSnapshot.data().count;
-	const usesProgressDoc = PROGRESS_COUNTED_TYPES.includes(subscription.statementType);
+	const memberCount = await countMembers(firestore, statementId);
+	const statementRef = firestore.collection(Collections.statements).doc(statementId);
+	const statement = (await statementRef.get()).data() as Statement | undefined;
 
-	if (usesProgressDoc) {
+	if (keepsCountOnProgress(statement)) {
 		await recordMemberCount({
 			statementId,
 			members: memberCount,
-			topParentId: subscription.statement?.topParentId,
+			topParentId: statement.topParentId,
+			organizationId: statement.organizationId,
 		});
+		if (!isCounterCopyDue(memberCount, statement.numberOfMembers)) return memberCount;
 	}
-	if (usesProgressDoc && !isCounterMilestone(memberCount)) return memberCount;
 
-	await firestore.collection(Collections.statements).doc(statementId).update({
+	await statementRef.update({
 		numberOfMembers: memberCount,
 		lastUpdate: Date.now(),
 	});
@@ -92,7 +96,7 @@ async function onMembershipChanged(
 	if (!statementId) return;
 
 	const results = await Promise.allSettled([
-		updateMemberCount(firestore, statementId, subscription),
+		updateMemberCount(firestore, statementId),
 		reconcileUserFeedEntry(firestore, { subscriptionId, userId, statementId }),
 	]);
 	results.forEach((result) => {

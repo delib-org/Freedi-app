@@ -132,7 +132,7 @@ import { cleanupStaleTokens, performTokenCleanup } from './fn_tokenCleanup';
 // Admin Stats (KPI aggregation)
 import { performUserStatsRefresh, backfillAdminStats } from './fn_adminStats';
 import { drainAdminStatShards } from './adminStats/adminStatShards';
-import { logger } from 'firebase-functions';
+import { syncQuestionCounterCopies } from './progress/syncQuestionCounterCopies';
 
 // Engagement System (Phase 1-3: Credits, Levels, Badges, Streaks, Notification Queue, Digests)
 import {
@@ -1144,8 +1144,9 @@ export const refreshUserStats = onSchedule(
 	},
 );
 
-// Moves the sharded rating, vote and join counters onto the Admin app's documents.
-export const drainAdminStatShardsSchedule = onSchedule(
+// Settles the counters kept off busy documents: the sharded rating, vote and
+// join stats, and the question document's copies of its member and rater counts.
+export const syncCountersSchedule = onSchedule(
 	{
 		schedule: 'every 10 minutes',
 		timeZone: 'UTC',
@@ -1153,8 +1154,15 @@ export const drainAdminStatShardsSchedule = onSchedule(
 		timeoutSeconds: 300,
 	},
 	async () => {
-		const { shards, events } = await drainAdminStatShards();
-		logger.info(`Admin stats: drained ${events} events from ${shards} shards`);
+		const [stats, copies] = await Promise.allSettled([
+			drainAdminStatShards(),
+			syncQuestionCounterCopies(),
+		]);
+		[stats, copies].forEach((result) => {
+			if (result.status === 'rejected') {
+				logError(result.reason, { operation: 'scheduled.syncCountersSchedule' });
+			}
+		});
 	},
 );
 

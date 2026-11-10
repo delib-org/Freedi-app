@@ -23,6 +23,7 @@ export const ADMIN_STAT_SHARD_COUNT = 10;
 /** Upper bound on shards drained by one run; the next run picks up the rest. */
 const DRAIN_PAGE_LIMIT = 500;
 const SHARD_SEPARATOR = '__shard';
+const WRITE_BATCH_LIMIT = 500;
 
 export interface StatPeriod {
 	/** Canonical document id, e.g. `evaluations_2026-11-10`. */
@@ -88,6 +89,26 @@ async function drainShard(shard: QueryDocumentSnapshot): Promise<number> {
 
 		return pending;
 	});
+}
+
+/**
+ * Throws away a collection's pending counts. For a backfill, which recounts
+ * from the source documents: those events are already in its totals, and a
+ * later drain would add them again.
+ */
+export async function discardPendingShards(collectionName: string): Promise<number> {
+	const snapshot = await db.collection(Collections.adminStats).where('pending', '>', 0).get();
+	const shards = snapshot.docs.filter((doc) => doc.data().collection === collectionName);
+
+	for (let start = 0; start < shards.length; start += WRITE_BATCH_LIMIT) {
+		const batch = db.batch();
+		shards.slice(start, start + WRITE_BATCH_LIMIT).forEach((shard) => {
+			batch.update(shard.ref, { pending: FieldValue.increment(-shard.data().pending) });
+		});
+		await batch.commit();
+	}
+
+	return shards.length;
 }
 
 /** One scheduled pass: moves every waiting count onto its canonical document. */

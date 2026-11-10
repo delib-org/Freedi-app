@@ -1,34 +1,57 @@
 import {
-	isCounterMilestone,
+	isCounterCopyDue,
 	resolveMemberCount,
 	resolveViewCount,
 } from '../models/progress/questionCounters';
 
-describe('isCounterMilestone', () => {
-	it('copies every count while the group is small', () => {
-		for (let count = 0; count <= 20; count += 1) {
-			expect(isCounterMilestone(count)).toBe(true);
+describe('isCounterCopyDue', () => {
+	it('copies every change while the group is small', () => {
+		for (let count = 1; count <= 20; count += 1) {
+			expect(isCounterCopyDue(count, count - 1)).toBe(true);
 		}
 	});
 
-	it('copies at widening steps as the group grows', () => {
-		expect(isCounterMilestone(21)).toBe(false);
-		expect(isCounterMilestone(25)).toBe(true);
-		expect(isCounterMilestone(101)).toBe(false);
-		expect(isCounterMilestone(125)).toBe(true);
-		expect(isCounterMilestone(1100)).toBe(true);
-		expect(isCounterMilestone(1125)).toBe(false);
+	it('leaves the copy alone inside a bucket', () => {
+		expect(isCounterCopyDue(24, 20)).toBe(false);
+		expect(isCounterCopyDue(124, 100)).toBe(false);
+		expect(isCounterCopyDue(1099, 1000)).toBe(false);
+	});
+
+	it('copies when a new bucket is entered', () => {
+		expect(isCounterCopyDue(25, 20)).toBe(true);
+		expect(isCounterCopyDue(125, 100)).toBe(true);
+		expect(isCounterCopyDue(1100, 1000)).toBe(true);
+	});
+
+	it('still copies when a burst jumps over the exact milestone', () => {
+		expect(isCounterCopyDue(26, 24)).toBe(true);
+		expect(isCounterCopyDue(127, 120)).toBe(true);
+	});
+
+	it('copies when the count falls into a lower bucket', () => {
+		expect(isCounterCopyDue(24, 25)).toBe(true);
+	});
+
+	it('copies when there is no stored value yet', () => {
+		expect(isCounterCopyDue(1500, undefined)).toBe(true);
 	});
 
 	it('moves a 1,000-person question fewer than 100 times', () => {
-		const milestones = Array.from({ length: 1000 }, (_, i) => i + 1).filter(isCounterMilestone);
+		let copies = 0;
+		let stored: number | undefined;
+		for (let count = 1; count <= 1000; count += 1) {
+			if (isCounterCopyDue(count, stored)) {
+				copies += 1;
+				stored = count;
+			}
+		}
 
-		expect(milestones.length).toBeLessThan(100);
+		expect(copies).toBeLessThan(100);
 	});
 
 	it('rejects values that are not a count', () => {
-		expect(isCounterMilestone(-1)).toBe(false);
-		expect(isCounterMilestone(1.5)).toBe(false);
+		expect(isCounterCopyDue(-1, 0)).toBe(false);
+		expect(isCounterCopyDue(1.5, 0)).toBe(false);
 	});
 });
 

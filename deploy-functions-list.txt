@@ -49,7 +49,6 @@ deleteResearchLogs
 deleteRoomAssignments
 detectMultipleSuggestions
 detectStatementType
-drainAdminStatShardsSchedule
 ensureTopParentSubscription
 evaluationDriftCorrection
 executeIntegration
@@ -202,6 +201,7 @@ studioScheduledActionSweep
 suggestClusterTitle
 summarizeDiscussion
 summarizeLink
+syncCountersSchedule
 synthesisCancel
 synthesisJobCancel
 synthesisJobDispatch

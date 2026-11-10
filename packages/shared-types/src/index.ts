@@ -177,7 +177,7 @@ export {
   QuestionProgressSchema,
   QuestionParticipationSchema,
   getQuestionParticipationId,
-  isCounterMilestone,
+  isCounterCopyDue,
   resolveMemberCount,
   resolveViewCount,
 } from "./models/progress";

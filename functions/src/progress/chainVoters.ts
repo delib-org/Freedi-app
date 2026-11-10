@@ -92,6 +92,7 @@ async function countChainUnion(chain: string[]): Promise<number | undefined> {
 		const snap = await db
 			.collection(Collections.questionParticipation)
 			.where('statementId', '==', statementId)
+			.limit(MAX_MARKER_READS - read + 1)
 			.get();
 
 		read += snap.docs.length;

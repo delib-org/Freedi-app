@@ -518,6 +518,16 @@ describe('reading only the options the selection can pick', () => {
 		expect(chosenIds()).toEqual(['o000', 'o001']);
 	});
 
+	it('falls back to reading everything when the consensus query fails', async () => {
+		seedMany(12);
+		mockFake.failOrderBy = 'consensus';
+
+		await updateParentStatementWithChosenOptions(Q);
+
+		expect(chosenIds()).toEqual(['o000', 'o001', 'o002', 'o003', 'o004']);
+		expect(mockFake.counts.queries).toBeGreaterThan(0);
+	});
+
 	it('still reads every option for a metric the index cannot order', async () => {
 		seedQuestion({ resultsBy: ResultsBy.mostLiked, numberOfResults: 5 } as ResultsSettings, {
 			results: [],

@@ -46,23 +46,25 @@ export async function updateVote(event: FirestoreEvent<Change<DocumentSnapshot> 
 		const topVotedId =
 			Object.keys(realSelections).length > 0 ? maxKeyInObject(realSelections) : undefined;
 
-		// The leader's flag, and the copy on the question, only move when the
-		// leader does: each write to an option wakes every trigger on that doc.
-		// `topVotedOption` is written last, so a run that stops halfway leaves the
-		// old leader recorded and the next vote finishes the move.
-		if (topVotedId && previousTopVotedOption?.statementId !== topVotedId) {
-			await moveLeaderFlag(newVote.parentId, topVotedId);
+		if (topVotedId) {
+			// Checked on every vote (usually one read): an interleaved vote can leave
+			// the flags wrong, and this is what repairs them.
+			await syncLeaderFlag(newVote.parentId, topVotedId);
 
-			const topVotedOptionDB = await db.doc(`${Collections.statements}/${topVotedId}`).get();
+			// Written after the flag, so a run that stops between the two leaves the
+			// old leader recorded and the next vote finishes the move.
+			if (previousTopVotedOption?.statementId !== topVotedId) {
+				const topVotedOptionDB = await db.doc(`${Collections.statements}/${topVotedId}`).get();
 
-			if (!topVotedOptionDB.exists) throw new Error(`topVotedOption ${topVotedId} do not exists`);
-			const topVotedOption = topVotedOptionDB.data() as Statement;
+				if (!topVotedOptionDB.exists) throw new Error(`topVotedOption ${topVotedId} do not exists`);
+				const topVotedOption = topVotedOptionDB.data() as Statement;
 
-			await db.doc(`${Collections.statements}/${newVote.parentId}`).update({
-				topVotedOption: statementToSimpleStatement(topVotedOption),
-			});
+				await db.doc(`${Collections.statements}/${newVote.parentId}`).update({
+					topVotedOption: statementToSimpleStatement(topVotedOption),
+				});
 
-			logger.info(`Vote updated successfully for parentId: ${newVote.parentId}`);
+				logger.info(`Vote updated successfully for parentId: ${newVote.parentId}`);
+			}
 		}
 
 		// Track engagement (non-blocking)
@@ -113,20 +115,26 @@ export async function updateVote(event: FirestoreEvent<Change<DocumentSnapshot> 
 	}
 }
 
-/** Clears `isVoted` from every option that has it, then sets it on the leader. */
-async function moveLeaderFlag(parentId: string, leaderId: string): Promise<void> {
+/**
+ * Makes the leader the only option flagged `isVoted`, in one atomic batch.
+ * Writes nothing when that is already true: each write to an option wakes every
+ * trigger on that document.
+ */
+async function syncLeaderFlag(parentId: string, leaderId: string): Promise<void> {
 	const flagged = await db
 		.collection(Collections.statements)
 		.where('parentId', '==', parentId)
 		.where('isVoted', '==', true)
 		.get();
 
-	const batch = db.batch();
-	flagged.docs.forEach((resultDB) => {
-		const result = resultDB.data() as Statement;
-		batch.update(db.doc(`${Collections.statements}/${result.statementId}`), { isVoted: false });
-	});
-	await batch.commit();
+	const staleFlags = flagged.docs.filter((doc) => doc.id !== leaderId);
+	const leaderIsFlagged = staleFlags.length < flagged.docs.length;
+	if (leaderIsFlagged && staleFlags.length === 0) return;
 
-	await db.doc(`${Collections.statements}/${leaderId}`).update({ isVoted: true });
+	const batch = db.batch();
+	staleFlags.forEach((doc) => batch.update(doc.ref, { isVoted: false }));
+	if (!leaderIsFlagged) {
+		batch.update(db.doc(`${Collections.statements}/${leaderId}`), { isVoted: true });
+	}
+	await batch.commit();
 }

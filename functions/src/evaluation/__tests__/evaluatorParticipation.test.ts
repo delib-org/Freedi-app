@@ -298,6 +298,21 @@ describe('the question copy of the count', () => {
 		expect(mockFake.peek(`statements/${QUESTION}`)?.totalEvaluators).toBe(25);
 	});
 
+	it('still copies when a burst commits past the exact milestone', async () => {
+		await rate(1, 20);
+		for (let i = 21; i <= 25; i += 1) {
+			mockFake.seed(`evaluationParticipants/${QUESTION}--seeded-${i}`, {
+				parentId: QUESTION,
+				userId: `seeded-${i}`,
+				createdAt: 1,
+			});
+		}
+
+		await recordEvaluatorParticipation(QUESTION, 'twenty-sixth', fsAny);
+
+		expect(countOf()).toBe(26);
+	});
+
 	it('a reconcile still brings the question to the exact count between milestones', async () => {
 		await rate(1, 22);
 		for (let i = 1; i <= 22; i += 1) seedEvaluation(`e${i}`, `user-${i}`);

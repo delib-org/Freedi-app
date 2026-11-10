@@ -11,7 +11,7 @@ import { FieldValue, QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { Collections, getAdminStatDocId } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { db } from './index';
-import { incrementShardedStat } from './adminStats/adminStatShards';
+import { discardPendingShards, incrementShardedStat } from './adminStats/adminStatShards';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -328,6 +328,9 @@ export async function backfillAdminStats(req: Request, res: Response): Promise<v
 		processedCount += snap.size;
 		logger.info(`Admin stats backfill: processed ${processedCount} ${targetCollection} docs`);
 	}
+
+	// Everything still waiting in a shard was just counted from the source docs.
+	await discardPendingShards(targetCollection);
 
 	// Write aggregates to Firestore in batches of 500
 	const entries = Array.from(aggregates.entries());

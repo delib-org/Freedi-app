@@ -13,9 +13,11 @@
  *   out-of-order events are idempotent and concurrent first evaluations by
  *   different users each add exactly one marker. The markers ARE the count.
  * - The question's counters are a copy, refreshed from an exact count of the
- *   markers at milestones (`isCounterMilestone`), because every write to the
- *   question document reaches everyone present. These counters are shown to
- *   people; they are not an input to the consensus score.
+ *   markers when it enters a new bucket (`isCounterCopyDue`), because every
+ *   write to the question document reaches everyone present. A scheduled pass
+ *   (progress/syncQuestionCounterCopies.ts) makes the copy exact afterwards.
+ *   These counters are shown to people; they are not an input to the consensus
+ *   score.
  * - A neutral evaluation (value 0) is participation and counts.
  * - Once counted a participant stays counted: deleting evaluations never
  *   decrements (agreed behaviour change vs. the old scan).
@@ -29,7 +31,7 @@
 
 import { logger } from 'firebase-functions/v1';
 import type { Firestore, Transaction, WriteBatch } from 'firebase-admin/firestore';
-import { Collections, Evaluation, Statement, isCounterMilestone } from '@freedi/shared-types';
+import { Collections, Evaluation, Statement, isCounterCopyDue } from '@freedi/shared-types';
 import type { EvaluationParticipant } from '@freedi/shared-types';
 import { db } from '../index';
 import { logError } from '../utils/errorHandling';
@@ -55,7 +57,7 @@ type BatchOperation = (batch: WriteBatch) => void;
  *
  * Cost when already counted: 1 read, 0 writes. First time: 3 reads (marker,
  * question, count of markers), 1 write (marker), plus 1 write to the question
- * when the new count is a milestone.
+ * when the new count is in a new bucket.
  *
  * @returns true when this call added the user to the count.
  */
@@ -106,9 +108,9 @@ export async function recordEvaluatorParticipation(
 }
 
 /**
- * Refreshes the question's copy of the count when it reaches a milestone. The
- * number comes from the markers, so a failed or skipped copy heals at the next
- * milestone, and it never touches the marker that was just committed.
+ * Refreshes the question's copy of the count when it enters a new bucket. The
+ * number comes from the markers, so a failed copy heals at the next one, and it
+ * never touches the marker that was just committed.
  */
 async function copyCountToQuestion(
 	firestore: Firestore,
@@ -122,7 +124,8 @@ async function copyCountToQuestion(
 			.count()
 			.get();
 		const count = countSnapshot.data().count;
-		if (!isCounterMilestone(count)) return;
+		const storedCopy = parent.evaluation?.asParentTotalEvaluators ?? parent.totalEvaluators;
+		if (!isCounterCopyDue(count, storedCopy)) return;
 
 		await firestore
 			.collection(Collections.statements)
