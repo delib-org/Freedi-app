@@ -12,3 +12,5 @@ export const LOWER_RANK_DEMAND_FACTOR = 0.01;
 export const CONSTANT_AXIS_RELATIVE_SD = 1e-9;
 /** Swaps the search may evaluate over all restarts of one run; a count, never a clock, so a seed still gives the same room. */
 export const SWAP_TRIES_DEFAULT = 50_000_000;
+/** Fewest newcomers worth opening a table for beside pinned tables; fewer take a free pinned seat instead. */
+export const MIN_OPENED_TABLE_SIZE = 3;

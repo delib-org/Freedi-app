@@ -1,5 +1,6 @@
 import type { Participant, PinnedTable, TablePlan, Topic } from './types';
-import { allocateTables, topicDemand } from './allocateTables';
+import { allocateTables } from './allocateTables';
+import { MIN_OPENED_TABLE_SIZE } from './constants';
 import { TableAssignmentError } from './errors';
 
 export interface PinnedLayout {
@@ -11,8 +12,14 @@ export interface PinnedLayout {
 
 /**
  * Tables for a re-run that keeps the room as it is. Pinned members stay put.
- * Newcomers first fill the free seats of pinned tables (spread over topics by
- * what they asked for); only the people who do not fit there open new tables.
+ *
+ * 1. A newcomer takes a free seat at a pinned table only of a topic they
+ *    ranked (best choice first); a newcomer with no preferences then takes
+ *    any seat still free.
+ * 2. Those left over open new tables at the topics they ranked, as a normal
+ *    run would, when they are enough for a table (MIN_OPENED_TABLE_SIZE).
+ * 3. Fewer than that take any free pinned seat rather than sit alone; only
+ *    with no free seat anywhere do they open a (small) table.
  */
 export function layoutWithPinned(
 	participants: readonly Participant[],
@@ -24,19 +31,111 @@ export function layoutWithPinned(
 	const pinnedSeats = seatPinned(participants, topics, pinnedTables, tableSize);
 	const seated = new Set(pinnedSeats.flat());
 	const newcomers = participants.filter((_, i) => !seated.has(i));
-	const sizes = pinnedSeats.map((members) => members.length);
-	const freeSeats = sizes.reduce((total, size) => total + (tableSize - size), 0);
 	const topicIds = pinnedTables.map((table) => table.topicId);
-	const toPinned = Math.min(newcomers.length, freeSeats);
+	const sizes = pinnedSeats.map((members) => members.length);
 
-	fillPinnedSeats(sizes, topicIds, newcomers, topics, tableSize, maxRanked, toPinned);
+	const unmatched = takeRankedSeats(newcomers, topicIds, sizes, tableSize, maxRanked);
+	const withoutPreferences = unmatched.filter((p) => p.preferences.length === 0);
+	let leftover = unmatched.filter((p) => p.preferences.length > 0);
+	leftover = [...leftover, ...takeAnySeats(withoutPreferences, sizes, tableSize)];
+
+	let opened: TablePlan[] = [];
+	if (leftover.length >= MIN_OPENED_TABLE_SIZE) {
+		opened = tryOpenTables(leftover, topics, topicIds, tableSize, maxRanked) ?? [];
+		if (opened.length > 0) leftover = [];
+	}
+	if (leftover.length > 0) {
+		leftover = takeAnySeats(leftover, sizes, tableSize);
+		opened =
+			leftover.length > 0 ? openTables(leftover, topics, topicIds, tableSize, maxRanked) : [];
+	}
 	const plans: TablePlan[] = topicIds.map((topicId, t) => ({ topicId, size: sizes[t] }));
-	const opened = allocateTables(newcomers, topics, tableSize, maxRanked, {
-		seats: newcomers.length - toPinned,
-		tablesPerTopic: countPerTopic(topicIds),
-	});
 
 	return { plans: [...plans, ...opened], pinnedSeats: [...pinnedSeats, ...opened.map(() => [])] };
+}
+
+/** Rank by rank, gives newcomers a free seat at a pinned table of that topic (emptiest first). Returns who got none. */
+function takeRankedSeats(
+	newcomers: readonly Participant[],
+	topicIds: readonly string[],
+	sizes: number[],
+	tableSize: number,
+	maxRanked: number,
+): Participant[] {
+	let waiting = [...newcomers];
+	for (let rank = 0; rank < maxRanked; rank++) {
+		waiting = waiting.filter((person) => {
+			const topicId = person.preferences[rank];
+			if (topicId === undefined) return true;
+			const table = emptiestTable(sizes, tableSize, (t) => topicIds[t] === topicId);
+
+			if (table < 0) return true;
+			sizes[table]++;
+
+			return false;
+		});
+	}
+
+	return waiting;
+}
+
+/** Gives each person any free pinned seat (emptiest table first). Returns who found none. */
+function takeAnySeats(
+	people: readonly Participant[],
+	sizes: number[],
+	tableSize: number,
+): Participant[] {
+	const unseated: Participant[] = [];
+	for (const person of people) {
+		const table = emptiestTable(sizes, tableSize, () => true);
+		if (table < 0) unseated.push(person);
+		else sizes[table]++;
+	}
+
+	return unseated;
+}
+
+function emptiestTable(
+	sizes: readonly number[],
+	tableSize: number,
+	wanted: (t: number) => boolean,
+): number {
+	let best = -1;
+	for (let t = 0; t < sizes.length; t++) {
+		if (sizes[t] >= tableSize || !wanted(t)) continue;
+		if (best < 0 || sizes[t] < sizes[best]) best = t;
+	}
+
+	return best;
+}
+
+function openTables(
+	people: readonly Participant[],
+	topics: readonly Topic[],
+	topicIds: readonly string[],
+	tableSize: number,
+	maxRanked: number,
+): TablePlan[] {
+	return allocateTables(people, topics, tableSize, maxRanked, {
+		seats: people.length,
+		tablesPerTopic: countPerTopic(topicIds),
+	});
+}
+
+/** Like openTables, but undefined when topic caps leave no room (the caller then uses free pinned seats). */
+function tryOpenTables(
+	people: readonly Participant[],
+	topics: readonly Topic[],
+	topicIds: readonly string[],
+	tableSize: number,
+	maxRanked: number,
+): TablePlan[] | undefined {
+	try {
+		return openTables(people, topics, topicIds, tableSize, maxRanked);
+	} catch (error) {
+		if (error instanceof TableAssignmentError) return undefined;
+		throw error;
+	}
 }
 
 /** Participant indexes of each pinned table's members who are still in the room. */
@@ -72,40 +171,6 @@ function seatPinned(
 
 		return seats;
 	});
-}
-
-/**
- * Hands `count` newcomer seats to pinned tables, one at a time (highest
- * average method over topics, so a topic's share follows what newcomers asked
- * for). Inside a topic the emptiest table gets the next seat. Grows `sizes`.
- */
-function fillPinnedSeats(
-	sizes: number[],
-	topicIds: readonly string[],
-	newcomers: readonly Participant[],
-	topics: readonly Topic[],
-	tableSize: number,
-	maxRanked: number,
-	count: number,
-): void {
-	const weight = new Map(
-		topicDemand(newcomers, topics, maxRanked).map((entry) => [entry.topicId, entry.weight]),
-	);
-	const given = new Map<string, number>();
-	for (let seat = 0; seat < count; seat++) {
-		let best = -1;
-		let bestScore = -1;
-		for (let t = 0; t < sizes.length; t++) {
-			if (sizes[t] >= tableSize) continue;
-			const score = (weight.get(topicIds[t]) ?? 0) / (1 + (given.get(topicIds[t]) ?? 0));
-			if (best < 0 || score > bestScore || (score === bestScore && sizes[t] < sizes[best])) {
-				best = t;
-				bestScore = score;
-			}
-		}
-		sizes[best]++;
-		given.set(topicIds[best], (given.get(topicIds[best]) ?? 0) + 1);
-	}
 }
 
 function countPerTopic(topicIds: readonly string[]): Map<string, number> {
