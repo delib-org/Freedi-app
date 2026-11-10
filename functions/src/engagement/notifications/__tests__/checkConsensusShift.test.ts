@@ -3,6 +3,7 @@ import {
 	NotificationChannel,
 	NotificationFrequency,
 	NotificationTriggerType,
+	SourceApp,
 	StatementType,
 } from '@freedi/shared-types';
 import type { NotificationQueueItem, Statement } from '@freedi/shared-types';
@@ -22,6 +23,7 @@ jest.mock('../../../utils/errorHandling', () => ({
 
 import {
 	checkConsensusShift,
+	countRaters,
 	MIN_NEW_RATERS,
 	MIN_RATERS,
 	MIN_SCORE_CHANGE_POINTS,
@@ -34,6 +36,7 @@ const BASE_RATERS = 15;
 const BASE_SCORE = 0.5;
 const HOUR = 60 * 60 * 1000;
 const TEXT = 'Keep the library open on weekends';
+const CLASS_TABLE = { tableId: 't1', coAuthors: [] } as unknown as Statement['classTable'];
 
 function answer(raters: number, consensus: number, overrides: Partial<Statement> = {}): Statement {
 	return {
@@ -103,13 +106,68 @@ describe('checkConsensusShift', () => {
 			expect(collection).not.toHaveBeenCalled();
 		});
 
-		it('does not count the automatic +1 on a classroom answer as a rater', async () => {
+		it.each<[string, Partial<Statement>]>([
+			['a Mass Consensus answer', { sourceApp: SourceApp.MASS_CONSENSUS }],
+			['a join-class answer', { classTable: CLASS_TABLE }],
+		])('does no reads for %s', async (_name, overrides) => {
 			const collection = jest.spyOn(fake.db, 'collection');
-			const classTable = { tableId: 't1' } as unknown as Statement['classTable'];
 
-			await checkConsensusShift(answer(MIN_RATERS, 0.9, { classTable }));
+			await checkConsensusShift(answer(DUE_RATERS, DUE_SCORE, overrides));
 
 			expect(collection).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('countRaters', () => {
+		const withTable = (raters: number, coAuthors: string[]): Statement =>
+			answer(raters, 0, {
+				classTable: { tableId: 't1', coAuthors } as unknown as Statement['classTable'],
+			});
+
+		it('counts everyone on an ordinary answer', () => {
+			expect(countRaters(answer(20, 0))).toBe(20);
+		});
+
+		it('subtracts the author and each co-author', () => {
+			expect(countRaters(withTable(20, ['c1', 'c2']))).toBe(17);
+		});
+
+		it('counts the author once when listed among the co-authors', () => {
+			expect(countRaters(withTable(20, [AUTHOR, 'c1']))).toBe(18);
+		});
+
+		it('never goes below zero', () => {
+			expect(countRaters(withTable(1, ['c1', 'c2']))).toBe(0);
+		});
+	});
+
+	describe('main-app questions only', () => {
+		it.each<[string, Record<string, unknown>]>([
+			['a Mass Consensus question', { sourceApp: SourceApp.MASS_CONSENSUS }],
+			['a join-class question', { classTable: { tableId: 't1', coAuthors: [] } }],
+		])('holds for an unstamped answer under %s', async (_name, extra) => {
+			fake.seed(Collections.statements, QUESTION, {
+				statementId: QUESTION,
+				statementSettings: { showEvaluation: true },
+				...extra,
+			});
+			seedBaseline();
+
+			await checkConsensusShift(answer(DUE_RATERS, DUE_SCORE));
+
+			expect(queued()).toHaveLength(0);
+		});
+
+		it.each<[string, Partial<Statement>]>([
+			['stamped main', { sourceApp: SourceApp.MAIN }],
+			['with no stamp, as older answers are', {}],
+		])('sends for an answer %s', async (_name, overrides) => {
+			seedQuestion(true);
+			seedBaseline();
+
+			await checkConsensusShift(answer(DUE_RATERS, DUE_SCORE, overrides));
+
+			expect(queued()).toHaveLength(1);
 		});
 	});
 

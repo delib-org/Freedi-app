@@ -111,21 +111,39 @@ export async function checkSocialProofMilestone(statement: Statement): Promise<v
 }
 
 /**
+ * Notices link to the main app, so only its statements earn one. Mass Consensus
+ * stamps `sourceApp`, join-class never does but always sets `classTable`. Older
+ * documents have neither, and they are main-app.
+ */
+export function isMainAppStatement(
+	statement: Pick<Statement, 'sourceApp' | 'classTable'>,
+): boolean {
+	if (statement.classTable) return false;
+
+	return statement.sourceApp === undefined || statement.sourceApp === SourceApp.MAIN;
+}
+
+/**
  * Who a notice about this answer goes to. AI-written combined answers have no
  * author to tell, and a hidden answer is not being read.
  */
 export function answerAuthor(statement: Statement): string | undefined {
 	if (statement.statementType !== StatementType.option) return undefined;
 	if (statement.isCluster || statement.hide) return undefined;
+	if (!isMainAppStatement(statement)) return undefined;
 
 	return statement.creator?.uid;
 }
 
-/** Raters other than the author's own automatic +1, which classroom answers start with. */
+/** Raters other than the automatic +1s a classroom answer starts with (author and co-authors). */
 export function countRaters(statement: Statement): number {
 	const raters = statement.evaluation?.numberOfEvaluators ?? 0;
+	const { classTable, creator } = statement;
+	if (!classTable) return raters;
 
-	return statement.classTable ? Math.max(0, raters - 1) : raters;
+	const automatic = new Set([creator?.uid, ...(classTable.coAuthors ?? [])]).size;
+
+	return Math.max(0, raters - automatic);
 }
 
 /** Score change on the participants' −100..+100 scale, free of floating-point noise. */
@@ -224,7 +242,11 @@ export async function checkConsensusShift(statement: Statement): Promise<void> {
 
 		const parentSnap = await db.collection(Collections.statements).doc(parentId).get();
 		const parent = parentSnap.data() as Statement | undefined;
-		if (parent?.statementSettings?.showEvaluation !== true) {
+		if (
+			!parent ||
+			!isMainAppStatement(parent) ||
+			parent.statementSettings?.showEvaluation !== true
+		) {
 			await rest();
 
 			return;

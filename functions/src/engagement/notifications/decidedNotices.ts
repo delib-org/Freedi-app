@@ -17,14 +17,26 @@ import type { Statement } from '@freedi/shared-types';
 import { logError } from '../../utils/errorHandling';
 import { readNoticeAudiences } from './noticeAudience';
 import { answerPreview, decidedCopy, pickNoticeLanguage } from './noticeText';
-import { answerAuthor, buildAnswerNotice } from './socialProofTrigger';
+import { answerAuthor, buildAnswerNotice, isMainAppStatement } from './socialProofTrigger';
 
 const ALREADY_EXISTS = 6;
 const CREATE_CHUNK = 50;
 
+/** All the closing notice needs of each answer. */
+export const ANSWER_FIELDS = [
+	'statement',
+	'statementType',
+	'creator.uid',
+	'hide',
+	'isCluster',
+	'sourceApp',
+	'classTable',
+] as const;
+
 export function isDecidedTransition(before: Statement, after: Statement): boolean {
 	return (
 		after.statementType === StatementType.question &&
+		isMainAppStatement(after) &&
 		after.questionSettings?.currentStep === QuestionStep.finished &&
 		before.questionSettings?.currentStep !== QuestionStep.finished
 	);
@@ -38,6 +50,7 @@ async function answersByAuthor(
 		.collection(Collections.statements)
 		.where('parentId', '==', questionId)
 		.where('statementType', '==', StatementType.option)
+		.select(...ANSWER_FIELDS)
 		.get();
 
 	const byAuthor = new Map<string, Statement[]>();

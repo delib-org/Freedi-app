@@ -2,6 +2,7 @@ import {
 	Collections,
 	NotificationChannel,
 	QuestionStep,
+	SourceApp,
 	StatementType,
 } from '@freedi/shared-types';
 import type { NotificationQueueItem, Statement } from '@freedi/shared-types';
@@ -19,7 +20,11 @@ jest.mock('../../../utils/errorHandling', () => ({
 	logError: (...args: unknown[]) => mockLogError(...args),
 }));
 
-import { isDecidedTransition, sendDecidedNoticesOnStageChange } from '../decidedNotices';
+import {
+	ANSWER_FIELDS,
+	isDecidedTransition,
+	sendDecidedNoticesOnStageChange,
+} from '../decidedNotices';
 
 const QUESTION = 'q1';
 
@@ -78,6 +83,19 @@ describe('decided notices', () => {
 			expect(isDecidedTransition(TO_DECIDED, TO_VOTING)).toBe(false);
 		});
 
+		it.each<[string, Partial<Statement>]>([
+			['Mass Consensus', { sourceApp: SourceApp.MASS_CONSENSUS }],
+			['join-class', { classTable: { tableId: 't1', shared: false, coAuthors: [] } }],
+		])('is false for a %s question', (_name, overrides) => {
+			expect(isDecidedTransition(TO_VOTING, { ...TO_DECIDED, ...overrides })).toBe(false);
+		});
+
+		it('is true for a question with no source stamp or a main stamp', () => {
+			expect(isDecidedTransition(TO_VOTING, { ...TO_DECIDED, sourceApp: SourceApp.MAIN })).toBe(
+				true,
+			);
+		});
+
 		it('is false for a statement that is not a question', () => {
 			const option = { ...TO_DECIDED, statementType: StatementType.option } as Statement;
 
@@ -133,6 +151,43 @@ describe('decided notices', () => {
 		expect(byUser.get('noa')?.body).toBe(
 			'התשובה שלך "לפתוח בסופי שבוע" הייתה חלק ממה שהקבוצה שקלה. התוצאות פתוחות עכשיו לכולם.',
 		);
+	});
+
+	it('skips answers from other apps under a main-app question', async () => {
+		seedAnswer('a1', 'alice', 'From Mass Consensus', { sourceApp: SourceApp.MASS_CONSENSUS });
+		seedAnswer('a2', 'bob', 'From class', { classTable: { tableId: 't1', coAuthors: [] } });
+		seedAnswer('a3', 'carol', 'An older answer');
+
+		await sendDecidedNoticesOnStageChange(TO_VOTING, TO_DECIDED);
+
+		expect(queued().map((n) => n.userId)).toEqual(['carol']);
+	});
+
+	it('reads only the fields it needs', async () => {
+		seedAnswer('a1', 'alice', 'Open on weekends');
+		const selected = jest.fn();
+		const realCollection = fake.db.collection;
+		type Query = ReturnType<ReturnType<typeof fake.db.collection>['where']>;
+		const watch = (query: Query): Query => ({
+			...query,
+			where: (field, op, value) => watch(query.where(field, op, value)),
+			select: (...fields: unknown[]) => {
+				selected(...fields);
+
+				return query.select();
+			},
+		});
+		fake.db.collection = (name: string) => {
+			const col = realCollection(name);
+			if (name !== Collections.statements) return col;
+
+			return { ...col, where: (field, op, value) => watch(col.where(field, op, value)) };
+		};
+
+		await sendDecidedNoticesOnStageChange(TO_VOTING, TO_DECIDED);
+
+		expect(selected).toHaveBeenCalledWith(...ANSWER_FIELDS);
+		expect(queued()).toHaveLength(1);
 	});
 
 	it('skips combined and hidden answers', async () => {

@@ -2,6 +2,7 @@ import {
 	Collections,
 	NotificationChannel,
 	NotificationTriggerType,
+	SourceApp,
 	StatementType,
 } from '@freedi/shared-types';
 import type { NotificationQueueItem, Statement } from '@freedi/shared-types';
@@ -24,7 +25,7 @@ import { checkSocialProofMilestone, MILESTONES } from '../socialProofTrigger';
 const AUTHOR = 'author';
 const ANSWER = 'answer1';
 const QUESTION = 'question1';
-const CLASS_TABLE = { tableId: 't1' } as unknown as Statement['classTable'];
+const CLASS_TABLE = { tableId: 't1', coAuthors: [] } as unknown as Statement['classTable'];
 
 function answer(raters: number, overrides: Partial<Statement> = {}): Statement {
 	return {
@@ -107,17 +108,26 @@ describe('checkSocialProofMilestone', () => {
 		expect(fake.read(Collections.answerNoticeState, ANSWER)).toMatchObject({ noticesSent: 1 });
 	});
 
-	describe("the author's automatic rating", () => {
-		it('does not count on a classroom answer', async () => {
-			await checkSocialProofMilestone(answer(5, { classTable: CLASS_TABLE }));
+	describe('other apps', () => {
+		it.each<[string, Partial<Statement>]>([
+			['a Mass Consensus answer', { sourceApp: SourceApp.MASS_CONSENSUS }],
+			['a join-class answer', { classTable: CLASS_TABLE }],
+		])('sends nothing for %s, with no read', async (_name, overrides) => {
+			const collection = jest.spyOn(fake.db, 'collection');
 
+			await checkSocialProofMilestone(answer(7, overrides));
+
+			expect(collection).not.toHaveBeenCalled();
 			expect(queued()).toHaveLength(0);
 		});
 
-		it('reaches the milestone one rating later', async () => {
-			await checkSocialProofMilestone(answer(6, { classTable: CLASS_TABLE }));
+		it.each<[string, Partial<Statement>]>([
+			['stamped main', { sourceApp: SourceApp.MAIN }],
+			['with no stamp, as older answers are', {}],
+		])('treats an answer %s as main-app', async (_name, overrides) => {
+			await checkSocialProofMilestone(answer(5, overrides));
 
-			expect(queued()[0].body).toContain('5 people');
+			expect(queued()).toHaveLength(1);
 		});
 	});
 

@@ -3,6 +3,7 @@ import { LanguagesEnum } from '@/context/UserConfigContext';
 import styles from './ChangeLanguage.module.scss';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { LANGUAGES } from '@/constants/Languages';
+import { saveChosenLanguage } from '@/controllers/db/user/userLanguage';
 
 interface ChangeLanguageProps {
 	/** Close the popover (typically toggles its parent state) */
@@ -28,6 +29,7 @@ const ChangeLanguage: FC<ChangeLanguageProps> = ({ onClose, returnFocusRef, alig
 			document.body.style.direction = 'ltr';
 		}
 		localStorage.setItem('lang', lang);
+		saveChosenLanguage(lang);
 
 		closePopover();
 	}

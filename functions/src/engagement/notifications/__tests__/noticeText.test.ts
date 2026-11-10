@@ -17,14 +17,23 @@ describe('pickNoticeLanguage', () => {
 		expect(pickNoticeLanguage('EN-us')).toBe('en');
 	});
 
-	it('falls back to the text for a language it has no words for', () => {
-		expect(pickNoticeLanguage('ar', 'טקסט בעברית')).toBe('he');
-		expect(pickNoticeLanguage('de', 'Plain text')).toBe('en');
+	it('gives English for a stored language with no server wording, whatever the text', () => {
+		expect(pickNoticeLanguage('ar', 'טקסט בעברית')).toBe('en');
+		expect(pickNoticeLanguage('de')).toBe('en');
 	});
 
 	it('uses the script of the text when nothing is stored', () => {
 		expect(pickNoticeLanguage(undefined, 'טקסט בעברית')).toBe('he');
 		expect(pickNoticeLanguage(undefined, 'Plain text')).toBe('en');
+	});
+
+	it('gives English for any other script when nothing is stored', () => {
+		expect(pickNoticeLanguage(undefined, 'نص بالعربية')).toBe('en');
+		expect(pickNoticeLanguage(undefined, 'Текст')).toBe('en');
+	});
+
+	it('treats an empty stored value as nothing stored', () => {
+		expect(pickNoticeLanguage('', 'טקסט בעברית')).toBe('he');
 	});
 
 	it('treats mixed text as Hebrew', () => {

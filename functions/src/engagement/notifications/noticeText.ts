@@ -21,24 +21,23 @@ export const DEFAULT_NOTICE_LANGUAGE: NoticeLanguage = 'he';
 
 const PREVIEW_LENGTH = 60;
 const HEBREW_LETTER = /[֐-׿]/;
-const LATIN_LETTER = /[A-Za-z]/;
+const ANY_LETTER = /\p{L}/u;
 
 /**
  * The language to write to one person in.
  *
- * The app keeps the chosen language in the browser only, so a stored language
- * is rare. The next best signal is the text the person wrote themselves.
+ * A stored language wins; there is wording only for Hebrew and English, so any
+ * other stored language gets English. With nothing stored, the best signal is
+ * the script of the text the person wrote themselves.
  */
 export function pickNoticeLanguage(
 	storedLanguage: string | undefined,
 	sampleText?: string,
 ): NoticeLanguage {
-	const stored = storedLanguage?.toLowerCase();
-	if (stored?.startsWith('he')) return 'he';
-	if (stored?.startsWith('en')) return 'en';
+	if (storedLanguage) return storedLanguage.toLowerCase().startsWith('he') ? 'he' : 'en';
 
 	if (sampleText && HEBREW_LETTER.test(sampleText)) return 'he';
-	if (sampleText && LATIN_LETTER.test(sampleText)) return 'en';
+	if (sampleText && ANY_LETTER.test(sampleText)) return 'en';
 
 	return DEFAULT_NOTICE_LANGUAGE;
 }
