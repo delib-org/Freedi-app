@@ -7,7 +7,7 @@ import { Statement } from '@freedi/shared-types';
 import { useEvaluation } from './EvalautionMV';
 import { logError } from '@/utils/errorHandling';
 import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
-import { useAnswerScoreGate } from '../../../questionScreen/useAnswerScoreGate';
+import { useCardAnswerScoreGate } from '../../../questionScreen/useAnswerScoreGate';
 
 export type EvaluationVariant = 'default' | 'card';
 
@@ -38,7 +38,7 @@ const Evaluation: FC<EvaluationProps> = ({
 }) => {
 	const { parentStatement } = useEvaluation(statement);
 	const { isHalted } = useIsProcessHalted(parentStatement);
-	const scoreGate = useAnswerScoreGate(statement, parentStatement);
+	const scoreGate = useCardAnswerScoreGate(statement, parentStatement);
 
 	if (!statement) return <>{footerSlot}</>;
 	try {

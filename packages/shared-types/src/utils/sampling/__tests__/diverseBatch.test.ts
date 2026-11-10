@@ -8,7 +8,8 @@
  * - Round-robin selection: one-per-cluster, multi-pass, singleton fallback,
  *   rotation to unseen clusters, determinism
  */
-import { Statement, StatementType } from '@freedi/shared-types';
+import { StatementType } from '../../../models/TypeEnums';
+import type { Statement } from '../../../models/statement/StatementTypes';
 import {
   buildClusterMembershipMap,
   getClusterKey,

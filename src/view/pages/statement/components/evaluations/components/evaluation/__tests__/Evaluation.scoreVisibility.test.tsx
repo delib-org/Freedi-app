@@ -22,7 +22,7 @@ jest.mock('@/controllers/hooks/useIsProcessHalted', () => ({
 	useIsProcessHalted: () => ({ isHalted: false }),
 }));
 jest.mock('../../../../questionScreen/useAnswerScoreGate', () => ({
-	useAnswerScoreGate: () => ({ canSee: mockCanSee, showRevealHint: mockShowRevealHint }),
+	useCardAnswerScoreGate: () => ({ canSee: mockCanSee, showRevealHint: mockShowRevealHint }),
 }));
 
 interface ScoredProps {

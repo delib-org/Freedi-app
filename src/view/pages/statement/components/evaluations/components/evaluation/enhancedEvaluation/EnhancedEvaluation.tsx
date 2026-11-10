@@ -17,7 +17,7 @@ import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearni
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
 import { useSelector } from 'react-redux';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
-import { useAnswerScoreGate } from '../../../../questionScreen/useAnswerScoreGate';
+import { useCardAnswerScoreGate } from '../../../../questionScreen/useAnswerScoreGate';
 import { ResultsStrip } from '@/view/components/atomic/molecules/ResultsStrip';
 import { EvaluationCircle, EvaluationCircleRow } from '../shared/EvaluationCircle';
 import { FaceIcon } from '@/view/components/atomic/atoms/FaceIcon';
@@ -84,9 +84,13 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	const hasRated = optimisticScore !== undefined;
 	const isOwnAnswer = isCard && !!creator?.uid && statement.creatorId === creator.uid;
 	// `hasRated` is the optimistic score, so the result opens on the tap itself.
-	const { canSee: showResults, showRevealHint } = useAnswerScoreGate(statement, parentStatement, {
-		hasRated,
-	});
+	const { canSee: showResults, showRevealHint } = useCardAnswerScoreGate(
+		statement,
+		parentStatement,
+		{
+			hasRated,
+		},
+	);
 
 	const thumbNodes = options.map((option) => (
 		<EvaluationThumb

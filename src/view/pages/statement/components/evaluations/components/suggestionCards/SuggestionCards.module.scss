@@ -92,6 +92,20 @@
 	height: 1px;
 }
 
+.backToRating {
+	display: block;
+	margin: 0 auto calc(var(--padding) / 2);
+	min-height: 44px;
+	padding: 0 var(--padding);
+	border: none;
+	background: none;
+	color: var(--btn-primary);
+	font: inherit;
+	font-size: 0.9rem;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
 .lazyLoadStatus {
 	width: 100%;
 	padding: var(--padding);

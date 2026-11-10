@@ -77,6 +77,17 @@ export function resolveCurrentSort({
 	return { kind: 'sort', sort: guardScoreSort(defaultSort ?? SortType.newest, canSortByScore) };
 }
 
+/** Back to the question's default view: the Rate view on a large question. */
+export function buildRateViewPath(
+	pathname: string,
+	statementId: string,
+	tab: string | null,
+): string {
+	const query = tab ? `?tab=${encodeURIComponent(tab)}` : '';
+
+	return `/${sortRouteBase(pathname)}/${statementId}${query}`;
+}
+
 /** `/stage/…` keeps its family; everything else sorts under `/statement/…`. */
 export function sortRouteBase(pathname: string): 'stage' | 'statement' {
 	return pathname.includes('/stage/') ? 'stage' : 'statement';

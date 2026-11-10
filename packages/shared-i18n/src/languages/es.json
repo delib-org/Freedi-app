@@ -5719,5 +5719,11 @@
   "to": "a",
   "{count} evaluators": "{count} personas valoraron",
   "{pct}% agree": "{pct}% de acuerdo",
-  "…and {count} more": "…y {count} más"
+  "…and {count} more": "…y {count} más",
+  "Rate": "Valorar",
+  "See all answers": "Ver todas las respuestas",
+  "Back to rating": "Volver a valorar",
+  "{n} answers in this question": "{n} respuestas en esta pregunta",
+  "No more answers to rate right now": "No hay más respuestas por valorar ahora",
+  "Could not load everything. Please try again.": "No se pudo cargar todo. Inténtalo de nuevo."
 }

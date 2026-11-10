@@ -18,7 +18,12 @@ import {
 	isAddAnswerEnabled,
 	isHostRole,
 } from './questionScreenLogic';
-import { getQuestionStage, QuestionStageIndex, STAGE_DECIDED } from '@/helpers/questionStage';
+import {
+	canRateQuestion,
+	getQuestionStage,
+	QuestionStageIndex,
+	STAGE_DECIDED,
+} from '@/helpers/questionStage';
 import { areAnswersComplete, countRated, latestRatingAt, rankableAnswers } from './resultsLogic';
 import { isLiveResultsOn } from '@/helpers/liveResults';
 
@@ -110,10 +115,7 @@ export function useQuestionScreenData(statement: Statement | undefined): Questio
 			}),
 			isDeadlinePassed,
 			isHalted,
-			canRate:
-				statement?.statementSettings?.enableEvaluation !== false &&
-				!isHalted &&
-				stage !== STAGE_DECIDED,
+			canRate: canRateQuestion(statement, stage, isHalted),
 			showLiveResults: isLiveResultsOn(statement),
 			canAddAnswer:
 				isAddAnswerEnabled(addState) &&

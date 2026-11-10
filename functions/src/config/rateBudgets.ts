@@ -57,6 +57,10 @@ export const RATE_BUDGETS = {
 	detectStatementType: budget('detectStatementType', 120, 30000),
 	checkProfanity: budget('checkProfanity', 120, 30000),
 
+	// A person asks once per few answers rated, plus a call when they reopen the tab.
+	// No IP budget: a whole school rates at once from one address.
+	getAnswerBatch: budget('getAnswerBatch', 300, 500000),
+
 	improveSuggestion: budget('improveSuggestion', 30, 10000, SCHOOL_IP_HOUR),
 	analyzeFalsifiability: budget('analyzeFalsifiability', 30, 5000, SCHOOL_IP_HOUR),
 	refineIdea: budget('refineIdea', 60, 5000, SCHOOL_IP_HOUR),

@@ -12,8 +12,8 @@
  * older integration path).
  */
 
-import { Statement } from '@freedi/shared-types';
-import { isDerivedStatement } from './derivedStatements';
+import type { Statement } from '../../models/statement/StatementTypes';
+import { isDerivedStatement } from '../derivedStatement';
 
 /**
  * Build a memberId -> clusterId map from the cluster docs present in a

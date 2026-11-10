@@ -5719,5 +5719,11 @@
   "to": "naar",
   "{count} evaluators": "{count} mensen beoordeelden",
   "{pct}% agree": "{pct}% is het eens",
-  "…and {count} more": "…en nog {count}"
+  "…and {count} more": "…en nog {count}",
+  "Rate": "Beoordelen",
+  "See all answers": "Alle antwoorden bekijken",
+  "Back to rating": "Terug naar beoordelen",
+  "{n} answers in this question": "{n} antwoorden bij deze vraag",
+  "No more answers to rate right now": "Op dit moment geen antwoorden meer te beoordelen",
+  "Could not load everything. Please try again.": "Niet alles kon worden geladen. Probeer het opnieuw."
 }
