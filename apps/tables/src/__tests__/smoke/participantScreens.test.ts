@@ -1,7 +1,15 @@
 // @vitest-environment jsdom
 import m from 'mithril';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { NOW, SESSION_ID, makeParticipant, makeRun, makeSession, makeTopic } from '../fixtures';
+import {
+	NOW,
+	SESSION_ID,
+	makeParticipant,
+	makeRosterEntry,
+	makeRun,
+	makeSession,
+	makeTopic,
+} from '../fixtures';
 import { emptyStore, renderScreen, unmountAll } from './testHarness';
 import type { FakeStore } from './testHarness';
 
@@ -309,8 +317,8 @@ describe('participant preferences (direct)', () => {
 
 	it('shows free seats when occupancy is readable', async () => {
 		hoisted.store.current.everyone = [
-			makeParticipant('u2', { chosenTableIndex: 0 }),
-			makeParticipant('u3', { chosenTableIndex: 0 }),
+			makeRosterEntry('u2', { chosenTableIndex: 0 }),
+			makeRosterEntry('u3', { chosenTableIndex: 0 }),
 		];
 
 		const { text } = await renderScreen(ParticipantPreferences, ID);

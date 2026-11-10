@@ -1,6 +1,6 @@
 import m from 'mithril';
 import type {
-	TableAssignmentParticipant,
+	TableAssignmentRosterEntry,
 	TableAssignmentRun,
 	TableAssignmentTopic,
 } from '@freedi/shared-types';
@@ -41,7 +41,7 @@ export function tableViewsFromRun(
 /** Direct mode: tables are derived from the topics, members are whoever joined that index. */
 export function tableViewsFromDirect(
 	tables: readonly DirectTable[],
-	participants: readonly TableAssignmentParticipant[],
+	participants: readonly TableAssignmentRosterEntry[],
 ): TableView[] {
 	return tables.map((table) => ({
 		number: table.number,

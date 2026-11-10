@@ -88,8 +88,6 @@ const en: Record<string, string> = {
 	'tableAssignment.count.topics': 'Topics',
 	'tableAssignment.count.registered': 'Registered',
 	'tableAssignment.count.withPreferences': 'With preferences',
-	'tableAssignment.count.withPosition': 'With a position',
-	'tableAssignment.count.notSpecified': 'Not specified',
 
 	'tableAssignment.next.addTopics': 'Add the topics people will discuss.',
 	'tableAssignment.next.addTopics.button': 'Add topics',

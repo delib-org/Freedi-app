@@ -43,8 +43,6 @@ const ParticipantsBody: m.ClosureComponent<ParticipantsBodyAttrs> = () => {
 						[
 							['registered', summary.registered],
 							['withPreferences', summary.withPreferences],
-							['withPosition', summary.withPosition],
-							['notSpecified', summary.notSpecified],
 						].map(([key, value]) =>
 							m('div.counts__item', { key: String(key) }, [
 								m('dt', t(`tableAssignment.count.${key}`)),

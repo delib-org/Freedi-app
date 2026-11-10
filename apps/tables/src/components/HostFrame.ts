@@ -1,16 +1,12 @@
 import m from 'mithril';
 import type {
 	TableAssignment,
-	TableAssignmentParticipant,
+	TableAssignmentRosterEntry,
 	TableAssignmentTopic,
 } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { LiveValue } from '@/lib/live';
-import {
-	subscribeParticipants,
-	subscribeSession,
-	subscribeTopics,
-} from '@/lib/tableAssignment/data';
+import { subscribeRoster, subscribeSession, subscribeTopics } from '@/lib/tableAssignment/data';
 import { combineStates } from '@/logic/loadable';
 import { HostGate } from '@/components/HostGate';
 import { Shell } from '@/components/Shell';
@@ -22,7 +18,7 @@ export interface HostContext {
 	uid: string;
 	session: TableAssignment;
 	topics: TableAssignmentTopic[];
-	participants: TableAssignmentParticipant[];
+	participants: TableAssignmentRosterEntry[];
 }
 
 export interface HostFrameAttrs {
@@ -48,7 +44,7 @@ export const HostFrame: m.ClosureComponent<HostFrameAttrs> = (initial) => {
 	const sessionId = initial.attrs.sessionId;
 	const session = new LiveValue('session', subscribeSession(sessionId));
 	const topics = new LiveValue('topics', subscribeTopics(sessionId));
-	const participants = new LiveValue('participants', subscribeParticipants(sessionId));
+	const participants = new LiveValue('participants', subscribeRoster(sessionId));
 	const needsTopics = !!initial.attrs.topics;
 	const needsParticipants = !!initial.attrs.participants;
 

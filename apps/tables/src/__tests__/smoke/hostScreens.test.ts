@@ -4,7 +4,7 @@ import {
 	HOST_UID,
 	NOW,
 	SESSION_ID,
-	makeParticipant,
+	makeRosterEntry,
 	makeRun,
 	makeSession,
 	makeTopic,
@@ -44,7 +44,7 @@ vi.mock('@/lib/tableAssignment/data', () => {
 		subscribeHostSessions: () => sub((s) => s.hostSessions),
 		subscribeSession: () => sub((s) => s.session),
 		subscribeTopics: () => sub((s) => s.topics, true),
-		subscribeParticipants: () => sub((s) => s.everyone),
+		subscribeRoster: () => sub((s) => s.everyone),
 		subscribeMyParticipant: () => sub((s) => s.me),
 		subscribeRun: () => sub((s) => s.run),
 		subscribeRuns: () => sub((s) => s.runs),
@@ -180,18 +180,20 @@ describe('host settings', () => {
 });
 
 describe('host participants', () => {
-	it('shows counts and names, never individual positions', async () => {
+	it('shows counts and names, and no position or not-specified rows', async () => {
 		hoisted.store.current.session = makeSession({ status: 'registrationOpen' });
 		hoisted.store.current.everyone = [
-			makeParticipant('u1', { position: 33, preferences: ['a'] }),
-			makeParticipant('u2'),
+			makeRosterEntry('u1', { hasPreferences: true }),
+			makeRosterEntry('u2'),
 		];
 
 		const { text } = await renderScreen(HostParticipants, ID);
 
 		expect(text).toContain('Name u1');
 		expect(text).toContain(en['tableAssignment.control.registrationClosed']);
-		expect(text).not.toContain('33');
+		expect(text).toContain(en['tableAssignment.count.withPreferences']);
+		expect(text).not.toContain('With a position');
+		expect(text).not.toContain('Not specified');
 	});
 
 	it('shows the empty state with the link', async () => {
@@ -206,9 +208,9 @@ describe('host preview', () => {
 		hoisted.store.current.session = makeSession({ status: 'registrationClosed' });
 		hoisted.store.current.topics = [makeTopic('a', 0), makeTopic('b', 1)];
 		hoisted.store.current.everyone = [
-			makeParticipant('u1'),
-			makeParticipant('u2'),
-			makeParticipant('u3'),
+			makeRosterEntry('u1'),
+			makeRosterEntry('u2'),
+			makeRosterEntry('u3'),
 		];
 	};
 
@@ -238,7 +240,7 @@ describe('host preview', () => {
 
 	it('blocks a stale draft with a message', async () => {
 		closed();
-		hoisted.store.current.everyone.push(makeParticipant('u4'));
+		hoisted.store.current.everyone.push(makeRosterEntry('u4'));
 		hoisted.store.current.runs = [makeRun()];
 
 		const { text, root } = await renderScreen(HostPreview, ID);
@@ -261,7 +263,7 @@ describe('host preview', () => {
 	it('has no preview in direct mode: it shows the tables filling', async () => {
 		hoisted.store.current.session = makeSession({ mode: 'direct', status: 'registrationOpen' });
 		hoisted.store.current.topics = [makeTopic('a', 0)];
-		hoisted.store.current.everyone = [makeParticipant('u1', { chosenTableIndex: 0 })];
+		hoisted.store.current.everyone = [makeRosterEntry('u1', { chosenTableIndex: 0 })];
 
 		const { text } = await renderScreen(HostPreview, ID);
 
@@ -280,7 +282,7 @@ describe('host assignment', () => {
 	it('prints the published tables with their version', async () => {
 		hoisted.store.current.session = makeSession({ status: 'published', publishedRunId: 'run-1' });
 		hoisted.store.current.topics = [makeTopic('a', 0), makeTopic('b', 1)];
-		hoisted.store.current.everyone = [makeParticipant('u1'), makeParticipant('u3')];
+		hoisted.store.current.everyone = [makeRosterEntry('u1'), makeRosterEntry('u3')];
 		hoisted.store.current.run = makeRun({ status: 'published', publishedAt: NOW });
 
 		const { text } = await renderScreen(HostAssignment, ID);

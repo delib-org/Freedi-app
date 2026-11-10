@@ -2,6 +2,7 @@ import m from 'mithril';
 import type {
 	TableAssignment,
 	TableAssignmentParticipant,
+	TableAssignmentRosterEntry,
 	TableAssignmentRun,
 	TableAssignmentTopic,
 } from '@freedi/shared-types';
@@ -14,7 +15,7 @@ import type {
 export interface FakeStore {
 	session: TableAssignment | null;
 	topics: TableAssignmentTopic[];
-	everyone: TableAssignmentParticipant[];
+	everyone: TableAssignmentRosterEntry[];
 	me: TableAssignmentParticipant | null;
 	runs: TableAssignmentRun[];
 	run: TableAssignmentRun | null;

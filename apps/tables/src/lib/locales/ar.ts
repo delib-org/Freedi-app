@@ -88,8 +88,6 @@ const ar: Record<string, string> = {
 	'tableAssignment.count.topics': 'المواضيع',
 	'tableAssignment.count.registered': 'المسجّلون',
 	'tableAssignment.count.withPreferences': 'لديهم تفضيلات',
-	'tableAssignment.count.withPosition': 'لديهم موقف',
-	'tableAssignment.count.notSpecified': 'غير محدد',
 
 	'tableAssignment.next.addTopics': 'أضف المواضيع التي سيناقشها المشاركون.',
 	'tableAssignment.next.addTopics.button': 'إضافة مواضيع',

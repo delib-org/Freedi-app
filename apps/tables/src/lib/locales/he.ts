@@ -87,8 +87,6 @@ const he: Record<string, string> = {
 	'tableAssignment.count.topics': 'נושאים',
 	'tableAssignment.count.registered': 'נרשמים',
 	'tableAssignment.count.withPreferences': 'עם העדפות',
-	'tableAssignment.count.withPosition': 'עם עמדה',
-	'tableAssignment.count.notSpecified': 'לא צוין',
 
 	'tableAssignment.next.addTopics': 'מוסיפים נושאים לדיון.',
 	'tableAssignment.next.addTopics.button': 'הוספת נושאים',

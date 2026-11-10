@@ -1,6 +1,7 @@
 import type {
 	TableAssignment,
 	TableAssignmentParticipant,
+	TableAssignmentRosterEntry,
 	TableAssignmentRun,
 	TableAssignmentTopic,
 } from '@freedi/shared-types';
@@ -41,6 +42,21 @@ export function makeParticipant(
 		fullName: `Name ${uid}`,
 		preferences: [],
 		registeredAt: NOW,
+		...patch,
+	};
+}
+
+export function makeRosterEntry(
+	uid: string,
+	patch: Partial<TableAssignmentRosterEntry> = {},
+): TableAssignmentRosterEntry {
+	return {
+		sessionId: SESSION_ID,
+		uid,
+		fullName: `Name ${uid}`,
+		nameKey: `name ${uid}`,
+		registeredAt: NOW,
+		hasPreferences: false,
 		...patch,
 	};
 }

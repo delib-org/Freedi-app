@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { makeParticipant, makeRun, makeSession, makeTopic } from '../../__tests__/fixtures';
+import { makeRosterEntry, makeRun, makeSession, makeTopic } from '../../__tests__/fixtures';
 import { classifyError, errorCode, errorMessageKey } from '../callableErrors';
 import {
 	deriveDirectTables,
@@ -230,17 +230,15 @@ describe('topics', () => {
 
 describe('participants', () => {
 	const people = [
-		makeParticipant('u1', { preferences: ['a'], position: 20, registeredAt: 2 }),
-		makeParticipant('u2', { registeredAt: 1 }),
-		makeParticipant('u3', { preferences: ['b'], position: 0, registeredAt: 3 }),
+		makeRosterEntry('u1', { hasPreferences: true, registeredAt: 2 }),
+		makeRosterEntry('u2', { registeredAt: 1 }),
+		makeRosterEntry('u3', { hasPreferences: true, registeredAt: 3 }),
 	];
 
-	it('counts, treating position 0 as specified', () => {
+	it('counts registrations and who has ranked', () => {
 		expect(summarizeParticipants(people)).toEqual({
 			registered: 3,
 			withPreferences: 2,
-			withPosition: 2,
-			notSpecified: 1,
 		});
 	});
 
@@ -332,8 +330,8 @@ describe('direct tables', () => {
 
 	it('counts free seats from the joined participants', () => {
 		const joined = [
-			makeParticipant('u1', { chosenTableIndex: 2 }),
-			makeParticipant('u2', { chosenTableIndex: 2 }),
+			makeRosterEntry('u1', { chosenTableIndex: 2 }),
+			makeRosterEntry('u2', { chosenTableIndex: 2 }),
 		];
 		const tables = deriveDirectTables(topics, seatCountsFromParticipants(joined), 2);
 
