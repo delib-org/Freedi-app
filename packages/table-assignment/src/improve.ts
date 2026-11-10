@@ -10,6 +10,8 @@ export interface SearchOptions {
 	maxRanked: number;
 	tolerance: number;
 	locked: ReadonlySet<number>;
+	/** Stop after this many evaluated swaps and keep the seating reached so far. */
+	maxSwapTries: number;
 }
 
 /** What the search tracks about a seating; also the score a restart is judged by. */
@@ -17,11 +19,14 @@ export interface SeatingScore {
 	preferenceScore: number;
 	maxDeviation: number;
 	sumDeviation: number;
+	/** Swaps evaluated to get here, the search's own measure of work. */
+	swapTries: number;
 }
 
 interface SearchState {
 	seating: Seating;
 	deviations: number[];
+	swapTries: number;
 	score: SeatingScore;
 }
 
@@ -43,7 +48,7 @@ export function improveBySwaps(
 	runPasses(participants, plans, population, options, state, rng, 'balance');
 	runPasses(participants, plans, population, options, state, rng, 'preference');
 
-	return state.score;
+	return { ...state.score, swapTries: state.swapTries };
 }
 
 type Phase = 'balance' | 'preference';
@@ -63,6 +68,7 @@ function runPasses(
 	phase: Phase,
 ): void {
 	for (let pass = 0; pass < MAX_IMPROVEMENT_PASSES; pass++) {
+		if (state.swapTries >= options.maxSwapTries) break;
 		if (phase === 'balance' && state.score.maxDeviation <= options.tolerance) break;
 		const swapped = onePass(participants, plans, population, options, state, rng, phase);
 		if (!swapped) break;
@@ -100,10 +106,12 @@ function initialState(
 	return {
 		seating,
 		deviations,
+		swapTries: 0,
 		score: {
 			preferenceScore,
 			maxDeviation: Math.max(0, ...deviations),
 			sumDeviation: sum(deviations),
+			swapTries: 0,
 		},
 	};
 }
@@ -119,6 +127,7 @@ function onePass(
 ): boolean {
 	let swapped = false;
 	for (const [a, b] of shuffle(tablePairs(plans.length), rng)) {
+		if (state.swapTries >= options.maxSwapTries) break;
 		const maxElsewhere = Math.max(0, ...state.deviations.filter((_, t) => t !== a && t !== b));
 		for (let ia = 0; ia < state.seating[a].length; ia++) {
 			for (let ib = 0; ib < state.seating[b].length; ib++) {
@@ -159,6 +168,7 @@ function trySwap(
 	const pa = state.seating[a][ia];
 	const pb = state.seating[b][ib];
 	if (options.locked.has(pa) || options.locked.has(pb)) return false;
+	state.swapTries++;
 
 	const gain = preferenceGain(
 		participants[pa],
@@ -180,6 +190,7 @@ function trySwap(
 		maxDeviation: Math.max(maxElsewhere, devA, devB),
 		sumDeviation:
 			state.score.sumDeviation - state.deviations[a] - state.deviations[b] + devA + devB,
+		swapTries: 0,
 	};
 	const accepted =
 		phase === 'balance' ? evensOut(state.score, next) : accepts(state.score, next, options.tolerance);

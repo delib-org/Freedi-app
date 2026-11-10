@@ -3,6 +3,7 @@ import {
 	BALANCE_TOLERANCE_DEFAULT,
 	MAX_RANKED_PREFERENCES,
 	RESTARTS_DEFAULT,
+	SWAP_TRIES_DEFAULT,
 	TABLE_SIZE_DEFAULT,
 } from './constants';
 import { TableAssignmentError } from './errors';
@@ -19,6 +20,7 @@ interface ResolvedOptions {
 	tolerance: number;
 	restarts: number;
 	seed: number;
+	maxSwapTries: number;
 	locked: Readonly<Record<string, number>>;
 }
 
@@ -43,16 +45,19 @@ export function assignTables(
 	const rng = createRng(resolved.seed);
 
 	let best: { seating: Seating; score: SeatingScore } | undefined;
+	let triesLeft = resolved.maxSwapTries;
 	for (let restart = 0; restart < resolved.restarts; restart++) {
+		if (best && triesLeft <= 0) break;
 		const seating = dealSnake(participants, plans, resolved.locked, rng);
 		const score = improveBySwaps(
 			participants,
 			plans,
 			seating,
 			population,
-			{ maxRanked: resolved.maxRanked, tolerance: resolved.tolerance, locked: lockedIndexes },
+			{ maxRanked: resolved.maxRanked, tolerance: resolved.tolerance, locked: lockedIndexes, maxSwapTries: triesLeft },
 			rng,
 		);
+		triesLeft -= score.swapTries;
 		if (!best || isBetter(score, best.score, resolved.tolerance)) best = { seating, score };
 	}
 
@@ -88,6 +93,7 @@ function resolveOptions(options: AssignmentOptions): ResolvedOptions {
 		tolerance: options.balanceTolerance ?? BALANCE_TOLERANCE_DEFAULT,
 		restarts: options.restarts ?? RESTARTS_DEFAULT,
 		seed: options.seed ?? Date.now(),
+		maxSwapTries: options.maxSwapTries ?? SWAP_TRIES_DEFAULT,
 		locked: options.locked ?? {},
 	};
 }

@@ -10,3 +10,5 @@ export const IMPROVEMENT_EPSILON = 1e-9;
 export const LOWER_RANK_DEMAND_FACTOR = 0.01;
 /** An axis whose sd is below this share of max(1, |mean|) is treated as one shared value. */
 export const CONSTANT_AXIS_RELATIVE_SD = 1e-9;
+/** Swaps the search may evaluate over all restarts of one run; a count, never a clock, so a seed still gives the same room. */
+export const SWAP_TRIES_DEFAULT = 50_000_000;

@@ -33,6 +33,11 @@ export interface AssignmentOptions {
 	balanceTolerance?: number;
 	/** Independent deal-and-improve runs; the best is returned. Default RESTARTS_DEFAULT. */
 	restarts?: number;
+	/**
+	 * Most swaps the search may evaluate over all restarts. When it runs out the
+	 * best seating so far is returned. Default SWAP_TRIES_DEFAULT.
+	 */
+	maxSwapTries?: number;
 	/** Seed of the lottery. The same seed and input always give the same output. */
 	seed?: number;
 	/**
