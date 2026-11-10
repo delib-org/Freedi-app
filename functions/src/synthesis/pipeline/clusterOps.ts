@@ -1,6 +1,6 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
-import { Collections, type Statement, StatementType, getRandomUID } from '@freedi/shared-types';
+import { Collections, type Statement, StatementType, getRandomUID, inheritedAccessScope } from '@freedi/shared-types';
 import {
 	generateSynthesizedProposal,
 	generateTopicLabel,
@@ -394,6 +394,7 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 		// queries/selectors that filter on parents[] (e.g. the cluster map).
 		// Without it the map drops auto-generated clusters and shows flat mode.
 		parents: [...(parentStatement.parents ?? []), parentStatement.statementId],
+		...inheritedAccessScope(parentStatement),
 		topParentId: option.topParentId ?? option.parentId,
 		creatorId: option.creatorId,
 		creator: option.creator,
@@ -561,6 +562,7 @@ export async function spawnSingletonClaimCluster(input: SingletonSpawnInput): Pr
 		statementType: StatementType.option,
 		parentId: option.parentId,
 		parents: [...(parentStatement.parents ?? []), parentStatement.statementId],
+		...inheritedAccessScope(parentStatement),
 		topParentId: option.topParentId ?? option.parentId,
 		creatorId: option.creatorId,
 		creator: option.creator,

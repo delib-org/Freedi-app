@@ -11,6 +11,7 @@ import {
 	SourceApp,
 	statementToSimpleStatement,
 	getRandomUID,
+	inheritedAccessScope,
 } from '@freedi/shared-types';
 import { db } from './index';
 import { embeddingService } from './services/embedding-service';
@@ -464,6 +465,7 @@ async function splitStatementIntoParagraphs(statement: Statement): Promise<void>
 				parentId: statement.statementId,
 				topParentId: statement.topParentId,
 				parents: [...(statement.parents || []), statement.statementId],
+				...inheritedAccessScope(statement),
 				creatorId: statement.creatorId,
 				creator: statement.creator,
 				createdAt: childCreatedAt,

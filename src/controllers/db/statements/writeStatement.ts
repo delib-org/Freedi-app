@@ -101,8 +101,9 @@ export const setStatementToDB = async ({
 		statement.lastUpdate = new Date().getTime();
 		statement.createdAt = statement?.createdAt || new Date().getTime();
 
-		// Always ensure membership is set - default to openToAll if not provided
-		if (!statement.membership) {
+		// Only a top statement gets a default. A child with no setting inherits, so
+		// an ordinary child of a private group stays private.
+		if (!statement.membership && parentId === 'top') {
 			statement.membership = { access: Access.openToAll };
 		}
 

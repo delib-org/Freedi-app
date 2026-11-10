@@ -1,5 +1,5 @@
 import { logger } from 'firebase-functions';
-import { Collections, getRandomUID, StatementType } from '@freedi/shared-types';
+import { Collections, getRandomUID, StatementType, inheritedAccessScope } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import {
 	computeClusterEvaluationFromRawEvals,
@@ -82,6 +82,7 @@ function buildSyntheticOption(
 		statementId: id,
 		parentId: parent.statementId,
 		parents: [...(parent.parents || []), parent.statementId],
+		...inheritedAccessScope(parent),
 		topParentId: parent.topParentId,
 		statementType: StatementType.option,
 		createdAt: Date.now(),
@@ -114,6 +115,7 @@ function buildClusterStatement(
 			statementId: id,
 			parentId: parent.statementId,
 			parents: [...(parent.parents || []), parent.statementId],
+			...inheritedAccessScope(parent),
 			topParentId: parent.topParentId,
 			statementType: StatementType.option,
 			createdAt: Date.now(),

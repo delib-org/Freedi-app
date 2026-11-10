@@ -52,6 +52,7 @@ export async function promoteOptionToSubQuestion(
 			statementType: StatementType.question,
 			parentId: parentStatement.statementId,
 			topParentId: parentStatement.topParentId || parentStatement.statementId,
+			parentAccessScope: parentStatement.accessScope,
 			creatorId: creator.uid,
 			creator,
 			statementId: deterministicId,

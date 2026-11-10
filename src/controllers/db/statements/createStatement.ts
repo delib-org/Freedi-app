@@ -20,6 +20,7 @@ import {
 	Paragraph,
 	SourceApp,
 	evaluationType as EvalType,
+	newStatementAccessScope,
 } from '@freedi/shared-types';
 
 import { parse } from 'valibot';
@@ -107,8 +108,10 @@ export function createStatement({
 			...(defaultLanguage && { defaultLanguage: defaultLanguage }),
 			creatorId: creator.uid,
 			sourceApp: SourceApp.MAIN,
-			// Always set membership - either provided, or default to openToAll
-			membership: membership || { access: Access.openToAll },
+			// A child with no setting inherits. Only a top statement defaults to open.
+			...(membership
+				? { membership }
+				: parentId === 'top' && { membership: { access: Access.openToAll } }),
 			statementSettings: {
 				evaluationType: evalType,
 				enhancedEvaluation: evalType === EvalType.range, // auto-derived from evaluationType
@@ -143,6 +146,12 @@ export function createStatement({
 			randomSeed: Math.random(),
 			results: [],
 		};
+
+		const accessScope = newStatementAccessScope(
+			newStatement,
+			parentStatement === 'top' ? null : parentStatement,
+		);
+		if (accessScope !== undefined) newStatement.accessScope = accessScope;
 
 		if (newStatement.statementType === StatementType.question) {
 			newStatement.questionSettings = {

@@ -234,6 +234,7 @@ export function createBasicStatement({
 		paragraphs,
 		statementType: statementType ?? StatementType.statement,
 		parentId: parentStatement.statementId,
+		parentAccessScope: parentStatement.accessScope,
 		topParentId: parentStatement.topParentId || parentStatement.statementId,
 		parents: [...(parentStatement.parents || []), parentStatement.statementId],
 		creatorId: user.uid,
@@ -329,11 +330,13 @@ export function createSuggestionStatement(
 	documentId: string,
 	creator: User,
 	reasoning?: string,
+	parentAccessScope?: string,
 ): Statement | undefined {
 	return createStatementObject({
 		statement: suggestedText,
 		statementType: StatementType.option,
 		parentId: officialParagraphId, // Child of the official paragraph
+		parentAccessScope,
 		topParentId: documentId,
 		creatorId: creator.uid,
 		creator,

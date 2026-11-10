@@ -543,7 +543,7 @@ export async function updateSuggestion(optionId: string, text: string): Promise<
 			for (let i = 0; i < bodyLines.length; i++) {
 				const child = createParagraphChildStatement({
 					content: bodyLines[i],
-					host: { statementId: optionId, topParentId },
+					host: { statementId: optionId, topParentId, accessScope: option.accessScope },
 					creator,
 					creatorId: creator.uid,
 					order: i,
@@ -873,6 +873,7 @@ export async function createSuggestion(text: string, asOrganizer?: boolean): Pro
 		statement: trimmed,
 		statementType: StatementType.option,
 		parentId: question.statementId,
+		parentAccessScope: question.accessScope,
 		topParentId: question.topParentId || question.statementId,
 		creatorId: creator.uid,
 		creator,
@@ -1214,6 +1215,7 @@ export async function createSubQuestion(mainId: string, title: string): Promise<
 		statement: trimmed,
 		statementType: StatementType.question,
 		parentId: mainId,
+		parentAccessScope: main?.accessScope,
 		topParentId,
 		parents,
 		creatorId: creator.uid,
@@ -1636,6 +1638,7 @@ export async function sendMessage(optionId: string, text: string): Promise<void>
 		statement: title,
 		statementType: StatementType.statement,
 		parentId: optionId,
+		parentAccessScope: allOptions.find((option) => option.statementId === optionId)?.accessScope,
 		topParentId,
 		creatorId: creator.uid,
 		creator,
@@ -1676,7 +1679,7 @@ export async function sendMessage(optionId: string, text: string): Promise<void>
 	for (let i = 0; i < bodyLines.length; i++) {
 		const child = createParagraphChildStatement({
 			content: bodyLines[i],
-			host: { statementId: parentStatement.statementId, topParentId },
+			host: { statementId: parentStatement.statementId, topParentId, accessScope: parentStatement.accessScope },
 			creator,
 			creatorId: creator.uid,
 			order: i,

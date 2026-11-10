@@ -1,7 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import pLimit from 'p-limit';
-import { Collections, Statement, StatementType, functionConfig } from '@freedi/shared-types';
+import { Collections, Statement, StatementType, functionConfig, inheritedAccessScope } from '@freedi/shared-types';
 import { logger } from 'firebase-functions';
 import { ALLOWED_ORIGINS } from './config/cors';
 import { embeddingCache } from './services/embedding-cache-service';
@@ -1083,6 +1083,7 @@ export const regenerateSynthesisProposal = onCall<RegenerateProposalRequest>(
 				statementType: StatementType.paragraph,
 				parentId: clusterStatementId,
 				topParentId: cluster.topParentId || parentStatementId,
+				...inheritedAccessScope(parentStatement),
 				parents: [...parentParents, parentStatementId, clusterStatementId],
 				creatorId: userId,
 				creator: cluster.creator ?? {

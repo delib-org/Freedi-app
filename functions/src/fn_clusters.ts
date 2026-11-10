@@ -5,6 +5,7 @@ import {
 	StatementSchema,
 	StatementSnapShot,
 	StatementType,
+	inheritedAccessScope,
 } from '@freedi/shared-types';
 import { Response, Request, logger } from 'firebase-functions/v1';
 import { parse } from 'valibot';
@@ -136,6 +137,7 @@ export async function getCluster(req: Request, res: Response, uid: string) {
 				statementId: id,
 				parentId: topic.statementId,
 				parents: [...(topic.parents || []), topic.statementId],
+				...inheritedAccessScope(topic),
 				topParentId: topic.topParentId,
 				statementType: StatementType.option,
 				createdAt: new Date().getTime(),

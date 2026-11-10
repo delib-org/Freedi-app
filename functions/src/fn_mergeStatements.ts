@@ -10,6 +10,7 @@ import {
 	getResearchLogId,
 	isMeaningfulSuggestion,
 	MIN_MEANINGFUL_WORDS,
+	inheritedAccessScope,
 } from '@freedi/shared-types';
 import { mergeAndReorganizeParagraphs, ParagraphForMerge } from './services/ai-service';
 import { generateParagraphId } from './helpers';
@@ -200,6 +201,7 @@ export async function mergeStatements(
 			statementType: StatementType.option,
 			parentId: questionId,
 			topParentId: questionData.topParentId || questionId,
+			...inheritedAccessScope(questionData),
 			creatorId: userId,
 			creator: {
 				uid: userId,

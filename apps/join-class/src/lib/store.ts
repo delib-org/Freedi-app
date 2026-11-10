@@ -445,6 +445,7 @@ export async function createSubQuestion(
 		statement: trimmed,
 		statementType: StatementType.question,
 		parentId: mainId,
+		parentAccessScope: main?.accessScope,
 		topParentId,
 		parents,
 		creatorId: creator.uid,

@@ -372,14 +372,23 @@ describe('createStatement', () => {
 	});
 
 	describe('default settings', () => {
-		it('should set default membership to openToAll when not provided', () => {
+		it('should store no own setting on a child when none is chosen', () => {
 			const result = createStatement({
 				text: 'Valid text',
 				parentStatement: mockParentStatement as never,
 				statementType: StatementType.option as never,
 			});
 
-			expect(result?.membership).toBeDefined();
+			expect(result?.membership).toBeUndefined();
+		});
+
+		it('should default a top statement to openToAll', () => {
+			const result = createStatement({
+				text: 'Valid text',
+				parentStatement: 'top',
+				statementType: StatementType.group as never,
+			});
+
 			expect((result?.membership as Record<string, unknown>)?.access).toBe('openToAll');
 		});
 

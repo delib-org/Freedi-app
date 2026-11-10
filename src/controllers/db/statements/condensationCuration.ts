@@ -360,6 +360,7 @@ export async function createEmptyCluster(args: {
 			statement: trimmed,
 			statementType: StatementType.option,
 			parentId: args.parentStatement.statementId,
+			parentAccessScope: args.parentStatement.accessScope,
 			topParentId: args.parentStatement.topParentId ?? args.parentStatement.statementId,
 			parents: [...(args.parentStatement.parents ?? []), args.parentStatement.statementId].filter(
 				Boolean,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getVerifiedDisplayName, getVerifiedIdentity, getVerifiedUserId } from '@/lib/auth/requestIdentity';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
-import { Collections, StatementType, Access, Role, ResultsBy, CutoffBy, evaluationType } from '@freedi/shared-types';
+import { Collections, StatementType, Access, Role, ResultsBy, CutoffBy, evaluationType, OPEN_ACCESS_SCOPE } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 
 interface CreateGroupBody {
@@ -70,9 +70,10 @@ function buildStatementData({
     consensus: 0,
     color: getRandomColor(),
     randomSeed: Math.random(),
-    membership: {
-      access: Access.openToAll,
-    },
+    // Only a top statement gets a default; a child with no setting inherits.
+    ...(parentId === 'top' && { membership: { access: Access.openToAll } }),
+    // Everything this route creates sits under a group it just opened to all.
+    accessScope: OPEN_ACCESS_SCOPE,
     statementSettings: {
       evaluationType: evaluationType.range,
       enhancedEvaluation: true, // auto-derived from evaluationType

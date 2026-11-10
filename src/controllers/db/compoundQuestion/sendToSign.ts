@@ -25,6 +25,7 @@ export async function sendSolutionToSign({
 			statement: solution.statement,
 			statementType: StatementType.document,
 			parentId: compoundStatement.statementId,
+			parentAccessScope: compoundStatement.accessScope,
 			topParentId: compoundStatement.topParentId || compoundStatement.statementId,
 			creatorId: creator.uid,
 			creator,

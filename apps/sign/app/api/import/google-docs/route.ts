@@ -285,7 +285,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImportRes
         const paragraphStatement = createParagraphChildStatement(
           paragraphToFactoryParams(
             paragraph,
-            { statementId, topParentId: statementId },
+            { statementId, topParentId: statementId, accessScope: docData?.accessScope },
             creator,
             { isOfficial: true, sourceApp: SourceApp.SIGN },
           ),
