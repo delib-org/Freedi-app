@@ -157,6 +157,23 @@
 			outline: 3px solid var(--btn-primary, #5f88e5);
 			outline-offset: 3px;
 		}
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: default;
+			transform: none;
+		}
+
+		&--secondary {
+			color: var(--text-title, #191e29);
+			background: transparent;
+			border: 2px solid var(--btn-primary, #5f88e5);
+			box-shadow: none;
+
+			&:hover {
+				box-shadow: none;
+			}
+		}
 	}
 
 	// Footer stamp
