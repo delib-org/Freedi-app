@@ -56,6 +56,12 @@ describe('userLanguage', () => {
 				}),
 			);
 		});
+
+		it('never writes an unsupported language', async () => {
+			await saveUserLanguage('u1', 'xx');
+
+			expect(setDoc).not.toHaveBeenCalled();
+		});
 	});
 
 	describe('saveChosenLanguage', () => {
@@ -146,6 +152,95 @@ describe('userLanguage', () => {
 			syncUserLanguage('u1', NOT_DEFAULT);
 
 			expect(setDoc).not.toHaveBeenCalled();
+		});
+	});
+
+	// The once-a-session memory lives in the module, so each case uses its own person.
+	describe('first language, when none is stored', () => {
+		it('saves the untouched language on screen once', async () => {
+			setDevice(DEFAULT_LANGUAGE);
+
+			syncUserLanguage('first-untouched', undefined);
+			await flush();
+
+			expect(setDoc).toHaveBeenCalledTimes(1);
+			expect(setDoc).toHaveBeenCalledWith(
+				'usersV2/first-untouched',
+				{ defaultLanguage: DEFAULT_LANGUAGE },
+				{ merge: true },
+			);
+		});
+
+		it('treats an empty stored language as missing', () => {
+			setDevice(DEFAULT_LANGUAGE);
+
+			syncUserLanguage('first-empty', '');
+
+			expect(setDoc).toHaveBeenCalledTimes(1);
+		});
+
+		it('never overwrites a stored language with the untouched screen language', () => {
+			setDevice(DEFAULT_LANGUAGE);
+
+			syncUserLanguage('first-stored', NOT_DEFAULT);
+
+			expect(setDoc).not.toHaveBeenCalled();
+		});
+
+		it('does not write again on a repeat call', () => {
+			setDevice(DEFAULT_LANGUAGE);
+
+			syncUserLanguage('first-repeat', undefined);
+			syncUserLanguage('first-repeat', undefined);
+
+			expect(setDoc).toHaveBeenCalledTimes(1);
+		});
+
+		it('logs a failed write and does not throw', async () => {
+			setDevice(DEFAULT_LANGUAGE);
+			jest.mocked(setDoc).mockRejectedValue(new Error('denied'));
+
+			expect(() => syncUserLanguage('first-fails', undefined)).not.toThrow();
+			await flush();
+
+			expect(logError).toHaveBeenCalledWith(
+				expect.any(Error),
+				expect.objectContaining({
+					operation: 'user.userLanguage.saveUserLanguage',
+					userId: 'first-fails',
+				}),
+			);
+		});
+
+		it('does not write an unsupported language', () => {
+			setDevice('xx');
+
+			syncUserLanguage('first-unsupported', undefined);
+
+			expect(setDoc).not.toHaveBeenCalled();
+		});
+
+		it('does not write when the app has not recorded a language', () => {
+			setDevice(undefined);
+
+			syncUserLanguage('first-unknown', undefined);
+
+			expect(setDoc).not.toHaveBeenCalled();
+		});
+
+		it('logs a corrupt config and writes nothing', () => {
+			localStorage.setItem('userConfig', '{not json');
+
+			expect(() => syncUserLanguage('first-corrupt', undefined)).not.toThrow();
+
+			expect(setDoc).not.toHaveBeenCalled();
+			expect(logError).toHaveBeenCalledWith(
+				expect.any(Error),
+				expect.objectContaining({
+					operation: 'user.userLanguage.saveFirstLanguage',
+					userId: 'first-corrupt',
+				}),
+			);
 		});
 	});
 });

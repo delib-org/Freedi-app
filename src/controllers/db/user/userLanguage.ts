@@ -5,7 +5,7 @@
  */
 import { setDoc } from 'firebase/firestore';
 import { Collections } from '@freedi/shared-types';
-import { DEFAULT_LANGUAGE } from '@freedi/shared-i18n';
+import { DEFAULT_LANGUAGE, isValidLanguage } from '@freedi/shared-i18n';
 import { store } from '@/redux/store';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 import { createDocRef } from '@/utils/firebaseUtils';
@@ -13,7 +13,12 @@ import { logError } from '@/utils/errorHandling';
 
 const EXPLICIT_LANGUAGE_KEY = 'lang';
 
+/** People whose first language was already saved in this session. */
+const firstLanguageSavedFor = new Set<string>();
+
 export async function saveUserLanguage(uid: string, language: string): Promise<void> {
+	if (!isValidLanguage(language)) return;
+
 	try {
 		await setDoc(
 			createDocRef(Collections.users, uid),
@@ -35,6 +40,13 @@ export function saveChosenLanguage(language: string): void {
 	if (uid) void saveUserLanguage(uid, language);
 }
 
+/** The language the app is showing. UserConfigProvider keeps this entry current. */
+function languageOnScreen(): string | undefined {
+	const saved = localStorage.getItem(LocalStorageObjects.UserConfig);
+
+	return saved ? JSON.parse(saved).chosenLanguage : undefined;
+}
+
 /**
  * The language this person chose on this device, or undefined if they never
  * chose one. The app saves its config on every load, so an untouched default is
@@ -43,8 +55,7 @@ export function saveChosenLanguage(language: string): void {
 export function chosenLanguageOnDevice(): string | undefined {
 	try {
 		const explicit = localStorage.getItem(EXPLICIT_LANGUAGE_KEY) ?? undefined;
-		const saved = localStorage.getItem(LocalStorageObjects.UserConfig);
-		const shown: string | undefined = saved ? JSON.parse(saved).chosenLanguage : undefined;
+		const shown = languageOnScreen();
 
 		if (!shown) return explicit;
 
@@ -56,8 +67,29 @@ export function chosenLanguageOnDevice(): string | undefined {
 	}
 }
 
-/** At sign-in: saves the device's choice when the server has none or a different one. */
+/** Someone with no stored language gets the one on screen, at most once a session. */
+function saveFirstLanguage(uid: string): void {
+	if (firstLanguageSavedFor.has(uid)) return;
+
+	try {
+		const language = languageOnScreen() ?? localStorage.getItem(EXPLICIT_LANGUAGE_KEY);
+		if (!language) return;
+
+		firstLanguageSavedFor.add(uid);
+		void saveUserLanguage(uid, language);
+	} catch (error) {
+		logError(error, { operation: 'user.userLanguage.saveFirstLanguage', userId: uid });
+	}
+}
+
+/** At sign-in: fills in a missing language, or saves a language picked on this device. */
 export function syncUserLanguage(uid: string, serverLanguage: string | undefined): void {
+	if (!serverLanguage) {
+		saveFirstLanguage(uid);
+
+		return;
+	}
+
 	const chosen = chosenLanguageOnDevice();
 	if (chosen && chosen !== serverLanguage) void saveUserLanguage(uid, chosen);
 }
