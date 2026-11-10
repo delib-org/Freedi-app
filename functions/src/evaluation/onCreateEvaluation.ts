@@ -17,7 +17,10 @@ import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
 import { recordEvaluatorParticipation } from './evaluatorParticipation';
 import { trackEvaluationEngagement } from '../engagement/credits/trackEngagement';
-import { checkSocialProofMilestone } from '../engagement/notifications/socialProofTrigger';
+import {
+	checkConsensusShift,
+	checkSocialProofMilestone,
+} from '../engagement/notifications/socialProofTrigger';
 import { onEvaluationCreatedStats } from '../fn_adminStats';
 import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
 import { writeHistoryEntry } from '../statements/history/writeHistoryEntry';
@@ -171,6 +174,8 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 			checkSocialProofMilestone(statement, evaluatorCount).catch((err) =>
 				logger.warn('Social proof check failed:', err),
 			);
+
+			await checkConsensusShift(statement);
 		}
 
 		// Mark hybrid embedding as stale (non-blocking) — sweep checks setting before processing

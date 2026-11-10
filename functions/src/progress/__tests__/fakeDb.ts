@@ -110,6 +110,7 @@ export interface FakeDb {
 export interface TransactionLike {
 	get: (ref: Ref) => Promise<Snap>;
 	set: (ref: Ref, data: Doc, opts?: { merge?: boolean }) => void;
+	create: (ref: Ref, data: Doc) => void;
 	update: (ref: Ref, data: Doc) => void;
 }
 
@@ -200,6 +201,12 @@ export function createFakeDb(): FakeDb {
 				fn({
 					get: async (ref) => snapOf(ref.collection, ref.id),
 					set: (ref, data, opts) => writeDoc(ref.collection, ref.id, data, !!opts?.merge),
+					create: (ref, data) => {
+						if (col(ref.collection).has(ref.id)) {
+							throw Object.assign(new Error(`Document already exists: ${ref.id}`), { code: 6 });
+						}
+						writeDoc(ref.collection, ref.id, data, false);
+					},
 					update: (ref, data) => writeDoc(ref.collection, ref.id, data, true),
 				}),
 		},

@@ -20,6 +20,7 @@ import { generateDescriptionFromChildren } from './helpers';
 import { classifyChildUpdate } from './userFeed/classifyChildUpdate';
 import { recordDiscussionActivity } from './userFeed/recordDiscussionActivity';
 import { recordMessageDeleted } from './unread/messageCounter';
+import { sendDecidedNoticesOnStageChange } from './engagement/notifications/decidedNotices';
 import { writeHistoryEntry } from './statements/history/writeHistoryEntry';
 import { isResearchEnabledForTopParent } from './statements/history/isResearchEnabled';
 import {
@@ -68,6 +69,9 @@ export const updateParentOnChildUpdate = onDocumentUpdated(
 		try {
 			const before = event.data?.before.data() as Statement | undefined;
 			const after = event.data?.after.data() as Statement | undefined;
+
+			// Before the parent check: a top-level question can reach Decided too.
+			if (before && after) await sendDecidedNoticesOnStageChange(before, after);
 
 			// Skip if no data or no parent or if parent is 'top'
 			if (!before || !after || !after.parentId || after.parentId === 'top') return;

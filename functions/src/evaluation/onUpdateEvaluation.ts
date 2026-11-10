@@ -16,6 +16,7 @@ import { dropEvaluationOnTheme } from './themeGuard';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
 import { recordEvaluatorParticipation } from './evaluatorParticipation';
+import { checkConsensusShift } from '../engagement/notifications/socialProofTrigger';
 import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
 import { writeHistoryEntry } from '../statements/history/writeHistoryEntry';
 import { isResearchEnabledForTopParent } from '../statements/history/isResearchEnabled';
@@ -92,6 +93,8 @@ export async function updateEvaluation(
 			demographicAnchorId: after.demographicAnchorId,
 		};
 		updateUserDemographicEvaluation(statement, userEvalData);
+
+		await checkConsensusShift(statement);
 
 		// Ship 3a: enqueue cluster recompute(s) when this statement belongs to
 		// any synth cluster. Same pattern as onCreateEvaluation. Behind

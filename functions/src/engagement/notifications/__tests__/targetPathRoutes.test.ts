@@ -16,6 +16,7 @@ const NOTIFICATION_SOURCES = [
 	join(ENGAGEMENT, 'scheduled', 'dailyDigest.ts'),
 	join(ENGAGEMENT, 'scheduled', 'weeklyDigest.ts'),
 	join(ENGAGEMENT, 'notifications', 'socialProofTrigger.ts'),
+	join(ENGAGEMENT, 'notifications', 'decidedNotices.ts'),
 ];
 
 const ROUTE_TABLES = [
