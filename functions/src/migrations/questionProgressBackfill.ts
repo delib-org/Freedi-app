@@ -30,7 +30,7 @@ import {
 } from '@freedi/shared-types';
 import { db } from '../db';
 import { collectParticipation, ParticipationSets } from '../progress/fn_recomputeQuestionProgress';
-import { ensureProgressDoc } from '../progress/questionProgressWriter';
+import { ensureProgressDoc, type ProgressContext } from '../progress/questionProgressWriter';
 import { logError } from '../utils/errorHandling';
 
 /** The day the counters began (commit 86d7d27b3). */
@@ -39,6 +39,7 @@ export const COUNTERS_BEGAN_AT = Date.UTC(2026, 7, 25);
 const QUESTION_PAGE_SIZE = 200;
 const MARKER_CHUNK_SIZE = 200;
 const KINDS = ['entered', 'suggested', 'evaluated'] as const;
+const COUNTERS = [...KINDS, 'options', 'evaluations'] as const;
 
 type Kind = (typeof KINDS)[number];
 type KindCounts = Record<Kind, number>;
@@ -76,20 +77,25 @@ export interface BackfillTotals {
 	failed: number;
 }
 
+/** The default state file; emulator and real runs must never share one. */
+export function backfillStateFileName(project: string, onEmulator: boolean): string {
+	return `backfillQuestionProgress.${onEmulator ? 'emulator.' : ''}${project}.json`;
+}
+
 function progressRefOf(statementId: string): DocumentReference {
 	return db.collection(Collections.questionProgress).doc(statementId);
 }
 
-function createdAtMillis(statement: Statement): number | undefined {
-	const createdAt: unknown = statement.createdAt;
-	if (typeof createdAt === 'number') return createdAt;
-	const asTimestamp = createdAt as { toMillis?: () => number } | undefined;
+/** Old documents can still hold a Firestore Timestamp here. */
+function millisOf(value: unknown): number | undefined {
+	if (typeof value === 'number') return value;
+	const asTimestamp = value as { toMillis?: () => number } | undefined;
 
 	return asTimestamp?.toMillis?.();
 }
 
 function isOlderThan(statement: Statement, before: number): boolean {
-	const createdAt = createdAtMillis(statement);
+	const createdAt = millisOf(statement.createdAt);
 
 	return createdAt !== undefined && createdAt < before;
 }
@@ -186,27 +192,49 @@ async function addMissingPeople(
 	});
 }
 
-async function createProgressIfMissing(statement: Statement): Promise<boolean> {
+/**
+ * What a document lacks to pass `QuestionProgressSchema`, or undefined when it
+ * has everything. Live writers can leave one without counters (`touchActivity`,
+ * the facilitator nudge), and the app refuses such a document. Counters are
+ * filled with `increment(0)`, which leaves alone any value a trigger just wrote.
+ */
+function missingProgressFields(
+	statement: Statement,
+	context: ProgressContext,
+	existing: Partial<QuestionProgress> | undefined,
+): Record<string, unknown> | undefined {
+	const now = Date.now();
+	const fields: Record<string, unknown> = {};
+	if (typeof existing?.statementId !== 'string') fields.statementId = statement.statementId;
+	if (typeof existing?.topParentId !== 'string') fields.topParentId = context.topParentId;
+	for (const counter of COUNTERS) {
+		if (typeof existing?.[counter] !== 'number') fields[counter] = FieldValue.increment(0);
+	}
+	if (typeof existing?.lastActivity !== 'number') {
+		fields.lastActivity = millisOf(statement.lastUpdate) ?? now;
+	}
+	if (typeof existing?.lastUpdate !== 'number') fields.lastUpdate = now;
+	if (Object.keys(fields).length === 0) return undefined;
+
+	return context.organizationId && !existing?.organizationId
+		? { ...fields, organizationId: context.organizationId }
+		: fields;
+}
+
+/** Creates or completes the document before anything is counted into it. */
+async function repairProgressDoc(statement: Statement, execute: boolean): Promise<boolean> {
 	const context = await ensureProgressDoc(statement);
 	const ref = progressRefOf(statement.statementId);
+	const missingIn = (snap: DocumentSnapshot) =>
+		missingProgressFields(statement, context, snap.data() as Partial<QuestionProgress> | undefined);
+
+	if (!execute) return !!missingIn(await ref.get());
 
 	return db.runTransaction(async (transaction) => {
-		if ((await transaction.get(ref)).exists) return false;
+		const fields = missingIn(await transaction.get(ref));
+		if (!fields) return false;
 
-		const now = Date.now();
-		const progress: QuestionProgress = {
-			statementId: statement.statementId,
-			topParentId: context.topParentId,
-			...(context.organizationId ? { organizationId: context.organizationId } : {}),
-			entered: 0,
-			suggested: 0,
-			evaluated: 0,
-			options: 0,
-			evaluations: 0,
-			lastActivity: statement.lastUpdate ?? now,
-			lastUpdate: now,
-		};
-		transaction.set(ref, progress);
+		transaction.set(ref, fields, { merge: true });
 
 		return true;
 	});
@@ -257,7 +285,7 @@ export async function backfillQuestion(
 	execute: boolean,
 ): Promise<QuestionBackfillResult> {
 	const { statementId } = statement;
-	const created = execute ? await createProgressIfMissing(statement) : false;
+	const repaired = await repairProgressDoc(statement, execute);
 	const sets = await collectParticipation(statementId);
 	const users = kindsByUser(sets);
 	const added: KindCounts = { entered: 0, suggested: 0, evaluated: 0 };
@@ -273,7 +301,7 @@ export async function backfillQuestion(
 
 	const { options, evaluations } = await raiseEventCounters(statementId, sets, execute);
 	const changed =
-		created ||
+		repaired ||
 		KINDS.some((kind) => added[kind] > 0) ||
 		options.to > options.from ||
 		evaluations.to > evaluations.from;

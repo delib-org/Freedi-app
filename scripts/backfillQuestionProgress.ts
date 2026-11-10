@@ -7,7 +7,9 @@
  * finished questions are recorded in a state file and skipped, and if that file
  * is lost the markers still prevent any double count.
  *
- * Every run must name its project.
+ * Every run must name its project, in GCLOUD_PROJECT or GOOGLE_CLOUD_PROJECT;
+ * set to two different projects, it refuses to start. It also refuses when the
+ * database it connected to is not the project that was checked.
  *
  * USAGE (from the repo root)
  *   - Emulator:
@@ -17,19 +19,25 @@
  *   - A real project, read-only preview (reads every rating of each old question):
  *       GCLOUD_PROJECT=<project> npx tsx scripts/backfillQuestionProgress.ts
  *
- *   - A real project, writing (production also needs --confirm-prod):
+ *   - A real project, writing (only freedi-test may omit --confirm-prod):
  *       GCLOUD_PROJECT=<project> npx tsx scripts/backfillQuestionProgress.ts --execute --confirm-prod
  *
  * OPTIONS
  *   --before=YYYY-MM-DD  Questions created before this day (default: 2026-08-25)
  *   --limit=N            Stop after N questions
- *   --state=PATH         State file (default: scripts/.cache/backfillQuestionProgress.<project>.json)
+ *   --state=PATH         State file (default: scripts/.cache/backfillQuestionProgress[.emulator].<project>.json)
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
-import { checkBackfillRun } from '../functions/src/migrations/backfillRunGuard';
+import { db } from '../functions/src/db';
 import {
+	checkBackfillRun,
+	databaseProjectRefusal,
+	resolveProjectEnv,
+} from '../functions/src/migrations/backfillRunGuard';
+import {
+	backfillStateFileName,
 	COUNTERS_BEGAN_AT,
 	QuestionBackfillResult,
 	runQuestionProgressBackfill,
@@ -75,15 +83,22 @@ function formatResult(result: QuestionBackfillResult): string {
 }
 
 async function main(): Promise<void> {
-	const project = process.env.GCLOUD_PROJECT?.trim();
+	const resolved = resolveProjectEnv(process.env);
+	if (!resolved.ok) throw new Error(resolved.reason);
+
 	const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
-	const check = checkBackfillRun({ project, emulatorHost, argv: process.argv });
+	const check = checkBackfillRun({ project: resolved.project, emulatorHost, argv: process.argv });
 	if (!check.ok) throw new Error(check.reason);
+
+	// Not in the SDK's public types; set by firebase-admin from the same project lookup.
+	const databaseProject = (db as unknown as { projectId: string }).projectId;
+	const refusal = databaseProjectRefusal(databaseProject, check.project);
+	if (refusal) throw new Error(refusal);
 
 	const before = parseBefore();
 	const statePath =
 		optionValue('state') ??
-		join('scripts/.cache', `backfillQuestionProgress.${check.project}.json`);
+		join('scripts/.cache', backfillStateFileName(check.project, Boolean(emulatorHost)));
 	const done = loadDone(statePath);
 	console.info(
 		`Project: ${check.project} (${emulatorHost ? 'emulator' : 'REAL PROJECT'}, ${check.execute ? 'WRITE' : 'dry run'}), before ${new Date(before).toISOString()}, ${done.size} already done`,

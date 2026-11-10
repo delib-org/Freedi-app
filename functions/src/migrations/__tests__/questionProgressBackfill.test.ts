@@ -1,4 +1,5 @@
-import { Collections, StatementType } from '@freedi/shared-types';
+import { safeParse } from 'valibot';
+import { Collections, QuestionProgressSchema, StatementType } from '@freedi/shared-types';
 import { createFakeDb, FakeDb } from '../../progress/__tests__/fakeDb';
 
 let fake: FakeDb;
@@ -15,6 +16,7 @@ jest.mock('firebase-admin/firestore', () => ({
 
 import {
 	BackfillRun,
+	backfillStateFileName,
 	COUNTERS_BEGAN_AT,
 	QuestionBackfillResult,
 	runQuestionProgressBackfill,
@@ -171,6 +173,110 @@ describe('runQuestionProgressBackfill', () => {
 			evaluations: 11,
 			lastActivity: NEW,
 		});
+	});
+
+	describe('documents the app would refuse', () => {
+		const expectValid = (id: string) =>
+			expect(safeParse(QuestionProgressSchema, progressOf(id)).success).toBe(true);
+
+		it('repairs a document left with no counters, keeping its other fields', async () => {
+			seedOldActivity();
+			fake.seed(Collections.questionProgress, 'q1', {
+				statementId: 'q1',
+				lastNudgeAt: NEW,
+				lastUpdate: NEW,
+			});
+
+			await runQuestionProgressBackfill(runOf());
+
+			expectValid('q1');
+			expect(progressOf('q1')).toMatchObject({
+				topParentId: 'q1',
+				entered: 1,
+				suggested: 1,
+				evaluated: 2,
+				options: 2,
+				evaluations: 2,
+				lastActivity: OLD,
+				lastNudgeAt: NEW,
+				lastUpdate: expect.any(Number),
+			});
+		});
+
+		it('repairs a document that has ids and activity but no counters', async () => {
+			seedOldActivity();
+			fake.seed(Collections.questionProgress, 'q1', {
+				statementId: 'q1',
+				topParentId: 'q1',
+				lastActivity: NEW,
+				lastUpdate: NEW,
+			});
+
+			await runQuestionProgressBackfill(runOf());
+
+			expectValid('q1');
+			expect(progressOf('q1')).toMatchObject({ evaluated: 2, lastActivity: NEW });
+		});
+
+		it('repairs one when every person was already counted', async () => {
+			seedQuestion('q1', OLD, { totalEvaluators: 1 });
+			seedRating('q1', 'b');
+			fake.seed(Collections.questionParticipation, 'q1--b', {
+				statementId: 'q1',
+				userId: 'b',
+				evaluated: true,
+			});
+			fake.seed(Collections.questionProgress, 'q1', { statementId: 'q1', evaluated: 1 });
+
+			await runQuestionProgressBackfill(runOf());
+
+			expectValid('q1');
+			expect(progressOf('q1')).toMatchObject({ evaluated: 1, entered: 0, suggested: 0 });
+		});
+
+		it('takes lastActivity in milliseconds from an old Timestamp', async () => {
+			seedQuestion('q1', OLD, {
+				totalEvaluators: 1,
+				lastUpdate: { toMillis: () => OLD + 5 },
+			});
+			seedRating('q1', 'b');
+
+			await runQuestionProgressBackfill(runOf());
+
+			expectValid('q1');
+			expect(progressOf('q1')).toMatchObject({ lastActivity: OLD + 5 });
+		});
+
+		it('writes nothing more on the run after a repair', async () => {
+			seedOldActivity();
+			fake.seed(Collections.questionProgress, 'q1', { statementId: 'q1' });
+			await runQuestionProgressBackfill(runOf());
+			const repaired = { ...progressOf('q1') };
+
+			const totals = await runQuestionProgressBackfill(runOf());
+
+			expect(totals.changed).toBe(0);
+			expect(progressOf('q1')).toEqual(repaired);
+		});
+
+		it('reports a needed repair on a dry run without writing it', async () => {
+			seedQuestion('q1', OLD, { totalEvaluators: 1 });
+			fake.seed(Collections.questionProgress, 'q1', { statementId: 'q1' });
+
+			const totals = await runQuestionProgressBackfill(runOf({ execute: false }));
+
+			expect(totals.changed).toBe(1);
+			expect(progressOf('q1')).toEqual({ statementId: 'q1' });
+		});
+	});
+
+	it('keeps emulator and real runs in separate state files', () => {
+		expect(backfillStateFileName('freedi-test', false)).toBe(
+			'backfillQuestionProgress.freedi-test.json',
+		);
+		expect(backfillStateFileName('freedi-test', true)).toBe(
+			'backfillQuestionProgress.emulator.freedi-test.json',
+		);
 	});
 
 	it('counts each kind once for a person who did several things', async () => {
