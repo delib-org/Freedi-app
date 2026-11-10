@@ -13,6 +13,7 @@ import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import * as admin from 'firebase-admin';
 import { getDefaultQuestionType } from './model/questionTypeDefaults';
 import { removeInvalidTokens } from './notifications/removeInvalidTokens';
+import { isInQuietHours, loadQuietHours } from './notifications/quietHours';
 import {
 	pushRecipientFromSubscription,
 	resolveFcmSubscribers,
@@ -30,110 +31,17 @@ interface SendResult {
 }
 
 /**
- * Quiet hours configuration stored with FCM tokens.
- */
-interface QuietHoursConfig {
-	enabled: boolean;
-	startTime: string; // HH:mm format
-	endTime: string; // HH:mm format
-	timezone: string; // IANA timezone
-}
-
-/**
- * Check if current time is within quiet hours for a user.
- */
-function isInQuietHours(config: QuietHoursConfig | undefined): boolean {
-	if (!config || !config.enabled) {
-		return false;
-	}
-
-	try {
-		// Get current time in user's timezone
-		const now = new Date();
-		const formatter = new Intl.DateTimeFormat('en-US', {
-			hour: '2-digit',
-			minute: '2-digit',
-			hour12: false,
-			timeZone: config.timezone,
-		});
-
-		const currentTime = formatter.format(now);
-		const [currentHour, currentMinute] = currentTime.split(':').map(Number);
-		const currentMinutes = currentHour * 60 + currentMinute;
-
-		const [startHour, startMinute] = config.startTime.split(':').map(Number);
-		const startMinutes = startHour * 60 + startMinute;
-
-		const [endHour, endMinute] = config.endTime.split(':').map(Number);
-		const endMinutes = endHour * 60 + endMinute;
-
-		// Handle overnight quiet hours (e.g., 22:00 - 08:00)
-		if (startMinutes > endMinutes) {
-			// Quiet hours span midnight
-			return currentMinutes >= startMinutes || currentMinutes < endMinutes;
-		} else {
-			// Quiet hours within same day
-			return currentMinutes >= startMinutes && currentMinutes < endMinutes;
-		}
-	} catch (error) {
-		logger.error('Error checking quiet hours:', error);
-
-		return false;
-	}
-}
-
-/**
  * Filter FCM subscribers by quiet hours - removes subscribers currently in quiet hours.
  */
 async function filterByQuietHours(subscribers: FcmSubscriber[]): Promise<FcmSubscriber[]> {
 	if (subscribers.length === 0) return [];
 
-	// Get unique user IDs to batch fetch quiet hours
-	const userIds = [...new Set(subscribers.map((s) => s.userId))];
-	const quietHoursMap = new Map<string, QuietHoursConfig | null>();
+	const quietHours = await loadQuietHours(
+		db,
+		subscribers.map((subscriber) => subscriber.userId),
+	);
 
-	// Quiet hours now live per-user on `notificationSettings/{uid}` (user-wide).
-	// During migration we fall back to the legacy per-device value on
-	// `pushNotifications/{token}.quietHours` when the settings doc has none.
-	const fetchPromises = userIds.map(async (userId) => {
-		try {
-			const settingsSnap = await db.collection(Collections.notificationSettings).doc(userId).get();
-			const settingsQuietHours = settingsSnap.exists
-				? (settingsSnap.data()?.quietHours as QuietHoursConfig | undefined)
-				: undefined;
-			if (settingsQuietHours) {
-				quietHoursMap.set(userId, settingsQuietHours);
-
-				return;
-			}
-
-			// Fallback: legacy per-token quiet hours.
-			const tokensSnapshot = await db
-				.collection(Collections.pushNotifications)
-				.where('userId', '==', userId)
-				.limit(1)
-				.get();
-
-			if (!tokensSnapshot.empty) {
-				const tokenData = tokensSnapshot.docs[0].data();
-				quietHoursMap.set(userId, (tokenData.quietHours as QuietHoursConfig | undefined) || null);
-			} else {
-				quietHoursMap.set(userId, null);
-			}
-		} catch (error) {
-			logger.warn(`Error fetching quiet hours for user ${userId}:`, error);
-			quietHoursMap.set(userId, null);
-		}
-	});
-
-	await Promise.all(fetchPromises);
-
-	// Filter out subscribers who are in quiet hours
-	return subscribers.filter((subscriber) => {
-		const quietHours = quietHoursMap.get(subscriber.userId);
-
-		return !isInQuietHours(quietHours || undefined);
-	});
+	return subscribers.filter((subscriber) => !isInQuietHours(quietHours.get(subscriber.userId)));
 }
 
 /**

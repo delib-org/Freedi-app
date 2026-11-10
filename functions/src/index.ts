@@ -145,6 +145,7 @@ import {
 } from './engagement/notifications/queueProcessor';
 import { sendDailyDigests, processDailyDigests } from './engagement/scheduled/dailyDigest';
 import { sendWeeklyDigests, processWeeklyDigests } from './engagement/scheduled/weeklyDigest';
+import { sendLargeQuestionDigests } from './engagement/scheduled/largeQuestionDigestRun';
 import type { NotificationQueueItem } from '@freedi/shared-types';
 
 import { triggerTopicClusterPipeline } from './fn_topicClustering';
@@ -1109,6 +1110,7 @@ exports.sendDailyDigests = sendDailyDigests;
 
 // Scheduled function: weekly digest (daily at 10:00 UTC, checks per-user day preference)
 exports.sendWeeklyDigests = sendWeeklyDigests;
+exports.sendLargeQuestionDigests = sendLargeQuestionDigests;
 
 // HTTP endpoint for manual daily digest processing (admin auth required)
 exports.manualDailyDigest = wrapAdminHttpFunction(async (req: Request, res: Response) => {

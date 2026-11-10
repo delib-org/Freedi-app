@@ -9,7 +9,7 @@ import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificat
 import { relevantNotifications } from '@/utils/engagementNavigation';
 import {
 	clearAllInAppNotificationsDB,
-	markMultipleNotificationsAsReadDB,
+	markAllUnreadNotificationsAsReadDB,
 	markNotificationAsReadDB,
 } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import NotificationDeliveryControls from '@/view/components/notifications/NotificationDeliveryControls';
@@ -52,7 +52,7 @@ export default function HomeInbox() {
 
 	async function markAllRead() {
 		try {
-			if (unreadIds.length) await markMultipleNotificationsAsReadDB(unreadIds);
+			if (unreadIds.length) await markAllUnreadNotificationsAsReadDB();
 		} catch (error) {
 			logError(error, { operation: 'home.HomeInbox.markAllRead', userId: creator?.uid });
 		}

@@ -15,6 +15,10 @@ import { logger } from 'firebase-functions';
 import { Collections, NotificationQueueStatus } from '@freedi/shared-types';
 import type { NotificationQueueItem } from '@freedi/shared-types';
 import { routeToChannels } from './channelRouter';
+import {
+	deliverDigestItem,
+	isLargeQuestionDigestItem,
+} from '../../notifications/largeQuestionDigestDelivery';
 
 const getDb = () => getFirestore();
 
@@ -32,6 +36,12 @@ export async function processQueueItem(
 	queueItemId: string,
 	item: NotificationQueueItem,
 ): Promise<void> {
+	if (isLargeQuestionDigestItem(queueItemId)) {
+		await deliverDigestItem(queueItemId);
+
+		return;
+	}
+
 	const docRef = getDb().collection(Collections.notificationQueue).doc(queueItemId);
 
 	try {
@@ -153,6 +163,9 @@ export async function processPendingQueueItems(): Promise<{
 
 		// Reset stuck items to pending
 		for (const doc of stuckSnapshot.docs) {
+			// Digest items have their own sweep; a reset here would skip its claim.
+			if (isLargeQuestionDigestItem(doc.id)) continue;
+
 			const data = doc.data() as NotificationQueueItem;
 			const createdAt = data.createdAt || 0;
 
