@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAnswerCompose } from '@/controllers/hooks/useAnswerCompose';
+import ActionToast from '@/view/components/atomic/molecules/ActionToast';
+import { FOCUS_ANSWER_PARAM } from '../evaluations/components/suggestionCards/useFocusedAnswer';
 import AddAnswerSheet from './AddAnswerSheet';
 import styles from './QuestionScreen.module.scss';
 
@@ -36,6 +38,22 @@ const AddAnswerFab: FC<AddAnswerFabProps> = ({ statement }) => {
 		setOpen(true);
 	}, [searchParams, setSearchParams]);
 
+	// The sheet closes the moment the answer is published, so the toast lives here.
+	const [addedToastId, setAddedToastId] = useState(0);
+
+	function handleAnswerAdded(answerId: string): void {
+		setSearchParams(
+			(previous) => {
+				const next = new URLSearchParams(previous);
+				next.set(FOCUS_ANSWER_PARAM, answerId);
+
+				return next;
+			},
+			{ replace: true },
+		);
+		setAddedToastId((current) => current + 1);
+	}
+
 	return (
 		<>
 			<button
@@ -56,6 +74,15 @@ const AddAnswerFab: FC<AddAnswerFabProps> = ({ statement }) => {
 					key={statement.statementId}
 					statement={statement}
 					onClose={() => setOpen(false)}
+					onAnswerAdded={handleAnswerAdded}
+				/>
+			)}
+			{addedToastId > 0 && (
+				<ActionToast
+					key={addedToastId}
+					message={t('question.answerAdded')}
+					variant="success"
+					onDismiss={() => setAddedToastId(0)}
 				/>
 			)}
 		</>

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useLocation, useNavigate } from 'react-router';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 import { setDoc } from 'firebase/firestore';
+import clsx from 'clsx';
 
 import { Statement, SortType, Role, StatementType } from '@freedi/shared-types';
 import { Sparkles, Lightbulb } from 'lucide-react';
@@ -17,7 +18,8 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 import SuggestionCard from './suggestionCard/SuggestionCard';
 import Evaluation from '../evaluation/Evaluation';
-import { applyManualOrder, sortStatements } from './suggestionOrdering';
+import { applyManualOrder, pinFirst, sortStatements } from './suggestionOrdering';
+import { useFocusedAnswer } from './useFocusedAnswer';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 import { useViewLayers } from '@/controllers/hooks/useViewLayers';
@@ -163,14 +165,31 @@ const SuggestionCards: FC = () => {
 		intentKey: orderIntentKey,
 	});
 
+	// The pin applies after the throttle, so a just-added answer leads at once.
+	const shownIds = useMemo(
+		() => new Set([...orderedFlatRaw, ...plan.topLevelSynths].map(getStatementId)),
+		[orderedFlatRaw, plan.topLevelSynths],
+	);
+	const { pinnedId, ringId, ringRef } = useFocusedAnswer(statementId, shownIds);
+	const displayedFlatRaw = useMemo(
+		() => pinFirst(orderedFlatRaw, pinnedId),
+		[orderedFlatRaw, pinnedId],
+	);
+	const displayedSynths = useMemo(
+		() => pinFirst(plan.topLevelSynths, pinnedId),
+		[plan.topLevelSynths, pinnedId],
+	);
+
 	const prefersReducedMotion = usePrefersReducedMotion();
 
 	// A constant key parks FLIP: positions still update, they just jump instead
 	// of gliding — the JS equivalent of the reduced-motion CSS blocks.
 	const flipKey = useMemo(
 		() =>
-			prefersReducedMotion ? 'reduced-motion' : orderedFlatRaw.map((s) => s.statementId).join(','),
-		[orderedFlatRaw, prefersReducedMotion],
+			prefersReducedMotion
+				? 'reduced-motion'
+				: displayedFlatRaw.map((s) => s.statementId).join(','),
+		[displayedFlatRaw, prefersReducedMotion],
 	);
 
 	useEffect(() => {
@@ -260,8 +279,15 @@ const SuggestionCards: FC = () => {
 						variant="synthesis"
 					/>
 					<div className={styles['suggestions-wrapper']}>
-						{plan.topLevelSynths.map((synth) => (
-							<div key={synth.statementId} className={styles['card-wrapper']}>
+						{displayedSynths.map((synth) => (
+							<div
+								key={synth.statementId}
+								ref={synth.statementId === ringId ? ringRef : undefined}
+								className={clsx(
+									styles['card-wrapper'],
+									synth.statementId === ringId && styles['card-wrapper--focused'],
+								)}
+							>
 								<GroupedSuggestionCard
 									cluster={synth}
 									mode="both"
@@ -285,9 +311,15 @@ const SuggestionCards: FC = () => {
 				/>
 			)}
 			<Flipper flipKey={flipKey} spring={REORDER_SPRING} className={styles['suggestions-wrapper']}>
-				{orderedFlatRaw.map((statementSub: Statement) => (
+				{displayedFlatRaw.map((statementSub: Statement) => (
 					<Flipped key={statementSub.statementId} flipId={statementSub.statementId}>
-						<div className={styles['card-wrapper']}>
+						<div
+							ref={statementSub.statementId === ringId ? ringRef : undefined}
+							className={clsx(
+								styles['card-wrapper'],
+								statementSub.statementId === ringId && styles['card-wrapper--focused'],
+							)}
+						>
 							<SuggestionCard parentStatement={statement} statement={statementSub} />
 						</div>
 					</Flipped>

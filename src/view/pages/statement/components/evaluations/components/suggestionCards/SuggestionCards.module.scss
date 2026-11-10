@@ -20,6 +20,23 @@
 	// Unsupported browsers ignore both properties (graceful no-op).
 	content-visibility: auto;
 	contain-intrinsic-size: auto 140px;
+
+	// Drawn inside the card: paint containment clips anything outside the box.
+	&--focused > * {
+		outline: 2px solid var(--accent-violet);
+		outline-offset: -2px;
+		animation: focused-answer-ring calc(var(--motion-slow) * 4) var(--motion-ease) 2;
+
+		@media (prefers-reduced-motion: reduce) {
+			animation: none;
+		}
+	}
+}
+
+@keyframes focused-answer-ring {
+	50% {
+		outline-color: transparent;
+	}
 }
 
 .submitButtonContainer {

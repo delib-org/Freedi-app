@@ -4800,6 +4800,7 @@
   "stage.decided": "Decided",
   "question.share": "Share",
   "question.addAnswerCta": "Add",
+  "question.answerAdded": "Your answer was added. Others can now rate it.",
   "Background": "Background",
   "Background from the host": "Background from the host",
   "host": "host",

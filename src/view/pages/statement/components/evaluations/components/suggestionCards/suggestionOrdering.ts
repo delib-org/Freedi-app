@@ -14,6 +14,14 @@ import { sortByConsensus } from '@/redux/utils/selectorFactories';
  * tested — without mounting the card list.
  */
 
+/** Move one card to the top without disturbing the order of the others. */
+export function pinFirst(statements: Statement[], pinnedId: string | undefined): Statement[] {
+	const pinned = statements.find((statement) => statement.statementId === pinnedId);
+	if (!pinned) return statements;
+
+	return [pinned, ...statements.filter((statement) => statement !== pinned)];
+}
+
 /**
  * Apply an admin's hand-placed order (`statementSettings.manualOptionOrder`).
  *

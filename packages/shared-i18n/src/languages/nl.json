@@ -4094,6 +4094,7 @@
   "stage.decided": "Besloten",
   "question.share": "Delen",
   "question.addAnswerCta": "Toevoegen",
+  "question.answerAdded": "Je antwoord is toegevoegd. Anderen kunnen het nu beoordelen.",
   "Background": "Achtergrond",
   "Background from the host": "Achtergrond van de host",
   "host": "host",
