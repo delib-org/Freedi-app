@@ -21,25 +21,34 @@ function readProgress(statementId: string, now: number): Promise<QuestionProgres
 	return result;
 }
 
+export interface QuestionProgressRead {
+	progress: QuestionProgress | null;
+	/** False only while a read for this question is still on its way. */
+	isLoaded: boolean;
+}
+
 /**
  * A question's group progress: read on open and after the viewer's own action
  * (a change of `actionKey`), at most once a minute. Pass no id to skip the read.
  */
-export function useQuestionProgress(
+export function useQuestionProgressRead(
 	statementId: string | undefined,
 	actionKey: string,
-): QuestionProgress | null {
-	const [progress, setProgress] = useState<QuestionProgress | null>(null);
+): QuestionProgressRead {
+	const [read, setRead] = useState<{
+		statementId: string;
+		progress: QuestionProgress | null;
+	} | null>(null);
 
 	useEffect(() => {
 		if (!statementId) {
-			setProgress(null);
+			setRead(null);
 
 			return;
 		}
 		let cancelled = false;
-		void readProgress(statementId, Date.now()).then((value) => {
-			if (!cancelled) setProgress(value);
+		void readProgress(statementId, Date.now()).then((progress) => {
+			if (!cancelled) setRead({ statementId, progress });
 		});
 
 		return () => {
@@ -47,5 +56,16 @@ export function useQuestionProgress(
 		};
 	}, [statementId, actionKey]);
 
-	return progress;
+	if (!statementId) return { progress: null, isLoaded: true };
+	if (read?.statementId !== statementId) return { progress: null, isLoaded: false };
+
+	return { progress: read.progress, isLoaded: true };
+}
+
+/** The progress alone, for callers that treat "not loaded" and "none" alike. */
+export function useQuestionProgress(
+	statementId: string | undefined,
+	actionKey: string,
+): QuestionProgress | null {
+	return useQuestionProgressRead(statementId, actionKey).progress;
 }

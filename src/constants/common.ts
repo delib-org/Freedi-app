@@ -143,6 +143,17 @@ export const PARTICIPATION = {
 	PROGRESS_REFRESH_MS: TIME.MINUTE,
 } as const;
 
+/**
+ * Who-is-here avatars. Every arrival is delivered to everyone present, so the
+ * cost grows with the square of the crowd: at LARGE_QUESTION_PEOPLE the
+ * feature is off, and no listener ever holds more than MAX_LISTENED_PEOPLE.
+ */
+export const PRESENCE = {
+	LARGE_QUESTION_PEOPLE: 100,
+	MAX_LISTENED_PEOPLE: 100,
+	STALE_AFTER_MS: TIME.MINUTE,
+} as const;
+
 export const CACHE = {
 	DEFAULT_TTL: 5 * TIME.MINUTE,
 	LONG_TTL: 1 * TIME.HOUR,

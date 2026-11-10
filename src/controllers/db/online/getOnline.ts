@@ -1,8 +1,9 @@
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import { FireStore } from '../config';
+import { query, where, onSnapshot, limit } from 'firebase/firestore';
 import { Collections, Online, OnlineSchema } from '@freedi/shared-types';
 import { parse } from 'valibot';
+import { PRESENCE } from '@/constants/common';
 import { logError } from '@/utils/errorHandling';
+import { createCollectionRef } from '@/utils/firebaseUtils';
 
 //listen to online users
 export function ListenToOnlineUsers(
@@ -13,37 +14,45 @@ export function ListenToOnlineUsers(
 	if (!statementId) return () => {};
 
 	const q = query(
-		collection(FireStore, Collections.online),
+		createCollectionRef(Collections.online),
 		where('statementId', '==', statementId),
+		limit(PRESENCE.MAX_LISTENED_PEOPLE),
 	);
 
-	const unsubscribe = onSnapshot(q, (snapshot) => {
-		const users: Online[] = [];
+	const unsubscribe = onSnapshot(
+		q,
+		(snapshot) => {
+			const users: Online[] = [];
 
-		snapshot.forEach((doc) => {
-			try {
-				const data = doc.data();
-				if (data.lastUpdated?.toMillis) {
-					data.lastUpdated = data.lastUpdated.toMillis();
+			snapshot.forEach((doc) => {
+				try {
+					const data = doc.data();
+					if (data.lastUpdated?.toMillis) {
+						data.lastUpdated = data.lastUpdated.toMillis();
+					}
+					const validated = parse(OnlineSchema, data);
+					users.push(validated);
+				} catch (err) {
+					logError(err, {
+						operation: 'online.getOnline.unsubscribe',
+						metadata: { message: 'Error validating online user data:' },
+					});
 				}
-				const validated = parse(OnlineSchema, data);
-				users.push(validated);
-			} catch (err) {
-				logError(err, {
-					operation: 'online.getOnline.unsubscribe',
-					metadata: { message: 'Error validating online user data:' },
-				});
-			}
-		});
+			});
 
-		const now = Date.now();
-		const validUsers = users.filter(
-			(u) => typeof u.lastUpdated === 'number' && now - u.lastUpdated < 60000,
-		);
+			const now = Date.now();
+			const validUsers = users.filter(
+				(u) => typeof u.lastUpdated === 'number' && now - u.lastUpdated < PRESENCE.STALE_AFTER_MS,
+			);
 
-		setOnlineUsers(validUsers);
-		if (setIsLoading) setIsLoading(false);
-	});
+			setOnlineUsers(validUsers);
+			if (setIsLoading) setIsLoading(false);
+		},
+		(error) => {
+			logError(error, { operation: 'online.getOnline.listen', statementId });
+			if (setIsLoading) setIsLoading(false);
+		},
+	);
 
 	return unsubscribe;
 }

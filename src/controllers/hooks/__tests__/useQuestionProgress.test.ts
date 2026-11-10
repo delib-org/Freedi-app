@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { PARTICIPATION } from '@/constants/common';
 import { getQuestionProgress } from '@/controllers/db/questionProgress/getQuestionProgress';
-import { useQuestionProgress } from '../useQuestionProgress';
+import { useQuestionProgress, useQuestionProgressRead } from '../useQuestionProgress';
 
 jest.mock('@/controllers/db/questionProgress/getQuestionProgress', () => ({
 	getQuestionProgress: jest.fn(),
@@ -30,6 +30,20 @@ describe('useQuestionProgress', () => {
 		await waitFor(() => expect(result.current).toEqual({ suggested: 8, evaluated: 11 }));
 		expect(mockGetProgress).toHaveBeenCalledTimes(1);
 		expect(mockGetProgress).toHaveBeenCalledWith('open-q');
+	});
+
+	it('says when the read is still on its way', async () => {
+		const { result } = renderHook(() => useQuestionProgressRead('pending-q', '0'));
+
+		expect(result.current).toEqual({ progress: null, isLoaded: false });
+		await waitFor(() => expect(result.current.isLoaded).toBe(true));
+		expect(result.current.progress).toEqual({ suggested: 8, evaluated: 11 });
+	});
+
+	it('counts as loaded when there is nothing to read', () => {
+		const { result } = renderHook(() => useQuestionProgressRead(undefined, '0'));
+
+		expect(result.current).toEqual({ progress: null, isLoaded: true });
 	});
 
 	it('skips the read without a question id', () => {
