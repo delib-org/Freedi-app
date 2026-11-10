@@ -39,6 +39,7 @@ import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
 import { generateParagraphId } from '@/utils/paragraphUtils';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 import { QuestionAnswersTabContext } from '../../questionScreen/useQuestionScreenData';
+import { isLiveResultsOn } from '@/helpers/liveResults';
 
 interface Props {
 	showNav?: boolean;
@@ -102,7 +103,7 @@ const StatementBottomNav: FC<Props> = () => {
 	const statementColor = useStatementColor({ statement });
 
 	// Filter out sort options based on settings
-	const showEvaluation = statement?.statementSettings?.showEvaluation ?? true;
+	const showEvaluation = isLiveResultsOn(statement);
 	const joiningEnabled = statement?.statementSettings?.joiningEnabled ?? false;
 	const filteredSortItems = sortItems.filter((item) => {
 		// Filter out Agreement if evaluation is disabled

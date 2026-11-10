@@ -14,6 +14,7 @@ import { statementSelectorById } from '@/redux/statements/statementsSlice';
 import { ResultsStrip } from '@/view/components/atomic/molecules/ResultsStrip';
 import { EvaluationCircle, EvaluationCircleRow } from '../shared/EvaluationCircle';
 import type { EvaluationVariant } from '../Evaluation';
+import { isLiveResultsOn } from '@/helpers/liveResults';
 
 interface CommunityVoiceEvaluationProps {
 	statement: Statement;
@@ -30,7 +31,7 @@ const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 	const { learning, t } = useUserConfig();
 
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
-	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
+	const showEvaluation = isLiveResultsOn(parentStatement);
 
 	const evaluationScore = useAppSelector(evaluationSelector(statement.statementId));
 

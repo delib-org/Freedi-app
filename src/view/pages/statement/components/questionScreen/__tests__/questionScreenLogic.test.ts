@@ -192,13 +192,17 @@ describe('questionScreenLogic', () => {
 
 	describe('getSortChips', () => {
 		it('drops Agreement without live results and swaps Updated for Joined when joining is on', () => {
-			const base = getSortChips(question()).map((c) => c.id);
+			const base = getSortChips(
+				question({ statementSettings: { showEvaluation: true } } as Partial<Statement>),
+			).map((c) => c.id);
 			expect(base).toEqual([
 				SortType.newest,
 				SortType.mostUpdated,
 				SortType.random,
 				SortType.accepted,
 			]);
+
+			expect(getSortChips(question()).map((c) => c.id)).not.toContain(SortType.accepted);
 
 			const noResults = getSortChips(
 				question({ statementSettings: { showEvaluation: false } } as Partial<Statement>),

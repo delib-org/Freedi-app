@@ -13,14 +13,11 @@ import { uxAnalytics } from '@/services/analytics';
 import { useStatementSettingsHandlers } from '../settings/useStatementSettingsHandlers';
 import { ALLOW_ADD_ANSWERS_KEYS } from '../settings/components/allowAddAnswers/AllowAddAnswersToggle';
 import { canParticipantsAddAnswers } from '../questionScreen/questionScreenLogic';
-import {
-	QuestionStageIndex,
-	STAGE_LABEL_KEYS,
-	STAGE_TO_STEP,
-} from '@/helpers/questionStage';
+import { QuestionStageIndex, STAGE_LABEL_KEYS, STAGE_TO_STEP } from '@/helpers/questionStage';
 import { differsFromStagePreset } from '@/helpers/stagePreset';
 import { buildHostHubPath, HostHubSectionId } from './hostHubLogic';
 import styles from './HostHubSheet.module.scss';
+import { isLiveResultsOn } from '@/helpers/liveResults';
 
 interface HostHubSheetProps {
 	isOpen: boolean;
@@ -75,7 +72,7 @@ const HostHubSheet: FC<HostHubSheetProps> = ({
 		{
 			key: 'live',
 			label: t('Participants see live results'),
-			checked: settings?.showEvaluation ?? false,
+			checked: isLiveResultsOn(statement),
 		},
 	];
 

@@ -40,6 +40,7 @@ import MergeBadge from './MergeBadge';
 import YouTubeEmbed from './YouTubeEmbed';
 import { extractYouTubeVideo } from '@/helpers/youtubeLinks';
 import { useIsClamped } from './hasClampedContent';
+import { isLiveResultsOn } from '@/helpers/liveResults';
 
 interface Props {
 	statement: Statement | undefined;
@@ -65,7 +66,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 	const minJoinMembers = parentStatement?.statementSettings?.minJoinMembers;
 	const maxJoinMembers = parentStatement?.statementSettings?.maxJoinMembers;
-	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
+	const showEvaluation = isLiveResultsOn(parentStatement);
 	const showBadges =
 		parentStatement?.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot;
 	const isAnchored = statement?.anchored === true;

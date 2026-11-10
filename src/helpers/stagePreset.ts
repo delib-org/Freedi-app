@@ -1,5 +1,6 @@
 import { EvaluationUI, QuestionStep, Statement } from '@freedi/shared-types';
 import { QuestionStageIndex, STAGE_DECIDED, STAGE_TO_STEP, STAGE_VOTING } from './questionStage';
+import { isLiveResultsOn } from './liveResults';
 
 /**
  * What a host's stage pick lets participants do. The host can still flip each
@@ -79,6 +80,6 @@ export function differsFromStagePreset(statement: Statement, stage: QuestionStag
 	return (
 		(addAnswers ?? false) !== preset.addAnswers ||
 		(settings?.enableEvaluation ?? true) !== preset.rate ||
-		(settings?.showEvaluation ?? false) !== preset.liveResults
+		isLiveResultsOn(statement) !== preset.liveResults
 	);
 }

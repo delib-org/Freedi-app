@@ -15,6 +15,7 @@ import {
 } from './questionScreenLogic';
 import { getQuestionStage, QuestionStageIndex, STAGE_DECIDED } from '@/helpers/questionStage';
 import { countRated, rankableAnswers } from './resultsLogic';
+import { isLiveResultsOn } from '@/helpers/liveResults';
 
 /**
  * True while the question screen's Answers tab is on screen. The screen then
@@ -95,7 +96,7 @@ export function useQuestionScreenData(statement: Statement | undefined): Questio
 				statement?.statementSettings?.enableEvaluation !== false &&
 				!isHalted &&
 				stage !== STAGE_DECIDED,
-			showLiveResults: statement?.statementSettings?.showEvaluation === true,
+			showLiveResults: isLiveResultsOn(statement),
 			canAddAnswer:
 				isAddAnswerEnabled(addState) &&
 				stage !== STAGE_DECIDED &&
