@@ -10,6 +10,8 @@ import { TablesError } from '../tablesErrors';
 
 /** Fixtures shared by the Tables registration and fix-details suites. */
 export const HOST = 'host-1';
+/** The token shape of a host: only a Google sign-in may create a session. */
+export const GOOGLE_HOST = { uid: HOST, signInProvider: 'google.com' };
 export const SID = 'session-1';
 export const NOW = 1_800_000_000_000;
 

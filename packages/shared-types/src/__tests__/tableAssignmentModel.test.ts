@@ -246,6 +246,19 @@ describe('name card and counter schemas', () => {
 		).toBe(true);
 	});
 
+	it('carries the claim flag for the host', () => {
+		expect(parse(TableAssignmentRosterEntrySchema, { ...card, claimedByName: true })).toMatchObject({
+			claimedByName: true,
+		});
+	});
+
+	it('caps a topic at 50 tables', () => {
+		const topic = { topicId: 't1', sessionId: 's1', title: 'T', order: 0 };
+
+		expect(safeParse(TableAssignmentTopicSchema, { ...topic, maxTables: 50 }).success).toBe(true);
+		expect(safeParse(TableAssignmentTopicSchema, { ...topic, maxTables: 51 }).success).toBe(false);
+	});
+
 	it('has no field for an answer: a position does not survive parsing', () => {
 		const parsed = parse(TableAssignmentRosterEntrySchema, { ...card, position: 40 });
 

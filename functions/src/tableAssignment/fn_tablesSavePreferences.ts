@@ -40,7 +40,8 @@ function parsePreferenceList(value: unknown): string[] {
 
 /**
  * `tablesSavePreferences` (the participant themself): up to three distinct
- * topic ids of this session, best first, plus an optional 0..100 position.
+ * topic ids of this session, best first, plus an optional position on one of
+ * the five stops.
  * The call replaces both: leaving `position` out means "not specified" (never
  * the middle). Only while registration is open.
  */

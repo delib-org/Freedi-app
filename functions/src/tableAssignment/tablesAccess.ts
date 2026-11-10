@@ -41,14 +41,15 @@ export interface PreviewBudgetDoc {
 
 export interface Actor {
 	uid: string;
-	isAnonymous: boolean;
+	/** The token's `firebase.sign_in_provider`, for example `google.com` or `anonymous`. */
+	signInProvider?: string;
 }
 
 export function actorFrom<T>(request: CallableRequest<T>): Actor {
 	const uid = request.auth?.uid;
 	if (!uid) throw new TablesError('unauthenticated', 'Sign in first');
 
-	return { uid, isAnonymous: request.auth?.token?.firebase?.sign_in_provider === 'anonymous' };
+	return { uid, signInProvider: request.auth?.token?.firebase?.sign_in_provider };
 }
 
 /** A fresh document id (chosen here so every doc is addressed by an explicit id). */
@@ -109,6 +110,10 @@ export function runInputRef(firestore: Firestore, runId: string): DocumentRefere
 	return firestore.collection(RUN_INPUTS_COLLECTION).doc(runId);
 }
 
+export function runInputsQuery(firestore: Firestore, sessionId: string): Query {
+	return firestore.collection(RUN_INPUTS_COLLECTION).where('sessionId', '==', sessionId);
+}
+
 /** Not in the rules on purpose, like the run inputs: only the functions touch it. */
 const PREVIEW_BUDGETS_COLLECTION = 'tableAssignmentPreviewBudgets';
 
@@ -119,6 +124,10 @@ export function previewBudgetRef(
 	answersHash: string,
 ): DocumentReference {
 	return firestore.collection(PREVIEW_BUDGETS_COLLECTION).doc(`${sessionId}_${answersHash}`);
+}
+
+export function previewBudgetsQuery(firestore: Firestore, sessionId: string): Query {
+	return firestore.collection(PREVIEW_BUDGETS_COLLECTION).where('sessionId', '==', sessionId);
 }
 
 export function seatRef(
@@ -145,6 +154,20 @@ export function rosterByNameQuery(firestore: Firestore, sessionId: string, nameK
 		.collection(Collections.tableAssignmentRoster)
 		.where('sessionId', '==', sessionId)
 		.where('nameKey', '==', nameKey);
+}
+
+export function rosterQuery(firestore: Firestore, sessionId: string): Query {
+	return firestore
+		.collection(Collections.tableAssignmentRoster)
+		.where('sessionId', '==', sessionId);
+}
+
+export function seatsQuery(firestore: Firestore, sessionId: string): Query {
+	return firestore.collection(Collections.tableAssignmentSeats).where('sessionId', '==', sessionId);
+}
+
+export function runsQuery(firestore: Firestore, sessionId: string): Query {
+	return runsCollection(firestore).where('sessionId', '==', sessionId);
 }
 
 export function readyRunsQuery(firestore: Firestore, sessionId: string): Query {

@@ -13,9 +13,18 @@ export const FULL_NAME_MIN_LENGTH = 2;
 /** Most topics one session may carry (keeps a replace inside one transaction). */
 export const MAX_TOPICS_PER_SESSION = 100;
 
-/** Position axis bounds (0 = pole A, 100 = pole B). */
-export const POSITION_MIN = 0;
-export const POSITION_MAX = 100;
+/** Registration cap: at least this many, whatever the host expects. */
+export const REGISTRATION_CAP_MIN = 200;
+/** Registration cap: this many times the number the host expects. */
+export const REGISTRATION_CAP_PER_EXPECTED = 3;
+/** Registration cap: never above this many. */
+export const REGISTRATION_CAP_MAX = 2000;
+
+/** The only sign-in provider a host may create a session with. */
+export const HOST_SIGN_IN_PROVIDER = 'google.com';
+
+/** Writes per Firestore batch when erasing or deleting; the limit is 500. */
+export const WRITE_BATCH_SIZE = 400;
 
 /** Machine-readable causes the client can branch on (HttpsError details.reason). */
 export type TablesErrorReason =
@@ -24,6 +33,8 @@ export type TablesErrorReason =
 	| 'registration-closed'
 	| 'claimed-by-name'
 	| 'seated-in-published-run'
+	| 'registration-full'
+	| 'name-locked'
 	| 'too-few-registrants'
 	| 'preview-limit';
 

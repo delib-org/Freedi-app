@@ -1,6 +1,10 @@
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
 import type { Firestore } from 'firebase-admin/firestore';
-import { TABLE_ASSIGNMENT_DESCRIPTION_MAX_LENGTH, functionConfig } from '@freedi/shared-types';
+import {
+	TABLE_ASSIGNMENT_DESCRIPTION_MAX_LENGTH,
+	TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC,
+	functionConfig,
+} from '@freedi/shared-types';
 import type {
 	TableAssignmentTopic,
 	TablesSaveTopicsRequest,
@@ -39,7 +43,10 @@ function parseTopic(input: TablesTopicInput, index: number): TablesTopicInput {
 	}
 	if (
 		maxTables !== undefined &&
-		(typeof maxTables !== 'number' || !Number.isInteger(maxTables) || maxTables < 1)
+		(typeof maxTables !== 'number' ||
+			!Number.isInteger(maxTables) ||
+			maxTables < 1 ||
+			maxTables > TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC)
 	) {
 		throw new TablesError('invalid-argument', `topics[${index}].maxTables is invalid`);
 	}

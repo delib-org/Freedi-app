@@ -19,6 +19,7 @@ import { buildDirectLayout } from '../directLayout';
 import { TablesError, toHttpsError } from '../tablesErrors';
 
 const HOST = 'host-1';
+const GOOGLE_HOST = { uid: HOST, signInProvider: 'google.com' };
 const SID = 'session-1';
 const NOW = 1_800_000_000_000;
 
@@ -95,7 +96,7 @@ describe('tablesCreateSession', () => {
 		await expectCode(
 			createSession(
 				fake.asFirestore(),
-				{ uid: 'anon', isAnonymous: true },
+				{ uid: 'anon', signInProvider: 'anonymous' },
 				{ title: 'T', mode: 'direct' },
 			),
 			'permission-denied',
@@ -107,7 +108,7 @@ describe('tablesCreateSession', () => {
 		const fake = new FakeFirestore();
 		const { session } = await createSession(
 			fake.asFirestore(),
-			{ uid: HOST, isAnonymous: false },
+			GOOGLE_HOST,
 			{ title: '  Town hall  ', mode: 'ranked', settings: { tableSize: 5 } },
 			NOW,
 		);
@@ -124,7 +125,7 @@ describe('tablesCreateSession', () => {
 
 	it('validates input before touching Firestore', async () => {
 		const fake = new FakeFirestore();
-		const host = { uid: HOST, isAnonymous: false };
+		const host = GOOGLE_HOST;
 		await expectCode(
 			createSession(fake.asFirestore(), host, { title: '', mode: 'ranked' }),
 			'invalid-argument',
@@ -276,7 +277,7 @@ describe('tablesSetStatus', () => {
 		);
 		await setStatus(fs, HOST, { sessionId: SID, status: 'ended' });
 		await expectCode(
-			setStatus(fs, HOST, { sessionId: SID, status: 'ended' }),
+			setStatus(fs, HOST, { sessionId: SID, status: 'registrationClosed' }),
 			'failed-precondition',
 		);
 		await expectCode(
@@ -309,12 +310,12 @@ describe('tablesRegister and tablesSavePreferences', () => {
 			preferences: [],
 			registeredAt: NOW,
 		});
-		await savePreferences(fs, 'u1', { sessionId: SID, preferences: ['t2'], position: 30 });
+		await savePreferences(fs, 'u1', { sessionId: SID, preferences: ['t2'], position: 25 });
 		const again = await register(fs, 'u1', { sessionId: SID, fullName: 'Dana L.' }, NOW + 5);
 		expect(again.participant).toMatchObject({
 			fullName: 'Dana L.',
 			preferences: ['t2'],
-			position: 30,
+			position: 25,
 			registeredAt: NOW,
 		});
 	});

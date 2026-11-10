@@ -1247,6 +1247,8 @@ export {
   TABLE_ASSIGNMENT_BALANCE_TOLERANCE_DEFAULT,
   TABLE_ASSIGNMENT_MAX_PREFERENCES,
   TABLE_ASSIGNMENT_TABLE_SIZE_MIN,
+  TABLE_ASSIGNMENT_TABLE_SIZE_STORED_MIN,
+  TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC,
   TABLE_ASSIGNMENT_TABLE_SIZE_MAX,
   TABLE_ASSIGNMENT_TITLE_MAX_LENGTH,
   TABLE_ASSIGNMENT_DESCRIPTION_MAX_LENGTH,
@@ -1315,6 +1317,8 @@ export type {
   TablesComputePreviewResponse,
   TablesPublishRunRequest,
   TablesPublishRunResponse,
+  TablesDeleteSessionRequest,
+  TablesDeleteSessionResponse,
 } from './models/tableAssignment/tableAssignmentCallables';
 
 // Theme rebuild ("Re-theme with AI") callable contract

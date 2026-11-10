@@ -5,8 +5,8 @@ import { counterRef, participantRef, rosterRef, seatRef } from './tablesAccess';
 import type { SeatDoc } from './tablesAccess';
 
 /**
- * The one way a registration leaves a session, shared by cancel, claim and the
- * host's remove. A transaction must finish its reads before its first write,
+ * How a registration leaves a session: cancel and the host's remove free the
+ * seat, a claim passes it on. A transaction must finish its reads before its first write,
  * so loading and deleting are separate steps.
  */
 export interface LoadedRegistration {
@@ -42,15 +42,24 @@ export async function loadRegistration(
 	return { participant, seat, registeredCount };
 }
 
+/** Deletes the private record and the name card; a seat and the count are left alone. */
+export function deleteRegistrationRecords(
+	tx: Transaction,
+	firestore: Firestore,
+	{ sessionId, uid }: Pick<TableAssignmentParticipant, 'sessionId' | 'uid'>,
+): void {
+	const id = tableAssignmentParticipantId(sessionId, uid);
+	tx.delete(participantRef(firestore, id));
+	tx.delete(rosterRef(firestore, id));
+}
+
 /** Deletes the private record and the name card and frees any seat. The count is left alone. */
-export function deleteRegistration(
+function deleteRegistration(
 	tx: Transaction,
 	firestore: Firestore,
 	{ participant, seat }: LoadedRegistration,
 ): void {
-	const id = tableAssignmentParticipantId(participant.sessionId, participant.uid);
-	tx.delete(participantRef(firestore, id));
-	tx.delete(rosterRef(firestore, id));
+	deleteRegistrationRecords(tx, firestore, participant);
 	if (seat?.exists) {
 		const held = seat.data() as SeatDoc;
 		tx.set(seat.ref, { ...held, count: Math.max(0, held.count - 1) });
