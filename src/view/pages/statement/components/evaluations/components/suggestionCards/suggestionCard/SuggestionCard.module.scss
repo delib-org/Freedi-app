@@ -910,6 +910,8 @@
 // The rating row (cardFooter) is the exception: it breaks out of the card's
 // padding to span the full card width and sits on a card-coloured strip drawn
 // OVER the lower part of the photo, so the faces keep the whole width.
+$photo-min-visible: 4.5rem; // 72px of photo stays recognisable above the strip
+
 .statement-evaluation-card--with-photo {
   --card-photo-width: 7.5rem;
   --card-photo-inset: calc(var(--card-photo-width) + var(--card-pad-inline));
@@ -920,12 +922,18 @@
     --card-photo-width: 5.5rem;
   }
 
+  // A one-line answer must not shrink the visible photo to a sliver above the
+  // strip: the text row keeps at least this much height.
+  .info {
+    min-block-size: $photo-min-visible;
+  }
+
   .cardFooter {
     position: relative;
     z-index: 2; // above the photo column (z-index 1)
     margin-inline: calc(-1 * var(--card-photo-inset)) calc(-1 * var(--card-pad-inline));
     margin-block-end: calc(-1 * var(--card-pad-block));
-    padding-inline: var(--card-photo-inset) var(--card-pad-inline);
+    padding-inline: var(--card-pad-inline);
     padding-block: var(--space-2xs) var(--card-pad-block);
     background-color: var(--card-default);
     pointer-events: auto; // the strip must not pass taps through to the photo button
