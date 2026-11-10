@@ -702,4 +702,41 @@
 		min-width: 44px;
 		justify-content: center;
 	}
+
+	// Reply counter: the button is the 44x44 tap target; the 22px pill is drawn
+	// by ::before so the visible badge stays small and no neighbour is overlapped.
+	.tree-option-node__reply-counter {
+		position: relative;
+		isolation: isolate;
+		min-width: 44px;
+		height: 44px;
+		padding: 0;
+		border-radius: 0;
+		background-color: transparent;
+
+		&::before {
+			content: '';
+			position: absolute;
+			inset-block: 11px;
+			inset-inline: 6px;
+			z-index: -1;
+			border-radius: 11px;
+			background-color: rgba(95, 136, 229, 0.15);
+			transition: background-color 0.15s ease;
+		}
+
+		&:hover {
+			background-color: transparent;
+		}
+
+		&:hover::before {
+			background-color: var(--btn-primary-hover, #4a73d0);
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			&::before {
+				transition: none;
+			}
+		}
+	}
 }
