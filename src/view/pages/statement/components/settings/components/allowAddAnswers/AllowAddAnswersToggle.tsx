@@ -39,7 +39,7 @@ const AllowAddAnswersToggle: FC<AllowAddAnswersToggleProps> = ({
 		<ToggleSwitch
 			isChecked={canParticipantsAddAnswers(statement)}
 			onChange={handleChange}
-			label={t('host.allowAddAnswers')}
+			label={t('Participants can add answers')}
 			description={t('host.allowAddAnswersDesc')}
 			icon={Plus}
 			data-testid="allow-add-answers"

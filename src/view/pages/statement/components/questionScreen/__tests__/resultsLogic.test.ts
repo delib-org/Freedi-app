@@ -1,8 +1,11 @@
 import { CutoffBy, ResultsBy, Statement, StatementType } from '@freedi/shared-types';
 import {
 	countRated,
-	getRateHint,
+	latestRatingAt,
+	areAnswersComplete,
+	getStageCue,
 	getResultsAccess,
+	hiddenResultsNoticeKey,
 	rankAnswers,
 	resultsRuleCaption,
 	scoreLabelKey,
@@ -55,7 +58,7 @@ describe('resultsLogic', () => {
 			);
 		});
 
-		it('hosts always see results', () => {
+		it('hides results from hosts too while they are off and the question is open', () => {
 			expect(
 				getResultsAccess({
 					...base,
@@ -64,7 +67,33 @@ describe('resultsLogic', () => {
 					ratedCount: 0,
 					showLiveResults: false,
 				}),
+			).toBe('hidden-by-host');
+		});
+
+		it('shows results to a host with the switch off once the question is settled', () => {
+			const host = { ...base, isHost: true, ratedCount: 0, showLiveResults: false };
+
+			expect(getResultsAccess({ ...host, stage: 3 })).toBe('visible');
+			expect(getResultsAccess({ ...host, stage: 1, isDeadlinePassed: true })).toBe('visible');
+		});
+
+		it('keeps showing hosts results while they are on', () => {
+			expect(
+				getResultsAccess({
+					...base,
+					isHost: true,
+					stage: 1,
+					ratedCount: 0,
+					showLiveResults: true,
+				}),
 			).toBe('visible');
+		});
+	});
+
+	describe('hiddenResultsNoticeKey', () => {
+		it('tells a host about the switch, and leaves a participant the current text', () => {
+			expect(hiddenResultsNoticeKey(true)).toBe('question.resultsOffHostNotice');
+			expect(hiddenResultsNoticeKey(false)).toBe('Results are hidden. Evaluate independently.');
 		});
 	});
 
@@ -136,7 +165,7 @@ describe('resultsLogic', () => {
 			};
 			expect(resultsRuleCaption(settings, false)).toEqual({
 				key: 'Above the agreement threshold ({n})',
-				value: '0.6',
+				value: '60',
 			});
 			expect(resultsRuleCaption(settings, true).key).toBe('By consensus · threshold {n}');
 		});
@@ -154,26 +183,271 @@ describe('resultsLogic', () => {
 		});
 	});
 
-	describe('rate hint', () => {
-		it.each([
-			[
-				{ canRate: false, stage: 0 as const, rated: 0, total: 3 },
-				'Still collecting ideas — rating opens later',
-			],
-			[{ canRate: false, stage: 3 as const, rated: 0, total: 3 }, 'Rating is closed'],
-			[
-				{ canRate: true, stage: 1 as const, rated: 0, total: 3 },
-				'Rate each answer on its own — what could you live with?',
-			],
-			[{ canRate: true, stage: 1 as const, rated: 1, total: 3 }, '{n} more to rate'],
-			[{ canRate: true, stage: 1 as const, rated: 3, total: 3 }, 'You rated them all. Thank you!'],
-		])('%o → %s', (input, key) => {
-			expect(getRateHint(input).key).toBe(key);
+	describe('getStageCue', () => {
+		const base = {
+			isHalted: false,
+			canRate: true,
+			canAddAnswer: true,
+			usesVotingUI: false,
+			hasVoted: false,
+			ratedCount: 0,
+			rateableCount: 4,
+			answersComplete: true,
+		};
+		type Ability = 'both' | 'add' | 'rate' | 'neither';
+		const ability = (who: Ability) => ({
+			canAddAnswer: who === 'both' || who === 'add',
+			canRate: who === 'both' || who === 'rate',
+		});
+		const progress = {
+			nothing: { ratedCount: 0, rateableCount: 0 },
+			none: { ratedCount: 0, rateableCount: 4 },
+			some: { ratedCount: 1, rateableCount: 4 },
+			all: { ratedCount: 4, rateableCount: 4 },
+		} as const;
+		type Progress = keyof typeof progress;
+
+		const table = (rows: Record<Ability, [string, string, string, string]>) =>
+			(Object.keys(rows) as Ability[]).flatMap((who) =>
+				(Object.keys(progress) as Progress[]).map(
+					(step, column) => [who, step, rows[who][column]] as const,
+				),
+			);
+
+		describe('Collecting', () => {
+			it.each(
+				table({
+					both: ['noneToRateAdd', 'addOrRate', 'moreToRateAdd', 'ratedAllAdd'],
+					add: ['addRatingLater', 'addRatingLater', 'addRatingLater', 'addRatingLater'],
+					rate: ['noneToRate', 'rateEach', 'moreToRate', 'ratedAll'],
+					neither: ['collectingRead', 'collectingRead', 'collectingRead', 'collectingRead'],
+				}),
+			)('%s / %s: %s', (who, step, name) => {
+				expect(getStageCue({ ...base, stage: 0, ...ability(who), ...progress[step] }).key).toBe(
+					`stageCue.${name}`,
+				);
+			});
 		});
 
-		it('carries the remaining count', () => {
-			expect(getRateHint({ canRate: true, stage: 1, rated: 1, total: 3 }).value).toBe('2');
+		describe('Rating', () => {
+			it.each(
+				table({
+					both: ['noneToRateAdd', 'rateEach', 'moreToRate', 'ratedAllAdd'],
+					add: ['ratingClosedAdd', 'ratingClosedAdd', 'ratingClosedAdd', 'ratingClosedAdd'],
+					rate: ['noneToRate', 'rateEach', 'moreToRate', 'ratedAll'],
+					neither: ['ratingClosedRead', 'ratingClosedRead', 'ratingClosedRead', 'ratingClosedRead'],
+				}),
+			)('%s / %s: %s', (who, step, name) => {
+				expect(getStageCue({ ...base, stage: 1, ...ability(who), ...progress[step] }).key).toBe(
+					`stageCue.${name}`,
+				);
+			});
 		});
+
+		describe('Voting', () => {
+			const voting = { ...base, stage: 2 as const, usesVotingUI: true };
+
+			it.each([
+				['both', 'noneToVoteAdd', 'voteOrAdd', 'votedAdd'],
+				['add', 'votingClosedAdd', 'votingClosedAdd', 'votingClosedAdd'],
+				['rate', 'noneToVote', 'voteOne', 'voted'],
+				['neither', 'votingClosedRead', 'votingClosedRead', 'votingClosedRead'],
+			] as const)('%s: %s / %s / %s', (who, nothing, notVoted, voted) => {
+				const can = ability(who);
+				expect(getStageCue({ ...voting, ...can, ...progress.nothing }).key).toBe(
+					`stageCue.${nothing}`,
+				);
+				expect(getStageCue({ ...voting, ...can }).key).toBe(`stageCue.${notVoted}`);
+				expect(getStageCue({ ...voting, ...can, hasVoted: true }).key).toBe(`stageCue.${voted}`);
+			});
+
+			it('progress is "has voted", never the rated count', () => {
+				expect(getStageCue({ ...voting, ...ability('rate'), ...progress.some }).key).toBe(
+					'stageCue.voteOne',
+				);
+			});
+
+			it("a vote on the only answer, the person's own, still reads as voted", () => {
+				expect(
+					getStageCue({ ...voting, ...ability('rate'), hasVoted: true, ...progress.nothing }).key,
+				).toBe('stageCue.voted');
+			});
+		});
+
+		describe('selection order', () => {
+			it('Decided wins over halted and over the voting UI', () => {
+				expect(getStageCue({ ...base, stage: 3, isHalted: true, usesVotingUI: true }).key).toBe(
+					'stageCue.over',
+				);
+			});
+
+			it('halted wins over every stage table', () => {
+				expect(getStageCue({ ...base, stage: 0, isHalted: true }).key).toBe('stageCue.closed');
+				expect(getStageCue({ ...base, stage: 2, isHalted: true, usesVotingUI: true }).key).toBe(
+					'stageCue.closed',
+				);
+			});
+
+			it('someone who can vote on a voting UI gets the voting table in any stage', () => {
+				expect(getStageCue({ ...base, stage: 1, usesVotingUI: true }).key).toBe(
+					'stageCue.voteOrAdd',
+				);
+			});
+
+			it('without the ability to vote, a voting UI falls back to the actual stage', () => {
+				expect(getStageCue({ ...base, stage: 1, usesVotingUI: true, ...ability('add') }).key).toBe(
+					'stageCue.ratingClosedAdd',
+				);
+			});
+		});
+
+		describe('with partly loaded answers', () => {
+			const partial = { ...base, answersComplete: false };
+
+			it.each([
+				['Collecting, nothing in the store', 0, 'both', 'nothing', 'addOrRate'],
+				['Collecting, some rated', 0, 'both', 'some', 'addOrRate'],
+				['Collecting, all loaded rated', 0, 'both', 'all', 'addOrRate'],
+				['Rating, nothing in the store', 1, 'both', 'nothing', 'rateEach'],
+				['Rating, some rated', 1, 'both', 'some', 'rateEach'],
+				['Rating, all loaded rated', 1, 'both', 'all', 'rateEach'],
+				['rate only, nothing in the store', 1, 'rate', 'nothing', 'rateEach'],
+				['rate only, all loaded rated', 0, 'rate', 'all', 'rateEach'],
+			] as const)('%s: general cue, no number', (_label, stage, who, step, name) => {
+				expect(getStageCue({ ...partial, stage, ...ability(who), ...progress[step] })).toEqual({
+					key: `stageCue.${name}`,
+				});
+			});
+
+			it('does not say there is nothing to vote on', () => {
+				const voting = { ...partial, stage: 2 as const, usesVotingUI: true, ...progress.nothing };
+				expect(getStageCue({ ...voting, ...ability('both') }).key).toBe('stageCue.voteOrAdd');
+				expect(getStageCue({ ...voting, ...ability('rate') }).key).toBe('stageCue.voteOne');
+			});
+
+			it('a vote is still known, whatever is loaded', () => {
+				expect(
+					getStageCue({
+						...partial,
+						stage: 2,
+						usesVotingUI: true,
+						hasVoted: true,
+						...ability('rate'),
+					}).key,
+				).toBe('stageCue.voted');
+			});
+
+			it('does not change the rows that do not depend on progress', () => {
+				expect(getStageCue({ ...partial, stage: 0, ...ability('add') }).key).toBe(
+					'stageCue.addRatingLater',
+				);
+				expect(getStageCue({ ...partial, stage: 1, ...ability('neither') }).key).toBe(
+					'stageCue.ratingClosedRead',
+				);
+			});
+		});
+
+		describe('areAnswersComplete', () => {
+			const coverage = {
+				loadedAnswers: 0,
+				loadedChildren: 0,
+				numberOfOptions: undefined,
+				isFullyLoaded: false,
+				childrenWindow: 30,
+			};
+
+			it('a counter of 0 with nothing loaded is complete', () => {
+				expect(areAnswersComplete({ ...coverage, numberOfOptions: 0 })).toBe(true);
+			});
+
+			it("every answer loaded is complete, also when they are the viewer's own", () => {
+				expect(
+					areAnswersComplete({
+						...coverage,
+						numberOfOptions: 2,
+						loadedAnswers: 2,
+						loadedChildren: 2,
+					}),
+				).toBe(true);
+			});
+
+			it('a counter above the loaded count is partial', () => {
+				expect(
+					areAnswersComplete({
+						...coverage,
+						numberOfOptions: 40,
+						loadedAnswers: 3,
+						loadedChildren: 30,
+					}),
+				).toBe(false);
+				expect(areAnswersComplete({ ...coverage, numberOfOptions: 5, loadedChildren: 30 })).toBe(
+					false,
+				);
+			});
+
+			it('a counter below the loaded count cannot be trusted', () => {
+				expect(
+					areAnswersComplete({
+						...coverage,
+						numberOfOptions: 2,
+						loadedAnswers: 9,
+						loadedChildren: 9,
+					}),
+				).toBe(false);
+			});
+
+			it('a fully loaded list is complete whatever the counter says', () => {
+				expect(
+					areAnswersComplete({
+						...coverage,
+						numberOfOptions: 40,
+						loadedAnswers: 38,
+						isFullyLoaded: true,
+					}),
+				).toBe(true);
+			});
+
+			describe('on a question without the counter', () => {
+				it('is complete when the window did not fill', () => {
+					expect(areAnswersComplete({ ...coverage, loadedChildren: 12, loadedAnswers: 4 })).toBe(
+						true,
+					);
+					expect(areAnswersComplete(coverage)).toBe(true);
+				});
+
+				it('is partial when the window filled, even with no answer loaded', () => {
+					expect(areAnswersComplete({ ...coverage, loadedChildren: 30 })).toBe(false);
+					expect(areAnswersComplete({ ...coverage, loadedChildren: 45, loadedAnswers: 45 })).toBe(
+						false,
+					);
+				});
+			});
+		});
+
+		it('counts what is left to rate, and only on the counting cues', () => {
+			expect(getStageCue({ ...base, stage: 1, ...progress.some })).toEqual({
+				key: 'stageCue.moreToRate',
+				value: '3',
+			});
+			expect(getStageCue({ ...base, stage: 0, ...progress.some })).toEqual({
+				key: 'stageCue.moreToRateAdd',
+				value: '3',
+			});
+			expect(getStageCue({ ...base, stage: 1 }).value).toBeUndefined();
+		});
+	});
+
+	it('latestRatingAt reads only own ratings among these answers', () => {
+		const evaluations = [
+			{ statementId: 'a', evaluatorId: 'me', updatedAt: 10 },
+			{ statementId: 'b', evaluatorId: 'me', updatedAt: 30 },
+			{ statementId: 'c', evaluatorId: 'me', updatedAt: 99 },
+			{ statementId: 'a', evaluatorId: 'other', updatedAt: 50 },
+		];
+
+		expect(latestRatingAt(evaluations, ['a', 'b'], 'me')).toBe(30);
+		expect(latestRatingAt(evaluations, ['a'], undefined)).toBe(0);
+		expect(latestRatingAt([], ['a'], 'me')).toBe(0);
 	});
 
 	it('countRated counts distinct own ratings among these answers', () => {
@@ -194,11 +468,83 @@ describe('resultsLogic', () => {
 		expect(scorePercent(-1)).toBe(0);
 		expect(scorePercent(0)).toBe(50);
 		expect(scorePercent(2)).toBe(100);
-		expect([0.6, 0.3, 0, -0.1].map(scoreLabelKey)).toEqual([
-			'Broad agreement',
-			'Partial agreement',
-			'Split',
-			'Opposition',
-		]);
+	});
+
+	describe('scoreLabelKey bands', () => {
+		const ENOUGH_RATERS = 3;
+
+		it.each([
+			[1, 'Broad agreement'],
+			[0.6, 'Broad agreement'],
+			[0.59, 'Partial agreement'],
+			[0.3, 'Partial agreement'],
+			[0.29, 'Split'],
+			[0, 'Split'],
+			[-0.09, 'Split'],
+			[-0.1, 'Opposition'],
+			[-1, 'Opposition'],
+		])('score %d → %s', (score, key) => {
+			expect(scoreLabelKey(score, ENOUGH_RATERS)).toBe(key);
+		});
+
+		it('reads the whole number people see, so "+60" is never partial', () => {
+			expect(scoreLabelKey(0.595, ENOUGH_RATERS)).toBe('Broad agreement');
+			expect(scoreLabelKey(-0.095, ENOUGH_RATERS)).toBe('Opposition');
+			expect(scoreTone(-0.095)).toBe('negative');
+		});
+
+		it.each([0, 1, 2])('says too few ratings with %d raters, whatever the score', (raters) => {
+			expect(scoreLabelKey(0.9, raters)).toBe('Too few ratings so far');
+			expect(scoreLabelKey(-0.9, raters)).toBe('Too few ratings so far');
+		});
+
+		it('starts the bands at exactly 3 raters', () => {
+			expect(scoreLabelKey(0.9, 3)).toBe('Broad agreement');
+		});
+	});
+
+	describe('resultsRuleCaption threshold scale', () => {
+		const captionValue = (resultsBy: ResultsBy, cutoffNumber: number): string | undefined =>
+			resultsRuleCaption({ resultsBy, cutoffBy: CutoffBy.aboveThreshold, cutoffNumber }, false)
+				.value;
+
+		it.each([
+			[ResultsBy.mostLiked, 12, '12'],
+			[ResultsBy.mostLiked, 1, '1'],
+			[ResultsBy.mostLiked, 0.5, '0.5'],
+			[ResultsBy.averageLikesDislikes, 40, '40'],
+		])('%s shows its raw value %d', (resultsBy, cutoffNumber, expected) => {
+			expect(captionValue(resultsBy, cutoffNumber)).toBe(expected);
+		});
+
+		it.each([
+			[60, '60'],
+			[-40, '-40'],
+			[1.5, '1.5'],
+		])(
+			'a legacy consensus value of %d is not squeezed onto the scale',
+			(cutoffNumber, expected) => {
+				expect(captionValue(ResultsBy.consensus, cutoffNumber)).toBe(expected);
+			},
+		);
+
+		it.each([
+			[1, '100'],
+			[-1, '−100'],
+		])(
+			'consensus at the edge of the range (%d) is still on the scale',
+			(cutoffNumber, expected) => {
+				expect(captionValue(ResultsBy.consensus, cutoffNumber)).toBe(expected);
+			},
+		);
+	});
+
+	it('shows a negative threshold on the same scale', () => {
+		expect(
+			resultsRuleCaption(
+				{ resultsBy: ResultsBy.consensus, cutoffBy: CutoffBy.aboveThreshold, cutoffNumber: -0.1 },
+				false,
+			).value,
+		).toBe('−10');
 	});
 });

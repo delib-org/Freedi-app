@@ -16,6 +16,7 @@ import { Tooltip } from '@/view/components/tooltip/Tooltip';
 import { logError } from '@/utils/errorHandling';
 import { getPseudoName } from '@/utils/temporalNameGenerator';
 import { EvaluationCircle, EvaluationCircleRow } from '../shared/EvaluationCircle';
+import ScoreRevealHint from '../shared/ScoreRevealHint';
 import { enhancedEvaluationsThumbs } from '../enhancedEvaluation/EnhancedEvaluationModel';
 import type { EvaluationVariant } from '../Evaluation';
 import LikeChips from './LikeChips';
@@ -24,6 +25,8 @@ interface Props {
 	statement: Statement;
 	parentStatement?: Statement;
 	shouldDisplayScore?: boolean;
+	/** Say that the score appears after rating, where it would have been. */
+	showRevealHint?: boolean;
 	enableEvaluation?: boolean;
 	/** 'card' = Join's look: one filled face, results as chips. */
 	variant?: EvaluationVariant;
@@ -33,6 +36,7 @@ const SingleLikeEvaluation: FC<Props> = ({
 	statement,
 	parentStatement,
 	shouldDisplayScore = true,
+	showRevealHint = false,
 	enableEvaluation = true,
 	variant = 'default',
 }) => {
@@ -140,7 +144,9 @@ const SingleLikeEvaluation: FC<Props> = ({
 		}
 	};
 
-	const likePercentage = totalEvaluators > 0 ? Math.round((likesCount / totalEvaluators) * 100) : 0;
+	// The question's evaluator count is copied at milestones, so it can trail the likes.
+	const likePercentage =
+		totalEvaluators > 0 ? Math.min(100, Math.round((likesCount / totalEvaluators) * 100)) : 0;
 
 	const likeButton = (
 		<button
@@ -229,6 +235,7 @@ const SingleLikeEvaluation: FC<Props> = ({
 						showPercentage={totalEvaluators > 0}
 					/>
 				)}
+				{showRevealHint && <ScoreRevealHint />}
 				{modals}
 			</div>
 		);
@@ -247,7 +254,7 @@ const SingleLikeEvaluation: FC<Props> = ({
 			{shouldDisplayScore && (
 				<div className={styles.stats}>
 					<span className={styles.count}>
-						{likesCount} {likesCount === 1 ? 'like' : 'likes'}
+						{t('Likes')}: {likesCount}
 					</span>
 					{totalEvaluators > 0 && <span className={styles.percentage}>({likePercentage}%)</span>}
 				</div>
@@ -262,6 +269,8 @@ const SingleLikeEvaluation: FC<Props> = ({
 					/>
 				</div>
 			)}
+
+			{showRevealHint && <ScoreRevealHint />}
 
 			{modals}
 		</div>

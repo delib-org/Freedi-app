@@ -9,6 +9,8 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './NotificationBtn.module.scss';
 import useClickOutside from '@/controllers/hooks/useClickOutside';
 import UnreadBadge from '../unreadBadge/UnreadBadge';
+import { formatUnreadCount } from '@/helpers/unreadCount';
+import { NOTIFICATION } from '@/constants/common';
 
 const NotificationBtn = () => {
 	const creator = useSelector(creatorSelector);
@@ -16,6 +18,7 @@ const NotificationBtn = () => {
 	const unreadCount = relevantNotifications(notifications, creator?.uid).filter(
 		(n) => !n.read,
 	).length;
+	const unreadLabel = formatUnreadCount(unreadCount);
 	const { t } = useTranslation();
 	const [open, setOpen] = useState(false);
 	const buttonRef = useRef<HTMLButtonElement>(null);
@@ -40,7 +43,7 @@ const NotificationBtn = () => {
 				type="button"
 				ref={buttonRef}
 				className={styles.notificationBtn__trigger}
-				aria-label={`${t('Inbox')}${unreadCount ? `: ${unreadCount} ${t('unread')}` : ''}`}
+				aria-label={`${t('Inbox')}${unreadCount ? `: ${unreadLabel} ${t('unread')}` : ''}`}
 				aria-expanded={open}
 				aria-controls={open ? panelId : undefined}
 				onClick={() => setOpen(!open)}
@@ -48,9 +51,9 @@ const NotificationBtn = () => {
 				<MailIcon />
 				<UnreadBadge
 					count={unreadCount}
-					maxDisplay={99}
+					maxDisplay={NOTIFICATION.UNREAD_DISPLAY_MAX}
 					position="absolute"
-					ariaLabel={`${unreadCount} ${t('unread')}`}
+					ariaLabel={`${unreadLabel} ${t('unread')}`}
 				/>
 			</button>
 			{open && (

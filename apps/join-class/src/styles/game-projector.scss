@@ -10,6 +10,16 @@
 // The projector never shows text below this (projector.scss, IA 14).
 $projector-min-text: 32px;
 
+// Short projectors (~720 px tall, the smallest real one): the 96 px footer and
+// 72 px QR cost a 600-character intro its room, so the band shrinks to the 64 px
+// the layout assumes. Taller screens keep the footer above exactly as it was.
+$short-screen-max-height: 760px;
+$short-band-height: 64px;
+$short-band-padding-block: 4px;
+$short-qr-size: 56px; // 48 px of code inside the 4 px quiet zone: still scans across a room
+$short-qr-quiet: 4px;
+$short-band-code-size: 40px; // the join code, 48 px elsewhere; keeps the band at its 64 px
+
 #{$game} .projector-instruction {
   font-size: 88px;
   font-weight: 800;
@@ -143,4 +153,22 @@ $projector-min-text: 32px;
   border-radius: 28px;
   font-weight: 800;
   @include edge(var(--ink), 8px);
+}
+
+// ---- short projectors (~720 px tall): a slimmer footer so long intro text fits --------
+@media (max-height: $short-screen-max-height) {
+  #{$game} .projector-band {
+    min-height: $short-band-height;
+    padding-block: $short-band-padding-block;
+  }
+
+  #{$game} .projector-band__code {
+    font-size: $short-band-code-size;
+  }
+
+  #{$game} .projector-band .projector-qr:not(.projector-qr--waiting) {
+    inline-size: $short-qr-size;
+    block-size: $short-qr-size;
+    border-width: $short-qr-quiet;
+  }
 }

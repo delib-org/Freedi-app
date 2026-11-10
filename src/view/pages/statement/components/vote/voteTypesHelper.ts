@@ -18,6 +18,8 @@ export interface OptionBarProps {
 	isSelected: boolean;
 	castVote: (option: Statement) => Promise<void>;
 	totalVotes: number;
+	/** False keeps this option's percentage, count and bar off the screen. */
+	showTallies: boolean;
 	order: number;
 	setStatementInfo: React.Dispatch<React.SetStateAction<Statement | undefined>>;
 	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;

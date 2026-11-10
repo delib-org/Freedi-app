@@ -100,6 +100,7 @@ generateBulkEmbeddings
 generateDialecticalRevision
 generateDocumentReportAI
 getAllOptionsWithMembers
+getAnswerBatch
 getBulkStatements
 getCluster
 getEmailSubscriberCount
@@ -133,6 +134,7 @@ massConsensusAddMember
 massConsensusGetInitialData
 mergeClusters
 mergeStatements
+moderateNewAnswer
 mirrorQuestionStatusToSurvey
 newEvaluation
 notifyRoomParticipants
@@ -187,6 +189,7 @@ scheduledStatementHistorySnapshot
 seedCreditRules
 sendDailyDigests
 sendEmailToSubscribers
+sendLargeQuestionDigests
 sendOdysseyDigests
 sendWeeklyDigests
 serveJoinShareRoutes
@@ -201,6 +204,7 @@ studioScheduledActionSweep
 suggestClusterTitle
 summarizeDiscussion
 summarizeLink
+syncCountersSchedule
 synthesisCancel
 synthesisJobCancel
 synthesisJobDispatch

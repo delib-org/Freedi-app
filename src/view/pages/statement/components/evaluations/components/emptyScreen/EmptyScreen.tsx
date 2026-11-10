@@ -17,7 +17,7 @@ const EmptyScreen: FC<Props> = ({ statement: _statement }) => {
 	return (
 		<div className={styles.emptyScreen}>
 			<h1 className={styles.title}>
-				{isLearning ? t('Be the first to share your idea!') : t('No suggestions yet')}
+				{isLearning ? t('Be the first to share your idea!') : t('No answers yet')}
 			</h1>
 
 			<p className={styles.subtitle}>

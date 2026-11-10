@@ -8,6 +8,7 @@ import {
 	HomeSpace,
 	Translate,
 } from '../homeModel';
+import UnreadMessagesBadge from '@/view/components/unreadBadge/UnreadMessagesBadge';
 import styles from './HomeOverview.module.scss';
 
 export function SpaceCard({
@@ -39,6 +40,7 @@ export function SpaceCard({
 				</span>
 			</span>
 			{space.hosting && <span className={styles.hostChip}>{t('Host')}</span>}
+			<UnreadMessagesBadge statementId={space.id} size="medium" />
 		</button>
 	);
 }
@@ -86,6 +88,7 @@ export function QuestionRow({
 				{question.hosting && (
 					<span className={`${styles.hostChip} ${styles['hostChip--lilac']}`}>{t('Host')}</span>
 				)}
+				<UnreadMessagesBadge statementId={question.id} size="medium" />
 			</button>
 		</li>
 	);

@@ -10,9 +10,60 @@ const firestore = vi.hoisted(() => ({
 
 vi.mock('firebase/firestore', () => firestore);
 vi.mock('@/lib/firebase', () => ({ db: {} }));
-vi.mock('@/lib/listeners', () => ({ resilientDoc: vi.fn(), resilientQuery: vi.fn() }));
+const listeners = vi.hoisted(() => ({ resilientDoc: vi.fn(), resilientQuery: vi.fn() }));
 
-import { fetchChosenOptions } from '../data';
+vi.mock('@/lib/listeners', () => listeners);
+
+import { fetchChosenOptions, subscribeRoster, subscribeTablemates } from '../data';
+
+type ErrorHandler = (error: { code: string }) => void;
+
+/** The error handler and options the subscription handed to the listener. */
+function listenerCall(): { onError: ErrorHandler; options: unknown } {
+	const { calls } = listeners.resilientQuery.mock;
+	const [, , , onError, options] = calls[calls.length - 1];
+
+	return { onError: onError as ErrorHandler, options };
+}
+
+describe('name cards', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it('ends the tablemates list quietly when the person is no longer registered', () => {
+		const onData = vi.fn();
+		const onError = vi.fn();
+
+		subscribeTablemates('session-1')(onData, onError);
+		listenerCall().onError({ code: 'permission-denied' });
+
+		expect(listenerCall().options).toEqual({ deniedIsFinal: true });
+		expect(onData).toHaveBeenCalledWith([]);
+		expect(onError).not.toHaveBeenCalled();
+	});
+
+	it('reports any other failure of the tablemates list', () => {
+		const onData = vi.fn();
+		const onError = vi.fn();
+
+		subscribeTablemates('session-1')(onData, onError);
+		listenerCall().onError({ code: 'unavailable' });
+
+		expect(onData).not.toHaveBeenCalled();
+		expect(onError).toHaveBeenCalledWith({ code: 'unavailable' });
+	});
+
+	it('reports a refusal to the host: the host list must never go quiet', () => {
+		const onError = vi.fn();
+
+		subscribeRoster('session-1')(vi.fn(), onError);
+		listenerCall().onError({ code: 'permission-denied' });
+
+		expect(listenerCall().options).toBeUndefined();
+		expect(onError).toHaveBeenCalledWith({ code: 'permission-denied' });
+	});
+});
 
 describe('fetchChosenOptions', () => {
 	beforeEach(() => {

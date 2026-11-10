@@ -24,10 +24,7 @@ const columns: ColumnConfig<Statement>[] = [
 	{
 		key: 'statement',
 		label: 'Statement',
-		render: (s) =>
-			s.statement.length > 70
-				? s.statement.substring(0, 67) + '...'
-				: s.statement,
+		render: (s) => (s.statement.length > 70 ? s.statement.substring(0, 67) + '...' : s.statement),
 		width: '40%',
 	},
 	{
@@ -39,8 +36,7 @@ const columns: ColumnConfig<Statement>[] = [
 	{
 		key: 'sourceApp',
 		label: 'App',
-		render: (s) =>
-			sourceAppBadge((s as Statement & { sourceApp?: string }).sourceApp),
+		render: (s) => sourceAppBadge((s as Statement & { sourceApp?: string }).sourceApp),
 		width: '110px',
 	},
 	{
@@ -67,7 +63,7 @@ const columns: ColumnConfig<Statement>[] = [
 					rel: 'noopener',
 					onclick: (e: Event) => e.stopPropagation(),
 				},
-				'Open'
+				'Open',
 			),
 		width: '60px',
 	},
@@ -85,6 +81,7 @@ export function StatementsView(): m.Component {
 		if (expandedId === statement.statementId) {
 			expandedId = null;
 			m.redraw();
+
 			return;
 		}
 
@@ -130,8 +127,7 @@ export function StatementsView(): m.Component {
 				m(FilterBarComponent, {
 					currentType: state.filter.statementType,
 					searchText: state.filter.searchText,
-					onTypeChange: (type: StatementType | undefined) =>
-						setFilter({ statementType: type }),
+					onTypeChange: (type: StatementType | undefined) => setFilter({ statementType: type }),
 					onSearch: (text: string) => setFilter({ searchText: text }),
 				}),
 
@@ -153,13 +149,9 @@ export function StatementsView(): m.Component {
 													loadingBreadcrumb
 														? m(Spinner, { inline: true })
 														: m(Breadcrumb, {
-																items:
-																	breadcrumbCache.get(expandedId) || [],
-																topParentId:
-																	state.items.find(
-																		(s) =>
-																			s.statementId === expandedId
-																	)?.topParentId,
+																items: breadcrumbCache.get(expandedId) || [],
+																topParentId: state.items.find((s) => s.statementId === expandedId)
+																	?.topParentId,
 															}),
 												]),
 											]),

@@ -156,6 +156,78 @@ describe('useCreateStatementFlow', () => {
 		);
 	});
 
+	describe('moderation against the similarity check', () => {
+		const settings = { defaultLookForSimilarities: true };
+
+		it('a rejection shows its message, keeps the draft and publishes nothing', async () => {
+			similar.mockResolvedValue({ rejected: true, reason: 'Please rephrase', category: 'other' });
+			const { result, onDone } = setup(settings);
+			act(() => result.current.setDraft({ title: 'bad words' }));
+			act(() => result.current.submit());
+			await waitFor(() => expect(result.current.state.rejection).toBe('Please rephrase'));
+
+			expect(result.current.state).toMatchObject({
+				step: 'draft',
+				pending: false,
+				draft: { title: 'bad words' },
+			});
+			expect(createWithSub).not.toHaveBeenCalled();
+			expect(onDone).not.toHaveBeenCalled();
+		});
+
+		it('editing the text clears the rejection', async () => {
+			similar.mockResolvedValue({ rejected: true, reason: 'Please rephrase', category: 'other' });
+			const { result } = setup(settings);
+			act(() => result.current.setDraft({ title: 'bad words' }));
+			act(() => result.current.submit());
+			await waitFor(() => expect(result.current.state.rejection).toBe('Please rephrase'));
+
+			act(() => result.current.setDraft({ title: 'kind words' }));
+
+			expect(result.current.state.rejection).toBeNull();
+		});
+
+		it('nothing similar publishes', async () => {
+			similar.mockResolvedValue({ similarStatements: [], similarTexts: [], userText: null });
+			const { result } = setup(settings);
+			act(() => result.current.setDraft({ title: 'fine' }));
+			act(() => result.current.submit());
+			await waitFor(() => expect(result.current.state.step).toBe('done'));
+
+			expect(createWithSub).toHaveBeenCalledTimes(1);
+			expect(result.current.state.rejection).toBeNull();
+		});
+
+		it.each([
+			['the check returned null', () => similar.mockResolvedValue(null)],
+			['the check threw', () => similar.mockRejectedValue(new Error('offline'))],
+		])('fails open and publishes when %s', async (_name, arrange) => {
+			arrange();
+			const { result } = setup(settings);
+			act(() => result.current.setDraft({ title: 'fine' }));
+			act(() => result.current.submit());
+			await waitFor(() => expect(result.current.state.step).toBe('done'));
+
+			expect(createWithSub).toHaveBeenCalledTimes(1);
+		});
+
+		it('a rejection from the split detector also blocks publishing', async () => {
+			detect.mockResolvedValue({
+				ok: false,
+				isMultipleSuggestions: false,
+				suggestions: [],
+				rejection: { reason: 'Not here', category: 'other' },
+			});
+			const { result } = setup({ enableMultiSuggestionDetection: true });
+			act(() => result.current.setDraft({ title: 'bad words' }));
+			act(() => result.current.submit());
+			await waitFor(() => expect(result.current.state.rejection).toBe('Not here'));
+
+			expect(result.current.state.step).toBe('draft');
+			expect(createWithSub).not.toHaveBeenCalled();
+		});
+	});
+
 	it('multi split: confirmed splits create one statement each', async () => {
 		detect.mockResolvedValue({
 			ok: true,

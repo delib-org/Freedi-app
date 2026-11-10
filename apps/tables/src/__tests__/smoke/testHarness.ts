@@ -2,6 +2,7 @@ import m from 'mithril';
 import type {
 	TableAssignment,
 	TableAssignmentParticipant,
+	TableAssignmentRosterEntry,
 	TableAssignmentRun,
 	TableAssignmentTopic,
 } from '@freedi/shared-types';
@@ -14,11 +15,12 @@ import type {
 export interface FakeStore {
 	session: TableAssignment | null;
 	topics: TableAssignmentTopic[];
-	everyone: TableAssignmentParticipant[];
+	everyone: TableAssignmentRosterEntry[];
 	me: TableAssignmentParticipant | null;
 	runs: TableAssignmentRun[];
 	run: TableAssignmentRun | null;
 	hostSessions: TableAssignment[];
+	registeredCount: number;
 	/** A Firestore error code every subscription reports instead of data. */
 	failWith: string | null;
 	/** The same, for the topics subscription only. */
@@ -34,6 +36,7 @@ export function emptyStore(): FakeStore {
 		runs: [],
 		run: null,
 		hostSessions: [],
+		registeredCount: 0,
 		failWith: null,
 		failTopicsWith: null,
 	};

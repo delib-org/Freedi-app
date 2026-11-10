@@ -14,13 +14,9 @@ export interface RouteDef {
 
 export const ROUTES: readonly RouteDef[] = [
 	{ path: '/host', titleKey: 'tableAssignment.screen.hostList', role: 'host' },
-	{ path: '/host/sessions/:id', titleKey: 'tableAssignment.screen.hostHome', role: 'host' },
-	{ path: '/host/sessions/:id/topics', titleKey: 'tableAssignment.screen.topics', role: 'host' },
-	{
-		path: '/host/sessions/:id/settings',
-		titleKey: 'tableAssignment.screen.settings',
-		role: 'host',
-	},
+	{ path: '/host/new', titleKey: 'tableAssignment.setup.title', role: 'host' },
+	{ path: '/host/sessions/:id', titleKey: 'tableAssignment.session', role: 'host' },
+	{ path: '/host/sessions/:id/screen', titleKey: 'tableAssignment.roomScreen', role: 'host' },
 	{
 		path: '/host/sessions/:id/participants',
 		titleKey: 'tableAssignment.screen.participants',
@@ -36,29 +32,22 @@ export const ROUTES: readonly RouteDef[] = [
 		titleKey: 'tableAssignment.screen.assignment',
 		role: 'host',
 	},
-	{
-		path: '/sessions/:id',
-		titleKey: 'tableAssignment.screen.participantHome',
-		role: 'participant',
-	},
-	{
-		path: '/sessions/:id/topics',
-		titleKey: 'tableAssignment.screen.topics',
-		role: 'participant',
-	},
-	{
-		path: '/sessions/:id/topics/:topicId',
-		titleKey: 'tableAssignment.screen.topic',
-		role: 'participant',
-	},
-	{
-		path: '/sessions/:id/preferences',
-		titleKey: 'tableAssignment.screen.preferences',
-		role: 'participant',
-	},
+	{ path: '/sessions/:id', titleKey: 'tableAssignment.session', role: 'participant' },
+	{ path: '/sessions/:id/name', titleKey: 'tableAssignment.editDetails', role: 'participant' },
+	{ path: '/sessions/:id/preferences', titleKey: 'tableAssignment.rank', role: 'participant' },
+	{ path: '/sessions/:id/position', titleKey: 'tableAssignment.position', role: 'participant' },
 	{
 		path: '/sessions/:id/my-table',
 		titleKey: 'tableAssignment.screen.myTable',
+		role: 'participant',
+	},
+	// Old links keep working (IA section 5): the host's land on the stage screen, the rest on the link.
+	{ path: '/host/sessions/:id/topics', titleKey: 'tableAssignment.session', role: 'host' },
+	{ path: '/host/sessions/:id/settings', titleKey: 'tableAssignment.session', role: 'host' },
+	{ path: '/sessions/:id/topics', titleKey: 'tableAssignment.session', role: 'participant' },
+	{
+		path: '/sessions/:id/topics/:topicId',
+		titleKey: 'tableAssignment.session',
 		role: 'participant',
 	},
 ];

@@ -6,6 +6,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useOpenAskQuestion } from '@/controllers/hooks/useOpenAskQuestion';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { statementSelector } from '@/redux/statements/statementsSlice';
+import { buildStatementPath } from '@/routes/statementPaths';
 import ApproveMembers from '@/view/components/approveMembers/WaitingList';
 import NotificationBtn from '@/view/components/notificationBtn/NotificationBtn';
 import NotificationSettingsButton from '@/view/components/notifications/NotificationSettingsButton';
@@ -112,7 +113,9 @@ const QuestionHeaderBar: FC<QuestionHeaderBarProps> = ({
 				onNavigateToScreen={(target) => goToScreen(target)}
 				onNavigateToClusterMap={() => {
 					setIsMenuOpen(false);
-					navigate(`/map/${statement.statementId}`);
+					navigate(
+						buildStatementPath({ statementId: statement.statementId, view: Screen.clusterBoard }),
+					);
 				}}
 				onNavigateHome={() => {
 					setIsMenuOpen(false);

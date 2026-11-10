@@ -7,10 +7,6 @@
 	position: relative;
 }
 
-.summarizeWrapper {
-	margin: 0 0 1rem;
-}
-
 .grid {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -19,15 +15,6 @@
 	@media screen and (max-width: 768px) {
 		grid-template-columns: 1fr;
 	}
-}
-
-.empty {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	padding: 3rem 1rem;
-	color: var(--text-body);
-	opacity: 0.6;
 }
 
 .onboarding {
@@ -81,225 +68,11 @@
 	}
 }
 
-$addButtonSize: 60px;
-$subButtonSize: 48px;
-
-.addButtonWrapper {
-	position: fixed;
-	bottom: 0;
-	// Centred with auto margins rather than translateX(-50%): a transform here
-	// would turn the wrapper into the containing block for the fixed overlay,
-	// which then covers only the wrapper instead of the viewport.
-	inset-inline: 0;
-	margin-inline: auto;
-	max-width: var(--wrapper);
-	width: 90vw;
-	min-height: 6rem;
-	box-sizing: border-box;
-	display: flex;
-	justify-content: flex-start;
-	align-items: center;
-	padding: 30px 20px;
-	pointer-events: none;
-	z-index: 10;
-	// Fade to the theme scrim tokens so the bar stays dark in dark mode
-	// (same pattern as StatementBottomNav)
-	background: linear-gradient(180deg, var(--nav-scrim-from) 0%, var(--nav-scrim-to) 42%);
-
-	@media screen and (max-width: 600px) {
-		width: 100%;
-		max-width: 100%;
-	}
-}
-
-// Anchors the fan-out menu to the "+" button itself. Without it the
-// sub-buttons resolve against the full-width fixed wrapper and land on the
-// opposite edge of the screen.
-.addButtonGroup {
-	position: relative;
-	display: flex;
-	align-items: center;
-	pointer-events: none;
-}
-
-.addButton {
-	width: $addButtonSize;
-	height: $addButtonSize;
-	border-radius: $addButtonSize;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	cursor: pointer;
-	pointer-events: auto;
-	box-shadow: 2px 2px 5px var(--shadow);
-	transition: transform var(--motion-base) var(--motion-ease);
-	z-index: 10000;
-
-	svg {
-		width: 24px;
-		height: 24px;
-	}
-
-	&:hover {
-		transform: scale(1.05);
-	}
-
-	&:active {
-		transform: scale(0.95);
-	}
-}
-
-.addButtonActive {
-	transform: rotate(-45deg);
-
-	&:hover {
-		transform: rotate(-45deg) scale(1.05);
-	}
-
-	&:active {
-		transform: rotate(-45deg) scale(0.95);
-	}
-}
-
-.fanMenu {
-	position: absolute;
-	bottom: calc(100% + 0.75rem);
-	// Line the 48px sub-buttons up with the centre of the 60px "+".
-	inset-inline-start: ($addButtonSize - $subButtonSize) * 0.5;
-	display: flex;
-	// Reversed so DOM/tab order stays "simple first" while the simple option
-	// renders closest to the "+".
-	flex-direction: column-reverse;
-	align-items: flex-start;
-	gap: 0.75rem;
-	z-index: 10000;
-	pointer-events: none;
-}
-
-.fanItem {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding: 0;
-	border: none;
-	background: none;
-	cursor: pointer;
-	pointer-events: none;
-	opacity: 0;
-	transform: translateY(0.75rem) scale(0.6);
-	transform-origin: center bottom;
-	transition:
-		opacity var(--motion-fast) var(--motion-ease),
-		transform var(--motion-base) var(--motion-ease);
-
-	// Closed state collapses top-down, so the item nearest the "+" leaves last.
-	&:nth-child(1) {
-		transition-delay: 60ms;
-	}
-
-	&:nth-child(2) {
-		transition-delay: 0ms;
-	}
-
-	&__icon {
-		width: $subButtonSize;
-		height: $subButtonSize;
-		flex: 0 0 auto;
-		border-radius: 50%;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		box-shadow: 2px 2px 5px var(--shadow);
-		transition: transform var(--motion-fast) var(--motion-ease);
-
-		svg {
-			width: 22px;
-			height: 22px;
-			color: var(--white);
-		}
-	}
-
-	&__label {
-		font-size: 0.85rem;
-		font-weight: 600;
-		white-space: nowrap;
-		color: var(--text-headline);
-		background-color: var(--card-default);
-		border-radius: 999px;
-		padding: 0.25rem 0.75rem;
-		box-shadow: 2px 2px 5px var(--shadow);
-	}
-
-	&:hover &__icon {
-		transform: scale(1.08);
-	}
-
-	&:active &__icon {
-		transform: scale(0.95);
-	}
-}
-
-.fanItemSimple .fanItem__icon {
-	background-color: var(--btn-primary);
-}
-
-.fanItemCompound .fanItem__icon {
-	background-color: var(--question);
-}
-
-.fanMenuOpen {
-	pointer-events: auto;
-
-	.fanItem {
-		opacity: 1;
-		transform: translateY(0) scale(1);
-		pointer-events: auto;
-
-		// Opening fans out bottom-up: the item nearest the "+" appears first.
-		&:nth-child(1) {
-			transition-delay: 0ms;
-		}
-
-		&:nth-child(2) {
-			transition-delay: 60ms;
-		}
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.fanItem {
-		transition: opacity var(--motion-fast) var(--motion-ease);
-		transform: none;
-		transition-delay: 0ms !important;
-	}
-
-	.fanMenuOpen .fanItem {
-		transform: none;
-	}
-}
-
-.overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100vw;
-	height: 100svh;
-	background: transparent;
-	z-index: 9999;
-	cursor: default;
-	pointer-events: auto;
-	border: none;
-}
-
 .content {
 	width: 100%;
 	min-width: 0;
 }
 .heading {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 24px;
 	margin-bottom: 24px;
 	h2 {
 		font-size: clamp(24px, 3vw, 34px);
@@ -310,12 +83,6 @@ $subButtonSize: 48px;
 		color: var(--text-secondary);
 		max-width: 60ch;
 		margin: 0;
-	}
-	button {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		flex-shrink: 0;
 	}
 }
 .onboarding {
@@ -328,32 +95,9 @@ $subButtonSize: 48px;
 	.questionsView {
 		padding: 16px;
 	}
-	.heading {
-		align-items: flex-start;
-		flex-direction: column;
-		gap: 16px;
-	}
 }
 
-
-	.onboarding__icon {
-		background: var(--space-surface);
-		color: var(--space-ink);
-	}
-	.addButtonWrapper {
-		background: none;
-	}
-	.addButton {
-		background: var(--space-yellow);
-		color: var(--space-ink);
-		box-shadow: var(--space-shadow);
-		svg {
-			color: inherit;
-		}
-	}
-	.fanItem__icon {
-		background: var(--space-mint);
-		svg {
-			color: var(--space-ink);
-		}
-	}
+.onboarding__icon {
+	background: var(--space-surface);
+	color: var(--space-ink);
+}

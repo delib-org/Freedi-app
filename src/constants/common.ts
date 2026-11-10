@@ -47,7 +47,14 @@ export const NOTIFICATION = {
 	TOKEN_CHECK_INTERVAL: 24 * TIME.HOUR,
 	SERVICE_WORKER_TIMEOUT: 10 * TIME.SECOND,
 	CHECK_INTERVAL: 500,
-	TOKEN_RESYNC_INTERVAL: TIME.WEEK,
+	/** Highest number any unread badge shows; more than this reads "99+". */
+	UNREAD_DISPLAY_MAX: 99,
+	/** One more than UNREAD_DISPLAY_MAX: enough to know the badge is at "99+". */
+	UNREAD_LISTENER_LIMIT: 100,
+	/** Client batches stay under Firestore's limit of 500 writes. */
+	MARK_READ_BATCH_SIZE: 450,
+	/** How long a message must stay on screen before it counts as read. */
+	READ_RECEIPT_DELAY_MS: 2 * TIME.SECOND,
 } as const;
 
 /**
@@ -79,6 +86,11 @@ export const UI = {
 	COLLAPSE_DURATION_MS: 180,
 	COLLAPSE_FALLBACK_BUFFER_MS: 100,
 	MODAL_Z_INDEX: 1000,
+	// Floating profile card: gap from its avatar, minimum gap from the screen
+	// edge, and how far the arrow stays from the card's corners.
+	POPOVER_ANCHOR_GAP: 8,
+	POPOVER_VIEWPORT_MARGIN: 8,
+	POPOVER_ARROW_INSET: 16,
 	TOOLTIP_DELAY: 500,
 	// Minimum gap between two animated list reorders. Live evaluation updates
 	// can reshuffle a consensus ranking many times a second; coalescing them
@@ -89,11 +101,22 @@ export const UI = {
 	// discussion stays open. Each write to a subscription doc also fires
 	// three Cloud Functions triggers.
 	READ_MARK_THROTTLE_MS: 30 * 1000,
+	// Most subscription docs one discussion tree fetch brings in for unread numbers.
+	UNREAD_TREE_SUBSCRIPTIONS_PAGE: 100,
+	// Pages one tree fetch may read (page x pages = hard cap, then it is logged).
+	UNREAD_TREE_SUBSCRIPTIONS_MAX_PAGES: 10,
+	// A mark-as-read that found no subscription doc yet is retried this often, this many times.
+	READ_MARK_RETRY_MS: 3 * 1000,
+	READ_MARK_MAX_RETRIES: 5,
 	// How long a toast carrying Undo stays (UX main-people-settings §4.8);
 	// paused while hovered or focused.
 	UNDO_TOAST_DURATION: 6 * TIME.SECOND,
 	// How long the short "Undone" confirmation stays.
 	UNDONE_TOAST_DURATION: 2 * TIME.SECOND,
+	// How long the ring stays on an answer opened from `?focusId=`.
+	FOCUSED_ANSWER_RING_DURATION: 6 * TIME.SECOND,
+	// New ratings needed before "you've rated all the answers" may be said again.
+	RATED_ALL_REPEAT_MIN_RATINGS: 3,
 	// People › Members: rows shown first, and how many "Show more" adds (UX §4.4).
 	MEMBERS_INITIAL_COUNT: 10,
 	MEMBERS_LOAD_MORE_COUNT: 20,
@@ -124,6 +147,27 @@ export const JOINING = {
 /**
  * Cache constants
  */
+/**
+ * Group progress shown to participants.
+ * MIN_PUBLIC_COUNT equals DEFAULT_K_ANONYMITY in functions/src/fn_strategicExport.ts.
+ */
+export const PARTICIPATION = {
+	MIN_PUBLIC_COUNT: 5,
+	PROGRESS_REFRESH_MS: TIME.MINUTE,
+	PROGRESS_MIN_RETRY_MS: TIME.SECOND,
+} as const;
+
+/**
+ * Who-is-here avatars. Every arrival is delivered to everyone present, so the
+ * cost grows with the square of the crowd: at LARGE_QUESTION_PEOPLE the
+ * feature is off, and no listener ever holds more than MAX_LISTENED_PEOPLE.
+ */
+export const PRESENCE = {
+	LARGE_QUESTION_PEOPLE: 100,
+	MAX_LISTENED_PEOPLE: 100,
+	STALE_AFTER_MS: TIME.MINUTE,
+} as const;
+
 export const CACHE = {
 	DEFAULT_TTL: 5 * TIME.MINUTE,
 	LONG_TTL: 1 * TIME.HOUR,
@@ -167,12 +211,13 @@ export const STORAGE_KEYS = {
 	PWA_INSTALL_TRIGGER_DATA: 'pwa-install-trigger-data',
 	PWA_INSTALL_SOFT_PROMPT_DISMISSED_AT: 'pwa-install-soft-prompt-dismissed-at',
 	NOTIFICATION_SOFT_PROMPT_DISMISSED_AT: 'notification-soft-prompt-dismissed-at',
-	FCM_TOKEN_SYNC: 'freedi_fcm_token_sync',
 	SHOW_HIDDEN_CARDS: 'freedi_showHiddenCards',
 	MAP_DETAIL_LEVEL: 'freedi_map_detail_level',
 	SIDEBAR_WIDTH: 'freedi_sidebar_width',
 	/** Text size (rem) chosen in the cluster board's note focus box. */
 	MAP_NOTE_FONT_REM: 'freedi_map_note_font_rem',
+	/** Prefix of the per-user key holding the id of the last credit toasted on Home. */
+	LAST_TOASTED_CREDIT: 'freedi_last_toasted_credit',
 } as const;
 
 /**
@@ -220,6 +265,28 @@ export const REDUX = {
 /**
  * Bulk "Load all statements" constants (getBulkStatements endpoint + delta listeners)
  */
+export const RATE_VIEW = {
+	/** While nothing is left to rate, ask again this often at most when answers are added */
+	FINISHED_REFRESH_MS: 60 * 1000,
+	/** Each person adds up to this much to that wait, so a crowd does not ask together */
+	FINISHED_REFRESH_SPREAD_MS: 30 * 1000,
+	/** First wait after the sampler call fails; doubles per failure */
+	FAILURE_RETRY_BASE_MS: 5 * 1000,
+	FAILURE_RETRY_MAX_MS: 5 * 60 * 1000,
+	/** Times to ask again when the sampler says there is more but gives nothing new */
+	EMPTY_BATCH_RETRIES: 3,
+	EMPTY_BATCH_RETRY_MS: 1500,
+} as const;
+
+export const RANKED_ANSWERS = {
+	/** Answers fetched per page of a ranked list */
+	PAGE_SIZE: 30,
+	/** A list cut to the top pages re-reads its first page this often, tab visible only */
+	REFRESH_MS: 60 * 1000,
+	/** An answer this person added this recently shows in a cut list, wherever it ranks */
+	JUST_ADDED_WINDOW_MS: 10 * 60 * 1000,
+} as const;
+
 export const BULK_LOAD = {
 	/** Statements fetched per HTTP page */
 	PAGE_SIZE: 500,
@@ -278,18 +345,6 @@ export const PWA = {
 	PROMPT_DELAY: 2 * TIME.SECOND,
 	/** How long to wait before allowing prompt to show again after dismissal (in days) */
 	PROMPT_COOLDOWN: 7,
-} as const;
-
-/**
- * PWA Install Prompt Messages
- */
-export const PWA_MESSAGES = {
-	TITLE: 'Install FreeDi',
-	DESCRIPTION:
-		'Install FreeDi on your device for a better experience. Get quick access and work offline!',
-	INSTALL_BUTTON: 'Install',
-	CANCEL_BUTTON: 'Not now',
-	SUCCESS: 'FreeDi installed successfully!',
 } as const;
 
 /**

@@ -8,7 +8,7 @@ import { NotificationType } from '@freedi/shared-types';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import NotificationCard from '../notificationCard/NotificationCard';
 import {
-	markMultipleNotificationsAsReadDB,
+	markAllUnreadNotificationsAsReadDB,
 	clearAllInAppNotificationsDB,
 } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import NotificationDeliveryControls from '../notifications/NotificationDeliveryControls';
@@ -31,7 +31,7 @@ const InAppNotifications = ({ onClose }: { onClose?: () => void }) => {
 		e.stopPropagation();
 		try {
 			if (unreadIds.length === 0) return;
-			await markMultipleNotificationsAsReadDB(unreadIds);
+			await markAllUnreadNotificationsAsReadDB();
 		} catch (error) {
 			logError(error, { operation: 'inAppNotifications.handleMarkAllAsRead' });
 		}

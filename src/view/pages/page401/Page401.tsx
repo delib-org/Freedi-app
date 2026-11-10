@@ -1,6 +1,11 @@
+import { useState } from 'react';
 import styles from './page401.module.scss';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { logOut } from '@/controllers/db/authenticationUtils';
+import { saveInitialRoute, toSafeRedirectPath } from '@/helpers/initialRoute';
+import { logError } from '@/utils/errorHandling';
 import clsx from 'clsx';
 
 // Images
@@ -10,7 +15,31 @@ import Cloud3 from '@/assets/images/Cloud3.png';
 
 const Page401 = () => {
 	const navigate = useNavigate();
+	const location = useLocation();
 	const { t } = useTranslation();
+	const { user } = useAuthentication();
+	const [isSigningIn, setIsSigningIn] = useState(false);
+
+	const hasNamedAccount = !!user && !user.isAnonymous;
+	const from = (location.state as { from?: unknown } | null)?.from;
+	const returnPath = toSafeRedirectPath(from ?? `${location.pathname}${location.search}`);
+
+	const handleSignIn = async () => {
+		setIsSigningIn(true);
+		try {
+			if (returnPath) saveInitialRoute(returnPath);
+			// /start sends anyone with a session straight back, so end it first.
+			if (user) await logOut();
+			navigate('/start', { replace: true });
+		} catch (error) {
+			logError(error, {
+				operation: 'page401.Page401.handleSignIn',
+				userId: user?.uid,
+				metadata: { returnPath },
+			});
+			setIsSigningIn(false);
+		}
+	};
 
 	const handleGoHome = () => {
 		navigate('/', { state: { from: window.location.pathname } });
@@ -67,17 +96,27 @@ const Page401 = () => {
 				</h1>
 
 				<p className={styles.page401__hint}>
-					{t('This area is for registered members. Sign in to unlock access!')}
+					{hasNamedAccount
+						? t('No access. Ask the host to invite you.')
+						: t('This area is for registered members. Sign in to unlock access!')}
 				</p>
 
 				{/* Action Buttons */}
 				<div className={styles.page401__actions}>
 					<button
+						type="button"
 						className={styles.page401__button}
-						onClick={handleGoHome}
-						aria-label={t('Return to home page')}
+						onClick={handleSignIn}
+						disabled={isSigningIn}
 					>
-						{t('Take Me Home')}
+						{hasNamedAccount ? t('Sign in with another account') : t('Sign in')}
+					</button>
+					<button
+						type="button"
+						className={clsx(styles.page401__button, styles['page401__button--secondary'])}
+						onClick={handleGoHome}
+					>
+						{t('Back to home')}
 					</button>
 				</div>
 

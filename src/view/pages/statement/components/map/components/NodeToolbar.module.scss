@@ -1,0 +1,290 @@
+// Node panel of the mind map: named actions on top, the rating faces under
+// their own heading. Rendered in React, outside MindElixir's DOM.
+
+$touch-target: 44px;
+
+.toolbar {
+	position: fixed;
+	// Bottom-anchored: the rating row is conditional, so a top-anchored panel
+	// would grow down over the node it belongs to.
+	transform: translate(-50%, -100%);
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	max-width: calc(100vw - 16px);
+	background: var(--card-default, #ffffff);
+	border-radius: 8px;
+	padding: 4px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+	z-index: 100;
+	animation: toolbarFadeIn 0.15s ease-out;
+	white-space: nowrap;
+
+	// No room above the node (it sits at the top edge): hang under it instead.
+	&--below {
+		transform: translate(-50%, 0);
+	}
+
+	&__row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 2px;
+	}
+
+	// Icon and visible name side by side. `title` never shows on touch, so the
+	// name is real text, not a tooltip.
+	&__btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		min-height: 36px;
+		padding: 0 10px;
+		border: none;
+		border-radius: 6px;
+		background: transparent;
+		color: var(--text-body, #555);
+		font-size: 0.85rem;
+		cursor: pointer;
+		transition:
+			background 0.15s ease,
+			color 0.15s ease;
+
+		svg {
+			width: 18px;
+			height: 18px;
+			flex-shrink: 0;
+		}
+
+		&:hover {
+			background: var(--btn-primary, #5f88e5);
+			color: var(--btn-primary-text, #ffffff);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: -2px;
+		}
+
+		&--active {
+			background: var(--btn-primary, #5f88e5);
+			color: var(--btn-primary-text, #ffffff);
+		}
+
+		&--delete:hover {
+			background: var(--disagree, #fe6ba2);
+			color: var(--btn-primary-text, #ffffff);
+		}
+	}
+
+	&__label {
+		line-height: 1;
+	}
+
+	&__divider {
+		width: 1px;
+		height: 20px;
+		background: var(--border-color, #ddd);
+		margin: 0 2px;
+	}
+}
+
+// Rating: the app's 5-point face scale under its own heading.
+.rating {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 4px 6px 2px;
+	border-top: 1px solid var(--background, #eef0f3);
+
+	&__heading {
+		color: var(--text-caption, #6b7a99);
+		font-size: 0.75rem;
+		font-weight: 600;
+	}
+
+	// Same construct as the option cards: the faces are listed high -> low and
+	// reversed here, so the row reads unhappy -> happy and mirrors in RTL the way
+	// every other rating row in the app does.
+	&__faces {
+		display: flex;
+		flex-direction: row-reverse;
+		align-items: center;
+		justify-content: space-between;
+		gap: 2px;
+
+		// Faces shown for an original inside a merged idea: its vote is already
+		// counted through the merge, so the row is visible but inert.
+		&--readonly {
+			opacity: 0.55;
+
+			.rating__btn {
+				cursor: not-allowed;
+			}
+		}
+	}
+
+	&__btn {
+		width: 28px;
+		height: 28px;
+		border: none;
+		border-radius: 50%;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		// Unpicked faces recede so the cast vote reads at a glance.
+		opacity: 0.75;
+		transition:
+			opacity 0.15s ease,
+			transform 0.15s ease,
+			box-shadow 0.15s ease;
+
+		img {
+			width: 20px;
+			height: 20px;
+		}
+
+		&:hover {
+			opacity: 1;
+			transform: scale(1.15);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: 1px;
+		}
+
+		&--active {
+			opacity: 1;
+			transform: scale(1.1);
+			box-shadow: 0 0 0 2px var(--btn-primary, #5f88e5);
+		}
+	}
+
+	&__emoji {
+		font-size: 1rem;
+		line-height: 1;
+	}
+}
+
+// Type switcher popover, hanging under the panel.
+.typeMenu {
+	position: absolute;
+	top: calc(100% + 6px);
+	inset-inline-start: 0;
+	display: flex;
+	flex-direction: column;
+	min-width: 9rem;
+	padding: 4px;
+	gap: 2px;
+	background: var(--card-default, #ffffff);
+	border-radius: 8px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+	animation: toolbarFadeIn 0.15s ease-out;
+
+	&__item {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		width: 100%;
+		min-height: 36px;
+		padding: 0.4rem 0.5rem;
+		border: none;
+		border-radius: 6px;
+		background: transparent;
+		color: var(--text-body, #3d4d71);
+		font-size: 0.85rem;
+		text-align: start;
+		cursor: pointer;
+		transition: background 0.15s ease;
+
+		&:hover:not(:disabled) {
+			background: var(--background, #eef0f3);
+		}
+
+		&:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: -2px;
+		}
+
+		&--current {
+			font-weight: 700;
+		}
+	}
+
+	// Mirrors the node colors from `getStyleForType` so the menu reads as "this
+	// is what the node will look like".
+	&__swatch {
+		width: 12px;
+		height: 12px;
+		border-radius: 3px;
+		flex-shrink: 0;
+		background: var(--card-default, #ffffff);
+
+		&[data-type='question'] {
+			background: #47b4ef;
+		}
+
+		&[data-type='option'] {
+			background: #ffe16a;
+		}
+
+		&[data-type='group'] {
+			background: #b9a1e8;
+		}
+	}
+}
+
+// Touch: every control reaches 44px.
+@media (pointer: coarse) {
+	.toolbar__btn,
+	.typeMenu__item {
+		min-height: $touch-target;
+	}
+
+	.rating__btn {
+		width: $touch-target;
+		height: $touch-target;
+
+		img {
+			width: 28px;
+			height: 28px;
+		}
+	}
+
+	.rating__emoji {
+		font-size: 1.4rem;
+	}
+}
+
+@keyframes toolbarFadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.toolbar,
+	.typeMenu {
+		animation: none;
+	}
+
+	.rating__btn {
+		transition: none;
+
+		&:hover,
+		&--active {
+			transform: none;
+		}
+	}
+}

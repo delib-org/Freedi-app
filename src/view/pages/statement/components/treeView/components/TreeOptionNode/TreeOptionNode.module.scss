@@ -1,13 +1,16 @@
+@use '@/view/style/dark-scope' as *;
+@use '@/view/style/mixins' as m;
+
 .tree-option-node {
 	display: flex;
 	align-items: flex-start;
-	gap: 8px;
-	padding: 8px 10px;
+	gap: var(--space-xs);
+	padding: var(--space-xs) var(--space-sm);
 	flex: 1;
 	min-width: 0;
-	margin-top: 6px;
+	margin-top: var(--space-2xs);
 	border-inline-start: 3px solid var(--header-not-chosen, #ffe16a);
-	padding-inline-start: 10px;
+	padding-inline-start: var(--space-sm);
 	background-color: var(--card-default, #fff);
 	border-radius: 6px;
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
@@ -260,12 +263,19 @@
 	&--selected &__badge {
 		background-color: var(--approve, #57c6b2);
 		color: #fff;
+
+		// White on the teal approve fill is 2.07:1; the dark page ink is 8:1+.
+		@include dark {
+			color: var(--space-paper, #0b0f17);
+		}
 	}
 
+	// Title: clearly stronger than the body below (larger, bold, strong colour).
 	&__text {
-		font-size: 0.9rem;
-		line-height: 1.4;
-		color: var(--text-body, #444);
+		font-size: var(--font-size-md);
+		font-weight: var(--font-weight-bold);
+		line-height: var(--line-height-snug);
+		color: var(--text-title, #333);
 		word-break: break-word;
 	}
 
@@ -287,26 +297,21 @@
 		padding-inline-end: 12rem;
 	}
 
-	&__description {
-		color: var(--text-secondary, #999);
-		font-size: 0.85rem;
-		line-height: 1.4;
-		margin-top: 0.25rem;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		-webkit-box-orient: vertical;
+	// Body: regular weight, body colour, a step smaller than the title. It is cut
+	// to 2 lines by ReadMoreClamp (description and paragraph children alike).
+	&__description,
+	&__paragraphs {
+		color: var(--text-body, #444);
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-regular);
+		line-height: var(--line-height-snug);
+		margin-top: var(--space-3xs);
 		word-break: break-word;
 	}
 
-	&__paragraphs {
-		margin-top: 4px;
-
-		p {
-			margin: 2px 0;
-			font-size: inherit;
-		}
+	&__paragraphs p {
+		margin: var(--space-3xs) 0;
+		font-size: inherit;
 	}
 
 	// Synthesis: proposal-first actions row — sources toggle + admin buttons.
@@ -480,15 +485,58 @@
 		font-style: italic;
 	}
 
+	// One footer for the evaluation and the buttons. The compact Evaluation
+	// dissolves into this flex box: faces on their own row (order 1), then the
+	// action buttons (order 2) at the start and the result chips (order 3) at
+	// the end of ONE row, the consensus caption last (order 4).
+	&__footer {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		column-gap: 8px;
+		row-gap: var(--space-3xs);
+		margin-top: var(--space-2xs);
+	}
+
+	// Dissolved so the compact Evaluation's pieces are items of the footer; any
+	// other evaluation type is a single block that takes the full first row.
+	// The actions are passed into the Evaluation (footerSlot) so the DOM order is
+	// the visual order; they are the one child that is not a full-width block.
 	&__evaluation {
-		margin-top: 4px;
+		display: contents;
+
+		> *:not(.tree-option-node__actions) {
+			flex: 0 0 100%;
+			min-width: 0;
+			order: 1;
+		}
+	}
+
+	// Join buttons get their own row below the buttons + chips row.
+	&__join {
+		flex: 0 0 100%;
+		min-width: 0;
+		order: 5;
+
+		&:empty {
+			display: none;
+		}
+	}
+
+	// "Reply" is words on desktop and an icon on a phone (see the mobile block).
+	&__reply-icon {
+		display: none;
+		font-size: 1.25rem;
 	}
 
 	&__actions {
 		display: flex;
+		flex: 0 1 auto;
+		flex-wrap: wrap;
 		align-items: center;
 		gap: 8px;
-		margin-top: 4px;
+		min-width: 0;
+		order: 2;
 	}
 
 	&__action-btn {
@@ -504,6 +552,12 @@
 		cursor: pointer;
 		min-height: 32px;
 		opacity: 0.7;
+
+		// Pale grey at 70% opacity only just reaches 4.5:1 on the dark card.
+		@include dark {
+			color: var(--text-meta);
+			opacity: 1;
+		}
 
 		&:hover {
 			background: var(--card-default, #f5f5f5);
@@ -610,6 +664,79 @@
 		&:focus-visible {
 			outline: 2px solid var(--btn-primary, #5f88e5);
 			outline-offset: -2px;
+		}
+	}
+}
+
+// Phone tap targets: every action button reaches 44px tall, icon-only ones 44px wide.
+@include m.mobile {
+	.tree-option-node__action-btn {
+		min-height: 44px;
+	}
+
+	// Icon-only reply keeps the 44px target (aria-label and title stay).
+	.tree-option-node__reply-btn {
+		min-width: 44px;
+		justify-content: center;
+	}
+
+	.tree-option-node__reply-label {
+		display: none;
+	}
+
+	.tree-option-node__reply-icon {
+		display: inline-block;
+	}
+
+	// Buttons are 44px wide boxes already: no gap between them, and a small one
+	// before the chips, frees the width the two chips need on the same row.
+	.tree-option-node__actions {
+		gap: 0;
+	}
+
+	.tree-option-node__footer {
+		column-gap: var(--space-2xs);
+	}
+
+	.tree-option-node__action-btn--icon {
+		min-width: 44px;
+		justify-content: center;
+	}
+
+	// Reply counter: the button is the 44x44 tap target; the 22px pill is drawn
+	// by ::before so the visible badge stays small and no neighbour is overlapped.
+	.tree-option-node__reply-counter {
+		position: relative;
+		isolation: isolate;
+		min-width: 44px;
+		height: 44px;
+		padding: 0;
+		border-radius: 0;
+		background-color: transparent;
+
+		&::before {
+			content: '';
+			position: absolute;
+			inset-block: 11px;
+			inset-inline: 6px;
+			z-index: -1;
+			border-radius: 11px;
+			background-color: rgba(95, 136, 229, 0.15);
+			transition: background-color 0.15s ease;
+		}
+
+		&:hover {
+			background-color: transparent;
+		}
+
+		&:hover::before {
+			background-color: var(--btn-primary-hover, #4a73d0);
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			&::before {
+				transition: none;
+			}
 		}
 	}
 }

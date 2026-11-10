@@ -7,10 +7,11 @@
  * client security rules would block.
  *
  * Data model (shared with the main app + the `fn_notifications` function):
- *  - `pushNotifications/{token}`            — token → user, for token bookkeeping.
- *  - `statementsSubscribe/{uid}--{stId}`    — the function delivers a push to
- *    every such doc with `getPushNotification === true`, to each token in its
- *    `tokens[]` array.
+ *  - `pushNotifications/{token}`            — token → user. Pushes are sent to
+ *    these tokens. Owner-only: a token must never be readable by anyone else.
+ *  - `statementsSubscribe/{uid}--{stId}`    — the function pushes to everyone
+ *    with `getPushNotification === true` here, looking their tokens up by uid.
+ *    Any signed-in user can read this collection, so no token is written to it.
  */
 import { FieldValue } from 'firebase-admin/firestore';
 import {
@@ -24,9 +25,6 @@ import {
 import { adminDb } from './firebaseAdmin';
 import { getStatement } from './conversation';
 import type { SessionUser } from './writeActions';
-
-/** Firestore caps a single batch at 500 writes. */
-const BATCH_SIZE = 500;
 
 /** A SessionUser is enough to identify the subscriber on the subscription doc. */
 function toUser(user: SessionUser) {
@@ -69,52 +67,16 @@ export async function storeToken(user: SessionUser, token: string): Promise<void
 }
 
 /**
- * Fan the token out to every push-enabled subscription the user already has, so
- * the existing function delivers to this device. Mirrors the main app's
- * `syncTokenWithSubscriptions`.
+ * Token registration. Every push-enabled subscription the user has reaches this
+ * device from here on, because delivery looks tokens up by uid.
  */
-export async function syncTokenWithSubscriptions(
-	user: SessionUser,
-	token: string,
-): Promise<number> {
-	const snapshot = await adminDb
-		.collection(Collections.statementsSubscribe)
-		.where('userId', '==', user.uid)
-		.where('getPushNotification', '==', true)
-		.get();
-
-	let batch = adminDb.batch();
-	let count = 0;
-	const commits: Promise<unknown>[] = [];
-
-	for (const docSnap of snapshot.docs) {
-		batch.update(docSnap.ref, {
-			tokens: FieldValue.arrayUnion(token),
-			lastTokenUpdate: Date.now(),
-		});
-		count++;
-		if (count % BATCH_SIZE === 0) {
-			commits.push(batch.commit());
-			batch = adminDb.batch();
-		}
-	}
-	if (count % BATCH_SIZE !== 0) commits.push(batch.commit());
-
-	await Promise.all(commits);
-
-	return count;
-}
-
-/** Token registration: store the token and sync it to existing subscriptions. */
-export async function registerToken(user: SessionUser, token: string): Promise<number> {
+export async function registerToken(user: SessionUser, token: string): Promise<void> {
 	await storeToken(user, token);
-
-	return syncTokenWithSubscriptions(user, token);
 }
 
 /**
  * Follow a question for push: upsert the user's subscription with
- * `getPushNotification: true` and the device token. Idempotent.
+ * `getPushNotification: true`, and register the device. Idempotent.
  */
 export async function followQuestion(
 	user: SessionUser,
@@ -145,10 +107,8 @@ export async function followQuestion(
 				statementType: statement.statementType,
 				getPushNotification: true,
 				getInAppNotification: true,
-				tokens: FieldValue.arrayUnion(token),
 				lastUpdate: Date.now(),
 				createdAt: statement.createdAt ?? Date.now(),
-				lastTokenUpdate: Date.now(),
 			},
 			{ merge: true },
 		);
@@ -167,6 +127,7 @@ export async function unfollowQuestion(
 		getPushNotification: false,
 		lastUpdate: Date.now(),
 	};
+	// Only shrinks the old list: a device still on it must stop being a fallback target.
 	if (token) update.tokens = FieldValue.arrayRemove(token);
 
 	await adminDb.collection(Collections.statementsSubscribe).doc(subId).set(update, { merge: true });
@@ -241,11 +202,7 @@ export async function setQuestionFrequency(
 		lastUpdate: Date.now(),
 		createdAt: statement.createdAt ?? Date.now(),
 	};
-	if (wantsPush) {
-		update.getPushNotification = true;
-		update.tokens = FieldValue.arrayUnion(token);
-		update.lastTokenUpdate = Date.now();
-	}
+	if (wantsPush) update.getPushNotification = true;
 
 	await ref.set(update, { merge: true });
 }

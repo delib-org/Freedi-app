@@ -33,9 +33,7 @@ export function FilterBar(): m.Component<FilterBarAttrs> {
 							onTypeChange(val ? (val as StatementType) : undefined);
 						},
 					},
-					typeOptions.map((opt) =>
-						m('option', { value: opt.value }, opt.label)
-					)
+					typeOptions.map((opt) => m('option', { value: opt.value }, opt.label)),
 				),
 				m('input.filter-bar__input[type=text]', {
 					placeholder: 'Search statements...',

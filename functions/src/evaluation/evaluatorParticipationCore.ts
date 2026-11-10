@@ -4,7 +4,6 @@
  */
 
 import type { Firestore, DocumentReference } from 'firebase-admin/firestore';
-import type { FieldValue } from 'firebase-admin/firestore';
 import {
 	Collections,
 	Statement,
@@ -33,14 +32,10 @@ export function buildEmptyStatementEvaluation(): StatementEvaluation {
 }
 
 /**
- * The parent patch for "count is now `count`" (absolute number) or "+1"
- * (FieldValue.increment). Always stamps `lastUpdate`: callers write it only
- * when the count really changes.
+ * The parent patch for "count is now `count`". Always stamps `lastUpdate`:
+ * callers write it only when the count really changes.
  */
-export function buildCounterPatch(
-	parent: Statement,
-	count: number | FieldValue,
-): Record<string, unknown> {
+export function buildCounterPatch(parent: Statement, count: number): Record<string, unknown> {
 	// `lastUpdate` moves with a real count change so delta listeners
 	// (`where lastUpdate > watermark`, the only live channel for bulk-loaded
 	// scopes) deliver the new count.
@@ -51,10 +46,8 @@ export function buildCounterPatch(
 	}
 
 	// No evaluation map yet: create a complete one so strict parsers still accept it.
-	const asNumber = typeof count === 'number' ? count : 1;
-
 	return {
-		evaluation: { ...buildEmptyStatementEvaluation(), asParentTotalEvaluators: asNumber },
+		evaluation: { ...buildEmptyStatementEvaluation(), asParentTotalEvaluators: count },
 		totalEvaluators: count,
 		lastUpdate,
 	};

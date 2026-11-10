@@ -21,6 +21,8 @@ interface Props {
 	 */
 	minEvaluators: number;
 	minConsensus: number;
+	/** Off while results are off: the agreement number stays out of the rows. */
+	showScores: boolean;
 	onResult: (result: { enqueued: number; skipped: number; mergedIntoExistingRun: boolean }) => void;
 }
 
@@ -29,6 +31,7 @@ const SelectiveOptionsList: FC<Props> = ({
 	disabled,
 	minEvaluators,
 	minConsensus,
+	showScores,
 	onResult,
 }) => {
 	const { t } = useTranslation();
@@ -223,9 +226,11 @@ const SelectiveOptionsList: FC<Props> = ({
 													<span className={styles.row__metric} title={t('Number of evaluators')}>
 														{evals}
 													</span>
-													<span className={styles.row__metric} title={t('Consensus score')}>
-														{cons.toFixed(2)}
-													</span>
+													{showScores && (
+														<span className={styles.row__metric} title={t('Agreement score')}>
+															{cons.toFixed(2)}
+														</span>
+													)}
 												</span>
 												{inCluster && <span className={styles.row__badge}>{t('in cluster')}</span>}
 											</label>

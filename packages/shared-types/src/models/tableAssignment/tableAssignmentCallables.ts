@@ -53,6 +53,11 @@ export interface TablesSaveSettingsRequest {
 	balanceTolerance?: number;
 	/** `null` removes the position question. */
 	positionQuestion?: TableAssignmentPositionQuestion | null;
+	/** Accepted while the session is a draft only. */
+	mode?: TableAssignmentMode;
+	/** `null` removes the number. */
+	expectedParticipants?: number | null;
+	allowReturnByName?: boolean;
 }
 export interface TablesSaveSettingsResponse {
 	settings: TableAssignmentSettings;
@@ -67,13 +72,70 @@ export interface TablesSetStatusResponse {
 	status: TableAssignmentStatus;
 }
 
+/**
+ * What to do when return by full name is on and exactly one other registration
+ * has this name. `ask`: report it and write nothing. `claim`: replace that
+ * registration with an empty one for the caller. `separate`: a new registration.
+ */
+export type TablesNameMatch = 'ask' | 'claim' | 'separate';
+
 /** `tablesRegister` (participant). Idempotent: registering again updates the name. */
 export interface TablesRegisterRequest {
 	sessionId: string;
 	fullName: string;
+	/** Defaults to `ask`. */
+	nameMatch?: TablesNameMatch;
 }
 export interface TablesRegisterResponse {
-	participant: TableAssignmentParticipant;
+	outcome: 'registered' | 'nameExists';
+	/** The caller's own record; absent for `nameExists`. Never another person's data. */
+	participant?: TableAssignmentParticipant;
+}
+
+/**
+ * `tablesCancelRegistration` (the participant, own uid, while registration is open).
+ * Refused with reason `claimed-by-name` for a registration taken over by full name.
+ * No-op success when not registered.
+ */
+export interface TablesCancelRegistrationRequest {
+	sessionId: string;
+}
+export interface TablesCancelRegistrationResponse {
+	cancelled: true;
+}
+
+/**
+ * `tablesRemoveParticipant` (host, any status but `ended`). A ready preview goes
+ * stale. Refused with reason `seated-in-published-run` for someone seated in the
+ * published assignment. No-op success when the person is not registered.
+ */
+export interface TablesRemoveParticipantRequest {
+	sessionId: string;
+	uid: string;
+}
+export interface TablesRemoveParticipantResponse {
+	removed: true;
+}
+
+/** One topic's new title in a `tablesFixDetails` call. */
+export interface TablesFixDetailsTopic {
+	topicId: string;
+	title: string;
+}
+
+/**
+ * `tablesFixDetails` (host, after registration opens and until the session ends).
+ * Titles only, so a ready preview stays publishable. `topics`, when sent, lists
+ * every topic of the session, once each, in the current order.
+ */
+export interface TablesFixDetailsRequest {
+	sessionId: string;
+	title?: string;
+	topics?: TablesFixDetailsTopic[];
+}
+export interface TablesFixDetailsResponse {
+	title: string;
+	topicIds: string[];
 }
 
 /** `tablesSavePreferences` (participant, before registration closes). */

@@ -1,0 +1,128 @@
+// My table: the round table with its seats, the topic, the pill, who sits with you.
+
+.table-art {
+  display: block;
+  inline-size: 16.5rem;
+  max-inline-size: 100%;
+  block-size: auto;
+  margin-inline: auto;
+
+  &__surface {
+    fill: var(--card);
+    stroke: var(--paper-line);
+  }
+
+  &__word {
+    fill: var(--ink);
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 500;
+    text-anchor: middle;
+  }
+
+  &__number {
+    fill: var(--brand);
+    font-family: var(--font-display);
+    font-size: 88px;
+    font-weight: 700;
+    text-anchor: middle;
+  }
+
+  &__me {
+    fill: var(--ink);
+  }
+
+  &__me-word {
+    fill: var(--card);
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    text-anchor: middle;
+  }
+
+  &__seat {
+    &--1 {
+      fill: var(--seat-1);
+    }
+
+    &--2 {
+      fill: var(--seat-2);
+    }
+
+    &--3 {
+      fill: var(--seat-3);
+    }
+
+    &--4 {
+      fill: var(--seat-4);
+    }
+
+    &--5 {
+      fill: var(--seat-5);
+    }
+
+    &--empty {
+      fill: var(--paper);
+      stroke: var(--ink-muted);
+      stroke-width: 2.5;
+    }
+  }
+
+  &__clock {
+    fill: none;
+    stroke: var(--brand);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 6;
+  }
+}
+
+.my-table {
+  &__summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    align-items: center;
+    text-align: center;
+  }
+
+  &__pill {
+    align-self: center;
+    font-size: var(--font-size-note);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__note {
+    margin: 2px 0 0;
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+  }
+
+  &__mates {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-10);
+    margin-block-start: auto;
+    padding: var(--space-md);
+    border: var(--hairline) solid var(--paper-line);
+    border-radius: var(--radius-card);
+    background: var(--card);
+  }
+
+  &__mates-title {
+    margin: 0;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__names {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-sm) var(--space-md);
+    margin: 0;
+    padding: 0;
+    line-height: 1.3;
+    list-style: none;
+    overflow-wrap: anywhere;
+  }
+}

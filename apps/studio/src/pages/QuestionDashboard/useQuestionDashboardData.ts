@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ActivityType, type Statement } from '@freedi/shared-types';
+import { ActivityType, resolveMemberCount, type Statement } from '@freedi/shared-types';
 import { deriveActivities, type ActivityRunState, type DerivedActivity } from '@freedi/event-core';
 import { activityUrlResolver } from '@/config';
 import { useChildren, useStatement } from '@/db/orgStatements';
@@ -65,13 +65,12 @@ export function useQuestionDashboardData(qId: string | undefined): QuestionDashb
 	const membersById = useMemo(
 		() =>
 			children.reduce<Record<string, number>>((acc, child) => {
-				if (typeof child.numberOfMembers === 'number') {
-					acc[child.statementId] = child.numberOfMembers;
-				}
+				const members = resolveMemberCount(progressById[child.statementId], child);
+				if (typeof members === 'number') acc[child.statementId] = members;
 
 				return acc;
 			}, {}),
-		[children],
+		[children, progressById],
 	);
 
 	const lastActivityById = useMemo(

@@ -1,4 +1,4 @@
-import type { TableAssignmentParticipant, TableAssignmentTopic } from '@freedi/shared-types';
+import type { TableAssignmentRosterEntry, TableAssignmentTopic } from '@freedi/shared-types';
 
 /**
  * Direct mode ("choose a table"). The contract has no table documents in
@@ -24,7 +24,7 @@ export interface DirectTable {
 
 /** Seats taken per table, counted from the registrants (host side, where all of them are readable). */
 export function seatCountsFromParticipants(
-	participants: readonly TableAssignmentParticipant[],
+	participants: readonly TableAssignmentRosterEntry[],
 ): Map<number, number> {
 	const counts = new Map<number, number>();
 

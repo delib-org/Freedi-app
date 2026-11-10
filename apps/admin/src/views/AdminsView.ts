@@ -61,13 +61,12 @@ export function AdminsView(): m.Component {
 											m('th', 'User ID'),
 											m('th', { style: { width: '100px' } }, 'Statements'),
 											m('th', { style: { width: '80px' } }, ''),
-										])
+										]),
 									),
 									m(
 										'tbody',
 										state.entries.flatMap((entry) => {
-											const isExpanded =
-												expandedUserId === entry.userId;
+											const isExpanded = expandedUserId === entry.userId;
 
 											const rows: m.Vnode[] = [
 												m(
@@ -75,36 +74,21 @@ export function AdminsView(): m.Component {
 													{
 														key: entry.userId,
 														onclick: () => {
-															expandedUserId = isExpanded
-																? null
-																: entry.userId;
+															expandedUserId = isExpanded ? null : entry.userId;
 														},
 														style: { cursor: 'pointer' },
 													},
 													[
-														m('td', [
-															m('strong', entry.displayName),
-														]),
-														m(
-															'td',
-															entry.userId.substring(0, 16) +
-																'...'
-														),
+														m('td', [m('strong', entry.displayName)]),
+														m('td', entry.userId.substring(0, 16) + '...'),
 														m('td', [
 															m(Badge, {
-																text: String(
-																	entry.statements.length
-																),
+																text: String(entry.statements.length),
 																variant: 'blue',
 															}),
 														]),
-														m(
-															'td',
-															isExpanded
-																? '\u25B2'
-																: '\u25BC'
-														),
-													]
+														m('td', isExpanded ? '\u25B2' : '\u25BC'),
+													],
 												),
 											];
 
@@ -118,52 +102,43 @@ export function AdminsView(): m.Component {
 															{ colspan: 4 },
 															m(
 																'.expand-row__content',
-																entry.statements.map(
-																	(stmt) =>
-																		m(
-																			'.breadcrumb',
-																			{
-																				key: stmt.statementId,
-																				style: {
-																					marginBottom:
-																						'4px',
-																				},
+																entry.statements.map((stmt) =>
+																	m(
+																		'.breadcrumb',
+																		{
+																			key: stmt.statementId,
+																			style: {
+																				marginBottom: '4px',
 																			},
-																			[
-																				m(
-																					Badge,
-																					{
-																						text: stmt.role,
-																						variant:
-																							'emerald',
-																					}
-																				),
-																				m(
-																					'a.app-link',
-																					{
-																						href: getMainAppUrl(
-																							stmt.statementId
-																						),
-																						target: '_blank',
-																						rel: 'noopener',
-																						style: {
-																							marginLeft:
-																								'8px',
-																						},
+																		},
+																		[
+																			m(Badge, {
+																				text: stmt.role,
+																				variant: 'emerald',
+																			}),
+																			m(
+																				'a.app-link',
+																				{
+																					href: getMainAppUrl(stmt.statementId),
+																					target: '_blank',
+																					rel: 'noopener',
+																					style: {
+																						marginLeft: '8px',
 																					},
-																					stmt.title
-																				),
-																			]
-																		)
-																)
-															)
-														)
-													)
+																				},
+																				stmt.title,
+																			),
+																		],
+																	),
+																),
+															),
+														),
+													),
 												);
 											}
 
 											return rows;
-										})
+										}),
 									),
 								]),
 							]),

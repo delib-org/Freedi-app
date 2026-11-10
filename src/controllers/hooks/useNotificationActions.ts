@@ -4,7 +4,6 @@ import {
 	markNotificationAsRead,
 	markNotificationsAsRead,
 	markStatementNotificationsAsRead,
-	markAllNotificationsAsRead,
 	inAppNotificationsSelector,
 	unreadNotificationsSelector,
 } from '@/redux/notificationsSlice/notificationsSlice';
@@ -12,6 +11,7 @@ import {
 	markNotificationAsReadDB,
 	markMultipleNotificationsAsReadDB,
 	markStatementNotificationsAsReadDB,
+	markAllUnreadNotificationsAsReadDB,
 } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { logError } from '@/utils/errorHandling';
@@ -95,22 +95,16 @@ export function useNotificationActions() {
 	 */
 	const markAllAsRead = useCallback(async () => {
 		try {
-			// Get all unread notification IDs
-			const unreadIds = userUnreadNotifications.map((n) => n.notificationId);
+			if (userUnreadNotifications.length === 0) return;
 
-			if (unreadIds.length === 0) return;
-
-			// Update in Redux immediately
-			dispatch(markAllNotificationsAsRead());
-			// Then sync with database
-			await markMultipleNotificationsAsReadDB(unreadIds);
+			await markAllUnreadNotificationsAsReadDB();
 		} catch (error) {
 			logError(error, {
 				operation: 'hooks.useNotificationActions.unreadIds',
 				metadata: { message: 'Error marking all notifications as read:' },
 			});
 		}
-	}, [dispatch, userUnreadNotifications]);
+	}, [userUnreadNotifications]);
 
 	/**
 	 * Get unread count for a specific statement (with backward compatibility)

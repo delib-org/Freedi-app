@@ -1,4 +1,3 @@
-import OptionImprovement from '@/view/components/atomic/organisms/ThinkingSpace/OptionImprovement';
 import React, { useContext, useMemo, useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
@@ -21,7 +20,10 @@ import TopAnswersPanel from '../topAnswers/TopAnswersPanel';
 import ConversationWelcome from '@/view/components/atomic/organisms/ThinkingSpace/ConversationWelcome';
 import { mapViews } from '@/view/components/atomic/organisms/ThinkingSpace/MapExplorer';
 import AnswersCounter from '../questionScreen/AnswersCounter';
+import { useAnswersView } from '../questionScreen/useAnswersView';
+import { moreToRateSelector } from '@/redux/answerViews/answerViewsSlice';
 import AddAnswerFab from '../questionScreen/AddAnswerFab';
+import RatedAllNotice from '../questionScreen/RatedAllNotice';
 import AnswerSortControl from '../questionScreen/AnswerSortControl';
 import {
 	QuestionAnswersTabContext,
@@ -64,6 +66,8 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 		[statement?.statementId],
 	);
 	const allSubs = useSelector(subsSelect);
+	const { view: answersView } = useAnswersView(statement);
+	const moreToRate = useSelector(moreToRateSelector(statement?.statementId));
 
 	const isAdmin = role === Role.admin || role === Role.creator;
 	const isQuestion = statement?.statementType === StatementType.question;
@@ -103,7 +107,7 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 					: {})}
 			>
 				{showReadingHeader && activeView === 'chat' && <ConversationWelcome t={t} compact />}
-				{showReadingHeader && <OnlineUsers statementId={statement?.statementId} />}
+				{showReadingHeader && <OnlineUsers statement={statement} />}
 				{showBody && statement && <StatementBody host={statement} canEdit={isAdmin} />}
 				{showReadingHeader && allSubs.length === 0 && activeView === 'chat' && (
 					<div className={styles.onboarding}>
@@ -149,15 +153,12 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 						<p className={styles.onboarding__cta}>{t('questionOnboarding.getStarted')}</p>
 					</div>
 				)}
-				{showReadingHeader &&
-					activeView === 'chat' &&
-					statement?.statementType === StatementType.option &&
-					!statement.isCluster && (
-						<OptionImprovement key={statement.statementId} statement={statement} />
-					)}
 				{onAnswersTab && statement && (
 					<div className={questionStyles.listHead}>
-						<AnswersCounter data={data} />
+						<AnswersCounter
+							data={data}
+							moreToRate={answersView === 'rate' ? moreToRate : undefined}
+						/>
 						<AnswerSortControl statement={statement} isHost={isAdmin} />
 					</div>
 				)}
@@ -165,15 +166,14 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 					<SwitchScreen statement={statement} role={role} activeView={activeView} data={data} />
 				</QuestionAnswersTabContext.Provider>
 				{/* Admin control over which answers are marked as leading, and in what
-				    order the list reads. Mounted here rather than inside StagePage
-				    because StagePage is also rendered nested (QuestionPage,
-				    MultiStageQuestion), which would put several handles on one screen.
-				    It stays reachable from every reading tab of the question. */}
+				    order the list reads. Mounted here so it stays reachable from every
+				    reading tab of the question. */}
 				{isAdmin && statement && canHaveAnswers && !isMapScreen && !isTabContentView && (
 					<TopAnswersPanel statement={statement} />
 				)}
 			</div>
 			{showFab && statement && <AddAnswerFab statement={statement} />}
+			{isQuestion && statement && <RatedAllNotice key={statement.statementId} data={data} />}
 		</main>
 	);
 };

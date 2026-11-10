@@ -16,6 +16,7 @@ export function getCached(statementId: string): Statement | null {
 
 	if (Date.now() > entry.expires) {
 		cache.delete(statementId);
+
 		return null;
 	}
 

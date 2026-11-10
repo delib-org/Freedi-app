@@ -54,14 +54,17 @@ describe('security step 1: collection locks', () => {
 				await assertFails(write(asMe(), 'tok-forged', { token: 'tok-forged', userId: OTHER }));
 			});
 
-			it('lets the next person on a shared device take the token over', async () => {
-				await seed(env, async (db) => {
-					await write(db, 'tok-shared', { token: 'tok-shared', userId: OTHER });
+			// askedToBeNotified has no takeover: see push-token-registrations.test.mjs
+			if (name === 'pushNotifications') {
+				it('lets the next person on a shared device take the token over', async () => {
+					await seed(env, async (db) => {
+						await write(db, 'tok-shared', { token: 'tok-shared', userId: OTHER });
+					});
+					await assertSucceeds(
+						write(asMe(), 'tok-shared', { token: 'tok-shared', userId: ME }, { merge: true }),
+					);
 				});
-				await assertSucceeds(
-					write(asMe(), 'tok-shared', { token: 'tok-shared', userId: ME }, { merge: true }),
-				);
-			});
+			}
 
 			it('rejects changing a document while leaving it in someone else’s name', async () => {
 				await seed(env, async (db) => {

@@ -21,9 +21,11 @@ import {
 	markNotificationAsRead,
 	markNotificationsAsRead,
 	markStatementNotificationsAsRead,
+	markAllNotificationsAsRead,
 	clearAllInAppNotifications,
 } from '@/redux/notificationsSlice/notificationsSlice';
 import { logError } from '@/utils/errorHandling';
+import { NOTIFICATION } from '@/constants/common';
 
 // Filters out Firestore write errors that are expected and not actionable:
 // - permission-denied: happens during sign-out before listeners unmount
@@ -57,14 +59,30 @@ export function listenToInAppNotifications(): Unsubscribe {
 			limit(100),
 		);
 
-		// Keep the recent history and ALL explicit unread records, even beyond 100.
+		// Unread records, newest first and bounded: someone behind on a large
+		// question could otherwise download one document per answer on every open.
+		// The badge needs no more than this to read "99+", and as records are read
+		// the next ones arrive. Needs the (userId, read, createdAt desc) index.
 		const unreadQuery = query(
 			inAppNotificationsRef,
 			where('userId', '==', user.uid),
 			where('read', '==', false),
+			orderBy('createdAt', 'desc'),
+			limit(NOTIFICATION.UNREAD_LISTENER_LIMIT),
 		);
 		const snapshots = new Map<string, NotificationType[]>();
 		let disposed = false;
+		const publishWhenBothArrived = (): void => {
+			if (snapshots.size < 2) return;
+			const combined = new Map<string, NotificationType>();
+			// A read from the history takes precedence over a pending unread snapshot.
+			for (const record of [...(snapshots.get('unread') || []), ...(snapshots.get('recent') || [])])
+				combined.set(record.notificationId, record);
+			store.dispatch(
+				setInAppNotificationsAll([...combined.values()].sort((a, b) => b.createdAt - a.createdAt)),
+			);
+			store.dispatch(setNotificationFeedOwner(user.uid));
+		};
 		const subscribe = (source: string, notificationQuery: typeof q): Unsubscribe =>
 			onSnapshot(
 				notificationQuery,
@@ -81,25 +99,17 @@ export function listenToInAppNotifications(): Unsubscribe {
 						} as NotificationType;
 					});
 					snapshots.set(source, records);
-					if (snapshots.size < 2) return;
-					const combined = new Map<string, NotificationType>();
-					// A read from the history takes precedence over a pending unread snapshot.
-					for (const record of [
-						...(snapshots.get('unread') || []),
-						...(snapshots.get('recent') || []),
-					])
-						combined.set(record.notificationId, record);
-					store.dispatch(
-						setInAppNotificationsAll(
-							[...combined.values()].sort((a, b) => b.createdAt - a.createdAt),
-						),
-					);
-					store.dispatch(setNotificationFeedOwner(user.uid));
+					publishWhenBothArrived();
 				},
 				(error) => {
 					if (disposed || store.getState().creator.creator?.uid !== user.uid) return;
 					if (error.code === 'permission-denied') return;
 					logError(error, { operation: 'inAppNotifications.listen', metadata: { source } });
+					// If the unread index is not ready, the history must still show.
+					if (source === 'unread') {
+						snapshots.set(source, []);
+						publishWhenBothArrived();
+					}
 				},
 			);
 		const unsubscribers = [subscribe('recent', q), subscribe('unread', unreadQuery)];
@@ -210,10 +220,9 @@ export async function markMultipleNotificationsAsReadDB(notificationIds: string[
 			return;
 		}
 
-		// The unread feed is no longer capped at 100. Respect Firestore's 500-write limit.
 		const uniqueIds = [...new Set(notificationIds)];
-		for (let offset = 0; offset < uniqueIds.length; offset += 450) {
-			const ids = uniqueIds.slice(offset, offset + 450);
+		for (let offset = 0; offset < uniqueIds.length; offset += NOTIFICATION.MARK_READ_BATCH_SIZE) {
+			const ids = uniqueIds.slice(offset, offset + NOTIFICATION.MARK_READ_BATCH_SIZE);
 			const batch = writeBatch(DB);
 			const now = Date.now();
 			ids.forEach((id) =>
@@ -230,6 +239,44 @@ export async function markMultipleNotificationsAsReadDB(notificationIds: string[
 			metadata: {
 				detail: error instanceof Error ? error.message : String(error),
 			},
+		});
+	}
+}
+
+/**
+ * Marks everything unread as read, page by page from the server. The Redux feed
+ * holds only a bounded slice, so its ids would clear part of a long backlog.
+ */
+export async function markAllUnreadNotificationsAsReadDB(): Promise<void> {
+	const user = store.getState().creator.creator;
+
+	try {
+		if (!user) return;
+
+		store.dispatch(markAllNotificationsAsRead());
+
+		const unreadPage = query(
+			collection(DB, Collections.inAppNotifications),
+			where('userId', '==', user.uid),
+			where('read', '==', false),
+			limit(NOTIFICATION.MARK_READ_BATCH_SIZE),
+		);
+
+		let page = await getDocs(unreadPage);
+		while (!page.empty) {
+			const batch = writeBatch(DB);
+			const now = Date.now();
+			page.docs.forEach((record) => batch.update(record.ref, { read: true, readAt: now }));
+			await batch.commit();
+			if (page.size < NOTIFICATION.MARK_READ_BATCH_SIZE) return;
+			page = await getDocs(unreadPage);
+		}
+	} catch (error: unknown) {
+		if (isIgnorableFirestoreWriteError(error)) return;
+
+		logError(error, {
+			operation: 'inAppNotifications.db_inAppNotifications.markAllUnreadNotificationsAsReadDB',
+			userId: user?.uid,
 		});
 	}
 }
@@ -258,17 +305,20 @@ export async function markStatementNotificationsAsReadDB(statementId: string): P
 		const snapshot = await getDocs(q);
 
 		if (!snapshot.empty) {
-			// Batch update in Firestore
-			const batch = writeBatch(DB);
+			// A question can hold more unread answers than one batch accepts.
 			const now = Date.now();
-			snapshot.forEach((docSnapshot) => {
-				batch.update(docSnapshot.ref, {
-					read: true,
-					readAt: now,
-					viewedInContext: true,
+			const docs = snapshot.docs;
+			for (let offset = 0; offset < docs.length; offset += NOTIFICATION.MARK_READ_BATCH_SIZE) {
+				const batch = writeBatch(DB);
+				docs.slice(offset, offset + NOTIFICATION.MARK_READ_BATCH_SIZE).forEach((docSnapshot) => {
+					batch.update(docSnapshot.ref, {
+						read: true,
+						readAt: now,
+						viewedInContext: true,
+					});
 				});
-			});
-			await batch.commit();
+				await batch.commit();
+			}
 
 			// Update in Redux
 			store.dispatch(markStatementNotificationsAsRead(statementId));

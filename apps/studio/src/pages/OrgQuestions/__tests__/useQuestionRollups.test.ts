@@ -48,6 +48,20 @@ describe('computeQuestionRollups', () => {
 		expect(rollup.status).toBe('open');
 	});
 
+	it('prefers the exact member count on the progress doc over the copy on the question', () => {
+		const map: ProgressMap = { q1: progress({ members: 43 }) };
+		const [rollup] = computeQuestionRollups([question({ numberOfMembers: 40 })], map);
+
+		expect(rollup.memberCount).toBe(43);
+	});
+
+	it('does not count a top-level group’s own progress doc as an activity', () => {
+		const map: ProgressMap = { q1: progress({ statementId: 'q1', topParentId: 'q1', members: 3 }) };
+		const [rollup] = computeQuestionRollups([question({})], map);
+
+		expect(rollup.activityCount).toBe(0);
+	});
+
 	it('falls back to zero counts and the statement timestamps without a progress doc', () => {
 		const [rollup] = computeQuestionRollups(
 			[question({ lastChildUpdate: 4000, lastUpdate: 3000 })],

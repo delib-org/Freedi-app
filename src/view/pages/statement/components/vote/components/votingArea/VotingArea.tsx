@@ -8,6 +8,7 @@ import useWindowDimensions from '@/controllers/hooks/useWindowDimensions';
 import { useSelector } from 'react-redux';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
 import { Statement, StatementType } from '@freedi/shared-types';
+import { guardScoreSort } from '../../../questionScreen/canSeeScore';
 
 interface VotingAreaProps {
 	setStatementInfo: React.Dispatch<React.SetStateAction<Statement | undefined>>;
@@ -17,6 +18,7 @@ interface VotingAreaProps {
 	selectionsById: Record<string, number>;
 	votedOptionId: string;
 	castVote: (option: Statement) => Promise<void>;
+	showTallies: boolean;
 }
 
 const VotingArea: FC<VotingAreaProps> = ({
@@ -27,6 +29,7 @@ const VotingArea: FC<VotingAreaProps> = ({
 	selectionsById,
 	votedOptionId,
 	castVote,
+	showTallies,
 }) => {
 	const { statementId, sort } = useParams();
 	const statement = useSelector(statementSelectorById(statementId));
@@ -50,9 +53,9 @@ const VotingArea: FC<VotingAreaProps> = ({
 		return getSortedVotingOptions({
 			statement,
 			subStatements: filteredOptions,
-			sort,
+			sort: sort && guardScoreSort(sort, showTallies),
 		});
-	}, [statement, filteredOptions, sort]);
+	}, [statement, filteredOptions, sort, showTallies]);
 
 	const optionsCount = options.length;
 	const shouldShowVerticalBar = useMemo(
@@ -77,6 +80,7 @@ const VotingArea: FC<VotingAreaProps> = ({
 						isSelected={votedOptionId === option.statementId}
 						castVote={castVote}
 						totalVotes={totalVotes}
+						showTallies={showTallies}
 						setShowInfo={setShowInfo}
 						setStatementInfo={setStatementInfo}
 						optionsCount={optionsCount}

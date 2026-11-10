@@ -25,6 +25,10 @@
 		}
 	}
 
+	&__lead {
+		margin-inline-end: 0.5em;
+	}
+
 	&__segment + &__segment::before {
 		content: '·';
 		margin-inline: 0.5em;

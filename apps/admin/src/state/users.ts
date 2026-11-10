@@ -35,7 +35,10 @@ export function subscribeUsers(): void {
 
 	// Count (one-time)
 	fetchUserCount()
-		.then((count) => { state.totalUsers = count; m.redraw(); })
+		.then((count) => {
+			state.totalUsers = count;
+			m.redraw();
+		})
 		.catch((e) => console.error('[Users] count error:', e));
 
 	// Real-time list
@@ -43,7 +46,7 @@ export function subscribeUsers(): void {
 		const hasMore = snap.docs.length > PAGE_SIZE;
 		const docs = hasMore ? snap.docs.slice(0, PAGE_SIZE) : snap.docs;
 
-		state.items = docs.map((d) => ({ uid: d.id, ...d.data() } as UserDoc));
+		state.items = docs.map((d) => ({ uid: d.id, ...d.data() }) as UserDoc);
 		state.cursor = docs.length > 0 ? docs[docs.length - 1] : null;
 		state.hasMore = hasMore;
 		state.loading = false;

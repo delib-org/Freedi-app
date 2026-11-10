@@ -97,7 +97,7 @@ const SubQuestionsMap = () => {
 		<div className={styles.subQuestionsMap} dir="ltr">
 			<div className={styles.content}>
 				<div className={styles.title}>
-					<h3>{t('Statement Map')}</h3>
+					<h3>{t('Questions map')}</h3>
 				</div>
 				<SubQuestionNode
 					statement={results.top}

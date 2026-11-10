@@ -107,7 +107,12 @@ const feedOf = (userId: string) => mockDb.read(Collections.userFeed, `${userId}-
 describe('subscription lifecycle (member count + userFeed)', () => {
 	beforeEach(() => {
 		mockDb = new FakeFirestore();
-		mockDb.seed(Collections.statements, DISCUSSION, { statementId: DISCUSSION, parentId: 'top' });
+		mockDb.seed(Collections.statements, DISCUSSION, {
+			statementId: DISCUSSION,
+			parentId: 'top',
+			topParentId: DISCUSSION,
+			statementType: StatementType.group,
+		});
 	});
 
 	it('counts members on join and creates their feed entry', async () => {
@@ -140,6 +145,37 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 
 		expect(memberCount()).toBe(2);
 		expect(feedOf('alice')).toBeUndefined();
+	});
+
+	it('removes the token an old client sent when it joined, without registering anything', async () => {
+		const id = `dana--${DISCUSSION}`;
+		const doc = subscriptionDoc('dana', Role.member, {
+			getPushNotification: true,
+			tokens: ['device-1'],
+		});
+		mockDb.seed(Collections.pushNotifications, 'device-1', { token: 'device-1', userId: 'dana' });
+		mockDb.seed(Collections.statementsSubscribe, id, doc);
+
+		await onSubscriptionCreated(snapshotEvent(id, doc));
+
+		expect(mockDb.read(Collections.statementsSubscribe, id)?.tokens).not.toEqual(['device-1']);
+		expect(memberCount()).toBe(1);
+	});
+
+	it('does nothing when only the old tokens field changed (the strip and the cleanup)', async () => {
+		const alice = await joinAs('alice', Role.member, { tokens: ['device-1'] });
+		const before = mockDb.read(Collections.statementsSubscribe, alice) as SubscriptionDoc;
+		const { tokens: _removed, ...after } = before;
+		const feedBefore = feedOf('alice');
+		mockDb.seed(Collections.statementsSubscribe, alice, after);
+		mockDb.resetCounters();
+
+		await onSubscriptionUpdated(changeEvent(alice, before, after));
+
+		expect(_removed).toBeDefined();
+		expect(mockDb.writes).toBe(0);
+		expect(mockDb.reads).toBe(0);
+		expect(feedOf('alice')).toEqual(feedBefore);
 	});
 
 	it('gives a waiting member a feed entry (it leads to the waiting-for-approval screen)', async () => {
@@ -214,5 +250,103 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 		await onSubscriptionDeleted(snapshotEvent(alice, oldDoc));
 
 		expect(feedOf('alice')).toBeDefined();
+	});
+
+	describe('keeping the question document quiet', () => {
+		const progress = (id = DISCUSSION) => mockDb.read(Collections.questionProgress, id);
+		const statementLastUpdate = (): unknown =>
+			mockDb.read(Collections.statements, DISCUSSION)?.lastUpdate;
+		const joinMany = async (from: number, to: number): Promise<void> => {
+			for (let i = from; i <= to; i += 1) await joinAs(`user${i}`, Role.member);
+		};
+
+		it('stores the exact count on the progress doc for every join', async () => {
+			await joinMany(1, 3);
+
+			expect(progress()?.members).toBe(3);
+		});
+
+		it('leaves the question alone between milestones', async () => {
+			await joinMany(1, 20);
+			expect(memberCount()).toBe(20);
+			const stamped = statementLastUpdate();
+
+			await joinMany(21, 24);
+
+			expect(memberCount()).toBe(20);
+			expect(statementLastUpdate()).toBe(stamped);
+			expect(progress()?.members).toBe(24);
+		});
+
+		it('copies the exact number when a milestone is reached', async () => {
+			await joinMany(1, 25);
+
+			expect(memberCount()).toBe(25);
+			expect(progress()?.members).toBe(25);
+		});
+
+		it('recounts a leave on the progress doc too', async () => {
+			await joinMany(1, 21);
+			await leave(`user21--${DISCUSSION}`);
+
+			expect(progress()?.members).toBe(20);
+			expect(memberCount()).toBe(20);
+		});
+
+		it('writes the count straight to statements that have no progress doc', async () => {
+			mockDb.seed(Collections.statements, DISCUSSION, {
+				statementId: DISCUSSION,
+				parentId: 'q1',
+				statementType: StatementType.option,
+			});
+			await joinMany(1, 21);
+
+			expect(memberCount()).toBe(21);
+			expect(progress()).toBeUndefined();
+		});
+
+		it('gives a nested group no progress doc, or Studio would list it as an activity', async () => {
+			mockDb.seed(Collections.statements, DISCUSSION, {
+				statementId: DISCUSSION,
+				parentId: 'parent-group',
+				topParentId: 'parent-group',
+				statementType: StatementType.group,
+			});
+			await joinMany(1, 21);
+
+			expect(memberCount()).toBe(21);
+			expect(progress()).toBeUndefined();
+		});
+
+		it('still copies when a burst of joins jumps past the exact milestone', async () => {
+			await joinMany(1, 20);
+			for (let i = 21; i <= 25; i += 1) {
+				const id = `seeded${i}--${DISCUSSION}`;
+				mockDb.seed(
+					Collections.statementsSubscribe,
+					id,
+					subscriptionDoc(`seeded${i}`, Role.member),
+				);
+			}
+
+			await joinAs('twenty-sixth', Role.member);
+
+			expect(memberCount()).toBe(26);
+		});
+
+		it('does not count a join as activity on an existing progress doc', async () => {
+			mockDb.seed(Collections.questionProgress, DISCUSSION, {
+				statementId: DISCUSSION,
+				topParentId: DISCUSSION,
+				entered: 3,
+				lastActivity: 5,
+				lastUpdate: 5,
+			});
+
+			await joinAs('alice', Role.member);
+
+			expect(progress()).toMatchObject({ members: 1, lastActivity: 5, entered: 3 });
+			expect(progress()?.lastUpdate).toBeGreaterThan(5);
+		});
 	});
 });

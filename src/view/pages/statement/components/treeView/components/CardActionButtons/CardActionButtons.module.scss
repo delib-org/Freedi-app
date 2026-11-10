@@ -1,0 +1,12 @@
+.card-action-icon {
+	font-size: 18px;
+	line-height: 1;
+
+	&--filled {
+		font-variation-settings: 'FILL' 1;
+	}
+
+	&--outline {
+		font-variation-settings: 'FILL' 0;
+	}
+}

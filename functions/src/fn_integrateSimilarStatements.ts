@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getFirestore } from 'firebase-admin/firestore';
-import { Statement, Collections, Role, StatementType, functionConfig } from '@freedi/shared-types';
+import { getFirestore, type Firestore } from 'firebase-admin/firestore';
+import { Statement, Collections, StatementType, functionConfig } from '@freedi/shared-types';
 import { logger } from 'firebase-functions';
 import {
 	findSimilarAndGenerateSuggestion,
@@ -10,6 +10,29 @@ import {
 import { performIntegration } from './integrate/performIntegration';
 import { reverseIntegration } from './integrate/reverseIntegration';
 import { ALLOWED_ORIGINS } from './config/cors';
+import { hasAdminSubscription } from './utils/subscriptionIdentity';
+import { logError } from './utils/errorHandling';
+
+/**
+ * Whether `userId` holds an admin subscription on the deliberation root.
+ * Reads the subscription by doc id and fails closed: a missing root id or any
+ * lookup error answers false, never true.
+ */
+export async function isIntegrationAdmin(
+	db: Firestore,
+	userId: string,
+	topParentId: string | undefined,
+	operation: string,
+): Promise<boolean> {
+	if (!topParentId) return false;
+	try {
+		return await hasAdminSubscription(db, userId, [topParentId]);
+	} catch (error) {
+		logError(error, { operation, userId, statementId: topParentId });
+
+		return false;
+	}
+}
 
 /**
  * Request type for finding similar statements for integration
@@ -83,14 +106,8 @@ export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest
 		const topParentId = sourceStatement.topParentId || parentId;
 
 		// 2. PARALLEL: Fetch admin check, parent, and siblings simultaneously
-		const [membersSnapshot, parentDoc, siblingsSnapshot] = await Promise.all([
-			db
-				.collection(Collections.statementsSubscribe)
-				.where('statementId', '==', topParentId)
-				.where('userId', '==', userId)
-				.where('role', 'in', [Role.admin, 'creator', 'admin'])
-				.limit(1)
-				.get(),
+		const [isAdmin, parentDoc, siblingsSnapshot] = await Promise.all([
+			isIntegrationAdmin(db, userId, topParentId, 'integrateSimilarStatements.findSimilar'),
 			db.collection(Collections.statements).doc(parentId).get(),
 			db
 				.collection(Collections.statements)
@@ -99,7 +116,6 @@ export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest
 				.get(),
 		]);
 
-		const isAdmin = !membersSnapshot.empty;
 		const isCreator = sourceStatement.creatorId === userId;
 
 		if (!isAdmin && !isCreator) {
@@ -165,15 +181,9 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 		const parentStatement = parentDoc.data() as Statement;
 		const topParentId = parentStatement.topParentId || parentStatementId;
 
-		const membersSnapshot = await db
-			.collection(Collections.statementsSubscribe)
-			.where('statementId', '==', topParentId)
-			.where('userId', '==', userId)
-			.where('role', 'in', [Role.admin, 'creator', 'admin'])
-			.limit(1)
-			.get();
-
-		if (membersSnapshot.empty) {
+		if (
+			!(await isIntegrationAdmin(db, userId, topParentId, 'integrateSimilarStatements.execute'))
+		) {
 			throw new HttpsError('permission-denied', 'Only admins can execute integration');
 		}
 
@@ -255,14 +265,9 @@ export const reverseIntegrationCallable = onCall<ReverseIntegrationRequest>(
 		if (!topParentId) {
 			throw new HttpsError('failed-precondition', 'Cluster has no parent context');
 		}
-		const membersSnapshot = await db
-			.collection(Collections.statementsSubscribe)
-			.where('statementId', '==', topParentId)
-			.where('userId', '==', userId)
-			.where('role', 'in', [Role.admin, 'creator', 'admin'])
-			.limit(1)
-			.get();
-		if (membersSnapshot.empty) {
+		if (
+			!(await isIntegrationAdmin(db, userId, topParentId, 'integrateSimilarStatements.reverse'))
+		) {
 			throw new HttpsError('permission-denied', 'Only admins can reverse a synthesis');
 		}
 

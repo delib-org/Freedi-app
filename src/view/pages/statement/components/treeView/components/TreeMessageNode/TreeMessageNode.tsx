@@ -22,6 +22,9 @@ import { useBookmark } from '@/controllers/hooks/useBookmark';
 import SendIcon from '@/view/components/icons/SendIcon';
 import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
 import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
+import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
+import UnreadMessagesBadge from '@/view/components/unreadBadge/UnreadMessagesBadge';
+import { DiveInIconButton, BookmarkIconButton } from '../CardActionButtons/CardActionButtons';
 import ChatQuestionSummary from './ChatQuestionSummary';
 import styles from './TreeMessageNode.module.scss';
 
@@ -31,6 +34,9 @@ interface TreeMessageNodeProps {
 	hasChildren: boolean;
 	onReplySubmitted?: () => void;
 	onReply?: (statement: Statement) => void;
+	/** Discussion tab: one chat button opens the message's conversation panel, replacing
+	 *  the reply button and box. Tree view leaves this off and keeps nested replies. */
+	opensChatSheet?: boolean;
 }
 
 const SWIPE_THRESHOLD = 60;
@@ -47,6 +53,7 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 	hasChildren,
 	onReplySubmitted,
 	onReply,
+	opensChatSheet = false,
 }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
@@ -296,13 +303,38 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 				)}
 				{isQuestion && <ChatQuestionSummary statement={statement} />}
 				<div className={styles['tree-message-node__actions']}>
-					<button
-						className={styles['tree-message-node__action-btn']}
-						onClick={onReply ? () => onReply(statement) : handleReplyToggle}
-						aria-label={t('reply')}
-					>
-						{t('reply')}
-					</button>
+					{!opensChatSheet && (
+						<button
+							className={styles['tree-message-node__action-btn']}
+							onClick={onReply ? () => onReply(statement) : handleReplyToggle}
+							aria-label={t('reply')}
+						>
+							{t('reply')}
+						</button>
+					)}
+					{(isQuestion || hasChildren) && (
+						<DiveInIconButton
+							className={`${styles['tree-message-node__action-btn']} ${styles['tree-message-node__action-btn--icon']}`}
+							onClick={handleDrillDown}
+							label="Drill down"
+						/>
+					)}
+					{opensChatSheet ? (
+						<StatementChatMore
+							statement={statement}
+							variant="round"
+							opensSheet
+							sheetSubject="message"
+						/>
+					) : (
+						<UnreadMessagesBadge statementId={statement.statementId} />
+					)}
+					<BookmarkIconButton
+						className={`${styles['tree-message-node__action-btn']} ${styles['tree-message-node__action-btn--icon']} ${styles['tree-message-node__bookmark-btn']}`}
+						activeClassName={styles['tree-message-node__bookmark-btn--active']}
+						isBookmarked={isBookmarked}
+						onClick={toggleBookmark}
+					/>
 					{canPropose && (
 						<button
 							className={styles['tree-message-node__action-btn']}
@@ -313,41 +345,6 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 							{converting ? t('Saving...') : t('Make this a proposal')}
 						</button>
 					)}
-					{isQuestion && (
-						<button
-							className={styles['tree-message-node__action-btn']}
-							onClick={handleDrillDown}
-							aria-label={t('Drill down')}
-						>
-							<span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-								jump_to_element
-							</span>
-						</button>
-					)}
-					{hasChildren && !isQuestion && (
-						<button
-							className={styles['tree-message-node__action-btn']}
-							onClick={handleDrillDown}
-							aria-label={t('Drill down')}
-						>
-							{t('Drill down')}
-						</button>
-					)}
-					<button
-						className={`${styles['tree-message-node__action-btn']} ${styles['tree-message-node__bookmark-btn']} ${isBookmarked ? styles['tree-message-node__bookmark-btn--active'] : ''}`}
-						onClick={toggleBookmark}
-						aria-label={isBookmarked ? t('Remove bookmark') : t('Bookmark')}
-					>
-						<span
-							className="material-symbols-outlined"
-							style={{
-								fontSize: 18,
-								fontVariationSettings: isBookmarked ? "'FILL' 1" : "'FILL' 0",
-							}}
-						>
-							bookmark
-						</span>
-					</button>
 				</div>
 
 				{conversionError && <p role="alert">{conversionError}</p>}
@@ -360,7 +357,7 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 					/>
 				)}
 
-				{showReplyInput && (
+				{showReplyInput && !opensChatSheet && (
 					<form className={styles['tree-message-node__reply-form']} onSubmit={handleReplySubmit}>
 						<textarea
 							ref={replyInputRef}

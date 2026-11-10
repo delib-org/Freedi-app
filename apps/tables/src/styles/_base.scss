@@ -6,12 +6,16 @@
   box-sizing: border-box;
 }
 
+html.modal-open {
+  overflow: hidden;
+}
+
 body {
   margin: 0;
-  min-block-size: 100vh;
+  min-block-size: 100dvh;
   background: var(--paper);
   color: var(--ink);
-  font-family: 'Assistant', system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: var(--font-size-base);
   line-height: var(--line-height-normal);
 }
@@ -36,44 +40,131 @@ a {
 
 // ---- page shell -------------------------------------------------------------
 .shell {
-  min-block-size: 100vh;
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100dvh;
 
   &__bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-sm) var(--padding);
-    border-block-end: 1px solid var(--paper-line);
-    background: var(--card);
+    gap: var(--space-sm);
+    inline-size: 100%;
+    margin-inline: auto;
+    padding: var(--space-md) var(--space-lg) var(--space-sm);
   }
 
-  &__app {
-    color: var(--brand);
+  &__brand {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-10);
+  }
+
+  &__logo {
+    display: block;
+    block-size: var(--logo-height);
+    inline-size: auto;
+
+    // The logo file has a white ground; on warm paper it must not show as a box.
+    mix-blend-mode: multiply;
+
+    [data-theme='dark'] & {
+      mix-blend-mode: normal;
+    }
+
+    &--large {
+      block-size: var(--logo-height-large);
+    }
+  }
+
+  &__bar-end {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-sm);
+    min-inline-size: 0;
+  }
+
+  // A gathering name can be 200 characters: two lines here, the whole of it on the page.
+  &__label {
+    display: -webkit-box;
+    flex: 1 1 5rem;
+    min-inline-size: 0;
+    overflow: hidden;
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  &__lang {
+    flex: none;
+  }
+
+  &__bar-title {
+    flex: 1;
+    min-inline-size: 0;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--font-size-room-lg);
     font-weight: var(--font-weight-bold);
-    font-size: var(--font-size-lg);
+    line-height: var(--line-height-tight);
+    overflow-wrap: anywhere;
+  }
+
+  // Projector: the whole width and height, nothing centred into a column.
+  &--room &__logo {
+    block-size: var(--logo-height-room);
+  }
+
+  &--room {
+    block-size: 100dvh;
+  }
+
+  &--room &__main {
+    min-block-size: 0;
+    max-inline-size: none;
+    padding-block-start: var(--space-sm);
+    overflow-y: auto;
   }
 
   &__lang-select {
     min-block-size: var(--tap-target);
-    padding-inline: var(--space-sm);
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-sm);
+    padding-inline: var(--space-14);
+    border: var(--hairline) solid var(--paper-line);
+    border-radius: var(--radius-full);
     background: var(--card);
     color: var(--ink);
     font: inherit;
+    font-size: var(--font-size-sm);
   }
 
   &__main {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: var(--space-md);
+    inline-size: 100%;
     max-inline-size: var(--content-width);
     margin-inline: auto;
-    padding: var(--padding-large) var(--padding);
+    padding: var(--space-lg) var(--padding);
 
     &--wide {
       max-inline-size: var(--content-width-wide);
     }
+  }
+
+  &--phone &__bar,
+  &--phone &__main {
+    max-inline-size: var(--content-width-phone);
+  }
+
+  &--phone &__main {
+    padding: var(--space-sm) var(--space-lg) var(--space-lg);
   }
 
   &__back {
@@ -86,6 +177,7 @@ a {
 
   &__title {
     margin: 0;
+    font-family: var(--font-display);
     font-size: var(--font-size-2xl);
     line-height: 1.25;
   }
@@ -97,10 +189,9 @@ a {
   flex-direction: column;
   gap: var(--space-sm);
   padding: var(--padding);
-  border: 1px solid var(--paper-line);
-  border-radius: var(--radius);
+  border: var(--hairline) solid var(--paper-line);
+  border-radius: var(--radius-card);
   background: var(--card);
-  box-shadow: var(--shadow-sm);
 
   &--center {
     align-items: flex-start;
@@ -162,7 +253,7 @@ a {
     align-items: center;
     justify-content: space-between;
     gap: var(--space-sm);
-    border: 1px solid var(--paper-line);
+    border: var(--hairline) solid var(--paper-line);
     border-radius: var(--radius);
     background: var(--card);
   }
@@ -218,7 +309,7 @@ a {
 
   &--registrationOpen {
     background: var(--success-soft);
-    color: var(--success);
+    color: var(--success-strong);
   }
 
   &--registrationClosed {
@@ -228,7 +319,7 @@ a {
 
   &--published {
     background: var(--brand-soft);
-    color: var(--brand);
+    color: var(--brand-strong);
   }
 }
 
@@ -237,28 +328,54 @@ a {
   padding: 0 var(--space-sm);
   border-radius: var(--radius-sm);
   background: var(--paper-soft);
-  color: var(--ink-muted);
+  color: var(--ink);
   font-size: var(--font-size-sm);
 }
 
 .notice {
   margin: 0;
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-sm);
+  padding: var(--space-10) var(--space-14);
+  border-radius: var(--radius);
   background: var(--paper-soft);
   color: var(--ink);
 
   &--ok {
     background: var(--success-soft);
+    color: var(--success-strong);
   }
 
   &--warn {
     background: var(--warning-soft);
+    color: var(--warning);
   }
 
   &--error {
     background: var(--danger-soft);
     color: var(--danger);
+  }
+}
+
+.pill {
+  display: inline-block;
+  align-self: flex-start;
+  padding: var(--space-xs) var(--space-14);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+
+  &--success {
+    background: var(--success-soft);
+    color: var(--success-strong);
+  }
+
+  &--warning {
+    background: var(--warning-soft);
+    color: var(--warning);
+  }
+
+  &--neutral {
+    background: var(--paper-soft);
+    color: var(--ink);
   }
 }
 

@@ -16,7 +16,8 @@ import { dropEvaluationOnTheme } from './themeGuard';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
 import { recordEvaluatorParticipation } from './evaluatorParticipation';
-import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
+import { checkConsensusShift } from '../engagement/notifications/socialProofTrigger';
+import { markHybridEmbeddingStaleIfUsed } from '../services/hybrid-vector-service';
 import { writeHistoryEntry } from '../statements/history/writeHistoryEntry';
 import { isResearchEnabledForTopParent } from '../statements/history/isResearchEnabled';
 // Ship 3a: cluster-aware polarization. See onCreateEvaluation.ts for the
@@ -93,6 +94,8 @@ export async function updateEvaluation(
 		};
 		updateUserDemographicEvaluation(statement, userEvalData);
 
+		await checkConsensusShift(statement);
+
 		// Ship 3a: enqueue cluster recompute(s) when this statement belongs to
 		// any synth cluster. Same pattern as onCreateEvaluation. Behind
 		// `clusterAwarePolarization` flag — when OFF, no cluster work happens.
@@ -114,7 +117,7 @@ export async function updateEvaluation(
 		}
 
 		// Mark hybrid embedding as stale (non-blocking)
-		markHybridEmbeddingStale(after.statementId).catch((err) =>
+		markHybridEmbeddingStaleIfUsed(statement).catch((err) =>
 			logger.warn('Hybrid stale marking failed:', err),
 		);
 

@@ -1,9 +1,13 @@
 import { useEffect } from 'react';
 import { useAppSelector } from './reduxHooks';
 import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
-import { markMultipleNotificationsAsReadDB } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
+import {
+	markMultipleNotificationsAsReadDB,
+	markStatementNotificationsAsReadDB,
+} from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { relevantNotifications } from '@/utils/engagementNavigation';
+import { NOTIFICATION } from '@/constants/common';
 
 /** Read receipts follow messages actually visible for two seconds, including virtualized lists. */
 export function useReadVisibleNotifications(
@@ -12,6 +16,19 @@ export function useReadVisibleNotifications(
 ): void {
 	const notifications = useAppSelector(inAppNotificationsSelector);
 	const user = useAppSelector(creatorSelector);
+	// The feed is bounded, so with a full backlog this question's older notices may
+	// not be loaded and could never be seen as visible. Clear them by query instead.
+	const backlogIsFull =
+		notifications.filter((n) => !n.read).length >= NOTIFICATION.UNREAD_LISTENER_LIMIT;
+	useEffect(() => {
+		if (!container || !statementId || !backlogIsFull) return;
+		const timer = setTimeout(() => {
+			if (document.visibilityState === 'visible')
+				void markStatementNotificationsAsReadDB(statementId);
+		}, NOTIFICATION.READ_RECEIPT_DELAY_MS);
+
+		return () => clearTimeout(timer);
+	}, [container, statementId, backlogIsFull]);
 	useEffect(() => {
 		if (!container || !statementId || typeof IntersectionObserver === 'undefined') return;
 		const unread = relevantNotifications(notifications, user?.uid).filter(
@@ -35,7 +52,7 @@ export function useReadVisibleNotifications(
 								timers.delete(entry.target);
 								if (document.visibilityState === 'visible' && entry.target.isConnected)
 									void markMultipleNotificationsAsReadDB(ids);
-							}, 2000),
+							}, NOTIFICATION.READ_RECEIPT_DELAY_MS),
 						);
 				});
 			},

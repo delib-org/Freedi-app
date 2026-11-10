@@ -192,6 +192,11 @@
 	border: 1.5px solid var(--text-title);
 	background-color: var(--card-default);
 	color: var(--text-title);
+
+	// Phone: paint the full 44px tap target, not a 36px pill inside it.
+	@media screen and (max-width: 500px) {
+		min-height: 2.75rem;
+	}
 }
 
 .pill--unread {

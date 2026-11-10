@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { safeStorage } from '@/lib/safeStorage';
 
 /**
  * Runtime i18n for Tables, same mechanism as join-class: one locale chunk per
@@ -62,7 +63,7 @@ function applyLang(lang: LangCode): void {
 export async function initI18n(): Promise<void> {
 	const lang = detectLanguage(
 		window.location.search,
-		window.localStorage.getItem(LANG_STORAGE_KEY),
+		safeStorage.getItem(LANG_STORAGE_KEY),
 		navigator.language,
 	);
 
@@ -75,7 +76,7 @@ export function getLang(): LangCode {
 }
 
 export function setLang(lang: LangCode): void {
-	window.localStorage.setItem(LANG_STORAGE_KEY, lang);
+	safeStorage.setItem(LANG_STORAGE_KEY, lang);
 	void loadLocale(lang).then(() => {
 		applyLang(lang);
 		m.redraw();
@@ -97,6 +98,25 @@ export function t(key: string, params?: Record<string, string | number>): string
 	}
 
 	return text;
+}
+
+function hasKey(key: string): boolean {
+	return translations[currentLang]?.[key] !== undefined;
+}
+
+/**
+ * Translate a counted sentence: picks `${base}.${form}` by the current language's plural
+ * rules, or `.other` for a form the sentence does not need (Arabic zero, say).
+ */
+export function tPlural(
+	base: string,
+	count: number,
+	params: Record<string, string | number> = {},
+): string {
+	const form = new Intl.PluralRules(currentLang).select(count);
+	const key = hasKey(`${base}.${form}`) ? `${base}.${form}` : `${base}.other`;
+
+	return t(key, { count, ...params });
 }
 
 export function getAvailableLanguages(): Array<{ code: LangCode; name: string }> {

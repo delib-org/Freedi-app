@@ -14,10 +14,7 @@ export const KpiCard: m.Component<KpiCardAttrs> = {
 
 		return m(`.kpi-card.kpi-card--${gradient}`, [
 			m('.kpi-card__icon', icon),
-			m(
-				'.kpi-card__value',
-				typeof value === 'number' ? value.toLocaleString() : value
-			),
+			m('.kpi-card__value', typeof value === 'number' ? value.toLocaleString() : value),
 			m('.kpi-card__title', title),
 			trend && m('.kpi-card__trend', trend),
 		]);

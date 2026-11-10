@@ -20,7 +20,7 @@ export function useCompoundSolutions(statement: Statement | undefined): UseCompo
 		() =>
 			solutionChildren
 				.filter((child: Statement) => child.statementType === StatementType.option)
-				.sort((a, b) => (b.consensus ?? 0) - (a.consensus ?? 0)),
+				.sort((a, b) => a.createdAt - b.createdAt),
 		[solutionChildren],
 	);
 

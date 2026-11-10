@@ -1,6 +1,6 @@
 import { after, before, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { arrayUnion, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { arrayRemove, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { makeEnv, seed } from './helpers.mjs';
 
 /**
@@ -176,7 +176,7 @@ describe('statementsSubscribe identity', () => {
 			);
 			await assertSucceeds(updateDoc(ref, { isBookmarked: true, lastUpdate: T0 + 1 }));
 			await assertSucceeds(updateDoc(ref, { lastReadTimestamp: T0 + 2, statementId: OPEN_Q }));
-			await assertSucceeds(updateDoc(ref, { tokens: arrayUnion('tok-1'), statementId: OPEN_Q }));
+			await assertSucceeds(updateDoc(ref, { tokens: arrayRemove('tok-1'), statementId: OPEN_Q }));
 			await assertSucceeds(updateDoc(ref, { 'user.displayName': 'New name' }));
 		});
 

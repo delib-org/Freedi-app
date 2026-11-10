@@ -6,6 +6,7 @@ import {
 } from '@/redux/notificationsSlice/notificationsSlice';
 import { useAuthentication } from './useAuthentication';
 import { relevantNotifications } from '@/utils/engagementNavigation';
+import { NOTIFICATION } from '@/constants/common';
 import '../../../public/badge-store.js';
 
 let pendingSync: Promise<void> = Promise.resolve();
@@ -14,7 +15,11 @@ export const useBadgeSync = (): void => {
 	const { user, isLoading } = useAuthentication();
 	const notifications = useSelector(inAppNotificationsSelector);
 	const owner = useSelector(notificationFeedOwnerSelector);
-	const count = relevantNotifications(notifications, user?.uid).filter((n) => !n.read).length;
+	// The feed is bounded, so a larger number would be a partial count.
+	const count = Math.min(
+		relevantNotifications(notifications, user?.uid).filter((n) => !n.read).length,
+		NOTIFICATION.UNREAD_DISPLAY_MAX,
+	);
 	useEffect(() => {
 		if (isLoading || (user && owner !== user.uid)) return;
 		const sync = (): void => {

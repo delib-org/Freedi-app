@@ -23,6 +23,8 @@ interface CreateStatementModalProps {
 	getSubStatements?: () => Promise<void>;
 	isSendToStoreTemp?: boolean;
 	allowedTypes?: StatementType[];
+	/** Off in the main app until the setting is wired in (see the TODO below). */
+	isMultiSuggestionEnabled?: boolean;
 }
 
 const CreateStatementModal: FC<CreateStatementModalProps> = ({
@@ -32,6 +34,7 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 	getSubStatements,
 	isSendToStoreTemp,
 	allowedTypes,
+	isMultiSuggestionEnabled = false,
 }) => {
 	// Default to question if parent is an option (since options can't be created under options)
 	const defaultIsOption =
@@ -44,15 +47,14 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 	const [showMultiPreview, setShowMultiPreview] = useState(false);
 	const [multiSuggestions, setMultiSuggestions] = useState<SplitSuggestion[]>([]);
 	const [isCheckingMulti, setIsCheckingMulti] = useState(false);
+	const [rejection, setRejection] = useState<string | null>(null);
 	const { t } = useTranslation();
 	const { creator } = useAuthentication();
 
 	const titleInputRef = useRef<HTMLInputElement>(null);
 
-	// Check if multi-suggestion detection is enabled for this statement
 	// Note: enableMultiSuggestionDetection setting needs to be added to delib-npm StatementSettings
-	// For now, disable in main app - feature is fully implemented in MC app only
-	const isMultiSuggestionEnabled = false;
+	// For now, disabled by default in main app - feature is fully implemented in MC app only
 	// TODO: Re-enable when delib-npm is updated with enableMultiSuggestionDetection setting
 	// const isMultiSuggestionEnabled = parentStatement !== 'top'
 	//   && parentStatement.statementSettings?.enableMultiSuggestionDetection === true;
@@ -96,6 +98,7 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 	// Handle form submission
 	const onFormSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		setRejection(null);
 		// Only check for multi-suggestions when:
 		// 1. The setting is enabled
 		// 2. We're creating an option (not a question)
@@ -112,6 +115,13 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 					parentId,
 					creator?.uid || '',
 				);
+
+				if (result.rejection) {
+					setRejection(result.rejection.reason);
+					setIsCheckingMulti(false);
+
+					return;
+				}
 
 				if (result.ok && result.isMultipleSuggestions && result.suggestions.length > 1) {
 					// Convert to SplitSuggestion format
@@ -213,15 +223,26 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 						required
 						minLength={3}
 						value={title}
-						onChange={(ev) => setTitle(ev.target.value)}
+						onChange={(ev) => {
+							setTitle(ev.target.value);
+							setRejection(null);
+						}}
 					/>
 					<textarea
 						name="description"
 						placeholder={t('Description')}
 						rows={4}
 						value={description}
-						onChange={(ev) => setDescription(ev.target.value)}
+						onChange={(ev) => {
+							setDescription(ev.target.value);
+							setRejection(null);
+						}}
 					></textarea>
+					{rejection && (
+						<p className={styles.rejection} role="alert">
+							{rejection}
+						</p>
+					)}
 				</div>
 
 				<CreateStatementButtons
@@ -284,7 +305,7 @@ const Tabs: FC<TabsProps> = ({
 					title={isOptionDisabled ? t('Options cannot be created under other options') : ''}
 					disabled={isOptionDisabled}
 				>
-					{t('Option')}
+					{t('Answer')}
 					{isOptionChosen && <div className={styles.block} />}
 				</button>
 			)}
@@ -318,7 +339,7 @@ const CreateStatementButtons: FC<CreateStatementButtonsProps> = ({
 	return (
 		<div className={styles.createStatementButtons}>
 			<Button
-				text={isLoading ? t('Checking...') : t(`Add ${isOption ? 'Option' : 'Question'}`)}
+				text={isLoading ? t('Checking...') : t(isOption ? 'Add an answer' : 'Add Question')}
 				buttonType={ButtonType.PRIMARY}
 				data-cy="add-statement-simple"
 				disabled={isLoading}

@@ -14,6 +14,8 @@ import styles from './QuestionScreen.module.scss';
 interface AddAnswerSheetProps {
 	statement: Statement;
 	onClose: () => void;
+	/** Called when an answer was really published; supporting a similar one is not that. */
+	onAnswerAdded: (answerId: string) => void;
 }
 
 /** First line is the answer, anything after it its description. */
@@ -32,9 +34,10 @@ export function draftFromText(text: string): { title: string; description: strin
  * הוספת תשובה — the design's add-answer sheet over the existing creation flow
  * (useCreateStatementFlow): write → quiet checks the host turned on
  * (structured-debate refinery, split detection, similar answers) → publish.
- * A failed similarity check resolves to "nothing similar", so it never blocks.
+ * A failed similarity check resolves to "nothing similar", so it never blocks;
+ * a moderation refusal is different: it keeps the draft open and publishes nothing.
  */
-const AddAnswerSheet: FC<AddAnswerSheetProps> = ({ statement, onClose }) => {
+const AddAnswerSheet: FC<AddAnswerSheetProps> = ({ statement, onClose, onAnswerAdded }) => {
 	const { t } = useTranslation();
 	const textId = useId();
 	const [text, setText] = useState('');
@@ -44,7 +47,11 @@ const AddAnswerSheet: FC<AddAnswerSheetProps> = ({ statement, onClose }) => {
 		intent: 'answer',
 		origin: 'fab',
 		commit: 'db',
-		onDone: onClose,
+		onDone: (createdIds) => {
+			const lastCreatedId = createdIds[createdIds.length - 1];
+			if (lastCreatedId) onAnswerAdded(lastCreatedId);
+			onClose();
+		},
 	});
 	const { state } = flow;
 
@@ -109,11 +116,18 @@ const AddAnswerSheet: FC<AddAnswerSheetProps> = ({ statement, onClose }) => {
 								autoFocus
 								data-testid="add-answer-text"
 							/>
-							<p className={styles.sheet__hint}>
-								{t(
-									'We will quietly check whether a similar answer exists. If we cannot check, your answer is published anyway.',
-								)}
-							</p>
+							{flow.config.similarity && (
+								<p className={styles.sheet__hint} data-testid="add-answer-similar-hint">
+									{t(
+										'We will quietly check whether a similar answer exists. If we cannot check, your answer is published anyway.',
+									)}
+								</p>
+							)}
+							{state.rejection && (
+								<div className={styles.sheet__error} role="alert">
+									<span>{state.rejection}</span>
+								</div>
+							)}
 							{state.step === 'error' && (
 								<div className={styles.sheet__error} role="alert">
 									<span>{t('Could not complete action.')}</span>

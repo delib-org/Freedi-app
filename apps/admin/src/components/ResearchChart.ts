@@ -24,11 +24,11 @@ const SERIES: Array<{ key: keyof TimeBucket; label: string; color: string }> = (
 }));
 
 const SCOPES: Array<{ value: TimeScope; label: string }> = [
-	{ value: '1h',  label: '1 Hour' },
+	{ value: '1h', label: '1 Hour' },
 	{ value: '12h', label: '12 Hours' },
 	{ value: '24h', label: '24 Hours' },
-	{ value: '1w',  label: '1 Week' },
-	{ value: '1m',  label: '1 Month' },
+	{ value: '1w', label: '1 Week' },
+	{ value: '1m', label: '1 Month' },
 ];
 
 // ── SVG constants ───────────────────────────────────────────────────
@@ -97,20 +97,27 @@ export const ResearchChart: m.Component<ResearchChartAttrs> = {
 		for (const t of yTicks) {
 			svgChildren.push(
 				m('line', {
-					x1: PAD_L, y1: t.y,
-					x2: VB_W - PAD_R, y2: t.y,
+					x1: PAD_L,
+					y1: t.y,
+					x2: VB_W - PAD_R,
+					y2: t.y,
 					stroke: 'var(--border-color, #e2e8f0)',
 					'stroke-width': 0.5,
 				}),
 			);
 			svgChildren.push(
-				m('text', {
-					x: PAD_L - 6, y: t.y + 3.5,
-					'text-anchor': 'end',
-					fill: 'var(--text-muted, #94a3b8)',
-					'font-size': 9,
-					'font-family': 'var(--font-family)',
-				}, t.label),
+				m(
+					'text',
+					{
+						x: PAD_L - 6,
+						y: t.y + 3.5,
+						'text-anchor': 'end',
+						fill: 'var(--text-muted, #94a3b8)',
+						'font-size': 9,
+						'font-family': 'var(--font-family)',
+					},
+					t.label,
+				),
 			);
 		}
 
@@ -134,7 +141,9 @@ export const ResearchChart: m.Component<ResearchChartAttrs> = {
 				` L${points[0].x},${PAD_T + PLOT_H} Z`;
 			svgChildren.push(
 				m('path', {
-					d: areaD, fill: s.color, opacity: 0.08,
+					d: areaD,
+					fill: s.color,
+					opacity: 0.08,
 					style: { transition: 'd 0.6s ease' },
 				}),
 			);
@@ -158,7 +167,10 @@ export const ResearchChart: m.Component<ResearchChartAttrs> = {
 				if (p.val > 0) {
 					svgChildren.push(
 						m('circle', {
-							cx: p.x, cy: p.y, r: 3, fill: s.color,
+							cx: p.x,
+							cy: p.y,
+							r: 3,
+							fill: s.color,
 							style: { transition: 'cx 0.6s ease, cy 0.6s ease' },
 						}),
 					);
@@ -198,8 +210,10 @@ export const ResearchChart: m.Component<ResearchChartAttrs> = {
 		if (tooltip.visible) {
 			svgChildren.push(
 				m('line', {
-					x1: tooltip.x, y1: PAD_T,
-					x2: tooltip.x, y2: PAD_T + PLOT_H,
+					x1: tooltip.x,
+					y1: PAD_T,
+					x2: tooltip.x,
+					y2: PAD_T + PLOT_H,
 					stroke: 'var(--text-muted, #94a3b8)',
 					'stroke-width': 0.5,
 					'stroke-dasharray': '3,3',
@@ -211,14 +225,18 @@ export const ResearchChart: m.Component<ResearchChartAttrs> = {
 		for (let i = 0; i < data.length; i++) {
 			if (i % labelStep === 0 || i === data.length - 1) {
 				svgChildren.push(
-					m('text', {
-						x: PAD_L + i * stepX,
-						y: VB_H - 8,
-						'text-anchor': 'middle',
-						fill: 'var(--text-muted, #94a3b8)',
-						'font-size': 8,
-						'font-family': 'var(--font-family)',
-					}, data[i].label),
+					m(
+						'text',
+						{
+							x: PAD_L + i * stepX,
+							y: VB_H - 8,
+							'text-anchor': 'middle',
+							fill: 'var(--text-muted, #94a3b8)',
+							'font-size': 8,
+							'font-family': 'var(--font-family)',
+						},
+						data[i].label,
+					),
 				);
 			}
 		}
@@ -231,18 +249,24 @@ export const ResearchChart: m.Component<ResearchChartAttrs> = {
 		return m('.chart-card', [
 			m('.chart-card__header', [
 				m('.chart-card__title', 'Activity Timeline'),
-				m('.research__scope-toggle',
+				m(
+					'.research__scope-toggle',
 					SCOPES.map((s) =>
-						m('button.research__scope-btn', {
-							class: scope === s.value ? 'research__scope-btn--active' : '',
-							onclick: () => setTimeScope(s.value),
-						}, s.label),
+						m(
+							'button.research__scope-btn',
+							{
+								class: scope === s.value ? 'research__scope-btn--active' : '',
+								onclick: () => setTimeScope(s.value),
+							},
+							s.label,
+						),
 					),
 				),
 			]),
 
 			// Legend
-			m('.research__chart-legend',
+			m(
+				'.research__chart-legend',
 				SERIES.map((s) =>
 					m('.research__chart-legend-item', [
 						m('span.research__chart-legend-dot', { style: { background: s.color } }),
@@ -252,10 +276,14 @@ export const ResearchChart: m.Component<ResearchChartAttrs> = {
 			),
 
 			// SVG chart
-			m('svg.chart-card__svg', {
-				viewBox: `0 0 ${VB_W} ${VB_H}`,
-				style: { width: '100%', height: 'auto' },
-			}, svgChildren),
+			m(
+				'svg.chart-card__svg',
+				{
+					viewBox: `0 0 ${VB_W} ${VB_H}`,
+					style: { width: '100%', height: 'auto' },
+				},
+				svgChildren,
+			),
 		]);
 	},
 };
@@ -280,8 +308,10 @@ function renderTooltip(x: number, y: number, bucket: TimeBucket): m.Vnode {
 	// Background
 	children.push(
 		m('rect', {
-			x: tx, y: ty,
-			width: TT_W, height: TT_H,
+			x: tx,
+			y: ty,
+			width: TT_W,
+			height: TT_H,
 			rx: 6,
 			fill: 'var(--sidebar-bg, #1e293b)',
 			opacity: 0.95,
@@ -290,41 +320,54 @@ function renderTooltip(x: number, y: number, bucket: TimeBucket): m.Vnode {
 
 	// Time label
 	children.push(
-		m('text', {
-			x: tx + PAD, y: ty + PAD + 12,
-			fill: 'white',
-			'font-size': 11,
-			'font-weight': '600',
-			'font-family': 'var(--font-family)',
-		}, bucket.label),
+		m(
+			'text',
+			{
+				x: tx + PAD,
+				y: ty + PAD + 12,
+				fill: 'white',
+				'font-size': 11,
+				'font-weight': '600',
+				'font-family': 'var(--font-family)',
+			},
+			bucket.label,
+		),
 	);
 
 	// Series values
 	let lineY = ty + PAD + 18 + LINE_H;
 	for (const s of activeSeries) {
 		const val = bucket[s.key] as number;
+		children.push(m('circle', { cx: tx + PAD + 4, cy: lineY - 4, r: 4, fill: s.color }));
 		children.push(
-			m('circle', { cx: tx + PAD + 4, cy: lineY - 4, r: 4, fill: s.color }),
-		);
-		children.push(
-			m('text', {
-				x: tx + PAD + 14, y: lineY,
-				fill: 'rgba(255,255,255,0.85)',
-				'font-size': 10,
-				'font-family': 'var(--font-family)',
-			}, `${s.label}: ${val}`),
+			m(
+				'text',
+				{
+					x: tx + PAD + 14,
+					y: lineY,
+					fill: 'rgba(255,255,255,0.85)',
+					'font-size': 10,
+					'font-family': 'var(--font-family)',
+				},
+				`${s.label}: ${val}`,
+			),
 		);
 		lineY += LINE_H;
 	}
 
 	if (activeSeries.length === 0) {
 		children.push(
-			m('text', {
-				x: tx + PAD, y: ty + PAD + 34,
-				fill: 'rgba(255,255,255,0.5)',
-				'font-size': 10,
-				'font-family': 'var(--font-family)',
-			}, 'No activity'),
+			m(
+				'text',
+				{
+					x: tx + PAD,
+					y: ty + PAD + 34,
+					fill: 'rgba(255,255,255,0.5)',
+					'font-size': 10,
+					'font-family': 'var(--font-family)',
+				},
+				'No activity',
+			),
 		);
 	}
 

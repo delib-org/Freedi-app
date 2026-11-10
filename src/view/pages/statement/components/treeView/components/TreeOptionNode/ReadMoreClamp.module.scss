@@ -1,0 +1,44 @@
+@use '@/view/style/mixins' as m;
+
+// Lines of an answer's body shown before "Read more".
+$preview-lines: 2;
+
+.readMoreClamp {
+	min-width: 0;
+
+	&__body {
+		overflow-wrap: anywhere;
+
+		// -webkit-line-clamp on the one block cuts the lines of whatever is inside:
+		// a description, or several <p> paragraphs.
+		&--clamped {
+			display: -webkit-box;
+			-webkit-line-clamp: $preview-lines;
+			line-clamp: $preview-lines;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+	}
+
+	&__toggle {
+		min-height: 1.75rem;
+		padding: 0;
+		background: none;
+		border: 0;
+		color: var(--btn-primary);
+		font: inherit;
+		font-size: var(--font-size-sm);
+		text-decoration: underline;
+		cursor: pointer;
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary);
+			outline-offset: 2px;
+		}
+
+		// 2.75rem = the 44px touch minimum from the design guide.
+		@include m.mobile {
+			min-height: 2.75rem;
+		}
+	}
+}

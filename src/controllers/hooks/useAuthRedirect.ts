@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
-import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
+import { saveInitialRoute } from '@/helpers/initialRoute';
 import { AuthState } from './useAuthentication';
 
 /**
@@ -58,16 +58,19 @@ export const useAuthRedirect = (authState: AuthState): AuthRedirectResult => {
 
 		// If not authenticated and not on a public route, redirect to /start
 		if (!authState.isAuthenticated && !isPublicRoute(location.pathname)) {
-			// Save current location for post-login redirect
-			const historyData = {
-				pathname: location.pathname,
-			};
-			localStorage.setItem(LocalStorageObjects.InitialRoute, JSON.stringify(historyData));
+			// Save current location, query included, for post-login redirect
+			saveInitialRoute(`${location.pathname}${location.search}`);
 
 			setIsRedirecting(true);
 			navigate('/start', { replace: true });
 		}
-	}, [authState.isAuthenticated, authState.isLoading, location.pathname, navigate]);
+	}, [
+		authState.isAuthenticated,
+		authState.isLoading,
+		location.pathname,
+		location.search,
+		navigate,
+	]);
 
 	return { isRedirecting };
 };

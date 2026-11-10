@@ -11,6 +11,8 @@ export interface BottomNavProps {
 	unreadCount: number;
 	onNavigate: (item: BottomNavItem) => void;
 	onAsk: () => void;
+	/** True when "+" adds an answer to the open question instead of asking a new one. */
+	canCompose?: boolean;
 	t: Translate;
 }
 
@@ -28,7 +30,14 @@ const MAX_BADGE = 99;
  * transitions on the page never carry it along; hidden while a sheet or modal
  * holds the screen (body.modal-open) and on desktop, where the sidebar leads.
  */
-export default function BottomNav({ active, unreadCount, onNavigate, onAsk, t }: BottomNavProps) {
+export default function BottomNav({
+	active,
+	unreadCount,
+	onNavigate,
+	onAsk,
+	canCompose = false,
+	t,
+}: BottomNavProps) {
 	if (typeof document === 'undefined') return null;
 
 	return createPortal(
@@ -64,7 +73,7 @@ export default function BottomNav({ active, unreadCount, onNavigate, onAsk, t }:
 					type="button"
 					className={styles.bottomNav__ask}
 					onClick={onAsk}
-					aria-label={t('Ask a question')}
+					aria-label={t(canCompose ? 'Add an answer' : 'Ask a question')}
 					data-testid="bottom-nav-ask"
 				>
 					<Plus size={22} aria-hidden="true" />

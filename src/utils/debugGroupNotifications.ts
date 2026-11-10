@@ -143,13 +143,19 @@ export async function debugGroupNotifications(statementId?: string) {
 
 		// Check for current token
 		if (currentToken) {
+			// The userId filter is what lets the owner-only rule accept this query.
 			const notifyQuery = statementId
 				? query(
 						collection(DB, Collections.askedToBeNotified),
+						where('userId', '==', currentUser),
 						where('token', '==', currentToken),
 						where('statementId', '==', statementId),
 					)
-				: query(collection(DB, Collections.askedToBeNotified), where('token', '==', currentToken));
+				: query(
+						collection(DB, Collections.askedToBeNotified),
+						where('userId', '==', currentUser),
+						where('token', '==', currentToken),
+					);
 
 			const notifySnapshot = await getDocs(notifyQuery);
 

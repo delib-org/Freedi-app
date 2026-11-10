@@ -98,7 +98,7 @@ describe('systemBarSync', () => {
 			expect(resolveStatusBarColor(document, window)).toBe('#fbfaf7');
 		});
 
-		it('samples the global .app-header bar (my-suggestions)', () => {
+		it('samples the global .app-header bar', () => {
 			document.body.style.backgroundColor = PAGE;
 			document.body.innerHTML = `<div class="app-header" style="background-color: ${LILAC}"></div>`;
 			setRect(document.querySelector('.app-header') as Element, 0, 56);

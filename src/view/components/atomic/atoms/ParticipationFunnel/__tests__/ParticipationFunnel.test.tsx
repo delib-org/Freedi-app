@@ -14,7 +14,7 @@ describe('ParticipationFunnel', () => {
 		render(<ParticipationFunnel entered={18} suggested={13} evaluated={9} />);
 
 		expect(screen.getByText('18 entered')).toBeInTheDocument();
-		expect(screen.getByText('13 suggested')).toBeInTheDocument();
+		expect(screen.getByText('13 added answers')).toBeInTheDocument();
 		expect(screen.getByText('9 evaluated')).toBeInTheDocument();
 	});
 
@@ -22,7 +22,7 @@ describe('ParticipationFunnel', () => {
 		render(<ParticipationFunnel suggested={13} evaluated={9} />);
 
 		expect(screen.queryByText(/entered/)).not.toBeInTheDocument();
-		expect(screen.getByText('13 suggested')).toBeInTheDocument();
+		expect(screen.getByText('13 added answers')).toBeInTheDocument();
 	});
 
 	it('renders nothing when all counts are zero or missing', () => {
@@ -31,11 +31,22 @@ describe('ParticipationFunnel', () => {
 		expect(container).toBeEmptyDOMElement();
 	});
 
-	it('exposes a single fluent sentence to screen readers', () => {
-		render(<ParticipationFunnel entered={18} suggested={13} evaluated={9} />);
+	it('leaves the counts readable to screen readers', () => {
+		const { container } = render(<ParticipationFunnel entered={18} suggested={13} evaluated={9} />);
 
-		const funnel = screen.getByLabelText('Participation: 18 entered, 13 suggested, 9 evaluated');
-		expect(funnel).toBeInTheDocument();
+		expect(container.querySelector('[aria-hidden="true"]')).toBeNull();
+		expect(container.querySelector('[aria-label]')).toBeNull();
+		expect(screen.getByText('18 entered')).toBeVisible();
+	});
+
+	it('uses the participant wording and lead-in when asked', () => {
+		render(
+			<ParticipationFunnel audience="participant" leadIn="So far:" suggested={13} evaluated={9} />,
+		);
+
+		expect(screen.getByText('So far:')).toBeInTheDocument();
+		expect(screen.getByText('progress.peopleAddedAnswers')).toBeInTheDocument();
+		expect(screen.getByText('progress.peopleRated')).toBeInTheDocument();
 	});
 
 	it('formats large numbers compactly', () => {

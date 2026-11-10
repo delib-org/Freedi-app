@@ -26,7 +26,10 @@ const state: AdminsState = {
 
 let unsubs: Unsubscribe[] = [];
 // Accumulate from multiple role queries
-const roleData = new Map<string, Array<{ statementId: string; userId: string; role: string; title: string; displayName: string }>>();
+const roleData = new Map<
+	string,
+	Array<{ statementId: string; userId: string; role: string; title: string; displayName: string }>
+>();
 
 export function subscribeAdmins(): void {
 	state.loading = true;
@@ -35,7 +38,13 @@ export function subscribeAdmins(): void {
 
 	unsubs = listenToAdminSubscriptions((snap) => {
 		// Determine which role this snapshot is for from the first doc
-		const subs: Array<{ statementId: string; userId: string; role: string; title: string; displayName: string }> = [];
+		const subs: Array<{
+			statementId: string;
+			userId: string;
+			role: string;
+			title: string;
+			displayName: string;
+		}> = [];
 		let snapshotRole = '';
 
 		for (const docSnap of snap.docs) {
@@ -46,8 +55,10 @@ export function subscribeAdmins(): void {
 				statementId: (data.statementId as string) ?? '',
 				userId: (data.userId as string) ?? '',
 				role,
-				title: (data.statement as Record<string, unknown>)?.statement as string || (data.statementId as string || '').substring(0, 12) + '...',
-				displayName: (data.userId as string || '').substring(0, 8),
+				title:
+					((data.statement as Record<string, unknown>)?.statement as string) ||
+					((data.statementId as string) || '').substring(0, 12) + '...',
+				displayName: ((data.userId as string) || '').substring(0, 8),
 			});
 		}
 

@@ -93,7 +93,7 @@ describe('LiveNowCard', () => {
 	it('the collapsed summary names what is currently on', () => {
 		renderCard(makeStatement(), true);
 		// enableEvaluation defaults on, so the summary says so without expanding.
-		expect(screen.getByText(/host\.acceptingResponses/)).toBeInTheDocument();
+		expect(screen.getByText(/Participants can rate and vote/)).toBeInTheDocument();
 
 		renderCard(
 			makeStatement({

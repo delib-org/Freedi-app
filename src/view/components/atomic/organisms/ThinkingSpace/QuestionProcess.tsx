@@ -5,11 +5,15 @@ import {
 	requestDeliberation as call,
 	createAgreementHandoff,
 	DELIBERATION_POLL_MS,
+	isNotYetJoinedError,
 } from '@/controllers/db/deliberation';
+import { RETRY } from '@/constants/common';
 import { useSelector } from 'react-redux';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { statementSelector } from '@/redux/statements/statementsSlice';
+import { formatScore } from '@/helpers/scoreFormat';
 import SubGroupCardSummary from '@/view/components/subGroupCard/SubGroupCardSummary';
+import AgreementStatus from './AgreementStatus';
 import styles from './Agreement.module.scss';
 import processStyles from './QuestionProcess.module.scss';
 
@@ -20,11 +24,14 @@ export default function QuestionProcess({
 	statement,
 	view,
 	variant = 'page',
+	showScores = true,
 }: {
 	statement: Statement;
 	view: 'overview' | 'summary' | 'covenant';
 	/** `card` = the compact סיכום card inside the Results tab. */
 	variant?: 'page' | 'card';
+	/** False leaves the agreement numbers off, for a viewer the score guard holds back. */
+	showScores?: boolean;
 }) {
 	const isCard = variant === 'card';
 	// One summary per question: the live statement's own, same as on the question card.
@@ -35,23 +42,56 @@ export default function QuestionProcess({
 	const [busy, setBusy] = useState(false);
 	const [notice, setNotice] = useState('');
 	const [selected, setSelected] = useState<string[]>([]);
-	const refresh = useCallback(async () => {
+	/** Resolves true while the viewer's auto-subscribe has not finished yet. */
+	const refresh = useCallback(async (): Promise<boolean> => {
 		try {
 			setData((await call({ questionId: statement.statementId })).data);
 			setError('');
+
+			return false;
 		} catch (e) {
+			if (isNotYetJoinedError(e)) {
+				setError('');
+
+				return true;
+			}
 			if (!(e instanceof Error && e.name === 'AbortError'))
 				logError(e, { operation: 'QuestionProcess' });
 			setError(t('Could not complete action.'));
+
+			return false;
 		}
 	}, [statement.statementId, t]);
 	useEffect(() => {
-		void refresh();
+		let isStopped = false;
+		let joinRetries = 0;
+		let joinRetryTimer: ReturnType<typeof setTimeout> | undefined;
+
+		async function load(): Promise<void> {
+			clearTimeout(joinRetryTimer);
+			const isAwaitingMembership = await refresh();
+			if (isStopped) return;
+			if (!isAwaitingMembership) {
+				joinRetries = 0;
+
+				return;
+			}
+			if (joinRetries >= RETRY.MAX_ATTEMPTS) return;
+			const delay = RETRY.INITIAL_DELAY_MS * RETRY.EXPONENTIAL_BASE ** joinRetries;
+			joinRetries += 1;
+			joinRetryTimer = setTimeout(() => void load(), delay);
+		}
+
+		void load();
 		const timer = setInterval(() => {
-			if (!document.hidden) void refresh();
+			if (!document.hidden) void load();
 		}, DELIBERATION_POLL_MS);
 
-		return () => clearInterval(timer);
+		return () => {
+			isStopped = true;
+			clearInterval(timer);
+			clearTimeout(joinRetryTimer);
+		};
 	}, [refresh]);
 	async function act(action: string, extra: Record<string, unknown> = {}) {
 		setBusy(true);
@@ -139,15 +179,16 @@ export default function QuestionProcess({
 					</small>
 				</div>
 			)}
-			{view !== 'overview' && !!data?.sources.length && (
+			{view !== 'overview' && showScores && !!data?.sources.length && (
 				<details>
 					<summary>
-						{t('Source solution')} · {data.sources.length}
+						{t(data.sources.length > 1 ? 'Original answers' : 'Source solution')} ·{' '}
+						{data.sources.length}
 					</summary>
 					{data.sources.map((source) => (
 						<p key={source.id}>
-							<a href={`/statement/${source.id}`}>{source.text}</a> · Cp{' '}
-							{Math.round(source.cp * 100)}%
+							<a href={`/statement/${source.id}`}>{source.text}</a> · {t('Agreement score')}{' '}
+							<span dir="ltr">{formatScore(source.cp)}</span>
 						</p>
 					))}
 				</details>
@@ -184,13 +225,15 @@ export default function QuestionProcess({
 						{data?.agreements.map((a) => (
 							<article
 								className={styles.journey__card}
-								data-tone={a.agreed ? 'mint' : 'peach'}
+								data-tone={showScores && a.agreed ? 'mint' : 'peach'}
 								key={a.id}
 							>
-								<span>
-									{t(a.agreed ? 'Passed the agreement threshold' : 'Draft for review')} · Cp{' '}
-									{Math.round(a.cp * 100)}% · {a.evaluators} {t('People evaluated')}
-								</span>
+								<AgreementStatus
+									agreed={a.agreed}
+									cp={a.cp}
+									evaluators={a.evaluators}
+									showScores={showScores}
+								/>
 								<h3>{a.title}</h3>
 								<p>{a.introduction}</p>
 								{a.previousId && (

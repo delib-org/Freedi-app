@@ -17,9 +17,12 @@ import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
 import { recordEvaluatorParticipation } from './evaluatorParticipation';
 import { trackEvaluationEngagement } from '../engagement/credits/trackEngagement';
-import { checkSocialProofMilestone } from '../engagement/notifications/socialProofTrigger';
+import {
+	checkConsensusShift,
+	checkSocialProofMilestone,
+} from '../engagement/notifications/socialProofTrigger';
 import { onEvaluationCreatedStats } from '../fn_adminStats';
-import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
+import { markHybridEmbeddingStaleIfUsed } from '../services/hybrid-vector-service';
 import { writeHistoryEntry } from '../statements/history/writeHistoryEntry';
 import { isResearchEnabledForTopParent } from '../statements/history/isResearchEnabled';
 import { recordParticipation } from '../progress/questionProgressWriter';
@@ -166,15 +169,14 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 				}).catch((err) => logger.warn('Question progress tracking failed:', err));
 			}
 
-			// Check social proof milestones (non-blocking)
-			const evaluatorCount = statement.evaluation?.numberOfEvaluators ?? 0;
-			checkSocialProofMilestone(statement, evaluatorCount).catch((err) =>
-				logger.warn('Social proof check failed:', err),
-			);
+			// Notices about the author's answer. Awaited so the function is not
+			// frozen mid-write; neither can throw.
+			await checkSocialProofMilestone(statement);
+			await checkConsensusShift(statement);
 		}
 
 		// Mark hybrid embedding as stale (non-blocking) — sweep checks setting before processing
-		markHybridEmbeddingStale(statementId).catch((err) =>
+		markHybridEmbeddingStaleIfUsed(statement).catch((err) =>
 			logger.warn('Hybrid stale marking failed:', err),
 		);
 

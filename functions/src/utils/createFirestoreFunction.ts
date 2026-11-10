@@ -19,6 +19,8 @@ export const HOT_TRIGGER_MEMORY: MemoryOption = '512MiB';
 /** Optional per-function runtime options for a Firestore trigger. */
 export interface FirestoreFunctionOptions {
 	memory?: MemoryOption;
+	/** Upper bound on instances; values and reasoning in config/triggerLimits.ts. */
+	maxInstances?: number;
 }
 
 export const getTimestamp = (): string => {
@@ -60,7 +62,11 @@ export function createFirestoreFunction<T>(
 	// Cast to unknown first, then to a compatible function signature
 	// This is required because Firebase's trigger types have incompatible generic structures
 	const trigger = triggerType as unknown as (
-		opts: { document: string; memory?: MemoryOption } & typeof functionConfig,
+		opts: {
+			document: string;
+			memory?: MemoryOption;
+			maxInstances?: number;
+		} & typeof functionConfig,
 		handler: (event: T) => Promise<void>,
 	) => ReturnType<typeof onDocumentCreated>;
 
@@ -69,6 +75,7 @@ export function createFirestoreFunction<T>(
 			document: path,
 			...functionConfig,
 			...(options.memory ? { memory: options.memory } : {}),
+			...(options.maxInstances ? { maxInstances: options.maxInstances } : {}),
 		},
 		async (event: T) => {
 			const startTime = Date.now();

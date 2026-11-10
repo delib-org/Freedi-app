@@ -8,7 +8,17 @@ import type {
 } from '@freedi/shared-types';
 import { db } from '../db';
 import { loadRunInputs } from './runInputs';
-import { actorFrom, assertHost, readSession, requireId, runRef, sessionRef } from './tablesAccess';
+import { publishedRunFields } from './runPrivacy';
+import type { RunInputDoc } from './tablesAccess';
+import {
+	actorFrom,
+	assertHost,
+	readSession,
+	requireId,
+	runInputRef,
+	runRef,
+	sessionRef,
+} from './tablesAccess';
 import { TablesError, toHttpsError } from './tablesErrors';
 
 /**
@@ -52,7 +62,10 @@ export async function publishRun(
 			throw new TablesError('failed-precondition', `Run is ${run.status}, not ready`);
 		}
 		const { inputHash } = await loadRunInputs(firestore, (q) => tx.get(q), session);
-		if (inputHash !== run.inputHash) {
+		const inputSnap = await tx.get(runInputRef(firestore, runId));
+		// A run computed before the hash moved out of the run still carries its own.
+		const expectedHash = (inputSnap.data() as RunInputDoc | undefined)?.inputHash ?? run.inputHash;
+		if (inputHash !== expectedHash) {
 			throw new TablesError(
 				'failed-precondition',
 				'The preview is stale: registrations or settings changed. Compute a new one.',
@@ -65,7 +78,7 @@ export async function publishRun(
 
 		// ---- writes (all reads are done) ----
 		if (previousSnap?.exists) tx.update(previousSnap.ref, { status: 'superseded' });
-		tx.update(runSnap.ref, { status: 'published', publishedAt: now });
+		tx.update(runSnap.ref, { status: 'published', publishedAt: now, ...publishedRunFields(run) });
 		tx.update(sessionRef(firestore, sessionId), {
 			publishedRunId: runId,
 			status: 'published',

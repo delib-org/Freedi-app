@@ -22,18 +22,11 @@ import {
 	collection,
 	writeBatch,
 	Timestamp,
-	arrayUnion,
 } from 'firebase/firestore';
 import { Collections } from '@freedi/shared-types';
 import { DB, auth } from '@/controllers/db/config';
-import {
-	removeTokenFromSubscription,
-	addTokenToSubscription,
-} from '@/controllers/db/subscriptions/setSubscriptions';
+import { removeTokenFromSubscription } from '@/controllers/db/subscriptions/setSubscriptions';
 import { getDeviceInfo, type PushPlatform } from './platformService';
-import { FIREBASE } from '@/constants/common';
-import { getCurrentTimestamp } from '@/utils/firebaseUtils';
-import { wasTokenSyncedRecently, markTokenSynced, clearTokenSyncMarker } from './tokenSyncMarker';
 import { logError } from '@/utils/errorHandling';
 
 /**
@@ -153,7 +146,9 @@ export const deleteToken = async (token: string): Promise<void> => {
 
 /**
  * Register for statement notifications.
- * Adds the FCM token to the statementsSubscribe.tokens[] array.
+ * Pushes are delivered from the owner-only pushNotifications collection, so this
+ * makes sure the device is registered there. The token is never written to
+ * statementsSubscribe, which any signed-in user can read.
  * Also maintains legacy askedToBeNotified for backward compatibility during migration.
  */
 export const registerForStatementNotifications = async (
@@ -161,28 +156,37 @@ export const registerForStatementNotifications = async (
 	token: string,
 	statementId: string,
 ): Promise<void> => {
-	// Add token to statementsSubscribe.tokens[] (new approach)
-	await addTokenToSubscription(statementId, userId, token);
+	await storeToken(userId, token);
 
 	// Also update legacy collection for backward compatibility during migration
 	// TODO: Remove this after migration is complete
 	const notificationRef = doc(DB, Collections.askedToBeNotified, `${token}_${statementId}`);
-	await setDoc(
-		notificationRef,
-		{
-			token,
-			userId,
-			statementId,
-			lastUpdate: new Date(),
-			subscribed: true,
-		},
-		{ merge: true },
-	);
+	try {
+		await setDoc(
+			notificationRef,
+			{
+				token,
+				userId,
+				statementId,
+				lastUpdate: new Date(),
+				subscribed: true,
+			},
+			{ merge: true },
+		);
+	} catch (error) {
+		// On a shared browser this document can still belong to the last person
+		// who signed in here, and the rules keep it theirs. Registration is
+		// already done: push is delivered from pushNotifications, never from this legacy doc.
+		if ((error as { code?: string })?.code !== 'permission-denied') {
+			throw error;
+		}
+	}
 };
 
 /**
  * Unregister from statement notifications.
- * Removes the FCM token from statementsSubscribe.tokens[] array.
+ * Removes the FCM token from the old statementsSubscribe.tokens[] list, so a
+ * device still listed there stops being a fallback push target.
  * Also cleans up legacy askedToBeNotified collection.
  */
 export const unregisterFromStatementNotifications = async (
@@ -190,7 +194,6 @@ export const unregisterFromStatementNotifications = async (
 	statementId: string,
 	userId: string,
 ): Promise<void> => {
-	// Remove token from statementsSubscribe.tokens[] (primary)
 	await removeTokenFromSubscription(statementId, userId, token);
 
 	// Also clean up legacy collection
@@ -199,100 +202,16 @@ export const unregisterFromStatementNotifications = async (
 		const notificationRef = doc(DB, Collections.askedToBeNotified, `${token}_${statementId}`);
 		await deleteDoc(notificationRef);
 	} catch (error) {
-		// Silently handle if document doesn't exist in legacy collection
+		// Silently handle a legacy doc that is gone or still belongs to the last
+		// person who signed in on this browser
 		const err = error as { code?: string };
-		if (err?.code !== 'not-found') {
+		if (err?.code !== 'not-found' && err?.code !== 'permission-denied') {
 			logError(error, {
 				operation: 'services.notificationRepository.unregisterFromStatementNotifications',
 				metadata: { message: 'Error cleaning up legacy notification doc:' },
 			});
 		}
 	}
-};
-
-/**
- * Sync token with all user's statement subscriptions.
- * Uses arrayUnion to add token to the tokens[] array without duplicates.
- */
-export const syncTokenWithSubscriptions = async (
-	userId: string,
-	token: string,
-): Promise<number> => {
-	// Guard: skip if user is no longer authenticated (prevents "Missing or insufficient permissions")
-	if (!auth.currentUser) {
-		console.info('[NotificationRepository] Skipping token sync - user not authenticated');
-
-		return 0;
-	}
-
-	// Guard: this device already synced this token for this user recently
-	if (wasTokenSyncedRecently(userId, token)) {
-		console.info('[NotificationRepository] Skipping token sync - already synced recently');
-
-		return 0;
-	}
-
-	const subscriptionsQuery = query(
-		collection(DB, Collections.statementsSubscribe),
-		where('userId', '==', userId),
-		where('getPushNotification', '==', true),
-	);
-
-	const subscriptionsSnapshot = await getDocs(subscriptionsQuery);
-
-	// Batch updates for efficiency (Firestore allows max 500 per batch)
-	const BATCH_SIZE = FIREBASE.BATCH_SIZE;
-	const batches: Promise<void>[] = [];
-	let currentBatch = writeBatch(DB);
-	let operationCount = 0;
-
-	for (const docSnapshot of subscriptionsSnapshot.docs) {
-		const subscription = docSnapshot.data();
-		const statementId = subscription.statementId || subscription.statement?.statementId;
-
-		if (!statementId) {
-			logError(new Error('No statementId found in subscription:'), {
-				operation: 'services.notificationRepository.syncTokenWithSubscriptions',
-				metadata: { detail: docSnapshot.id },
-			});
-			continue;
-		}
-
-		// Already has the token: no write, no trigger
-		const existingTokens: unknown = subscription.tokens;
-		if (Array.isArray(existingTokens) && existingTokens.includes(token)) {
-			continue;
-		}
-
-		// Update the subscription with the token in the tokens array
-		const subscriptionRef = docSnapshot.ref;
-		currentBatch.update(subscriptionRef, {
-			tokens: arrayUnion(token),
-			lastTokenUpdate: getCurrentTimestamp(),
-		});
-
-		operationCount++;
-
-		// If we've hit the batch limit, start a new batch
-		if (operationCount % BATCH_SIZE === 0) {
-			batches.push(currentBatch.commit());
-			currentBatch = writeBatch(DB);
-		}
-	}
-
-	// Commit the last batch if it has operations
-	if (operationCount % BATCH_SIZE !== 0) {
-		batches.push(currentBatch.commit());
-	}
-
-	// Execute all batches
-	await Promise.all(batches);
-
-	markTokenSynced(userId, token);
-
-	console.info(`Synced token with ${operationCount} subscriptions in ${batches.length} batch(es)`);
-
-	return operationCount;
 };
 
 /**
@@ -306,9 +225,6 @@ export const removeTokenFromAllSubscriptions = async (
 	if (!userId || !token) {
 		return;
 	}
-
-	// Next login must resync, even if the Firestore cleanup below is skipped
-	clearTokenSyncMarker();
 
 	// Guard: skip if user is no longer authenticated (prevents "Missing or insufficient permissions")
 	if (!auth.currentUser) {
@@ -325,12 +241,13 @@ export const removeTokenFromAllSubscriptions = async (
 
 	const subscriptionsSnapshot = await getDocs(subscriptionsQuery);
 
-	// Remove token from all subscriptions
+	// Remove the token where it is still listed; the other subscriptions need no read or write
 	const removePromises = subscriptionsSnapshot.docs.map((docSnapshot) => {
 		const subscription = docSnapshot.data();
 		const statementId = subscription.statementId || subscription.statement?.statementId;
+		const listedTokens: unknown = subscription.tokens;
 
-		if (!statementId) {
+		if (!statementId || !Array.isArray(listedTokens) || !listedTokens.includes(token)) {
 			return Promise.resolve();
 		}
 
@@ -458,7 +375,6 @@ export const NotificationRepository = {
 	deleteToken,
 	registerForStatementNotifications,
 	unregisterFromStatementNotifications,
-	syncTokenWithSubscriptions,
 	removeTokenFromAllSubscriptions,
 	saveQuietHours,
 	getQuietHours,

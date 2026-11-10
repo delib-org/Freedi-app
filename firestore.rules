@@ -857,15 +857,16 @@ service cloud.firestore {
 
     // === Tables (table assignment) ===
     // Every write goes through the tables* callables (Admin SDK): clients write
-    // nothing. Reads are scoped so a participant never sees another person's
-    // preferences or position (those live only in tableAssignmentParticipants).
+    // nothing. Reads are scoped so nobody, the host included, reads another
+    // person's preferences or position (those live only in
+    // tableAssignmentParticipants, which only their owner can read).
     function isTableSessionHost(sessionId) {
       let sessionPath = /databases/$(database)/documents/tableAssignments/$(sessionId);
       return exists(sessionPath) && get(sessionPath).data.hostUid == request.auth.uid;
     }
 
-    // The session is readable to any signed-in user (anonymous included) once
-    // registration has opened; drafts are the host's alone.
+    // A session's topics are readable to any signed-in user (anonymous
+    // included) once registration has opened; a draft's are the host's alone.
     function isTableSessionOpenToAll(sessionId) {
       let sessionPath = /databases/$(database)/documents/tableAssignments/$(sessionId);
       return exists(sessionPath) &&
@@ -880,11 +881,18 @@ service cloud.firestore {
       return isTableSessionHost(sessionId) || isTableSessionOpenToAll(sessionId);
     }
 
+    // Who sits where is public once tables exist: after publishing, and from
+    // the start in direct mode, where people pick a table themselves.
+    function areTablemateNamesVisible(sessionId) {
+      let session = get(/databases/$(database)/documents/tableAssignments/$(sessionId)).data;
+      return session.get('publishedRunId', null) != null || session.mode == 'direct';
+    }
+
+    // Every signed-in user may get a session in any status, so the not-open
+    // screen can show the gathering's name and update by itself. Topics stay
+    // hidden until registration opens.
     match /tableAssignments/{sessionId} {
-      allow get: if request.auth != null &&
-                    (resource == null ||
-                     resource.data.hostUid == request.auth.uid ||
-                     resource.data.status in ['registrationOpen', 'registrationClosed', 'published', 'ended']);
+      allow get: if request.auth != null;
       // A host lists their own sessions (query on hostUid); nobody lists anyone else's.
       allow list: if request.auth != null && resource != null &&
                      resource.data.hostUid == request.auth.uid;
@@ -897,18 +905,41 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Doc id = {sessionId}_{uid}. The owner reads their own; the host reads all.
+    // Doc id = {sessionId}_{uid}. Choices and position: the owner only, never
+    // the host, who reads tableAssignmentRoster instead.
     match /tableAssignmentParticipants/{participantId} {
       allow list: if request.auth != null && resource != null &&
-                     (resource.data.uid == request.auth.uid ||
-                      isTableSessionHost(resource.data.sessionId));
+                     resource.data.uid == request.auth.uid;
       // A get of one's own not-yet-registered doc answers "missing" instead of
       // permission-denied, so the registration screen settles quietly.
       allow get: if request.auth != null &&
                     (resource == null
                        ? participantId.matches('.*_' + request.auth.uid)
-                       : (resource.data.uid == request.auth.uid ||
-                          isTableSessionHost(resource.data.sessionId)));
+                       : resource.data.uid == request.auth.uid);
+      allow write: if false;
+    }
+
+    // Name cards, doc id = {sessionId}_{uid}: a name and progress, no answers.
+    // The host and the owner always; other registered people once tables are public.
+    function mayReadTableRosterEntry(entry) {
+      return entry.uid == request.auth.uid ||
+             isTableSessionHost(entry.sessionId) ||
+             (isRegisteredInTableSession(entry.sessionId) &&
+              areTablemateNamesVisible(entry.sessionId));
+    }
+
+    match /tableAssignmentRoster/{entryId} {
+      allow get: if request.auth != null &&
+                    (resource == null || mayReadTableRosterEntry(resource.data));
+      allow list: if request.auth != null && resource != null &&
+                     mayReadTableRosterEntry(resource.data);
+      allow write: if false;
+    }
+
+    // How many registered, doc id = session id. Anyone who may get the session,
+    // which is every signed-in user. Written by the callables only.
+    match /tableAssignmentCounters/{sessionId} {
+      allow get: if request.auth != null;
       allow write: if false;
     }
 
@@ -1102,6 +1133,58 @@ service cloud.firestore {
         return resource.data.get('creatorId', null) != null &&
                request.resource.data.get('creatorId', null) != resource.data.creatorId &&
                !isCreator();
+      }
+
+      // The question's host, for answers the automatic language check hid.
+      // isAdmin() is not enough, and neither is isCreator(): the main app makes
+      // every author an admin of their own answer.
+      function isHostOfAnswer() {
+        return isSystemAdmin() ||
+               (resource.data.get('parentId', null) != null && checkParentAdmin()) ||
+               (resource.data.get('topParentId', null) != null && checkTopParentAdmin());
+      }
+
+      // A host's restore may add `restoredAt` to the mark, in the same write that
+      // clears `hide`, and nothing else.
+      function isHostRecordingRestore() {
+        let before = resource.data.get('answerModeration', null);
+        let after = request.resource.data.get('answerModeration', null);
+        return before != null && after != null &&
+               before.get('restoredAt', null) == null &&
+               after.diff(before).affectedKeys().hasOnly(['restoredAt']) &&
+               after.get('restoredAt', null) is number &&
+               resource.data.get('hide', false) == true &&
+               request.resource.data.get('hide', false) != true &&
+               isHostOfAnswer();
+      }
+
+      // moderateNewAnswer (Admin SDK) writes the mark. A client could otherwise
+      // pre-set it or strip it.
+      function changesAnswerModeration() {
+        return request.resource.data.get('answerModeration', null) !=
+               resource.data.get('answerModeration', null) &&
+               !isHostRecordingRestore();
+      }
+
+      // While the check is what keeps an answer hidden, only a host brings it
+      // back. A restore records restoredAt, after which this lock is over, so
+      // an author cannot lock their own answer by hiding it later.
+      function unhidesHeldAnswerWithoutHost() {
+        let mark = resource.data.get('answerModeration', null);
+        return mark != null &&
+               mark.get('restoredAt', null) == null &&
+               resource.data.get('hide', false) == true &&
+               request.resource.data.get('hide', false) != true &&
+               !isHostOfAnswer();
+      }
+
+      // Hosts are worked out from where the answer is now, so moving it under a
+      // question the author hosts would make them its host.
+      function movesModeratedAnswerWithoutHost() {
+        return resource.data.get('answerModeration', null) != null &&
+               request.resource.data.diff(resource.data).affectedKeys()
+                 .hasAny(['parentId', 'topParentId', 'parents']) &&
+               !isHostOfAnswer();
       }
 
       function isAllowedToUpdate() {
@@ -1356,6 +1439,7 @@ service cloud.firestore {
                        !setsOrganizationIdOnCreate() &&
                        !createsClassReplyFields() &&
                        !createsClassProposal() &&
+                       !request.resource.data.keys().hasAny(['answerModeration']) &&
                        !createsClassHomeOrLesson() &&
                        classEnteredByOf(request.resource.data) == null &&
                        request.resource.data.creatorId == request.auth.uid &&
@@ -1367,6 +1451,9 @@ service cloud.firestore {
       allow update: if request.auth.uid != null &&
                        !resource.data.keys().hasAny(['agreementBallot']) &&
                        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['agreementMeta', 'agreementBallot', 'deliberationEnabled']) &&
+                       !changesAnswerModeration() &&
+                       !unhidesHeldAnswerWithoutHost() &&
+                       !movesModeratedAnswerWithoutHost() &&
                        !changesCreatorRole() &&
                        !changesCreatorIdWithoutBeingCreator() &&
                        !changesOrganizationId() &&
@@ -1483,11 +1570,24 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Legacy per-(token, statement) registration, same ownership as above.
+    // Legacy per-(token, statement) registration, id `{token}_{statementId}`.
+    // Nothing delivers from it (push goes to pushNotifications), so unlike
+    // pushNotifications there is no takeover to keep working: a document stays
+    // with the person who wrote it, and the next person on a shared browser is
+    // refused here and carries on (registerForStatementNotifications). Allowing
+    // takeover would leave the attack open, because statementsSubscribe.tokens[]
+    // stays readable until the old field is cleaned up, and it gives away this id.
     match /askedToBeNotified/{askedToBeNotifiedId} {
-      allow read: if request.auth.uid != null;
-      allow create, update: if request.auth != null &&
-                               request.resource.data.userId == request.auth.uid;
+      // `resource == null`: asking for an id that does not exist needs the full
+      // token in hand, so it reveals nothing.
+      allow get: if request.auth != null &&
+                    (resource == null || resource.data.get('userId', '') == request.auth.uid);
+      allow list: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null &&
+                       request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null &&
+                       resource.data.get('userId', '') == request.auth.uid &&
+                       request.resource.data.userId == request.auth.uid;
       allow delete: if request.auth != null &&
                        (resource == null || resource.data.get('userId', '') == request.auth.uid);
     }
@@ -1770,6 +1870,38 @@ service cloud.firestore {
                (userUidOf(after) == userUidOf(before) || userUidOf(after) == afterUser);
       }
 
+      // PUSH TOKENS ARE LEAVING THIS COLLECTION. Any signed-in user can read a
+      // subscription and rules cannot hide one field, so a device's token now
+      // lives in the owner-only pushNotifications collection. The tokens field
+      // here may only shrink: new app versions never write it, and old cached
+      // ones are refused when they try to add to it (those updates are
+      // best-effort, and the device is already registered in pushNotifications).
+      //
+      // Only the owner may remove tokens, even when an admin may change the
+      // rest of the doc (role, approval). The owner is userId; a legacy doc
+      // without one belongs to the uid its id names. A doc with no tokens field
+      // works too: adding the field counts as changing it.
+      function tokensUpdateOk() {
+        let before = resource.data.get('tokens', []);
+        let after = request.resource.data.get('tokens', []);
+        return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['tokens']) ||
+               (resource.data.get('userId', statementSubId.split('--')[0]) == request.auth.uid &&
+                before is list && after is list && after.hasOnly(before));
+      }
+
+      // Old cached app versions send this device's token inside the very write
+      // that creates the subscription, and that write is how they join:
+      // refusing it would silently keep them out. A rule cannot accept a write
+      // and drop one field of it, so the create stays allowed with at most the
+      // one token those versions send, and onSubscriptionCreatedMembership
+      // removes it within seconds if the device is in pushNotifications (else
+      // the cleanup script does). Tighten this to no tokens at all when the old
+      // field is retired and those versions are gone.
+      function tokensCreateOk() {
+        let tokens = request.resource.data.get('tokens', []);
+        return tokens is list && tokens.size() <= 1;
+      }
+
       // The roles a person may give themselves. An allow-list, because a
       // deny-list misses whatever it did not think of: server code counts the
       // literal 'creator' as an admin (functions/src/classroom/classroomAccess.ts)
@@ -1793,6 +1925,7 @@ service cloud.firestore {
       allow create: if request.auth.uid != null &&
                      request.resource.data.userId == request.auth.uid &&
                      createIdentityOk() &&
+                     tokensCreateOk() &&
                      homeSubscriptionWriteOk() &&
                      (isAdminOrCreator() ||
                       (isSelfGrantableRole() &&
@@ -1809,6 +1942,7 @@ service cloud.firestore {
       allow update: if request.auth.uid != null &&
                      !isTryingToBanProtectedUser() &&
                      updateIdentityOk() &&
+                     tokensUpdateOk() &&
                      homeSubscriptionUpdateOk() &&
                      (isAdminOrCreator() ||
                       (isSubscriber() &&
@@ -2723,26 +2857,12 @@ service cloud.firestore {
     }
 
     // Per-question participation funnel. Counters are maintained by the
-    // progress writer in functions/src/progress/ (Admin SDK). Readable by the
-    // question's admins (direct or via the top parent) and by members of the
-    // owning organization.
+    // progress writer in functions/src/progress/ (Admin SDK). Readable by any
+    // signed-in user: participants see group progress from a one-shot get, and
+    // the documents hold only aggregate counters (no user ids, no text). The
+    // k-anonymity floor on what is shown is applied by the client.
     match /questionProgress/{statementId} {
-      function isStatementAdmin(sid) {
-        let subId = string(request.auth.uid) + '--' + cleanPath(string(sid));
-        let subPath = /databases/$(database)/documents/statementsSubscribe/$(subId);
-        return exists(subPath) &&
-               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
-      }
-      allow get: if request.auth != null && (
-        isStatementAdmin(resource.data.statementId) ||
-        isStatementAdmin(resource.data.topParentId) ||
-        (resource.data.get('organizationId', null) != null &&
-         isOrgMember(resource.data.organizationId))
-      );
-      // list: any signed-in user. A list rule cannot cheaply evaluate the
-      // per-document subscription lookups above, and the documents hold only
-      // non-sensitive aggregate counters (no user ids, no text) — the same
-      // numbers every participant already sees on the question page.
+      allow get: if request.auth != null;
       allow list: if request.auth != null;
       allow write: if false;
     }

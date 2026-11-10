@@ -17,7 +17,7 @@ import ToggleSwitch from './ToggleSwitch';
 
 const DEFAULT_VIEW_OPTIONS = [
 	{ value: 'chat', labelKey: 'Chat' },
-	{ value: 'options', labelKey: 'Options' },
+	{ value: 'options', labelKey: 'Answers' },
 	{ value: 'questions', labelKey: 'Questions' },
 ] as const;
 

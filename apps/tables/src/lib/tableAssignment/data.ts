@@ -1,10 +1,18 @@
 import { collection, doc, getDocs, query, where } from 'firebase/firestore';
-import type { FirestoreError, Unsubscribe } from 'firebase/firestore';
+import type {
+	DocumentData,
+	FirestoreError,
+	Query,
+	QuerySnapshot,
+	Unsubscribe,
+} from 'firebase/firestore';
 import { Collections, tableAssignmentParticipantId } from '@freedi/shared-types';
 import type {
 	Statement,
 	TableAssignment,
+	TableAssignmentCounter,
 	TableAssignmentParticipant,
+	TableAssignmentRosterEntry,
 	TableAssignmentRun,
 	TableAssignmentTopic,
 } from '@freedi/shared-types';
@@ -15,9 +23,6 @@ import { resilientDoc, resilientQuery } from '@/lib/listeners';
  * Live reads of Tables data. Writes never happen here: they go through the
  * callables in client.ts. A subscription reports data or an error.
  */
-
-/** Server-written counter docs, `${sessionId}_${tableIndex}`: { sessionId, tableIndex, topicId, count }. */
-const SEATS_COLLECTION = 'tableAssignmentSeats';
 
 export type Subscription<T> = (
 	onData: (data: T) => void,
@@ -63,18 +68,52 @@ export function subscribeTopics(sessionId: string): Subscription<TableAssignment
 		);
 }
 
-/** All registrants of a session (host only; the rules decide). */
-export function subscribeParticipants(
-	sessionId: string,
-): Subscription<TableAssignmentParticipant[]> {
+function rosterQuery(sessionId: string): Query<DocumentData> {
+	return query(
+		collection(db, Collections.tableAssignmentRoster),
+		where('sessionId', '==', sessionId),
+	);
+}
+
+function rosterEntries(snap: QuerySnapshot<DocumentData>): TableAssignmentRosterEntry[] {
+	return snap.docs.map((d) => d.data() as TableAssignmentRosterEntry);
+}
+
+/** The host's list of name cards. Choices and positions are not on them. */
+export function subscribeRoster(sessionId: string): Subscription<TableAssignmentRosterEntry[]> {
 	return (onData, onError) =>
 		resilientQuery(
-			'tablesParticipants',
-			query(
-				collection(db, Collections.tableAssignmentParticipants),
-				where('sessionId', '==', sessionId),
-			),
-			(snap) => onData(snap.docs.map((d) => d.data() as TableAssignmentParticipant)),
+			'tablesRoster',
+			rosterQuery(sessionId),
+			(snap) => onData(rosterEntries(snap)),
+			onError,
+		);
+}
+
+/**
+ * A registered participant's view of the session's name cards, readable once
+ * tables are public. The read is refused the moment the person's own
+ * registration is gone (cancelled, removed, continued on another phone): that
+ * is the end of the list, not a failure.
+ */
+export function subscribeTablemates(sessionId: string): Subscription<TableAssignmentRosterEntry[]> {
+	return (onData, onError) =>
+		resilientQuery(
+			'tablesTablemates',
+			rosterQuery(sessionId),
+			(snap) => onData(rosterEntries(snap)),
+			(error) => (error.code === 'permission-denied' ? onData([]) : onError(error)),
+			{ deniedIsFinal: true },
+		);
+}
+
+/** How many registered; 0 until the first registration writes the counter. */
+export function subscribeCounter(sessionId: string): Subscription<number> {
+	return (onData, onError) =>
+		resilientDoc(
+			'tablesCounter',
+			doc(db, Collections.tableAssignmentCounters, sessionId),
+			(snap) => onData(snap.exists() ? (snap.data() as TableAssignmentCounter).registered : 0),
 			onError,
 		);
 }
@@ -102,7 +141,7 @@ export function subscribeSeats(sessionId: string): Subscription<Map<number, numb
 	return (onData, onError) =>
 		resilientQuery(
 			'tablesSeats',
-			query(collection(db, SEATS_COLLECTION), where('sessionId', '==', sessionId)),
+			query(collection(db, Collections.tableAssignmentSeats), where('sessionId', '==', sessionId)),
 			(snap) => {
 				const counts = new Map<number, number>();
 

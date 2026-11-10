@@ -22,6 +22,7 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 	isSelected,
 	castVote,
 	totalVotes,
+	showTallies,
 	order,
 	setStatementInfo,
 	setShowInfo,
@@ -43,7 +44,9 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 	const barThickness = barWidth - padding;
 	const { shortVersion } = statementTitleToDisplay(option.statement, 30);
 	const barHeight =
-		selections > 0 && totalVotes > 0 ? Math.round((selections / totalVotes) * 100) : 0;
+		showTallies && selections > 0 && totalVotes > 0
+			? Math.round((selections / totalVotes) * 100)
+			: 0;
 
 	const handleVotePress = useCallback(() => {
 		castVote(option);
@@ -107,7 +110,7 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 					</div>
 				)}
 				<div className={`${styles.bar} ${styles.dropShadow}`} style={barStyle}>
-					{(!isVertical || barHeight >= MIN_BAR_HEIGHT_FOR_COUNT) && (
+					{showTallies && (!isVertical || barHeight >= MIN_BAR_HEIGHT_FOR_COUNT) && (
 						<div className={styles.numberOfSelections}>{selections}</div>
 					)}
 				</div>
@@ -147,6 +150,7 @@ export const OptionBar = memo(OptionBarComponent, (prevProps, nextProps) => {
 		prevProps.isSelected === nextProps.isSelected &&
 		prevProps.castVote === nextProps.castVote &&
 		prevProps.totalVotes === nextProps.totalVotes &&
+		prevProps.showTallies === nextProps.showTallies &&
 		prevProps.order === nextProps.order &&
 		prevProps.isVertical === nextProps.isVertical &&
 		prevProps.optionsCount === nextProps.optionsCount &&

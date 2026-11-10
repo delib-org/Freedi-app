@@ -5,7 +5,15 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useSelector } from 'react-redux';
 import { ArrowUpRight, FileText } from 'lucide-react';
-import { EvaluationUI, Screen, SortType, Statement, StatementType } from '@freedi/shared-types';
+import {
+	DEFAULT_MIN_EVALUATORS,
+	EvaluationUI,
+	Screen,
+	SortType,
+	Statement,
+	StatementType,
+} from '@freedi/shared-types';
+import { formatScore } from '@/helpers/scoreFormat';
 import { statementsSelector, fullyLoadedScopeSelector } from '@/redux/statements/statementsSlice';
 import {
 	createGroupedViewSelector,
@@ -18,12 +26,18 @@ import { agreementCandidates, proposalEvidence } from './agreementData';
 import OtherIdeasSection from './OtherIdeasSection';
 import styles from './Agreement.module.scss';
 import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
+import { useRankedAnswers } from '@/view/pages/statement/hooks/useRankedAnswers';
+import { useQuestionScoreAccess } from '@/view/pages/statement/components/questionScreen/useAnswerScoreGate';
+import {
+	canSeeScore,
+	isOwnAnswerOf,
+} from '@/view/pages/statement/components/questionScreen/canSeeScore';
 
 /** Views AgreementHub still renders full-width: the covenant (under Results) and themes (under Maps). */
 export const AGREEMENT_VIEWS = ['covenant', 'themes'];
 const selectGrouped = createGroupedViewSelector(statementsSelector);
 const selectOtherIdeas = createOtherIdeasSelector(statementsSelector);
-const percent = (n?: number): string => (n === undefined ? '—' : `${Math.round(n * 100)}%`);
+const scoreText = (n?: number): string => (n === undefined ? '—' : formatScore(n));
 
 export default function AgreementHub({
 	statement,
@@ -60,10 +74,16 @@ export default function AgreementHub({
 		[statement.statementId],
 	);
 	const otherIdeas = useSelector(otherIdeasSelector);
-	const showResults = statement.statementSettings?.showEvaluation === true;
+	const { canSee: showResults, facts: scoreFacts } = useQuestionScoreAccess(statement);
+	// Themes group every answer, so they need all of them. The overview only
+	// shows the leading few, which the first page of the ranking settles.
 	const { isAutoLoading } = useAutoLoadAllForSort(
-		compact || !['overview', 'themes'].includes(view) ? undefined : statement.statementId,
+		!compact && view === 'themes' ? statement.statementId : undefined,
 		SortType.accepted,
+	);
+	const topAnswers = useRankedAnswers(
+		statement.statementId,
+		!compact && view === 'overview' && showResults,
 	);
 	const candidates = useMemo(
 		() =>
@@ -91,7 +111,14 @@ export default function AgreementHub({
 	);
 	const parent = all.find((p) => p.statementId === statement.parentId);
 	const evidence = (p: Statement): React.ReactNode => {
-		if (!showResults)
+		const canSeeEvidence =
+			showResults ||
+			canSeeScore({
+				...scoreFacts,
+				isOwnAnswer: isOwnAnswerOf(p, authorization.creator?.uid),
+				hasRated: false,
+			});
+		if (!canSeeEvidence)
 			return (
 				<p className={styles.journey__muted}>{t('Results are hidden. Evaluate independently.')}</p>
 			);
@@ -101,27 +128,22 @@ export default function AgreementHub({
 			<>
 				<div className={styles.journey__stats}>
 					<span>
-						<strong>{percent(e.score)}</strong>
-						{t('Consensus score')}
+						<strong dir="ltr">{scoreText(e.score)}</strong>
+						{t('Agreement score')}
 					</span>
 					<span>
 						<strong>{e.n}</strong>
-						{t('People evaluated')}
+						{t('People who rated')}
 					</span>
 				</div>
 				<div className={styles.journey__evidence}>
 					<span>
-						{t('Average sentiment')}: {percent(e.mean)}
+						{t('Average rating')}: <span dir="ltr">{scoreText(e.mean)}</span>
 					</span>
 					<span>
 						{t('Oppose')}: {e.oppose ?? t('Not available')}
 					</span>
-					{e.confidence !== undefined && (
-						<span>
-							{t('Confidence')}: {percent(e.confidence)}
-						</span>
-					)}
-					{e.n < 3 && <span>{t('Needs more evaluation')}</span>}
+					{e.n < DEFAULT_MIN_EVALUATORS && <span>{t('Too few ratings so far')}</span>}
 				</div>
 			</>
 		);
@@ -197,7 +219,7 @@ export default function AgreementHub({
 	if (!compact && (view === 'summary' || view === 'covenant'))
 		return (
 			<div className={styles.journey}>
-				<QuestionProcess statement={statement} view={view} />
+				<QuestionProcess statement={statement} view={view} showScores={showResults} />
 			</div>
 		);
 
@@ -267,7 +289,7 @@ export default function AgreementHub({
 									✳
 								</span>
 							</div>
-							<QuestionProcess statement={statement} view="overview" />
+							<QuestionProcess statement={statement} view="overview" showScores={showResults} />
 							<section className={styles.journey__section} aria-label={t('Sub-questions')}>
 								<div className={styles.journey__title}>
 									<h3>
@@ -337,7 +359,7 @@ export default function AgreementHub({
 							<section className={styles.journey__section}>
 								<h3>
 									{showResults
-										? fullyLoaded
+										? fullyLoaded || topAnswers.isTopLoaded
 											? t('Strongest common ground so far')
 											: t('Leading options among those loaded')
 										: t('Options to explore')}

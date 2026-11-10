@@ -9,8 +9,9 @@ import ChatInput from './components/input/ChatInput';
 import NewMessages from './components/newMessages/NewMessages';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
+import { sideLoadedIdsSelector } from '@/redux/answerViews/answerViewsSlice';
 import Description from '../evaluations/components/description/Description';
-import { Statement, StatementType } from '@freedi/shared-types';
+import { StatementType } from '@freedi/shared-types';
 import { hasParagraphsContent } from '@/utils/paragraphUtils';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
@@ -19,6 +20,7 @@ import { setStatement } from '@/redux/statements/statementsSlice';
 import { useReadVisibleNotifications } from '@/controllers/hooks/useReadVisibleNotifications';
 import { fetchOlderSubStatements } from '@/controllers/db/statements/listenToStatements';
 import { CHAT } from '@/constants/common';
+import { useCanSeeAnswer } from '@/controllers/hooks/useAnswerVisibility';
 
 interface ChatProps {
 	sideChat?: boolean;
@@ -33,7 +35,13 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 	// Memoize per statementId — calling the selector factory inline creates a
 	// new selector (and a new array) on every render/dispatch.
 	const selectSubs = useMemo(() => statementSubsSelector(statementId), [statementId]);
-	const subStatements = useAppSelector(selectSubs);
+	const loadedSubStatements = useAppSelector(selectSubs);
+	const sideLoadedIds = useAppSelector(sideLoadedIdsSelector);
+	const canSee = useCanSeeAnswer();
+	const subStatements = useMemo(
+		() => loadedSubStatements.filter(canSee),
+		[loadedSubStatements, canSee],
+	);
 	const { user } = useAuthentication();
 	const location = useLocation();
 	const firstTimeRef = useRef(true);
@@ -59,7 +67,6 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 	const [numberOfNewMessages, setNumberOfNewMessages] = useState<number>(0);
 	const [hasMore, setHasMore] = useState(true);
 	const [isLoadingMore, setIsLoadingMore] = useState(false);
-	const [replyToStatement, setReplyToStatement] = useState<Statement | null>(null);
 
 	// Refs for lazy loading
 	const isLoadingMoreRef = useRef(false);
@@ -80,10 +87,12 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 
 	// Keep track of the oldest message timestamp for the load-more query
 	useEffect(() => {
-		if (subStatements.length > 0) {
-			oldestCreatedAtRef.current = subStatements[0].createdAt;
-		}
-	}, [subStatements]);
+		// The cursor comes from everything loaded, so a held answer cannot hide
+		// the real oldest one. Answers fetched ahead of the window are not part of
+		// it: paging from one would skip everything between the window and that answer.
+		const oldest = loadedSubStatements.find((sub) => !sideLoadedIds[sub.statementId]);
+		if (oldest) oldestCreatedAtRef.current = oldest.createdAt;
+	}, [loadedSubStatements, sideLoadedIds]);
 
 	// Reset lazy loading state when navigating to a different statement, and arm
 	// loadMore only after the initial render/scroll has settled (see ref comment).
@@ -103,13 +112,13 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 
 	// Check if all messages are already loaded (fewer than initial limit)
 	useEffect(() => {
-		if (!initialCheckDoneRef.current && subStatements.length > 0) {
+		if (!initialCheckDoneRef.current && loadedSubStatements.length > 0) {
 			initialCheckDoneRef.current = true;
-			if (subStatements.length < CHAT.INITIAL_MESSAGES_LIMIT) {
+			if (loadedSubStatements.length < CHAT.INITIAL_MESSAGES_LIMIT) {
 				setHasMore(false);
 			}
 		}
-	}, [subStatements.length]);
+	}, [loadedSubStatements.length]);
 
 	// Fetch older messages when user scrolls to top — called by Virtuoso's startReached
 	const loadMore = useCallback(async () => {
@@ -233,10 +242,6 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 		}
 	}, [subStatements.length]);
 
-	const handleClearReply = useCallback(() => {
-		setReplyToStatement(null);
-	}, []);
-
 	// Render each statement using the tree card components (shared with the tree view) — used by Virtuoso.
 	// The wrapper establishes a new block formatting context (flow-root) so the
 	// nodes' own margins are included in Virtuoso's item measurement — escaped
@@ -250,17 +255,13 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 			return (
 				<div className={styles.messageWrapper} data-contribution-id={statementSub.statementId}>
 					{isOption ? (
-						<TreeOptionNode
-							statement={statementSub}
-							parentStatement={statement}
-							onReply={setReplyToStatement}
-						/>
+						<TreeOptionNode statement={statementSub} parentStatement={statement} opensChatSheet />
 					) : (
 						<TreeMessageNode
 							statement={statementSub}
 							parentStatement={statement}
 							hasChildren={false}
-							onReply={setReplyToStatement}
+							opensChatSheet
 						/>
 					)}
 				</div>
@@ -326,12 +327,7 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 
 			{statement && showInput && (
 				<div className={sideChat ? styles.sideChatInputWrapper : styles.input}>
-					<ChatInput
-						statement={statement}
-						sideChat={sideChat}
-						replyToStatement={replyToStatement}
-						onClearReply={handleClearReply}
-					/>
+					<ChatInput statement={statement} sideChat={sideChat} />
 				</div>
 			)}
 		</div>

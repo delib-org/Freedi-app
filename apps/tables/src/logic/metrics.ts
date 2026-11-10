@@ -1,7 +1,6 @@
 import type { TableAssignmentMetrics } from '@freedi/shared-types';
 
 const BALANCE_DECIMALS = 2;
-const PERCENT = 100;
 
 export interface RankRow {
 	/** 1 = first choice. */
@@ -15,12 +14,12 @@ export interface MetricsView {
 	outsideChoices: number;
 	/** Seated without having ranked anything. */
 	withoutPreferences: number;
+	/** Seated at a topic they chose. */
+	gotChosenTopic: number;
+	/** Everyone seated who ranked something. */
+	rankedSeated: number;
 	balanceMax: string;
-	balanceMean: string;
 	tolerance: string;
-	withinTolerance: boolean;
-	/** Share of the seated whose seat is one of their choices, 0..100 (rounded). */
-	satisfiedPercent: number;
 }
 
 export function formatDeviation(value: number): string {
@@ -31,18 +30,15 @@ export function formatDeviation(value: number): string {
 export function describeMetrics(metrics: TableAssignmentMetrics): MetricsView {
 	const { balance, preferences } = metrics;
 	const rankRows = preferences.byRank.map((count, index) => ({ rank: index + 1, count }));
-	const inChoices = preferences.byRank.reduce((sum, count) => sum + count, 0);
-	const seated = inChoices + preferences.none + preferences.noPreference;
-	const rankedSeated = seated - preferences.noPreference;
+	const gotChosenTopic = preferences.byRank.reduce((sum, count) => sum + count, 0);
 
 	return {
 		rankRows,
 		outsideChoices: preferences.none,
 		withoutPreferences: preferences.noPreference,
+		gotChosenTopic,
+		rankedSeated: gotChosenTopic + preferences.none,
 		balanceMax: formatDeviation(balance.max),
-		balanceMean: formatDeviation(balance.mean),
 		tolerance: formatDeviation(balance.tolerance),
-		withinTolerance: balance.withinTolerance,
-		satisfiedPercent: rankedSeated > 0 ? Math.round((inChoices / rankedSeated) * PERCENT) : 0,
 	};
 }

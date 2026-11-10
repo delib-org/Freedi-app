@@ -1,5 +1,7 @@
 import { FC, useContext, useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router';
+import { useQuestionScoreAccess } from '../questionScreen/useAnswerScoreGate';
+import { guardScoreSort } from '../questionScreen/canSeeScore';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import ChatInput from '@/view/pages/statement/components/chat/components/input/ChatInput';
@@ -44,6 +46,7 @@ const TreeView: FC<TreeViewProps> = ({
 	const { statementId, sort } = useParams();
 	const [searchParams] = useSearchParams();
 	const { statement } = useContext(StatementContext);
+	const { canSee: canSortByScore } = useQuestionScoreAccess(statement);
 	const { t } = useTranslation();
 	const { user } = useAuthentication();
 	const bookmarkedIds = useAppSelector(bookmarkedStatementIdsSelector);
@@ -71,7 +74,9 @@ const TreeView: FC<TreeViewProps> = ({
 
 	const treeOptions: TreeDataOptions = {
 		typeFilter,
-		sortType: showSortNav ? (sort as SortType) || SortType.accepted : undefined,
+		sortType: showSortNav
+			? guardScoreSort((sort as SortType) || SortType.accepted, canSortByScore)
+			: undefined,
 		onlySelectedOptions,
 		filterMode,
 		userId: user?.uid,

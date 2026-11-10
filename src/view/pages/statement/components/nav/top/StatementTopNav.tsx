@@ -8,6 +8,7 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import useStatementColor from '@/controllers/hooks/useStatementColor.ts';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { buildStatementPath } from '@/routes/statementPaths';
 
 // Redux
 import {
@@ -82,7 +83,7 @@ const StatementTopNav: FC<Props> = ({
 	function handleNavigateToClusterMap() {
 		if (!statement?.statementId) return;
 		setIsHeaderMenuOpen(false);
-		navigate(`/map/${statement.statementId}`);
+		navigate(buildStatementPath({ statementId: statement.statementId, view: Screen.clusterBoard }));
 	}
 
 	return (

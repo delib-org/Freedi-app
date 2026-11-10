@@ -29,7 +29,7 @@ export interface SearchResultsProps {
 
 const TYPE_LABELS: Partial<Record<StatementType, string>> = {
 	[StatementType.question]: 'Question',
-	[StatementType.option]: 'Option',
+	[StatementType.option]: 'Answer',
 	[StatementType.group]: 'Group',
 	[StatementType.comment]: 'Comment',
 	[StatementType.statement]: 'Discussion',

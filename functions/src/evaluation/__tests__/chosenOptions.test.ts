@@ -457,9 +457,87 @@ describe('op counts: one new evaluation on a question with N existing evaluation
 		);
 
 		Object.keys(scenarios).forEach((name) => {
-			// after: constant in N; before: grows with N
-			expect(new Set(afterReads[name]).size).toBe(1);
+			// after: flat in N, except that a first rating bills one read per 1,000
+			// markers for the count aggregation; before: grows with N
+			const spread = Math.max(...afterReads[name]) - Math.min(...afterReads[name]);
+			expect(spread).toBeLessThanOrEqual(Math.ceil(sizes[sizes.length - 1] / 1000));
 			expect(beforeReads[name][3]).toBeGreaterThan(beforeReads[name][0] * 100);
 		});
 	}, 120000);
+});
+
+describe('reading only the options the selection can pick', () => {
+	const consensusOf = (i: number): number => Math.round((1 - i / 600) * 1000) / 1000;
+	const seedMany = (count: number): void => {
+		mockFake.clear();
+		seedQuestion({ resultsBy: ResultsBy.consensus, numberOfResults: 5 } as ResultsSettings, {
+			results: [],
+			totalResults: 0,
+		});
+		seedOptions(
+			Array.from({ length: count }, (_, i) => optionDoc(i, { consensus: consensusOf(i) })),
+		);
+	};
+
+	it('reads a handful of documents on a 300-answer question', async () => {
+		seedMany(300);
+		mockFake.resetCounts();
+
+		await updateParentStatementWithChosenOptions(Q);
+
+		expect(mockFake.counts.reads).toBeLessThan(30);
+		expect(chosenIds()).toEqual(['o000', 'o001', 'o002', 'o003', 'o004']);
+	});
+
+	it('picks visible options when hidden ones fill the top of the order', async () => {
+		seedMany(60);
+		for (let i = 0; i < 12; i += 1) {
+			mockFake.seed(
+				`statements/${optionDoc(i).statementId}`,
+				optionDoc(i, { hide: true, consensus: 0.99 }),
+			);
+		}
+
+		await updateParentStatementWithChosenOptions(Q);
+
+		expect(chosenIds()).toEqual(['o012', 'o013', 'o014', 'o015', 'o016']);
+	});
+
+	it('resolves a tie at the last place the way reading everything did', async () => {
+		mockFake.clear();
+		seedQuestion({ resultsBy: ResultsBy.consensus, numberOfResults: 2 } as ResultsSettings, {
+			results: [],
+			totalResults: 0,
+		});
+		seedOptions(
+			Array.from({ length: 40 }, (_, i) => optionDoc(i, { consensus: i < 3 ? 0.8 : 0.1 })),
+		);
+
+		await updateParentStatementWithChosenOptions(Q);
+
+		expect(chosenIds()).toEqual(['o000', 'o001']);
+	});
+
+	it('falls back to reading everything when the consensus query fails', async () => {
+		seedMany(12);
+		mockFake.failOrderBy = 'consensus';
+
+		await updateParentStatementWithChosenOptions(Q);
+
+		expect(chosenIds()).toEqual(['o000', 'o001', 'o002', 'o003', 'o004']);
+		expect(mockFake.counts.queries).toBeGreaterThan(0);
+	});
+
+	it('still reads every option for a metric the index cannot order', async () => {
+		seedQuestion({ resultsBy: ResultsBy.mostLiked, numberOfResults: 5 } as ResultsSettings, {
+			results: [],
+			totalResults: 0,
+		});
+		seedOptions(Array.from({ length: 40 }, (_, i) => optionDoc(i)));
+		mockFake.resetCounts();
+
+		await updateParentStatementWithChosenOptions(Q);
+
+		expect(mockFake.counts.reads).toBeGreaterThanOrEqual(40);
+	});
 });

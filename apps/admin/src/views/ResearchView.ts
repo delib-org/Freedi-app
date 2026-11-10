@@ -7,7 +7,11 @@ import { whenAdmin } from '../lib/auth';
 import { ResearchChart } from '../components/ResearchChart';
 import { getResearchActionLabel, normalizeScreenPath } from '@freedi/shared-types';
 import type { ResearchLog } from '@freedi/shared-types';
-import { setResearchLogging, getResearchLoggingStatus, fetchStatementContextMap } from '../lib/queries';
+import {
+	setResearchLogging,
+	getResearchLoggingStatus,
+	fetchStatementContextMap,
+} from '../lib/queries';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -79,7 +83,9 @@ function loadPersistedEntries(): ConfigEntry[] {
 	try {
 		const raw = localStorage.getItem(STORAGE_KEY);
 		if (raw) return JSON.parse(raw) as ConfigEntry[];
-	} catch { /* ignore */ }
+	} catch {
+		/* ignore */
+	}
 
 	return [];
 }
@@ -87,7 +93,9 @@ function loadPersistedEntries(): ConfigEntry[] {
 function persistEntries(entries: ConfigEntry[]): void {
 	try {
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-	} catch { /* ignore */ }
+	} catch {
+		/* ignore */
+	}
 }
 
 const configState = {
@@ -118,7 +126,11 @@ async function handleLookup(): Promise<void> {
 				existing.enabled = result.enabled;
 				existing.title = result.title;
 			} else {
-				configState.entries.unshift({ statementId: id, title: result.title, enabled: result.enabled });
+				configState.entries.unshift({
+					statementId: id,
+					title: result.title,
+					enabled: result.enabled,
+				});
 			}
 			persistEntries(configState.entries);
 			configState.inputId = '';
@@ -174,39 +186,47 @@ function ResearchConfigPanel(): m.Vnode {
 		]),
 
 		// Feedback
-		configState.error ? m('.research__config-msg.research__config-msg--error', configState.error) : null,
-		configState.success ? m('.research__config-msg.research__config-msg--success', configState.success) : null,
+		configState.error
+			? m('.research__config-msg.research__config-msg--error', configState.error)
+			: null,
+		configState.success
+			? m('.research__config-msg.research__config-msg--success', configState.success)
+			: null,
 
 		// Entries list
 		configState.entries.length > 0
-			? m('.research__config-list',
-				configState.entries.map((entry) =>
-					m('.research__config-entry', [
-						m('.research__config-info', [
-							m('span.research__config-title', entry.title.length > 60 ? entry.title.slice(0, 60) + '...' : entry.title),
-							m('span.research__config-id', entry.statementId),
+			? m(
+					'.research__config-list',
+					configState.entries.map((entry) =>
+						m('.research__config-entry', [
+							m('.research__config-info', [
+								m(
+									'span.research__config-title',
+									entry.title.length > 60 ? entry.title.slice(0, 60) + '...' : entry.title,
+								),
+								m('span.research__config-id', entry.statementId),
+							]),
+							m('.research__config-actions', [
+								m(
+									'button.research__config-export',
+									{
+										onclick: () => exportQuestionJSON(entry.statementId),
+										title: "Export this question's research logs",
+									},
+									'\u2B07 Export',
+								),
+								m(
+									'button.research__config-toggle',
+									{
+										class: entry.enabled ? 'research__config-toggle--on' : '',
+										onclick: () => handleToggle(entry),
+									},
+									entry.enabled ? 'Enabled' : 'Disabled',
+								),
+							]),
 						]),
-						m('.research__config-actions', [
-							m(
-								'button.research__config-export',
-								{
-									onclick: () => exportQuestionJSON(entry.statementId),
-									title: 'Export this question\'s research logs',
-								},
-								'\u2B07 Export',
-							),
-							m(
-								'button.research__config-toggle',
-								{
-									class: entry.enabled ? 'research__config-toggle--on' : '',
-									onclick: () => handleToggle(entry),
-								},
-								entry.enabled ? 'Enabled' : 'Disabled',
-							),
-						]),
-					]),
-				),
-			)
+					),
+				)
 			: m('.research__empty', 'Add a statement ID to configure research logging'),
 	]);
 }
@@ -237,7 +257,9 @@ async function refreshPersistedEntries(): Promise<void> {
 				entry.enabled = result.enabled;
 				entry.title = result.title;
 			}
-		} catch { /* ignore */ }
+		} catch {
+			/* ignore */
+		}
 	}
 	persistEntries(configState.entries);
 	m.redraw();
@@ -282,7 +304,9 @@ export function ResearchView(): m.Component {
 							m('h1.page-header__title', 'Research Dashboard'),
 							m('p.page-header__subtitle', [
 								PulseDot(isLive),
-								isLive ? ' Live \u2014 real-time research telemetry' : ' Inactive \u2014 no recent activity',
+								isLive
+									? ' Live \u2014 real-time research telemetry'
+									: ' Inactive \u2014 no recent activity',
 							]),
 						]),
 						m(
@@ -362,8 +386,8 @@ export function ResearchView(): m.Component {
 						s.byApp.size === 0
 							? m('.research__empty', 'No data yet')
 							: Array.from(s.byApp.entries()).map(([app, count]) =>
-								AppBar(app, count, s.totalActions),
-							),
+									AppBar(app, count, s.totalActions),
+								),
 					]),
 				]),
 
@@ -372,16 +396,17 @@ export function ResearchView(): m.Component {
 					m('.section-title', 'By Action Type'),
 					s.byAction.size === 0
 						? m('.research__empty', 'No data yet')
-						: m('.research__action-grid',
-							Array.from(s.byAction.entries())
-								.sort((a, b) => b[1] - a[1])
-								.map(([action, count]) =>
-									m('.research__action-chip', [
-										m('span.research__action-label', getResearchActionLabel(action)),
-										m('span.research__action-count', count.toLocaleString()),
-									]),
-								),
-						),
+						: m(
+								'.research__action-grid',
+								Array.from(s.byAction.entries())
+									.sort((a, b) => b[1] - a[1])
+									.map(([action, count]) =>
+										m('.research__action-chip', [
+											m('span.research__action-label', getResearchActionLabel(action)),
+											m('span.research__action-count', count.toLocaleString()),
+										]),
+									),
+							),
 				]),
 
 				// Live Feed
@@ -394,9 +419,7 @@ export function ResearchView(): m.Component {
 						'.research__feed',
 						recent.length === 0
 							? m('.research__empty', 'Waiting for actions\u2026')
-							: recent.map((log) =>
-								ActivityRow(log, s.newLogIds.has(log.logId)),
-							),
+							: recent.map((log) => ActivityRow(log, s.newLogIds.has(log.logId))),
 					),
 				]),
 
@@ -411,7 +434,10 @@ export function ResearchView(): m.Component {
 async function exportQuestionJSON(questionId: string): Promise<void> {
 	const s = getResearchState();
 	const filtered = s.logs.filter(
-		(log) => log.parentId === questionId || log.topParentId === questionId || log.statementId === questionId,
+		(log) =>
+			log.parentId === questionId ||
+			log.topParentId === questionId ||
+			log.statementId === questionId,
 	);
 	if (filtered.length === 0) {
 		configState.error = 'No research logs found for this question';
@@ -420,7 +446,10 @@ async function exportQuestionJSON(questionId: string): Promise<void> {
 
 		return;
 	}
-	await exportJSON(filtered, `research-logs_${questionId}_${new Date().toISOString().slice(0, 10)}.json`);
+	await exportJSON(
+		filtered,
+		`research-logs_${questionId}_${new Date().toISOString().slice(0, 10)}.json`,
+	);
 }
 
 async function exportJSON(logs: ResearchLog[], filename?: string): Promise<void> {

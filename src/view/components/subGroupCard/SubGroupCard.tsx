@@ -10,6 +10,7 @@ import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
 import RoutePicker from '@/view/components/statementRouter/RoutePicker/RoutePicker';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
+import { canSeeSettledResults } from '@/view/pages/statement/components/questionScreen/canSeeScore';
 import { logError } from '@/utils/errorHandling';
 import { ArrowUpRight } from 'lucide-react';
 
@@ -28,7 +29,10 @@ const SubGroupCard: FC<Props> = ({ statement, isAdmin = false }) => {
 	const [showRoutePicker, setShowRoutePicker] = useState(false);
 
 	try {
-		const { results = [], topVotedOption, evaluationSettings, hide } = statement;
+		const { evaluationSettings, hide } = statement;
+		const showResults = canSeeSettledResults(statement, isAdmin, Date.now());
+		const results = showResults ? (statement.results ?? []) : [];
+		const topVotedOption = showResults ? statement.topVotedOption : undefined;
 		const summary = statement.summary?.trim();
 		const evaluationUI = evaluationSettings?.evaluationUI;
 		const isDecidedByVoting = evaluationUI === EvaluationUI.voting;

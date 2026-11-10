@@ -27,7 +27,6 @@ import {
 	getTokenLastRefresh,
 	registerForStatementNotifications as registerInDb,
 	unregisterFromStatementNotifications as unregisterInDb,
-	syncTokenWithSubscriptions as syncTokenInDb,
 	removeTokenFromAllSubscriptions as removeTokenFromAllSubs,
 	TokenMetadata,
 } from './notificationRepository';
@@ -133,18 +132,6 @@ export class NotificationService {
 			if (token) {
 				console.info('[NotificationService] Token registered in pushNotifications collection');
 				this.setupTokenRefresh(userId);
-
-				// Sync token with existing subscriptions that have push notifications enabled
-				// This ensures the new token is added to all push-enabled subscriptions
-				try {
-					await syncTokenInDb(userId, token);
-					console.info('[NotificationService] Token synced with existing subscriptions');
-				} catch (error) {
-					logError(error, {
-						operation: 'services.notificationService.initialize.syncToken',
-						metadata: { message: '[NotificationService] Error syncing token with subscriptions:' },
-					});
-				}
 			} else {
 				console.info(
 					'[NotificationService] Initialized without FCM token - browser notifications only',
@@ -384,13 +371,11 @@ export class NotificationService {
 	}
 
 	/**
-	 * Push fields for a new statement subscription: whether push is on for this device and
-	 * the FCM token already held in memory (never requests permission or fetches a token).
+	 * Push field for a new statement subscription: whether push is on for this device
+	 * (never requests permission or fetches a token).
 	 */
-	public getPushSubscriptionFields(): { getPushNotification: boolean; pushToken: string | null } {
-		const getPushNotification = this.isInitialized() && this.safeGetPermission() === 'granted';
-
-		return { getPushNotification, pushToken: getPushNotification ? this.token : null };
+	public getPushSubscriptionFields(): { getPushNotification: boolean } {
+		return { getPushNotification: this.isInitialized() && this.safeGetPermission() === 'granted' };
 	}
 
 	/**
@@ -405,28 +390,6 @@ export class NotificationService {
 	 */
 	public isInitialized(): boolean {
 		return PushService.isInitialized() && !!this.token;
-	}
-
-	/**
-	 * Sync current token with all user's statement subscriptions.
-	 */
-	public async syncTokenWithSubscriptions(userId: string): Promise<void> {
-		if (!this.token) {
-			logError(new Error('No token available to sync'), {
-				operation: 'services.notificationService.syncTokenWithSubscriptions',
-			});
-
-			return;
-		}
-
-		try {
-			await syncTokenInDb(userId, this.token);
-		} catch (error) {
-			logError(error, {
-				operation: 'services.notificationService.syncTokenWithSubscriptions',
-				metadata: { message: 'Error syncing token with subscriptions:' },
-			});
-		}
 	}
 
 	/**

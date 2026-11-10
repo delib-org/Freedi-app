@@ -1,185 +1,219 @@
 # Shared Tables: חלוקה לשולחנות — IA spec
 
-Status: draft — הצעה לאישור; המנוע קיים ב-`packages/table-assignment`, אין עדיין מסכים או שינוי במערכות הקיימות. שם המושג: table-assignment (טל, 2026-11-05).
-Date: 2026-11-05
-Supersedes: none. המנגנונים הקיימים של חדרים, Agora ו־join-class נשארים בתוקף עד לחיבור מפורש.
-Companion: [תכנון המערכת המשותפת](../plans/features/shared-table-assignment.md).
-Host: tables.wizcol.com (האפליקציה העצמאית; טל, 2026-11-05).
+Status: agreed (redesign approved by Tal, 2026-11-10); not implemented yet
+Date: 2026-11-10
+Supersedes: the 2026-11-05 version of this file (hub with five host sub-screens, separate topics and preferences screens).
+Companions: [build map](../plans/features/tables-redesign-build.md), [design brief](../design/tables-design-brief.md), [system plan](../plans/features/shared-table-assignment.md).
+Host: tables.wizcol.com (`apps/tables`, Mithril + SCSS). i18n prefix: `tableAssignment.` in `apps/tables/src/lib/locales/{he,en,ar}.ts`.
+
+Unchanged from the earlier version and not repeated here: the embedded use from other WizCol apps ("back to…", identity adapters, event-core resolver) and the compatibility notes for legacy rooms / Agora / join-class. They stay valid; nothing in this redesign builds them.
 
 ## 1. Audiences
 
 | Audience | One-line goal | Must never see |
 |---|---|---|
-| מארח/ת | להגדיר נושאים, לאסוף העדפות ולפרסם חלוקה טובה לכל הנרשמים | מידע מאירועים שאין הרשאה לנהל |
-| משתתף/ת | לבחור נושא או לדרג נושאים ולדעת לאיזה שולחן להגיע | עמדות אישיות והעדפות של משתתפים אחרים; טיוטת השיבוץ |
-| משתתף/ת שמגיעים מאפליקציה אחרת | לבצע את בחירת השולחן ולחזור לאותו הקשר | דרישה לפתוח זהות נוספת כשאפשר לשמר את הזהות הקיימת |
-| מפעיל/ת אפליקציה משולבת | להשתמש באותה חלוקה בהקשר של דיון, שיעור או אירוע | סמכויות מעבר להרשאות ההקשר המקורי |
-
-קהל המשנה של תלמידים יורש את מגבלות הזהות והחשיפה של אפליקציית המקור. קישור לבדו אינו מעניק סמכות ניהול.
+| Host (מארח/ת), Google sign-in | Set up one guided page, open registration, check the tables, publish | Any person's position or choices; other hosts' assignments |
+| Participant (משתתף/ת), full name only, own phone | Be done in about a minute and know where to sit | Other people's position or choices; a draft assignment; who else registered before publishing |
+| The room (החדר), a projector driven by the host's signed-in browser | Join by QR code, later find a name at a table | Positions, choices, statistics |
 
 ## 2. Object model
 
 | Object | Meaning | Relations | Lifecycle |
 |---|---|---|---|
-| `TableAssignment` — חלוקה לשולחנות | מופע אחד של הרשמה ושיבוץ, במצב בחירה ישירה או דירוג | הקשר אחד; נושאים רבים; נרשמים רבים; גרסאות שיבוץ רבות | טיוטה → הרשמה פתוחה → הרשמה סגורה → שיבוץ פורסם → הסתיים |
-| `TableAssignmentTopic` — נושא | כותרת, הסבר, מקור אופציונלי ו־C_p אופציונלי | שייך לחלוקה אחת; אפס או יותר שולחנות | הכנה → זמין לבחירה → נעול לחישוב |
-| `TableAssignmentTable` — שולחן | מקום מפגש של עד שבעה משתתפים, עם מספר ונושא | נושא אחד לכל שולחן; שולחנות רבים יכולים לדון באותו נושא | מוצע → פורסם; במצב ישיר: פתוח → מלא/נסגר |
-| `TableAssignmentParticipant` — נרשם/ת | זהות יציבה בהקשר הנוכחי, דירוג נושאים ועמדה אופציונלית | מופע אחד לכל זהות וחלוקה; לכל היותר שולחן פעיל אחד | נרשם → בחר/דירג → שובץ; ביטול הרשמה מתועד |
-| `TableAssignmentRun` — גרסת שיבוץ | חלוקה מחושבת מתוך תמונת נתונים קפואה, עם מדדים וחריגים | חלוקה אחת; גרסאות רבות; אחת מפורסמת בכל רגע | בחישוב → טיוטה מוכנה → פורסמה / הוחלפה; כשל או נתונים שהשתנו מוצגים במפורש |
+| Table assignment (`TableAssignment`) | One event's registration and seating; mode `ranked` (mix) or `direct` (sit where you like) | 1 host; many topics; many registrations; many runs | draft → registrationOpen → registrationClosed → published → ended. Forward only. Mode may change in draft only |
+| Topic (`TableAssignmentTopic`) | What a table talks about | belongs to 1 assignment; 0..n tables | editable in draft; after opening only its title can be fixed (id, order and count are frozen) |
+| Registration (נרשם/ת), stored as two records | A person in this assignment | 1 per browser identity (uid) and assignment | none → registered → answered → seated; cancelled (deleted) while registration is open |
+| · Name card (`TableAssignmentRosterEntry`, collection `tableAssignmentRoster`) | Full name, registration time, "has ranked", direct-mode table | read by the host, by the owner, and by registered people once tables are public | written by callables only |
+| · Private answers (`TableAssignmentParticipant`, collection `tableAssignmentParticipants`) | Choices (up to 3 topic ids) and position | read by the owner only; never by the host client | written by callables only |
+| Registered count (`tableAssignmentCounters/{id}`) | How many registered | 1 per assignment; readable by anyone who can open the link | kept by the register / cancel callables |
+| Table (`TableAssignmentRunTable`) | A numbered place for up to N people on one topic | 1 topic; members | proposed → published; direct mode: live |
+| Run (`TableAssignmentRun`) | One computed seating with metrics | 1 assignment; 1 published at a time | computing → ready → published / superseded; a ready run goes stale when inputs change |
+| Display settings (browser only) | Theme, high contrast, text size | per browser, all Tables screens | localStorage; reset returns to defaults |
 
-**נושא אינו שולחן.** בדירוג בוחרים נושאים; בבחירה ישירה מצטרפים לשולחן מסוים בתוך נושא. מספר השולחן הוא הזיהוי המעשי ביום האירוע.
+Rules of the model:
 
-**עיגון בעץ ה־Statements:** החלוקה מצביעה על `contextStatementId`, עם `topParentId` שנגזר מההקשר. זה יכול להיות קבוצה, שאלה, מסמך או שיעור קיים. הפעלה עצמאית מקבלת הקשר אירוע/קבוצה בבעלות המארח. נושא מיובא מפנה ל־Statement המקורי של ההצעה ושומר צילום הכותרת, ההסבר והמדדים לזמן ההרשמה; אין העברה או שינוי של `parentId` של ההצעה.
-
-רשומות השיבוץ, העמדות וההעדפות הן נתוני תפעול נפרדים; הן אינן תגובות או הצעות בעץ הציבורי. נושא ידני יכול להישאר `TableAssignmentTopic` ללא יצירת הצעה פיקטיבית. `TableAssignment` מפנה להקשר אך אינו מאלץ כל אפליקציה לייצר שאלה חדשה.
-
-**קלט העמדות:** עמדות על ציר מספרי משותף, או צדדים קטגוריאליים עם הגדרה משותפת. חוסר עמדה הוא "לא צוין", לא אמצע ולא צד נוסף. דירוג נושא אינו הצהרת תמיכה בנושא. C_p מתאר את ההצעה ואינו עמדתו האישית של המשתתף.
-
-**עקרון השיבוץ:** קיבולת והשתתפות תקינה; אחר כך הטרוגניות גבוהה ודומה בין השולחנות וקרבה להתפלגות הכללית; אחר כך העדפות נושאים; לבסוף הכרעה אקראית בשוויון. התצוגה מפרידה בין הרכב השולחנות, הגשמת ההעדפות ושלמות מידע העמדות. ההגדרה החישובית בתכנון המערכת.
-
-החלטה 2026-11-05: ההעדפות והעמדה נשמרות ברשומת הנרשם; הכללים מאפשרים קריאה רק לנרשם עצמו (uid שלו) ולמארח החלוקה; הממשק אינו מציג לעולם עמדה או העדפות של אדם מסוים, אלא ספירות בלבד; ריצות חושפות רק חברות בשולחן ומדדים מצטברים.
+- **Topic is not table.** People rank topics; they sit at a numbered table.
+- **Position** is one axis 0–100. The participant answers on five stops stored as 0, 25, 50, 75, 100, or chooses "prefer not to answer", stored as no value. No answer is never the middle and nothing is preselected. Older answers from the slider (any 0–100 value) stay valid.
+- **Strictness** is the balance tolerance shown as three choices: strict 0.15, balanced 0.30 (default), flexible 0.45. Any other stored number is shown as a custom value with no chip selected.
+- **Return by full name** is a host setting, off by default. It only acts while registration is open.
+- **Statement tree mapping:** unchanged. The assignment may point at `contextStatementId`; an imported topic keeps `sourceStatementId`. Registrations, answers and runs are operational records, not Statements.
 
 ## 3. Labels
 
+One name per concept. Hebrew is the approved design copy; (?) marks Hebrew proposed here because the design has no text for it.
+
 | Concept | EN label | HE label | i18n key | Route segment | Code type | Synonyms to retire |
 |---|---|---|---|---|---|---|
-| המערכת | Tables | שולחנות | `tableAssignment.app` | `tables` | — | חדרים כשמדובר במערכת החדשה |
-| מופע חלוקה | Table assignment | חלוקה לשולחנות | `tableAssignment.session` | `sessions` | `TableAssignment` | סשן, הגרלה כשם לכל התהליך |
-| אחראי/ת החלוקה | Host | מארח/ת | `tableAssignment.host` | `host` | הרשאה בהקשר | מנהל/מנחה לאותו תפקיד בתוך המשטח החדש |
-| תוכן לדיון | Topic | נושא | `tableAssignment.topic` | `topics` | `TableAssignmentTopic` | שולחן כשמתכוונים לתוכן |
-| מקום מפגש | Table | שולחן | `tableAssignment.table` | `tables` | `TableAssignmentTable` | קבוצה/חדר במשטח החדש |
-| רשימת הרשמה | Registered participants | נרשמים | `tableAssignment.participants` | `participants` | `TableAssignmentParticipant[]` | כל חברי הקבוצה כשמדובר רק בנרשמים לחלוקה |
-| אופן בחירה 1 | Choose a table | בחירת שולחן | `tableAssignment.mode.direct` | — | מצב ישיר | הגרלה |
-| אופן בחירה 2 | Rank topics | דירוג נושאים | `tableAssignment.mode.ranked` | `preferences` | מצב דירוג | הצבעה / תמיכה |
-| דירוג אישי | My preferences | ההעדפות שלי | `tableAssignment.preferences` | `preferences` | העדפות הנרשם | הצבעות |
-| שיוך צד/עמדה | My position | העמדה שלי | `tableAssignment.position` | — | עמדה אופציונלית | ציון משתתף |
-| מידע חסר | Not specified | לא צוין | `tableAssignment.position.unknown` | — | ערך חסר מפורש | ניטרלי |
-| טיוטה לבדיקה | Assignment preview | תצוגה מקדימה של השיבוץ | `tableAssignment.preview` | `preview` | `TableAssignmentRun` | תוצאות סופיות |
-| גרסה מפורסמת | Published assignment | השיבוץ שפורסם | `tableAssignment.published` | `assignment` | גרסה פעילה | טיוטה |
-| תוצאה אישית | My table | השולחן שלי | `tableAssignment.myTable` | `my-table` | השיבוץ האישי | מספר קבוצה |
-| פירוט איכות | Table composition | הרכב השולחנות | `tableAssignment.composition` | בתוך `preview` | מדדי הרכב | ציון איזון יחיד שאינו מבחין בין גודל להרכב |
-| חזרה למקור | Back to … | חזרה ל… | `tableAssignment.backToSource` | — | הקשר ניווט מאומת | יציאה בלי יעד |
+| Product | Tables | שולחנות | `tableAssignment.app` | — | — | rooms |
+| One event's process | Table assignment | חלוקה לשולחנות | `tableAssignment.session` | `sessions` | `TableAssignment` | session, סשן |
+| Its title | Gathering name | שם המפגש | `tableAssignment.setup.name` | — | `title` | "מפגש" anywhere except as the thing the title names |
+| Host | Host | מארח/ת | `tableAssignment.host` | `host` | `hostUid` | מנהל, מנחה |
+| Topic | Topic | נושא | `tableAssignment.topic` | — | `TableAssignmentTopic` | table (as content) |
+| Table | Table | שולחן | `tableAssignment.table` | — | `TableAssignmentRunTable` | group, room |
+| The whole crowd | The room | החדר | `tableAssignment.room` | — | `metrics.population` | crowd, קהל, population (in UI) |
+| Registered people | Registered participants | נרשמים | `tableAssignment.participants` | `participants` | `TableAssignmentRosterEntry[]` | — |
+| Mode: mix | Mix | להתערבב | `tableAssignment.mode.ranked` | — | `mode: 'ranked'` | "דירוג נושאים" as a mode name |
+| Mode: free | Sit where you like | לשבת איפה שירצו | `tableAssignment.mode.direct` | — | `mode: 'direct'` | "בחירת שולחן" as a mode name |
+| Participant step 2 (mix) | Rank topics | דירוג נושאים | `tableAssignment.rank` | `preferences` (kept for old links) | `preferences` | vote, support |
+| Participant step 2 (free) | Choose a table | בחירת שולחן | `tableAssignment.chooseTable` | `preferences` | `chosenTableIndex` | — |
+| A person's ranked topics | My choices | הבחירות שלי | `tableAssignment.choices` | — | `preferences` | "ההעדפות שלי", preferences (in UI text) |
+| Position | My position | העמדה שלי | `tableAssignment.position` | `position` | `position` | score, side |
+| No answer on position | Prefer not to answer | מעדיפים לא לענות | `tableAssignment.position.unknown` | — | `position` absent | "לא צוין", neutral, middle |
+| Strictness | How alike each table is to the room | כמה חשוב שכל שולחן יהיה דומה לחדר? | `tableAssignment.strictness` (+ `.strict` קפדני, `.balanced` מאוזן, `.flexible` גמיש) | — | `balanceTolerance` | tolerance, סטייה (outside the expert line) |
+| Expected people | Expected people | כמה אנשים צפויים? | `tableAssignment.setup.expected` | — | `settings.expectedParticipants` | — |
+| Return by name | Return by full name | חזרה לפי שם מלא | `tableAssignment.returnByName` | — | `settings.allowReturnByName` | login, account |
+| Host correction after opening | Fix details | תיקון פרטים | `tableAssignment.fixDetails` | — (modal) | `tablesFixDetails` | edit topics, settings |
+| Participant correction | Edit my details | עריכת הפרטים | `tableAssignment.editDetails` | `name` → `preferences` → `position` | — | — |
+| Leaving | Cancel participation | ביטול השתתפות | `tableAssignment.cancelParticipation` | — (modal) | `tablesCancelRegistration` | unregister, delete |
+| Waiting | Saved, waiting for tables | נשמר, מחכים לשולחנות | `tableAssignment.waiting` | — | stage `waiting` | "ממתינים לשיבוץ" |
+| Unpublished result | Assignment preview | תצוגה מקדימה של השיבוץ | `tableAssignment.preview` | `preview` | run `ready` | results |
+| Final result | Published assignment | השיבוץ שפורסם | `tableAssignment.published` | `assignment` | run `published` | — |
+| Personal result | My table | השולחן שלי | `tableAssignment.myTable` | `my-table` | — | group number |
+| Tablemates | Sitting with you | יושבים איתך | `tableAssignment.myTable.mates` | — | roster of my table | — |
+| Table closeness | Close to the room | קרוב לחדר / קרוב מאוד לחדר / אין מספיק תשובות / רחוק מהחדר (?) | `tableAssignment.closeness.*` | — | `stats.deviation` | deviation (outside the full data) |
+| Second layer of preview | Full data | הנתונים המלאים | `tableAssignment.preview.fullData` | — | `metrics` | statistics, composition |
+| Projector view | Room screen | מסך החדר (button: הצגה על המסך) | `tableAssignment.roomScreen` | `screen` | — | projector mode, rooms |
+| Who sits where | Who sits where | מי יושב איפה | `tableAssignment.roomScreen.seats` | `screen` (same route) | — | — |
+| Display settings | Accessibility | נגישות | `tableAssignment.a11y.*` | — | `A11yPrefs` | — |
 
-`Table` כבר קיים במילון הכללי במשמעות "טבלה"; אין לשנותו. המפתחות החדשים שמורים למערכת השולחנות. מונחי legacy "חדרים" נשארים במסכים הישנים עד להסבה מתוכננת. כל המילים החדשות יתווספו לכל שפות המשטח הרלוונטי במימוש; אין שינוי מילונים בשלב התכנון.
+Retired keys (delete from all three locale files): `tableAssignment.screen.topics`, `.screen.topic`, `.screen.settings`, `.screen.hostHome`, `.screen.participantHome`, `.screen.preferences`, `.preferences`, `.back.toHome`, the per-person position counts under `tableAssignment.participants.*`, and the old slider strings.
 
 ## 4. Hierarchy (per role)
 
-Role: מארח/ת — בית אחד למופע החלוקה, גם כשמגיעים מ־Studio או מאפליקציה אחרת.
+Role: Host. Home: My table assignments. One assignment has one screen at a time, chosen by its status.
 
 ```text
-0 החלוקות שלי                            /host
-1   חלוקה לשולחנות                       /host/sessions/:id
-2     נושאים                              /host/sessions/:id/topics
-3       נושא                              /host/sessions/:id/topics/:topicId
-2     נרשמים                              /host/sessions/:id/participants
-2     הגדרות                              /host/sessions/:id/settings
-2     תצוגה מקדימה של השיבוץ              /host/sessions/:id/preview
-2     השיבוץ שפורסם                       /host/sessions/:id/assignment
+0 My table assignments                      /host
+1   New table assignment (setup)            /host/new            (becomes /host/sessions/:id once the draft exists)
+1   Table assignment, by status             /host/sessions/:id
+      draft               → Setup (one guided page)
+      registrationOpen    → Registration open
+      registrationClosed  → mix: goes to Assignment preview; free: Registration open, closed variant
+      published / ended   → goes to Published assignment
+2     Assignment preview                    /host/sessions/:id/preview
+2     Published assignment                  /host/sessions/:id/assignment
+2     Registered participants (names)       /host/sessions/:id/participants
+2     Room screen (join, then who sits where) /host/sessions/:id/screen
+      modal: Fix details (from Registration open, Preview, Published assignment)
 ```
 
-Role: משתתף/ת — קישור ההזמנה פותח את בית החלוקה; אין צורך לעבור ברשימת כל האפליקציות.
+Role: Participant. Home: the assignment link. The home shows the one thing that fits the person's state.
 
 ```text
-0 החלוקה הנוכחית                         /sessions/:id
-1   נושאים ושולחנות                       /sessions/:id/topics
-2     נושא                                /sessions/:id/topics/:topicId
-1   ההעדפות שלי                           /sessions/:id/preferences
-1   השולחן שלי                            /sessions/:id/my-table
+0 The assignment link, by state             /sessions/:id
+      not open | name (step 1) | "is this you?" modal | waiting | waiting, closed
+      | cancelled | registration closed, not registered | ended
+      published and registered → goes to My table
+1   Step 2: Rank topics / Choose a table    /sessions/:id/preferences
+1   Step 3: My position                     /sessions/:id/position
+1   Step 1 again, when editing              /sessions/:id/name
+1   My table                                /sessions/:id/my-table
+      modal: Cancel participation (from waiting)
 ```
 
-במצב ישיר אין "ההעדפות שלי": הפעולה הראשית היא בחירת שולחן. במצב דירוג הפעולה הראשית היא דירוג נושאים, ואחר הפרסום — "השולחן שלי". עמדה נמסרת בתוך ההרשמה/העדפות, ללא מסך ניווט חדש.
+Role: The room. One screen, opened by the host: `/host/sessions/:id/screen`. Before publishing it is the join page; after publishing it is who sits where.
+
+Accessibility is a floating control on every screen of every role; it has no route.
 
 ## 5. Navigation model
 
-- **שני אופני שימוש באותו מופע:** אפליקציה עצמאית עם קישור שיתוף, או משימה שנפתחת לזמן קצר מתוך אפליקציה אחרת ומחזירה תוצאה לאותו הקשר. אפשר גם להשתמש בשירות דרך ממשק מקומי של האפליקציה המארחת; אין חובה ל־iframe.
-- **Global:** שם האירוע/הדיון והחלוקה. המשתתף אינו נשלח לבית המארח. מי שהגיע מאפליקציה אחרת מקבל "חזרה ל…" גם במצב כשל או הרשאה חסרה.
-- **Local:** כל ילד חוזר לבית החלוקה של אותו תפקיד; נושא חוזר לרשימת הנושאים ושומר חיפוש ודירוג שלא נשמר עדיין.
-- **Contextual:** נושא מיובא מציג "ההצעה המקורית" רק כשיש הרשאה וקישור תקין. ניווט אליה אינו מחליף את פעולת הבחירה.
-- **Deep links:** קישור משתתף `/sessions/:id`; קישור ניהול `/host/sessions/:id`. בדיקת ההרשאה מתבצעת בכל כניסה; מזהה חלוקה אינו סוד גישה.
-- **חיבור בין אפליקציות:** הרחבת registry ו־URL resolver המשותפים של event-core. כיום resolver תומך ב־main, MC, Sign ו־Join; אין להציג חיבור ל־Tables כקיים כבר.
-- **זהות וחזרה:** מתאם אפליקציה משמר זהות כשהדבר נתמך, ומוודא הרשאה להקשר. יעד החזרה נבנה מנתוני מקור מאומתים ויעדים מותרים, לא מכתובת חופשית בקישור. בחזרה נמסרים מזהה החלוקה/הגרסה ומצב השיבוץ; אפליקציית המקור קוראת את התוצאה המורשית מהשירות.
-- **הפעלה קצרה אינה הבטחת תוצאה מיידית:** בדירוג, המשתתף יכול לחזור עם "ההעדפות נשמרו; ממתינים לשיבוץ". בהמשך האפליקציה קוראת/מקבלת עדכון על הפרסום. המארח יכול להפעיל חישוב מול רשימת נרשמים שכבר קיימת ולקבל טיוטה לבדיקה.
-- **שיתוף:** קישור ההרשמה מתאים לשליחה לכל המשתתפים. פרטי עמדות ודירוגים אינם עוברים ב־URL.
+- **Global:** logo, gathering name, language, accessibility. No menu. A participant is never sent to host screens.
+- **Local, participant:** the three steps run forward with one primary button each. Browser back and an in-page back go one step back and keep unsaved choices. The step count is honest: 3 with a position question, 2 without, 2 in free mode.
+- **Local, host:** every stage screen goes back to My table assignments. Depth-2 screens go back to the stage screen. Setup has no sub-screens and no save button; it autosaves and says so.
+- **Contextual:** "Fix details" and "Show on screen" appear on the stage screens after registration opens. The registered count opens the names list.
+- **Modals** (no URL, focus-trapped, Escape and the background close them): Fix details, Cancel participation, Is this you?. The accessibility panel is a popover.
+- **Deep links:** `/sessions/:id` for participants (QR code), `/host/sessions/:id` for the host, `/host/sessions/:id/screen` for the projector. Permission is checked on every entry.
+- **Old links keep working** (redirect, never 404):
+
+| Old route | Now |
+|---|---|
+| `/host/sessions/:id/topics`, `/host/sessions/:id/settings` | → `/host/sessions/:id` (Setup in draft; otherwise the stage screen) |
+| `/host/sessions/:id/participants`, `/preview`, `/assignment` | kept |
+| `/sessions/:id/topics`, `/sessions/:id/topics/:topicId` | → `/sessions/:id` (the home sends a registered person on to step 2) |
+| `/sessions/:id/preferences`, `/sessions/:id/my-table` | kept |
+| step routes opened without a registration, or after closing | → `/sessions/:id` |
 
 ## 6. Task flows
 
-Role: מארח/ת, task: להכין חלוקה ולפתוח הרשמה (5 צעדים).
-1. החלוקות שלי או אפליקציית המקור — "חלוקה חדשה" בהקשר המורשה.
-2. הגדרות — בחירה ישירה או דירוג; מספר שולחנות/קיבולת; מקור העמדות האופציונלי.
-3. נושאים — הוספה ידנית או בחירת הצעות מתוך התוצאה של מנגנון הבחירה הקיים; בדיקת הכותרות וההסברים.
-4. בית החלוקה — בדיקת סיכום התנאים ופתיחת הרשמה.
-5. בית החלוקה — העתקת קישור ההרשמה או פתיחה למשתתפים באפליקציה המארחת.
+Role: Participant, task: register (mix, with a position question): 3 steps (was 5).
+1. Link — type full name, "בואו נתחיל". If return by name is on and the exact name exists: "is this you?" (yes: empty form, the new answers replace the old; no: a new registration).
+2. Rank topics — tap up to three; picked topics rise to the top in order; drag handle or arrow keys reorder; "המשך". The note about sitting outside one's choices is on this screen.
+3. My position — tap one of five stops or "מעדיפים לא לענות"; "שמירה" → Waiting.
 
-Role: מארח/ת, task: לפרסם שיבוץ לפי דירוג (4 צעדים).
-1. נרשמים — סגירת הרשמה והצגת מספר הנרשמים, מספר המדורגים ושיעור בעלי עמדה ידועה.
-2. תצוגה מקדימה — חישוב; מוצגים הרכב, גודלי שולחנות, העדפות שמומשו והחריגים.
-3. תצוגה מקדימה — בדיקה; אם אין מספיק מקומות או אין פתרון לאילוצים, תיקון ההגדרות וחישוב מחדש.
-4. תצוגה מקדימה — "פרסום השיבוץ"; אותה גרסה זמינה לכל האפליקציות. נתונים ששונו מאז החישוב מחייבים חישוב חדש.
+Role: Participant, task: change or cancel before closing: 2 steps.
+1. Waiting — "עריכת הפרטים" walks the same steps prefilled with the person's own answers; or "ביטול השתתפות".
+2. Confirm modal → Cancelled screen with "הרשמה מחדש". After closing: neither action; the screen says to talk to the host.
 
-Role: מארח/ת, task: לטפל בשינוי לאחר פרסום (4 צעדים).
-1. השיבוץ שפורסם — פתיחת טיוטת שינוי; הגרסה הפעילה נשארת בתוקף.
-2. נרשמים/הגדרות — עדכון מוצהר, כגון ביטול הגעה או נרשם מאוחר.
-3. תצוגה מקדימה — הצגת השינויים בשולחנות ובמדדים; היעד הוא להקטין שינויים לא נחוצים בכפוף לכללי ההרכב המאושרים.
-4. תצוגה מקדימה — פרסום גרסה חדשה; המשתתף רואה שהשיבוץ עודכן. אין ערבוב מחדש אוטומטי ושקט.
+Role: Participant, task: find my table: 1 step.
+1. Link — My table: number, topic, the pill (which choice, or outside my choices with the thank-you note), tablemates' names.
 
-Role: משתתף/ת, task: להצטרף ישירות לשולחן (3 צעדים).
-1. בית החלוקה — הרשמה/אימות זהות לפי ההקשר; בחירה אם לציין עמדה.
-2. נושאים ושולחנות — קריאת ההסבר ובחירת שולחן שיש בו מקום.
-3. השולחן שלי — אישור שרת על שמירת המקום, מספר שולחן ונושא; חזרה לאפליקציית המקור אם קיימת.
+Role: Host, task: set up and open registration: 3 steps (was 5).
+1. My table assignments — "חלוקה חדשה".
+2. Setup — name, mix or sit, topics (one by one, or a pasted list split on comma, Arabic comma or new line), position question, strictness, return by name, summary with expected people and seats per table. Autosaved.
+3. Setup — "פתיחת ההרשמה" → Registration open (count, link, QR, show on screen).
 
-במצב הישיר שמירת המקום היא מיידית ואינה ממתינה לפרסום של חישוב מרכזי. תפיסת המקום השביעי בידי אחר מחזירה לרשימת המקומות הזמינים. אי אפשר להבטיח הטרוגניות בבחירה חופשית; הדבר נאמר בבחירת מצב העבודה למארח.
+Role: Host, task: publish (mix): 3 steps (was 4).
+1. Registration open — "סגירה וחלוקה לשולחנות" (closes, computes, opens the preview).
+2. Assignment preview — verdict first, then how many got each choice, then tables with names, closeness pill and room-versus-table band; full data collapsed. "חישוב מחדש" if wanted.
+3. Assignment preview — "פרסום השיבוץ" → Published assignment. A stale preview cannot be published.
 
-Role: משתתף/ת, task: לדרג נושאים (3 צעדים).
-1. בית החלוקה — הרשמה ובחירה אם לציין עמדה; הסבר קצר שהרכב השולחנות קודם להעדפות.
-2. ההעדפות שלי — קריאת הנושאים ודירוג עד שלושה נושאים שונים (שלושה כשיש לפחות שלושה).
-3. ההעדפות שלי — שמירה מאומתת; "ההעדפות נשמרו" ומצב "ממתינים לשיבוץ"; אפשר לחזור למקור.
+Role: Host, task: fix a typo after opening: 2 steps.
+1. Any stage screen — "תיקון פרטים" opens the modal over the blurred screen.
+2. Modal — change the gathering name or topic titles, "שמירה". Choices are untouched; no recompute is needed.
 
-Role: משתתף/ת, task: למצוא את השיבוץ ולחזור לדיון (2 צעדים).
-1. בית החלוקה או הודעה באפליקציית המקור — "השולחן שלי"; מספר, נושא והסבר ההגעה.
-2. השולחן שלי — הגעה לשולחן או "חזרה ל…". אם שובץ נושא שלא דורג, מוצג הדבר בפשטות, בלי לחשוף עמדות של אחרים.
+Role: Host, task: show the room: 1 step.
+1. Registration open or Published assignment — "הצגה על המסך" → Room screen.
+
+Free mode differs in two places: step 2 is Choose a table and the seat is held at once (no step 3, no waiting, My table straight away); the host closes registration and there is no preview or publish.
 
 ## 7. Screen inventory
 
-כל הנתיבים להלן מוצעים למשטח העצמאי. ממשק משולב יכול להשתמש בנתיבי אפליקציית המקור ולשמור על אותם מושגים ומצבים.
+Design file in brackets. "Kept" means the screen exists in code and has no approved design; it moves into the new frame as it is.
 
 | Screen | Route | Single job | Empty | Loading | Error | No permission | Done |
 |---|---|---|---|---|---|---|---|
-| החלוקות שלי | `/host` | למצוא או ליצור חלוקה | יצירת חלוקה ראשונה | טעינת הרשימה | ניסיון חוזר | כניסה מורשית | רשימה לפי מצב |
-| בית המארח | `/host/sessions/:id` | לדעת מה הפעולה הבאה | הכנת נושאים | טעינת המופע | חזרה לרשימה | אין הרשאת ניהול | מצב ופעולה הבאה |
-| נושאים | `…/topics` לשני התפקידים | למצוא נושא/שולחן | למארח: הוספה; למשתתף: טרם נפתח | טעינת נושאים | ניסיון חוזר ללא אובדן בחירה | חזרה לבית | רשימה עם זמינות |
-| נושא | `…/topics/:topicId` | להבין נושא אחד | הסבר חסר מסומן | טעינת התוכן | מקור אינו זמין | ללא חשיפת מקור חסום | בחירה או חזרה לרשימה |
-| הגדרות | `/host/sessions/:id/settings` | לקבוע את כללי החלוקה | ברירות מחדל מוצעות | טעינת הגדרות | שגיאה ליד שדה | חזרה לבית | שמירה מאומתת |
-| נרשמים | `/host/sessions/:id/participants` | להבין מוכנות להרצה | קישור הרשמה | טעינת הרשמה | ניסיון חוזר | חזרה לבית | ספירות וחריגים |
-| תצוגה מקדימה | `/host/sessions/:id/preview` | לבדוק ולפרסם טיוטה | הפעלת חישוב | חישוב עם סטטוס | סיבה ניתנת לתיקון; אין פרסום | חזרה לבית | מדדים ופרסום; טיוטה שהתיישנה חסומה |
-| השיבוץ שפורסם | `/host/sessions/:id/assignment` | לראות את הגרסה הפעילה | טרם פורסם | טעינת גרסה אחת | ניסיון חוזר | חזרה לבית | שולחנות וגרסת פרסום |
-| בית המשתתף | `/sessions/:id` | להגיע לפעולה הנוכחית | הרשמה טרם נפתחה | זיהוי ומצב | חזרה למקור/ניסיון חוזר | בקשת גישה לפי ההקשר | בחירה, המתנה או השולחן שלי |
-| ההעדפות שלי | `/sessions/:id/preferences` | לשמור דירוג אישי | התחלת דירוג | טעינת בחירות | הבחירות נשמרות מקומית לעריכה; אין אישור הצלחה | הרשמה סגורה/אין גישה | נשמר; ניתן לערוך עד הסגירה |
-| השולחן שלי | `/sessions/:id/my-table` | לדעת לאן להגיע | ממתינים לפרסום או אין הרשמה | טעינת שיבוץ | ניסיון חוזר; אין הצגת טיוטה | חזרה לבית/מקור | מספר, נושא וגרסה עדכנית |
+| My table assignments (kept) | `/host` | Find or start an assignment | "start your first" | list skeleton | retry | Google sign-in gate | list by status |
+| Setup [HostSetup] | `/host/new`, `/host/sessions/:id` in draft | Describe the gathering and open registration | name empty: nothing is created yet; no topics: open is disabled with the reason | loading the draft | "not saved, retrying" next to the autosave mark; fields keep their text | not the host: back to the list | "פתיחת ההרשמה" |
+| Registration open [HostLive] | `/host/sessions/:id` while open | Share the link and watch the count | 0 registered: link and QR lead | count placeholder | retry; link still shown | back to the list | "סגירה וחלוקה לשולחנות" (free mode: close registration) |
+| Fix details [HostEdit] | modal | Correct names without touching choices | — | fields disabled while saving | message in the modal; text kept | — | closes; new names everywhere |
+| Assignment preview [HostPreview] | `…/preview` | Decide whether to publish | nobody registered; not computed yet: compute | computing | reason and fix; no publish | back to the list | verdict, choices, tables; stale preview blocks publish |
+| Published assignment (kept) | `…/assignment` | See and print the live tables | not published yet | loading one run | retry | back to the list | tables, print, show on screen, recompute |
+| Registered participants (kept, names only) | `…/participants` | Check who registered | link to share | loading names | retry | back to the list | names with search |
+| Room screen [Room, RoomSeats] | `…/screen` | Before: join by QR. After: who sits where | draft: "registration not open yet" | QR placeholder | retry | host sign-in | QR and count; then tables with names |
+| Link home: not open [NotOpen] | `/sessions/:id` | Reassure an early visitor | — | identity and state | retry | — | flips by itself when registration opens |
+| Link home: name [Main] | `/sessions/:id` | Start with a full name | — | button busy | message under the field; name kept | — | → step 2 |
+| Is this you? [ReturnByName] | modal | Tell a returning person from a namesake | — | buttons busy | message in the modal | — | yes: empty form; no: new registration |
+| Rank topics [Rank] | `…/preferences` | Pick and order up to three topics | no topics: message, back | topic list | retry; picks kept locally | not registered or closed: home | "המשך" (or "שמירה" when it is the last step) |
+| Choose a table (kept) | `…/preferences` in free mode | Take a free seat | no tables | seats | table full: back to the list of free tables | closed: home | My table |
+| My position [Position] | `…/position` | Answer or decline | no position question: step is skipped | — | save failed: answers kept, retry | not registered or closed: home | → Waiting |
+| Waiting [Waiting, WaitingClosed] | `/sessions/:id` | Know it is saved and what happens next | registered without answers: prompt to finish the steps | own details | retry | — | open: edit and cancel; closed: neither, "talk to the host" |
+| Cancel participation [CancelConfirm] | modal | Confirm leaving | — | buttons busy | message; still registered | closed: action absent | → Cancelled |
+| Cancelled [Cancelled] | `/sessions/:id` | Confirm, offer to return | — | — | — | registration closed: no "register again" | "הרשמה מחדש" → name |
+| My table [MyTable, MyTableOutside] | `…/my-table` | Know where to sit | published but not seated (registered late): "talk to the host" | one run | retry; never a draft | not registered: home | number, topic, pill, tablemates |
+| Closed, not registered; Ended (kept) | `/sessions/:id` | Say why nothing can be done | — | — | — | — | plain message |
+| Accessibility [Accessibility] | popover, all screens | Theme, high contrast, text size 87.5–150%, reset | — | — | storage blocked: works for this visit only | — | applies at once |
 
 ## 8. Findability
 
-- נושאים: חיפוש בכותרת ובהסבר; סינון נושאים שדורגו. במצב ישיר סינון "יש מקום". C_p מוצג רק כשקיים, עם משמעותו, ואינו ציון התאמה אישי.
-- נרשמים: חיפוש לפי שם ההצגה; מסננים "טרם דירגו", "לא ציינו עמדה", "טרם שובצו". אין חיפוש גלובלי באנשים מחוץ לחלוקה.
-- שולחנות למארח: חיפוש במספר או בנושא; מיון לפי נושא, מספר שולחן וחריגה מאיכות ההרכב. פירוט עמדות אישיות רק לפי הרשאות ומדיניות ההקשר.
-- החלוקות שלי: פעילות/הסתיימו, חיפוש בכותרת ובהקשר.
-- משתתף חוזר מגיע ישירות למצב שלו; אין צורך לחפש את שמו ברשימת כל הנרשמים.
+- Rank topics: one list; picked topics on top. Topics that have an explanation show it on demand inside the row (the design has titles only; see open question 3). With more than about 12 topics a title filter appears.
+- Registered participants and Published assignment: search by name; tables sorted by number.
+- Room screen, who sits where: grouped by table number. For more tables than fit one screen the view pages by itself; the host's own device has the name search. Paging rhythm is a UX decision.
+- My table assignments: active first, ended after; search by name of the gathering.
+- A returning participant lands on their own state; they never search a list.
 
 ## 9. Open questions and assumptions
 
-1. **נושאים לעומת שולחנות:** מוצע לאפשר כמה שולחנות לנושא ולפחות שולחן אחד לכל נושא שהמארח השאיר פעיל. מספר השולחנות המוצע הוא הגבוה מבין עיגול מספר הנרשמים חלקי שבע כלפי מעלה לבין מספר הנושאים הפעילים; אין ליצור יותר שולחנות מנרשמים או ממקומות המפגש הזמינים. המארח מאשר את המספר לפני החישוב; אם אין די מקום לכל נושא, הוא יכול לצמצם נושאים פעילים או להוסיף שולחנות. המערכת אינה פותחת שולחן פיזי נוסף בשקט. אלה ברירות מחדל מוצעות לאישור.
-2. **מחוץ לשלוש ההעדפות:** מוצע לאפשר כשצריך כדי לשבץ את כולם ולשמור על הרכב, עם הסבר מראש ודו"ח חריגים. זו הצעה לאישור; איסור מוחלט דורש מצב "אין פתרון" מפורש.
-3. **עמדות:** צריך לבחור אם הנתונים הם ציר מספרי בעל משמעות או צדדים קטגוריאליים. אין להקצות מספרים שרירותיים לצדדים ולחשב להם ממוצע. נתונים מאפליקציות שונות מושווים רק אם הם מתייחסים לאותה שאלת עמדה ואותה סקאלה.
-4. **אין עמדות:** מוצע שיבוץ לפי העדפות והכרעה אקראית בשוויון. אם רק חלק ציינו עמדה, מוצג שיעור הכיסוי ואין טענה שהרכב כל המשתתפים ידוע.
-5. **בחירה ישירה:** זמינות המקום מאומתת בשרת, והמשתתף רואה מיד אם נרשם. העברות מותרות כל עוד ההרשמה פתוחה ורק אם המקום החדש נשמר; סגירה מקבעת את הבחירות. אין הבטחת הטרוגניות במצב זה.
-6. **כלל האפליקציות:** root/main, MC, Sign, Agora, Join, join-class, Studio, Chat, Flow, Odyssey ו־Admin יוכלו להשתמש באותו שירות וקישור. עומק החיבור המקומי תלוי בתפקיד האפליקציה; אין להעתיק מנוע שיבוץ לכל ממשק.
-7. **זהות:** הרשמה עצמאית חדשה לעומת הגעה עם זהות קיימת דורשות מדיניות שתמנע כפילות. אין מיזוג זהויות לפי שם או דואר ללא הוכחת בעלות. מתאמי תלמידים שומרים כינוי ומגבלות מקור.
-8. **תאימות:** `roomsSettings`/`rooms`/`roomParticipants`, `classTables` ונתוני Agora אינם מוחלפים מעצמם. הסבה או ייצוא מצריכים מתאם מפורש וקביעת מקור אמת יחיד לכל מופע.
-9. **פרסום:** הרצת חישוב אינה פרסום. פלט לפי דירוג מפורסם רק לאחר בדיקת המארח; לאחר פרסום אין הזזת אנשים אוטומטית בעקבות הצבעות, דירוגים או שינוי C_p.
+1. **"Talk to the host" has nothing behind it.** After closing, the host has no way to remove or change a person. Recommended: a host action "remove from the list" on Registered participants (preview then goes stale and is recomputed). Needs Tal's yes; the build map lists it as optional.
+2. **Another device after publishing.** Return by name acts only while registration is open, so a person who switches phone after publishing finds their table on the Room screen, not in My table. Assumed acceptable.
+3. **Topic explanations** (up to 2,000 characters, and imported topics have them) and **most tables per topic** have no place in the approved Setup and Rank designs. Assumption: data is kept and honoured; explanations show on demand in Rank; neither is editable in Setup for now.
+4. **Free mode** has no approved participant or host design. Assumption: Choose a table and the closed variant of Registration open keep today's content in the new frame.
+5. **Preview verdicts other than "good"** have no approved copy. Proposed states: good; "כדאי לבדוק" (?) when a table is further from the room than the limit; "לפי הבחירות בלבד" (?) when fewer than three people answered the position question. A fifth count, "לא דירגו" (?), appears when someone registered without ranking.
+6. **Draft link.** For the not-open screen to show the gathering name and update by itself, a draft's title becomes readable to anyone holding the link. Topics stay hidden until opening.
+7. **Return by name** treats names as equal after trimming, collapsing spaces and Unicode normalisation. With two or more existing registrations under that name the question is not asked and a new registration is created.
+8. The projector browser must be signed in as the host. A public room link is not built.
 
 ## 10. Handoff to UX
 
-קבוע בטיוטה זו לצורך המשך התכנון: הפרדת נושא ושולחן; בית אחד לכל תפקיד; שני מצבי השתתפות; שימוש עצמאי ומשולב באותו שירות; טיוטה לעומת פרסום; עמדה חסרה שאינה ניטרלית; ניווט חזרה להקשר המקור; היעדר חשיפת עמדות של אחרים למשתתפים.
+Fixed by this spec: the objects and the two-record registration; one stage screen per status for the host; the three participant steps and their order; the route table and redirects; the label table; which actions are modals; the states in section 7; the privacy boundary (the host client reads names and counts only).
 
-להחלטת UX לאחר אישור: אופן דירוג נגיש בנייד, דרך הסבר קצרה לאיכות ההרכב, הצגת עדכון בשיבוץ, ומבנה ההסבר למשתתף שלא קיבל נושא שדירג. העיצוב יפעל לפי design-guide ובהתאם למערכת העיצוב של האפליקציה המארחת, עם RTL וכל השפות הנתמכות.
-
-מקורות שנבדקו: `docs/ia/main-people-settings.md`, `docs/ia/agora-linked-app-stations.md`, `docs/ia/join-class-lesson-plan.md`, `src/routes/statementPaths.ts`, `apps/join/src/index.ts`, `apps/studio/src/App.tsx`, `packages/event-core/src/activityUrls.ts`, `packages/shared-types/src/models/event/activityRegistry.ts`, `packages/shared-types/src/models/rooms/roomsModel.ts`, ומילוני `shared-i18n` בעברית ואנגלית.
+Yours to decide: the look of explanations inside a Rank row; the two missing verdicts and the "far from the room" pill; the free-mode screens; paging on the Room screen; how the autosave mark reports a failure; the wording of the intermediate position stops (see the build map: they cannot be derived from the host's free text); tap area of the stops (the drawn dot is under 48px, the target must not be).

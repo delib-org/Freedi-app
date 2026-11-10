@@ -1,12 +1,13 @@
-import { FC, useContext, useEffect, useState } from 'react';
+import { FC, useContext, useState } from 'react';
 import { getStepsInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/helpers';
 import StatementInfo from './components/info/StatementInfo';
 import VotingArea from './components/votingArea/VotingArea';
-import { useOptimisticVotes } from './useOptimisticVotes';
+import { NO_VOTE, useOptimisticVotes } from './useOptimisticVotes';
+import { useQuestionScoreAccess } from '../questionScreen/useAnswerScoreGate';
+import { canSeeVoteTallies } from '../questionScreen/canSeeScore';
+import { areResultsOffForEveryone } from '../questionScreen/resultsLogic';
 import HandIcon from '@/assets/icons/handIcon.svg?react';
 import X from '@/assets/icons/x.svg?react';
-import { getToVoteOnParent } from '@/controllers/db/vote/getVotes';
-import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 
 // Custom components
 import Button from '@/view/components/buttons/button/Button';
@@ -15,23 +16,17 @@ import styles from './StatementVote.module.scss';
 
 // Helpers
 import Toast from '@/view/components/toast/Toast';
+import ActionToast from '@/view/components/atomic/molecules/ActionToast';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { StatementContext } from '../../StatementCont';
 import { Statement, QuestionStep } from '@freedi/shared-types';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
-import { sortByConsensus } from '@/redux/utils/selectorFactories';
 import { useSelector } from 'react-redux';
-import { setVoteToStore } from '@/redux/vote/votesSlice';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
-import { filterVotingOptions } from './votingOptionsFilter';
-
-let getVoteFromDB = false;
+import { filterVotingOptions, topVotingOptions } from './votingOptionsFilter';
 
 const StatementVote: FC = () => {
 	// * Hooks * //
-	const dispatch = useAppDispatch();
 	const { t } = useTranslation();
-	const { user } = useAuthentication();
 	const { statement } = useContext(StatementContext);
 	const inVotingGetOnlyResults = statement?.statementSettings?.inVotingGetOnlyResults;
 	const topOptionsCount = statement?.resultsSettings?.numberOfResults ?? 3;
@@ -42,8 +37,9 @@ const StatementVote: FC = () => {
 		statement?.statementSettings?.votingOptionsSource,
 	);
 
+	const { facts: scoreFacts } = useQuestionScoreAccess(statement);
 	const subStatements = inVotingGetOnlyResults
-		? _subStatements.sort(sortByConsensus).slice(0, topOptionsCount)
+		? topVotingOptions(_subStatements, topOptionsCount, areResultsOffForEveryone(scoreFacts))
 		: _subStatements;
 
 	const currentStep = statement?.questionSettings?.currentStep;
@@ -57,23 +53,9 @@ const StatementVote: FC = () => {
 	const [statementInfo, setStatementInfo] = useState<Statement | undefined>(undefined);
 
 	// * Variables * //
-	const { selectionsById, totalVotes, votedOptionId, castVote } = useOptimisticVotes(statement);
-
-	useEffect(() => {
-		const parentId = statement?.statementId;
-		if (getVoteFromDB || !user?.uid || !parentId) return;
-
-		getToVoteOnParent(parentId, user.uid, (option: Statement) =>
-			dispatch(
-				setVoteToStore({
-					parentId,
-					optionId: option.statementId,
-					userId: user.uid,
-				}),
-			),
-		);
-		getVoteFromDB = true;
-	}, [statement?.statementId, dispatch, user?.uid]);
+	const { selectionsById, totalVotes, votedOptionId, castVote, voteCountedId, dismissVoteCounted } =
+		useOptimisticVotes(statement);
+	const showTallies = canSeeVoteTallies(scoreFacts, votedOptionId !== NO_VOTE);
 
 	return (
 		<>
@@ -93,11 +75,14 @@ const StatementVote: FC = () => {
 						/>
 					</Toast>
 				)}
-				<div className={styles.numberOfVotesMark}>
-					<HandIcon /> {totalVotes}
-				</div>
+				{showTallies && (
+					<div className={styles.numberOfVotesMark}>
+						<HandIcon /> {totalVotes}
+					</div>
+				)}
 				<VotingArea
 					totalVotes={totalVotes}
+					showTallies={showTallies}
 					selectionsById={selectionsById}
 					votedOptionId={votedOptionId}
 					castVote={castVote}
@@ -110,6 +95,14 @@ const StatementVote: FC = () => {
 				<Modal>
 					<StatementInfo statement={statementInfo} setShowInfo={setIsStatementInfoModalOpen} />
 				</Modal>
+			)}
+			{voteCountedId > 0 && (
+				<ActionToast
+					key={voteCountedId}
+					message={t('question.voteCounted')}
+					variant="success"
+					onDismiss={dismissVoteCounted}
+				/>
 			)}
 		</>
 	);

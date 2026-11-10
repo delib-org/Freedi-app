@@ -514,13 +514,14 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 		);
 		const run = fake.read(`tableAssignmentRuns/${runId}`) as unknown as TableAssignmentRun;
 		expect(run).toMatchObject({ runId, sessionId: SID, seed: 42, status: 'ready', createdAt: NOW });
-		expect(run.inputHash).toMatch(/^[0-9a-f]{64}$/);
+		expect(fake.read(`tableAssignmentRunInputs/${runId}`)?.inputHash).toMatch(/^[0-9a-f]{64}$/);
+		expect(run.inputHash).toBe('');
 		const seated = run.tables.flatMap((t) => t.memberUids).sort();
 		expect(seated).toEqual(['u0', 'u1', 'u2', 'u3', 'u4', 'u5', 'u6', 'u7']);
 		expect(run.tables.every((t) => t.memberUids.length <= 4)).toBe(true);
 		expect(new Set(run.tables.map((t) => t.topicId)).size).toBeGreaterThan(0);
-		// 8 registrants, 6 with a position: the engine counted exactly those.
-		expect(run.metrics.population.n).toBe(6);
+		// 8 registrants, 6 with a position: 6 is stored in steps of 5.
+		expect(run.metrics.population.n).toBe(5);
 		expect(run.metrics.balance.tolerance).toBe(0.5);
 		const prefs = run.metrics.preferences;
 		expect(prefs.byRank.reduce((a, b) => a + b, 0) + prefs.none + prefs.noPreference).toBe(8);
@@ -574,7 +575,9 @@ describe('tablesComputePreview and tablesPublishRun (ranked mode)', () => {
 		expect(a.status).toBe('superseded');
 		expect(b.status).toBe('ready');
 		expect(b.tables).toEqual(a.tables);
-		expect(b.inputHash).toBe(a.inputHash);
+		expect(fake.read(`tableAssignmentRunInputs/${second.runId}`)?.inputHash).toBe(
+			fake.read(`tableAssignmentRunInputs/${first.runId}`)?.inputHash,
+		);
 	});
 
 	it('leaves a run alone when it became published before the supersede write', async () => {

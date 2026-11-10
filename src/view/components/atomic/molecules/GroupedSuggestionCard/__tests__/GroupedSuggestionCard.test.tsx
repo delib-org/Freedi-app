@@ -4,6 +4,8 @@ import { MemoryRouter } from 'react-router';
 import { Statement } from '@freedi/shared-types';
 import GroupedSuggestionCard from '../GroupedSuggestionCard';
 
+let mockCanSee = true;
+
 jest.mock('@/controllers/hooks/useTranslation', () => ({
 	useTranslation: () => ({ t: (key: string) => key, dir: 'ltr' }),
 }));
@@ -19,6 +21,9 @@ jest.mock('@/controllers/hooks/useAuthorization', () => ({
 jest.mock('@/controllers/db/integration/integrationController', () => ({
 	reverseIntegration: jest.fn(),
 	regenerateSynthesisProposal: jest.fn(),
+}));
+jest.mock('@/view/pages/statement/components/questionScreen/useAnswerScoreGate', () => ({
+	useAnswerScoreGate: () => ({ canSee: mockCanSee, showRevealHint: false }),
 }));
 jest.mock('../ScoreBreakdown', () => ({
 	__esModule: true,
@@ -61,7 +66,7 @@ describe('GroupedSuggestionCard (synthesis)', () => {
 		const toggle = screen.getByRole('button', { name: 'Details' });
 		expect(toggle.getAttribute('aria-expanded')).toBe('false');
 		expect(screen.queryByTestId('score-breakdown')).toBeNull();
-		expect(screen.queryByText('evaluators', { exact: false })).toBeNull();
+		expect(screen.queryByText('People who rated', { exact: false })).toBeNull();
 	});
 
 	it('reveals the details when the toggle is pressed', () => {
@@ -70,7 +75,88 @@ describe('GroupedSuggestionCard (synthesis)', () => {
 		fireEvent.click(screen.getByRole('button', { name: 'Details' }));
 
 		expect(screen.getByTestId('score-breakdown')).toBeTruthy();
-		expect(screen.getByText('evaluators', { exact: false })).toBeTruthy();
+		expect(screen.getByText('People who rated', { exact: false })).toBeTruthy();
+	});
+
+	it('shows the same three numbers as the results strip, with no second agreement or confidence', () => {
+		render(
+			<MemoryRouter>
+				<GroupedSuggestionCard
+					cluster={
+						{
+							...SYNTHESIS,
+							consensus: 0.21,
+							evaluation: {
+								numberOfEvaluators: 13,
+								averageEvaluation: -0.38,
+								agreement: 0.5,
+								confidenceIndex: 0.9,
+							},
+						} as unknown as Statement
+					}
+					mode="both"
+					allowDrillToOriginals
+					pipeline="synthesis"
+				/>
+			</MemoryRouter>,
+		);
+
+		fireEvent.click(screen.getByRole('button', { name: 'Details' }));
+
+		expect(screen.getByText('+21')).toBeTruthy();
+		expect(screen.getByText('−38')).toBeTruthy();
+		expect(screen.queryByText('Confidence', { exact: false })).toBeNull();
+		expect(screen.queryByText('+50')).toBeNull();
+		expect(screen.queryByText('%', { exact: false })).toBeNull();
+	});
+
+	it('holds back the agreement score under the minimum number of raters', () => {
+		render(
+			<MemoryRouter>
+				<GroupedSuggestionCard
+					cluster={
+						{
+							...SYNTHESIS,
+							consensus: 0.21,
+							evaluation: { numberOfEvaluators: 2, averageEvaluation: 0.38 },
+						} as unknown as Statement
+					}
+					mode="both"
+					allowDrillToOriginals
+					pipeline="synthesis"
+				/>
+			</MemoryRouter>,
+		);
+
+		fireEvent.click(screen.getByRole('button', { name: 'Details' }));
+
+		expect(screen.queryByText('Agreement score', { exact: false })).toBeNull();
+		expect(screen.getByText('+38')).toBeTruthy();
+	});
+});
+
+describe('GroupedSuggestionCard score guard', () => {
+	afterEach(() => {
+		mockCanSee = true;
+	});
+
+	it('shows no numbers to a viewer who has not rated', () => {
+		mockCanSee = false;
+
+		render(
+			<MemoryRouter>
+				<GroupedSuggestionCard
+					cluster={{ ...SYNTHESIS, consensus: 0.21 } as unknown as Statement}
+					mode="both"
+					allowDrillToOriginals
+					pipeline="synthesis"
+				/>
+			</MemoryRouter>,
+		);
+		fireEvent.click(screen.getByRole('button', { name: 'Details' }));
+
+		expect(screen.queryByText('Agreement score', { exact: false })).toBeNull();
+		expect(screen.queryByText('People who rated', { exact: false })).toBeNull();
 	});
 });
 

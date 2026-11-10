@@ -13,7 +13,7 @@ import { Outlet, useNavigate, useParams, useLocation } from 'react-router';
 
 export default function ProtectedLayout() {
 	const { statementId } = useParams();
-	const { pathname } = useLocation();
+	const { pathname, search } = useLocation();
 	const alreadyFramed =
 		pathname === '/' ||
 		pathname === '/home' ||
@@ -39,9 +39,19 @@ export default function ProtectedLayout() {
 	useEffect(() => {
 		// Don't redirect to 401 if we're still checking access
 		if (!isAuthorized && !loading && !error && !isWaitingForApproval && !isCheckingAccess) {
-			navigate('/401');
+			// /401 replaces the URL, so it is told where signing in should return to.
+			navigate('/401', { state: { from: `${pathname}${search}` } });
 		}
-	}, [isAuthorized, loading, error, isWaitingForApproval, isCheckingAccess, navigate]);
+	}, [
+		isAuthorized,
+		loading,
+		error,
+		isWaitingForApproval,
+		isCheckingAccess,
+		navigate,
+		pathname,
+		search,
+	]);
 
 	// Show loading while checking access
 	if (isCheckingAccess || loading) {

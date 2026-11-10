@@ -7,9 +7,7 @@ import {
 } from 'firebase-admin/firestore';
 import { safeParse } from 'valibot';
 import {
-	Access,
 	Collections,
-	Role,
 	SEARCH_CONFIG,
 	SearchStatementsRequestSchema,
 	functionConfig,
@@ -31,6 +29,7 @@ import { ALLOWED_ORIGINS } from './config/cors';
 import { treeScopeQuery } from './services/statement-tree-query';
 import { vectorSearchService } from './services/vector-search-service';
 import { logError } from './utils/errorHandling';
+import { resolveStatementAccess, type StatementAccess } from './utils/statementAccess';
 
 /**
  * Statement search for the main app.
@@ -87,23 +86,9 @@ const SUBSCRIPTION_FIELDS = [
 	'statement.createdAt',
 ] as const;
 
-const OPEN_ACCESS: ReadonlySet<string> = new Set([
-	Access.public,
-	Access.open,
-	Access.openToAll,
-	Access.openForRegistered,
-]);
-
-const ACTIVE_ROLES: ReadonlySet<string> = new Set([Role.admin, Role.creator, Role.member]);
-
 interface ScanResult {
 	docs: DocumentData[];
 	truncated: boolean;
-}
-
-interface TreeAccess {
-	root: Statement;
-	topParentId: string;
 }
 
 function emptyResponse(started: number): SearchStatementsResponse {
@@ -146,50 +131,6 @@ async function totalFor(base: Query, scan: ScanResult): Promise<number> {
 	return aggregate.data().count;
 }
 
-/**
- * The caller may search a tree they hold an active role in (on the root or its
- * top statement), or one that is open. Banned is always refused.
- */
-async function resolveTreeAccess(
-	firestore: Firestore,
-	uid: string,
-	rootId: string,
-): Promise<TreeAccess> {
-	const statements = firestore.collection(Collections.statements);
-	const rootSnap = await statements.doc(rootId).get();
-	const root = rootSnap.data() as Statement | undefined;
-	if (!rootSnap.exists || !root) {
-		throw new HttpsError('not-found', 'Statement not found');
-	}
-
-	const topParentId = root.parentId === 'top' || !root.topParentId ? rootId : root.topParentId;
-	const subscriptionIds = [...new Set([rootId, topParentId])];
-	const subscriptions = await firestore.getAll(
-		...subscriptionIds.map((id) =>
-			firestore.collection(Collections.statementsSubscribe).doc(`${uid}--${id}`),
-		),
-	);
-	const roles = subscriptions
-		.filter((snap) => snap.exists)
-		.map((snap) => (snap.data() as { role?: string } | undefined)?.role);
-
-	if (roles.includes(Role.banned)) {
-		throw new HttpsError('permission-denied', 'You cannot search this space');
-	}
-	if (roles.some((role) => role !== undefined && ACTIVE_ROLES.has(role))) {
-		return { root, topParentId };
-	}
-
-	const top =
-		topParentId === rootId
-			? root
-			: ((await statements.doc(topParentId).get()).data() as Statement | undefined);
-	const access = root.membership?.access ?? top?.membership?.access;
-	if (access && OPEN_ACCESS.has(access)) return { root, topParentId };
-
-	throw new HttpsError('permission-denied', 'You are not a member of this space');
-}
-
 async function treeCandidates(
 	firestore: Firestore,
 	rootId: string,
@@ -224,7 +165,7 @@ async function subscriptionCandidates(
 /** Semantic hits never fail the search: without them the lexical results still stand. */
 async function semanticInTree(
 	uid: string,
-	access: TreeAccess,
+	access: StatementAccess,
 	rootId: string,
 	query: string,
 	limit: number,
@@ -285,12 +226,12 @@ export async function executeStatementSearch(
 		const firestore = getFirestore();
 
 		if (scope.kind === 'tree') {
-			const access = await resolveTreeAccess(firestore, uid, scope.rootId);
+			const access = await resolveStatementAccess(firestore, uid, scope.rootId);
 			const wantsSemantic =
 				request.semantic === true && query.length >= SEARCH_CONFIG.MIN_SEMANTIC_QUERY_LENGTH;
 
 			const [tree, semantic] = await Promise.all([
-				wantsLexical ? treeCandidates(firestore, scope.rootId, access.root) : null,
+				wantsLexical ? treeCandidates(firestore, scope.rootId, access.statement) : null,
 				wantsSemantic ? semanticInTree(uid, access, scope.rootId, query, limit) : [],
 			]);
 

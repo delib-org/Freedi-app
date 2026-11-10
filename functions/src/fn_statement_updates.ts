@@ -19,12 +19,15 @@ import { HOT_TRIGGER_MEMORY } from './utils/createFirestoreFunction';
 import { generateDescriptionFromChildren } from './helpers';
 import { classifyChildUpdate } from './userFeed/classifyChildUpdate';
 import { recordDiscussionActivity } from './userFeed/recordDiscussionActivity';
+import { recordMessageDeleted } from './unread/messageCounter';
+import { sendDecidedNoticesOnStageChange } from './engagement/notifications/decidedNotices';
 import { writeHistoryEntry } from './statements/history/writeHistoryEntry';
 import { isResearchEnabledForTopParent } from './statements/history/isResearchEnabled';
 import {
 	syncTopAnswersOnOptionDeleted,
 	syncTopAnswersOnOptionUpdated,
 } from './evaluation/topAnswerSync';
+import { TRIGGER_MAX_INSTANCES } from './config/triggerLimits';
 
 /**
  * Updates parent statement when a child statement is created
@@ -62,11 +65,15 @@ export const updateParentOnChildUpdate = onDocumentUpdated(
 		document: `${Collections.statements}/{statementId}`,
 		region: functionConfig.region,
 		memory: HOT_TRIGGER_MEMORY,
+		maxInstances: TRIGGER_MAX_INSTANCES.statementWrite,
 	},
 	async (event) => {
 		try {
 			const before = event.data?.before.data() as Statement | undefined;
 			const after = event.data?.after.data() as Statement | undefined;
+
+			// Before the parent check: a top-level question can reach Decided too.
+			if (before && after) await sendDecidedNoticesOnStageChange(before, after);
 
 			// Skip if no data or no parent or if parent is 'top'
 			if (!before || !after || !after.parentId || after.parentId === 'top') return;
@@ -285,6 +292,9 @@ export const updateParentOnChildDelete = onDocumentDeleted(
 					subStatementsCount: FieldValue.increment(-1),
 				});
 			}
+
+			// Unread counters: -1 on every ancestor (never throws)
+			await recordMessageDeleted(db, deletedStatement);
 
 			// Update parent statement with latest children
 			await updateParentWithLatestChildren(deletedStatement.parentId);

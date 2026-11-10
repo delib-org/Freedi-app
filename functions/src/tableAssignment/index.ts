@@ -15,3 +15,6 @@ export { tablesSavePreferences } from './fn_tablesSavePreferences';
 export { tablesJoinTable } from './fn_tablesJoinTable';
 export { tablesComputePreview } from './fn_tablesComputePreview';
 export { tablesPublishRun } from './fn_tablesPublishRun';
+export { tablesCancelRegistration } from './fn_tablesCancelRegistration';
+export { tablesRemoveParticipant } from './fn_tablesRemoveParticipant';
+export { tablesFixDetails } from './fn_tablesFixDetails';

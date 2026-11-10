@@ -63,6 +63,78 @@
   }
 }
 
+// Thumb mode: the card's photo column. It is pinned to the card's inline-start
+// edge and spans its full height (inset-block: 0); being absolute, it never adds
+// to the card's height, so a tall source image cannot stretch the card. The card
+// (position: relative, overflow hidden, rounded) clips its corners and reserves
+// the width through --card-photo-width. The button opens the photo in the
+// lightbox; the column is at least 5.5rem wide, so it is a generous tap target.
+// An admin's picture sits inside UploadImage, whose `cover` variant fills this box.
+.imageContainer.thumb {
+  --statement-image-max-height: none;
+
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 1;
+  display: block;
+  inline-size: var(--card-photo-width);
+  overflow: hidden;
+  border-radius: 0;
+
+  .enlargeBtn,
+  .picture {
+    inline-size: 100%;
+    block-size: 100%;
+    max-width: none;
+    max-height: none;
+    min-height: 0;
+    border-radius: 0;
+  }
+
+  .picture {
+    object-fit: cover;
+  }
+
+  // The admin's remove control: a small chip tucked in the photo's top inline-end
+  // corner. On touch screens the hit area grows to 44px without growing the chip.
+  .imageControls {
+    top: 0.25rem;
+    right: auto;
+    left: auto;
+    inset-inline-end: 0.25rem;
+  }
+
+  .imageRemoveBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    padding: 0;
+    font-size: 0.75rem;
+    line-height: 1;
+
+    @media (pointer: coarse), screen and (max-width: 600px) {
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        inset-block-start: 0;
+        inset-inline-end: 0;
+        // px, not rem: the root font size is user-set and 2.75rem can fall short of 44px.
+        inline-size: 44px;
+        block-size: 44px;
+      }
+    }
+  }
+
+  @media screen and (max-width: 600px) {
+    display: block;
+  }
+}
+
 // The picture as a participant sees it: a button that opens it full screen.
 // Admins get the upload drop zone in its place.
 .enlargeBtn {

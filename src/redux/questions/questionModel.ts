@@ -7,7 +7,7 @@ import { QuestionStage } from '@freedi/shared-types';
 
 export const questionStages = {
 	[QuestionStage.suggestion]: {
-		name: 'Suggestion',
+		name: 'Answers',
 		icon: LightBulbIcon,
 		color: '--settings-suggestions',
 	},

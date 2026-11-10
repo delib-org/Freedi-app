@@ -1,7 +1,7 @@
 /**
  * Minimal in-memory Firestore stand-in for the progress / nudge /
  * subscription tests. Supports the subset the code under test uses:
- * doc get/set/create/update, equality `where` queries with id ordering +
+ * doc get/set/create/update, `where` queries (`==` and `>`) with id ordering +
  * limit/startAfter, `getAll`, batches and transactions.
  *
  * `{ _increment: n }` values (the jest.setup FieldValue mock) are applied as
@@ -40,6 +40,7 @@ interface Query {
 	limit: (n: number) => Query;
 	startAfter: (cursor: Snap) => Query;
 	get: () => Promise<{ empty: boolean; size: number; docs: QuerySnap[] }>;
+	count: () => { get: () => Promise<{ data: () => { count: number } }> };
 }
 
 function isIncrement(value: unknown): value is { _increment: number } {
@@ -96,7 +97,11 @@ export interface FakeDb {
 	read: (collection: string, id: string) => Doc | undefined;
 	createCalls: Array<{ collection: string; id: string }>;
 	db: {
-		collection: (name: string) => { doc: (id: string) => Ref; where: Query['where'] };
+		collection: (name: string) => {
+			doc: (id: string) => Ref;
+			where: Query['where'];
+			orderBy: Query['orderBy'];
+		};
 		getAll: (...refs: Ref[]) => Promise<Snap[]>;
 		batch: () => {
 			set: (ref: Ref, data: Doc, opts?: { merge?: boolean }) => void;
@@ -110,6 +115,7 @@ export interface FakeDb {
 export interface TransactionLike {
 	get: (ref: Ref) => Promise<Snap>;
 	set: (ref: Ref, data: Doc, opts?: { merge?: boolean }) => void;
+	create: (ref: Ref, data: Doc) => void;
 	update: (ref: Ref, data: Doc) => void;
 }
 
@@ -154,26 +160,53 @@ export function createFakeDb(): FakeDb {
 
 	const makeQuery = (
 		collection: string,
-		filters: Array<[string, unknown]>,
+		filters: Array<[string, unknown, string]>,
 		limit?: number,
 		after?: string,
 	): Query => ({
-		where: (field, _op, value) => makeQuery(collection, [...filters, [field, value]], limit, after),
+		where: (field, op, value) =>
+			makeQuery(collection, [...filters, [field, value, op]], limit, after),
 		orderBy: () => makeQuery(collection, filters, limit, after),
 		select: () => makeQuery(collection, filters, limit, after),
 		limit: (n) => makeQuery(collection, filters, n, after),
 		startAfter: (cursor) => makeQuery(collection, filters, limit, cursor.id),
 		get: async () => {
-			let ids = [...col(collection).keys()].sort();
-			if (after) ids = ids.filter((id) => id > after);
-			let docs = ids
-				.map((id) => ({ ...snapOf(collection, id), ref: makeRef(collection, id) }))
-				.filter((snap) => filters.every(([f, v]) => snap.data()?.[f] === v));
-			if (limit !== undefined) docs = docs.slice(0, limit);
+			const docs = matching(collection, filters, limit, after);
 
 			return { empty: docs.length === 0, size: docs.length, docs };
 		},
+		count: () => ({
+			get: async () => {
+				const count = matching(collection, filters, limit, after).length;
+
+				return { data: () => ({ count }) };
+			},
+		}),
 	});
+
+	const matching = (
+		collection: string,
+		filters: Array<[string, unknown, string]>,
+		limit?: number,
+		after?: string,
+	): QuerySnap[] => {
+		let ids = [...col(collection).keys()].sort();
+		if (after) ids = ids.filter((id) => id > after);
+		const docs = ids
+			.map((id) => ({ ...snapOf(collection, id), ref: makeRef(collection, id) }))
+			.filter((snap) =>
+				filters.every(([f, v, op]) => {
+					const actual = snap.data()?.[f];
+
+					if (op === '>') return Number(actual) > Number(v);
+					if (op === '!=') return actual !== undefined && actual !== v;
+
+					return actual === v;
+				}),
+			);
+
+		return limit !== undefined ? docs.slice(0, limit) : docs;
+	};
 
 	return {
 		store,
@@ -184,8 +217,9 @@ export function createFakeDb(): FakeDb {
 			collection: (name) => ({
 				doc: (id) => makeRef(name, id),
 				where: (field, op, value) => makeQuery(name, []).where(field, op, value),
+				orderBy: () => makeQuery(name, []),
 			}),
-			getAll: async (...refs) => refs.map((r) => snapOf(r.collection, r.id)),
+			getAll: async (...refs) => refs.map((r) => ({ ...snapOf(r.collection, r.id), ref: r })),
 			batch: () => {
 				const ops: Array<() => void> = [];
 
@@ -200,6 +234,12 @@ export function createFakeDb(): FakeDb {
 				fn({
 					get: async (ref) => snapOf(ref.collection, ref.id),
 					set: (ref, data, opts) => writeDoc(ref.collection, ref.id, data, !!opts?.merge),
+					create: (ref, data) => {
+						if (col(ref.collection).has(ref.id)) {
+							throw Object.assign(new Error(`Document already exists: ${ref.id}`), { code: 6 });
+						}
+						writeDoc(ref.collection, ref.id, data, false);
+					},
 					update: (ref, data) => writeDoc(ref.collection, ref.id, data, true),
 				}),
 		},

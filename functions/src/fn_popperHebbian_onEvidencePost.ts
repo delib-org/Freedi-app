@@ -10,6 +10,7 @@ import {
 	migrateCorroborationScore,
 } from './helpers/consensusValidCalculator';
 import { logError } from './utils/errorHandling';
+import { TRIGGER_MAX_INSTANCES } from './config/triggerLimits';
 
 // Extended evidence interface with new corroborationScore field
 // (until delib-npm is updated)
@@ -211,6 +212,7 @@ export const onEvidencePostCreate = onDocumentCreated(
 	{
 		document: `${Collections.statements}/{statementId}`,
 		region: functionConfig.region,
+		maxInstances: TRIGGER_MAX_INSTANCES.statementCreate,
 	},
 	async (event) => {
 		const snapshot = event.data;
@@ -289,6 +291,7 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 	{
 		document: `${Collections.statements}/{statementId}`,
 		region: functionConfig.region,
+		maxInstances: TRIGGER_MAX_INSTANCES.statementWrite,
 	},
 	async (event) => {
 		const beforeSnapshot = event.data?.before;

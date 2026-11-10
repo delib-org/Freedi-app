@@ -6,12 +6,11 @@ import { enforceCallableRateLimit } from './utils/rateLimit';
 import { RATE_BUDGETS } from './config/rateBudgets';
 
 // LLM-based profanity detection (see config/gemini.ts: OpenAI-backed today).
-// Exported for the Agora language gate (agora/fn_agoraCheckLanguage.ts).
-export async function containsBadLanguage(text: string): Promise<boolean> {
-	try {
-		const model = getGenAI().getGenerativeModel({ model: GEMINI_MODEL });
+// Throws when the check cannot answer, so a caller can tell "clean" from "unknown".
+export async function assessLanguage(text: string): Promise<boolean> {
+	const model = getGenAI().getGenerativeModel({ model: GEMINI_MODEL });
 
-		const prompt = `
+	const prompt = `
       You are a content moderator for a collaborative discussion platform.
       You must moderate content in ALL languages including Hebrew, Arabic, English, Spanish, German, and Dutch.
 
@@ -34,23 +33,25 @@ export async function containsBadLanguage(text: string): Promise<boolean> {
       Return only true or false. Text: "${text}"
     `;
 
-		const result = await model.generateContent(prompt);
-		const response = result.response;
+	const result = await model.generateContent(prompt);
+	const response = result.response;
 
-		// If the model returned nothing usable, don't punish the author — allow.
-		if (!response.candidates || response.candidates.length === 0) {
-			console.info('Moderation returned no candidates — allowing content');
+	if (!response.candidates || response.candidates.length === 0) {
+		throw new Error('Moderation returned no candidates');
+	}
 
-			return false;
-		}
+	const isFlagged = response.text().trim().toLowerCase().includes('true');
+	console.info('Moderation verdict:', isFlagged);
 
-		const output = response.text().trim().toLowerCase();
-		console.info('Moderation response:', output);
+	return isFlagged;
+}
 
-		return output.includes('true');
+// Fail-open form, for the Agora language gate (agora/fn_agoraCheckLanguage.ts) and
+// the callable below: an infrastructure error is our problem, not the author's.
+export async function containsBadLanguage(text: string): Promise<boolean> {
+	try {
+		return await assessLanguage(text);
 	} catch (error: unknown) {
-		// Fail OPEN: an infrastructure error is our problem, not the author's.
-		// Allow the content rather than wrongly accusing a real participant.
 		logError(error, { operation: 'profanityChecker.containsBadLanguage' });
 
 		return false;

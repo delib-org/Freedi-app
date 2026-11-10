@@ -127,6 +127,31 @@ describe('useOptimisticVotes', () => {
 		expect(mockSetVoteToDB).toHaveBeenCalledWith(option, mockCreator);
 	});
 
+	it('should report a vote only after the database confirms it', async () => {
+		mockSetVoteToDB.mockResolvedValueOnce('cast');
+		const { result } = renderHook(() => useOptimisticVotes(makeQuestion({ a: 2 })));
+
+		expect(result.current.voteCountedId).toBe(0);
+		await act(async () => {
+			await result.current.castVote(makeOption('a'));
+		});
+
+		expect(result.current.voteCountedId).toBeGreaterThan(0);
+		act(() => result.current.dismissVoteCounted());
+		expect(result.current.voteCountedId).toBe(0);
+	});
+
+	it.each(['removed', 'failed'])('should say nothing when the vote was %s', async (outcome) => {
+		mockSetVoteToDB.mockResolvedValueOnce(outcome);
+		const { result } = renderHook(() => useOptimisticVotes(makeQuestion({ a: 2 })));
+
+		await act(async () => {
+			await result.current.castVote(makeOption('a'));
+		});
+
+		expect(result.current.voteCountedId).toBe(0);
+	});
+
 	it('should hand back to the server numbers once they catch up', async () => {
 		const { result, rerender } = renderHook(({ question }) => useOptimisticVotes(question), {
 			initialProps: { question: makeQuestion({ a: 2, b: 1 }) },

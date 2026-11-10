@@ -100,7 +100,7 @@ export async function processWeeklyDigests(): Promise<{
 					body: `${digest.items.length} updates, ${digest.totalNewStatements} new discussions.${creditsSummary}`,
 					channels: [NotificationChannel.EMAIL],
 					sourceApp: SourceApp.MAIN,
-					targetPath: '/notifications',
+					targetPath: '/home?view=inbox',
 					deliverAt: null,
 					frequency: NotificationFrequency.WEEKLY,
 					triggerType: NotificationTriggerType.WEEKLY_DIGEST,

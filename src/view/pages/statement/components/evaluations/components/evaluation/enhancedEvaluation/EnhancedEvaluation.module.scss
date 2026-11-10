@@ -15,6 +15,41 @@
 	min-width: 0;
 }
 
+// Footer layout (`compact`): the wrapper dissolves so the faces, the chips and
+// the hint become flex items of the host's footer. `order` puts the faces
+// first; the host's action row (order 2) and the chips (order 3) share the
+// next line, and the hint / caption close it.
+.evaluation--compact {
+	display: contents;
+}
+
+.evaluation__faces {
+	flex: 0 0 100%;
+	min-width: 0;
+	order: 1;
+}
+
+// Desktop: the faces stop taking a whole row. Smaller circles sit at the start
+// of the footer, so the faces, the host's action buttons (order 2) and the
+// result chips (order 3) share ONE row. A phone keeps the faces on their own
+// row at full tap size. DOM order is already faces, actions, chips.
+@media (min-width: 601px) {
+	.evaluation--compact .evaluation__faces {
+		--circle-max: 2.25rem;
+		--circle-min: 2.25rem;
+		--circle-row-gap: var(--space-xs);
+		--circle-row-justify: flex-start;
+
+		flex: 0 1 auto;
+		inline-size: auto;
+	}
+}
+
+.evaluation--compact .reveal-hint {
+	flex: 0 0 100%;
+	order: 4;
+}
+
 .scale {
 	display: flex;
 	flex-direction: row;
