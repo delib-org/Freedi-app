@@ -5,7 +5,15 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useSelector } from 'react-redux';
 import { ArrowUpRight, FileText } from 'lucide-react';
-import { EvaluationUI, Screen, SortType, Statement, StatementType } from '@freedi/shared-types';
+import {
+	DEFAULT_MIN_EVALUATORS,
+	EvaluationUI,
+	Screen,
+	SortType,
+	Statement,
+	StatementType,
+} from '@freedi/shared-types';
+import { formatScore } from '@/helpers/scoreFormat';
 import { statementsSelector, fullyLoadedScopeSelector } from '@/redux/statements/statementsSlice';
 import {
 	createGroupedViewSelector,
@@ -24,7 +32,7 @@ import { isLiveResultsOn } from '@/helpers/liveResults';
 export const AGREEMENT_VIEWS = ['covenant', 'themes'];
 const selectGrouped = createGroupedViewSelector(statementsSelector);
 const selectOtherIdeas = createOtherIdeasSelector(statementsSelector);
-const percent = (n?: number): string => (n === undefined ? '—' : `${Math.round(n * 100)}%`);
+const scoreText = (n?: number): string => (n === undefined ? '—' : formatScore(n));
 
 export default function AgreementHub({
 	statement,
@@ -102,27 +110,22 @@ export default function AgreementHub({
 			<>
 				<div className={styles.journey__stats}>
 					<span>
-						<strong>{percent(e.score)}</strong>
-						{t('Consensus score')}
+						<strong dir="ltr">{scoreText(e.score)}</strong>
+						{t('Agreement score')}
 					</span>
 					<span>
 						<strong>{e.n}</strong>
-						{t('People evaluated')}
+						{t('People who rated')}
 					</span>
 				</div>
 				<div className={styles.journey__evidence}>
 					<span>
-						{t('Average sentiment')}: {percent(e.mean)}
+						{t('Average rating')}: <span dir="ltr">{scoreText(e.mean)}</span>
 					</span>
 					<span>
 						{t('Oppose')}: {e.oppose ?? t('Not available')}
 					</span>
-					{e.confidence !== undefined && (
-						<span>
-							{t('Confidence')}: {percent(e.confidence)}
-						</span>
-					)}
-					{e.n < 3 && <span>{t('Needs more evaluation')}</span>}
+					{e.n < DEFAULT_MIN_EVALUATORS && <span>{t('Too few ratings so far')}</span>}
 				</div>
 			</>
 		);

@@ -137,7 +137,7 @@ describe('resultsLogic', () => {
 			};
 			expect(resultsRuleCaption(settings, false)).toEqual({
 				key: 'Above the agreement threshold ({n})',
-				value: '0.6',
+				value: '60',
 			});
 			expect(resultsRuleCaption(settings, true).key).toBe('By consensus · threshold {n}');
 		});
@@ -427,11 +427,47 @@ describe('resultsLogic', () => {
 		expect(scorePercent(-1)).toBe(0);
 		expect(scorePercent(0)).toBe(50);
 		expect(scorePercent(2)).toBe(100);
-		expect([0.6, 0.3, 0, -0.1].map(scoreLabelKey)).toEqual([
-			'Broad agreement',
-			'Partial agreement',
-			'Split',
-			'Opposition',
-		]);
+	});
+
+	describe('scoreLabelKey bands', () => {
+		const ENOUGH_RATERS = 3;
+
+		it.each([
+			[1, 'Broad agreement'],
+			[0.6, 'Broad agreement'],
+			[0.59, 'Partial agreement'],
+			[0.3, 'Partial agreement'],
+			[0.29, 'Split'],
+			[0, 'Split'],
+			[-0.09, 'Split'],
+			[-0.1, 'Opposition'],
+			[-1, 'Opposition'],
+		])('score %d → %s', (score, key) => {
+			expect(scoreLabelKey(score, ENOUGH_RATERS)).toBe(key);
+		});
+
+		it('reads the whole number people see, so "+60" is never partial', () => {
+			expect(scoreLabelKey(0.595, ENOUGH_RATERS)).toBe('Broad agreement');
+			expect(scoreLabelKey(-0.095, ENOUGH_RATERS)).toBe('Opposition');
+			expect(scoreTone(-0.095)).toBe('negative');
+		});
+
+		it.each([0, 1, 2])('says too few ratings with %d raters, whatever the score', (raters) => {
+			expect(scoreLabelKey(0.9, raters)).toBe('Too few ratings so far');
+			expect(scoreLabelKey(-0.9, raters)).toBe('Too few ratings so far');
+		});
+
+		it('starts the bands at exactly 3 raters', () => {
+			expect(scoreLabelKey(0.9, 3)).toBe('Broad agreement');
+		});
+	});
+
+	it('shows a negative threshold on the same scale', () => {
+		expect(
+			resultsRuleCaption(
+				{ resultsBy: ResultsBy.consensus, cutoffBy: CutoffBy.aboveThreshold, cutoffNumber: -0.1 },
+				false,
+			).value,
+		).toBe('−10');
 	});
 });

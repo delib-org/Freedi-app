@@ -717,6 +717,25 @@
 	color: var(--score-negative-ink);
 }
 
+.howToRead {
+	padding-inline: 4px;
+	font-size: 12.5px;
+	line-height: 1.6;
+	color: var(--text-meta);
+
+	&__title {
+		display: flex;
+		align-items: center;
+		min-height: var(--tap-min, 44px);
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	&__line {
+		margin: 0 0 8px;
+	}
+}
+
 .allToggle {
 	display: flex;
 	align-items: center;

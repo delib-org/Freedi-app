@@ -1,5 +1,12 @@
-import { CutoffBy, ResultsSettings, Statement, defaultResultsSettings } from '@freedi/shared-types';
+import {
+	CutoffBy,
+	DEFAULT_MIN_EVALUATORS,
+	ResultsSettings,
+	Statement,
+	defaultResultsSettings,
+} from '@freedi/shared-types';
 import { getConsensusScore } from '@/redux/utils/selectorFactories';
+import { formatScoreThreshold, toDisplayScore } from '@/helpers/scoreFormat';
 import {
 	QuestionStageIndex,
 	STAGE_COLLECTING,
@@ -126,7 +133,7 @@ export function resultsRuleCaption(
 	if (cutoffBy === CutoffBy.aboveThreshold) {
 		return {
 			key: decided ? 'By consensus · threshold {n}' : 'Above the agreement threshold ({n})',
-			value: String(cutoffNumber),
+			value: formatScoreThreshold(cutoffNumber),
 		};
 	}
 	if (cutoffBy === CutoffBy.all) return { key: 'Every rated answer, by agreement' };
@@ -139,24 +146,26 @@ export function resultsRuleCaption(
 
 export type ScoreTone = 'positive' | 'split' | 'negative';
 
-/** Same bands as the design's bar colour: broad/partial agreement, split, opposition. */
-export const SCORE_POSITIVE_MIN = 0.3;
-export const SCORE_SPLIT_MIN = -0.1;
+/** The bands, on the −100…+100 scale people read. */
+export const SCORE_BROAD_MIN = 60;
+export const SCORE_POSITIVE_MIN = 30;
+export const SCORE_SPLIT_MIN = -10;
 
 export function scoreTone(score: number): ScoreTone {
-	if (score >= SCORE_POSITIVE_MIN) return 'positive';
-	if (score > SCORE_SPLIT_MIN) return 'split';
+	const display = toDisplayScore(score);
+	if (display >= SCORE_POSITIVE_MIN) return 'positive';
+	if (display > SCORE_SPLIT_MIN) return 'split';
 
 	return 'negative';
 }
 
-export const SCORE_BROAD_MIN = 0.6;
-
-/** The design's plain-language label for a score (broad / partial agreement, split, opposition). */
-export function scoreLabelKey(score: number): string {
-	if (score >= SCORE_BROAD_MIN) return 'Broad agreement';
-	if (score >= SCORE_POSITIVE_MIN) return 'Partial agreement';
-	if (score > SCORE_SPLIT_MIN) return 'Split';
+/** The plain-language label for an answer's score. A score from a few raters says little. */
+export function scoreLabelKey(score: number, raterCount: number): string {
+	if (raterCount < DEFAULT_MIN_EVALUATORS) return 'Too few ratings so far';
+	const display = toDisplayScore(score);
+	if (display >= SCORE_BROAD_MIN) return 'Broad agreement';
+	if (display >= SCORE_POSITIVE_MIN) return 'Partial agreement';
+	if (display > SCORE_SPLIT_MIN) return 'Split';
 
 	return 'Opposition';
 }

@@ -31,6 +31,5 @@ export function proposalEvidence(p: Statement) {
 		mean: n ? calcMeanSentiment(sum, n) : undefined,
 		support: e?.numberOfProEvaluators,
 		oppose: e?.numberOfConEvaluators,
-		confidence: e?.confidenceIndex,
 	};
 }

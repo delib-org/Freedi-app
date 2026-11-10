@@ -16,6 +16,7 @@ import {
 import type { QuestionScreenData } from '../useQuestionScreenData';
 import AnswerResult from './AnswerResult';
 import AgreementCard from './AgreementCard';
+import HowToReadResults from './HowToReadResults';
 import styles from '../QuestionScreen.module.scss';
 
 interface ResultsTabProps {
@@ -164,6 +165,8 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 					)}
 				</section>
 			)}
+
+			{visible && <HowToReadResults />}
 
 			<AgreementCard statement={statement} decided={decided} />
 		</div>
