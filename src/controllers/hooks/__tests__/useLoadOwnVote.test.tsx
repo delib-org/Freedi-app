@@ -1,18 +1,21 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { EvaluationUI, QuestionStep, Statement, StatementType, Vote } from '@freedi/shared-types';
 import { getOwnVote } from '@/controllers/db/vote/getVotes';
 import { questionUsesVotes, useLoadOwnVote } from '../useLoadOwnVote';
 
 const mockDispatch = jest.fn();
 let mockUid: string | undefined = 'u1';
+let mockStoredVote: Vote | undefined;
 
 jest.mock('@/controllers/db/vote/getVotes', () => ({ getOwnVote: jest.fn() }));
 jest.mock('@/controllers/hooks/reduxHooks', () => ({ useAppDispatch: () => mockDispatch }));
 jest.mock('react-redux', () => ({
-	useSelector: () => (mockUid ? { uid: mockUid } : undefined),
+	useSelector: (selector: string) =>
+		selector === 'vote' ? mockStoredVote : mockUid ? { uid: mockUid } : undefined,
 }));
-jest.mock('@/redux/creator/creatorSlice', () => ({ creatorSelector: jest.fn() }));
+jest.mock('@/redux/creator/creatorSlice', () => ({ creatorSelector: 'creator' }));
 jest.mock('@/redux/vote/votesSlice', () => ({
+	parentVoteSelector: () => 'vote',
 	setVoteToStore: (payload: unknown) => ({ type: 'setVote', payload }),
 }));
 
@@ -35,6 +38,7 @@ describe('useLoadOwnVote', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		mockUid = 'u1';
+		mockStoredVote = undefined;
 		getOwnVoteMock.mockImplementation(async (parentId) => vote(parentId, `${parentId}-answer`));
 	});
 
@@ -82,6 +86,34 @@ describe('useLoadOwnVote', () => {
 		resolveFirst(vote('q1', 'late'));
 		await Promise.resolve();
 		expect(mockDispatch).toHaveBeenCalledTimes(1);
+	});
+
+	it('does not overwrite a vote cast while the read was in flight', async () => {
+		let resolveRead: (value: Vote) => void = () => undefined;
+		getOwnVoteMock.mockImplementationOnce(
+			() =>
+				new Promise<Vote>((resolve) => {
+					resolveRead = resolve;
+				}),
+		);
+		const statement = question('q1');
+		const { rerender } = renderHook(() => useLoadOwnVote(statement));
+
+		mockStoredVote = vote('q1', 'just-cast');
+		rerender();
+		await act(async () => resolveRead(vote('q1', 'older-from-db')));
+
+		expect(mockDispatch).not.toHaveBeenCalled();
+	});
+
+	it('replaces a vote already in the store when nothing changed during the read', async () => {
+		mockStoredVote = vote('q1', 'from-an-earlier-visit');
+		renderHook(() => useLoadOwnVote(question('q1')));
+		await waitFor(() => expect(mockDispatch).toHaveBeenCalledTimes(1));
+		expect(mockDispatch).toHaveBeenCalledWith({
+			type: 'setVote',
+			payload: { parentId: 'q1', optionId: 'q1-answer', userId: 'u1' },
+		});
 	});
 
 	it('stores nothing when the person has not voted', async () => {

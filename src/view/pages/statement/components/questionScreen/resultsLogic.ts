@@ -168,6 +168,41 @@ export function scorePercent(score: number): number {
 	return Math.round(((clamped + 1) / 2) * 100);
 }
 
+export interface AnswerCoverageInput {
+	/** Answers of this question in the store, hidden ones included. */
+	loadedAnswers: number;
+	/** Children of any type in the store: the listener's window counts these, not answers. */
+	loadedChildren: number;
+	/** Server counter. Missing on questions older than the counter. */
+	numberOfOptions: number | undefined;
+	isFullyLoaded: boolean;
+	/** How many children the question screen's first listener asks for. */
+	childrenWindow: number;
+}
+
+/**
+ * Whether the answers in the store are all the answers of the question, the
+ * only case where "none yet", "all rated" or a remaining count can be true.
+ * The store normally holds the newest children of any type, so a busy
+ * discussion can push every answer out of it.
+ *
+ * A counter that disagrees either way is treated as not known: below the loaded
+ * count it is provably stale, above it there are answers not loaded. Without a
+ * counter, a window that did not fill means nothing was left out.
+ */
+export function areAnswersComplete({
+	loadedAnswers,
+	loadedChildren,
+	numberOfOptions,
+	isFullyLoaded,
+	childrenWindow,
+}: AnswerCoverageInput): boolean {
+	if (isFullyLoaded) return true;
+	if (numberOfOptions === undefined) return loadedChildren < childrenWindow;
+
+	return loadedAnswers === numberOfOptions;
+}
+
 export interface StageCueInput {
 	stage: QuestionStageIndex;
 	/** Host halt, or the deadline passed. */
@@ -179,6 +214,8 @@ export interface StageCueInput {
 	hasVoted: boolean;
 	ratedCount: number;
 	rateableCount: number;
+	/** See `areAnswersComplete`: without it the counts say nothing about the whole question. */
+	answersComplete: boolean;
 }
 
 type RateProgress = 'nothing' | 'none' | 'some' | 'all';
@@ -203,23 +240,35 @@ const RATE_ONLY: RateRow = {
 	all: 'ratedAll',
 };
 
-function rateProgress(ratedCount: number, rateableCount: number): RateProgress {
+/** Partly loaded answers read as "none": the row's general cue, with no number and no thanks. */
+function rateProgress(
+	ratedCount: number,
+	rateableCount: number,
+	answersComplete: boolean,
+): RateProgress {
+	if (!answersComplete) return 'none';
 	if (rateableCount === 0) return 'nothing';
 	if (ratedCount === 0) return 'none';
 
 	return ratedCount < rateableCount ? 'some' : 'all';
 }
 
-function votingCueName({ canRate, canAddAnswer, hasVoted, rateableCount }: StageCueInput): string {
+function votingCueName({
+	canRate,
+	canAddAnswer,
+	hasVoted,
+	rateableCount,
+	answersComplete,
+}: StageCueInput): string {
 	if (!canRate) return canAddAnswer ? 'votingClosedAdd' : 'votingClosedRead';
 	if (hasVoted) return canAddAnswer ? 'votedAdd' : 'voted';
-	if (rateableCount === 0) return canAddAnswer ? 'noneToVoteAdd' : 'noneToVote';
+	if (answersComplete && rateableCount === 0) return canAddAnswer ? 'noneToVoteAdd' : 'noneToVote';
 
 	return canAddAnswer ? 'voteOrAdd' : 'voteOne';
 }
 
 function ratingCueName(input: StageCueInput): string {
-	const { stage, canRate, canAddAnswer, ratedCount, rateableCount } = input;
+	const { stage, canRate, canAddAnswer, ratedCount, rateableCount, answersComplete } = input;
 	const isCollecting = stage === STAGE_COLLECTING;
 	if (!canRate) {
 		if (isCollecting) return canAddAnswer ? 'addRatingLater' : 'collectingRead';
@@ -228,7 +277,9 @@ function ratingCueName(input: StageCueInput): string {
 	}
 	const collectingOrRating = isCollecting ? COLLECTING_ADD_AND_RATE : RATING_ADD_AND_RATE;
 
-	return (canAddAnswer ? collectingOrRating : RATE_ONLY)[rateProgress(ratedCount, rateableCount)];
+	return (canAddAnswer ? collectingOrRating : RATE_ONLY)[
+		rateProgress(ratedCount, rateableCount, answersComplete)
+	];
 }
 
 /**

@@ -13,7 +13,7 @@ const AnswersCounter: FC<AnswersCounterProps> = ({ data }) => {
 
 	return (
 		<div className={styles.counter} data-testid="answers-counter">
-			{data.rateableCount > 0 && (
+			{data.answersComplete && data.rateableCount > 0 && (
 				<span
 					className={styles.counter__count}
 					aria-label={t('{rated} of {total} rated')

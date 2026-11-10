@@ -34,9 +34,9 @@
 	}
 
 	&__caption {
-		margin: 8px 0 0;
-		font-size: 13px;
-		line-height: 1.35;
+		margin: var(--space-xs) 0 0;
+		font-size: var(--font-size-sm);
+		line-height: var(--line-height-snug);
 		color: var(--tone-lilac-ink);
 	}
 

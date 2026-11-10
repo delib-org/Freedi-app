@@ -1,6 +1,7 @@
 import { CutoffBy, ResultsBy, Statement, StatementType } from '@freedi/shared-types';
 import {
 	countRated,
+	areAnswersComplete,
 	getStageCue,
 	getResultsAccess,
 	rankAnswers,
@@ -163,6 +164,7 @@ describe('resultsLogic', () => {
 			hasVoted: false,
 			ratedCount: 0,
 			rateableCount: 4,
+			answersComplete: true,
 		};
 		type Ability = 'both' | 'add' | 'rate' | 'neither';
 		const ability = (who: Ability) => ({
@@ -268,6 +270,129 @@ describe('resultsLogic', () => {
 				expect(getStageCue({ ...base, stage: 1, usesVotingUI: true, ...ability('add') }).key).toBe(
 					'stageCue.ratingClosedAdd',
 				);
+			});
+		});
+
+		describe('with partly loaded answers', () => {
+			const partial = { ...base, answersComplete: false };
+
+			it.each([
+				['Collecting, nothing in the store', 0, 'both', 'nothing', 'addOrRate'],
+				['Collecting, some rated', 0, 'both', 'some', 'addOrRate'],
+				['Collecting, all loaded rated', 0, 'both', 'all', 'addOrRate'],
+				['Rating, nothing in the store', 1, 'both', 'nothing', 'rateEach'],
+				['Rating, some rated', 1, 'both', 'some', 'rateEach'],
+				['Rating, all loaded rated', 1, 'both', 'all', 'rateEach'],
+				['rate only, nothing in the store', 1, 'rate', 'nothing', 'rateEach'],
+				['rate only, all loaded rated', 0, 'rate', 'all', 'rateEach'],
+			] as const)('%s: general cue, no number', (_label, stage, who, step, name) => {
+				expect(getStageCue({ ...partial, stage, ...ability(who), ...progress[step] })).toEqual({
+					key: `stageCue.${name}`,
+				});
+			});
+
+			it('does not say there is nothing to vote on', () => {
+				const voting = { ...partial, stage: 2 as const, usesVotingUI: true, ...progress.nothing };
+				expect(getStageCue({ ...voting, ...ability('both') }).key).toBe('stageCue.voteOrAdd');
+				expect(getStageCue({ ...voting, ...ability('rate') }).key).toBe('stageCue.voteOne');
+			});
+
+			it('a vote is still known, whatever is loaded', () => {
+				expect(
+					getStageCue({
+						...partial,
+						stage: 2,
+						usesVotingUI: true,
+						hasVoted: true,
+						...ability('rate'),
+					}).key,
+				).toBe('stageCue.voted');
+			});
+
+			it('does not change the rows that do not depend on progress', () => {
+				expect(getStageCue({ ...partial, stage: 0, ...ability('add') }).key).toBe(
+					'stageCue.addRatingLater',
+				);
+				expect(getStageCue({ ...partial, stage: 1, ...ability('neither') }).key).toBe(
+					'stageCue.ratingClosedRead',
+				);
+			});
+		});
+
+		describe('areAnswersComplete', () => {
+			const coverage = {
+				loadedAnswers: 0,
+				loadedChildren: 0,
+				numberOfOptions: undefined,
+				isFullyLoaded: false,
+				childrenWindow: 30,
+			};
+
+			it('a counter of 0 with nothing loaded is complete', () => {
+				expect(areAnswersComplete({ ...coverage, numberOfOptions: 0 })).toBe(true);
+			});
+
+			it("every answer loaded is complete, also when they are the viewer's own", () => {
+				expect(
+					areAnswersComplete({
+						...coverage,
+						numberOfOptions: 2,
+						loadedAnswers: 2,
+						loadedChildren: 2,
+					}),
+				).toBe(true);
+			});
+
+			it('a counter above the loaded count is partial', () => {
+				expect(
+					areAnswersComplete({
+						...coverage,
+						numberOfOptions: 40,
+						loadedAnswers: 3,
+						loadedChildren: 30,
+					}),
+				).toBe(false);
+				expect(areAnswersComplete({ ...coverage, numberOfOptions: 5, loadedChildren: 30 })).toBe(
+					false,
+				);
+			});
+
+			it('a counter below the loaded count cannot be trusted', () => {
+				expect(
+					areAnswersComplete({
+						...coverage,
+						numberOfOptions: 2,
+						loadedAnswers: 9,
+						loadedChildren: 9,
+					}),
+				).toBe(false);
+			});
+
+			it('a fully loaded list is complete whatever the counter says', () => {
+				expect(
+					areAnswersComplete({
+						...coverage,
+						numberOfOptions: 40,
+						loadedAnswers: 38,
+						isFullyLoaded: true,
+					}),
+				).toBe(true);
+			});
+
+			describe('on a question without the counter', () => {
+				it('is complete when the window did not fill', () => {
+					expect(areAnswersComplete({ ...coverage, loadedChildren: 12, loadedAnswers: 4 })).toBe(
+						true,
+					);
+					expect(areAnswersComplete(coverage)).toBe(true);
+				});
+
+				it('is partial when the window filled, even with no answer loaded', () => {
+					expect(areAnswersComplete({ ...coverage, loadedChildren: 30 })).toBe(false);
+					expect(areAnswersComplete({ ...coverage, loadedChildren: 45, loadedAnswers: 45 })).toBe(
+						false,
+					);
+				});
 			});
 		});
 
