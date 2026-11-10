@@ -6,6 +6,7 @@ import { listenToStatement } from '@/controllers/db/statements/listenToStatement
 import {
 	statementSelector,
 	statementSelectorById,
+	statementSubscriptionSelector,
 	setStatement,
 } from '@/redux/statements/statementsSlice';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
@@ -14,6 +15,8 @@ import { getTime } from '@/controllers/general/helpers';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { logError } from '@/utils/errorHandling';
 import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
+import { getEntryVerdict, getSubscriptionScopeId } from '@/helpers/entryVerdict';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 interface Props {
 	simpleStatement: SimpleStatement;
@@ -26,6 +29,18 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 	);
 	const parentStatement = useSelector(statementSelectorById(statement?.parentId));
 	const topParentStatement = useSelector(statementSelectorById(statement?.topParentId));
+	const creator = useSelector(creatorSelector);
+	const parentSubscription = useSelector(
+		statementSubscriptionSelector(getSubscriptionScopeId(parentStatement)),
+	);
+	const topParentSubscription = useSelector(
+		statementSubscriptionSelector(getSubscriptionScopeId(topParentStatement)),
+	);
+	const isParentOpen =
+		getEntryVerdict(parentStatement, topParentStatement, parentSubscription, creator) === 'open';
+	const isTopParentOpen =
+		getEntryVerdict(topParentStatement, topParentStatement, topParentSubscription, creator) ===
+		'open';
 
 	useEffect(() => {
 		const unsubscribe = listenToStatement(simpleStatement.statementId);
@@ -38,7 +53,7 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 	// Fetch parent statements for breadcrumb if not in Redux
 	useEffect(() => {
 		if (statement?.parentId && !parentStatement) {
-			getStatementFromDB(statement.parentId)
+			getStatementFromDB(statement.parentId, { expectRefusal: true })
 				.then((st) => {
 					if (st) dispatch(setStatement(st));
 				})
@@ -57,7 +72,7 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 			statement.topParentId !== statement.parentId &&
 			!topParentStatement
 		) {
-			getStatementFromDB(statement.topParentId)
+			getStatementFromDB(statement.topParentId, { expectRefusal: true })
 				.then((st) => {
 					if (st) dispatch(setStatement(st));
 				})
@@ -73,16 +88,23 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 	const breadcrumb = useMemo(() => {
 		const parts: string[] = [];
 
-		if (topParentStatement && statement?.topParentId !== statement?.parentId) {
+		if (isTopParentOpen && statement?.topParentId !== statement?.parentId) {
 			parts.push(getFirstLine(topParentStatement.statement));
 		}
 
-		if (parentStatement) {
+		if (isParentOpen) {
 			parts.push(getFirstLine(parentStatement.statement));
 		}
 
 		return parts.join(' › ');
-	}, [parentStatement, topParentStatement, statement?.topParentId, statement?.parentId]);
+	}, [
+		parentStatement,
+		topParentStatement,
+		statement?.topParentId,
+		statement?.parentId,
+		isParentOpen,
+		isTopParentOpen,
+	]);
 
 	// Only show statements that have sub-statements
 	if (statement && (!statement.lastSubStatements || statement.lastSubStatements.length === 0)) {

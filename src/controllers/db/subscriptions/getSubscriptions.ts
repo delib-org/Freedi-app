@@ -36,6 +36,7 @@ import {
 import { parse, safeParse } from 'valibot';
 import { logError } from '@/utils/errorHandling';
 import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
+import { isRefusedRead } from '@/helpers/firestoreRefusal';
 import { NON_DOCUMENT_STATEMENT_TYPES } from '@/helpers/statementTypeHelpers';
 import { FIREBASE, HOME } from '@/constants/common';
 import { listenerManager } from '@/controllers/utils/ListenerManager';
@@ -406,6 +407,7 @@ export async function getIsSubscribed(
 
 export async function getStatementSubscriptionFromDB(
 	statementSubscriptionId: string,
+	options?: { expectRefusal?: boolean },
 ): Promise<StatementSubscription | undefined> {
 	try {
 		if (!statementSubscriptionId) throw new Error('Statement subscription id is undefined');
@@ -421,6 +423,7 @@ export async function getStatementSubscriptionFromDB(
 
 		return parse(StatementSubscriptionSchema, subscriptionDB.data());
 	} catch (error) {
+		if (options?.expectRefusal && isRefusedRead(error)) return undefined;
 		logError(error, { operation: 'subscriptions.getSubscriptions.getStatementSubscriptionFromDB' });
 	}
 }

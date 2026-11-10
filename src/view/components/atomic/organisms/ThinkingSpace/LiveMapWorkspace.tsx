@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Screen, Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useLevelVerdict } from '@/controllers/hooks/useLevelVerdict';
 import { buildStatementPath } from '@/routes/statementPaths';
 import ShareModal from '@/view/components/shareModal/ShareModal';
 import { availableMapViews, mapViews, MapViewId } from './MapExplorer';
@@ -28,6 +29,8 @@ export default function LiveMapWorkspace({
 	const { pathname } = useLocation();
 	const [shareOpen, setShareOpen] = useState(false);
 	const { canSee } = useQuestionScoreAccess(statement);
+	const isParentOpen =
+		useLevelVerdict(statement.parentId === 'top' ? undefined : statement.parentId) === 'open';
 	const hidden = !canSee && [Screen.agreementMap, Screen.polarizationIndex].includes(active);
 	const current = mapViews.find((view) => view.id === active);
 	const views = availableMapViews(statement.statementSettings);
@@ -65,9 +68,9 @@ export default function LiveMapWorkspace({
 				</button>
 			</header>
 
-			{(active === Screen.clusterBoard || (statement.parentId && statement.parentId !== 'top')) && (
+			{(active === Screen.clusterBoard || isParentOpen) && (
 				<nav className={styles.workspace__links} aria-label={t('Question path')}>
-					{statement.parentId && statement.parentId !== 'top' && (
+					{isParentOpen && (
 						<button
 							type="button"
 							onClick={() =>
