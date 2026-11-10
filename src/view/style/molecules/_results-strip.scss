@@ -6,12 +6,14 @@
 //
 // DOM:   <div class="results-strip">
 //          <div class="results-strip__items">
-//            <div class="results-strip__item [--primary] [--negative]">
-//              <span class="results-strip__value" dir="ltr">42%</span>
-//              <span class="results-strip__label">Consensus</span>
+//            <div class="tooltip results-strip__tip">
+//              <button class="tooltip__trigger results-strip__item [--primary] [--negative]">
+//                <span class="results-strip__value" dir="ltr">+42</span>
+//                <span class="results-strip__label">Agreement score</span>
+//              </button>
 //            </div> ×3
 //          </div>
-//          [<p class="results-strip__caption">Consensus will show after 5 evaluators</p>]
+//          [<p class="results-strip__caption">Agreement score shows after 3 people rate</p>]
 //        </div>
 
 @use '../mixins' as *;
@@ -30,6 +32,13 @@
 		inline-size: 100%;
 	}
 
+	// When an item explains itself, the tooltip's root is the flex item.
+	&__tip {
+		flex: 1 1 0;
+		display: flex;
+		min-width: 0;
+	}
+
 	// Three equal tiles; the value reads as data (display face), the label as UI.
 	&__item {
 		flex: 1 1 0;
@@ -44,7 +53,6 @@
 		border-radius: var(--radius-tile);
 		background: var(--card-default);
 		color: var(--text-title);
-		cursor: default;
 
 		&--primary {
 			background: var(--bg-sunken);
@@ -77,10 +85,9 @@
 	&__label {
 		max-inline-size: 100%;
 		font-size: 0.625rem;
+		line-height: 1.2;
 		color: var(--text-meta);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
+		text-align: center;
 	}
 
 	&__caption {
@@ -98,6 +105,10 @@
 			justify-content: flex-start;
 			flex-wrap: wrap;
 			gap: var(--space-2xs);
+		}
+
+		.results-strip__tip {
+			flex: 0 0 auto;
 		}
 
 		.results-strip__item {
@@ -136,6 +147,7 @@
 
 		.results-strip__label {
 			color: inherit;
+			white-space: nowrap;
 		}
 	}
 

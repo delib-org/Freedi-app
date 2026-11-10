@@ -42,8 +42,7 @@ const Evaluation: FC<EvaluationProps> = ({
 	try {
 		if (!parentStatement) return <>{footerSlot}</>;
 
-		let shouldDisplayScore: boolean =
-			!!parentStatement.statementSettings?.showEvaluation && window.innerWidth >= 768; //also checks for mobile
+		let shouldDisplayScore: boolean = !!parentStatement.statementSettings?.showEvaluation;
 		if (statement.evaluation?.selectionFunction) shouldDisplayScore = false;
 
 		// Check if evaluation is enabled (defaults to true for backward compatibility)

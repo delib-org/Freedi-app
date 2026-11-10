@@ -9,6 +9,7 @@ import {
 import { useSelector } from 'react-redux';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { statementSelector } from '@/redux/statements/statementsSlice';
+import { formatScore } from '@/helpers/scoreFormat';
 import SubGroupCardSummary from '@/view/components/subGroupCard/SubGroupCardSummary';
 import styles from './Agreement.module.scss';
 import processStyles from './QuestionProcess.module.scss';
@@ -146,8 +147,8 @@ export default function QuestionProcess({
 					</summary>
 					{data.sources.map((source) => (
 						<p key={source.id}>
-							<a href={`/statement/${source.id}`}>{source.text}</a> · Cp{' '}
-							{Math.round(source.cp * 100)}%
+							<a href={`/statement/${source.id}`}>{source.text}</a> · {t('Agreement score')}{' '}
+							<span dir="ltr">{formatScore(source.cp)}</span>
 						</p>
 					))}
 				</details>
@@ -188,8 +189,9 @@ export default function QuestionProcess({
 								key={a.id}
 							>
 								<span>
-									{t(a.agreed ? 'Passed the agreement threshold' : 'Draft for review')} · Cp{' '}
-									{Math.round(a.cp * 100)}% · {a.evaluators} {t('People evaluated')}
+									{t(a.agreed ? 'Passed the agreement threshold' : 'Draft for review')} ·{' '}
+									{t('Agreement score')} <span dir="ltr">{formatScore(a.cp)}</span> ·{' '}
+									{t('People who rated')}: {a.evaluators}
 								</span>
 								<h3>{a.title}</h3>
 								<p>{a.introduction}</p>

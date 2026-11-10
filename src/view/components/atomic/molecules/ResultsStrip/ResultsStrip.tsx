@@ -7,6 +7,8 @@ import {
 	stakeholderCoverage,
 } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { formatScore, toDisplayScore } from '@/helpers/scoreFormat';
+import ResultsStripItem from './ResultsStripItem';
 
 export type ResultsMetric = 'consensus' | 'average' | 'evaluators';
 
@@ -28,12 +30,10 @@ export interface ResultsStripProps {
 }
 
 /**
- * The three numbers a participant needs to read a suggestion's result:
- * consensus (C_p), average sentiment (μ_p) and how many people evaluated.
- *
- * Previously these lived only inside a hover tooltip on a colour bar, which
- * meant touch users never saw them at all. Same three metrics, same labels as
- * the Join app's card results strip.
+ * The three numbers a participant needs to read an answer's result: the
+ * agreement score (C_p), the average rating (μ_p) and how many people rated.
+ * The two scores read from −100 to +100 with no "%": they are not a share of
+ * people. Each number explains itself on tap, hover and keyboard focus.
  */
 const ResultsStrip: React.FC<ResultsStripProps> = ({
 	statement,
@@ -60,8 +60,8 @@ const ResultsStrip: React.FC<ResultsStripProps> = ({
 	// recoverable from the pro/con totals.
 	const sumEvaluations = statement.evaluation?.sumEvaluations ?? sumPro - sumCon;
 
-	const averagePct = Math.round(calcMeanSentiment(sumEvaluations, numberOfEvaluators) * 100);
-	const consensusPct = Math.round((statement.consensus ?? 0) * 100);
+	const average = calcMeanSentiment(sumEvaluations, numberOfEvaluators);
+	const consensus = statement.consensus ?? 0;
 	const showConsensus = numberOfEvaluators >= minEvaluators;
 
 	// When the stakeholder count is known, the consensus shown above was
@@ -69,37 +69,16 @@ const ResultsStrip: React.FC<ResultsStripProps> = ({
 	// being a bare tally and becomes the claim that makes the score readable.
 	// "50" says nothing; "50 / 500" says how much weight it deserves.
 	const stakeholders = statement.evaluation?.stakeholderCount;
-	const coverage = stakeholderCoverage(numberOfEvaluators, stakeholders);
-	const coveragePct = coverage !== undefined ? Math.round(coverage * 100) : undefined;
+	const hasPopulation = stakeholderCoverage(numberOfEvaluators, stakeholders) !== undefined;
 	const evaluatorsValue =
 		stakeholders !== undefined
 			? `${numberOfEvaluators} / ${stakeholders}`
 			: `${numberOfEvaluators}`;
-
-	const item = (
-		metric: ResultsMetric,
-		label: string,
-		title: string,
-		value: string,
-		isNegative = false,
-	) => (
-		<div
-			key={metric}
-			className={clsx(
-				'results-strip__item',
-				headline === metric && 'results-strip__item--primary',
-				isNegative && 'results-strip__item--negative',
-			)}
-			title={`${title}: ${value}`}
-		>
-			{/* dir="ltr" isolates the number: without it bidi reorders
-			    "50 / 500" to "500 / 50" inside a Hebrew card. */}
-			<span className="results-strip__value" dir="ltr">
-				{value}
-			</span>
-			<span className="results-strip__label">{label}</span>
-		</div>
-	);
+	const evaluatorsTip = hasPopulation
+		? t('scoreTip.peopleOf')
+				.replace('{n}', String(numberOfEvaluators))
+				.replace('{total}', String(stakeholders))
+		: t('scoreTip.people');
 
 	return (
 		<div
@@ -111,23 +90,28 @@ const ResultsStrip: React.FC<ResultsStripProps> = ({
 			)}
 		>
 			<div className="results-strip__items" role="group" aria-label={t('Results')}>
-				{showConsensus &&
-					item(
-						'consensus',
-						isChips ? t('Agreement') : t('Consensus'),
-						t('Consensus score'),
-						`${consensusPct}%`,
-						consensusPct < 0,
-					)}
-				{item('average', t('Average'), t('Average score'), `${averagePct}%`, averagePct < 0)}
-				{item(
-					'evaluators',
-					coveragePct !== undefined ? t('Of stakeholders') : t('Evaluators'),
-					coveragePct !== undefined
-						? `${t('Evaluators')} (${coveragePct}% ${t('of stakeholders')})`
-						: t('Evaluators'),
-					evaluatorsValue,
+				{showConsensus && (
+					<ResultsStripItem
+						value={formatScore(consensus)}
+						label={t('Agreement score')}
+						tip={t('scoreTip.agreement')}
+						isPrimary={headline === 'consensus'}
+						isNegative={toDisplayScore(consensus) < 0}
+					/>
 				)}
+				<ResultsStripItem
+					value={formatScore(average)}
+					label={t('Average rating')}
+					tip={t('scoreTip.average')}
+					isPrimary={headline === 'average'}
+					isNegative={toDisplayScore(average) < 0}
+				/>
+				<ResultsStripItem
+					value={evaluatorsValue}
+					label={t('People who rated')}
+					tip={evaluatorsTip}
+					isPrimary={headline === 'evaluators'}
+				/>
 			</div>
 			{/* The gate made legible: without it a missing consensus tile looks
 			    like missing data. */}
