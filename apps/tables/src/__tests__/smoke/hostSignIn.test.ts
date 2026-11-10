@@ -77,4 +77,28 @@ describe('a host link opened before signing in (the projector, a new device)', (
 		expect(started).toEqual(['session', 'roster']);
 		expect(root.textContent).toContain('Dana Levi');
 	});
+
+	it('shows a sign-out control, and signing out drops the screen back to the gate', async () => {
+		mocks.store.current.everyone = [makeRosterEntry('u1', { fullName: 'Dana Levi' })];
+
+		const { root } = await renderScreen(HostParticipants, ID);
+
+		expect(root.querySelector('.shell__sign-out')?.textContent).toBe(
+			en['tableAssignment.signOut'],
+		);
+
+		signOut();
+		await settle();
+
+		expect(root.textContent).toContain(en['tableAssignment.signIn.google']);
+		expect(root.textContent).not.toContain('Dana Levi');
+		expect(root.querySelector('.shell__sign-out')).toBeNull();
+
+		// Signing in again builds a new frame with new reads: the old ones were torn down.
+		started.length = 0;
+		signIn();
+		await settle();
+
+		expect(started).toEqual(['session', 'roster']);
+	});
 });

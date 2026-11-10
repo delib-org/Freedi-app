@@ -52,6 +52,7 @@ export const fakeHostAuth = {
 	hostAuth: { status: 'signedIn', user: { uid: 'host-1' }, signInFailed: false },
 	startHostAuth: (): void => undefined,
 	signInHost: async (): Promise<void> => undefined,
+	signOutHost: async (): Promise<void> => undefined,
 };
 
 export function buttonByText(root: HTMLElement, text: string): HTMLButtonElement {

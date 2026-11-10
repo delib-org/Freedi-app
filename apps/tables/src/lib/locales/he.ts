@@ -16,6 +16,7 @@ const he: Record<string, string> = {
 	'tableAssignment.screen.myTable': 'השולחן שלי',
 	'tableAssignment.placeholder.soon': 'המסך הזה עדיין בבנייה',
 	'tableAssignment.signIn.google': 'כניסה עם Google',
+	'tableAssignment.signOut': 'יציאה',
 
 	'tableAssignment.back': 'חזרה',
 	'tableAssignment.back.toList': 'חזרה לחלוקות שלי',

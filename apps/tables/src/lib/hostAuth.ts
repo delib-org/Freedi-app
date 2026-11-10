@@ -1,5 +1,5 @@
 import m from 'mithril';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { logError } from '@freedi/shared-utils';
 import { auth } from '@/lib/firebase';
@@ -41,6 +41,16 @@ export async function signInHost(): Promise<void> {
 	} catch (error) {
 		logError(error, { operation: 'tables.hostAuth.signIn' });
 		hostAuth.signInFailed = true;
+	}
+	m.redraw();
+}
+
+/** Ends the host's session. The auth listener then shows the sign-in gate, which drops the signed-in frame and its reads. */
+export async function signOutHost(): Promise<void> {
+	try {
+		await signOut(auth);
+	} catch (error) {
+		logError(error, { operation: 'tables.hostAuth.signOut' });
 	}
 	m.redraw();
 }

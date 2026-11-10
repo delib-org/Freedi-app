@@ -186,6 +186,11 @@ const PreviewBody: m.ClosureComponent<PreviewBodyAttrs> = (initial) => {
 		return m('.preview__head', [
 			m('span.preview__not-public', t('tableAssignment.preview.notPublic')),
 			m(
+				m.route.Link,
+				{ href: hostScreenPath(sessionId, 'participants'), class: 'btn btn--text' },
+				t('tableAssignment.screen.participants'),
+			),
+			m(
 				'button.btn.btn--text',
 				{
 					type: 'button',
@@ -249,6 +254,7 @@ export const HostPreview: m.Component<{ id: string }> = {
 		return m(HostFrame, {
 			sessionId: attrs.id,
 			titleKey: 'tableAssignment.screen.preview',
+			stage: 'preview',
 			topics: true,
 			participants: true,
 			wide: true,

@@ -12,7 +12,9 @@ import type { HostContext } from '@/components/HostFrame';
 import { StateBox } from '@/components/StateBox';
 import { TableCards, tableViewsFromDirect, tableViewsFromRun } from '@/components/TableCards';
 import { FixDetailsDialog } from '@/views/host/FixDetailsDialog';
-import { hostHomePath, hostScreenPath } from '@/paths';
+import { backTargetFor } from '@/logic/hostBack';
+import type { BackTarget } from '@/logic/hostBack';
+import { hostScreenPath } from '@/paths';
 
 interface AssignmentBodyAttrs {
 	context: HostContext;
@@ -86,17 +88,24 @@ const AssignmentBody: m.ClosureComponent<AssignmentBodyAttrs> = () => {
 		]);
 	}
 
-	function emptyState(home: string): m.Children {
+	function backProps(target: BackTarget): { backHref: string; backLabel: string } {
+		return {
+			backHref: target.href,
+			backLabel: t(target.toList ? 'tableAssignment.back.toList' : 'tableAssignment.back'),
+		};
+	}
+
+	function emptyState(home: BackTarget): m.Children {
 		return m(StateBox, {
 			kind: 'empty',
 			messageKey: 'tableAssignment.assignment.empty',
-			backHref: home,
+			...backProps(home),
 		});
 	}
 
 	function body(context: HostContext): m.Children {
 		const { session, topics, participants } = context;
-		const home = hostHomePath(session.tableAssignmentId);
+		const home = backTargetFor(session, 'assignment');
 
 		if (session.mode === 'direct') {
 			const tables = deriveDirectTables(
@@ -117,7 +126,7 @@ const AssignmentBody: m.ClosureComponent<AssignmentBodyAttrs> = () => {
 		if (!runId) return emptyState(home);
 		if (run.state === 'loading') return m(StateBox, { kind: 'loading' });
 		if (run.state === 'denied' || run.state === 'error') {
-			return m(StateBox, { kind: run.state, onRetry: () => run.retry(), backHref: home });
+			return m(StateBox, { kind: run.state, onRetry: () => run.retry(), ...backProps(home) });
 		}
 		if (!run.data) return emptyState(home);
 
@@ -168,6 +177,7 @@ export const HostAssignment: m.Component<{ id: string }> = {
 		return m(HostFrame, {
 			sessionId: attrs.id,
 			titleKey: 'tableAssignment.screen.assignment',
+			stage: 'assignment',
 			topics: true,
 			participants: true,
 			wide: true,
