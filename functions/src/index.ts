@@ -15,7 +15,7 @@ import { Collections, StatementType, functionConfig } from '@freedi/shared-types
 
 // Structured error handling
 import { logError } from './utils/errorHandling';
-import { moderateNewAnswer } from './moderation/fn_moderateNewAnswer';
+import { moderateEditedAnswer, moderateNewAnswer } from './moderation/fn_moderateNewAnswer';
 import {
 	createFirestoreFunction,
 	getTimestamp,
@@ -595,6 +595,16 @@ exports.moderateNewAnswer = createFirestoreFunction(
 	moderateNewAnswer,
 	'moderateNewAnswer',
 	{ maxInstances: TRIGGER_MAX_INSTANCES.answerModeration },
+);
+
+// The same check on an edited answer or a chat message turned into one. Starts on
+// every statement update and leaves at once unless the words or the type changed.
+exports.moderateEditedAnswer = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentUpdated,
+	moderateEditedAnswer,
+	'moderateEditedAnswer',
+	{ memory: HOT_TRIGGER_MEMORY, maxInstances: TRIGGER_MAX_INSTANCES.statementWrite },
 );
 
 // ============================================
