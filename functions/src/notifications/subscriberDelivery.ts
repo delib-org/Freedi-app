@@ -8,11 +8,14 @@ import {
 	NotificationFrequency,
 	Role,
 	SourceApp,
+	Statement,
 	StatementSubscription,
+	StatementType,
 	type NotificationQueueItem,
 	type NotificationSettings,
 } from '@freedi/shared-types';
 import type { Firestore } from 'firebase-admin/firestore';
+import { ancestorIds } from '../utils/statementAncestors';
 import { expectedSubscriptionId, genuineSubscriberUid } from '../utils/subscriptionIdentity';
 
 const TOP = 'top';
@@ -104,56 +107,80 @@ export async function loadSettings(
 	return map;
 }
 
+/** Where a statement sits in the tree, and whether it is an answer. */
+export type StatementLevels = Pick<
+	Statement,
+	'statementId' | 'parentId' | 'parents' | 'topParentId'
+> &
+	Partial<Pick<Statement, 'statementType'>>;
+
+/** The question an answer belongs to; undefined for anything but an answer. */
+function questionOfAnswer(statement: StatementLevels): string | undefined {
+	return statement.statementType === StatementType.option && statement.parentId !== TOP
+		? statement.parentId
+		: undefined;
+}
+
 /**
- * The people banned on any of `statementIds`. A ban at any level of the tree
- * shuts a person out (see `resolveQuestionParticipation`), but it is written on
- * that level's subscription only. One query per level, billed per banned doc, so
- * a tree with no bans costs one read per level. Only a doc whose id agrees with
- * its fields counts: anything else could silence someone it does not belong to.
+ * The people shut out of `statement` from above it. A ban at any level counts
+ * (see `resolveQuestionParticipation`). Waiting and unsubscribed count only on
+ * the question of an answer, because an answer is part of its question: someone
+ * can be waiting on a closed group and still belong to an open question inside
+ * it. One query per level, billed per doc found, so a tree with nobody blocked
+ * costs one read per level. Only a doc whose id agrees with its fields counts:
+ * anything else could silence someone it does not belong to.
  */
-export async function loadBannedUids(
+export async function loadBlockedAbove(
 	db: Firestore,
-	statementIds: readonly string[],
+	statement: StatementLevels,
 ): Promise<Set<string>> {
+	const levels = ancestorIds(statement);
+	const question = questionOfAnswer(statement);
 	const subscriptions = db.collection(Collections.statementsSubscribe);
 	const snaps = await Promise.all(
-		statementIds.map((id) =>
-			subscriptions.where('statementId', '==', id).where('role', '==', Role.banned).get(),
+		levels.map((id) =>
+			subscriptions
+				.where('statementId', '==', id)
+				.where('role', 'in', id === question ? [...EXCLUDED_SUBSCRIBER_ROLES] : [Role.banned])
+				.get(),
 		),
 	);
 
-	const banned = new Set<string>();
+	const blocked = new Set<string>();
 	snaps.forEach((snap, index) => {
 		snap.docs.forEach((doc) => {
-			const uid = genuineSubscriberUid(
-				doc.id,
-				doc.data() as StatementSubscription,
-				statementIds[index],
-			);
-			if (uid) banned.add(uid);
+			const uid = genuineSubscriberUid(doc.id, doc.data() as StatementSubscription, levels[index]);
+			if (uid) blocked.add(uid);
 		});
 	});
 
-	return banned;
+	return blocked;
 }
 
 /**
  * Whether a queued notice must be dropped because its recipient lost their place
- * after it was written. Reads the recipient's subscriptions by id (at most three
- * docs). The notice's own statement and its parent use the full exclusion list.
- * The top statement counts only for a ban: someone can be waiting on a closed
- * group and still belong to an open question inside it.
+ * after it was written, by the same rule as the fan-out: the full exclusion list
+ * on the statement the notice is about (and, for an answer, on its question), a
+ * ban anywhere above. One read of the statement for its true place in the tree,
+ * then one read per level.
  */
 export async function isRecipientExcluded(
 	db: Firestore,
 	uid: string,
 	item: Pick<NotificationQueueItem, 'statementId' | 'parentId' | 'topParentId'>,
 ): Promise<boolean> {
-	const isStatement = (id: string | undefined): id is string => !!id && id !== TOP;
-	const own = [...new Set([item.statementId, item.parentId].filter(isStatement))];
-	const top = item.topParentId;
-	const levels = isStatement(top) && !own.includes(top) ? [...own, top] : own;
-	if (levels.length === 0) return false;
+	const { statementId } = item;
+	if (!statementId || statementId === TOP) return false;
+
+	const statementSnap = await db.collection(Collections.statements).doc(statementId).get();
+	// A statement deleted since the item was written: the item still says where it sat.
+	const statement: StatementLevels = (statementSnap.data() as Statement | undefined) ?? {
+		statementId,
+		parentId: item.parentId ?? TOP,
+		topParentId: item.topParentId ?? TOP,
+	};
+	const question = questionOfAnswer(statement);
+	const levels = [statementId, ...ancestorIds(statement)];
 
 	const subscriptions = db.collection(Collections.statementsSubscribe);
 	const snaps = await db.getAll(
@@ -163,20 +190,22 @@ export async function isRecipientExcluded(
 	return snaps.some((snap, index) => {
 		const role = (snap.data() as StatementSubscription | undefined)?.role;
 		if (!role) return false;
+		const isOwnLevel = levels[index] === statementId || levels[index] === question;
 
-		return index < own.length ? EXCLUDED_SUBSCRIBER_ROLES.includes(role) : role === Role.banned;
+		return isOwnLevel ? EXCLUDED_SUBSCRIBER_ROLES.includes(role) : role === Role.banned;
 	});
 }
 
 /**
  * Everyone who may hear about `statementId` on any channel, merged by uid so a
  * user subscribed on several channels is resolved once. An excluded role leaves
- * the person out, and so does a ban on any of `ancestorStatementIds`.
+ * the person out. Given the `statement` itself, so does being shut out above it
+ * (`loadBlockedAbove`).
  */
 export async function loadSubscribers(
 	db: Firestore,
 	statementId: string,
-	ancestorStatementIds: readonly string[] = [],
+	statement?: StatementLevels,
 ): Promise<Map<string, SubscriberChannels>> {
 	const subscriptions = db
 		.collection(Collections.statementsSubscribe)
@@ -185,7 +214,7 @@ export async function loadSubscribers(
 		subscriptions.where('getInAppNotification', '==', true).get(),
 		subscriptions.where('getPushNotification', '==', true).get(),
 		subscriptions.where('getEmailNotification', '==', true).get(),
-		loadBannedUids(db, ancestorStatementIds),
+		statement ? loadBlockedAbove(db, statement) : new Set<string>(),
 	]);
 
 	// Worked out before merging: the doc at the person's real id decides, so an

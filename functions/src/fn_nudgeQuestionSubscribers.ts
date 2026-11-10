@@ -25,8 +25,7 @@ import { assertStatementAdmin } from './progress/assertStatementAdmin';
 import { getEmailTransporter } from './utils/emailTransporter';
 import { createStatementUpdateEmail } from './email-templates';
 import { logError } from './utils/errorHandling';
-import { EXCLUDED_SUBSCRIBER_ROLES, loadBannedUids } from './notifications/subscriberDelivery';
-import { ancestorIds } from './utils/statementAncestors';
+import { EXCLUDED_SUBSCRIBER_ROLES, loadBlockedAbove } from './notifications/subscriberDelivery';
 
 export type NudgeAudience = 'all' | 'notSuggested' | 'notEvaluated';
 export type NudgeChannel = 'inApp' | 'email';
@@ -94,7 +93,7 @@ async function loadSubscribers(
 	callerUid: string,
 ): Promise<StatementSubscription[]> {
 	const { statementId } = statement;
-	const bannedAbove = await loadBannedUids(db, ancestorIds(statement));
+	const blockedAbove = await loadBlockedAbove(db, statement);
 	const byUser = new Map<string, StatementSubscription>();
 	let cursor: QueryDocumentSnapshot | null = null;
 	for (;;) {
@@ -110,7 +109,7 @@ async function loadSubscribers(
 			const sub = doc.data() as StatementSubscription;
 			const uid = sub.user?.uid ?? sub.userId;
 			if (!uid || uid === callerUid) return;
-			if (EXCLUDED_SUBSCRIBER_ROLES.includes(sub.role) || bannedAbove.has(sub.userId)) return;
+			if (EXCLUDED_SUBSCRIBER_ROLES.includes(sub.role) || blockedAbove.has(sub.userId)) return;
 			byUser.set(uid, sub);
 		});
 		if (page.size < PAGE_SIZE) break;

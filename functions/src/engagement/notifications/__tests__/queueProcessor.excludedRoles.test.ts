@@ -22,14 +22,52 @@ jest.mock('../../../notifications/largeQuestionDigestDelivery', () => ({
 }));
 
 let mockRoles: Record<string, Role> = {};
+const mockStatements: Record<string, Record<string, unknown>> = {
+	// An answer in a question inside a group.
+	a1: {
+		statementId: 'a1',
+		statementType: 'option',
+		parentId: 'q1',
+		parents: ['top', 'g1', 'q1'],
+		topParentId: 'g1',
+	},
+	// A question directly inside a group: its parent is its top.
+	q1: {
+		statementId: 'q1',
+		statementType: 'question',
+		parentId: 'g1',
+		parents: ['top', 'g1'],
+		topParentId: 'g1',
+	},
+	// A question two levels down.
+	q2: {
+		statementId: 'q2',
+		statementType: 'question',
+		parentId: 's1',
+		parents: ['top', 'g1', 's1'],
+		topParentId: 'g1',
+	},
+	// A top-level question.
+	t1: {
+		statementId: 't1',
+		statementType: 'question',
+		parentId: 'top',
+		parents: ['top'],
+		topParentId: 't1',
+	},
+};
 const mockReads: string[] = [];
 let mockReadFails = false;
 const mockUpdate = jest.fn(async (_data: Record<string, unknown>) => undefined);
 
 jest.mock('firebase-admin/firestore', () => ({
 	getFirestore: () => ({
-		collection: () => ({
-			doc: (id: string) => ({ id, update: mockUpdate }),
+		collection: (name: string) => ({
+			doc: (id: string) => ({
+				id,
+				update: mockUpdate,
+				get: async () => ({ data: () => (name === 'statements' ? mockStatements[id] : undefined) }),
+			}),
 		}),
 		getAll: async (...refs: Array<{ id: string }>) => {
 			if (mockReadFails) throw new Error('read failed');
@@ -133,11 +171,75 @@ describe('queue delivery re-checks the recipient', () => {
 
 	it('ignores the "top" placeholder', async () => {
 		await processQueueItem(
-			'decided_q1_u',
-			item({ statementId: 'q1', parentId: 'top', topParentId: 'q1' }),
+			'decided_t1_u',
+			item({ statementId: 't1', parentId: 'top', topParentId: 't1' }),
 		);
 
-		expect(mockReads).toEqual([`${USER}--q1`]);
+		expect(mockReads).toEqual([`${USER}--t1`]);
+	});
+
+	describe('a Decided notice, about the question itself', () => {
+		const decided = item({ statementId: 'q1', parentId: 'g1', topParentId: 'g1' });
+
+		it.each([Role.waiting, Role.unsubscribed])(
+			'still reaches a member of q1 who is %s on its group',
+			async (role) => {
+				mockRoles = { [`${USER}--q1`]: Role.member, [`${USER}--g1`]: role };
+
+				await processQueueItem('decided_q1_u', decided);
+
+				expect(mockRoute).toHaveBeenCalledTimes(1);
+			},
+		);
+
+		it('is dropped for someone banned on the group', async () => {
+			mockRoles = { [`${USER}--q1`]: Role.member, [`${USER}--g1`]: Role.banned };
+
+			await processQueueItem('decided_q1_u', decided);
+
+			expect(mockRoute).not.toHaveBeenCalled();
+			expect(lastStatus()).toBe(NotificationQueueStatus.SKIPPED);
+		});
+
+		it('is dropped for someone waiting on the question', async () => {
+			mockRoles = { [`${USER}--q1`]: Role.waiting };
+
+			await processQueueItem('decided_q1_u', decided);
+
+			expect(mockRoute).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('a deeper tree', () => {
+		const deep = item({ statementId: 'q2', parentId: 's1', topParentId: 'g1' });
+
+		it('ignores waiting on a level above the question', async () => {
+			mockRoles = { [`${USER}--q2`]: Role.member, [`${USER}--s1`]: Role.waiting };
+
+			await processQueueItem('decided_q2_u', deep);
+
+			expect(mockRoute).toHaveBeenCalledTimes(1);
+		});
+
+		it('sees a ban on a level in between', async () => {
+			mockRoles = { [`${USER}--s1`]: Role.banned };
+
+			await processQueueItem('decided_q2_u', deep);
+
+			expect(mockRoute).not.toHaveBeenCalled();
+			expect(lastStatus()).toBe(NotificationQueueStatus.SKIPPED);
+		});
+	});
+
+	it('falls back to the item when the statement is gone', async () => {
+		mockRoles = { [`${USER}--gone-parent`]: Role.banned };
+
+		await processQueueItem(
+			'social_gone',
+			item({ statementId: 'gone', parentId: 'gone-parent', topParentId: 'gone-parent' }),
+		);
+
+		expect(mockRoute).not.toHaveBeenCalled();
 	});
 
 	it('sends nothing when the role cannot be read', async () => {

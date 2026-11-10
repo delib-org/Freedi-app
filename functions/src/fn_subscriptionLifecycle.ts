@@ -14,6 +14,7 @@ import { logError } from './utils/errorHandling';
 import { validateRoleChange } from './fn_subscriptions';
 import { feedRelevantChange, reconcileUserFeedEntry } from './userFeed/userFeedMembership';
 import { stripCreatedSubscriptionTokens } from './notifications/stripSubscriptionTokens';
+import { enableNotificationsOnApproval } from './notifications/enableNotificationsOnApproval';
 import {
 	countMembers,
 	keepsCountOnProgress,
@@ -125,14 +126,23 @@ export async function onSubscriptionDeleted(event: SnapshotEvent): Promise<void>
 
 /**
  * The existing onDocumentUpdated trigger (deployed as `validateRoleChange`):
- * first the ban guard, then — only when role/identity changed — the feed entry.
+ * first the ban guard, then notifications for someone just approved, then —
+ * only when role/identity changed — the feed entry.
  */
 export async function onSubscriptionUpdated(event: ChangeEvent): Promise<void> {
 	await validateRoleChange(event);
 
 	const before = event.data?.before.data() as SubscriptionData | undefined;
 	const after = event.data?.after.data() as SubscriptionData | undefined;
-	if (!before || !after || !feedRelevantChange(before, after)) return;
+	if (!before || !after) return;
+
+	await enableNotificationsOnApproval(
+		db,
+		event.params.subscriptionId,
+		before as StatementSubscription,
+		after as StatementSubscription,
+	);
+	if (!feedRelevantChange(before, after)) return;
 
 	try {
 		await reconcileUserFeedEntry(db, {

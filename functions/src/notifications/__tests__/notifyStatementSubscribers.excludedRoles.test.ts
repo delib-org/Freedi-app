@@ -46,8 +46,10 @@ jest.mock('../../index', () => {
 			get: async () => ({
 				docs: mockSubscriptions
 					.filter((sub) =>
-						Object.entries(filters).every(
-							([field, value]) => sub[field as keyof TestSubscription] === value,
+						Object.entries(filters).every(([field, value]) =>
+							Array.isArray(value)
+								? value.includes(sub[field as keyof TestSubscription])
+								: sub[field as keyof TestSubscription] === value,
 						),
 					)
 					.map((sub) => ({
@@ -57,7 +59,17 @@ jest.mock('../../index', () => {
 			}),
 		});
 
-		return { ...query({}), doc: (id: string) => ({ id, collection: name }) };
+		return {
+			...query({}),
+			doc: (id: string) => ({
+				id,
+				collection: name,
+				update: async (patch: Partial<TestSubscription>) => {
+					const sub = mockSubscriptions.find((s) => `${s.userId}--${s.statementId}` === id);
+					if (sub) Object.assign(sub, patch);
+				},
+			}),
+		};
 	};
 
 	return {
@@ -85,10 +97,13 @@ jest.mock('../notificationEmail', () => ({
 	sendNotificationEmail: jest.fn(async () => true),
 }));
 
+import { db } from '../../index';
+import { enableNotificationsOnApproval } from '../enableNotificationsOnApproval';
 import { notifyStatementSubscribers } from '../notifyStatementSubscribers';
 
 const QUESTION = 'question';
 const ANSWER = 'answer';
+const GROUP = 'group';
 
 const reply = {
 	statementId: 'reply',
@@ -107,6 +122,13 @@ const question = {
 	parents: ['top'],
 	topParentId: QUESTION,
 } as unknown as Statement;
+
+const questionInGroup = {
+	...question,
+	parentId: GROUP,
+	parents: ['top', GROUP],
+	topParentId: GROUP,
+} as Statement;
 
 const replyOnAnswer = { ...reply, parentId: ANSWER } as Statement;
 
@@ -172,11 +194,23 @@ describe('notifyStatementSubscribers and people who are not members', () => {
 	});
 
 	it('starts notifying a waiting person once they are approved', async () => {
-		mockSubscriptions = [subscriber('approved', Role.waiting)];
+		// A real waiting doc: the moderated join writes every channel off.
+		const off = { getPushNotification: false, getInAppNotification: false };
+		const waiting = subscriber('approved', Role.waiting, QUESTION, off);
+		mockSubscriptions = [waiting];
 		await notifyStatementSubscribers(reply, question);
 		expect(mockSendPush).not.toHaveBeenCalled();
+		expect(inAppRowsFor()).toEqual([]);
 
-		mockSubscriptions = [subscriber('approved', Role.member)];
+		// Approval writes only the role; the trigger turns the channels on.
+		const before = { ...waiting } as StatementSubscription;
+		waiting.role = Role.member;
+		await enableNotificationsOnApproval(
+			db,
+			'approved--question',
+			before,
+			waiting as StatementSubscription,
+		);
 		await notifyStatementSubscribers(reply, question);
 
 		expect(pushedTo()).toEqual(['approved']);
@@ -196,15 +230,41 @@ describe('notifyStatementSubscribers and people who are not members', () => {
 		expect(inAppRowsFor()).toEqual(['member']);
 	});
 
-	it('still notifies someone waiting higher up who belongs to this statement', async () => {
+	it('does not reach someone waiting on the question through a subscription on one of its answers', async () => {
 		mockSubscriptions = [
-			subscriber('member-here', Role.member, ANSWER),
-			subscriber('member-here', Role.waiting, QUESTION),
+			subscriber('waiting-above', Role.member, ANSWER),
+			subscriber('waiting-above', Role.waiting, QUESTION),
+			subscriber('member', Role.member, ANSWER),
 		];
 
 		await notifyStatementSubscribers(replyOnAnswer, answer);
 
+		expect(pushedTo()).toEqual(['member']);
+		expect(inAppRowsFor()).toEqual(['member']);
+	});
+
+	it('still notifies someone waiting on a closed group who belongs to an open question inside it', async () => {
+		mockSubscriptions = [
+			subscriber('member-here', Role.member, QUESTION),
+			subscriber('member-here', Role.waiting, GROUP),
+		];
+
+		await notifyStatementSubscribers(reply, questionInGroup);
+
 		expect(pushedTo()).toEqual(['member-here']);
+		expect(inAppRowsFor()).toEqual(['member-here']);
+	});
+
+	it('does not reach someone banned on the group through a subscription on a question inside it', async () => {
+		mockSubscriptions = [
+			subscriber('banned-above', Role.member, QUESTION),
+			subscriber('banned-above', Role.banned, GROUP),
+		];
+
+		await notifyStatementSubscribers(reply, questionInGroup);
+
+		expect(mockSendPush).not.toHaveBeenCalled();
+		expect(inAppRowsFor()).toEqual([]);
 	});
 
 	it('does not let an old copy of a subscription bring a banned person back', async () => {
