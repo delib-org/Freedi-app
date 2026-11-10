@@ -116,6 +116,56 @@ describe('syncQuestionCounterCopies', () => {
 		expect(question()?.numberOfMembers).toBe(95);
 	});
 
+	it('leaves an answer with its own rater count untouched', async () => {
+		fake.seed(Collections.statements, Q, {
+			statementId: Q,
+			statementType: StatementType.option,
+			totalEvaluators: 40,
+			evaluation: { numberOfEvaluators: 40 },
+			lastUpdate: 1,
+		});
+		seedProgress({ evaluated: 0, members: undefined });
+
+		await expect(syncQuestionCounterCopies(NOW)).resolves.toEqual({ checked: 1, updated: 0 });
+
+		expect(question()).toMatchObject({ totalEvaluators: 40, lastUpdate: 1 });
+		expect(question()?.evaluation).toEqual({ numberOfEvaluators: 40 });
+	});
+
+	it('does not touch a member count on a statement type that does not keep one', async () => {
+		fake.seed(Collections.statements, Q, {
+			statementId: Q,
+			statementType: StatementType.option,
+			numberOfMembers: 5,
+			lastUpdate: 1,
+		});
+		seedProgress({ evaluated: 0, members: 9 });
+		seedPeople(2, 0);
+
+		await syncQuestionCounterCopies(NOW);
+
+		expect(question()).toMatchObject({ numberOfMembers: 5, lastUpdate: 1 });
+		expect(fake.read(Collections.questionProgress, Q)?.members).toBe(9);
+	});
+
+	it('does not lower a legacy question with a high count and no markers', async () => {
+		seedQuestion({
+			numberOfMembers: 97,
+			totalEvaluators: 300,
+			evaluation: { asParentTotalEvaluators: 300 },
+		});
+		seedProgress({ evaluated: 0 });
+		seedPeople(97, 0);
+
+		await expect(syncQuestionCounterCopies(NOW)).resolves.toEqual({ checked: 1, updated: 0 });
+
+		expect(question()).toMatchObject({
+			totalEvaluators: 300,
+			evaluation: { asParentTotalEvaluators: 300 },
+			lastUpdate: 1,
+		});
+	});
+
 	it('skips a progress doc whose statement is gone', async () => {
 		seedProgress();
 

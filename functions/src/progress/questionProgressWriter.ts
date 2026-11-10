@@ -17,6 +17,7 @@ import {
 	Collections,
 	QuestionParticipation,
 	Statement,
+	StatementType,
 	getQuestionParticipationId,
 } from '@freedi/shared-types';
 import { db } from '../db';
@@ -228,6 +229,17 @@ export interface RecordMemberCountInput {
 	topParentId?: string;
 	organizationId?: string;
 	now?: number;
+}
+
+/**
+ * Questions and top-level groups keep their member count on `questionProgress`.
+ * Not nested groups: Studio counts every progress doc below a top statement as
+ * one of its activities.
+ */
+export function keepsCountOnProgress(statement: Statement | undefined): statement is Statement {
+	if (statement?.statementType === StatementType.question) return true;
+
+	return statement?.statementType === StatementType.group && statement.parentId === 'top';
 }
 
 /** Current members of a statement: every role counts, Sign documents do not. */

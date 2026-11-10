@@ -8,18 +8,24 @@
  * which heals the case where two join or leave triggers recounted at once and
  * the older number landed last.
  *
+ * Progress docs also exist for answers (the parent of a chat reply), and on an
+ * answer `totalEvaluators` is its own rater count, not a copy of anything, so
+ * each counter is handled only for the statement types that keep it. The rater
+ * copy is never lowered here: a legacy question can hold a count with no markers
+ * behind it, and only `reconcileParentEvaluators` may reduce it.
+ *
  * Only questions whose progress doc moved inside the window are read, so a
  * quiet question costs nothing. Nothing here touches `lastUpdate` on the
  * progress doc, or a question would keep itself in the window forever.
  */
 
 import type { QueryDocumentSnapshot, DocumentSnapshot } from 'firebase-admin/firestore';
-import { Collections } from '@freedi/shared-types';
+import { Collections, StatementType } from '@freedi/shared-types';
 import type { QuestionProgress, Statement } from '@freedi/shared-types';
 import { db } from '../db';
 import { logError } from '../utils/errorHandling';
 import { buildCounterPatch } from '../evaluation/evaluatorParticipationCore';
-import { countMembers } from './questionProgressWriter';
+import { countMembers, keepsCountOnProgress } from './questionProgressWriter';
 
 /** Two run intervals, so one failed run does not lose a question. */
 export const RECENT_ACTIVITY_WINDOW_MS = 20 * 60 * 1000;
@@ -41,7 +47,7 @@ async function exactMembersPatch(
 	statement: Statement,
 ): Promise<Record<string, unknown>> {
 	const stored = (progressDoc.data() as Partial<QuestionProgress>).members;
-	if (typeof stored !== 'number') return {};
+	if (typeof stored !== 'number' || !keepsCountOnProgress(statement)) return {};
 
 	const members = await countMembers(db, progressDoc.id);
 	if (members !== stored) await progressDoc.ref.set({ members }, { merge: true });
@@ -58,13 +64,15 @@ async function exactEvaluatorsPatch(
 	progressDoc: QueryDocumentSnapshot,
 	statement: Statement,
 ): Promise<Record<string, unknown>> {
+	if (statement.statementType !== StatementType.question) return {};
+
 	const copied = statement.evaluation?.asParentTotalEvaluators ?? statement.totalEvaluators ?? 0;
 	const evaluated = (progressDoc.data() as Partial<QuestionProgress>).evaluated ?? 0;
 	if (evaluated === copied) return {};
 
 	const count = await countEvaluators(progressDoc.id);
 
-	return count === copied ? {} : buildCounterPatch(statement, count);
+	return count > copied ? buildCounterPatch(statement, count) : {};
 }
 
 async function syncOne(

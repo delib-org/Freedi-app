@@ -125,6 +125,9 @@ async function copyCountToQuestion(
 			.get();
 		const count = countSnapshot.data().count;
 		const storedCopy = parent.evaluation?.asParentTotalEvaluators ?? parent.totalEvaluators;
+		// Never lowered here: a legacy question can hold a count with no markers
+		// behind it. reconcileParentEvaluators is the one path that may reduce it.
+		if (storedCopy !== undefined && count <= storedCopy) return;
 		if (!isCounterCopyDue(count, storedCopy)) return;
 
 		await firestore

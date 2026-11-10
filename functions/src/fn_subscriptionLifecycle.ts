@@ -8,14 +8,17 @@ import {
 	isCounterCopyDue,
 	Statement,
 	StatementSubscription,
-	StatementType,
 } from '@freedi/shared-types';
 import { db } from './db';
 import { logError } from './utils/errorHandling';
 import { validateRoleChange } from './fn_subscriptions';
 import { feedRelevantChange, reconcileUserFeedEntry } from './userFeed/userFeedMembership';
 import { stripCreatedSubscriptionTokens } from './notifications/stripSubscriptionTokens';
-import { countMembers, recordMemberCount } from './progress/questionProgressWriter';
+import {
+	countMembers,
+	keepsCountOnProgress,
+	recordMemberCount,
+} from './progress/questionProgressWriter';
 
 /**
  * Membership lifecycle triggers on `statementsSubscribe/{subscriptionId}`.
@@ -29,17 +32,6 @@ import { countMembers, recordMemberCount } from './progress/questionProgressWrit
  */
 
 type SubscriptionData = Partial<StatementSubscription>;
-
-/**
- * Questions and top-level groups keep their member count on `questionProgress`.
- * Not nested groups: Studio counts every progress doc below a top statement as
- * one of its activities.
- */
-function keepsCountOnProgress(statement: Statement | undefined): statement is Statement {
-	if (statement?.statementType === StatementType.question) return true;
-
-	return statement?.statementType === StatementType.group && statement.parentId === 'top';
-}
 
 type SnapshotEvent = FirestoreEvent<QueryDocumentSnapshot | undefined, { subscriptionId: string }>;
 type ChangeEvent = FirestoreEvent<

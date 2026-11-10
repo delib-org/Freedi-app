@@ -313,6 +313,20 @@ describe('the question copy of the count', () => {
 		expect(countOf()).toBe(26);
 	});
 
+	it('does not lower a legacy count that has no markers behind it', async () => {
+		mockFake.seed(`statements/${QUESTION}`, {
+			statementId: QUESTION,
+			evaluation: { numberOfEvaluators: 0, asParentTotalEvaluators: 300 },
+			totalEvaluators: 300,
+		});
+
+		await recordEvaluatorParticipation(QUESTION, 'first-marker', fsAny);
+
+		expect(countOf()).toBe(300);
+		expect(mockFake.peek(`statements/${QUESTION}`)?.totalEvaluators).toBe(300);
+		expect(markers()).toBe(1);
+	});
+
 	it('a reconcile still brings the question to the exact count between milestones', async () => {
 		await rate(1, 22);
 		for (let i = 1; i <= 22; i += 1) seedEvaluation(`e${i}`, `user-${i}`);
