@@ -96,7 +96,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	).length;
 
 	useRecordQuestionView(statement);
-	const participation = useParticipationStats(statement, isHost, options);
+	const participation = useParticipationStats(statement, isHost, options.length);
 
 	const tabs = useMemo(
 		() =>

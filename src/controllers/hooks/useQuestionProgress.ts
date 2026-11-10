@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { QuestionProgress } from '@freedi/shared-types';
 import { PARTICIPATION } from '@/constants/common';
 import { getQuestionProgress } from '@/controllers/db/questionProgress/getQuestionProgress';
@@ -34,8 +34,6 @@ export interface QuestionProgressRead {
 	progress: QuestionProgress | null;
 	/** False only while a read for this question is still on its way. */
 	isLoaded: boolean;
-	/** Drops the shared read and fetches again, for after the counters were rebuilt. */
-	reload: () => void;
 }
 
 export interface QuestionProgressReadOptions {
@@ -78,13 +76,6 @@ export function useQuestionProgressRead(
 		};
 	}, [statementId, actionKey, tick]);
 
-	const reload = useCallback(() => {
-		if (!statementId) return;
-		lastRead.delete(statementId);
-		setRead(null);
-		setTick((value) => value + 1);
-	}, [statementId]);
-
 	const isLoaded = !statementId || read?.statementId === statementId;
 	const progress = statementId && isLoaded && read ? read.progress : null;
 	const isPolling = !!statementId && isLoaded && (pollWhile?.(progress) ?? false);
@@ -115,7 +106,7 @@ export function useQuestionProgressRead(
 		};
 	}, [statementId, isPolling, tick]);
 
-	return { progress, isLoaded, reload };
+	return { progress, isLoaded };
 }
 
 /** The progress alone, for callers that treat "not loaded" and "none" alike. */

@@ -35,7 +35,7 @@ describe('useQuestionProgress', () => {
 	it('says when the read is still on its way', async () => {
 		const { result } = renderHook(() => useQuestionProgressRead('pending-q', '0'));
 
-		expect(result.current).toMatchObject({ progress: null, isLoaded: false });
+		expect(result.current).toEqual({ progress: null, isLoaded: false });
 		await waitFor(() => expect(result.current.isLoaded).toBe(true));
 		expect(result.current.progress).toEqual({ suggested: 8, evaluated: 11 });
 	});
@@ -43,7 +43,7 @@ describe('useQuestionProgress', () => {
 	it('counts as loaded when there is nothing to read', () => {
 		const { result } = renderHook(() => useQuestionProgressRead(undefined, '0'));
 
-		expect(result.current).toMatchObject({ progress: null, isLoaded: true });
+		expect(result.current).toEqual({ progress: null, isLoaded: true });
 	});
 
 	it('skips the read without a question id', () => {
@@ -84,17 +84,6 @@ describe('useQuestionProgress', () => {
 
 		await waitFor(() => expect(second.result.current).toEqual({ suggested: 8, evaluated: 11 }));
 		expect(mockGetProgress).toHaveBeenCalledTimes(1);
-	});
-
-	it('reload drops the shared read and fetches again', async () => {
-		const { result } = renderHook(() => useQuestionProgressRead('reload-q', '0'));
-		await waitFor(() => expect(result.current.isLoaded).toBe(true));
-
-		act(() => result.current.reload());
-
-		expect(result.current.isLoaded).toBe(false);
-		await waitFor(() => expect(result.current.isLoaded).toBe(true));
-		expect(mockGetProgress).toHaveBeenCalledTimes(2);
 	});
 });
 
