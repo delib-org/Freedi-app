@@ -9,6 +9,7 @@ import ChatInput from './components/input/ChatInput';
 import NewMessages from './components/newMessages/NewMessages';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
+import { sideLoadedIdsSelector } from '@/redux/answerViews/answerViewsSlice';
 import Description from '../evaluations/components/description/Description';
 import { StatementType } from '@freedi/shared-types';
 import { hasParagraphsContent } from '@/utils/paragraphUtils';
@@ -34,6 +35,7 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 	// new selector (and a new array) on every render/dispatch.
 	const selectSubs = useMemo(() => statementSubsSelector(statementId), [statementId]);
 	const subStatements = useAppSelector(selectSubs);
+	const sideLoadedIds = useAppSelector(sideLoadedIdsSelector);
 	const { user } = useAuthentication();
 	const location = useLocation();
 	const firstTimeRef = useRef(true);
@@ -79,10 +81,11 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 
 	// Keep track of the oldest message timestamp for the load-more query
 	useEffect(() => {
-		if (subStatements.length > 0) {
-			oldestCreatedAtRef.current = subStatements[0].createdAt;
-		}
-	}, [subStatements]);
+		// Answers fetched ahead of the window are not part of it: paging from one
+		// would skip everything between the window and that answer.
+		const oldest = subStatements.find((sub) => !sideLoadedIds[sub.statementId]);
+		if (oldest) oldestCreatedAtRef.current = oldest.createdAt;
+	}, [subStatements, sideLoadedIds]);
 
 	// Reset lazy loading state when navigating to a different statement, and arm
 	// loadMore only after the initial render/scroll has settled (see ref comment).

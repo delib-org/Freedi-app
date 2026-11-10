@@ -1,7 +1,8 @@
 /**
  * Tests for ProposalSampler class
  */
-import { Statement, StatementType } from '@freedi/shared-types';
+import { StatementType } from '../../../models/TypeEnums';
+import type { Statement } from '../../../models/statement/StatementTypes';
 import { createSampler } from '../proposalSampler';
 import { DEFAULT_SAMPLING_CONFIG } from '../sampling';
 

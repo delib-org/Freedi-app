@@ -5717,5 +5717,10 @@
   "to": "به",
   "{count} evaluators": "{count} نفر امتیاز دادند",
   "{pct}% agree": "{pct}% موافق",
-  "…and {count} more": "…و {count} مورد دیگر"
+  "…and {count} more": "…و {count} مورد دیگر",
+  "Rate": "امتیازدهی",
+  "See all answers": "دیدن همه پاسخ‌ها",
+  "Back to rating": "بازگشت به امتیازدهی",
+  "{n} answers in this question": "{n} پاسخ در این پرسش",
+  "No more answers to rate right now": "فعلاً پاسخ دیگری برای امتیازدهی نیست"
 }

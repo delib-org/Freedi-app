@@ -40,7 +40,12 @@ export function useLazyLoadOptions(statementId: string | undefined): {
 	const oldestCreatedAt = useSelector((state: RootState) => {
 		let min = Infinity;
 		for (const s of state.statements.statements) {
-			if (s.parentId === statementId && typeof s.createdAt === 'number' && s.createdAt < min) {
+			if (
+				s.parentId === statementId &&
+				typeof s.createdAt === 'number' &&
+				s.createdAt < min &&
+				!state.answerViews.sideLoadedIds[s.statementId]
+			) {
 				min = s.createdAt;
 			}
 		}
@@ -49,6 +54,9 @@ export function useLazyLoadOptions(statementId: string | undefined): {
 	});
 	const oldestRef = useRef<number | null>(oldestCreatedAt);
 	oldestRef.current = oldestCreatedAt;
+	// A page made only of side-loaded answers leaves the selector where it was,
+	// so the cursor also remembers how far paging itself has reached.
+	const pagedToRef = useRef<number | null>(null);
 
 	// Reset paging state when navigating to a different statement.
 	// We do NOT pre-decide `hasMore` from the loaded count: that was sticky
@@ -60,6 +68,7 @@ export function useLazyLoadOptions(statementId: string | undefined): {
 		hasMoreRef.current = true;
 		setIsLoadingMore(false);
 		isLoadingRef.current = false;
+		pagedToRef.current = null;
 	}, [statementId]);
 
 	const loadMore = useCallback(async () => {
@@ -69,11 +78,10 @@ export function useLazyLoadOptions(statementId: string | undefined): {
 		isLoadingRef.current = true;
 		setIsLoadingMore(true);
 		try {
-			const result = await fetchOlderSubStatements(
-				statementId,
-				oldestRef.current,
-				CHAT.LOAD_MORE_BATCH_SIZE,
-			);
+			const cursor = Math.min(oldestRef.current, pagedToRef.current ?? Infinity);
+			const result = await fetchOlderSubStatements(statementId, cursor, CHAT.LOAD_MORE_BATCH_SIZE);
+			const pageOldest = result.statements[result.statements.length - 1]?.createdAt;
+			if (typeof pageOldest === 'number') pagedToRef.current = pageOldest;
 			hasMoreRef.current = result.hasMore;
 			setHasMore(result.hasMore);
 		} finally {

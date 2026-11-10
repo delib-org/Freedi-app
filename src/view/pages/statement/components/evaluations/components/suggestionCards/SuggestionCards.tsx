@@ -21,6 +21,10 @@ import Evaluation from '../evaluation/Evaluation';
 import { applyManualOrder, includeAnswer, pinFirst, sortStatements } from './suggestionOrdering';
 import { useFocusedAnswer } from './useFocusedAnswer';
 import { useQuestionScoreAccess } from '../../../questionScreen/useAnswerScoreGate';
+import { useAnswersView } from '../../../questionScreen/useAnswersView';
+import { useAnswerBatch } from '../../../questionScreen/useAnswerBatch';
+import { buildRateViewPath } from '../../../questionScreen/answerSorting';
+import { ANSWERS_VIEW_ALL, ANSWERS_VIEW_PARAM } from '../../../questionScreen/answersView';
 import { guardScoreSort } from '../../../questionScreen/canSeeScore';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
@@ -63,6 +67,9 @@ const SuggestionCards: FC = () => {
 	const statement = useSelector(statementSelector(statementId));
 	const defaultSort = statement?.statementSettings?.defaultSortType || SortType.newest;
 	const { canSee: canSortByScore } = useQuestionScoreAccess(statement);
+	const answersView = useAnswersView(statement);
+	const isRateView = answersView.view === 'rate';
+	const rateBatch = useAnswerBatch(statementId, isRateView);
 	const sort = guardScoreSort(params.sort || defaultSort, canSortByScore);
 
 	// An admin's hand-placed order (written from the Top Answers panel or the
@@ -171,22 +178,43 @@ const SuggestionCards: FC = () => {
 	// The pin applies after the throttle, so a just-added answer leads at once.
 	// A `:sort` in the URL is the reader asking for a ranking, and that wins here too.
 	const shownIds = useMemo(
-		() => new Set([...orderedFlatRaw, ...plan.topLevelSynths].map(getStatementId)),
-		[orderedFlatRaw, plan.topLevelSynths],
+		() =>
+			new Set(
+				[...orderedFlatRaw, ...plan.topLevelSynths, ...rateBatch.answers].map(getStatementId),
+			),
+		[orderedFlatRaw, plan.topLevelSynths, rateBatch.answers],
 	);
 	const { pinnedId, focusedAnswer, ringId, ringRef } = useFocusedAnswer(
 		statementId,
 		shownIds,
 		params.sort !== undefined,
 	);
-	const displayedFlatRaw = useMemo(
-		() =>
-			pinFirst(
-				effectiveLayers.raw ? includeAnswer(orderedFlatRaw, focusedAnswer) : orderedFlatRaw,
-				pinnedId,
-			),
-		[orderedFlatRaw, focusedAnswer, effectiveLayers.raw, pinnedId],
-	);
+	const pinnedInStore = useSelector(statementSelector(pinnedId));
+	const displayedFlatRaw = useMemo(() => {
+		if (isRateView) {
+			// A linked or just-added answer leads the batch without being part of it.
+			const withPinned = includeAnswer(
+				includeAnswer(rateBatch.answers, focusedAnswer),
+				pinnedInStore?.parentId === statementId ? pinnedInStore : undefined,
+			);
+
+			return pinFirst(withPinned, pinnedId);
+		}
+
+		return pinFirst(
+			effectiveLayers.raw ? includeAnswer(orderedFlatRaw, focusedAnswer) : orderedFlatRaw,
+			pinnedId,
+		);
+	}, [
+		isRateView,
+		rateBatch.answers,
+		pinnedInStore,
+		statementId,
+		orderedFlatRaw,
+		focusedAnswer,
+		effectiveLayers.raw,
+		pinnedId,
+	]);
 	const displayedSynths = useMemo(
 		() => pinFirst(plan.topLevelSynths, pinnedId),
 		[plan.topLevelSynths, pinnedId],
@@ -224,6 +252,18 @@ const SuggestionCards: FC = () => {
 		[setLayers],
 	);
 
+	const openFullList = useCallback(() => {
+		const next = new URLSearchParams(location.search);
+		next.set(ANSWERS_VIEW_PARAM, ANSWERS_VIEW_ALL);
+		navigate({ pathname: location.pathname, search: next.toString() });
+	}, [location.pathname, location.search, navigate]);
+
+	const backToRating = useCallback(() => {
+		if (!statementId) return;
+		const tab = new URLSearchParams(location.search).get('tab');
+		navigate(buildRateViewPath(location.pathname, statementId, tab));
+	}, [location.pathname, location.search, navigate, statementId]);
+
 	const handleSubmit = useCallback(() => {
 		navigate(`/statement/${statementId}/thank-you`);
 	}, [navigate, statementId]);
@@ -254,7 +294,7 @@ const SuggestionCards: FC = () => {
 	);
 
 	if (!statement) return null;
-	if (isQuestion && !hasSynth && !hasRaw) return null;
+	if (isQuestion && !isRateView && !hasSynth && !hasRaw) return null;
 
 	const isSubmitMode = statement.statementSettings?.isSubmitMode;
 
@@ -264,7 +304,7 @@ const SuggestionCards: FC = () => {
 			    stats used to occupy three separate bands above the list — the
 			    filter chips even rendered on the Discussion tab, which has no
 			    list for them to filter. */}
-			{treeFilter && (
+			{treeFilter && !isRateView && (
 				<ListToolbar
 					filterMode={treeFilter.filterMode}
 					onFilterChange={treeFilter.setFilterMode}
@@ -280,9 +320,29 @@ const SuggestionCards: FC = () => {
 				/>
 			)}
 
-			<LoadAllBanner rootId={statement.statementId} mode="direct" />
+			{isRateView ? (
+				<LoadAllBanner
+					key="see-all-answers"
+					rootId={statement.statementId}
+					mode="direct"
+					label={t('See all answers')}
+					description={t('{n} answers in this question').replace(
+						'{n}',
+						String(answersView.answerCount),
+					)}
+					alwaysOffer
+					onLoaded={openFullList}
+				/>
+			) : (
+				<LoadAllBanner key="load-all" rootId={statement.statementId} mode="direct" />
+			)}
+			{answersView.canReturnToRating && (
+				<button type="button" className={styles.backToRating} onClick={backToRating}>
+					{t('Back to rating')}
+				</button>
+			)}
 
-			{hasSynth && (
+			{hasSynth && !isRateView && (
 				<>
 					<SectionDivider
 						label={t('AI proposals')}
@@ -314,7 +374,7 @@ const SuggestionCards: FC = () => {
 				</>
 			)}
 
-			{hasSynth && hasRaw && (
+			{hasSynth && hasRaw && !isRateView && (
 				<SectionDivider
 					label={t('Open ideas')}
 					count={visibleFlatRaw.length}
@@ -332,12 +392,33 @@ const SuggestionCards: FC = () => {
 								statementSub.statementId === ringId && styles['card-wrapper--focused'],
 							)}
 						>
-							<SuggestionCard parentStatement={statement} statement={statementSub} />
+							{isRateView && statementSub.isCluster ? (
+								<GroupedSuggestionCard
+									cluster={statementSub}
+									mode="both"
+									allowDrillToOriginals
+									pipeline="synthesis"
+									evaluationSlot={<Evaluation statement={statementSub} variant="card" />}
+									renderOriginal={renderRaw}
+								/>
+							) : (
+								<SuggestionCard parentStatement={statement} statement={statementSub} />
+							)}
 						</div>
 					</Flipped>
 				))}
 			</Flipper>
-			{hasRaw && hasMore && (
+			{isRateView && rateBatch.isFinished && (
+				<p className={styles.lazyLoadStatus} role="status">
+					{t('No more answers to rate right now')}
+				</p>
+			)}
+			{isRateView && rateBatch.isLoading && (
+				<div className={styles['lazyLoadStatus']} role="status">
+					{t('Loading more…')}
+				</div>
+			)}
+			{hasRaw && hasMore && !isRateView && (
 				<div ref={sentinelRef} className={styles['lazyLoadSentinel']} aria-hidden="true" />
 			)}
 			{(isLoadingMore || isAutoLoading) && (

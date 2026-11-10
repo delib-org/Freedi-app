@@ -5719,5 +5719,10 @@
   "to": "إلى",
   "{count} evaluators": "قيّم {count} أشخاص",
   "{pct}% agree": "{pct}% موافقون",
-  "…and {count} more": "…و{count} أخرى"
+  "…and {count} more": "…و{count} أخرى",
+  "Rate": "التقييم",
+  "See all answers": "عرض كل الإجابات",
+  "Back to rating": "العودة إلى التقييم",
+  "{n} answers in this question": "{n} إجابة في هذا السؤال",
+  "No more answers to rate right now": "لا توجد إجابات أخرى للتقييم الآن"
 }

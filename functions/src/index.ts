@@ -199,6 +199,7 @@ import {
 import { recomputeTopOptions } from './fn_recomputeTopOptions';
 import { reconcileEvaluatorCount } from './fn_reconcileEvaluatorCount';
 import { searchStatements } from './fn_searchStatements';
+import { getAnswerBatch } from './fn_getAnswerBatch';
 import { searchQuestionsByMeaning } from './fn_searchQuestionsByMeaning';
 
 // Bulk Idea Synthesis (admin-triggered near-duplicate detection)
@@ -920,6 +921,7 @@ exports.reconcileEvaluatorCount = reconcileEvaluatorCount;
 
 // Statement search (home, subscriptions, whole tree; lexical + semantic)
 exports.searchStatements = searchStatements;
+exports.getAnswerBatch = getAnswerBatch;
 
 // Question "search by meaning" (MC survey question picker; admin scope only)
 exports.searchQuestionsByMeaning = searchQuestionsByMeaning;

@@ -30,6 +30,7 @@ import {
 } from './answerSorting';
 import styles from './QuestionScreen.module.scss';
 import { useQuestionScoreAccess } from './useAnswerScoreGate';
+import { useAnswersView } from './useAnswersView';
 
 const ICON_SIZE = 18;
 
@@ -71,6 +72,12 @@ const AnswerSortControl: FC<AnswerSortControlProps> = ({ statement, isHost }) =>
 
 	const settings = statement.statementSettings;
 	const { canSee: canSortByScore } = useQuestionScoreAccess(statement);
+	const { view, canReturnToRating } = useAnswersView(statement);
+	const onRateView = view === 'rate';
+	// On a large question the shuffle is the Rate view, so it goes by that name.
+	const hasRateView = onRateView || canReturnToRating;
+	const optionLabelKey = (option: { id: SortType; labelKey: string }): string =>
+		hasRateView && option.id === SortType.random ? 'Rate' : option.labelKey;
 	const sortOptions = useMemo(
 		() =>
 			getAnswerSortOptions({
@@ -90,11 +97,12 @@ const AnswerSortControl: FC<AnswerSortControlProps> = ({ statement, isHost }) =>
 	});
 	const currentOption =
 		current.kind === 'sort' ? sortOptions.find((o) => o.id === current.sort) : undefined;
-	const currentLabel =
-		current.kind === 'manual'
+	const currentLabel = onRateView
+		? t('Rate')
+		: current.kind === 'manual'
 			? t("Host's order")
 			: currentOption
-				? t(currentOption.labelKey)
+				? t(optionLabelKey(currentOption))
 				: t('Sort');
 
 	function choose(sort: SortType) {
@@ -126,7 +134,9 @@ const AnswerSortControl: FC<AnswerSortControlProps> = ({ statement, isHost }) =>
 				>
 					<div className={styles.sortList} role="radiogroup" aria-label={t('Sort answers')}>
 						{sortOptions.map((option) => {
-							const selected = current.kind === 'sort' && current.sort === option.id;
+							const selected = onRateView
+								? option.id === SortType.random
+								: current.kind === 'sort' && current.sort === option.id;
 
 							return (
 								<button
@@ -139,7 +149,7 @@ const AnswerSortControl: FC<AnswerSortControlProps> = ({ statement, isHost }) =>
 									data-testid={`answer-sort-${option.id}`}
 								>
 									<span className={styles.sortOption__icon}>{SORT_ICONS[option.id]}</span>
-									<span className={styles.sortOption__label}>{t(option.labelKey)}</span>
+									<span className={styles.sortOption__label}>{t(optionLabelKey(option))}</span>
 									{selected && <Check size={ICON_SIZE} aria-hidden="true" />}
 								</button>
 							);

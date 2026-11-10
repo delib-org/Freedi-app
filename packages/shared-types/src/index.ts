@@ -1318,6 +1318,45 @@ export {
 	resolveDerivedPipeline,
 } from './utils/derivedStatement';
 export type { DerivedPipeline } from './utils/derivedStatement';
+
+// Adaptive answer sampling (shared by MC and the main app's getAnswerBatch)
+export {
+	calculateAdjustedPriority,
+	calculatePriority,
+	calculateStatsFromAggregates,
+	calculateUCBPriority,
+	DEFAULT_SAMPLING_CONFIG,
+	gaussianThompsonSample,
+	getProposalStats,
+	getSamplingDiagnostics,
+	isStable,
+	thompsonSample,
+} from './utils/sampling/sampling';
+export type { ProposalStats, SamplingConfig } from './utils/sampling/sampling';
+export { createSampler, ProposalSampler } from './utils/sampling/proposalSampler';
+export type {
+	BatchResult,
+	BatchStats,
+	DiversityOptions,
+	SamplerLogger,
+	ScoredProposal,
+} from './utils/sampling/proposalSampler';
+export {
+	buildClusterMembershipMap,
+	deriveSeenClusters,
+	getClusterKey,
+	selectDiverseBatch,
+} from './utils/sampling/diverseBatch';
+export {
+	buildSynthMembershipMap,
+	expandEvaluatedIds,
+	isSynthesisCluster,
+} from './utils/sampling/synthesisMembership';
+export { ANSWER_BATCH, isAnswerBatchQuestion } from './utils/sampling/answerBatch';
+export type {
+	GetAnswerBatchRequest,
+	GetAnswerBatchResponse,
+} from './utils/sampling/answerBatch';
 export {
 	computeOtherIdeas,
 	isTheme,

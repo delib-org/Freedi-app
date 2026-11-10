@@ -20,6 +20,8 @@ import TopAnswersPanel from '../topAnswers/TopAnswersPanel';
 import ConversationWelcome from '@/view/components/atomic/organisms/ThinkingSpace/ConversationWelcome';
 import { mapViews } from '@/view/components/atomic/organisms/ThinkingSpace/MapExplorer';
 import AnswersCounter from '../questionScreen/AnswersCounter';
+import { useAnswersView } from '../questionScreen/useAnswersView';
+import { moreToRateSelector } from '@/redux/answerViews/answerViewsSlice';
 import AddAnswerFab from '../questionScreen/AddAnswerFab';
 import RatedAllNotice from '../questionScreen/RatedAllNotice';
 import AnswerSortControl from '../questionScreen/AnswerSortControl';
@@ -64,6 +66,8 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 		[statement?.statementId],
 	);
 	const allSubs = useSelector(subsSelect);
+	const { view: answersView } = useAnswersView(statement);
+	const moreToRate = useSelector(moreToRateSelector(statement?.statementId));
 
 	const isAdmin = role === Role.admin || role === Role.creator;
 	const isQuestion = statement?.statementType === StatementType.question;
@@ -151,7 +155,10 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 				)}
 				{onAnswersTab && statement && (
 					<div className={questionStyles.listHead}>
-						<AnswersCounter data={data} />
+						<AnswersCounter
+							data={data}
+							moreToRate={answersView === 'rate' ? moreToRate : undefined}
+						/>
 						<AnswerSortControl statement={statement} isHost={isAdmin} />
 					</div>
 				)}
