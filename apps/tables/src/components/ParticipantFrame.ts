@@ -75,6 +75,9 @@ export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (init
 	let me: LiveValue<TableAssignmentParticipant | null> | null = null;
 	let identity: Identity = { state: 'loading' };
 	let topicsStarted = false;
+	let readsStarted = false;
+	/** Set in onremove: a sign-in that finishes late must not start anything. */
+	let removed = false;
 
 	/** Remember in this browser that it holds a registration, the moment the record is seen. */
 	function myRecord(uid: string): Subscription<TableAssignmentParticipant | null> {
@@ -85,18 +88,33 @@ export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (init
 			}, onError);
 	}
 
-	async function signIn(): Promise<void> {
+	/**
+	 * The session, seats and counter reads start only once the identity exists: before
+	 * sign-in the rules refuse them, and a refused listener does not come back by itself.
+	 */
+	function startReads(attrs: ParticipantFrameAttrs): void {
+		if (readsStarted) return;
+		readsStarted = true;
+		session.start();
+		if (attrs.occupancy) seats.start();
+		if (attrs.counter) counter.start();
+	}
+
+	async function signIn(attrs: ParticipantFrameAttrs): Promise<void> {
 		identity = { state: 'loading' };
 		m.redraw();
 
 		try {
 			const user = await ensureParticipantUser();
 
+			if (removed) return;
+			startReads(attrs);
 			identity = { state: 'ready', uid: user.uid };
 			me?.stop();
 			me = new LiveValue('me', myRecord(user.uid));
 			me.start();
 		} catch (error) {
+			if (removed) return;
 			logError(error, { operation: 'tables.participant.identity', metadata: { sessionId } });
 			identity = { state: 'error' };
 		}
@@ -110,12 +128,16 @@ export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (init
 	}
 
 	function retryAll(attrs: ParticipantFrameAttrs): void {
+		if (identity.state === 'error') {
+			void signIn(attrs);
+
+			return;
+		}
 		session.retry();
 		if (topicsStarted) topics.retry();
 		me?.retry();
 		if (attrs.occupancy) seats.retry();
 		if (attrs.counter) counter.retry();
-		if (identity.state === 'error') void signIn();
 	}
 
 	function contextOf(uid: string, current: TableAssignment, attrs: ParticipantFrameAttrs) {
@@ -136,10 +158,7 @@ export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (init
 
 	return {
 		oninit({ attrs }) {
-			session.start();
-			if (attrs.occupancy) seats.start();
-			if (attrs.counter) counter.start();
-			void signIn();
+			void signIn(attrs);
 		},
 		oncreate({ attrs }) {
 			startTopicsOnceReadable(attrs);
@@ -148,6 +167,7 @@ export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (init
 			startTopicsOnceReadable(attrs);
 		},
 		onremove() {
+			removed = true;
 			session.stop();
 			topics.stop();
 			seats.stop();

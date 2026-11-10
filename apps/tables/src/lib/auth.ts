@@ -1,5 +1,6 @@
 import {
 	GoogleAuthProvider,
+	linkWithPopup,
 	signInAnonymously,
 	signInWithPopup,
 	onAuthStateChanged,
@@ -34,11 +35,37 @@ export function isGoogleUser(user: User | null): boolean {
 	return !!user && !user.isAnonymous;
 }
 
-export async function signInHostWithGoogle(): Promise<User> {
-	try {
-		const credential = await signInWithPopup(auth, new GoogleAuthProvider());
+/** Firebase's code when the Google account already belongs to another user. */
+const CREDENTIAL_IN_USE = 'auth/credential-already-in-use';
 
-		return credential.user;
+function isCredentialInUse(error: unknown): boolean {
+	return (
+		typeof error === 'object' &&
+		error !== null &&
+		'code' in error &&
+		(error as { code: unknown }).code === CREDENTIAL_IN_USE
+	);
+}
+
+/**
+ * Google sign-in. An anonymous user (a participant who is now hosting) is linked to the
+ * Google account, which keeps the uid and so their registration. Only when that account
+ * already exists as another user does it sign in to that one instead.
+ */
+export async function signInHostWithGoogle(): Promise<User> {
+	const provider = new GoogleAuthProvider();
+	const current = auth.currentUser;
+
+	try {
+		if (current?.isAnonymous) {
+			try {
+				return (await linkWithPopup(current, provider)).user;
+			} catch (error) {
+				if (!isCredentialInUse(error)) throw error;
+			}
+		}
+
+		return (await signInWithPopup(auth, provider)).user;
 	} catch (error) {
 		logError(error, { operation: 'tables.auth.signInHostWithGoogle' });
 		throw error;

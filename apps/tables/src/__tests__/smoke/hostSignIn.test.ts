@@ -83,9 +83,7 @@ describe('a host link opened before signing in (the projector, a new device)', (
 
 		const { root } = await renderScreen(HostParticipants, ID);
 
-		expect(root.querySelector('.shell__sign-out')?.textContent).toBe(
-			en['tableAssignment.signOut'],
-		);
+		expect(root.querySelector('.shell__sign-out')?.textContent).toBe(en['tableAssignment.signOut']);
 
 		signOut();
 		await settle();

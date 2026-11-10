@@ -37,7 +37,11 @@ export async function signInHost(): Promise<void> {
 	hostAuth.signInFailed = false;
 
 	try {
-		await signInHostWithGoogle();
+		const user = await signInHostWithGoogle();
+
+		// Linking an anonymous user does not fire onAuthStateChanged: set the identity here.
+		hostAuth.user = user;
+		hostAuth.status = 'signedIn';
 	} catch (error) {
 		logError(error, { operation: 'tables.hostAuth.signIn' });
 		hostAuth.signInFailed = true;
