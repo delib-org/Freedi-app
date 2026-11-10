@@ -859,14 +859,21 @@
 // Flat card with a 1px hairline (no shadow). Status states still take the
 // inline-start rule; the own answer takes a mint border.
 .statement-evaluation-card {
+  // The padding lives in two variables so the photo card can pull its footer
+  // back out over it (see --with-photo).
+  --card-pad-block: var(--space-sm);
+  --card-pad-inline: var(--space-md);
+
   gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--card-pad-block) var(--card-pad-inline);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-card);
   box-shadow: none;
 
   @media screen and (max-width: 600px) {
-    padding: var(--space-xs) var(--space-sm);
+    --card-pad-block: var(--space-2xs);
+    --card-pad-inline: var(--space-xs);
+
     gap: var(--space-2xs);
   }
 
@@ -899,15 +906,28 @@
 // The photo is a column at the inline-start edge that runs the full height of
 // the card. StatementImage places it absolutely (inset-block: 0), so the text
 // column alone decides how tall the card is, even for a tall source image.
-// This card makes room for it with start padding, so nothing runs under it.
+// This card makes room for it with start padding, so the text runs beside it.
+// The rating row (cardFooter) is the exception: it breaks out of the card's
+// padding to span the full card width and sits on a card-coloured strip drawn
+// OVER the lower part of the photo, so the faces keep the whole width.
 .statement-evaluation-card--with-photo {
   --card-photo-width: 7.5rem;
+  --card-photo-inset: calc(var(--card-photo-width) + var(--card-pad-inline));
 
-  padding-inline-start: calc(var(--card-photo-width) + var(--space-md));
+  padding-inline-start: var(--card-photo-inset);
 
   @media screen and (max-width: 600px) {
     --card-photo-width: 5.5rem;
+  }
 
-    padding-inline-start: calc(var(--card-photo-width) + var(--space-sm));
+  .cardFooter {
+    position: relative;
+    z-index: 2; // above the photo column (z-index 1)
+    margin-inline: calc(-1 * var(--card-photo-inset)) calc(-1 * var(--card-pad-inline));
+    margin-block-end: calc(-1 * var(--card-pad-block));
+    padding-inline: var(--card-photo-inset) var(--card-pad-inline);
+    padding-block: var(--space-2xs) var(--card-pad-block);
+    background-color: var(--card-default);
+    pointer-events: auto; // the strip must not pass taps through to the photo button
   }
 }
