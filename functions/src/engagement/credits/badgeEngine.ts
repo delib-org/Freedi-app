@@ -149,7 +149,7 @@ export async function checkAndAwardBadges(
 			body: `You earned the "${badge.name}" badge: ${badge.description}`,
 			channels: [NotificationChannel.IN_APP],
 			sourceApp,
-			targetPath: '/profile',
+			targetPath: '/my/engagement',
 			deliverAt: null,
 			frequency: NotificationFrequency.INSTANT,
 			triggerType: NotificationTriggerType.BADGE_EARNED,

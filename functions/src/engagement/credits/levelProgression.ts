@@ -48,7 +48,7 @@ export async function checkAndNotifyLevelUp(
 		body: `Congratulations! You reached ${levelName} level.`,
 		channels: [NotificationChannel.IN_APP, NotificationChannel.PUSH],
 		sourceApp,
-		targetPath: '/profile',
+		targetPath: '/my/engagement',
 		deliverAt: null,
 		frequency: NotificationFrequency.INSTANT,
 		triggerType: NotificationTriggerType.LEVEL_UP,
