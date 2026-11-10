@@ -1,6 +1,11 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
-import { Collections, StatementType, type Statement } from '@freedi/shared-types';
+import {
+	Collections,
+	isAnswerHeldByModeration,
+	StatementType,
+	type Statement,
+} from '@freedi/shared-types';
 import { vectorSearchService } from '../../services/vector-search-service';
 import { judgeSemanticEquivalenceCached } from '../../services/verdict-cache-service';
 import { findClustersContainingMember } from '../liveSynth/clusterRecompute';
@@ -339,6 +344,8 @@ async function executePipeline(
 	// attached/merged into another cluster, deleting a just-created manual cluster).
 	// Central guard covering every pipeline source (onCreate, threshold, queue, admin).
 	if (option.isCluster === true) return skipped('is-cluster', startedAt);
+	// Nothing the automatic check flagged may reach AI wording, by any source.
+	if (isAnswerHeldByModeration(option)) return skipped('held-by-moderation', startedAt);
 	if (!option.parentId || option.parentId === 'top') return skipped('no-parent', startedAt);
 	// `integratedOptions` is populated on CLUSTER statements; this guards against
 	// running the pipeline on a cluster (or a legacy option that carries the

@@ -395,6 +395,81 @@ describe('/statements — answers hidden by the automatic check', () => {
 		await assertSucceeds(updateDoc(doc(db, 'statements', 'by-host'), { hide: false }));
 	});
 
+	it('rejects the author moving the answer, by any of the three fields', async () => {
+		await seedHiddenAnswer('move-me');
+		const db = env.authenticatedContext(AUTHOR).firestore();
+		const ref = doc(db, 'statements', 'move-me');
+		await assertFails(updateDoc(ref, { parentId: 'my-own-question' }));
+		await assertFails(updateDoc(ref, { topParentId: 'my-own-question' }));
+		await assertFails(updateDoc(ref, { parents: ['my-own-question'] }));
+	});
+
+	it('lets a host of the original question move it', async () => {
+		await seedHiddenAnswer('host-moves');
+		const db = env.authenticatedContext(HOST).firestore();
+		await assertSucceeds(
+			updateDoc(doc(db, 'statements', 'host-moves'), { parentId: 'another-question' }),
+		);
+	});
+
+	it('lets a host record the restore in the write that unhides', async () => {
+		await seedHiddenAnswer('recorded');
+		const db = env.authenticatedContext(HOST).firestore();
+		await assertSucceeds(
+			updateDoc(doc(db, 'statements', 'recorded'), {
+				hide: false,
+				'answerModeration.restoredAt': 2,
+			}),
+		);
+	});
+
+	it('rejects the author recording a restore', async () => {
+		await seedHiddenAnswer('author-records');
+		const db = env.authenticatedContext(AUTHOR).firestore();
+		await assertFails(
+			updateDoc(doc(db, 'statements', 'author-records'), {
+				hide: false,
+				'answerModeration.restoredAt': 2,
+			}),
+		);
+	});
+
+	it('rejects restoredAt without clearing hide', async () => {
+		await seedHiddenAnswer('no-unhide');
+		const db = env.authenticatedContext(HOST).firestore();
+		await assertFails(
+			updateDoc(doc(db, 'statements', 'no-unhide'), { 'answerModeration.restoredAt': 2 }),
+		);
+	});
+
+	it('rejects a host changing another field of the mark during a restore', async () => {
+		await seedHiddenAnswer('extra-field');
+		const db = env.authenticatedContext(HOST).firestore();
+		await assertFails(
+			updateDoc(doc(db, 'statements', 'extra-field'), {
+				hide: false,
+				'answerModeration.restoredAt': 2,
+				'answerModeration.reason': 'none',
+			}),
+		);
+	});
+
+	it('does not lock an answer the host restored: its author may hide and unhide it', async () => {
+		await seed(env, async (db) => {
+			await setDoc(
+				doc(db, 'statements', 'restored'),
+				answer('restored', {
+					hide: false,
+					answerModeration: { ...MARKER, restoredAt: 2 },
+				}),
+			);
+		});
+		const db = env.authenticatedContext(AUTHOR).firestore();
+		const ref = doc(db, 'statements', 'restored');
+		await assertSucceeds(updateDoc(ref, { hide: true }));
+		await assertSucceeds(updateDoc(ref, { hide: false }));
+	});
+
 	it('rejects the host editing the mark', async () => {
 		await seedHiddenAnswer('mark-edit');
 		const db = env.authenticatedContext(HOST).firestore();

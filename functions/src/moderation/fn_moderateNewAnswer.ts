@@ -6,17 +6,20 @@
  * Fails open: if the check cannot answer, the answer stays visible and it is logged.
  */
 
+import { isDeepStrictEqual } from 'node:util';
 import { FirestoreEvent, QueryDocumentSnapshot } from 'firebase-functions/v2/firestore';
-import { Collections, SourceApp, Statement, StatementType, User } from '@freedi/shared-types';
+import {
+	AnswerModeration,
+	ANSWER_MODERATION_REASON,
+	Collections,
+	SourceApp,
+	Statement,
+	StatementType,
+	User,
+} from '@freedi/shared-types';
 import { db } from '../db';
 import { assessLanguage } from '../fn_profanityChecker';
 import { logError } from '../utils/errorHandling';
-import {
-	AnswerModerationMarker,
-	ANSWER_MODERATION_FIELD,
-	ANSWER_MODERATION_REASON,
-	isSameModerationEvent,
-} from './answerModerationMarker';
 import {
 	AnswerHiddenLanguage,
 	answerHiddenNoticeId,
@@ -46,13 +49,33 @@ export function isNewMainAppAnswer(statement: Statement): boolean {
 }
 
 /** The title and the description paragraphs, as one text for one AI call. */
-export function answerTextToCheck(answer: Statement): string {
+export function answerFullText(answer: Statement): string {
 	const paragraphs = (answer.paragraphs ?? []).map((paragraph) => paragraph.content);
 
-	return [answer.statement, ...paragraphs]
-		.filter(Boolean)
-		.join('\n')
-		.substring(0, MAX_CHECKED_CHARACTERS);
+	return [answer.statement, ...paragraphs].filter(Boolean).join('\n');
+}
+
+/** Whatever lies past the limit goes unchecked, so it has to be countable. Lengths only. */
+function logTruncatedCheck(answer: Statement, totalCharacters: number): void {
+	console.info('moderateNewAnswer: checked only the start of a long answer', {
+		statementId: answer.statementId,
+		totalCharacters,
+		checkedCharacters: MAX_CHECKED_CHARACTERS,
+	});
+}
+
+/**
+ * True when the verdict no longer applies to the document. `hide` and
+ * `integratedInto` count only if they appeared after creation: a value already
+ * in the creation snapshot came from the client and must not switch the check off.
+ */
+function changedSinceCreation(created: Statement, current: Statement): boolean {
+	return (
+		current.statement !== created.statement ||
+		!isDeepStrictEqual(current.paragraphs, created.paragraphs) ||
+		(current.hide === true && created.hide !== true) ||
+		(Boolean(current.integratedInto) && !created.integratedInto)
+	);
 }
 
 function rejectAfterTimeout(
@@ -123,7 +146,8 @@ async function readNoticeContext(
  * Hide, mark and notify in one transaction, so a redelivered event finds its
  * own marker and does nothing, even if a host restored the answer in between.
  * The marker is compared by event id because a marker already on the document
- * at creation would be the client's and proves nothing.
+ * at creation would be the client's and proves nothing. Anything else that
+ * changed while the check ran leaves the document as it is.
  */
 async function hideFlaggedAnswer(answer: Statement, eventId: string, text: string): Promise<void> {
 	const { language, questionTitle } = await readNoticeContext(answer, text);
@@ -134,18 +158,25 @@ async function hideFlaggedAnswer(answer: Statement, eventId: string, text: strin
 
 	await db.runTransaction(async (transaction) => {
 		const current = await transaction.get(answerRef);
-		const currentAnswer = current.data();
-		if (!currentAnswer || isSameModerationEvent(currentAnswer, eventId)) return;
+		const currentAnswer = current.data() as Statement | undefined;
+		if (!currentAnswer || currentAnswer.answerModeration?.eventId === eventId) return;
+		if (changedSinceCreation(answer, currentAnswer)) {
+			console.info('moderateNewAnswer: answer changed during the check, left as it is', {
+				statementId: answer.statementId,
+			});
+
+			return;
+		}
 
 		const now = Date.now();
-		const marker: AnswerModerationMarker = {
+		const marker: AnswerModeration = {
 			reason: ANSWER_MODERATION_REASON,
 			hiddenAt: now,
 			eventId,
 		};
 		transaction.update(answerRef, {
 			hide: true,
-			[ANSWER_MODERATION_FIELD]: marker,
+			answerModeration: marker,
 			lastUpdate: now,
 		});
 		transaction.set(noticeRef, buildAnswerHiddenNotice({ answer, language, questionTitle, now }));
@@ -156,7 +187,9 @@ export async function moderateNewAnswer(event: AnswerCreatedEvent): Promise<void
 	const answer = event.data?.data() as Statement | undefined;
 	if (!answer || !isNewMainAppAnswer(answer)) return;
 
-	const text = answerTextToCheck(answer);
+	const fullText = answerFullText(answer);
+	if (fullText.length > MAX_CHECKED_CHARACTERS) logTruncatedCheck(answer, fullText.length);
+	const text = fullText.substring(0, MAX_CHECKED_CHARACTERS);
 	if (!text || !(await isAnswerFlagged(text, answer))) return;
 
 	try {

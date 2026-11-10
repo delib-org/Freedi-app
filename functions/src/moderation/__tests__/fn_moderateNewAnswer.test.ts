@@ -19,7 +19,7 @@ jest.mock('../../utils/errorHandling', () => ({
 	logError: (...args: unknown[]) => logError(...args),
 }));
 
-import { answerTextToCheck, moderateNewAnswer } from '../fn_moderateNewAnswer';
+import { answerFullText, moderateNewAnswer } from '../fn_moderateNewAnswer';
 import { answerHiddenNoticeId, pickAnswerHiddenLanguage } from '../answerHiddenNotice';
 
 const ANSWER = 'answer-1';
@@ -216,14 +216,110 @@ describe('moderateNewAnswer', () => {
 	});
 });
 
-describe('answerTextToCheck', () => {
+describe('moderateNewAnswer when the document moved on during the check', () => {
+	const changeDuringCheck = (change: Record<string, unknown>): void => {
+		assessLanguage.mockImplementation(async () => {
+			await fake.db.collection(Collections.statements).doc(ANSWER).update(change);
+
+			return true;
+		});
+	};
+
+	it.each([
+		['the text was edited', { statement: 'reworded' }],
+		['the description was edited', { paragraphs: [{ content: 'new' }] }],
+		['it was integrated into a cluster', { integratedInto: 'cluster-1' }],
+	])('leaves it alone when %s', async (_label, change) => {
+		const event = created();
+		changeDuringCheck(change);
+
+		await moderateNewAnswer(event);
+
+		expect(stored()?.hide).toBeUndefined();
+		expect(stored()?.answerModeration).toBeUndefined();
+		expect(notice()).toBeUndefined();
+	});
+
+	it('leaves it alone when a host hid it first', async () => {
+		const event = created();
+		changeDuringCheck({ hide: true });
+
+		await moderateNewAnswer(event);
+
+		expect(stored()?.answerModeration).toBeUndefined();
+		expect(notice()).toBeUndefined();
+	});
+
+	it('still acts on a hide the client wrote at creation', async () => {
+		assessLanguage.mockResolvedValue(true);
+
+		await moderateNewAnswer(created({ hide: true }));
+
+		expect(marker().eventId).toBe('event-1');
+		expect(notice()).toBeDefined();
+	});
+
+	it('treats equal paragraphs in another key order as unchanged', async () => {
+		const event = created({ paragraphs: [{ content: 'a', order: 0 }] });
+		changeDuringCheck({ paragraphs: [{ order: 0, content: 'a' }] });
+
+		await moderateNewAnswer(event);
+
+		expect(stored()?.hide).toBe(true);
+	});
+
+	it('stays harmless on redelivery once a host recorded the restore', async () => {
+		assessLanguage.mockResolvedValue(true);
+		const event = created();
+		await moderateNewAnswer(event);
+		await fake.db
+			.collection(Collections.statements)
+			.doc(ANSWER)
+			.update({ hide: false, 'answerModeration.restoredAt': 5 });
+
+		await moderateNewAnswer(event);
+
+		expect(stored()?.hide).toBe(false);
+		expect(stored()?.answerModeration).toMatchObject({ eventId: 'event-1', restoredAt: 5 });
+	});
+});
+
+describe('moderateNewAnswer on very long answers', () => {
+	it('checks the first 5,000 characters and logs the lengths, never the text', async () => {
+		const info = jest.spyOn(console, 'info').mockImplementation(() => undefined);
+		assessLanguage.mockResolvedValue(false);
+
+		await moderateNewAnswer(created({ statement: 'x'.repeat(5_001) }));
+
+		expect(assessLanguage.mock.calls[0][0]).toHaveLength(5_000);
+		expect(info).toHaveBeenCalledWith(expect.stringContaining('long answer'), {
+			statementId: ANSWER,
+			totalCharacters: 5_001,
+			checkedCharacters: 5_000,
+		});
+		expect(JSON.stringify(info.mock.calls)).not.toContain('xxx');
+		info.mockRestore();
+	});
+
+	it('does not log an answer at the limit', async () => {
+		const info = jest.spyOn(console, 'info').mockImplementation(() => undefined);
+		assessLanguage.mockResolvedValue(false);
+
+		await moderateNewAnswer(created({ statement: 'x'.repeat(5_000) }));
+
+		expect(info).not.toHaveBeenCalled();
+		info.mockRestore();
+	});
+});
+
+describe('answerFullText', () => {
 	it('joins the title and the description paragraphs for one AI call', () => {
 		const answer = answerDoc({
 			statement: 'Title',
 			paragraphs: [{ content: 'First' }, { content: 'Second' }],
 		}) as unknown as Statement;
 
-		expect(answerTextToCheck(answer)).toBe('Title\nFirst\nSecond');
+		expect(answerFullText(answer)).toBe('Title\nFirst\nSecond');
 	});
 });
 

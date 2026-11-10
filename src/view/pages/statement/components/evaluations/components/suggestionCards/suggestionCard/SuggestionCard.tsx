@@ -43,7 +43,9 @@ import { useIsClamped } from './hasClampedContent';
 import { useAnswerScoreGate } from '../../../../questionScreen/useAnswerScoreGate';
 import { isQuestionResultsOff } from '../../../../questionScreen/canSeeScore';
 import { resolveCardMarks } from './cardMarks';
-import { isHiddenByAutomaticCheck } from '@/helpers/answerModeration';
+import { isHostOfAnswer } from '@/helpers/answerModeration';
+import { useAnswerHostContext } from '@/controllers/hooks/useAnswerVisibility';
+import { isAnswerHeldByModeration } from '@freedi/shared-types';
 
 interface Props {
 	statement: Statement | undefined;
@@ -65,6 +67,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	const { t } = useTranslation();
 	// Use parent's authorization instead of individual card authorization
 	const { isAuthorized, isAdmin } = useAuthorization(parentStatement?.statementId);
+	const answerHostContext = useAnswerHostContext();
 	const creator = useSelector(creatorSelector);
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 	const minJoinMembers = parentStatement?.statementSettings?.minJoinMembers;
@@ -219,7 +222,10 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 		canSeeMarks,
 	);
 
-	const canUnhide = isAuthorized && (isAdmin || !isHiddenByAutomaticCheck(statement));
+	// While the automatic check holds an answer, only its host may restore it.
+	const canUnhide = isAnswerHeldByModeration(statement)
+		? isAdmin || isHostOfAnswer(statement, answerHostContext)
+		: isAuthorized;
 
 	function handleToggleHide(e: React.MouseEvent) {
 		e.stopPropagation();
@@ -302,7 +308,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 			onPointerDown={handleCardPointerDown}
 			className={cardClassName}
 			style={{
-				pointerEvents: statement.hide && !isAuthorized ? 'none' : 'auto',
+				pointerEvents: statement.hide && !isAuthorized && !canUnhide ? 'none' : 'auto',
 			}}
 			ref={elementRef}
 			id={statement.statementId}
@@ -434,6 +440,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 							statement={statement}
 							isAuthorized={isAuthorized}
 							isAdmin={isAdmin}
+							canToggleHide={canUnhide}
 							isCardMenuOpen={isCardMenuOpen}
 							setIsCardMenuOpen={setIsCardMenuOpen}
 							isEdit={isEdit}

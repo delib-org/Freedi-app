@@ -1,5 +1,5 @@
 import { FieldValue, getFirestore, type Firestore } from 'firebase-admin/firestore';
-import { Collections, Statement } from '@freedi/shared-types';
+import { Collections, isAnswerHeldByModeration, Statement } from '@freedi/shared-types';
 import { logger } from 'firebase-functions';
 
 /**
@@ -127,12 +127,14 @@ export async function reverseIntegration(
 			logger.warn(`reverseIntegration: original ${originalId} not found, skipping`);
 			continue;
 		}
+		// An answer the automatic check hid leaves the cluster but stays hidden.
+		const isHeld = isAnswerHeldByModeration(doc.data() as Statement);
 		restoreBatch.update(ref, {
-			hide: false,
+			...(isHeld ? {} : { hide: false }),
 			integratedInto: FieldValue.delete(),
 			lastUpdate: now,
 		});
-		restoredIds.push(originalId);
+		if (!isHeld) restoredIds.push(originalId);
 	}
 	await restoreBatch.commit();
 

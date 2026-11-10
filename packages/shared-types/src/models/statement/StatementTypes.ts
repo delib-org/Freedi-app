@@ -24,6 +24,7 @@ import {
 } from '../TypeEnums';
 import { AgoraMessageKind, AgoraSuggestionStatus } from '../agora/agoraEnums';
 import { AgoraModerationSchema } from '../agora/agoraModeration';
+import { AnswerModerationSchema } from './answerModeration';
 import { Role } from '../user/UserSettings';
 import { CreatorSchema, MembershipSchema, StepSchema, UserSchema } from '../user/User';
 import { ResultsSettingsSchema } from '../results/ResultsSettings';
@@ -420,6 +421,8 @@ export const StatementSchema = object({
 	// shared `hide` flag it mirrors. See agoraModeration.ts for why no reason
 	// and no removed text ever sit here.
 	agoraModeration: optional(AgoraModerationSchema),
+	// Set only by the automatic language check on new answers; see answerModeration.ts.
+	answerModeration: optional(AnswerModerationSchema),
 	questionnaire: optional(QuestionnaireSchema), // if a statement is a questionnaire, it will have this field
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division
 	anchored: optional(boolean()), // if true, the statement is anchored to be represented in the evaluation.

@@ -11,7 +11,10 @@
 // Avoid pulling Firebase/valibot into jsdom via the module's value imports.
 jest.mock('@/controllers/db/results/getResults', () => ({ getResultsDB: jest.fn() }));
 jest.mock('@/utils/errorHandling', () => ({ logError: jest.fn() }));
-jest.mock('@freedi/shared-types', () => ({}));
+jest.mock('@freedi/shared-types', () => ({
+	isAnswerHeldByModeration: (answer: { hide?: boolean; answerModeration?: object }) =>
+		answer.hide === true && answer.answerModeration !== undefined,
+}));
 
 import { resultsByParentId } from '../mapCont';
 import type { Results, Statement } from '@freedi/shared-types';
@@ -53,6 +56,35 @@ function findNode(node: Results, id: string): Results | null {
 
 	return null;
 }
+
+describe('resultsByParentId — answers the automatic check hid', () => {
+	const mark = { answerModeration: {} } as Partial<MockStatement>;
+	const cluster = make({
+		statementId: 'cluster',
+		isCluster: true,
+		integratedOptions: ['merged', 'flagged'],
+	});
+
+	it('does not nest a flagged member under its cluster, but keeps a merged one', () => {
+		const descendants = [
+			cluster,
+			make({ statementId: 'merged', hide: true, mergedInto: 'cluster' }),
+			make({ statementId: 'flagged', hide: true, ...mark }),
+		];
+		const tree = resultsByParentId(question, descendants);
+
+		expect(findNode(tree, 'merged')).not.toBeNull();
+		expect(findNode(tree, 'flagged')).toBeNull();
+	});
+
+	it('does not draw a flagged answer directly under the question', () => {
+		const tree = resultsByParentId(question, [
+			make({ statementId: 'flagged', hide: true, ...mark }),
+		]);
+
+		expect(childIds(tree)).toEqual([]);
+	});
+});
 
 describe('resultsByParentId — retired clusters', () => {
 	/**

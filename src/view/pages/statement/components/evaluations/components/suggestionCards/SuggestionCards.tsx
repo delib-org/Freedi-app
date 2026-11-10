@@ -23,6 +23,8 @@ import { useFocusedAnswer } from './useFocusedAnswer';
 import { useQuestionScoreAccess } from '../../../questionScreen/useAnswerScoreGate';
 import { guardScoreSort } from '../../../questionScreen/canSeeScore';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { isHostOfAnswer } from '@/helpers/answerModeration';
+import { useAnswerHostContext } from '@/controllers/hooks/useAnswerVisibility';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 import { useViewLayers } from '@/controllers/hooks/useViewLayers';
 import { useLazyLoadOptions } from '@/view/pages/statement/hooks/useLazyLoadOptions';
@@ -81,6 +83,7 @@ const SuggestionCards: FC = () => {
 		creator?.uid === parentSubscription?.statement?.creatorId ||
 		parentSubscription?.role === Role.admin;
 	const { showHiddenCards } = useShowHiddenCards();
+	const answerHostContext = useAnswerHostContext();
 	const treeFilter = useTreeFilterOptional();
 	// Lazy-load older options as the user scrolls the list (the page subscription
 	// only loads the newest window; this pages in the rest on demand).
@@ -132,7 +135,7 @@ const SuggestionCards: FC = () => {
 	const visibleFlatRaw = useMemo(() => {
 		const canSee = (st: Statement): boolean => {
 			if (st.hide !== true) return true;
-			if (isAdmin) return showHiddenCards;
+			if (isAdmin || isHostOfAnswer(st, answerHostContext)) return showHiddenCards;
 
 			return st.creatorId === creator?.uid;
 		};
@@ -145,6 +148,7 @@ const SuggestionCards: FC = () => {
 	}, [
 		plan.flatRaw,
 		isAdmin,
+		answerHostContext,
 		showHiddenCards,
 		creator?.uid,
 		sort,
