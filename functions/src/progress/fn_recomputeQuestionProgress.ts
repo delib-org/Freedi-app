@@ -28,7 +28,7 @@ interface RecomputeRequest {
 	statementId: string;
 }
 
-interface ParticipationSets {
+export interface ParticipationSets {
 	entered: Set<string>;
 	suggested: Set<string>;
 	evaluated: Set<string>;
@@ -64,7 +64,7 @@ async function forEachPage(
 	}
 }
 
-async function collectParticipation(statementId: string): Promise<ParticipationSets> {
+export async function collectParticipation(statementId: string): Promise<ParticipationSets> {
 	const sets: ParticipationSets = {
 		entered: new Set(),
 		suggested: new Set(),
