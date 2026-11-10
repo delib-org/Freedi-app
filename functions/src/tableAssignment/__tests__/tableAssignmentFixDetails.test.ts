@@ -123,12 +123,12 @@ describe('tablesFixDetails', () => {
 		['u1', 'u2', 'u3', 'u4'].forEach((uid) => seedRegistration(fake, uid, { preferences: ['a'] }));
 		const fs = fake.asFirestore();
 		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 5 }, NOW);
-		const hashBefore = fake.read(`tableAssignmentRuns/${runId}`)?.inputHash;
+		const hashBefore = fake.read(`tableAssignmentRunInputs/${runId}`)?.inputHash;
 		await fixDetails(fs, HOST, { sessionId: SID, title: 'Renamed', topics: bothTopics });
 		await expect(publishRun(fs, HOST, { sessionId: SID, runId })).resolves.toEqual({
 			publishedRunId: runId,
 		});
-		expect(fake.read(`tableAssignmentRuns/${runId}`)?.inputHash).toBe(hashBefore);
+		expect(fake.read(`tableAssignmentRunInputs/${runId}`)?.inputHash).toBe(hashBefore);
 	});
 });
 

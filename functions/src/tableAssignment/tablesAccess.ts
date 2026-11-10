@@ -27,6 +27,12 @@ export interface SeatDoc {
 	count: number;
 }
 
+/** A run's input hash. No client may read it: over a few answers it can be guessed. */
+export interface RunInputDoc {
+	sessionId: string;
+	inputHash: string;
+}
+
 export interface Actor {
 	uid: string;
 	isAnonymous: boolean;
@@ -88,6 +94,13 @@ export function counterRef(firestore: Firestore, sessionId: string): DocumentRef
 
 export function runRef(firestore: Firestore, runId: string): DocumentReference {
 	return runsCollection(firestore).doc(runId);
+}
+
+/** Not in the rules on purpose: Firestore denies every client an unmatched collection. */
+const RUN_INPUTS_COLLECTION = 'tableAssignmentRunInputs';
+
+export function runInputRef(firestore: Firestore, runId: string): DocumentReference {
+	return firestore.collection(RUN_INPUTS_COLLECTION).doc(runId);
 }
 
 export function seatRef(

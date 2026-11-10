@@ -27,3 +27,9 @@ export type TablesErrorReason =
 
 /** A table's position mean/sd is stored only with at least this many known positions; fewer could identify a person. */
 export const TABLE_STATS_MIN_KNOWN_POSITIONS = 3;
+
+/** Stored position means, spreads and known-position counts move in this step (positions are 0..100). */
+export const RUN_STATS_ROUND_STEP = 5;
+
+/** A table's stored distance from the room moves in this step (distance is in room-sd units). */
+export const RUN_DEVIATION_ROUND_STEP = 0.05;

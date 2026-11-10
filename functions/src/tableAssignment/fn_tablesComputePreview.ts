@@ -6,12 +6,11 @@ import { functionConfig } from '@freedi/shared-types';
 import type {
 	TableAssignment,
 	TableAssignmentRun,
-	TableAssignmentTableStats,
 	TablesComputePreviewRequest,
 	TablesComputePreviewResponse,
 } from '@freedi/shared-types';
 import { db } from '../db';
-import { TABLE_STATS_MIN_KNOWN_POSITIONS } from './constants';
+import { coarseRunFields } from './runPrivacy';
 import { loadRunInputs } from './runInputs';
 import {
 	actorFrom,
@@ -19,17 +18,11 @@ import {
 	newId,
 	readyRunsQuery,
 	requireId,
+	runInputRef,
 	runRef,
 	sessionRef,
 } from './tablesAccess';
 import { TablesError, toHttpsError } from './tablesErrors';
-
-/** Drops position mean/sd of a table with too few known positions to stay anonymous. */
-function suppressSmallTableStats(stats: TableAssignmentTableStats): TableAssignmentTableStats {
-	if (stats.n >= TABLE_STATS_MIN_KNOWN_POSITIONS) return stats;
-
-	return { ...stats, mean: [], sd: [] };
-}
 
 function parseSeed(value: unknown): number | undefined {
 	if (value === undefined) return undefined;
@@ -45,7 +38,8 @@ function parseSeed(value: unknown): number | undefined {
  * registrants and stores the result as a 'ready' TableAssignmentRun that the
  * host can look at before publishing. Older 'ready' runs become 'superseded'.
  * The inputHash lets tablesPublishRun detect that registrations, preferences
- * or settings moved on since this draft. The balance policy (tolerance as the
+ * or settings moved on since this draft; it lives apart from the run, because
+ * a hash over a handful of answers can be guessed by trying them all. The balance policy (tolerance as the
  * hard constraint, preferences maximised inside it) is the engine's; nothing
  * is re-implemented here.
  */
@@ -108,14 +102,8 @@ export async function computePreview(
 		sessionId,
 		seed: assignment.seed,
 		status: 'ready',
-		tables: assignment.tables.map((t) => ({
-			index: t.index,
-			topicId: t.topicId,
-			memberUids: t.memberIds,
-			stats: suppressSmallTableStats(t.stats),
-		})),
-		metrics: assignment.metrics,
-		inputHash,
+		...coarseRunFields(assignment),
+		inputHash: '',
 		createdAt: now,
 	};
 
@@ -129,6 +117,7 @@ export async function computePreview(
 			}
 		});
 		tx.set(runRef(firestore, runId), run);
+		tx.set(runInputRef(firestore, runId), { sessionId, inputHash });
 	});
 
 	return { runId };
