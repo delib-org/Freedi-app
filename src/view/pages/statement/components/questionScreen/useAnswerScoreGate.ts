@@ -78,12 +78,13 @@ function useScoreViewerFacts(question: Statement | undefined): ScoreViewerFacts 
  * The score guard for one answer. An unknown question fails closed, so an
  * answer whose parent has not loaded shows no score until it arrives.
  * `options.hasRated` overrides the rating read from the store, for a card
- * holding a rating the store has not caught up with yet.
+ * holding a rating the store has not caught up with yet. `options.isHost` adds
+ * what the caller knows about the viewer; the results-off rule still applies.
  */
 export function useAnswerScoreGate(
 	answer: Statement | undefined,
 	question?: Statement,
-	options?: { hasRated?: boolean },
+	options?: { hasRated?: boolean; isHost?: boolean },
 ): AnswerScoreGate {
 	const parentFromStore = useAppSelector(statementSelector(answer?.parentId));
 	const parent = question ?? parentFromStore;
@@ -109,6 +110,7 @@ export function useAnswerScoreGate(
 		});
 	const input: CanSeeScoreInput = {
 		...facts,
+		isHost: facts.isHost || options?.isHost === true,
 		isOwnAnswer: isOwnAnswerOf(answer, creator?.uid),
 		hasRated: hasRatedAnswer || hasVoted,
 	};
@@ -121,9 +123,13 @@ export function useAnswerScoreGate(
  * store alone: `useQuestionScreenData` also subscribes the viewer, and a shared
  * map must not turn an anonymous visitor into a member of the question.
  */
-export function useQuestionScoreAccess(question: Statement | undefined): QuestionScoreAccess {
+export function useQuestionScoreAccess(
+	question: Statement | undefined,
+	viewer?: { isHost?: boolean },
+): QuestionScoreAccess {
 	const statementId = question?.statementId;
-	const facts = useScoreViewerFacts(question);
+	const storeFacts = useScoreViewerFacts(question);
+	const facts = { ...storeFacts, isHost: storeFacts.isHost || viewer?.isHost === true };
 	const creator = useAppSelector(creatorSelector);
 	const optionsSelect = useMemo(() => statementOptionsSelector(statementId), [statementId]);
 	const options = useAppSelector(optionsSelect);

@@ -52,6 +52,8 @@ export interface IntegrateSuggestionsModalProps {
 	parentStatementId: string;
 	onClose: () => void;
 	onSuccess: (newStatementId: string) => void;
+	/** Off while the question's results are off for everyone. */
+	showScores: boolean;
 }
 
 /**
@@ -62,6 +64,8 @@ export interface SimilarGroupSelectorProps {
 	similarStatements: StatementWithEvaluation[];
 	selectedIds: string[];
 	onSelectionChange: (selectedIds: string[]) => void;
+	/** Off while the question's results are off for everyone. */
+	showScores: boolean;
 }
 
 /**

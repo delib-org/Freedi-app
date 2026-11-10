@@ -25,6 +25,7 @@ import Toggle from '@/view/components/atomic/atoms/Toggle/Toggle';
 import SynthesisProgressBar from './SynthesisProgressBar';
 import SelectiveOptionsList from './SelectiveOptionsList';
 import ThemeRebuildButton from './ThemeRebuildButton';
+import { isQuestionResultsOff } from '../../../questionScreen/canSeeScore';
 import styles from './SynthesisPanel.module.scss';
 
 interface Props {
@@ -777,6 +778,7 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 						disabled={busyOp !== null || dirty}
 						minEvaluators={settings.minEvaluators}
 						minConsensus={settings.minConsensus}
+						showScores={!isQuestionResultsOff(statement, Date.now())}
 						onResult={(result) => {
 							setToast({
 								tone: 'info',

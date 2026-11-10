@@ -28,15 +28,29 @@ export interface ResultsAccessInput {
 	stage: QuestionStageIndex;
 	/** Answers the viewer rated under this question. */
 	ratedCount: number;
-	/** `statementSettings.showEvaluation` — the host's "live results for participants". */
+	/** `statementSettings.showEvaluation`, the "Show live results" switch. */
 	showLiveResults: boolean;
 	isDeadlinePassed: boolean;
 }
 
 /**
- * - Hosts always read results.
- * - A decided question (stage 3) or one whose clock ran out is always readable.
- * - Live results switched off by the host → hidden for participants.
+ * Results are off and the question is not settled, so nobody reads agreement:
+ * not a participant, not an author, not a host. A settled question (Decided, or
+ * its deadline passed) always shows results, or one that closes with the switch
+ * off would never show them to anyone.
+ */
+export function areResultsOffForEveryone({
+	showLiveResults,
+	stage,
+	isDeadlinePassed,
+}: Pick<ResultsAccessInput, 'showLiveResults' | 'stage' | 'isDeadlinePassed'>): boolean {
+	return !showLiveResults && stage !== STAGE_DECIDED && !isDeadlinePassed;
+}
+
+/**
+ * - Results off on an unsettled question → hidden for everyone, hosts included.
+ * - Otherwise hosts read results, and a decided question (stage 3) or one whose
+ *   clock ran out is readable by anyone.
  * - Mid-flow (rating or voting) with nothing rated yet → rate first, so the
  *   viewer's own rating stays independent.
  * - Otherwise readable (including while still collecting).
@@ -48,11 +62,18 @@ export function getResultsAccess({
 	showLiveResults,
 	isDeadlinePassed,
 }: ResultsAccessInput): ResultsAccess {
+	if (areResultsOffForEveryone({ showLiveResults, stage, isDeadlinePassed })) {
+		return 'hidden-by-host';
+	}
 	if (isHost || stage === STAGE_DECIDED || isDeadlinePassed) return 'visible';
-	if (!showLiveResults) return 'hidden-by-host';
 	if (stage !== STAGE_COLLECTING && ratedCount === 0) return 'rate-first';
 
 	return 'visible';
+}
+
+/** The Results tab's note while results are off: a host is the one who can turn them on. */
+export function hiddenResultsNoticeKey(isHost: boolean): string {
+	return isHost ? 'question.resultsOffHostNotice' : 'Results are hidden. Evaluate independently.';
 }
 
 /** Answers that take part in results: visible, and not a pipeline cluster (syntheses count). */

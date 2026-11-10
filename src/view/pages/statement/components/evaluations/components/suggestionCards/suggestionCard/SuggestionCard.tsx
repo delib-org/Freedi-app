@@ -41,6 +41,7 @@ import YouTubeEmbed from './YouTubeEmbed';
 import { extractYouTubeVideo } from '@/helpers/youtubeLinks';
 import { useIsClamped } from './hasClampedContent';
 import { useAnswerScoreGate } from '../../../../questionScreen/useAnswerScoreGate';
+import { isQuestionResultsOff } from '../../../../questionScreen/canSeeScore';
 import { resolveCardMarks } from './cardMarks';
 
 interface Props {
@@ -549,6 +550,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 				<IntegrateSuggestionsModal
 					sourceStatementId={statement.statementId}
 					parentStatementId={parentStatement.statementId}
+					showScores={!isQuestionResultsOff(parentStatement, Date.now())}
 					onClose={() => setShowIntegrationModal(false)}
 					onSuccess={() => {
 						setShowIntegrationModal(false);

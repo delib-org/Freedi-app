@@ -11,8 +11,8 @@ export interface ResultsUnlockedInput {
 
 /**
  * Whether the score may be shown on an evaluation card now.
- * Participants keep the reveal-after-rating rule; admins of the space
- * always see the score. `canSeeScore` applies the rest of the rule.
+ * Participants keep the reveal-after-rating rule; admins of the space skip
+ * it. `canSeeScore` applies the rest, including results off for everyone.
  */
 export function areResultsUnlocked({
 	isCard,

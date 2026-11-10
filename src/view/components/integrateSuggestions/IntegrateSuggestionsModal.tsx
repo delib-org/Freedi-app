@@ -59,6 +59,7 @@ const IntegrateSuggestionsModal: FC<IntegrateSuggestionsModalProps> = ({
 	parentStatementId,
 	onClose,
 	onSuccess,
+	showScores,
 }) => {
 	const { t } = useTranslation();
 	const [step, setStep] = useState<IntegrationStep>('loading');
@@ -312,6 +313,7 @@ const IntegrateSuggestionsModal: FC<IntegrateSuggestionsModalProps> = ({
 							similarStatements={similarStatements}
 							selectedIds={selectedIds}
 							onSelectionChange={handleSelectionChange}
+							showScores={showScores}
 						/>
 					)}
 

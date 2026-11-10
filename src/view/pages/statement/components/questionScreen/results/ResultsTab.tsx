@@ -7,7 +7,12 @@ import { fullyLoadedScopeSelector } from '@/redux/statements/statementsSlice';
 import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
 import QuestionProcess from '@/view/components/atomic/organisms/ThinkingSpace/QuestionProcess';
 import { STAGE_COLLECTING, STAGE_DECIDED } from '@/helpers/questionStage';
-import { rankAnswers, resultsRuleCaption, selectLeadingAnswers } from '../resultsLogic';
+import {
+	hiddenResultsNoticeKey,
+	rankAnswers,
+	resultsRuleCaption,
+	selectLeadingAnswers,
+} from '../resultsLogic';
 import { getScoreAccess, questionScoreInput } from '../canSeeScore';
 import type { QuestionScreenData } from '../useQuestionScreenData';
 import GroupProgress from '../GroupProgress';
@@ -103,7 +108,7 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 
 			{access === 'hidden-by-host' && (
 				<p className={styles.notice} role="note">
-					{t('Results are hidden. Evaluate independently.')}
+					{t(hiddenResultsNoticeKey(data.isHost))}
 				</p>
 			)}
 

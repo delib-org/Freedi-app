@@ -27,7 +27,10 @@ import OtherIdeasSection from './OtherIdeasSection';
 import styles from './Agreement.module.scss';
 import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
 import { useQuestionScoreAccess } from '@/view/pages/statement/components/questionScreen/useAnswerScoreGate';
-import { isOwnAnswerOf } from '@/view/pages/statement/components/questionScreen/canSeeScore';
+import {
+	canSeeScore,
+	isOwnAnswerOf,
+} from '@/view/pages/statement/components/questionScreen/canSeeScore';
 
 /** Views AgreementHub still renders full-width: the covenant (under Results) and themes (under Maps). */
 export const AGREEMENT_VIEWS = ['covenant', 'themes'];
@@ -70,7 +73,7 @@ export default function AgreementHub({
 		[statement.statementId],
 	);
 	const otherIdeas = useSelector(otherIdeasSelector);
-	const { canSee: showResults } = useQuestionScoreAccess(statement);
+	const { canSee: showResults, facts: scoreFacts } = useQuestionScoreAccess(statement);
 	const { isAutoLoading } = useAutoLoadAllForSort(
 		compact || !['overview', 'themes'].includes(view) ? undefined : statement.statementId,
 		SortType.accepted,
@@ -101,7 +104,14 @@ export default function AgreementHub({
 	);
 	const parent = all.find((p) => p.statementId === statement.parentId);
 	const evidence = (p: Statement): React.ReactNode => {
-		if (!showResults && !isOwnAnswerOf(p, authorization.creator?.uid))
+		const canSeeEvidence =
+			showResults ||
+			canSeeScore({
+				...scoreFacts,
+				isOwnAnswer: isOwnAnswerOf(p, authorization.creator?.uid),
+				hasRated: false,
+			});
+		if (!canSeeEvidence)
 			return (
 				<p className={styles.journey__muted}>{t('Results are hidden. Evaluate independently.')}</p>
 			);
