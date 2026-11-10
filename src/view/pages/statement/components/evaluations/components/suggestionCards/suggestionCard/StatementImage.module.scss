@@ -69,6 +69,7 @@
 // (position: relative, overflow hidden, rounded) clips its corners and reserves
 // the width through --card-photo-width. The button opens the photo in the
 // lightbox; the column is at least 5.5rem wide, so it is a generous tap target.
+// An admin's picture sits inside UploadImage, whose `cover` variant fills this box.
 .imageContainer.thumb {
   --statement-image-max-height: none;
 
@@ -82,9 +83,7 @@
   border-radius: 0;
 
   .enlargeBtn,
-  .picture,
-  label,
-  img {
+  .picture {
     inline-size: 100%;
     block-size: 100%;
     max-width: none;
@@ -93,8 +92,7 @@
     border-radius: 0;
   }
 
-  .picture,
-  img {
+  .picture {
     object-fit: cover;
   }
 
@@ -125,8 +123,9 @@
         position: absolute;
         inset-block-start: 0;
         inset-inline-end: 0;
-        inline-size: 2.75rem;
-        block-size: 2.75rem;
+        // px, not rem: the root font size is user-set and 2.75rem can fall short of 44px.
+        inline-size: 44px;
+        block-size: 44px;
       }
     }
   }

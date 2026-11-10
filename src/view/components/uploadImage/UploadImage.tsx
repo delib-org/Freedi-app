@@ -5,7 +5,14 @@ import { Statement } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 
-type SizeVariant = 'default' | 'compact' | 'inline';
+type SizeVariant = 'default' | 'compact' | 'inline' | 'cover';
+
+const VARIANT_CLASSES: Record<SizeVariant, string> = {
+	default: '',
+	compact: styles.compact,
+	inline: styles.inline,
+	cover: styles.cover,
+};
 
 interface Props {
 	readonly statement: Statement | undefined;
@@ -92,12 +99,9 @@ export default function UploadImage({
 		}
 	};
 
-	const variantClass =
-		variant === 'inline' ? styles.inline : variant === 'compact' ? styles.compact : '';
-
 	return (
 		<label
-			className={`${styles.dropZone} ${variantClass} ${isDragging ? styles.dropZoneActive : ''} ${!isAdmin ? styles.disabled : ''}`}
+			className={`${styles.dropZone} ${VARIANT_CLASSES[variant]} ${isDragging ? styles.dropZoneActive : ''} ${!isAdmin ? styles.disabled : ''}`}
 			style={{
 				border: image === '' ? '2px dashed #ccc' : 'none',
 				cursor: !isAdmin ? 'default' : 'pointer',
