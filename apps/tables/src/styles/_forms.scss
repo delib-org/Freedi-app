@@ -1,4 +1,4 @@
-// Buttons and form fields (Join-family look, 48px tap targets).
+// Buttons and form fields (WizCol look, 48px tap targets).
 
 .btn {
   display: inline-flex;
@@ -20,9 +20,43 @@
     cursor: not-allowed;
   }
 
+  // The full-width button that ends a screen. A disabled one stays readable and says why.
+  &--cta {
+    inline-size: 100%;
+    min-block-size: var(--cta-height);
+    border-radius: var(--radius-cta);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+
+    &:disabled {
+      border-color: transparent;
+      background: var(--disabled-bg);
+      color: var(--disabled-ink);
+      opacity: 1;
+    }
+  }
+
   &--primary {
     background: var(--brand);
     color: var(--brand-ink);
+  }
+
+  // The way out beside the main button.
+  &--outline {
+    border: var(--hairline) solid var(--border-medium);
+    background: var(--card);
+    color: var(--ink);
+  }
+
+  &--soft {
+    background: var(--brand-soft);
+    color: var(--brand-strong);
+  }
+
+  &--text {
+    background: transparent;
+    color: var(--ink);
+    text-decoration: underline;
   }
 
   &--secondary {
@@ -56,19 +90,31 @@
     inline-size: 100%;
     min-block-size: var(--tap-target);
     padding: var(--space-sm) var(--space-md);
-    border: 1px solid var(--border-medium);
+    border: var(--hairline) solid var(--border-medium);
     border-radius: var(--radius-sm);
     background: var(--card);
     color: var(--ink);
     font: inherit;
+
+    &--large {
+      min-block-size: var(--cta-height);
+      border: 1.5px solid var(--ink);
+      border-radius: var(--radius-field);
+      font-size: var(--font-size-lg);
+    }
 
     &[aria-invalid='true'] {
       border-color: var(--danger);
     }
   }
 
+  &__label--small {
+    font-size: var(--font-size-note);
+  }
+
   &__hint {
     color: var(--ink-muted);
+    font-size: var(--font-size-sm);
   }
 
   &__error {

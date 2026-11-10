@@ -3,11 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#1f5895" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fbfaf7" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b0f17" />
     <meta name="description" content="WizCol Tables: divide a crowd into balanced tables." />
     <title>WizCol Tables</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Rubik:wght@500;700&display=swap"
+    />
+    <!-- Same work as applyA11yPrefs in src/lib/a11yPrefs.ts, before the first paint. -->
+    <script>
+      (function () {
+        var root = document.documentElement;
+        var prefs = {};
+        try {
+          prefs = JSON.parse(localStorage.getItem('freedi_tables_a11y')) || {};
+        } catch (e) {}
+        var systemDark = matchMedia('(prefers-color-scheme: dark)').matches;
+        var dark = prefs.theme === 'dark' || (prefs.theme !== 'light' && systemDark);
+        root.dataset.theme = dark ? 'dark' : 'light';
+        root.dataset.contrast = prefs.contrast === true ? 'high' : 'normal';
+        if (typeof prefs.scale === 'number' && prefs.scale !== 100) {
+          root.style.fontSize = prefs.scale + '%';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>

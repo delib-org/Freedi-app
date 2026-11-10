@@ -1,0 +1,190 @@
+// The accessibility tool: a round trigger beside the logo and a popover panel.
+
+.a11y {
+  position: relative;
+  flex: none;
+
+  &__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--tap-target);
+    block-size: var(--tap-target);
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-full);
+    background: var(--brand);
+    color: var(--brand-ink);
+    cursor: pointer;
+  }
+
+  &__panel {
+    position: absolute;
+    z-index: var(--layer-popover);
+    inset-block-start: calc(100% + var(--space-sm));
+    inset-inline-start: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    inline-size: min(var(--panel-width), calc(100vw - 2 * var(--space-lg)));
+    max-block-size: calc(100dvh - 2 * var(--cta-height));
+    padding: var(--space-md);
+    overflow-y: auto;
+    border: var(--hairline) solid var(--paper-line);
+    border-radius: var(--radius-card);
+    background: var(--card);
+    box-shadow: var(--shadow-panel);
+    color: var(--ink);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--tap-target);
+    block-size: var(--tap-target);
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  &__label {
+    padding: 0;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &__segments {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-6);
+  }
+
+  &__segment {
+    min-block-size: var(--tap-target);
+    padding-inline: var(--space-xs);
+    border: var(--hairline) solid var(--border-medium);
+    border-radius: var(--radius-segment);
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    cursor: pointer;
+
+    &--active {
+      border-color: var(--brand);
+      background: var(--brand);
+      color: var(--brand-ink);
+    }
+  }
+
+  &__switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-block-size: var(--tap-target);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  &__switch {
+    display: flex;
+    flex: none;
+    inline-size: 52px;
+    block-size: 30px;
+    padding: 3px;
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-full);
+
+    &--on {
+      justify-content: flex-end;
+      background: var(--brand);
+    }
+  }
+
+  &__knob {
+    inline-size: 20px;
+    block-size: 20px;
+    border-radius: var(--radius-full);
+    background: var(--ink);
+  }
+
+  &__switch--on &__knob {
+    background: var(--brand-ink);
+  }
+
+  &__stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+  }
+
+  &__step {
+    inline-size: var(--cta-height);
+    block-size: var(--tap-target);
+    border: var(--hairline) solid var(--border-medium);
+    border-radius: var(--radius-segment);
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-weight: var(--font-weight-bold);
+    cursor: pointer;
+
+    &--larger {
+      font-size: var(--font-size-xl);
+    }
+
+    &:disabled {
+      border-color: var(--disabled-bg);
+      color: var(--disabled-ink);
+      cursor: not-allowed;
+    }
+  }
+
+  &__value {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__reset {
+    min-block-size: var(--tap-target);
+    border: 0;
+    border-radius: var(--radius-segment);
+    background: var(--paper-soft);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--font-size-note);
+    font-weight: var(--font-weight-bold);
+    cursor: pointer;
+  }
+}

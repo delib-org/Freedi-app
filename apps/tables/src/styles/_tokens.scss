@@ -1,67 +1,218 @@
-// Design tokens for Tables. Definitions live here; components only use var(--token).
-// Palette and spacing follow the Join family (docs/guides/design-guide.md).
-// Contrast: every text/background pair below is >= 4.5:1 (WCAG AA).
+// Design tokens for Tables: the only file with colour values. Four variants: light
+// (:root), dark, high contrast, and both together. Each block sets every value it
+// changes, so a component only ever reads var(--token). Text pairs are >= 4.5:1 in all
+// four variants; __tests__/tokenContrast.test.ts holds them to it.
 
 :root {
+  color-scheme: light;
+
   // surfaces and text
-  --paper: #faf6ef;
-  --paper-soft: #f1e9dc;
-  --paper-line: #d6c8b0;
+  --paper: #fbfaf7;
+  --paper-soft: #f4f2ee;
+  --paper-line: #e7e3db;
   --card: #ffffff;
-  --ink: #1c1917;
-  --ink-muted: #4a433c;
-  --ink-soft: #6b6259;
-  --border-medium: #8a7a5e;
+  --ink: #263854;
+  --ink-muted: #65718a; // on paper and card only; on paper-soft use --ink
+  --border-medium: #65718a;
+  --hairline: 1px;
 
   // brand and states
-  --brand: #1f5895;
+  --brand: #0b66d6;
   --brand-ink: #ffffff;
-  --brand-soft: #e4edf7;
+  --brand-soft: #e3efff;
+  --brand-strong: #0a4a9c;
   --danger: #9a2a1e;
   --danger-soft: #fbe6e3;
-  --success: #1d6b53;
-  --success-soft: #e1f1ea;
-  --warning: #8a4a0a;
-  --warning-soft: #fbeedd;
+  --success: #0c7d36;
+  --success-ink: #ffffff;
+  --success-soft: #d9f2e2;
+  --success-strong: #0b5a2b;
+  --warning: #5a4200;
+  --warning-soft: #fce9a8;
+  --disabled-bg: #e7e3db;
+  --disabled-ink: #525d75;
 
-  // the two poles of the position axis (same hues as the classroom slider)
+  // the two poles of the host's position preview
   --side-a: #c14a25;
   --side-a-soft: #fbece4;
   --side-b: #4a3fa0;
   --side-b-soft: #e3e0f1;
-  --side-center: #6b6259;
+  --side-center: #65718a;
 
-  // spacing: 8-point grid
+  // the seats drawn around a table (decorative)
+  --seat-1: #c8443f;
+  --seat-2: #f2a93b;
+  --seat-3: #4fae4a;
+  --seat-4: #2f7de0;
+  --seat-5: #7a35d6;
+
+  // depth
+  --scrim: rgba(38, 56, 84, 0.55);
+  --shadow-sm: 0 2px 6px rgba(38, 56, 84, 0.08), 0 1px 2px rgba(38, 56, 84, 0.04);
+  --shadow-panel: 0 14px 36px rgba(11, 15, 23, 0.32);
+  --shadow-dialog: 0 18px 48px rgba(38, 56, 84, 0.35);
+  --shadow-drag: 0 10px 26px rgba(38, 56, 84, 0.28);
+
+  // spacing
   --space-xs: 4px;
+  --space-6: 6px;
   --space-sm: 8px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-14: 14px;
   --space-md: 16px;
+  --space-20: 20px;
   --space-lg: 24px;
   --space-xl: 32px;
   --padding: 1rem;
   --padding-large: 2rem;
 
-  // shape and depth
+  // shape
   --radius-sm: 8px;
+  --radius-segment: 10px;
   --radius: 12px;
+  --radius-field: 14px;
+  --radius-cta: 16px;
+  --radius-card: 18px;
+  --radius-dialog: 24px;
   --radius-full: 9999px;
-  --shadow-sm: 0 2px 6px rgba(28, 25, 23, 0.08), 0 1px 2px rgba(28, 25, 23, 0.04);
 
-  // type
+  // type: rem only, so the text-size setting scales all of it
+  --font-ui: 'Open Sans', 'Rubik', system-ui, sans-serif;
+  --font-display: 'Rubik', 'Open Sans', system-ui, sans-serif;
   --font-size-sm: 0.875rem;
+  --font-size-note: 0.9375rem;
   --font-size-base: 1rem;
+  --font-size-body: 1.0625rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.375rem;
+  --font-size-dialog: 1.625rem;
   --font-size-2xl: 1.75rem;
+  --font-size-page: 1.875rem;
+  --font-size-notice: 2rem;
+  --font-size-hero: 2.125rem;
   --font-size-display: 3.5rem;
   --font-weight-normal: 400;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
-  --line-height-normal: 1.55;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.55;
 
   // layout
   --content-width: 40rem;
   --content-width-wide: 64rem;
+  --content-width-phone: 30rem;
+  --panel-width: 19.125rem;
+  --dialog-width: 28rem;
   --tap-target: 48px;
+  --cta-height: 56px;
+  --logo-height: 52px;
+  --logo-height-large: 64px;
   --focus-ring: 3px solid var(--brand);
   --transition: 150ms ease;
+  --layer-popover: 20;
+  --layer-modal: 30;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --paper: #0b0f17;
+  --paper-soft: #1a2133;
+  --paper-line: #4a5876;
+  --card: #252f46;
+  --ink: #eef1f7;
+  --ink-muted: #a6afc2;
+  --border-medium: #a6afc2;
+
+  --brand: #8fbcf2;
+  --brand-ink: #0b0f17;
+  --brand-soft: #1f3a63;
+  --brand-strong: #cfe2ff;
+  --danger: #f2a7a7;
+  --danger-soft: #4a2b2f;
+  --success: #6ee29a;
+  --success-ink: #0b0f17;
+  --success-soft: #1d4436;
+  --success-strong: #c4f0db;
+  --warning: #fbe7a1;
+  --warning-soft: #473a12;
+  --disabled-bg: #1a2133;
+  --disabled-ink: #a6afc2;
+
+  --side-a: #f7a25c;
+  --side-a-soft: #4a3020;
+  --side-b: #b9a8ff;
+  --side-b-soft: #352d5c;
+  --side-center: #a6afc2;
+
+  --scrim: rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.35);
+  --shadow-panel: 0 14px 36px rgba(0, 0, 0, 0.55);
+  --shadow-dialog: 0 18px 48px rgba(0, 0, 0, 0.55);
+  --shadow-drag: 0 10px 26px rgba(0, 0, 0, 0.55);
+}
+
+[data-contrast='high'] {
+  --paper: #ffffff;
+  --paper-soft: #f4f2ee;
+  --paper-line: #263854;
+  --card: #ffffff;
+  --ink: #263854;
+  --ink-muted: #263854;
+  --border-medium: #263854;
+  --hairline: 2px;
+
+  --brand: #0a4a9c;
+  --brand-ink: #ffffff;
+  --brand-soft: #e3efff;
+  --brand-strong: #0a4a9c;
+  --danger: #7f1d12;
+  --danger-soft: #fbe6e3;
+  --success: #0b5a2b;
+  --success-ink: #ffffff;
+  --success-soft: #d9f2e2;
+  --success-strong: #0b5a2b;
+  --warning: #5a4200;
+  --warning-soft: #fce9a8;
+  --disabled-bg: #f4f2ee;
+  --disabled-ink: #263854;
+
+  --side-a: #8f3414;
+  --side-a-soft: #fbece4;
+  --side-b: #3a2f88;
+  --side-b-soft: #e3e0f1;
+  --side-center: #263854;
+}
+
+[data-theme='dark'][data-contrast='high'] {
+  --paper: #000000;
+  --paper-soft: #141a2a;
+  --paper-line: #ffffff;
+  --card: #0b0f1a;
+  --ink: #ffffff;
+  --ink-muted: #ffffff;
+  --border-medium: #ffffff;
+
+  --brand: #ffffff;
+  --brand-ink: #000000;
+  --brand-soft: #141a2a;
+  --brand-strong: #ffffff;
+  --danger: #ffb4b4;
+  --danger-soft: #2a0f0f;
+  --success: #ffffff;
+  --success-ink: #000000;
+  --success-soft: #0f2a1c;
+  --success-strong: #ffffff;
+  --warning: #ffffff;
+  --warning-soft: #2a2208;
+  --disabled-bg: #141a2a;
+  --disabled-ink: #ffffff;
+
+  --side-a: #ffc9a3;
+  --side-a-soft: #2a170c;
+  --side-b: #d7ccff;
+  --side-b-soft: #1c1638;
+  --side-center: #ffffff;
 }
