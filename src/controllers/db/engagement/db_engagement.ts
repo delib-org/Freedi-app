@@ -20,9 +20,62 @@ import {
 } from '@/redux/engagement/engagementSlice';
 import { logError } from '@/utils/errorHandling';
 
+interface SharedEngagementListener {
+	unsubscribe: Unsubscribe;
+	holders: number;
+}
+
+/** One Firestore listener per user, however many screens ask for it. */
+const engagementListeners = new Map<string, SharedEngagementListener>();
+
+function startEngagementListener(userId: string): Unsubscribe {
+	store.dispatch(setEngagementLoading(true));
+
+	return onSnapshot(
+		doc(DB, Collections.userEngagement, userId),
+		(snapshot) => {
+			try {
+				if (snapshot.exists()) {
+					const data = snapshot.data();
+					const engagement: UserEngagement = {
+						...data,
+						createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt,
+						lastUpdate: data.lastUpdate?.toMillis ? data.lastUpdate.toMillis() : data.lastUpdate,
+						trialModeExpiresAt: data.trialModeExpiresAt?.toMillis
+							? data.trialModeExpiresAt.toMillis()
+							: data.trialModeExpiresAt,
+					} as UserEngagement;
+					store.dispatch(setUserEngagement(engagement));
+				} else {
+					// No engagement doc yet - user is new
+					store.dispatch(setUserEngagement(null));
+				}
+			} catch (error) {
+				logError(error, {
+					operation: 'engagement.db_engagement.listenToUserEngagement.snapshot',
+					userId,
+				});
+			}
+		},
+		(error: Error & { code?: string }) => {
+			if (error.code === 'permission-denied') {
+				store.dispatch(clearEngagement());
+
+				return;
+			}
+
+			logError(error, {
+				operation: 'engagement.db_engagement.listenToUserEngagement.error',
+				userId,
+			});
+		},
+	);
+}
+
 /**
- * Listen to the current user's engagement document.
- * Returns an unsubscribe function.
+ * Listen to the current user's engagement document. Joins the listener already
+ * running for this user, if any. Returns a release function; the Firestore
+ * listener stops when its last holder releases it.
  */
 export function listenToUserEngagement(): Unsubscribe {
 	try {
@@ -30,47 +83,24 @@ export function listenToUserEngagement(): Unsubscribe {
 
 		if (!user) throw new Error('User not found');
 
-		store.dispatch(setEngagementLoading(true));
+		const userId = user.uid;
+		const listener: SharedEngagementListener = engagementListeners.get(userId) ?? {
+			unsubscribe: startEngagementListener(userId),
+			holders: 0,
+		};
+		listener.holders += 1;
+		engagementListeners.set(userId, listener);
 
-		const engagementRef = doc(DB, Collections.userEngagement, user.uid);
+		let isReleased = false;
 
-		return onSnapshot(
-			engagementRef,
-			(snapshot) => {
-				try {
-					if (snapshot.exists()) {
-						const data = snapshot.data();
-						const engagement: UserEngagement = {
-							...data,
-							createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt,
-							lastUpdate: data.lastUpdate?.toMillis ? data.lastUpdate.toMillis() : data.lastUpdate,
-							trialModeExpiresAt: data.trialModeExpiresAt?.toMillis
-								? data.trialModeExpiresAt.toMillis()
-								: data.trialModeExpiresAt,
-						} as UserEngagement;
-						store.dispatch(setUserEngagement(engagement));
-					} else {
-						// No engagement doc yet - user is new
-						store.dispatch(setUserEngagement(null));
-					}
-				} catch (error) {
-					logError(error, {
-						operation: 'engagement.db_engagement.listenToUserEngagement.snapshot',
-					});
-				}
-			},
-			(error: Error & { code?: string }) => {
-				if (error.code === 'permission-denied') {
-					store.dispatch(clearEngagement());
-
-					return;
-				}
-
-				logError(error, {
-					operation: 'engagement.db_engagement.listenToUserEngagement.error',
-				});
-			},
-		);
+		return () => {
+			if (isReleased) return;
+			isReleased = true;
+			listener.holders -= 1;
+			if (listener.holders > 0) return;
+			engagementListeners.delete(userId);
+			listener.unsubscribe();
+		};
 	} catch (error) {
 		logError(error, {
 			operation: 'engagement.db_engagement.listenToUserEngagement',

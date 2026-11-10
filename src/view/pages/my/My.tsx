@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -7,6 +7,7 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { userEngagementSelector, userLevelSelector } from '@/redux/engagement/engagementSlice';
+import { listenToUserEngagement } from '@/controllers/db/engagement/db_engagement';
 import { setUserAdvanceUserToDB } from '@/controllers/db/user/setUser';
 import { logOut } from '@/controllers/db/authenticationUtils';
 import { logError } from '@/utils/errorHandling';
@@ -30,6 +31,14 @@ const My = () => {
 	const languageButtonRef = useRef<HTMLButtonElement>(null);
 	const isAdvancedUser = !!user?.advanceUser;
 	const Chevron = dir === 'rtl' ? ChevronLeft : ChevronRight;
+	const userId = user?.uid;
+
+	// Only Home and My Impact started this listener, so a direct load showed zeros.
+	useEffect(() => {
+		if (!userId) return;
+
+		return listenToUserEngagement();
+	}, [userId]);
 
 	const name = user?.displayName || t('Your profile');
 	const photo = selectedImage || user?.photoURL;
