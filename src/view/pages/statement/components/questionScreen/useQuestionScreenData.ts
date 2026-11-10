@@ -1,18 +1,26 @@
 import { createContext, useMemo } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
-import { Statement } from '@freedi/shared-types';
+import { EvaluationUI, Statement } from '@freedi/shared-types';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
-import { statementOptionsSelector } from '@/redux/statements/statementsSlice';
+import {
+	fullyLoadedScopeSelector,
+	statementOptionsSelector,
+	statementSubsSelector,
+} from '@/redux/statements/statementsSlice';
+import { CHAT } from '@/constants/common';
 import { evaluationsParentSelector } from '@/redux/evaluations/evaluationsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { parentVoteSelector } from '@/redux/vote/votesSlice';
+import { NO_VOTE } from '../vote/useOptimisticVotes';
 import {
 	canParticipantsAddAnswers,
 	getAddAnswerState,
 	isAddAnswerEnabled,
 	isHostRole,
 } from './questionScreenLogic';
-import { getQuestionStage, QuestionStageIndex, STAGE_DECIDED } from './questionStage';
-import { countRated, rankableAnswers } from './resultsLogic';
+import { getQuestionStage, QuestionStageIndex, STAGE_DECIDED } from '@/helpers/questionStage';
+import { areAnswersComplete, countRated, rankableAnswers } from './resultsLogic';
+import { isLiveResultsOn } from '@/helpers/liveResults';
 
 /**
  * True while the question screen's Answers tab is on screen. The screen then
@@ -32,11 +40,15 @@ export interface QuestionScreenData {
 	/** Answers the viewer can rate (not their own). */
 	rateableCount: number;
 	ratedCount: number;
+	/** False while the store may hold only part of the answers: the two counts are then partial. */
+	answersComplete: boolean;
 	isDeadlinePassed: boolean;
 	isHalted: boolean;
 	canRate: boolean;
 	showLiveResults: boolean;
 	canAddAnswer: boolean;
+	usesVotingUI: boolean;
+	hasVoted: boolean;
 }
 
 function isOwn(answer: Statement, userId: string | undefined): boolean {
@@ -53,8 +65,14 @@ export function useQuestionScreenData(statement: Statement | undefined): Questio
 
 	const optionsSelect = useMemo(() => statementOptionsSelector(statementId), [statementId]);
 	const options = useSelector(optionsSelect);
+	const subsSelect = useMemo(() => statementSubsSelector(statementId), [statementId]);
+	const loadedChildren = useSelector(subsSelect).length;
+	const fullyLoadedSelect = useMemo(() => fullyLoadedScopeSelector(statementId), [statementId]);
+	const isFullyLoaded = useSelector(fullyLoadedSelect) !== undefined;
 	const evaluationsSelect = useMemo(() => evaluationsParentSelector(statementId), [statementId]);
 	const evaluations = useSelector(evaluationsSelect, shallowEqual);
+	const voteSelect = useMemo(() => parentVoteSelector(statementId), [statementId]);
+	const votedOptionId = useSelector(voteSelect)?.statementId;
 
 	return useMemo(() => {
 		const answers = rankableAnswers(options);
@@ -83,17 +101,36 @@ export function useQuestionScreenData(statement: Statement | undefined): Questio
 			answers,
 			rateableCount: rateable.length,
 			ratedCount,
+			answersComplete: areAnswersComplete({
+				loadedAnswers: options.length,
+				loadedChildren,
+				numberOfOptions: statement?.numberOfOptions,
+				isFullyLoaded,
+				childrenWindow: CHAT.INITIAL_MESSAGES_LIMIT,
+			}),
 			isDeadlinePassed,
 			isHalted,
 			canRate:
 				statement?.statementSettings?.enableEvaluation !== false &&
 				!isHalted &&
 				stage !== STAGE_DECIDED,
-			showLiveResults: statement?.statementSettings?.showEvaluation === true,
+			showLiveResults: isLiveResultsOn(statement),
 			canAddAnswer:
 				isAddAnswerEnabled(addState) &&
 				stage !== STAGE_DECIDED &&
 				(isHost || authorization.isAuthorized),
+			usesVotingUI: statement?.evaluationSettings?.evaluationUI === EvaluationUI.voting,
+			hasVoted: votedOptionId !== undefined && votedOptionId !== NO_VOTE,
 		};
-	}, [options, evaluations, userId, statement, isHost, authorization.isAuthorized]);
+	}, [
+		options,
+		loadedChildren,
+		isFullyLoaded,
+		evaluations,
+		votedOptionId,
+		userId,
+		statement,
+		isHost,
+		authorization.isAuthorized,
+	]);
 }

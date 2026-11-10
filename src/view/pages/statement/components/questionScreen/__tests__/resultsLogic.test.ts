@@ -1,7 +1,8 @@
 import { CutoffBy, ResultsBy, Statement, StatementType } from '@freedi/shared-types';
 import {
 	countRated,
-	getRateHint,
+	areAnswersComplete,
+	getStageCue,
 	getResultsAccess,
 	rankAnswers,
 	resultsRuleCaption,
@@ -154,25 +155,257 @@ describe('resultsLogic', () => {
 		});
 	});
 
-	describe('rate hint', () => {
-		it.each([
-			[
-				{ canRate: false, stage: 0 as const, rated: 0, total: 3 },
-				'Still collecting ideas — rating opens later',
-			],
-			[{ canRate: false, stage: 3 as const, rated: 0, total: 3 }, 'Rating is closed'],
-			[
-				{ canRate: true, stage: 1 as const, rated: 0, total: 3 },
-				'Rate each answer on its own — what could you live with?',
-			],
-			[{ canRate: true, stage: 1 as const, rated: 1, total: 3 }, '{n} more to rate'],
-			[{ canRate: true, stage: 1 as const, rated: 3, total: 3 }, 'You rated them all. Thank you!'],
-		])('%o → %s', (input, key) => {
-			expect(getRateHint(input).key).toBe(key);
+	describe('getStageCue', () => {
+		const base = {
+			isHalted: false,
+			canRate: true,
+			canAddAnswer: true,
+			usesVotingUI: false,
+			hasVoted: false,
+			ratedCount: 0,
+			rateableCount: 4,
+			answersComplete: true,
+		};
+		type Ability = 'both' | 'add' | 'rate' | 'neither';
+		const ability = (who: Ability) => ({
+			canAddAnswer: who === 'both' || who === 'add',
+			canRate: who === 'both' || who === 'rate',
+		});
+		const progress = {
+			nothing: { ratedCount: 0, rateableCount: 0 },
+			none: { ratedCount: 0, rateableCount: 4 },
+			some: { ratedCount: 1, rateableCount: 4 },
+			all: { ratedCount: 4, rateableCount: 4 },
+		} as const;
+		type Progress = keyof typeof progress;
+
+		const table = (rows: Record<Ability, [string, string, string, string]>) =>
+			(Object.keys(rows) as Ability[]).flatMap((who) =>
+				(Object.keys(progress) as Progress[]).map(
+					(step, column) => [who, step, rows[who][column]] as const,
+				),
+			);
+
+		describe('Collecting', () => {
+			it.each(
+				table({
+					both: ['noneToRateAdd', 'addOrRate', 'moreToRateAdd', 'ratedAllAdd'],
+					add: ['addRatingLater', 'addRatingLater', 'addRatingLater', 'addRatingLater'],
+					rate: ['noneToRate', 'rateEach', 'moreToRate', 'ratedAll'],
+					neither: ['collectingRead', 'collectingRead', 'collectingRead', 'collectingRead'],
+				}),
+			)('%s / %s: %s', (who, step, name) => {
+				expect(getStageCue({ ...base, stage: 0, ...ability(who), ...progress[step] }).key).toBe(
+					`stageCue.${name}`,
+				);
+			});
 		});
 
-		it('carries the remaining count', () => {
-			expect(getRateHint({ canRate: true, stage: 1, rated: 1, total: 3 }).value).toBe('2');
+		describe('Rating', () => {
+			it.each(
+				table({
+					both: ['noneToRateAdd', 'rateEach', 'moreToRate', 'ratedAllAdd'],
+					add: ['ratingClosedAdd', 'ratingClosedAdd', 'ratingClosedAdd', 'ratingClosedAdd'],
+					rate: ['noneToRate', 'rateEach', 'moreToRate', 'ratedAll'],
+					neither: ['ratingClosedRead', 'ratingClosedRead', 'ratingClosedRead', 'ratingClosedRead'],
+				}),
+			)('%s / %s: %s', (who, step, name) => {
+				expect(getStageCue({ ...base, stage: 1, ...ability(who), ...progress[step] }).key).toBe(
+					`stageCue.${name}`,
+				);
+			});
+		});
+
+		describe('Voting', () => {
+			const voting = { ...base, stage: 2 as const, usesVotingUI: true };
+
+			it.each([
+				['both', 'noneToVoteAdd', 'voteOrAdd', 'votedAdd'],
+				['add', 'votingClosedAdd', 'votingClosedAdd', 'votingClosedAdd'],
+				['rate', 'noneToVote', 'voteOne', 'voted'],
+				['neither', 'votingClosedRead', 'votingClosedRead', 'votingClosedRead'],
+			] as const)('%s: %s / %s / %s', (who, nothing, notVoted, voted) => {
+				const can = ability(who);
+				expect(getStageCue({ ...voting, ...can, ...progress.nothing }).key).toBe(
+					`stageCue.${nothing}`,
+				);
+				expect(getStageCue({ ...voting, ...can }).key).toBe(`stageCue.${notVoted}`);
+				expect(getStageCue({ ...voting, ...can, hasVoted: true }).key).toBe(`stageCue.${voted}`);
+			});
+
+			it('progress is "has voted", never the rated count', () => {
+				expect(getStageCue({ ...voting, ...ability('rate'), ...progress.some }).key).toBe(
+					'stageCue.voteOne',
+				);
+			});
+
+			it("a vote on the only answer, the person's own, still reads as voted", () => {
+				expect(
+					getStageCue({ ...voting, ...ability('rate'), hasVoted: true, ...progress.nothing }).key,
+				).toBe('stageCue.voted');
+			});
+		});
+
+		describe('selection order', () => {
+			it('Decided wins over halted and over the voting UI', () => {
+				expect(getStageCue({ ...base, stage: 3, isHalted: true, usesVotingUI: true }).key).toBe(
+					'stageCue.over',
+				);
+			});
+
+			it('halted wins over every stage table', () => {
+				expect(getStageCue({ ...base, stage: 0, isHalted: true }).key).toBe('stageCue.closed');
+				expect(getStageCue({ ...base, stage: 2, isHalted: true, usesVotingUI: true }).key).toBe(
+					'stageCue.closed',
+				);
+			});
+
+			it('someone who can vote on a voting UI gets the voting table in any stage', () => {
+				expect(getStageCue({ ...base, stage: 1, usesVotingUI: true }).key).toBe(
+					'stageCue.voteOrAdd',
+				);
+			});
+
+			it('without the ability to vote, a voting UI falls back to the actual stage', () => {
+				expect(getStageCue({ ...base, stage: 1, usesVotingUI: true, ...ability('add') }).key).toBe(
+					'stageCue.ratingClosedAdd',
+				);
+			});
+		});
+
+		describe('with partly loaded answers', () => {
+			const partial = { ...base, answersComplete: false };
+
+			it.each([
+				['Collecting, nothing in the store', 0, 'both', 'nothing', 'addOrRate'],
+				['Collecting, some rated', 0, 'both', 'some', 'addOrRate'],
+				['Collecting, all loaded rated', 0, 'both', 'all', 'addOrRate'],
+				['Rating, nothing in the store', 1, 'both', 'nothing', 'rateEach'],
+				['Rating, some rated', 1, 'both', 'some', 'rateEach'],
+				['Rating, all loaded rated', 1, 'both', 'all', 'rateEach'],
+				['rate only, nothing in the store', 1, 'rate', 'nothing', 'rateEach'],
+				['rate only, all loaded rated', 0, 'rate', 'all', 'rateEach'],
+			] as const)('%s: general cue, no number', (_label, stage, who, step, name) => {
+				expect(getStageCue({ ...partial, stage, ...ability(who), ...progress[step] })).toEqual({
+					key: `stageCue.${name}`,
+				});
+			});
+
+			it('does not say there is nothing to vote on', () => {
+				const voting = { ...partial, stage: 2 as const, usesVotingUI: true, ...progress.nothing };
+				expect(getStageCue({ ...voting, ...ability('both') }).key).toBe('stageCue.voteOrAdd');
+				expect(getStageCue({ ...voting, ...ability('rate') }).key).toBe('stageCue.voteOne');
+			});
+
+			it('a vote is still known, whatever is loaded', () => {
+				expect(
+					getStageCue({
+						...partial,
+						stage: 2,
+						usesVotingUI: true,
+						hasVoted: true,
+						...ability('rate'),
+					}).key,
+				).toBe('stageCue.voted');
+			});
+
+			it('does not change the rows that do not depend on progress', () => {
+				expect(getStageCue({ ...partial, stage: 0, ...ability('add') }).key).toBe(
+					'stageCue.addRatingLater',
+				);
+				expect(getStageCue({ ...partial, stage: 1, ...ability('neither') }).key).toBe(
+					'stageCue.ratingClosedRead',
+				);
+			});
+		});
+
+		describe('areAnswersComplete', () => {
+			const coverage = {
+				loadedAnswers: 0,
+				loadedChildren: 0,
+				numberOfOptions: undefined,
+				isFullyLoaded: false,
+				childrenWindow: 30,
+			};
+
+			it('a counter of 0 with nothing loaded is complete', () => {
+				expect(areAnswersComplete({ ...coverage, numberOfOptions: 0 })).toBe(true);
+			});
+
+			it("every answer loaded is complete, also when they are the viewer's own", () => {
+				expect(
+					areAnswersComplete({
+						...coverage,
+						numberOfOptions: 2,
+						loadedAnswers: 2,
+						loadedChildren: 2,
+					}),
+				).toBe(true);
+			});
+
+			it('a counter above the loaded count is partial', () => {
+				expect(
+					areAnswersComplete({
+						...coverage,
+						numberOfOptions: 40,
+						loadedAnswers: 3,
+						loadedChildren: 30,
+					}),
+				).toBe(false);
+				expect(areAnswersComplete({ ...coverage, numberOfOptions: 5, loadedChildren: 30 })).toBe(
+					false,
+				);
+			});
+
+			it('a counter below the loaded count cannot be trusted', () => {
+				expect(
+					areAnswersComplete({
+						...coverage,
+						numberOfOptions: 2,
+						loadedAnswers: 9,
+						loadedChildren: 9,
+					}),
+				).toBe(false);
+			});
+
+			it('a fully loaded list is complete whatever the counter says', () => {
+				expect(
+					areAnswersComplete({
+						...coverage,
+						numberOfOptions: 40,
+						loadedAnswers: 38,
+						isFullyLoaded: true,
+					}),
+				).toBe(true);
+			});
+
+			describe('on a question without the counter', () => {
+				it('is complete when the window did not fill', () => {
+					expect(areAnswersComplete({ ...coverage, loadedChildren: 12, loadedAnswers: 4 })).toBe(
+						true,
+					);
+					expect(areAnswersComplete(coverage)).toBe(true);
+				});
+
+				it('is partial when the window filled, even with no answer loaded', () => {
+					expect(areAnswersComplete({ ...coverage, loadedChildren: 30 })).toBe(false);
+					expect(areAnswersComplete({ ...coverage, loadedChildren: 45, loadedAnswers: 45 })).toBe(
+						false,
+					);
+				});
+			});
+		});
+
+		it('counts what is left to rate, and only on the counting cues', () => {
+			expect(getStageCue({ ...base, stage: 1, ...progress.some })).toEqual({
+				key: 'stageCue.moreToRate',
+				value: '3',
+			});
+			expect(getStageCue({ ...base, stage: 0, ...progress.some })).toEqual({
+				key: 'stageCue.moreToRateAdd',
+				value: '3',
+			});
+			expect(getStageCue({ ...base, stage: 1 }).value).toBeUndefined();
 		});
 	});
 

@@ -33,6 +33,13 @@
 		text-overflow: ellipsis;
 	}
 
+	&__caption {
+		margin: var(--space-xs) 0 0;
+		font-size: var(--font-size-sm);
+		line-height: var(--line-height-snug);
+		color: var(--tone-lilac-ink);
+	}
+
 	&__stage--done &__bar {
 		background: var(--accent-violet);
 	}

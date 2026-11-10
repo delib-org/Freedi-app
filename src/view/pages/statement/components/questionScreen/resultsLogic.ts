@@ -1,11 +1,16 @@
 import { CutoffBy, ResultsSettings, Statement, defaultResultsSettings } from '@freedi/shared-types';
 import { getConsensusScore } from '@/redux/utils/selectorFactories';
-import { QuestionStageIndex, STAGE_COLLECTING, STAGE_DECIDED } from './questionStage';
+import {
+	QuestionStageIndex,
+	STAGE_COLLECTING,
+	STAGE_DECIDED,
+	STAGE_VOTING,
+} from '@/helpers/questionStage';
 
 /**
  * Pure decisions behind the Results tab and the answers counter: who may read
  * results right now, which answers count as "leading" under the question's own
- * results selection, and the one-line hint above the answers list.
+ * results selection, and the one-line cue under the stage bar.
  */
 
 export type ResultsAccess = 'visible' | 'rate-first' | 'hidden-by-host';
@@ -163,27 +168,140 @@ export function scorePercent(score: number): number {
 	return Math.round(((clamped + 1) / 2) * 100);
 }
 
-export interface RateHintInput {
-	canRate: boolean;
-	stage: QuestionStageIndex;
-	rated: number;
-	total: number;
+export interface AnswerCoverageInput {
+	/** Answers of this question in the store, hidden ones included. */
+	loadedAnswers: number;
+	/** Children of any type in the store: the listener's window counts these, not answers. */
+	loadedChildren: number;
+	/** Server counter. Missing on questions older than the counter. */
+	numberOfOptions: number | undefined;
+	isFullyLoaded: boolean;
+	/** How many children the question screen's first listener asks for. */
+	childrenWindow: number;
 }
 
-/** The hint beside the "{rated}/{total}" counter above the answers list. */
-export function getRateHint({ canRate, stage, rated, total }: RateHintInput): Caption {
-	if (!canRate) {
-		return {
-			key:
-				stage === STAGE_COLLECTING
-					? 'Still collecting ideas — rating opens later'
-					: 'Rating is closed',
-		};
-	}
-	if (rated === 0) return { key: 'Rate each answer on its own — what could you live with?' };
-	if (rated < total) return { key: '{n} more to rate', value: String(total - rated) };
+/**
+ * Whether the answers in the store are all the answers of the question, the
+ * only case where "none yet", "all rated" or a remaining count can be true.
+ * The store normally holds the newest children of any type, so a busy
+ * discussion can push every answer out of it.
+ *
+ * A counter that disagrees either way is treated as not known: below the loaded
+ * count it is provably stale, above it there are answers not loaded. Without a
+ * counter, a window that did not fill means nothing was left out.
+ */
+export function areAnswersComplete({
+	loadedAnswers,
+	loadedChildren,
+	numberOfOptions,
+	isFullyLoaded,
+	childrenWindow,
+}: AnswerCoverageInput): boolean {
+	if (isFullyLoaded) return true;
+	if (numberOfOptions === undefined) return loadedChildren < childrenWindow;
 
-	return { key: 'You rated them all. Thank you!' };
+	return loadedAnswers === numberOfOptions;
+}
+
+export interface StageCueInput {
+	stage: QuestionStageIndex;
+	/** Host halt, or the deadline passed. */
+	isHalted: boolean;
+	canRate: boolean;
+	canAddAnswer: boolean;
+	/** `evaluationUI === voting`: the question's answers are voted on, not rated. */
+	usesVotingUI: boolean;
+	hasVoted: boolean;
+	ratedCount: number;
+	rateableCount: number;
+	/** See `areAnswersComplete`: without it the counts say nothing about the whole question. */
+	answersComplete: boolean;
+}
+
+type RateProgress = 'nothing' | 'none' | 'some' | 'all';
+type RateRow = Readonly<Record<RateProgress, string>>;
+
+const COLLECTING_ADD_AND_RATE: RateRow = {
+	nothing: 'noneToRateAdd',
+	none: 'addOrRate',
+	some: 'moreToRateAdd',
+	all: 'ratedAllAdd',
+};
+const RATING_ADD_AND_RATE: RateRow = {
+	nothing: 'noneToRateAdd',
+	none: 'rateEach',
+	some: 'moreToRate',
+	all: 'ratedAllAdd',
+};
+const RATE_ONLY: RateRow = {
+	nothing: 'noneToRate',
+	none: 'rateEach',
+	some: 'moreToRate',
+	all: 'ratedAll',
+};
+
+/** Partly loaded answers read as "none": the row's general cue, with no number and no thanks. */
+function rateProgress(
+	ratedCount: number,
+	rateableCount: number,
+	answersComplete: boolean,
+): RateProgress {
+	if (!answersComplete) return 'none';
+	if (rateableCount === 0) return 'nothing';
+	if (ratedCount === 0) return 'none';
+
+	return ratedCount < rateableCount ? 'some' : 'all';
+}
+
+function votingCueName({
+	canRate,
+	canAddAnswer,
+	hasVoted,
+	rateableCount,
+	answersComplete,
+}: StageCueInput): string {
+	if (!canRate) return canAddAnswer ? 'votingClosedAdd' : 'votingClosedRead';
+	if (hasVoted) return canAddAnswer ? 'votedAdd' : 'voted';
+	if (answersComplete && rateableCount === 0) return canAddAnswer ? 'noneToVoteAdd' : 'noneToVote';
+
+	return canAddAnswer ? 'voteOrAdd' : 'voteOne';
+}
+
+function ratingCueName(input: StageCueInput): string {
+	const { stage, canRate, canAddAnswer, ratedCount, rateableCount, answersComplete } = input;
+	const isCollecting = stage === STAGE_COLLECTING;
+	if (!canRate) {
+		if (isCollecting) return canAddAnswer ? 'addRatingLater' : 'collectingRead';
+
+		return canAddAnswer ? 'ratingClosedAdd' : 'ratingClosedRead';
+	}
+	const collectingOrRating = isCollecting ? COLLECTING_ADD_AND_RATE : RATING_ADD_AND_RATE;
+
+	return (canAddAnswer ? collectingOrRating : RATE_ONLY)[
+		rateProgress(ratedCount, rateableCount, answersComplete)
+	];
+}
+
+/**
+ * The one line under the stage bar that says what to do now. Decided first,
+ * then a halted question, then the voting table for anyone who can vote on a
+ * voting UI, whatever the stage says, and otherwise the table of the actual stage.
+ */
+export function getStageCue(input: StageCueInput): Caption {
+	const { stage, isHalted, canRate, usesVotingUI, ratedCount, rateableCount } = input;
+	if (stage === STAGE_DECIDED) return { key: 'stageCue.over' };
+	if (isHalted) return { key: 'stageCue.closed' };
+
+	const name =
+		stage === STAGE_VOTING || (canRate && usesVotingUI)
+			? votingCueName(input)
+			: ratingCueName(input);
+	const isCounting = name === 'moreToRate' || name === 'moreToRateAdd';
+
+	return {
+		key: `stageCue.${name}`,
+		...(isCounting ? { value: String(rateableCount - ratedCount) } : {}),
+	};
 }
 
 /** How many of these answers the viewer rated (their own evaluation rows). */

@@ -8,18 +8,16 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { selectWaitingMemberByStatementId } from '@/redux/subscriptions/subscriptionsSlice';
-import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
+import { setStagePresetToDB } from '@/controllers/db/statements/setStagePreset';
 import { uxAnalytics } from '@/services/analytics';
 import { useStatementSettingsHandlers } from '../settings/useStatementSettingsHandlers';
 import { ALLOW_ADD_ANSWERS_KEYS } from '../settings/components/allowAddAnswers/AllowAddAnswersToggle';
 import { canParticipantsAddAnswers } from '../questionScreen/questionScreenLogic';
-import {
-	QuestionStageIndex,
-	STAGE_LABEL_KEYS,
-	STAGE_TO_STEP,
-} from '../questionScreen/questionStage';
+import { QuestionStageIndex, STAGE_LABEL_KEYS, STAGE_TO_STEP } from '@/helpers/questionStage';
+import { differsFromStagePreset } from '@/helpers/stagePreset';
 import { buildHostHubPath, HostHubSectionId } from './hostHubLogic';
 import styles from './HostHubSheet.module.scss';
+import { isLiveResultsOn } from '@/helpers/liveResults';
 
 interface HostHubSheetProps {
 	isOpen: boolean;
@@ -66,24 +64,32 @@ const HostHubSheet: FC<HostHubSheetProps> = ({
 			label: t('Participants can add answers'),
 			checked: canParticipantsAddAnswers(statement),
 		},
-		{ key: 'rating', label: t('Accepting ratings'), checked: settings?.enableEvaluation ?? true },
+		{
+			key: 'rating',
+			label: t('Participants can rate and vote'),
+			checked: settings?.enableEvaluation ?? true,
+		},
 		{
 			key: 'live',
-			label: t('Live results for participants'),
-			checked: settings?.showEvaluation ?? false,
+			label: t('Participants see live results'),
+			checked: isLiveResultsOn(statement),
 		},
 	];
 
+	async function savePreset(index: QuestionStageIndex, doneMessage: string) {
+		try {
+			await setStagePresetToDB(statement, index);
+			setStatus(doneMessage);
+		} catch {
+			// setStagePresetToDB already logged it with context.
+			setStatus(t('Could not save. Please try again.'));
+		}
+	}
+
 	function pickStage(index: QuestionStageIndex) {
-		const step = STAGE_TO_STEP[index];
-		uxAnalytics.settingChanged(statement.statementId, 'currentStep', step);
-		setStatementSettingToDB({
-			statement,
-			property: 'currentStep',
-			newValue: step,
-			settingsSection: 'questionSettings',
-		});
-		setStatus(
+		uxAnalytics.settingChanged(statement.statementId, 'currentStep', STAGE_TO_STEP[index]);
+		savePreset(
+			index,
 			t('The question moved to stage: {stage}').replace('{stage}', t(STAGE_LABEL_KEYS[index])),
 		);
 	}
@@ -143,6 +149,20 @@ const HostHubSheet: FC<HostHubSheetProps> = ({
 						</span>
 					</button>
 				))}
+
+				{differsFromStagePreset(statement, stage) && (
+					<div className={styles.hub__preset} data-testid="host-stage-differs">
+						<span>{t('host.stageDiffers')}</span>
+						<button
+							type="button"
+							className={styles.hub__presetAction}
+							onClick={() => savePreset(stage, t('host.stagePresetApplied'))}
+							data-testid="host-apply-stage-preset"
+						>
+							{t('host.applyStagePreset')}
+						</button>
+					</div>
+				)}
 
 				{ROWS.map((row) => (
 					<div key={row.section} className={styles.hub__row}>

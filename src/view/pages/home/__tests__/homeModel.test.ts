@@ -14,7 +14,6 @@ import {
 	formatQuestionMeta,
 	formatSpaceMeta,
 	HomeQuestion,
-	stageForStep,
 	toLastReply,
 	toneForIndex,
 } from '../homeModel';
@@ -26,10 +25,10 @@ const HE: Record<string, string> = {
 	'{n} open': '{n} פתוחות',
 	'All decided': 'הכול הוחלט',
 	'No questions yet': 'עדיין אין שאלות',
-	Collecting: 'אוספים',
-	Rating: 'מדרגים',
-	'Voting stage': 'מצביעים',
-	Decided: 'הוחלט',
+	'stage.collecting': 'אוספים',
+	'stage.rating': 'מדרגים',
+	'stage.voting': 'מצביעים',
+	'stage.decided': 'הוחלט',
 	Closed: 'נסגר',
 	'Closes {date}': 'נסגר {date}',
 };
@@ -76,24 +75,6 @@ describe('formatSpaceMeta — Hebrew number agreement', () => {
 	});
 });
 
-describe('stageForStep', () => {
-	it.each([
-		[QuestionStep.explanation, 'collecting'],
-		[QuestionStep.suggestion, 'collecting'],
-		[QuestionStep.randomEvaluation, 'rating'],
-		[QuestionStep.topEvaluation, 'rating'],
-		[QuestionStep.voting, 'voting'],
-		[QuestionStep.finished, 'decided'],
-	])('maps %s to %s', (step, stage) => {
-		expect(stageForStep(step)).toBe(stage);
-	});
-
-	it('leaves the stage out when there is no known step', () => {
-		expect(stageForStep(undefined)).toBeUndefined();
-		expect(stageForStep(QuestionStep.other)).toBeUndefined();
-	});
-});
-
 describe('toneForIndex', () => {
 	it('cycles lilac, mint, yellow', () => {
 		expect([0, 1, 2, 3].map(toneForIndex)).toEqual(['lilac', 'mint', 'yellow', 'lilac']);
@@ -121,7 +102,7 @@ describe('formatClosing / formatQuestionMeta', () => {
 			title: 'Q',
 			spaceTitle: 'ועד השכונה',
 			tone: 'mint',
-			stage: 'rating',
+			stage: 1,
 			hosting: false,
 		};
 		expect(formatQuestionMeta(question, now, 'he', t)).toBe('ועד השכונה · מדרגים');
@@ -209,10 +190,57 @@ describe('buildHomeModel', () => {
 			spaceId: 's1',
 			spaceTitle: 'Neighbours',
 			tone: 'lilac',
-			stage: 'rating',
+			stage: 1,
 			deadline: 42,
 		});
 		expect(model.questions[2]).toMatchObject({ tone: 'sunken', spaceId: undefined });
+	});
+
+	it('gives only questions a stage', () => {
+		expect(model.questions.find((q) => q.id === 'c1')?.stage).toBeUndefined();
+	});
+
+	describe('the stage of a question with no step set', () => {
+		const NOW = 1_000_000;
+		const stageOf = (question: Statement, statements: Statement[] = [question]) =>
+			buildHomeModel({ subscriptions: [sub(question)], statements, userId: 'u1', now: NOW })
+				.questions[0].stage;
+		const bare = (overrides: Partial<Statement> = {}) =>
+			statement({ statementId: 'bare', ...overrides });
+
+		it('is collecting while the question has no answers', () => {
+			expect(stageOf(bare())).toBe(0);
+		});
+
+		it('is rating once numberOfOptions counts answers', () => {
+			expect(stageOf(bare({ numberOfOptions: 2 }))).toBe(1);
+		});
+
+		it('falls back to answers in the store when the counter is missing', () => {
+			const question = bare();
+			const answer = statement({
+				statementId: 'a1',
+				parentId: 'bare',
+				statementType: StatementType.option,
+			});
+			expect(stageOf(question, [question, answer])).toBe(1);
+		});
+
+		it('is decided when its deadline passed, and then no longer counts as open', () => {
+			const question = bare({
+				parentId: 's1',
+				topParentId: 's1',
+				questionSettings: { deadline: NOW - 1 } as Statement['questionSettings'],
+			});
+			const built = buildHomeModel({
+				subscriptions: [sub(space), sub(question)],
+				statements: [question],
+				userId: 'u1',
+				now: NOW,
+			});
+			expect(built.questions[0].stage).toBe(3);
+			expect(built.spaces[0]).toMatchObject({ questionCount: 1, openCount: 0 });
+		});
 	});
 });
 

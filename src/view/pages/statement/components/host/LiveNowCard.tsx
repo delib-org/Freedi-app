@@ -19,6 +19,7 @@ import { defaultStatementSettings } from '../settings/emptyStatementModel';
 import advStyles from '../settings/components/advancedSettings/EnhancedAdvancedSettings.module.scss';
 import { buildHostHubPath } from './hostHubLogic';
 import styles from './HostHub.module.scss';
+import { isLiveResultsOn } from '@/helpers/liveResults';
 
 const SAVED_FLASH_MS = 1600;
 const toggleWrapClass = `${advStyles.enhancedSettings} ${advStyles.flatGroup}`;
@@ -44,6 +45,7 @@ const LiveNowCard: FC<LiveNowCardProps> = ({ statement: propStatement, compact =
 	const topParent = useAppSelector(statementSelector(statement.topParentId));
 	const presenterTarget = topParent ?? statement;
 	const settings = statement.statementSettings ?? defaultStatementSettings;
+	const liveResultsOn = isLiveResultsOn(statement);
 	const handlers = useStatementSettingsHandlers(statement);
 
 	const [showPin, setShowPin] = useState(false);
@@ -97,8 +99,8 @@ const LiveNowCard: FC<LiveNowCardProps> = ({ statement: propStatement, compact =
 	if (compact) {
 		const liveOn = [
 			presenterOn && t('host.presenterMode'),
-			(settings.enableEvaluation ?? true) && t('host.acceptingResponses'),
-			(settings.showEvaluation ?? false) && t('Show live results'),
+			(settings.enableEvaluation ?? true) && t('Participants can rate and vote'),
+			liveResultsOn && t('Participants see live results'),
 		].filter(Boolean) as string[];
 
 		return (
@@ -131,7 +133,7 @@ const LiveNowCard: FC<LiveNowCardProps> = ({ statement: propStatement, compact =
 							ariaLabel={t('host.presenterMode')}
 						/>
 						<Chip
-							label={t('host.acceptingResponses')}
+							label={t('Participants can rate and vote')}
 							icon={<Vote size={14} aria-hidden="true" />}
 							selected={settings.enableEvaluation ?? true}
 							onClick={() =>
@@ -139,10 +141,10 @@ const LiveNowCard: FC<LiveNowCardProps> = ({ statement: propStatement, compact =
 							}
 						/>
 						<Chip
-							label={t('Show live results')}
+							label={t('Participants see live results')}
 							icon={<PieChart size={14} aria-hidden="true" />}
-							selected={settings.showEvaluation ?? false}
-							onClick={() => toggleSetting('showEvaluation', !(settings.showEvaluation ?? false))}
+							selected={liveResultsOn}
+							onClick={() => toggleSetting('showEvaluation', !liveResultsOn)}
 						/>
 						<Chip
 							label={t('host.showPin')}
@@ -207,16 +209,16 @@ const LiveNowCard: FC<LiveNowCardProps> = ({ statement: propStatement, compact =
 				<ToggleSwitch
 					isChecked={settings.enableEvaluation ?? true}
 					onChange={(checked) => toggleSetting('enableEvaluation', checked)}
-					label={t('host.acceptingResponses')}
+					label={t('Participants can rate and vote')}
 					description={t('Off = participants can see but not rate or vote')}
 					icon={Vote}
 					data-testid="accepting-responses"
 				/>
 				<SavedFlash active={savedField === 'enableEvaluation'} />
 				<ToggleSwitch
-					isChecked={settings.showEvaluation ?? false}
+					isChecked={liveResultsOn}
 					onChange={(checked) => toggleSetting('showEvaluation', checked)}
-					label={t('Show live results')}
+					label={t('Participants see live results')}
 					description={t('Participants see scores while responding (may bias them)')}
 					icon={PieChart}
 					data-testid="live-results"

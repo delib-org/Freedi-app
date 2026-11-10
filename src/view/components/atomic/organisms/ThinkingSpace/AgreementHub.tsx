@@ -18,6 +18,7 @@ import { agreementCandidates, proposalEvidence } from './agreementData';
 import OtherIdeasSection from './OtherIdeasSection';
 import styles from './Agreement.module.scss';
 import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
+import { isLiveResultsOn } from '@/helpers/liveResults';
 
 /** Views AgreementHub still renders full-width: the covenant (under Results) and themes (under Maps). */
 export const AGREEMENT_VIEWS = ['covenant', 'themes'];
@@ -60,7 +61,7 @@ export default function AgreementHub({
 		[statement.statementId],
 	);
 	const otherIdeas = useSelector(otherIdeasSelector);
-	const showResults = statement.statementSettings?.showEvaluation === true;
+	const showResults = isLiveResultsOn(statement);
 	const { isAutoLoading } = useAutoLoadAllForSort(
 		compact || !['overview', 'themes'].includes(view) ? undefined : statement.statementId,
 		SortType.accepted,

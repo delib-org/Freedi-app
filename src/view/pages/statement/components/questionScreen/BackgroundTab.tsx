@@ -1,4 +1,5 @@
-import { FC, useRef } from 'react';
+import { FC, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router';
 import clsx from 'clsx';
 import { useSelector } from 'react-redux';
 import { Statement } from '@freedi/shared-types';
@@ -7,7 +8,8 @@ import { statementSelectorById } from '@/redux/statements/statementsSlice';
 import { formatTimeRemaining } from '@/helpers/deadlineHelpers';
 import StatementBody from '@/view/components/atomic/molecules/StatementBody/StatementBody';
 import StatementDescription from '@/view/components/atomic/molecules/StatementDescription/StatementDescription';
-import { STAGE_LABEL_KEYS } from './questionStage';
+import { STAGE_LABEL_KEYS } from '@/helpers/questionStage';
+import { HOW_IT_WORKS_ANCHOR } from './questionTabs';
 import type { QuestionScreenData } from './useQuestionScreenData';
 import styles from './QuestionScreen.module.scss';
 
@@ -31,11 +33,18 @@ interface BackgroundTabProps {
  */
 const BackgroundTab: FC<BackgroundTabProps> = ({ statement, data }) => {
 	const { t } = useTranslation();
+	const { hash } = useLocation();
 	const bodyRef = useRef<HTMLDivElement>(null);
+	const howRef = useRef<HTMLElement>(null);
 	const space = useSelector(statementSelectorById(statement.topParentId));
 	const hostName = statement.creator?.displayName;
 	const deadline = statement.questionSettings?.deadline;
 	const members = statement.numberOfMembers;
+
+	// Client-side navigation does not scroll to a hash by itself.
+	useEffect(() => {
+		if (hash === `#${HOW_IT_WORKS_ANCHOR}`) howRef.current?.scrollIntoView?.({ block: 'center' });
+	}, [hash]);
 
 	function handleEdit() {
 		const container = bodyRef.current;
@@ -78,7 +87,12 @@ const BackgroundTab: FC<BackgroundTabProps> = ({ statement, data }) => {
 				)}
 			</article>
 
-			<section className={styles.how} aria-labelledby="how-it-works-title">
+			<section
+				ref={howRef}
+				id={HOW_IT_WORKS_ANCHOR}
+				className={styles.how}
+				aria-labelledby="how-it-works-title"
+			>
 				<h2 id="how-it-works-title" className={styles.how__title}>
 					{t('How it works')}
 				</h2>

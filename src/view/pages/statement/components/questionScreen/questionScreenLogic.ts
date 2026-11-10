@@ -1,6 +1,7 @@
 import { EvaluationUI, Role, SortType, Statement, StatementType } from '@freedi/shared-types';
 import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
 import type { StatementView } from '@/routes/statementPaths';
+import { isLiveResultsOn } from '@/helpers/liveResults';
 
 /**
  * Pure decisions behind the question screen, kept out of the components so
@@ -139,7 +140,7 @@ const ALL_SORTS: SortChipDef[] = [
 
 /** Same filter the legacy bottom nav applied: no Agreement without live results, Joined replaces Updated when joining is on. */
 export function getSortChips(statement: Statement | undefined): SortChipDef[] {
-	const showEvaluation = statement?.statementSettings?.showEvaluation ?? true;
+	const showEvaluation = isLiveResultsOn(statement);
 	const joiningEnabled = statement?.statementSettings?.joiningEnabled ?? false;
 
 	return ALL_SORTS.filter((item) => {

@@ -49,7 +49,7 @@ interface InstantToggle {
 const ALL_INSTANT_TOGGLES: InstantToggle[] = [
 	{
 		key: 'enableEvaluation',
-		labelKey: 'Accepting responses',
+		labelKey: 'Participants can rate and vote',
 		descriptionKey: 'Off = participants can see but not rate or vote',
 		icon: Vote,
 		defaultValue: true,
@@ -63,7 +63,7 @@ const ALL_INSTANT_TOGGLES: InstantToggle[] = [
 	},
 	{
 		key: 'showEvaluation',
-		labelKey: 'Show live results',
+		labelKey: 'Participants see live results',
 		descriptionKey: 'Participants see scores while responding (may bias them)',
 		icon: PieChart,
 		defaultValue: false,

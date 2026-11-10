@@ -29,6 +29,7 @@ import {
 	resolveCurrentSort,
 } from './answerSorting';
 import styles from './QuestionScreen.module.scss';
+import { isLiveResultsOn } from '@/helpers/liveResults';
 
 const ICON_SIZE = 18;
 
@@ -69,13 +70,14 @@ const AnswerSortControl: FC<AnswerSortControlProps> = ({ statement, isHost }) =>
 	const children = useSelector(subsSelect);
 
 	const settings = statement.statementSettings;
+	const liveResultsOn = isLiveResultsOn(statement);
 	const sortOptions = useMemo(
 		() =>
 			getAnswerSortOptions({
-				showEvaluation: settings?.showEvaluation ?? true,
+				showEvaluation: liveResultsOn,
 				joiningEnabled: settings?.joiningEnabled ?? false,
 			}),
-		[settings?.showEvaluation, settings?.joiningEnabled],
+		[liveResultsOn, settings?.joiningEnabled],
 	);
 
 	if (!hasEnoughAnswersToSort(options.length, children.length)) return null;

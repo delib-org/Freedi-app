@@ -25,6 +25,7 @@ import { shouldShowResults, shouldShowRevealHint } from './resultsVisibility';
 import { ResultsStrip } from '@/view/components/atomic/molecules/ResultsStrip';
 import { EvaluationCircle, EvaluationCircleRow } from '../shared/EvaluationCircle';
 import { FaceIcon } from '@/view/components/atomic/atoms/FaceIcon';
+import { isLiveResultsOn } from '@/helpers/liveResults';
 
 export type EnhancedEvaluationVariant = 'default' | 'card';
 
@@ -58,7 +59,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 
 	// Get parent statement for settings
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
-	const showEvaluation = !!parentStatement?.statementSettings?.showEvaluation;
+	const showEvaluation = isLiveResultsOn(parentStatement);
 
 	// Cross-app evaluation mode: reactions (positive 0..1 emoji) or the default
 	// agree-disagree faces. Read from the same shared statementSettings.ratingMode.

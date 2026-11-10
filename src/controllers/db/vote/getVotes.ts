@@ -1,46 +1,25 @@
 import { collection, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { FireStore } from '../config';
-import {
-	Collections,
-	Statement,
-	StatementSchema,
-	getVoteId,
-	Vote,
-	VoteSchema,
-} from '@freedi/shared-types';
+import { Collections, getVoteId, Vote, VoteSchema } from '@freedi/shared-types';
 import { parse } from 'valibot';
-import { normalizeStatementData } from '@/helpers/timestampHelpers';
-import { createDocRef, createStatementRef } from '@/utils/firebaseUtils';
+import { createDocRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 
-// Why get user from firebase when we can pass it as a parameter?
-export async function getToVoteOnParent(
-	parentId: string | undefined,
-	userId: string,
-	updateStoreWithVoteCB: (statement: Statement) => void,
-): Promise<void> {
+/** The person's stored vote on one question, or undefined when there is none. One document read. */
+export async function getOwnVote(parentId: string, userId: string): Promise<Vote | undefined> {
 	try {
-		if (!parentId) throw new Error('ParentId not provided');
-		if (!parentId) throw new Error('ParentId not provided');
+		const voteDB = await getDoc(createDocRef(Collections.votes, getVoteId(userId, parentId)));
+		if (!voteDB.exists()) return undefined;
 
-		const voteId = getVoteId(userId, parentId);
-		if (!voteId) throw new Error('VoteId not found');
-
-		const parentVoteRef = createDocRef(Collections.votes, voteId);
-		const voteDB = await getDoc(parentVoteRef);
-
-		if (!voteDB.exists()) return null;
-		const vote = parse(VoteSchema, voteDB.data());
-
-		const statementRef = createStatementRef(vote.statementId);
-		const statementDB = await getDoc(statementRef);
-		const statement = parse(StatementSchema, normalizeStatementData(statementDB.data()));
-
-		updateStoreWithVoteCB(statement);
+		return parse(VoteSchema, voteDB.data());
 	} catch (error) {
-		logError(error, { operation: 'vote.getVotes.getToVoteOnParent' });
+		logError(error, {
+			operation: 'vote.getVotes.getOwnVote',
+			userId,
+			statementId: parentId,
+		});
 
-		return null;
+		return undefined;
 	}
 }
 

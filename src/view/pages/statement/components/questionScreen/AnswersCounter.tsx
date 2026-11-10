@@ -1,6 +1,5 @@
 import { FC } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { getRateHint } from './resultsLogic';
 import type { QuestionScreenData } from './useQuestionScreenData';
 import styles from './QuestionScreen.module.scss';
 
@@ -8,21 +7,13 @@ interface AnswersCounterProps {
 	data: QuestionScreenData;
 }
 
-/** "{hint} · {rated}/{total}" above the answers list. */
+/** "{rated}/{total}" above the answers list. The cue under the stage bar says what to do. */
 const AnswersCounter: FC<AnswersCounterProps> = ({ data }) => {
 	const { t } = useTranslation();
-	const hint = getRateHint({
-		canRate: data.canRate,
-		stage: data.stage,
-		rated: data.ratedCount,
-		total: data.rateableCount,
-	});
-	const hintText = hint.value ? t(hint.key).replace('{n}', hint.value) : t(hint.key);
 
 	return (
 		<div className={styles.counter} data-testid="answers-counter">
-			<span className={styles.counter__hint}>{hintText}</span>
-			{data.rateableCount > 0 && (
+			{data.answersComplete && data.rateableCount > 0 && (
 				<span
 					className={styles.counter__count}
 					aria-label={t('{rated} of {total} rated')
