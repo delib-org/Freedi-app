@@ -6,10 +6,11 @@ import { db } from './index';
 import { logError } from './utils/errorHandling';
 import { verifyAuthToken } from './utils/httpAuth';
 import { treeScopeQuery } from './services/statement-tree-query';
+import type { AccessLevel } from './utils/statementAccess';
 import {
 	authorizeTreeRead,
 	findPrivateGates,
-	findRefusedGates,
+	findRefusedStatements,
 	type PrivateGates,
 } from './utils/treeReadAccess';
 
@@ -91,17 +92,17 @@ async function readPage(
 	};
 }
 
-/** The shared body, less anything behind a private level this caller may not pass. */
-async function bodyForCaller(uid: string, page: BulkPage): Promise<string> {
-	const refused = await findRefusedGates(db, uid, page.gates);
+/** The shared body, less anything this caller may not see. */
+async function bodyForCaller(
+	uid: string,
+	page: BulkPage,
+	rootLevels: AccessLevel[],
+): Promise<string> {
+	const refused = await findRefusedStatements(db, uid, page.gates, rootLevels);
 	if (refused.size === 0) return page.body;
 
 	const parsed = JSON.parse(page.body) as { statements: Statement[] };
-	const statements = parsed.statements.filter((statement) => {
-		const gate = page.gates.get(statement.statementId);
-
-		return gate === undefined || !refused.has(gate);
-	});
+	const statements = parsed.statements.filter(({ statementId }) => !refused.has(statementId));
 
 	return JSON.stringify({ ...parsed, statements });
 }
@@ -157,7 +158,7 @@ export async function getBulkStatements(req: Request, res: Response): Promise<vo
 			setCached(cacheKey, page);
 		}
 
-		const body = access.seesEverything ? page.body : await bodyForCaller(uid, page);
+		const body = await bodyForCaller(uid, page, access.levels);
 		res.status(200).type('application/json').send(body);
 	} catch (error) {
 		logError(error, {

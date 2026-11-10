@@ -2,7 +2,7 @@
  * Who may read a tree through getBulkStatements. Runs the real handler, access
  * rules and response cache against the fake Firestore.
  */
-import type { Request, Response } from 'firebase-functions/v1';
+import type { Request } from 'firebase-functions/v1';
 
 jest.mock(
 	'firebase-admin/firestore',
@@ -21,110 +21,22 @@ jest.mock('../db', () => ({
 jest.mock('../utils/errorHandling', () => ({ logError: jest.fn() }));
 jest.mock('../utils/rateLimit', () => ({ passesHttpRateLimit: jest.fn() }));
 
-const mockCaller = jest.fn<Promise<string | null>, []>();
 jest.mock('../utils/httpAuth', () => ({
 	...jest.requireActual('../utils/httpAuth'),
-	verifyAuthToken: () => mockCaller(),
+	verifyAuthToken: async (req: Request) => req.headers['x-test-uid'],
 }));
 
-import { getBulkStatements } from '../fn_bulkStatements';
 import { resetFirestore, seed } from '../services/__tests__/helpers/fakeFirestore';
-
-const MEMBER = 'member';
-const OUTSIDER = 'outsider';
-
-interface PageBody {
-	ok: boolean;
-	statements?: Array<{ statementId: string }>;
-	nextCursor?: string | null;
-	error?: string;
-}
-
-interface Result {
-	status: number | undefined;
-	body: PageBody;
-	ids: string[];
-}
-
-let treeCounter = 0;
-
-/** A fresh id per tree, because both module-level caches outlive a test. */
-function newId(name: string): string {
-	treeCounter++;
-
-	return `${name}-${treeCounter}`;
-}
-
-function statement(id: string, data: Record<string, unknown>): void {
-	seed('statements', id, { statementId: id, lastUpdate: 1, ...data });
-}
-
-function role(uid: string, statementId: string, value: string): void {
-	seed('statementsSubscribe', `${uid}--${statementId}`, { userId: uid, statementId, role: value });
-}
-
-const withAccess = (access?: string) => (access ? { membership: { access } } : {});
-
-/** top (access given) -> q (access given) -> one answer with no setting of its own. */
-function tree(access: { top?: string; question?: string }): { top: string; q: string } {
-	const top = newId('top');
-	const q = newId('q');
-	statement(top, {
-		parentId: 'top',
-		parents: ['top'],
-		topParentId: top,
-		...withAccess(access.top),
-	});
-	statement(q, {
-		parentId: top,
-		parents: ['top', top],
-		topParentId: top,
-		...withAccess(access.question),
-	});
-	statement(`${q}-answer`, { parentId: q, parents: ['top', top, q], topParentId: top });
-
-	return { top, q };
-}
-
-async function load(
-	uid: string,
-	rootId: string,
-	mode: 'direct' | 'descendants' = 'direct',
-): Promise<Result> {
-	mockCaller.mockResolvedValue(uid);
-	const result: { status?: number; body?: unknown } = {};
-	const res = {
-		status(code: number) {
-			result.status = code;
-
-			return res;
-		},
-		type() {
-			return res;
-		},
-		json(body: unknown) {
-			result.body = body;
-
-			return res;
-		},
-		send(body: string) {
-			result.body = JSON.parse(body);
-
-			return res;
-		},
-	};
-	await getBulkStatements(
-		{ query: { rootId, mode }, headers: {} } as unknown as Request,
-		res as unknown as Response,
-	);
-	const body = result.body as PageBody;
-
-	return {
-		status: result.status,
-		body,
-		ids: (body.statements ?? []).map(({ statementId }) => statementId).sort(),
-	};
-}
+import {
+	MEMBER,
+	OUTSIDER,
+	load,
+	newId,
+	role,
+	statement,
+	tree,
+	withAccess,
+} from './helpers/bulkAccessHarness';
 
 beforeEach(() => {
 	resetFirestore();
@@ -381,31 +293,16 @@ describe('getBulkStatements access', () => {
 
 		it('finds the private level when it is not on the same page as the answer', async () => {
 			const { top, group, answer } = nested();
-			mockCaller.mockResolvedValue(OUTSIDER);
-			const result: { body?: string } = {};
-			const res = {
-				status: () => res,
-				type: () => res,
-				send(body: string) {
-					result.body = body;
-
-					return res;
-				},
-			};
-			// Page ids sort as: answer < open-top... < secret-group, so one doc per page splits them.
+			// Ids sort as answer < open-top < secret-group, so one doc per page splits them.
 			const seen: string[] = [];
 			let cursor: string | null = '';
 			while (cursor !== null) {
-				await getBulkStatements(
-					{
-						query: { rootId: top, mode: 'descendants', pageSize: '1', cursor },
-						headers: {},
-					} as unknown as Request,
-					res as unknown as Response,
-				);
-				const page = JSON.parse(result.body ?? '{}') as PageBody;
-				seen.push(...(page.statements ?? []).map(({ statementId }) => statementId));
-				cursor = page.nextCursor ?? null;
+				const page: Awaited<ReturnType<typeof load>> = await load(OUTSIDER, top, 'descendants', {
+					pageSize: '1',
+					cursor,
+				});
+				seen.push(...page.ids);
+				cursor = page.body.nextCursor ?? null;
 			}
 
 			expect(seen).toEqual([`${top}-open`]);

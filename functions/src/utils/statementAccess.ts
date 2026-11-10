@@ -79,11 +79,11 @@ export function isOpenAccess(access: string): boolean {
 	return OPEN_ACCESS.has(access);
 }
 
-export function isActiveRole(role: string | undefined): boolean {
+function isActiveRole(role: string | undefined): boolean {
 	return role !== undefined && ACTIVE_ROLES.has(role);
 }
 
-export function isHostRole(role: string | undefined): boolean {
+function isHostRole(role: string | undefined): boolean {
 	return role !== undefined && HOST_ROLES.has(role);
 }
 
