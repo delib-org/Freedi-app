@@ -247,7 +247,7 @@ const SingleLikeEvaluation: FC<Props> = ({
 			{shouldDisplayScore && (
 				<div className={styles.stats}>
 					<span className={styles.count}>
-						{likesCount} {likesCount === 1 ? 'like' : 'likes'}
+						{t('Likes')}: {likesCount}
 					</span>
 					{totalEvaluators > 0 && <span className={styles.percentage}>({likePercentage}%)</span>}
 				</div>
