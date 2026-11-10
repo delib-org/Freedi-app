@@ -15,9 +15,16 @@ export function summarizeParticipants(
 	};
 }
 
-/** Names only, in registration order. */
-export function participantNames(participants: readonly TableAssignmentRosterEntry[]): string[] {
-	return [...participants].sort((a, b) => a.registeredAt - b.registeredAt).map((p) => p.fullName);
+/** Name cards in registration order, those matching the search text only. */
+export function rosterMatching(
+	participants: readonly TableAssignmentRosterEntry[],
+	search: string,
+): TableAssignmentRosterEntry[] {
+	const needle = search.trim().toLowerCase();
+
+	return [...participants]
+		.sort((a, b) => a.registeredAt - b.registeredAt)
+		.filter((p) => p.fullName.toLowerCase().includes(needle));
 }
 
 /** uid -> display name, for printing tables. */

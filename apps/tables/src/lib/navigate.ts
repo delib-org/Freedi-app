@@ -9,3 +9,8 @@ export function goTo(path: string): void {
 export function replaceWith(path: string): void {
 	m.route.set(path, undefined, { replace: true });
 }
+
+/** Change the address only: the screen stays mounted, so whoever is typing keeps their focus. */
+export function rewriteAddress(path: string): void {
+	window.history.replaceState(window.history.state, '', path);
+}

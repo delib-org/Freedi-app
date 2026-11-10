@@ -32,6 +32,17 @@
   --disabled-bg: #e7e3db;
   --disabled-ink: #525d75;
 
+  // the host's summary panel and the choice bar of the preview
+  --summary-bg: #263854;
+  --summary-ink: #ffffff;
+  --summary-cta-bg: #ffffff;
+  --summary-cta-ink: #0a4a9c;
+  --choice-first: #0a4a9c;
+  --choice-second: #0b66d6;
+  --choice-third: #8fbcf2;
+  --choice-outside: #f2c94c;
+  --choice-none: #65718a;
+
   // the two poles of the host's position preview
   --side-a: #c14a25;
   --side-a-soft: #fbece4;
@@ -92,6 +103,11 @@
   --font-size-notice: 2rem;
   --font-size-hero: 2.125rem;
   --font-size-display: 3.5rem;
+  --font-size-count: 5.25rem;
+  --font-size-room-sm: 1.3125rem;
+  --font-size-room: 1.6875rem;
+  --font-size-room-lg: 2.125rem;
+  --font-size-room-title: 4.25rem;
   --font-weight-normal: 400;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
@@ -101,7 +117,7 @@
 
   // layout
   --content-width: 40rem;
-  --content-width-wide: 64rem;
+  --content-width-wide: 75rem;
   --content-width-phone: 30rem;
   --panel-width: 19.125rem;
   --dialog-width: 28rem;
@@ -109,6 +125,10 @@
   --cta-height: 56px;
   --logo-height: 52px;
   --logo-height-large: 64px;
+  --logo-height-room: 88px;
+  --qr-size: 13rem;
+  --qr-size-room: 27.5rem;
+  --room-number: 3.25rem;
   --focus-ring: 3px solid var(--brand);
   --transition: 150ms ease;
   --layer-popover: 20;
@@ -140,6 +160,16 @@
   --warning-soft: #473a12;
   --disabled-bg: #1a2133;
   --disabled-ink: #a6afc2;
+
+  --summary-bg: #1a2133;
+  --summary-ink: #eef1f7;
+  --summary-cta-bg: #8fbcf2;
+  --summary-cta-ink: #0b0f17;
+  --choice-first: #cfe2ff;
+  --choice-second: #8fbcf2;
+  --choice-third: #4f83c7;
+  --choice-outside: #fbe7a1;
+  --choice-none: #a6afc2;
 
   --side-a: #f7a25c;
   --side-a-soft: #4a3020;
@@ -179,6 +209,16 @@
   --disabled-bg: #f4f2ee;
   --disabled-ink: #263854;
 
+  --summary-bg: #263854;
+  --summary-ink: #ffffff;
+  --summary-cta-bg: #ffffff;
+  --summary-cta-ink: #0a4a9c;
+  --choice-first: #0a2a5c;
+  --choice-second: #0a4a9c;
+  --choice-third: #5f8fc9;
+  --choice-outside: #b98a00;
+  --choice-none: #263854;
+
   --side-a: #8f3414;
   --side-a-soft: #fbece4;
   --side-b: #3a2f88;
@@ -209,6 +249,16 @@
   --warning-soft: #2a2208;
   --disabled-bg: #141a2a;
   --disabled-ink: #ffffff;
+
+  --summary-bg: #141a2a;
+  --summary-ink: #ffffff;
+  --summary-cta-bg: #ffffff;
+  --summary-cta-ink: #000000;
+  --choice-first: #ffffff;
+  --choice-second: #cfe2ff;
+  --choice-third: #8fbcf2;
+  --choice-outside: #fbe7a1;
+  --choice-none: #a6afc2;
 
   --side-a: #ffc9a3;
   --side-a-soft: #2a170c;

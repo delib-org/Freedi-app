@@ -14,13 +14,9 @@ export interface RouteDef {
 
 export const ROUTES: readonly RouteDef[] = [
 	{ path: '/host', titleKey: 'tableAssignment.screen.hostList', role: 'host' },
-	{ path: '/host/sessions/:id', titleKey: 'tableAssignment.screen.hostHome', role: 'host' },
-	{ path: '/host/sessions/:id/topics', titleKey: 'tableAssignment.screen.topics', role: 'host' },
-	{
-		path: '/host/sessions/:id/settings',
-		titleKey: 'tableAssignment.screen.settings',
-		role: 'host',
-	},
+	{ path: '/host/new', titleKey: 'tableAssignment.setup.title', role: 'host' },
+	{ path: '/host/sessions/:id', titleKey: 'tableAssignment.session', role: 'host' },
+	{ path: '/host/sessions/:id/screen', titleKey: 'tableAssignment.roomScreen', role: 'host' },
 	{
 		path: '/host/sessions/:id/participants',
 		titleKey: 'tableAssignment.screen.participants',
@@ -45,7 +41,9 @@ export const ROUTES: readonly RouteDef[] = [
 		titleKey: 'tableAssignment.screen.myTable',
 		role: 'participant',
 	},
-	// Old links keep working: both land on the assignment link (IA section 5).
+	// Old links keep working (IA section 5): the host's land on the stage screen, the rest on the link.
+	{ path: '/host/sessions/:id/topics', titleKey: 'tableAssignment.session', role: 'host' },
+	{ path: '/host/sessions/:id/settings', titleKey: 'tableAssignment.session', role: 'host' },
 	{ path: '/sessions/:id/topics', titleKey: 'tableAssignment.session', role: 'participant' },
 	{
 		path: '/sessions/:id/topics/:topicId',

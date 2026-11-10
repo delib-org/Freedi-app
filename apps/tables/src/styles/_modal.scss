@@ -27,6 +27,27 @@
     color: var(--ink);
   }
 
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+  }
+
+  &__close {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--tap-target);
+    block-size: var(--tap-target);
+    border: 0;
+    border-radius: var(--radius-full);
+    background: var(--paper-soft);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
   &__title {
     margin: 0;
     font-family: var(--font-display);

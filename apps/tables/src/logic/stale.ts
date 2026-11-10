@@ -12,7 +12,7 @@ import type { TableAssignmentRun, TableAssignmentSettings } from '@freedi/shared
  *
  * Signals the browser can see without the server's hash:
  *  - the run was marked superseded;
- *  - the registrant count differs from the number of seated members;
+ *  - the people registered are not exactly the people seated;
  *  - the balance tolerance or table size in the settings no longer matches;
  *  - a table's topic is no longer in the topic list.
  * Anything subtler is caught by the server on publish (failed-precondition).
@@ -20,19 +20,25 @@ import type { TableAssignmentRun, TableAssignmentSettings } from '@freedi/shared
 export interface StaleInput {
 	run: Pick<TableAssignmentRun, 'status' | 'tables' | 'metrics'>;
 	settings: TableAssignmentSettings;
-	registeredCount: number;
+	registeredUids: readonly string[];
 	topicIds: readonly string[];
 }
 
 const TOLERANCE_EPSILON = 1e-9;
 
-export function seatedCount(tables: TableAssignmentRun['tables']): number {
-	return tables.reduce((sum, table) => sum + table.memberUids.length, 0);
+function seatedUids(tables: TableAssignmentRun['tables']): Set<string> {
+	return new Set(tables.flatMap((table) => table.memberUids));
 }
 
-export function isDraftStale({ run, settings, registeredCount, topicIds }: StaleInput): boolean {
+function isSameCrowd(tables: TableAssignmentRun['tables'], uids: readonly string[]): boolean {
+	const seated = seatedUids(tables);
+
+	return seated.size === new Set(uids).size && uids.every((uid) => seated.has(uid));
+}
+
+export function isDraftStale({ run, settings, registeredUids, topicIds }: StaleInput): boolean {
 	if (run.status === 'superseded') return true;
-	if (seatedCount(run.tables) !== registeredCount) return true;
+	if (!isSameCrowd(run.tables, registeredUids)) return true;
 
 	const tolerance = settings.balanceTolerance ?? TABLE_ASSIGNMENT_BALANCE_TOLERANCE_DEFAULT;
 

@@ -51,6 +51,8 @@ const PAIRS: ReadonlyArray<[string, string]> = [
 	['--success-strong', '--success-soft'],
 	['--warning', '--warning-soft'],
 	['--disabled-ink', '--disabled-bg'],
+	['--summary-ink', '--summary-bg'],
+	['--summary-cta-ink', '--summary-cta-bg'],
 	['--side-a', '--card'],
 	['--side-b', '--card'],
 ];
@@ -90,7 +92,9 @@ describe('colour values', () => {
 			'_my-table',
 			'_participant',
 			'_host',
-			'_side-slider',
+			'_setup',
+			'_preview',
+			'_room',
 		];
 
 		for (const file of files) {

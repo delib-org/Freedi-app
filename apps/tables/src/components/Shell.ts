@@ -21,6 +21,9 @@ export interface ShellAttrs {
 	/** What the bar says besides language: the step, or the gathering name. */
 	barLabel?: string;
 	largeLogo?: boolean;
+	/** A projector screen: the whole width, and its heading in the bar. */
+	room?: boolean;
+	barTitle?: string;
 }
 
 const LOGO_LIGHT = '/brand/wizcol-logo.webp';
@@ -47,7 +50,9 @@ function languageSwitch(): m.Vnode {
 
 export const Shell: m.Component<ShellAttrs> = {
 	view({ attrs, children }) {
-		return m('.shell', { class: attrs.phone ? 'shell--phone' : '' }, [
+		const variant = attrs.room ? 'shell--room' : attrs.phone ? 'shell--phone' : '';
+
+		return m('.shell', { class: variant }, [
 			m('header.shell__bar', [
 				m('.shell__brand', [
 					m(AccessibilityTool),
@@ -57,6 +62,7 @@ export const Shell: m.Component<ShellAttrs> = {
 						alt: BRAND_NAME,
 					}),
 				]),
+				attrs.barTitle ? m('h1.shell__bar-title', { dir: 'auto' }, attrs.barTitle) : null,
 				m('.shell__bar-end', [
 					attrs.barLabel ? m('span.shell__label', { dir: 'auto' }, attrs.barLabel) : null,
 					languageSwitch(),

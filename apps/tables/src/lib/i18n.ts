@@ -100,11 +100,23 @@ export function t(key: string, params?: Record<string, string | number>): string
 	return text;
 }
 
-/** Translate a counted sentence: picks `${base}.${form}` by the current language's plural rules. */
-export function tPlural(base: string, count: number): string {
-	const form = new Intl.PluralRules(currentLang).select(count);
+function hasKey(key: string): boolean {
+	return translations[currentLang]?.[key] !== undefined;
+}
 
-	return t(`${base}.${form}`, { count });
+/**
+ * Translate a counted sentence: picks `${base}.${form}` by the current language's plural
+ * rules, or `.other` for a form the sentence does not need (Arabic zero, say).
+ */
+export function tPlural(
+	base: string,
+	count: number,
+	params: Record<string, string | number> = {},
+): string {
+	const form = new Intl.PluralRules(currentLang).select(count);
+	const key = hasKey(`${base}.${form}`) ? `${base}.${form}` : `${base}.other`;
+
+	return t(key, { count, ...params });
 }
 
 export function getAvailableLanguages(): Array<{ code: LangCode; name: string }> {

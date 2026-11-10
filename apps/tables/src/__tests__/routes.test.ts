@@ -14,9 +14,11 @@ const SAMPLE_ID = 'abc123';
 
 const CONCRETE_PATHS: ReadonlyArray<[string, string]> = [
 	['/host', 'tableAssignment.screen.hostList'],
-	[`/host/sessions/${SAMPLE_ID}`, 'tableAssignment.screen.hostHome'],
-	[`/host/sessions/${SAMPLE_ID}/topics`, 'tableAssignment.screen.topics'],
-	[`/host/sessions/${SAMPLE_ID}/settings`, 'tableAssignment.screen.settings'],
+	['/host/new', 'tableAssignment.setup.title'],
+	[`/host/sessions/${SAMPLE_ID}`, 'tableAssignment.session'],
+	[`/host/sessions/${SAMPLE_ID}/screen`, 'tableAssignment.roomScreen'],
+	[`/host/sessions/${SAMPLE_ID}/topics`, 'tableAssignment.session'],
+	[`/host/sessions/${SAMPLE_ID}/settings`, 'tableAssignment.session'],
 	[`/host/sessions/${SAMPLE_ID}/participants`, 'tableAssignment.screen.participants'],
 	[`/host/sessions/${SAMPLE_ID}/preview`, 'tableAssignment.screen.preview'],
 	[`/host/sessions/${SAMPLE_ID}/assignment`, 'tableAssignment.screen.assignment'],

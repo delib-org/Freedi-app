@@ -11,7 +11,11 @@ export function hostHomePath(sessionId: string): string {
 	return `/host/sessions/${encodeURIComponent(sessionId)}`;
 }
 
-export type HostSubScreen = 'topics' | 'settings' | 'participants' | 'preview' | 'assignment';
+export function hostNewPath(): string {
+	return '/host/new';
+}
+
+export type HostSubScreen = 'participants' | 'preview' | 'assignment' | 'screen';
 
 export function hostScreenPath(sessionId: string, screen: HostSubScreen): string {
 	return `${hostHomePath(sessionId)}/${screen}`;

@@ -1,5 +1,13 @@
 // @vitest-environment jsdom
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import m from 'mithril';
+import { describe, expect, it, vi } from 'vitest';
+import en from '@/lib/locales/en';
+import { HostAssignment } from '@/views/host/HostAssignment';
+import { HostHome } from '@/views/host/HostHome';
+import { HostList } from '@/views/host/HostList';
+import { HostParticipants } from '@/views/host/HostParticipants';
+import { HostPreview } from '@/views/host/HostPreview';
+import { RoomScreen } from '@/views/room/RoomScreen';
 import {
 	HOST_UID,
 	NOW,
@@ -9,92 +17,41 @@ import {
 	makeSession,
 	makeTopic,
 } from '../fixtures';
-import { emptyStore, renderScreen, unmountAll } from './testHarness';
-import type { FakeStore } from './testHarness';
-
-const hoisted = vi.hoisted(() => ({ store: { current: null as unknown as FakeStore } }));
+import { renderScreen } from './testHarness';
+import { ID, buttonByText, buttonsByText, mocks, settle, useHostScreens } from './hostMocks';
 
 vi.mock('@/lib/firebase', () => ({ app: {}, auth: {}, db: {}, functions: {} }));
-vi.mock('@/lib/tableAssignment/client', () => ({ tablesApi: {} }));
-vi.mock('qrcode', () => ({ default: { toDataURL: async () => 'data:image/png;base64,AA' } }));
-vi.mock('@/lib/hostAuth', () => ({
-	hostAuth: { status: 'signedIn', user: { uid: 'host-1' }, signInFailed: false },
-	startHostAuth: () => undefined,
-	signInHost: async () => undefined,
+vi.mock('@/lib/tableAssignment/client', async () => ({
+	tablesApi: (await import('./hostMocks')).mocks.api,
 }));
-vi.mock('@/lib/tableAssignment/data', () => {
-	type Sub<T> = (
-		onData: (data: T) => void,
-		onError: (error: { code: string }) => void,
-	) => () => void;
+vi.mock('qrcode', () => ({ default: { toDataURL: async () => 'data:image/png;base64,AA' } }));
+vi.mock('@/lib/hostAuth', async () => (await import('./hostMocks')).fakeHostAuth);
+vi.mock('@/lib/tableAssignment/data', async () => (await import('./hostMocks')).fakeData);
 
-	function sub<T>(read: (store: FakeStore) => T, topics = false): Sub<T> {
-		return (onData, onError) => {
-			const store = hoisted.store.current;
-			const code = (topics ? store.failTopicsWith : null) ?? store.failWith;
-
-			if (code) onError({ code });
-			else onData(read(store));
-
-			return () => undefined;
-		};
-	}
-
-	return {
-		subscribeHostSessions: () => sub((s) => s.hostSessions),
-		subscribeSession: () => sub((s) => s.session),
-		subscribeTopics: () => sub((s) => s.topics, true),
-		subscribeRoster: () => sub((s) => s.everyone),
-		subscribeMyParticipant: () => sub((s) => s.me),
-		subscribeRun: () => sub((s) => s.run),
-		subscribeRuns: () => sub((s) => s.runs),
-		fetchChosenOptions: async () => [],
-	};
-});
-
-import en from '@/lib/locales/en';
-import { initI18n } from '@/lib/i18n';
-import { HostAssignment } from '@/views/host/HostAssignment';
-import { HostHome } from '@/views/host/HostHome';
-import { HostList } from '@/views/host/HostList';
-import { HostParticipants } from '@/views/host/HostParticipants';
-import { HostPreview } from '@/views/host/HostPreview';
-import { HostSettings } from '@/views/host/HostSettings';
-import { HostTopics } from '@/views/host/HostTopics';
-
-const ID = { id: SESSION_ID };
-
-beforeAll(async () => {
-	window.localStorage.setItem('freedi_tables_lang', 'en');
-	await initI18n();
-});
-
-beforeEach(() => {
-	hoisted.store.current = emptyStore();
-	hoisted.store.current.session = makeSession();
-});
-
-afterEach(unmountAll);
+useHostScreens();
 
 describe('host list (/host)', () => {
-	it('shows the empty state with the create form', async () => {
+	it('offers the first assignment when there are none', async () => {
 		const { text } = await renderScreen(HostList, {});
 
 		expect(text).toContain(en['tableAssignment.list.empty']);
 		expect(text).toContain(en['tableAssignment.list.createFirst']);
 	});
 
-	it('lists sessions with their status chip', async () => {
-		hoisted.store.current.hostSessions = [makeSession({ status: 'registrationOpen' })];
+	it('lists active assignments before ended ones', async () => {
+		mocks.store.current.hostSessions = [
+			makeSession({ tableAssignmentId: 'old', title: 'Old one', status: 'ended' }),
+			makeSession({ tableAssignmentId: 'new', title: 'Live one', status: 'registrationOpen' }),
+		];
 
-		const { text } = await renderScreen(HostList, {});
+		const { root } = await renderScreen(HostList, {});
+		const titles = Array.from(root.querySelectorAll('.list__title')).map((el) => el.textContent);
 
-		expect(text).toContain('Town hall');
-		expect(text).toContain(en['tableAssignment.status.registrationOpen']);
+		expect(titles).toEqual(['Live one', 'Old one']);
 	});
 
 	it('shows the error state with retry when the list cannot load', async () => {
-		hoisted.store.current.failWith = 'unavailable';
+		mocks.store.current.failWith = 'unavailable';
 
 		const { text } = await renderScreen(HostList, {});
 
@@ -103,19 +60,9 @@ describe('host list (/host)', () => {
 	});
 });
 
-describe('host home', () => {
-	it('shows the one next action and the participant link', async () => {
-		const { text, root } = await renderScreen(HostHome, ID);
-
-		expect(text).toContain(en['tableAssignment.next.addTopics']);
-		expect(text).toContain(en['tableAssignment.home.participantLink']);
-		expect(root.querySelector<HTMLInputElement>('.share-link__input')?.value).toBe(
-			`https://tables.wizcol.com/sessions/${SESSION_ID}`,
-		);
-	});
-
+describe('the assignment, by status', () => {
 	it('is a no-permission screen for someone who is not the host', async () => {
-		hoisted.store.current.session = makeSession({ hostUid: 'someone-else' });
+		mocks.store.current.session = makeSession({ hostUid: 'someone-else' });
 
 		const { text } = await renderScreen(HostHome, ID);
 
@@ -124,15 +71,15 @@ describe('host home', () => {
 	});
 
 	it('is a no-permission screen when the read is denied', async () => {
-		hoisted.store.current.failWith = 'permission-denied';
+		mocks.store.current.failWith = 'permission-denied';
 
 		const { text } = await renderScreen(HostHome, ID);
 
 		expect(text).toContain(en['tableAssignment.state.denied']);
 	});
 
-	it('says so when the session does not exist', async () => {
-		hoisted.store.current.session = null;
+	it('says so when the assignment does not exist', async () => {
+		mocks.store.current.session = null;
 
 		const { text } = await renderScreen(HostHome, ID);
 
@@ -140,74 +87,80 @@ describe('host home', () => {
 	});
 });
 
-describe('host topics', () => {
-	it('shows the empty state and the import box', async () => {
-		const { text } = await renderScreen(HostTopics, ID);
-
-		expect(text).toContain(en['tableAssignment.topics.empty']);
-		expect(text).toContain(en['tableAssignment.import.title']);
-	});
-
-	it('lists topics with consensus and is locked after draft', async () => {
-		hoisted.store.current.session = makeSession({ status: 'registrationOpen' });
-		hoisted.store.current.topics = [makeTopic('a', 0, { consensus: 0.62 })];
-
-		const { text } = await renderScreen(HostTopics, ID);
-
-		expect(text).toContain('Topic a');
-		expect(text).toContain('Consensus 0.62');
-		expect(text).toContain(en['tableAssignment.topics.locked']);
-	});
-});
-
-describe('host settings', () => {
-	it('shows the mode, the plain balance explanation and the position question', async () => {
-		hoisted.store.current.session = makeSession({
-			settings: {
-				tableSize: 7,
-				balanceTolerance: 0.3,
-				positionQuestion: { label: 'Q', poleA: 'For', poleB: 'Against' },
-			},
-		});
-
-		const { text, root } = await renderScreen(HostSettings, ID);
-
-		expect(text).toContain(en['tableAssignment.mode.ranked']);
-		expect(text).toContain(en['tableAssignment.settings.toleranceHelp']);
-		expect(root.querySelector('.side-slider')).not.toBeNull();
-		expect(root.querySelector<HTMLInputElement>('input[type="number"]')?.value).toBe('7');
-	});
-});
-
 describe('host participants', () => {
-	it('shows counts and names, and no position or not-specified rows', async () => {
-		hoisted.store.current.session = makeSession({ status: 'registrationOpen' });
-		hoisted.store.current.everyone = [
+	beforeEach(() => {
+		mocks.store.current.session = makeSession({ status: 'registrationOpen' });
+		mocks.store.current.everyone = [
 			makeRosterEntry('u1', { hasPreferences: true }),
 			makeRosterEntry('u2'),
 		];
+	});
 
+	it('shows names and counts, and no position or not-specified rows', async () => {
 		const { text } = await renderScreen(HostParticipants, ID);
 
 		expect(text).toContain('Name u1');
-		expect(text).toContain(en['tableAssignment.control.registrationClosed']);
 		expect(text).toContain(en['tableAssignment.count.withPreferences']);
 		expect(text).not.toContain('With a position');
 		expect(text).not.toContain('Not specified');
 	});
 
-	it('shows the empty state with the link', async () => {
+	it('shows the empty state', async () => {
+		mocks.store.current.everyone = [];
+
 		const { text } = await renderScreen(HostParticipants, ID);
 
 		expect(text).toContain(en['tableAssignment.participants.empty']);
+	});
+
+	it('removes a person only after the confirmation', async () => {
+		const { root } = await renderScreen(HostParticipants, ID);
+
+		buttonsByText(root, en['tableAssignment.remove'])[0].click();
+		m.redraw.sync();
+		expect(mocks.api.removeParticipant).not.toHaveBeenCalled();
+		expect(root.textContent).toContain('Remove Name u1 from the list?');
+
+		buttonByText(root, en['tableAssignment.remove.confirm']).click();
+		await settle();
+
+		expect(mocks.api.removeParticipant).toHaveBeenCalledWith({
+			sessionId: SESSION_ID,
+			uid: 'u1',
+		});
+		expect(root.querySelector('.modal')).toBeNull();
+	});
+
+	it('gives the reason when the server refuses a seated person, and stays open', async () => {
+		mocks.api.removeParticipant.mockRejectedValue({
+			code: 'functions/failed-precondition',
+			details: { reason: 'seated-in-published-run' },
+		});
+		const { root } = await renderScreen(HostParticipants, ID);
+
+		buttonsByText(root, en['tableAssignment.remove'])[0].click();
+		m.redraw.sync();
+		buttonByText(root, en['tableAssignment.remove.confirm']).click();
+		await settle();
+
+		expect(root.textContent).toContain(en['tableAssignment.remove.seated']);
+		expect(root.querySelector('.modal')).not.toBeNull();
+	});
+
+	it('offers no removal once the assignment has ended', async () => {
+		mocks.store.current.session = makeSession({ status: 'ended' });
+
+		const { root } = await renderScreen(HostParticipants, ID);
+
+		expect(buttonsByText(root, en['tableAssignment.remove'])).toHaveLength(0);
 	});
 });
 
 describe('host preview', () => {
 	const closed = (): void => {
-		hoisted.store.current.session = makeSession({ status: 'registrationClosed' });
-		hoisted.store.current.topics = [makeTopic('a', 0), makeTopic('b', 1)];
-		hoisted.store.current.everyone = [
+		mocks.store.current.session = makeSession({ status: 'registrationClosed' });
+		mocks.store.current.topics = [makeTopic('a', 0), makeTopic('b', 1)];
+		mocks.store.current.everyone = [
 			makeRosterEntry('u1'),
 			makeRosterEntry('u2'),
 			makeRosterEntry('u3'),
@@ -223,47 +176,121 @@ describe('host preview', () => {
 		expect(text).toContain(en['tableAssignment.preview.compute']);
 	});
 
-	it('shows tables, metrics and an enabled Publish for a current draft', async () => {
+	it('leads with the verdict, says how many got each choice and allows publishing', async () => {
 		closed();
-		hoisted.store.current.runs = [makeRun({ createdAt: NOW })];
+		mocks.store.current.runs = [makeRun({ createdAt: NOW })];
 
 		const { text, root } = await renderScreen(HostPreview, ID);
-		const publish = Array.from(root.querySelectorAll('button')).find(
-			(b) => b.textContent === en['tableAssignment.preview.publish'],
-		);
 
+		expect(text).toContain(en['tableAssignment.preview.good.title']);
+		expect(text).toContain(`2 ${en['tableAssignment.choice.first']}`);
+		expect(text).toContain(`1 ${en['tableAssignment.choice.second']}`);
 		expect(text).toContain('Table 1');
 		expect(text).toContain('Name u1');
-		expect(text).toContain(en['tableAssignment.metrics.within']);
-		expect(publish?.disabled).toBe(false);
+		expect(buttonByText(root, en['tableAssignment.preview.publish']).disabled).toBe(false);
 	});
 
-	it('blocks a stale draft with a message', async () => {
+	it('hides the band of a table below three known positions', async () => {
 		closed();
-		hoisted.store.current.everyone.push(makeRosterEntry('u4'));
-		hoisted.store.current.runs = [makeRun()];
+		mocks.store.current.runs = [makeRun()];
 
 		const { text, root } = await renderScreen(HostPreview, ID);
-		const publish = Array.from(root.querySelectorAll('button')).find(
-			(b) => b.textContent === en['tableAssignment.preview.publish'],
-		);
 
-		expect(text).toContain(en['tableAssignment.preview.stale']);
-		expect(publish?.disabled).toBe(true);
+		expect(root.querySelectorAll('.band')).toHaveLength(1);
+		expect(text).toContain(en['tableAssignment.preview.noStats']);
+		expect(text).toContain(en['tableAssignment.closeness.notEnough']);
+	});
+
+	it('blocks a preview that no longer matches, and says compute again', async () => {
+		closed();
+		mocks.store.current.everyone.push(makeRosterEntry('u4'));
+		mocks.store.current.runs = [makeRun()];
+
+		const { text, root } = await renderScreen(HostPreview, ID);
+
+		expect(text).toContain(en['tableAssignment.preview.stale.title']);
+		expect(text).not.toContain(en['tableAssignment.preview.good.title']);
+		expect(buttonByText(root, en['tableAssignment.preview.publish']).disabled).toBe(true);
+		expect(buttonByText(root, en['tableAssignment.preview.recompute']).disabled).toBe(false);
+	});
+
+	it('shows the server refusal of a stale publish', async () => {
+		closed();
+		mocks.store.current.runs = [makeRun()];
+		mocks.api.publishRun.mockRejectedValue({
+			code: 'functions/failed-precondition',
+			details: { reason: 'stale-run' },
+		});
+		const { root } = await renderScreen(HostPreview, ID);
+
+		buttonByText(root, en['tableAssignment.preview.publish']).click();
+		await settle();
+
+		expect(root.textContent).toContain(en['tableAssignment.error.publishStale']);
+	});
+
+	it('never claims good when the tables are outside the limit', async () => {
+		closed();
+		const run = makeRun();
+
+		mocks.store.current.runs = [
+			makeRun({
+				metrics: { ...run.metrics, balance: { ...run.metrics.balance, withinTolerance: false } },
+			}),
+		];
+
+		const { text } = await renderScreen(HostPreview, ID);
+
+		expect(text).toContain(en['tableAssignment.preview.unbalanced.title']);
+		expect(text).not.toContain(en['tableAssignment.preview.good.title']);
+	});
+
+	it('says the tables follow the choices when too few answered', async () => {
+		closed();
+		const run = makeRun();
+
+		mocks.store.current.runs = [
+			makeRun({ metrics: { ...run.metrics, population: { n: 0, mean: [], sd: [] } } }),
+		];
+
+		const { text, root } = await renderScreen(HostPreview, ID);
+
+		expect(text).toContain(en['tableAssignment.preview.choicesOnly.title']);
+		expect(root.querySelector('.band')).toBeNull();
+	});
+
+	it('keeps the numbers behind "full data"', async () => {
+		closed();
+		mocks.store.current.runs = [makeRun()];
+
+		const { root } = await renderScreen(HostPreview, ID);
+
+		expect(root.querySelector('details.full-data')?.hasAttribute('open')).toBe(false);
+		expect(root.querySelector('details.full-data')?.textContent).toContain('0.20');
+	});
+
+	it('names a topic that got no table', async () => {
+		closed();
+		mocks.store.current.topics.push(makeTopic('c', 2, { title: 'Quiet topic' }));
+		mocks.store.current.runs = [makeRun()];
+
+		const { root } = await renderScreen(HostPreview, ID);
+
+		expect(root.querySelector('details.full-data')?.textContent).toContain('Quiet topic');
 	});
 
 	it('asks to close registration first', async () => {
-		hoisted.store.current.session = makeSession({ status: 'registrationOpen' });
+		mocks.store.current.session = makeSession({ status: 'registrationOpen' });
 
 		const { text } = await renderScreen(HostPreview, ID);
 
 		expect(text).toContain(en['tableAssignment.preview.closeFirst']);
 	});
 
-	it('has no preview in direct mode: it shows the tables filling', async () => {
-		hoisted.store.current.session = makeSession({ mode: 'direct', status: 'registrationOpen' });
-		hoisted.store.current.topics = [makeTopic('a', 0)];
-		hoisted.store.current.everyone = [makeRosterEntry('u1', { chosenTableIndex: 0 })];
+	it('has no preview in free mode: it shows the tables filling', async () => {
+		mocks.store.current.session = makeSession({ mode: 'direct', status: 'registrationOpen' });
+		mocks.store.current.topics = [makeTopic('a', 0)];
+		mocks.store.current.everyone = [makeRosterEntry('u1', { chosenTableIndex: 0 })];
 
 		const { text } = await renderScreen(HostPreview, ID);
 
@@ -279,17 +306,109 @@ describe('host assignment', () => {
 		expect(text).toContain(en['tableAssignment.assignment.empty']);
 	});
 
-	it('prints the published tables with their version', async () => {
-		hoisted.store.current.session = makeSession({ status: 'published', publishedRunId: 'run-1' });
-		hoisted.store.current.topics = [makeTopic('a', 0), makeTopic('b', 1)];
-		hoisted.store.current.everyone = [makeRosterEntry('u1'), makeRosterEntry('u3')];
-		hoisted.store.current.run = makeRun({ status: 'published', publishedAt: NOW });
+	it('prints the published tables with names and topics only', async () => {
+		mocks.store.current.session = makeSession({ status: 'published', publishedRunId: 'run-1' });
+		mocks.store.current.topics = [makeTopic('a', 0), makeTopic('b', 1)];
+		mocks.store.current.everyone = [makeRosterEntry('u1'), makeRosterEntry('u3')];
+		mocks.store.current.run = makeRun({ status: 'published', publishedAt: NOW });
 
-		const { text } = await renderScreen(HostAssignment, ID);
+		const { text, root } = await renderScreen(HostAssignment, ID);
 
 		expect(text).toContain('Table 1');
 		expect(text).toContain('Topic a');
 		expect(text).toContain('Name u1');
 		expect(text).toContain(en['tableAssignment.assignment.print']);
+		expect(root.querySelector('.band')).toBeNull();
+		expect(root.querySelector('.pill')).toBeNull();
+	});
+});
+
+describe('room screen', () => {
+	it('before opening says registration is not open', async () => {
+		const { text } = await renderScreen(RoomScreen, ID);
+
+		expect(text).toContain(en['tableAssignment.notOpen.title']);
+	});
+
+	it('while open is the join page: name, QR, count and the real link', async () => {
+		mocks.store.current.session = makeSession({ status: 'registrationOpen' });
+		mocks.store.current.registeredCount = 42;
+
+		const { text, root } = await renderScreen(RoomScreen, ID);
+
+		expect(text).toContain('Town hall');
+		expect(text).toContain(en['tableAssignment.roomScreen.scan']);
+		expect(root.querySelector('img.room-join__qr')).not.toBeNull();
+		expect(text).toContain('42');
+		expect(text).toContain(`tables.wizcol.com/sessions/${SESSION_ID}`);
+	});
+
+	it('shows no seating before publishing', async () => {
+		mocks.store.current.session = makeSession({ status: 'registrationClosed' });
+		mocks.store.current.topics = [makeTopic('a', 0), makeTopic('b', 1)];
+		mocks.store.current.everyone = [makeRosterEntry('u1')];
+		mocks.store.current.runs = [makeRun()];
+
+		const { text } = await renderScreen(RoomScreen, ID);
+
+		expect(text).toContain(en['tableAssignment.roomScreen.tablesSoon']);
+		expect(text).not.toContain('Name u1');
+	});
+
+	it('flips to who sits where once published: numbers, topics and names only', async () => {
+		mocks.store.current.session = makeSession({ status: 'published', publishedRunId: 'run-1' });
+		mocks.store.current.topics = [makeTopic('a', 0), makeTopic('b', 1)];
+		mocks.store.current.everyone = [makeRosterEntry('u1'), makeRosterEntry('u3')];
+		mocks.store.current.run = makeRun({ status: 'published', publishedAt: NOW });
+
+		const { text, root } = await renderScreen(RoomScreen, ID);
+
+		expect(text).toContain(en['tableAssignment.roomScreen.seats']);
+		expect(text).toContain('Topic a');
+		expect(text).toContain('Name u1');
+		expect(root.querySelector('.band')).toBeNull();
+		expect(root.querySelector('.pill')).toBeNull();
+	});
+
+	it('pages through ten tables, with controls', async () => {
+		const tables = Array.from({ length: 10 }, (_, index) => ({
+			index,
+			topicId: 'a',
+			memberUids: [`u${index}`],
+			stats: { n: 0, mean: [], sd: [], deviation: 0 },
+		}));
+
+		mocks.store.current.session = makeSession({ status: 'published', publishedRunId: 'run-1' });
+		mocks.store.current.topics = [makeTopic('a', 0)];
+		mocks.store.current.run = makeRun({ status: 'published', tables });
+		window.innerWidth = 1280;
+
+		const { root } = await renderScreen(RoomScreen, ID);
+
+		expect(root.querySelectorAll('.room-table')).toHaveLength(6);
+		expect(root.textContent).toContain('Page 1 of 2');
+		buttonByText(root, en['tableAssignment.roomScreen.next']).click();
+		m.redraw.sync();
+		expect(root.querySelectorAll('.room-table')).toHaveLength(4);
+		expect(root.textContent).toContain('Page 2 of 2');
+	});
+});
+
+describe('privacy of the host screens', () => {
+	it('no host or room source imports the private records', () => {
+		const sources = import.meta.glob('../../views/{host,room}/*.ts', {
+			query: '?raw',
+			import: 'default',
+			eager: true,
+		});
+
+		expect(Object.keys(sources).length).toBeGreaterThan(5);
+
+		for (const [file, source] of Object.entries(sources)) {
+			expect(source, file).not.toContain('subscribeMyParticipant');
+			expect(source, file).not.toContain('TableAssignmentParticipant');
+			expect(source, file).not.toMatch(/(?<!setup)\.position\b/);
+			expect(source, file).not.toMatch(/\.preferences\b/);
+		}
 	});
 });

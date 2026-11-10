@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { closeIcon } from '@/components/icons';
 
 /**
  * The one modal of the app (IA section 5): `role=dialog`, focus moved in and
@@ -10,6 +11,8 @@ export interface ModalAttrs {
 	title: string;
 	onClose: () => void;
 	locked?: boolean;
+	/** Draws a close button beside the title, for a dialog that holds a form. */
+	closeLabel?: string;
 }
 
 const FOCUSABLE =
@@ -88,7 +91,24 @@ export const Modal: m.ClosureComponent<ModalAttrs> = (initial) => {
 				m(
 					'.modal__dialog',
 					{ role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': titleId, tabindex: -1 },
-					[m('h2.modal__title', { id: titleId, dir: 'auto' }, attrs.title), children],
+					[
+						m('.modal__head', [
+							m('h2.modal__title', { id: titleId, dir: 'auto' }, attrs.title),
+							attrs.closeLabel
+								? m(
+										'button.modal__close',
+										{
+											type: 'button',
+											'aria-label': attrs.closeLabel,
+											disabled: attrs.locked,
+											onclick: attrs.onClose,
+										},
+										closeIcon(),
+									)
+								: null,
+						]),
+						children,
+					],
 				),
 			);
 		},

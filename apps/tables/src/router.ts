@@ -2,17 +2,17 @@ import m from 'mithril';
 import { DEFAULT_ROUTE, ROUTES } from '@/routes';
 import { placeholderView } from '@/views/Placeholder';
 import { HostAssignment } from '@/views/host/HostAssignment';
-import { HostHome } from '@/views/host/HostHome';
+import { HostHome, LegacyHostRedirect } from '@/views/host/HostHome';
 import { HostList } from '@/views/host/HostList';
 import { HostParticipants } from '@/views/host/HostParticipants';
 import { HostPreview } from '@/views/host/HostPreview';
-import { HostSettings } from '@/views/host/HostSettings';
-import { HostTopics } from '@/views/host/HostTopics';
+import { HostNew } from '@/views/host/HostSetup';
 import { ParticipantHome, LegacyTopicsRedirect } from '@/views/participant/ParticipantHome';
 import { ParticipantMyTable } from '@/views/participant/ParticipantMyTable';
 import { ParticipantName } from '@/views/participant/ParticipantName';
 import { ParticipantPosition } from '@/views/participant/ParticipantPosition';
 import { ParticipantPreferences } from '@/views/participant/ParticipantPreferences';
+import { RoomScreen } from '@/views/room/RoomScreen';
 
 /** Route params arrive as attrs; a screen declares the ones it reads, the router hands them over. */
 function routeView<Attrs>(component: m.Component<Attrs>): m.Component {
@@ -23,8 +23,10 @@ function routeView<Attrs>(component: m.Component<Attrs>): m.Component {
 const VIEWS: Record<string, m.Component> = {
 	'/host': routeView(HostList),
 	'/host/sessions/:id': routeView(HostHome),
-	'/host/sessions/:id/topics': routeView(HostTopics),
-	'/host/sessions/:id/settings': routeView(HostSettings),
+	'/host/new': routeView(HostNew),
+	'/host/sessions/:id/screen': routeView(RoomScreen),
+	'/host/sessions/:id/topics': routeView(LegacyHostRedirect),
+	'/host/sessions/:id/settings': routeView(LegacyHostRedirect),
 	'/host/sessions/:id/participants': routeView(HostParticipants),
 	'/host/sessions/:id/preview': routeView(HostPreview),
 	'/host/sessions/:id/assignment': routeView(HostAssignment),

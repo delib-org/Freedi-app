@@ -10,6 +10,7 @@ import { subscribeRoster, subscribeSession, subscribeTopics } from '@/lib/tableA
 import { combineStates } from '@/logic/loadable';
 import { HostGate } from '@/components/HostGate';
 import { Shell } from '@/components/Shell';
+import type { ShellAttrs } from '@/components/Shell';
 import { StateBox } from '@/components/StateBox';
 import { hostHomePath, hostListPath } from '@/paths';
 
@@ -31,6 +32,8 @@ export interface HostFrameAttrs {
 	wide?: boolean;
 	/** The host home has no "back to home" link, it goes back to the list. */
 	isHome?: boolean;
+	/** Frame details that depend on the session, e.g. a stage screen with its own heading. */
+	shellFor?: (session: TableAssignment) => Partial<ShellAttrs>;
 	render: (context: HostContext) => m.Children;
 }
 
@@ -68,9 +71,7 @@ export const HostFrame: m.ClosureComponent<HostFrameAttrs> = (initial) => {
 		view({ attrs }) {
 			const title = t(attrs.titleKey);
 			const backHref = attrs.isHome ? hostListPath() : hostHomePath(sessionId);
-			const backLabel = attrs.isHome
-				? t('tableAssignment.back.toList')
-				: t('tableAssignment.back.toHome');
+			const backLabel = attrs.isHome ? t('tableAssignment.back.toList') : t('tableAssignment.back');
 
 			return m(HostGate, {
 				title,
@@ -139,7 +140,7 @@ export const HostFrame: m.ClosureComponent<HostFrameAttrs> = (initial) => {
 
 					return m(
 						Shell,
-						{ ...shell, title: attrs.isHome ? current.title : title },
+						{ ...shell, title, ...attrs.shellFor?.(current) },
 						attrs.render({
 							uid,
 							session: current,
