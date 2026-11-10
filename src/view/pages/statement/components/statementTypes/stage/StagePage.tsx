@@ -8,23 +8,24 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { StatementContext } from '../../../StatementCont';
 import { Statement, EvaluationUI } from '@freedi/shared-types';
 import Clustering from '../../clustering/Clustering';
-import { statementSubsSelector } from '@/redux/statements/statementsSlice';
+import { statementOptionsSelector } from '@/redux/statements/statementsSlice';
 import { Lightbulb, Plus, MessageSquare } from 'lucide-react';
 
 interface Props {
 	showBottomNav?: boolean;
+	/** False hides the add steps of the empty state; the person can only wait for answers. */
+	canAddAnswer?: boolean;
 }
 
-const StagePage = ({ showBottomNav = true }: Props) => {
-	const { t } = useTranslation();
+const StagePage = ({ showBottomNav = true, canAddAnswer = true }: Props) => {
 	const { statement } = useContext(StatementContext);
 	const stageRef = useRef<HTMLDivElement>(null);
-	const subsSelect = useMemo(
-		() => statementSubsSelector(statement?.statementId),
+	const optionsSelect = useMemo(
+		() => statementOptionsSelector(statement?.statementId),
 		[statement?.statementId],
 	);
-	const allSubs = useSelector(subsSelect);
-	const hasSubStatements = allSubs.length > 0;
+	const options = useSelector(optionsSelect);
+	const hasAnswers = options.length > 0;
 
 	useEffect(() => {
 		const updateHeight = () => {
@@ -60,7 +61,7 @@ const StagePage = ({ showBottomNav = true }: Props) => {
 
 	return (
 		<>
-			{hasSubStatements ? (
+			{hasAnswers ? (
 				<div
 					className={`${styles['stage-page']} ${
 						statement?.evaluationSettings?.evaluationUI === EvaluationUI.voting
@@ -71,47 +72,7 @@ const StagePage = ({ showBottomNav = true }: Props) => {
 					<StagePageSwitch statement={statement} />
 				</div>
 			) : (
-				<div className={styles.onboarding}>
-					<div className={styles.onboarding__step}>
-						<span className={styles.onboarding__icon}>
-							<Lightbulb size={20} />
-						</span>
-						<div className={styles.onboarding__content}>
-							<h3 className={styles.onboarding__stepTitle}>
-								{t('solutionsOnboarding.shareSolution')}
-							</h3>
-							<p className={styles.onboarding__stepText}>
-								{t('solutionsOnboarding.shareSolutionDesc')}
-							</p>
-						</div>
-					</div>
-					<div className={styles.onboarding__step}>
-						<span className={styles.onboarding__icon}>
-							<Plus size={20} />
-						</span>
-						<div className={styles.onboarding__content}>
-							<h3 className={styles.onboarding__stepTitle}>
-								{t('solutionsOnboarding.addSolution')}
-							</h3>
-							<p className={styles.onboarding__stepText}>
-								{t('solutionsOnboarding.addSolutionDesc')}
-							</p>
-						</div>
-					</div>
-					<div className={styles.onboarding__step}>
-						<span className={styles.onboarding__icon}>
-							<MessageSquare size={20} />
-						</span>
-						<div className={styles.onboarding__content}>
-							<h3 className={styles.onboarding__stepTitle}>
-								{t('solutionsOnboarding.convertFromDiscussion')}
-							</h3>
-							<p className={styles.onboarding__stepText}>
-								{t('solutionsOnboarding.convertFromDiscussionDesc')}
-							</p>
-						</div>
-					</div>
-				</div>
+				<AnswersEmptyState canAddAnswer={canAddAnswer} />
 			)}
 			{showBottomNav && (
 				<div className={styles.bottomNav}>
@@ -123,6 +84,56 @@ const StagePage = ({ showBottomNav = true }: Props) => {
 };
 
 export default StagePage;
+
+interface AnswersEmptyStateProps {
+	readonly canAddAnswer: boolean;
+}
+
+const ADD_STEPS = [
+	{
+		Icon: Lightbulb,
+		titleKey: 'solutionsOnboarding.shareSolution',
+		textKey: 'solutionsOnboarding.shareSolutionDesc',
+	},
+	{
+		Icon: Plus,
+		titleKey: 'solutionsOnboarding.addSolution',
+		textKey: 'solutionsOnboarding.addSolutionDesc',
+	},
+	{
+		Icon: MessageSquare,
+		titleKey: 'solutionsOnboarding.convertFromDiscussion',
+		textKey: 'solutionsOnboarding.convertFromDiscussionDesc',
+	},
+] as const;
+
+function AnswersEmptyState({ canAddAnswer }: AnswersEmptyStateProps) {
+	const { t } = useTranslation();
+
+	if (!canAddAnswer) {
+		return (
+			<div className={styles.onboarding}>
+				<p className={styles.onboarding__stepText}>{t('No suggestions yet')}</p>
+			</div>
+		);
+	}
+
+	return (
+		<div className={styles.onboarding}>
+			{ADD_STEPS.map(({ Icon, titleKey, textKey }) => (
+				<div className={styles.onboarding__step} key={titleKey}>
+					<span className={styles.onboarding__icon}>
+						<Icon size={20} />
+					</span>
+					<div className={styles.onboarding__content}>
+						<h3 className={styles.onboarding__stepTitle}>{t(titleKey)}</h3>
+						<p className={styles.onboarding__stepText}>{t(textKey)}</p>
+					</div>
+				</div>
+			))}
+		</div>
+	);
+}
 
 interface StagePageSwitchProps {
 	readonly statement: Statement;
