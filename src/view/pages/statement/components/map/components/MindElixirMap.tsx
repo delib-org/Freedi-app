@@ -148,6 +148,15 @@ function createHintContent(key: string, label: string): DocumentFragment {
 	return fragment;
 }
 
+/** Visible name of a "+" button; CSS shows it on devices without a keyboard or hover. */
+function createAddLabel(label: string): HTMLSpanElement {
+	const span = document.createElement('span');
+	span.className = 'mind-map-add-label';
+	span.textContent = label;
+
+	return span;
+}
+
 function MindElixirMap({
 	descendants,
 	isAdmin,
@@ -361,6 +370,7 @@ function MindElixirMap({
 				childBtn.textContent = '+';
 				childBtn.setAttribute('aria-label', childLabel);
 				childBtn.title = childLabel;
+				childBtn.appendChild(createAddLabel(childLabel));
 				childBtn.addEventListener('click', async (e) => {
 					e.stopPropagation();
 					e.preventDefault();
@@ -387,6 +397,7 @@ function MindElixirMap({
 				siblingBtn.textContent = '+';
 				siblingBtn.setAttribute('aria-label', siblingLabel);
 				siblingBtn.title = siblingLabel;
+				siblingBtn.appendChild(createAddLabel(siblingLabel));
 				siblingBtn.addEventListener('click', async (e) => {
 					e.stopPropagation();
 					e.preventDefault();

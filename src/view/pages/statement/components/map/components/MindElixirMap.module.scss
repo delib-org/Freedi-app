@@ -299,6 +299,10 @@
 			}
 		}
 
+		.mind-map-add-label {
+			display: none;
+		}
+
 		// Keyboard shortcut hints
 		.mind-map-hints {
 			position: absolute;
@@ -392,19 +396,36 @@
 				display: none;
 			}
 
+			// Without a keyboard the "+" says what it adds: a pill with the label.
+			// Child sits beside the node, sibling under it, so the two never meet.
 			.mind-map-add-btn {
-				width: 44px;
+				width: auto;
+				min-width: 44px;
 				height: 44px;
+				padding: 0 14px;
+				gap: 6px;
+				border-radius: 22px;
+				white-space: nowrap;
+				font-size: 14px;
 
 				&--child {
-					right: -22px;
+					left: calc(100% + 8px);
+					right: auto;
+					top: 50%;
 					margin-top: -22px;
 				}
 
 				&--sibling {
-					bottom: -22px;
-					margin-left: -22px;
+					left: 0;
+					bottom: -52px;
+					margin-left: 0;
 				}
+			}
+
+			.mind-map-add-label {
+				display: inline;
+				font-size: 13px;
+				font-weight: 600;
 			}
 		}
 	}
