@@ -1,5 +1,10 @@
 import { logger } from 'firebase-functions';
-import { Collections, getRandomUID, StatementType, inheritedAccessScope } from '@freedi/shared-types';
+import {
+	Collections,
+	getRandomUID,
+	StatementType,
+	inheritedAccessScope,
+} from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import {
 	computeClusterEvaluationFromRawEvals,

@@ -88,7 +88,8 @@ describe('useAuthorization on the shared verdict', () => {
 		});
 
 		it('files a waiting request at that level when it is moderated', async () => {
-			(mockStatements.mid as { membership: { access: Access } }).membership.access = Access.moderated;
+			(mockStatements.mid as { membership: { access: Access } }).membership.access =
+				Access.moderated;
 
 			const { result } = renderHook(() => useAuthorization('child'));
 

@@ -1,9 +1,10 @@
 import { isDeepStrictEqual } from 'util';
 
 function withoutScope(data: object): object {
-	const { accessScope: _accessScope, ...rest } = data as { accessScope?: unknown };
+	const copy = { ...data } as { accessScope?: unknown };
+	delete copy.accessScope;
 
-	return rest;
+	return copy;
 }
 
 /**
@@ -13,7 +14,10 @@ function withoutScope(data: object): object {
  */
 export function isAccessScopeOnlyWrite(before: unknown, after: unknown): boolean {
 	if (!before || !after || typeof before !== 'object' || typeof after !== 'object') return false;
-	if ((before as { accessScope?: unknown }).accessScope === (after as { accessScope?: unknown }).accessScope) {
+	if (
+		(before as { accessScope?: unknown }).accessScope ===
+		(after as { accessScope?: unknown }).accessScope
+	) {
 		return false;
 	}
 

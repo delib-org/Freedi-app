@@ -24,8 +24,18 @@ function tree() {
 		topParentId: 'group',
 		membership: { access: 'secret' },
 	});
-	store.seed(S, 'q', { statementId: 'q', parentId: 'group', parents: ['group'], topParentId: 'group' });
-	store.seed(S, 'a', { statementId: 'a', parentId: 'q', parents: ['group', 'q'], topParentId: 'group' });
+	store.seed(S, 'q', {
+		statementId: 'q',
+		parentId: 'group',
+		parents: ['group'],
+		topParentId: 'group',
+	});
+	store.seed(S, 'a', {
+		statementId: 'a',
+		parentId: 'q',
+		parents: ['group', 'q'],
+		topParentId: 'group',
+	});
 
 	return store;
 }
@@ -33,7 +43,9 @@ function tree() {
 describe('isAccessScopeOnlyWrite', () => {
 	it('is true when only the scope moved', () => {
 		expect(isAccessScopeOnlyWrite({ a: 1 }, { a: 1, accessScope: 'open' })).toBe(true);
-		expect(isAccessScopeOnlyWrite({ a: 1, accessScope: 'x' }, { a: 1, accessScope: 'y' })).toBe(true);
+		expect(isAccessScopeOnlyWrite({ a: 1, accessScope: 'x' }, { a: 1, accessScope: 'y' })).toBe(
+			true,
+		);
 	});
 
 	it('is false when anything else moved too', () => {
@@ -41,7 +53,9 @@ describe('isAccessScopeOnlyWrite', () => {
 	});
 
 	it('is false when the scope did not move', () => {
-		expect(isAccessScopeOnlyWrite({ a: 1, accessScope: 'x' }, { a: 2, accessScope: 'x' })).toBe(false);
+		expect(isAccessScopeOnlyWrite({ a: 1, accessScope: 'x' }, { a: 2, accessScope: 'x' })).toBe(
+			false,
+		);
 		expect(isAccessScopeOnlyWrite({ a: 1 }, { a: 1 })).toBe(false);
 	});
 
@@ -69,7 +83,9 @@ describe('mayChangeScope', () => {
 	});
 
 	it('sees an access change, a move, and a lost scope', () => {
-		expect(mayChangeScope(base, { ...base, membership: { access: 'secret' } } as Statement)).toBe(true);
+		expect(mayChangeScope(base, { ...base, membership: { access: 'secret' } } as Statement)).toBe(
+			true,
+		);
 		expect(mayChangeScope(base, { ...base, parentId: 'other' })).toBe(true);
 		expect(mayChangeScope(base, { ...base, accessScope: undefined })).toBe(true);
 	});
@@ -100,7 +116,12 @@ describe('scope levels', () => {
 			topParentId: 'top1',
 			membership: { access: 'secret' },
 		});
-		store.seed(S, 'q2', { statementId: 'q2', parentId: 'mid', parents: ['top1', 'mid'], topParentId: 'top1' });
+		store.seed(S, 'q2', {
+			statementId: 'q2',
+			parentId: 'mid',
+			parents: ['top1', 'mid'],
+			topParentId: 'top1',
+		});
 		const chat = statement({
 			statementId: 'c',
 			parentId: 'q2',
@@ -172,7 +193,11 @@ describe('runAccessScopeJob', () => {
 
 	it('does nothing for a finished job', async () => {
 		const store = tree();
-		store.seed(Collections.accessScopeJobs, 'group', { rootId: 'group', status: 'done', generation: 1 });
+		store.seed(Collections.accessScopeJobs, 'group', {
+			rootId: 'group',
+			status: 'done',
+			generation: 1,
+		});
 		await runAccessScopeJob(store.db, 'group');
 		expect(store.writes).toHaveLength(0);
 	});
@@ -181,7 +206,12 @@ describe('runAccessScopeJob', () => {
 		const store = tree();
 		for (let i = 0; i < 4500; i += 1) {
 			const id = `c${String(i).padStart(5, '0')}`;
-			store.seed(S, id, { statementId: id, parentId: 'group', parents: ['group'], topParentId: 'group' });
+			store.seed(S, id, {
+				statementId: id,
+				parentId: 'group',
+				parents: ['group'],
+				topParentId: 'group',
+			});
 		}
 		seedJob(store);
 		await runAccessScopeJob(store.db, 'group');

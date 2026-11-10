@@ -36,11 +36,12 @@ jest.mock('firebase/firestore', () => ({
 	}),
 	getDoc: jest.fn(async () => ({ exists: () => false, data: () => undefined })),
 	getDocs: jest.fn(async (q: { name: string; fields: string[] }) => {
-		const docs = q.name === 'statementsSubscribe'
-			? mockSubscriptions
-			: q.fields.includes('membership.access')
-				? mockRestricted
-				: mockById;
+		const docs =
+			q.name === 'statementsSubscribe'
+				? mockSubscriptions
+				: q.fields.includes('membership.access')
+					? mockRestricted
+					: mockById;
 
 		return { docs, forEach: (run: (doc: FakeDoc) => void) => docs.forEach(run) };
 	}),

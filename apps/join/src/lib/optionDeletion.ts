@@ -37,7 +37,7 @@ import { isAdmin, canEditOption } from './admin';
 /** Firestore hard limit on writes per batch. */
 const BATCH_LIMIT = 500;
 /** Firestore hard limit on values in an `in` filter. */
-const PARALLEL_READS = 30;
+const PARENTS_PER_QUERY = 15;
 
 export interface DeleteAllOptionsResult {
 	/** How many option documents were removed. */
@@ -58,25 +58,23 @@ function chunk<T>(items: T[], size: number): T[][] {
 }
 
 /**
- * All statement ids whose `parentId` is one of `parentIds`, one query per parent
- * in small groups. Rules check each parent of a list, so a `parentId in` query
- * would run out of its document-read allowance.
+ * All statement ids whose `parentId` is one of `parentIds`. The two `in` filters
+ * multiply, and Firestore allows 30 combinations, so 15 parents by up to 2
+ * scopes. Rules judge the scope, so a long parent list costs them nothing.
  */
 async function findChildIds(parentIds: string[], scopes: string[]): Promise<string[]> {
+	if (parentIds.length === 0) return [];
+
 	const ids: string[] = [];
-	for (const group of chunk(parentIds, PARALLEL_READS)) {
-		const snaps = await Promise.all(
-			group.map((parentId) =>
-				getDocs(
-					query(
-						collection(db, Collections.statements),
-						where('parentId', '==', parentId),
-						where('accessScope', 'in', scopes),
-					),
-				),
+	for (const group of chunk(parentIds, PARENTS_PER_QUERY)) {
+		const snap = await getDocs(
+			query(
+				collection(db, Collections.statements),
+				where('parentId', 'in', group),
+				where('accessScope', 'in', scopes),
 			),
 		);
-		for (const snap of snaps) for (const d of snap.docs) ids.push(d.id);
+		for (const d of snap.docs) ids.push(d.id);
 	}
 
 	return ids;

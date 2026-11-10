@@ -1120,7 +1120,11 @@ export async function loadMainStatement(mainId: string): Promise<void> {
 	const subQ = query(
 		collection(db, Collections.statements),
 		where('parentId', '==', mainId),
-		where('accessScope', 'in', mainStatement ? readScopesOf(mainStatement) : readScopesOfRoot(mainId)),
+		where(
+			'accessScope',
+			'in',
+			mainStatement ? readScopesOf(mainStatement) : readScopesOfRoot(mainId),
+		),
 		where('statementType', '==', StatementType.question),
 	);
 	const subSnap = await getDocs(subQ);
@@ -1437,7 +1441,11 @@ export function subscribeSubQuestions(mainId: string): Unsubscribe {
 	const subQ = query(
 		collection(db, Collections.statements),
 		where('parentId', '==', mainId),
-		where('accessScope', 'in', mainStatement ? readScopesOf(mainStatement) : readScopesOfRoot(mainId)),
+		where(
+			'accessScope',
+			'in',
+			mainStatement ? readScopesOf(mainStatement) : readScopesOfRoot(mainId),
+		),
 		where('statementType', '==', StatementType.question),
 	);
 
@@ -1683,7 +1691,11 @@ export async function sendMessage(optionId: string, text: string): Promise<void>
 	for (let i = 0; i < bodyLines.length; i++) {
 		const child = createParagraphChildStatement({
 			content: bodyLines[i],
-			host: { statementId: parentStatement.statementId, topParentId, accessScope: parentStatement.accessScope },
+			host: {
+				statementId: parentStatement.statementId,
+				topParentId,
+				accessScope: parentStatement.accessScope,
+			},
 			creator,
 			creatorId: creator.uid,
 			order: i,

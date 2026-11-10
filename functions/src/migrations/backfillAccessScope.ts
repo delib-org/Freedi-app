@@ -55,9 +55,10 @@ const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(r
 
 /** Same subject, with its own setting removed: what it would inherit. */
 function withoutOwnSetting(subject: Statement): Statement {
-	const { membership: _membership, ...rest } = subject;
+	const copy = { ...subject };
+	delete copy.membership;
 
-	return rest as Statement;
+	return copy;
 }
 
 export async function runAccessScopeBackfill(
@@ -102,7 +103,10 @@ export async function runAccessScopeBackfill(
 			const accessScope = levels.scopeOf(subject);
 			if (accessScope === OPEN_ACCESS_SCOPE) {
 				result.open += 1;
-				if (subject.membership?.access && levels.scopeOf(withoutOwnSetting(subject)) !== accessScope) {
+				if (
+					subject.membership?.access &&
+					levels.scopeOf(withoutOwnSetting(subject)) !== accessScope
+				) {
 					result.ownOpenUnderRestricted += 1;
 				}
 			} else {

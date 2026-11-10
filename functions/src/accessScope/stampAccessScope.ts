@@ -14,10 +14,7 @@ export async function stampNewStatement(statement: Statement | undefined): Promi
 	if (!statement?.statementId || statement.accessScope) return;
 	try {
 		const accessScope = await resolveStatementScope(db, statement);
-		await db
-			.collection(Collections.statements)
-			.doc(statement.statementId)
-			.update({ accessScope });
+		await db.collection(Collections.statements).doc(statement.statementId).update({ accessScope });
 	} catch (error) {
 		logError(error, {
 			operation: 'accessScope.stampNewStatement',
@@ -51,15 +48,18 @@ export async function restampOnAccessChange(
 
 		const now = Date.now();
 		await db.collection(Collections.statements).doc(after.statementId).update({ accessScope });
-		await db.collection(Collections.accessScopeJobs).doc(after.statementId).set({
-			rootId: after.statementId,
-			topParentId:
-				after.parentId === 'top' || !after.topParentId ? after.statementId : after.topParentId,
-			status: 'pending',
-			cursor: null,
-			generation: now,
-			updatedAt: now,
-		});
+		await db
+			.collection(Collections.accessScopeJobs)
+			.doc(after.statementId)
+			.set({
+				rootId: after.statementId,
+				topParentId:
+					after.parentId === 'top' || !after.topParentId ? after.statementId : after.topParentId,
+				status: 'pending',
+				cursor: null,
+				generation: now,
+				updatedAt: now,
+			});
 		logger.info('accessScope: queued a subtree', { statementId: after.statementId, accessScope });
 	} catch (error) {
 		logError(error, {

@@ -107,26 +107,26 @@ function listenToMindMapDataInScopes(scopes: string[], statementId: string): Uns
 			and(
 				where('accessScope', 'in', scopes),
 				or(
-				// Get the root statement itself
-				where('statementId', '==', statementId),
-				// Get all descendants via parents array
-				and(
-					where('parents', 'array-contains', statementId),
-					or(
-						where('statementType', '==', StatementType.question),
-						where('statementType', '==', StatementType.group),
-						where('statementType', '==', StatementType.option),
+					// Get the root statement itself
+					where('statementId', '==', statementId),
+					// Get all descendants via parents array
+					and(
+						where('parents', 'array-contains', statementId),
+						or(
+							where('statementType', '==', StatementType.question),
+							where('statementType', '==', StatementType.group),
+							where('statementType', '==', StatementType.option),
+						),
 					),
-				),
-				// Get direct children via parentId (backup for missing parents array)
-				and(
-					where('parentId', '==', statementId),
-					or(
-						where('statementType', '==', StatementType.question),
-						where('statementType', '==', StatementType.group),
-						where('statementType', '==', StatementType.option),
+					// Get direct children via parentId (backup for missing parents array)
+					and(
+						where('parentId', '==', statementId),
+						or(
+							where('statementType', '==', StatementType.question),
+							where('statementType', '==', StatementType.group),
+							where('statementType', '==', StatementType.option),
+						),
 					),
-				),
 				),
 			),
 			orderBy('createdAt', 'desc'),

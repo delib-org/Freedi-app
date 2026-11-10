@@ -175,9 +175,7 @@ export function listenToStatementDeltas(
 	mode: BulkLoadMode,
 	sinceMs: number,
 ): Unsubscribe {
-	return listenInScopes(rootId, (scopes) =>
-		listenToDeltasInScopes(scopes, rootId, mode, sinceMs),
-	);
+	return listenInScopes(rootId, (scopes) => listenToDeltasInScopes(scopes, rootId, mode, sinceMs));
 }
 
 function listenToDeltasInScopes(

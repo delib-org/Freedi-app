@@ -207,23 +207,26 @@ describe('resolveQuestionParticipation', () => {
 		[{ top: 'public', middle: 'secret' }],
 		[{ top: 'secret', middle: 'openToAll' }],
 		[{ middle: 'openForRegistered' }],
-	])('agrees with resolveAccessScope for an outsider: %j', async (access: { top?: string; middle?: string; question?: string }) => {
-		tree(access);
-		const level = (statementId: string, value?: string) => ({
-			statementId,
-			...(value ? { membership: { access: value } } : {}),
-		});
-		const scope = resolveAccessScope(level('q', access.question), [
-			level('middle', access.middle),
-			level('top-group', access.top),
-		]);
+	])(
+		'agrees with resolveAccessScope for an outsider: %j',
+		async (access: { top?: string; middle?: string; question?: string }) => {
+			tree(access);
+			const level = (statementId: string, value?: string) => ({
+				statementId,
+				...(value ? { membership: { access: value } } : {}),
+			});
+			const scope = resolveAccessScope(level('q', access.question), [
+				level('middle', access.middle),
+				level('top-group', access.top),
+			]);
 
-		if (scope === OPEN_ACCESS_SCOPE) {
-			await expect(call()).resolves.toMatchObject({ statementId: 'q' });
-		} else {
-			await expect(call()).rejects.toMatchObject({ code: 'permission-denied' });
-		}
-	});
+			if (scope === OPEN_ACCESS_SCOPE) {
+				await expect(call()).resolves.toMatchObject({ statementId: 'q' });
+			} else {
+				await expect(call()).rejects.toMatchObject({ code: 'permission-denied' });
+			}
+		},
+	);
 
 	it('copes with a legacy question that has no parents list', async () => {
 		statement('top-group', { parentId: 'top', membership: { access: 'secret' } });

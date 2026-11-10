@@ -11,7 +11,13 @@ import {
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { auth, functions } from '../config';
-import { Collections, Statement, StatementType, Creator, inheritedAccessScope } from '@freedi/shared-types';
+import {
+	Collections,
+	Statement,
+	StatementType,
+	Creator,
+	inheritedAccessScope,
+} from '@freedi/shared-types';
 import { logger } from '@/services/logger';
 import { createStatementRef, createDocRef, createCollectionRef } from '@/utils/firebaseUtils';
 import { detectUrls } from '@/utils/urlHelpers';

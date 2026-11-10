@@ -1,6 +1,12 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
-import { Collections, StatementType, type Statement, getRandomUID, inheritedAccessScope } from '@freedi/shared-types';
+import {
+	Collections,
+	StatementType,
+	type Statement,
+	getRandomUID,
+	inheritedAccessScope,
+} from '@freedi/shared-types';
 import {
 	assignToTheme,
 	generateTopicLabel,
