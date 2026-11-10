@@ -32,6 +32,10 @@
 // =============================================================================
 
 .statement-evaluation-card {
+  // The card's own fill; tinted states swap it. The photo card's rating strip
+  // paints the same value so it always matches (the washes are opaque).
+  --card-surface: var(--card-default);
+
   position: relative;
   display: flex;
   flex-direction: column;
@@ -39,7 +43,7 @@
   width: 100%;
   box-sizing: border-box;
   padding: var(--space-md);
-  background-color: var(--card-default);
+  background-color: var(--card-surface);
   border: 1.5px solid var(--border-subtle);
 
   // Reserved lane for the C1 status rule. Always present at full width so a
@@ -77,13 +81,15 @@
 
   &--voted {
     border-inline-start-color: var(--approve);
-    background-color: var(--wash-approve);
+    --card-surface: var(--wash-approve);
+    background-color: var(--card-surface);
   }
 
   // Below the join minimum — the one state that genuinely needs attention.
   &--below-minimum {
     border-inline-start-color: var(--warning);
-    background-color: var(--wash-warning);
+    --card-surface: var(--wash-warning);
+    background-color: var(--card-surface);
   }
 
   // At/above minimum and over maximum are healthy or admin-only conditions.
@@ -94,7 +100,8 @@
     isolation: isolate;
     border-style: dashed;
     border-color: var(--lighter);
-    background-color: var(--wash-neutral);
+    --card-surface: var(--wash-neutral);
+    background-color: var(--card-surface);
 
     .body {
       opacity: 0.55;
@@ -859,14 +866,21 @@
 // Flat card with a 1px hairline (no shadow). Status states still take the
 // inline-start rule; the own answer takes a mint border.
 .statement-evaluation-card {
+  // The padding lives in two variables so the photo card can pull its footer
+  // back out over it (see --with-photo).
+  --card-pad-block: var(--space-sm);
+  --card-pad-inline: var(--space-md);
+
   gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--card-pad-block) var(--card-pad-inline);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-card);
   box-shadow: none;
 
   @media screen and (max-width: 600px) {
-    padding: var(--space-xs) var(--space-sm);
+    --card-pad-block: var(--space-2xs);
+    --card-pad-inline: var(--space-xs);
+
     gap: var(--space-2xs);
   }
 
@@ -899,15 +913,60 @@
 // The photo is a column at the inline-start edge that runs the full height of
 // the card. StatementImage places it absolutely (inset-block: 0), so the text
 // column alone decides how tall the card is, even for a tall source image.
-// This card makes room for it with start padding, so nothing runs under it.
+// This card makes room for it with start padding, so the text runs beside it.
+// The rating row (cardFooter) is the exception: it breaks out of the card's
+// padding to span the full card width and sits on a card-coloured strip drawn
+// OVER the lower part of the photo, so the faces keep the whole width.
+$photo-min-visible: 4.5rem; // 72px of photo stays recognisable above the strip
+
 .statement-evaluation-card--with-photo {
   --card-photo-width: 7.5rem;
+  --card-photo-inset: calc(var(--card-photo-width) + var(--card-pad-inline));
 
-  padding-inline-start: calc(var(--card-photo-width) + var(--space-md));
+  padding-inline-start: var(--card-photo-inset);
 
   @media screen and (max-width: 600px) {
     --card-photo-width: 5.5rem;
+  }
 
-    padding-inline-start: calc(var(--card-photo-width) + var(--space-sm));
+  // A one-line answer must not shrink the visible photo to a sliver above the
+  // strip: the text row keeps at least this much height.
+  .info {
+    min-block-size: $photo-min-visible;
+  }
+
+  .cardFooter {
+    position: relative;
+    z-index: 2; // above the photo column (z-index 1)
+    margin-inline: calc(-1 * var(--card-photo-inset)) calc(-1 * var(--card-pad-inline));
+    margin-block-end: calc(-1 * var(--card-pad-block));
+    padding-inline: var(--card-pad-inline);
+    padding-block: var(--space-2xs) var(--card-pad-block);
+    background-color: var(--card-surface);
+    pointer-events: auto; // the strip must not pass taps through to the photo button
+  }
+}
+
+// A hidden card dims its content, but .body's own opacity would also make the
+// rating strip see-through over the photo. Dim the content instead and keep the
+// strip's fill opaque.
+.statement-evaluation-card--hidden.statement-evaluation-card--with-photo {
+  --hidden-dim: 0.55;
+
+  &:hover {
+    --hidden-dim: 0.75;
+  }
+
+  .body,
+  &:hover .body {
+    opacity: 1;
+  }
+
+  .text,
+  .meta,
+  .joinRow,
+  .bylineText,
+  .cardFooter > * {
+    opacity: var(--hidden-dim);
   }
 }
