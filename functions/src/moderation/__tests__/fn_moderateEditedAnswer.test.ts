@@ -21,72 +21,21 @@ jest.mock('../../utils/errorHandling', () => ({
 
 import { moderateEditedAnswer } from '../fn_moderateNewAnswer';
 import { answerHiddenNoticeId } from '../answerHiddenNotice';
+import {
+	ANSWER,
+	CLEAN_TEXT,
+	editedAnswerFixture,
+	Event,
+	EVENT_ID,
+	Fields,
+	HELD_MARK,
+	OFFENSIVE_TEXT,
+	QUESTION,
+	RESTORED_MARK,
+} from './editedAnswerFixture';
 
-const ANSWER = 'answer-1';
-const QUESTION = 'question-1';
-const AUTHOR = 'author-1';
-const CLEAN_TEXT = 'a kind answer';
-const OFFENSIVE_TEXT = 'some offensive words';
-const EVENT_ID = 'event-edit';
-const RESTORED_MARK = {
-	reason: 'inappropriate-language',
-	hiddenAt: 1,
-	eventId: 'event-old',
-	restoredAt: 2,
-};
-const HELD_MARK = { reason: 'inappropriate-language', hiddenAt: 1, eventId: 'event-old' };
-
-type Event = Parameters<typeof moderateEditedAnswer>[0];
-type Fields = Record<string, unknown>;
-
-function answerDoc(overrides: Fields = {}): Fields {
-	return {
-		statementId: ANSWER,
-		statement: CLEAN_TEXT,
-		statementType: StatementType.option,
-		sourceApp: SourceApp.MAIN,
-		parentId: QUESTION,
-		topParentId: QUESTION,
-		creatorId: AUTHOR,
-		...overrides,
-	};
-}
-
-/** Seeds the document as it stands after the write and builds that write's event. */
-function updated(beforeFields: Fields, afterFields: Fields, id = EVENT_ID): Event {
-	const before = answerDoc(beforeFields);
-	const after = answerDoc(afterFields);
-	fake.seed(Collections.statements, ANSWER, after);
-
-	return {
-		id,
-		data: { before: { data: () => before }, after: { data: () => after } },
-		params: { statementId: ANSWER },
-	} as unknown as Event;
-}
-
-const answerRef = () => fake.db.collection(Collections.statements).doc(ANSWER);
-const stored = (): Fields | undefined => fake.read(Collections.statements, ANSWER);
-const notice = (): Fields | undefined =>
-	fake.read(Collections.inAppNotifications, answerHiddenNoticeId(ANSWER));
-const marker = (): { hiddenAt: number; eventId: string; restoredAt?: number } =>
-	stored()?.answerModeration as { hiddenAt: number; eventId: string; restoredAt?: number };
-
-function expectHeldBy(eventId: string): void {
-	expect(stored()?.hide).toBe(true);
-	expect(marker()).toEqual({
-		reason: 'inappropriate-language',
-		hiddenAt: expect.any(Number),
-		eventId,
-	});
-	expect(notice()?.userId).toBe(AUTHOR);
-}
-
-function expectLeftVisible(): void {
-	expect(stored()?.hide).toBeUndefined();
-	expect(stored()?.answerModeration).toBeUndefined();
-	expect(notice()).toBeUndefined();
-}
+const { updated, answerRef, stored, notice, marker, expectHeldBy, expectLeftVisible } =
+	editedAnswerFixture(() => fake);
 
 beforeEach(() => {
 	fake = createFakeDb();
@@ -106,14 +55,14 @@ describe('moderateEditedAnswer: what gets checked', () => {
 		expect(stored()?.statement).toBe(OFFENSIVE_TEXT);
 	});
 
-	it('holds an answer when a paragraph child edit reaches its description', async () => {
+	it('holds an answer whose own description, with no paragraphs, was edited', async () => {
 		assessLanguage.mockResolvedValue(true);
 
 		await moderateEditedAnswer(
-			updated({ description: 'first paragraph' }, { description: 'offensive paragraph' }),
+			updated({ description: 'first words' }, { description: 'offensive words' }),
 		);
 
-		expect(assessLanguage).toHaveBeenCalledWith(`${CLEAN_TEXT}\noffensive paragraph`);
+		expect(assessLanguage).toHaveBeenCalledWith(`${CLEAN_TEXT}\noffensive words`);
 		expectHeldBy(EVENT_ID);
 	});
 

@@ -19,7 +19,8 @@ jest.mock('../../utils/errorHandling', () => ({
 	logError: (...args: unknown[]) => logError(...args),
 }));
 
-import { answerFullText, moderateNewAnswer } from '../fn_moderateNewAnswer';
+import { moderateNewAnswer } from '../fn_moderateNewAnswer';
+import { answerFullText } from '../answerText';
 import { answerHiddenNoticeId } from '../answerHiddenNotice';
 
 const ANSWER = 'answer-1';

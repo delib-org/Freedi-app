@@ -113,7 +113,10 @@ export interface FakeDb {
 }
 
 export interface TransactionLike {
-	get: (ref: Ref) => Promise<Snap>;
+	get: {
+		(ref: Ref): Promise<Snap>;
+		(query: Query): ReturnType<Query['get']>;
+	};
 	set: (ref: Ref, data: Doc, opts?: { merge?: boolean }) => void;
 	create: (ref: Ref, data: Doc) => void;
 	update: (ref: Ref, data: Doc) => void;
@@ -232,7 +235,7 @@ export function createFakeDb(): FakeDb {
 			},
 			runTransaction: async (fn) =>
 				fn({
-					get: async (ref) => snapOf(ref.collection, ref.id),
+					get: ((target: Ref | Query) => target.get()) as TransactionLike['get'],
 					set: (ref, data, opts) => writeDoc(ref.collection, ref.id, data, !!opts?.merge),
 					create: (ref, data) => {
 						if (col(ref.collection).has(ref.id)) {
