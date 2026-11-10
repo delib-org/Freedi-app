@@ -1,4 +1,5 @@
-import { Access, Creator, Statement, StatementSubscription } from '@freedi/shared-types';
+import { getDoc } from 'firebase/firestore';
+import { Access, Creator, Role, Statement } from '@freedi/shared-types';
 import { CACHE } from '@/constants/common';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import {
@@ -7,8 +8,14 @@ import {
 	getLevelsAbove,
 	getSubscriptionScopeId,
 } from '@/helpers/entryVerdict';
+import { isRefusedRead } from '@/helpers/firestoreRefusal';
+import {
+	statementSelector,
+	statementSubscriptionSelector,
+} from '@/redux/statements/statementsSlice';
+import { store } from '@/redux/store';
 import { logError } from '@/utils/errorHandling';
-import { getStatementSubscriptionFromDB } from '../subscriptions/getSubscriptions';
+import { createSubscriptionRef } from '@/utils/firebaseUtils';
 import { getStatementFromDB } from './getStatement';
 
 type Person = Pick<Creator, 'uid' | 'isAnonymous'>;
@@ -19,10 +26,9 @@ interface RememberedRead<T> {
 }
 
 const MAX_REMEMBERED_READS = 200;
-const EXPECT_REFUSAL = { expectRefusal: true };
 
 const statementReads = new Map<string, RememberedRead<Statement | undefined>>();
-const subscriptionReads = new Map<string, RememberedRead<StatementSubscription | undefined>>();
+const roleReads = new Map<string, RememberedRead<Role | undefined>>();
 
 /** One screen asks about the same levels from several places; they share one read. */
 function remember<T>(
@@ -43,25 +49,57 @@ function remember<T>(
 
 export function forgetLevelReads(): void {
 	statementReads.clear();
-	subscriptionReads.clear();
+	roleReads.clear();
 }
 
 function readLevel(levelId: string, uid: string | undefined): Promise<Statement | undefined> {
 	return remember(statementReads, `${uid}--${levelId}`, () =>
-		getStatementFromDB(levelId, EXPECT_REFUSAL),
+		getStatementFromDB(levelId, { expectRefusal: true }),
 	);
 }
 
-function readSubscription(
-	scopeId: string | undefined,
-	uid: string | undefined,
-): Promise<StatementSubscription | undefined> {
+function isRole(value: unknown): value is Role {
+	return Object.values(Role).includes(value as Role);
+}
+
+/**
+ * Only the role matters here, so only the role is read. Real subscription docs
+ * can hold Timestamps or miss fields; the gate's listener salvages the role
+ * from those, and a full schema parse here would turn a member into a stranger.
+ */
+async function fetchRole(subscriptionId: string): Promise<Role | undefined> {
+	try {
+		const snapshot = await getDoc(createSubscriptionRef(subscriptionId));
+		const role: unknown = snapshot.data()?.role;
+
+		return isRole(role) ? role : undefined;
+	} catch (error) {
+		if (!isRefusedRead(error)) {
+			logError(error, {
+				operation: 'statements.levelAccess.fetchRole',
+				metadata: { subscriptionId },
+			});
+		}
+
+		return undefined;
+	}
+}
+
+function readRole(scopeId: string | undefined, uid: string | undefined): Promise<Role | undefined> {
 	const subscriptionId = scopeId && uid ? getStatementSubscriptionId(scopeId, uid) : undefined;
 	if (!subscriptionId) return Promise.resolve(undefined);
 
-	return remember(subscriptionReads, subscriptionId, () =>
-		getStatementSubscriptionFromDB(subscriptionId, EXPECT_REFUSAL),
-	);
+	return remember(roleReads, subscriptionId, () => fetchRole(subscriptionId));
+}
+
+/** Redux can prove a level open with no network; it cannot prove one closed, a subscription may just not be loaded. */
+function isKnownOpen(levelId: string, person: Person | undefined): boolean {
+	const state = store.getState();
+	const level = statementSelector(levelId)(state);
+	const topParent = statementSelector(level?.topParentId)(state);
+	const subscription = statementSubscriptionSelector(getSubscriptionScopeId(level))(state);
+
+	return getEntryVerdict(level, topParent, subscription, person) === 'open';
 }
 
 /** Judges one level for one person. Read-only: unlike useAuthorization it never subscribes or files a request. */
@@ -69,6 +107,8 @@ export async function readLevelVerdict(
 	levelId: string,
 	person: Person | undefined,
 ): Promise<EntryVerdict> {
+	if (isKnownOpen(levelId, person)) return 'open';
+
 	const uid = person?.uid;
 	const level = await readLevel(levelId, uid);
 	if (!level) return 'gone';
@@ -76,12 +116,10 @@ export async function readLevelVerdict(
 	const inheritsAccess = !level.membership?.access && level.topParentId !== levelId;
 	const topParent = inheritsAccess ? await readLevel(level.topParentId, uid) : level;
 	const access = level.membership?.access || topParent?.membership?.access;
-	const subscription =
-		access === Access.public
-			? undefined
-			: await readSubscription(getSubscriptionScopeId(level), uid);
+	const role =
+		access === Access.public ? undefined : await readRole(getSubscriptionScopeId(level), uid);
 
-	return getEntryVerdict(level, topParent, subscription, person);
+	return getEntryVerdict(level, topParent, role ? { role } : undefined, person);
 }
 
 /** The nearest level above the statement the person may enter, or undefined for Home. */

@@ -23,7 +23,7 @@ Up target = the nearest `open` level, else Home.
 - Subscription scope = the level if it has its own access, else the top parent.
 - Order: public -> open; member, admin or the level's creator -> open; waiting -> waiting; not banned and `openToAll`, or `openForRegistered` and not anonymous -> open; anything else -> closed. Every level is judged on its own.
 - Never call `useAuthorization` on an ancestor: it writes (it auto-subscribes on open groups and files a join request on moderated ones).
-- Read-only `useUpTarget(statement)`: walks `parents` reversed, skipping `top`; if `parents` is missing it uses `[parentId, topParentId]`. It does not walk by `parentId` alone. It reads with `getStatementFromDB` plus the person's subscription doc. `undefined` (deleted, denied, offline) = not open, skipped. A refused read is an ordinary answer and is not logged as an error. A tap before the look resolves waits for it.
+- Read-only `useUpTarget(statement)`: walks `parents` reversed, skipping `top`; if `parents` is missing it uses `[parentId, topParentId]`. It does not walk by `parentId` alone. A level Redux can prove open needs no read, so a tap on it does not wait on the network. Otherwise it reads with `getStatementFromDB` plus the `role` of the person's subscription doc; only the role is read, so a doc holding Timestamps or missing fields still counts, as it does at the gate. `undefined` (deleted, denied, offline) = not open, skipped. A refused read is an ordinary answer and is not logged as an error. A tap before the look resolves waits for it.
 
 ## 3. Labels
 One word for the closed door: page / עמוד.
@@ -47,7 +47,7 @@ Unchanged. Closed ancestors are omitted from every way up: no lock, no placehold
 | Space name (`StatementHeader` -> `QuestionHeaderBar`) | Rendered, including the `title` attribute, only if the top parent's verdict is `open`. Otherwise omitted. |
 | "Question path" button (`AgreementHub`) | Shown only if the direct parent is `open`. |
 | "Parent question" (`LiveMapWorkspace`) | Same condition. |
-| Home card path text (`MainQuestionCard`) | Drops any part not known `open`. Redux only for the verdict; unknown = omitted. |
+| Home card path text (`MainQuestionCard`) | Not changed: no screen imports this component, so it renders nowhere. If it is brought back, it must drop any path part not known `open`. |
 | Follow me (`FollowMeToast`) | If the top parent's verdict is not `open`: no toast, no redirect. |
 | BottomNav, side list, menu Home; browser back | No change. Browser back is not intercepted. |
 
