@@ -4,9 +4,6 @@
  * @freedi/shared-types as TABLE_ASSIGNMENT_*; only server-side limits are here.
  */
 
-/** Direct mode: one counter doc per table, `${sessionId}_${tableIndex}`. Server-only (no client rules). */
-export const TABLE_ASSIGNMENT_SEATS_COLLECTION = 'tableAssignmentSeats';
-
 /** Longest Firestore doc id the callables accept from a client. */
 export const MAX_ID_LENGTH = 200;
 
@@ -21,7 +18,12 @@ export const POSITION_MIN = 0;
 export const POSITION_MAX = 100;
 
 /** Machine-readable causes the client can branch on (HttpsError details.reason). */
-export type TablesErrorReason = 'table-full' | 'stale-run' | 'registration-closed';
+export type TablesErrorReason =
+	| 'table-full'
+	| 'stale-run'
+	| 'registration-closed'
+	| 'claimed-by-name'
+	| 'seated-in-published-run';
 
 /** A table's position mean/sd is stored only with at least this many known positions; fewer could identify a person. */
 export const TABLE_STATS_MIN_KNOWN_POSITIONS = 3;

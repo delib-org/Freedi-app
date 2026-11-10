@@ -11,7 +11,15 @@ import type {
 	TablesSavePreferencesResponse,
 } from '@freedi/shared-types';
 import { db } from '../db';
-import { actorFrom, participantRef, readSession, requireId, topicsQuery } from './tablesAccess';
+import { rosterEntryFrom } from './roster';
+import {
+	actorFrom,
+	participantRef,
+	readSession,
+	requireId,
+	rosterRef,
+	topicsQuery,
+} from './tablesAccess';
 import { TablesError, toHttpsError } from './tablesErrors';
 import { parsePosition, withoutUndefined } from './validation';
 
@@ -44,7 +52,8 @@ export async function savePreferences(
 	const sessionId = requireId(req?.sessionId, 'sessionId');
 	const preferences = parsePreferenceList(req.preferences);
 	const position = parsePosition(req.position);
-	const ref = participantRef(firestore, tableAssignmentParticipantId(sessionId, uid));
+	const id = tableAssignmentParticipantId(sessionId, uid);
+	const ref = participantRef(firestore, id);
 
 	return firestore.runTransaction(async (tx) => {
 		const session = await readSession(tx, firestore, sessionId);
@@ -76,6 +85,7 @@ export async function savePreferences(
 			position,
 		});
 		tx.set(ref, participant);
+		tx.set(rosterRef(firestore, id), rosterEntryFrom(participant));
 
 		return { participant };
 	});

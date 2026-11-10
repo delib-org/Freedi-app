@@ -6,7 +6,8 @@
  * queries with ==, in, array-contains and range ops on dotted fields,
  * orderBy / limit / startAfter, get/create/set (with { merge })/update,
  * getAll, batch and runTransaction (reads then writes, applied at the end).
- * FieldValue.delete() comes from jest.setup.ts's mock as `{ _delete: true }`;
+ * FieldValue.delete() comes from jest.setup.ts's mock as `{ _delete: true }`
+ * and a merged FieldValue.increment(n) as `{ _increment: n }`;
  * a dotted update key ('statementSettings.ballot') writes a nested field, as
  * Firestore does.
  */
@@ -83,10 +84,18 @@ function applyUpdate(target: Data, patch: Data): Data {
 	return out;
 }
 
+function incrementOf(v: unknown): number | undefined {
+	return typeof v === 'object' && v !== null
+		? (v as { _increment?: number })._increment
+		: undefined;
+}
+
 function deepMerge(target: Data, patch: Data): Data {
 	const out = clone(target);
 	for (const [key, value] of Object.entries(patch)) {
+		const increment = incrementOf(value);
 		if (isDelete(value)) delete out[key];
+		else if (increment !== undefined) out[key] = ((out[key] as number) ?? 0) + increment;
 		else if (
 			typeof value === 'object' &&
 			value !== null &&

@@ -9,7 +9,7 @@ import type {
 import type { CallableRequest } from 'firebase-functions/v2/https';
 import { Collections } from '@freedi/shared-types';
 import type { TableAssignment, TableAssignmentTopic } from '@freedi/shared-types';
-import { MAX_ID_LENGTH, TABLE_ASSIGNMENT_SEATS_COLLECTION } from './constants';
+import { MAX_ID_LENGTH } from './constants';
 import { TablesError } from './tablesErrors';
 
 /**
@@ -17,6 +17,15 @@ import { TablesError } from './tablesErrors';
  * participants may be Firebase anonymous users. Host authority always comes
  * from the session doc's hostUid, never from anything the client sends.
  */
+
+/** Direct mode: one counter per table, doc id `${sessionId}_${tableIndex}`. */
+export interface SeatDoc {
+	sessionId: string;
+	tableIndex: number;
+	topicId: string;
+	/** Seats taken. Only ever changed inside a transaction that also read it. */
+	count: number;
+}
 
 export interface Actor {
 	uid: string;
@@ -69,6 +78,14 @@ export function participantRef(firestore: Firestore, participantId: string): Doc
 	return firestore.collection(Collections.tableAssignmentParticipants).doc(participantId);
 }
 
+export function rosterRef(firestore: Firestore, participantId: string): DocumentReference {
+	return firestore.collection(Collections.tableAssignmentRoster).doc(participantId);
+}
+
+export function counterRef(firestore: Firestore, sessionId: string): DocumentReference {
+	return firestore.collection(Collections.tableAssignmentCounters).doc(sessionId);
+}
+
 export function runRef(firestore: Firestore, runId: string): DocumentReference {
 	return runsCollection(firestore).doc(runId);
 }
@@ -78,7 +95,7 @@ export function seatRef(
 	sessionId: string,
 	tableIndex: number,
 ): DocumentReference {
-	return firestore.collection(TABLE_ASSIGNMENT_SEATS_COLLECTION).doc(`${sessionId}_${tableIndex}`);
+	return firestore.collection(Collections.tableAssignmentSeats).doc(`${sessionId}_${tableIndex}`);
 }
 
 export function topicsQuery(firestore: Firestore, sessionId: string): Query {
@@ -89,6 +106,14 @@ export function participantsQuery(firestore: Firestore, sessionId: string): Quer
 	return firestore
 		.collection(Collections.tableAssignmentParticipants)
 		.where('sessionId', '==', sessionId);
+}
+
+/** Name cards of one session with this name key. Two equalities, so no composite index. */
+export function rosterByNameQuery(firestore: Firestore, sessionId: string, nameKey: string): Query {
+	return firestore
+		.collection(Collections.tableAssignmentRoster)
+		.where('sessionId', '==', sessionId)
+		.where('nameKey', '==', nameKey);
 }
 
 export function readyRunsQuery(firestore: Firestore, sessionId: string): Query {
