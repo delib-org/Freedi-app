@@ -65,9 +65,26 @@ export async function resolveStatementAccess(
 	throw new HttpsError('permission-denied', 'You are not a member of this space');
 }
 
-interface AccessLevel {
-	statement: Statement | undefined;
+export interface AccessLevel {
+	statement: Pick<Statement, 'membership' | 'hide'> | undefined;
 	role: string | undefined;
+}
+
+export type AccessVerdict = 'allowed' | 'banned' | 'hidden' | 'waiting' | 'outsider';
+
+/** Whether no level having an access setting counts as open or as closed. */
+export type NoAccessSetting = 'open' | 'closed';
+
+export function isOpenAccess(access: string): boolean {
+	return OPEN_ACCESS.has(access);
+}
+
+export function isActiveRole(role: string | undefined): boolean {
+	return role !== undefined && ACTIVE_ROLES.has(role);
+}
+
+export function isHostRole(role: string | undefined): boolean {
+	return role !== undefined && HOST_ROLES.has(role);
 }
 
 /** The question first, then each ancestor up to the top. */
@@ -91,16 +108,45 @@ async function readAccessLevels(
 }
 
 /**
- * Whether the caller may take part in a question, reading the whole way up the
- * tree. The rules follow the app (`useAuthorization`):
+ * The verdict on one statement, given the statement and each ancestor up to the
+ * top, nearest first. The rules follow the app (`useAuthorization`):
  *
  * - a ban at any level refuses; a host at any level gets in;
- * - a hidden question, or one under something hidden, is `not-found` to anyone
- *   but an admin, so its existence is not revealed either;
+ * - a hidden statement, or one under something hidden, is `hidden` to anyone
+ *   but a host;
  * - a statement's own access setting wins, else the nearest ancestor's, so a
  *   private group between a question and an open top is honoured;
  * - someone waiting for approval is refused unless access is `public`, the one
  *   setting the app lets through before it looks at the waiting role.
+ */
+export function judgeAccessLevels(
+	levels: AccessLevel[],
+	noSetting: NoAccessSetting,
+): AccessVerdict {
+	if (levels.some(({ role }) => role === Role.banned)) return 'banned';
+
+	const isHostInTree = levels.some(({ role }) => isHostRole(role));
+	if (levels.some(({ statement }) => statement?.hide === true)) {
+		return isHostInTree ? 'allowed' : 'hidden';
+	}
+	if (isHostInTree) return 'allowed';
+
+	const ownerIndex = levels.findIndex(({ statement }) => statement?.membership?.access);
+	const access = ownerIndex >= 0 ? levels[ownerIndex].statement?.membership?.access : undefined;
+	const governing = ownerIndex >= 0 ? levels.slice(0, ownerIndex + 1) : levels;
+	if (governing.some(({ role }) => isActiveRole(role))) return 'allowed';
+	if (access === Access.public) return 'allowed';
+	if (governing.some(({ role }) => role === Role.waiting)) return 'waiting';
+	if (access ? isOpenAccess(access) : noSetting === 'open') return 'allowed';
+
+	return 'outsider';
+}
+
+/**
+ * Whether the caller may take part in a question, reading the whole way up the
+ * tree (see `judgeAccessLevels`). A question with no access setting at any level
+ * is refused. A hidden question is `not-found` to anyone but an admin, so its
+ * existence is not revealed either.
  */
 export async function resolveQuestionParticipation(
 	firestore: Firestore,
@@ -112,28 +158,17 @@ export async function resolveQuestionParticipation(
 	if (!questionSnap.exists || !question) throw new HttpsError('not-found', 'Statement not found');
 
 	const levels = await readAccessLevels(firestore, uid, question);
-	if (levels.some(({ role }) => role === Role.banned)) {
+	const verdict = judgeAccessLevels(levels, 'closed');
+	if (verdict === 'banned') {
 		throw new HttpsError('permission-denied', 'You cannot take part in this space');
 	}
-	if (levels.some(({ statement }) => statement?.hide === true)) {
-		const isHostInTree = levels.some(({ role }) => role !== undefined && HOST_ROLES.has(role));
-		if (!isHostInTree && (await findStatementAdminSource(uid, question)) === null) {
-			throw new HttpsError('not-found', 'Statement not found');
-		}
-
-		return question;
+	if (verdict === 'hidden' && (await findStatementAdminSource(uid, question)) === null) {
+		throw new HttpsError('not-found', 'Statement not found');
 	}
-	if (levels.some(({ role }) => role !== undefined && HOST_ROLES.has(role))) return question;
-
-	const ownerIndex = levels.findIndex(({ statement }) => statement?.membership?.access);
-	const access = ownerIndex >= 0 ? levels[ownerIndex].statement?.membership?.access : undefined;
-	const governing = ownerIndex >= 0 ? levels.slice(0, ownerIndex + 1) : levels;
-	if (governing.some(({ role }) => role !== undefined && ACTIVE_ROLES.has(role))) return question;
-	if (access === Access.public) return question;
-	if (governing.some(({ role }) => role === Role.waiting)) {
-		throw new HttpsError('permission-denied', 'Waiting for approval');
+	if (verdict === 'waiting') throw new HttpsError('permission-denied', 'Waiting for approval');
+	if (verdict === 'outsider') {
+		throw new HttpsError('permission-denied', 'You are not a member of this space');
 	}
-	if (access && OPEN_ACCESS.has(access)) return question;
 
-	throw new HttpsError('permission-denied', 'You are not a member of this space');
+	return question;
 }

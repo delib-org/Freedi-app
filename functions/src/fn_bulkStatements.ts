@@ -6,6 +6,12 @@ import { db } from './index';
 import { logError } from './utils/errorHandling';
 import { verifyAuthToken } from './utils/httpAuth';
 import { treeScopeQuery } from './services/statement-tree-query';
+import {
+	authorizeTreeRead,
+	findPrivateGates,
+	findRefusedGates,
+	type PrivateGates,
+} from './utils/treeReadAccess';
 
 /** Scope of a bulk fetch: direct children only, or the whole subtree. */
 type BulkFetchMode = 'direct' | 'descendants';
@@ -21,9 +27,15 @@ const BULK_FETCH = {
 	TOMBSTONE_TTL_MS: 30 * 24 * 60 * 60 * 1000,
 } as const;
 
-const responseCache = new Map<string, { at: number; body: string }>();
+/** One page as every caller could see it, and which of its statements are behind a private level. */
+interface BulkPage {
+	body: string;
+	gates: PrivateGates;
+}
 
-function getCached(key: string): string | null {
+const responseCache = new Map<string, BulkPage & { at: number }>();
+
+function getCached(key: string): BulkPage | null {
 	const entry = responseCache.get(key);
 	if (!entry) return null;
 	if (Date.now() - entry.at > BULK_FETCH.CACHE_TTL_MS) {
@@ -32,20 +44,66 @@ function getCached(key: string): string | null {
 		return null;
 	}
 
-	return entry.body;
+	return entry;
 }
 
-function setCached(key: string, body: string): void {
+function setCached(key: string, page: BulkPage): void {
 	if (responseCache.size >= BULK_FETCH.CACHE_MAX_ENTRIES) {
 		// Evict the oldest entry (Map preserves insertion order)
 		const oldest = responseCache.keys().next().value;
 		if (oldest !== undefined) responseCache.delete(oldest);
 	}
-	responseCache.set(key, { at: Date.now(), body });
+	responseCache.set(key, { at: Date.now(), ...page });
 }
 
 function isBulkFetchMode(value: unknown): value is BulkFetchMode {
 	return value === 'direct' || value === 'descendants';
+}
+
+async function readPage(
+	rootId: string,
+	mode: BulkFetchMode,
+	cursorId: string | null,
+	pageSize: number,
+): Promise<BulkPage> {
+	let query = treeScopeQuery(db, rootId, mode).orderBy('__name__').limit(pageSize);
+	if (cursorId) {
+		query = query.startAfter(cursorId);
+	}
+
+	const snapshot = await query.get();
+	const statements = snapshot.docs
+		.map((doc) => doc.data() as Statement)
+		.filter((statement) => !statement.hide);
+
+	const nextCursor =
+		snapshot.docs.length === pageSize ? snapshot.docs[snapshot.docs.length - 1].id : null;
+
+	return {
+		body: JSON.stringify({
+			ok: true,
+			statements,
+			nextCursor,
+			pageSize,
+			serverTime: Date.now(),
+		}),
+		gates: await findPrivateGates(db, rootId, statements),
+	};
+}
+
+/** The shared body, less anything behind a private level this caller may not pass. */
+async function bodyForCaller(uid: string, page: BulkPage): Promise<string> {
+	const refused = await findRefusedGates(db, uid, page.gates);
+	if (refused.size === 0) return page.body;
+
+	const parsed = JSON.parse(page.body) as { statements: Statement[] };
+	const statements = parsed.statements.filter((statement) => {
+		const gate = page.gates.get(statement.statementId);
+
+		return gate === undefined || !refused.has(gate);
+	});
+
+	return JSON.stringify({ ...parsed, statements });
 }
 
 /**
@@ -53,9 +111,11 @@ function isBulkFetchMode(value: unknown): value is BulkFetchMode {
  *
  * Returns one page of statements under rootId, ordered by document ID for
  * stable index-free pagination. The client drives the pagination loop so it
- * can render streaming progress. Requires a Firebase ID token.
+ * can render streaming progress. Requires a Firebase ID token, and access to
+ * rootId: the cache key has no user in it, so the check runs before the cache.
  *
- * Response: { ok, statements, nextCursor, pageSize, serverTime }
+ * Response: { ok, statements, nextCursor, pageSize, serverTime }, or
+ * { ok: false, error } with 403 when refused and 404 when not found or hidden.
  */
 export async function getBulkStatements(req: Request, res: Response): Promise<void> {
 	const uid = await verifyAuthToken(req, res);
@@ -75,6 +135,13 @@ export async function getBulkStatements(req: Request, res: Response): Promise<vo
 			return;
 		}
 
+		const access = await authorizeTreeRead(db, uid, rootId);
+		if (!access.allowed) {
+			res.status(access.status).json({ ok: false, error: access.error });
+
+			return;
+		}
+
 		const requestedPageSize = Number(req.query.pageSize);
 		const pageSize =
 			Number.isInteger(requestedPageSize) && requestedPageSize > 0
@@ -84,35 +151,13 @@ export async function getBulkStatements(req: Request, res: Response): Promise<vo
 		const cursorId = typeof cursor === 'string' && cursor.length > 0 ? cursor : null;
 		const cacheKey = `${mode}:${rootId}:${cursorId ?? ''}:${pageSize}`;
 
-		const cached = getCached(cacheKey);
-		if (cached) {
-			res.status(200).type('application/json').send(cached);
-
-			return;
+		let page = getCached(cacheKey);
+		if (!page) {
+			page = await readPage(rootId, mode, cursorId, pageSize);
+			setCached(cacheKey, page);
 		}
 
-		let query = treeScopeQuery(db, rootId, mode).orderBy('__name__').limit(pageSize);
-		if (cursorId) {
-			query = query.startAfter(cursorId);
-		}
-
-		const snapshot = await query.get();
-		const statements = snapshot.docs
-			.map((doc) => doc.data() as Statement)
-			.filter((statement) => !statement.hide);
-
-		const nextCursor =
-			snapshot.docs.length === pageSize ? snapshot.docs[snapshot.docs.length - 1].id : null;
-
-		const body = JSON.stringify({
-			ok: true,
-			statements,
-			nextCursor,
-			pageSize,
-			serverTime: Date.now(),
-		});
-
-		setCached(cacheKey, body);
+		const body = access.seesEverything ? page.body : await bodyForCaller(uid, page);
 		res.status(200).type('application/json').send(body);
 	} catch (error) {
 		logError(error, {
