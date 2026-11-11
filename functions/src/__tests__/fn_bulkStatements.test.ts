@@ -43,6 +43,10 @@ jest.mock('firebase-admin/firestore', () => ({
 }));
 
 // The access rules have their own suite: fn_bulkStatements.access.test.ts
+const mockRestampIfReused = jest.fn<(db: unknown, id: string) => Promise<void>>();
+jest.mock('../accessScope/recreatedStatements', () => ({
+	restampIfReused: (db: unknown, id: string) => mockRestampIfReused(db, id),
+}));
 jest.mock('../utils/treeReadAccess', () => ({
 	authorizeTreeRead: async () => ({ allowed: true, levels: [] }),
 	findPrivateGates: async () => new Map(),
@@ -256,7 +260,35 @@ describe('writeStatementDeletionTombstone', () => {
 		expect(written.topParentId).toBe('top-1');
 		expect(written.parents).toEqual(['top-1', 'parent-1']);
 		expect(typeof written.deletedAtMs).toBe('number');
+		expect(written.accessScope).toBe('open');
 		expect(written.expireAt).toBeDefined();
+		expect(mockRestampIfReused).not.toHaveBeenCalled();
+	});
+
+	it('keeps the tombstone of a statement inside a private level for good', async () => {
+		mockDocSet.mockResolvedValue(undefined);
+		const event = {
+			params: { statementId: 'st-2' },
+			data: {
+				data: () => ({
+					statementId: 'st-2',
+					parentId: 'group',
+					topParentId: 'top-1',
+					accessScope: 'group',
+				}),
+			},
+		};
+
+		await writeStatementDeletionTombstone(
+			event as unknown as Parameters<typeof writeStatementDeletionTombstone>[0],
+		);
+
+		const written = mockDocSet.mock.calls[0]?.[0] as unknown as Record<string, unknown>;
+		// No expireAt: the TTL policy never removes it, so a reused id can be told.
+		expect(written.accessScope).toBe('group');
+		expect(written.expireAt).toBeUndefined();
+		// An id made again before the tombstone landed is judged now.
+		expect(mockRestampIfReused).toHaveBeenCalledWith(expect.anything(), 'st-2');
 	});
 
 	it('does nothing when the event has no data', async () => {

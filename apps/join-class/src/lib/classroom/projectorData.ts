@@ -1,5 +1,5 @@
 import m from 'mithril';
-import { Collections, StatementType } from '@freedi/shared-types';
+import { Collections, StatementType, readScopesOfRoot } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { db, doc, collection, query, where } from '../firebase';
 import type { Unsubscribe } from '../firebase';
@@ -103,6 +103,7 @@ export function watchProjector(mainId: string): () => void {
 		query(
 			collection(db, Collections.statements),
 			where('parentId', '==', mainId),
+			where('accessScope', 'in', readScopesOfRoot(mainId)),
 			where('statementType', '==', StatementType.question),
 		),
 		(snap) => {

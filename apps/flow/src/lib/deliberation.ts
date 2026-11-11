@@ -1,6 +1,7 @@
 import { db, doc, getDoc, collection, getDocs, query, where, orderBy, setDoc, updateDoc } from './firebase';
 import { getUserState } from './user';
 import type { RatingMode } from '@freedi/shared-types';
+import { OPEN_ACCESS_SCOPE } from '@freedi/shared-types';
 
 /** Stage progression for the forward flow */
 export type FlowStage = 'intro' | 'needs-write' | 'needs-evaluate' | 'solutions-write' | 'solutions-evaluate' | 'state' | 'done';
@@ -151,6 +152,7 @@ export async function createDeliberation(wizard: WizardState): Promise<string> {
     createdAt: now,
     lastUpdate: now,
     consensus: 0,
+    accessScope: OPEN_ACCESS_SCOPE,
     participantCount: 0,
     deliberationConfig: {
       needsQuestionId,
@@ -171,6 +173,7 @@ export async function createDeliberation(wizard: WizardState): Promise<string> {
     createdAt: now,
     lastUpdate: now,
     consensus: 0,
+    accessScope: OPEN_ACCESS_SCOPE,
   });
 
   // Write solutions sub-question
@@ -185,6 +188,7 @@ export async function createDeliberation(wizard: WizardState): Promise<string> {
     createdAt: now,
     lastUpdate: now,
     consensus: 0,
+    accessScope: OPEN_ACCESS_SCOPE,
   });
 
   // 4. Write seed needs
@@ -200,6 +204,7 @@ export async function createDeliberation(wizard: WizardState): Promise<string> {
       createdAt: now,
       lastUpdate: now,
       consensus: 0,
+      accessScope: OPEN_ACCESS_SCOPE,
       isSeed: true,
     });
   }
@@ -217,6 +222,7 @@ export async function createDeliberation(wizard: WizardState): Promise<string> {
       createdAt: now,
       lastUpdate: now,
       consensus: 0,
+      accessScope: OPEN_ACCESS_SCOPE,
       isSeed: true,
     });
   }
@@ -415,6 +421,7 @@ export async function loadRatingMode(questionId: string): Promise<RatingMode | u
 
 /** Minimal statement data used in this app */
 export interface StatementData {
+  accessScope?: string;
   statementId: string;
   statement: string;
   parentId: string;
@@ -454,6 +461,7 @@ export async function submitStatement(
     createdAt: now,
     lastUpdate: now,
     consensus: 0,
+    accessScope: OPEN_ACCESS_SCOPE,
   };
 
   await setDoc(newRef, statement);
@@ -519,6 +527,7 @@ export async function submitComment(
     createdAt: now,
     lastUpdate: now,
     consensus: 0,
+    accessScope: OPEN_ACCESS_SCOPE,
   });
 
   return newRef.id;
@@ -548,6 +557,7 @@ export async function submitSuggestion(
     createdAt: now,
     lastUpdate: now,
     consensus: 0,
+    accessScope: OPEN_ACCESS_SCOPE,
     suggestionReason: reason || '',
   });
 

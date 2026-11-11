@@ -24,6 +24,7 @@ import { db } from '../db';
 import { logError } from '../utils/errorHandling';
 import { generateAnonName } from '../agora/anonNames';
 import { consumeAppHandoff, type AppHandoffRecord } from './appHandoff';
+import { governingLevelId } from '../accessScope/accessScopeLevels';
 
 /** Accesses a signed-in guest reaches without a membership of their own */
 const OPEN_ACCESS: ReadonlySet<Access> = new Set([Access.public, Access.openToAll, Access.open]);
@@ -50,16 +51,21 @@ export function guestDisplayName(
 }
 
 /**
- * The statement whose membership governs the question: the question itself
- * when it overrides access, else its top parent (as `useAuthorization` reads it).
+ * The statement whose membership governs the question: the private level its
+ * `accessScope` names (a private middle level counts); when it is open, its own
+ * setting or its top's, which still tells "open to the registered" apart.
  */
 async function governingStatement(question: Statement): Promise<Statement> {
-	if (question.membership?.access || !question.topParentId || question.topParentId === 'top') {
-		return question;
-	}
-	const top = await db.collection(Collections.statements).doc(question.topParentId).get();
+	const governingId = await governingLevelId(db, question);
+	const id =
+		governingId ??
+		(question.membership?.access || !question.topParentId || question.topParentId === 'top'
+			? question.statementId
+			: question.topParentId);
+	if (id === question.statementId) return question;
+	const snap = await db.collection(Collections.statements).doc(id).get();
 
-	return top.exists ? (top.data() as Statement) : question;
+	return snap.exists ? (snap.data() as Statement) : question;
 }
 
 /**
@@ -76,7 +82,8 @@ export async function ensureGuestMembership(
 	const snap = await db.collection(Collections.statements).doc(statementId).get();
 	if (!snap.exists)
 		throw new HttpsError('not-found', 'Question not found', { reason: 'not_found' });
-	const governing = await governingStatement(snap.data() as Statement);
+	const question = snap.data() as Statement;
+	const governing = await governingStatement(question);
 	const access = governing.membership?.access;
 	if (access && OPEN_ACCESS.has(access)) return;
 

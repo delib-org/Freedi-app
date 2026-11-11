@@ -7,6 +7,7 @@ import {
 	OdysseyIsland,
 	ODYSSEY_DEFAULT_GAME_ID,
 	odysseyTranslationsPath,
+	OPEN_ACCESS_SCOPE,
 } from '@freedi/shared-types';
 import { collection, db, doc, getDoc, getDocs, query, where } from './firebase';
 import type { Lang } from '../i18n/i18n';
@@ -55,6 +56,7 @@ export async function loadGame(
 		query(
 			collection(db, Collections.statements),
 			where('parents', 'array-contains', game.rootStatementId),
+			where('accessScope', '==', OPEN_ACCESS_SCOPE),
 		),
 	);
 	const statements = descendantsSnap.docs.map((d) => d.data() as Statement);

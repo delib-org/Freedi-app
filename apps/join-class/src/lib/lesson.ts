@@ -5,6 +5,7 @@ import {
 	Statement,
 	StatementType,
 	getRandomUID,
+	readScopesOfRoot,
 } from '@freedi/shared-types';
 import {
 	db,
@@ -136,6 +137,7 @@ export async function setChallengeQuestion(mainId: string, questionId: string): 
 		query(
 			collection(db, Collections.statements),
 			where('parentId', '==', mainId),
+			where('accessScope', 'in', readScopesOfRoot(mainId)),
 			where('statementType', '==', StatementType.question),
 		),
 	);

@@ -11,7 +11,14 @@ import {
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { auth, functions } from '../config';
-import { Collections, Statement, StatementType, Creator } from '@freedi/shared-types';
+import {
+	Collections,
+	Statement,
+	StatementType,
+	Creator,
+	inheritedAccessScope,
+	childTopParentId,
+} from '@freedi/shared-types';
 import { logger } from '@/services/logger';
 import { createStatementRef, createDocRef, createCollectionRef } from '@/utils/firebaseUtils';
 import { detectUrls } from '@/utils/urlHelpers';
@@ -162,7 +169,8 @@ export async function createEvidencePost(
 			statement: formattedText, // Use formatted text with link
 			statementType: StatementType.statement,
 			parentId: parentStatement.statementId,
-			topParentId: parentStatement.topParentId,
+			topParentId: childTopParentId(parentStatement),
+			...inheritedAccessScope(parentStatement),
 			creatorId: currentUser.uid,
 			creator,
 			createdAt: Date.now(),
@@ -201,6 +209,7 @@ export function listenToEvidencePosts(
 	const q = query(
 		createCollectionRef(Collections.statements),
 		where('parentId', '==', statementId),
+		where('statementType', '==', StatementType.statement),
 		where('evidence', '!=', null),
 	);
 

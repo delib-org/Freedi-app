@@ -16,9 +16,10 @@ import {
 export function useLevelVerdict(levelId: string | undefined): EntryVerdict | undefined {
 	const creator = useAppSelector(creatorSelector);
 	const level = useAppSelector(statementSelector(levelId));
-	const topParent = useAppSelector(statementSelector(level?.topParentId));
-	const subscription = useAppSelector(statementSubscriptionSelector(getSubscriptionScopeId(level)));
-	const isKnownOpen = isProvenOpen(level, topParent, subscription, creator);
+	const scopeId = getSubscriptionScopeId(level);
+	const governing = useAppSelector(statementSelector(scopeId));
+	const subscription = useAppSelector(statementSubscriptionSelector(scopeId));
+	const isKnownOpen = isProvenOpen(level, governing, subscription, creator);
 	const readKey = `${creator?.uid}--${levelId}`;
 	const [readResult, setReadResult] = useState<{ key: string; verdict: EntryVerdict }>();
 

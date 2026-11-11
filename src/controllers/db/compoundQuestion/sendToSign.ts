@@ -1,5 +1,10 @@
 import { setDoc } from 'firebase/firestore';
-import { Statement, StatementType, createStatementObject } from '@freedi/shared-types';
+import {
+	Statement,
+	StatementType,
+	createStatementObject,
+	childTopParentId,
+} from '@freedi/shared-types';
 import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { store } from '@/redux/store';
@@ -25,7 +30,8 @@ export async function sendSolutionToSign({
 			statement: solution.statement,
 			statementType: StatementType.document,
 			parentId: compoundStatement.statementId,
-			topParentId: compoundStatement.topParentId || compoundStatement.statementId,
+			parentAccessScope: compoundStatement.accessScope,
+			topParentId: childTopParentId(compoundStatement),
 			creatorId: creator.uid,
 			creator,
 		});

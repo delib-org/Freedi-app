@@ -5,7 +5,8 @@
 	"type": "module",
 	"description": "Firestore security-rules tests. Isolated from the app dependency tree on purpose: @firebase/rules-unit-testing peers on firebase ^12 while the apps are on ^11.",
 	"scripts": {
-		"test": "node --test"
+		"test": "node --test",
+		"test:next": "node --test \"next-rules/*.next.mjs\""
 	},
 	"devDependencies": {
 		"@firebase/rules-unit-testing": "^5.0.1",

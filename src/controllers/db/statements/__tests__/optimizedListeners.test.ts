@@ -27,6 +27,9 @@ jest.mock('@/redux/statements/statementsSlice', () => ({
 }));
 
 jest.mock('@/utils/errorHandling', () => ({ logError: jest.fn() }));
+jest.mock('../readScopes', () => ({
+	listenInScopes: (_id: string, start: (scopes: string[]) => () => void) => start(['open']),
+}));
 
 jest.mock('@/controllers/utils/firestoreListenerHelpers', () => ({
 	generateListenerKey: () => 'key',

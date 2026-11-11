@@ -7,6 +7,7 @@ import { clearStatementFields, statementSelector } from '@/redux/statements/stat
 import { logError } from '@/utils/errorHandling';
 import { accessCopyKeys, SELECTABLE_ACCESS_LEVELS } from '@/helpers/peopleLabels';
 import { isAccessInherited, resolveEffectiveAccess } from '@/helpers/effectiveAccess';
+import { getInheritedLevelId } from '@/helpers/entryVerdict';
 import { fillPlaceholders } from '@/helpers/fillPlaceholders';
 import InlineNote from '@/view/components/atomic/atoms/InlineNote';
 import InheritanceSwitch from '@/view/components/atomic/molecules/InheritanceSwitch';
@@ -33,7 +34,7 @@ interface AccessChoice {
 const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 	const { t } = useTranslation();
 	const dispatch = useAppDispatch();
-	const topParent = useAppSelector(statementSelector(statement?.topParentId));
+	const topParent = useAppSelector(statementSelector(getInheritedLevelId(statement)));
 	const isTopLevel = statement?.parentId === 'top';
 	const inheritedAccess = topParent?.membership?.access ?? Access.openToAll;
 

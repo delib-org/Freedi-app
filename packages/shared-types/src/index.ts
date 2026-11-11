@@ -1403,3 +1403,21 @@ export type {
 	FullExportRequest,
 	FullExportResponse,
 } from './utils/exportFormat';
+
+export {
+	OPEN_ACCESS_SCOPE,
+	QUARANTINED_ACCESS_SCOPE,
+	isQuarantinedScope,
+	isAnswerTypeLevel,
+	isOpenAccessValue,
+	ownAccessSetting,
+	resolveAccessScope,
+	newStatementAccessScope,
+	stampAccessScope,
+	inheritedAccessScope,
+	readScopesOf,
+	readScopesOfRoot,
+} from "./models/statement/accessScope";
+export type { AccessScopeLevel, AccessScopeParent } from "./models/statement/accessScope";
+export { childTopParentId } from "./models/statement/treeFields";
+export type { TreeParent } from "./models/statement/treeFields";

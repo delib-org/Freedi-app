@@ -1,7 +1,7 @@
 import { after, before, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { agoraProposalDoc, evaluationDoc, makeEnv, seed, statementDoc } from './helpers.mjs';
+import { agoraProposalDoc, evaluationDoc, makeEnv, seed, seedDefaultParents, statementDoc } from './helpers.mjs';
 
 /**
  * The teacher removed a student (agoraRemoveParticipant): the uid is on the
@@ -35,6 +35,7 @@ describe('agora removed participants', () => {
 
 	before(async () => {
 		env = await makeEnv('agora-removal');
+		await seedDefaultParents(env);
 		await seed(env, async (db) => {
 			await setDoc(doc(db, 'agoraSessions', SESSION), sessionDoc(SESSION, { [REMOVED]: { removedAt: 1000, anonName: 'שועל כחול', requestedAt: 2000 } }));
 			await setDoc(doc(db, 'agoraSessions', OTHER_SESSION), sessionDoc(OTHER_SESSION));

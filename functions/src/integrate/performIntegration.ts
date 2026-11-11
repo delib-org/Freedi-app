@@ -1,5 +1,5 @@
 import { getFirestore } from 'firebase-admin/firestore';
-import { Collections, Statement, StatementType } from '@freedi/shared-types';
+import { Collections, Statement, StatementType, inheritedAccessScope } from '@freedi/shared-types';
 import { logger } from 'firebase-functions';
 import { migrateEvaluationsToNewStatement } from '../evaluation';
 import { textToParagraphs } from '../helpers';
@@ -143,6 +143,7 @@ export async function performIntegration(
 		// queries/selectors that filter on parents[] (e.g. the cluster map).
 		// Without it the map drops auto-generated clusters and shows flat mode.
 		parents: [...(parentStatement.parents ?? []), parentStatementId],
+		...inheritedAccessScope(parentStatement),
 		topParentId,
 		creatorId,
 		creator: {
@@ -203,6 +204,7 @@ export async function performIntegration(
 				parentId: newStatementId,
 				topParentId,
 				parents: [...parentParents, parentStatementId, newStatementId],
+				...inheritedAccessScope(parentStatement),
 				creatorId,
 				creator: {
 					displayName: creatorDisplayName || 'Admin',

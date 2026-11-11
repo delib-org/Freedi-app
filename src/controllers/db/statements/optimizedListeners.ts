@@ -23,6 +23,7 @@ import {
 	createManagedCollectionListener,
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
+import { listenInScopes } from './readScopes';
 
 /**
  * Coerce a required-number field that arrived as null/undefined to 0, following
@@ -90,6 +91,10 @@ function parseStatement(raw: unknown): Statement {
  * Replaces dual listeners with a single efficient query
  */
 export function listenToMindMapData(statementId: string): Unsubscribe {
+	return listenInScopes(statementId, (scopes) => listenToMindMapDataInScopes(scopes, statementId));
+}
+
+function listenToMindMapDataInScopes(scopes: string[], statementId: string): Unsubscribe {
 	try {
 		const statementsRef = collection(FireStore, Collections.statements);
 
@@ -99,25 +104,28 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
 		// Single comprehensive query that gets everything we need
 		const q = query(
 			statementsRef,
-			or(
-				// Get the root statement itself
-				where('statementId', '==', statementId),
-				// Get all descendants via parents array
-				and(
-					where('parents', 'array-contains', statementId),
-					or(
-						where('statementType', '==', StatementType.question),
-						where('statementType', '==', StatementType.group),
-						where('statementType', '==', StatementType.option),
+			and(
+				where('accessScope', 'in', scopes),
+				or(
+					// Get the root statement itself
+					where('statementId', '==', statementId),
+					// Get all descendants via parents array
+					and(
+						where('parents', 'array-contains', statementId),
+						or(
+							where('statementType', '==', StatementType.question),
+							where('statementType', '==', StatementType.group),
+							where('statementType', '==', StatementType.option),
+						),
 					),
-				),
-				// Get direct children via parentId (backup for missing parents array)
-				and(
-					where('parentId', '==', statementId),
-					or(
-						where('statementType', '==', StatementType.question),
-						where('statementType', '==', StatementType.group),
-						where('statementType', '==', StatementType.option),
+					// Get direct children via parentId (backup for missing parents array)
+					and(
+						where('parentId', '==', statementId),
+						or(
+							where('statementType', '==', StatementType.question),
+							where('statementType', '==', StatementType.group),
+							where('statementType', '==', StatementType.option),
+						),
 					),
 				),
 			),
@@ -125,7 +133,11 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
 			limit(MAX_MINDMAP_DOCUMENTS),
 		);
 
-		const listenerKey = generateListenerKey('mindmap-consolidated', 'statement', statementId);
+		const listenerKey = generateListenerKey(
+			'mindmap-consolidated',
+			'statement',
+			`${statementId}-${scopes.join('+')}`,
+		);
 
 		// Performance tracking
 		let loadedCount = 0;

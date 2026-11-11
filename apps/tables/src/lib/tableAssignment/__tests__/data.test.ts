@@ -77,7 +77,8 @@ describe('fetchChosenOptions', () => {
 
 		expect(firestore.where).toHaveBeenCalledWith('parentId', '==', 'question-1');
 		expect(firestore.where).toHaveBeenCalledWith('isChosen', '==', true);
-		expect(firestore.where).toHaveBeenCalledTimes(2);
+		expect(firestore.where).toHaveBeenCalledWith('statementType', '==', 'option');
+		expect(firestore.where).toHaveBeenCalledTimes(3);
 	});
 
 	it('returns the statement data of every matching document', async () => {

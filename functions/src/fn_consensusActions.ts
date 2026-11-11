@@ -14,6 +14,7 @@ import {
 	DEFAULT_MIN_EVALUATORS,
 	StatementType,
 	functionConfig,
+	inheritedAccessScope,
 } from '@freedi/shared-types';
 
 /**
@@ -211,6 +212,7 @@ export const fn_autoRemoveParagraph = onDocumentUpdated(
 				},
 				statementType: StatementType.option,
 				parentId: after.topParentId,
+				...inheritedAccessScope(after),
 				topParentId: after.topParentId,
 				createdAt: now,
 				lastUpdate: now,
@@ -387,6 +389,7 @@ export const fn_autoAddParagraph = onDocumentUpdated(
 				creator: after.creator,
 				statementType: StatementType.option,
 				parentId: after.topParentId,
+				...inheritedAccessScope(after),
 				topParentId: after.topParentId,
 				createdAt: now,
 				lastUpdate: now,
@@ -425,6 +428,7 @@ export const fn_autoAddParagraph = onDocumentUpdated(
 				creator: { displayName: 'System', uid: 'system' },
 				statementType: StatementType.option,
 				parentId: after.topParentId,
+				...inheritedAccessScope(after),
 				topParentId: after.topParentId,
 				createdAt: now,
 				lastUpdate: now,
@@ -450,6 +454,7 @@ export const fn_autoAddParagraph = onDocumentUpdated(
 				creator: { displayName: 'System', uid: 'system' },
 				statementType: StatementType.option,
 				parentId: after.topParentId,
+				...inheritedAccessScope(after),
 				topParentId: after.topParentId,
 				createdAt: now,
 				lastUpdate: now,

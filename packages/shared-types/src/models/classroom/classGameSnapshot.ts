@@ -1,3 +1,4 @@
+import { OPEN_ACCESS_SCOPE } from '../statement/accessScope';
 import { safeParse } from 'valibot';
 import { Access, StatementType } from '../TypeEnums';
 import { ParagraphType } from '../paragraph/paragraphModel';
@@ -327,6 +328,7 @@ export function lessonFromSnapshot(input: LessonFromSnapshotInput): LessonStatem
 		createdAt: now,
 		lastUpdate: now,
 		membership: { ...(built.membership ?? {}), access: Access.openToAll },
+		accessScope: OPEN_ACCESS_SCOPE,
 		...(input.sourceLesson
 			? {
 					sourceLessonId: input.sourceLesson.id,
@@ -352,6 +354,7 @@ export function lessonFromSnapshot(input: LessonFromSnapshotInput): LessonStatem
 			statement: flattenLines(q.text),
 			statementType: StatementType.question,
 			parentId: lessonId,
+			parentAccessScope: OPEN_ACCESS_SCOPE,
 			topParentId: homeId,
 			parents: [homeId, lessonId],
 			creatorId: creator.uid,
@@ -370,7 +373,7 @@ export function lessonFromSnapshot(input: LessonFromSnapshotInput): LessonStatem
 		const copy = createParagraphChildStatement({
 			statementId: input.newId(),
 			content: flattenLines(p.text),
-			host: { statementId: lessonId, topParentId: homeId },
+			host: { statementId: lessonId, topParentId: homeId, accessScope: OPEN_ACCESS_SCOPE },
 			creator,
 			order: p.order,
 			blockType: p.blockType as ParagraphType | undefined,

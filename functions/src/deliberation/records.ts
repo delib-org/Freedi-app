@@ -8,6 +8,7 @@ import {
 	User,
 	calcAgreement,
 	createParagraphChildStatement,
+	inheritedAccessScope,
 } from '@freedi/shared-types';
 import { createHash } from 'crypto';
 import { HttpsError } from 'firebase-functions/v2/https';
@@ -240,6 +241,7 @@ export async function persistAgreement(
 		statementType: 'agreement',
 		parentId: question.statementId,
 		topParentId: question.topParentId || question.statementId,
+		...inheritedAccessScope(question),
 		parents: [...(question.parents || []), question.statementId],
 		creatorId: creator.uid,
 		creator,
@@ -247,7 +249,6 @@ export async function persistAgreement(
 		lastUpdate: now,
 		consensus: 0,
 		isDocument: true,
-		membership: question.membership || {},
 		statementSettings: { ...question.statementSettings, enableAddEvaluationOption: false },
 		agreementMeta: meta,
 	};
@@ -258,7 +259,7 @@ export async function persistAgreement(
 	parts.forEach((part, order) => {
 		const paragraph = createParagraphChildStatement({
 			content: part.text,
-			host: { statementId: id, topParentId: id },
+			host: { statementId: id, topParentId: id, accessScope: question.accessScope },
 			creator,
 			order,
 			blockType: part.type as ParagraphType,

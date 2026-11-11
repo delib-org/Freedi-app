@@ -11,7 +11,7 @@ import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
 // Import collection constants
-import { Collections, StatementType, functionConfig } from '@freedi/shared-types';
+import { Collections, StatementType, functionConfig, Statement } from '@freedi/shared-types';
 
 // Structured error handling
 import { logError } from './utils/errorHandling';
@@ -39,6 +39,9 @@ import {
 import { RATE_BUDGETS, type RateBudget } from './config/rateBudgets';
 import { TRIGGER_MAX_INSTANCES } from './config/triggerLimits';
 import { legacyStatementTriggers } from './statementDispatch/legacyTriggers';
+import { onAccessScopeJobWritten } from './accessScope/fn_accessScopeJob';
+import { isAccessScopeOnlyWrite } from './accessScope/scopeOnlyWrite';
+import { restampOnAccessChange, stampNewStatement } from './accessScope/stampAccessScope';
 import { skipWhenDispatcherOwns } from './statementDispatch/cutover';
 
 // Import function modules
@@ -583,7 +586,13 @@ exports.backfillSubscriptionFields = wrapAdminHttpFunction(backfillSubscriptionF
 exports.onStatementCreated = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
 	onDocumentCreated,
-	onStatementCreated,
+	async (event: Parameters<typeof onStatementCreated>[0]) => {
+		await Promise.all([
+			onStatementCreated(event),
+			// Rides here rather than adding a trigger to the hottest collection.
+			stampNewStatement(event.data?.data() as Statement | undefined),
+		]);
+	},
 	'onStatementCreated',
 	{ memory: HOT_TRIGGER_MEMORY, maxInstances: TRIGGER_MAX_INSTANCES.statementCreate },
 );
@@ -774,6 +783,7 @@ exports.onSubscriptionDeletedMembership = createFirestoreFunction(
 // STATEMENT_DISPATCH_CUTOVER_MS is set; see docs/scale/statement-dispatch-cutover.md.
 export { onStatementWriteDispatch } from './statementDispatch/onStatementWriteDispatch';
 exports.updateParentOnChildUpdate = updateParentOnChildUpdate;
+exports.onAccessScopeJobWritten = onAccessScopeJobWritten;
 exports.updateParentOnChildDelete = updateParentOnChildDelete;
 // REMOVED: updateSubscriptionsSimpleStatement — replaced by Snapshot + Overlay pattern
 
@@ -1253,7 +1263,10 @@ exports.liveSynthOnOptionUpdate = createFirestoreFunction(
 		if (!event.data) return;
 		const before = event.data.before.data();
 		const after = event.data.after.data();
+		if (isAccessScopeOnlyWrite(before, after)) return;
 		await Promise.all([
+			// Same ride: only an access or parent change does any reading here.
+			restampOnAccessChange(before as Statement, after as Statement),
 			// Rides on this trigger (it already fires on every statement update)
 			// rather than adding another per-update function: vector search
 			// pre-filters by parentId, so the embedding doc follows a moved statement.
@@ -1276,6 +1289,7 @@ exports.liveSynthOnOptionEvaluationChange = createFirestoreFunction(
 	onDocumentUpdated,
 	async (event: { data?: { before: { data: () => unknown }; after: { data: () => unknown } } }) => {
 		if (!event.data) return;
+		if (isAccessScopeOnlyWrite(event.data.before.data(), event.data.after.data())) return;
 		await liveSynthOnOptionEvaluationChange(event.data.before.data(), event.data.after.data());
 	},
 	'liveSynthOnOptionEvaluationChange',

@@ -180,6 +180,7 @@ function buildExtraQuestion(
 		statement: extra.title.trim(),
 		statementType: StatementType.question,
 		parentId: activity.statementId,
+		parentAccessScope: activity.accessScope,
 		topParentId: top.statementId,
 		parents: [top.statementId, activity.statementId],
 		statementId,

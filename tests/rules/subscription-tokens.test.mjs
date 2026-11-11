@@ -13,8 +13,18 @@ import {
 import { makeEnv, seed } from './helpers.mjs';
 
 /**
+ * STAGE 1 NOTE (private-level reads, `accessScope`): dev still runs the OLD
+ * firestore.rules, where any signed-in user can read a subscription. The last
+ * test below asserts that. The NEW rules ship LAST, after Tal's separate yes,
+ * from `fix/private-statement-reads` rebased onto dev at that time (see
+ * docs/security/access-scope-release.md, "Stage 2: the rules"); that change
+ * flips the last test to assertFails for a stranger.
+ */
+
+/**
  * statementsSubscribe.tokens is being retired: any signed-in user can read a
- * subscription, so the field may only shrink. Old cached clients must still be
+ * subscription (until the private-reads rules ship; then only its owner,
+ * those in the statement and hosts can), so the field may only shrink. Old cached clients must still be
  * able to JOIN, and they send one token inside the write that creates the doc,
  * so that one shape stays allowed (the server removes the token afterwards).
  * The shapes below are what those clients really send: see
@@ -182,6 +192,9 @@ describe('statementsSubscribe.tokens is retired', () => {
 			);
 		});
 
+		// STAGE 1: dev's rules still let any signed-in user read a subscription.
+		// When the new rules ship (see the note at the top), this test becomes
+		// 'no longer shows the old field to a signed-in stranger': assertFails.
 		it('still shows the old field to any signed-in reader until the cleanup has run', async () => {
 			await seedSub({ tokens: ['device-1'] });
 			const snapshot = await assertSucceeds(getDoc(ref(as(OTHER), OPEN)));

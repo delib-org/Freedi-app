@@ -221,8 +221,9 @@ describe('join-class no-device rules', () => {
 			await assertSucceeds(
 				setDoc(moved, option('move-then-flip', GUIDING, STUDENT, { statementType: 'statement' })),
 			);
-			await assertFails(updateDoc(moved, { parentId: CH, statementType: 'option' }));
-			await assertSucceeds(updateDoc(moved, { parentId: CH }));
+			// A move carries the new parent's tree fields, as every client move does.
+			await assertFails(updateDoc(moved, { parentId: CH, parents: [MAIN, CH], statementType: 'option' }));
+			await assertSucceeds(updateDoc(moved, { parentId: CH, parents: [MAIN, CH] }));
 			await assertFails(updateDoc(moved, { statementType: 'option' }));
 		});
 
@@ -313,13 +314,13 @@ describe('join-class no-device rules', () => {
 			await assertSucceeds(
 				setDoc(ref, option('chat-under-challenge', CH, STUDENT, { statementType: 'statement' })),
 			);
-			await assertSucceeds(updateDoc(ref, { parentId: GUIDING }));
+			await assertSucceeds(updateDoc(ref, { parentId: GUIDING, parents: [MAIN, GUIDING] }));
 		});
 
 		it('moving an option between guiding questions stays open', async () => {
 			const ref = doc(as(STUDENT), 'statements', 'answer-other-q');
 			await assertSucceeds(setDoc(ref, option('answer-other-q', GUIDING, STUDENT)));
-			await assertSucceeds(updateDoc(ref, { parentId: OWN_QUESTION }));
+			await assertSucceeds(updateDoc(ref, { parentId: OWN_QUESTION, parents: [MAIN, OWN_QUESTION] }));
 		});
 	});
 

@@ -241,7 +241,7 @@ describe('createStatement with validation', () => {
 	});
 
 	describe('Default values and settings', () => {
-		it('should set default membership to openToAll when not provided', () => {
+		it('should store no own setting on a child when none is chosen', () => {
 			const props: CreateStatementProps = {
 				text: 'Statement without membership',
 				parentStatement: mockParentStatement,
@@ -250,7 +250,7 @@ describe('createStatement with validation', () => {
 
 			const result = createStatement(props);
 
-			expect(result?.membership).toEqual({ access: Access.openToAll });
+			expect(result?.membership).toBeUndefined();
 		});
 
 		it('should use provided membership when specified', () => {
