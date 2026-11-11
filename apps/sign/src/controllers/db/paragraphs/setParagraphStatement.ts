@@ -44,7 +44,8 @@ export async function createParagraphStatementToDB(params: CreateParagraphParams
       content: params.content,
       host: {
         statementId: params.documentId,
-        topParentId: params.documentId,
+        // A document can sit under a group: its children belong to the group's tree.
+        topParentId: documentSnap.data()?.topParentId || params.documentId,
         accessScope: documentSnap.data()?.accessScope,
       },
       creator: params.creator,
