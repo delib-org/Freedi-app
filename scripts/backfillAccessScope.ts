@@ -35,6 +35,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { db } from '../functions/src/db';
+import { logError } from '../functions/src/utils/errorHandling';
 import {
 	backfillStateFileName,
 	estimateBackfillCost,
@@ -112,6 +113,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-	console.error(error);
+	logError(error, { operation: 'scripts.backfillAccessScope' });
 	process.exitCode = 1;
 });
