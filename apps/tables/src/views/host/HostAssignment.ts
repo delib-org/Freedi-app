@@ -181,6 +181,7 @@ export const HostAssignment: m.Component<{ id: string }> = {
 			topics: true,
 			participants: true,
 			wide: true,
+			deletable: true,
 			render: (context: HostContext) => m(AssignmentBody, { context }),
 		});
 	},

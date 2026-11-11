@@ -1,9 +1,10 @@
 import m from 'mithril';
-import { canEditPreferences } from '@/logic/nextAction';
+import { preferencesAccess } from '@/logic/nextAction';
 import { stepNumber, stepsOf } from '@/logic/steps';
 import { ParticipantFrame } from '@/components/ParticipantFrame';
 import type { ParticipantContext } from '@/components/ParticipantFrame';
 import { Redirect } from '@/components/Redirect';
+import { StateBox } from '@/components/StateBox';
 import { stepLabel } from '@/components/StepHeader';
 import { DirectPicker } from '@/views/participant/DirectPicker';
 import { RankedPreferences } from '@/views/participant/RankedPreferences';
@@ -23,7 +24,10 @@ export const ParticipantPreferences: m.Component<{ id: string }> = {
 			barLabel: ({ session }: ParticipantContext) =>
 				stepLabel(stepNumber(session, 'preferences'), stepsOf(session).length),
 			render: (context: ParticipantContext) => {
-				if (!context.me || !canEditPreferences(context.session.status)) {
+				const access = preferencesAccess(context.session.status, context.seated);
+
+				if (context.me && access === 'checking') return m(StateBox, { kind: 'loading' });
+				if (!context.me || access !== 'allowed') {
 					return m(Redirect, { to: participantHomePath(attrs.id) });
 				}
 

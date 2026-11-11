@@ -1,6 +1,9 @@
 import m from 'mithril';
 import type { TableAssignmentRosterEntry } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
+import { LiveValue } from '@/lib/live';
+import { subscribeRuns } from '@/lib/tableAssignment/data';
+import { publishedRunOf, unseatedSincePublished } from '@/logic/latecomers';
 import { rosterMatching, summarizeParticipants } from '@/logic/participants';
 import { HostFrame } from '@/components/HostFrame';
 import type { HostContext } from '@/components/HostFrame';
@@ -11,13 +14,27 @@ interface ParticipantsBodyAttrs {
 	context: HostContext;
 }
 
-const ParticipantsBody: m.ClosureComponent<ParticipantsBodyAttrs> = () => {
+const ParticipantsBody: m.ClosureComponent<ParticipantsBodyAttrs> = (initial) => {
+	const runs = new LiveValue(
+		'runs',
+		subscribeRuns(initial.attrs.context.session.tableAssignmentId),
+	);
 	let search = '';
 	let removing: TableAssignmentRosterEntry | null = null;
 
-	function row(person: TableAssignmentRosterEntry, canRemove: boolean): m.Vnode {
+	function row(
+		person: TableAssignmentRosterEntry,
+		canRemove: boolean,
+		unseated: ReadonlySet<string>,
+	): m.Vnode {
 		return m('li.roster__item', { key: person.uid }, [
 			m('span.roster__name', { dir: 'auto' }, person.fullName),
+			unseated.has(person.uid)
+				? m('span.pill.pill--warning.roster__tag', t('tableAssignment.participants.unseated'))
+				: null,
+			person.claimedByName
+				? m('span.pill.pill--neutral.roster__tag', t('tableAssignment.participants.claimedByName'))
+				: null,
 			canRemove
 				? m(
 						'button.btn.btn--text',
@@ -35,9 +52,23 @@ const ParticipantsBody: m.ClosureComponent<ParticipantsBodyAttrs> = () => {
 	}
 
 	return {
+		oninit() {
+			runs.start();
+		},
+		onremove() {
+			runs.stop();
+		},
 		view({ attrs }) {
 			const { session, participants } = attrs.context;
 			const summary = summarizeParticipants(participants);
+			// People who registered after publishing and have no seat yet (the host seats them by computing again).
+			const unseated = unseatedSincePublished(
+				session.status === 'published'
+					? publishedRunOf(runs.data ?? [], session.publishedRunId)
+					: undefined,
+				participants,
+			);
+			const unseatedUids = new Set(unseated.map((person) => person.uid));
 			const canRemove = session.status !== 'ended';
 
 			if (participants.length === 0) {
@@ -52,6 +83,7 @@ const ParticipantsBody: m.ClosureComponent<ParticipantsBodyAttrs> = () => {
 							[
 								['registered', summary.registered],
 								['withPreferences', summary.withPreferences],
+								...(unseated.length > 0 ? ([['unseated', unseated.length]] as const) : []),
 							] as const
 						).map(([key, value]) =>
 							m('div.counts__item', { key }, [
@@ -75,7 +107,9 @@ const ParticipantsBody: m.ClosureComponent<ParticipantsBodyAttrs> = () => {
 					]),
 					m(
 						'ul.roster',
-						rosterMatching(participants, search).map((person) => row(person, canRemove)),
+						rosterMatching(participants, search).map((person) =>
+							row(person, canRemove, unseatedUids),
+						),
 					),
 				]),
 				removing
@@ -98,6 +132,7 @@ export const HostParticipants: m.Component<{ id: string }> = {
 			sessionId: attrs.id,
 			titleKey: 'tableAssignment.screen.participants',
 			participants: true,
+			deletable: true,
 			render: (context: HostContext) => m(ParticipantsBody, { context }),
 		});
 	},

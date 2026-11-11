@@ -17,6 +17,8 @@ export class Action {
 		private readonly operation: string,
 		/** Message key for `failed-precondition` (stale draft, full table, ...). */
 		private readonly preconditionKey: string = 'tableAssignment.error.generic',
+		/** Message keys for server reasons that mean something else on this screen. */
+		private readonly reasonKeys: Readonly<Record<string, string>> = {},
 	) {}
 
 	/** Run `work`; resolves to its result, or undefined when it failed (see `errorKey`). */
@@ -34,7 +36,7 @@ export class Action {
 			return result;
 		} catch (error) {
 			logError(error, { operation: this.operation, metadata });
-			this.errorKey = errorMessageKey(error, this.preconditionKey);
+			this.errorKey = errorMessageKey(error, this.preconditionKey, this.reasonKeys);
 
 			return undefined;
 		} finally {

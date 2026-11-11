@@ -148,6 +148,21 @@
     min-inline-size: 0;
     overflow-wrap: anywhere;
   }
+
+  &__tag {
+    flex: none;
+    font-size: var(--font-size-sm);
+  }
+}
+
+.host-footer {
+  display: flex;
+  justify-content: center;
+  margin-block-start: var(--space-lg);
+
+  &__delete {
+    color: var(--danger);
+  }
 }
 
 .assignment__actions {

@@ -36,7 +36,8 @@ export type TablesErrorReason =
 	| 'registration-full'
 	| 'name-locked'
 	| 'too-few-registrants'
-	| 'preview-limit';
+	| 'preview-limit'
+	| 'table-size-below-published';
 
 /** Fewer registrants than this are refused a preview: tables that small say too much about each person. */
 export const MIN_REGISTRANTS_FOR_PREVIEW = 5;

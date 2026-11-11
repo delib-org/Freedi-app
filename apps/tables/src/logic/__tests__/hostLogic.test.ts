@@ -9,7 +9,7 @@ import {
 } from '../directTables';
 import { formatConsensus, tableNumber } from '../format';
 import { combineStates, stateForErrorCode } from '../loadable';
-import { describeMetrics, formatDeviation } from '../metrics';
+import { describeMetrics } from '../metrics';
 import { canEditPreferences } from '../nextAction';
 import { rosterMatching, summarizeParticipants } from '../participants';
 import { latestRun } from '../runs';
@@ -70,7 +70,7 @@ describe('stale draft check', () => {
 });
 
 describe('describeMetrics', () => {
-	it('lists each rank and the balance against the tolerance', () => {
+	it('lists each rank and the totals', () => {
 		const view = describeMetrics(makeRun().metrics);
 
 		expect(view.rankRows).toEqual([
@@ -78,8 +78,6 @@ describe('describeMetrics', () => {
 			{ rank: 2, count: 1 },
 			{ rank: 3, count: 0 },
 		]);
-		expect(view.balanceMax).toBe('0.20');
-		expect(view.tolerance).toBe('0.30');
 		expect(view.gotChosenTopic).toBe(3);
 		expect(view.rankedSeated).toBe(3);
 	});
@@ -99,8 +97,16 @@ describe('describeMetrics', () => {
 		expect(view.rankedSeated).toBe(2);
 	});
 
-	it('formats non-finite deviations as a dash', () => {
-		expect(formatDeviation(Number.NaN)).toBe('-');
+	it('reads a published run with empty preferences without crashing', () => {
+		const run = makeRun();
+		const view = describeMetrics({
+			...run.metrics,
+			preferences: { byRank: [], none: 0, noPreference: 0, score: 0, maxScore: 0 },
+		});
+
+		expect(view.rankRows).toEqual([]);
+		expect(view.gotChosenTopic).toBe(0);
+		expect(view.rankedSeated).toBe(0);
 	});
 });
 

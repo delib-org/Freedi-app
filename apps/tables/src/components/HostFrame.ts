@@ -8,6 +8,7 @@ import { t } from '@/lib/i18n';
 import { LiveValue } from '@/lib/live';
 import { subscribeRoster, subscribeSession, subscribeTopics } from '@/lib/tableAssignment/data';
 import { combineStates } from '@/logic/loadable';
+import { DeleteAssignment } from '@/components/DeleteAssignment';
 import { HostGate } from '@/components/HostGate';
 import { Shell } from '@/components/Shell';
 import type { ShellAttrs } from '@/components/Shell';
@@ -33,6 +34,8 @@ export interface HostFrameAttrs {
 	topics?: boolean;
 	participants?: boolean;
 	wide?: boolean;
+	/** Show "Delete this assignment" at the foot of the screen. */
+	deletable?: boolean;
 	/** The host home has no "back to home" link, it goes back to the list. */
 	isHome?: boolean;
 	/** The stage this screen is for: when the status makes it the stage, Back goes to the list. */
@@ -44,6 +47,16 @@ export interface HostFrameAttrs {
 
 interface SignedInFrameAttrs extends HostFrameAttrs {
 	uid: string;
+}
+
+/** The screen, with "Delete this assignment" after it when the screen offers it. Keyed so children never mix. */
+function withDeleteControl(body: m.Children, deleteSessionId: string | null): m.Children {
+	if (deleteSessionId === null) return body;
+
+	return [
+		m.fragment({ key: 'screen' }, [body]),
+		m(DeleteAssignment, { key: 'delete', sessionId: deleteSessionId }),
+	];
 }
 
 /**
@@ -153,12 +166,15 @@ const SignedInFrame: m.ClosureComponent<SignedInFrameAttrs> = (initial) => {
 			return m(
 				Shell,
 				{ ...shell, title, ...backShell, ...attrs.shellFor?.(current) },
-				attrs.render({
-					uid,
-					session: current,
-					topics: topics.data ?? [],
-					participants: participants.data ?? [],
-				}),
+				withDeleteControl(
+					attrs.render({
+						uid,
+						session: current,
+						topics: topics.data ?? [],
+						participants: participants.data ?? [],
+					}),
+					attrs.deletable ? sessionId : null,
+				),
 			);
 		},
 	};

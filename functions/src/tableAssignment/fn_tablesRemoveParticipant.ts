@@ -3,13 +3,13 @@ import type { Firestore, Transaction } from 'firebase-admin/firestore';
 import { functionConfig } from '@freedi/shared-types';
 import type {
 	TableAssignment,
-	TableAssignmentRun,
 	TablesRemoveParticipantRequest,
 	TablesRemoveParticipantResponse,
 } from '@freedi/shared-types';
 import { db } from '../db';
 import { deleteCountedRegistration, loadRegistration } from './removeRegistration';
-import { actorFrom, assertHost, readSession, requireId, runRef } from './tablesAccess';
+import { maySitInPublishedRun } from './publishedSeating';
+import { actorFrom, assertHost, readSession, requireId } from './tablesAccess';
 import { TablesError, toHttpsError } from './tablesErrors';
 
 /**
@@ -23,11 +23,7 @@ async function assertNotSeatedInPublishedRun(
 	session: TableAssignment,
 	uid: string,
 ): Promise<void> {
-	if (!session.publishedRunId) return;
-	const runSnap = await tx.get(runRef(firestore, session.publishedRunId));
-	const run = runSnap.data() as TableAssignmentRun | undefined;
-	const mayBeSeated = !run || run.tables.some((table) => table.memberUids.includes(uid));
-	if (mayBeSeated) {
+	if (await maySitInPublishedRun(tx, firestore, session, uid)) {
 		throw new TablesError(
 			'failed-precondition',
 			'This person is seated in the published assignment',

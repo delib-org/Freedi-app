@@ -42,6 +42,7 @@ export const HostHome: m.Component<{ id: string }> = {
 			topics: true,
 			participants: true,
 			isHome: true,
+			deletable: true,
 			shellFor: (session) => ({
 				title: undefined,
 				wide: session.status === 'draft',

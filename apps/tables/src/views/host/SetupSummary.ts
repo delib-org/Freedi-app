@@ -77,7 +77,7 @@ export const SetupSummary: m.Component<SetupSummaryAttrs> = {
 		const summary = setupSummary({
 			mode: draft.mode,
 			expected: expected === null || Number.isNaN(expected) ? null : expected,
-			seats: parseSeats(draft.seats) ?? DEFAULT_SEATS_FOR_SUMMARY,
+			seats: parseSeats(draft.seats, draft.legacySeats) ?? DEFAULT_SEATS_FOR_SUMMARY,
 			freeTables: freeTableCount(draft),
 		});
 		const { headline, subline } = lines(summary);

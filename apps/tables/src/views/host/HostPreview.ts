@@ -1,6 +1,6 @@
 import m from 'mithril';
 import type { TableAssignmentRun } from '@freedi/shared-types';
-import { t } from '@/lib/i18n';
+import { t, tPlural } from '@/lib/i18n';
 import { Action } from '@/lib/action';
 import { LiveValue } from '@/lib/live';
 import { goTo } from '@/lib/navigate';
@@ -12,6 +12,7 @@ import { describeMetrics } from '@/logic/metrics';
 import { nameByUid } from '@/logic/participants';
 import { previewVerdict } from '@/logic/previewVerdict';
 import type { PreviewVerdict } from '@/logic/previewVerdict';
+import { publishedRunOf, unseatedSincePublished } from '@/logic/latecomers';
 import { latestRun } from '@/logic/runs';
 import { canPublish, isDraftStale } from '@/logic/stale';
 import { ChoiceSummary } from '@/components/ChoiceSummary';
@@ -133,7 +134,6 @@ const PreviewBody: m.ClosureComponent<PreviewBodyAttrs> = (initial) => {
 			),
 			m(TableCards, { tables: previewTableViews(run, topics, nameByUid(participants)) }),
 			m(MetricsPanel, {
-				metrics: run.metrics,
 				unusedTopics: topics.filter((topic) => !seatedTopics.has(topic.topicId)),
 			}),
 		];
@@ -184,6 +184,16 @@ const PreviewBody: m.ClosureComponent<PreviewBodyAttrs> = (initial) => {
 						capacity: session.settings.tableSize,
 					}),
 		];
+	}
+
+	/** After publishing: how many registered since, who a new computation will seat (and nobody else). */
+	function newcomersNote(context: HostContext): m.Vnode | null {
+		const published = publishedRunOf(runs.data ?? [], context.session.publishedRunId);
+		const newcomers = unseatedSincePublished(published, context.participants).length;
+
+		return newcomers === 0
+			? null
+			: m('p.notice', { role: 'status' }, tPlural('tableAssignment.preview.newcomers', newcomers));
 	}
 
 	function head(context: HostContext): m.Vnode {
@@ -238,6 +248,7 @@ const PreviewBody: m.ClosureComponent<PreviewBodyAttrs> = (initial) => {
 
 			return [
 				head(context),
+				newcomersNote(context),
 				canCompute
 					? null
 					: m('p.notice', { role: 'status' }, t('tableAssignment.preview.closeFirst')),
@@ -262,6 +273,7 @@ export const HostPreview: m.Component<{ id: string }> = {
 			topics: true,
 			participants: true,
 			wide: true,
+			deletable: true,
 			shellFor: () => ({ title: undefined }),
 			render: (context: HostContext) => m(PreviewBody, { context }),
 		});

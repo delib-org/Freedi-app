@@ -8,6 +8,7 @@ import type { ParticipantStage } from '@/logic/participantStage';
 import { ParticipantFrame } from '@/components/ParticipantFrame';
 import type { ParticipantContext } from '@/components/ParticipantFrame';
 import { Redirect } from '@/components/Redirect';
+import { StateBox } from '@/components/StateBox';
 import { WaitingTableArt } from '@/components/TableArt';
 import { joinIntro, NameForm } from '@/views/participant/ParticipantName';
 import { ParticipantWaiting } from '@/views/participant/ParticipantWaiting';
@@ -22,6 +23,7 @@ function stageOf(context: ParticipantContext): ParticipantStage {
 		registered: me !== null,
 		hasChosenTable: me?.chosenTableIndex !== undefined,
 		lost,
+		seated: context.seated,
 	});
 }
 
@@ -55,7 +57,7 @@ function cancelledCopy({ status }: TableAssignment): GoneCopy {
 	return {
 		titleKey: 'tableAssignment.cancelled.title',
 		bodyKey:
-			status === 'registrationOpen'
+			status === 'registrationOpen' || status === 'published'
 				? 'tableAssignment.cancelled.body'
 				: 'tableAssignment.cancelled.bodyClosed',
 	};
@@ -74,6 +76,11 @@ function removedCopy({ settings }: TableAssignment): GoneCopy {
 		: { titleKey: 'tableAssignment.removed.title', bodyKey: 'tableAssignment.removed.body' };
 }
 
+/** Registering is possible while it is open, and after publishing for a latecomer. */
+function isRegistrationAccepted({ status }: TableAssignment): boolean {
+	return status === 'registrationOpen' || status === 'published';
+}
+
 function registrationGone(
 	context: ParticipantContext,
 	{ titleKey, bodyKey }: GoneCopy,
@@ -85,7 +92,7 @@ function registrationGone(
 			m('h1.screen__title.screen__title--hero', t(titleKey)),
 			m('p.screen__text', t(bodyKey)),
 		]),
-		context.session.status === 'registrationOpen'
+		isRegistrationAccepted(context.session)
 			? m(
 					'button.btn.btn--primary.btn--cta',
 					{ type: 'button', onclick: onRegisterAgain },
@@ -126,8 +133,11 @@ const HomeBody: m.ClosureComponent<{ context: ParticipantContext }> = () => {
 						},
 						joinIntro(context),
 					);
+				case 'checkingSeat':
+					return m(StateBox, { kind: 'loading' });
 				case 'waiting':
 				case 'waitingClosed':
+				case 'waitingForSeat':
 					return m(ParticipantWaiting, { context });
 				case 'cancelled':
 					return registrationGone(context, cancelledCopy(session), registerAgain);
