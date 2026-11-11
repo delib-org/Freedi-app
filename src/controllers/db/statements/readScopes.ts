@@ -62,7 +62,10 @@ async function restrictedLevelsForHost(topParentId: string): Promise<string[]> {
 		),
 	);
 
-	return snapshot.docs.map((doc) => doc.id);
+	// A copy on an answer is not a level of its own: it would mean one listener per answer.
+	return snapshot.docs
+		.filter((doc) => (doc.data() as Statement).accessScope === doc.id)
+		.map((doc) => doc.id);
 }
 
 /** Which of these subscribed levels are private levels of their own. */

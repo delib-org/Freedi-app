@@ -114,14 +114,21 @@ describe('scopeChunksOf', () => {
 	it('finds private levels through the top for a host of the top', async () => {
 		setStatement({ accessScope: 'open' });
 		mockSubscriptions = [subscription('top1', 'admin')];
-		mockRestricted = [asDoc('h', {})];
+		mockRestricted = [asDoc('h', { accessScope: 'h' })];
+		await expect(scopeChunksOf('s')).resolves.toEqual([['open'], ['h']]);
+	});
+
+	it('skips a copied setting on an answer, which is no level of its own', async () => {
+		setStatement({ accessScope: 'open' });
+		mockSubscriptions = [subscription('top1', 'admin')];
+		mockRestricted = [asDoc('h', { accessScope: 'h' }), asDoc('copy', { accessScope: 'h' })];
 		await expect(scopeChunksOf('s')).resolves.toEqual([['open'], ['h']]);
 	});
 
 	it('finds private levels through the top for a system admin', async () => {
 		mockState.creator = { uid: 'me', systemAdmin: true };
 		setStatement({ accessScope: 'g' });
-		mockRestricted = [asDoc('g', {})];
+		mockRestricted = [asDoc('g', { accessScope: 'g' })];
 		await expect(scopeChunksOf('s')).resolves.toEqual([['open', 'g']]);
 	});
 
