@@ -17,12 +17,15 @@ jest.mock('../index', () => ({
 jest.mock('firebase-functions', () => ({
 	logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
+jest.mock('../utils/errorHandling', () => ({ logError: jest.fn() }));
 jest.mock('../fn_adminStats', () => ({
 	onSubscriptionCreatedStats: jest.fn(() => Promise.resolve()),
 	onStatementDeletedStats: jest.fn(() => Promise.resolve()),
 }));
 
+import { logError } from '../utils/errorHandling';
 import {
+	updateMemberCount,
 	onSubscriptionCreated,
 	onSubscriptionDeleted,
 	onSubscriptionUpdated,
@@ -250,6 +253,30 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 		await onSubscriptionDeleted(snapshotEvent(alice, oldDoc));
 
 		expect(feedOf('alice')).toBeDefined();
+	});
+
+	it('skips quietly when the statement is already deleted (cascade), without writing the statement or throwing', async () => {
+		const alice = await joinAs('alice', Role.member);
+		mockDb.rowsOf(Collections.statements).delete(DISCUSSION);
+		mockDb.rowsOf(Collections.questionProgress).delete(DISCUSSION);
+		mockDb.resetCounters();
+
+		await expect(updateMemberCount(mockDb as never, DISCUSSION)).resolves.toBe(1);
+		await leave(alice);
+
+		expect(mockDb.read(Collections.statements, DISCUSSION)).toBeUndefined();
+		expect(mockDb.read(Collections.questionProgress, DISCUSSION)).toBeUndefined();
+		expect(logError).not.toHaveBeenCalled();
+	});
+
+	it('still reports a real failure while counting', async () => {
+		const failure = new Error('firestore unavailable');
+		const spy = jest.spyOn(mockDb, 'collection').mockImplementation(() => {
+			throw failure;
+		});
+
+		await expect(updateMemberCount(mockDb as never, DISCUSSION)).rejects.toThrow(failure);
+		spy.mockRestore();
 	});
 
 	describe('keeping the question document quiet', () => {

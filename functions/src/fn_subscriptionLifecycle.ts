@@ -58,7 +58,14 @@ export async function updateMemberCount(
 ): Promise<number> {
 	const memberCount = await countMembers(firestore, statementId);
 	const statementRef = firestore.collection(Collections.statements).doc(statementId);
-	const statement = (await statementRef.get()).data() as Statement | undefined;
+	const statementSnap = await statementRef.get();
+
+	// A deleted statement's subscriptions are removed after it (cascade), so this
+	// runs against a missing document: update() would throw NOT_FOUND and there
+	// is nothing left to count for. Skip quietly; other failures still throw.
+	if (!statementSnap.exists) return memberCount;
+
+	const statement = statementSnap.data() as Statement | undefined;
 
 	if (keepsCountOnProgress(statement)) {
 		await recordMemberCount({
