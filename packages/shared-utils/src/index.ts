@@ -48,7 +48,7 @@ export type {
 export { isLocalRuntime } from './isLocalRuntime';
 
 // Sentry init options (SDK-agnostic — each app passes these to its own Sentry)
-export { buildSentryOptions, isUsableDsn } from './sentryOptions';
+export { buildSentryOptions, isUsableDsn, CONNECTIVITY_IGNORE } from './sentryOptions';
 export type { BuildSentryOptionsArgs, FreediApp, SentryOptionsLike } from './sentryOptions';
 
 // Logger
