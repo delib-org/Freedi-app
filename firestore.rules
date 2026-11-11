@@ -1019,10 +1019,11 @@ service cloud.firestore {
                (get(topSubPath).data.role == 'admin' || get(topSubPath).data.role == 'statement-creator');
       }
 
-      // Check if user is a system-wide admin (usersV2 document)
+      // Check if user is a system-wide admin (usersV2 document). One read, not
+      // exists() and get(): a write may make ten, and each counts. A missing
+      // document is an error, which an `||` treats as false; never negate this.
       function isSystemAdmin() {
-        return exists(/databases/$(database)/documents/usersV2/$(request.auth.uid)) &&
-               get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true;
+        return get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.get('systemAdmin', false) == true;
       }
 
       // Join-app delegate check. A user listed in `joinDelegates/{qid--uid}`
@@ -1468,11 +1469,12 @@ service cloud.firestore {
       }
       // A level that turns out to be open passes, so a client can name a root
       // without reading it first. Nothing is stamped with an open level's id.
+      // A missing level is an error here (one read, not exists() and get()), which
+      // the `||` around every use treats as false.
       function mayReadRestrictedScope(scope) {
-        let path = /databases/$(database)/documents/statements/$(cleanPath(string(scope)));
-        return exists(path) &&
-               (get(path).data.get('accessScope', '') == 'open' ||
-                (request.auth != null && mayEnterLevel(scope, get(path).data)));
+        let level = get(statementPathOf(scope)).data;
+        return level.get('accessScope', '') == 'open' ||
+               (request.auth != null && mayEnterLevel(scope, level));
       }
       // 'quarantined' is the stamp of a statement on a loop of parents: it has no
       // real place, so no one reads it through a scope (system admins excepted).
@@ -1525,10 +1527,9 @@ service cloud.firestore {
         return [subRoleAt(scope), (top == 'top' || top == scope) ? '' : subRoleAt(top)];
       }
       function mayWorkInRestrictedScope(scope) {
-        let path = statementPathOf(scope);
-        return exists(path) &&
-               (get(path).data.get('accessScope', '') == 'open' ||
-                (request.auth != null && mayWorkWithRoles(rolesForWriting(scope, get(path).data))));
+        let level = get(statementPathOf(scope)).data;
+        return level.get('accessScope', '') == 'open' ||
+               (request.auth != null && mayWorkWithRoles(rolesForWriting(scope, level)));
       }
       function mayWorkWithRoles(roles) {
         return !('banned' in roles) && !('waiting' in roles) &&
@@ -1538,51 +1539,43 @@ service cloud.firestore {
       function mayWorkInScope(scope) {
         return scope == 'open' || (scope != 'quarantined' && mayWorkInRestrictedScope(scope));
       }
-      function scopeOfStatement(id) {
-        return get(statementPathOf(id)).data.get('accessScope', 'open');
+      // WRITING INSIDE A PRIVATE LEVEL. Every check below runs against the limit
+      // of 1000 expressions per request, next to the rules that decide who may
+      // edit at all; one role read costs about 30 of them. So the parent is read
+      // once and handed down, and the cheap answers come first: an open scope, a
+      // role at the private level or a host role at the top, a host role on one
+      // of the four levels just above it (rule A), and last a system admin.
+      function mayCreateInScope(scope) {
+        return scope == 'open' ||
+               (scope != 'quarantined' && createInRestrictedScope(scope)) ||
+               isSystemAdmin();
+      }
+      function createInRestrictedScope(scope) {
+        return createInLevel(scope, get(statementPathOf(scope)).data);
+      }
+      // The two roles mayWorkWithRoles reads first, then the four nearest
+      // ancestors (rule A: a host role at or above it) without reading the first
+      // two again, and last a system admin. In this order a host four levels up
+      // and a system admin both stay within the ten reads of one write.
+      function createInLevel(scope, level) {
+        let near = rolesForWriting(scope, level);
+        return level.get('accessScope', '') == 'open' ||
+               mayWorkWithRoles(near) ||
+               (!('banned' in near) && !('waiting' in near) && isHostJustAbove(scope, level)) ||
+               isSystemAdmin();
+      }
+      function isHostJustAbove(scope, level) {
+        let ids = level.get('parents', []).removeAll(['top', scope]);
+        let roles = [roleFromEnd(ids, 0), roleFromEnd(ids, 1), roleFromEnd(ids, 2), roleFromEnd(ids, 3)];
+        return !('banned' in roles) && !('waiting' in roles) && hasHostRole(roles);
       }
 
-      // Writing under a level needs a way into its scope, or anyone could plant a
-      // statement inside a private level. The parent must exist: a statement
-      // under a parent nobody can read has no place to be judged by.
-      // A parent created in the same batch (a message and its paragraphs, a seeded
-      // game) passes: its own create was checked the same way. Values read through
-      // getAfter() never feed a ternary here: the emulator, at least, fails the
-      // whole request instead of evaluating one.
-      // A create may use the full read check (any host above the private level).
-      function mayWriteUnder(parentId) {
-        let path = statementPathOf(parentId);
-        return parentId == 'top' ||
-               (exists(path) && mayReadScope(get(path).data.get('accessScope', 'open'))) ||
-               (!exists(path) && existsAfter(path));
-      }
-      // An update already spends much of its budget on who may edit at all, so a
-      // move uses the cheaper check: a role at the private level, or a host of the
-      // top. A host of a level between the two moves nothing in.
+      // A move uses the cheaper check: a role at the private level, or a host of
+      // the top. A host of a level between the two moves nothing in.
       function mayMoveUnder(parentId) {
         let path = statementPathOf(parentId);
         return parentId == 'top' ||
                (exists(path) && mayWorkInScope(get(path).data.get('accessScope', 'open')));
-      }
-      // A move stays inside the scope it is already in, or needs a way into the new one.
-      function movesOnlyWhereReadable() {
-        let next = request.resource.data.get('parentId', 'top');
-        return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['parentId']) ||
-               next == 'top' ||
-               (exists(statementPathOf(next)) &&
-                scopeOfStatement(next) == resource.data.get('accessScope', '')) ||
-               mayMoveUnder(next);
-      }
-      // Changing a level's access, or its place in the tree, while it sits inside a
-      // private level needs a way into that level: otherwise an outsider could
-      // open members' content to everyone, or move it out.
-      function changesAccessOrPlace() {
-        return request.resource.data.diff(resource.data).affectedKeys()
-          .hasAny(['membership', 'parentId', 'parents', 'topParentId']);
-      }
-      function mayChangeAccessOrPlace() {
-        let scope = resource.data.get('accessScope', 'open');
-        return !changesAccessOrPlace() || mayWorkInScope(scope);
       }
 
       // The tree fields must follow the parent, or a statement could claim a place
@@ -1599,65 +1592,109 @@ service cloud.firestore {
         return (parentIsTop && topId == parentId) ||
                (!parentIsTop && topId == parentData.get('topParentId', parentId));
       }
-      function treeFieldsMatch(data, parentData, parentId) {
-        return topIdMatches(data, parentData, parentId) &&
+      // A statement is never its own parent, nor its parent's parent: it is judged
+      // by its parent, and on a loop it would be judged by itself (and by whatever
+      // place it claims). A longer loop, made by moving existing statements, is
+      // caught by the stamping trigger, which quarantines it.
+      function followsParent(data, parentId, parentAfter) {
+        return parentId != statementId &&
+               parentAfter.get('parentId', 'top') != statementId &&
+               topIdMatches(data, parentAfter, parentId) &&
                data.get('parents', []).hasOnly(
-                 parentData.get('parents', []).concat([parentId, parentData.get('topParentId', parentId), 'top']));
+                 parentAfter.get('parents', []).concat([parentId, parentAfter.get('topParentId', parentId), 'top']));
       }
       function topFieldsMatch(data) {
         return data.get('parents', []).hasOnly(['top']) &&
                data.get('topParentId', 'top') in [statementId, 'top'];
       }
-      // A statement is never its own parent, nor its parent's parent: it is judged
-      // by its parent, and on a loop it would be judged by itself (and by whatever
-      // place it claims). A longer loop, made by moving existing statements, is
-      // caught by the stamping trigger, which quarantines it.
-      function parentIsNotSelf(parentId, parentPath) {
-        return parentId != statementId &&
-               getAfter(parentPath).data.get('parentId', 'top') != statementId;
+
+      // A scope a client sends must be the true one. Absent is accepted: an old
+      // cached client does not know the field, and the create trigger stamps it.
+      function ownScopeOk(data, own) {
+        return own in ['public', 'open', 'openToAll', 'openForRegistered']
+          ? data.accessScope == 'open'
+          : data.accessScope == statementId;
       }
-      // A parent made in this same batch must hang, within two levels, from the
+      function createScopeOk(data, parent) {
+        let own = data.get('membership', {}).get('access', null);
+        return !('accessScope' in data) ||
+               (own != null && ownScopeOk(data, own)) ||
+               (own == null &&
+                (parent == null
+                  ? data.accessScope == 'open'
+                  : (isClassHomeData(parent) ||
+                     data.accessScope == parent.get('accessScope', data.accessScope))));
+      }
+
+      // Everything a create decides from its parent, with the parent read once.
+      // A parent made in this same batch (a message and its paragraphs, a seeded
+      // game) passes on its own create, but must hang, within two levels, from the
       // top or from something that existed before; so new statements alone cannot
       // close a loop (Odyssey seeds a root, its islands and their stances at once).
+      function createPlaceOk(parentId) {
+        let data = request.resource.data;
+        let path = statementPathOf(parentId);
+        return parentId == 'top'
+          ? (topFieldsMatch(data) && createScopeOk(data, null))
+          : (exists(path)
+              ? createUnderParent(data, parentId, get(path).data)
+              : createUnderNewParent(data, parentId, path));
+      }
+      // The parent as it is before this write: a loop through it is caught on the
+      // parent's own update (its new parent may not be its child).
+      function createUnderParent(data, parentId, parent) {
+        return createScopeOk(data, parent) &&
+               mayCreateInScope(parent.get('accessScope', 'open')) &&
+               followsParent(data, parentId, parent);
+      }
       function isRootedBefore(id) {
         return id == 'top' || exists(statementPathOf(id));
       }
-      function newParentIsRooted(parentPath) {
-        let grandId = getAfter(parentPath).data.get('parentId', 'top');
-        return isRootedBefore(grandId) ||
-               (grandId != statementId &&
-                existsAfter(statementPathOf(grandId)) &&
-                isRootedBefore(getAfter(statementPathOf(grandId)).data.get('parentId', 'top')));
+      function createUnderNewParent(data, parentId, path) {
+        return existsAfter(path) &&
+               newParentOk(data, parentId, getAfter(path).data);
       }
-      function createTreeFieldsOk() {
-        let data = request.resource.data;
-        let parentId = data.get('parentId', 'top');
+      function newParentOk(data, parentId, parentAfter) {
+        let grandId = parentAfter.get('parentId', 'top');
+        return followsParent(data, parentId, parentAfter) &&
+               (isRootedBefore(grandId) ||
+                (grandId != statementId &&
+                 existsAfter(statementPathOf(grandId)) &&
+                 isRootedBefore(getAfter(statementPathOf(grandId)).data.get('parentId', 'top'))));
+      }
+
+      // An update's access and place. With no change to either, nothing to check.
+      // A move that keeps its access setting and lands under a parent in the same
+      // scope stays where it was readable, so it needs no more than the right to
+      // edit. Any other change to access or place, inside a private level, needs
+      // a way into it (else an outsider could open members' content or move it
+      // out), and a move into another scope a way into that one too.
+      function updatePlaceOk() {
+        let changed = request.resource.data.diff(resource.data).affectedKeys();
+        let scope = resource.data.get('accessScope', 'open');
+        let next = request.resource.data.get('parentId', 'top');
+        return !changed.hasAny(['membership', 'parentId', 'parents', 'topParentId']) ||
+               (placeChangeOk(changed, scope, next) && updateTreeFieldsOk(changed, next));
+      }
+      function placeChangeOk(changed, scope, next) {
+        let movesParent = changed.hasAny(['parentId']);
+        return (!changed.hasAny(['membership']) &&
+                scope != 'quarantined' &&
+                (!movesParent || staysInScope(next, scope))) ||
+               (mayWorkInScope(scope) &&
+                (!movesParent || next == 'top' || mayMoveUnder(next)));
+      }
+      function staysInScope(next, scope) {
+        let path = statementPathOf(next);
+        return next != 'top' && exists(path) && get(path).data.get('accessScope', 'open') == scope;
+      }
+      function updateTreeFieldsOk(changed, parentId) {
         let parentPath = statementPathOf(parentId);
-        return (parentId == 'top' && topFieldsMatch(data)) ||
+        return !changed.hasAny(['parentId', 'parents', 'topParentId']) ||
+               (parentId == 'top' && topFieldsMatch(request.resource.data)) ||
                (parentId != 'top' &&
                 existsAfter(parentPath) &&
-                parentIsNotSelf(parentId, parentPath) &&
-                (exists(parentPath) || newParentIsRooted(parentPath)) &&
-                treeFieldsMatch(data, getAfter(parentPath).data, parentId));
-      }
-      function updateTreeFieldsOk() {
-        let data = request.resource.data;
-        let parentId = data.get('parentId', 'top');
-        let parentPath = statementPathOf(parentId);
-        return !request.resource.data.diff(resource.data).affectedKeys()
-                 .hasAny(['parentId', 'parents', 'topParentId']) ||
-               (parentId == 'top' && topFieldsMatch(data)) ||
-               (parentId != 'top' &&
-                existsAfter(parentPath) &&
-                parentIsNotSelf(parentId, parentPath) &&
-                treeFieldsMatch(data, getAfter(parentPath).data, parentId));
-      }
-      // The tombstone of a deleted statement that sat inside a private level is
-      // kept (writeStatementDeletionTombstone), and its id is never used again:
-      // re-made as an open statement, it would open what is still filed under it.
-      function recreatesPrivateStatement() {
-        let path = /databases/$(database)/documents/statementDeletions/$(statementId);
-        return exists(path) && get(path).data.get('accessScope', 'open') != 'open';
+                followsParent(request.resource.data, parentId, getAfter(parentPath).data));
       }
       function isHostOfLevel(id) {
         return request.auth != null &&
@@ -1693,27 +1730,6 @@ service cloud.firestore {
                      ('topParentId' in resource.data && isHostOfLevel(resource.data.topParentId)) ||
                      ('organizationId' in resource.data && isOrgMember(resource.data.organizationId));
 
-      // A scope a client sends must be the true one. Absent is accepted: an old
-      // cached client does not know the field, and the create trigger stamps it.
-      function ownAccessOnCreate() {
-        return request.resource.data.get('membership', {}).get('access', null);
-      }
-      function inheritedScopeOk() {
-        let parentId = request.resource.data.get('parentId', 'top');
-        return parentId == 'top'
-          ? request.resource.data.accessScope == 'open'
-          : (!exists(statementPathOf(parentId)) ||
-             isClassHomeData(get(statementPathOf(parentId)).data) ||
-             request.resource.data.accessScope == get(statementPathOf(parentId)).data.get('accessScope', request.resource.data.accessScope));
-      }
-      function createScopeOk() {
-        return !('accessScope' in request.resource.data) ||
-               (ownAccessOnCreate() == null
-                 ? inheritedScopeOk()
-                 : (ownAccessOnCreate() in ['public', 'open', 'openToAll', 'openForRegistered']
-                     ? request.resource.data.accessScope == 'open'
-                     : request.resource.data.accessScope == statementId));
-      }
       // Written only by the server, which recomputes it when access changes.
       function changesAccessScope() {
         return request.resource.data.get('accessScope', null) != resource.data.get('accessScope', null);
@@ -1733,10 +1749,7 @@ service cloud.firestore {
                        !createsClassProposal() &&
                        !request.resource.data.keys().hasAny(['answerModeration']) &&
                        !createsClassHomeOrLesson() &&
-                       createScopeOk() &&
-                       mayWriteUnder(request.resource.data.get('parentId', 'top')) &&
-                       createTreeFieldsOk() &&
-                       !recreatesPrivateStatement() &&
+                       createPlaceOk(request.resource.data.get('parentId', 'top')) &&
                        classEnteredByOf(request.resource.data) == null &&
                        request.resource.data.creatorId == request.auth.uid &&
                        // A student the teacher removed writes nothing more
@@ -1754,9 +1767,7 @@ service cloud.firestore {
                        !changesCreatorIdWithoutBeingCreator() &&
                        !changesOrganizationId() &&
                        !changesAccessScope() &&
-                       movesOnlyWhereReadable() &&
-                       mayChangeAccessOrPlace() &&
-                       updateTreeFieldsOk() &&
+                       updatePlaceOk() &&
                        !isClassReply() &&
                        !changesClassReplyFields() &&
                        !rewordsClassProposal() &&
@@ -1779,7 +1790,7 @@ service cloud.firestore {
       // has left could otherwise delete their question and make it again, open,
       // over the members' answers still filed under it.
       allow delete: if request.auth.uid != null && !isAgoraStatement() && !isClassReply() && !isClassHomeData(resource.data) && !resource.data.keys().hasAny(['agreementBallot']) &&
-                       (isSystemAdmin() || mayWorkInScope(resource.data.get('accessScope', 'open'))) &&
+                       (mayWorkInScope(resource.data.get('accessScope', 'open')) || isSystemAdmin()) &&
                        isAuthorized();
 
       // Civil Activity Hub — join form submissions subcollection.

@@ -226,8 +226,11 @@ describe('loops, deletes and quarantine in /statements', () => {
 			});
 		});
 
-		it('cannot be made again, not even at the top', async () => {
-			await assertFails(create('leaver', 'gone', { parentId: 'top', topParentId: 'gone', parents: [], accessScope: 'open' }));
+		// The rules no longer read the tombstone (one read per statement broke
+		// batches of 15 or more); the create trigger quarantines a reused id
+		// (functions/src/accessScope/recreatedStatements.ts).
+		it('can be made again; the server judges it, not the rules', async () => {
+			await assertSucceeds(create('leaver', 'gone', { parentId: 'top', topParentId: 'gone', parents: [], accessScope: 'open' }));
 		});
 
 		it('an id deleted from an open space can', async () => {
