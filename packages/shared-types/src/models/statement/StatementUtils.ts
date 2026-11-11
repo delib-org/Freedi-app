@@ -10,6 +10,7 @@ import { StatementSettings } from './StatementSettings';
 import { SourceApp } from '../engagement/SourceApp';
 import { AgoraMessageKind, AgoraSuggestionStatus } from '../agora/agoraEnums';
 import { newStatementAccessScope } from './accessScope';
+import { childTopParentId } from './treeFields';
 
 /**
  * Default statement settings used when creating new statements
@@ -117,7 +118,7 @@ export interface CreateStatementParams {
  *   statement: 'My question',
  *   statementType: StatementType.question,
  *   parentId: parentStatement.statementId,
- *   topParentId: parentStatement.topParentId || parentStatement.statementId,
+ *   topParentId: childTopParentId(parentStatement),
  *   parents: [...(parentStatement.parents || []), parentStatement.statementId],
  *   creatorId: user.uid,
  *   creator: user,
@@ -235,7 +236,7 @@ export function createBasicStatement({
 		statementType: statementType ?? StatementType.statement,
 		parentId: parentStatement.statementId,
 		parentAccessScope: parentStatement.accessScope,
-		topParentId: parentStatement.topParentId || parentStatement.statementId,
+		topParentId: childTopParentId(parentStatement),
 		parents: [...(parentStatement.parents || []), parentStatement.statementId],
 		creatorId: user.uid,
 		creator: user,
@@ -363,7 +364,8 @@ export interface CreateParagraphChildParams {
 	/** The paragraph text (empty for image-only paragraphs). */
 	content: string;
 	/** The host statement whose body this paragraph belongs to. */
-	host: Pick<Statement, 'statementId' | 'topParentId'> & Partial<Pick<Statement, 'accessScope'>>;
+	host: Pick<Statement, 'statementId' | 'topParentId'> &
+		Partial<Pick<Statement, 'accessScope' | 'parentId'>>;
 	/** Full creator object. */
 	creator: User;
 	/** Creator id; defaults to `creator.uid`. */
@@ -413,7 +415,7 @@ export function createParagraphChildStatement(
 		statement: params.content,
 		statementType: StatementType.paragraph,
 		parentId: params.host.statementId,
-		topParentId: params.host.topParentId || params.host.statementId,
+		topParentId: childTopParentId(params.host),
 		parentAccessScope: params.host.accessScope,
 		creatorId: params.creatorId ?? params.creator.uid,
 		creator: params.creator,

@@ -13,6 +13,18 @@ import { Access, StatementType } from '../TypeEnums';
  */
 export const OPEN_ACCESS_SCOPE = 'open';
 
+/**
+ * The scope of a statement whose chain of parents loops back on itself. Such a
+ * tree has no real place, so nothing about it can be trusted: the rules let no
+ * one list it but a system admin, and it is never a document id (the create
+ * rule refuses a statement with this id).
+ */
+export const QUARANTINED_ACCESS_SCOPE = 'quarantined';
+
+export function isQuarantinedScope(scope: string | undefined | null): boolean {
+	return scope === QUARANTINED_ACCESS_SCOPE;
+}
+
 const OPEN_ACCESS_VALUES: ReadonlySet<string> = new Set([
 	Access.public,
 	Access.open,

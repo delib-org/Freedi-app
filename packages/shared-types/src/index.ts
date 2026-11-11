@@ -1406,6 +1406,8 @@ export type {
 
 export {
 	OPEN_ACCESS_SCOPE,
+	QUARANTINED_ACCESS_SCOPE,
+	isQuarantinedScope,
 	isAnswerTypeLevel,
 	isOpenAccessValue,
 	ownAccessSetting,
@@ -1417,3 +1419,5 @@ export {
 	readScopesOfRoot,
 } from "./models/statement/accessScope";
 export type { AccessScopeLevel, AccessScopeParent } from "./models/statement/accessScope";
+export { childTopParentId } from "./models/statement/treeFields";
+export type { TreeParent } from "./models/statement/treeFields";

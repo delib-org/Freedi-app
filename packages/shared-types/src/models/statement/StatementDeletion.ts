@@ -13,6 +13,12 @@ export const StatementDeletionSchema = object({
     topParentId: optional(string()),
     parents: optional(array(string())),
     deletedAtMs: number(),
+    /**
+     * The scope the statement had. A tombstone of a statement inside a private
+     * level is kept for good (no `expireAt`), and its id cannot be created again,
+     * so no one can re-make it as an open statement and read what was under it.
+     */
+    accessScope: optional(string()),
 });
 
 export type StatementDeletion = InferOutput<typeof StatementDeletionSchema>;
