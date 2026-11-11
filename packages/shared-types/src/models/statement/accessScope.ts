@@ -44,7 +44,7 @@ const ANSWER_TYPES: ReadonlySet<string> = new Set([
 ]);
 
 /** Something given as an answer to a question: an option, an agreement, a ballot. */
-function isAnswerType(level: Pick<AccessScopeLevel, 'statementType' | 'agreementBallot'>): boolean {
+export function isAnswerTypeLevel(level: Pick<AccessScopeLevel, 'statementType' | 'agreementBallot'>): boolean {
 	return level.agreementBallot != null || ANSWER_TYPES.has(level.statementType ?? '');
 }
 
@@ -61,7 +61,7 @@ export function ownAccessSetting(
 	const access = level.membership?.access;
 	if (!access) return undefined;
 
-	return parent && isAnswerType(level) && parent.membership?.access === access ? undefined : access;
+	return parent && isAnswerTypeLevel(level) && parent.membership?.access === access ? undefined : access;
 }
 
 function scopeOfSetting(level: AccessScopeLevel, access: string): string {

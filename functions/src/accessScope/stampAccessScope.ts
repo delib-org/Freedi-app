@@ -1,5 +1,5 @@
 import { logger } from 'firebase-functions';
-import { Collections, type Statement } from '@freedi/shared-types';
+import { Collections, type Statement, isOpenAccessValue } from '@freedi/shared-types';
 import { db } from '../db';
 import { logError } from '../utils/errorHandling';
 import { resolveStatementScope } from './accessScopeLevels';
@@ -44,10 +44,14 @@ export async function restampOnAccessChange(
 	if (!before || !after?.statementId || !mayChangeScope(before, after)) return;
 	try {
 		const accessScope = await resolveStatementScope(db, after);
-		if (accessScope === after.accessScope) return;
+		const previousAccess = before.membership?.access;
+		const accessChanged = previousAccess !== after.membership?.access;
+		if (accessScope === after.accessScope && !accessChanged) return;
 
 		const now = Date.now();
-		await db.collection(Collections.statements).doc(after.statementId).update({ accessScope });
+		if (accessScope !== after.accessScope) {
+			await db.collection(Collections.statements).doc(after.statementId).update({ accessScope });
+		}
 		await db
 			.collection(Collections.accessScopeJobs)
 			.doc(after.statementId)
@@ -55,6 +59,10 @@ export async function restampOnAccessChange(
 				rootId: after.statementId,
 				topParentId:
 					after.parentId === 'top' || !after.topParentId ? after.statementId : after.topParentId,
+				// Answers may carry a copy of the old setting; a private one must go.
+				...(accessChanged && previousAccess && !isOpenAccessValue(previousAccess)
+					? { clearCopiesOf: previousAccess }
+					: {}),
 				status: 'pending',
 				cursor: null,
 				generation: now,

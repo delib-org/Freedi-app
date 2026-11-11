@@ -1,6 +1,12 @@
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
 import type { Firestore, QueryDocumentSnapshot } from 'firebase-admin/firestore';
-import { Collections, functionConfig, type Statement } from '@freedi/shared-types';
+import {
+	Collections,
+	functionConfig,
+	isAnswerTypeLevel,
+	type Statement,
+} from '@freedi/shared-types';
 import { db } from '../db';
 import { logError } from '../utils/errorHandling';
 import { AccessScopeLevels } from './accessScopeLevels';
@@ -14,6 +20,8 @@ export interface AccessScopeJob {
 	rootId: string;
 	/** The tree to walk. `parents` is too short on many statements to find a subtree. */
 	topParentId: string;
+	/** A private setting the root just dropped: copies of it on answers go with it. */
+	clearCopiesOf?: string;
 	status: 'pending' | 'done';
 	cursor: string | null;
 	generation: number;
@@ -62,6 +70,31 @@ async function restampPage(
 }
 
 /**
+ * A question's old private setting, copied onto its answers, would make each
+ * answer look private in its own right once the question has moved on. An
+ * answer never chose it. Clears the copies so they inherit like any child.
+ */
+async function clearCopiedSettings(
+	firestore: Firestore,
+	rootId: string,
+	access: string,
+): Promise<void> {
+	const snapshot = await firestore
+		.collection(Collections.statements)
+		.where('parentId', '==', rootId)
+		.where('membership.access', '==', access)
+		.get();
+	const copies = snapshot.docs.filter((doc) => isAnswerTypeLevel(doc.data() as Statement));
+	for (let start = 0; start < copies.length; start += PAGE_SIZE) {
+		const batch = firestore.batch();
+		copies
+			.slice(start, start + PAGE_SIZE)
+			.forEach((doc) => batch.update(doc.ref, { membership: FieldValue.delete() }));
+		await batch.commit();
+	}
+}
+
+/**
  * Re-stamps one slice of a subtree and records how far it got. Writing the
  * cursor fires this function again for the next slice, so no single run is
  * long; `done` ends the chain. Safe to repeat: a statement already correct is
@@ -72,6 +105,10 @@ export async function runAccessScopeJob(firestore: Firestore, jobId: string): Pr
 	const jobRef = firestore.collection(Collections.accessScopeJobs).doc(jobId);
 	const job = (await jobRef.get()).data() as AccessScopeJob | undefined;
 	if (!job || job.status !== 'pending') return;
+
+	if (job.cursor === null && job.clearCopiesOf) {
+		await clearCopiedSettings(firestore, job.rootId, job.clearCopiesOf);
+	}
 
 	const levels = new AccessScopeLevels(firestore);
 	let cursor = job.cursor;

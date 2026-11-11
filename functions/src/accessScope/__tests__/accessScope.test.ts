@@ -1,7 +1,7 @@
 import { Collections, type Statement } from '@freedi/shared-types';
 import { isAccessScopeOnlyWrite } from '../scopeOnlyWrite';
 import { mayChangeScope } from '../stampAccessScope';
-import { AccessScopeLevels, resolveStatementScope } from '../accessScopeLevels';
+import { AccessScopeLevels, governingLevelId, resolveStatementScope } from '../accessScopeLevels';
 import { runAccessScopeJob } from '../fn_accessScopeJob';
 import {
 	BACKFILL_PAGE_SIZE,
@@ -181,6 +181,66 @@ describe('runAccessScopeJob', () => {
 		expect(store.read(S, 'a')?.accessScope).toBe('open');
 	});
 
+	describe('when a private question is opened', () => {
+		function openedQuestion() {
+			const store = fakeStatementStore();
+			store.seed(S, 'q', {
+				statementId: 'q',
+				parentId: 'top',
+				topParentId: 'q',
+				statementType: 'question',
+				membership: { access: 'public' },
+				accessScope: 'open',
+			});
+			store.seed(S, 'copy', {
+				statementId: 'copy',
+				parentId: 'q',
+				topParentId: 'q',
+				statementType: 'option',
+				membership: { access: 'secret' },
+				accessScope: 'q',
+			});
+			store.seed(S, 'chat', {
+				statementId: 'chat',
+				parentId: 'copy',
+				topParentId: 'q',
+				statementType: 'statement',
+				accessScope: 'q',
+			});
+			store.seed(S, 'sub', {
+				statementId: 'sub',
+				parentId: 'q',
+				topParentId: 'q',
+				statementType: 'question',
+				membership: { access: 'secret' },
+				accessScope: 'sub',
+			});
+			store.seed(Collections.accessScopeJobs, 'q', {
+				rootId: 'q',
+				topParentId: 'q',
+				clearCopiesOf: 'secret',
+				status: 'pending',
+				cursor: null,
+				generation: 1,
+			});
+
+			return store;
+		}
+
+		it('clears a copied setting so the answer follows the question', async () => {
+			const store = openedQuestion();
+			await runAccessScopeJob(store.db, 'q');
+			expect(store.read(S, 'copy')?.accessScope).toBe('open');
+			expect(store.read(S, 'chat')?.accessScope).toBe('open');
+		});
+
+		it('keeps a real nested question with the same setting private', async () => {
+			const store = openedQuestion();
+			await runAccessScopeJob(store.db, 'q');
+			expect(store.read(S, 'sub')?.accessScope).toBe('sub');
+		});
+	});
+
 	it('writes nothing the second time', async () => {
 		const store = tree();
 		seedJob(store);
@@ -221,6 +281,27 @@ describe('runAccessScopeJob', () => {
 		await runAccessScopeJob(store.db, 'group');
 		expect(store.read(Collections.accessScopeJobs, 'group')?.status).toBe('done');
 		expect(store.read(S, 'c04499')?.accessScope).toBe('group');
+	});
+});
+
+describe('governingLevelId', () => {
+	it('trusts the stamp', async () => {
+		const store = fakeStatementStore();
+		const stamped = statement({ statementId: 'k', parentId: 'q', accessScope: 'q' });
+		await expect(governingLevelId(store.db, stamped)).resolves.toBe('q');
+		expect(store.writes).toHaveLength(0);
+	});
+
+	it('is null when stamped open', async () => {
+		const store = fakeStatementStore();
+		const stamped = statement({ statementId: 'k', parentId: 'q', accessScope: 'open' });
+		await expect(governingLevelId(store.db, stamped)).resolves.toBeNull();
+	});
+
+	it('walks parentId for a statement not stamped yet', async () => {
+		const store = tree();
+		const unstamped = store.read(S, 'a') as unknown as Statement;
+		await expect(governingLevelId(store.db, unstamped)).resolves.toBe('group');
 	});
 });
 

@@ -1406,6 +1406,7 @@ export type {
 
 export {
 	OPEN_ACCESS_SCOPE,
+	isAnswerTypeLevel,
 	isOpenAccessValue,
 	ownAccessSetting,
 	resolveAccessScope,

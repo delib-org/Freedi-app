@@ -17,6 +17,14 @@ interface FakeRef {
 	set: (value: Data) => Promise<void>;
 }
 
+function readPath(data: Data | undefined, path: string): unknown {
+	return path.split('.').reduce<unknown>((value, key) => (value as Data | undefined)?.[key], data);
+}
+
+function isDelete(value: unknown): boolean {
+	return (value as { constructor?: { name?: string } })?.constructor?.name === 'DeleteTransform';
+}
+
 /** Just enough of Firestore for the stamping code: a page-able, array-contains-able store. */
 export function fakeStatementStore() {
 	const stores = new Map<string, Map<string, Data>>();
@@ -32,7 +40,9 @@ export function fakeStatementStore() {
 		get: async () => snap(collection, id),
 		update: async (patch) => {
 			writes.push({ id, patch });
-			store(collection).set(id, { ...store(collection).get(id), ...patch });
+			const next: Data = { ...store(collection).get(id), ...patch };
+			for (const key of Object.keys(patch)) if (isDelete(patch[key])) delete next[key];
+			store(collection).set(id, next);
 		},
 		set: async (value) => {
 			store(collection).set(id, value);
@@ -45,12 +55,12 @@ export function fakeStatementStore() {
 	};
 	const makeQuery = (
 		collection: string,
-		equals?: { field: string; value: string },
+		equals?: Array<{ field: string; value: string }>,
 		pageSize = Number.MAX_SAFE_INTEGER,
 		after?: string,
 	) => ({
 		where: (field: string, _op: string, value: string) =>
-			makeQuery(collection, { field, value }, pageSize, after),
+			makeQuery(collection, [...(equals ?? []), { field, value }], pageSize, after),
 		orderBy: () => makeQuery(collection, equals, pageSize, after),
 		limit: (size: number) => makeQuery(collection, equals, size, after),
 		startAfter: (id: string) => makeQuery(collection, equals, pageSize, id),
@@ -58,7 +68,11 @@ export function fakeStatementStore() {
 			const ids = [...store(collection).keys()]
 				.sort()
 				.filter((id) => !after || id > after)
-				.filter((id) => !equals || store(collection).get(id)?.[equals.field] === equals.value)
+				.filter((id) =>
+					(equals ?? []).every(
+						({ field, value }) => readPath(store(collection).get(id), field) === value,
+					),
+				)
 				.slice(0, pageSize);
 			const docs = ids.map((id) => snap(collection, id));
 
