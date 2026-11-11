@@ -8,7 +8,7 @@ import type {
 } from './tableAssignmentModel';
 
 /**
- * Wire contracts of the Tables callables (region me-west1, App Check).
+ * Wire contracts of the Tables callables (region me-west1; App Check is not enforced yet).
  * Clients (apps/tables, packages/table-assignment-client) and functions
  * both import these; drift is a compile error.
  * Actor rules: host (the session's hostUid) unless stated otherwise.
@@ -70,6 +70,11 @@ export interface TablesSetStatusRequest {
 }
 export interface TablesSetStatusResponse {
 	status: TableAssignmentStatus;
+	/**
+	 * Only when moving to `ended`: whether the answers are gone. `false` means the
+	 * session did end but the erase failed; calling `ended` again retries it.
+	 */
+	answersErased?: boolean;
 }
 
 /**
@@ -79,7 +84,12 @@ export interface TablesSetStatusResponse {
  */
 export type TablesNameMatch = 'ask' | 'claim' | 'separate';
 
-/** `tablesRegister` (participant). Idempotent: registering again updates the name. */
+/**
+ * `tablesRegister` (participant). Idempotent: registering again updates the name.
+ * Refused with reason `registration-full` for a new registration past the cap,
+ * `name-locked` for a rename once published, `claimed-by-name` for a rename of
+ * a registration taken over by full name.
+ */
 export interface TablesRegisterRequest {
 	sessionId: string;
 	fullName: string;
@@ -143,7 +153,7 @@ export interface TablesSavePreferencesRequest {
 	sessionId: string;
 	/** Topic ids, best first, at most three. */
 	preferences: string[];
-	/** 0..100; omit to leave "not specified". */
+	/** One of TABLE_ASSIGNMENT_POSITION_STOPS; omit to leave "not specified". */
 	position?: number;
 }
 export interface TablesSavePreferencesResponse {
@@ -160,11 +170,14 @@ export interface TablesJoinTableResponse {
 	topicId: string;
 }
 
-/** `tablesComputePreview` (host). Returns the id of the computed (or computing) run. */
+/**
+ * `tablesComputePreview` (host). Returns the id of the computed (or computing) run.
+ * Refused with reason `too-few-registrants` below five people and `preview-limit`
+ * after five previews over the same registrations and answers, or thirty in the
+ * session. The seed is the server's own: a request carrying one is refused.
+ */
 export interface TablesComputePreviewRequest {
 	sessionId: string;
-	/** Same seed gives the same seating; omit for a fresh one. */
-	seed?: number;
 }
 export interface TablesComputePreviewResponse {
 	runId: string;
@@ -177,4 +190,15 @@ export interface TablesPublishRunRequest {
 }
 export interface TablesPublishRunResponse {
 	publishedRunId: string;
+}
+
+/**
+ * `tablesDeleteSession` (host, any status): deletes the session and everything
+ * stored under it. Calling it for a session already gone succeeds.
+ */
+export interface TablesDeleteSessionRequest {
+	sessionId: string;
+}
+export interface TablesDeleteSessionResponse {
+	deleted: true;
 }

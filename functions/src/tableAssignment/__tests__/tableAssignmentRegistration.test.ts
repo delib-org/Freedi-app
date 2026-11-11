@@ -134,28 +134,14 @@ describe('tablesRegister: return by full name', () => {
 		expect(fake.read(counterPath)).toMatchObject({ registered: 1 });
 	});
 
-	it('does not put the claim flag on the name card', async () => {
+	it('puts the claim flag on the name card, so the host can see it', async () => {
 		const fake = sessionWithNamesake();
 		await register(fake.asFirestore(), 'new', {
 			sessionId: SID,
 			fullName: NAME,
 			nameMatch: 'claim',
 		});
-		expect(fake.read(rosterPath('new'))).not.toHaveProperty('claimedByName');
-	});
-
-	it('frees the old direct-mode seat on a claim', async () => {
-		const fake = new FakeFirestore();
-		seedSession(fake, { mode: 'direct' }, RETURN_BY_NAME);
-		seedRegistration(fake, 'old', { fullName: NAME, chosenTableIndex: 0 });
-		seedCounter(fake, 1);
-		fake.seed(seatPath(0), { sessionId: SID, tableIndex: 0, topicId: 'a', count: 1 });
-		await register(fake.asFirestore(), 'new', {
-			sessionId: SID,
-			fullName: NAME,
-			nameMatch: 'claim',
-		});
-		expect(fake.read(seatPath(0))).toMatchObject({ count: 0 });
+		expect(fake.read(rosterPath('new'))).toMatchObject({ claimedByName: true });
 	});
 
 	it("'separate' registers a second person under the same name", async () => {
@@ -229,16 +215,16 @@ describe('tablesRegister: return by full name', () => {
 		expect(fake.read(counterPath)).toMatchObject({ registered: 2 });
 	});
 
-	it('keeps the claim flag through a later rename and a save of answers', async () => {
+	it('keeps the claim flag through a save of answers', async () => {
 		const fake = sessionWithNamesake();
 		const fs = fake.asFirestore();
 		await register(fs, 'new', { sessionId: SID, fullName: NAME, nameMatch: 'claim' });
-		await register(fs, 'new', { sessionId: SID, fullName: 'Dana L.' });
 		await savePreferences(fs, 'new', { sessionId: SID, preferences: ['a'] });
 		expect(fake.read(participantPath('new'))).toMatchObject({
-			fullName: 'Dana L.',
+			fullName: NAME,
 			claimedByName: true,
 		});
+		expect(fake.read(rosterPath('new'))).toMatchObject({ claimedByName: true });
 	});
 });
 
@@ -249,7 +235,7 @@ describe('name card stays in step', () => {
 		seedTopics(fake, ['a']);
 		seedRegistration(fake, 'u1');
 		const fs = fake.asFirestore();
-		await savePreferences(fs, 'u1', { sessionId: SID, preferences: ['a'], position: 62 });
+		await savePreferences(fs, 'u1', { sessionId: SID, preferences: ['a'], position: 50 });
 		expect(fake.read(rosterPath('u1'))).toMatchObject({ hasPreferences: true });
 		expect(fake.read(rosterPath('u1'))).not.toHaveProperty('position');
 		expect(fake.read(rosterPath('u1'))).not.toHaveProperty('preferences');
@@ -346,11 +332,11 @@ describe('tablesCancelRegistration', () => {
 		expect(fake.read(counterPath)).toMatchObject({ registered: 1 });
 	});
 
-	it('still refuses after the claimant renames', async () => {
+	it('still refuses after the claimant sends their name again', async () => {
 		const fake = sessionWithNamesake();
 		const fs = fake.asFirestore();
 		await register(fs, 'new', { sessionId: SID, fullName: NAME, nameMatch: 'claim' });
-		await register(fs, 'new', { sessionId: SID, fullName: 'Dana L.' });
+		await register(fs, 'new', { sessionId: SID, fullName: NAME });
 		await expectRefusal(
 			cancelRegistration(fs, 'new', { sessionId: SID }),
 			'failed-precondition',
@@ -428,8 +414,9 @@ describe('tablesRemoveParticipant', () => {
 
 	it('makes a ready preview stale: publishing it is refused like after a new registration', async () => {
 		const fake = ranked('registrationClosed');
+		seedRegistration(fake, 'u5', { preferences: ['a'] });
 		const fs = fake.asFirestore();
-		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 7 }, NOW);
+		const { runId } = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 7);
 		await removeParticipant(fs, HOST, { sessionId: SID, uid: 'u4' });
 		await expectRefusal(
 			publishRun(fs, HOST, { sessionId: SID, runId }),
@@ -441,9 +428,11 @@ describe('tablesRemoveParticipant', () => {
 
 	it('a preview computed after the removal can be published', async () => {
 		const fake = ranked('registrationClosed');
+		seedRegistration(fake, 'u5', { preferences: ['a'] });
+		seedRegistration(fake, 'u6', { preferences: ['a'] });
 		const fs = fake.asFirestore();
 		await removeParticipant(fs, HOST, { sessionId: SID, uid: 'u4' });
-		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 7 }, NOW);
+		const { runId } = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 7);
 		await expect(publishRun(fs, HOST, { sessionId: SID, runId })).resolves.toEqual({
 			publishedRunId: runId,
 		});
@@ -497,11 +486,11 @@ describe('compute and publish with name cards present', () => {
 		const fake = new FakeFirestore();
 		seedSession(fake, { status: 'registrationClosed' });
 		seedTopics(fake, ['a', 'b']);
-		['u1', 'u2', 'u3', 'u4'].forEach((uid, index) =>
+		['u1', 'u2', 'u3', 'u4', 'u5'].forEach((uid, index) =>
 			seedRegistration(fake, uid, { preferences: ['a'], position: index * 20 }),
 		);
 		const fs = fake.asFirestore();
-		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 3 }, NOW);
+		const { runId } = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 3);
 		await expect(publishRun(fs, HOST, { sessionId: SID, runId })).resolves.toEqual({
 			publishedRunId: runId,
 		});
@@ -509,12 +498,13 @@ describe('compute and publish with name cards present', () => {
 
 	it('a rename does not make a ready preview stale', async () => {
 		const fake = new FakeFirestore();
-		seedSession(fake, { status: 'published', publishedRunId: 'old' });
-		seedPublishedRun(fake, 'old', []);
+		seedSession(fake);
 		seedTopics(fake, ['a', 'b']);
-		['u1', 'u2', 'u3', 'u4'].forEach((uid) => seedRegistration(fake, uid, { preferences: ['a'] }));
+		['u1', 'u2', 'u3', 'u4', 'u5'].forEach((uid) =>
+			seedRegistration(fake, uid, { preferences: ['a'] }),
+		);
 		const fs = fake.asFirestore();
-		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 3 }, NOW);
+		const { runId } = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 3);
 		await register(fs, 'u1', { sessionId: SID, fullName: 'New Name' });
 		await expect(publishRun(fs, HOST, { sessionId: SID, runId })).resolves.toEqual({
 			publishedRunId: runId,
@@ -542,7 +532,14 @@ describe('roster builders', () => {
 			registeredAt: NOW,
 			hasPreferences: true,
 			chosenTableIndex: 1,
+			claimedByName: true,
 		});
+	});
+
+	it('leaves the claim flag off a card that was never claimed', () => {
+		expect(rosterEntryFrom({ ...participant, claimedByName: undefined })).not.toHaveProperty(
+			'claimedByName',
+		);
 	});
 
 	it('plans one card per registration and a true count per session, zero included', () => {

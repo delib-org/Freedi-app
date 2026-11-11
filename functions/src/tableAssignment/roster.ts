@@ -13,7 +13,8 @@ import type {
 export function rosterEntryFrom(
 	participant: TableAssignmentParticipant,
 ): TableAssignmentRosterEntry {
-	const { sessionId, uid, fullName, registeredAt, preferences, chosenTableIndex } = participant;
+	const { sessionId, uid, fullName, registeredAt, preferences, chosenTableIndex, claimedByName } =
+		participant;
 
 	return {
 		sessionId,
@@ -23,6 +24,7 @@ export function rosterEntryFrom(
 		registeredAt,
 		hasPreferences: preferences.length > 0,
 		...(chosenTableIndex === undefined ? {} : { chosenTableIndex }),
+		...(claimedByName ? { claimedByName } : {}),
 	};
 }
 

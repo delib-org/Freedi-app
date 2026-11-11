@@ -15,6 +15,7 @@ import {
 	string,
 } from 'valibot';
 import { SideValueSchema } from '../classroom/classroomModel';
+import { TableAssignmentClosenessSchema } from './tableAssignmentCloseness';
 
 /**
  * Tables (שולחנות): shared table-assignment product. Data model.
@@ -34,9 +35,13 @@ export const TABLE_ASSIGNMENT_BALANCE_TOLERANCE_DEFAULT = 0.3;
 /** Ranked preferences a participant may save. */
 export const TABLE_ASSIGNMENT_MAX_PREFERENCES = 3;
 /** Smallest table a host can choose. */
-export const TABLE_ASSIGNMENT_TABLE_SIZE_MIN = 2;
+export const TABLE_ASSIGNMENT_TABLE_SIZE_MIN = 3;
+/** Smallest table size a stored session may hold: older sessions were allowed 2. */
+export const TABLE_ASSIGNMENT_TABLE_SIZE_STORED_MIN = 2;
 /** Largest table a host can choose. */
 export const TABLE_ASSIGNMENT_TABLE_SIZE_MAX = 20;
+/** Most tables one topic may open. */
+export const TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC = 50;
 /** Longest title, topic label, or position label. */
 export const TABLE_ASSIGNMENT_TITLE_MAX_LENGTH = 200;
 /** Longest topic description. */
@@ -81,7 +86,7 @@ export const TableAssignmentSettingsSchema = object({
 		pipe(
 			number(),
 			integer(),
-			minValue(TABLE_ASSIGNMENT_TABLE_SIZE_MIN),
+			minValue(TABLE_ASSIGNMENT_TABLE_SIZE_STORED_MIN),
 			maxValue(TABLE_ASSIGNMENT_TABLE_SIZE_MAX),
 		),
 		TABLE_ASSIGNMENT_TABLE_SIZE_DEFAULT,
@@ -108,6 +113,8 @@ export const TableAssignmentSchema = object({
 	status: TableAssignmentStatusSchema,
 	settings: TableAssignmentSettingsSchema,
 	publishedRunId: optional(string()),
+	/** When the answers were erased after the session ended. Absent while they are still stored. */
+	answersErasedAt: optional(MillisSchema),
 	createdAt: MillisSchema,
 	lastUpdate: MillisSchema,
 });
@@ -124,7 +131,9 @@ export const TableAssignmentTopicSchema = object({
 	/** C_p: the proposal's consensus at registration time (describes the proposal, not a person). */
 	consensus: optional(number()),
 	/** Hard cap on tables opened for this topic. */
-	maxTables: optional(pipe(number(), integer(), minValue(1))),
+	maxTables: optional(
+		pipe(number(), integer(), minValue(1), maxValue(TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC)),
+	),
 	order: NonNegativeIntSchema,
 });
 export type TableAssignmentTopic = InferOutput<typeof TableAssignmentTopicSchema>;
@@ -169,6 +178,8 @@ export const TableAssignmentRosterEntrySchema = object({
 	hasPreferences: boolean(),
 	/** Direct mode: the table the participant joined. */
 	chosenTableIndex: optional(NonNegativeIntSchema),
+	/** Someone took this registration over by typing the same full name. */
+	claimedByName: optional(boolean()),
 });
 export type TableAssignmentRosterEntry = InferOutput<typeof TableAssignmentRosterEntrySchema>;
 
@@ -209,7 +220,10 @@ export const TableAssignmentRunTableSchema = object({
 	index: NonNegativeIntSchema,
 	topicId: string(),
 	memberUids: array(string()),
+	/** Always empty on runs computed now; older documents may still hold figures. */
 	stats: TableAssignmentTableStatsSchema,
+	/** How close this table is to the room. Host previews only; absent on published and older runs. */
+	closeness: optional(TableAssignmentClosenessSchema),
 });
 export type TableAssignmentRunTable = InferOutput<typeof TableAssignmentRunTableSchema>;
 
@@ -235,11 +249,17 @@ const PreferenceMetricsSchema = object({
 	maxScore: number(),
 });
 
-/** Same shape as the engine's AssignmentMetrics (packages/table-assignment). */
+/**
+ * What a run stores about the room. `population` and `balance.max/mean` are
+ * written empty (0 and []) so no figure about positions is ever stored; older
+ * documents may still hold figures. `preferences` is empty on a published run.
+ */
 export const TableAssignmentMetricsSchema = object({
 	population: PopulationStatsSchema,
 	balance: BalanceMetricsSchema,
 	preferences: PreferenceMetricsSchema,
+	/** At least three people gave a position. Absent on older runs. */
+	hasEnoughPositions: optional(boolean()),
 });
 export type TableAssignmentMetrics = InferOutput<typeof TableAssignmentMetricsSchema>;
 
@@ -247,7 +267,8 @@ export type TableAssignmentMetrics = InferOutput<typeof TableAssignmentMetricsSc
 export const TableAssignmentRunSchema = object({
 	runId: string(),
 	sessionId: string(),
-	seed: number(),
+	/** Only on older documents: with the engine, a seed lets a reader replay the seating and solve for the answers. */
+	seed: optional(number()),
 	status: TableAssignmentRunStatusSchema,
 	tables: array(TableAssignmentRunTableSchema),
 	metrics: TableAssignmentMetricsSchema,
