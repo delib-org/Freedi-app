@@ -170,6 +170,12 @@ What changes for people:
 
 ## Afterwards
 
+**Deferred:** ratings stay readable by anyone signed in (the `evaluations`
+read rule, kept open for Odyssey's opinion map and Agora's timeline). Ratings
+inside a private level, including who gave them, can be read by people outside
+it. Closing this needs evaluation reads that name the scope, or a
+server-side read path for Odyssey and Agora.
+
 - Quarantined statements: [access-scope-quarantine.md](access-scope-quarantine.md),
   `scripts/liftQuarantine.ts`.
 - Watch Sentry for `accessScope.scopeOf` and `accessScope.scopeOfReusedId`.

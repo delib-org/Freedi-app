@@ -1,6 +1,6 @@
 import { after, before, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, increment, setDoc } from 'firebase/firestore';
 import { makeEnv, seed, statementDoc } from './helpers.mjs';
 
 /**
@@ -116,9 +116,17 @@ describe('ratings and votes inside a private level', () => {
 			await assertFails(setDoc(doc(db(PEOPLE.member), 'statementsMeta', 'a'), { numberOfMembers: 1 }));
 			await assertFails(setDoc(doc(db(PEOPLE.member), 'approval', 'x'), { statementId: 'a' }));
 		});
-		it('a question view is the person’s own', async () => {
-			await assertSucceeds(setDoc(doc(db(PEOPLE.member), 'statementViews', 'member--q'), { statementId: 'q', userId: PEOPLE.member }));
-			await assertFails(setDoc(doc(db(PEOPLE.outsider), 'statementViews', 'member--q'), { statementId: 'q', userId: PEOPLE.member }));
+		it('a question view is the person’s own, and its count grows by one', async () => {
+			const view = (uid, viewed) => ({ statementId: 'q', userId: uid, viewed, lastViewed: 1 });
+			const mine = doc(db(PEOPLE.member), 'statementViews', 'member--q');
+			await assertSucceeds(setDoc(mine, { ...view(PEOPLE.member, increment(1)), parentDocumentId: 'root' }, { merge: true }));
+			await assertSucceeds(setDoc(mine, view(PEOPLE.member, increment(1)), { merge: true }));
+			await assertSucceeds(getDoc(mine));
+			await assertFails(setDoc(mine, view(PEOPLE.member, 1000), { merge: true }));
+			await assertFails(setDoc(mine, view(PEOPLE.member, 'many'), { merge: true }));
+			await assertFails(setDoc(mine, view(PEOPLE.outsider, increment(1)), { merge: true }));
+			await assertFails(setDoc(doc(db(PEOPLE.member), 'statementViews', 'member--oq'), { ...view(PEOPLE.member, 1), statementId: 'q' }));
+			await assertFails(setDoc(doc(db(PEOPLE.outsider), 'statementViews', 'member--q'), view(PEOPLE.member, 1)));
 			await assertFails(getDoc(doc(db(PEOPLE.outsider), 'statementViews', 'member--q')));
 		});
 	});

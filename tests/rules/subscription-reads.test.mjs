@@ -58,6 +58,16 @@ describe('reading /statementsSubscribe', () => {
 		await assertSucceeds(getDoc(doc(db('outsider'), 'statementsSubscribe', 'outsider--pg')));
 	});
 
+	it('a stranger learns nothing from a get: someone else’s missing and existing subscriptions are both refused', async () => {
+		await assertFails(getDoc(doc(db('outsider'), 'statementsSubscribe', 'member--pg')));
+		await assertFails(getDoc(doc(db('outsider'), 'statementsSubscribe', 'never-joined--pg')));
+	});
+
+	it('a host of the private level lists the people of a question under it, holding no subscription there', async () => {
+		await assertSucceeds(getDocs(query(subs('pg-admin'), where('statementId', '==', 'q'))));
+		await assertSucceeds(getDoc(doc(db('pg-admin'), 'statementsSubscribe', 'member--q')));
+	});
+
 	it('a stranger cannot read anyone else’s, nor list a group’s members', async () => {
 		await assertFails(getDoc(doc(db('outsider'), 'statementsSubscribe', 'member--pg')));
 		await assertFails(getDocs(query(subs('outsider'), where('statementId', '==', 'pg'))));

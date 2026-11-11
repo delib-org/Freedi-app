@@ -1945,8 +1945,22 @@ service cloud.firestore {
     // One doc per person and question, `{uid}--{statementId}`
     // (useRecordQuestionView). Only the person's own.
     match /statementViews/{statementViewId} {
-      allow read, write: if request.auth != null &&
-                            statementViewId.matches('^' + request.auth.uid + '--.+');
+      function isOwnView() {
+        return request.auth != null && statementViewId.matches('^' + request.auth.uid + '--.+');
+      }
+      // useRecordQuestionView: { statementId, userId, viewed: increment(1), ... }.
+      // The count only ever grows by one.
+      function viewWriteOk() {
+        let d = request.resource.data;
+        let before = resource == null ? 0 : resource.data.get('viewed', 0);
+        return d.get('userId', '') == request.auth.uid &&
+               statementViewId == request.auth.uid + '--' + d.get('statementId', '') &&
+               d.get('viewed', 0) is int &&
+               d.viewed >= 1 &&
+               d.viewed <= before + 1;
+      }
+      allow read, delete: if isOwnView();
+      allow create, update: if isOwnView() && viewWriteOk();
     }
 
     match /statementSegments/{segementId=**} {
@@ -2228,9 +2242,10 @@ service cloud.firestore {
                (userUidOf(after) == userUidOf(before) || userUidOf(after) == afterUser);
       }
 
-      // PUSH TOKENS ARE LEAVING THIS COLLECTION. Any signed-in user can read a
-      // subscription and rules cannot hide one field, so a device's token now
-      // lives in the owner-only pushNotifications collection. The tokens field
+      // PUSH TOKENS ARE LEAVING THIS COLLECTION. A subscription is read by more
+      // people than its owner (those in the statement, hosts) and rules cannot
+      // hide one field, so a device's token now lives in the owner-only
+      // pushNotifications collection. The tokens field
       // here may only shrink: new app versions never write it, and old cached
       // ones are refused when they try to add to it (those updates are
       // best-effort, and the device is already registered in pushNotifications).
@@ -2281,17 +2296,26 @@ service cloud.firestore {
         let role = subRoleAt(sid);
         return role in ['member', 'admin', 'statement-creator'];
       }
-      function hostsTopOf(sid) {
+      // A host of the statement's top, or of the private level governing it, so
+      // a host of a group sees the people of a question under it on which they
+      // hold no subscription of their own.
+      function hostsAbove(sid) {
         let path = statementPathOf(sid);
-        let top = exists(path) ? get(path).data.get('topParentId', 'top') : 'top';
-        return top != 'top' && top != sid && subRoleAt(top) in ['admin', 'statement-creator'];
+        let level = exists(path) ? get(path).data : {};
+        let top = level.get('topParentId', 'top');
+        let scope = level.get('accessScope', 'open');
+        return (top != 'top' && top != sid && subRoleAt(top) in ['admin', 'statement-creator']) ||
+               (scope != 'open' && scope != 'quarantined' && scope != sid &&
+                subRoleAt(scope) in ['admin', 'statement-creator']);
       }
       function maySeeSubscriptionsOf(sid) {
-        return isInStatement(sid) || hostsTopOf(sid) || isSystemAdminUser();
+        return isInStatement(sid) || hostsAbove(sid) || isSystemAdminUser();
       }
+      // No `resource == null` pass: whether a get finds a document is itself an
+      // answer (is this person in that group, waiting, banned?). Only one's own
+      // id may be asked for before it exists.
       allow get: if request.auth.uid != null &&
-                    (resource == null ||
-                     statementSubId.split('--')[0] == request.auth.uid ||
+                    (statementSubId.split('--')[0] == request.auth.uid ||
                      ownsSubscription() ||
                      maySeeSubscriptionsOf(resource.data.get('statementId', '')));
       allow list: if request.auth.uid != null &&
@@ -2450,13 +2474,16 @@ service cloud.firestore {
     //
     // Everything below judges only the incoming document: a vote stays a direct
     // client write with no added lookup, because every get() here is paid on
-    // every vote. The one lookup is notRemovedAgoraRater, and only for a rating
-    // that names an Agora session. Nothing here looks at the option, so anyone,
-    // anonymous included, can evaluate an option somebody else wrote.
+    // every vote. The lookups: the rated statement and, inside a private level,
+    // the caller's way into it (mayActOnStatement); notRemovedAgoraRater only for
+    // a rating that names an Agora session. An open option can be rated by
+    // anyone, anonymous included; one inside a private level only by those in it.
     match /evaluations/{evaluationDocId} {
       // Cross-user reads stay open: Odyssey's opinion map reads the whole
       // game's evaluations, and Agora derives its "who rated when" timeline
-      // the same way.
+      // the same way. So ratings inside a private level, and who gave them,
+      // are readable by anyone signed in: a known gap, deferred (see
+      // docs/security/access-scope-release.md).
       allow read: if request.auth != null;
 
       function hasEvaluationShape() {
