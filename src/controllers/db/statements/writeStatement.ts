@@ -15,6 +15,7 @@ import {
 	Creator,
 	getRandomUID,
 	SourceApp,
+	childTopParentId,
 } from '@freedi/shared-types';
 
 import { parse } from 'valibot';
@@ -238,7 +239,7 @@ export async function updateStatementParents(statement: Statement, parentStateme
 		const newStatement = {
 			parentId: parentStatement.statementId,
 			parents: [parentStatement.parents, parentStatement.statementId].flat(1),
-			topParentId: parentStatement.topParentId,
+			topParentId: childTopParentId(parentStatement),
 		};
 
 		await updateDoc(statementRef, newStatement);

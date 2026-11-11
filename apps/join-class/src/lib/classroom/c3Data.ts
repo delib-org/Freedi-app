@@ -9,6 +9,7 @@ import {
 	type StatementSubscription,
 	type Vote,
 	readScopesOfRoot,
+	childTopParentId,
 } from '@freedi/shared-types';
 import { collection, db, doc, query, setDoc, updateDoc, where } from '../firebase';
 import type { Unsubscribe } from '../firebase';
@@ -206,7 +207,7 @@ export async function createClassOption(input: NewClassOption): Promise<string> 
 			statementType: StatementType.option,
 			parentId: input.parentId,
 			parentAccessScope: input.main.accessScope,
-			topParentId: input.main.topParentId || input.main.statementId,
+			topParentId: childTopParentId(input.main),
 			parents: [...(input.main.parents ?? []), input.main.statementId, input.parentId],
 			creatorId: creator.uid,
 			creator,
@@ -259,7 +260,7 @@ export async function createTableQuestion(
 			statementType: StatementType.question,
 			parentId: main.statementId,
 			parentAccessScope: main.accessScope,
-			topParentId: main.topParentId || main.statementId,
+			topParentId: childTopParentId(main),
 			parents: [...(main.parents ?? []), main.statementId],
 			creatorId: creator.uid,
 			creator,

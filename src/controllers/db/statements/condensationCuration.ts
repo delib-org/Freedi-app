@@ -4,6 +4,7 @@ import {
 	Statement,
 	StatementType,
 	User,
+	childTopParentId,
 } from '@freedi/shared-types';
 import {
 	collection,
@@ -361,7 +362,7 @@ export async function createEmptyCluster(args: {
 			statementType: StatementType.option,
 			parentId: args.parentStatement.statementId,
 			parentAccessScope: args.parentStatement.accessScope,
-			topParentId: args.parentStatement.topParentId ?? args.parentStatement.statementId,
+			topParentId: childTopParentId(args.parentStatement),
 			parents: [...(args.parentStatement.parents ?? []), args.parentStatement.statementId].filter(
 				Boolean,
 			),

@@ -32,6 +32,7 @@ import {
 	CutoffBy,
 	readScopesOf,
 	readScopesOfRoot,
+	childTopParentId,
 } from '@freedi/shared-types';
 import {
 	canEditOption,
@@ -876,7 +877,7 @@ export async function createSuggestion(text: string, asOrganizer?: boolean): Pro
 		statementType: StatementType.option,
 		parentId: question.statementId,
 		parentAccessScope: question.accessScope,
-		topParentId: question.topParentId || question.statementId,
+		topParentId: childTopParentId(question),
 		creatorId: creator.uid,
 		creator,
 	});

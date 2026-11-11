@@ -17,6 +17,7 @@ import {
 	StatementType,
 	Creator,
 	inheritedAccessScope,
+	childTopParentId,
 } from '@freedi/shared-types';
 import { logger } from '@/services/logger';
 import { createStatementRef, createDocRef, createCollectionRef } from '@/utils/firebaseUtils';
@@ -168,7 +169,7 @@ export async function createEvidencePost(
 			statement: formattedText, // Use formatted text with link
 			statementType: StatementType.statement,
 			parentId: parentStatement.statementId,
-			topParentId: parentStatement.topParentId,
+			topParentId: childTopParentId(parentStatement),
 			...inheritedAccessScope(parentStatement),
 			creatorId: currentUser.uid,
 			creator,

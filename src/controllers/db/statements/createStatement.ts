@@ -21,6 +21,7 @@ import {
 	SourceApp,
 	evaluationType as EvalType,
 	newStatementAccessScope,
+	childTopParentId,
 } from '@freedi/shared-types';
 
 import { parse } from 'valibot';
@@ -91,7 +92,10 @@ export function createStatement({
 		parentsSet.add(parentId);
 		const parents: string[] = [...parentsSet];
 
-		const topParentId = parentStatement !== 'top' ? parentStatement?.topParentId : statementId;
+		const topParentId =
+			parentStatement !== 'top' && parentStatement
+				? childTopParentId(parentStatement)
+				: statementId;
 
 		const siblingOptions = getSiblingOptionsByParentId(parentId, storeState.statements.statements);
 		const existingColors = getExistingOptionColors(siblingOptions);
