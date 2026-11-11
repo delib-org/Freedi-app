@@ -441,6 +441,66 @@ describe('listing /statements', () => {
 		});
 	});
 
+	describe('a child of a private level in an open top', () => {
+		const SUB = (uid, id, role) => ({
+			userId: uid,
+			user: { uid },
+			statementId: id,
+			statementsSubscribeId: `${uid}--${id}`,
+			role,
+		});
+		const selfSubscribe = (uid, id, role = 'member') =>
+			setDoc(doc(contextOf(uid).firestore(), 'statementsSubscribe', `${uid}--${id}`), SUB(uid, id, role));
+
+		before(async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'statements', 'k-top'), statementDoc({ statementId: 'k-top', uid: CREATOR, overrides: { parentId: 'top', topParentId: 'k-top', parents: [], accessScope: 'open', membership: { access: 'openToAll' } } }));
+				await setDoc(doc(db, 'statements', 'k-q'), statementDoc({ statementId: 'k-q', uid: CREATOR, overrides: { parentId: 'k-top', topParentId: 'k-top', parents: ['k-top'], accessScope: 'k-q', statementType: 'question', membership: { access: 'secret' } } }));
+				await setDoc(doc(db, 'statements', 'k'), statementDoc({ statementId: 'k', uid: 'k-creator', overrides: { parentId: 'k-q', topParentId: 'k-top', parents: ['k-top', 'k-q'], accessScope: 'k-q', statementType: 'question' } }));
+				await setDoc(doc(db, 'statements', 'k-m'), statementDoc({ statementId: 'k-m', uid: CREATOR, overrides: { parentId: 'k-top', topParentId: 'k-top', parents: ['k-top'], accessScope: 'k-m', statementType: 'question', membership: { access: 'moderated' } } }));
+				await setDoc(doc(db, 'statements', 'k-m-child'), statementDoc({ statementId: 'k-m-child', uid: CREATOR, overrides: { parentId: 'k-m', topParentId: 'k-top', parents: ['k-top', 'k-m'], accessScope: 'k-m', statementType: 'question' } }));
+				await subscribe(db, 'k-q-member', 'k-q', 'member');
+				await subscribe(db, 'k-top-member', 'k-top', 'member');
+				await subscribe(db, 'k-host', 'k', 'admin');
+			});
+		});
+
+		it('refuses an outsider a member role on the child', async () => {
+			await assertFails(selfSubscribe('k-outsider', 'k'));
+		});
+
+		it('refuses a plain member of the open top a role on the child', async () => {
+			await assertFails(selfSubscribe('k-top-member', 'k'));
+		});
+
+		it('lets a member of the governing level follow the child', async () => {
+			await assertSucceeds(selfSubscribe('k-q-member', 'k'));
+		});
+
+		it('judges a moderated governing level: waiting yes, member no', async () => {
+			await assertSucceeds(selfSubscribe('k-asker', 'k-m-child', 'waiting'));
+			await assertFails(selfSubscribe('k-asker-2', 'k-m-child', 'member'));
+		});
+
+		it('a host of the child may list its children with no scope', async () => {
+			await assertSucceeds(getDocs(query(statementsAs('k-host'), where('parentId', '==', 'k'))));
+		});
+
+		it('the creator of the child may too', async () => {
+			await assertSucceeds(getDocs(query(statementsAs('k-creator'), where('parentId', '==', 'k'))));
+		});
+
+		it('but neither may name the governing scope', async () => {
+			const named = (uid) => query(statementsAs(uid), where('parents', 'array-contains', 'k'), where('accessScope', 'in', ['open', 'k-q']));
+			await assertFails(getDocs(named('k-host')));
+			await assertFails(getDocs(named('k-creator')));
+		});
+
+		it('an outsider still may not list the children', async () => {
+			await assertFails(getDocs(query(statementsAs('k-outsider'), where('parentId', '==', 'k'))));
+		});
+	});
+
 	describe('following a question inside a private group', () => {
 		const followAs = (uid, statementId, role = 'member') =>
 			setDoc(doc(contextOf(uid).firestore(), 'statementsSubscribe', `${uid}--${statementId}`), {

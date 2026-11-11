@@ -1492,11 +1492,18 @@ service cloud.firestore {
         return exists(statementPathOf(parentId)) &&
                mayReadScope(get(statementPathOf(parentId)).data.accessScope);
       }
+      // A host, or the creator, of the level itself or of anything above it. A
+      // level's children are theirs to read even with no role on the level that
+      // governs it, so no scope needs naming.
+      function mayHostLevel(id, level) {
+        let roles = rolesAround(id, level);
+        return !('banned' in roles) &&
+               (level.get('creatorId', '') == request.auth.uid || hasHostRole(roles));
+      }
       function isHostOfLevel(id) {
         return request.auth != null &&
                exists(statementPathOf(id)) &&
-               hasHostRole(rolesAround(id, get(statementPathOf(id)).data)) &&
-               !('banned' in rolesAround(id, get(statementPathOf(id)).data));
+               mayHostLevel(id, get(statementPathOf(id)).data);
       }
 
       // By id: the same exposure as `get`. Range scans on the id do not pass.
@@ -1830,12 +1837,20 @@ service cloud.firestore {
                data.statementSettings.get('classHome', null) != null;
       }
 
-      // The access that judges a subscription: the statement's own; else, when the
+      // The access that judges a subscription: that of the level `accessScope`
+      // names, so a child of a private level is never judged by an open top.
+      // Without a named level: the statement's own; else, when the
       // top parent is a join-class HOME (secret, teachers only), the access of the
       // lesson, parents[1]; else the top parent's (IA join-class-lesson-plan 9.3).
       // At most three gets: the statement, its top parent, the lesson.
       function getAccess() {
         let statement = statementDataOf(getStatementId());
+        let scope = statement == null ? '' : statement.get('accessScope', '');
+        return (scope != '' && scope != 'open' && scope != getStatementId())
+          ? accessOf(statementDataOf(scope))
+          : getUnscopedAccess(statement);
+      }
+      function getUnscopedAccess(statement) {
         let own = accessOf(statement);
         let topId = statement == null ? null : statement.get('topParentId', null);
         let top = (own != null || topId == null) ? null : statementDataOf(topId);
@@ -1873,17 +1888,20 @@ service cloud.firestore {
         return !isHomeSubscription() || (isSubscriber() && isRoleUnchanged());
       }
 
-      // A child with no setting of its own follows the tree. Someone already in
-      // the top may follow a question inside it (the bell, an auto-subscribe).
+      // A child with no setting of its own follows the level governing it.
+      // Someone already in that level may follow a question inside it (the bell,
+      // an auto-subscribe). The governing level is the stamped one, else the top.
       function isMemberUnderOwnTop() {
         let statement = statementDataOf(getStatementId());
+        let scope = statement == null ? '' : statement.get('accessScope', '');
         let topId = statement == null ? null : statement.get('topParentId', null);
-        let topSub = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(topId)));
+        let governingId = (scope != '' && scope != 'open') ? scope : topId;
+        let governingSub = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(governingId)));
         return isMemberRole() &&
                accessOf(statement) == null &&
-               topId != null &&
-               exists(topSub) &&
-               get(topSub).data.role in ['member', 'admin', 'statement-creator'];
+               governingId != null &&
+               exists(governingSub) &&
+               get(governingSub).data.role in ['member', 'admin', 'statement-creator'];
       }
 
       function isOpenToAll() {
