@@ -1495,10 +1495,59 @@ service cloud.firestore {
       // A host, or the creator, of the level itself or of anything above it. A
       // level's children are theirs to read even with no role on the level that
       // governs it, so no scope needs naming.
-      function mayHostLevel(id, level) {
+      // Under an open level, or a private level itself: a host or creator of it,
+      // or a host of anything above it.
+      function mayHostOpenLevel(id, level) {
         let roles = rolesAround(id, level);
         return !('banned' in roles) &&
                (level.get('creatorId', '') == request.auth.uid || hasHostRole(roles));
+      }
+      // Under a private level above it: its own host or creator, unless it was
+      // planted, or a host of the private level or of the top. A host role on a
+      // level between them is not trusted here, since that level could be a plant;
+      // such a host reads with the scope named instead.
+      function mayHostScopedLevel(id, level) {
+        let scope = level.accessScope;
+        let top = level.get('topParentId', 'top');
+        let roles = [subRoleAt(id), subRoleAt(scope), (top == 'top' || top == scope) ? '' : subRoleAt(top)];
+        return !('banned' in roles) &&
+               ((hasHostRole([roles[0]]) || level.get('creatorId', '') == request.auth.uid) &&
+                  !isPlantedLevel(id, level) ||
+                hasHostRole([roles[1], roles[2]]));
+      }
+      function mayHostLevel(id, level) {
+        let scope = level.get('accessScope', 'open');
+        return (scope == 'open' || scope == id)
+          ? mayHostOpenLevel(id, level)
+          : mayHostScopedLevel(id, level);
+      }
+      // A level made inside a private level by someone with no way into it, from
+      // before creates checked the parent. Its creator, and anyone they make a
+      // host of it, is no host of anything there.
+      function isPlantedLevel(id, level) {
+        let scope = level.get('accessScope', 'open');
+        let creator = level.get('creatorId', '');
+        let creatorSub = /databases/$(database)/documents/statementsSubscribe/$(string(creator) + '--' + cleanPath(string(scope)));
+        return scope != 'open' && scope != id && creator != '' &&
+               !(exists(creatorSub) &&
+                 get(creatorSub).data.get('role', '') in ['member', 'admin', 'statement-creator']);
+      }
+      // Writing under a private level needs a way into it, or anyone could plant
+      // a statement there, host it, and list what members write under it.
+      function mayWriteUnder(parentId) {
+        return parentId == 'top' ||
+               !exists(statementPathOf(parentId)) ||
+               get(statementPathOf(parentId)).data.get('accessScope', 'open') == 'open' ||
+               mayReadScope(get(statementPathOf(parentId)).data.accessScope);
+      }
+      // A move stays inside the scope it is already in, or needs a way into the new one.
+      function movesOnlyWhereReadable() {
+        let next = request.resource.data.get('parentId', 'top');
+        return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['parentId']) ||
+               next == 'top' ||
+               (exists(statementPathOf(next)) &&
+                get(statementPathOf(next)).data.get('accessScope', 'open') == resource.data.get('accessScope', '')) ||
+               mayWriteUnder(next);
       }
       function isHostOfLevel(id) {
         return request.auth != null &&
@@ -1571,6 +1620,7 @@ service cloud.firestore {
                        !request.resource.data.keys().hasAny(['answerModeration']) &&
                        !createsClassHomeOrLesson() &&
                        createScopeOk() &&
+                       mayWriteUnder(request.resource.data.get('parentId', 'top')) &&
                        classEnteredByOf(request.resource.data) == null &&
                        request.resource.data.creatorId == request.auth.uid &&
                        // A student the teacher removed writes nothing more
@@ -1588,6 +1638,7 @@ service cloud.firestore {
                        !changesCreatorIdWithoutBeingCreator() &&
                        !changesOrganizationId() &&
                        !changesAccessScope() &&
+                       movesOnlyWhereReadable() &&
                        !isClassReply() &&
                        !changesClassReplyFields() &&
                        !rewordsClassProposal() &&

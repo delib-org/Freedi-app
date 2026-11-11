@@ -462,6 +462,8 @@ describe('listing /statements', () => {
 				await subscribe(db, 'k-q-member', 'k-q', 'member');
 				await subscribe(db, 'k-top-member', 'k-top', 'member');
 				await subscribe(db, 'k-host', 'k', 'admin');
+				// Only someone in the private level can have made a level inside it.
+				await subscribe(db, 'k-creator', 'k-q', 'member');
 			});
 		});
 
@@ -490,14 +492,79 @@ describe('listing /statements', () => {
 			await assertSucceeds(getDocs(query(statementsAs('k-creator'), where('parentId', '==', 'k'))));
 		});
 
-		it('but neither may name the governing scope', async () => {
+		it('but the host may not name the governing scope', async () => {
 			const named = (uid) => query(statementsAs(uid), where('parents', 'array-contains', 'k'), where('accessScope', 'in', ['open', 'k-q']));
 			await assertFails(getDocs(named('k-host')));
-			await assertFails(getDocs(named('k-creator')));
 		});
 
 		it('an outsider still may not list the children', async () => {
 			await assertFails(getDocs(query(statementsAs('k-outsider'), where('parentId', '==', 'k'))));
+		});
+	});
+
+	describe('planting a statement inside a private level', () => {
+		const make = (uid, id, fields) =>
+			setDoc(doc(contextOf(uid).firestore(), 'statements', id), statementDoc({ statementId: id, uid, overrides: fields }));
+		const underPg = { parentId: 'pg', topParentId: 'pg-root', parents: ['pg-root', 'pg'], accessScope: 'pg', statementType: 'question' };
+
+		it('refuses an outsider creating under the private level', async () => {
+			await assertFails(make(OUTSIDER, 'plant-1', underPg));
+		});
+
+		it('refuses it with the scope left off, or with an own public setting', async () => {
+			const { accessScope: _scope, ...noScope } = underPg;
+			await assertFails(make(OUTSIDER, 'plant-2', noScope));
+			await assertFails(make(OUTSIDER, 'plant-3', { ...underPg, accessScope: 'open', membership: { access: 'public' } }));
+		});
+
+		it('refuses a banned or waiting person, and an anonymous one', async () => {
+			await assertFails(make(BANNED, 'plant-4', underPg));
+			await assertFails(make(WAITING, 'plant-5', underPg));
+			await assertFails(make(ANONYMOUS, 'plant-6', underPg));
+		});
+
+		it('lets a member and a host above write there', async () => {
+			await assertSucceeds(make(MEMBER, 'grow-1', underPg));
+			await assertSucceeds(make(HOST, 'grow-2', underPg));
+			await assertSucceeds(make(MEMBER, 'grow-3', { ...underPg, accessScope: 'open', membership: { access: 'public' } }));
+		});
+
+		it('still lets anyone write under an open level', async () => {
+			await assertSucceeds(make(OUTSIDER, 'open-1', { parentId: 'ns-q', topParentId: 'ns-top', parents: ['ns-top', 'ns-q'], accessScope: 'open', statementType: 'option' }));
+		});
+
+		it('refuses moving one’s own statement under the private level', async () => {
+			await assertSucceeds(make(OUTSIDER, 'mytop', { parentId: 'top', topParentId: 'mytop', parents: [], accessScope: 'open' }));
+			await assertFails(updateDoc(doc(contextOf(OUTSIDER).firestore(), 'statements', 'mytop'), { parentId: 'pg', topParentId: 'pg-root', parents: ['pg-root', 'pg'] }));
+		});
+
+		it('lets a member move a statement within the private level', async () => {
+			await assertSucceeds(make(MEMBER, 'mover', underPg));
+			await assertSucceeds(updateDoc(doc(contextOf(MEMBER).firestore(), 'statements', 'mover'), { parentId: 'pg-q', parents: ['pg-root', 'pg', 'pg-q'] }));
+		});
+
+		describe('a plant made before creates checked the parent', () => {
+			before(async () => {
+				await seed(env, async (db) => {
+					await setDoc(doc(db, 'statements', 'old-plant'), statementDoc({ statementId: 'old-plant', uid: 'planter', overrides: underPg }));
+					await subscribe(db, 'planter', 'old-plant', 'admin');
+					await setDoc(doc(db, 'statements', 'old-plant-reply'), statementDoc({ statementId: 'old-plant-reply', uid: MEMBER, overrides: { parentId: 'old-plant', topParentId: 'pg-root', parents: ['pg-root', 'pg', 'old-plant'], accessScope: 'pg' } }));
+					await setDoc(doc(db, 'statements', 'real-level'), statementDoc({ statementId: 'real-level', uid: MEMBER, overrides: underPg }));
+					await subscribe(db, 'real-host', 'real-level', 'admin');
+				});
+			});
+
+			it('gives its creator and its hosts no unscoped list', async () => {
+				await assertFails(getDocs(query(statementsAs('planter'), where('parentId', '==', 'old-plant'))));
+			});
+
+			it('still gives a host of a member-made level its children', async () => {
+				await assertSucceeds(getDocs(query(statementsAs('real-host'), where('parentId', '==', 'real-level'))));
+			});
+
+			it('leaves a member reading it as usual', async () => {
+				await assertSucceeds(getDocs(query(statementsAs(MEMBER), where('parents', 'array-contains', 'old-plant'), where('accessScope', 'in', ['open', 'pg']))));
+			});
 		});
 	});
 
