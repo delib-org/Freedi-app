@@ -1,6 +1,6 @@
 import { Collections, type Statement } from '@freedi/shared-types';
 import { isAccessScopeOnlyWrite } from '../scopeOnlyWrite';
-import { mayChangeScope } from '../stampAccessScope';
+import { mayChangeScope, restampPlan } from '../stampAccessScope';
 import { AccessScopeLevels, governingLevelId, resolveStatementScope } from '../accessScopeLevels';
 import { runAccessScopeJob } from '../fn_accessScopeJob';
 import {
@@ -88,6 +88,56 @@ describe('mayChangeScope', () => {
 		);
 		expect(mayChangeScope(base, { ...base, parentId: 'other' })).toBe(true);
 		expect(mayChangeScope(base, { ...base, accessScope: undefined })).toBe(true);
+	});
+});
+
+describe('restampPlan', () => {
+	const question = (access?: string, accessScope = 'q') =>
+		statement({
+			statementId: 'q',
+			parentId: 'g',
+			statementType: 'question',
+			accessScope,
+			...(access ? { membership: { access } } : {}),
+		} as Partial<Statement> & { statementId: string });
+	const answer = (access?: string) =>
+		statement({
+			statementId: 'a',
+			parentId: 'q',
+			statementType: 'option',
+			accessScope: 'q',
+			...(access ? { membership: { access } } : {}),
+		} as Partial<Statement> & { statementId: string });
+
+	it('queues when the scope moves', () => {
+		expect(restampPlan(question('secret'), question('public'), 'open')).toEqual({
+			queue: true,
+			clearCopiesOf: 'secret',
+		});
+	});
+
+	it('queues to clear copies when a private setting changes but the scope stays', () => {
+		expect(restampPlan(question('secret'), question('moderated'), 'q')).toEqual({
+			queue: true,
+			clearCopiesOf: 'secret',
+		});
+	});
+
+	it('does not queue for a cleared copy on an answer', () => {
+		expect(restampPlan(answer('secret'), answer(), 'q').queue).toBe(false);
+	});
+
+	it('does not queue between two open values with the scope unchanged', () => {
+		expect(
+			restampPlan(question('openToAll', 'open'), question('public', 'open'), 'open').queue,
+		).toBe(false);
+	});
+
+	it('does not ask to clear copies of an open setting', () => {
+		expect(restampPlan(question('public', 'open'), question('secret', 'open'), 'q')).toEqual({
+			queue: true,
+			clearCopiesOf: undefined,
+		});
 	});
 });
 
@@ -232,6 +282,16 @@ describe('runAccessScopeJob', () => {
 			await runAccessScopeJob(store.db, 'q');
 			expect(store.read(S, 'copy')?.accessScope).toBe('open');
 			expect(store.read(S, 'chat')?.accessScope).toBe('open');
+		});
+
+		it('removes only membership.access from the copy', async () => {
+			const store = openedQuestion();
+			store.seed(S, 'copy', {
+				...store.read(S, 'copy'),
+				membership: { access: 'secret', adminApproveMembers: true },
+			});
+			await runAccessScopeJob(store.db, 'q');
+			expect(store.read(S, 'copy')?.membership).toEqual({ adminApproveMembers: true });
 		});
 
 		it('keeps a real nested question with the same setting private', async () => {

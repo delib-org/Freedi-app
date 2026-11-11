@@ -1,5 +1,10 @@
 import { logger } from 'firebase-functions';
-import { Collections, type Statement, isOpenAccessValue } from '@freedi/shared-types';
+import {
+	Collections,
+	type Statement,
+	isOpenAccessValue,
+	isAnswerTypeLevel,
+} from '@freedi/shared-types';
 import { db } from '../db';
 import { logError } from '../utils/errorHandling';
 import { resolveStatementScope } from './accessScopeLevels';
@@ -32,6 +37,32 @@ export function mayChangeScope(before: Statement, after: Statement): boolean {
 	);
 }
 
+export interface RestampPlan {
+	queue: boolean;
+	/** The private setting the level dropped: copies of it on answers must go. */
+	clearCopiesOf?: string;
+}
+
+/**
+ * Whether a level's change needs its tree re-stamped. A whole-tree job is costly,
+ * so only when the level's scope moved, or when it dropped a private setting its
+ * answers may carry copies of. Not when a copy on an answer is cleared (the job
+ * does that itself, once per answer), nor between two open values.
+ */
+export function restampPlan(before: Statement, after: Statement, accessScope: string): RestampPlan {
+	const previousAccess = before.membership?.access;
+	const nextAccess = after.membership?.access;
+	const dropsPrivateSetting =
+		Boolean(previousAccess) &&
+		previousAccess !== nextAccess &&
+		!isOpenAccessValue(previousAccess as string);
+	const isClearedCopy = !nextAccess && isAnswerTypeLevel(after);
+	const clearCopiesOf = dropsPrivateSetting && !isClearedCopy ? previousAccess : undefined;
+	const scopeMoved = accessScope !== after.accessScope;
+
+	return { queue: scopeMoved || Boolean(clearCopiesOf), clearCopiesOf };
+}
+
 /**
  * Called on every statement update. When a level's scope really changes, stamps
  * that statement and queues its subtree. Writes only `accessScope`, which
@@ -44,9 +75,8 @@ export async function restampOnAccessChange(
 	if (!before || !after?.statementId || !mayChangeScope(before, after)) return;
 	try {
 		const accessScope = await resolveStatementScope(db, after);
-		const previousAccess = before.membership?.access;
-		const accessChanged = previousAccess !== after.membership?.access;
-		if (accessScope === after.accessScope && !accessChanged) return;
+		const plan = restampPlan(before, after, accessScope);
+		if (!plan.queue) return;
 
 		const now = Date.now();
 		if (accessScope !== after.accessScope) {
@@ -60,9 +90,7 @@ export async function restampOnAccessChange(
 				topParentId:
 					after.parentId === 'top' || !after.topParentId ? after.statementId : after.topParentId,
 				// Answers may carry a copy of the old setting; a private one must go.
-				...(accessChanged && previousAccess && !isOpenAccessValue(previousAccess)
-					? { clearCopiesOf: previousAccess }
-					: {}),
+				...(plan.clearCopiesOf ? { clearCopiesOf: plan.clearCopiesOf } : {}),
 				status: 'pending',
 				cursor: null,
 				generation: now,

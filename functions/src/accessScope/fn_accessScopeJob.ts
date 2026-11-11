@@ -89,7 +89,7 @@ async function clearCopiedSettings(
 		const batch = firestore.batch();
 		copies
 			.slice(start, start + PAGE_SIZE)
-			.forEach((doc) => batch.update(doc.ref, { membership: FieldValue.delete() }));
+			.forEach((doc) => batch.update(doc.ref, { 'membership.access': FieldValue.delete() }));
 		await batch.commit();
 	}
 }

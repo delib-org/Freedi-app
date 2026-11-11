@@ -21,8 +21,25 @@ function readPath(data: Data | undefined, path: string): unknown {
 	return path.split('.').reduce<unknown>((value, key) => (value as Data | undefined)?.[key], data);
 }
 
+/** Sets or deletes a possibly dotted path, copying each map on the way. */
+function setPath(target: Data, path: string, value: unknown): void {
+	const [head, ...rest] = path.split('.');
+	if (rest.length === 0) {
+		if (isDelete(value)) delete target[head];
+		else target[head] = value;
+
+		return;
+	}
+	const child: Data = { ...((target[head] as Data | undefined) ?? {}) };
+	setPath(child, rest.join('.'), value);
+	target[head] = child;
+}
+
+/** FieldValue.delete(): the real class, or the shape the functions test setup mocks it with. */
 function isDelete(value: unknown): boolean {
-	return (value as { constructor?: { name?: string } })?.constructor?.name === 'DeleteTransform';
+	const sentinel = value as { constructor?: { name?: string }; _delete?: boolean } | undefined;
+
+	return sentinel?.constructor?.name === 'DeleteTransform' || sentinel?._delete === true;
 }
 
 /** Just enough of Firestore for the stamping code: a page-able, array-contains-able store. */
@@ -40,8 +57,8 @@ export function fakeStatementStore() {
 		get: async () => snap(collection, id),
 		update: async (patch) => {
 			writes.push({ id, patch });
-			const next: Data = { ...store(collection).get(id), ...patch };
-			for (const key of Object.keys(patch)) if (isDelete(patch[key])) delete next[key];
+			const next: Data = { ...store(collection).get(id) };
+			for (const [key, value] of Object.entries(patch)) setPath(next, key, value);
 			store(collection).set(id, next);
 		},
 		set: async (value) => {
