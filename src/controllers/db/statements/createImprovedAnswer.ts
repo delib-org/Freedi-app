@@ -50,7 +50,6 @@ export async function createImprovedAnswer({
 			text: wording,
 			parentStatement: parent,
 			statementType: StatementType.option,
-			membership: parent.membership,
 			paragraphs: [
 				{
 					paragraphId: generateParagraphId(),

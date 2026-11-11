@@ -152,6 +152,7 @@ export async function postProposal(
 		statement: text,
 		statementType: StatementType.option,
 		parentId: challenge.statementId,
+		parentAccessScope: challenge.accessScope,
 		topParentId: main.topParentId || mainId,
 		parents: [...(main.parents ?? []), mainId, challenge.statementId],
 		creatorId: author.id,

@@ -122,3 +122,27 @@ export function agoraParticipantDoc({ sessionId, uid, overrides = {} }) {
 		...overrides,
 	};
 }
+
+/**
+ * The parent and top that statementDoc() points at by default. Creates check the
+ * parent: it must exist, and `parents` / `topParentId` must follow it.
+ */
+export async function seedDefaultParents(env) {
+	await seed(env, async (db) => {
+		const { doc, setDoc } = await import('firebase/firestore');
+		await setDoc(doc(db, 'statements', 'top-1'), {
+			statementId: 'top-1',
+			parentId: 'top',
+			topParentId: 'top-1',
+			parents: [],
+			accessScope: 'open',
+		});
+		await setDoc(doc(db, 'statements', 'parent-1'), {
+			statementId: 'parent-1',
+			parentId: 'top-1',
+			topParentId: 'top-1',
+			parents: ['top-1'],
+			accessScope: 'open',
+		});
+	});
+}

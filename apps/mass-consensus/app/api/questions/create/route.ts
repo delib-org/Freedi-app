@@ -122,6 +122,7 @@ export async function POST(request: NextRequest) {
       statement: body.statement.trim(),
       statementType: StatementType.question,
       parentId: body.parentId,
+      parentAccessScope: parentStatement.accessScope,
       topParentId: parentStatement.topParentId || parentStatement.statementId,
       parents: [...(parentStatement.parents || []), body.parentId],
       creatorId: userId,

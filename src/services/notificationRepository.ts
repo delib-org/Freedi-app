@@ -148,7 +148,8 @@ export const deleteToken = async (token: string): Promise<void> => {
  * Register for statement notifications.
  * Pushes are delivered from the owner-only pushNotifications collection, so this
  * makes sure the device is registered there. The token is never written to
- * statementsSubscribe, which any signed-in user can read.
+ * statementsSubscribe, which more people than its owner can read (those in the
+ * statement, hosts).
  * Also maintains legacy askedToBeNotified for backward compatibility during migration.
  */
 export const registerForStatementNotifications = async (

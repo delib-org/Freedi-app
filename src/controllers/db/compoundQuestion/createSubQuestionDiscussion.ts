@@ -7,6 +7,7 @@ import {
 	CutoffBy,
 	createStatementObject,
 	evaluationType,
+	childTopParentId,
 } from '@freedi/shared-types';
 import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
@@ -32,7 +33,8 @@ export async function createSubQuestionDiscussion({
 			statement: title,
 			statementType: StatementType.question,
 			parentId: parentStatement.statementId,
-			topParentId: parentStatement.topParentId || parentStatement.statementId,
+			topParentId: childTopParentId(parentStatement),
+			parentAccessScope: parentStatement.accessScope,
 			creatorId: creator.uid,
 			creator,
 		});

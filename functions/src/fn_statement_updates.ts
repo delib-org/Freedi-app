@@ -4,6 +4,7 @@ import {
 	onDocumentUpdated,
 	onDocumentDeleted,
 } from 'firebase-functions/v2/firestore';
+import { isAccessScopeOnlyWrite } from './accessScope/scopeOnlyWrite';
 import { db } from '.';
 import { logger } from 'firebase-functions';
 import { FieldValue } from 'firebase-admin/firestore';
@@ -71,6 +72,8 @@ export const updateParentOnChildUpdate = onDocumentUpdated(
 		try {
 			const before = event.data?.before.data() as Statement | undefined;
 			const after = event.data?.after.data() as Statement | undefined;
+
+			if (isAccessScopeOnlyWrite(before, after)) return;
 
 			// Before the parent check: a top-level question can reach Decided too.
 			if (before && after) await sendDecidedNoticesOnStageChange(before, after);

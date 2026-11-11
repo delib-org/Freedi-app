@@ -3,7 +3,7 @@
  * Direct Firestore writes - no API routes needed
  */
 
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
 import { Collections, createParagraphChildStatement, ParagraphType, SourceApp } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
@@ -33,6 +33,7 @@ interface CreateParagraphParams {
 export async function createParagraphStatementToDB(params: CreateParagraphParams): Promise<string> {
   try {
     const firestore = getFirebaseFirestore();
+    const documentSnap = await getDoc(doc(firestore, Collections.statements, params.documentId));
 
     // Create a canonical paragraph child statement (statementType === paragraph).
     // `isOfficial: true` also writes the `doc.isOfficialParagraph`/`doc.order`/
@@ -41,7 +42,12 @@ export async function createParagraphStatementToDB(params: CreateParagraphParams
     // approval/evaluation linkage.
     const paragraphStatement = createParagraphChildStatement({
       content: params.content,
-      host: { statementId: params.documentId, topParentId: params.documentId },
+      host: {
+        statementId: params.documentId,
+        // A document can sit under a group: its children belong to the group's tree.
+        topParentId: documentSnap.data()?.topParentId || params.documentId,
+        accessScope: documentSnap.data()?.accessScope,
+      },
       creator: params.creator,
       creatorId: params.creator.uid,
       order: params.order,

@@ -1,9 +1,14 @@
 import type { Firestore } from 'firebase-admin/firestore';
 import { Access, Collections, Role, StatementType, type Statement } from '@freedi/shared-types';
-import { findStatementAdminSource } from '../progress/assertStatementAdmin';
 import { isSystemAdmin } from './httpAuth';
 import { ancestorIds } from './statementAncestors';
-import { isOpenAccess, judgeAccessLevels, type AccessLevel } from './statementAccess';
+import {
+	isAdminThere,
+	isOpenAccess,
+	isRestrictedOwner,
+	judgeAccessLevels,
+	type AccessLevel,
+} from './statementAccess';
 
 const TREE_ACCESS = {
 	/**
@@ -65,13 +70,14 @@ export type TreeReadAccess =
 	| { allowed: false; status: number; error: string };
 
 /**
- * A statement behind a private level: the levels below the root that own a
- * setting or are hidden. A level with neither is left out, so a child that only
- * inherits costs no role read, and a role placed directly on one does not count.
+ * A statement behind a private level: the levels below the root it is judged
+ * on (see judgedLevels).
  */
 export interface GatedChain {
 	ids: string[];
 	settings: LevelSettings[];
+	/** Per level: it only inherits, so only a host role on it counts. */
+	hostOnly?: boolean[];
 }
 
 /** Statement id -> its chain, for the statements of a page governed by a private level below the root. */
@@ -295,7 +301,12 @@ export async function authorizeTreeRead(
 	if (verdict === 'banned') {
 		return { allowed: false, status: FORBIDDEN, error: 'You cannot take part in this space' };
 	}
-	if ((await findStatementAdminSource(uid, chain.root)) !== null) {
+	// Inside a private level a pending request shuts the door, a host role above
+	// included, as the rules do.
+	if (verdict === 'waiting' && isRestrictedOwner(levels)) {
+		return { allowed: false, status: FORBIDDEN, error: 'Waiting for approval' };
+	}
+	if (await isAdminThere(uid, chain.root, levels)) {
 		// Counts as a host level when statements below the root are judged.
 		return { allowed: true, levels: [...levels, { statement: undefined, role: Role.admin }] };
 	}
@@ -309,12 +320,28 @@ export async function authorizeTreeRead(
 	return { allowed: false, status: FORBIDDEN, error: 'You are not a member of this space' };
 }
 
+function ownsSettingOrHides(level: LevelSettings): boolean {
+	return Boolean(level?.membership?.access || level?.hide);
+}
+
+/**
+ * The levels a statement is judged on: those with a setting or hidden, and the
+ * levels above it that only inherit, since a host role there counts when it is
+ * at or above the private level (judgeAccessLevels decides). On an inheriting
+ * level only a host role counts; a membership or a ban placed there does not.
+ * The statement itself is left out unless it owns a setting, so a page of plain
+ * answers costs no extra role read each.
+ */
 function judgedLevels(ids: string[], settings: LevelSettings[]): GatedChain {
 	const kept = ids
-		.map((id, index) => ({ id, level: settings[index] }))
-		.filter(({ level }) => level?.membership?.access || level?.hide);
+		.map((id, index) => ({ id, level: settings[index], index }))
+		.filter(({ level, index }) => index > 0 || ownsSettingOrHides(level));
 
-	return { ids: kept.map(({ id }) => id), settings: kept.map(({ level }) => level) };
+	return {
+		ids: kept.map(({ id }) => id),
+		settings: kept.map(({ level }) => level),
+		hostOnly: kept.map(({ level }) => !ownsSettingOrHides(level)),
+	};
 }
 
 /**
@@ -374,8 +401,16 @@ export async function findRefusedStatements(
 	);
 
 	const refused = [...gates]
-		.filter(([, { ids, settings }]) => {
-			const levels = ids.map((id, index) => ({ statement: settings[index], role: roles.get(id) }));
+		.filter(([, { ids, settings, hostOnly }]) => {
+			const levels = ids.map((id, index) => {
+				const role = roles.get(id);
+				const isHost = role === Role.admin || role === Role.creator;
+
+				return {
+					statement: settings[index],
+					role: hostOnly?.[index] && !isHost ? undefined : role,
+				};
+			});
 
 			return judgeAccessLevels([...levels, ...rootLevels], 'open') !== 'allowed';
 		})

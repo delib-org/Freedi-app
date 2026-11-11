@@ -12,6 +12,7 @@ import { normalizeStatementData } from '@/helpers/timestampHelpers';
 import { createStatementRef, createCollectionRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { isRefusedRead } from '@/helpers/firestoreRefusal';
+import { childListScopes, scopeChunksOf } from './readScopes';
 
 export async function getStatementFromDB(
 	statementId: string,
@@ -75,6 +76,7 @@ export async function getStatementDepth(
 		try {
 			const subStatements: Statement[] = [];
 			const statementsRef = createCollectionRef(Collections.statements);
+			const scopes = await childListScopes(statement.statementId);
 			const q = query(
 				statementsRef,
 				and(
@@ -84,6 +86,7 @@ export async function getStatementDepth(
 					),
 					where('statementType', '!=', 'document'),
 					where('parentId', '==', statement.statementId),
+					...(scopes ? [where('accessScope', 'in', scopes)] : []),
 				),
 			);
 			const statementsDB = await getDocs(q);
@@ -106,6 +109,7 @@ export async function getStatementDepth(
 export async function getChildStatements(statementId: string): Promise<Statement[]> {
 	try {
 		const statementsRef = createCollectionRef(Collections.statements);
+		const [scopes] = await scopeChunksOf(statementId);
 		const q = query(
 			statementsRef,
 			and(
@@ -114,6 +118,7 @@ export async function getChildStatements(statementId: string): Promise<Statement
 					where('deliberativeElement', '==', DeliberativeElement.research),
 				),
 				where('parents', 'array-contains', statementId),
+				where('accessScope', 'in', scopes),
 			),
 		);
 		const statementsDB = await getDocs(q);

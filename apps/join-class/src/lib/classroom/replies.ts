@@ -5,6 +5,7 @@ import {
 	getStatementSubscriptionId,
 	type ClassPostReplyResponse,
 	type Statement,
+	readScopesOfRoot,
 } from '@freedi/shared-types';
 import { collection, db, doc, getDoc, query, updateDoc, where } from '../firebase';
 import type { Unsubscribe } from '../firebase';
@@ -41,7 +42,11 @@ export function listenProposalReplies(
 ): Unsubscribe {
 	return resilientOnSnapshot(
 		LISTENER.proposal,
-		query(collection(db, Collections.statements), where('parentId', '==', proposalId)),
+		query(
+			collection(db, Collections.statements),
+			where('parentId', '==', proposalId),
+			where('statementType', '==', StatementType.statement),
+		),
 		(snap) => onData(replies(snap.docs)),
 		(err) => onError?.(err),
 	);
@@ -59,6 +64,7 @@ export function listenRepliesToMe(
 		query(
 			collection(db, Collections.statements),
 			where('parents', 'array-contains', lessonId),
+			where('accessScope', 'in', readScopesOfRoot(lessonId)),
 			where('classReply.proposalCreatorId', '==', uid),
 		),
 		(snap) => onData(replies(snap.docs)),
@@ -77,6 +83,7 @@ export function listenLessonReplies(
 		query(
 			collection(db, Collections.statements),
 			where('parents', 'array-contains', lessonId),
+			where('accessScope', 'in', readScopesOfRoot(lessonId)),
 			where('statementType', '==', StatementType.statement),
 		),
 		(snap) => onData(replies(snap.docs)),

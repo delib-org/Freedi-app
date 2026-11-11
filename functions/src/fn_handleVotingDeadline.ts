@@ -15,7 +15,7 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions/v1';
 import { getFirestore } from 'firebase-admin/firestore';
-import { Statement, Collections } from '@freedi/shared-types';
+import { Statement, Collections, inheritedAccessScope } from '@freedi/shared-types';
 
 const db = getFirestore();
 
@@ -112,6 +112,7 @@ export const fn_handleVotingDeadline = onSchedule(
 							statement: officialParagraph.statement,
 							statementType: officialParagraph.statementType,
 							parentId: officialParagraph.statementId,
+							...inheritedAccessScope(officialParagraph),
 							topParentId: documentId,
 							creatorId: officialParagraph.creatorId,
 							creator: officialParagraph.creator,

@@ -1,6 +1,12 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
-import { Collections, StatementType, type Statement, getRandomUID } from '@freedi/shared-types';
+import {
+	Collections,
+	StatementType,
+	type Statement,
+	getRandomUID,
+	inheritedAccessScope,
+} from '@freedi/shared-types';
 import {
 	assignToTheme,
 	generateTopicLabel,
@@ -240,6 +246,7 @@ async function createThemeForSynth(
 		statementType: StatementType.option,
 		parentId: parent.statementId,
 		parents: [...(parent.parents ?? []), parent.statementId],
+		...inheritedAccessScope(parent),
 		topParentId: synthDoc.topParentId ?? parent.statementId,
 		creatorId: synthDoc.creatorId,
 		creator: synthDoc.creator,

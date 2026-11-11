@@ -14,6 +14,7 @@ import {
 	User,
 	createStatementObject,
 	defaultStatementSettings,
+	resolveAccessScope,
 } from '@freedi/shared-types';
 import { db } from '../db';
 import { buildAdminSubscription } from './orgAuth';
@@ -122,6 +123,7 @@ export function buildTopQuestion(input: BuildTopQuestionInput): Statement {
 	statement.membership = {
 		access: access ?? organization.defaultAccess ?? Access.openToAll,
 	};
+	statement.accessScope = resolveAccessScope(statement, []);
 	statement.questionSettings = { questionType: QuestionType.simple };
 	if (description) statement.description = description;
 
@@ -186,6 +188,7 @@ export function buildChildQuestion(input: BuildChildQuestionInput): Statement {
 		statement: title,
 		statementType: StatementType.question,
 		parentId: parent.statementId,
+		parentAccessScope: parent.accessScope,
 		topParentId: parent.statementId,
 		parents: [parent.statementId],
 		statementId,
@@ -272,6 +275,7 @@ export function buildDocumentChild(input: BuildDocumentChildInput): Statement {
 		statement: title,
 		statementType: StatementType.document,
 		parentId: parent.statementId,
+		parentAccessScope: parent.accessScope,
 		topParentId: parent.statementId,
 		parents: [parent.statementId],
 		statementId,

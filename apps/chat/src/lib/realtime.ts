@@ -8,7 +8,7 @@
  *
  * Nothing here is in the first HTML payload — it runs only after hydration.
  */
-import { Collections, Visibility } from '@freedi/shared-types';
+import { Collections, Visibility, readScopesOfRoot } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { firestoreAnon, firestoreAuthed } from './firebaseClient';
 
@@ -35,6 +35,7 @@ export function subscribeToConversation(
 			const q = query(
 				collection(db, Collections.statements),
 				where('topParentId', '==', topParentId),
+				where('accessScope', 'in', readScopesOfRoot(topParentId)),
 			);
 
 			const stop = onSnapshot(q, (snap) => {

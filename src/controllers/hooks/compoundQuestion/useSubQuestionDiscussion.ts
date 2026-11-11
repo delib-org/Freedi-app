@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Statement, SimpleStatement } from '@freedi/shared-types';
+import { Statement, SimpleStatement, childTopParentId } from '@freedi/shared-types';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { promoteOptionToSubQuestion } from '@/controllers/db/compoundQuestion/promoteOptionToSubQuestion';
 
@@ -63,7 +63,7 @@ export function useSubQuestionDiscussion(
 
 			const resultAsStatement = {
 				...result,
-				topParentId: discussion.topParentId || discussion.parentId,
+				topParentId: childTopParentId(discussion),
 				parentId: discussion.statementId,
 			} as Statement;
 

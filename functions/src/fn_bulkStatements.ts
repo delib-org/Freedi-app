@@ -1,11 +1,12 @@
 import { Request, Response } from 'firebase-functions/v1';
 import { FirestoreEvent, QueryDocumentSnapshot } from 'firebase-functions/firestore';
 import { Timestamp } from 'firebase-admin/firestore';
-import { Collections, Statement, StatementDeletion } from '@freedi/shared-types';
+import { Collections, OPEN_ACCESS_SCOPE, Statement, StatementDeletion } from '@freedi/shared-types';
 import { db } from './index';
 import { logError } from './utils/errorHandling';
 import { verifyAuthToken } from './utils/httpAuth';
 import { treeScopeQuery } from './services/statement-tree-query';
+import { restampIfReused } from './accessScope/recreatedStatements';
 import type { AccessLevel } from './utils/statementAccess';
 import {
 	authorizeTreeRead,
@@ -175,7 +176,11 @@ export async function getBulkStatements(req: Request, res: Response): Promise<vo
  * Firestore onDocumentDeleted handler for statements/{statementId}.
  * Writes a tombstone to statementDeletions so clients with delta listeners
  * (which only see docs whose lastUpdate changed) learn about hard deletes.
- * Tombstones are purged by a Firestore TTL policy on `expireAt`.
+ * Tombstones are purged by a Firestore TTL policy on `expireAt`, except that of
+ * a statement inside a private level: it has no `expireAt` and stays, so the
+ * create trigger can tell when the id comes back somewhere else and quarantine
+ * it; otherwise its old children (still stamped private, still pointing at it)
+ * would be read under an open statement.
  */
 export async function writeStatementDeletionTombstone(
 	event: FirestoreEvent<QueryDocumentSnapshot | undefined, { statementId: string }>,
@@ -187,21 +192,29 @@ export async function writeStatementDeletionTombstone(
 
 	try {
 		const deletedAtMs = Date.now();
+		const accessScope = deleted.accessScope ?? OPEN_ACCESS_SCOPE;
 		const tombstone: StatementDeletion = {
 			statementId,
 			parentId: deleted.parentId,
 			topParentId: deleted.topParentId,
 			parents: deleted.parents ?? [],
 			deletedAtMs,
+			accessScope,
 		};
+		const keep = accessScope !== OPEN_ACCESS_SCOPE;
 
 		await db
 			.collection(Collections.statementDeletions)
 			.doc(statementId)
 			.set({
 				...tombstone,
-				expireAt: Timestamp.fromMillis(deletedAtMs + BULK_FETCH.TOMBSTONE_TTL_MS),
+				...(keep
+					? {}
+					: { expireAt: Timestamp.fromMillis(deletedAtMs + BULK_FETCH.TOMBSTONE_TTL_MS) }),
 			});
+		// Made again before this tombstone landed, the id slipped past the create
+		// trigger's check: judge it now.
+		if (keep) await restampIfReused(db, statementId);
 	} catch (error) {
 		logError(error, {
 			operation: 'fn_bulkStatements.writeStatementDeletionTombstone',

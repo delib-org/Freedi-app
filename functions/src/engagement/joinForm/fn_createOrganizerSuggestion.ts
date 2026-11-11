@@ -68,6 +68,7 @@ export const createOrganizerSuggestion = onCall(
 			statement: trimmed,
 			statementType: StatementType.option,
 			parentId: questionId,
+			parentAccessScope: question.accessScope,
 			topParentId: question.topParentId || questionId,
 			creatorId: uid,
 			creator: {

@@ -41,6 +41,7 @@ import {
 	seatOrder,
 	tallyVotes,
 	functionConfig,
+	OPEN_ACCESS_SCOPE,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 
@@ -322,6 +323,7 @@ async function pitchChallenge(
 		statement: statementText,
 		statementType: StatementType.option,
 		parentId: session.challengeQuestionId,
+		parentAccessScope: OPEN_ACCESS_SCOPE,
 		topParentId: session.rootStatementId,
 		parents: [session.rootStatementId, session.challengeQuestionId],
 		creatorId: uid,

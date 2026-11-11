@@ -202,12 +202,14 @@ export async function POST(
     };
 
     // Create Statement object using utility function
+    const paragraphSnap = await db.collection(Collections.statements).doc(paragraphId).get();
     const suggestionStatement = createSuggestionStatement(
       suggestedContent.trim(),
       paragraphId, // officialParagraphId
       documentId,
       creator,
-      reasoning?.trim() // Pass reasoning to be saved in Statement
+      reasoning?.trim(), // Pass reasoning to be saved in Statement
+      paragraphSnap.data()?.accessScope,
     );
 
     // Debug: Log created statement

@@ -13,8 +13,9 @@ import {
 import { makeEnv, seed } from './helpers.mjs';
 
 /**
- * statementsSubscribe.tokens is being retired: any signed-in user can read a
- * subscription, so the field may only shrink. Old cached clients must still be
+ * statementsSubscribe.tokens is being retired: any signed-in user could read a
+ * subscription (now only its owner, those in the statement and hosts can), so
+ * the field may only shrink. Old cached clients must still be
  * able to JOIN, and they send one token inside the write that creates the doc,
  * so that one shape stays allowed (the server removes the token afterwards).
  * The shapes below are what those clients really send: see
@@ -182,12 +183,12 @@ describe('statementsSubscribe.tokens is retired', () => {
 			);
 		});
 
-		it('still shows the old field to any signed-in reader until the cleanup has run', async () => {
+		// Subscriptions are no longer readable by any signed-in user (only by their
+		// owner, those in the statement, a host of its top, and system admins), so
+		// a stranger no longer sees an old token either.
+		it('no longer shows the old field to a signed-in stranger', async () => {
 			await seedSub({ tokens: ['device-1'] });
-			const snapshot = await assertSucceeds(getDoc(ref(as(OTHER), OPEN)));
-			if (!Array.isArray(snapshot.data().tokens)) {
-				throw new Error('expected the old field to be readable');
-			}
+			await assertFails(getDoc(ref(as(OTHER), OPEN)));
 		});
 	});
 });

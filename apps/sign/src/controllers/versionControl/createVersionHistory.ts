@@ -4,7 +4,7 @@
  */
 
 import { Firestore, Transaction } from 'firebase-admin/firestore';
-import { Collections, Statement } from '@freedi/shared-types';
+import { Collections, Statement, inheritedAccessScope } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 
 /**
@@ -82,6 +82,7 @@ export async function createVersionHistory(
 		const historyEntry: Partial<Statement> = {
 			statementId: historyId,
 			parentId: paragraphId,
+			...inheritedAccessScope(paragraph),
 			topParentId: paragraph.topParentId,
 			statement: text,
 			creatorId: paragraph.creatorId,

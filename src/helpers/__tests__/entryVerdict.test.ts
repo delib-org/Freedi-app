@@ -1,6 +1,8 @@
 import { Access, Role, Statement } from '@freedi/shared-types';
 import {
 	getEntryVerdict,
+	getInheritedLevelId,
+	getLevelAccess,
 	getLevelsAbove,
 	getSubscriptionScopeId,
 	isProvenOpen,
@@ -50,10 +52,22 @@ describe('getEntryVerdict', () => {
 		expect(getEntryVerdict(level(Access.secret), undefined, { role }, signedIn)).toBe('open');
 	});
 
-	it("opens a secret level to that level's creator", () => {
+	it('does not open a secret level to its creator without a role, as the database reads it', () => {
 		expect(getEntryVerdict(level(Access.secret, 'u1'), undefined, undefined, signedIn)).toBe(
-			'open',
+			'closed',
 		);
+	});
+
+	it('still opens an open level to its creator', () => {
+		const anonymousCreator = { uid: 'u1', isAnonymous: true };
+		expect(
+			getEntryVerdict(
+				level(Access.openForRegistered, 'u1'),
+				undefined,
+				undefined,
+				anonymousCreator,
+			),
+		).toBe('open');
 	});
 
 	it('says waiting for a pending request', () => {
@@ -94,8 +108,8 @@ describe('isProvenOpen', () => {
 		expect(isProvenOpen(level(Access.public), undefined, undefined, anonymous)).toBe(true);
 	});
 
-	it("is proven by being the level's creator", () => {
-		expect(isProvenOpen(level(Access.secret, 'u1'), undefined, undefined, signedIn)).toBe(true);
+	it("is not proven by being a private level's creator", () => {
+		expect(isProvenOpen(level(Access.secret, 'u1'), undefined, undefined, signedIn)).toBe(false);
 	});
 
 	it.each([Role.member, Role.admin, Role.creator])('is proven by a loaded %s role', (role) => {
@@ -157,5 +171,65 @@ describe('getLevelsAbove', () => {
 
 	it('has nothing above a top-level statement', () => {
 		expect(getLevelsAbove({ statementId: 'q', parentId: 'top', topParentId: 'q' })).toEqual([]);
+	});
+});
+
+describe('the governing level from accessScope', () => {
+	const scoped = (accessScope: string, access?: Access) =>
+		({ ...level(access), accessScope }) as Statement;
+	const middle = topParent(Access.secret);
+
+	it('is the named level when private', () => {
+		expect(getSubscriptionScopeId(scoped('middle'))).toBe('middle');
+	});
+
+	it('is the level itself when it is its own scope', () => {
+		expect(getSubscriptionScopeId(scoped('level', Access.secret))).toBe('level');
+	});
+
+	it('falls back on own, then top, when open or unstamped', () => {
+		expect(getSubscriptionScopeId(scoped('open', Access.public))).toBe('level');
+		expect(getSubscriptionScopeId(scoped('open'))).toBe('group');
+		expect(getSubscriptionScopeId(level())).toBe('group');
+	});
+
+	it('closes a new child under a private middle level inside an open top', () => {
+		expect(getEntryVerdict(scoped('middle'), middle, undefined, signedIn)).toBe('closed');
+	});
+
+	it('lets a member of that middle level in', () => {
+		expect(getEntryVerdict(scoped('middle'), middle, { role: Role.member }, signedIn)).toBe('open');
+	});
+
+	it('shows waiting at that middle level', () => {
+		expect(getEntryVerdict(scoped('middle'), middle, { role: Role.waiting }, signedIn)).toBe(
+			'waiting',
+		);
+	});
+
+	it('ignores an old open setting copied below a private scope', () => {
+		expect(getLevelAccess(scoped('middle', Access.openToAll), middle)).toBe(Access.secret);
+	});
+
+	it('opens a level stamped open even under a private top', () => {
+		expect(getEntryVerdict(scoped('open'), middle, undefined, signedIn)).toBe('open');
+	});
+
+	it('means open when no level has a setting', () => {
+		expect(getLevelAccess(scoped('open'), undefined)).toBe(Access.openToAll);
+	});
+
+	it('knows nothing yet for a private scope it has not loaded', () => {
+		expect(getLevelAccess(scoped('middle'), undefined)).toBeUndefined();
+	});
+
+	it('keeps the old answer for an unstamped level', () => {
+		expect(getLevelAccess(level(), topParent(Access.moderated))).toBe(Access.moderated);
+	});
+
+	it('inherits from a nearer private level, else the top', () => {
+		expect(getInheritedLevelId(scoped('middle'))).toBe('middle');
+		expect(getInheritedLevelId(scoped('level', Access.secret))).toBe('group');
+		expect(getInheritedLevelId(scoped('open'))).toBe('group');
 	});
 });

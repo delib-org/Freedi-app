@@ -4,6 +4,7 @@ import {
 	StatementType,
 	createStatementObject,
 	User as FreediUser,
+	OPEN_ACCESS_SCOPE,
 } from '@freedi/shared-types';
 import {
 	db,
@@ -74,6 +75,7 @@ export async function addStance(params: {
 		statement: params.text,
 		statementType: StatementType.option,
 		parentId: params.islandStatementId,
+		parentAccessScope: OPEN_ACCESS_SCOPE,
 		topParentId: params.rootStatementId,
 		parents: [params.rootStatementId, params.islandStatementId],
 		creatorId: params.creator.uid,
@@ -102,6 +104,7 @@ export async function addIslandStatement(params: {
 		statement: params.centralQuestion,
 		statementType: StatementType.question,
 		parentId: params.rootStatementId,
+		parentAccessScope: OPEN_ACCESS_SCOPE,
 		topParentId: params.rootStatementId,
 		creatorId: params.creator.uid,
 		creator: params.creator,

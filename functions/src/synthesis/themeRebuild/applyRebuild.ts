@@ -6,6 +6,7 @@ import {
 	THEME_SOURCE_LLM_REBUILD,
 	getRandomUID,
 	type Statement,
+	inheritedAccessScope,
 } from '@freedi/shared-types';
 import { collectAbsorbedIds } from '../../condensation/absorbedClusters';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
@@ -71,6 +72,7 @@ function newThemeDoc(
 		statementType: StatementType.option,
 		parentId: question.statementId,
 		parents: [...(question.parents ?? []), question.statementId],
+		...inheritedAccessScope(question),
 		topParentId: question.topParentId || question.statementId,
 		creatorId: question.creatorId,
 		creator: question.creator,

@@ -9,6 +9,7 @@ import {
 	getStatementSubscriptionId,
 	getRandomUID,
 	type User,
+	OPEN_ACCESS_SCOPE,
 } from '@freedi/shared-types';
 import type { FacilitatorEvent } from './myEvents';
 
@@ -65,6 +66,7 @@ export async function createEvent(
 
 	// Event group is open for participants to join by default.
 	group.membership = { access: Access.openToAll };
+	group.accessScope = OPEN_ACCESS_SCOPE;
 
 	await setDoc(doc(db, Collections.statements, statementId), group).catch((e: unknown) => {
 		const err = e as { code?: string; message?: string };

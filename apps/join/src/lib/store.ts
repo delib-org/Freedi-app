@@ -30,6 +30,9 @@ import {
 	createStatementObject,
 	createParagraphChildStatement,
 	CutoffBy,
+	readScopesOf,
+	readScopesOfRoot,
+	childTopParentId,
 } from '@freedi/shared-types';
 import {
 	canEditOption,
@@ -543,7 +546,7 @@ export async function updateSuggestion(optionId: string, text: string): Promise<
 			for (let i = 0; i < bodyLines.length; i++) {
 				const child = createParagraphChildStatement({
 					content: bodyLines[i],
-					host: { statementId: optionId, topParentId },
+					host: { statementId: optionId, topParentId, accessScope: option.accessScope },
 					creator,
 					creatorId: creator.uid,
 					order: i,
@@ -873,7 +876,8 @@ export async function createSuggestion(text: string, asOrganizer?: boolean): Pro
 		statement: trimmed,
 		statementType: StatementType.option,
 		parentId: question.statementId,
-		topParentId: question.topParentId || question.statementId,
+		parentAccessScope: question.accessScope,
+		topParentId: childTopParentId(question),
 		creatorId: creator.uid,
 		creator,
 	});
@@ -1117,6 +1121,11 @@ export async function loadMainStatement(mainId: string): Promise<void> {
 	const subQ = query(
 		collection(db, Collections.statements),
 		where('parentId', '==', mainId),
+		where(
+			'accessScope',
+			'in',
+			mainStatement ? readScopesOf(mainStatement) : readScopesOfRoot(mainId),
+		),
 		where('statementType', '==', StatementType.question),
 	);
 	const subSnap = await getDocs(subQ);
@@ -1214,6 +1223,7 @@ export async function createSubQuestion(mainId: string, title: string): Promise<
 		statement: trimmed,
 		statementType: StatementType.question,
 		parentId: mainId,
+		parentAccessScope: main?.accessScope,
 		topParentId,
 		parents,
 		creatorId: creator.uid,
@@ -1432,6 +1442,11 @@ export function subscribeSubQuestions(mainId: string): Unsubscribe {
 	const subQ = query(
 		collection(db, Collections.statements),
 		where('parentId', '==', mainId),
+		where(
+			'accessScope',
+			'in',
+			mainStatement ? readScopesOf(mainStatement) : readScopesOfRoot(mainId),
+		),
 		where('statementType', '==', StatementType.question),
 	);
 
@@ -1514,7 +1529,7 @@ export function subscribeOptions(questionId: string): Unsubscribe {
 				? incoming.filter((o) => o.creatorId === currentUid).map((o) => o.statementId)
 				: [],
 		);
-		subscribeMessageCounts(allOptions.map((o) => o.statementId));
+		subscribeMessageCounts(allOptions);
 		subscribeClusterLinks();
 		m.redraw();
 	});
@@ -1636,6 +1651,7 @@ export async function sendMessage(optionId: string, text: string): Promise<void>
 		statement: title,
 		statementType: StatementType.statement,
 		parentId: optionId,
+		parentAccessScope: allOptions.find((option) => option.statementId === optionId)?.accessScope,
 		topParentId,
 		creatorId: creator.uid,
 		creator,
@@ -1676,7 +1692,11 @@ export async function sendMessage(optionId: string, text: string): Promise<void>
 	for (let i = 0; i < bodyLines.length; i++) {
 		const child = createParagraphChildStatement({
 			content: bodyLines[i],
-			host: { statementId: parentStatement.statementId, topParentId },
+			host: {
+				statementId: parentStatement.statementId,
+				topParentId,
+				accessScope: parentStatement.accessScope,
+			},
 			creator,
 			creatorId: creator.uid,
 			order: i,

@@ -8,6 +8,8 @@ import {
 	type Statement,
 	type StatementSubscription,
 	type Vote,
+	readScopesOfRoot,
+	childTopParentId,
 } from '@freedi/shared-types';
 import { collection, db, doc, query, setDoc, updateDoc, where } from '../firebase';
 import type { Unsubscribe } from '../firebase';
@@ -56,6 +58,7 @@ export function listenClassOptions(
 		query(
 			collection(db, Collections.statements),
 			where('parents', 'array-contains', lessonId),
+			where('accessScope', 'in', readScopesOfRoot(lessonId)),
 			where('statementType', '==', StatementType.option),
 		),
 		(snap) => onData(snap.docs.map((d) => d.data() as Statement)),
@@ -203,7 +206,8 @@ export async function createClassOption(input: NewClassOption): Promise<string> 
 			statement: text,
 			statementType: StatementType.option,
 			parentId: input.parentId,
-			topParentId: input.main.topParentId || input.main.statementId,
+			parentAccessScope: input.main.accessScope,
+			topParentId: childTopParentId(input.main),
 			parents: [...(input.main.parents ?? []), input.main.statementId, input.parentId],
 			creatorId: creator.uid,
 			creator,
@@ -255,7 +259,8 @@ export async function createTableQuestion(
 			statement: text,
 			statementType: StatementType.question,
 			parentId: main.statementId,
-			topParentId: main.topParentId || main.statementId,
+			parentAccessScope: main.accessScope,
+			topParentId: childTopParentId(main),
 			parents: [...(main.parents ?? []), main.statementId],
 			creatorId: creator.uid,
 			creator,

@@ -7,7 +7,7 @@
  * - Types from @freedi/shared-types
  */
 
-import { Statement } from '@freedi/shared-types';
+import { Statement, StatementType } from '@freedi/shared-types';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { loadFirestore } from '@/lib/firebase/lazyFirestore';
 import { SWIPE } from '@/constants/common';
@@ -101,6 +101,7 @@ export async function loadCardBatch(
     const q = sdk.query(
       statementsRef,
       sdk.where('parentId', '==', questionId),
+      sdk.where('statementType', '==', StatementType.option),
       sdk.orderBy('createdAt', 'desc'),
       sdk.limit(limit)
     );

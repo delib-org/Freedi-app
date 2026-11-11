@@ -13,7 +13,13 @@ import {
 	listenToStatementSubscription,
 } from '../db/statements/listenToStatements';
 import { notificationService } from '@/services/notificationService';
-import { getEntryVerdict, isAdminRole, isMemberOfLevel } from '@/helpers/entryVerdict';
+import {
+	getEntryVerdict,
+	getLevelAccess,
+	getSubscriptionScopeId,
+	isAdminRole,
+	isMemberOfLevel,
+} from '@/helpers/entryVerdict';
 
 export interface AuthorizationState {
 	isAuthorized: boolean;
@@ -52,54 +58,46 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 	}, [statementId]);
 
 	const statement = useAppSelector(statementSelector(statementId));
-	const topParentStatement = useAppSelector(statementSelector(statement?.topParentId));
+	// The level whose setting decides, as the database rules read it.
+	const governingId = getSubscriptionScopeId(statement);
+	const governingStatement = useAppSelector(statementSelector(governingId));
 	const creator = useSelector(creatorSelector);
-	const topParentId = statement?.topParentId;
 
 	// Extract primitive values for stable comparisons
-	const statementAccess = statement?.membership?.access;
-	const topParentAccess = topParentStatement?.membership?.access;
-	const effectiveAccess = statementAccess || topParentAccess;
+	const effectiveAccess = getLevelAccess(statement, governingStatement);
 	const statementCreatorUid = statement?.creator?.uid;
 	const creatorUid = creator?.uid;
 	const creatorIsAnonymous = creator?.isAnonymous;
 
-	// Determine which subscription to use based on access override
-	const subscriptionId = statementAccess ? statementId : topParentId;
-	const subscription = useAppSelector(statementSubscriptionSelector(subscriptionId));
+	const subscription = useAppSelector(statementSubscriptionSelector(governingId));
 	const role = subscription?.role;
 
-	// Set up top parent statement listener
+	// Set up the governing statement listener
 	useEffect(() => {
-		if (!statementId || !topParentId) return;
-		if (topParentStatement) return;
+		if (!statementId || !governingId) return;
+		if (governingStatement) return;
 
-		const unsubscribe = listenToStatement(topParentId);
+		const unsubscribe = listenToStatement(governingId);
 
 		return () => {
 			unsubscribe();
 		};
-	}, [statementId, topParentId, !!topParentStatement]);
+	}, [statementId, governingId, !!governingStatement]);
 
 	// Set up subscription listener
 	useEffect(() => {
 		if (!statementId || !creatorUid) return;
 
-		const subscriptionToListenId = statementAccess ? statementId : topParentId;
-		const unsubscribe = listenToStatementSubscription(
-			subscriptionToListenId,
-			creator,
-			setHasSubscription,
-		);
+		const unsubscribe = listenToStatementSubscription(governingId, creator, setHasSubscription);
 
 		return () => unsubscribe();
-	}, [statementId, topParentId, creatorUid, statementAccess]);
+	}, [statementId, creatorUid, governingId]);
 
 	// Handle authorization logic
 	useEffect(() => {
 		if (!statementId || !creatorUid) return;
 
-		const effectiveStatement = statementAccess ? statement : topParentStatement;
+		const effectiveStatement = governingStatement;
 
 		// Helper to check if we should update state
 		const shouldUpdate = (newState: Partial<AuthorizationState>) => {
@@ -112,7 +110,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 			);
 		};
 
-		const verdict = getEntryVerdict(statement, topParentStatement, subscription, creator);
+		const verdict = getEntryVerdict(statement, governingStatement, subscription, creator);
 
 		if (verdict === 'open') {
 			const isPublic = effectiveAccess === Access.public;
@@ -247,7 +245,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		}
 	}, [
 		statementId,
-		statementAccess,
+		governingId,
 		statementCreatorUid,
 		creatorUid,
 		creatorIsAnonymous,

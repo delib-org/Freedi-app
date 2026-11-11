@@ -11,6 +11,7 @@ import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { handlePublicAutoAuth } from '@/controllers/auth/publicAuthHandler';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { logError } from '@/utils/errorHandling';
+import { getLevelAccess, getSubscriptionScopeId } from '@/helpers/entryVerdict';
 
 interface UsePublicAccessResult {
 	isCheckingAccess: boolean;
@@ -65,7 +66,13 @@ export function usePublicAccess(statementId?: string): UsePublicAccessResult {
 				}
 
 				// Determine effective access - statement override or topParent
-				const access = statement?.membership?.access || topParentStatement?.membership?.access;
+				const scopeId = getSubscriptionScopeId(statement);
+				const governing =
+					scopeId && scopeId !== statement.topParentId && scopeId !== statementId
+						? await getStatementFromDB(scopeId)
+						: topParentStatement;
+				if (!isMounted) return;
+				const access = getLevelAccess(statement, governing ?? undefined);
 				setEffectiveAccess(access || null);
 			} catch (error) {
 				logError(error, {

@@ -19,7 +19,12 @@ import {
 	listenToGroupDemographicQuestions,
 	listenToGroupDemographicAnswers,
 } from '@/controllers/db/userDemographic/getUserDemographic';
-import { statementSelector, fullyLoadedScopeSelector } from '@/redux/statements/statementsSlice';
+import { forgetTreeScopes } from '@/controllers/db/statements/readScopes';
+import {
+	statementSelector,
+	statementSubscriptionSelector,
+	fullyLoadedScopeSelector,
+} from '@/redux/statements/statementsSlice';
 import { listenerManager } from '@/controllers/utils/ListenerManager';
 import { logError } from '@/utils/errorHandling';
 import { loadBookmarksForRoom } from '@/controllers/db/bookmarks/bookmarksPersistence';
@@ -55,6 +60,8 @@ export const useStatementListeners = ({
 	const statement = useSelector(statementSelector(statementId));
 	const topParentId = statement?.topParentId;
 	const enableTreeView = statement?.statementSettings?.enableTreeView === true;
+	// Being approved opens a scope: the listeners must restart to ask for it.
+	const governingRole = useSelector(statementSubscriptionSelector(statement?.accessScope))?.role;
 
 	// When the user bulk-loaded this scope ("Load all"), swap the capped
 	// listener for narrow delta listeners that start at the load watermark
@@ -73,6 +80,11 @@ export const useStatementListeners = ({
 			previousStatementIdRef.current = statementId;
 		}
 	}, [statementId, setIsStatementNotFound]);
+
+	// Must run before the listeners below, which ask what this person may read.
+	useEffect(() => {
+		forgetTreeScopes();
+	}, [governingRole]);
 
 	// Effect for main statement listening
 	useEffect(() => {
@@ -186,6 +198,7 @@ export const useStatementListeners = ({
 		isStatementNotFound,
 		setIsStatementNotFound,
 		setError,
+		governingRole,
 	]);
 
 	// Effect for top parent statement and group-level demographic questions
