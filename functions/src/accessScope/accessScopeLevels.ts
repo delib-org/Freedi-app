@@ -2,6 +2,7 @@ import type { Firestore } from 'firebase-admin/firestore';
 import {
 	AccessScopeLevel,
 	Collections,
+	OPEN_ACCESS_SCOPE,
 	resolveAccessScope,
 	type Statement,
 } from '@freedi/shared-types';
@@ -23,6 +24,7 @@ const LEVEL_FIELDS = [
 	'membership',
 	'statementSettings',
 	'agreementBallot',
+	'hide',
 ];
 
 export type ScopeSubject = Pick<
@@ -31,7 +33,7 @@ export type ScopeSubject = Pick<
 > &
 	Partial<Pick<Statement, 'statementType' | 'agreementBallot'>>;
 
-type LoadedLevel = AccessScopeLevel & { parentId?: string };
+type LoadedLevel = AccessScopeLevel & { parentId?: string; hide?: boolean };
 
 /**
  * The access settings of the levels above a set of statements, read once. A
@@ -99,6 +101,20 @@ export class AccessScopeLevels {
 		}
 	}
 
+	/** Reads one more level, when a stamped scope names one the chain did not reach. */
+	async loadLevel(id: string): Promise<void> {
+		await this.load([{ statementId: '', parentId: id } as ScopeSubject]);
+	}
+
+	/** The ids above a loaded statement, nearest first, its top last. */
+	idsAbove(subject: ScopeSubject): string[] {
+		return this.walk(subject).ids;
+	}
+
+	levelOf(id: string): LoadedLevel | undefined {
+		return this.levels.get(id) ?? undefined;
+	}
+
 	/** The scope of a statement whose ancestors have been loaded. */
 	scopeOf(subject: ScopeSubject): string {
 		const levels = this.walk(subject)
@@ -118,4 +134,17 @@ export async function resolveStatementScope(
 	await levels.load([subject]);
 
 	return levels.scopeOf(subject);
+}
+
+/**
+ * The id of the level governing a statement, or null when it is open. Trusts the
+ * stamp; a statement not stamped yet is resolved by walking its parents.
+ */
+export async function governingLevelId(
+	firestore: Firestore,
+	statement: ScopeSubject & Pick<Statement, 'accessScope'>,
+): Promise<string | null> {
+	const scope = statement.accessScope ?? (await resolveStatementScope(firestore, statement));
+
+	return scope === OPEN_ACCESS_SCOPE ? null : scope;
 }

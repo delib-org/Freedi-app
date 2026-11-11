@@ -9,6 +9,8 @@ import {
 	emptyCovenant,
 } from '../../../packages/shared-types/src/models/covenant/covenant';
 import { applyCovenantAction, CovenantFailure } from './reducer';
+import type { Statement } from '@freedi/shared-types';
+import { governingLevelId } from '../accessScope/accessScopeLevels';
 
 const memberRoles = ['admin', 'statement-creator', 'member'];
 const adminRoles = ['admin', 'statement-creator'];
@@ -35,11 +37,10 @@ export async function covenantService(uid: string, input: unknown): Promise<Cove
 		const q = qSnap.data();
 		if (!q || q.statementType !== 'question' || q.hide)
 			throw new HttpsError('not-found', 'Question is unavailable.');
-		const scopeId = q.membership?.access
-			? questionId
-			: validId(q.topParentId)
-				? q.topParentId
-				: questionId;
+		const governingId = await governingLevelId(db, { ...q, statementId: questionId } as Statement);
+		const scopeId =
+			governingId ??
+			(q.membership?.access ? questionId : validId(q.topParentId) ? q.topParentId : questionId);
 		const scope =
 			scopeId === questionId ? q : (await tx.get(db.collection('statements').doc(scopeId))).data();
 		const ownSub = (
@@ -56,7 +57,7 @@ export async function covenantService(uid: string, input: unknown): Promise<Cove
 			scopeSub?.role === 'banned' ||
 			(!creator &&
 				!scopeCreator &&
-				!memberRoles.includes(ownSub?.role) &&
+				!adminRoles.includes(ownSub?.role) &&
 				!memberRoles.includes(scopeSub?.role))
 		)
 			throw new HttpsError('permission-denied', 'Active question membership is required.');

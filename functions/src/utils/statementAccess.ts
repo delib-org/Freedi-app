@@ -1,8 +1,15 @@
 import { HttpsError } from 'firebase-functions/v2/https';
 import type { Firestore } from 'firebase-admin/firestore';
-import { Access, Collections, ownAccessSetting, Role, type Statement } from '@freedi/shared-types';
+import {
+	Access,
+	Collections,
+	OPEN_ACCESS_SCOPE,
+	ownAccessSetting,
+	Role,
+	type Statement,
+} from '@freedi/shared-types';
 import { findStatementAdminSource } from '../progress/assertStatementAdmin';
-import { ancestorIds } from './statementAncestors';
+import { AccessScopeLevels } from '../accessScope/accessScopeLevels';
 
 const OPEN_ACCESS: ReadonlySet<string> = new Set([
 	Access.public,
@@ -38,28 +45,15 @@ export async function resolveStatementAccess(
 
 	const topParentId =
 		statement.parentId === 'top' || !statement.topParentId ? statementId : statement.topParentId;
-	const subscriptionIds = [...new Set([statementId, topParentId])];
-	const subscriptions = await firestore.getAll(
-		...subscriptionIds.map((id) =>
-			firestore.collection(Collections.statementsSubscribe).doc(`${uid}--${id}`),
-		),
-	);
-	const roles = subscriptions
-		.filter((snap) => snap.exists)
-		.map((snap) => (snap.data() as { role?: string } | undefined)?.role);
+	const levels = await readAccessLevels(firestore, uid, statement);
 
-	if (roles.includes(Role.banned)) {
+	if (levels.some(({ role }) => role === Role.banned)) {
 		throw new HttpsError('permission-denied', 'You cannot take part in this space');
 	}
-	if (roles.some((role) => role !== undefined && ACTIVE_ROLES.has(role))) {
-		return { statement, topParentId };
-	}
+	if (levels.some(({ role }) => isHostRole(role))) return { statement, topParentId };
 
-	const top =
-		topParentId === statementId
-			? statement
-			: ((await statements.doc(topParentId).get()).data() as Statement | undefined);
-	const access = statement.membership?.access ?? top?.membership?.access;
+	const { access, governing } = governingOf(levels);
+	if (governing.some(({ role }) => isActiveRole(role))) return { statement, topParentId };
 	// No setting at any level means open (the same answer as resolveAccessScope).
 	if (!access || OPEN_ACCESS.has(access)) return { statement, topParentId };
 
@@ -68,8 +62,8 @@ export async function resolveStatementAccess(
 
 export interface AccessLevel {
 	statement:
-		| (Pick<Statement, 'membership' | 'hide'> &
-				Partial<Pick<Statement, 'statementType' | 'agreementBallot'>>)
+		| (Pick<Statement, 'membership'> &
+				Partial<Pick<Statement, 'hide' | 'statementType' | 'agreementBallot'>>)
 		| undefined;
 	role: string | undefined;
 }
@@ -91,26 +85,58 @@ function isHostRole(role: string | undefined): boolean {
 	return role !== undefined && HOST_ROLES.has(role);
 }
 
-/** The question first, then each ancestor up to the top. */
+/**
+ * The statement first, then each level above it, nearest first. Walks `parentId`:
+ * `parents` is often only the top and the direct parent, and would skip a
+ * private level between them. The stamped governing level is always included.
+ */
 async function readAccessLevels(
 	firestore: Firestore,
 	uid: string,
-	question: Statement,
+	statement: Statement,
 ): Promise<AccessLevel[]> {
-	// No limit: with no setting meaning open, stopping short would read a private
-	// level above the limit as no setting at all.
-	const ids = [question.statementId, ...ancestorIds(question, Infinity)];
-	const statements = firestore.collection(Collections.statements);
-	const subscriptions = firestore.collection(Collections.statementsSubscribe);
-	const [statementSnaps, subscriptionSnaps] = await Promise.all([
-		firestore.getAll(...ids.map((id) => statements.doc(id))),
-		firestore.getAll(...ids.map((id) => subscriptions.doc(`${uid}--${id}`))),
-	]);
+	const chain = new AccessScopeLevels(firestore);
+	await chain.load([statement]);
+	const above = chain.idsAbove(statement);
+	const scope = statement.accessScope;
+	if (
+		scope &&
+		scope !== OPEN_ACCESS_SCOPE &&
+		scope !== statement.statementId &&
+		!above.includes(scope)
+	) {
+		await chain.loadLevel(scope);
+		above.push(scope);
+	}
 
-	return ids.map((_, index) => ({
-		statement: statementSnaps[index].data() as Statement | undefined,
+	const ids = [statement.statementId, ...above];
+	const subscriptions = firestore.collection(Collections.statementsSubscribe);
+	const subscriptionSnaps = await firestore.getAll(
+		...ids.map((id) => subscriptions.doc(`${uid}--${id}`)),
+	);
+
+	return ids.map((id, index) => ({
+		statement: index === 0 ? statement : (chain.levelOf(id) as AccessLevel['statement']),
 		role: (subscriptionSnaps[index].data() as { role?: string } | undefined)?.role,
 	}));
+}
+
+/**
+ * The access that applies and the level whose roles count. Only the level that
+ * owns the setting: a role below it can be self-granted, and a role above it is
+ * not membership of a private level inside.
+ */
+function governingOf(levels: AccessLevel[]): { access?: string; governing: AccessLevel[] } {
+	const settingAt = (index: number): string | undefined => {
+		const statement = levels[index]?.statement;
+
+		return statement ? ownAccessSetting(statement, levels[index + 1]?.statement) : undefined;
+	};
+	const ownerIndex = levels.findIndex((_, index) => settingAt(index));
+
+	return ownerIndex >= 0
+		? { access: settingAt(ownerIndex), governing: [levels[ownerIndex]] }
+		: { governing: levels };
 }
 
 /**
@@ -121,7 +147,8 @@ async function readAccessLevels(
  * - a hidden statement, or one under something hidden, is `hidden` to anyone
  *   but a host;
  * - a statement's own access setting wins, else the nearest ancestor's, so a
- *   private group between a question and an open top is honoured;
+ *   private group between a question and an open top is honoured, and only a
+ *   role at the level owning that setting counts;
  * - someone waiting for approval is refused unless access is `public`, the one
  *   setting the app lets through before it looks at the waiting role.
  */
@@ -137,14 +164,7 @@ export function judgeAccessLevels(
 	}
 	if (isHostInTree) return 'allowed';
 
-	const settingAt = (index: number): string | undefined => {
-		const statement = levels[index]?.statement;
-
-		return statement ? ownAccessSetting(statement, levels[index + 1]?.statement) : undefined;
-	};
-	const ownerIndex = levels.findIndex((_, index) => settingAt(index));
-	const access = ownerIndex >= 0 ? settingAt(ownerIndex) : undefined;
-	const governing = ownerIndex >= 0 ? levels.slice(0, ownerIndex + 1) : levels;
+	const { access, governing } = governingOf(levels);
 	if (governing.some(({ role }) => isActiveRole(role))) return 'allowed';
 	if (access === Access.public) return 'allowed';
 	if (governing.some(({ role }) => role === Role.waiting)) return 'waiting';

@@ -28,7 +28,7 @@ jest.mock('../../progress/assertStatementAdmin', () => ({
 import { OPEN_ACCESS_SCOPE, resolveAccessScope } from '@freedi/shared-types';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { resetFirestore, seed } from '../../services/__tests__/helpers/fakeFirestore';
-import { resolveQuestionParticipation } from '../statementAccess';
+import { resolveQuestionParticipation, resolveStatementAccess } from '../statementAccess';
 
 const db = getFirestore() as unknown as Firestore;
 const UID = 'me';
@@ -234,5 +234,94 @@ describe('resolveQuestionParticipation', () => {
 		role('top-group', 'member');
 
 		await expect(call()).resolves.toMatchObject({ statementId: 'q' });
+	});
+});
+
+describe('only the level owning the setting counts', () => {
+	beforeEach(() => {
+		statement('top-group', {
+			parentId: 'top',
+			statementType: 'group',
+			membership: { access: 'public' },
+		});
+		statement('private-q', {
+			parentId: 'top-group',
+			parents: ['top-group'],
+			statementType: 'question',
+			membership: { access: 'secret' },
+		});
+		// Short `parents`, as createStatementObject writes without it.
+		statement('child', {
+			parentId: 'private-q',
+			parents: ['top-group'],
+			statementType: 'question',
+		});
+	});
+
+	const callChild = () => resolveQuestionParticipation(db, UID, 'child');
+
+	it('ignores a member role placed on a child of the private level', async () => {
+		role('child', 'member');
+
+		await expect(callChild()).rejects.toMatchObject({ code: 'permission-denied' });
+	});
+
+	it('lets a member of the owning level in', async () => {
+		role('private-q', 'member');
+
+		await expect(callChild()).resolves.toMatchObject({ statementId: 'child' });
+	});
+
+	it('does not count a plain member of the open top', async () => {
+		role('top-group', 'member');
+
+		await expect(callChild()).rejects.toMatchObject({ code: 'permission-denied' });
+	});
+
+	it('still refuses a ban at any level', async () => {
+		role('private-q', 'member');
+		role('child', 'banned');
+
+		await expect(callChild()).rejects.toMatchObject({ code: 'permission-denied' });
+	});
+
+	it('still lets a host at any level in', async () => {
+		role('child', 'admin');
+
+		await expect(callChild()).resolves.toMatchObject({ statementId: 'child' });
+	});
+
+	describe('resolveStatementAccess', () => {
+		const search = () => resolveStatementAccess(db, UID, 'child');
+
+		it('does not skip a private middle level', async () => {
+			await expect(search()).rejects.toMatchObject({ code: 'permission-denied' });
+		});
+
+		it('ignores a role below the owning level', async () => {
+			role('child', 'member');
+
+			await expect(search()).rejects.toMatchObject({ code: 'permission-denied' });
+		});
+
+		it('lets a member of the owning level in', async () => {
+			role('private-q', 'member');
+
+			await expect(search()).resolves.toMatchObject({ topParentId: 'top-group' });
+		});
+
+		it('lets a host below it in, and refuses a ban anywhere', async () => {
+			role('child', 'admin');
+			await expect(search()).resolves.toBeDefined();
+
+			role('private-q', 'banned');
+			await expect(search()).rejects.toMatchObject({ code: 'permission-denied' });
+		});
+
+		it('is open with no setting at any level', async () => {
+			statement('free', { parentId: 'top', topParentId: 'free' });
+
+			await expect(resolveStatementAccess(db, UID, 'free')).resolves.toBeDefined();
+		});
 	});
 });
