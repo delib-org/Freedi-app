@@ -10,7 +10,12 @@ import type {
 import { db } from '../db';
 import { actorFrom, assertHost, readSession, requireId, sessionRef } from './tablesAccess';
 import { TablesError, toHttpsError } from './tablesErrors';
-import { parseSettings, requireTitle, withoutUndefined } from './validation';
+import {
+	assertChoosableTableSize,
+	parseSettings,
+	requireTitle,
+	withoutUndefined,
+} from './validation';
 
 /** A request value of `null` clears the setting and `undefined` keeps it. */
 function clearable<T>(requested: T | null | undefined, current: T | undefined): T | undefined {
@@ -65,6 +70,10 @@ export async function saveSettings(
 		}
 
 		const settings = mergedSettings(session.settings, req);
+		// Only a change is checked: an older session may still hold a size no longer offered.
+		if (settings.tableSize !== session.settings.tableSize) {
+			assertChoosableTableSize(settings.tableSize);
+		}
 		if (
 			session.mode === 'direct' &&
 			session.status !== 'draft' &&

@@ -66,7 +66,7 @@ export const CancelParticipation: m.ClosureComponent<{ context: ParticipantConte
 		view({ attrs }) {
 			const { me, session, uid } = attrs.context;
 
-			if (!me || !canCancelRegistration(session.status, me)) return null;
+			if (!me || !canCancelRegistration(session.status, me, attrs.context.seated)) return null;
 
 			return [
 				m(

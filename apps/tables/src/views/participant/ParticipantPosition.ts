@@ -3,9 +3,8 @@ import { TABLE_ASSIGNMENT_POSITION_STOPS } from '@freedi/shared-types';
 import type { TableAssignmentPositionQuestion } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { Action } from '@/lib/action';
-import { goTo } from '@/lib/navigate';
 import { safeStorage } from '@/lib/safeStorage';
-import { canEditPreferences } from '@/logic/nextAction';
+import { preferencesAccess } from '@/logic/nextAction';
 import { loadDraft, saveDraft } from '@/logic/localDraft';
 import type { ChoicesDraft } from '@/logic/localDraft';
 import { answerFromRecord, POSITION_DECLINED, stopLabel } from '@/logic/positionStops';
@@ -15,8 +14,9 @@ import { checkIcon, lockIcon } from '@/components/icons';
 import { ParticipantFrame } from '@/components/ParticipantFrame';
 import type { ParticipantContext } from '@/components/ParticipantFrame';
 import { Redirect } from '@/components/Redirect';
+import { StateBox } from '@/components/StateBox';
 import { stepLabel, StepHeader } from '@/components/StepHeader';
-import { saveChoices } from '@/views/participant/saveChoices';
+import { saveChoicesAndLeave } from '@/views/participant/saveChoices';
 import { participantHomePath, participantScreenPath } from '@/paths';
 
 const GROUP_NAME = 'position-answer';
@@ -101,7 +101,7 @@ const PositionBody: m.ClosureComponent<{ context: ParticipantContext; draft: Cho
 	}
 
 	async function submit(): Promise<void> {
-		if (await saveChoices(save, { sessionId, uid }, draft)) goTo(participantHomePath(sessionId));
+		await saveChoicesAndLeave(save, { sessionId, uid }, draft);
 	}
 
 	return {
@@ -183,7 +183,10 @@ export const ParticipantPosition: m.Component<{ id: string }> = {
 				const home = participantHomePath(attrs.id);
 				const { me, session } = context;
 
-				if (!me || !canEditPreferences(session.status) || !session.settings.positionQuestion) {
+				const access = preferencesAccess(session.status, context.seated);
+
+				if (me && access === 'checking') return m(StateBox, { kind: 'loading' });
+				if (!me || access !== 'allowed' || !session.settings.positionQuestion) {
 					return m(Redirect, { to: home });
 				}
 

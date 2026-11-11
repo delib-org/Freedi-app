@@ -75,7 +75,7 @@ export function clearDraft(sessionId: string, uid: string, storage: Remover): vo
 export interface RegistrationMemory {
 	/** This browser held a registration in this assignment. */
 	wasRegistered: boolean;
-	/** The last full name, offered again by "register again". */
+	/** The last full name, offered again by "register again"; dropped when the person cancels. */
 	lastName: string;
 	/** This browser asked to cancel, so a disappearing record is the person's own doing. */
 	cancelledHere: boolean;
@@ -143,7 +143,14 @@ function writeCancelledHere(
 	cancelledHere: boolean,
 	storage: Reader & Writer,
 ): void {
-	const memory: RegistrationMemory = { ...loadMemory(sessionId, uid, storage), cancelledHere };
+	const previous = loadMemory(sessionId, uid, storage);
+	// Cancelling erases the person: the name is not kept in this browser either.
+	// If the cancel fails the record is seen again and the name is remembered again.
+	const memory: RegistrationMemory = {
+		...previous,
+		cancelledHere,
+		lastName: cancelledHere ? '' : previous.lastName,
+	};
 
 	storage.setItem(memoryKey(sessionId, uid), JSON.stringify(memory));
 }

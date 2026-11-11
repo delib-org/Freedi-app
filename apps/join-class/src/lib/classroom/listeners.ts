@@ -15,9 +15,10 @@ import { getUserState } from '../user';
  * Each returns the unsubscribe. Prefer `watchClass` in classState.ts, which wires
  * these into the shared store; use these directly only for something bespoke.
  *
- * Rules (current firestore.rules): `statementsSubscribe` is readable by any
- * signed-in user, so `listenRoster` works for the teacher (and, uselessly but
- * harmlessly, for students). `classTables` has NO rule yet — lane C1 adds
+ * Rules (current firestore.rules): a `statementsSubscribe` list by
+ * `statementId == X` is open to people in X (a member, a host), a host of its
+ * top and system admins, so `listenRoster` works for the teacher and for the
+ * students who joined the lesson. `classTables` has NO rule yet — lane C1 adds
  * `allow read: if request.auth != null` (or member/admin scoped).
  */
 

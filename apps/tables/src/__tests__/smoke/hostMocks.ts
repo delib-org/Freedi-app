@@ -19,6 +19,7 @@ export const mocks = {
 		publishRun: vi.fn(),
 		fixDetails: vi.fn(),
 		removeParticipant: vi.fn(),
+		deleteSession: vi.fn(),
 	},
 };
 
@@ -52,6 +53,7 @@ export const fakeHostAuth = {
 	hostAuth: { status: 'signedIn', user: { uid: 'host-1' }, signInFailed: false },
 	startHostAuth: (): void => undefined,
 	signInHost: async (): Promise<void> => undefined,
+	signOutHost: async (): Promise<void> => undefined,
 };
 
 export function buttonByText(root: HTMLElement, text: string): HTMLButtonElement {
@@ -108,6 +110,7 @@ export function useHostScreens(): void {
 		mocks.api.publishRun.mockResolvedValue({ publishedRunId: 'run-1' });
 		mocks.api.fixDetails.mockResolvedValue({ title: 'x', topicIds: [] });
 		mocks.api.removeParticipant.mockResolvedValue({ removed: true });
+		mocks.api.deleteSession.mockResolvedValue({ deleted: true });
 	});
 
 	afterEach(unmountAll);

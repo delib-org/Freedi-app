@@ -23,6 +23,7 @@ const WRAPPERS: ReadonlyArray<[keyof TablesClient, string]> = [
 	['cancelRegistration', TABLES_CALLABLES.cancelRegistration],
 	['removeParticipant', TABLES_CALLABLES.removeParticipant],
 	['fixDetails', TABLES_CALLABLES.fixDetails],
+	['deleteSession', TABLES_CALLABLES.deleteSession],
 ];
 
 describe('createTablesClient', () => {
@@ -30,12 +31,13 @@ describe('createTablesClient', () => {
 		jest.clearAllMocks();
 	});
 
-	it('covers all twelve callables with their deployed names', () => {
+	it('covers all thirteen callables with their deployed names', () => {
 		expect(Object.values(TABLES_CALLABLES).sort()).toEqual(
 			[
 				'tablesCancelRegistration',
 				'tablesComputePreview',
 				'tablesCreateSession',
+				'tablesDeleteSession',
 				'tablesFixDetails',
 				'tablesJoinTable',
 				'tablesPublishRun',

@@ -6,6 +6,7 @@ import { Action } from '@/lib/action';
 import { goTo } from '@/lib/navigate';
 import { safeStorage } from '@/lib/safeStorage';
 import { tablesApi } from '@/lib/tableAssignment/client';
+import { NAME_SCREEN_REASON_KEYS } from '@/logic/callableErrors';
 import { canEditPreferences } from '@/logic/nextAction';
 import { clearDraft } from '@/logic/localDraft';
 import { nextStep, stepNumber, stepsOf } from '@/logic/steps';
@@ -57,6 +58,7 @@ export const NameForm: m.ClosureComponent<NameFormAttrs> = (initial) => {
 	const register = new Action(
 		'tables.participant.register',
 		'tableAssignment.error.registrationClosed',
+		NAME_SCREEN_REASON_KEYS,
 	);
 	let fullName = initial.attrs.initialName;
 	let askAboutName: string | null = null;
@@ -68,6 +70,9 @@ export const NameForm: m.ClosureComponent<NameFormAttrs> = (initial) => {
 
 		if (name === '') return;
 		attrs.onPending?.(true);
+		// Whoever continues a registration by name starts empty: nothing old is ever shown.
+		// Cleared before the request, so the new record arriving can never meet the old draft.
+		if (nameMatch === 'claim') clearDraft(sessionId, uid, safeStorage);
 
 		const result = await register.run(
 			() => tablesApi.register({ sessionId, fullName: name, nameMatch }),
@@ -81,8 +86,6 @@ export const NameForm: m.ClosureComponent<NameFormAttrs> = (initial) => {
 			return;
 		}
 		askAboutName = null;
-		// Whoever continues a registration by name starts empty: nothing old is ever shown.
-		if (nameMatch === 'claim') clearDraft(sessionId, uid, safeStorage);
 		attrs.onRegistered?.();
 	}
 

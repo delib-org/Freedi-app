@@ -96,12 +96,25 @@ const MyTableBody: m.ClosureComponent<{ context: ParticipantContext }> = (initia
 		return roster.data ?? [];
 	}
 
+	/** Table titles come from the topics: until they are read, say so instead of guessing. */
+	function topicsNotReady(context: ParticipantContext, backHref: string): m.Children {
+		const { topicsState } = context;
+
+		if (topicsState === 'ready') return null;
+		if (topicsState === 'loading') return m(StateBox, { kind: 'loading' });
+
+		return m(StateBox, { kind: topicsState, onRetry: context.retryTopics, backHref });
+	}
+
 	function directSeat(context: ParticipantContext): m.Children {
 		const { session, topics, me, uid } = context;
 
 		if (!me) return null;
 
 		const home = participantHomePath(sessionId);
+		const waitingForTopics = topicsNotReady(context, home);
+
+		if (waitingForTopics) return waitingForTopics;
 		const choose = participantScreenPath(sessionId, 'preferences');
 		const tables = deriveDirectTables(topics, null, session.settings.tableSize ?? 0);
 		const mine = tableByIndex(tables, me.chosenTableIndex);
@@ -174,13 +187,12 @@ const MyTableBody: m.ClosureComponent<{ context: ParticipantContext }> = (initia
 
 		const table = published.tables.find((candidate) => candidate.memberUids.includes(uid));
 
-		if (!table || !me) {
-			return m(StateBox, {
-				kind: 'empty',
-				messageKey: 'tableAssignment.myTable.notSeated',
-				backHref,
-			});
-		}
+		// Registered after publishing and not seated yet: the link page tells them the host will seat them.
+		if (!table || !me) return m(Redirect, { to: backHref });
+
+		const waitingForTopics = topicsNotReady(context, backHref);
+
+		if (waitingForTopics) return waitingForTopics;
 
 		return seatScreen({
 			number: tableNumber(table.index),

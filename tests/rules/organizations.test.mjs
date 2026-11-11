@@ -243,7 +243,7 @@ describe('organizations', () => {
 					statementDoc({
 						statementId: 'plain-create',
 						uid: OWNER,
-						overrides: { parentId: 'top', topParentId: 'plain-create' },
+						overrides: { parentId: 'top', topParentId: 'plain-create', parents: [] },
 					}),
 				),
 			);

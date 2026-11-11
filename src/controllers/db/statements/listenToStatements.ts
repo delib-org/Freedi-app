@@ -42,6 +42,7 @@ import {
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
 import { DISCUSSABLE_STATEMENT_TYPES } from '@/helpers/statementTypeHelpers';
+import { childListScopes, listenInScopes, scopeChunksOf } from './readScopes';
 
 // Tracks subscription docs whose schema-validation failure we've already
 // logged this session, so a malformed doc on a hot listener doesn't spam the
@@ -231,6 +232,25 @@ export const listenToSubStatements = (
 	topBottom?: 'top' | 'bottom',
 	numberOfOptions?: number,
 ): Unsubscribe => {
+	if (!statementId) {
+		logError(new Error('Statement id is undefined'), {
+			operation: 'statements.listenToSubStatements',
+		});
+
+		return () => {};
+	}
+
+	return listenInScopes(statementId, (scopes) =>
+		listenToSubStatementsInScopes(scopes, statementId, topBottom, numberOfOptions),
+	);
+};
+
+const listenToSubStatementsInScopes = (
+	scopes: string[] | null,
+	statementId: string | undefined,
+	topBottom?: 'top' | 'bottom',
+	numberOfOptions?: number,
+): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch;
 		if (!statementId) throw new Error('Statement id is undefined');
@@ -256,6 +276,7 @@ export const listenToSubStatements = (
 			statementsRef,
 			where('parentId', '==', statementId),
 			where('statementType', 'in', DISCUSSABLE_STATEMENT_TYPES),
+			...(scopes ? [where('accessScope', 'in', scopes)] : []),
 			orderBy('createdAt', descAsc),
 		);
 
@@ -267,7 +288,7 @@ export const listenToSubStatements = (
 		const listenerKey = generateListenerKey(
 			'sub-statements',
 			'statement',
-			`${statementId}-${topBottom || 'all'}-${numberOfOptions || 'all'}`,
+			`${statementId}-${topBottom || 'all'}-${numberOfOptions || 'all'}-${scopes?.join('+') ?? 'host'}`,
 		);
 
 		let isFirstCall = true;
@@ -368,6 +389,7 @@ export async function fetchOlderSubStatements(
 ): Promise<{ statements: Statement[]; hasMore: boolean }> {
 	try {
 		const statementsRef = createCollectionRef(Collections.statements);
+		const scopes = await childListScopes(statementId);
 
 		// Query for messages older than the oldest loaded one.
 		// Using desc order so startAfter gives us messages with createdAt < oldestCreatedAt.
@@ -375,6 +397,7 @@ export async function fetchOlderSubStatements(
 		const q = query(
 			statementsRef,
 			where('parentId', '==', statementId),
+			...(scopes ? [where('accessScope', 'in', scopes)] : []),
 			orderBy('createdAt', 'desc'),
 			startAfter(oldestCreatedAt),
 			limit(batchSize + 1),
@@ -459,6 +482,16 @@ export const listenToMembers =
 	};
 
 export function listenToAllSubStatements(statementId: string, numberOfLastMessages = 7) {
+	return listenInScopes(statementId, (scopes) =>
+		listenToAllSubStatementsInScopes(scopes, statementId, numberOfLastMessages),
+	);
+}
+
+function listenToAllSubStatementsInScopes(
+	scopes: string[],
+	statementId: string,
+	numberOfLastMessages: number,
+) {
 	try {
 		if (numberOfLastMessages > 25) numberOfLastMessages = 25;
 		if (!statementId) throw new Error('Statement id is undefined');
@@ -467,6 +500,7 @@ export function listenToAllSubStatements(statementId: string, numberOfLastMessag
 		const q = query(
 			statementsRef,
 			where('topParentId', '==', statementId),
+			where('accessScope', 'in', scopes),
 			where('statementId', '!=', statementId),
 			orderBy('createdAt', 'desc'),
 			limit(numberOfLastMessages),
@@ -475,7 +509,7 @@ export function listenToAllSubStatements(statementId: string, numberOfLastMessag
 		const listenerKey = generateListenerKey(
 			'all-sub-statements',
 			'statement',
-			`${statementId}-${numberOfLastMessages}`,
+			`${statementId}-${numberOfLastMessages}-${scopes.join('+')}`,
 		);
 
 		return createManagedCollectionListener(
@@ -552,6 +586,12 @@ export function listenToAllSubStatements(statementId: string, numberOfLastMessag
 const MAX_DESCENDANTS_LIMIT = 200;
 
 export function listenToAllDescendants(statementId: string): Unsubscribe {
+	return listenInScopes(statementId, (scopes) =>
+		listenToAllDescendantsInScopes(scopes, statementId),
+	);
+}
+
+function listenToAllDescendantsInScopes(scopes: string[], statementId: string): Unsubscribe {
 	try {
 		const statementsRef = createCollectionRef(Collections.statements);
 		// Query ONLY for questions, groups, and options (not any other types)
@@ -561,6 +601,7 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 			statementsRef,
 			and(
 				where('parents', 'array-contains', statementId),
+				where('accessScope', 'in', scopes),
 				or(
 					where('statementType', '==', StatementType.question),
 					where('statementType', '==', StatementType.group),
@@ -571,7 +612,11 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 			limit(MAX_DESCENDANTS_LIMIT),
 		);
 
-		const listenerKey = generateListenerKey('all-descendants', 'statement', statementId);
+		const listenerKey = generateListenerKey(
+			'all-descendants',
+			'statement',
+			`${statementId}-${scopes.join('+')}`,
+		);
 
 		// Use batched updates for better performance
 		let isFirstBatch = true;
@@ -669,16 +714,31 @@ export function listenToTreeDescendants(
 	statementId: string,
 	queryLimit = MAX_DESCENDANTS_LIMIT,
 ): Unsubscribe {
+	return listenInScopes(statementId, (scopes) =>
+		listenToTreeDescendantsInScopes(scopes, statementId, queryLimit),
+	);
+}
+
+function listenToTreeDescendantsInScopes(
+	scopes: string[],
+	statementId: string,
+	queryLimit: number,
+): Unsubscribe {
 	try {
 		const statementsRef = createCollectionRef(Collections.statements);
 		const q = query(
 			statementsRef,
 			where('parents', 'array-contains', statementId),
+			where('accessScope', 'in', scopes),
 			orderBy('createdAt', 'desc'),
 			limit(queryLimit),
 		);
 
-		const listenerKey = generateListenerKey('tree-descendants', 'statement', statementId);
+		const listenerKey = generateListenerKey(
+			'tree-descendants',
+			'statement',
+			`${statementId}-${scopes.join('+')}`,
+		);
 
 		let isFirstBatch = true;
 		const statementsArr: Statement[] = [];
@@ -762,16 +822,31 @@ export function listenToTreeByTopParent(
 	topParentId: string,
 	queryLimit = MAX_DESCENDANTS_LIMIT,
 ): Unsubscribe {
+	return listenInScopes(topParentId, (scopes) =>
+		listenToTreeByTopParentInScopes(scopes, topParentId, queryLimit),
+	);
+}
+
+function listenToTreeByTopParentInScopes(
+	scopes: string[],
+	topParentId: string,
+	queryLimit: number,
+): Unsubscribe {
 	try {
 		const statementsRef = createCollectionRef(Collections.statements);
 		const q = query(
 			statementsRef,
 			where('topParentId', '==', topParentId),
+			where('accessScope', 'in', scopes),
 			orderBy('createdAt', 'desc'),
 			limit(queryLimit),
 		);
 
-		const listenerKey = generateListenerKey('tree-by-top-parent', 'statement', topParentId);
+		const listenerKey = generateListenerKey(
+			'tree-by-top-parent',
+			'statement',
+			`${topParentId}-${scopes.join('+')}`,
+		);
 
 		let isFirstBatch = true;
 		const statementsArr: Statement[] = [];
@@ -862,9 +937,11 @@ export async function fetchOlderTreeDescendants(
 ): Promise<{ statements: Statement[]; hasMore: boolean }> {
 	try {
 		const statementsRef = createCollectionRef(Collections.statements);
+		const [scopes] = await scopeChunksOf(statementId);
 		const q = query(
 			statementsRef,
 			where('parents', 'array-contains', statementId),
+			where('accessScope', 'in', scopes),
 			orderBy('createdAt', 'desc'),
 			startAfter(oldestCreatedAt),
 			limit(batchSize + 1),

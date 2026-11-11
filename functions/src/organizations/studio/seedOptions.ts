@@ -58,6 +58,7 @@ export function buildSeedOption(input: {
 		statement: text,
 		statementType: StatementType.option,
 		parentId: question.statementId,
+		parentAccessScope: question.accessScope,
 		topParentId,
 		parents: [...(question.parents ?? []), question.statementId],
 		creatorId: creator.uid,

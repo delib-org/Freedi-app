@@ -133,48 +133,6 @@
   }
 }
 
-.band {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-  font-size: var(--font-size-sm);
-
-  &__row {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-  }
-
-  &__label {
-    flex: none;
-    inline-size: 3.5rem;
-  }
-
-  &__track {
-    position: relative;
-    flex: 1;
-    block-size: 0.625rem;
-    border-radius: var(--radius-sm);
-    background: var(--paper-soft);
-  }
-
-  &__fill {
-    position: absolute;
-    inset-block: 0;
-    inset-inline-start: var(--band-start);
-    inline-size: var(--band-width);
-    border-radius: var(--radius-sm);
-
-    &--room {
-      background: var(--border-medium);
-    }
-
-    &--table {
-      background: var(--brand);
-    }
-  }
-}
-
 .full-data {
   padding: var(--space-xs) var(--space-20);
   border-radius: var(--radius-cta);

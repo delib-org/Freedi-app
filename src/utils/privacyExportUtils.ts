@@ -80,7 +80,11 @@ async function fetchEvaluations(parentId: string): Promise<Evaluation[]> {
  */
 async function fetchOptions(parentId: string): Promise<Statement[]> {
 	const statementsRef = collection(FireStore, Collections.statements);
-	const q = query(statementsRef, where('parentId', '==', parentId));
+	const q = query(
+		statementsRef,
+		where('parentId', '==', parentId),
+		where('statementType', 'in', [StatementType.option, StatementType.synthesis]),
+	);
 	const snapshot = await getDocs(q);
 
 	return snapshot.docs

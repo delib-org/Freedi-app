@@ -1,5 +1,4 @@
 import type { TableAssignmentMetrics } from '@freedi/shared-types';
-import { MIN_KNOWN_POSITIONS } from '@/logic/closeness';
 
 /**
  * The one answer the preview leads with. Only `good` may say the tables are
@@ -9,7 +8,8 @@ export type PreviewVerdict = 'stale' | 'choicesOnly' | 'unbalanced' | 'good';
 
 export function previewVerdict(metrics: TableAssignmentMetrics, stale: boolean): PreviewVerdict {
 	if (stale) return 'stale';
-	if (metrics.population.n < MIN_KNOWN_POSITIONS) return 'choicesOnly';
+	// A run from before the flag existed has no answer: do not claim the room is known.
+	if (metrics.hasEnoughPositions !== true) return 'choicesOnly';
 
 	return metrics.balance.withinTolerance ? 'good' : 'unbalanced';
 }

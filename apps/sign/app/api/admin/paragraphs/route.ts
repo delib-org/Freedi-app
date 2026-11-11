@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     // `isOfficial` writes the legacy `doc` mirrors so transition-era queries work.
     const paragraphStatement = createParagraphChildStatement({
       content,
-      host: { statementId: documentId, topParentId: documentId },
+      host: { statementId: documentId, topParentId: documentId, accessScope: docData?.accessScope },
       creator,
       creatorId: userId,
       order: newOrder,

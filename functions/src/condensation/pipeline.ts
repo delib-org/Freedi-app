@@ -696,6 +696,7 @@ async function applyGroup({
 		statement: title,
 		statementType: StatementType.option,
 		parentId,
+		parentAccessScope: parent.accessScope,
 		topParentId: parent.topParentId ?? parentId,
 		parents: [...(parent.parents ?? []), parentId].filter(Boolean),
 		creatorId: runBy,

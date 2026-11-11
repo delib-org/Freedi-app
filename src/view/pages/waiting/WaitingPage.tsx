@@ -1,9 +1,14 @@
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
+import { getWayBackPath } from '@/helpers/wayBack';
+import { HOME_PATH } from '@/view/components/atomic/organisms/BottomNav/bottomNavModel';
 import styles from './WaitingPage.module.scss';
 
 const WaitingPage = () => {
 	const { t } = useTranslation();
+	const location = useLocation();
+	const from = (location.state as { from?: unknown } | null)?.from;
+	const wayBackPath = getWayBackPath(from, location.pathname);
 
 	return (
 		<div className={styles['waiting-page']}>
@@ -111,7 +116,14 @@ const WaitingPage = () => {
 
 					{/* Actions */}
 					<div className={styles['waiting-actions']}>
-						<Link to="/home">
+						{wayBackPath && (
+							<Link to={wayBackPath}>
+								<button className="btn btn--primary" type="button">
+									{t('Back to the question')}
+								</button>
+							</Link>
+						)}
+						<Link to={HOME_PATH}>
 							<button className="btn btn--secondary" type="button">
 								{t('Back to home')}
 							</button>

@@ -17,12 +17,15 @@ jest.mock('../index', () => ({
 jest.mock('firebase-functions', () => ({
 	logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
+jest.mock('../utils/errorHandling', () => ({ logError: jest.fn() }));
 jest.mock('../fn_adminStats', () => ({
 	onSubscriptionCreatedStats: jest.fn(() => Promise.resolve()),
 	onStatementDeletedStats: jest.fn(() => Promise.resolve()),
 }));
 
+import { logError } from '../utils/errorHandling';
 import {
+	updateMemberCount,
 	onSubscriptionCreated,
 	onSubscriptionDeleted,
 	onSubscriptionUpdated,
@@ -252,6 +255,30 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 		expect(feedOf('alice')).toBeDefined();
 	});
 
+	it('skips quietly when the statement is already deleted (cascade), without writing the statement or throwing', async () => {
+		const alice = await joinAs('alice', Role.member);
+		mockDb.rowsOf(Collections.statements).delete(DISCUSSION);
+		mockDb.rowsOf(Collections.questionProgress).delete(DISCUSSION);
+		mockDb.resetCounters();
+
+		await expect(updateMemberCount(mockDb as never, DISCUSSION)).resolves.toBe(1);
+		await leave(alice);
+
+		expect(mockDb.read(Collections.statements, DISCUSSION)).toBeUndefined();
+		expect(mockDb.read(Collections.questionProgress, DISCUSSION)).toBeUndefined();
+		expect(logError).not.toHaveBeenCalled();
+	});
+
+	it('still reports a real failure while counting', async () => {
+		const failure = new Error('firestore unavailable');
+		const spy = jest.spyOn(mockDb, 'collection').mockImplementation(() => {
+			throw failure;
+		});
+
+		await expect(updateMemberCount(mockDb as never, DISCUSSION)).rejects.toThrow(failure);
+		spy.mockRestore();
+	});
+
 	describe('keeping the question document quiet', () => {
 		const progress = (id = DISCUSSION) => mockDb.read(Collections.questionProgress, id);
 		const statementLastUpdate = (): unknown =>
@@ -347,6 +374,68 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 
 			expect(progress()).toMatchObject({ members: 1, lastActivity: 5, entered: 3 });
 			expect(progress()?.lastUpdate).toBeGreaterThan(5);
+		});
+	});
+
+	describe('a waiting person is let in', () => {
+		const off = { getInAppNotification: false, getPushNotification: false };
+		const subscription = (userId: string) =>
+			mockDb.read(Collections.statementsSubscribe, `${userId}--${DISCUSSION}`);
+
+		async function moveFromWaiting(userId: string, role: Role): Promise<void> {
+			const id = `${userId}--${DISCUSSION}`;
+			const before = subscriptionDoc(userId, Role.waiting, off);
+			const after = subscriptionDoc(userId, role, off);
+			mockDb.seed(Collections.statementsSubscribe, id, after);
+			await onSubscriptionUpdated(changeEvent(id, before, after));
+		}
+
+		it('turns in-app on, and push for someone with a device', async () => {
+			mockDb.seed(Collections.pushNotifications, 'token-1', { token: 'token-1', userId: 'alice' });
+
+			await moveFromWaiting('alice', Role.member);
+
+			expect(subscription('alice')).toMatchObject({
+				getInAppNotification: true,
+				getPushNotification: true,
+			});
+		});
+
+		it('leaves push off for someone with no device', async () => {
+			await moveFromWaiting('bob', Role.member);
+
+			expect(subscription('bob')).toMatchObject({
+				getInAppNotification: true,
+				getPushNotification: false,
+			});
+		});
+
+		it('does not count a device of another app', async () => {
+			mockDb.seed(Collections.pushNotifications, 'token-2', {
+				token: 'token-2',
+				userId: 'carol',
+				app: 'join-class',
+			});
+
+			await moveFromWaiting('carol', Role.member);
+
+			expect(subscription('carol')).toMatchObject({ getPushNotification: false });
+		});
+
+		it.each([Role.unsubscribed, Role.banned])('changes nothing when moved to %s', async (role) => {
+			await moveFromWaiting('dan', role);
+
+			expect(subscription('dan')).toMatchObject(off);
+		});
+
+		it('changes nothing for a member whose role did not move', async () => {
+			const id = `erin--${DISCUSSION}`;
+			const doc = subscriptionDoc('erin', Role.member, off);
+			mockDb.seed(Collections.statementsSubscribe, id, doc);
+
+			await onSubscriptionUpdated(changeEvent(id, doc, doc));
+
+			expect(subscription('erin')).toMatchObject(off);
 		});
 	});
 });

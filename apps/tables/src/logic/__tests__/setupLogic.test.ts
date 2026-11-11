@@ -1,7 +1,6 @@
+import { TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC } from '@freedi/shared-types';
 import { describe, expect, it } from 'vitest';
 import { makeSession, makeTopic } from '../../__tests__/fixtures';
-import { bandOf } from '../band';
-import { closenessOf } from '../closeness';
 import { previewVerdict } from '../previewVerdict';
 import {
 	columnsForWidth,
@@ -27,7 +26,7 @@ import type { SetupDraft } from '../setupDraft';
 import { setupSummary } from '../setupSummary';
 import { chipOfTolerance, formatTolerance, toleranceOfChip } from '../strictness';
 import { MAX_TOPICS, splitTopicList, topicsToAdd } from '../topicList';
-import { emptyDraft } from '../topics';
+import { emptyDraft, parseMaxTables } from '../topics';
 import { makeRun } from '../../__tests__/fixtures';
 
 function memoryStore(): Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> {
@@ -158,10 +157,33 @@ describe('setupDraft', () => {
 
 	it('validates seats and expected people', () => {
 		expect(parseSeats('1')).toBeNull();
+		expect(parseSeats('2')).toBeNull();
+		expect(parseSeats('3')).toBe(3);
 		expect(parseSeats('21')).toBeNull();
 		expect(parseSeats('20')).toBe(20);
 		expect(parseExpected('')).toBeNull();
 		expect(parseExpected('abc')).toBeNaN();
+	});
+
+	it('opens an existing session of size 2 without blocking, until the size is changed', () => {
+		const session = makeSession({ settings: { tableSize: 2, balanceTolerance: 0.3 } });
+		const draft = { ...readyDraft(), ...setupDraftFromSession(session, [makeTopic('a', 0)]) };
+
+		expect(draft.seats).toBe('2');
+		expect(settingsProblem(draft)).toBeNull();
+		expect(settingsRequest('s1', draft)?.tableSize).toBe(2);
+		expect(settingsProblem({ ...draft, seats: '1' })).toBe('seats');
+		expect(settingsProblem({ ...draft, seats: '4' })).toBeNull();
+	});
+
+	it('holds a topic cap to the server limit', () => {
+		expect(parseMaxTables('')).toBeUndefined();
+		expect(parseMaxTables('abc')).toBeUndefined();
+		expect(parseMaxTables('7')).toBe(7);
+		expect(parseMaxTables('500')).toBe(TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC);
+		expect(freeTableCount({ topics: [{ ...emptyDraft(), title: 'A', maxTables: '500' }] })).toBe(
+			TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC,
+		);
 	});
 
 	it('names what stops the settings from being saved', () => {
@@ -188,7 +210,7 @@ describe('setupDraft', () => {
 				question: ' Q ',
 				poleA: 'A',
 				poleB: 'B',
-				mode: 'direct',
+				mode: 'ranked',
 				expected: '12',
 				allowReturn: true,
 			}),
@@ -196,13 +218,20 @@ describe('setupDraft', () => {
 
 		expect(request).toMatchObject({
 			sessionId: 's',
-			mode: 'direct',
+			mode: 'ranked',
 			tableSize: 7,
 			balanceTolerance: 0.3,
 			positionQuestion: { label: 'Q', poleA: 'A', poleB: 'B' },
 			expectedParticipants: 12,
 			allowReturnByName: true,
 		});
+	});
+
+	it('sends no position question in direct mode, and a half-filled one does not block', () => {
+		const direct = readyDraft({ mode: 'direct', question: 'Q', poleA: 'A', poleB: '' });
+
+		expect(settingsProblem(direct)).toBeNull();
+		expect(settingsRequest('s', direct)).toMatchObject({ mode: 'direct', positionQuestion: null });
 	});
 
 	it('clears expected people when the field is empty', () => {
@@ -240,60 +269,50 @@ describe('setupDraft', () => {
 });
 
 describe('setupBackup', () => {
+	const HOST = { uid: 'host-1', sessionId: 's1' };
+	const SERVER_TIME = 1_000;
+
 	it('keeps a draft per session until it is cleared', () => {
 		const store = memoryStore();
 
-		writeSetupBackup(store, 's1', readyDraft());
-		expect(readSetupBackup(store, 's1')?.title).toBe('Town hall');
-		expect(readSetupBackup(store, 's2')).toBeNull();
-		clearSetupBackup(store, 's1');
-		expect(readSetupBackup(store, 's1')).toBeNull();
+		writeSetupBackup(store, HOST, readyDraft(), SERVER_TIME);
+		expect(readSetupBackup(store, HOST, SERVER_TIME)?.title).toBe('Town hall');
+		expect(readSetupBackup(store, { ...HOST, sessionId: 's2' }, SERVER_TIME)).toBeNull();
+		clearSetupBackup(store, HOST);
+		expect(readSetupBackup(store, HOST, SERVER_TIME)).toBeNull();
 	});
 
-	it('keeps the not-yet-created page apart and ignores damaged data', () => {
+	it('restores when the server copy has not moved on, and drops it when it has', () => {
 		const store = memoryStore();
 
-		store.setItem('freedi_tables_setup_new', '{oops');
-		expect(readSetupBackup(store, null)).toBeNull();
-		writeSetupBackup(store, null, readyDraft({ title: 'New' }));
-		expect(readSetupBackup(store, null)?.title).toBe('New');
-	});
-});
-
-describe('closeness', () => {
-	const stats = (deviation: number, n = 5): Parameters<typeof closenessOf>[0] => ({
-		n,
-		mean: n > 0 ? [50] : [],
-		sd: n > 0 ? [20] : [],
-		deviation,
+		writeSetupBackup(store, HOST, readyDraft(), SERVER_TIME);
+		expect(readSetupBackup(store, HOST, SERVER_TIME - 1)).not.toBeNull();
+		expect(readSetupBackup(store, HOST, SERVER_TIME + 1)).toBeNull();
 	});
 
-	it('is very close up to half the limit', () => {
-		expect(closenessOf(stats(0.15), 0.3)).toBe('veryClose');
+	it("never restores another host's copy", () => {
+		const store = memoryStore();
+
+		writeSetupBackup(store, HOST, readyDraft(), SERVER_TIME);
+		expect(readSetupBackup(store, { ...HOST, uid: 'host-2' }, SERVER_TIME)).toBeNull();
 	});
 
-	it('is close up to the limit', () => {
-		expect(closenessOf(stats(0.3), 0.3)).toBe('close');
+	it('discards an old copy that has no host or time', () => {
+		const store = memoryStore();
+
+		store.setItem('freedi_tables_setup_s1', JSON.stringify(readyDraft()));
+		expect(readSetupBackup(store, HOST, SERVER_TIME)).toBeNull();
 	});
 
-	it('is far past the limit', () => {
-		expect(closenessOf(stats(0.35), 0.3)).toBe('far');
-	});
+	it('keeps the not-yet-created page apart per host and ignores damaged data', () => {
+		const store = memoryStore();
+		const fresh = { uid: 'host-1', sessionId: null };
 
-	it('says there are not enough answers below three known positions', () => {
-		expect(closenessOf(stats(0.05, 2), 0.3)).toBe('notEnough');
-		expect(closenessOf(stats(0, 0), 0.3)).toBe('notEnough');
-	});
-});
-
-describe('band', () => {
-	it('spans one spread either side of the middle', () => {
-		expect(bandOf(50, 20)).toEqual({ start: 30, width: 40 });
-	});
-
-	it('stays on the 0..100 axis', () => {
-		expect(bandOf(90, 20)).toEqual({ start: 70, width: 30 });
-		expect(bandOf(10, 20)).toEqual({ start: 0, width: 30 });
+		store.setItem('freedi_tables_setup_new_host-1', '{oops');
+		expect(readSetupBackup(store, fresh, null)).toBeNull();
+		writeSetupBackup(store, fresh, readyDraft({ title: 'New' }), null);
+		expect(readSetupBackup(store, fresh, null)?.title).toBe('New');
+		expect(readSetupBackup(store, { uid: 'host-2', sessionId: null }, null)).toBeNull();
 	});
 });
 
@@ -315,9 +334,15 @@ describe('previewVerdict', () => {
 	});
 
 	it('says the tables follow the choices when too few answered', () => {
-		const few = { ...metrics, population: { n: 0, mean: [], sd: [] } };
+		const few = { ...metrics, hasEnoughPositions: false };
 
 		expect(previewVerdict(few, false)).toBe('choicesOnly');
+	});
+
+	it('does not claim the room is known on a run from before the flag existed', () => {
+		const legacy = { ...metrics, hasEnoughPositions: undefined };
+
+		expect(previewVerdict(legacy, false)).toBe('choicesOnly');
 	});
 });
 

@@ -25,9 +25,10 @@ jest.mock('../../progress/assertStatementAdmin', () => ({
 	findStatementAdminSource: (...args: unknown[]) => mockAdminSource(...args),
 }));
 
+import { OPEN_ACCESS_SCOPE, resolveAccessScope } from '@freedi/shared-types';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { resetFirestore, seed } from '../../services/__tests__/helpers/fakeFirestore';
-import { resolveQuestionParticipation } from '../statementAccess';
+import { resolveQuestionParticipation, resolveStatementAccess } from '../statementAccess';
 
 const db = getFirestore() as unknown as Firestore;
 const UID = 'me';
@@ -189,11 +190,214 @@ describe('resolveQuestionParticipation', () => {
 		await expect(call()).rejects.toMatchObject({ code: 'permission-denied' });
 	});
 
+	it('lets anyone in when no level sets access', async () => {
+		tree();
+
+		await expect(call()).resolves.toMatchObject({ statementId: 'q' });
+	});
+
+	// The database rules enforce accessScope; this callable reads the tree. An
+	// outsider must get the same answer from both.
+	it.each([
+		[{}],
+		[{ top: 'secret' }],
+		[{ top: 'public' }],
+		[{ top: 'moderated', question: 'public' }],
+		[{ top: 'public', question: 'moderated' }],
+		[{ top: 'public', middle: 'secret' }],
+		[{ top: 'secret', middle: 'openToAll' }],
+		[{ middle: 'openForRegistered' }],
+	])(
+		'agrees with resolveAccessScope for an outsider: %j',
+		async (access: { top?: string; middle?: string; question?: string }) => {
+			tree(access);
+			const level = (statementId: string, value?: string) => ({
+				statementId,
+				...(value ? { membership: { access: value } } : {}),
+			});
+			const scope = resolveAccessScope(level('q', access.question), [
+				level('middle', access.middle),
+				level('top-group', access.top),
+			]);
+
+			if (scope === OPEN_ACCESS_SCOPE) {
+				await expect(call()).resolves.toMatchObject({ statementId: 'q' });
+			} else {
+				await expect(call()).rejects.toMatchObject({ code: 'permission-denied' });
+			}
+		},
+	);
+
 	it('copes with a legacy question that has no parents list', async () => {
 		statement('top-group', { parentId: 'top', membership: { access: 'secret' } });
 		statement('q', { parentId: 'top-group', statementType: 'question' });
 		role('top-group', 'member');
 
 		await expect(call()).resolves.toMatchObject({ statementId: 'q' });
+	});
+});
+
+describe('only the level owning the setting counts', () => {
+	beforeEach(() => {
+		statement('top-group', {
+			parentId: 'top',
+			statementType: 'group',
+			membership: { access: 'public' },
+		});
+		statement('private-q', {
+			parentId: 'top-group',
+			parents: ['top-group'],
+			statementType: 'question',
+			membership: { access: 'secret' },
+		});
+		// Short `parents`, as createStatementObject writes without it.
+		statement('child', {
+			parentId: 'private-q',
+			parents: ['top-group'],
+			statementType: 'question',
+		});
+	});
+
+	const callChild = () => resolveQuestionParticipation(db, UID, 'child');
+
+	it('ignores a member role placed on a child of the private level', async () => {
+		role('child', 'member');
+
+		await expect(callChild()).rejects.toMatchObject({ code: 'permission-denied' });
+	});
+
+	it('lets a member of the owning level in', async () => {
+		role('private-q', 'member');
+
+		await expect(callChild()).resolves.toMatchObject({ statementId: 'child' });
+	});
+
+	it('does not count a plain member of the open top', async () => {
+		role('top-group', 'member');
+
+		await expect(callChild()).rejects.toMatchObject({ code: 'permission-denied' });
+	});
+
+	it('still refuses a ban at any level', async () => {
+		role('private-q', 'member');
+		role('child', 'banned');
+
+		await expect(callChild()).rejects.toMatchObject({ code: 'permission-denied' });
+	});
+
+	it('does not count a host of a level below the private one', async () => {
+		role('child', 'admin');
+
+		await expect(callChild()).rejects.toMatchObject({ code: 'permission-denied' });
+	});
+
+	it('counts a host of the private level or above it', async () => {
+		role('top-group', 'admin');
+
+		await expect(callChild()).resolves.toMatchObject({ statementId: 'child' });
+	});
+
+	it('refuses someone waiting anywhere on the chain, even a member', async () => {
+		role('private-q', 'member');
+		role('top-group', 'waiting');
+
+		await expect(callChild()).rejects.toMatchObject({ code: 'permission-denied' });
+	});
+
+	describe('resolveStatementAccess', () => {
+		const search = () => resolveStatementAccess(db, UID, 'child');
+
+		it('does not skip a private middle level', async () => {
+			await expect(search()).rejects.toMatchObject({ code: 'permission-denied' });
+		});
+
+		it('ignores a role below the owning level', async () => {
+			role('child', 'member');
+
+			await expect(search()).rejects.toMatchObject({ code: 'permission-denied' });
+		});
+
+		it('lets a member of the owning level in', async () => {
+			role('private-q', 'member');
+
+			await expect(search()).resolves.toMatchObject({ topParentId: 'top-group' });
+		});
+
+		it('does not let a host below it in, and refuses a ban anywhere', async () => {
+			role('child', 'admin');
+			await expect(search()).rejects.toMatchObject({ code: 'permission-denied' });
+
+			role('top-group', 'admin');
+			await expect(search()).resolves.toBeDefined();
+
+			role('private-q', 'banned');
+			await expect(search()).rejects.toMatchObject({ code: 'permission-denied' });
+		});
+
+		it('is open with no setting at any level', async () => {
+			statement('free', { parentId: 'top', topParentId: 'free' });
+
+			await expect(resolveStatementAccess(db, UID, 'free')).resolves.toBeDefined();
+		});
+	});
+});
+
+describe('who made a level inside a private one gives no way in', () => {
+	beforeEach(() => {
+		statement('top-group', {
+			parentId: 'top',
+			statementType: 'group',
+			membership: { access: 'public' },
+		});
+		statement('private-q', {
+			parentId: 'top-group',
+			parents: ['top-group'],
+			statementType: 'question',
+			accessScope: 'private-q',
+			membership: { access: 'secret' },
+		});
+	});
+
+	function levelBy(creatorId: string): void {
+		statement('level', {
+			parentId: 'private-q',
+			parents: ['top-group', 'private-q'],
+			statementType: 'question',
+			accessScope: 'private-q',
+			creatorId,
+		});
+	}
+
+	it('does not let the planter in', async () => {
+		levelBy(UID);
+		role('level', 'admin');
+
+		await expect(resolveQuestionParticipation(db, UID, 'level')).rejects.toMatchObject({
+			code: 'permission-denied',
+		});
+	});
+
+	it('refuses a host of the level even when a member made it', async () => {
+		levelBy('a-member');
+		seed('statementsSubscribe', 'a-member--private-q', {
+			userId: 'a-member',
+			statementId: 'private-q',
+			role: 'member',
+		});
+		role('level', 'admin');
+
+		await expect(resolveQuestionParticipation(db, UID, 'level')).rejects.toMatchObject({
+			code: 'permission-denied',
+		});
+	});
+
+	it('lets a host of the level in once they are a member of the private level', async () => {
+		levelBy('someone');
+		role('level', 'admin');
+		role('private-q', 'member');
+
+		await expect(resolveQuestionParticipation(db, UID, 'level')).resolves.toMatchObject({
+			statementId: 'level',
+		});
 	});
 });

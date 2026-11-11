@@ -16,6 +16,7 @@ const ar: Record<string, string> = {
 	'tableAssignment.screen.myTable': 'طاولتي',
 	'tableAssignment.placeholder.soon': 'هذه الشاشة قيد الإنشاء',
 	'tableAssignment.signIn.google': 'الدخول بحساب Google',
+	'tableAssignment.signOut': 'تسجيل الخروج',
 
 	'tableAssignment.back': 'رجوع',
 	'tableAssignment.back.toList': 'العودة إلى توزيعاتي',
@@ -123,7 +124,6 @@ const ar: Record<string, string> = {
 	'tableAssignment.direct.seatsUnknown':
 		'تُفحص المقاعد الشاغرة في الخادم: إذا كانت الطاولة ممتلئة ستُبلَّغ.',
 	'tableAssignment.myTable.waiting': 'بانتظار نشر التوزيع. ستظهر طاولتك هنا عند نشره.',
-	'tableAssignment.myTable.notSeated': 'لم نجد لكم طاولة في التوزيع المنشور. تحدّثوا مع المضيف.',
 	'tableAssignment.myTable.chooseFirst': 'لم تختر طاولة بعد.',
 	'tableAssignment.error.tableFull': 'امتلأت هذه الطاولة للتو. يمكنك اختيار طاولة أخرى.',
 	'tableAssignment.error.preferencesClosed': 'أُغلق التسجيل، لذلك لا يمكن الحفظ.',
@@ -314,12 +314,7 @@ const ar: Record<string, string> = {
 	'tableAssignment.closeness.veryClose': 'قريبة جدًا من القاعة',
 	'tableAssignment.closeness.close': 'قريبة من القاعة',
 	'tableAssignment.closeness.notEnough': 'لا توجد إجابات كافية',
-	'tableAssignment.preview.room': 'القاعة',
-	'tableAssignment.preview.table': 'الطاولة',
-	'tableAssignment.preview.noStats':
-		'أجاب أقل من ثلاثة أشخاص عن سؤال الموقف، لذا لا تُعرض التركيبة.',
 	'tableAssignment.preview.fullData': 'البيانات الكاملة',
-	'tableAssignment.preview.distance': 'أكبر بُعد لطاولة عن القاعة: {{max}}. الحد: {{tolerance}}.',
 	'tableAssignment.autosave.failed': 'لم يُحفظ. يبقى النص هنا، وسنحاول مجددًا.',
 	'tableAssignment.strictness.custom.text':
 		'حُفظت هنا قيمة أخرى. يمكن إبقاؤها أو اختيار أحد الخيارات.',
@@ -344,7 +339,6 @@ const ar: Record<string, string> = {
 	'tableAssignment.choice.none': 'لم يرتّبوا',
 	'tableAssignment.closeness.far': 'بعيدة عن القاعة',
 	'tableAssignment.preview.unusedTopic': 'الموضوع "{{topic}}" لم يحصل على طاولة.',
-	'tableAssignment.preview.rounded': 'الأرقام مقرّبة حفاظًا على خصوصية الإجابات.',
 	'tableAssignment.roomScreen.previous': 'السابق',
 	'tableAssignment.roomScreen.next': 'التالي',
 	'tableAssignment.roomScreen.pause': 'إيقاف',
@@ -410,6 +404,41 @@ const ar: Record<string, string> = {
 	'tableAssignment.live.estimate.few': 'حتى الآن هذا نحو {{count}} طاولات',
 	'tableAssignment.live.estimate.many': 'حتى الآن هذا نحو {{count}} طاولة',
 	'tableAssignment.live.estimate.other': 'حتى الآن هذا نحو {{count}} طاولة',
+	'tableAssignment.error.tooFewRegistrants':
+		'عدد المسجّلين قليل جدًا لحساب الطاولات. انتظروا مزيدًا من المسجّلين ثم احسبوا مجددًا.',
+	'tableAssignment.error.previewLimit':
+		'تم بلوغ حدّ الحساب. يمكن حساب الإجابات نفسها بضع مرات فقط، ولكل توزيع حدّ إجمالي أيضًا. احسبوا مجددًا عند وصول إجابات جديدة، أو انشروا آخر معاينة.',
+	'tableAssignment.error.registrationFull':
+		'بلغ هذا اللقاء الحدّ الأقصى من المسجّلين، ولا يمكن تسجيل أحد آخر.',
+	'tableAssignment.error.nameLocked':
+		'نُشرت الطاولات، لذا لا يمكن تغيير الاسم بعد الآن. إن كان فيه خطأ فتحدّثوا مع المضيف.',
+	'tableAssignment.error.nameClaimed':
+		'تابعتم هذا التسجيل بالاسم الكامل، لذا لا يمكن تغيير الاسم. إن كان فيه خطأ فتحدّثوا مع المضيف.',
+	'tableAssignment.delete': 'حذف هذا التوزيع',
+	'tableAssignment.delete.title': 'حذف هذا التوزيع؟',
+	'tableAssignment.delete.body':
+		'يؤدي هذا إلى حذف الأسماء والإجابات والطاولات للجميع نهائيًا. لا يمكن التراجع.',
+	'tableAssignment.delete.keep': 'لا، أبقِه',
+	'tableAssignment.delete.confirm': 'نعم، احذف كل شيء',
+	'tableAssignment.participants.claimedByName': 'تابع بالاسم',
+	'tableAssignment.waiting.late.lead':
+		'نُشرت الطاولات بالفعل. حُفظت اختياراتكم وسيجلسكم المضيف على طاولة.',
+	'tableAssignment.waiting.late.note':
+		'نُشرت الطاولات قبل تسجيلكم. سيجلسكم المضيف على طاولة وستظهر طاولتكم في هذه الصفحة. يمكنكم إغلاقها والعودة بالرابط.',
+	'tableAssignment.preview.newcomers.one':
+		'سجّل شخص واحد بعد نشر الطاولات. الحساب مجددًا يُبقي الجميع في أماكنهم ويجلس هذا الشخص فقط.',
+	'tableAssignment.preview.newcomers.two':
+		'سجّل شخصان بعد نشر الطاولات. الحساب مجددًا يُبقي الجميع في أماكنهم ويجلس هذين الشخصين فقط.',
+	'tableAssignment.preview.newcomers.few':
+		'سجّل {{count}} أشخاص بعد نشر الطاولات. الحساب مجددًا يُبقي الجميع في أماكنهم ويجلس هؤلاء فقط.',
+	'tableAssignment.preview.newcomers.many':
+		'سجّل {{count}} شخصًا بعد نشر الطاولات. الحساب مجددًا يُبقي الجميع في أماكنهم ويجلس هؤلاء فقط.',
+	'tableAssignment.preview.newcomers.other':
+		'سجّل {{count}} شخص بعد نشر الطاولات. الحساب مجددًا يُبقي الجميع في أماكنهم ويجلس هؤلاء فقط.',
+	'tableAssignment.participants.unseated': 'لم يُجلَس بعد',
+	'tableAssignment.count.unseated': 'لم يُجلسوا بعد',
+	'tableAssignment.error.tableSizeBelowPublished':
+		'حجم الطاولة أصبح أصغر من طاولة نُشرت بالفعل. أعيدوه أو كبّروه ثم احسبوا مجددًا.',
 };
 
 export default ar;

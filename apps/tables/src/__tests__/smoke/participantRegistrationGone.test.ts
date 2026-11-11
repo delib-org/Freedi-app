@@ -54,20 +54,27 @@ describe('the cancelled screen', () => {
 		expect(buttonWithText(root, AGAIN)).toBeDefined();
 	});
 
-	it.each(['registrationClosed', 'published'] as const)(
-		'in %s, points to the host and makes no offer to register again',
-		async (status) => {
-			mocks.store.current.session = makeSession({ status, publishedRunId: 'run-1' });
-			cancelledHere();
+	it('in registrationClosed, points to the host and makes no offer to register again', async () => {
+		mocks.store.current.session = makeSession({ status: 'registrationClosed' });
+		cancelledHere();
 
-			const { text, root } = await renderScreen(ParticipantHome, ID);
+		const { text, root } = await renderScreen(ParticipantHome, ID);
 
-			expect(text).toContain(en['tableAssignment.cancelled.title']);
-			expect(text).toContain(en['tableAssignment.cancelled.bodyClosed']);
-			expect(text).not.toContain(en['tableAssignment.cancelled.body']);
-			expect(root.querySelectorAll('button.btn--cta')).toHaveLength(0);
-		},
-	);
+		expect(text).toContain(en['tableAssignment.cancelled.title']);
+		expect(text).toContain(en['tableAssignment.cancelled.bodyClosed']);
+		expect(text).not.toContain(en['tableAssignment.cancelled.body']);
+		expect(root.querySelectorAll('button.btn--cta')).toHaveLength(0);
+	});
+
+	it('in published, a latecomer who cancelled may register again', async () => {
+		mocks.store.current.session = makeSession({ status: 'published', publishedRunId: 'run-1' });
+		cancelledHere();
+
+		const { text, root } = await renderScreen(ParticipantHome, ID);
+
+		expect(text).toContain(en['tableAssignment.cancelled.body']);
+		expect(buttonWithText(root, AGAIN)).toBeDefined();
+	});
 });
 
 describe('a registration this browser did not cancel', () => {

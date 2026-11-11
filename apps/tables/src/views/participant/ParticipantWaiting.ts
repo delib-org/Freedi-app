@@ -3,6 +3,7 @@ import type { TableAssignmentParticipant, TableAssignmentTopic } from '@freedi/s
 import { t } from '@/lib/i18n';
 import { checkIcon } from '@/components/icons';
 import type { ParticipantContext } from '@/components/ParticipantFrame';
+import { StateBox } from '@/components/StateBox';
 import { CancelParticipation } from '@/views/participant/CancelDialog';
 import { participantScreenPath } from '@/paths';
 
@@ -32,17 +33,27 @@ function choicesList(me: TableAssignmentParticipant, topics: TableAssignmentTopi
 	);
 }
 
+/** The choices are titled from the topics: show their loading or error, never "unknown" for all. */
+function choices(context: ParticipantContext, me: TableAssignmentParticipant): m.Children {
+	const { topicsState, topics } = context;
+
+	if (topicsState === 'ready') return choicesList(me, topics);
+	if (topicsState === 'loading') return m(StateBox, { kind: 'loading' });
+
+	return m(StateBox, { kind: topicsState, onRetry: context.retryTopics });
+}
+
 function detailsCard(
 	context: ParticipantContext,
 	me: TableAssignmentParticipant,
-	isOpen: boolean,
+	editTo: 'name' | 'preferences' | null,
 ): m.Vnode {
-	const { session, topics } = context;
+	const { session } = context;
 
 	return m('section.waiting__card', [
 		m('h2.waiting__heading', t('tableAssignment.waiting.details')),
 		m('span.waiting__name', { dir: 'auto' }, me.fullName),
-		me.preferences.length > 0 ? choicesList(me, topics) : null,
+		me.preferences.length > 0 ? choices(context, me) : null,
 		session.settings.positionQuestion && me.preferences.length > 0
 			? m(
 					'span.waiting__position',
@@ -53,11 +64,11 @@ function detailsCard(
 					),
 				)
 			: null,
-		isOpen
+		editTo
 			? m(
 					m.route.Link,
 					{
-						href: participantScreenPath(session.tableAssignmentId, 'name'),
+						href: participantScreenPath(session.tableAssignmentId, editTo),
 						class: 'btn btn--soft',
 					},
 					t('tableAssignment.editDetails'),
@@ -112,15 +123,20 @@ function unfinishedPrompt(context: ParticipantContext, name: string): m.Vnode {
 	]);
 }
 
-function savedHeader(name: string, titleKey: string, showLead: boolean): m.Vnode {
+function savedHeader(name: string, titleKey: string, leadKey: string | null): m.Vnode {
 	return m('.waiting__head', [
 		m('span.waiting__done-mark', { 'aria-hidden': 'true' }, checkIcon(DONE_ICON_SIZE)),
 		m('h1.screen__title.screen__title--page', { dir: 'auto' }, t(titleKey, { name })),
-		showLead ? m('p.waiting__lead', t('tableAssignment.waiting.lead')) : null,
+		leadKey ? m('p.waiting__lead', t(leadKey)) : null,
 	]);
 }
 
-/** Saved and waiting, before and after registration closes. */
+/** What a latecomer is told: the tables are published, and the host will seat them. */
+function latecomerNote(): m.Vnode {
+	return m('p.notice', { role: 'status' }, t('tableAssignment.waiting.late.note'));
+}
+
+/** Saved and waiting, before and after registration closes, and for a latecomer after publishing. */
 export const ParticipantWaiting: m.Component<{ context: ParticipantContext }> = {
 	view({ attrs }) {
 		const { context } = attrs;
@@ -129,20 +145,31 @@ export const ParticipantWaiting: m.Component<{ context: ParticipantContext }> = 
 		if (!me) return null;
 
 		const isOpen = session.status === 'registrationOpen';
+		const isLate = session.status === 'published';
 		const name = firstName(me.fullName);
 		const answered = hasAnswers(me);
+		const mayAnswer = isOpen || isLate;
+		let editTo: 'name' | 'preferences' | null = null;
+
+		if (answered) editTo = isLate ? 'preferences' : isOpen ? 'name' : null;
 
 		return m('.screen', [
-			!answered && isOpen
+			!answered && mayAnswer
 				? unfinishedPrompt(context, name)
 				: savedHeader(
 						name,
 						answered ? 'tableAssignment.waiting.title' : 'tableAssignment.waiting.registeredTitle',
-						answered,
+						answered
+							? isLate
+								? 'tableAssignment.waiting.late.lead'
+								: 'tableAssignment.waiting.lead'
+							: null,
 					),
-			detailsCard(context, me, isOpen && answered),
-			whatHappensNow(isOpen),
-			isOpen ? null : m('p.notice', { role: 'note' }, t('tableAssignment.waiting.closedNote')),
+			detailsCard(context, me, editTo),
+			isLate ? latecomerNote() : whatHappensNow(isOpen),
+			isOpen || isLate
+				? null
+				: m('p.notice', { role: 'note' }, t('tableAssignment.waiting.closedNote')),
 			m(CancelParticipation, { context }),
 		]);
 	},

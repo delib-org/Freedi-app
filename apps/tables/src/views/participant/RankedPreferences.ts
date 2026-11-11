@@ -14,7 +14,7 @@ import type { ParticipantContext } from '@/components/ParticipantFrame';
 import { RankList } from '@/components/RankList';
 import { StateBox } from '@/components/StateBox';
 import { StepHeader } from '@/components/StepHeader';
-import { saveChoices } from '@/views/participant/saveChoices';
+import { saveChoicesAndLeave } from '@/views/participant/saveChoices';
 import { participantHomePath, participantScreenPath } from '@/paths';
 
 /** Above this many topics, a title filter appears (IA section 8). */
@@ -71,7 +71,7 @@ export const RankedPreferences: m.ClosureComponent<{ context: ParticipantContext
 
 			return;
 		}
-		if (await saveChoices(save, { sessionId, uid }, current)) goTo(participantHomePath(sessionId));
+		await saveChoicesAndLeave(save, { sessionId, uid }, current);
 	}
 
 	function matchesFilter(topic: TableAssignmentTopic): boolean {

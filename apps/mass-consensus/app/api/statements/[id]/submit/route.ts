@@ -235,6 +235,7 @@ export async function POST(
       statementType: StatementType.option,
       parentId: questionId,
       topParentId: questionData?.topParentId || questionId,
+      parentAccessScope: questionData?.accessScope,
       creatorId: userId,
       creator: {
         uid: userId,

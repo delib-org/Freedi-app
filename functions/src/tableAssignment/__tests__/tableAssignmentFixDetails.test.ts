@@ -120,9 +120,11 @@ describe('tablesFixDetails', () => {
 
 	it('keeps a ready preview publishable: titles are not in the hash', async () => {
 		const fake = openWithTopics('registrationClosed');
-		['u1', 'u2', 'u3', 'u4'].forEach((uid) => seedRegistration(fake, uid, { preferences: ['a'] }));
+		['u1', 'u2', 'u3', 'u4', 'u5'].forEach((uid) =>
+			seedRegistration(fake, uid, { preferences: ['a'] }),
+		);
 		const fs = fake.asFirestore();
-		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 5 }, NOW);
+		const { runId } = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 5);
 		const hashBefore = fake.read(`tableAssignmentRunInputs/${runId}`)?.inputHash;
 		await fixDetails(fs, HOST, { sessionId: SID, title: 'Renamed', topics: bothTopics });
 		await expect(publishRun(fs, HOST, { sessionId: SID, runId })).resolves.toEqual({
@@ -208,9 +210,11 @@ describe('tablesSaveSettings: redesign fields', () => {
 
 	it('does not stale a preview when only expected people or return by name change', async () => {
 		const fake = openWithTopics('registrationClosed');
-		['u1', 'u2', 'u3', 'u4'].forEach((uid) => seedRegistration(fake, uid, { preferences: ['a'] }));
+		['u1', 'u2', 'u3', 'u4', 'u5'].forEach((uid) =>
+			seedRegistration(fake, uid, { preferences: ['a'] }),
+		);
 		const fs = fake.asFirestore();
-		const { runId } = await computePreview(fs, HOST, { sessionId: SID, seed: 5 }, NOW);
+		const { runId } = await computePreview(fs, HOST, { sessionId: SID }, NOW, () => 5);
 		await saveSettings(fs, HOST, {
 			sessionId: SID,
 			expectedParticipants: 10,

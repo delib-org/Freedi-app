@@ -1,4 +1,5 @@
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
+import { isAccessScopeOnlyWrite } from '../accessScope/scopeOnlyWrite';
 import { db } from '../db';
 import {
 	Collections,
@@ -497,6 +498,7 @@ export const onAgoraProposalWritten = onDocumentWritten(
 		const before = event.data?.before.exists ? (event.data.before.data() as ProposalDoc) : null;
 		const proposal = after ?? before;
 		if (!proposal?.agoraSessionId) return;
+		if (isAccessScopeOnlyWrite(before, after)) return;
 		if (proposal.statementType !== StatementType.option) return;
 		// A challenge written during the vote is an option, but it is not a
 		// deliberation proposal and must not enter this lifecycle. It would

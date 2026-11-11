@@ -125,6 +125,7 @@ export async function postReply(
 		statement: text,
 		statementType: StatementType.statement,
 		parentId: proposalId,
+		parentAccessScope: proposal.accessScope,
 		topParentId: proposal.topParentId || mainId,
 		parents: [...(proposal.parents ?? []), proposalId],
 		creatorId: actorUid,

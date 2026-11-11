@@ -5,6 +5,7 @@ import { setFollowMeDB, setPowerFollowMeDB } from '@/controllers/db/statements/s
 import { Role } from '@freedi/shared-types';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useLevelVerdict } from '@/controllers/hooks/useLevelVerdict';
 import {
 	statementSelector,
 	statementSubscriptionSelector,
@@ -59,6 +60,7 @@ const FollowMeToast: FC = () => {
 	const _isAdmin = role === Role.admin;
 
 	const topParentStatement = useAppSelector(statementSelector(statement?.topParentId));
+	const isTopParentOpen = useLevelVerdict(statement?.topParentId) === 'open';
 
 	// Always hold a listener to topParentStatement for followMe updates
 	useEffect(() => {
@@ -103,7 +105,7 @@ const FollowMeToast: FC = () => {
 
 	// Auto-redirect for non-admin users in power mode
 	useEffect(() => {
-		if (!isPowerMode || _isAdmin || !powerFollowMePath) return;
+		if (!isTopParentOpen || !isPowerMode || _isAdmin || !powerFollowMePath) return;
 
 		// Don't redirect if already on the target page (compare full path including search params)
 		if (fullPath === powerFollowMePath) return;
@@ -113,7 +115,7 @@ const FollowMeToast: FC = () => {
 		}, FOLLOW_ME.REDIRECT_DELAY_MS);
 
 		return () => clearTimeout(timer);
-	}, [isPowerMode, _isAdmin, powerFollowMePath, fullPath, navigate]);
+	}, [isTopParentOpen, isPowerMode, _isAdmin, powerFollowMePath, fullPath, navigate]);
 
 	function handleRemoveToast() {
 		if (!_isAdmin) return;
@@ -127,6 +129,9 @@ const FollowMeToast: FC = () => {
 	}
 
 	if (!statement) return null;
+
+	// An outsider on a public question must not be led into the closed group above it
+	if (!isTopParentOpen) return null;
 
 	// If no active follow mode, hide toast
 	if (!activePath || activePath === '') return null;

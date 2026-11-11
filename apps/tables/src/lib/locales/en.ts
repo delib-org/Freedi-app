@@ -16,6 +16,7 @@ const en: Record<string, string> = {
 	'tableAssignment.screen.myTable': 'My table',
 	'tableAssignment.placeholder.soon': 'This screen is under construction',
 	'tableAssignment.signIn.google': 'Sign in with Google',
+	'tableAssignment.signOut': 'Sign out',
 
 	'tableAssignment.back': 'Back',
 	'tableAssignment.back.toList': 'Back to my table assignments',
@@ -125,8 +126,6 @@ const en: Record<string, string> = {
 		'Free seats are checked on the server: if a table is full you will be told.',
 	'tableAssignment.myTable.waiting':
 		'Waiting for the assignment to be published. Your table will show here once it is.',
-	'tableAssignment.myTable.notSeated':
-		'No table was found for you in the published assignment. Talk to the host.',
 	'tableAssignment.myTable.chooseFirst': 'You have not chosen a table yet.',
 	'tableAssignment.error.tableFull': 'That table just filled up. You can choose another table.',
 	'tableAssignment.error.preferencesClosed': 'Registration has closed, so this cannot be saved.',
@@ -323,13 +322,7 @@ const en: Record<string, string> = {
 	'tableAssignment.closeness.veryClose': 'Very close to the room',
 	'tableAssignment.closeness.close': 'Close to the room',
 	'tableAssignment.closeness.notEnough': 'Not enough answers',
-	'tableAssignment.preview.room': 'The room',
-	'tableAssignment.preview.table': 'The table',
-	'tableAssignment.preview.noStats':
-		'Fewer than three people answered the position question, so the mix is not shown.',
 	'tableAssignment.preview.fullData': 'Full data',
-	'tableAssignment.preview.distance':
-		'Largest distance of a table from the room: {{max}}. The limit: {{tolerance}}.',
 	'tableAssignment.autosave.failed': 'Not saved. Your text stays here, and we will try again.',
 	'tableAssignment.strictness.custom.text':
 		'A different value is stored here. You can keep it, or pick one of the options.',
@@ -356,7 +349,6 @@ const en: Record<string, string> = {
 	'tableAssignment.choice.none': 'Did not rank',
 	'tableAssignment.closeness.far': 'Far from the room',
 	'tableAssignment.preview.unusedTopic': 'The topic "{{topic}}" did not get a table.',
-	'tableAssignment.preview.rounded': 'The numbers are rounded, to keep the answers private.',
 	'tableAssignment.roomScreen.previous': 'Previous',
 	'tableAssignment.roomScreen.next': 'Next',
 	'tableAssignment.roomScreen.pause': 'Pause',
@@ -424,6 +416,41 @@ const en: Record<string, string> = {
 	'tableAssignment.live.estimate.few': 'So far that is about {{count}} tables',
 	'tableAssignment.live.estimate.many': 'So far that is about {{count}} tables',
 	'tableAssignment.live.estimate.other': 'So far that is about {{count}} tables',
+	'tableAssignment.error.tooFewRegistrants':
+		'Too few people have registered to compute tables. Wait for more people, then compute again.',
+	'tableAssignment.error.previewLimit':
+		'The limit on computing was reached. The same answers can be computed only a few times, and one assignment has a total limit. Compute again after more answers arrive, or publish the last preview.',
+	'tableAssignment.error.registrationFull':
+		'This gathering has reached its limit of registered people, so no one else can register.',
+	'tableAssignment.error.nameLocked':
+		'The tables are published, so a name can no longer be changed. Talk to the host if it is wrong.',
+	'tableAssignment.error.nameClaimed':
+		'You continued this registration by full name, so the name cannot be changed. Talk to the host if it is wrong.',
+	'tableAssignment.delete': 'Delete this assignment',
+	'tableAssignment.delete.title': 'Delete this assignment?',
+	'tableAssignment.delete.body':
+		'This removes the names, the answers and the tables of everyone, permanently. It cannot be undone.',
+	'tableAssignment.delete.keep': 'No, keep it',
+	'tableAssignment.delete.confirm': 'Yes, delete everything',
+	'tableAssignment.participants.claimedByName': 'Continued by name',
+	'tableAssignment.waiting.late.lead':
+		'The tables are already published. Your choices are saved, and the host will seat you.',
+	'tableAssignment.waiting.late.note':
+		'The tables were published before you registered. The host will seat you, and your table will appear on this page. You can close it and come back with the link.',
+	'tableAssignment.preview.newcomers.one':
+		'One person registered after the tables were published. Computing again keeps everyone seated where they are and seats only them.',
+	'tableAssignment.preview.newcomers.two':
+		'{{count}} people registered after the tables were published. Computing again keeps everyone seated where they are and seats only them.',
+	'tableAssignment.preview.newcomers.few':
+		'{{count}} people registered after the tables were published. Computing again keeps everyone seated where they are and seats only them.',
+	'tableAssignment.preview.newcomers.many':
+		'{{count}} people registered after the tables were published. Computing again keeps everyone seated where they are and seats only them.',
+	'tableAssignment.preview.newcomers.other':
+		'{{count}} people registered after the tables were published. Computing again keeps everyone seated where they are and seats only them.',
+	'tableAssignment.participants.unseated': 'Not seated yet',
+	'tableAssignment.count.unseated': 'Not seated yet',
+	'tableAssignment.error.tableSizeBelowPublished':
+		'The table size is now smaller than a table that was already published. Set it back, or raise it, then compute again.',
 };
 
 export default en;

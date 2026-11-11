@@ -1,10 +1,10 @@
 import m from 'mithril';
 import type { TableAssignmentRun } from '@freedi/shared-types';
-import { t } from '@/lib/i18n';
+import { t, tPlural } from '@/lib/i18n';
 import { Action } from '@/lib/action';
 import { LiveValue } from '@/lib/live';
 import { goTo } from '@/lib/navigate';
-import { computeAction } from '@/lib/tableAssignment/closeAndSplit';
+import { computeActionFor } from '@/lib/tableAssignment/closeAndSplit';
 import { tablesApi } from '@/lib/tableAssignment/client';
 import { subscribeRuns } from '@/lib/tableAssignment/data';
 import { deriveDirectTables, seatCountsFromParticipants } from '@/logic/directTables';
@@ -12,6 +12,7 @@ import { describeMetrics } from '@/logic/metrics';
 import { nameByUid } from '@/logic/participants';
 import { previewVerdict } from '@/logic/previewVerdict';
 import type { PreviewVerdict } from '@/logic/previewVerdict';
+import { publishedRunOf, unseatedSincePublished } from '@/logic/latecomers';
 import { latestRun } from '@/logic/runs';
 import { canPublish, isDraftStale } from '@/logic/stale';
 import { ChoiceSummary } from '@/components/ChoiceSummary';
@@ -33,6 +34,7 @@ const VERDICT_ICON_PX = 32;
 const PreviewBody: m.ClosureComponent<PreviewBodyAttrs> = (initial) => {
 	const sessionId = initial.attrs.context.session.tableAssignmentId;
 	const runs = new LiveValue('runs', subscribeRuns(sessionId));
+	const computeAction = computeActionFor(sessionId);
 	const publish = new Action('tables.host.publishRun', 'tableAssignment.error.publishStale');
 	let fixing = false;
 
@@ -132,7 +134,6 @@ const PreviewBody: m.ClosureComponent<PreviewBodyAttrs> = (initial) => {
 			),
 			m(TableCards, { tables: previewTableViews(run, topics, nameByUid(participants)) }),
 			m(MetricsPanel, {
-				metrics: run.metrics,
 				unusedTopics: topics.filter((topic) => !seatedTopics.has(topic.topicId)),
 			}),
 		];
@@ -150,6 +151,9 @@ const PreviewBody: m.ClosureComponent<PreviewBodyAttrs> = (initial) => {
 				),
 			]),
 			computeButton(false, canCompute, false),
+			computeAction.errorKey
+				? m('p.notice.notice--error', { role: 'alert' }, t(computeAction.errorKey))
+				: null,
 		]);
 	}
 
@@ -182,9 +186,24 @@ const PreviewBody: m.ClosureComponent<PreviewBodyAttrs> = (initial) => {
 		];
 	}
 
+	/** After publishing: how many registered since, who a new computation will seat (and nobody else). */
+	function newcomersNote(context: HostContext): m.Vnode | null {
+		const published = publishedRunOf(runs.data ?? [], context.session.publishedRunId);
+		const newcomers = unseatedSincePublished(published, context.participants).length;
+
+		return newcomers === 0
+			? null
+			: m('p.notice', { role: 'status' }, tPlural('tableAssignment.preview.newcomers', newcomers));
+	}
+
 	function head(context: HostContext): m.Vnode {
 		return m('.preview__head', [
 			m('span.preview__not-public', t('tableAssignment.preview.notPublic')),
+			m(
+				m.route.Link,
+				{ href: hostScreenPath(sessionId, 'participants'), class: 'btn btn--text' },
+				t('tableAssignment.screen.participants'),
+			),
 			m(
 				'button.btn.btn--text',
 				{
@@ -229,6 +248,7 @@ const PreviewBody: m.ClosureComponent<PreviewBodyAttrs> = (initial) => {
 
 			return [
 				head(context),
+				newcomersNote(context),
 				canCompute
 					? null
 					: m('p.notice', { role: 'status' }, t('tableAssignment.preview.closeFirst')),
@@ -249,9 +269,11 @@ export const HostPreview: m.Component<{ id: string }> = {
 		return m(HostFrame, {
 			sessionId: attrs.id,
 			titleKey: 'tableAssignment.screen.preview',
+			stage: 'preview',
 			topics: true,
 			participants: true,
 			wide: true,
+			deletable: true,
 			shellFor: () => ({ title: undefined }),
 			render: (context: HostContext) => m(PreviewBody, { context }),
 		});

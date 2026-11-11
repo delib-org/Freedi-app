@@ -4,12 +4,15 @@ import type { TableAssignment, TableAssignmentTopic } from '@freedi/shared-types
 import { logError } from '@freedi/shared-utils';
 import { t } from '@/lib/i18n';
 import { Action } from '@/lib/action';
+import { LiveValue } from '@/lib/live';
+import { subscribeSession } from '@/lib/tableAssignment/data';
 import { goTo, rewriteAddress } from '@/lib/navigate';
 import { safeStorage } from '@/lib/safeStorage';
 import { tablesApi } from '@/lib/tableAssignment/client';
 import { Autosaver } from '@/logic/autosave';
 import type { SaveOutcome } from '@/logic/autosave';
 import { clearSetupBackup, readSetupBackup, writeSetupBackup } from '@/logic/setupBackup';
+import type { BackupScope } from '@/logic/setupBackup';
 import {
 	emptySetupDraft,
 	filledTopics,
@@ -29,6 +32,8 @@ import { SetupTopics } from '@/views/host/SetupTopics';
 import { hostHomePath, hostListPath } from '@/paths';
 
 export interface SetupBodyAttrs {
+	/** The signed-in host: a saved copy of the page belongs to one host. */
+	uid: string;
 	/** Null on `/host/new`, until the name is first saved. */
 	sessionId: string | null;
 	session?: TableAssignment;
@@ -43,19 +48,48 @@ const OPERATION = 'tables.host.setup';
 
 function initialDraft(attrs: SetupBodyAttrs): SetupDraft {
 	return (
-		readSetupBackup(safeStorage, attrs.sessionId) ??
+		readSetupBackup(
+			safeStorage,
+			{ uid: attrs.uid, sessionId: attrs.sessionId },
+			attrs.session?.lastUpdate ?? null,
+		) ??
 		(attrs.session ? setupDraftFromSession(attrs.session, attrs.topics ?? []) : emptySetupDraft())
 	);
 }
 
 /** The whole gathering on one page, saved as it is typed. */
 export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) => {
+	const { uid } = first;
 	let sessionId = first.sessionId;
-	const hadBackup = readSetupBackup(safeStorage, sessionId) !== null;
+	// The lastUpdate this page last received from the server's session: what the saved copy sits on.
+	let serverUpdate: number | null = first.session?.lastUpdate ?? null;
 	const draft = initialDraft(first);
+	const hadBackup = readSetupBackup(safeStorage, { uid, sessionId }, serverUpdate) !== null;
+	/** Set in onremove: a save that finishes after the page is gone must not touch the address. */
+	let removed = false;
 	let creating: Promise<string> | null = null;
 	const open = new Action('tables.host.openRegistration', 'tableAssignment.error.statusRefused');
 	let openErrorKey: string | null = null;
+
+	/**
+	 * A page that created the session itself gets no session from its parent: read it here,
+	 * so the recorded lastUpdate keeps following our own saves.
+	 */
+	let ownSession: LiveValue<TableAssignment | null> | null = null;
+
+	function followSession(id: string): void {
+		if (removed || first.session || ownSession) return;
+		ownSession = new LiveValue('setupSession', subscribeSession(id));
+		ownSession.start();
+	}
+
+	function backupScope(): BackupScope {
+		return { uid, sessionId };
+	}
+
+	function saveBackup(): void {
+		writeSetupBackup(safeStorage, backupScope(), draft, serverUpdate);
+	}
 
 	function createSession(title: string): Promise<string> {
 		creating ??= tablesApi
@@ -63,10 +97,12 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 			.then((result) => {
 				const id = result.session.tableAssignmentId;
 
-				clearSetupBackup(safeStorage, sessionId);
+				clearSetupBackup(safeStorage, backupScope());
 				sessionId = id;
-				rewriteAddress(hostHomePath(id));
-				writeSetupBackup(safeStorage, id, draft);
+				serverUpdate = result.session.lastUpdate;
+				followSession(id);
+				if (!removed) rewriteAddress(hostHomePath(id));
+				saveBackup();
 				// Whatever was typed before the name existed goes up now.
 				saver.touch('settings');
 				saver.touch('topics');
@@ -136,7 +172,7 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 	}
 
 	function afterSaveChange(): void {
-		if (saver.state === 'saved' && !saver.hasUnsaved) clearSetupBackup(safeStorage, sessionId);
+		if (saver.state === 'saved' && !saver.hasUnsaved) clearSetupBackup(safeStorage, backupScope());
 		m.redraw();
 	}
 
@@ -147,7 +183,7 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 	);
 
 	function changed(kind: SaveKind): void {
-		writeSetupBackup(safeStorage, sessionId, draft);
+		saveBackup();
 		openErrorKey = null;
 		saver.touch(kind);
 	}
@@ -181,7 +217,7 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 		);
 
 		if (opened) {
-			clearSetupBackup(safeStorage, id);
+			clearSetupBackup(safeStorage, { uid, sessionId: id });
 			goTo(hostHomePath(id));
 		}
 	}
@@ -267,7 +303,18 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 			window.addEventListener('beforeunload', warnIfUnsaved);
 			document.addEventListener('visibilitychange', flushWhenHidden);
 		},
+		onupdate({ attrs }) {
+			const latest = attrs.session?.lastUpdate ?? ownSession?.data?.lastUpdate;
+
+			if (latest === undefined || latest === serverUpdate) return;
+			serverUpdate = latest;
+			// Never drop a copy here: with a save in flight or edits not yet saved, the copy is
+			// rewritten on top of the server data just received, or a reload would discard it.
+			if (saver.hasUnsaved && sessionId) saveBackup();
+		},
 		onremove() {
+			removed = true;
+			ownSession?.stop();
 			window.removeEventListener('beforeunload', warnIfUnsaved);
 			document.removeEventListener('visibilitychange', flushWhenHidden);
 			void saver.flush();
@@ -323,8 +370,8 @@ export const HostNew: m.Component = {
 			title: t('tableAssignment.setup.title'),
 			backHref,
 			wide: true,
-			render: () =>
-				m(Shell, { backHref, backLabel, wide: true }, m(SetupBody, { sessionId: null })),
+			render: (uid: string) =>
+				m(Shell, { backHref, backLabel, wide: true }, m(SetupBody, { uid, sessionId: null })),
 		});
 	},
 };

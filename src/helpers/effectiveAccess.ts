@@ -1,18 +1,27 @@
-import { Access, Statement } from '@freedi/shared-types';
+import { Access, isOpenAccessValue, OPEN_ACCESS_SCOPE, Statement } from '@freedi/shared-types';
 
-type AccessSource = Pick<Statement, 'parentId' | 'membership'> | null | undefined;
+type AccessSource =
+	| (Pick<Statement, 'parentId' | 'membership'> & Partial<Pick<Statement, 'accessScope'>>)
+	| null
+	| undefined;
 
 /**
  * The access level that actually applies to a space: its own, unless it is a
  * sub-space with none (or the deprecated `open`, read as "inherit"); then the
- * top parent's; then Open to all. Same rule MembershipSettings shows.
+ * governing level's (the top parent's when nothing nearer governs); then Open
+ * to all. Same rule MembershipSettings shows.
  */
-export function resolveEffectiveAccess(statement: AccessSource, topParent: AccessSource): Access {
+export function resolveEffectiveAccess(statement: AccessSource, governing: AccessSource): Access {
 	const own = statement?.membership?.access;
 
 	if (own && !isAccessInherited(statement)) return own;
 
-	return topParent?.membership?.access ?? Access.openToAll;
+	const inherited = governing?.membership?.access ?? Access.openToAll;
+
+	// Stamped open means a nearer level opened it, whatever the top says.
+	return statement?.accessScope === OPEN_ACCESS_SCOPE && !isOpenAccessValue(inherited)
+		? Access.openToAll
+		: inherited;
 }
 
 /**

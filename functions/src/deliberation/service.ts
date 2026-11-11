@@ -1,5 +1,5 @@
 import { DELIBERATION_LIMITS } from '../../../packages/shared-types/src/models/covenant/deliberation';
-import { Collections, StatementType } from '@freedi/shared-types';
+import { Collections, StatementType, inheritedAccessScope } from '@freedi/shared-types';
 import { randomUUID } from 'crypto';
 import { HttpsError } from 'firebase-functions/v2/https';
 import {
@@ -232,9 +232,9 @@ export async function act(
 				parentId: questionId,
 				topParentId: question.topParentId,
 				parents: [...(question.parents || []), questionId],
+				...inheritedAccessScope(question),
 				creatorId: creator.uid,
 				creator,
-				membership: question.membership,
 				createdAt: now,
 				lastUpdate: now,
 				consensus: 0,
@@ -258,6 +258,7 @@ export async function act(
 					parentId: ballotId,
 					topParentId: question.topParentId,
 					parents: [...(question.parents || []), questionId, ballotId],
+					...inheritedAccessScope(question),
 					creatorId: creator.uid,
 					creator,
 					createdAt: now,

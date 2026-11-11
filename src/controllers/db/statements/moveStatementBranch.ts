@@ -1,5 +1,5 @@
 import { updateDoc } from 'firebase/firestore';
-import { Statement } from '@freedi/shared-types';
+import { Statement, childTopParentId } from '@freedi/shared-types';
 import { createStatementRef, executeBatchUpdates, updateTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 
@@ -56,7 +56,7 @@ export async function moveStatementBranch({
 }: MoveBranchParams): Promise<MoveBranchResult> {
 	try {
 		const parentChain = [...(newParent.parents ?? []), newParent.statementId];
-		const topParentId = newParent.topParentId ?? newParent.statementId;
+		const topParentId = childTopParentId(newParent);
 		const { lastUpdate } = updateTimestamp();
 
 		// Ancestors of the moved node, which every descendant must drop.

@@ -1,7 +1,7 @@
 import { after, before, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import { collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
-import { makeEnv, seed, statementDoc } from './helpers.mjs';
+import { makeEnv, seed, seedDefaultParents, statementDoc } from './helpers.mjs';
 
 /**
  * join-class replies on a proposal (IA 22):
@@ -56,6 +56,7 @@ describe('join-class replies rules', () => {
 
 	before(async () => {
 		env = await makeEnv('join-class-replies');
+		await seedDefaultParents(env);
 		await seed(env, async (db) => {
 			await setDoc(doc(db, 'statements', MAIN), {
 				statementId: MAIN,
@@ -76,7 +77,7 @@ describe('join-class replies rules', () => {
 				statementType: 'question',
 				statementSettings: { classRole: 'challenge' },
 			});
-			await setDoc(doc(db, 'statements', PROPOSAL), proposal);
+			await setDoc(doc(db, 'statements', PROPOSAL), { ...proposal, accessScope: 'open' });
 			await setDoc(doc(db, 'statements', REPLY), replyDoc(REPLY, MATE));
 		});
 	});
@@ -88,7 +89,13 @@ describe('join-class replies rules', () => {
 	it('lets members read the replies of a proposal', async () => {
 		await assertSucceeds(getDoc(doc(as(AUTHOR), 'statements', REPLY)));
 		await assertSucceeds(
-			getDocs(query(collection(as(MATE), 'statements'), where('parentId', '==', PROPOSAL))),
+			getDocs(
+				query(
+					collection(as(MATE), 'statements'),
+					where('parentId', '==', PROPOSAL),
+					where('statementType', '==', 'statement'),
+				),
+			),
 		);
 	});
 

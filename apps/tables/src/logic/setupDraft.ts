@@ -13,7 +13,13 @@ import type {
 	TablesTopicInput,
 } from '@freedi/shared-types';
 import { DEFAULT_TABLES_PER_TOPIC } from '@/logic/directTables';
-import { draftFromTopic, draftToInput, emptyDraft, parseOptionalPositiveInt } from '@/logic/topics';
+import {
+	draftFromTopic,
+	draftToInput,
+	emptyDraft,
+	parseMaxTables,
+	parseOptionalPositiveInt,
+} from '@/logic/topics';
 import type { TopicDraft } from '@/logic/topics';
 
 /** Everything on the Setup page. Numbers stay strings while typed. */
@@ -28,6 +34,8 @@ export interface SetupDraft {
 	tolerance: number;
 	expected: string;
 	seats: string;
+	/** A size below the current minimum that the session already has: kept while the host does not change it. */
+	legacySeats?: number;
 	allowReturn: boolean;
 }
 
@@ -71,6 +79,10 @@ export function setupDraftFromSession(
 		expected:
 			settings.expectedParticipants === undefined ? '' : String(settings.expectedParticipants),
 		seats: String(settings.tableSize ?? TABLE_ASSIGNMENT_TABLE_SIZE_DEFAULT),
+		legacySeats:
+			settings.tableSize !== undefined && settings.tableSize < TABLE_ASSIGNMENT_TABLE_SIZE_MIN
+				? settings.tableSize
+				: undefined,
 		allowReturn: settings.allowReturnByName === true,
 	};
 }
@@ -79,12 +91,14 @@ export function filledTopics(draft: Pick<SetupDraft, 'topics'>): TopicDraft[] {
 	return draft.topics.filter((topic) => topic.title.trim() !== '');
 }
 
-export function parseSeats(text: string): number | null {
+/** A table size the host may choose now; `legacySeats` is the smaller size an older session already has. */
+export function parseSeats(text: string, legacySeats?: number): number | null {
 	const seats = Number(text);
+	const unchanged = legacySeats !== undefined && seats === legacySeats;
 	const valid =
 		text.trim() !== '' &&
 		Number.isInteger(seats) &&
-		seats >= TABLE_ASSIGNMENT_TABLE_SIZE_MIN &&
+		(unchanged || seats >= TABLE_ASSIGNMENT_TABLE_SIZE_MIN) &&
 		seats <= TABLE_ASSIGNMENT_TABLE_SIZE_MAX;
 
 	return valid ? seats : null;
@@ -101,15 +115,20 @@ function positionFields(draft: SetupDraft): TableAssignmentPositionQuestion {
 	return { label: draft.question.trim(), poleA: draft.poleA.trim(), poleB: draft.poleB.trim() };
 }
 
+/** The position question is a ranked-mode feature: in direct mode it is neither checked nor sent. */
+function isRanked(draft: SetupDraft): boolean {
+	return draft.mode === 'ranked';
+}
+
 function isPositionPartial(draft: SetupDraft): boolean {
 	const fields = Object.values(positionFields(draft));
 
-	return draft.askPosition && fields.some(Boolean) && !fields.every(Boolean);
+	return isRanked(draft) && draft.askPosition && fields.some(Boolean) && !fields.every(Boolean);
 }
 
 /** The first thing that stops the settings from being sent. */
 export function settingsProblem(draft: SetupDraft): SetupProblem | null {
-	if (parseSeats(draft.seats) === null) return 'seats';
+	if (parseSeats(draft.seats, draft.legacySeats) === null) return 'seats';
 	if (Number.isNaN(parseExpected(draft.expected))) return 'expected';
 
 	return isPositionPartial(draft) ? 'question' : null;
@@ -127,7 +146,7 @@ export function settingsRequest(
 	sessionId: string,
 	draft: SetupDraft,
 ): TablesSaveSettingsRequest | null {
-	const seats = parseSeats(draft.seats);
+	const seats = parseSeats(draft.seats, draft.legacySeats);
 
 	if (seats === null || settingsProblem(draft) !== null) return null;
 
@@ -138,7 +157,7 @@ export function settingsRequest(
 		mode: draft.mode,
 		tableSize: seats,
 		balanceTolerance: draft.tolerance,
-		positionQuestion: draft.askPosition && fields.label !== '' ? fields : null,
+		positionQuestion: isRanked(draft) && draft.askPosition && fields.label !== '' ? fields : null,
 		expectedParticipants: parseExpected(draft.expected),
 		allowReturnByName: draft.allowReturn,
 	};
@@ -152,8 +171,8 @@ export function topicInputs(draft: Pick<SetupDraft, 'topics'>): TablesTopicInput
 /** How many tables the topics open in free mode: a topic's cap, or one. */
 export function freeTableCount(draft: Pick<SetupDraft, 'topics'>): number {
 	return filledTopics(draft).reduce((sum, topic) => {
-		const cap = parseOptionalPositiveInt(topic.maxTables);
+		const cap = parseMaxTables(topic.maxTables);
 
-		return sum + (cap === undefined || Number.isNaN(cap) ? DEFAULT_TABLES_PER_TOPIC : cap);
+		return sum + (cap === undefined ? DEFAULT_TABLES_PER_TOPIC : cap);
 	}, 0);
 }

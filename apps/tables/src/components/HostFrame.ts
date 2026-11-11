@@ -8,10 +8,14 @@ import { t } from '@/lib/i18n';
 import { LiveValue } from '@/lib/live';
 import { subscribeRoster, subscribeSession, subscribeTopics } from '@/lib/tableAssignment/data';
 import { combineStates } from '@/logic/loadable';
+import { DeleteAssignment } from '@/components/DeleteAssignment';
 import { HostGate } from '@/components/HostGate';
 import { Shell } from '@/components/Shell';
 import type { ShellAttrs } from '@/components/Shell';
 import { StateBox } from '@/components/StateBox';
+import { signOutHost } from '@/lib/hostAuth';
+import { backTargetFor } from '@/logic/hostBack';
+import type { StageScreen } from '@/logic/hostBack';
 import { hostHomePath, hostListPath } from '@/paths';
 
 /** What a host sub-screen receives once the session is loaded and owned by the host. */
@@ -30,8 +34,12 @@ export interface HostFrameAttrs {
 	topics?: boolean;
 	participants?: boolean;
 	wide?: boolean;
+	/** Show "Delete this assignment" at the foot of the screen. */
+	deletable?: boolean;
 	/** The host home has no "back to home" link, it goes back to the list. */
 	isHome?: boolean;
+	/** The stage this screen is for: when the status makes it the stage, Back goes to the list. */
+	stage?: StageScreen;
 	/** Frame details that depend on the session, e.g. a stage screen with its own heading. */
 	shellFor?: (session: TableAssignment) => Partial<ShellAttrs>;
 	render: (context: HostContext) => m.Children;
@@ -39,6 +47,16 @@ export interface HostFrameAttrs {
 
 interface SignedInFrameAttrs extends HostFrameAttrs {
 	uid: string;
+}
+
+/** The screen, with "Delete this assignment" after it when the screen offers it. Keyed so children never mix. */
+function withDeleteControl(body: m.Children, deleteSessionId: string | null): m.Children {
+	if (deleteSessionId === null) return body;
+
+	return [
+		m.fragment({ key: 'screen' }, [body]),
+		m(DeleteAssignment, { key: 'delete', sessionId: deleteSessionId }),
+	];
 }
 
 /**
@@ -83,7 +101,7 @@ const SignedInFrame: m.ClosureComponent<SignedInFrameAttrs> = (initial) => {
 			if (needsParticipants) states.push(participants.state);
 
 			const state = combineStates(states);
-			const shell = { title, backHref, backLabel, wide: attrs.wide };
+			const shell = { title, backHref, backLabel, wide: attrs.wide, onSignOut: signOutHost };
 
 			if (state === 'loading') return m(Shell, shell, m(StateBox, { kind: 'loading' }));
 			if (state === 'denied') {
@@ -137,15 +155,26 @@ const SignedInFrame: m.ClosureComponent<SignedInFrameAttrs> = (initial) => {
 				);
 			}
 
+			const back = backTargetFor(current, attrs.stage);
+			const backShell = attrs.isHome
+				? {}
+				: {
+						backHref: back.href,
+						backLabel: back.toList ? t('tableAssignment.back.toList') : t('tableAssignment.back'),
+					};
+
 			return m(
 				Shell,
-				{ ...shell, title, ...attrs.shellFor?.(current) },
-				attrs.render({
-					uid,
-					session: current,
-					topics: topics.data ?? [],
-					participants: participants.data ?? [],
-				}),
+				{ ...shell, title, ...backShell, ...attrs.shellFor?.(current) },
+				withDeleteControl(
+					attrs.render({
+						uid,
+						session: current,
+						topics: topics.data ?? [],
+						participants: participants.data ?? [],
+					}),
+					attrs.deletable ? sessionId : null,
+				),
 			);
 		},
 	};

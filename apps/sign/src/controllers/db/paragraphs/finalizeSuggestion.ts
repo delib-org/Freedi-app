@@ -13,7 +13,7 @@
  */
 
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, Statement, StatementType } from '@freedi/shared-types';
+import { Collections, Statement, StatementType, inheritedAccessScope } from '@freedi/shared-types';
 import { logError, DatabaseError, ValidationError } from '@/lib/utils/errorHandling';
 
 /**
@@ -107,6 +107,7 @@ export async function finalizeSuggestion(
         statement: officialParagraph.statement,
         statementType: officialParagraph.statementType,
         parentId: officialParagraphId,
+        ...inheritedAccessScope(officialParagraph),
         topParentId: officialParagraph.topParentId,
         creatorId: officialParagraph.creatorId,
         creator: officialParagraph.creator,

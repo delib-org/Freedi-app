@@ -26,6 +26,7 @@ import {
 	createManagedCollectionListener,
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
+import { childListScopes, listenInScopes, scopeChunksOf } from './readScopes';
 
 interface BulkPageResponse {
 	ok: boolean;
@@ -55,7 +56,13 @@ function scopeConstraint(rootId: string, mode: BulkLoadMode) {
  */
 export async function getStatementsCount(rootId: string, mode: BulkLoadMode): Promise<number> {
 	try {
-		const q = query(collection(FireStore, Collections.statements), scopeConstraint(rootId, mode));
+		const scopes =
+			mode === 'direct' ? await childListScopes(rootId) : (await scopeChunksOf(rootId))[0];
+		const q = query(
+			collection(FireStore, Collections.statements),
+			scopeConstraint(rootId, mode),
+			...(scopes ? [where('accessScope', 'in', scopes)] : []),
+		);
 		const snapshot = await getCountFromServer(q);
 
 		return snapshot.data().count;
@@ -169,10 +176,20 @@ export function listenToStatementDeltas(
 	mode: BulkLoadMode,
 	sinceMs: number,
 ): Unsubscribe {
+	return listenInScopes(rootId, (scopes) => listenToDeltasInScopes(scopes, rootId, mode, sinceMs));
+}
+
+function listenToDeltasInScopes(
+	scopes: string[] | null,
+	rootId: string,
+	mode: BulkLoadMode,
+	sinceMs: number,
+): Unsubscribe {
 	try {
 		const changesQuery = query(
 			collection(FireStore, Collections.statements),
 			scopeConstraint(rootId, mode),
+			...(scopes ? [where('accessScope', 'in', scopes)] : []),
 			where('lastUpdate', '>', sinceMs),
 			orderBy('lastUpdate', 'asc'),
 		);
@@ -186,7 +203,7 @@ export function listenToStatementDeltas(
 
 		const unsubscribeChanges = createManagedCollectionListener(
 			changesQuery,
-			generateListenerKey('bulk-delta-changes', mode, rootId),
+			generateListenerKey('bulk-delta-changes', mode, `${rootId}-${scopes?.join('+') ?? 'host'}`),
 			(snapshot: QuerySnapshot<DocumentData>) => {
 				snapshot.docChanges().forEach((change) => {
 					try {
@@ -218,7 +235,7 @@ export function listenToStatementDeltas(
 
 		const unsubscribeDeletions = createManagedCollectionListener(
 			deletionsQuery,
-			generateListenerKey('bulk-delta-deletions', mode, rootId),
+			generateListenerKey('bulk-delta-deletions', mode, `${rootId}-${scopes?.join('+') ?? 'host'}`),
 			(snapshot: QuerySnapshot<DocumentData>) => {
 				snapshot.docChanges().forEach((change) => {
 					if (change.type === 'added' || change.type === 'modified') {

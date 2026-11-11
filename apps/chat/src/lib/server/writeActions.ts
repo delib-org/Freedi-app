@@ -119,6 +119,7 @@ export async function sendMessage(user: SessionUser, input: SendMessageInput): P
 		statementType,
 		parentId,
 		topParentId: parent.topParentId || parent.statementId,
+		parentAccessScope: parent.accessScope,
 		creatorId: user.uid,
 		creator: toCreator(user),
 		sourceApp: SourceApp.CHAT,

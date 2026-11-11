@@ -52,11 +52,14 @@ export async function POST(request: NextRequest) {
     const db = getFirestoreAdmin();
     const statementId = `comment_${userId}_${Date.now()}`;
 
+    const suggestionSnap = await db.collection(Collections.statements).doc(suggestionId).get();
+
     const comment = createStatementObject({
       statementId,
       statement: trimmedText,
       statementType: StatementType.comment,
       parentId: suggestionId,
+      parentAccessScope: suggestionSnap.data()?.accessScope,
       topParentId: topParentId || suggestionId,
       creatorId: userId,
       creator: {

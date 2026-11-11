@@ -13,9 +13,18 @@ export const FULL_NAME_MIN_LENGTH = 2;
 /** Most topics one session may carry (keeps a replace inside one transaction). */
 export const MAX_TOPICS_PER_SESSION = 100;
 
-/** Position axis bounds (0 = pole A, 100 = pole B). */
-export const POSITION_MIN = 0;
-export const POSITION_MAX = 100;
+/** Registration cap: at least this many, whatever the host expects. */
+export const REGISTRATION_CAP_MIN = 200;
+/** Registration cap: this many times the number the host expects. */
+export const REGISTRATION_CAP_PER_EXPECTED = 3;
+/** Registration cap: never above this many. */
+export const REGISTRATION_CAP_MAX = 2000;
+
+/** The only sign-in provider a host may create a session with. */
+export const HOST_SIGN_IN_PROVIDER = 'google.com';
+
+/** Writes per Firestore batch when erasing or deleting; the limit is 500. */
+export const WRITE_BATCH_SIZE = 400;
 
 /** Machine-readable causes the client can branch on (HttpsError details.reason). */
 export type TablesErrorReason =
@@ -23,13 +32,21 @@ export type TablesErrorReason =
 	| 'stale-run'
 	| 'registration-closed'
 	| 'claimed-by-name'
-	| 'seated-in-published-run';
+	| 'seated-in-published-run'
+	| 'registration-full'
+	| 'name-locked'
+	| 'too-few-registrants'
+	| 'preview-limit'
+	| 'table-size-below-published';
 
-/** A table's position mean/sd is stored only with at least this many known positions; fewer could identify a person. */
-export const TABLE_STATS_MIN_KNOWN_POSITIONS = 3;
+/** Fewer registrants than this are refused a preview: tables that small say too much about each person. */
+export const MIN_REGISTRANTS_FOR_PREVIEW = 5;
 
-/** Stored position means, spreads and known-position counts move in this step (positions are 0..100). */
-export const RUN_STATS_ROUND_STEP = 5;
+/** Previews a host may compute over one unchanged set of registrations and answers. */
+export const MAX_PREVIEWS_PER_ANSWERS = 5;
 
-/** A table's stored distance from the room moves in this step (distance is in room-sd units). */
-export const RUN_DEVIATION_ROUND_STEP = 0.05;
+/** Previews a host may compute in one session: dummy registrations or removals cannot refill this. */
+export const MAX_PREVIEWS_PER_SESSION = 30;
+
+/** Seeds are drawn from this range: the engine's random generator keeps 32 bits of state. */
+export const ENGINE_SEED_RANGE = 2 ** 32;

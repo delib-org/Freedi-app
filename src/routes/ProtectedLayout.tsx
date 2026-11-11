@@ -31,7 +31,7 @@ export default function ProtectedLayout() {
 			getStatementFromDB(statementId).then((fetchedStatement) => {
 				if (fetchedStatement) {
 					dispatch(setStatement(fetchedStatement));
-				} else navigate('/404');
+				} else navigate('/404', { replace: true });
 			});
 		}
 	}, [statementId, statement, dispatch, navigate, isCheckingAccess]);

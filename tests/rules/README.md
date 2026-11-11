@@ -10,6 +10,12 @@ npm run test:rules        # against an emulator you already have up
 npm run test:rules:exec   # starts a firestore emulator, runs, tears it down
 ```
 
+`next-rules/*.next.mjs` test the private-level read rules (`accessScope`) that
+are not on dev yet: they ship last, from `fix/private-statement-reads`, after a
+separate yes (see `docs/security/access-scope-release.md`, "Stage 2: the
+rules"). They fail against dev's rules, so `npm run test:rules` skips them. Run
+them only against the new rules: `npm run test:rules:next`.
+
 The emulator port is **8081** (from `firebase.json`), not Firebase's default
 8080. Pointing this harness at 8080 quietly starts a second emulator with no
 rules loaded, and then every assertion passes for the wrong reason.

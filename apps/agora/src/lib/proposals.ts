@@ -34,6 +34,7 @@ import {
 	isAgoraHidden,
 	isTeacherEdited,
 	ModeratedDoc,
+	OPEN_ACCESS_SCOPE,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { trackWrite, clearWriteTracking } from './confirmedWrite';
@@ -202,7 +203,11 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 	listeningKey = key;
 
 	const statementsUnsub = onSnapshot(
-		query(collection(db, Collections.statements), where('agoraSessionId', '==', sessionId)),
+		query(
+			collection(db, Collections.statements),
+			where('agoraSessionId', '==', sessionId),
+			where('accessScope', '==', OPEN_ACCESS_SCOPE),
+		),
 		// The ack is a METADATA change: the server sends back the same fields it
 		// was given, so without this flag the moment a write becomes real never
 		// reaches the client at all (see serverConfirmed).
@@ -742,7 +747,11 @@ export async function submitThreadMessage(
  */
 export async function fetchIslandStances(islandStatementId: string): Promise<Statement[]> {
 	const snapshot = await getDocs(
-		query(collection(db, Collections.statements), where('parentId', '==', islandStatementId)),
+		query(
+			collection(db, Collections.statements),
+			where('parentId', '==', islandStatementId),
+			where('statementType', '==', StatementType.option),
+		),
 	);
 
 	return snapshot.docs

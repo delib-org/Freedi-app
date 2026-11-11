@@ -4,7 +4,7 @@ import type {
 	TableAssignmentParticipant,
 	TableAssignmentTopic,
 } from '@freedi/shared-types';
-import { computeInputHash } from './inputHash';
+import { computeAnswersHash, computeInputHash } from './inputHash';
 import { participantsQuery, sortTopics, topicsQuery } from './tablesAccess';
 
 /** Reads a query: `query.get()` outside a transaction, `tx.get(query)` inside one. */
@@ -14,6 +14,7 @@ export interface RunInputs {
 	topics: TableAssignmentTopic[];
 	participants: TableAssignmentParticipant[];
 	inputHash: string;
+	answersHash: string;
 }
 
 /** The topics and registrants a ranked run is computed from, plus their hash. */
@@ -34,5 +35,6 @@ export async function loadRunInputs(
 		topics,
 		participants,
 		inputHash: computeInputHash(session.settings, topics, participants),
+		answersHash: computeAnswersHash(participants),
 	};
 }

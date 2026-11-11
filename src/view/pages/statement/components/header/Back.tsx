@@ -1,10 +1,12 @@
-import { FC } from 'react';
+import { FC, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import BackArrowIcon from '@/assets/icons/chevronLeftIcon.svg?react';
 import { StyleProps } from '@/controllers/hooks/useStatementColor';
 import { Statement } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useUpTarget } from '@/controllers/hooks/useUpTarget';
+import { HOME_PATH } from '@/view/components/atomic/organisms/BottomNav/bottomNavModel';
 
 interface Props {
 	statement?: Statement | undefined;
@@ -18,8 +20,18 @@ interface Props {
 const Back: FC<Props> = ({ statement, headerColor, className, iconClassName }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
+	const resolveUpTarget = useUpTarget(statement);
+	// A tap can wait on a read: a newer tap, or leaving the screen, cancels it.
+	const latestTap = useRef(0);
 
-	function handleBack() {
+	useEffect(
+		() => () => {
+			latestTap.current += 1;
+		},
+		[statement?.statementId],
+	);
+
+	async function handleBack() {
 		try {
 			if (location.pathname.includes('statement-screen')) {
 				return navigate(`/statement/${statement?.statementId}`, {
@@ -36,13 +48,13 @@ const Back: FC<Props> = ({ statement, headerColor, className, iconClassName }) =
 					state: { from: window.location.pathname },
 				});
 			}
-			if (statement?.parentId === 'top' || !statement?.parentId) {
-				return navigate('/home', {
-					state: { from: window.location.pathname },
-				});
-			}
 
-			return navigate(`/statement/${statement.parentId}`, {
+			latestTap.current += 1;
+			const tap = latestTap.current;
+			const upTarget = await resolveUpTarget();
+			if (tap !== latestTap.current) return;
+
+			return navigate(upTarget ? `/statement/${upTarget}` : HOME_PATH, {
 				state: { from: window.location.pathname },
 			});
 		} catch (error) {

@@ -16,6 +16,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useParticipationStats } from '@/controllers/hooks/useParticipationStats';
 import { useRecordQuestionView } from '@/controllers/hooks/useRecordQuestionView';
 import { useLoadOwnVote } from '@/controllers/hooks/useLoadOwnVote';
+import { useLevelVerdict } from '@/controllers/hooks/useLevelVerdict';
 import { logError } from '@/utils/errorHandling';
 import { renderInlineMarkdown } from '@/helpers/inlineMarkdownHelpers';
 import { relevantNotifications } from '@/utils/engagementNavigation';
@@ -95,6 +96,12 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 		(n) => !n.read && n.parentId === statement?.statementId,
 	).length;
 
+	const isInsideSpace =
+		!!topParentStatement && topParentStatement.statementId !== statement?.statementId;
+	const topParentVerdict = useLevelVerdict(
+		isInsideSpace ? topParentStatement.statementId : undefined,
+	);
+
 	useRecordQuestionView(statement);
 	const participation = useParticipationStats(statement, isHost, options.length);
 
@@ -173,9 +180,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	}
 
 	const spaceName =
-		topParentStatement && topParentStatement.statementId !== statement?.statementId
-			? topParentStatement.statement
-			: undefined;
+		isInsideSpace && topParentVerdict === 'open' ? topParentStatement?.statement : undefined;
 
 	return (
 		<>

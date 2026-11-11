@@ -6,13 +6,15 @@ import type {
 	TablesCancelRegistrationResponse,
 } from '@freedi/shared-types';
 import { db } from '../db';
+import { isUnseatedLatecomer } from './publishedSeating';
 import { deleteCountedRegistration, loadRegistration } from './removeRegistration';
 import { actorFrom, readSession, requireId } from './tablesAccess';
 import { TablesError, toHttpsError } from './tablesErrors';
 
 /**
  * `tablesCancelRegistration` (the participant themself): leaves the session
- * while registration is open. Cancel belongs to the browser that registered,
+ * while registration is open, or after publishing when the published run does
+ * not seat them (a latecomer; a seated person's seat is not theirs to give up). Cancel belongs to the browser that registered,
  * so a registration taken over by full name cannot be cancelled: without this
  * refusal, typing someone's name would be enough to remove them. Calling it
  * when not registered succeeds and changes nothing.
@@ -26,7 +28,10 @@ export async function cancelRegistration(
 
 	return firestore.runTransaction(async (tx) => {
 		const session = await readSession(tx, firestore, sessionId);
-		if (session.status !== 'registrationOpen') {
+		if (
+			session.status !== 'registrationOpen' &&
+			!(await isUnseatedLatecomer(tx, firestore, session, uid))
+		) {
 			throw new TablesError(
 				'failed-precondition',
 				'Registration is not open',

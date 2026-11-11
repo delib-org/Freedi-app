@@ -16,6 +16,7 @@ import {
 	StatementType,
 	User,
 	createStatementObject,
+	OPEN_ACCESS_SCOPE,
 } from '@freedi/shared-types';
 
 /**
@@ -49,6 +50,7 @@ export function buildProposalStatement(
 		statementType: StatementType.option,
 		parentId: session.challengeQuestionId,
 		topParentId: session.rootStatementId,
+		parentAccessScope: OPEN_ACCESS_SCOPE,
 		parents: [session.rootStatementId, session.challengeQuestionId],
 		creatorId: uid,
 		creator: agoraCreator(uid, anonName),
@@ -85,6 +87,7 @@ export function buildAnswerStatement(
 		statementType: StatementType.option,
 		parentId: questionStatementId,
 		topParentId: session.rootStatementId,
+		parentAccessScope: OPEN_ACCESS_SCOPE,
 		parents: [session.rootStatementId, questionStatementId],
 		creatorId: uid,
 		creator: agoraCreator(uid, anonName),
@@ -121,6 +124,7 @@ export function buildThreadMessageStatement(
 		statementType: StatementType.suggestion,
 		parentId: proposalId,
 		topParentId: session.rootStatementId,
+		parentAccessScope: OPEN_ACCESS_SCOPE,
 		parents: [session.rootStatementId, session.challengeQuestionId, proposalId],
 		creatorId: uid,
 		creator: agoraCreator(uid, anonName),

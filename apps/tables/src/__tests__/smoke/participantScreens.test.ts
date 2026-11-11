@@ -5,7 +5,7 @@ import { ParticipantHome, LegacyTopicsRedirect } from '@/views/participant/Parti
 import { ParticipantPreferences } from '@/views/participant/ParticipantPreferences';
 import { markCancelledHere, rememberRegistration } from '@/logic/localDraft';
 import { participantScreenPath } from '@/paths';
-import { makeParticipant, makeSession, SESSION_ID } from '../fixtures';
+import { makeParticipant, makeRun, makeSession, SESSION_ID } from '../fixtures';
 import { renderScreen } from './testHarness';
 import {
 	buttonWithText,
@@ -147,6 +147,7 @@ describe('the assignment link: step 1', () => {
 
 	it('forwards a registered person to My table once tables are published', async () => {
 		mocks.store.current.session = makeSession({ status: 'published', publishedRunId: 'run-1' });
+		mocks.store.current.run = makeRun({ status: 'published' });
 		registered();
 
 		await renderScreen(ParticipantHome, ID);
@@ -350,7 +351,7 @@ describe('cancel participation', () => {
 		expect(root.querySelector('[role="dialog"]')).toBeNull();
 	});
 
-	it('shows the cancelled screen when the record is gone, and "register again" brings the name back', async () => {
+	it('shows the cancelled screen when the record is gone, and "register again" starts with no stored name', async () => {
 		mocks.store.current.me = null;
 		rememberRegistration(SESSION_ID, 'u1', 'Dana Levi', window.localStorage);
 		markCancelledHere(SESSION_ID, 'u1', window.localStorage);
@@ -361,7 +362,7 @@ describe('cancel participation', () => {
 		clickButton(root, en['tableAssignment.cancelled.again']);
 		await settle();
 
-		expect(root.querySelector<HTMLInputElement>('input[name="name"]')?.value).toBe('Dana Levi');
+		expect(root.querySelector<HTMLInputElement>('input[name="name"]')?.value).toBe('');
 	});
 
 	it('offers no "register again" after closing', async () => {

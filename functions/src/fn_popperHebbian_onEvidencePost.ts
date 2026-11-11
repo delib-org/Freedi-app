@@ -1,4 +1,5 @@
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import { isAccessScopeOnlyWrite } from './accessScope/scopeOnlyWrite';
 import { getFirestore } from 'firebase-admin/firestore';
 import { Statement, Collections, functionConfig } from '@freedi/shared-types';
 import { EvidenceType } from '@freedi/shared-types';
@@ -307,6 +308,8 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 
 		const beforeStatement = beforeSnapshot.data() as Statement | undefined;
 		const afterStatement = afterSnapshot.data() as Statement | undefined;
+
+		if (isAccessScopeOnlyWrite(beforeStatement, afterStatement)) return;
 
 		// Only process if this is an evidence statement.
 		// Guard against undefined data and the common fan-out path where this

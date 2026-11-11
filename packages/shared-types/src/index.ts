@@ -1237,10 +1237,18 @@ export type {
 
 // Tables (שולחנות): shared table-assignment model and callables contract
 export {
+  TABLE_ASSIGNMENT_MIN_KNOWN_POSITIONS,
+  TableAssignmentClosenessSchema,
+  tableAssignmentCloseness,
+} from './models/tableAssignment/tableAssignmentCloseness';
+export type { TableAssignmentCloseness } from './models/tableAssignment/tableAssignmentCloseness';
+export {
   TABLE_ASSIGNMENT_TABLE_SIZE_DEFAULT,
   TABLE_ASSIGNMENT_BALANCE_TOLERANCE_DEFAULT,
   TABLE_ASSIGNMENT_MAX_PREFERENCES,
   TABLE_ASSIGNMENT_TABLE_SIZE_MIN,
+  TABLE_ASSIGNMENT_TABLE_SIZE_STORED_MIN,
+  TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC,
   TABLE_ASSIGNMENT_TABLE_SIZE_MAX,
   TABLE_ASSIGNMENT_TITLE_MAX_LENGTH,
   TABLE_ASSIGNMENT_DESCRIPTION_MAX_LENGTH,
@@ -1309,6 +1317,8 @@ export type {
   TablesComputePreviewResponse,
   TablesPublishRunRequest,
   TablesPublishRunResponse,
+  TablesDeleteSessionRequest,
+  TablesDeleteSessionResponse,
 } from './models/tableAssignment/tableAssignmentCallables';
 
 // Theme rebuild ("Re-theme with AI") callable contract
@@ -1393,3 +1403,21 @@ export type {
 	FullExportRequest,
 	FullExportResponse,
 } from './utils/exportFormat';
+
+export {
+	OPEN_ACCESS_SCOPE,
+	QUARANTINED_ACCESS_SCOPE,
+	isQuarantinedScope,
+	isAnswerTypeLevel,
+	isOpenAccessValue,
+	ownAccessSetting,
+	resolveAccessScope,
+	newStatementAccessScope,
+	stampAccessScope,
+	inheritedAccessScope,
+	readScopesOf,
+	readScopesOfRoot,
+} from "./models/statement/accessScope";
+export type { AccessScopeLevel, AccessScopeParent } from "./models/statement/accessScope";
+export { childTopParentId } from "./models/statement/treeFields";
+export type { TreeParent } from "./models/statement/treeFields";

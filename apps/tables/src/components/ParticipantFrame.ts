@@ -2,6 +2,7 @@ import m from 'mithril';
 import type {
 	TableAssignment,
 	TableAssignmentParticipant,
+	TableAssignmentRun,
 	TableAssignmentTopic,
 } from '@freedi/shared-types';
 import { logError } from '@freedi/shared-utils';
@@ -11,6 +12,7 @@ import { safeStorage } from '@/lib/safeStorage';
 import {
 	subscribeCounter,
 	subscribeMyParticipant,
+	subscribeRun,
 	subscribeSeats,
 	subscribeSession,
 	subscribeTopics,
@@ -43,6 +45,11 @@ export interface ParticipantContext {
 	 * documents are readable; null otherwise (the server still enforces capacity).
 	 */
 	seats: ReadonlyMap<number, number> | null;
+	/**
+	 * Published ranked run only: does the person sit at one of its tables? False is a
+	 * latecomer the host has not seated yet; null while the run is not read (or not published).
+	 */
+	seated: boolean | null;
 }
 
 export interface ParticipantFrameAttrs {
@@ -74,7 +81,13 @@ export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (init
 	const counter = new LiveValue('counter', subscribeCounter(sessionId));
 	let me: LiveValue<TableAssignmentParticipant | null> | null = null;
 	let identity: Identity = { state: 'loading' };
+	/** The published run, read only to know whether this person has a seat. */
+	let seatRun: LiveValue<TableAssignmentRun | null> | null = null;
+	let seatRunId: string | undefined;
 	let topicsStarted = false;
+	let readsStarted = false;
+	/** Set in onremove: a sign-in that finishes late must not start anything. */
+	let removed = false;
 
 	/** Remember in this browser that it holds a registration, the moment the record is seen. */
 	function myRecord(uid: string): Subscription<TableAssignmentParticipant | null> {
@@ -85,18 +98,33 @@ export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (init
 			}, onError);
 	}
 
-	async function signIn(): Promise<void> {
+	/**
+	 * The session, seats and counter reads start only once the identity exists: before
+	 * sign-in the rules refuse them, and a refused listener does not come back by itself.
+	 */
+	function startReads(attrs: ParticipantFrameAttrs): void {
+		if (readsStarted) return;
+		readsStarted = true;
+		session.start();
+		if (attrs.occupancy) seats.start();
+		if (attrs.counter) counter.start();
+	}
+
+	async function signIn(attrs: ParticipantFrameAttrs): Promise<void> {
 		identity = { state: 'loading' };
 		m.redraw();
 
 		try {
 			const user = await ensureParticipantUser();
 
+			if (removed) return;
+			startReads(attrs);
 			identity = { state: 'ready', uid: user.uid };
 			me?.stop();
 			me = new LiveValue('me', myRecord(user.uid));
 			me.start();
 		} catch (error) {
+			if (removed) return;
 			logError(error, { operation: 'tables.participant.identity', metadata: { sessionId } });
 			identity = { state: 'error' };
 		}
@@ -109,16 +137,47 @@ export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (init
 		topics.start();
 	}
 
+	/** Follows the published run while the person is registered; a new publication starts a new read. */
+	function followSeatRun(): void {
+		const current = session.data;
+		const wanted =
+			current?.status === 'published' && current.mode === 'ranked' && me?.data
+				? current.publishedRunId
+				: undefined;
+
+		if (wanted === seatRunId) return;
+		seatRun?.stop();
+		seatRunId = wanted;
+		seatRun = wanted ? new LiveValue('seatRun', subscribeRun(wanted)) : null;
+		seatRun?.start();
+	}
+
+	function seatedAt(uid: string): boolean | null {
+		const run = seatRun?.state === 'ready' ? seatRun.data : null;
+
+		if (!run || run.status !== 'published') return null;
+
+		return run.tables.some((table) => table.memberUids.includes(uid));
+	}
+
 	function retryAll(attrs: ParticipantFrameAttrs): void {
+		if (identity.state === 'error') {
+			void signIn(attrs);
+
+			return;
+		}
 		session.retry();
 		if (topicsStarted) topics.retry();
 		me?.retry();
 		if (attrs.occupancy) seats.retry();
 		if (attrs.counter) counter.retry();
-		if (identity.state === 'error') void signIn();
 	}
 
-	function contextOf(uid: string, current: TableAssignment, attrs: ParticipantFrameAttrs) {
+	function contextOf(
+		uid: string,
+		current: TableAssignment,
+		attrs: ParticipantFrameAttrs,
+	): ParticipantContext {
 		const record = me?.data ?? null;
 
 		return {
@@ -131,28 +190,30 @@ export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (init
 			lost: record === null ? registrationLoss(loadMemory(sessionId, uid, safeStorage)) : null,
 			registeredCount: attrs.counter && counter.state === 'ready' ? (counter.data ?? 0) : null,
 			seats: attrs.occupancy && seats.state === 'ready' ? (seats.data ?? new Map()) : null,
+			seated: record === null ? null : seatedAt(uid),
 		};
 	}
 
 	return {
 		oninit({ attrs }) {
-			session.start();
-			if (attrs.occupancy) seats.start();
-			if (attrs.counter) counter.start();
-			void signIn();
+			void signIn(attrs);
 		},
 		oncreate({ attrs }) {
 			startTopicsOnceReadable(attrs);
+			followSeatRun();
 		},
 		onupdate({ attrs }) {
 			startTopicsOnceReadable(attrs);
+			followSeatRun();
 		},
 		onremove() {
+			removed = true;
 			session.stop();
 			topics.stop();
 			seats.stop();
 			counter.stop();
 			me?.stop();
+			seatRun?.stop();
 		},
 		view({ attrs }) {
 			const shell = { phone: true };
