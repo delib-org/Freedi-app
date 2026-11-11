@@ -315,12 +315,7 @@ const ar: Record<string, string> = {
 	'tableAssignment.closeness.veryClose': 'قريبة جدًا من القاعة',
 	'tableAssignment.closeness.close': 'قريبة من القاعة',
 	'tableAssignment.closeness.notEnough': 'لا توجد إجابات كافية',
-	'tableAssignment.preview.room': 'القاعة',
-	'tableAssignment.preview.table': 'الطاولة',
-	'tableAssignment.preview.noStats':
-		'أجاب أقل من ثلاثة أشخاص عن سؤال الموقف، لذا لا تُعرض التركيبة.',
 	'tableAssignment.preview.fullData': 'البيانات الكاملة',
-	'tableAssignment.preview.distance': 'أكبر بُعد لطاولة عن القاعة: {{max}}. الحد: {{tolerance}}.',
 	'tableAssignment.autosave.failed': 'لم يُحفظ. يبقى النص هنا، وسنحاول مجددًا.',
 	'tableAssignment.strictness.custom.text':
 		'حُفظت هنا قيمة أخرى. يمكن إبقاؤها أو اختيار أحد الخيارات.',
@@ -345,7 +340,6 @@ const ar: Record<string, string> = {
 	'tableAssignment.choice.none': 'لم يرتّبوا',
 	'tableAssignment.closeness.far': 'بعيدة عن القاعة',
 	'tableAssignment.preview.unusedTopic': 'الموضوع "{{topic}}" لم يحصل على طاولة.',
-	'tableAssignment.preview.rounded': 'الأرقام مقرّبة حفاظًا على خصوصية الإجابات.',
 	'tableAssignment.roomScreen.previous': 'السابق',
 	'tableAssignment.roomScreen.next': 'التالي',
 	'tableAssignment.roomScreen.pause': 'إيقاف',

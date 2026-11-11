@@ -133,7 +133,6 @@ const PreviewBody: m.ClosureComponent<PreviewBodyAttrs> = (initial) => {
 			),
 			m(TableCards, { tables: previewTableViews(run, topics, nameByUid(participants)) }),
 			m(MetricsPanel, {
-				metrics: run.metrics,
 				unusedTopics: topics.filter((topic) => !seatedTopics.has(topic.topicId)),
 			}),
 		];

@@ -1,7 +1,5 @@
 import type { TableAssignmentMetrics } from '@freedi/shared-types';
 
-const BALANCE_DECIMALS = 2;
-
 export interface RankRow {
 	/** 1 = first choice. */
 	rank: number;
@@ -18,17 +16,11 @@ export interface MetricsView {
 	gotChosenTopic: number;
 	/** Everyone seated who ranked something. */
 	rankedSeated: number;
-	balanceMax: string;
-	tolerance: string;
 }
 
-export function formatDeviation(value: number): string {
-	return Number.isFinite(value) ? value.toFixed(BALANCE_DECIMALS) : '-';
-}
-
-/** Turn the run's metrics into the numbers the preview screen prints. */
+/** The choice counts the preview prints. A published run has none: every count is then zero. */
 export function describeMetrics(metrics: TableAssignmentMetrics): MetricsView {
-	const { balance, preferences } = metrics;
+	const { preferences } = metrics;
 	const rankRows = preferences.byRank.map((count, index) => ({ rank: index + 1, count }));
 	const gotChosenTopic = preferences.byRank.reduce((sum, count) => sum + count, 0);
 
@@ -38,7 +30,5 @@ export function describeMetrics(metrics: TableAssignmentMetrics): MetricsView {
 		withoutPreferences: preferences.noPreference,
 		gotChosenTopic,
 		rankedSeated: gotChosenTopic + preferences.none,
-		balanceMax: formatDeviation(balance.max),
-		tolerance: formatDeviation(balance.tolerance),
 	};
 }

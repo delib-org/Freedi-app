@@ -190,15 +190,29 @@ describe('host preview', () => {
 		expect(buttonByText(root, en['tableAssignment.preview.publish']).disabled).toBe(false);
 	});
 
-	it('hides the band of a table below three known positions', async () => {
+	it('shows the stored closeness of each table and no position figure', async () => {
 		closed();
 		mocks.store.current.runs = [makeRun()];
 
 		const { text, root } = await renderScreen(HostPreview, ID);
 
-		expect(root.querySelectorAll('.band')).toHaveLength(1);
-		expect(text).toContain(en['tableAssignment.preview.noStats']);
+		expect(text).toContain(en['tableAssignment.closeness.close']);
 		expect(text).toContain(en['tableAssignment.closeness.notEnough']);
+		expect(root.querySelector('.band')).toBeNull();
+	});
+
+	it('shows "not enough answers" for a stored run that has no closeness', async () => {
+		closed();
+		const run = makeRun();
+
+		mocks.store.current.runs = [
+			makeRun({ tables: run.tables.map(({ closeness: _closeness, ...table }) => table) }),
+		];
+
+		const { text } = await renderScreen(HostPreview, ID);
+
+		expect(text).toContain(en['tableAssignment.closeness.notEnough']);
+		expect(text).not.toContain(en['tableAssignment.closeness.close']);
 	});
 
 	it('blocks a preview that no longer matches, and says compute again', async () => {
@@ -250,7 +264,7 @@ describe('host preview', () => {
 		const run = makeRun();
 
 		mocks.store.current.runs = [
-			makeRun({ metrics: { ...run.metrics, population: { n: 0, mean: [], sd: [] } } }),
+			makeRun({ metrics: { ...run.metrics, hasEnoughPositions: false } }),
 		];
 
 		const { text, root } = await renderScreen(HostPreview, ID);
@@ -259,14 +273,16 @@ describe('host preview', () => {
 		expect(root.querySelector('.band')).toBeNull();
 	});
 
-	it('keeps the numbers behind "full data"', async () => {
+	it('keeps topics without a table behind "full data" and shows no distances', async () => {
 		closed();
+		mocks.store.current.topics.push(makeTopic('c', 2, { title: 'Quiet topic' }));
 		mocks.store.current.runs = [makeRun()];
 
 		const { root } = await renderScreen(HostPreview, ID);
 
 		expect(root.querySelector('details.full-data')?.hasAttribute('open')).toBe(false);
-		expect(root.querySelector('details.full-data')?.textContent).toContain('0.20');
+		expect(root.querySelector('details.full-data')?.textContent).toContain('Quiet topic');
+		expect(root.textContent).not.toMatch(/0\.\d\d/);
 	});
 
 	it('names a topic that got no table', async () => {

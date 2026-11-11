@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { makeSession, makeTopic } from '../../__tests__/fixtures';
-import { bandOf } from '../band';
-import { closenessOf } from '../closeness';
 import { previewVerdict } from '../previewVerdict';
 import {
 	columnsForWidth,
@@ -294,43 +292,6 @@ describe('setupBackup', () => {
 	});
 });
 
-describe('closeness', () => {
-	const stats = (deviation: number, n = 5): Parameters<typeof closenessOf>[0] => ({
-		n,
-		mean: n > 0 ? [50] : [],
-		sd: n > 0 ? [20] : [],
-		deviation,
-	});
-
-	it('is very close up to half the limit', () => {
-		expect(closenessOf(stats(0.15), 0.3)).toBe('veryClose');
-	});
-
-	it('is close up to the limit', () => {
-		expect(closenessOf(stats(0.3), 0.3)).toBe('close');
-	});
-
-	it('is far past the limit', () => {
-		expect(closenessOf(stats(0.35), 0.3)).toBe('far');
-	});
-
-	it('says there are not enough answers below three known positions', () => {
-		expect(closenessOf(stats(0.05, 2), 0.3)).toBe('notEnough');
-		expect(closenessOf(stats(0, 0), 0.3)).toBe('notEnough');
-	});
-});
-
-describe('band', () => {
-	it('spans one spread either side of the middle', () => {
-		expect(bandOf(50, 20)).toEqual({ start: 30, width: 40 });
-	});
-
-	it('stays on the 0..100 axis', () => {
-		expect(bandOf(90, 20)).toEqual({ start: 70, width: 30 });
-		expect(bandOf(10, 20)).toEqual({ start: 0, width: 30 });
-	});
-});
-
 describe('previewVerdict', () => {
 	const { metrics } = makeRun();
 
@@ -349,9 +310,15 @@ describe('previewVerdict', () => {
 	});
 
 	it('says the tables follow the choices when too few answered', () => {
-		const few = { ...metrics, population: { n: 0, mean: [], sd: [] } };
+		const few = { ...metrics, hasEnoughPositions: false };
 
 		expect(previewVerdict(few, false)).toBe('choicesOnly');
+	});
+
+	it('does not claim the room is known on a run from before the flag existed', () => {
+		const legacy = { ...metrics, hasEnoughPositions: undefined };
+
+		expect(previewVerdict(legacy, false)).toBe('choicesOnly');
 	});
 });
 

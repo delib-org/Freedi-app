@@ -304,12 +304,7 @@ const he: Record<string, string> = {
 	'tableAssignment.closeness.veryClose': 'קרוב מאוד לחדר',
 	'tableAssignment.closeness.close': 'קרוב לחדר',
 	'tableAssignment.closeness.notEnough': 'אין מספיק תשובות',
-	'tableAssignment.preview.room': 'החדר',
-	'tableAssignment.preview.table': 'השולחן',
-	'tableAssignment.preview.noStats': 'פחות משלושה אנשים ענו על שאלת העמדה, ולכן לא מוצג ההרכב.',
 	'tableAssignment.preview.fullData': 'הנתונים המלאים',
-	'tableAssignment.preview.distance':
-		'המרחק הגדול ביותר של שולחן מהחדר: {{max}}. המגבלה: {{tolerance}}.',
 	// Hebrew from here to the plurals below is NOT in the approved design (Phase 3).
 	'tableAssignment.count.withPreferences': 'דירגו נושאים',
 	'tableAssignment.participants.privacy':
@@ -336,7 +331,6 @@ const he: Record<string, string> = {
 	'tableAssignment.choice.none': 'לא דירגו',
 	'tableAssignment.closeness.far': 'רחוק מהחדר',
 	'tableAssignment.preview.unusedTopic': 'הנושא "{{topic}}" לא קיבל שולחן.',
-	'tableAssignment.preview.rounded': 'המספרים מעוגלים, כדי לשמור על פרטיות התשובות.',
 	'tableAssignment.roomScreen.previous': 'הקודם',
 	'tableAssignment.roomScreen.next': 'הבא',
 	'tableAssignment.roomScreen.pause': 'עצירה',

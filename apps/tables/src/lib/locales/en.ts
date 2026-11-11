@@ -324,13 +324,7 @@ const en: Record<string, string> = {
 	'tableAssignment.closeness.veryClose': 'Very close to the room',
 	'tableAssignment.closeness.close': 'Close to the room',
 	'tableAssignment.closeness.notEnough': 'Not enough answers',
-	'tableAssignment.preview.room': 'The room',
-	'tableAssignment.preview.table': 'The table',
-	'tableAssignment.preview.noStats':
-		'Fewer than three people answered the position question, so the mix is not shown.',
 	'tableAssignment.preview.fullData': 'Full data',
-	'tableAssignment.preview.distance':
-		'Largest distance of a table from the room: {{max}}. The limit: {{tolerance}}.',
 	'tableAssignment.autosave.failed': 'Not saved. Your text stays here, and we will try again.',
 	'tableAssignment.strictness.custom.text':
 		'A different value is stored here. You can keep it, or pick one of the options.',
@@ -357,7 +351,6 @@ const en: Record<string, string> = {
 	'tableAssignment.choice.none': 'Did not rank',
 	'tableAssignment.closeness.far': 'Far from the room',
 	'tableAssignment.preview.unusedTopic': 'The topic "{{topic}}" did not get a table.',
-	'tableAssignment.preview.rounded': 'The numbers are rounded, to keep the answers private.',
 	'tableAssignment.roomScreen.previous': 'Previous',
 	'tableAssignment.roomScreen.next': 'Next',
 	'tableAssignment.roomScreen.pause': 'Pause',
