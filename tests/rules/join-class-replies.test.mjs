@@ -1,7 +1,7 @@
 import { after, before, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import { collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
-import { makeEnv, seed, statementDoc } from './helpers.mjs';
+import { makeEnv, seed, seedDefaultParents, statementDoc } from './helpers.mjs';
 
 /**
  * join-class replies on a proposal (IA 22):
@@ -56,6 +56,7 @@ describe('join-class replies rules', () => {
 
 	before(async () => {
 		env = await makeEnv('join-class-replies');
+		await seedDefaultParents(env);
 		await seed(env, async (db) => {
 			await setDoc(doc(db, 'statements', MAIN), {
 				statementId: MAIN,

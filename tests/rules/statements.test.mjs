@@ -1,7 +1,7 @@
 import { after, before, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { agoraProposalDoc, makeEnv, seed, statementDoc } from './helpers.mjs';
+import { agoraProposalDoc, makeEnv, seed, seedDefaultParents, statementDoc } from './helpers.mjs';
 
 /**
  * /statements is shared by every Freedi app, and Agora's proposals live in it.
@@ -15,6 +15,7 @@ describe('/statements', () => {
 
 	before(async () => {
 		env = await makeEnv('statements');
+		await seedDefaultParents(env);
 	});
 
 	after(async () => {
@@ -210,6 +211,7 @@ describe('/statements — the permissive update branch', () => {
 
 	before(async () => {
 		env = await makeEnv('statements-permissive');
+		await seedDefaultParents(env);
 	});
 
 	after(async () => {
@@ -327,6 +329,17 @@ describe('/statements — answers hidden by the automatic check', () => {
 
 	before(async () => {
 		env = await makeEnv('statements-answer-moderation');
+		await seed(env, async (db) => {
+			for (const id of [QUESTION, 'another-question']) {
+				await setDoc(doc(db, 'statements', id), {
+					statementId: id,
+					parentId: 'top',
+					topParentId: id,
+					parents: [],
+					accessScope: 'open',
+				});
+			}
+		});
 	});
 
 	after(async () => {
@@ -346,6 +359,7 @@ describe('/statements — answers hidden by the automatic check', () => {
 				statementType: 'option',
 				parentId: QUESTION,
 				topParentId: QUESTION,
+				parents: [QUESTION],
 				...overrides,
 			},
 		});
@@ -408,7 +422,12 @@ describe('/statements — answers hidden by the automatic check', () => {
 		await seedHiddenAnswer('host-moves');
 		const db = env.authenticatedContext(HOST).firestore();
 		await assertSucceeds(
-			updateDoc(doc(db, 'statements', 'host-moves'), { parentId: 'another-question' }),
+			// A move carries the tree fields of the new parent with it.
+			updateDoc(doc(db, 'statements', 'host-moves'), {
+				parentId: 'another-question',
+				topParentId: 'another-question',
+				parents: ['another-question'],
+			}),
 		);
 	});
 
