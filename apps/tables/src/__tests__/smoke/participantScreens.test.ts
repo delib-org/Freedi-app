@@ -350,7 +350,7 @@ describe('cancel participation', () => {
 		expect(root.querySelector('[role="dialog"]')).toBeNull();
 	});
 
-	it('shows the cancelled screen when the record is gone, and "register again" brings the name back', async () => {
+	it('shows the cancelled screen when the record is gone, and "register again" starts with no stored name', async () => {
 		mocks.store.current.me = null;
 		rememberRegistration(SESSION_ID, 'u1', 'Dana Levi', window.localStorage);
 		markCancelledHere(SESSION_ID, 'u1', window.localStorage);
@@ -361,7 +361,7 @@ describe('cancel participation', () => {
 		clickButton(root, en['tableAssignment.cancelled.again']);
 		await settle();
 
-		expect(root.querySelector<HTMLInputElement>('input[name="name"]')?.value).toBe('Dana Levi');
+		expect(root.querySelector<HTMLInputElement>('input[name="name"]')?.value).toBe('');
 	});
 
 	it('offers no "register again" after closing', async () => {

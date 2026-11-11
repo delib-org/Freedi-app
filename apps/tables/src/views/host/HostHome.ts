@@ -13,7 +13,13 @@ function stageScreen(context: HostContext): m.Children {
 
 	switch (session.status) {
 		case 'draft':
-			return m(SetupBody, { key: id, sessionId: id, session, topics: context.topics });
+			return m(SetupBody, {
+				key: id,
+				uid: context.uid,
+				sessionId: id,
+				session,
+				topics: context.topics,
+			});
 		case 'registrationOpen':
 			return m(LiveBody, { key: id, context });
 		case 'registrationClosed':

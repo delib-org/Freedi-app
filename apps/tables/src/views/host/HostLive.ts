@@ -3,7 +3,7 @@ import { TABLES_BASE_URL, tablesSessionUrl } from '@freedi/table-assignment-clie
 import { t, tPlural } from '@/lib/i18n';
 import { Action } from '@/lib/action';
 import { LiveValue } from '@/lib/live';
-import { closeAndSplit, computeAction } from '@/lib/tableAssignment/closeAndSplit';
+import { closeAndSplit, computeActionFor } from '@/lib/tableAssignment/closeAndSplit';
 import { tablesApi } from '@/lib/tableAssignment/client';
 import { subscribeCounter } from '@/lib/tableAssignment/data';
 import { deriveDirectTables, seatCountsFromParticipants } from '@/logic/directTables';
@@ -24,6 +24,7 @@ const QR_PX = 416;
 export const LiveBody: m.ClosureComponent<LiveBodyAttrs> = ({ attrs: first }) => {
 	const sessionId = first.context.session.tableAssignmentId;
 	const counter = new LiveValue('counter', subscribeCounter(sessionId));
+	const compute = computeActionFor(sessionId);
 	const close = new Action('tables.host.closeRegistration', 'tableAssignment.error.statusRefused');
 	const end = new Action('tables.host.endSession', 'tableAssignment.error.statusRefused');
 	let fixing = false;
@@ -93,11 +94,11 @@ export const LiveBody: m.ClosureComponent<LiveBodyAttrs> = ({ attrs: first }) =>
 				'button.btn.btn--primary.btn--cta',
 				{
 					type: 'button',
-					disabled: close.busy || computeAction.busy,
+					disabled: close.busy || compute.busy,
 					onclick: isMix ? () => void closeAndSplit(sessionId, close) : closeFreeMode,
 				},
 				t(
-					close.busy || computeAction.busy
+					close.busy || compute.busy
 						? 'tableAssignment.saving'
 						: isMix
 							? 'tableAssignment.live.close'
@@ -123,7 +124,7 @@ export const LiveBody: m.ClosureComponent<LiveBodyAttrs> = ({ attrs: first }) =>
 	return {
 		oninit() {
 			counter.start();
-			computeAction.clear();
+			compute.clear();
 		},
 		onremove() {
 			counter.stop();

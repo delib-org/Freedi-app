@@ -24,6 +24,8 @@ export interface ShellAttrs {
 	/** A projector screen: the whole width, and its heading in the bar. */
 	room?: boolean;
 	barTitle?: string;
+	/** Host screens only: signs the host out. Never drawn on a projector screen. */
+	onSignOut?: () => void;
 }
 
 const LOGO_LIGHT = '/brand/wizcol-logo.webp';
@@ -66,6 +68,13 @@ export const Shell: m.Component<ShellAttrs> = {
 				m('.shell__bar-end', [
 					attrs.barLabel ? m('span.shell__label', { dir: 'auto' }, attrs.barLabel) : null,
 					languageSwitch(),
+					attrs.onSignOut && !attrs.room
+						? m(
+								'button.btn.btn--text.shell__sign-out',
+								{ type: 'button', onclick: attrs.onSignOut },
+								t('tableAssignment.signOut'),
+							)
+						: null,
 				]),
 			]),
 			m('main.shell__main', { class: attrs.wide ? 'shell__main--wide' : '' }, [

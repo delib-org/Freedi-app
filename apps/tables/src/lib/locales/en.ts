@@ -16,6 +16,7 @@ const en: Record<string, string> = {
 	'tableAssignment.screen.myTable': 'My table',
 	'tableAssignment.placeholder.soon': 'This screen is under construction',
 	'tableAssignment.signIn.google': 'Sign in with Google',
+	'tableAssignment.signOut': 'Sign out',
 
 	'tableAssignment.back': 'Back',
 	'tableAssignment.back.toList': 'Back to my table assignments',

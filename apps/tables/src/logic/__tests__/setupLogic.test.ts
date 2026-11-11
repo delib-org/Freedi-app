@@ -188,7 +188,7 @@ describe('setupDraft', () => {
 				question: ' Q ',
 				poleA: 'A',
 				poleB: 'B',
-				mode: 'direct',
+				mode: 'ranked',
 				expected: '12',
 				allowReturn: true,
 			}),
@@ -196,13 +196,20 @@ describe('setupDraft', () => {
 
 		expect(request).toMatchObject({
 			sessionId: 's',
-			mode: 'direct',
+			mode: 'ranked',
 			tableSize: 7,
 			balanceTolerance: 0.3,
 			positionQuestion: { label: 'Q', poleA: 'A', poleB: 'B' },
 			expectedParticipants: 12,
 			allowReturnByName: true,
 		});
+	});
+
+	it('sends no position question in direct mode, and a half-filled one does not block', () => {
+		const direct = readyDraft({ mode: 'direct', question: 'Q', poleA: 'A', poleB: '' });
+
+		expect(settingsProblem(direct)).toBeNull();
+		expect(settingsRequest('s', direct)).toMatchObject({ mode: 'direct', positionQuestion: null });
 	});
 
 	it('clears expected people when the field is empty', () => {
@@ -240,23 +247,50 @@ describe('setupDraft', () => {
 });
 
 describe('setupBackup', () => {
+	const HOST = { uid: 'host-1', sessionId: 's1' };
+	const SERVER_TIME = 1_000;
+
 	it('keeps a draft per session until it is cleared', () => {
 		const store = memoryStore();
 
-		writeSetupBackup(store, 's1', readyDraft());
-		expect(readSetupBackup(store, 's1')?.title).toBe('Town hall');
-		expect(readSetupBackup(store, 's2')).toBeNull();
-		clearSetupBackup(store, 's1');
-		expect(readSetupBackup(store, 's1')).toBeNull();
+		writeSetupBackup(store, HOST, readyDraft(), SERVER_TIME);
+		expect(readSetupBackup(store, HOST, SERVER_TIME)?.title).toBe('Town hall');
+		expect(readSetupBackup(store, { ...HOST, sessionId: 's2' }, SERVER_TIME)).toBeNull();
+		clearSetupBackup(store, HOST);
+		expect(readSetupBackup(store, HOST, SERVER_TIME)).toBeNull();
 	});
 
-	it('keeps the not-yet-created page apart and ignores damaged data', () => {
+	it('restores when the server copy has not moved on, and drops it when it has', () => {
 		const store = memoryStore();
 
-		store.setItem('freedi_tables_setup_new', '{oops');
-		expect(readSetupBackup(store, null)).toBeNull();
-		writeSetupBackup(store, null, readyDraft({ title: 'New' }));
-		expect(readSetupBackup(store, null)?.title).toBe('New');
+		writeSetupBackup(store, HOST, readyDraft(), SERVER_TIME);
+		expect(readSetupBackup(store, HOST, SERVER_TIME - 1)).not.toBeNull();
+		expect(readSetupBackup(store, HOST, SERVER_TIME + 1)).toBeNull();
+	});
+
+	it("never restores another host's copy", () => {
+		const store = memoryStore();
+
+		writeSetupBackup(store, HOST, readyDraft(), SERVER_TIME);
+		expect(readSetupBackup(store, { ...HOST, uid: 'host-2' }, SERVER_TIME)).toBeNull();
+	});
+
+	it('discards an old copy that has no host or time', () => {
+		const store = memoryStore();
+
+		store.setItem('freedi_tables_setup_s1', JSON.stringify(readyDraft()));
+		expect(readSetupBackup(store, HOST, SERVER_TIME)).toBeNull();
+	});
+
+	it('keeps the not-yet-created page apart per host and ignores damaged data', () => {
+		const store = memoryStore();
+		const fresh = { uid: 'host-1', sessionId: null };
+
+		store.setItem('freedi_tables_setup_new_host-1', '{oops');
+		expect(readSetupBackup(store, fresh, null)).toBeNull();
+		writeSetupBackup(store, fresh, readyDraft({ title: 'New' }), null);
+		expect(readSetupBackup(store, fresh, null)?.title).toBe('New');
+		expect(readSetupBackup(store, { uid: 'host-2', sessionId: null }, null)).toBeNull();
 	});
 });
 

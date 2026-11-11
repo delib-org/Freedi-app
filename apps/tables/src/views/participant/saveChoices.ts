@@ -1,15 +1,20 @@
 import type { Action } from '@/lib/action';
 import { safeStorage } from '@/lib/safeStorage';
 import { tablesApi } from '@/lib/tableAssignment/client';
+import { goTo } from '@/lib/navigate';
 import { clearDraft } from '@/logic/localDraft';
 import type { ChoicesDraft } from '@/logic/localDraft';
 import { savedPosition } from '@/logic/positionStops';
+import { participantHomePath } from '@/paths';
 
 /**
  * The last step's one save: choices and position together, replacing both on
- * the server. Resolves true when saved; on failure the draft stays for a retry.
+ * the server, then back to the home. Resolves true when saved; on failure the
+ * draft stays for a retry. The person leaves first and the draft goes after:
+ * the other way round, the screen can redraw without its draft in between and
+ * send them back to Rank.
  */
-export async function saveChoices(
+export async function saveChoicesAndLeave(
 	action: Action,
 	context: { sessionId: string; uid: string },
 	draft: ChoicesDraft,
@@ -27,6 +32,7 @@ export async function saveChoices(
 	);
 
 	if (!result) return false;
+	goTo(participantHomePath(sessionId));
 	clearDraft(sessionId, uid, safeStorage);
 
 	return true;

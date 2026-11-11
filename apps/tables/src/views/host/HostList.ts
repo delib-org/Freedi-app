@@ -5,6 +5,7 @@ import { LiveValue } from '@/lib/live';
 import { subscribeHostSessions } from '@/lib/tableAssignment/data';
 import { formatMoment } from '@/logic/format';
 import { HostGate } from '@/components/HostGate';
+import { signOutHost } from '@/lib/hostAuth';
 import { Shell } from '@/components/Shell';
 import { StateBox } from '@/components/StateBox';
 import { StatusChip } from '@/components/StatusChip';
@@ -63,7 +64,7 @@ const ListBody: m.ClosureComponent<ListBodyAttrs> = (initial) => {
 			sessions.stop();
 		},
 		view({ attrs }) {
-			const shell = { title: attrs.title };
+			const shell = { title: attrs.title, onSignOut: signOutHost };
 
 			if (sessions.state === 'loading') return m(Shell, shell, m(StateBox, { kind: 'loading' }));
 			if (sessions.state === 'denied' || sessions.state === 'error') {

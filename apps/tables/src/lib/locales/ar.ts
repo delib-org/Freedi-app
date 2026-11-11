@@ -16,6 +16,7 @@ const ar: Record<string, string> = {
 	'tableAssignment.screen.myTable': 'طاولتي',
 	'tableAssignment.placeholder.soon': 'هذه الشاشة قيد الإنشاء',
 	'tableAssignment.signIn.google': 'الدخول بحساب Google',
+	'tableAssignment.signOut': 'تسجيل الخروج',
 
 	'tableAssignment.back': 'رجوع',
 	'tableAssignment.back.toList': 'العودة إلى توزيعاتي',

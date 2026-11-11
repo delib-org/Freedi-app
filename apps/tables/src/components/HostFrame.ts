@@ -12,6 +12,9 @@ import { HostGate } from '@/components/HostGate';
 import { Shell } from '@/components/Shell';
 import type { ShellAttrs } from '@/components/Shell';
 import { StateBox } from '@/components/StateBox';
+import { signOutHost } from '@/lib/hostAuth';
+import { backTargetFor } from '@/logic/hostBack';
+import type { StageScreen } from '@/logic/hostBack';
 import { hostHomePath, hostListPath } from '@/paths';
 
 /** What a host sub-screen receives once the session is loaded and owned by the host. */
@@ -32,6 +35,8 @@ export interface HostFrameAttrs {
 	wide?: boolean;
 	/** The host home has no "back to home" link, it goes back to the list. */
 	isHome?: boolean;
+	/** The stage this screen is for: when the status makes it the stage, Back goes to the list. */
+	stage?: StageScreen;
 	/** Frame details that depend on the session, e.g. a stage screen with its own heading. */
 	shellFor?: (session: TableAssignment) => Partial<ShellAttrs>;
 	render: (context: HostContext) => m.Children;
@@ -83,7 +88,7 @@ const SignedInFrame: m.ClosureComponent<SignedInFrameAttrs> = (initial) => {
 			if (needsParticipants) states.push(participants.state);
 
 			const state = combineStates(states);
-			const shell = { title, backHref, backLabel, wide: attrs.wide };
+			const shell = { title, backHref, backLabel, wide: attrs.wide, onSignOut: signOutHost };
 
 			if (state === 'loading') return m(Shell, shell, m(StateBox, { kind: 'loading' }));
 			if (state === 'denied') {
@@ -137,9 +142,17 @@ const SignedInFrame: m.ClosureComponent<SignedInFrameAttrs> = (initial) => {
 				);
 			}
 
+			const back = backTargetFor(current, attrs.stage);
+			const backShell = attrs.isHome
+				? {}
+				: {
+						backHref: back.href,
+						backLabel: back.toList ? t('tableAssignment.back.toList') : t('tableAssignment.back'),
+					};
+
 			return m(
 				Shell,
-				{ ...shell, title, ...attrs.shellFor?.(current) },
+				{ ...shell, title, ...backShell, ...attrs.shellFor?.(current) },
 				attrs.render({
 					uid,
 					session: current,

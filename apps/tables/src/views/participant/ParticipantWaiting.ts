@@ -3,6 +3,7 @@ import type { TableAssignmentParticipant, TableAssignmentTopic } from '@freedi/s
 import { t } from '@/lib/i18n';
 import { checkIcon } from '@/components/icons';
 import type { ParticipantContext } from '@/components/ParticipantFrame';
+import { StateBox } from '@/components/StateBox';
 import { CancelParticipation } from '@/views/participant/CancelDialog';
 import { participantScreenPath } from '@/paths';
 
@@ -32,17 +33,27 @@ function choicesList(me: TableAssignmentParticipant, topics: TableAssignmentTopi
 	);
 }
 
+/** The choices are titled from the topics: show their loading or error, never "unknown" for all. */
+function choices(context: ParticipantContext, me: TableAssignmentParticipant): m.Children {
+	const { topicsState, topics } = context;
+
+	if (topicsState === 'ready') return choicesList(me, topics);
+	if (topicsState === 'loading') return m(StateBox, { kind: 'loading' });
+
+	return m(StateBox, { kind: topicsState, onRetry: context.retryTopics });
+}
+
 function detailsCard(
 	context: ParticipantContext,
 	me: TableAssignmentParticipant,
 	isOpen: boolean,
 ): m.Vnode {
-	const { session, topics } = context;
+	const { session } = context;
 
 	return m('section.waiting__card', [
 		m('h2.waiting__heading', t('tableAssignment.waiting.details')),
 		m('span.waiting__name', { dir: 'auto' }, me.fullName),
-		me.preferences.length > 0 ? choicesList(me, topics) : null,
+		me.preferences.length > 0 ? choices(context, me) : null,
 		session.settings.positionQuestion && me.preferences.length > 0
 			? m(
 					'span.waiting__position',
