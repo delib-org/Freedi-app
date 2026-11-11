@@ -78,11 +78,7 @@ class SubscriptionManager {
 
 		// Listen to sub-statements
 		const unsubscribeSubStatements = subscribeWhenAuthenticated(() =>
-			listenInScopes(
-				statementId,
-				(scopes) => listenToChildren(statementId, scopes),
-				() => listenToChildren(statementId, null),
-			),
+			listenInScopes(statementId, (scopes) => listenToChildren(statementId, scopes)),
 		);
 
 		// Combine unsubscribe functions

@@ -86,9 +86,9 @@ describe('scopeChunksOf', () => {
 		await expect(scopeChunksOf('s')).resolves.toEqual([['open']]);
 	});
 
-	it('adds the governing scope for its creator', async () => {
+	it('does not add the governing scope for its creator without a role', async () => {
 		setStatement({ statementId: 'g', accessScope: 'g', creatorId: 'me' });
-		await expect(scopeChunksOf('g')).resolves.toEqual([['open', 'g']]);
+		await expect(scopeChunksOf('g')).resolves.toEqual([['open']]);
 	});
 
 	it('adds the governing scope for a host above it', async () => {
@@ -166,43 +166,33 @@ describe('a host or creator below the governing level', () => {
 		];
 	});
 
-	it('never names the governing scope, which rules would refuse', async () => {
+	it('gets open content only, the same as the rules, when not in the private level', async () => {
 		mockSubscriptions = [subscription('k', 'admin')];
 		await expect(scopeChunksOf('k')).resolves.toEqual([['open']]);
-	});
-
-	it('gets an unscoped list of children', async () => {
-		mockSubscriptions = [subscription('k', 'admin')];
-		await expect(childListScopes('k')).resolves.toBeNull();
-	});
-
-	it('counts the creator of the level as a host', async () => {
-		mockState.statements[0].creatorId = 'me';
-		await expect(childListScopes('k')).resolves.toBeNull();
-	});
-
-	it('an outsider gets open only', async () => {
 		await expect(childListScopes('k')).resolves.toEqual(['open']);
 	});
 
-	it('a ban anywhere means open only', async () => {
-		mockSubscriptions = [subscription('k', 'admin'), subscription('top1', 'banned')];
+	it('counts no creator of the level', async () => {
+		mockState.statements[0].creatorId = 'me';
+		await expect(childListScopes('k')).resolves.toEqual(['open']);
+	});
+
+	it('names the scope when also a member of the private level', async () => {
+		mockSubscriptions = [subscription('k', 'admin'), subscription('q', 'member')];
+		await expect(childListScopes('k')).resolves.toEqual(['open', 'q']);
+	});
+
+	it('shuts on a ban or a pending request anywhere', async () => {
+		mockSubscriptions = [subscription('q', 'member'), subscription('top1', 'banned')];
+		await expect(childListScopes('k')).resolves.toEqual(['open']);
+		forgetTreeScopes();
+		mockSubscriptions = [subscription('q', 'member'), subscription('k', 'waiting')];
 		await expect(childListScopes('k')).resolves.toEqual(['open']);
 	});
 
 	it('a host above names the scope as usual', async () => {
 		mockSubscriptions = [subscription('q', 'admin')];
 		await expect(scopeChunksOf('k')).resolves.toEqual([['open', 'q']]);
-	});
-
-	it('starts the host read as well as the open listener', async () => {
-		mockSubscriptions = [subscription('k', 'admin')];
-		const start = jest.fn(() => jest.fn());
-		const hostStart = jest.fn(() => jest.fn());
-		listenInScopes('k', start, hostStart);
-		await new Promise((resolve) => setTimeout(resolve, 0));
-		expect(start).toHaveBeenCalledWith(['open']);
-		expect(hostStart).toHaveBeenCalledTimes(1);
 	});
 });
 

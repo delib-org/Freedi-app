@@ -15,7 +15,6 @@ import { store } from '@/redux/store';
 import { deleteStatement, setStatement } from '@/redux/statements/statementsSlice';
 import { logError } from '@/utils/errorHandling';
 import { childListScopes, listenInScopes } from '@/controllers/db/statements/readScopes';
-import { loadTreeForHost } from '@/controllers/db/statements/loadTreeForHost';
 
 export async function getResultsDB(statement: Statement): Promise<Statement[]> {
 	try {
@@ -75,11 +74,7 @@ async function getTopOptionsDB(statement: Statement): Promise<Statement[]> {
 }
 
 export function listenToDescendants(statementId: string) {
-	return listenInScopes(
-		statementId,
-		(scopes) => listenToDescendantsInScopes(scopes, statementId),
-		loadTreeForHost(statementId),
-	);
+	return listenInScopes(statementId, (scopes) => listenToDescendantsInScopes(scopes, statementId));
 }
 
 function listenToDescendantsInScopes(scopes: string[], statementId: string) {

@@ -52,10 +52,22 @@ describe('getEntryVerdict', () => {
 		expect(getEntryVerdict(level(Access.secret), undefined, { role }, signedIn)).toBe('open');
 	});
 
-	it("opens a secret level to that level's creator", () => {
+	it('does not open a secret level to its creator without a role, as the database reads it', () => {
 		expect(getEntryVerdict(level(Access.secret, 'u1'), undefined, undefined, signedIn)).toBe(
-			'open',
+			'closed',
 		);
+	});
+
+	it('still opens an open level to its creator', () => {
+		const anonymousCreator = { uid: 'u1', isAnonymous: true };
+		expect(
+			getEntryVerdict(
+				level(Access.openForRegistered, 'u1'),
+				undefined,
+				undefined,
+				anonymousCreator,
+			),
+		).toBe('open');
 	});
 
 	it('says waiting for a pending request', () => {
@@ -96,8 +108,8 @@ describe('isProvenOpen', () => {
 		expect(isProvenOpen(level(Access.public), undefined, undefined, anonymous)).toBe(true);
 	});
 
-	it("is proven by being the level's creator", () => {
-		expect(isProvenOpen(level(Access.secret, 'u1'), undefined, undefined, signedIn)).toBe(true);
+	it("is not proven by being a private level's creator", () => {
+		expect(isProvenOpen(level(Access.secret, 'u1'), undefined, undefined, signedIn)).toBe(false);
 	});
 
 	it.each([Role.member, Role.admin, Role.creator])('is proven by a loaded %s role', (role) => {

@@ -118,8 +118,6 @@ async function loadTreeScopes(topParentId: string, uid: string): Promise<CachedT
 
 interface ReadPlan {
 	chunks: ScopeChunks;
-	/** A host or creator below the governing level: rules let them list children, not name it. */
-	isHostBelow: boolean;
 }
 
 function levelIds(level: Statement): string[] {
@@ -136,7 +134,7 @@ async function readPlanOf(statementId: string): Promise<ReadPlan> {
 	const statement = await loadStatement(statementId);
 	const creator = store.getState().creator?.creator;
 	const uid = creator?.uid;
-	if (!statement || !uid) return { chunks: [[OPEN_ACCESS_SCOPE]], isHostBelow: false };
+	if (!statement || !uid) return { chunks: [[OPEN_ACCESS_SCOPE]] };
 
 	const topParentId = statement.topParentId || statementId;
 	const { scopes, roles } = await loadTreeScopes(topParentId, uid).catch(
@@ -153,26 +151,28 @@ async function readPlanOf(statementId: string): Promise<ReadPlan> {
 
 	const governing = statement.accessScope;
 	if (!governing || governing === OPEN_ACCESS_SCOPE) {
-		return { chunks: [[OPEN_ACCESS_SCOPE], ...others(governing)], isHostBelow: false };
+		return { chunks: [[OPEN_ACCESS_SCOPE], ...others(governing)] };
 	}
 
 	const level = governing === statementId ? statement : await loadStatement(governing);
 	const aboveAndAt = level ? levelIds(level) : [governing];
 	const statementLevels = levelIds(statement);
-	const isBanned = [...aboveAndAt, ...statementLevels].some((id) => roles.get(id) === Role.banned);
+	// The same rule as the database: banned or waiting anywhere shuts the door; a
+	// role at the private level, or a host role at it or above, opens it. A host
+	// of something below it, or a creator, gets nothing more than anyone else.
+	const isShut = [...aboveAndAt, ...statementLevels].some((id) => {
+		const role = roles.get(id);
+
+		return role === Role.banned || role === Role.waiting;
+	});
 	const mayReadGoverning =
-		!isBanned &&
+		!isShut &&
 		(isActiveRole(roles.get(governing)) ||
-			level?.creatorId === uid ||
 			aboveAndAt.some((id) => isHostRole(roles.get(id))) ||
 			creator?.systemAdmin === true);
-	const isHostBelow =
-		!isBanned &&
-		!mayReadGoverning &&
-		(statement.creatorId === uid || statementLevels.some((id) => isHostRole(roles.get(id))));
 	const first = mayReadGoverning ? [OPEN_ACCESS_SCOPE, governing] : [OPEN_ACCESS_SCOPE];
 
-	return { chunks: [first, ...others(governing)], isHostBelow };
+	return { chunks: [first, ...others(governing)] };
 }
 
 /** The queries to run under a statement. Nearly always one. */
@@ -180,34 +180,23 @@ export async function scopeChunksOf(statementId: string): Promise<ScopeChunks> {
 	return (await readPlanOf(statementId)).chunks;
 }
 
-/**
- * The scopes for a one-time list of a statement's children, or null when the
- * reader is a host below the governing level and the list needs no filter.
- */
-export async function childListScopes(statementId: string): Promise<string[] | null> {
-	const { chunks, isHostBelow } = await readPlanOf(statementId);
-
-	return isHostBelow ? null : chunks[0];
+/** The scopes for a one-time list of a statement's children. */
+export async function childListScopes(statementId: string): Promise<string[]> {
+	return (await readPlanOf(statementId)).chunks[0];
 }
 
-/**
- * Starts one listener per scope chunk, once the chunks are known. `hostStart`
- * is the extra read a host below the governing level gets: an unscoped listener
- * for a list of children, or a one-time load for a whole tree.
- */
+/** Starts one listener per scope chunk, once the chunks are known. */
 export function listenInScopes(
 	statementId: string,
 	start: (scopes: string[]) => Unsubscribe,
-	hostStart?: () => Unsubscribe,
 ): Unsubscribe {
 	let cancelled = false;
 	const stops: Unsubscribe[] = [];
 
 	readPlanOf(statementId)
-		.then(({ chunks, isHostBelow }) => {
+		.then(({ chunks }) => {
 			if (cancelled) return;
 			chunks.forEach((scopes) => stops.push(start(scopes)));
-			if (isHostBelow && hostStart) stops.push(hostStart());
 		})
 		.catch((error: unknown) => {
 			logError(error, { operation: 'readScopes.listenInScopes', statementId });

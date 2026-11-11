@@ -2,6 +2,7 @@ import { deleteDoc, getDoc, getDocs, query, updateDoc, where } from 'firebase/fi
 import { Collections, Statement, StatementType } from '@freedi/shared-types';
 import { createStatementRef, createCollectionRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
+import { scopeChunksOf } from './readScopes';
 
 export async function deleteStatementFromDB(
 	statement: Statement,
@@ -22,10 +23,20 @@ export async function deleteStatementFromDB(
 
 		//get all children and update their parentId to this statement's parentId
 		const childrenRef = createCollectionRef(Collections.statements);
-		// Unscoped on purpose: only a host deletes, and rules let a host list every
-		// child, including private ones no scope filter would name.
-		const q = query(childrenRef, where('parentId', '==', statement.statementId));
-		const children = await getDocs(q);
+		// Every scope this person may read, one query each (nearly always one).
+		const chunks = await scopeChunksOf(statement.statementId);
+		const snapshots = await Promise.all(
+			chunks.map((scopes) =>
+				getDocs(
+					query(
+						childrenRef,
+						where('parentId', '==', statement.statementId),
+						where('accessScope', 'in', scopes),
+					),
+				),
+			),
+		);
+		const children = { docs: snapshots.flatMap((snapshot) => snapshot.docs) };
 		// Check if parent is a group and any child is an option
 		if (statement.parentId) {
 			// Get the parent statement

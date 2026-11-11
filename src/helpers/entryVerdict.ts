@@ -63,6 +63,10 @@ export function getLevelAccess(
 	return access && access !== Access.open && isOpenAccessValue(access) ? access : Access.openToAll;
 }
 
+function hasMemberRole(role: Role | undefined): boolean {
+	return role === Role.member || isAdminRole(role);
+}
+
 export function isMemberOfLevel(
 	level: Level | undefined,
 	role: Role | undefined,
@@ -94,7 +98,10 @@ export function getEntryVerdict(
 	const role = subscription?.role;
 
 	if (access === Access.public) return 'open';
-	if (isMemberOfLevel(level, role, person)) return 'open';
+	// Inside a private level only roles count, as the database reads it: having
+	// created the level is no way in without one.
+	const isRestricted = access === Access.moderated || access === Access.secret;
+	if (isRestricted ? hasMemberRole(role) : isMemberOfLevel(level, role, person)) return 'open';
 	if (role === Role.waiting) return 'waiting';
 	if (role === Role.banned) return 'closed';
 	if (access === Access.openToAll) return 'open';

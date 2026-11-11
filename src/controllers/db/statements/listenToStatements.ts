@@ -43,7 +43,6 @@ import {
 } from '@/controllers/utils/firestoreListenerHelpers';
 import { DISCUSSABLE_STATEMENT_TYPES } from '@/helpers/statementTypeHelpers';
 import { childListScopes, listenInScopes, scopeChunksOf } from './readScopes';
-import { loadTreeForHost } from './loadTreeForHost';
 
 // Tracks subscription docs whose schema-validation failure we've already
 // logged this session, so a malformed doc on a hot listener doesn't spam the
@@ -241,10 +240,8 @@ export const listenToSubStatements = (
 		return () => {};
 	}
 
-	return listenInScopes(
-		statementId,
-		(scopes) => listenToSubStatementsInScopes(scopes, statementId, topBottom, numberOfOptions),
-		() => listenToSubStatementsInScopes(null, statementId, topBottom, numberOfOptions),
+	return listenInScopes(statementId, (scopes) =>
+		listenToSubStatementsInScopes(scopes, statementId, topBottom, numberOfOptions),
 	);
 };
 
@@ -485,10 +482,8 @@ export const listenToMembers =
 	};
 
 export function listenToAllSubStatements(statementId: string, numberOfLastMessages = 7) {
-	return listenInScopes(
-		statementId,
-		(scopes) => listenToAllSubStatementsInScopes(scopes, statementId, numberOfLastMessages),
-		loadTreeForHost(statementId),
+	return listenInScopes(statementId, (scopes) =>
+		listenToAllSubStatementsInScopes(scopes, statementId, numberOfLastMessages),
 	);
 }
 
@@ -591,10 +586,8 @@ function listenToAllSubStatementsInScopes(
 const MAX_DESCENDANTS_LIMIT = 200;
 
 export function listenToAllDescendants(statementId: string): Unsubscribe {
-	return listenInScopes(
-		statementId,
-		(scopes) => listenToAllDescendantsInScopes(scopes, statementId),
-		loadTreeForHost(statementId),
+	return listenInScopes(statementId, (scopes) =>
+		listenToAllDescendantsInScopes(scopes, statementId),
 	);
 }
 
@@ -721,10 +714,8 @@ export function listenToTreeDescendants(
 	statementId: string,
 	queryLimit = MAX_DESCENDANTS_LIMIT,
 ): Unsubscribe {
-	return listenInScopes(
-		statementId,
-		(scopes) => listenToTreeDescendantsInScopes(scopes, statementId, queryLimit),
-		loadTreeForHost(statementId),
+	return listenInScopes(statementId, (scopes) =>
+		listenToTreeDescendantsInScopes(scopes, statementId, queryLimit),
 	);
 }
 
@@ -831,10 +822,8 @@ export function listenToTreeByTopParent(
 	topParentId: string,
 	queryLimit = MAX_DESCENDANTS_LIMIT,
 ): Unsubscribe {
-	return listenInScopes(
-		topParentId,
-		(scopes) => listenToTreeByTopParentInScopes(scopes, topParentId, queryLimit),
-		loadTreeForHost(topParentId),
+	return listenInScopes(topParentId, (scopes) =>
+		listenToTreeByTopParentInScopes(scopes, topParentId, queryLimit),
 	);
 }
 

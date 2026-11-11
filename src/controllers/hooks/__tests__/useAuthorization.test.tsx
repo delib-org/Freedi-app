@@ -142,8 +142,9 @@ describe('useAuthorization on the shared verdict', () => {
 		expect(setStatementSubscriptionToDB).not.toHaveBeenCalled();
 	});
 
-	it("lets the level's creator in without writing", async () => {
+	it("lets the level's creator in once they hold their creator role", async () => {
 		group(Access.secret, 'u1');
+		mockSubscriptions = { s1: { role: Role.creator } };
 
 		const { result } = renderHook(() => useAuthorization('s1'));
 
