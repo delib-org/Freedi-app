@@ -13,6 +13,11 @@ import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { enhancedEvaluationsThumbs } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
 import { getEvaluationThumbIdByScore } from '@/view/pages/statement/components/evaluations/statementsEvaluationCont';
 import { logError } from '@/utils/errorHandling';
+import {
+	canSeeScore,
+	isOwnAnswerOf,
+	type ScoreViewerFacts,
+} from '../../questionScreen/canSeeScore';
 import type { ClusterPaletteEntry } from '../mapHelpers/mindElixirTransform';
 import NoteFocusOverlay from './NoteFocusOverlay';
 import styles from './ClusterBoard.module.scss';
@@ -52,8 +57,8 @@ interface Props {
 	color: ClusterPaletteEntry;
 	/** True when the current user may edit/delete/move/duplicate this card. */
 	canManage: boolean;
-	/** True when the admin enabled evaluation display on this board. */
-	showEval: boolean;
+	/** The score guard's facts about this board and the viewer. */
+	scoreViewer: ScoreViewerFacts;
 	/**
 	 * How participants rate this option — inherited from the question's
 	 * statementSettings.ratingMode. 'reactions' renders the positive-only 0→1
@@ -91,7 +96,7 @@ const ClusterCard: FC<Props> = ({
 	statement,
 	color,
 	canManage,
-	showEval,
+	scoreViewer,
 	ratingMode,
 	isEditing,
 	onRequestEdit,
@@ -199,6 +204,11 @@ const ClusterCard: FC<Props> = ({
 	const average = statement.evaluation?.averageEvaluation ?? 0;
 	const consensus = statement.consensus ?? 0;
 	const hasVoted = myEval !== undefined && myEval !== null;
+	const showEval = canSeeScore({
+		...scoreViewer,
+		isOwnAnswer: isMine || isOwnAnswerOf(statement, creator?.uid),
+		hasRated: hasVoted,
+	});
 	const myThumbId = hasVoted ? getEvaluationThumbIdByScore(myEval) : null;
 	const myThumb = myThumbId
 		? enhancedEvaluationsThumbs.find((thumb) => thumb.id === myThumbId)
@@ -329,9 +339,9 @@ const ClusterCard: FC<Props> = ({
 			<div className={styles.cardFooter}>
 				{showEval ? (
 					<div className={styles.evalStats}>
-						<span title={t('Consensus')}>≈{Math.round(consensus * 100)}</span>
-						<span title={t('Evaluators')}>👤{numberOfEvaluators}</span>
-						<span title={t('Average')}>⌀{average.toFixed(1)}</span>
+						<span title={t('Agreement score')}>≈{Math.round(consensus * 100)}</span>
+						<span title={t('People who rated')}>👤{numberOfEvaluators}</span>
+						<span title={t('Average rating')}>⌀{average.toFixed(1)}</span>
 					</div>
 				) : (
 					<span />

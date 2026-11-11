@@ -1,6 +1,12 @@
 // AnswerChatSheet — the per-answer thread. Bottom sheet (78% of the viewport)
 // on phones, a centred dialog from tablet up. Logical properties throughout:
 // the bubble's small corner sits on the START side (right in RTL, left in LTR).
+//
+// Dark: the sheet used to share the page's near-black and sat on a dim scrim, so
+// it had no edge. In dark it is now the "inset" step of the ladder (lifted from
+// the page), with a visible edge, a heavier scrim, and bubbles one step above it.
+
+@use '@/view/style/dark-scope' as *;
 
 .root {
 	position: fixed;
@@ -16,6 +22,11 @@
 	inset: 0;
 	background: var(--scrim);
 	animation: fadeIn var(--motion-base) var(--motion-ease) both;
+
+	@include dark {
+		// Heavier than --scrim (55%) so the answer cards behind stop competing.
+		background: color-mix(in srgb, var(--bg-page) 85%, transparent);
+	}
 }
 
 .panel {
@@ -35,6 +46,12 @@
 	box-shadow: var(--shadow-sheet);
 	outline: none;
 	animation: sheetIn var(--level-duration) var(--level-ease) both;
+
+	@include dark {
+		background: var(--bg-sunken);
+		border: 1px solid var(--text-faint);
+		border-block-end-width: 0;
+	}
 }
 
 .handle {
@@ -44,6 +61,10 @@
 	block-size: 0.25rem;
 	border-radius: 0.125rem;
 	background: var(--border-subtle);
+
+	@include dark {
+		background: var(--text-faint);
+	}
 }
 
 .header {
@@ -67,6 +88,10 @@
 	font-weight: 600;
 	letter-spacing: var(--eyebrow-tracking);
 	color: var(--text-meta);
+
+	@include dark {
+		font-size: 0.78125rem;
+	}
 }
 
 .title {
@@ -95,6 +120,14 @@
 	font: inherit;
 	font-size: 0.8125rem;
 	cursor: pointer;
+
+	@include dark {
+		color: var(--text-title);
+		font-size: 0.875rem;
+		font-weight: 600;
+		text-decoration: underline;
+		text-underline-offset: 0.25em;
+	}
 
 	&:hover {
 		color: var(--text-title);
@@ -166,6 +199,12 @@
 	&--sunken {
 		background: var(--tone-sunken);
 		color: var(--tone-sunken-ink);
+
+		// --tone-sunken is the sheet's own colour in dark: lift it one step.
+		@include dark {
+			background: var(--card-default);
+			border: 1px solid var(--text-faint);
+		}
 	}
 }
 
@@ -181,6 +220,10 @@
 	font-size: 0.71875rem;
 	color: var(--text-meta);
 	text-align: start;
+
+	@include dark {
+		font-size: 0.8125rem;
+	}
 }
 
 .messageNew {
@@ -200,6 +243,11 @@
 	line-height: var(--line-height-card);
 	text-align: start;
 	overflow-wrap: anywhere;
+
+	@include dark {
+		border-color: var(--text-faint);
+		color: var(--text-title);
+	}
 }
 
 .bubbleText,
@@ -231,8 +279,16 @@
 	font: inherit;
 	font-size: 0.875rem;
 
+	@include dark {
+		border-color: var(--text-faint);
+	}
+
 	&::placeholder {
 		color: var(--text-faint);
+
+		@include dark {
+			color: var(--text-meta);
+		}
 	}
 
 	&:focus-visible {
@@ -253,6 +309,12 @@
 	background: var(--nav-floating-bg);
 	color: var(--nav-floating-ink);
 	cursor: pointer;
+
+	@include dark {
+		border: 1px solid var(--text-faint);
+		background: var(--accent-violet);
+		color: var(--accent-violet-ink);
+	}
 
 	&:disabled {
 		opacity: 0.5;
@@ -281,6 +343,10 @@
 		block-size: min(78dvh, 44rem);
 		border-radius: var(--radius-sheet);
 		animation-name: dialogIn;
+
+		@include dark {
+			border-block-end-width: 1px;
+		}
 	}
 
 	.handle {

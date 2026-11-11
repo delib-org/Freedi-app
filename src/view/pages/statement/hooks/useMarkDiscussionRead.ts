@@ -9,6 +9,8 @@ interface UseMarkDiscussionReadProps {
 	isLoaded: boolean;
 	/** Bumped by the server when a child is created/edited - the "new content" signal. */
 	lastChildUpdate?: number;
+	/** The server's count of messages below the statement; becomes the person's seen marker. */
+	descendantMessageCount?: number;
 }
 
 /**
@@ -24,6 +26,7 @@ export function useMarkDiscussionRead({
 	userId,
 	isLoaded,
 	lastChildUpdate,
+	descendantMessageCount,
 }: UseMarkDiscussionReadProps): void {
 	const latestChildUpdateRef = useRef<number>(lastChildUpdate ?? 0);
 	const coveredChildUpdateRef = useRef<number>(0);
@@ -31,8 +34,14 @@ export function useMarkDiscussionRead({
 	const needsWriteRef = useRef<boolean>(false);
 	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const attemptRef = useRef<() => void>(() => undefined);
+	const retriesRef = useRef<number>(0);
+	const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	const latestMessageCountRef = useRef<number | undefined>(descendantMessageCount);
+	const coveredMessageCountRef = useRef<number>(0);
 
 	latestChildUpdateRef.current = lastChildUpdate ?? 0;
+	latestMessageCountRef.current = descendantMessageCount;
 
 	const active = Boolean(statementId && userId && isLoaded);
 
@@ -66,15 +75,42 @@ export function useMarkDiscussionRead({
 			needsWriteRef.current = false;
 			lastWriteAtRef.current = Date.now();
 			coveredChildUpdateRef.current = latestChildUpdateRef.current;
-			void updateLastReadTimestamp(statementId, userId);
+			coveredMessageCountRef.current = latestMessageCountRef.current ?? 0;
+			const sentChildUpdate = coveredChildUpdateRef.current;
+			const sentCount = coveredMessageCountRef.current;
+			void updateLastReadTimestamp(statementId, userId, latestMessageCountRef.current).then(
+				(found) => {
+					if (found !== false) {
+						retriesRef.current = 0;
+
+						return;
+					}
+					// No subscription doc yet (it is being created): nothing was recorded,
+					// so this attempt covers nothing. Try again shortly.
+					if (coveredChildUpdateRef.current === sentChildUpdate) coveredChildUpdateRef.current = 0;
+					if (coveredMessageCountRef.current === sentCount) coveredMessageCountRef.current = 0;
+					if (retriesRef.current >= UI.READ_MARK_MAX_RETRIES || retryTimerRef.current !== null) {
+						return;
+					}
+					retriesRef.current += 1;
+					retryTimerRef.current = setTimeout(() => {
+						retryTimerRef.current = null;
+						needsWriteRef.current = true;
+						lastWriteAtRef.current = 0;
+						attemptRef.current();
+					}, UI.READ_MARK_RETRY_MS);
+				},
+			);
 		};
 
 		attemptRef.current = attempt;
+		retriesRef.current = 0;
 
 		// Open: one immediate write (deferred until visible if the tab is hidden)
 		needsWriteRef.current = true;
 		lastWriteAtRef.current = 0;
 		coveredChildUpdateRef.current = 0;
+		coveredMessageCountRef.current = 0;
 		attempt();
 
 		const handleVisibility = (): void => {
@@ -85,6 +121,10 @@ export function useMarkDiscussionRead({
 		return () => {
 			document.removeEventListener('visibilitychange', handleVisibility);
 			clearTimer();
+			if (retryTimerRef.current !== null) {
+				clearTimeout(retryTimerRef.current);
+				retryTimerRef.current = null;
+			}
 			attemptRef.current = () => undefined;
 		};
 	}, [active, statementId, userId]);
@@ -92,9 +132,12 @@ export function useMarkDiscussionRead({
 	// Newer content than we last recorded -> schedule a (throttled) write
 	useEffect(() => {
 		if (!active) return;
-		if ((lastChildUpdate ?? 0) > coveredChildUpdateRef.current) {
+		if (
+			(lastChildUpdate ?? 0) > coveredChildUpdateRef.current ||
+			(descendantMessageCount ?? 0) > coveredMessageCountRef.current
+		) {
 			needsWriteRef.current = true;
 			attemptRef.current();
 		}
-	}, [active, lastChildUpdate]);
+	}, [active, lastChildUpdate, descendantMessageCount]);
 }

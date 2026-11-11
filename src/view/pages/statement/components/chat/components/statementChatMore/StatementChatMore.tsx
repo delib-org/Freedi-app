@@ -9,14 +9,18 @@ import ChatIcon from '@/assets/icons/roundedChatDotIcon.svg?react';
 // Types and Redux
 import { SimpleStatement, Statement } from '@freedi/shared-types';
 import { useSelector } from 'react-redux';
-import { createSelector } from '@reduxjs/toolkit';
-import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
-import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { statementsSelector } from '@/redux/statements/statementsSlice';
 import { createPredicateCountSelector } from '@/redux/utils/selectorFactories';
 import UnreadBadge from '@/view/components/unreadBadge/UnreadBadge';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { AnswerChatSheet } from '@/view/components/atomic/molecules/AnswerChatSheet';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { markStatementSeen } from '@/controllers/db/subscriptions/setSubscriptions';
+import { useUnreadMessageCount } from '@/controllers/hooks/useUnreadMessageCount';
+import { translateCount } from '@/helpers/translateCount';
+import {
+	AnswerChatSheet,
+	AnswerChatSheetSubject,
+} from '@/view/components/atomic/molecules/AnswerChatSheet';
 
 export type StatementChatMoreVariant = 'bubble' | 'pill' | 'round';
 
@@ -32,6 +36,8 @@ interface Props {
 	/** Open the thread in a bottom sheet instead of navigating to the chat page.
 	 *  Off by default so every other call site keeps navigating. */
 	opensSheet?: boolean;
+	/** Wording of the sheet: a conversation about an answer (default) or a message. */
+	sheetSubject?: AnswerChatSheetSubject;
 }
 
 /**
@@ -55,12 +61,11 @@ const StatementChatMore: FC<Props> = ({
 	showMessageCount = true,
 	variant = 'bubble',
 	opensSheet = false,
+	sheetSubject = 'answer',
 }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
-
-	// Redux store
 	const creator = useSelector(creatorSelector);
 
 	// Per-instance memoized COUNT selectors returning primitives, so this
@@ -89,23 +94,9 @@ const StatementChatMore: FC<Props> = ({
 		return 0;
 	}, [subStatementsCount, statement]);
 
-	// Count UNREAD notifications only (missing `read` field counts as unread
-	// for backward compatibility)
-	const selectUnreadCount = useMemo(
-		() =>
-			createSelector(
-				[inAppNotificationsSelector],
-				(notifications) =>
-					notifications.filter(
-						(n) =>
-							n.creatorId !== creator?.uid &&
-							n.parentId === statement.statementId &&
-							(!n.read || n.read === undefined),
-					).length,
-			),
-		[creator?.uid, statement.statementId],
-	);
-	const unreadCount = useSelector(selectUnreadCount);
+	// Messages below this card that this person has not seen (server counter
+	// minus what they had seen when they last opened it). Not from notifications.
+	const unreadCount = useUnreadMessageCount(statement.statementId);
 	// Consider has messages if either we have total count or unread notifications
 	const hasMessages = totalMessages > 0 || unreadCount > 0;
 	const hasUnread = unreadCount > 0;
@@ -119,6 +110,7 @@ const StatementChatMore: FC<Props> = ({
 
 		if (opensSheet) {
 			setIsSheetOpen(true);
+			markStatementSeen(statement.statementId, creator?.uid);
 
 			return;
 		}
@@ -153,7 +145,7 @@ const StatementChatMore: FC<Props> = ({
 		}
 
 		if (hasUnread) {
-			parts.push(`${unreadCount} ${t('unread')}`);
+			parts.push(translateCount(t, 'unread.messageCount', unreadCount));
 		}
 
 		parts.push(t('Click to open discussion'));
@@ -186,7 +178,7 @@ const StatementChatMore: FC<Props> = ({
 						count={unreadCount}
 						position="absolute"
 						size="small"
-						ariaLabel={`${unreadCount} ${t('unread')} ${unreadCount === 1 ? t('response') : t('responses')}`}
+						ariaLabel={translateCount(t, 'unread.messageCount', unreadCount)}
 					/>
 				)}
 				{!onlyCircle && <ChatIcon />}
@@ -269,6 +261,7 @@ const StatementChatMore: FC<Props> = ({
 			onClose={() => setIsSheetOpen(false)}
 			answerId={statement.statementId}
 			answerText={statement.statement}
+			subject={sheetSubject}
 		/>
 	);
 

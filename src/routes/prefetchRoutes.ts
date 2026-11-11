@@ -20,7 +20,6 @@ const routePrefetchers: Array<() => Promise<unknown>> = [
 	() => import('@/view/pages/statement/components/researchDashboard/ResearchDashboard'),
 	// Protected routes
 	() => import('@/view/pages/my/My'),
-	() => import('@/view/pages/my-suggestions/MySuggestions'),
 	() => import('@/view/pages/votingThankYou/VotingThankYou'),
 	() => import('@/view/pages/statement/components/map/ClusterMap/ClusterMap'),
 	() => import('@/view/pages/statement/components/groups/GroupsCurationPage'),
@@ -28,8 +27,6 @@ const routePrefetchers: Array<() => Promise<unknown>> = [
 	() => import('@/view/pages/subscriptions/SubscriptionManager'),
 	() => import('@/view/pages/eventControlCenter/EventDashboard'),
 	() => import('@/view/pages/settings/ChecNotifications'),
-	// Public routes
-	() => import('@/view/pages/memberRejection/MemberRejection'),
 ];
 
 type IdleScheduler = (callback: () => void) => void;

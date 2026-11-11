@@ -63,3 +63,15 @@ export const NotificationQueueItemSchema = object({
 export type NotificationQueueItem = InferOutput<
 	typeof NotificationQueueItemSchema
 >;
+
+/** A queue item the channel router can deliver. */
+export type RoutableQueueItem = NotificationQueueItem & {
+	/** Already resolved by the caller: send to exactly these and look nothing up. */
+	pushTokens?: string[];
+};
+
+/** The per-question marker that collects new answers for the large-question digest. */
+export type LargeQuestionDigestMarker = NotificationQueueItem & {
+	firstAuthorUid?: string;
+	multipleAuthors?: boolean;
+};

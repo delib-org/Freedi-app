@@ -1,9 +1,18 @@
-import { Statement, StatementType, Evaluation, Collections, statementToParagraph } from '@freedi/shared-types';
-import type { Paragraph } from '@freedi/shared-types';
+import {
+  Statement,
+  StatementType,
+  Evaluation,
+  Collections,
+  statementToParagraph,
+  ProposalSampler,
+  buildClusterMembershipMap,
+  getClusterKey,
+  deriveSeenClusters,
+  selectDiverseBatch,
+} from '@freedi/shared-types';
+import type { Paragraph, BatchResult, SamplingConfig } from '@freedi/shared-types';
 import { getFirestoreAdmin } from './admin';
 import { logger } from '@/lib/utils/logger';
-import { ProposalSampler, BatchResult } from '@/lib/utils/proposalSampler';
-import { SamplingConfig } from '@/lib/utils/sampling';
 import {
   isServableOriginal,
   isSynthesisCluster,
@@ -11,12 +20,6 @@ import {
   selectServableForEvaluation,
   expandEvaluatedIds,
 } from '@/lib/utils/derivedStatements';
-import {
-  buildClusterMembershipMap,
-  getClusterKey,
-  deriveSeenClusters,
-  selectDiverseBatch,
-} from '@/lib/utils/diverseBatch';
 import { CommentData } from '@/types/api';
 
 /**
@@ -317,7 +320,7 @@ export async function getAdaptiveBatch(
 ): Promise<BatchResult> {
   const { size = 6, config } = options;
   const db = getFirestoreAdmin();
-  const sampler = new ProposalSampler(config);
+  const sampler = new ProposalSampler(config, logger);
 
   logger.info('[getAdaptiveBatch] Starting Thompson Sampling batch fetch:', {
     questionId,

@@ -18,6 +18,7 @@ import {
 
 const unsubscribe = jest.fn();
 
+jest.mock('@/controllers/db/statements/readScopes', () => ({ forgetTreeScopes: jest.fn() }));
 jest.mock('@/controllers/db/statements/listenToStatements', () => ({
 	listenToStatement: jest.fn(() => unsubscribe),
 	listenToSubStatements: jest.fn(() => unsubscribe),
@@ -63,6 +64,7 @@ jest.mock('react-redux', () => ({
 jest.mock('@/redux/statements/statementsSlice', () => ({
 	statementSelector: () => () => ({ statementId: 'st-1', topParentId: 'st-1' }),
 	fullyLoadedScopeSelector: () => () => undefined,
+	statementSubscriptionSelector: () => () => undefined,
 }));
 
 /** Everything the chat screen subscribes beyond the single-document listener. */

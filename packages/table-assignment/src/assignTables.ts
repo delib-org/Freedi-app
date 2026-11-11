@@ -1,8 +1,16 @@
-import type { Assignment, AssignmentOptions, Participant, Topic } from './types';
+import type {
+	Assignment,
+	AssignmentOptions,
+	Participant,
+	PinnedTable,
+	TablePlan,
+	Topic,
+} from './types';
 import {
 	BALANCE_TOLERANCE_DEFAULT,
 	MAX_RANKED_PREFERENCES,
 	RESTARTS_DEFAULT,
+	SWAP_TRIES_DEFAULT,
 	TABLE_SIZE_DEFAULT,
 } from './constants';
 import { TableAssignmentError } from './errors';
@@ -10,6 +18,7 @@ import { createRng } from './rng';
 import { allocateTables } from './allocateTables';
 import { sideStats } from './stats';
 import { dealSnake, type Seating } from './deal';
+import { layoutWithPinned } from './pinned';
 import { improveBySwaps, type SeatingScore } from './improve';
 import { buildMetrics, buildTables } from './metrics';
 
@@ -19,7 +28,8 @@ interface ResolvedOptions {
 	tolerance: number;
 	restarts: number;
 	seed: number;
-	locked: Readonly<Record<string, number>>;
+	maxSwapTries: number;
+	pinnedTables: ReadonlyArray<PinnedTable>;
 }
 
 /**
@@ -35,24 +45,30 @@ export function assignTables(
 ): Assignment {
 	const resolved = resolveOptions(options);
 	validate(participants, topics, resolved);
-	const plans = allocateTables(participants, topics, resolved.tableSize, resolved.maxRanked);
+	const { plans, pinnedSeats } = planTables(participants, topics, resolved);
 	const population = sideStats(participants);
-	const lockedIndexes = new Set(
-		participants.flatMap((p, i) => (resolved.locked[p.id] === undefined ? [] : [i])),
-	);
+	const lockedIndexes = new Set(pinnedSeats.flat());
 	const rng = createRng(resolved.seed);
 
 	let best: { seating: Seating; score: SeatingScore } | undefined;
+	let triesLeft = resolved.maxSwapTries;
 	for (let restart = 0; restart < resolved.restarts; restart++) {
-		const seating = dealSnake(participants, plans, resolved.locked, rng);
+		if (best && triesLeft <= 0) break;
+		const seating = dealSnake(participants, plans, pinnedSeats, rng);
 		const score = improveBySwaps(
 			participants,
 			plans,
 			seating,
 			population,
-			{ maxRanked: resolved.maxRanked, tolerance: resolved.tolerance, locked: lockedIndexes },
+			{
+				maxRanked: resolved.maxRanked,
+				tolerance: resolved.tolerance,
+				locked: lockedIndexes,
+				maxSwapTries: triesLeft,
+			},
 			rng,
 		);
+		triesLeft -= score.swapTries;
 		if (!best || isBetter(score, best.score, resolved.tolerance)) best = { seating, score };
 	}
 
@@ -66,6 +82,27 @@ export function assignTables(
 	);
 
 	return { tables, seed: resolved.seed, metrics };
+}
+
+function planTables(
+	participants: readonly Participant[],
+	topics: readonly Topic[],
+	options: ResolvedOptions,
+): { plans: TablePlan[]; pinnedSeats: number[][] } {
+	if (options.pinnedTables.length > 0) {
+		return layoutWithPinned(
+			participants,
+			topics,
+			options.pinnedTables,
+			options.tableSize,
+			options.maxRanked,
+		);
+	}
+
+	return {
+		plans: allocateTables(participants, topics, options.tableSize, options.maxRanked),
+		pinnedSeats: [],
+	};
 }
 
 /** Within tolerance beats outside; then preferences; then the tightest, most even balance. */
@@ -88,7 +125,8 @@ function resolveOptions(options: AssignmentOptions): ResolvedOptions {
 		tolerance: options.balanceTolerance ?? BALANCE_TOLERANCE_DEFAULT,
 		restarts: options.restarts ?? RESTARTS_DEFAULT,
 		seed: options.seed ?? Date.now(),
-		locked: options.locked ?? {},
+		maxSwapTries: options.maxSwapTries ?? SWAP_TRIES_DEFAULT,
+		pinnedTables: options.pinnedTables ?? [],
 	};
 }
 
@@ -102,8 +140,24 @@ function validate(
 			tableSize: options.tableSize,
 		});
 	}
-	if (options.restarts < 1)
-		throw new TableAssignmentError('restarts must be at least 1', { restarts: options.restarts });
+	if (!Number.isInteger(options.restarts) || options.restarts < 1)
+		throw new TableAssignmentError('restarts must be a whole number of at least 1', {
+			restarts: options.restarts,
+		});
+	if (!Number.isInteger(options.maxRanked) || options.maxRanked < 0)
+		throw new TableAssignmentError('maxRankedPreferences must be a whole number, 0 or more', {
+			maxRankedPreferences: options.maxRanked,
+		});
+	if (Number.isNaN(options.tolerance) || options.tolerance < 0)
+		throw new TableAssignmentError('balanceTolerance must be a number, 0 or more', {
+			balanceTolerance: options.tolerance,
+		});
+	if (Number.isNaN(options.maxSwapTries) || options.maxSwapTries < 0)
+		throw new TableAssignmentError('maxSwapTries must be a number, 0 or more', {
+			maxSwapTries: options.maxSwapTries,
+		});
+	assertParticipantsWellFormed(participants);
+	assertTopicsWellFormed(topics);
 	assertUniqueIds(
 		participants.map((p) => p.id),
 		'participant',
@@ -119,6 +173,34 @@ function validate(
 		});
 	if (participants.length > 0 && topics.length === 0)
 		throw new TableAssignmentError('No topics to seat people at', {});
+}
+
+function assertParticipantsWellFormed(participants: readonly Participant[]): void {
+	for (const participant of participants) {
+		if (!Array.isArray(participant.preferences)) {
+			throw new TableAssignmentError('Every participant needs a preferences array', {
+				id: participant.id,
+			});
+		}
+		if (participant.side === undefined) continue;
+		if (!Array.isArray(participant.side) || !participant.side.every(Number.isFinite)) {
+			throw new TableAssignmentError('A declared side must be an array of finite numbers', {
+				id: participant.id,
+			});
+		}
+	}
+}
+
+function assertTopicsWellFormed(topics: readonly Topic[]): void {
+	for (const topic of topics) {
+		const { maxTables } = topic;
+		if (maxTables !== undefined && (!Number.isInteger(maxTables) || maxTables < 0)) {
+			throw new TableAssignmentError('maxTables must be a whole number, 0 or more', {
+				topicId: topic.id,
+				maxTables,
+			});
+		}
+	}
 }
 
 function assertUniqueIds(ids: readonly string[], kind: string): void {

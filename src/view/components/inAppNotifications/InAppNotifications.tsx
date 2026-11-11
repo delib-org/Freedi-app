@@ -8,7 +8,7 @@ import { NotificationType } from '@freedi/shared-types';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import NotificationCard from '../notificationCard/NotificationCard';
 import {
-	markMultipleNotificationsAsReadDB,
+	markAllUnreadNotificationsAsReadDB,
 	clearAllInAppNotificationsDB,
 } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import NotificationDeliveryControls from '../notifications/NotificationDeliveryControls';
@@ -31,7 +31,7 @@ const InAppNotifications = ({ onClose }: { onClose?: () => void }) => {
 		e.stopPropagation();
 		try {
 			if (unreadIds.length === 0) return;
-			await markMultipleNotificationsAsReadDB(unreadIds);
+			await markAllUnreadNotificationsAsReadDB();
 		} catch (error) {
 			logError(error, { operation: 'inAppNotifications.handleMarkAllAsRead' });
 		}
@@ -47,7 +47,7 @@ const InAppNotifications = ({ onClose }: { onClose?: () => void }) => {
 	}
 
 	return (
-		<div className={styles.inAppNotifications} role="region" aria-label={t('Notifications')}>
+		<div className={styles.inAppNotifications} role="region" aria-label={t('Inbox')}>
 			{onClose && (
 				<button className={styles.close} onClick={onClose} type="button" aria-label={t('Close')}>
 					<X size={20} />
@@ -57,7 +57,7 @@ const InAppNotifications = ({ onClose }: { onClose?: () => void }) => {
 			{inAppNotifications && inAppNotifications.length > 0 ? (
 				<>
 					<div className={styles.header}>
-						<span className={styles.notificationTitle}>{t('Notifications')}</span>
+						<span className={styles.notificationTitle}>{t('Inbox')}</span>
 						<div className={styles.actions}>
 							{unreadIds.length > 0 && (
 								<button className={styles.actionBtn} onClick={handleMarkAllAsRead} type="button">
@@ -76,7 +76,7 @@ const InAppNotifications = ({ onClose }: { onClose?: () => void }) => {
 					</div>
 				</>
 			) : (
-				<div className={styles.noNotifications}>{t('You have no new notifications')}</div>
+				<div className={styles.noNotifications}>{t('Your inbox is empty')}</div>
 			)}
 		</div>
 	);

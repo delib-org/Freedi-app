@@ -1,5 +1,6 @@
 import { FC } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { ResultsStripItem } from '@/view/components/atomic/molecules/ResultsStrip';
 
 interface LikeChipsProps {
 	likesCount: number;
@@ -16,19 +17,14 @@ const LikeChips: FC<LikeChipsProps> = ({ likesCount, likePercentage, showPercent
 		<div className="results-strip results-strip--chips">
 			<div className="results-strip__items" role="group" aria-label={t('Results')}>
 				{showPercentage && (
-					<div className="results-strip__item results-strip__item--primary">
-						<span className="results-strip__value" dir="ltr">
-							{likePercentage}%
-						</span>
-						<span className="results-strip__label">{t('Agreement')}</span>
-					</div>
+					<ResultsStripItem
+						value={`${likePercentage}%`}
+						label={t('Liked by')}
+						tip={t('scoreTip.liked')}
+						isPrimary
+					/>
 				)}
-				<div className="results-strip__item">
-					<span className="results-strip__value" dir="ltr">
-						{likesCount}
-					</span>
-					<span className="results-strip__label">{t('Likes')}</span>
-				</div>
+				<ResultsStripItem value={String(likesCount)} label={t('Likes')} />
 			</div>
 		</div>
 	);

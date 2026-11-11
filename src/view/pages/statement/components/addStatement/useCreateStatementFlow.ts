@@ -16,6 +16,7 @@ import { INTENT_TO_TYPE } from '@/redux/statements/newStatementSlice';
 import { setStatement } from '@/redux/statements/statementsSlice';
 import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
 import { createStatement } from '@/controllers/db/statements/createStatement';
+import { announceAnswerPublished } from '@/controllers/db/subscriptions/answerPublished';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -126,11 +127,21 @@ export function useCreateStatementFlow({
 		if (state.step === 'done') {
 			finishedRef.current = true;
 			uxAnalytics.addAnswerCompleted(parentId);
+			// An answer written to the database raises the notification-choices
+			// prompt (one per publish, even when split into several). Supporting a
+			// similar answer ends with no ids; a temp node never left the browser.
+			if (commit === 'db' && intent === 'answer' && state.createdIds.length > 0) {
+				announceAnswerPublished(
+					dispatch,
+					state.createdIds[state.createdIds.length - 1],
+					parentStatement,
+				);
+			}
 			onDoneRef.current?.(state.createdIds);
 		} else if (state.step !== 'error') {
 			uxAnalytics.addAnswerStep(parentId, toAnalyticsStep(state.step));
 		}
-	}, [state.step, state.createdIds, parentId]);
+	}, [state.step, state.createdIds, parentId, commit, intent, dispatch, parentStatement]);
 
 	// multiSplit: ask the detector once we enter the step.
 	useEffect(() => {
@@ -144,6 +155,11 @@ export function useCreateStatementFlow({
 		)
 			.then((result) => {
 				if (cancelled) return;
+				if (result.rejection) {
+					send({ type: 'REJECTED', reason: result.rejection.reason });
+
+					return;
+				}
 				const splits: FlowDraft[] =
 					result.ok && result.isMultipleSuggestions
 						? result.suggestions.map((s) => ({ title: s.title, description: s.description }))
@@ -170,6 +186,11 @@ export function useCreateStatementFlow({
 		getSimilarOptions(parentId, state.draft.title, user?.uid ?? '', () => undefined)
 			.then((result) => {
 				if (cancelled) return;
+				if (result?.rejected === true) {
+					send({ type: 'REJECTED', reason: result.reason });
+
+					return;
+				}
 				send({ type: 'SIMILARITY_RESULT', similar: result?.similarStatements ?? [] });
 			})
 			.catch(() => {
@@ -222,6 +243,8 @@ export function useCreateStatementFlow({
 						currentLanguage,
 						user,
 						dispatch,
+						// Announced by this hook once the sheet is done, not mid-write.
+						announceAnswer: false,
 						// The sheet closes once the write is local; waiting for the server's
 						// ack kept it open for ~20-30 s on a stale mobile connection.
 						onServerWriteError: (error: unknown) =>

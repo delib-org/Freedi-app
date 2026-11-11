@@ -1,5 +1,7 @@
 export enum NotificationTriggerType {
 	STATEMENT_REPLY = 'statement_reply',
+	/** A new answer (option) was added to a question the person follows */
+	NEW_ANSWER = 'new_answer',
 	SOCIAL_PROOF = 'social_proof',
 	CONSENSUS_SHIFT = 'consensus_shift',
 	VOTING_DEADLINE = 'voting_deadline',

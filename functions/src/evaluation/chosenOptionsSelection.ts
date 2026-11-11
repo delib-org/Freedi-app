@@ -114,6 +114,72 @@ export function selectChosenOptions(
 }
 
 // ----------------------------------------------------------------------------
+// Which options must be read to make the selection
+// ----------------------------------------------------------------------------
+
+/**
+ * What the selection needs from the consensus-ordered query, or undefined when
+ * only a read of every option gives the right answer: ordering by another
+ * metric (no descending index for it) or a cutoff that keeps everything.
+ */
+export type CandidatePlan = { top: number } | { above: number };
+
+export function planCandidates(settings: ResultsSettings): CandidatePlan | undefined {
+	const orderedByConsensus =
+		settings.resultsBy === ResultsBy.consensus || settings.resultsBy === ResultsBy.topOptions;
+	if (!orderedByConsensus) return undefined;
+
+	const cutoffBy = settings.cutoffBy || CutoffBy.topOptions;
+	if (cutoffBy === CutoffBy.aboveThreshold) {
+		const above = settings.cutoffNumber ?? 0;
+
+		// A negative threshold also admits options with no consensus field (see below).
+		return above >= 0 ? { above } : undefined;
+	}
+	if (cutoffBy !== CutoffBy.topOptions) return undefined;
+
+	const top = Math.ceil(Number(settings.numberOfResults || DEFAULT_NUMBER_OF_RESULTS));
+
+	return Number.isFinite(top) && top > 0 ? { top } : undefined;
+}
+
+export type CandidateStatus = 'complete' | 'readMore' | 'readAll';
+
+/**
+ * Whether `fetched` (consensus descending) holds every option the selection
+ * could pick.
+ *
+ * - A hidden option can sit anywhere in the order, so only visible ones count
+ *   toward the top N.
+ * - Options tied with last place must all be read, or the tie would be decided
+ *   by which page they fell on.
+ * - Options without a consensus field are not returned by the query and rank
+ *   as 0. They cannot reach a last place above 0; at or below 0 only a full
+ *   read gives the right answer.
+ *
+ * `exhausted` means the query has no more options to return.
+ */
+export function candidateStatus(
+	fetched: Statement[],
+	plan: CandidatePlan,
+	exhausted: boolean,
+): CandidateStatus {
+	const lastConsensus = fetched[fetched.length - 1]?.consensus ?? 0;
+
+	if ('above' in plan) {
+		return exhausted || lastConsensus <= plan.above ? 'complete' : 'readMore';
+	}
+
+	const lastPlace = fetched.filter((option) => !option.hide)[plan.top - 1];
+	if (!lastPlace) return exhausted ? 'readAll' : 'readMore';
+
+	const lastPlaceConsensus = lastPlace.consensus ?? 0;
+	if (lastPlaceConsensus <= 0) return 'readAll';
+
+	return exhausted || lastConsensus < lastPlaceConsensus ? 'complete' : 'readMore';
+}
+
+// ----------------------------------------------------------------------------
 // Diffing against what is stored
 // ----------------------------------------------------------------------------
 

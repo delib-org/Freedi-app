@@ -2,7 +2,7 @@ import { CSSProperties, FC } from 'react';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router';
 import { Check } from 'lucide-react';
-import { Statement } from '@freedi/shared-types';
+import { DEFAULT_MIN_EVALUATORS, Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { getConsensusScore } from '@/redux/utils/selectorFactories';
 import { renderInlineMarkdown } from '@/helpers/inlineMarkdownHelpers';
@@ -22,10 +22,10 @@ interface AnswerResultProps {
 const AnswerResult: FC<AnswerResultProps> = ({ answer, variant, rank }) => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
-	const rated = evaluatorCount(answer) > 0;
+	const raters = evaluatorCount(answer);
 	const score = getConsensusScore(answer);
 	const tone = scoreTone(score);
-	const label = rated ? t(scoreLabelKey(score)) : t('Not rated yet');
+	const label = raters > 0 ? t(scoreLabelKey(score, raters)) : t('Not rated yet');
 	const barStyle = { '--bar-pct': `${scorePercent(score)}%` } as CSSProperties;
 
 	const open = () =>
@@ -36,7 +36,7 @@ const AnswerResult: FC<AnswerResultProps> = ({ answer, variant, rank }) => {
 			<button type="button" className={styles.result__text} onClick={open}>
 				{renderInlineMarkdown(answer.statement)}
 			</button>
-			{rated && (
+			{raters >= DEFAULT_MIN_EVALUATORS && (
 				<span
 					className={clsx(styles.bar, variant === 'leading' && styles['bar--onTint'])}
 					role="img"

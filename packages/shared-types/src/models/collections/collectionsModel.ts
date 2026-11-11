@@ -10,6 +10,7 @@ export enum Collections {
     statementsMetaData = 'statementsMeta',
     statementsPasswords = 'statementsPasswords',
     statementsSubscribe = 'statementsSubscribe',
+    accessScopeJobs = 'accessScopeJobs',
     userFeed = 'userFeed', // server-written per-user home feed: one doc per (user, top-level discussion), ordered by lastActivity
     userFeedThrottle = 'userFeedThrottle', // server-only: last activity fan-out per discussion (coalesces userFeed writes)
     massConsensus = 'massConsensus',
@@ -93,6 +94,8 @@ export enum Collections {
 
     // Engagement system
     notificationQueue = 'notificationQueue',
+    answerNoticeState = 'answerNoticeState', // server-only: per-answer baseline and counters for answer notices
+    noticeCapSlots = 'noticeCapSlots', // server-only: deterministic slots enforcing notice caps
     creditLedger = 'creditLedger',
     userEngagement = 'userEngagement',
     engagementEvents = 'engagementEvents',
@@ -177,4 +180,7 @@ export enum Collections {
     tableAssignmentTopics = 'tableAssignmentTopics',
     tableAssignmentParticipants = 'tableAssignmentParticipants',
     tableAssignmentRuns = 'tableAssignmentRuns',
+    tableAssignmentRoster = 'tableAssignmentRoster',
+    tableAssignmentCounters = 'tableAssignmentCounters',
+    tableAssignmentSeats = 'tableAssignmentSeats',
 }

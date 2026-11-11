@@ -4,6 +4,8 @@ import { t } from '@/lib/i18n';
 import type { VoteResult } from '@/lib/classroom/voteResults';
 import { playFlip, recordPositions } from '@/lib/flipReorder';
 import type { Positions } from '@/lib/flipReorder';
+import { createGlideTapGate } from '@/lib/glideTapGate';
+import type { GlideTapGate } from '@/lib/glideTapGate';
 
 export interface VoteListAttrs {
 	candidates: Statement[];
@@ -48,14 +50,40 @@ function resultView(result: VoteResult | undefined): m.Children {
  * table. A tap selects; "Vote" (a second tap) casts. With live results on,
  * each card also shows its share of the votes (counts only, never who).
  * When the cards re-order (C_p or votes moved) they glide to their new place,
- * and taps are ignored until the glide ends, so a card never lands under a
- * finger that aimed at another one.
+ * and a tap made meanwhile is held (by option id) and sent when the glide
+ * ends, so a card never lands under a finger that aimed at another one and
+ * the student's tap is never lost.
  */
 const before = new WeakMap<Element, Positions>();
-const glideEnd = new WeakMap<Element, number>();
 
-function gliding(list: Element | null | undefined): boolean {
-	return !!list && Date.now() < (glideEnd.get(list) ?? 0);
+interface ListState {
+	gate: GlideTapGate;
+	latest: VoteListAttrs;
+}
+
+const states = new WeakMap<Element, ListState>();
+
+function stateOf(list: Element, attrs: VoteListAttrs): ListState {
+	const found = states.get(list);
+	if (found) {
+		found.latest = attrs;
+
+		return found;
+	}
+	const state: ListState = {
+		latest: attrs,
+		gate: createGlideTapGate({
+			// Reads the newest attrs: by the time the glide ends the ballot may be
+			// closed, or the option gone. Then the held tap is dropped.
+			deliver: (id) => {
+				const { locked, candidates, onSelect } = state.latest;
+				if (!locked && candidates.some((option) => option.statementId === id)) onSelect(id);
+			},
+		}),
+	};
+	states.set(list, state);
+
+	return state;
 }
 
 export const VoteList: m.Component<VoteListAttrs> = {
@@ -65,12 +93,23 @@ export const VoteList: m.Component<VoteListAttrs> = {
 		}
 	},
 
+	oncreate(vnode: m.VnodeDOM<VoteListAttrs>) {
+		stateOf(vnode.dom, vnode.attrs);
+	},
+
+	onremove(vnode: m.VnodeDOM<VoteListAttrs>) {
+		states.get(vnode.dom)?.gate.cancel();
+		states.delete(vnode.dom);
+	},
+
 	onupdate(vnode: m.VnodeDOM<VoteListAttrs>) {
+		const state = stateOf(vnode.dom, vnode.attrs);
+		if (vnode.attrs.locked) state.gate.cancel();
 		const positions = before.get(vnode.dom);
 		if (!positions) return;
 		before.delete(vnode.dom);
 		const duration = playFlip(vnode.dom, positions);
-		if (duration > 0) glideEnd.set(vnode.dom, Date.now() + duration);
+		if (duration > 0) state.gate.startGlide(duration);
 	},
 
 	view({ attrs }) {
@@ -88,8 +127,10 @@ export const VoteList: m.Component<VoteListAttrs> = {
 							role: 'radio',
 							'aria-checked': on ? 'true' : 'false',
 							onclick: (e: Event) => {
-								if (gliding((e.currentTarget as Element).closest('.vote-list'))) return;
-								attrs.onSelect(option.statementId);
+								const list = (e.currentTarget as Element).closest('.vote-list');
+								const state = list ? states.get(list) : undefined;
+								if (state) state.gate.tap(option.statementId);
+								else attrs.onSelect(option.statementId);
 							},
 						};
 

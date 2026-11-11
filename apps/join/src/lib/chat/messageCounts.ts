@@ -18,7 +18,7 @@
  */
 
 import m from 'mithril';
-import { Statement, StatementType, Collections } from '@freedi/shared-types';
+import { Statement, StatementType, Collections, OPEN_ACCESS_SCOPE } from '@freedi/shared-types';
 import { db, collection, query, where, Unsubscribe } from '../firebase';
 import { resilientOnSnapshot } from '../resilientListeners';
 import { resetAuthorAlerts, notifyLatestMessage } from './authorCommentAlerts';
@@ -87,7 +87,37 @@ function getLastReadMap(): Record<string, number> {
  */
 let subscribedSignature: string | null = null;
 
-export function subscribeMessageCounts(optionIds: string[]): void {
+interface MessageCountOption {
+	statementId: string;
+	accessScope?: string;
+}
+
+/**
+ * One query per scope: rules check the scope once, whereas a `parentId in` list
+ * with no scope would cost a document read per option. A chat message inherits
+ * its option's scope, so options are grouped by theirs.
+ */
+function scopedBatches(
+	options: readonly MessageCountOption[],
+): Array<{ scope: string; batch: string[] }> {
+	const byScope = new Map<string, string[]>();
+	for (const option of options) {
+		const scope = option.accessScope ?? OPEN_ACCESS_SCOPE;
+		byScope.set(scope, [...(byScope.get(scope) ?? []), option.statementId]);
+	}
+
+	return [...byScope.entries()].flatMap(([scope, ids]) => {
+		const batches: Array<{ scope: string; batch: string[] }> = [];
+		for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+			batches.push({ scope, batch: ids.slice(i, i + BATCH_SIZE) });
+		}
+
+		return batches;
+	});
+}
+
+export function subscribeMessageCounts(options: readonly MessageCountOption[]): void {
+	const optionIds = options.map((option) => option.statementId);
 	const signature = [...optionIds].sort().join('|');
 	if (signature === subscribedSignature) return;
 	subscribedSignature = signature;
@@ -101,16 +131,15 @@ export function subscribeMessageCounts(optionIds: string[]): void {
 
 	if (optionIds.length === 0) return;
 
-	for (let i = 0; i < optionIds.length; i += BATCH_SIZE) {
-		const batch = optionIds.slice(i, i + BATCH_SIZE);
-
+	for (const [listenerIndex, { scope, batch }] of scopedBatches(options).entries()) {
 		const chatQuery = query(
 			collection(db, Collections.statements),
 			where('parentId', 'in', batch),
 			where('statementType', '==', StatementType.statement),
+			where('accessScope', '==', scope),
 		);
 
-		const unsub = resilientOnSnapshot(`messageCounts:${i / BATCH_SIZE}`, chatQuery, (snap) => {
+		const unsub = resilientOnSnapshot(`messageCounts:${listenerIndex}`, chatQuery, (snap) => {
 			// Clear this batch's entries before re-counting so a deleted
 			// message decrements the counter correctly.
 			for (const id of batch) {

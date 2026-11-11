@@ -4,10 +4,12 @@ import { useDispatch } from 'react-redux';
 // Components
 import LoadingPage from '../loadingPage/LoadingPage';
 import Page404 from '../page404/Page404';
-import UnAuthorizedPage from '../unAuthorizedPage/UnAuthorizedPage';
+import Page401 from '../page401/Page401';
+import WaitingPage from '../waiting/WaitingPage';
 
 // Types
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { RootState } from '@/redux/store';
 
 // Custom hooks
@@ -19,6 +21,7 @@ import { useComponentState } from './hooks/useComponentState';
 import { useStatementViewTracking } from '@/controllers/hooks/useStatementViewTracking';
 import { analyticsService } from '@/services/analytics';
 import { useMarkDiscussionRead } from './hooks/useMarkDiscussionRead';
+import { useTreeSeenMarkers } from '@/controllers/hooks/useTreeSeenMarkers';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { closePanels } from '@/controllers/hooks/panelUtils';
 
@@ -40,6 +43,7 @@ export const subStatementsSelector = selectSubStatementsByParent;
 
 const StatementMain: React.FC = () => {
 	const dispatch = useDispatch();
+	const { t } = useTranslation();
 	const prevStatementIdRef = React.useRef<string | undefined>(undefined);
 
 	// Use custom hooks to manage data and side effects
@@ -113,12 +117,16 @@ const StatementMain: React.FC = () => {
 		}
 	}, [statementId, statement, user?.uid]);
 
+	// What this person has seen in the tree, so cards below the top level can show unread numbers
+	useTreeSeenMarkers(user?.uid, statement?.topParentId);
+
 	// Mark as read on open, then only when newer content arrives (throttled)
 	useMarkDiscussionRead({
 		statementId,
 		userId: user?.uid,
 		isLoaded: Boolean(statement),
 		lastChildUpdate: statement?.lastChildUpdate,
+		descendantMessageCount: statement?.descendantMessageCount,
 	});
 
 	// Reset new statement modal when component unmounts or navigating to a different statement
@@ -144,18 +152,19 @@ const StatementMain: React.FC = () => {
 			case COMPONENT_STATES.ERROR:
 				return (
 					<div className="page">
-						<h1>Error: {error}</h1>
-						<button onClick={resetError}>Retry</button>
+						<h1>{t('Something went wrong')}</h1>
+						{error && <p>{t(error)}</p>}
+						<button onClick={resetError}>{t('Retry')}</button>
 					</div>
 				);
 			case COMPONENT_STATES.NOT_FOUND:
 				return <Page404 />;
 			case COMPONENT_STATES.WAITING_APPROVAL:
-				return <h1>Waiting for approval</h1>;
+				return <WaitingPage />;
 			case COMPONENT_STATES.LOADING:
 				return <LoadingPage />;
 			case COMPONENT_STATES.UNAUTHORIZED:
-				return <UnAuthorizedPage />;
+				return <Page401 />;
 			case COMPONENT_STATES.AUTHORIZED:
 				return (
 					<StatementProvider
@@ -177,7 +186,7 @@ const StatementMain: React.FC = () => {
 					/>
 				);
 			default:
-				return <UnAuthorizedPage />;
+				return <Page401 />;
 		}
 	};
 

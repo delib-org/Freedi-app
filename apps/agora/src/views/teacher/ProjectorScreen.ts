@@ -132,7 +132,12 @@ export function ProjectorScreen(
 				item.stage === AgoraStage.ended;
 			if (needsData && userId) listenToDeliberation(sessionId, userId);
 			if (item.stage === AgoraStage.voting && userId) {
-				listenToVoting(sessionId, session.challengeQuestionId, userId);
+				listenToVoting(
+					sessionId,
+					session.challengeQuestionId,
+					userId,
+					session.teacherId === userId,
+				);
 			}
 
 			// The same link the console's QR encodes. A bare `/join/<code>` path

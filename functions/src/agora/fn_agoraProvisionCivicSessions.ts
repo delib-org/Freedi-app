@@ -349,6 +349,7 @@ export const agoraProvisionCivicSessions = onCall(
 					statement: questionText,
 					statementType: StatementType.question,
 					parentId: rootStatement.statementId,
+					parentAccessScope: rootStatement.accessScope,
 					topParentId: rootStatement.statementId,
 					creatorId: uid,
 					creator,

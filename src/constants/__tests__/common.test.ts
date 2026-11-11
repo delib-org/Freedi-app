@@ -21,7 +21,6 @@ import {
 	ROUTES,
 	FEATURES,
 	PWA,
-	PWA_MESSAGES,
 } from '../common';
 
 describe('TIME constants', () => {
@@ -305,15 +304,6 @@ describe('PWA constants', () => {
 	});
 });
 
-describe('PWA_MESSAGES constants', () => {
-	it('should have non-empty string values', () => {
-		Object.values(PWA_MESSAGES).forEach((msg) => {
-			expect(typeof msg).toBe('string');
-			expect(msg.length).toBeGreaterThan(0);
-		});
-	});
-});
-
 describe('Constant immutability (as const)', () => {
 	it('TIME should not be mutable (TypeScript const check via type)', () => {
 		// These constants are declared with "as const" which TypeScript enforces,
@@ -336,6 +326,5 @@ describe('Constant immutability (as const)', () => {
 		expect(ROUTES).toBeDefined();
 		expect(FEATURES).toBeDefined();
 		expect(PWA).toBeDefined();
-		expect(PWA_MESSAGES).toBeDefined();
 	});
 });

@@ -8,7 +8,7 @@
 
 set -uo pipefail
 
-ROOT="/Users/talyaron/Documents/Freedi-app"
+ROOT="${PW_ROOT:-$(cd "$(git rev-parse --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd -P || echo /Users/talyaron/Documents/Freedi-app)}"
 WT="${1:-}"
 APPS=""
 for arg in "$@"; do case "$arg" in --apps=*) APPS="${arg#--apps=}" ;; esac; done

@@ -38,6 +38,7 @@ import {
 	groupByCpBand,
 	rankByCp,
 	isAgoraHidden,
+	OPEN_ACCESS_SCOPE,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { callLLM, extractJson, WORKER_MODEL } from '../config/openai-chat';
@@ -71,6 +72,7 @@ export function buildQuestionStatement(params: {
 		statement: (params.item.title ?? '').trim() || (roundSpecOf(params.item)?.kind ?? ''),
 		statementType: StatementType.question,
 		parentId: params.rootStatementId,
+		parentAccessScope: OPEN_ACCESS_SCOPE,
 		topParentId: params.rootStatementId,
 		parents: [params.rootStatementId],
 		creatorId: params.creatorId,

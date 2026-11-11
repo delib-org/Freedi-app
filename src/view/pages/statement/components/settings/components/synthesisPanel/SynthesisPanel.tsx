@@ -25,6 +25,7 @@ import Toggle from '@/view/components/atomic/atoms/Toggle/Toggle';
 import SynthesisProgressBar from './SynthesisProgressBar';
 import SelectiveOptionsList from './SelectiveOptionsList';
 import ThemeRebuildButton from './ThemeRebuildButton';
+import { isQuestionResultsOff } from '../../../questionScreen/canSeeScore';
 import styles from './SynthesisPanel.module.scss';
 
 interface Props {
@@ -268,7 +269,7 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 			if (result) {
 				setToast({
 					tone: 'info',
-					message: `${t('Claim registry first run started')} · ${result.backfilledClaims} ${t('claims backfilled')} · ${t('Queued')} ${result.enqueuedOptions} ${t('options')} · ${t('ETA')} ${result.etaMinutes} ${t('min')}`,
+					message: `${t('Claim registry first run started')} · ${result.backfilledClaims} ${t('claims backfilled')} · ${t('Queued')} ${result.enqueuedOptions} ${t('answers')} · ${t('ETA')} ${result.etaMinutes} ${t('min')}`,
 				});
 			}
 		}
@@ -313,7 +314,7 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 		if (result) {
 			setToast({
 				tone: 'info',
-				message: `${t('Queued')} ${result.enqueued} ${t('options')} · ${t('ETA')} ${result.etaMinutes} ${t('min')}`,
+				message: `${t('Queued')} ${result.enqueued} ${t('answers')} · ${t('ETA')} ${result.etaMinutes} ${t('min')}`,
 			});
 		}
 	}
@@ -329,7 +330,7 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 		if (result) {
 			setToast({
 				tone: 'info',
-				message: `${t('Cleared')} ${result.clustersReversed} ${t('clusters')} · ${t('Queued')} ${result.enqueued} ${t('options')} · ${t('ETA')} ${result.etaMinutes} ${t('min')}`,
+				message: `${t('Cleared')} ${result.clustersReversed} ${t('clusters')} · ${t('Queued')} ${result.enqueued} ${t('answers')} · ${t('ETA')} ${result.etaMinutes} ${t('min')}`,
 			});
 		}
 	}
@@ -347,7 +348,7 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 		if (result) {
 			setToast({
 				tone: 'info',
-				message: `${t('Created')} ${result.synthsCreated} ${t('synths')} · ${result.topicsCreated} ${t('topic clusters')} ${t('from')} ${result.eligibleOptions} ${t('options')}`,
+				message: `${t('Created')} ${result.synthsCreated} ${t('synths')} · ${result.topicsCreated} ${t('topic clusters')} ${t('from')} ${result.eligibleOptions} ${t('answers')}`,
 			});
 		}
 	}
@@ -363,7 +364,7 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 		if (result) {
 			setToast({
 				tone: 'info',
-				message: `${t('Re-embedded')} ${result.embedded} / ${result.total} ${t('options')}${result.failed ? ` · ${result.failed} ${t('failed')}` : ''}`,
+				message: `${t('Re-embedded')} ${result.embedded} / ${result.total} ${t('answers')}${result.failed ? ` · ${result.failed} ${t('failed')}` : ''}`,
 			});
 		}
 	}
@@ -470,7 +471,7 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 								onChange={() => handleMetricChange('consensus')}
 								disabled={panelDisabled}
 							/>
-							<span className={styles.metricPicker__title}>{t('Consensus score')}</span>
+							<span className={styles.metricPicker__title}>{t('Agreement score')}</span>
 							<span className={styles.metricPicker__hint}>
 								{t('Gate by how much agreement the option has reached.')}
 							</span>
@@ -777,6 +778,7 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 						disabled={busyOp !== null || dirty}
 						minEvaluators={settings.minEvaluators}
 						minConsensus={settings.minConsensus}
+						showScores={!isQuestionResultsOff(statement, Date.now())}
 						onResult={(result) => {
 							setToast({
 								tone: 'info',

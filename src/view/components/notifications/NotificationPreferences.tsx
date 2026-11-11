@@ -11,6 +11,11 @@ import BellIcon from '@/assets/icons/bellIcon.svg?react';
 import MailIcon from '@/assets/icons/bellIcon.svg?react';
 import PhoneIcon from '@/assets/icons/bellIcon.svg?react';
 import { logError } from '@/utils/errorHandling';
+import { useSelector } from 'react-redux';
+import { StatementType } from '@freedi/shared-types';
+import { statementSelector } from '@/redux/statements/statementsSlice';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
+import AnswerNotifyChoices from './answerNotifyPrompt/AnswerNotifyChoices';
 
 interface NotificationPreferencesProps {
 	statementId: string;
@@ -26,6 +31,9 @@ interface PreferencesState {
  * Component that allows users to manage their notification preferences for a statement
  */
 const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ statementId }) => {
+	const { t } = useTranslation();
+	const statement = useSelector(statementSelector(statementId));
+	const isQuestion = statement?.statementType === StatementType.question;
 	const [preferences, setPreferences] = useState<PreferencesState>({
 		getInAppNotification: true,
 		getEmailNotification: false,
@@ -138,24 +146,23 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 	if (isLoading) {
 		return (
 			<div className="notification-preferences loading">
-				<span>Loading preferences...</span>
+				<span>{t('Loading preferences...')}</span>
 			</div>
 		);
 	}
 
 	return (
 		<div className={styles.notificationPreferences}>
-			<h3>Notification Settings</h3>
-			<p className={styles.description}>
-				Choose how you want to be notified about updates to this statement
-			</p>
+			<h3>{t('Notification settings')}</h3>
+			{isQuestion && <AnswerNotifyChoices questionId={statementId} />}
+			<h4 className={styles.sectionTitle}>{t('How to notify me')}</h4>
 
 			<div className={styles.preferenceItem}>
 				<div className={styles.preferenceInfo}>
 					<BellIcon className={styles.icon} />
 					<div>
-						<h4>In-App Notifications</h4>
-						<p>See notifications when you're using the app</p>
+						<h4>{t('In-App Notifications')}</h4>
+						<p>{t("See notifications when you're using the app")}</p>
 					</div>
 				</div>
 				<label className={styles.switch}>
@@ -173,10 +180,12 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 				<div className={styles.preferenceInfo}>
 					<PhoneIcon className={styles.icon} />
 					<div>
-						<h4>Push Notifications</h4>
-						<p>Get notified on all your devices even when the app is closed</p>
+						<h4>{t('Push Notifications')}</h4>
+						<p>{t('Get notified on all your devices even when the app is closed')}</p>
 						{!hasNotificationPermission && preferences.getPushNotification && (
-							<p className={styles.warningText}>⚠️ Browser notifications must be enabled first</p>
+							<p className={styles.warningText}>
+								⚠️ {t('Browser notifications must be enabled first')}
+							</p>
 						)}
 					</div>
 				</div>
@@ -188,7 +197,7 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 						disabled={isSaving || (!hasNotificationPermission && !preferences.getPushNotification)}
 						title={
 							!hasNotificationPermission && !preferences.getPushNotification
-								? 'Please enable browser notifications first'
+								? t('Please enable browser notifications first')
 								: ''
 						}
 					/>
@@ -200,8 +209,8 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 				<div className={styles.preferenceInfo}>
 					<MailIcon className={styles.icon} />
 					<div>
-						<h4>Email Notifications</h4>
-						<p>Receive updates via email</p>
+						<h4>{t('Email Notifications')}</h4>
+						<p>{t('Receive updates via email')}</p>
 					</div>
 				</div>
 				<label className={styles.switch}>
@@ -215,7 +224,7 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 				</label>
 			</div>
 
-			{isSaving && <p className={styles.savingIndicator}>Saving...</p>}
+			{isSaving && <p className={styles.savingIndicator}>{t('Saving...')}</p>}
 		</div>
 	);
 };

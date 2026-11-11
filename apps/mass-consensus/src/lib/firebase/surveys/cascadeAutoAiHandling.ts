@@ -2,6 +2,7 @@ import { Collections, type Statement } from '@freedi/shared-types';
 import { getFirestoreAdmin } from '../admin';
 import type { Survey } from '@/types/survey';
 import { logger } from '@/lib/utils/logger';
+import { keepRosterAdministeredWrites } from './questionAdminAccess';
 
 /**
  * Cascade the automatic AI handling of a submission — `autoSplitMultiSuggestions`
@@ -78,6 +79,7 @@ export async function cascadeAutoAiHandling(
 	const writesNeeded: {
 		ref: FirebaseFirestore.DocumentReference;
 		changes: Record<string, boolean>;
+		question: Statement;
 	}[] = [];
 	let skipped = 0;
 
@@ -104,16 +106,19 @@ export async function cascadeAutoAiHandling(
 			continue;
 		}
 
-		writesNeeded.push({ ref: docRefs[i], changes });
+		writesNeeded.push({ ref: docRefs[i], changes, question: statement });
 	}
 
 	if (writesNeeded.length === 0) {
 		return { surveyId, totalQuestions: questionIds.length, updated: 0, skipped };
 	}
 
+	const allowed = await keepRosterAdministeredWrites(survey, writesNeeded, 'cascadeAutoAiHandling');
+	skipped += writesNeeded.length - allowed.length;
+
 	let updated = 0;
-	for (let i = 0; i < writesNeeded.length; i += FIRESTORE_BATCH_LIMIT) {
-		const chunk = writesNeeded.slice(i, i + FIRESTORE_BATCH_LIMIT);
+	for (let i = 0; i < allowed.length; i += FIRESTORE_BATCH_LIMIT) {
+		const chunk = allowed.slice(i, i + FIRESTORE_BATCH_LIMIT);
 		const batch = db.batch();
 		for (const { ref, changes } of chunk) {
 			batch.update(ref, changes);

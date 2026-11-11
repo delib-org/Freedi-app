@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { makeParticipant, makeRun, makeSession, makeTopic } from '../../__tests__/fixtures';
+import { makeRosterEntry, makeRun, makeSession, makeTopic } from '../../__tests__/fixtures';
 import { classifyError, errorCode, errorMessageKey } from '../callableErrors';
 import {
 	deriveDirectTables,
@@ -9,69 +9,25 @@ import {
 } from '../directTables';
 import { formatConsensus, tableNumber } from '../format';
 import { combineStates, stateForErrorCode } from '../loadable';
-import { describeMetrics, formatDeviation } from '../metrics';
-import { canEditPreferences, canEditTopics, nextHostAction, statusControls } from '../nextAction';
-import { nameByUid, participantNames, summarizeParticipants } from '../participants';
+import { describeMetrics } from '../metrics';
+import { canEditPreferences } from '../nextAction';
+import { rosterMatching, summarizeParticipants } from '../participants';
 import { latestRun } from '../runs';
-import { draftFromSettings, draftToRequest, settingsErrors } from '../settings';
-import { canPublish, isDraftStale, seatedCount } from '../stale';
+import { canPublish, isDraftStale } from '../stale';
 import {
 	draftFromStatement,
 	draftFromTopic,
 	draftToInput,
 	emptyDraft,
-	filterTopics,
-	moveItem,
 	newImports,
 	parseOptionalPositiveInt,
-	validateDraft,
 } from '../topics';
 import type { Statement } from '@freedi/shared-types';
 
-describe('nextHostAction', () => {
-	it('asks for topics first, then opens registration', () => {
-		expect(nextHostAction({ status: 'draft', mode: 'ranked', topicCount: 0 }).key).toBe(
-			'addTopics',
-		);
-		expect(nextHostAction({ status: 'draft', mode: 'ranked', topicCount: 2 })).toEqual({
-			key: 'openRegistration',
-			kind: 'status',
-			status: 'registrationOpen',
-		});
-	});
-
-	it('closes registration, then previews (ranked) or ends (direct)', () => {
-		expect(nextHostAction({ status: 'registrationOpen', mode: 'ranked', topicCount: 2 }).key).toBe(
-			'closeRegistration',
-		);
-		expect(
-			nextHostAction({ status: 'registrationClosed', mode: 'ranked', topicCount: 2 }).key,
-		).toBe('preview');
-		expect(
-			nextHostAction({ status: 'registrationClosed', mode: 'direct', topicCount: 2 }).key,
-		).toBe('endSession');
-	});
-
-	it('shows the published assignment, then nothing', () => {
-		expect(nextHostAction({ status: 'published', mode: 'ranked', topicCount: 2 }).key).toBe(
-			'viewAssignment',
-		);
-		expect(nextHostAction({ status: 'ended', mode: 'ranked', topicCount: 2 }).key).toBe('done');
-	});
-
-	it('locks topics after draft and lets preferences change only while registration is open', () => {
-		expect(canEditTopics('draft')).toBe(true);
-		expect(canEditTopics('registrationOpen')).toBe(false);
+describe('canEditPreferences', () => {
+	it('lets preferences change only while registration is open', () => {
 		expect(canEditPreferences('registrationOpen')).toBe(true);
 		expect(canEditPreferences('registrationClosed')).toBe(false);
-	});
-
-	it('offers the right status controls', () => {
-		expect(statusControls('draft')).toEqual(['registrationOpen']);
-		expect(statusControls('registrationOpen')).toEqual(['registrationClosed']);
-		expect(statusControls('registrationClosed')).toEqual(['ended']);
-		expect(statusControls('published')).toEqual(['ended']);
-		expect(statusControls('ended')).toEqual([]);
 	});
 });
 
@@ -79,18 +35,21 @@ describe('stale draft check', () => {
 	const base = {
 		run: makeRun(),
 		settings: { tableSize: 7, balanceTolerance: 0.3 },
-		registeredCount: 3,
+		registeredUids: ['u1', 'u2', 'u3'],
 		topicIds: ['a', 'b'],
 	};
 
 	it('accepts a current draft', () => {
-		expect(seatedCount(base.run.tables)).toBe(3);
 		expect(isDraftStale(base)).toBe(false);
 		expect(canPublish(base)).toBe(true);
 	});
 
 	it('is stale when someone registered after the compute', () => {
-		expect(isDraftStale({ ...base, registeredCount: 4 })).toBe(true);
+		expect(isDraftStale({ ...base, registeredUids: ['u1', 'u2', 'u3', 'u4'] })).toBe(true);
+	});
+
+	it('is stale when one person left and another came, though the count is the same', () => {
+		expect(isDraftStale({ ...base, registeredUids: ['u1', 'u2', 'u9'] })).toBe(true);
 	});
 
 	it('is stale when the tolerance changed', () => {
@@ -111,7 +70,7 @@ describe('stale draft check', () => {
 });
 
 describe('describeMetrics', () => {
-	it('lists each rank and the balance against the tolerance', () => {
+	it('lists each rank and the totals', () => {
 		const view = describeMetrics(makeRun().metrics);
 
 		expect(view.rankRows).toEqual([
@@ -119,11 +78,8 @@ describe('describeMetrics', () => {
 			{ rank: 2, count: 1 },
 			{ rank: 3, count: 0 },
 		]);
-		expect(view.balanceMax).toBe('0.20');
-		expect(view.balanceMean).toBe('0.15');
-		expect(view.tolerance).toBe('0.30');
-		expect(view.withinTolerance).toBe(true);
-		expect(view.satisfiedPercent).toBe(100);
+		expect(view.gotChosenTopic).toBe(3);
+		expect(view.rankedSeated).toBe(3);
 	});
 
 	it('counts people outside their choices and without preferences', () => {
@@ -137,22 +93,24 @@ describe('describeMetrics', () => {
 
 		expect(view.outsideChoices).toBe(1);
 		expect(view.withoutPreferences).toBe(2);
-		expect(view.withinTolerance).toBe(false);
-		expect(view.satisfiedPercent).toBe(50);
+		expect(view.gotChosenTopic).toBe(1);
+		expect(view.rankedSeated).toBe(2);
 	});
 
-	it('formats non-finite deviations as a dash', () => {
-		expect(formatDeviation(Number.NaN)).toBe('-');
+	it('reads a published run with empty preferences without crashing', () => {
+		const run = makeRun();
+		const view = describeMetrics({
+			...run.metrics,
+			preferences: { byRank: [], none: 0, noPreference: 0, score: 0, maxScore: 0 },
+		});
+
+		expect(view.rankRows).toEqual([]);
+		expect(view.gotChosenTopic).toBe(0);
+		expect(view.rankedSeated).toBe(0);
 	});
 });
 
 describe('topics', () => {
-	it('validates a draft', () => {
-		expect(validateDraft(emptyDraft())).toBe('titleRequired');
-		expect(validateDraft({ ...emptyDraft(), title: 'x', maxTables: '0' })).toBe('maxTablesInvalid');
-		expect(validateDraft({ ...emptyDraft(), title: 'x', maxTables: '2' })).toBeNull();
-	});
-
 	it('parses the optional table cap', () => {
 		expect(parseOptionalPositiveInt('')).toBeUndefined();
 		expect(parseOptionalPositiveInt(' 3 ')).toBe(3);
@@ -210,18 +168,6 @@ describe('topics', () => {
 		expect(newImports([draft], [draft, { ...draft, sourceStatementId: 's2' }])).toHaveLength(1);
 	});
 
-	it('moves items and ignores out-of-range moves', () => {
-		expect(moveItem(['a', 'b', 'c'], 1, -1)).toEqual(['b', 'a', 'c']);
-		expect(moveItem(['a', 'b'], 0, -1)).toEqual(['a', 'b']);
-	});
-
-	it('filters by title and description', () => {
-		const topics = [makeTopic('a', 0, { description: 'parks' }), makeTopic('b', 1)];
-
-		expect(filterTopics(topics, 'park').map((t) => t.topicId)).toEqual(['a']);
-		expect(filterTopics(topics, '')).toHaveLength(2);
-	});
-
 	it('formats consensus and table numbers', () => {
 		expect(formatConsensus(0.456)).toBe('0.46');
 		expect(tableNumber(0)).toBe(1);
@@ -230,60 +176,24 @@ describe('topics', () => {
 
 describe('participants', () => {
 	const people = [
-		makeParticipant('u1', { preferences: ['a'], position: 20, registeredAt: 2 }),
-		makeParticipant('u2', { registeredAt: 1 }),
-		makeParticipant('u3', { preferences: ['b'], position: 0, registeredAt: 3 }),
+		makeRosterEntry('u1', { hasPreferences: true, registeredAt: 2 }),
+		makeRosterEntry('u2', { registeredAt: 1 }),
+		makeRosterEntry('u3', { hasPreferences: true, registeredAt: 3 }),
 	];
 
-	it('counts, treating position 0 as specified', () => {
+	it('counts registrations and who has ranked', () => {
 		expect(summarizeParticipants(people)).toEqual({
 			registered: 3,
 			withPreferences: 2,
-			withPosition: 2,
-			notSpecified: 1,
 		});
 	});
 
-	it('returns names only, in registration order', () => {
-		expect(participantNames(people)).toEqual(['Name u2', 'Name u1', 'Name u3']);
-		expect(nameByUid(people).get('u1')).toBe('Name u1');
-	});
-});
+	it('returns name cards in registration order, matching the search', () => {
+		const later = makeRosterEntry('b', { fullName: 'Bea', registeredAt: 20 });
+		const earlier = makeRosterEntry('a', { fullName: 'Ann', registeredAt: 10 });
 
-describe('settings', () => {
-	it('starts from the stored settings and builds a request', () => {
-		const draft = draftFromSettings({
-			tableSize: 6,
-			balanceTolerance: 0.4,
-			positionQuestion: { label: 'Q', poleA: 'Yes', poleB: 'No' },
-		});
-
-		expect(settingsErrors(draft)).toEqual([]);
-		expect(draftToRequest('s', draft)).toEqual({
-			sessionId: 's',
-			tableSize: 6,
-			balanceTolerance: 0.4,
-			positionQuestion: { label: 'Q', poleA: 'Yes', poleB: 'No' },
-		});
-	});
-
-	it('removes the position question when disabled', () => {
-		const draft = { ...draftFromSettings({ tableSize: 7, balanceTolerance: 0.3 }) };
-
-		expect(draftToRequest('s', draft).positionQuestion).toBeNull();
-	});
-
-	it('reports invalid fields', () => {
-		const draft = draftFromSettings({ tableSize: 7, balanceTolerance: 0.3 });
-
-		expect(settingsErrors({ ...draft, tableSize: '1' })).toEqual(['tableSize']);
-		expect(settingsErrors({ ...draft, tableSize: '21' })).toEqual(['tableSize']);
-		expect(settingsErrors({ ...draft, balanceTolerance: '-1' })).toEqual(['balanceTolerance']);
-		expect(settingsErrors({ ...draft, positionEnabled: true })).toEqual([
-			'positionLabel',
-			'poleA',
-			'poleB',
-		]);
+		expect(rosterMatching([later, earlier], '').map((p) => p.uid)).toEqual(['a', 'b']);
+		expect(rosterMatching([later, earlier], 'be').map((p) => p.uid)).toEqual(['b']);
 	});
 });
 
@@ -332,8 +242,8 @@ describe('direct tables', () => {
 
 	it('counts free seats from the joined participants', () => {
 		const joined = [
-			makeParticipant('u1', { chosenTableIndex: 2 }),
-			makeParticipant('u2', { chosenTableIndex: 2 }),
+			makeRosterEntry('u1', { chosenTableIndex: 2 }),
+			makeRosterEntry('u2', { chosenTableIndex: 2 }),
 		];
 		const tables = deriveDirectTables(topics, seatCountsFromParticipants(joined), 2);
 

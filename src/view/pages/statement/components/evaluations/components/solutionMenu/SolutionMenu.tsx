@@ -25,6 +25,7 @@ interface Props {
 	statement: Statement;
 	isAuthorized: boolean;
 	isAdmin: boolean;
+	canToggleHide: boolean;
 	isCardMenuOpen: boolean;
 	setIsCardMenuOpen: (isOpen: boolean) => void;
 	isEdit: boolean;
@@ -37,6 +38,7 @@ const SolutionMenu: FC<Props> = ({
 	statement,
 	isAdmin,
 	isAuthorized,
+	canToggleHide,
 	isCardMenuOpen,
 	setIsCardMenuOpen,
 	isEdit,
@@ -120,7 +122,7 @@ const SolutionMenu: FC<Props> = ({
 						}}
 					/>
 				)}
-				{isAuthorized && (
+				{canToggleHide && (
 					<MenuOption
 						isOptionSelected={isHide}
 						icon={isHide ? <EyeIcon /> : <EyeCrossIcon />}

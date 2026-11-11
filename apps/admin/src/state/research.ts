@@ -71,12 +71,35 @@ function categorize(action: string) {
 
 // ── Time bucketing ──────────────────────────────────────────────────
 
-const SCOPE_CONFIG: Record<TimeScope, { durationMs: number; bucketMs: number; labelFn: (d: Date) => string }> = {
-	'1h':  { durationMs: 60 * 60 * 1000,          bucketMs: 2 * 60 * 1000,           labelFn: (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}` },
-	'12h': { durationMs: 12 * 60 * 60 * 1000,      bucketMs: 15 * 60 * 1000,          labelFn: (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}` },
-	'24h': { durationMs: 24 * 60 * 60 * 1000,      bucketMs: 30 * 60 * 1000,          labelFn: (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}` },
-	'1w':  { durationMs: 7 * 24 * 60 * 60 * 1000,  bucketMs: 4 * 60 * 60 * 1000,      labelFn: (d) => `${d.getDate()}/${d.getMonth() + 1}` },
-	'1m':  { durationMs: 30 * 24 * 60 * 60 * 1000, bucketMs: 24 * 60 * 60 * 1000,     labelFn: (d) => `${d.getDate()}/${d.getMonth() + 1}` },
+const SCOPE_CONFIG: Record<
+	TimeScope,
+	{ durationMs: number; bucketMs: number; labelFn: (d: Date) => string }
+> = {
+	'1h': {
+		durationMs: 60 * 60 * 1000,
+		bucketMs: 2 * 60 * 1000,
+		labelFn: (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+	},
+	'12h': {
+		durationMs: 12 * 60 * 60 * 1000,
+		bucketMs: 15 * 60 * 1000,
+		labelFn: (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+	},
+	'24h': {
+		durationMs: 24 * 60 * 60 * 1000,
+		bucketMs: 30 * 60 * 1000,
+		labelFn: (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+	},
+	'1w': {
+		durationMs: 7 * 24 * 60 * 60 * 1000,
+		bucketMs: 4 * 60 * 60 * 1000,
+		labelFn: (d) => `${d.getDate()}/${d.getMonth() + 1}`,
+	},
+	'1m': {
+		durationMs: 30 * 24 * 60 * 60 * 1000,
+		bucketMs: 24 * 60 * 60 * 1000,
+		labelFn: (d) => `${d.getDate()}/${d.getMonth() + 1}`,
+	},
 };
 
 function pad(n: number): string {
@@ -108,10 +131,7 @@ function buildTimeSeries(logs: ResearchLog[], scope: TimeScope): TimeBucket[] {
 	// Fill buckets
 	for (const log of logs) {
 		if (log.timestamp < start) continue;
-		const idx = Math.min(
-			Math.floor((log.timestamp - start) / config.bucketMs),
-			bucketCount - 1,
-		);
+		const idx = Math.min(Math.floor((log.timestamp - start) / config.bucketMs), bucketCount - 1);
 		const cat = categorize(log.action);
 		if (cat && buckets[idx]) {
 			buckets[idx][cat]++;

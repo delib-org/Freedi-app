@@ -10,6 +10,7 @@ import {
 	EvaluationUI,
 	Paragraph,
 	evaluationType as EvalType,
+	childTopParentId,
 } from '@freedi/shared-types';
 
 import { parse } from 'valibot';
@@ -158,7 +159,7 @@ export async function updateStatementText(
 			const parentDoc = await getDoc(parentRef);
 			if (parentDoc.exists()) {
 				const parentData = parentDoc.data() as Statement;
-				updates.topParentId = parentData.topParentId || parentData.statementId;
+				updates.topParentId = childTopParentId(parentData);
 			}
 		}
 

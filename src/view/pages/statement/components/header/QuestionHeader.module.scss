@@ -4,9 +4,12 @@
 .header {
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	// Shared with children that sit flush against the bar (AnswerStateStrip).
+	--header-pad-inline: 20px;
+	--header-gap: 12px;
+	gap: var(--header-gap);
 	padding-block-start: 8px;
-	padding-inline: 20px;
+	padding-inline: var(--header-pad-inline);
 	background: var(--tone-lilac);
 	color: var(--tone-lilac-ink);
 	border-radius: 0 0 var(--radius-sheet, 28px) var(--radius-sheet, 28px);
@@ -175,6 +178,20 @@
 
 	&__stages {
 		display: block;
+	}
+
+	&__howLink {
+		display: inline-block;
+		min-height: 24px;
+		margin-inline-start: var(--space-xs);
+		color: inherit;
+		font-weight: 600;
+		text-decoration: underline;
+
+		&:focus-visible {
+			outline: 2px solid var(--accent-violet);
+			outline-offset: 2px;
+		}
 	}
 }
 

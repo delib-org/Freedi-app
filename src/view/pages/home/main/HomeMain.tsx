@@ -12,6 +12,7 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
 import { useOpenAskQuestion } from '@/controllers/hooks/useOpenAskQuestion';
 import { useHomeStatementOverlay } from '@/controllers/hooks/useHomeStatementOverlay';
+import { useFreshMessageCounts } from '@/controllers/hooks/useFreshMessageCounts';
 import {
 	HOME_VIEW_PARAM,
 	INBOX_VIEW,
@@ -60,6 +61,17 @@ export default function HomeMain() {
 	const model = useMemo(
 		() => buildHomeModel({ subscriptions, statements, userId: user?.uid }),
 		[subscriptions, statements, user?.uid],
+	);
+
+	// Unread numbers on the cards: one read per shown card, once per visit.
+	useFreshMessageCounts(
+		useMemo(
+			() => [
+				...model.spaces.map((space) => space.id),
+				...model.questions.map((question) => question.id),
+			],
+			[model.spaces, model.questions],
+		),
 	);
 
 	const create = useOpenAskQuestion();

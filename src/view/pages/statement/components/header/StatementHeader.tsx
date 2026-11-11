@@ -1,10 +1,11 @@
-import React, { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
+import React, { FC, useCallback, useContext, useLayoutEffect, useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { useSelector } from 'react-redux';
 import { Screen, Statement, StatementType } from '@freedi/shared-types';
 
 import InvitePanel from './invitePanel/InvitePanel';
 import QuestionHeaderBar from './QuestionHeaderBar';
+import AnswerStateStrip from './AnswerStateStrip';
 import ShareModal from '@/view/components/shareModal/ShareModal';
 import QuestionTabs from '@/view/components/atomic/molecules/QuestionTabs/QuestionTabs';
 import StageProgress from '@/view/components/atomic/molecules/StageProgress/StageProgress';
@@ -12,8 +13,10 @@ import { logOut } from '@/controllers/db/authenticationUtils';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { updateStatementText } from '@/controllers/db/statements/updateStatementFields';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useParticipationStats } from '@/controllers/hooks/useParticipationStats';
+import { useRecordQuestionView } from '@/controllers/hooks/useRecordQuestionView';
+import { useLoadOwnVote } from '@/controllers/hooks/useLoadOwnVote';
+import { useLevelVerdict } from '@/controllers/hooks/useLevelVerdict';
 import { logError } from '@/utils/errorHandling';
 import { renderInlineMarkdown } from '@/helpers/inlineMarkdownHelpers';
 import { relevantNotifications } from '@/utils/engagementNavigation';
@@ -26,9 +29,16 @@ import {
 import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import HostHubSheet from '../host/HostHubSheet';
-import { isHostRole } from '../questionScreen/questionScreenLogic';
-import { getQuestionStage, showsStageBar, STAGE_LABEL_KEYS } from '../questionScreen/questionStage';
-import { buildQuestionTabs, resolveActiveView, tabOfView } from '../questionScreen/questionTabs';
+import { showsStageBar, STAGE_LABEL_KEYS } from '@/helpers/questionStage';
+import { buildStatementPath } from '@/routes/statementPaths';
+import { getStageCue } from '../questionScreen/resultsLogic';
+import { useQuestionScreenData } from '../questionScreen/useQuestionScreenData';
+import {
+	buildQuestionTabs,
+	HOW_IT_WORKS_ANCHOR,
+	resolveActiveView,
+	tabOfView,
+} from '../questionScreen/questionTabs';
 import styles from './QuestionHeader.module.scss';
 
 const MAIN_SCREENS = new Set(['main', undefined, 'chat', 'options', 'questions']);
@@ -51,8 +61,9 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	const { screen } = useParams();
 	const { t, dir } = useTranslation();
 	const { statement } = useContext(StatementContext);
-	const { role } = useAuthorization(statement?.statementId);
-	const isHost = isHostRole(role);
+	const data = useQuestionScreenData(statement);
+	const { isHost, stage } = data;
+	useLoadOwnVote(statement);
 
 	const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
 	const [showInvitationPanel, setShowInvitationPanel] = useState(false);
@@ -85,7 +96,14 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 		(n) => !n.read && n.parentId === statement?.statementId,
 	).length;
 
-	const participation = useParticipationStats(statement, options);
+	const isInsideSpace =
+		!!topParentStatement && topParentStatement.statementId !== statement?.statementId;
+	const topParentVerdict = useLevelVerdict(
+		isInsideSpace ? topParentStatement.statementId : undefined,
+	);
+
+	useRecordQuestionView(statement);
+	const participation = useParticipationStats(statement, isHost, options.length);
 
 	const tabs = useMemo(
 		() =>
@@ -98,7 +116,9 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	);
 	const activeView = resolveActiveView(tabParam, statement, tabs);
 
-	useEffect(() => {
+	// Layout effect: the parent decides whether the floating nav shows from this
+	// view, so it must land before paint or the nav blinks when opening on Answers.
+	useLayoutEffect(() => {
 		onActiveViewChange(activeView);
 	}, [activeView, onActiveViewChange]);
 
@@ -120,7 +140,10 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	const isQuestion = statement?.statementType === StatementType.question;
 	const showTabs = MAIN_SCREENS.has(screen);
 	const isMapScreen = screen === Screen.mindMap;
-	const stage = getQuestionStage({ statement, answerCount: options.length, now: Date.now() });
+	// A compound question runs its own phases and has no Answers tab to point at.
+	const cue = tabs.some((tab) => tab.id === 'options') ? getStageCue(data) : undefined;
+	const cueText = cue && (cue.value ? t(cue.key).replace('{n}', cue.value) : t(cue.key));
+	const isOnBackground = showTabs && activeView === 'background';
 
 	function handleShare() {
 		setShowShareModal(true);
@@ -157,9 +180,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	}
 
 	const spaceName =
-		topParentStatement && topParentStatement.statementId !== statement?.statementId
-			? topParentStatement.statement
-			: undefined;
+		isInsideSpace && topParentVerdict === 'open' ? topParentStatement?.statement : undefined;
 
 	return (
 		<>
@@ -180,12 +201,29 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 						/>
 					)}
 
+					{statement && <AnswerStateStrip statement={statement} />}
+
 					{showsStageBar(statement) && !isMapScreen && (
 						<div className={styles.header__stages}>
 							<StageProgress
 								stages={STAGE_LABEL_KEYS.map((key) => t(key))}
 								activeIndex={stage}
 								ariaLabel={t('Question stage')}
+								caption={
+									cueText && (
+										<>
+											{cueText}
+											{statement && !isOnBackground && (
+												<Link
+													className={styles.header__howLink}
+													to={`${buildStatementPath({ statementId: statement.statementId, view: 'background' })}#${HOW_IT_WORKS_ANCHOR}`}
+												>
+													{t('How it works')}
+												</Link>
+											)}
+										</>
+									)
+								}
 							/>
 						</div>
 					)}
@@ -228,14 +266,14 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 						</button>
 					)}
 
-					{isQuestion && isHost && !isMapScreen && (
+					{isQuestion && isHost && !isMapScreen && participation && (
 						<div className={styles.header__funnel} data-testid="host-funnel">
 							<span className={styles.header__stat}>
 								{t('Entered')} <b>{participation.entered}</b>
 							</span>
 							<span aria-hidden="true">·</span>
 							<span className={styles.header__stat}>
-								{t('Suggested')} <b>{participation.suggested}</b>
+								{t('Added answers')} <b>{participation.suggested}</b>
 							</span>
 							<span aria-hidden="true">·</span>
 							<span className={styles.header__stat}>

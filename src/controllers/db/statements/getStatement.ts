@@ -11,8 +11,13 @@ import { parse } from 'valibot';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
 import { createStatementRef, createCollectionRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
+import { isRefusedRead } from '@/helpers/firestoreRefusal';
+import { childListScopes, scopeChunksOf } from './readScopes';
 
-export async function getStatementFromDB(statementId: string): Promise<Statement | undefined> {
+export async function getStatementFromDB(
+	statementId: string,
+	options?: { expectRefusal?: boolean },
+): Promise<Statement | undefined> {
 	try {
 		if (!statementId) throw new Error('Statement ID is required to get statement from DB');
 		const statementRef = createStatementRef(statementId);
@@ -24,6 +29,7 @@ export async function getStatementFromDB(statementId: string): Promise<Statement
 		// Normalize statement data (converts timestamps and fills missing topParentId)
 		return normalizeStatementData(data) as Statement;
 	} catch (error) {
+		if (options?.expectRefusal && isRefusedRead(error)) return undefined;
 		logError(error, { operation: 'statements.getStatement.getStatementFromDB' });
 
 		return undefined;
@@ -70,6 +76,7 @@ export async function getStatementDepth(
 		try {
 			const subStatements: Statement[] = [];
 			const statementsRef = createCollectionRef(Collections.statements);
+			const scopes = await childListScopes(statement.statementId);
 			const q = query(
 				statementsRef,
 				and(
@@ -79,6 +86,7 @@ export async function getStatementDepth(
 					),
 					where('statementType', '!=', 'document'),
 					where('parentId', '==', statement.statementId),
+					...(scopes ? [where('accessScope', 'in', scopes)] : []),
 				),
 			);
 			const statementsDB = await getDocs(q);
@@ -101,6 +109,7 @@ export async function getStatementDepth(
 export async function getChildStatements(statementId: string): Promise<Statement[]> {
 	try {
 		const statementsRef = createCollectionRef(Collections.statements);
+		const [scopes] = await scopeChunksOf(statementId);
 		const q = query(
 			statementsRef,
 			and(
@@ -109,6 +118,7 @@ export async function getChildStatements(statementId: string): Promise<Statement
 					where('deliberativeElement', '==', DeliberativeElement.research),
 				),
 				where('parents', 'array-contains', statementId),
+				where('accessScope', 'in', scopes),
 			),
 		);
 		const statementsDB = await getDocs(q);

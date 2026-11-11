@@ -13,6 +13,12 @@
  *                   (status SENT) so the scheduled digest batches push/email.
  *  - NONE / muted → skip.
  *
+ *  - Above LARGE_QUESTION_SUBSCRIBER_THRESHOLD, a new answer keeps the in-app
+ *    write but INSTANT push/email give way to one daily digest (largeQuestionDigest).
+ *
+ * Banned, waiting and unsubscribed people are left out before any of this
+ * (`loadSubscribers`), on every channel.
+ *
  * The actor (the statement's own creator) is never notified about their own post.
  * Behaviour matches the old inline code for users with NO settings doc on the
  * INSTANT path (defaults: not muted, INSTANT, all channels on).
@@ -28,15 +34,27 @@ import {
 	NotificationTriggerType,
 	SourceApp,
 	Statement,
-	StatementSubscription,
 	type NotificationQueueItem,
-	type NotificationSettings,
 } from '@freedi/shared-types';
 import { logger } from 'firebase-functions/v1';
 import { db } from '../index';
 import { getDefaultQuestionType } from '../model/questionTypeDefaults';
-import { FcmSubscriber, processFcmNotificationsImproved } from '../fn_notifications';
+import { processFcmNotificationsImproved } from '../fn_notifications';
+import {
+	pushRecipientFromSubscription,
+	resolveFcmSubscribers,
+	type PushRecipient,
+} from './resolvePushTokens';
 import { sendNotificationEmail } from './notificationEmail';
+import {
+	authorVetoesReplies,
+	isNewAnswer,
+	isReplyToAnswer,
+	vetoesNewAnswers,
+} from './answerNotifyGate';
+import { commitWritesInChunks, type PendingWrite } from './chunkedWrites';
+import { scheduleLargeQuestionDigest, shouldDigestInstead } from './largeQuestionDigest';
+import { loadSettings, loadSubscribers, resolveDelivery } from './subscriberDelivery';
 
 export interface NotifyOptions {
 	/** Distinguishes the event for copy/analytics; defaults to STATEMENT_REPLY. */
@@ -45,83 +63,6 @@ export interface NotifyOptions {
 	sourceApp?: SourceApp;
 	/** Deep-link the in-app center / push / email should open. */
 	targetPath?: string;
-}
-
-interface SubscriberChannels {
-	sub: StatementSubscription;
-	inApp: boolean;
-	push: boolean;
-	email: boolean;
-}
-
-interface DeliveryDecision {
-	deliver: boolean;
-	frequency: NotificationFrequency;
-	inApp: boolean;
-	push: boolean;
-	email: boolean;
-}
-
-const SKIP: DeliveryDecision = {
-	deliver: false,
-	frequency: NotificationFrequency.NONE,
-	inApp: false,
-	push: false,
-	email: false,
-};
-
-/** Resolve whether/where to deliver for one user, from their settings + subscription. */
-function resolveDelivery(
-	settings: NotificationSettings | null,
-	channels: SubscriberChannels,
-	sourceApp: SourceApp | undefined,
-	now: number,
-): DeliveryDecision {
-	// Master mute.
-	if (settings?.muted) return SKIP;
-
-	// Per-app mute.
-	const perApp = sourceApp ? settings?.perApp?.[sourceApp] : undefined;
-	if (perApp?.muted) return SKIP;
-
-	// Per-discussion snooze.
-	if (channels.sub.mutedUntil && channels.sub.mutedUntil > now) return SKIP;
-
-	// Effective frequency: subscription overrides user default; default INSTANT.
-	const frequency =
-		channels.sub.notificationFrequency ??
-		settings?.defaultFrequency ??
-		NotificationFrequency.INSTANT;
-	if (frequency === NotificationFrequency.NONE) return SKIP;
-
-	// Channel switches (user-global, then per-app). Default on when unset.
-	const inAppAllowed =
-		(settings?.defaultChannels?.inApp ?? true) && (perApp?.channels?.inApp ?? true);
-	const pushAllowed = (settings?.defaultChannels?.push ?? true) && (perApp?.channels?.push ?? true);
-	const emailAllowed =
-		(settings?.defaultChannels?.email ?? false) && (perApp?.channels?.email ?? true);
-
-	return {
-		deliver: true,
-		frequency,
-		inApp: channels.inApp && inAppAllowed,
-		push: channels.push && pushAllowed,
-		email: channels.email && emailAllowed,
-	};
-}
-
-/** Batch-load per-user notification settings, deduped by uid. */
-async function loadSettings(uids: string[]): Promise<Map<string, NotificationSettings | null>> {
-	const map = new Map<string, NotificationSettings | null>();
-	if (uids.length === 0) return map;
-
-	const refs = uids.map((uid) => db.collection(Collections.notificationSettings).doc(uid));
-	const snaps = await db.getAll(...refs);
-	snaps.forEach((snap, i) => {
-		map.set(uids[i], snap.exists ? (snap.data() as NotificationSettings) : null);
-	});
-
-	return map;
 }
 
 /** App-relative deep link to the replied-to discussion, for push/email/digest. */
@@ -145,61 +86,43 @@ export async function notifyStatementSubscribers(
 	parentStatement: Statement,
 	opts: NotifyOptions = {},
 ): Promise<void> {
-	const [inAppSnap, pushSnap, emailSnap] = await Promise.all([
-		db
-			.collection(Collections.statementsSubscribe)
-			.where('statementId', '==', statement.parentId)
-			.where('getInAppNotification', '==', true)
-			.get(),
-		db
-			.collection(Collections.statementsSubscribe)
-			.where('statementId', '==', statement.parentId)
-			.where('getPushNotification', '==', true)
-			.get(),
-		db
-			.collection(Collections.statementsSubscribe)
-			.where('statementId', '==', statement.parentId)
-			.where('getEmailNotification', '==', true)
-			.get(),
-	]);
+	const byUid = await loadSubscribers(db, statement.parentId, parentStatement);
 
-	// Merge by uid so a user subscribed on several channels is resolved once.
-	const actorUid = statement.creator.uid;
-	const byUid = new Map<string, SubscriberChannels>();
-	const upsert = (sub: StatementSubscription, key: 'inApp' | 'push' | 'email') => {
-		const uid = sub.user?.uid ?? sub.userId;
-		if (!uid || uid === actorUid) return; // never notify the actor about their own post
-		const existing = byUid.get(uid);
-		if (existing) {
-			existing[key] = true;
-			if (key === 'push') existing.sub = sub; // prefer the doc carrying tokens
-		} else {
-			byUid.set(uid, {
-				sub,
-				inApp: key === 'inApp',
-				push: key === 'push',
-				email: key === 'email',
-			});
+	// The person's own choices for this question (above everything else except
+	// that mute/frequency still apply below): `false` is a veto on every channel.
+	const newAnswer = isNewAnswer(statement, parentStatement);
+	if (newAnswer) {
+		for (const [uid, channels] of byUid) {
+			if (vetoesNewAnswers(channels.sub)) byUid.delete(uid);
 		}
-	};
-	inAppSnap.docs.forEach((d) => upsert(d.data() as StatementSubscription, 'inApp'));
-	pushSnap.docs.forEach((d) => upsert(d.data() as StatementSubscription, 'push'));
-	emailSnap.docs.forEach((d) => upsert(d.data() as StatementSubscription, 'email'));
+	} else if (isReplyToAnswer(statement, parentStatement)) {
+		const authorUid = parentStatement.creator?.uid;
+		if (authorUid && byUid.has(authorUid) && (await authorVetoesReplies(parentStatement))) {
+			byUid.delete(authorUid);
+		}
+	}
+
+	// Counted before the actor leaves, so one question always takes the same path
+	// whoever happens to answer.
+	const eligibleSubscribers = byUid.size;
+	byUid.delete(statement.creator.uid); // never notify the actor about their own post
 
 	if (byUid.size === 0) return;
 
-	const settingsMap = await loadSettings([...byUid.keys()]);
+	const digestInstead = shouldDigestInstead(newAnswer, eligibleSubscribers);
+	const settingsMap = await loadSettings(db, [...byUid.keys()]);
 	const now = Date.now();
 	const questionType = statement.questionSettings?.questionType ?? getDefaultQuestionType();
 	const creatorImage = statement.creator.photoURL ?? null; // Firestore rejects undefined
 	const targetPath = resolveTargetPath(opts, statement);
 	const sourceApp = opts.sourceApp ?? statement.sourceApp;
-	const triggerType = opts.triggerType ?? NotificationTriggerType.STATEMENT_REPLY;
-	const emailSubject = `New reply from ${statement.creator.displayName || 'someone'}`;
+	const triggerType =
+		opts.triggerType ??
+		(newAnswer ? NotificationTriggerType.NEW_ANSWER : NotificationTriggerType.STATEMENT_REPLY);
+	const emailSubject = `${newAnswer ? 'New answer' : 'New reply'} from ${statement.creator.displayName || 'someone'}`;
 
-	const batch = db.batch();
-	let batchWrites = 0;
-	const fcmSubscribers: FcmSubscriber[] = [];
+	const writes: PendingWrite[] = [];
+	const pushRecipients: PushRecipient[] = [];
 	const emailSends: Promise<boolean>[] = [];
 
 	for (const [uid, channels] of byUid) {
@@ -231,21 +154,15 @@ export async function notifyStatementSubscribers(
 				...(sourceApp ? { sourceApp } : {}),
 				targetPath,
 			};
-			batch.set(ref, newNotification);
-			batchWrites++;
+			writes.push({ ref, data: newNotification });
 		}
 
 		if (decision.frequency === NotificationFrequency.INSTANT) {
+			// In a very large question the one daily digest replaces these.
+			if (digestInstead) continue;
+
 			// Interruptive channels delivered now.
-			if (decision.push && channels.sub.tokens && channels.sub.tokens.length > 0) {
-				for (const token of channels.sub.tokens) {
-					fcmSubscribers.push({
-						userId: uid,
-						token,
-						documentId: `${uid}_${statement.parentId}`,
-					});
-				}
-			}
+			if (decision.push) pushRecipients.push(pushRecipientFromSubscription(channels.sub));
 			if (decision.email && channels.sub.user?.email) {
 				emailSends.push(
 					sendNotificationEmail({
@@ -283,16 +200,48 @@ export async function notifyStatementSubscribers(
 					status: NotificationQueueStatus.SENT,
 					createdAt: now,
 				};
-				batch.set(db.collection(Collections.notificationQueue).doc(queueItemId), item);
-				batchWrites++;
+				writes.push({
+					ref: db.collection(Collections.notificationQueue).doc(queueItemId),
+					data: item,
+				});
 			}
 		}
 	}
 
-	if (batchWrites > 0) await batch.commit();
+	// A chunk that fails is logged inside and not thrown: rethrowing would invite a
+	// retry of the whole function, and pushes are the one thing that would repeat.
+	const writeResult = await commitWritesInChunks(db, writes, {
+		operation: 'notifications.notifyStatementSubscribers.commit',
+		statementId: statement.statementId,
+		parentId: statement.parentId,
+	});
+	if (writeResult.failed > 0) {
+		logger.warn('Some subscriber notices were not written', {
+			statementId: statement.statementId,
+			...writeResult,
+		});
+	}
 
+	if (digestInstead) {
+		await scheduleLargeQuestionDigest(db, {
+			statement,
+			parentStatement,
+			targetPath,
+			sourceApp,
+			now,
+		});
+	}
+
+	// Looked up only for people about to get an instant push, so digest and muted
+	// subscribers cost no token reads.
+	const fcmSubscribers = await resolveFcmSubscribers(db, pushRecipients);
 	if (fcmSubscribers.length > 0) {
-		const sendResult = await processFcmNotificationsImproved(fcmSubscribers, statement);
+		const sendResult = await processFcmNotificationsImproved(
+			fcmSubscribers,
+			statement,
+			null,
+			newAnswer ? 'answer' : 'reply',
+		);
 		logger.info('Push notifications processed', {
 			statementId: statement.statementId,
 			parentId: statement.parentId,

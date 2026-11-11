@@ -11,7 +11,9 @@ import type { SnapshotState } from './hooks';
  */
 
 /** Firestore caps `in` filters at 30 values per query. */
-const IN_CHUNK = 30;
+// One parent per listener: rules check each parent of a list, and a longer
+// `in` would run out of its document-read allowance.
+const IN_CHUNK = 1;
 
 export function useChildrenOfParents(parentIds: string[]): SnapshotState<Statement[]> {
 	const key = useMemo(() => [...parentIds].sort().join(','), [parentIds]);

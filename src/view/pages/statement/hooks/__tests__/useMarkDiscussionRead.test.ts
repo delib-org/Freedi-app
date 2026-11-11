@@ -15,6 +15,7 @@ interface HookProps {
 	userId?: string;
 	isLoaded: boolean;
 	lastChildUpdate?: number;
+	descendantMessageCount?: number;
 }
 
 const base: HookProps = { statementId: 's1', userId: 'u1', isLoaded: true, lastChildUpdate: 100 };
@@ -44,7 +45,52 @@ describe('useMarkDiscussionRead', () => {
 		render();
 
 		expect(mockWrite).toHaveBeenCalledTimes(1);
-		expect(mockWrite).toHaveBeenCalledWith('s1', 'u1');
+		expect(mockWrite).toHaveBeenCalledWith('s1', 'u1', undefined);
+	});
+
+	it('passes the message counter so the card number clears', () => {
+		render({ ...base, descendantMessageCount: 12 });
+
+		expect(mockWrite).toHaveBeenCalledWith('s1', 'u1', 12);
+	});
+
+	it('writes again, throttled, when the message counter advances', () => {
+		const { rerender } = render({ ...base, descendantMessageCount: 12 });
+		mockWrite.mockClear();
+
+		rerender({ ...base, descendantMessageCount: 15 });
+		expect(mockWrite).not.toHaveBeenCalled();
+
+		jest.advanceTimersByTime(UI.READ_MARK_THROTTLE_MS);
+		expect(mockWrite).toHaveBeenCalledTimes(1);
+		expect(mockWrite).toHaveBeenLastCalledWith('s1', 'u1', 15);
+	});
+
+	it('retries when the subscription doc did not exist yet, and does not count it as covered', async () => {
+		mockWrite.mockResolvedValueOnce(false);
+		render({ ...base, descendantMessageCount: 8 });
+		expect(mockWrite).toHaveBeenCalledTimes(1);
+
+		await Promise.resolve();
+		await Promise.resolve();
+		jest.advanceTimersByTime(UI.READ_MARK_RETRY_MS);
+
+		expect(mockWrite).toHaveBeenCalledTimes(2);
+		expect(mockWrite).toHaveBeenLastCalledWith('s1', 'u1', 8);
+	});
+
+	it('gives up after a few retries', async () => {
+		mockWrite.mockResolvedValue(false);
+		render({ ...base, descendantMessageCount: 8 });
+
+		for (let i = 0; i < UI.READ_MARK_MAX_RETRIES + 3; i++) {
+			await Promise.resolve();
+			await Promise.resolve();
+			jest.advanceTimersByTime(UI.READ_MARK_RETRY_MS);
+		}
+
+		expect(mockWrite).toHaveBeenCalledTimes(UI.READ_MARK_MAX_RETRIES + 1);
+		mockWrite.mockResolvedValue(undefined as never);
 	});
 
 	it('does not write before the statement has loaded or without a user', () => {
@@ -70,7 +116,7 @@ describe('useMarkDiscussionRead', () => {
 		rerender({ ...base, statementId: 's2' });
 
 		expect(mockWrite).toHaveBeenCalledTimes(2);
-		expect(mockWrite).toHaveBeenLastCalledWith('s2', 'u1');
+		expect(mockWrite).toHaveBeenLastCalledWith('s2', 'u1', undefined);
 	});
 
 	it('limits a burst of new content within the window to leading + trailing', () => {

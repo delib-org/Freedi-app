@@ -28,10 +28,10 @@ export const MiniChart: m.Component<MiniChartAttrs> = {
 								width: `${(item.value / maxValue) * 100}%`,
 								background: item.color,
 							},
-						})
+						}),
 					),
 					m('.mini-chart__value', item.value.toLocaleString()),
-				])
+				]),
 			),
 		]);
 	},

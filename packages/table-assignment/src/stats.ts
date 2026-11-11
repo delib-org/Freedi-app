@@ -1,4 +1,5 @@
 import type { Participant, PopulationStats, TableStats } from './types';
+import { CONSTANT_AXIS_RELATIVE_SD } from './constants';
 
 /** Per-axis mean and population sd of the sides given (undeclared ones skipped). */
 export function sideStats(members: readonly Participant[]): PopulationStats {
@@ -9,11 +10,21 @@ export function sideStats(members: readonly Participant[]): PopulationStats {
 	const axes = sides[0].length;
 	const mean = new Array<number>(axes).fill(0);
 	const sd = new Array<number>(axes).fill(0);
-	for (const side of sides) side.forEach((value, axis) => (mean[axis] += value / n));
+	for (const side of sides) side.forEach((value, axis) => (mean[axis] += value));
+	mean.forEach((total, axis) => (mean[axis] = total / n));
 	for (const side of sides)
 		side.forEach((value, axis) => (sd[axis] += (value - mean[axis]) ** 2 / n));
 
-	return { n, mean, sd: sd.map(Math.sqrt) };
+	return { n, mean, sd: sd.map((variance, axis) => cleanSd(Math.sqrt(variance), mean[axis])) };
+}
+
+/** Rounding noise around a shared value is no spread: identical positions give sd exactly 0. */
+function cleanSd(sd: number, mean: number): number {
+	return isConstantAxis(sd, mean) ? 0 : sd;
+}
+
+function isConstantAxis(sd: number, mean: number): boolean {
+	return sd <= CONSTANT_AXIS_RELATIVE_SD * Math.max(1, Math.abs(mean));
 }
 
 /**
@@ -28,7 +39,7 @@ export function tableDeviation(table: PopulationStats, population: PopulationSta
 	let total = 0;
 	population.mean.forEach((populationMean, axis) => {
 		const populationSd = population.sd[axis];
-		if (populationSd === 0) return;
+		if (isConstantAxis(populationSd, populationMean)) return;
 		const meanShift = Math.abs(table.mean[axis] - populationMean) / populationSd;
 		const spreadShift = table.n < 2 ? 0 : Math.abs(table.sd[axis] - populationSd) / populationSd;
 		total += meanShift + spreadShift;

@@ -156,6 +156,12 @@
   font-weight: 700;
 }
 
+// Screens down: the header sits on the ink background, so the line takes the header's
+// light colour (--ink-soft on ink was 2.9:1, below AA).
+#{$game} .frame--down .frame__line {
+  color: var(--paper-line);
+}
+
 #{$game} .frame__progress {
   display: contents;
 }

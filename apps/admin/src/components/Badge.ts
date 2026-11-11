@@ -1,14 +1,7 @@
 import m from 'mithril';
 import { StatementType } from '@freedi/shared-types';
 
-export type BadgeVariant =
-	| 'blue'
-	| 'teal'
-	| 'violet'
-	| 'rose'
-	| 'amber'
-	| 'emerald'
-	| 'gray';
+export type BadgeVariant = 'blue' | 'teal' | 'violet' | 'rose' | 'amber' | 'emerald' | 'gray';
 
 export interface BadgeAttrs {
 	text: string;
@@ -18,6 +11,7 @@ export interface BadgeAttrs {
 export const Badge: m.Component<BadgeAttrs> = {
 	view(vnode) {
 		const { text, variant } = vnode.attrs;
+
 		return m(`.badge.badge--${variant}`, text);
 	},
 };
@@ -34,6 +28,7 @@ const typeColorMap: Record<string, BadgeVariant> = {
 
 export function statementTypeBadge(type: string): m.Children {
 	const variant = typeColorMap[type] || 'gray';
+
 	return m(`.badge.badge--${variant}`, type);
 }
 
@@ -49,5 +44,6 @@ export function sourceAppBadge(sourceApp?: string): m.Children {
 		return m('.badge.badge--gray', 'Unknown');
 	}
 	const variant = appColorMap[sourceApp] || 'gray';
+
 	return m(`.badge.badge--${variant}`, sourceApp);
 }

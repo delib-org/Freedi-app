@@ -101,6 +101,12 @@ describe('useCreateStatementFlow', () => {
 		});
 		expect(createWithSub.mock.calls[0][0].paragraphs[0].content).toBe('on Main St');
 		expect(onDone).toHaveBeenCalledWith(['new-1']);
+		// The prompt is raised by this hook once done, not by the writer mid-write.
+		expect(createWithSub.mock.calls[0][0].announceAnswer).toBe(false);
+		expect(dispatch).toHaveBeenCalledWith({
+			type: 'answerNotifyPrompt/answerPublished',
+			payload: { questionId: 'q1', answerId: 'new-1' },
+		});
 		expect(mockUx.addAnswerStep).toHaveBeenCalledWith('q1', 'create');
 		expect(mockUx.addAnswerCompleted).toHaveBeenCalledWith('q1');
 		expect(detect).not.toHaveBeenCalled();
@@ -119,6 +125,10 @@ describe('useCreateStatementFlow', () => {
 			expect.objectContaining({ type: 'statements/setStatement' }),
 		);
 		expect(result.current.state.createdIds).toEqual(['tmp-Temp']);
+		// Unpublished: nothing to ask about.
+		expect(dispatch).not.toHaveBeenCalledWith(
+			expect.objectContaining({ type: 'answerNotifyPrompt/answerPublished' }),
+		);
 	});
 
 	it('similarity: offers matches, supporting one evaluates it and finishes without creating', async () => {
@@ -140,6 +150,82 @@ describe('useCreateStatementFlow', () => {
 		expect(result.current.state.step).toBe('done');
 		expect(createWithSub).not.toHaveBeenCalled();
 		expect(onDone).toHaveBeenCalledWith([]);
+		// Supporting a similar answer adds nothing: no prompt.
+		expect(dispatch).not.toHaveBeenCalledWith(
+			expect.objectContaining({ type: 'answerNotifyPrompt/answerPublished' }),
+		);
+	});
+
+	describe('moderation against the similarity check', () => {
+		const settings = { defaultLookForSimilarities: true };
+
+		it('a rejection shows its message, keeps the draft and publishes nothing', async () => {
+			similar.mockResolvedValue({ rejected: true, reason: 'Please rephrase', category: 'other' });
+			const { result, onDone } = setup(settings);
+			act(() => result.current.setDraft({ title: 'bad words' }));
+			act(() => result.current.submit());
+			await waitFor(() => expect(result.current.state.rejection).toBe('Please rephrase'));
+
+			expect(result.current.state).toMatchObject({
+				step: 'draft',
+				pending: false,
+				draft: { title: 'bad words' },
+			});
+			expect(createWithSub).not.toHaveBeenCalled();
+			expect(onDone).not.toHaveBeenCalled();
+		});
+
+		it('editing the text clears the rejection', async () => {
+			similar.mockResolvedValue({ rejected: true, reason: 'Please rephrase', category: 'other' });
+			const { result } = setup(settings);
+			act(() => result.current.setDraft({ title: 'bad words' }));
+			act(() => result.current.submit());
+			await waitFor(() => expect(result.current.state.rejection).toBe('Please rephrase'));
+
+			act(() => result.current.setDraft({ title: 'kind words' }));
+
+			expect(result.current.state.rejection).toBeNull();
+		});
+
+		it('nothing similar publishes', async () => {
+			similar.mockResolvedValue({ similarStatements: [], similarTexts: [], userText: null });
+			const { result } = setup(settings);
+			act(() => result.current.setDraft({ title: 'fine' }));
+			act(() => result.current.submit());
+			await waitFor(() => expect(result.current.state.step).toBe('done'));
+
+			expect(createWithSub).toHaveBeenCalledTimes(1);
+			expect(result.current.state.rejection).toBeNull();
+		});
+
+		it.each([
+			['the check returned null', () => similar.mockResolvedValue(null)],
+			['the check threw', () => similar.mockRejectedValue(new Error('offline'))],
+		])('fails open and publishes when %s', async (_name, arrange) => {
+			arrange();
+			const { result } = setup(settings);
+			act(() => result.current.setDraft({ title: 'fine' }));
+			act(() => result.current.submit());
+			await waitFor(() => expect(result.current.state.step).toBe('done'));
+
+			expect(createWithSub).toHaveBeenCalledTimes(1);
+		});
+
+		it('a rejection from the split detector also blocks publishing', async () => {
+			detect.mockResolvedValue({
+				ok: false,
+				isMultipleSuggestions: false,
+				suggestions: [],
+				rejection: { reason: 'Not here', category: 'other' },
+			});
+			const { result } = setup({ enableMultiSuggestionDetection: true });
+			act(() => result.current.setDraft({ title: 'bad words' }));
+			act(() => result.current.submit());
+			await waitFor(() => expect(result.current.state.rejection).toBe('Not here'));
+
+			expect(result.current.state.step).toBe('draft');
+			expect(createWithSub).not.toHaveBeenCalled();
+		});
 	});
 
 	it('multi split: confirmed splits create one statement each', async () => {
@@ -162,6 +248,11 @@ describe('useCreateStatementFlow', () => {
 		await waitFor(() => expect(result.current.state.step).toBe('done'));
 		expect(createWithSub).toHaveBeenCalledTimes(2);
 		expect(onDone).toHaveBeenCalledWith(['a', 'b']);
+		// A multi-split publish raises one prompt.
+		const raised = dispatch.mock.calls.filter(
+			([action]: [{ type: string }]) => action.type === 'answerNotifyPrompt/answerPublished',
+		);
+		expect(raised).toHaveLength(1);
 	});
 
 	it('pre-check: publish splits the refined text into title and paragraphs', async () => {

@@ -1,5 +1,6 @@
 import {
 	TABLE_ASSIGNMENT_DESCRIPTION_MAX_LENGTH,
+	TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC,
 	TABLE_ASSIGNMENT_TITLE_MAX_LENGTH,
 } from '@freedi/shared-types';
 import type { Statement, TableAssignmentTopic, TablesTopicInput } from '@freedi/shared-types';
@@ -13,12 +14,6 @@ export interface TopicDraft {
 	sourceStatementId?: string;
 	consensus?: number;
 }
-
-export type TopicDraftError =
-	| 'titleRequired'
-	| 'titleTooLong'
-	| 'descriptionTooLong'
-	| 'maxTablesInvalid';
 
 export function emptyDraft(): TopicDraft {
 	return { title: '', description: '', maxTables: '' };
@@ -46,28 +41,24 @@ export function parseOptionalPositiveInt(text: string): number | undefined {
 	return Number.isInteger(value) && value >= 1 ? value : Number.NaN;
 }
 
-export function validateDraft(draft: TopicDraft): TopicDraftError | null {
-	const title = draft.title.trim();
+/** A topic's table cap: a whole number from 1, held to the server's limit; undefined when empty or not a number. */
+export function parseMaxTables(text: string): number | undefined {
+	const value = parseOptionalPositiveInt(text);
 
-	if (title === '') return 'titleRequired';
-	if (title.length > TABLE_ASSIGNMENT_TITLE_MAX_LENGTH) return 'titleTooLong';
-	if (draft.description.trim().length > TABLE_ASSIGNMENT_DESCRIPTION_MAX_LENGTH) {
-		return 'descriptionTooLong';
-	}
-	if (Number.isNaN(parseOptionalPositiveInt(draft.maxTables))) return 'maxTablesInvalid';
+	if (value === undefined || Number.isNaN(value)) return undefined;
 
-	return null;
+	return Math.min(value, TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC);
 }
 
 /** Build the wire input of one topic; optional fields are omitted when empty. */
 export function draftToInput(draft: TopicDraft): TablesTopicInput {
 	const input: TablesTopicInput = { title: draft.title.trim() };
 	const description = draft.description.trim();
-	const maxTables = parseOptionalPositiveInt(draft.maxTables);
+	const maxTables = parseMaxTables(draft.maxTables);
 
 	if (draft.topicId) input.topicId = draft.topicId;
 	if (description !== '') input.description = description;
-	if (maxTables !== undefined && !Number.isNaN(maxTables)) input.maxTables = maxTables;
+	if (maxTables !== undefined) input.maxTables = maxTables;
 	if (draft.sourceStatementId) input.sourceStatementId = draft.sourceStatementId;
 	if (draft.consensus !== undefined) input.consensus = draft.consensus;
 
@@ -98,33 +89,4 @@ export function newImports(
 	const have = new Set(existing.map((d) => d.sourceStatementId).filter(Boolean));
 
 	return imported.filter((d) => !d.sourceStatementId || !have.has(d.sourceStatementId));
-}
-
-/** Move a list item by one place; out-of-range moves are ignored. */
-export function moveItem<T>(items: readonly T[], index: number, delta: -1 | 1): T[] {
-	const target = index + delta;
-
-	if (index < 0 || index >= items.length || target < 0 || target >= items.length) {
-		return [...items];
-	}
-
-	const next = [...items];
-
-	[next[index], next[target]] = [next[target], next[index]];
-
-	return next;
-}
-
-/** Search a topic list by title and description (participant topics screen). */
-export function filterTopics(
-	topics: readonly TableAssignmentTopic[],
-	text: string,
-): TableAssignmentTopic[] {
-	const needle = text.trim().toLowerCase();
-
-	if (needle === '') return [...topics];
-
-	return topics.filter((topic) =>
-		`${topic.title} ${topic.description ?? ''}`.toLowerCase().includes(needle),
-	);
 }

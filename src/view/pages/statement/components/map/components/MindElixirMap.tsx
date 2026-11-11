@@ -36,7 +36,6 @@ import {
 	findNodeContext,
 	getTypeChangeChoices,
 	hasAnyTypeChange,
-	TYPE_LABEL_KEYS,
 } from '../mapHelpers/statementTypeChoices';
 import {
 	collectSubtree,
@@ -48,6 +47,15 @@ import {
 import type { DropKind } from '../mapHelpers/moveBranch';
 import { FilterType } from '@/controllers/general/sorting';
 import PanZoomControls from './PanZoomControls';
+import NodeToolbar from './NodeToolbar';
+import {
+	canDeleteNode,
+	canEditNode,
+	getChildAddLabelKey,
+	getNewNodeText,
+	getSiblingAddLabelKey,
+} from '../mapHelpers/nodeMenuLabels';
+import { getDefaultChildType, getDefaultSiblingType } from '../mapHelpers/mindMapStatements';
 import { findMapRoot } from '../hooks/useMapFullScreen';
 import styles from './MindElixirMap.module.scss';
 import { logError } from '@/utils/errorHandling';
@@ -92,6 +100,8 @@ interface Props {
 	allowRegroup?: boolean;
 	/** Render with the sticky-note "cluster board" styling (per-branch colors). */
 	boardMode?: boolean;
+	/** Highlight chosen and voted answers: the viewer passed the score guard. */
+	showResultMarks: boolean;
 }
 
 /**
@@ -126,6 +136,29 @@ function findStatementById(results: Results, id: string): Statement | null {
 	return null;
 }
 
+/** Keycap plus the action it triggers, for the keyboard hints beside a selected node. */
+function createHintContent(key: string, label: string): DocumentFragment {
+	const fragment = document.createDocumentFragment();
+	const keycap = document.createElement('span');
+	keycap.className = 'mind-map-key';
+	keycap.textContent = key;
+	const text = document.createElement('span');
+	text.className = 'mind-map-hint-text';
+	text.textContent = label;
+	fragment.append(keycap, text);
+
+	return fragment;
+}
+
+/** Visible name of a "+" button; CSS shows it on devices without a keyboard or hover. */
+function createAddLabel(label: string): HTMLSpanElement {
+	const span = document.createElement('span');
+	span.className = 'mind-map-add-label';
+	span.textContent = label;
+
+	return span;
+}
+
 function MindElixirMap({
 	descendants,
 	isAdmin,
@@ -139,6 +172,7 @@ function MindElixirMap({
 	locateToken,
 	allowRegroup = false,
 	boardMode = false,
+	showResultMarks,
 }: Readonly<Props>) {
 	const navigate = useNavigate();
 	// Dragging/regrouping is allowed for admins, or for anyone when the board
@@ -202,13 +236,11 @@ function MindElixirMap({
 	const [toolbarState, setToolbarState] = useState<{
 		visible: boolean;
 		top: number;
+		bottom: number;
 		left: number;
 		statementId: string;
 		isRoot: boolean;
-	}>({ visible: false, top: 0, left: 0, statementId: '', isRoot: false });
-
-	// Whether the "change type" popover under the node toolbar is open
-	const [typeMenuOpen, setTypeMenuOpen] = useState(false);
+	}>({ visible: false, top: 0, bottom: 0, left: 0, statementId: '', isRoot: false });
 
 	// Double click handler ref
 	const lastClickRef = useRef<{ time: number; nodeId: string }>({ time: 0, nodeId: '' });
@@ -243,7 +275,6 @@ function MindElixirMap({
 	const removeNodeButtons = useCallback(() => {
 		injectedElementsRef.current.forEach((el) => el.remove());
 		injectedElementsRef.current = [];
-		setTypeMenuOpen(false);
 		setToolbarState((prev) => (prev.visible ? { ...prev, visible: false } : prev));
 	}, []);
 
@@ -258,14 +289,14 @@ function MindElixirMap({
 		const statementId = nodeId.startsWith('me') ? nodeId.substring(2) : nodeId;
 		const isRoot = tpcEl.parentElement?.tagName === 'ME-ROOT';
 
-		setTypeMenuOpen(false);
-
 		// Use viewport coordinates directly (toolbar is position: fixed)
 		setToolbarState({
 			visible: true,
 			// Anchored by its own bottom edge (see .toolbar's translateY(-100%)) so
 			// the strip clears the node whether or not it carries the rating row.
 			top: nodeRect.top - 6,
+			// Where the panel hangs when there is no room above the node.
+			bottom: nodeRect.bottom + 6,
 			left: nodeRect.left + nodeRect.width / 2,
 			statementId,
 			isRoot: !!isRoot,
@@ -328,6 +359,9 @@ function MindElixirMap({
 			if (!statement) return;
 
 			const nodeCanAddChild = canHaveChildren(statement.statementType);
+			// Each "+" and its keyboard hint say what the press creates.
+			const childLabel = tRef.current(getChildAddLabelKey(statement.statementType));
+			const siblingLabel = tRef.current(getSiblingAddLabelKey(statement.statementType));
 
 			// Show React toolbar overlay (positioned outside MindElixir DOM)
 			showToolbarForNode(nodeId);
@@ -337,11 +371,16 @@ function MindElixirMap({
 				const childBtn = document.createElement('button');
 				childBtn.className = 'mind-map-add-btn mind-map-add-btn--child';
 				childBtn.textContent = '+';
-				childBtn.setAttribute('aria-label', 'Add child node (Tab)');
+				childBtn.setAttribute('aria-label', childLabel);
+				childBtn.title = childLabel;
+				childBtn.appendChild(createAddLabel(childLabel));
 				childBtn.addEventListener('click', async (e) => {
 					e.stopPropagation();
 					e.preventDefault();
-					const newChild = await createMindMapChild({ parentStatement: statement });
+					const newChild = await createMindMapChild({
+						parentStatement: statement,
+						defaultText: getNewNodeText(getDefaultChildType(statement.statementType), tRef.current),
+					});
 					if (newChild) {
 						waitAndEditNode(newChild.statementId);
 					}
@@ -359,13 +398,19 @@ function MindElixirMap({
 				const siblingBtn = document.createElement('button');
 				siblingBtn.className = 'mind-map-add-btn mind-map-add-btn--sibling';
 				siblingBtn.textContent = '+';
-				siblingBtn.setAttribute('aria-label', 'Add sibling node (Enter)');
+				siblingBtn.setAttribute('aria-label', siblingLabel);
+				siblingBtn.title = siblingLabel;
+				siblingBtn.appendChild(createAddLabel(siblingLabel));
 				siblingBtn.addEventListener('click', async (e) => {
 					e.stopPropagation();
 					e.preventDefault();
 					const newSibling = await createMindMapSibling({
 						currentStatement: statement,
 						parentStatement: parentOfNode,
+						defaultText: getNewNodeText(
+							getDefaultSiblingType(statement.statementType),
+							tRef.current,
+						),
 					});
 					if (newSibling) {
 						waitAndEditNode(newSibling.statementId);
@@ -382,16 +427,14 @@ function MindElixirMap({
 			if (nodeCanAddChild) {
 				const childHint = document.createElement('div');
 				childHint.className = 'mind-map-hint';
-				childHint.innerHTML =
-					'<span class="mind-map-key">Tab</span><span class="mind-map-hint-text">to create child</span>';
+				childHint.appendChild(createHintContent('Tab', childLabel));
 				hints.appendChild(childHint);
 			}
 
 			if (parentOfNode) {
 				const siblingHint = document.createElement('div');
 				siblingHint.className = 'mind-map-hint';
-				siblingHint.innerHTML =
-					'<span class="mind-map-key">Enter</span><span class="mind-map-hint-text">to create sibling</span>';
+				siblingHint.appendChild(createHintContent('Enter', siblingLabel));
 				hints.appendChild(siblingHint);
 			}
 
@@ -450,11 +493,21 @@ function MindElixirMap({
 		const filtered =
 			filterBy === FilterType.questionsResults ? filterDescendants(leveled) : leveled;
 		const built = filtered
-			? toMindElixirData(filtered, [], formatBadge, { boardMode, markIds })
+			? toMindElixirData(filtered, [], formatBadge, { boardMode, markIds, showResultMarks })
 			: null;
 
 		return { data: built, signature: built ? JSON.stringify(built) : '' };
-	}, [descendants, filterBy, level, expandedIds, foldedIds, formatBadge, boardMode, markIds]);
+	}, [
+		descendants,
+		filterBy,
+		level,
+		expandedIds,
+		foldedIds,
+		formatBadge,
+		boardMode,
+		markIds,
+		showResultMarks,
+	]);
 
 	// The signature MindElixir is currently showing.
 	const drawnSignatureRef = useRef('');
@@ -894,6 +947,10 @@ function MindElixirMap({
 
 				const newStatement = await createMindMapChild({
 					parentStatement: currentStatement,
+					defaultText: getNewNodeText(
+						getDefaultChildType(currentStatement.statementType),
+						tRef.current,
+					),
 				});
 
 				if (newStatement) {
@@ -927,6 +984,10 @@ function MindElixirMap({
 				const newStatement = await createMindMapSibling({
 					currentStatement,
 					parentStatement,
+					defaultText: getNewNodeText(
+						getDefaultSiblingType(currentStatement.statementType),
+						tRef.current,
+					),
 				});
 
 				if (newStatement) {
@@ -1331,20 +1392,10 @@ function MindElixirMap({
 				return;
 			}
 
-			setTypeMenuOpen(false);
 			removeNodeButtons();
 		},
 		[descendants, toolbarState.statementId, isAdmin, removeNodeButtons],
 	);
-
-	const handleToolbarDelete = useCallback(() => {
-		if (!toolbarState.statementId) return;
-		const statement = findStatementById(descendants, toolbarState.statementId);
-		if (!statement) return;
-		deleteStatementFromDB(statement, true, t).then(() => {
-			removeNodeButtons();
-		});
-	}, [toolbarState.statementId, descendants, t, removeNodeButtons]);
 
 	// ── Node evaluation ──────────────────────────────────────────────────────
 	// The toolbar doubles as the rating surface: pick a face and the vote is
@@ -1443,6 +1494,28 @@ function MindElixirMap({
 		kindOf(selectedStatement) === 'raw' &&
 		Boolean(membership.get(selectedStatement.statementId)?.parentSynthId);
 
+	// Edit and Delete belong to an admin or to whoever wrote the node. The
+	// Firestore rule (`isAuthorized`) is the real gate; this keeps the buttons
+	// honest. Delete is never offered on the root or on a space.
+	const isAuthor = Boolean(
+		creator?.uid && selectedStatement && selectedStatement.creatorId === creator.uid,
+	);
+	const canEditSelected = !!selectedStatement && canEditNode({ isAdmin, isAuthor });
+	const canDeleteSelected =
+		!!selectedStatement &&
+		canDeleteNode({
+			isAdmin,
+			isAuthor,
+			isRoot: toolbarState.isRoot,
+			statementType: selectedStatement.statementType,
+		});
+
+	const handleToolbarDelete = useCallback(async () => {
+		if (!selectedStatement) return;
+		await deleteStatementFromDB(selectedStatement, canDeleteSelected, t);
+		removeNodeButtons();
+	}, [selectedStatement, canDeleteSelected, t, removeNodeButtons]);
+
 	if (!data) {
 		return (
 			<div className={styles.loading}>
@@ -1460,153 +1533,29 @@ function MindElixirMap({
 				tabIndex={0}
 			/>
 
-			{/* Node toolbar overlay — rendered in React, outside MindElixir's DOM */}
+			{/* Node panel — rendered in React, outside MindElixir's DOM */}
 			{toolbarState.visible && (
-				<div
-					className={styles.toolbar}
-					style={{ top: toolbarState.top, left: toolbarState.left }}
-					onMouseDown={(e) => e.stopPropagation()}
-					onPointerDown={(e) => e.stopPropagation()}
-				>
-					<div className={styles.toolbarRow}>
-						<button
-							className={styles.toolbarBtn}
-							onClick={handleToolbarLink}
-							aria-label="Open statement"
-							title={t('Open')}
-						>
-							<svg
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-							>
-								<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-								<polyline points="15 3 21 3 21 9" />
-								<line x1="10" y1="14" x2="21" y2="3" />
-							</svg>
-						</button>
-						<button
-							className={styles.toolbarBtn}
-							onClick={handleToolbarEdit}
-							aria-label="Edit node"
-							title={t('Edit')}
-						>
-							<svg
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-							>
-								<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-								<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-							</svg>
-						</button>
-						{canChangeType && (
-							<button
-								className={`${styles.toolbarBtn} ${typeMenuOpen ? styles.toolbarBtnActive : ''}`}
-								onClick={() => setTypeMenuOpen((open) => !open)}
-								aria-label="Change statement type"
-								aria-expanded={typeMenuOpen}
-								title={t('Change type')}
-							>
-								<svg
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-								>
-									<rect x="3" y="13" width="8" height="8" rx="2" />
-									<circle cx="17" cy="17" r="4" />
-									<path d="M7 3 3 9h8L7 3z" />
-								</svg>
-							</button>
-						)}
-						{!toolbarState.isRoot && (
-							<>
-								<div className={styles.toolbarDivider} />
-								<button
-									className={`${styles.toolbarBtn} ${styles.toolbarBtnDelete}`}
-									onClick={handleToolbarDelete}
-									aria-label="Delete node"
-									title={t('Delete')}
-								>
-									<svg
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="2"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-									>
-										<polyline points="3 6 5 6 21 6" />
-										<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-										<line x1="10" y1="11" x2="10" y2="17" />
-										<line x1="14" y1="11" x2="14" y2="17" />
-									</svg>
-								</button>
-							</>
-						)}
-					</div>
-
-					{(canEvaluateNode || countedIntoMerge) && (
-						<div
-							className={`${styles.evaluationRow} ${countedIntoMerge ? styles.evaluationRowReadOnly : ''}`}
-							role="group"
-							aria-label={countedIntoMerge ? t('Counted into the merged idea') : t('Rate this')}
-							title={countedIntoMerge ? t('Counted into the merged idea') : undefined}
-						>
-							{evaluationFaces.map((face) => {
-								const isActive = optimisticEvaluation === face.value;
-
-								return (
-									<button
-										key={face.value}
-										type="button"
-										className={`${styles.evaluationBtn} ${isActive ? styles.evaluationBtnActive : ''}`}
-										style={{ backgroundColor: isActive ? face.colorSelected : face.color }}
-										onClick={() => handleEvaluate(face.value)}
-										disabled={countedIntoMerge}
-										aria-label={t(face.labelKey)}
-										aria-pressed={isActive}
-										title={t(face.labelKey)}
-									>
-										{face.svg ? (
-											<img src={face.svg} alt="" aria-hidden />
-										) : (
-											<span className={styles.evaluationEmoji} aria-hidden>
-												{face.emoji}
-											</span>
-										)}
-									</button>
-								);
-							})}
-						</div>
-					)}
-					{typeMenuOpen && (
-						<div className={styles.typeMenu} role="menu">
-							{typeChoices.map((choice) => (
-								<button
-									key={choice.type}
-									role="menuitem"
-									className={`${styles.typeMenuItem} ${choice.isCurrent ? styles.typeMenuItemCurrent : ''}`}
-									disabled={!choice.allowed}
-									title={choice.reasonKey ? t(choice.reasonKey) : undefined}
-									onClick={() => handleChangeType(choice.type)}
-								>
-									<span className={styles.typeMenuSwatch} data-type={choice.type} aria-hidden />
-									{t(TYPE_LABEL_KEYS[choice.type] ?? choice.type)}
-								</button>
-							))}
-						</div>
-					)}
-				</div>
+				<NodeToolbar
+					key={toolbarState.statementId}
+					anchorTop={toolbarState.top}
+					anchorBottom={toolbarState.bottom}
+					anchorLeft={toolbarState.left}
+					onOpen={handleToolbarLink}
+					onEdit={canEditSelected ? handleToolbarEdit : undefined}
+					onDelete={canDeleteSelected ? handleToolbarDelete : undefined}
+					typeChoices={canChangeType ? typeChoices : undefined}
+					onChangeType={canChangeType ? handleChangeType : undefined}
+					rating={
+						canEvaluateNode || countedIntoMerge
+							? {
+									faces: evaluationFaces,
+									activeValue: optimisticEvaluation,
+									readOnly: countedIntoMerge,
+									onRate: handleEvaluate,
+								}
+							: undefined
+					}
+				/>
 			)}
 
 			{/* Persistent map controls in the canvas's physical bottom-left corner. */}

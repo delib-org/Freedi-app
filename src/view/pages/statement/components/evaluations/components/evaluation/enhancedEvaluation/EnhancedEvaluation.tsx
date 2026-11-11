@@ -1,4 +1,4 @@
-import { CSSProperties, FC, useEffect, useState, useCallback, useMemo } from 'react';
+import { CSSProperties, FC, ReactNode, useEffect, useState, useCallback, useMemo } from 'react';
 import clsx from 'clsx';
 import styles from './EnhancedEvaluation.module.scss';
 import {
@@ -16,12 +16,8 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
 import { useSelector } from 'react-redux';
-import {
-	statementSelectorById,
-	statementSubscriptionSelector,
-} from '@/redux/statements/statementsSlice';
-import { isAdmin as isAdminRole } from '@/controllers/general/helpers';
-import { shouldShowResults, shouldShowRevealHint } from './resultsVisibility';
+import { statementSelectorById } from '@/redux/statements/statementsSlice';
+import { useCardAnswerScoreGate } from '../../../../questionScreen/useAnswerScoreGate';
 import { ResultsStrip } from '@/view/components/atomic/molecules/ResultsStrip';
 import { EvaluationCircle, EvaluationCircleRow } from '../shared/EvaluationCircle';
 import { FaceIcon } from '@/view/components/atomic/atoms/FaceIcon';
@@ -34,30 +30,35 @@ interface EnhancedEvaluationProps {
 	/** 'card' (answer card): hides the scale on your own answer and keeps the
 	 *  results behind your own rating. 'default' keeps the old behaviour. */
 	variant?: EnhancedEvaluationVariant;
+	/** Chat surfaces: never show the visible text under the faces. The
+	 *  aria-label stays. */
+	hideFaceLabels?: boolean;
+	/** Footer layout: round faces + compact chips, laid out as direct flex items
+	 *  of the host's footer (`display: contents`) so the host's action buttons
+	 *  can share the chips' row. Visibility rules stay those of `variant`. */
+	compact?: boolean;
+	/** The host's action buttons, rendered between the faces and the chips. */
+	footerSlot?: ReactNode;
 }
 
 const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	statement,
 	enableEvaluation = true,
 	variant = 'default',
+	hideFaceLabels = false,
+	compact = false,
+	footerSlot,
 }) => {
 	const { t } = useUserConfig();
 	const { creator } = useAuthentication();
 
 	// Get parent statement for settings
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
-	const showEvaluation = !!parentStatement?.statementSettings?.showEvaluation;
 
 	// Cross-app evaluation mode: reactions (positive 0..1 emoji) or the default
 	// agree-disagree faces. Read from the same shared statementSettings.ratingMode.
 	const ratingMode = parentStatement?.statementSettings?.ratingMode;
 	const thumbs = ratingMode === 'reactions' ? reactionEvaluationsThumbs : enhancedEvaluationsThumbs;
-
-	// Admin of the space (top parent subscription), same check the cluster map uses.
-	const spaceSubscription = useAppSelector(
-		statementSubscriptionSelector(statement.topParentId ?? statement.parentId),
-	);
-	const isSpaceAdmin = isAdminRole(spaceSubscription?.role);
 
 	const evaluationScore = useAppSelector(evaluationSelector(statement.statementId));
 	const [optimisticScore, setOptimisticScore] = useState<number | undefined>(evaluationScore);
@@ -71,7 +72,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 
 	// Presses on this statement's faces, this session only. Re-taps count.
 	const [pressCount, setPressCount] = useState(0);
-	const showLabels = shouldShowFaceLabels(pressCount);
+	const showLabels = !hideFaceLabels && shouldShowFaceLabels(pressCount);
 
 	const handleEvaluate = useCallback((score: number) => {
 		setOptimisticScore(score);
@@ -79,19 +80,17 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	}, []);
 
 	const isCard = variant === 'card';
+	const isRound = isCard || compact;
 	const hasRated = optimisticScore !== undefined;
 	const isOwnAnswer = isCard && !!creator?.uid && statement.creatorId === creator.uid;
-	// On a card, results wait for your own rating so they cannot anchor it —
-	// except where you cannot rate at all (your own answer, rating disabled).
-	// Admins of the space see the score right away.
-	const visibilityInput = {
-		isCard,
-		isOwnAnswer,
-		hasRated,
-		evaluationDisabled: !enableEvaluation,
-		isSpaceAdmin,
-	};
-	const showResults = shouldShowResults(showEvaluation, visibilityInput);
+	// `hasRated` is the optimistic score, so the result opens on the tap itself.
+	const { canSee: showResults, showRevealHint } = useCardAnswerScoreGate(
+		statement,
+		parentStatement,
+		{
+			hasRated,
+		},
+	);
 
 	const thumbNodes = options.map((option) => (
 		<EvaluationThumb
@@ -101,7 +100,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 			tone={option.tone}
 			labelKey={option.labelKey}
 			showLabel={showLabels}
-			shape={isCard ? 'circle' : 'tile'}
+			shape={isRound ? 'circle' : 'tile'}
 			statement={statement}
 			enableEvaluation={enableEvaluation}
 			onEvaluate={handleEvaluate}
@@ -109,16 +108,24 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	));
 
 	return (
-		<div className={clsx(styles.evaluation, isCard && styles['evaluation--card'])}>
+		<div
+			className={clsx(
+				styles.evaluation,
+				isCard && styles['evaluation--card'],
+				compact && styles['evaluation--compact'],
+			)}
+		>
 			{!isOwnAnswer &&
-				(isCard ? (
-					<EvaluationCircleRow
-						hasSelection={hasRated}
-						label={t('Rating scale')}
-						testId="face-scale"
-					>
-						{thumbNodes}
-					</EvaluationCircleRow>
+				(isRound ? (
+					<div className={styles.evaluation__faces}>
+						<EvaluationCircleRow
+							hasSelection={hasRated}
+							label={t('Rating scale')}
+							testId="face-scale"
+						>
+							{thumbNodes}
+						</EvaluationCircleRow>
+					</div>
 				) : (
 					<div
 						className={styles.scale}
@@ -129,11 +136,18 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 						{thumbNodes}
 					</div>
 				))}
+			{footerSlot}
 			{/* The result numbers, spelled out. They used to live only in a hover
 			    tooltip on a colour bar, so touch users never saw them. On a card
 			    they are Join's compact chips row. */}
-			{showResults && <ResultsStrip statement={statement} variant={isCard ? 'chips' : 'tiles'} />}
-			{shouldShowRevealHint(showEvaluation, visibilityInput) && (
+			{showResults && (
+				<ResultsStrip
+					statement={statement}
+					variant={isRound ? 'chips' : 'tiles'}
+					inline={compact}
+				/>
+			)}
+			{showRevealHint && (
 				<p className={styles['reveal-hint']} data-testid="results-reveal-hint">
 					{t('The result will be revealed after you rate')}
 				</p>

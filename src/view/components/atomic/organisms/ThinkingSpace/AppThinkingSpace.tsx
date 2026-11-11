@@ -28,12 +28,15 @@ export default function AppThinkingSpace({
 	aside,
 	asideLabel,
 	tools,
+	hideBottomNav = false,
 }: {
 	children: ReactNode;
 	activeId?: string;
 	aside?: ReactNode;
 	asideLabel?: string;
 	tools?: ReactNode;
+	/** A screen whose own composer owns the bottom edge (e.g. a Discussion tab) hides the floating nav. */
+	hideBottomNav?: boolean;
 }) {
 	const { t, dir } = useTranslation();
 	const navigate = useNavigate();
@@ -98,7 +101,7 @@ export default function AppThinkingSpace({
 
 	const create = useCallback((): void => setAskOpen(true), []);
 
-	const showNav = !!user && shouldShowBottomNav(location.pathname);
+	const showNav = !!user && !hideBottomNav && shouldShowBottomNav(location.pathname);
 
 	return (
 		<OpenAskQuestionContext.Provider value={create}>
@@ -124,6 +127,7 @@ export default function AppThinkingSpace({
 								onAsk={() => {
 									if (!answerCompose.compose()) setAskOpen(true);
 								}}
+								canCompose={answerCompose.canCompose}
 								t={t}
 							/>
 						) : undefined

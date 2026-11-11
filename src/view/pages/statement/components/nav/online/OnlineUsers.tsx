@@ -1,13 +1,40 @@
-import React, { useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
+import { Online, Statement, StatementType } from '@freedi/shared-types';
 import { useOnlineUsers } from '@/controllers/hooks/useOnlineUsers';
+import { useQuestionProgressRead } from '@/controllers/hooks/useQuestionProgress';
+import { isLargeForPresence } from '@/helpers/presenceVisibility';
 import { UserProfilePopover } from '@/view/components/atomic/molecules/UserProfilePopover';
 import styles from './OnlineUsersStyle.module.scss';
 
+/** Presence reads only on its timer; nothing the viewer does triggers another. */
+const PRESENCE_READ_KEY = 'presence';
+
 interface OnlineUsersProps {
-	statementId: string;
+	statement: Statement | undefined;
 }
 
-const OnlineUsers: React.FC<OnlineUsersProps> = ({ statementId }) => {
+/**
+ * Who is here now, for gatherings small enough to afford it. In a large
+ * question nothing mounts, so there is no presence write, no listener and no
+ * widget. Waits for the first size read before mounting. That read can be
+ * under the line while a crowd arrives together, so the size is checked again
+ * each minute until the question counts as large, and then never again: a
+ * crowd can hold presence on for about a minute, not longer.
+ */
+const OnlineUsers: FC<OnlineUsersProps> = ({ statement }) => {
+	const statementId = statement?.statementId;
+	const { progress, isLoaded } = useQuestionProgressRead(
+		statement?.statementType === StatementType.question ? statementId : undefined,
+		PRESENCE_READ_KEY,
+		{ pollWhile: (latest) => !isLargeForPresence(statement, latest) },
+	);
+
+	if (!statementId || !isLoaded || isLargeForPresence(statement, progress)) return null;
+
+	return <OnlineUsersList statementId={statementId} />;
+};
+
+const OnlineUsersList: FC<{ statementId: string }> = ({ statementId }) => {
 	const { onlineUsers, isLoading } = useOnlineUsers(statementId);
 	const [hoveredUserId, setHoveredUserId] = useState<string | null>(null);
 	const [clickedUserId, setClickedUserId] = useState<string | null>(null);
@@ -18,12 +45,18 @@ const OnlineUsers: React.FC<OnlineUsersProps> = ({ statementId }) => {
 
 	// Close clicked popover when clicking outside
 	// IMPORTANT: This hook must be called before any conditional returns
-	React.useEffect(() => {
+	useEffect(() => {
 		if (clickedUserId) {
+			const handleKeyDown = (e: KeyboardEvent): void => {
+				if (e.key === 'Escape') setClickedUserId(null);
+			};
+
 			document.addEventListener('click', handleClickOutside);
+			document.addEventListener('keydown', handleKeyDown);
 
 			return () => {
 				document.removeEventListener('click', handleClickOutside);
+				document.removeEventListener('keydown', handleKeyDown);
 			};
 		}
 
@@ -60,42 +93,14 @@ const OnlineUsers: React.FC<OnlineUsersProps> = ({ statementId }) => {
 					hoveredUserId === online.user.uid || clickedUserId === online.user.uid;
 
 				return (
-					<div
+					<OnlineUserItem
 						key={online.user.uid}
-						className={styles.userItem}
-						onMouseEnter={() => handleMouseEnter(online.user.uid)}
-						onMouseLeave={handleMouseLeave}
-						onClick={(e) => {
-							e.stopPropagation();
-							handleClick(online.user.uid);
-						}}
-					>
-						{online.user.photoURL ? (
-							<img
-								src={online.user.photoURL}
-								alt={online.user.displayName}
-								className={`${styles.avatar} ${styles.avatarImage} ${
-									online.tabInFocus ? styles.activeRing : ''
-								}`}
-							/>
-						) : (
-							<div
-								className={`${styles.avatar} ${styles.avatarDefault} ${
-									online.tabInFocus ? styles.activeRing : ''
-								}`}
-							>
-								<span className={styles.initial}>
-									{online.user.displayName?.charAt(0).toUpperCase()}
-								</span>
-							</div>
-						)}
-
-						<UserProfilePopover
-							user={online.user}
-							isActive={online.tabInFocus}
-							visible={isPopoverVisible}
-						/>
-					</div>
+						online={online}
+						isPopoverVisible={isPopoverVisible}
+						onEnter={() => handleMouseEnter(online.user.uid)}
+						onLeave={handleMouseLeave}
+						onToggle={() => handleClick(online.user.uid)}
+					/>
 				);
 			})}
 			{hiddenCount > 0 && (
@@ -103,6 +108,58 @@ const OnlineUsers: React.FC<OnlineUsersProps> = ({ statementId }) => {
 					<div className={styles.moreUsers}>+{hiddenCount}</div>
 				</div>
 			)}
+		</div>
+	);
+};
+
+interface OnlineUserItemProps {
+	online: Online;
+	isPopoverVisible: boolean;
+	onEnter: () => void;
+	onLeave: () => void;
+	onToggle: () => void;
+}
+
+/** One avatar. Its profile card renders in document.body, anchored to this element. */
+const OnlineUserItem: FC<OnlineUserItemProps> = ({
+	online,
+	isPopoverVisible,
+	onEnter,
+	onLeave,
+	onToggle,
+}) => {
+	const itemRef = useRef<HTMLDivElement>(null);
+	const ringClass = online.tabInFocus ? styles.activeRing : '';
+
+	return (
+		<div
+			ref={itemRef}
+			className={styles.userItem}
+			onMouseEnter={onEnter}
+			onMouseLeave={onLeave}
+			onClick={(e) => {
+				e.stopPropagation();
+				onToggle();
+			}}
+		>
+			{online.user.photoURL ? (
+				<img
+					src={online.user.photoURL}
+					alt={online.user.displayName}
+					className={`${styles.avatar} ${styles.avatarImage} ${ringClass}`}
+				/>
+			) : (
+				<div className={`${styles.avatar} ${styles.avatarDefault} ${ringClass}`}>
+					<span className={styles.initial}>{online.user.displayName?.charAt(0).toUpperCase()}</span>
+				</div>
+			)}
+
+			<UserProfilePopover
+				user={online.user}
+				isActive={online.tabInFocus}
+				visible={isPopoverVisible}
+				anchorRef={itemRef}
+			/>
 		</div>
 	);
 };

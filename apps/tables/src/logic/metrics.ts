@@ -1,8 +1,5 @@
 import type { TableAssignmentMetrics } from '@freedi/shared-types';
 
-const BALANCE_DECIMALS = 2;
-const PERCENT = 100;
-
 export interface RankRow {
 	/** 1 = first choice. */
 	rank: number;
@@ -15,34 +12,23 @@ export interface MetricsView {
 	outsideChoices: number;
 	/** Seated without having ranked anything. */
 	withoutPreferences: number;
-	balanceMax: string;
-	balanceMean: string;
-	tolerance: string;
-	withinTolerance: boolean;
-	/** Share of the seated whose seat is one of their choices, 0..100 (rounded). */
-	satisfiedPercent: number;
+	/** Seated at a topic they chose. */
+	gotChosenTopic: number;
+	/** Everyone seated who ranked something. */
+	rankedSeated: number;
 }
 
-export function formatDeviation(value: number): string {
-	return Number.isFinite(value) ? value.toFixed(BALANCE_DECIMALS) : '-';
-}
-
-/** Turn the run's metrics into the numbers the preview screen prints. */
+/** The choice counts the preview prints. A published run has none: every count is then zero. */
 export function describeMetrics(metrics: TableAssignmentMetrics): MetricsView {
-	const { balance, preferences } = metrics;
+	const { preferences } = metrics;
 	const rankRows = preferences.byRank.map((count, index) => ({ rank: index + 1, count }));
-	const inChoices = preferences.byRank.reduce((sum, count) => sum + count, 0);
-	const seated = inChoices + preferences.none + preferences.noPreference;
-	const rankedSeated = seated - preferences.noPreference;
+	const gotChosenTopic = preferences.byRank.reduce((sum, count) => sum + count, 0);
 
 	return {
 		rankRows,
 		outsideChoices: preferences.none,
 		withoutPreferences: preferences.noPreference,
-		balanceMax: formatDeviation(balance.max),
-		balanceMean: formatDeviation(balance.mean),
-		tolerance: formatDeviation(balance.tolerance),
-		withinTolerance: balance.withinTolerance,
-		satisfiedPercent: rankedSeated > 0 ? Math.round((inChoices / rankedSeated) * PERCENT) : 0,
+		gotChosenTopic,
+		rankedSeated: gotChosenTopic + preferences.none,
 	};
 }

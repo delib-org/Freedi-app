@@ -57,6 +57,8 @@ import {
 } from '../mapHelpers/detailLevel';
 import type { MapDetailState } from '../mapHelpers/useMapDetailLevel';
 import styles from './ClusterBoard.module.scss';
+import { useQuestionScoreAccess } from '../../questionScreen/useAnswerScoreGate';
+import { areResultsOffForEveryone } from '../../questionScreen/resultsLogic';
 
 interface Props {
 	/** Results tree from useMindMap: top = subject, sub = clusters, cluster.sub = members. */
@@ -217,7 +219,8 @@ const ClusterBoard: FC<Props> = ({
 	// The board owner (subject creator) is always an admin of the board, even
 	// before their subscription role loads — mirrors StatementTopNav.
 	const isAdmin = isAdminRole(subscription?.role) || (!!user && subject.creatorId === user.uid);
-	const showEval = subject.statementSettings?.showEvaluation ?? false;
+	const { facts } = useQuestionScoreAccess(subject);
+	const scoreViewer = { ...facts, isHost: facts.isHost || isAdmin };
 	// How participants rate options on this board — inherited from the question
 	// so the sticky notes match every other surface (reactions vs agree/disagree).
 	const ratingMode = subject.statementSettings?.ratingMode;
@@ -232,8 +235,10 @@ const ClusterBoard: FC<Props> = ({
 	// board. The shared filter is persisted on the question (everyone sees it);
 	// a per-viewer `localFilter` (this user's own, or an admin's "only me")
 	// overrides it for this device only, so it takes precedence when present.
-	const filterMetric: MapFilterMetric =
-		localFilter?.filterMetric ?? mapSettings?.filterMetric ?? 'none';
+	// With results off the filter rests: which notes clear a score is itself a result.
+	const filterMetric: MapFilterMetric = areResultsOffForEveryone(facts)
+		? 'none'
+		: (localFilter?.filterMetric ?? mapSettings?.filterMetric ?? 'none');
 	const minConsensus = localFilter?.minConsensus ?? mapSettings?.minConsensus ?? -1;
 	const minAverageEvaluation =
 		localFilter?.minAverageEvaluation ?? mapSettings?.minAverageEvaluation ?? -1;
@@ -1220,7 +1225,7 @@ const ClusterBoard: FC<Props> = ({
 													statement={member.top}
 													color={l.color}
 													canManage={canManage(member.top)}
-													showEval={showEval}
+													scoreViewer={scoreViewer}
 													ratingMode={ratingMode}
 													isEditing={editingId === member.top.statementId}
 													onRequestEdit={() => setEditingId(member.top.statementId)}
@@ -1286,7 +1291,7 @@ const ClusterBoard: FC<Props> = ({
 																	statement={source.top}
 																	color={l.color}
 																	canManage={canManage(source.top)}
-																	showEval={showEval}
+																	scoreViewer={scoreViewer}
 																	ratingMode={ratingMode}
 																	isEditing={editingId === source.top.statementId}
 																	onRequestEdit={() => setEditingId(source.top.statementId)}

@@ -11,7 +11,16 @@ import type {
 	TablesSavePreferencesResponse,
 } from '@freedi/shared-types';
 import { db } from '../db';
-import { actorFrom, participantRef, readSession, requireId, topicsQuery } from './tablesAccess';
+import { isUnseatedLatecomer } from './publishedSeating';
+import { rosterEntryFrom } from './roster';
+import {
+	actorFrom,
+	participantRef,
+	readSession,
+	requireId,
+	rosterRef,
+	topicsQuery,
+} from './tablesAccess';
 import { TablesError, toHttpsError } from './tablesErrors';
 import { parsePosition, withoutUndefined } from './validation';
 
@@ -32,9 +41,12 @@ function parsePreferenceList(value: unknown): string[] {
 
 /**
  * `tablesSavePreferences` (the participant themself): up to three distinct
- * topic ids of this session, best first, plus an optional 0..100 position.
+ * topic ids of this session, best first, plus an optional position on one of
+ * the five stops.
  * The call replaces both: leaving `position` out means "not specified" (never
- * the middle). Only while registration is open.
+ * the middle). Allowed while registration is open, and after publishing only for
+ * someone the published run does not seat (a latecomer); a seated person's table
+ * is fixed, so the call is refused for them.
  */
 export async function savePreferences(
 	firestore: Firestore,
@@ -44,11 +56,13 @@ export async function savePreferences(
 	const sessionId = requireId(req?.sessionId, 'sessionId');
 	const preferences = parsePreferenceList(req.preferences);
 	const position = parsePosition(req.position);
-	const ref = participantRef(firestore, tableAssignmentParticipantId(sessionId, uid));
+	const id = tableAssignmentParticipantId(sessionId, uid);
+	const ref = participantRef(firestore, id);
 
 	return firestore.runTransaction(async (tx) => {
 		const session = await readSession(tx, firestore, sessionId);
-		if (session.status !== 'registrationOpen') {
+		const open = session.status === 'registrationOpen';
+		if (!open && !(await isUnseatedLatecomer(tx, firestore, session, uid))) {
 			throw new TablesError(
 				'failed-precondition',
 				'Registration is not open',
@@ -76,6 +90,7 @@ export async function savePreferences(
 			position,
 		});
 		tx.set(ref, participant);
+		tx.set(rosterRef(firestore, id), rosterEntryFrom(participant));
 
 		return { participant };
 	});

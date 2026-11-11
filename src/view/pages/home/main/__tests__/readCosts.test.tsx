@@ -38,6 +38,9 @@ jest.mock('@/redux/statements/newStatementSlice', () => ({
 jest.mock('@/controllers/hooks/useHomeStatementOverlay', () => ({
 	useHomeStatementOverlay: jest.fn(),
 }));
+jest.mock('@/controllers/hooks/useFreshMessageCounts', () => ({
+	useFreshMessageCounts: jest.fn(),
+}));
 jest.mock('../../hooks/useLazyLoadHomeSubscriptions', () => ({
 	useLazyLoadHomeSubscriptions: () => ({}),
 }));

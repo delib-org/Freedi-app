@@ -1,9 +1,10 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import type { Firestore } from 'firebase-admin/firestore';
-import { Collections, Role, Statement, functionConfig } from '@freedi/shared-types';
+import { Collections, Statement, functionConfig } from '@freedi/shared-types';
 import { logger } from 'firebase-functions';
 import { ALLOWED_ORIGINS } from './config/cors';
 import { db } from './index';
+import { hasAdminSubscription } from './utils/subscriptionIdentity';
 import { updateParentStatementWithChosenOptions } from './evaluation/updateChosenOptions';
 
 /**
@@ -52,14 +53,7 @@ export async function assertAdmin(
 		statement = statementDoc.data() as Statement;
 		const topParentId = statement.topParentId || statementId;
 
-		const membersSnapshot = await firestore
-			.collection(Collections.statementsSubscribe)
-			.where('statementId', '==', topParentId)
-			.where('userId', '==', userId)
-			.where('role', 'in', [Role.admin, 'creator', 'admin'])
-			.limit(1)
-			.get();
-		isAdmin = !membersSnapshot.empty;
+		isAdmin = await hasAdminSubscription(firestore, userId, [topParentId]);
 	} catch (error) {
 		// Deliberate HttpsErrors (not-found) pass through untouched.
 		if (error instanceof HttpsError) throw error;

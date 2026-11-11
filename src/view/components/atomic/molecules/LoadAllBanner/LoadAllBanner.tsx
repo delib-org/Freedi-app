@@ -22,9 +22,17 @@ export interface LoadAllBannerProps {
 	/** 'direct' = children only (agreement map), 'descendants' = whole subtree (mind-map) */
 	mode: BulkLoadMode;
 	className?: string;
+	/** Replaces "Load all". */
+	label?: string;
+	/** Replaces "Showing X of N statements". */
+	description?: string;
+	/** Keeps offering the button when everything is already in the store. */
+	alwaysOffer?: boolean;
+	/** Runs once the whole scope is in the store. */
+	onLoaded?: () => void;
 }
 
-type BannerPhase = 'idle' | 'loading' | 'done';
+type BannerPhase = 'idle' | 'loading' | 'done' | 'failed';
 
 /**
  * "Showing X of N statements — Load all" banner.
@@ -34,7 +42,15 @@ type BannerPhase = 'idle' | 'loading' | 'done';
  * every page through the getBulkStatements endpoint with live progress, then
  * flags the scope as fully loaded so delta listeners take over.
  */
-const LoadAllBanner: React.FC<LoadAllBannerProps> = ({ rootId, mode, className }) => {
+const LoadAllBanner: React.FC<LoadAllBannerProps> = ({
+	rootId,
+	mode,
+	className,
+	label,
+	description,
+	alwaysOffer = false,
+	onLoaded,
+}) => {
 	const { t, currentLanguage } = useTranslation();
 	const dispatch = useDispatch();
 
@@ -85,26 +101,32 @@ const LoadAllBanner: React.FC<LoadAllBannerProps> = ({ rootId, mode, className }
 	}, [phase]);
 
 	const handleLoadAll = useCallback(async () => {
+		if (fullyLoadedScope) {
+			onLoaded?.();
+
+			return;
+		}
 		setPhase('loading');
 		setLoadedCount(0);
 		try {
 			const { watermark } = await bulkLoadStatements(rootId, mode, setLoadedCount);
 			dispatch(setScopeFullyLoaded({ rootId, mode, watermark }));
 			setPhase('done');
+			onLoaded?.();
 		} catch (error) {
 			logError(error, {
 				operation: 'LoadAllBanner.handleLoadAll',
 				statementId: rootId,
 				metadata: { mode },
 			});
-			setPhase('idle');
+			setPhase('failed');
 		}
-	}, [dispatch, rootId, mode]);
+	}, [dispatch, rootId, mode, fullyLoadedScope, onLoaded]);
 
 	// Nothing to offer: scope already complete, fully loaded earlier, or dismissed
 	if (!visible) return null;
-	if (phase === 'idle' && (fullyLoadedScope || totalCount === null || totalCount <= inStoreCount))
-		return null;
+	const nothingToOffer = fullyLoadedScope || totalCount === null || totalCount <= inStoreCount;
+	if (phase === 'idle' && nothingToOffer && !alwaysOffer) return null;
 
 	const classes = clsx(
 		'load-all-banner',
@@ -115,13 +137,34 @@ const LoadAllBanner: React.FC<LoadAllBannerProps> = ({ rootId, mode, className }
 
 	return (
 		<div className={classes} role="status" aria-live="polite">
-			{phase === 'idle' && totalCount !== null && (
+			{phase === 'failed' && (
 				<>
-					<span className="load-all-banner__text">
-						{`${t('Showing')} ${formatNumber(inStoreCount)} ${t('of')} ${formatNumber(totalCount)} ${t('statements')}`}
+					<span className="load-all-banner__text" role="alert">
+						{t('Could not load everything. Please try again.')}
 					</span>
 					<span className="load-all-banner__action">
-						<Button text={t('Load all')} variant="secondary" size="small" onClick={handleLoadAll} />
+						<Button
+							text={label ?? t('Load all')}
+							variant="secondary"
+							size="small"
+							onClick={handleLoadAll}
+						/>
+					</span>
+				</>
+			)}
+			{phase === 'idle' && (totalCount !== null || alwaysOffer) && (
+				<>
+					<span className="load-all-banner__text">
+						{description ??
+							`${t('Showing')} ${formatNumber(inStoreCount)} ${t('of')} ${formatNumber(totalCount ?? 0)} ${t('statements')}`}
+					</span>
+					<span className="load-all-banner__action">
+						<Button
+							text={label ?? t('Load all')}
+							variant="secondary"
+							size="small"
+							onClick={handleLoadAll}
+						/>
 					</span>
 				</>
 			)}

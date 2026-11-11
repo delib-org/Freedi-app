@@ -10,9 +10,13 @@ import {
 	TableAssignmentRunSchema,
 	TableAssignmentSchema,
 	TableAssignmentSettingsSchema,
+	TableAssignmentCounterSchema,
+	TableAssignmentRosterEntrySchema,
 	TableAssignmentTopicSchema,
+	tableAssignmentNameKey,
 	tableAssignmentParticipantId,
 } from '../models/tableAssignment/tableAssignmentModel';
+import { tableAssignmentCloseness } from '../models/tableAssignment/tableAssignmentCloseness';
 
 const NOW = 1_700_000_000_000;
 
@@ -148,6 +152,49 @@ describe('TableAssignmentRunSchema', () => {
 	it('rejects an unknown run status', () => {
 		expect(safeParse(TableAssignmentRunSchema, { ...valid, status: 'draft' }).success).toBe(false);
 	});
+
+	it('parses a run in the stored shape: closeness per table, empty figures', () => {
+		const empty = { n: 0, mean: [], sd: [], deviation: 0 };
+		const stored = {
+			...valid,
+			tables: [{ ...valid.tables[0], stats: empty, closeness: 'close' }],
+			metrics: {
+				...valid.metrics,
+				population: { n: 0, mean: [], sd: [] },
+				balance: { max: 0, mean: 0, tolerance: 0.3, withinTolerance: true },
+				hasEnoughPositions: true,
+			},
+		};
+
+		expect(safeParse(TableAssignmentRunSchema, stored).success).toBe(true);
+	});
+
+	it('parses a run with no seed, as they are stored now', () => {
+		const { seed: _seed, ...withoutSeed } = valid;
+
+		expect(safeParse(TableAssignmentRunSchema, withoutSeed).success).toBe(true);
+	});
+
+	it('rejects an unknown closeness', () => {
+		const tables = [{ ...valid.tables[0], closeness: 'near' }];
+
+		expect(safeParse(TableAssignmentRunSchema, { ...valid, tables }).success).toBe(false);
+	});
+});
+
+describe('tableAssignmentCloseness', () => {
+	const tolerance = 0.3;
+
+	it('says nothing below three known positions, however far the table is', () => {
+		expect(tableAssignmentCloseness({ n: 2, deviation: 5 }, tolerance)).toBe('notEnough');
+	});
+
+	it('reads very close up to half the tolerance, close up to the tolerance, far past it', () => {
+		expect(tableAssignmentCloseness({ n: 3, deviation: 0.15 }, tolerance)).toBe('veryClose');
+		expect(tableAssignmentCloseness({ n: 3, deviation: 0.16 }, tolerance)).toBe('close');
+		expect(tableAssignmentCloseness({ n: 3, deviation: 0.3 }, tolerance)).toBe('close');
+		expect(tableAssignmentCloseness({ n: 3, deviation: 0.31 }, tolerance)).toBe('far');
+	});
 });
 
 describe('Collections', () => {
@@ -156,5 +203,100 @@ describe('Collections', () => {
 		expect(Collections.tableAssignmentTopics).toBe('tableAssignmentTopics');
 		expect(Collections.tableAssignmentParticipants).toBe('tableAssignmentParticipants');
 		expect(Collections.tableAssignmentRuns).toBe('tableAssignmentRuns');
+	});
+});
+
+describe('redesign fields on older documents', () => {
+	it('parses settings without the new fields and leaves them absent', () => {
+		const settings = parse(TableAssignmentSettingsSchema, { tableSize: 5, balanceTolerance: 0.3 });
+
+		expect(settings.expectedParticipants).toBeUndefined();
+		expect(settings.allowReturnByName).toBeUndefined();
+	});
+
+	it('accepts the new settings and refuses fewer than one expected person', () => {
+		expect(
+			safeParse(TableAssignmentSettingsSchema, {
+				expectedParticipants: 42,
+				allowReturnByName: true,
+			}).success,
+		).toBe(true);
+		expect(safeParse(TableAssignmentSettingsSchema, { expectedParticipants: 0 }).success).toBe(
+			false,
+		);
+	});
+
+	it('parses a private record with and without the claim flag', () => {
+		expect(parse(TableAssignmentParticipantSchema, validParticipant).claimedByName).toBeUndefined();
+		expect(
+			parse(TableAssignmentParticipantSchema, { ...validParticipant, claimedByName: true })
+				.claimedByName,
+		).toBe(true);
+	});
+});
+
+describe('name card and counter schemas', () => {
+	const card = {
+		sessionId: 's1',
+		uid: 'u1',
+		fullName: 'Dana Levi',
+		nameKey: 'dana levi',
+		registeredAt: NOW,
+		hasPreferences: false,
+	};
+
+	it('parses a name card, with or without a direct-mode table', () => {
+		expect(safeParse(TableAssignmentRosterEntrySchema, card).success).toBe(true);
+		expect(
+			safeParse(TableAssignmentRosterEntrySchema, { ...card, chosenTableIndex: 2 }).success,
+		).toBe(true);
+	});
+
+	it('carries the claim flag for the host', () => {
+		expect(parse(TableAssignmentRosterEntrySchema, { ...card, claimedByName: true })).toMatchObject({
+			claimedByName: true,
+		});
+	});
+
+	it('caps a topic at 50 tables', () => {
+		const topic = { topicId: 't1', sessionId: 's1', title: 'T', order: 0 };
+
+		expect(safeParse(TableAssignmentTopicSchema, { ...topic, maxTables: 50 }).success).toBe(true);
+		expect(safeParse(TableAssignmentTopicSchema, { ...topic, maxTables: 51 }).success).toBe(false);
+	});
+
+	it('has no field for an answer: a position does not survive parsing', () => {
+		const parsed = parse(TableAssignmentRosterEntrySchema, { ...card, position: 40 });
+
+		expect(parsed).not.toHaveProperty('position');
+		expect(parsed).not.toHaveProperty('preferences');
+	});
+
+	it('refuses a negative counter', () => {
+		expect(
+			safeParse(TableAssignmentCounterSchema, { sessionId: 's1', registered: -1 }).success,
+		).toBe(false);
+	});
+});
+
+describe('tableAssignmentNameKey', () => {
+	it.each([
+		['  Dana   Levi ', 'dana levi'],
+		['DANA levi', 'dana levi'],
+		['דנה   לוי', 'דנה לוי'],
+		[' دانا  ليفي ', 'دانا ليفي'],
+		['Dana Levi', 'dana levi'],
+		['Dana\tLevi\n', 'dana levi'],
+	])('reduces %j to %j', (input, expected) => {
+		expect(tableAssignmentNameKey(input)).toBe(expected);
+	});
+
+	it('treats composed and compatibility forms as one name', () => {
+		expect(tableAssignmentNameKey('Ｄａｎａ')).toBe('dana');
+		expect(tableAssignmentNameKey('é')).toBe(tableAssignmentNameKey('é'));
+	});
+
+	it('keeps different names apart', () => {
+		expect(tableAssignmentNameKey('דנה לוי')).not.toBe(tableAssignmentNameKey('דנה כהן'));
 	});
 });

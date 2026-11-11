@@ -5,6 +5,7 @@ import { replaceAllParagraphChildren } from '@freedi/shared-utils';
 import { getSurveyById, addQuestionToSurvey } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { denySurveyPermission } from '@/lib/auth/surveyAccess';
+import { denyForeignQuestionsOnEdit, isValidQuestionId } from '@/lib/auth/surveyQuestionAccess';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { makeMcParagraphDeps } from '@/lib/firebase/paragraphStore';
 import { AddQuestionRequest } from '@/types/survey';
@@ -171,7 +172,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
     const body: AddQuestionRequest = await request.json();
 
-    if (!body.questionId) {
+    if (!isValidQuestionId(body.questionId)) {
       return NextResponse.json(
         { error: 'Question ID is required' },
         { status: 400 }
@@ -197,6 +198,10 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         { status: 400 }
       );
     }
+
+    // Before anything is written: adding the question cascades survey settings onto it
+    const deniedQuestion = await denyForeignQuestionsOnEdit(survey, userId, [body.questionId]);
+    if (deniedQuestion) return deniedQuestion;
 
     // Add to survey
     const updatedSurvey = await addQuestionToSurvey(surveyId, body.questionId);

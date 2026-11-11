@@ -1,4 +1,5 @@
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
+import { isAccessScopeOnlyWrite } from '../accessScope/scopeOnlyWrite';
 import { db } from '../db';
 import {
 	Collections,
@@ -28,6 +29,7 @@ import {
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { autoElderReviews } from './fn_agoraCharacterReview';
+import { TRIGGER_MAX_INSTANCES } from '../config/triggerLimits';
 
 interface ProposalDoc {
 	statementId?: string;
@@ -486,12 +488,17 @@ async function elderCouncilReads(
 }
 
 export const onAgoraProposalWritten = onDocumentWritten(
-	{ document: `${Collections.statements}/{statementId}`, ...functionConfig },
+	{
+		document: `${Collections.statements}/{statementId}`,
+		...functionConfig,
+		maxInstances: TRIGGER_MAX_INSTANCES.statementWrite,
+	},
 	async (event) => {
 		const after = event.data?.after.exists ? (event.data.after.data() as ProposalDoc) : null;
 		const before = event.data?.before.exists ? (event.data.before.data() as ProposalDoc) : null;
 		const proposal = after ?? before;
 		if (!proposal?.agoraSessionId) return;
+		if (isAccessScopeOnlyWrite(before, after)) return;
 		if (proposal.statementType !== StatementType.option) return;
 		// A challenge written during the vote is an option, but it is not a
 		// deliberation proposal and must not enter this lifecycle. It would

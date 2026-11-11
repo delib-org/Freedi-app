@@ -2,6 +2,7 @@ import firebaseConfig from '@/controllers/db/configKey';
 import { functionConfig } from '@freedi/shared-types';
 import { logError, NetworkError } from '@/utils/errorHandling';
 import { getAuthHeaders } from '@/controllers/db/authHeaders';
+import { ContentRejection, parseContentRejection } from '@/helpers/contentRejection';
 
 /**
  * Detected suggestion from multi-suggestion detection
@@ -22,6 +23,8 @@ export interface MultiSuggestionDetectionResponse {
 	originalText: string;
 	responseTime?: number;
 	error?: string;
+	/** Set when the server's moderator refused the text. */
+	rejection?: ContentRejection;
 }
 
 /**
@@ -61,6 +64,17 @@ export async function detectMultipleSuggestions(
 
 		if (!response.ok) {
 			const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+			const rejection = parseContentRejection(response.status, errorData);
+			if (rejection) {
+				return {
+					ok: false,
+					isMultipleSuggestions: false,
+					suggestions: [],
+					originalText: userInput,
+					rejection,
+				};
+			}
+
 			throw new NetworkError(errorData.error || 'Failed to detect multiple suggestions', {
 				status: response.status,
 				questionId,

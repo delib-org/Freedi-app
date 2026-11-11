@@ -4,6 +4,7 @@ import {
 	getDefaultQuestionTab,
 	resolveActiveView,
 	resolveTabParam,
+	showsDiscussionComposer,
 	tabOfView,
 } from '../questionTabs';
 
@@ -150,6 +151,40 @@ describe('questionTabs', () => {
 			expect(resolveActiveView('results', group, buildQuestionTabs({ statement: group }))).toBe(
 				'chat',
 			);
+		});
+	});
+
+	describe('showsDiscussionComposer', () => {
+		const compound = (): Statement =>
+			statement({
+				questionSettings: { questionType: QuestionType.compound },
+			} as Partial<Statement>);
+
+		it('is true on the Discussion tab of a question and of an answer', () => {
+			expect(showsDiscussionComposer('chat', undefined, statement())).toBe(true);
+			expect(showsDiscussionComposer('chat', 'chat', statement())).toBe(true);
+			expect(
+				showsDiscussionComposer('chat', 'main', statement({ statementType: StatementType.option })),
+			).toBe(true);
+		});
+
+		it('is true on the Discussion tab of a group', () => {
+			const group = statement({ statementType: StatementType.group });
+			expect(showsDiscussionComposer('chat', undefined, group)).toBe(true);
+			expect(showsDiscussionComposer('options', undefined, group)).toBe(false);
+		});
+
+		it('is false for a compound question and a missing statement', () => {
+			expect(showsDiscussionComposer('chat', undefined, compound())).toBe(false);
+			expect(showsDiscussionComposer('chat', undefined, null)).toBe(false);
+			expect(showsDiscussionComposer('chat', undefined, undefined)).toBe(false);
+		});
+
+		it('is false on other tabs and on map or settings screens', () => {
+			expect(showsDiscussionComposer('options', undefined, statement())).toBe(false);
+			expect(showsDiscussionComposer('results', undefined, statement())).toBe(false);
+			expect(showsDiscussionComposer('chat', 'settings', statement())).toBe(false);
+			expect(showsDiscussionComposer('chat', 'mind-map', statement())).toBe(false);
 		});
 	});
 });

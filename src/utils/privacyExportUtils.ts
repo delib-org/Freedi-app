@@ -14,7 +14,10 @@ import {
 	UserDemographicQuestion,
 	UserDemographicQuestionType,
 	StatementType,
+	resolveViewCount,
 } from '@freedi/shared-types';
+import type { CounterProgress } from '@freedi/shared-types';
+import { getQuestionProgress } from '@/controllers/db/questionProgress/getQuestionProgress';
 import { logError } from '@/utils/errorHandling';
 import { isDerivedStatement, resolveDerivedPipeline } from '@/utils/derivedStatement';
 import { downloadFile } from '@/utils/exportUtils';
@@ -77,7 +80,11 @@ async function fetchEvaluations(parentId: string): Promise<Evaluation[]> {
  */
 async function fetchOptions(parentId: string): Promise<Statement[]> {
 	const statementsRef = collection(FireStore, Collections.statements);
-	const q = query(statementsRef, where('parentId', '==', parentId));
+	const q = query(
+		statementsRef,
+		where('parentId', '==', parentId),
+		where('statementType', 'in', [StatementType.option, StatementType.synthesis]),
+	);
 	const snapshot = await getDocs(q);
 
 	return snapshot.docs
@@ -335,6 +342,7 @@ export function buildParticipationSummary(
 	parentStatement: Statement,
 	options: Statement[],
 	evaluations: Evaluation[],
+	progress: CounterProgress = null,
 ): ParticipationSummary {
 	const suggesters = new Set(
 		options
@@ -350,11 +358,9 @@ export function buildParticipationSummary(
 
 	// View tracking only exists for questions visited after it was introduced;
 	// when absent, report null rather than a misleading zero.
-	const recordedViews = parentStatement.viewed?.individualViews;
+	const recordedViews = resolveViewCount(progress, parentStatement);
 	const enteredCount =
-		typeof recordedViews === 'number' && recordedViews > 0
-			? Math.max(recordedViews, totalParticipants)
-			: null;
+		recordedViews !== undefined ? Math.max(recordedViews, totalParticipants) : null;
 
 	return {
 		enteredCount,
@@ -435,7 +441,13 @@ export async function createPrivacyPreservingExport(
 		const anonymizedEvaluations = buildAnonymizedEvaluations(evaluations, allOptions);
 
 		// Participation funnel: entered → suggested → evaluated
-		const participation = buildParticipationSummary(parentStatement, allOptions, evaluations);
+		const progress = await getQuestionProgress(parentStatement.statementId);
+		const participation = buildParticipationSummary(
+			parentStatement,
+			allOptions,
+			evaluations,
+			progress,
+		);
 
 		// Count unique evaluators and respondents
 		const uniqueEvaluators = participation.evaluatedCount;

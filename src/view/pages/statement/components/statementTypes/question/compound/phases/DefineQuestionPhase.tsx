@@ -14,6 +14,7 @@ import {
 } from '@/controllers/db/compoundQuestion/lockStatement';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { Lock, LockOpen } from 'lucide-react';
+import LeadingSuggestion from './LeadingSuggestion';
 import styles from '../CompoundQuestion.module.scss';
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
@@ -185,15 +186,7 @@ const DefineQuestionPhase: FC = () => {
 
 						{titleDiscussionId ? (
 							<>
-								{topTitleOption && (
-									<div className={styles.topSuggestion}>
-										<span className={styles.topSuggestionLabel}>{t('Leading suggestion')}</span>
-										<p className={styles.topSuggestionText}>{topTitleOption.statement}</p>
-										<span className={styles.topSuggestionConsensus}>
-											{t('Consensus')}: {Math.round((topTitleOption.consensus ?? 0) * 100)}%
-										</span>
-									</div>
-								)}
+								{topTitleOption && <LeadingSuggestion option={topTitleOption} isHost={isAdmin} />}
 								<div className={styles.discussionActions}>
 									<button className={styles.discussionLink} onClick={handleGoToDiscussion}>
 										{t('Go to title discussion')}

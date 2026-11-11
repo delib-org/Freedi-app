@@ -26,6 +26,9 @@ const RANKED_SORTS: ReadonlySet<string> = new Set<string>([
  * (once) so the client-side comparator ranks the complete set rather than just
  * the most-recent window. No-op for chronological sorts and for scopes already
  * fully loaded.
+ *
+ * A load is not cancelled by the effect's cleanup: its own dispatch re-runs the
+ * effect, and the pages it fetched are already in the store whoever is watching.
  */
 export function useAutoLoadAllForSort(
 	statementId: string | undefined,
@@ -34,21 +37,19 @@ export function useAutoLoadAllForSort(
 	const dispatch = useDispatch();
 	const loadedSelector = useMemo(() => fullyLoadedScopeSelector(statementId), [statementId]);
 	const fullyLoadedScope = useSelector(loadedSelector);
-	const [isAutoLoading, setIsAutoLoading] = useState(false);
-	const loadingRef = useRef(false);
+	const [loadingScopeId, setLoadingScopeId] = useState<string | undefined>(undefined);
+	const inFlightScopes = useRef(new Set<string>());
+	const isRankedSort = !!sort && RANKED_SORTS.has(sort);
 
 	useEffect(() => {
-		if (!statementId) return;
-		if (!sort || !RANKED_SORTS.has(sort)) return;
-		if (fullyLoadedScope || loadingRef.current) return;
+		if (!statementId || !isRankedSort) return;
+		if (fullyLoadedScope || inFlightScopes.current.has(statementId)) return;
 
-		loadingRef.current = true;
-		let cancelled = false;
-		setIsAutoLoading(true);
+		inFlightScopes.current.add(statementId);
+		setLoadingScopeId(statementId);
 
 		bulkLoadStatements(statementId, 'direct')
 			.then(({ watermark }) => {
-				if (cancelled) return;
 				dispatch(setScopeFullyLoaded({ rootId: statementId, mode: 'direct', watermark }));
 			})
 			.catch((error) =>
@@ -59,14 +60,10 @@ export function useAutoLoadAllForSort(
 				}),
 			)
 			.finally(() => {
-				loadingRef.current = false;
-				if (!cancelled) setIsAutoLoading(false);
+				inFlightScopes.current.delete(statementId);
+				setLoadingScopeId((current) => (current === statementId ? undefined : current));
 			});
+	}, [statementId, sort, isRankedSort, fullyLoadedScope, dispatch]);
 
-		return () => {
-			cancelled = true;
-		};
-	}, [statementId, sort, fullyLoadedScope, dispatch]);
-
-	return { isAutoLoading };
+	return { isAutoLoading: isRankedSort && !!statementId && loadingScopeId === statementId };
 }

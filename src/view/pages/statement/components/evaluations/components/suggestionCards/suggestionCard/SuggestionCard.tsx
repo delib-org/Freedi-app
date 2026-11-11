@@ -39,6 +39,14 @@ import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
 import MergeBadge from './MergeBadge';
 import YouTubeEmbed from './YouTubeEmbed';
 import { extractYouTubeVideo } from '@/helpers/youtubeLinks';
+import { useIsClamped } from './hasClampedContent';
+import { useAnswerScoreInput } from '../../../../questionScreen/useAnswerScoreGate';
+import { AnswerScoreGateContext } from '../../../../questionScreen/answerScoreGateContext';
+import { canSeeScore, isQuestionResultsOff } from '../../../../questionScreen/canSeeScore';
+import { resolveCardMarks } from './cardMarks';
+import { isHostOfAnswer } from '@/helpers/answerModeration';
+import { useAnswerHostContext } from '@/controllers/hooks/useAnswerVisibility';
+import { isAnswerHeldByModeration } from '@freedi/shared-types';
 
 interface Props {
 	statement: Statement | undefined;
@@ -60,11 +68,13 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	const { t } = useTranslation();
 	// Use parent's authorization instead of individual card authorization
 	const { isAuthorized, isAdmin } = useAuthorization(parentStatement?.statementId);
+	const answerHostContext = useAnswerHostContext();
 	const creator = useSelector(creatorSelector);
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
 	const minJoinMembers = parentStatement?.statementSettings?.minJoinMembers;
 	const maxJoinMembers = parentStatement?.statementSettings?.maxJoinMembers;
-	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
+	const scoreInput = useAnswerScoreInput(statement, parentStatement);
+	const canSeeMarks = canSeeScore(scoreInput);
 	const showBadges =
 		parentStatement?.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot;
 	const isAnchored = statement?.anchored === true;
@@ -118,40 +128,15 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	// Dropped: on a list where every card is the same type it encoded nothing,
 	// and it competed with the status rule for the same edge.
 
-	// Check if text is clamped and add overflow class
-	useEffect(() => {
-		const checkOverflow = () => {
-			const textContainer = textContainerRef.current;
-			if (textContainer) {
-				const textElement = textContainer.parentElement;
-
-				if (textElement) {
-					// Always show button when expanded (to allow collapsing)
-					if (isExpanded) {
-						textElement.classList.add(styles.hasOverflow);
-					} else {
-						// Only show when actually overflowing. The description is
-						// clamped independently of the title, so a short title with a
-						// long body still needs the expand affordance.
-						const description = descriptionRef.current;
-						const isOverflowing =
-							textContainer.scrollHeight > textContainer.clientHeight ||
-							(!!description && description.scrollHeight > description.clientHeight);
-						if (isOverflowing) {
-							textElement.classList.add(styles.hasOverflow);
-						} else {
-							textElement.classList.remove(styles.hasOverflow);
-						}
-					}
-				}
-			}
-		};
-
-		// Add a small delay to ensure rendering is complete
-		const timeoutId = setTimeout(checkOverflow, 50);
-
-		return () => clearTimeout(timeoutId);
-	}, [statement?.statement, statement?.description, isExpanded]);
+	// "Show more" appears only when the title or the body is really cut off. The
+	// description is clamped independently of the title, so a short title with a
+	// long body still needs it. Re-measured on resize and when fonts arrive.
+	const isCutOff = useIsClamped(
+		[textContainerRef, descriptionRef],
+		isExpanded,
+		`${statement?.statement ?? ''}|${statement?.description ?? ''}|${statement?.paragraphs?.length ?? 0}`,
+	);
+	const hasOverflow = isCutOff || isExpanded;
 
 	async function handleSetOption() {
 		try {
@@ -233,13 +218,16 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 		}
 	}
 
-	// Check if statement is in parent's results array (evaluation/consensus winner)
-	const isInResults =
-		parentStatement?.results?.some((result) => result.statementId === statement.statementId) ??
-		false;
+	const { showVotingWinner, showInResults } = resolveCardMarks(
+		statement,
+		parentStatement,
+		canSeeMarks,
+	);
 
-	// Check if statement is the voting winner (from voting screen)
-	const isVotingWinner = parentStatement?.topVotedOption?.statementId === statement.statementId;
+	// While the automatic check holds an answer, only its host may restore it.
+	const canUnhide = isAnswerHeldByModeration(statement)
+		? isAdmin || isHostOfAnswer(statement, answerHostContext)
+		: isAuthorized;
 
 	function handleToggleHide(e: React.MouseEvent) {
 		e.stopPropagation();
@@ -250,12 +238,11 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	// condition paint independently. See the channel table in the stylesheet:
 	// hidden outranks voting winner outranks results winner outranks the join
 	// warning, and only the top one claims the card's rule and wash.
-	const showVotingWinner = showEvaluation && isVotingWinner;
 	const statusModifier = statement.hide
 		? styles['statement-evaluation-card--hidden']
 		: showVotingWinner
 			? styles['statement-evaluation-card--voted']
-			: showEvaluation && isInResults
+			: showInResults
 				? styles['statement-evaluation-card--winner']
 				: isBelowMinimum
 					? styles['statement-evaluation-card--below-minimum']
@@ -276,6 +263,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 		isOwnAnswer && styles['statement-evaluation-card--own'],
 		statementAge < 10000 && styles['statement-evaluation-card--new'],
 		isCardMenuOpen && styles['statement-evaluation-card--menu-open'],
+		image && styles['statement-evaluation-card--with-photo'],
 	);
 
 	// Legacy inline paragraphs are rendered by EditableStatement; newer
@@ -291,6 +279,30 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	const showMetaRow = (memberOfClusters && memberOfClusters.length > 0) || (showBadges ?? false);
 	const showAddImage = !image && isAdmin;
 
+	// Bottom row like Join: action pills at the start, the chat as a small round
+	// button at the end.
+	const actionRow =
+		showAddImage || showChat ? (
+			<div className={styles.actionRow}>
+				<div className={styles.actions}>
+					{showAddImage && (
+						<button
+							type="button"
+							onClick={() => setShowImageUpload(true)}
+							className={styles.pillButton}
+						>
+							{t('Add Image')}
+						</button>
+					)}
+				</div>
+				{showChat && (
+					<div className={styles.chat}>
+						<StatementChatMore statement={statement} variant="round" opensSheet />
+					</div>
+				)}
+			</div>
+		) : null;
+
 	return (
 		<div
 			onContextMenu={(e) => handleRightClick(e)}
@@ -298,7 +310,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 			onPointerDown={handleCardPointerDown}
 			className={cardClassName}
 			style={{
-				pointerEvents: statement.hide && !isAuthorized ? 'none' : 'auto',
+				pointerEvents: statement.hide && !isAuthorized && !canUnhide ? 'none' : 'auto',
 			}}
 			ref={elementRef}
 			id={statement.statementId}
@@ -314,11 +326,11 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 							className={clsx(
 								styles.statusBadge,
 								styles['statusBadge--hidden'],
-								isAuthorized && styles['statusBadge--clickable'],
+								canUnhide && styles['statusBadge--clickable'],
 							)}
-							onClick={isAuthorized ? handleToggleHide : undefined}
-							title={isAuthorized ? t('Click to unhide') : t('Hidden from participants')}
-							aria-label={isAuthorized ? t('Unhide this card') : t('This card is hidden')}
+							onClick={canUnhide ? handleToggleHide : undefined}
+							title={canUnhide ? t('Click to unhide') : t('Hidden from participants')}
+							aria-label={canUnhide ? t('Unhide this card') : t('This card is hidden')}
 						>
 							<EyeCrossIcon />
 							<span>{t('Hidden')}</span>
@@ -338,7 +350,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 			)}
 
 			{/* Quick unhide button - appears on hover for admins on hidden cards */}
-			{statement.hide && isAuthorized && (
+			{statement.hide && canUnhide && (
 				<button
 					type="button"
 					className={styles.quickUnhideBtn}
@@ -358,13 +370,15 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 				</span>
 			)}
 
-			{/* Image - Display image at the top of card */}
+			{/* Photo: a full-height column at the inline-start edge of the card (absolutely
+			    placed, so it follows the text column's height instead of setting it).
+			    Pressing it opens it full size. */}
 			{image && (
 				<StatementImage
 					statement={statement}
 					image={image}
 					setImage={setImage}
-					displayMode="above"
+					displayMode="thumb"
 					onRemove={async () => {
 						setImage('');
 						await updateStatementMainImage(statement, '');
@@ -373,11 +387,12 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 					fileInputRef={fileInputRef}
 				/>
 			)}
+
 			{/* A YouTube link in the option text plays here; the link itself is hidden from the text. */}
 			{youTubeVideo && <YouTubeEmbed embedUrl={youTubeVideo.embedUrl} />}
 			<div className={styles.body}>
 				<div className={styles.info}>
-					<div className={styles.text}>
+					<div className={clsx(styles.text, hasOverflow && styles.hasOverflow)}>
 						<div
 							className={`${styles.textContent} ${isExpanded ? styles.textContentExpanded : ''}`}
 							ref={textContainerRef}
@@ -427,6 +442,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 							statement={statement}
 							isAuthorized={isAuthorized}
 							isAdmin={isAdmin}
+							canToggleHide={canUnhide}
 							isCardMenuOpen={isCardMenuOpen}
 							setIsCardMenuOpen={setIsCardMenuOpen}
 							isEdit={isEdit}
@@ -503,33 +519,21 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 
 				{bylineText && <span className={styles.bylineText}>{bylineText}</span>}
 
-				{/* Face circles, then (after you rate) the results chips. */}
-				<div className={styles['evolution-element']}>
-					{!isTheme(statement) && <Evaluation statement={statement} variant="card" />}
-				</div>
-
-				{/* Bottom row like Join: action pills at the start, the chat as a
-				    small round button at the end. */}
-				{(showAddImage || showChat) && (
-					<div className={styles.actionRow}>
-						<div className={styles.actions}>
-							{showAddImage && (
-								<button
-									type="button"
-									onClick={() => setShowImageUpload(true)}
-									className={styles.pillButton}
-								>
-									{t('Add Image')}
-								</button>
-							)}
-						</div>
-						{showChat && (
-							<div className={styles.chat}>
-								<StatementChatMore statement={statement} variant="round" opensSheet />
-							</div>
+				{/* Face circles, the action row, then (after you rate) the results
+				    chips: one footer, the chips share the action row's line. */}
+				<div className={styles.cardFooter}>
+					<div className={styles['evolution-element']}>
+						{isTheme(statement) ? (
+							actionRow
+						) : (
+							<AnswerScoreGateContext.Provider
+								value={{ answerId: statement.statementId, input: scoreInput }}
+							>
+								<Evaluation statement={statement} variant="card" compact footerSlot={actionRow} />
+							</AnswerScoreGateContext.Provider>
 						)}
 					</div>
-				)}
+				</div>
 				{shouldShowAddSubQuestionModal && (
 					<CreateStatementModal
 						allowedTypes={[StatementType.question]}
@@ -562,6 +566,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 				<IntegrateSuggestionsModal
 					sourceStatementId={statement.statementId}
 					parentStatementId={parentStatement.statementId}
+					showScores={!isQuestionResultsOff(parentStatement, Date.now())}
 					onClose={() => setShowIntegrationModal(false)}
 					onSuccess={() => {
 						setShowIntegrationModal(false);

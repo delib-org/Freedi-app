@@ -1,6 +1,13 @@
+import { useState } from 'react';
 import styles from './page401.module.scss';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { logOut } from '@/controllers/db/authenticationUtils';
+import { saveInitialRoute, toSafeRedirectPath } from '@/helpers/initialRoute';
+import { getWayBackPath } from '@/helpers/wayBack';
+import { HOME_PATH } from '@/view/components/atomic/organisms/BottomNav/bottomNavModel';
+import { logError } from '@/utils/errorHandling';
 import clsx from 'clsx';
 
 // Images
@@ -8,12 +15,43 @@ import UnAuthorizedImage from '@/assets/images/401-img.png';
 import Cloud1 from '@/assets/images/Cloud1.png';
 import Cloud3 from '@/assets/images/Cloud3.png';
 
+const ERROR_ROUTE = '/401';
+
 const Page401 = () => {
 	const navigate = useNavigate();
+	const location = useLocation();
 	const { t } = useTranslation();
+	const { user } = useAuthentication();
+	const [isSigningIn, setIsSigningIn] = useState(false);
+
+	const hasNamedAccount = !!user && !user.isAnonymous;
+	const from = (location.state as { from?: unknown } | null)?.from;
+	// On /401 the closed URL arrives as `from`. Rendered in place, the URL is the
+	// closed page and `from` is the page the person came from.
+	const returnPath = toSafeRedirectPath(
+		location.pathname === ERROR_ROUTE ? from : `${location.pathname}${location.search}`,
+	);
+	const wayBackPath = getWayBackPath(from, returnPath);
+
+	const handleSignIn = async () => {
+		setIsSigningIn(true);
+		try {
+			if (returnPath) saveInitialRoute(returnPath);
+			// /start sends anyone with a session straight back, so end it first.
+			if (user) await logOut();
+			navigate('/start', { replace: true });
+		} catch (error) {
+			logError(error, {
+				operation: 'page401.Page401.handleSignIn',
+				userId: user?.uid,
+				metadata: { returnPath },
+			});
+			setIsSigningIn(false);
+		}
+	};
 
 	const handleGoHome = () => {
-		navigate('/', { state: { from: window.location.pathname } });
+		navigate(HOME_PATH, { state: { from: window.location.pathname } });
 	};
 
 	return (
@@ -49,7 +87,6 @@ const Page401 = () => {
 						<rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
 						<path d="M7 11V7a5 5 0 0 1 10 0v4" />
 					</svg>
-					<span>401</span>
 				</div>
 
 				{/* Main Illustration */}
@@ -63,21 +100,43 @@ const Page401 = () => {
 
 				{/* Message */}
 				<h1 id="error-title" className={styles.page401__message}>
-					{t('Oops! This door needs a key')}
+					{t('This page is private')}
 				</h1>
 
 				<p className={styles.page401__hint}>
-					{t('This area is for registered members. Sign in to unlock access!')}
+					{hasNamedAccount
+						? t('No access. Ask the host to invite you.')
+						: t('This area is for registered members. Sign in to unlock access!')}
 				</p>
 
 				{/* Action Buttons */}
 				<div className={styles.page401__actions}>
+					{wayBackPath && (
+						<button
+							type="button"
+							className={styles.page401__button}
+							onClick={() => navigate(wayBackPath)}
+						>
+							{t('Back to the question')}
+						</button>
+					)}
 					<button
-						className={styles.page401__button}
-						onClick={handleGoHome}
-						aria-label={t('Return to home page')}
+						type="button"
+						className={clsx(
+							styles.page401__button,
+							wayBackPath && styles['page401__button--secondary'],
+						)}
+						onClick={handleSignIn}
+						disabled={isSigningIn}
 					>
-						{t('Take Me Home')}
+						{hasNamedAccount ? t('Sign in with another account') : t('Sign in')}
+					</button>
+					<button
+						type="button"
+						className={clsx(styles.page401__button, styles['page401__button--secondary'])}
+						onClick={handleGoHome}
+					>
+						{t('Back to home')}
 					</button>
 				</div>
 

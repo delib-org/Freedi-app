@@ -66,7 +66,7 @@ export const DEFAULT_CREDIT_RULES: CreditRule[] = [
 		baseAmount: 2,
 		cooldownMs: 0,
 		dailyLimit: 1,
-		enabled: true,
+		enabled: false,
 	},
 	{
 		ruleId: CreditAction.STREAK_BONUS,
@@ -74,7 +74,7 @@ export const DEFAULT_CREDIT_RULES: CreditRule[] = [
 		baseAmount: 15,
 		cooldownMs: 0,
 		dailyLimit: 1,
-		enabled: true,
+		enabled: false,
 	},
 	{
 		ruleId: CreditAction.CONSENSUS_REACHED,

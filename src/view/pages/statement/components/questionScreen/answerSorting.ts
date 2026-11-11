@@ -1,4 +1,5 @@
 import { SortType } from '@freedi/shared-types';
+import { guardScoreSort, isScoreOrderedSort } from './canSeeScore';
 
 /**
  * Pure decisions behind the answers-tab sort control: which orderings a
@@ -21,18 +22,18 @@ const ALL_SORT_OPTIONS: ReadonlyArray<AnswerSortOption> = [
 ];
 
 export interface SortOptionSettings {
-	/** Ratings are visible to participants; without them "by agreement" says nothing. */
-	showEvaluation: boolean;
+	/** The score guard lets this viewer see question-wide results. */
+	canSortByScore: boolean;
 	/** Joining replaces "most updated" with "most joined". */
 	joiningEnabled: boolean;
 }
 
 export function getAnswerSortOptions({
-	showEvaluation,
+	canSortByScore,
 	joiningEnabled,
 }: SortOptionSettings): AnswerSortOption[] {
 	return ALL_SORT_OPTIONS.filter((option) => {
-		if (option.id === SortType.accepted && !showEvaluation) return false;
+		if (isScoreOrderedSort(option.id) && !canSortByScore) return false;
 		if (option.id === SortType.mostJoined && !joiningEnabled) return false;
 		if (option.id === SortType.mostUpdated && joiningEnabled) return false;
 
@@ -52,6 +53,8 @@ export interface CurrentSortArgs {
 	defaultSort: SortType | undefined;
 	/** A hand-placed order replaces the ranking while no `:sort` is in the URL. */
 	hasManualOrder: boolean;
+	/** Without it a saved or linked score order must not rank the list for this viewer. */
+	canSortByScore: boolean;
 }
 
 export type CurrentSort = { kind: 'sort'; sort: SortType } | { kind: 'manual' };
@@ -64,11 +67,25 @@ export function resolveCurrentSort({
 	paramSort,
 	defaultSort,
 	hasManualOrder,
+	canSortByScore,
 }: CurrentSortArgs): CurrentSort {
-	if (isSortType(paramSort)) return { kind: 'sort', sort: paramSort };
+	if (isSortType(paramSort) && (canSortByScore || !isScoreOrderedSort(paramSort))) {
+		return { kind: 'sort', sort: paramSort };
+	}
 	if (hasManualOrder) return { kind: 'manual' };
 
-	return { kind: 'sort', sort: defaultSort ?? SortType.newest };
+	return { kind: 'sort', sort: guardScoreSort(defaultSort ?? SortType.newest, canSortByScore) };
+}
+
+/** Back to the question's default view: the Rate view on a large question. */
+export function buildRateViewPath(
+	pathname: string,
+	statementId: string,
+	tab: string | null,
+): string {
+	const query = tab ? `?tab=${encodeURIComponent(tab)}` : '';
+
+	return `/${sortRouteBase(pathname)}/${statementId}${query}`;
 }
 
 /** `/stage/…` keeps its family; everything else sorts under `/statement/…`. */

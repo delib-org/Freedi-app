@@ -29,10 +29,11 @@ jest.mock('../../engagement/credits/trackEngagement', () => ({
 }));
 jest.mock('../../engagement/notifications/socialProofTrigger', () => ({
 	checkSocialProofMilestone: () => mockSocialProof(),
+	checkConsensusShift: () => Promise.resolve(),
 }));
 jest.mock('../../fn_adminStats', () => ({ onEvaluationCreatedStats: () => mockAdminStats() }));
 jest.mock('../../services/hybrid-vector-service', () => ({
-	markHybridEmbeddingStale: () => Promise.resolve(),
+	markHybridEmbeddingStaleIfUsed: () => Promise.resolve(),
 }));
 jest.mock('../../statements/history/writeHistoryEntry', () => ({
 	writeHistoryEntry: () => Promise.resolve(),

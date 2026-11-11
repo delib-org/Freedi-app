@@ -29,9 +29,10 @@ export async function buildBreadcrumb(statementId: string): Promise<BreadcrumbIt
 
 		trail.unshift({
 			statementId: statement.statementId,
-			title: statement.statement.length > 60
-				? statement.statement.substring(0, 57) + '...'
-				: statement.statement,
+			title:
+				statement.statement.length > 60
+					? statement.statement.substring(0, 57) + '...'
+					: statement.statement,
 			statementType: statement.statementType,
 		});
 

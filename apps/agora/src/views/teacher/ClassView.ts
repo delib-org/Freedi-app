@@ -7,7 +7,7 @@ import {
 	isProposalConfirmed,
 	listenToDeliberation,
 } from '../../lib/proposals';
-import { getVotingState, listenToVoting } from '../../lib/voting';
+import { getVotingState, listenToVoting, totalVotes } from '../../lib/voting';
 import { sessionVillageMode } from '../../lib/flows/sessionLinks';
 import {
 	INITIAL_STAGE_NAV,
@@ -207,7 +207,12 @@ export function ClassView(initialVnode: m.Vnode<ClassViewAttrs>): m.Component<Cl
 				item.stage === AgoraStage.ended;
 			if (needsData && userId) listenToDeliberation(sessionId, userId);
 			if ((item.stage === AgoraStage.voting || councilNeedsVotes(plan, currentIndex)) && userId) {
-				listenToVoting(sessionId, session.challengeQuestionId, userId);
+				listenToVoting(
+					sessionId,
+					session.challengeQuestionId,
+					userId,
+					session.teacherId === userId,
+				);
 			}
 
 			const overlays = [
@@ -301,7 +306,7 @@ export function ClassView(initialVnode: m.Vnode<ClassViewAttrs>): m.Component<Cl
 								votes: {
 									selections: votes.selections,
 									myVoteStatementId: votes.myVoteStatementId,
-									votedCount: votes.voterUids.size,
+									votedCount: totalVotes(),
 								},
 								proposals,
 								scores,

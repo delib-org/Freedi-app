@@ -1,0 +1,22 @@
+{
+	"region": "me-west1",
+	"envKey": "STATEMENT_DISPATCH_CUTOVER_MS",
+	"dispatcher": "onStatementWriteDispatch",
+	"minPlausibleCutoverMs": 1767225600000,
+	"functions": [
+		"onStatementWriteDispatch",
+		"queueDeliberation",
+		"fn_syncOptionMembersToSheet",
+		"fn_backupOptionMembership",
+		"onStatementCreatedMarkCondensationStale",
+		"fn_syncParagraphChildrenToDescription",
+		"fn_pruneVersionHistory",
+		"fn_autoRemoveParagraph",
+		"fn_autoAddParagraph",
+		"fn_createReplacementQueueItem",
+		"fn_updateQueueConsensus",
+		"updateOptionInMassConsensus",
+		"mirrorQuestionStatusToSurvey",
+		"onVoteUpdate"
+	]
+}

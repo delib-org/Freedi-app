@@ -1,0 +1,18 @@
+.prompt {
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+
+	&__note {
+		margin: 0;
+		font-size: 0.875rem;
+		color: var(--text-caption);
+	}
+
+	&__install {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: calc(var(--padding) / 2);
+	}
+}

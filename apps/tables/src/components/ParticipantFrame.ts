@@ -2,25 +2,31 @@ import m from 'mithril';
 import type {
 	TableAssignment,
 	TableAssignmentParticipant,
+	TableAssignmentRun,
 	TableAssignmentTopic,
 } from '@freedi/shared-types';
 import { logError } from '@freedi/shared-utils';
-import { t } from '@/lib/i18n';
 import { ensureParticipantUser } from '@/lib/auth';
 import { LiveValue } from '@/lib/live';
+import { safeStorage } from '@/lib/safeStorage';
 import {
+	subscribeCounter,
 	subscribeMyParticipant,
+	subscribeRun,
 	subscribeSeats,
 	subscribeSession,
 	subscribeTopics,
 } from '@/lib/tableAssignment/data';
+import type { Subscription } from '@/lib/tableAssignment/data';
 import { combineStates } from '@/logic/loadable';
 import type { LoadState } from '@/logic/loadable';
+import { loadMemory, registrationLoss, rememberRegistration } from '@/logic/localDraft';
+import type { RegistrationLoss } from '@/logic/localDraft';
 import { Shell } from '@/components/Shell';
 import { StateBox } from '@/components/StateBox';
 import { participantHomePath } from '@/paths';
 
-/** What a participant sub-screen receives once the identity and the session are ready. */
+/** What a participant screen receives once the identity and the session are ready. */
 export interface ParticipantContext {
 	uid: string;
 	session: TableAssignment;
@@ -30,106 +36,203 @@ export interface ParticipantContext {
 	retryTopics: () => void;
 	/** The participant's own registration; null while not registered. */
 	me: TableAssignmentParticipant | null;
+	/** Why a registration this browser held no longer exists; null when none is missing. */
+	lost: RegistrationLoss | null;
+	/** How many registered, when `counter` was asked and is readable. */
+	registeredCount: number | null;
 	/**
 	 * Direct mode: seats taken per table index, only when `occupancy` was asked and the seat
 	 * documents are readable; null otherwise (the server still enforces capacity).
 	 */
 	seats: ReadonlyMap<number, number> | null;
+	/**
+	 * Published ranked run only: does the person sit at one of its tables? False is a
+	 * latecomer the host has not seated yet; null while the run is not read (or not published).
+	 */
+	seated: boolean | null;
 }
 
 export interface ParticipantFrameAttrs {
 	sessionId: string;
-	titleKey: string;
-	/** Home has no "back"; every child goes back to the participant home. */
-	isHome?: boolean;
+	/** Also read the topics (never in a draft, where the rules refuse them). */
+	topics?: boolean;
+	/** Also read the registered count. */
+	counter?: boolean;
 	/** Also read the seat counters to show free seats (direct mode). */
 	occupancy?: boolean;
-	/** Override where "back" goes (a topic goes back to the topic list). */
-	backHref?: string;
-	backLabel?: string;
+	barLabel?: (context: ParticipantContext) => string | undefined;
+	largeLogo?: (context: ParticipantContext) => boolean;
 	render: (context: ParticipantContext) => m.Children;
 }
 
 type Identity = { state: 'loading' } | { state: 'error' } | { state: 'ready'; uid: string };
 
 /**
- * Wraps a participant screen: anonymous identity, live session + topics + the
- * participant's own registration, and the loading / error / no-permission
- * states. Mobile-first; the body only renders when everything is ready.
+ * Wraps a participant screen: anonymous identity, the live session and the
+ * person's own registration, and the loading / error / no-permission states.
+ * The screen draws its own heading; the frame only renders it when all of
+ * this is ready.
  */
 export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (initial) => {
 	const sessionId = initial.attrs.sessionId;
 	const session = new LiveValue('session', subscribeSession(sessionId));
 	const topics = new LiveValue('topics', subscribeTopics(sessionId));
 	const seats = new LiveValue('seats', subscribeSeats(sessionId));
+	const counter = new LiveValue('counter', subscribeCounter(sessionId));
 	let me: LiveValue<TableAssignmentParticipant | null> | null = null;
 	let identity: Identity = { state: 'loading' };
+	/** The published run, read only to know whether this person has a seat. */
+	let seatRun: LiveValue<TableAssignmentRun | null> | null = null;
+	let seatRunId: string | undefined;
+	let topicsStarted = false;
+	let readsStarted = false;
+	/** Set in onremove: a sign-in that finishes late must not start anything. */
+	let removed = false;
 
-	async function signIn(): Promise<void> {
+	/** Remember in this browser that it holds a registration, the moment the record is seen. */
+	function myRecord(uid: string): Subscription<TableAssignmentParticipant | null> {
+		return (onData, onError) =>
+			subscribeMyParticipant(sessionId, uid)((record) => {
+				if (record) rememberRegistration(sessionId, uid, record.fullName, safeStorage);
+				onData(record);
+			}, onError);
+	}
+
+	/**
+	 * The session, seats and counter reads start only once the identity exists: before
+	 * sign-in the rules refuse them, and a refused listener does not come back by itself.
+	 */
+	function startReads(attrs: ParticipantFrameAttrs): void {
+		if (readsStarted) return;
+		readsStarted = true;
+		session.start();
+		if (attrs.occupancy) seats.start();
+		if (attrs.counter) counter.start();
+	}
+
+	async function signIn(attrs: ParticipantFrameAttrs): Promise<void> {
 		identity = { state: 'loading' };
 		m.redraw();
 
 		try {
 			const user = await ensureParticipantUser();
 
+			if (removed) return;
+			startReads(attrs);
 			identity = { state: 'ready', uid: user.uid };
 			me?.stop();
-			me = new LiveValue('me', subscribeMyParticipant(sessionId, user.uid));
+			me = new LiveValue('me', myRecord(user.uid));
 			me.start();
 		} catch (error) {
+			if (removed) return;
 			logError(error, { operation: 'tables.participant.identity', metadata: { sessionId } });
 			identity = { state: 'error' };
 		}
 		m.redraw();
 	}
 
-	function retryAll(initialAttrs: ParticipantFrameAttrs): void {
+	function startTopicsOnceReadable(attrs: ParticipantFrameAttrs): void {
+		if (topicsStarted || !attrs.topics || !session.data || session.data.status === 'draft') return;
+		topicsStarted = true;
+		topics.start();
+	}
+
+	/** Follows the published run while the person is registered; a new publication starts a new read. */
+	function followSeatRun(): void {
+		const current = session.data;
+		const wanted =
+			current?.status === 'published' && current.mode === 'ranked' && me?.data
+				? current.publishedRunId
+				: undefined;
+
+		if (wanted === seatRunId) return;
+		seatRun?.stop();
+		seatRunId = wanted;
+		seatRun = wanted ? new LiveValue('seatRun', subscribeRun(wanted)) : null;
+		seatRun?.start();
+	}
+
+	function seatedAt(uid: string): boolean | null {
+		const run = seatRun?.state === 'ready' ? seatRun.data : null;
+
+		if (!run || run.status !== 'published') return null;
+
+		return run.tables.some((table) => table.memberUids.includes(uid));
+	}
+
+	function retryAll(attrs: ParticipantFrameAttrs): void {
+		if (identity.state === 'error') {
+			void signIn(attrs);
+
+			return;
+		}
 		session.retry();
-		topics.retry();
+		if (topicsStarted) topics.retry();
 		me?.retry();
-		if (initialAttrs.occupancy) seats.retry();
-		if (identity.state === 'error') void signIn();
+		if (attrs.occupancy) seats.retry();
+		if (attrs.counter) counter.retry();
+	}
+
+	function contextOf(
+		uid: string,
+		current: TableAssignment,
+		attrs: ParticipantFrameAttrs,
+	): ParticipantContext {
+		const record = me?.data ?? null;
+
+		return {
+			uid,
+			session: current,
+			topics: topics.data ?? [],
+			topicsState: topics.state,
+			retryTopics: () => topics.retry(),
+			me: record,
+			lost: record === null ? registrationLoss(loadMemory(sessionId, uid, safeStorage)) : null,
+			registeredCount: attrs.counter && counter.state === 'ready' ? (counter.data ?? 0) : null,
+			seats: attrs.occupancy && seats.state === 'ready' ? (seats.data ?? new Map()) : null,
+			seated: record === null ? null : seatedAt(uid),
+		};
 	}
 
 	return {
 		oninit({ attrs }) {
-			session.start();
-			topics.start();
-			if (attrs.occupancy) seats.start();
-			void signIn();
+			void signIn(attrs);
+		},
+		oncreate({ attrs }) {
+			startTopicsOnceReadable(attrs);
+			followSeatRun();
+		},
+		onupdate({ attrs }) {
+			startTopicsOnceReadable(attrs);
+			followSeatRun();
 		},
 		onremove() {
+			removed = true;
 			session.stop();
 			topics.stop();
 			seats.stop();
+			counter.stop();
 			me?.stop();
+			seatRun?.stop();
 		},
 		view({ attrs }) {
-			const title = t(attrs.titleKey);
-			const home = participantHomePath(sessionId);
-			const shell = {
-				title: attrs.isHome && session.data ? session.data.title : title,
-				backHref: attrs.isHome ? undefined : (attrs.backHref ?? home),
-				backLabel: attrs.backLabel ?? t('tableAssignment.back.toHome'),
-			};
-			// Topics do not block the frame: a participant must be able to register
-			// even when the topic list is not readable yet; topic screens show its own state.
-			const states: LoadState[] = [
-				session.state,
+			const shell = { phone: true };
+			const identityState: LoadState =
 				identity.state === 'ready'
 					? (me?.state ?? 'loading')
 					: identity.state === 'error'
 						? 'error'
-						: 'loading',
-			];
-			const state = combineStates(states);
+						: 'loading';
+			// Topics do not block the frame: a person must be able to register even when
+			// the topic list is not readable yet; the screens that need it show its state.
+			const state = combineStates([session.state, identityState]);
 
 			if (state === 'loading') return m(Shell, shell, m(StateBox, { kind: 'loading' }));
 			if (state === 'denied') {
 				return m(
 					Shell,
 					shell,
-					m(StateBox, { kind: 'denied', backHref: attrs.isHome ? undefined : home }),
+					m(StateBox, { kind: 'denied', backHref: participantHomePath(sessionId) }),
 				);
 			}
 			if (state === 'error') {
@@ -144,18 +247,16 @@ export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (init
 			}
 			if (identity.state !== 'ready') return m(Shell, shell, m(StateBox, { kind: 'loading' }));
 
+			const context = contextOf(identity.uid, session.data, attrs);
+
 			return m(
 				Shell,
-				{ ...shell, title: attrs.isHome ? session.data.title : title },
-				attrs.render({
-					uid: identity.uid,
-					session: session.data,
-					topics: topics.data ?? [],
-					topicsState: topics.state,
-					retryTopics: () => topics.retry(),
-					me: me?.data ?? null,
-					seats: attrs.occupancy && seats.state === 'ready' ? (seats.data ?? new Map()) : null,
-				}),
+				{
+					...shell,
+					barLabel: attrs.barLabel?.(context),
+					largeLogo: attrs.largeLogo?.(context),
+				},
+				attrs.render(context),
 			);
 		},
 	};

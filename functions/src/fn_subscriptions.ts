@@ -12,6 +12,7 @@ import { DocumentSnapshot, QueryDocumentSnapshot } from 'firebase-functions/v1/f
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { Change } from 'firebase-functions/v1';
 import { onStatementDeletedStats, onSubscriptionCreatedStats } from './fn_adminStats';
+import { withoutPushTokens } from './notifications/stripSubscriptionTokens';
 
 export async function onNewSubscription(
 	event: FirestoreEvent<Change<DocumentSnapshot> | undefined>,
@@ -170,7 +171,7 @@ export async function onNewSubscription(
 			// Create single entry with array of all admin IDs
 			const adminIds = adminsSubscriptions.map((adminSub) => adminSub.userId);
 			const awaitingEntry = {
-				...subscription,
+				...withoutPushTokens(subscription),
 				adminIds: adminIds, // Array of admin user IDs
 				createdAt: Date.now(),
 			};

@@ -8,7 +8,7 @@ import type {
 } from './tableAssignmentModel';
 
 /**
- * Wire contracts of the Tables callables (region me-west1, App Check).
+ * Wire contracts of the Tables callables (region me-west1; App Check is not enforced yet).
  * Clients (apps/tables, packages/table-assignment-client) and functions
  * both import these; drift is a compile error.
  * Actor rules: host (the session's hostUid) unless stated otherwise.
@@ -53,6 +53,11 @@ export interface TablesSaveSettingsRequest {
 	balanceTolerance?: number;
 	/** `null` removes the position question. */
 	positionQuestion?: TableAssignmentPositionQuestion | null;
+	/** Accepted while the session is a draft only. */
+	mode?: TableAssignmentMode;
+	/** `null` removes the number. */
+	expectedParticipants?: number | null;
+	allowReturnByName?: boolean;
 }
 export interface TablesSaveSettingsResponse {
 	settings: TableAssignmentSettings;
@@ -65,15 +70,82 @@ export interface TablesSetStatusRequest {
 }
 export interface TablesSetStatusResponse {
 	status: TableAssignmentStatus;
+	/**
+	 * Only when moving to `ended`: whether the answers are gone. `false` means the
+	 * session did end but the erase failed; calling `ended` again retries it.
+	 */
+	answersErased?: boolean;
 }
 
-/** `tablesRegister` (participant). Idempotent: registering again updates the name. */
+/**
+ * What to do when return by full name is on and exactly one other registration
+ * has this name. `ask`: report it and write nothing. `claim`: replace that
+ * registration with an empty one for the caller. `separate`: a new registration.
+ */
+export type TablesNameMatch = 'ask' | 'claim' | 'separate';
+
+/**
+ * `tablesRegister` (participant). Idempotent: registering again updates the name.
+ * Refused with reason `registration-full` for a new registration past the cap,
+ * `name-locked` for a rename once published, `claimed-by-name` for a rename of
+ * a registration taken over by full name.
+ */
 export interface TablesRegisterRequest {
 	sessionId: string;
 	fullName: string;
+	/** Defaults to `ask`. */
+	nameMatch?: TablesNameMatch;
 }
 export interface TablesRegisterResponse {
-	participant: TableAssignmentParticipant;
+	outcome: 'registered' | 'nameExists';
+	/** The caller's own record; absent for `nameExists`. Never another person's data. */
+	participant?: TableAssignmentParticipant;
+}
+
+/**
+ * `tablesCancelRegistration` (the participant, own uid, while registration is open).
+ * Refused with reason `claimed-by-name` for a registration taken over by full name.
+ * No-op success when not registered.
+ */
+export interface TablesCancelRegistrationRequest {
+	sessionId: string;
+}
+export interface TablesCancelRegistrationResponse {
+	cancelled: true;
+}
+
+/**
+ * `tablesRemoveParticipant` (host, any status but `ended`). A ready preview goes
+ * stale. Refused with reason `seated-in-published-run` for someone seated in the
+ * published assignment. No-op success when the person is not registered.
+ */
+export interface TablesRemoveParticipantRequest {
+	sessionId: string;
+	uid: string;
+}
+export interface TablesRemoveParticipantResponse {
+	removed: true;
+}
+
+/** One topic's new title in a `tablesFixDetails` call. */
+export interface TablesFixDetailsTopic {
+	topicId: string;
+	title: string;
+}
+
+/**
+ * `tablesFixDetails` (host, after registration opens and until the session ends).
+ * Titles only, so a ready preview stays publishable. `topics`, when sent, lists
+ * every topic of the session, once each, in the current order.
+ */
+export interface TablesFixDetailsRequest {
+	sessionId: string;
+	title?: string;
+	topics?: TablesFixDetailsTopic[];
+}
+export interface TablesFixDetailsResponse {
+	title: string;
+	topicIds: string[];
 }
 
 /** `tablesSavePreferences` (participant, before registration closes). */
@@ -81,7 +153,7 @@ export interface TablesSavePreferencesRequest {
 	sessionId: string;
 	/** Topic ids, best first, at most three. */
 	preferences: string[];
-	/** 0..100; omit to leave "not specified". */
+	/** One of TABLE_ASSIGNMENT_POSITION_STOPS; omit to leave "not specified". */
 	position?: number;
 }
 export interface TablesSavePreferencesResponse {
@@ -98,11 +170,14 @@ export interface TablesJoinTableResponse {
 	topicId: string;
 }
 
-/** `tablesComputePreview` (host). Returns the id of the computed (or computing) run. */
+/**
+ * `tablesComputePreview` (host). Returns the id of the computed (or computing) run.
+ * Refused with reason `too-few-registrants` below five people and `preview-limit`
+ * after five previews over the same registrations and answers, or thirty in the
+ * session. The seed is the server's own: a request carrying one is refused.
+ */
 export interface TablesComputePreviewRequest {
 	sessionId: string;
-	/** Same seed gives the same seating; omit for a fresh one. */
-	seed?: number;
 }
 export interface TablesComputePreviewResponse {
 	runId: string;
@@ -115,4 +190,15 @@ export interface TablesPublishRunRequest {
 }
 export interface TablesPublishRunResponse {
 	publishedRunId: string;
+}
+
+/**
+ * `tablesDeleteSession` (host, any status): deletes the session and everything
+ * stored under it. Calling it for a session already gone succeeds.
+ */
+export interface TablesDeleteSessionRequest {
+	sessionId: string;
+}
+export interface TablesDeleteSessionResponse {
+	deleted: true;
 }

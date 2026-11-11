@@ -1,7 +1,13 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import pLimit from 'p-limit';
-import { Collections, Role, Statement, StatementType, functionConfig } from '@freedi/shared-types';
+import {
+	Collections,
+	Statement,
+	StatementType,
+	functionConfig,
+	inheritedAccessScope,
+} from '@freedi/shared-types';
 import { logger } from 'firebase-functions';
 import { ALLOWED_ORIGINS } from './config/cors';
 import { embeddingCache } from './services/embedding-cache-service';
@@ -9,6 +15,7 @@ import { buildCandidateEdges } from './services/similarity-grouping-service';
 import { EquivalenceVerdict, EquivalencePair } from './services/semantic-equivalence-service';
 import { judgeSemanticEquivalenceCached } from './services/verdict-cache-service';
 import { UnionFind } from './utils/unionFind';
+import { hasAdminSubscription } from './utils/subscriptionIdentity';
 import { refineComponent, pairKey } from './synthesis/completeLinkage';
 import { performIntegration } from './integrate/performIntegration';
 import { dissolveQuestionSynthesis } from './synthesis/derivedDocs';
@@ -114,8 +121,11 @@ interface ExecuteResponse {
 	createdStatementIds: string[];
 }
 
-async function assertAdmin(parentStatementId: string, userId: string): Promise<Statement> {
-	const db = getFirestore();
+export async function assertAdmin(
+	parentStatementId: string,
+	userId: string,
+	db: Firestore = getFirestore(),
+): Promise<Statement> {
 	const parentDoc = await db.collection(Collections.statements).doc(parentStatementId).get();
 	if (!parentDoc.exists) {
 		throw new HttpsError('not-found', 'Parent statement not found');
@@ -123,15 +133,21 @@ async function assertAdmin(parentStatementId: string, userId: string): Promise<S
 	const parentStatement = parentDoc.data() as Statement;
 	const topParentId = parentStatement.topParentId || parentStatementId;
 
-	const membersSnapshot = await db
-		.collection(Collections.statementsSubscribe)
-		.where('statementId', '==', topParentId)
-		.where('userId', '==', userId)
-		.where('role', 'in', [Role.admin, 'creator', 'admin'])
-		.limit(1)
-		.get();
+	// Fails closed: a lookup error denies rather than letting the caller through.
+	let isAdmin = false;
+	try {
+		isAdmin = await hasAdminSubscription(db, userId, [topParentId]);
+	} catch (error) {
+		logger.error('synthesizeIdeas: admin check failed', {
+			operation: 'synthesizeIdeas.assertAdmin',
+			statementId: parentStatementId,
+			userId,
+			errorMessage: error instanceof Error ? error.message : String(error),
+		});
+		throw new HttpsError('unavailable', 'Could not verify permissions, please try again');
+	}
 
-	if (membersSnapshot.empty) {
+	if (!isAdmin) {
 		throw new HttpsError('permission-denied', 'Only admins can run idea synthesis');
 	}
 
@@ -1073,6 +1089,7 @@ export const regenerateSynthesisProposal = onCall<RegenerateProposalRequest>(
 				statementType: StatementType.paragraph,
 				parentId: clusterStatementId,
 				topParentId: cluster.topParentId || parentStatementId,
+				...inheritedAccessScope(parentStatement),
 				parents: [...parentParents, parentStatementId, clusterStatementId],
 				creatorId: userId,
 				creator: cluster.creator ?? {

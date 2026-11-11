@@ -17,12 +17,15 @@ jest.mock('../index', () => ({
 jest.mock('firebase-functions', () => ({
 	logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
+jest.mock('../utils/errorHandling', () => ({ logError: jest.fn() }));
 jest.mock('../fn_adminStats', () => ({
 	onSubscriptionCreatedStats: jest.fn(() => Promise.resolve()),
 	onStatementDeletedStats: jest.fn(() => Promise.resolve()),
 }));
 
+import { logError } from '../utils/errorHandling';
 import {
+	updateMemberCount,
 	onSubscriptionCreated,
 	onSubscriptionDeleted,
 	onSubscriptionUpdated,
@@ -107,7 +110,12 @@ const feedOf = (userId: string) => mockDb.read(Collections.userFeed, `${userId}-
 describe('subscription lifecycle (member count + userFeed)', () => {
 	beforeEach(() => {
 		mockDb = new FakeFirestore();
-		mockDb.seed(Collections.statements, DISCUSSION, { statementId: DISCUSSION, parentId: 'top' });
+		mockDb.seed(Collections.statements, DISCUSSION, {
+			statementId: DISCUSSION,
+			parentId: 'top',
+			topParentId: DISCUSSION,
+			statementType: StatementType.group,
+		});
 	});
 
 	it('counts members on join and creates their feed entry', async () => {
@@ -140,6 +148,37 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 
 		expect(memberCount()).toBe(2);
 		expect(feedOf('alice')).toBeUndefined();
+	});
+
+	it('removes the token an old client sent when it joined, without registering anything', async () => {
+		const id = `dana--${DISCUSSION}`;
+		const doc = subscriptionDoc('dana', Role.member, {
+			getPushNotification: true,
+			tokens: ['device-1'],
+		});
+		mockDb.seed(Collections.pushNotifications, 'device-1', { token: 'device-1', userId: 'dana' });
+		mockDb.seed(Collections.statementsSubscribe, id, doc);
+
+		await onSubscriptionCreated(snapshotEvent(id, doc));
+
+		expect(mockDb.read(Collections.statementsSubscribe, id)?.tokens).not.toEqual(['device-1']);
+		expect(memberCount()).toBe(1);
+	});
+
+	it('does nothing when only the old tokens field changed (the strip and the cleanup)', async () => {
+		const alice = await joinAs('alice', Role.member, { tokens: ['device-1'] });
+		const before = mockDb.read(Collections.statementsSubscribe, alice) as SubscriptionDoc;
+		const { tokens: _removed, ...after } = before;
+		const feedBefore = feedOf('alice');
+		mockDb.seed(Collections.statementsSubscribe, alice, after);
+		mockDb.resetCounters();
+
+		await onSubscriptionUpdated(changeEvent(alice, before, after));
+
+		expect(_removed).toBeDefined();
+		expect(mockDb.writes).toBe(0);
+		expect(mockDb.reads).toBe(0);
+		expect(feedOf('alice')).toEqual(feedBefore);
 	});
 
 	it('gives a waiting member a feed entry (it leads to the waiting-for-approval screen)', async () => {
@@ -214,5 +253,189 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 		await onSubscriptionDeleted(snapshotEvent(alice, oldDoc));
 
 		expect(feedOf('alice')).toBeDefined();
+	});
+
+	it('skips quietly when the statement is already deleted (cascade), without writing the statement or throwing', async () => {
+		const alice = await joinAs('alice', Role.member);
+		mockDb.rowsOf(Collections.statements).delete(DISCUSSION);
+		mockDb.rowsOf(Collections.questionProgress).delete(DISCUSSION);
+		mockDb.resetCounters();
+
+		await expect(updateMemberCount(mockDb as never, DISCUSSION)).resolves.toBe(1);
+		await leave(alice);
+
+		expect(mockDb.read(Collections.statements, DISCUSSION)).toBeUndefined();
+		expect(mockDb.read(Collections.questionProgress, DISCUSSION)).toBeUndefined();
+		expect(logError).not.toHaveBeenCalled();
+	});
+
+	it('still reports a real failure while counting', async () => {
+		const failure = new Error('firestore unavailable');
+		const spy = jest.spyOn(mockDb, 'collection').mockImplementation(() => {
+			throw failure;
+		});
+
+		await expect(updateMemberCount(mockDb as never, DISCUSSION)).rejects.toThrow(failure);
+		spy.mockRestore();
+	});
+
+	describe('keeping the question document quiet', () => {
+		const progress = (id = DISCUSSION) => mockDb.read(Collections.questionProgress, id);
+		const statementLastUpdate = (): unknown =>
+			mockDb.read(Collections.statements, DISCUSSION)?.lastUpdate;
+		const joinMany = async (from: number, to: number): Promise<void> => {
+			for (let i = from; i <= to; i += 1) await joinAs(`user${i}`, Role.member);
+		};
+
+		it('stores the exact count on the progress doc for every join', async () => {
+			await joinMany(1, 3);
+
+			expect(progress()?.members).toBe(3);
+		});
+
+		it('leaves the question alone between milestones', async () => {
+			await joinMany(1, 20);
+			expect(memberCount()).toBe(20);
+			const stamped = statementLastUpdate();
+
+			await joinMany(21, 24);
+
+			expect(memberCount()).toBe(20);
+			expect(statementLastUpdate()).toBe(stamped);
+			expect(progress()?.members).toBe(24);
+		});
+
+		it('copies the exact number when a milestone is reached', async () => {
+			await joinMany(1, 25);
+
+			expect(memberCount()).toBe(25);
+			expect(progress()?.members).toBe(25);
+		});
+
+		it('recounts a leave on the progress doc too', async () => {
+			await joinMany(1, 21);
+			await leave(`user21--${DISCUSSION}`);
+
+			expect(progress()?.members).toBe(20);
+			expect(memberCount()).toBe(20);
+		});
+
+		it('writes the count straight to statements that have no progress doc', async () => {
+			mockDb.seed(Collections.statements, DISCUSSION, {
+				statementId: DISCUSSION,
+				parentId: 'q1',
+				statementType: StatementType.option,
+			});
+			await joinMany(1, 21);
+
+			expect(memberCount()).toBe(21);
+			expect(progress()).toBeUndefined();
+		});
+
+		it('gives a nested group no progress doc, or Studio would list it as an activity', async () => {
+			mockDb.seed(Collections.statements, DISCUSSION, {
+				statementId: DISCUSSION,
+				parentId: 'parent-group',
+				topParentId: 'parent-group',
+				statementType: StatementType.group,
+			});
+			await joinMany(1, 21);
+
+			expect(memberCount()).toBe(21);
+			expect(progress()).toBeUndefined();
+		});
+
+		it('still copies when a burst of joins jumps past the exact milestone', async () => {
+			await joinMany(1, 20);
+			for (let i = 21; i <= 25; i += 1) {
+				const id = `seeded${i}--${DISCUSSION}`;
+				mockDb.seed(
+					Collections.statementsSubscribe,
+					id,
+					subscriptionDoc(`seeded${i}`, Role.member),
+				);
+			}
+
+			await joinAs('twenty-sixth', Role.member);
+
+			expect(memberCount()).toBe(26);
+		});
+
+		it('does not count a join as activity on an existing progress doc', async () => {
+			mockDb.seed(Collections.questionProgress, DISCUSSION, {
+				statementId: DISCUSSION,
+				topParentId: DISCUSSION,
+				entered: 3,
+				lastActivity: 5,
+				lastUpdate: 5,
+			});
+
+			await joinAs('alice', Role.member);
+
+			expect(progress()).toMatchObject({ members: 1, lastActivity: 5, entered: 3 });
+			expect(progress()?.lastUpdate).toBeGreaterThan(5);
+		});
+	});
+
+	describe('a waiting person is let in', () => {
+		const off = { getInAppNotification: false, getPushNotification: false };
+		const subscription = (userId: string) =>
+			mockDb.read(Collections.statementsSubscribe, `${userId}--${DISCUSSION}`);
+
+		async function moveFromWaiting(userId: string, role: Role): Promise<void> {
+			const id = `${userId}--${DISCUSSION}`;
+			const before = subscriptionDoc(userId, Role.waiting, off);
+			const after = subscriptionDoc(userId, role, off);
+			mockDb.seed(Collections.statementsSubscribe, id, after);
+			await onSubscriptionUpdated(changeEvent(id, before, after));
+		}
+
+		it('turns in-app on, and push for someone with a device', async () => {
+			mockDb.seed(Collections.pushNotifications, 'token-1', { token: 'token-1', userId: 'alice' });
+
+			await moveFromWaiting('alice', Role.member);
+
+			expect(subscription('alice')).toMatchObject({
+				getInAppNotification: true,
+				getPushNotification: true,
+			});
+		});
+
+		it('leaves push off for someone with no device', async () => {
+			await moveFromWaiting('bob', Role.member);
+
+			expect(subscription('bob')).toMatchObject({
+				getInAppNotification: true,
+				getPushNotification: false,
+			});
+		});
+
+		it('does not count a device of another app', async () => {
+			mockDb.seed(Collections.pushNotifications, 'token-2', {
+				token: 'token-2',
+				userId: 'carol',
+				app: 'join-class',
+			});
+
+			await moveFromWaiting('carol', Role.member);
+
+			expect(subscription('carol')).toMatchObject({ getPushNotification: false });
+		});
+
+		it.each([Role.unsubscribed, Role.banned])('changes nothing when moved to %s', async (role) => {
+			await moveFromWaiting('dan', role);
+
+			expect(subscription('dan')).toMatchObject(off);
+		});
+
+		it('changes nothing for a member whose role did not move', async () => {
+			const id = `erin--${DISCUSSION}`;
+			const doc = subscriptionDoc('erin', Role.member, off);
+			mockDb.seed(Collections.statementsSubscribe, id, doc);
+
+			await onSubscriptionUpdated(changeEvent(id, doc, doc));
+
+			expect(subscription('erin')).toMatchObject(off);
+		});
 	});
 });

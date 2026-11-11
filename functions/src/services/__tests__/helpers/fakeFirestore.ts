@@ -287,7 +287,8 @@ function cosine(a: number[], b: number[]): number {
 
 const fakeDb = {
 	collection: (name: string) => new FakeCollection(name),
-	getAll: async (...refs: FakeDocRef[]) => Promise.all(refs.map((ref) => ref.get())),
+	getAll: async (...refs: Array<FakeDocRef | { fieldMask: string[] }>) =>
+		Promise.all(refs.filter((ref): ref is FakeDocRef => 'get' in ref).map((ref) => ref.get())),
 	batch: () => {
 		const ops: Array<() => Promise<void>> = [];
 

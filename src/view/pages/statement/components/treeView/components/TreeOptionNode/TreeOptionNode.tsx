@@ -1,4 +1,4 @@
-import React, { FC, useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { memo, FC, useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Statement } from '@freedi/shared-types';
 import { Layers, Sparkles, Tags, ChevronDown, ChevronRight, RefreshCw, Undo2 } from 'lucide-react';
@@ -17,6 +17,7 @@ import ChatMessageMenu from '@/view/pages/statement/components/chat/components/c
 import Evaluation from '@/view/pages/statement/components/evaluations/components/evaluation/Evaluation';
 import { useBookmark } from '@/controllers/hooks/useBookmark';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+import { useAnswerScoreGate } from '../../../questionScreen/useAnswerScoreGate';
 import {
 	regenerateSynthesisProposal,
 	reverseIntegration,
@@ -24,6 +25,10 @@ import {
 import SendIcon from '@/view/components/icons/SendIcon';
 import JoinButtons from '@/view/pages/statement/components/joining/JoinButtons';
 import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
+import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
+import UnreadMessagesBadge from '@/view/components/unreadBadge/UnreadMessagesBadge';
+import { DiveInIconButton, BookmarkIconButton } from '../CardActionButtons/CardActionButtons';
+import ReadMoreClamp from './ReadMoreClamp';
 import styles from './TreeOptionNode.module.scss';
 
 // Stable empty array reference shared across all non-synthesis nodes, so the
@@ -39,6 +44,9 @@ interface TreeOptionNodeProps {
 	childCount?: number;
 	onToggleChildren?: () => void;
 	isNew?: boolean;
+	/** Discussion tab: one chat button opens the answer's conversation panel, replacing
+	 *  the reply button and counter. Tree view leaves this off and keeps nested replies. */
+	opensChatSheet?: boolean;
 }
 
 const TreeOptionNode: FC<TreeOptionNodeProps> = ({
@@ -49,6 +57,7 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 	childCount = 0,
 	onToggleChildren,
 	isNew,
+	opensChatSheet = false,
 }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
@@ -64,6 +73,7 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 	// Authorize against the parent so admin actions on the imported question
 	// (regenerate / reverse synthesis) authorize via the parent subscription.
 	const { isAdmin: isParentAdmin } = useAuthorization(statement.parentId);
+	const { canSee: canSeeResultMark } = useAnswerScoreGate(statement, parentStatement);
 
 	const [isEdit, setIsEdit] = useState(false);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
@@ -200,9 +210,11 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 	}, [onToggleChildren]);
 
 	const isInResults =
-		parentStatement?.results?.some((result) => result.statementId === statement.statementId) ??
-		false;
+		canSeeResultMark &&
+		(parentStatement?.results?.some((result) => result.statementId === statement.statementId) ??
+			false);
 
+	const paragraphsKey = (statement.paragraphs ?? []).map((p) => p.content).join('\n');
 	const isFailed = statement.joinStatus === 'failed';
 	const isCluster = statement.isCluster === true;
 	const integratedOptions = statement.integratedOptions ?? [];
@@ -326,17 +338,21 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 						</div>
 						{statement.paragraphs && statement.paragraphs.length > 0 ? (
 							<div className={styles['tree-option-node__paragraphs']}>
-								{[...statement.paragraphs]
-									.sort((a, b) => a.order - b.order)
-									.map((p) => (
-										<p key={p.paragraphId}>
-											<RichHtmlContent content={p.content} />
-										</p>
-									))}
+								<ReadMoreClamp contentKey={paragraphsKey}>
+									{[...statement.paragraphs]
+										.sort((a, b) => a.order - b.order)
+										.map((p) => (
+											<p key={p.paragraphId}>
+												<RichHtmlContent content={p.content} />
+											</p>
+										))}
+								</ReadMoreClamp>
 							</div>
 						) : statement.description ? (
 							<div className={styles['tree-option-node__description']}>
-								<RichHtmlContent content={statement.description} />
+								<ReadMoreClamp contentKey={statement.description}>
+									<RichHtmlContent content={statement.description} />
+								</ReadMoreClamp>
 							</div>
 						) : null}
 						{isSynthesis && (
@@ -439,51 +455,63 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 						)}
 					</>
 				)}
-				<div className={styles['tree-option-node__evaluation']}>
-					<Evaluation statement={statement} />
+				<div className={styles['tree-option-node__footer']}>
+					<div className={styles['tree-option-node__evaluation']}>
+						<Evaluation
+							statement={statement}
+							hideFaceLabels
+							compact
+							footerSlot={
+								<div className={styles['tree-option-node__actions']}>
+									{!opensChatSheet && (
+										<button
+											className={`${styles['tree-option-node__action-btn']} ${styles['tree-option-node__reply-btn']}`}
+											onClick={onReply ? () => onReply(statement) : handleReplyToggle}
+											aria-label={t('reply')}
+											title={t('reply')}
+										>
+											<span className={styles['tree-option-node__reply-label']}>{t('reply')}</span>
+											<span
+												className={`material-symbols-outlined ${styles['tree-option-node__reply-icon']}`}
+												aria-hidden
+											>
+												reply
+											</span>
+										</button>
+									)}
+									<DiveInIconButton
+										className={`${styles['tree-option-node__action-btn']} ${styles['tree-option-node__action-btn--icon']}`}
+										onClick={() => navigate(`/statement/${statement.statementId}`)}
+									/>
+									{!opensChatSheet && childCount > 0 && onToggleChildren && (
+										<button
+											className={styles['tree-option-node__reply-counter']}
+											onClick={handleToggleAndScroll}
+											aria-label={`${childCount} ${childCount === 1 ? t('reply') : t('replies')}`}
+										>
+											{childCount}
+										</button>
+									)}
+									{opensChatSheet ? (
+										<StatementChatMore statement={statement} variant="round" opensSheet />
+									) : (
+										<UnreadMessagesBadge statementId={statement.statementId} />
+									)}
+									<BookmarkIconButton
+										className={`${styles['tree-option-node__action-btn']} ${styles['tree-option-node__action-btn--icon']} ${styles['tree-option-node__bookmark-btn']}`}
+										activeClassName={styles['tree-option-node__bookmark-btn--active']}
+										isBookmarked={isBookmarked}
+										onClick={toggleBookmarkFn}
+									/>
+								</div>
+							}
+						/>
+					</div>
+					<div className={styles['tree-option-node__join']}>
+						<JoinButtons statement={statement} parentStatement={parentStatement} />
+					</div>
 				</div>
-				<div className={styles['tree-option-node__actions']}>
-					<button
-						className={styles['tree-option-node__action-btn']}
-						onClick={onReply ? () => onReply(statement) : handleReplyToggle}
-						aria-label={t('reply')}
-					>
-						{t('reply')}
-					</button>
-					<button
-						className={styles['tree-option-node__action-btn']}
-						onClick={() => navigate(`/statement/${statement.statementId}`)}
-						aria-label={t('Dive in')}
-					>
-						{t('Dive in')}
-					</button>
-					<button
-						className={`${styles['tree-option-node__action-btn']} ${styles['tree-option-node__bookmark-btn']} ${isBookmarked ? styles['tree-option-node__bookmark-btn--active'] : ''}`}
-						onClick={toggleBookmarkFn}
-						aria-label={isBookmarked ? t('Remove bookmark') : t('Bookmark')}
-					>
-						<span
-							className="material-symbols-outlined"
-							style={{
-								fontSize: 18,
-								fontVariationSettings: isBookmarked ? "'FILL' 1" : "'FILL' 0",
-							}}
-						>
-							bookmark
-						</span>
-					</button>
-					{childCount > 0 && onToggleChildren && (
-						<button
-							className={styles['tree-option-node__reply-counter']}
-							onClick={handleToggleAndScroll}
-							aria-label={`${childCount} ${childCount === 1 ? t('reply') : t('replies')}`}
-						>
-							{childCount}
-						</button>
-					)}
-					<JoinButtons statement={statement} parentStatement={parentStatement} />
-				</div>
-				{showReplyInput && (
+				{showReplyInput && !opensChatSheet && (
 					<form className={styles['tree-option-node__reply-form']} onSubmit={handleReplySubmit}>
 						<textarea
 							ref={replyInputRef}
@@ -514,4 +542,4 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 	);
 };
 
-export default React.memo(TreeOptionNode);
+export default memo(TreeOptionNode);

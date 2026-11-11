@@ -84,14 +84,13 @@ export const totalCreditsSelector = createSelector(
 	(engagement): number => engagement?.totalCredits ?? 0,
 );
 
+/** No longer awarded. Stored copies stay on the person's record but are not shown. */
+const RETIRED_BADGE_IDS: ReadonlySet<string> = new Set(['streak_3', 'streak_7', 'streak_30']);
+
 export const userBadgesSelector = createSelector(
 	[(state: EngagementSliceState) => state.engagement.userEngagement],
-	(engagement): Badge[] => engagement?.badges ?? [],
-);
-
-export const currentStreakSelector = createSelector(
-	[(state: EngagementSliceState) => state.engagement.userEngagement],
-	(engagement): number => engagement?.streak?.currentStreak ?? 0,
+	(engagement): Badge[] =>
+		(engagement?.badges ?? []).filter((badge) => !RETIRED_BADGE_IDS.has(badge.badgeId)),
 );
 
 export const isTrialModeSelector = createSelector(

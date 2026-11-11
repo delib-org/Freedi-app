@@ -83,6 +83,27 @@ const GlobalNotificationSettings: React.FC = () => {
 				</label>
 			</div>
 
+			<div className={styles.row}>
+				<div className={styles.rowMain}>
+					<h4>{t('Updates about my answers')}</h4>
+					<p>
+						{t(
+							'A short note in the app when something changes for an answer you wrote. Never sent as a push.',
+						)}
+					</p>
+				</div>
+				<label className={styles.switch}>
+					<input
+						type="checkbox"
+						aria-label={t('Updates about my answers')}
+						checked={settings.answerUpdates !== false}
+						onChange={(e) => patch({ answerUpdates: e.target.checked })}
+						disabled={saving || muted}
+					/>
+					<span className={styles.slider}></span>
+				</label>
+			</div>
+
 			<fieldset className={styles.group} disabled={muted}>
 				<legend>{t('Channels')}</legend>
 				{(

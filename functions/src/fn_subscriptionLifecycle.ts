@@ -3,11 +3,23 @@ import type { FirestoreEvent } from 'firebase-functions/firestore';
 import type { QueryDocumentSnapshot } from 'firebase-functions/v1/firestore';
 import type { Change } from 'firebase-functions/v1';
 import { logger } from 'firebase-functions/v1';
-import { Collections, StatementSubscription } from '@freedi/shared-types';
+import {
+	Collections,
+	isCounterCopyDue,
+	Statement,
+	StatementSubscription,
+} from '@freedi/shared-types';
 import { db } from './db';
 import { logError } from './utils/errorHandling';
 import { validateRoleChange } from './fn_subscriptions';
 import { feedRelevantChange, reconcileUserFeedEntry } from './userFeed/userFeedMembership';
+import { stripCreatedSubscriptionTokens } from './notifications/stripSubscriptionTokens';
+import { enableNotificationsOnApproval } from './notifications/enableNotificationsOnApproval';
+import {
+	countMembers,
+	keepsCountOnProgress,
+	recordMemberCount,
+} from './progress/questionProgressWriter';
 
 /**
  * Membership lifecycle triggers on `statementsSubscribe/{subscriptionId}`.
@@ -32,20 +44,40 @@ type ChangeEvent = FirestoreEvent<
  * Recounts members with a count() aggregation (1 read per 1000 index entries)
  * instead of downloading every subscription doc. Same filter as before:
  * every role counts, Sign-document subscriptions do not.
+ *
+ * Questions and top-level groups keep the exact number on `questionProgress`,
+ * and copy it to the statement document only when it enters a new bucket: that
+ * document reaches everyone present, so a write per arrival costs people x
+ * people reads. Two recounts racing can land in the wrong order; the scheduled
+ * pass in progress/syncQuestionCounterCopies.ts recounts and heals that, because
+ * guarding it here would mean a transaction on a document every join shares.
  */
 export async function updateMemberCount(
 	firestore: Firestore,
 	statementId: string,
 ): Promise<number> {
-	const countSnapshot = await firestore
-		.collection(Collections.statementsSubscribe)
-		.where('statementId', '==', statementId)
-		.where('statementType', '!=', 'document')
-		.count()
-		.get();
-	const memberCount = countSnapshot.data().count;
+	const memberCount = await countMembers(firestore, statementId);
+	const statementRef = firestore.collection(Collections.statements).doc(statementId);
+	const statementSnap = await statementRef.get();
 
-	await firestore.collection(Collections.statements).doc(statementId).update({
+	// A deleted statement's subscriptions are removed after it (cascade), so this
+	// runs against a missing document: update() would throw NOT_FOUND and there
+	// is nothing left to count for. Skip quietly; other failures still throw.
+	if (!statementSnap.exists) return memberCount;
+
+	const statement = statementSnap.data() as Statement | undefined;
+
+	if (keepsCountOnProgress(statement)) {
+		await recordMemberCount({
+			statementId,
+			members: memberCount,
+			topParentId: statement.topParentId,
+			organizationId: statement.organizationId,
+		});
+		if (!isCounterCopyDue(memberCount, statement.numberOfMembers)) return memberCount;
+	}
+
+	await statementRef.update({
 		numberOfMembers: memberCount,
 		lastUpdate: Date.now(),
 	});
@@ -78,6 +110,7 @@ export async function onSubscriptionCreated(event: SnapshotEvent): Promise<void>
 	const subscription = event.data?.data() as SubscriptionData | undefined;
 	if (!subscription) return;
 
+	await stripCreatedSubscriptionTokens(db, event.params.subscriptionId, subscription);
 	await onMembershipChanged(
 		db,
 		event.params.subscriptionId,
@@ -100,14 +133,23 @@ export async function onSubscriptionDeleted(event: SnapshotEvent): Promise<void>
 
 /**
  * The existing onDocumentUpdated trigger (deployed as `validateRoleChange`):
- * first the ban guard, then — only when role/identity changed — the feed entry.
+ * first the ban guard, then notifications for someone just approved, then —
+ * only when role/identity changed — the feed entry.
  */
 export async function onSubscriptionUpdated(event: ChangeEvent): Promise<void> {
 	await validateRoleChange(event);
 
 	const before = event.data?.before.data() as SubscriptionData | undefined;
 	const after = event.data?.after.data() as SubscriptionData | undefined;
-	if (!before || !after || !feedRelevantChange(before, after)) return;
+	if (!before || !after) return;
+
+	await enableNotificationsOnApproval(
+		db,
+		event.params.subscriptionId,
+		before as StatementSubscription,
+		after as StatementSubscription,
+	);
+	if (!feedRelevantChange(before, after)) return;
 
 	try {
 		await reconcileUserFeedEntry(db, {

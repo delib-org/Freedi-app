@@ -8,7 +8,9 @@ import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
 import SettingsIcon from '@/assets/icons/settings.svg?react';
 import TriangleIcon from '@/assets/icons/triangle.svg?react';
+import HomeIcon from '@/assets/icons/homeIcon.svg?react';
 import MapIcon from '@/assets/icons/navMainPageIcon.svg?react';
+import AskIcon from '@/assets/icons/addQuestion.svg?react';
 
 // Components
 import Menu from '@/view/components/menu/Menu';
@@ -34,6 +36,10 @@ interface HeaderMenuProps {
 	onNavigateToSettings: () => void;
 	onNavigateToScreen: (screen: Screen) => void;
 	onNavigateToClusterMap: () => void;
+	/** When set, the menu opens with a Home row that calls it. */
+	onNavigateHome?: () => void;
+	/** When set, the menu has an "Ask a question" row right after Home that calls it. */
+	onAskQuestion?: () => void;
 	isFollowMeActive?: boolean;
 	/** 'tint' sits on a tinted header: no painted wrapper, language moves into the menu. */
 	variant?: 'default' | 'tint';
@@ -56,6 +62,8 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 	onNavigateToSettings,
 	onNavigateToScreen,
 	onNavigateToClusterMap,
+	onNavigateHome,
+	onAskQuestion,
 	isFollowMeActive,
 	variant = 'default',
 	extraItems,
@@ -119,6 +127,20 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 					</div>
 				}
 			>
+				{onNavigateHome && (
+					<MenuOption
+						label={t('Home')}
+						icon={<HomeIcon style={menuIconStyle} />}
+						onOptionClick={onNavigateHome}
+					/>
+				)}
+				{onAskQuestion && (
+					<MenuOption
+						label={t('Ask a question')}
+						icon={<AskIcon style={menuIconStyle} />}
+						onOptionClick={onAskQuestion}
+					/>
+				)}
 				<MenuOption
 					label={t('Share')}
 					icon={<ShareIcon style={menuIconStyle} />}
@@ -131,17 +153,17 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 					onOptionClick={() => handleNavigateToMap(Screen.agreementMap)}
 				/>
 				<MenuOption
-					label={t('Collaboration Index')}
+					label={t('Disagreement map')}
 					icon={<TriangleIcon style={menuIconStyle} />}
 					onOptionClick={() => handleNavigateToMap(Screen.polarizationIndex)}
 				/>
 				<MenuOption
-					label={t('Mind Map')}
+					label={t('Mind map')}
 					icon={<MapIcon style={menuIconStyle} />}
 					onOptionClick={() => handleNavigateToMap(Screen.mindMap)}
 				/>
 				<MenuOption
-					label={t('Cluster Map')}
+					label={t('Topics map')}
 					icon={<MapIcon style={menuIconStyle} />}
 					onOptionClick={() => {
 						onNavigateToClusterMap();
@@ -150,7 +172,7 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 				/>
 				{statement.statementSettings?.enableSubQuestionsMap !== false && (
 					<MenuOption
-						label={t('Statement Map')}
+						label={t('Questions map')}
 						icon={<MapIcon style={menuIconStyle} />}
 						onOptionClick={() => handleNavigateToMap(Screen.subQuestionsMap)}
 					/>

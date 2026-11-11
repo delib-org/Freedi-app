@@ -3,6 +3,8 @@ import { ArrowUpRight, ChevronDown, Home, Lightbulb, Plus, X } from 'lucide-reac
 import styles from './ThinkingSpace.module.scss';
 import UnreadBadge from '@/view/components/unreadBadge/UnreadBadge';
 import { useSidebarWidth } from '@/controllers/hooks/useSidebarWidth';
+import { formatUnreadCount } from '@/helpers/unreadCount';
+import { NOTIFICATION } from '@/constants/common';
 
 export interface SpaceLink {
 	id: string;
@@ -102,8 +104,8 @@ export default function ThinkingSpace({
 							<span className={styles.space__linkText}>{space.title}</span>
 							<UnreadBadge
 								count={space.unreadCount ?? 0}
-								maxDisplay={99}
-								ariaLabel={`${space.unreadCount ?? 0} ${t('unread')}`}
+								maxDisplay={NOTIFICATION.UNREAD_DISPLAY_MAX}
+								ariaLabel={`${formatUnreadCount(space.unreadCount ?? 0)} ${t('unread')}`}
 							/>
 						</button>
 					))}

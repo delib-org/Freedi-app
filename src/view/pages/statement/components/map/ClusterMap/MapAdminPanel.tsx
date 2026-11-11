@@ -22,6 +22,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import type { LocalMapFilter } from './mapLocalFilter';
 import { resolveDefaultDetail } from '../mapHelpers/detailLevel';
 import MapThemeRebuildSection from './MapThemeRebuildSection';
+import { isQuestionResultsOff } from '../../questionScreen/canSeeScore';
 
 interface MapAdminPanelProps {
 	statement: Statement;
@@ -277,7 +278,7 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 		v === 'themes' ? t('Themes') : v === 'ideas' ? t('Ideas') : t('Everything');
 
 	const filterMetricLabel = (m: MapFilterMetric): string =>
-		m === 'none' ? t('None') : m === 'consensus' ? t('Consensus') : t('Average rating');
+		m === 'none' ? t('None') : m === 'consensus' ? t('Agreement score') : t('Average rating');
 
 	// The active threshold + which field it writes depend on the chosen metric.
 	const activeThreshold = filterMetric === 'average' ? minAverageEvaluation : minConsensus;
@@ -389,6 +390,11 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 						<p className="admin-drawer__row-help">
 							{t('Only show responses at or above this score')}
 						</p>
+						{filterMetric !== 'none' && isQuestionResultsOff(statement, Date.now()) && (
+							<p className="admin-drawer__row-help" role="note">
+								{t('map.filterAppliesWhenResultsOn')}
+							</p>
+						)}
 
 						{canConfigure ? (
 							<>

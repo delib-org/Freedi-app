@@ -3,7 +3,7 @@
  * it can) and posts it here; the privileged Firestore writes happen server-side
  * via the admin SDK.
  *
- *  POST { action: 'register' }                  — store token + sync to existing subs
+ *  POST { action: 'register' }                  — store the device's token
  *  POST { action: 'follow',   statementId }     — follow a question for push
  *  POST { action: 'unfollow', statementId }     — stop push for a question
  *  GET  ?statementId=...                         — current follow status
@@ -44,9 +44,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	try {
 		switch (action) {
 			case 'register': {
-				const synced = await registerToken(user, token as string);
+				await registerToken(user, token as string);
 
-				return json({ success: true, subscriptionsSynced: synced });
+				return json({ success: true });
 			}
 			case 'follow': {
 				if (!statementId) return json({ error: 'Missing statementId' }, { status: 400 });

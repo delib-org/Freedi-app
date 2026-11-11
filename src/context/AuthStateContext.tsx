@@ -8,7 +8,7 @@ import { resetStatements } from '@/redux/statements/statementsSlice';
 import { resetVotes } from '@/redux/vote/votesSlice';
 import { Creator } from '@freedi/shared-types';
 import { convertFirebaseUserToCreator } from '@/utils/userUtils';
-import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
+import { readInitialRoute } from '@/helpers/initialRoute';
 import { setCreator } from '@/redux/creator/creatorSlice';
 import { setUserToDB } from '@/controllers/db/user/setUser';
 import { logLogin } from '@/controllers/db/researchLogs/researchLogger';
@@ -35,16 +35,6 @@ export const AuthStateProvider: FC<{ children: ReactNode }> = ({ children }) => 
 	const [authState, setAuthState] = useState<AuthState>(defaultAuthState);
 	const dispatch = useDispatch();
 
-	const initialRoute = useRef(
-		(() => {
-			try {
-				return JSON.parse(localStorage.getItem(LocalStorageObjects.InitialRoute) || 'null');
-			} catch {
-				return null;
-			}
-		})(),
-	);
-
 	const userSetRef = useRef<string | null>(null);
 
 	useEffect(() => {
@@ -57,7 +47,9 @@ export const AuthStateProvider: FC<{ children: ReactNode }> = ({ children }) => 
 					isLoading: false,
 					user,
 					creator,
-					initialRoute: initialRoute.current?.pathname,
+					// Read on every auth change: the target is often saved after this
+					// provider mounted (a redirect to /start, the 401 sign-in button).
+					initialRoute: readInitialRoute(),
 				});
 				dispatch(setCreator(creator));
 
@@ -74,7 +66,7 @@ export const AuthStateProvider: FC<{ children: ReactNode }> = ({ children }) => 
 					isLoading: false,
 					user: null,
 					creator: null,
-					initialRoute: initialRoute.current?.pathname,
+					initialRoute: readInitialRoute(),
 				});
 
 				dispatch(resetStatements());

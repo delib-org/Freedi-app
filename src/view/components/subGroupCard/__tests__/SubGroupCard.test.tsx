@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { Statement, StatementType } from '@freedi/shared-types';
+import { EvaluationUI, QuestionStep, Statement, StatementType } from '@freedi/shared-types';
 import SubGroupCard from '../SubGroupCard';
 import { requestDiscussionSummary } from '@/controllers/db/summarization/summarizationController';
 
@@ -45,6 +45,7 @@ function buildQuestion(extra: Partial<Statement> = {}): Statement {
 		statement: 'Question title',
 		statementType: StatementType.question,
 		results: [{ statementId: 'r1', parentId: 'q1', statement: 'Chosen result' }],
+		questionSettings: { currentStep: QuestionStep.finished },
 		...extra,
 	} as unknown as Statement;
 }
@@ -56,6 +57,61 @@ function renderCard(statement: Statement, isAdmin?: boolean): void {
 		</MemoryRouter>,
 	);
 }
+
+describe('SubGroupCard results before they are settled', () => {
+	const open = { questionSettings: { currentStep: QuestionStep.randomEvaluation } };
+	const voting = {
+		questionSettings: { currentStep: QuestionStep.voting },
+		evaluationSettings: { evaluationUI: EvaluationUI.voting },
+		topVotedOption: { statementId: 'r1', statement: 'Vote leader' },
+	};
+
+	it('hides the results from a participant while the question is open', () => {
+		renderCard(buildQuestion(open as Partial<Statement>));
+
+		expect(screen.queryByText('Chosen result')).not.toBeInTheDocument();
+	});
+
+	it('hides the vote leader from a participant while voting is open', () => {
+		renderCard(buildQuestion(voting as Partial<Statement>));
+
+		expect(screen.queryByText('Vote leader')).not.toBeInTheDocument();
+	});
+
+	it('hides them from a host while results are off', () => {
+		renderCard(buildQuestion(open as Partial<Statement>), true);
+
+		expect(screen.queryByText('Chosen result')).not.toBeInTheDocument();
+	});
+
+	it('shows them to a host while results are on', () => {
+		renderCard(
+			buildQuestion({
+				...open,
+				statementSettings: { showEvaluation: true },
+			} as Partial<Statement>),
+			true,
+		);
+
+		expect(screen.getByText('Chosen result')).toBeInTheDocument();
+	});
+
+	it('shows them to everyone at Decided', () => {
+		renderCard(buildQuestion());
+
+		expect(screen.getByText('Chosen result')).toBeInTheDocument();
+	});
+
+	it('shows them to everyone after the deadline', () => {
+		renderCard(
+			buildQuestion({
+				questionSettings: { currentStep: QuestionStep.randomEvaluation, deadline: 1 },
+			} as Partial<Statement>),
+		);
+
+		expect(screen.getByText('Chosen result')).toBeInTheDocument();
+	});
+});
 
 describe('SubGroupCard summary vs results', () => {
 	beforeEach(() => {

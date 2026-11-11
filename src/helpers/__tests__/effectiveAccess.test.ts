@@ -14,6 +14,16 @@ describe('resolveEffectiveAccess', () => {
 		).toBe(Access.moderated);
 	});
 
+	it('is open for a space stamped open, whatever is above it', () => {
+		const source = { ...space('g1'), accessScope: 'open' };
+		expect(resolveEffectiveAccess(source, space('top', Access.secret))).toBe(Access.openToAll);
+	});
+
+	it('shows the governing level for a private scope', () => {
+		const source = { ...space('g1'), accessScope: 'g1' };
+		expect(resolveEffectiveAccess(source, space('g0', Access.moderated))).toBe(Access.moderated);
+	});
+
 	it('inherits the top parent level when the sub-space has none', () => {
 		expect(resolveEffectiveAccess(space('g1'), space('top', Access.moderated))).toBe(
 			Access.moderated,

@@ -42,6 +42,8 @@ export interface FlowState {
 	toCreate: FlowDraft[];
 	createdIds: string[];
 	error: string | null;
+	/** The moderator's message to the author; the draft stays open to rephrase. */
+	rejection: string | null;
 }
 
 export type FlowEvent =
@@ -57,6 +59,7 @@ export type FlowEvent =
 	| { type: 'SIMILARITY_SUPPORTED' }
 	| { type: 'SIMILARITY_CONTINUE' }
 	| { type: 'SIMILARITY_BACK' }
+	| { type: 'REJECTED'; reason: string }
 	| { type: 'CREATE_OK'; ids: string[] }
 	| { type: 'FAIL'; message: string }
 	| { type: 'RETRY' };
@@ -72,6 +75,7 @@ export const initialFlowState: FlowState = {
 	toCreate: [],
 	createdIds: [],
 	error: null,
+	rejection: null,
 };
 
 interface ParentLike {
@@ -153,13 +157,13 @@ function enter(state: FlowState, step: FlowStep): FlowState {
 	// Async steps start pending; the hook clears it with a *_RESULT event.
 	const pending = step === 'multiSplit' || step === 'similarity' || step === 'create';
 
-	return { ...state, step, pending, error: null };
+	return { ...state, step, pending, error: null, rejection: null };
 }
 
 export function flowReducer(state: FlowState, event: FlowEvent, config: FlowConfig): FlowState {
 	switch (event.type) {
 		case 'EDIT':
-			return { ...state, draft: { ...state.draft, ...event.draft } };
+			return { ...state, draft: { ...state.draft, ...event.draft }, rejection: null };
 		case 'SUBMIT': {
 			if (state.step !== 'draft' || !state.draft.title.trim()) return state;
 
@@ -218,6 +222,18 @@ export function flowReducer(state: FlowState, event: FlowEvent, config: FlowConf
 			if (state.step !== 'similarity') return state;
 
 			return enter({ ...state, similar: [] }, 'draft');
+		case 'REJECTED':
+			if (state.step !== 'multiSplit' && state.step !== 'similarity') return state;
+
+			return {
+				...state,
+				step: 'draft',
+				pending: false,
+				splits: [],
+				similar: [],
+				toCreate: [],
+				rejection: event.reason,
+			};
 		case 'CREATE_OK':
 			if (state.step !== 'create') return state;
 

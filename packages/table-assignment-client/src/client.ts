@@ -1,16 +1,24 @@
 import { httpsCallable } from 'firebase/functions';
 import type { Functions } from 'firebase/functions';
 import type {
+	TablesCancelRegistrationRequest,
+	TablesCancelRegistrationResponse,
 	TablesComputePreviewRequest,
 	TablesComputePreviewResponse,
 	TablesCreateSessionRequest,
 	TablesCreateSessionResponse,
+	TablesDeleteSessionRequest,
+	TablesDeleteSessionResponse,
+	TablesFixDetailsRequest,
+	TablesFixDetailsResponse,
 	TablesJoinTableRequest,
 	TablesJoinTableResponse,
 	TablesPublishRunRequest,
 	TablesPublishRunResponse,
 	TablesRegisterRequest,
 	TablesRegisterResponse,
+	TablesRemoveParticipantRequest,
+	TablesRemoveParticipantResponse,
 	TablesSavePreferencesRequest,
 	TablesSavePreferencesResponse,
 	TablesSaveSettingsRequest,
@@ -32,6 +40,10 @@ export const TABLES_CALLABLES = {
 	joinTable: 'tablesJoinTable',
 	computePreview: 'tablesComputePreview',
 	publishRun: 'tablesPublishRun',
+	cancelRegistration: 'tablesCancelRegistration',
+	removeParticipant: 'tablesRemoveParticipant',
+	fixDetails: 'tablesFixDetails',
+	deleteSession: 'tablesDeleteSession',
 } as const;
 
 export interface TablesClient {
@@ -44,6 +56,14 @@ export interface TablesClient {
 	joinTable(request: TablesJoinTableRequest): Promise<TablesJoinTableResponse>;
 	computePreview(request: TablesComputePreviewRequest): Promise<TablesComputePreviewResponse>;
 	publishRun(request: TablesPublishRunRequest): Promise<TablesPublishRunResponse>;
+	cancelRegistration(
+		request: TablesCancelRegistrationRequest,
+	): Promise<TablesCancelRegistrationResponse>;
+	removeParticipant(
+		request: TablesRemoveParticipantRequest,
+	): Promise<TablesRemoveParticipantResponse>;
+	fixDetails(request: TablesFixDetailsRequest): Promise<TablesFixDetailsResponse>;
+	deleteSession(request: TablesDeleteSessionRequest): Promise<TablesDeleteSessionResponse>;
 }
 
 /**
@@ -68,5 +88,9 @@ export function createTablesClient(functions: Functions): TablesClient {
 		joinTable: (request) => call(TABLES_CALLABLES.joinTable, request),
 		computePreview: (request) => call(TABLES_CALLABLES.computePreview, request),
 		publishRun: (request) => call(TABLES_CALLABLES.publishRun, request),
+		cancelRegistration: (request) => call(TABLES_CALLABLES.cancelRegistration, request),
+		removeParticipant: (request) => call(TABLES_CALLABLES.removeParticipant, request),
+		fixDetails: (request) => call(TABLES_CALLABLES.fixDetails, request),
+		deleteSession: (request) => call(TABLES_CALLABLES.deleteSession, request),
 	};
 }

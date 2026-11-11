@@ -34,21 +34,31 @@ function makeDb({ statement, isAdmin }: DbShape): {
 		})),
 	};
 
-	// Chainable `.where(...).where(...).limit(...).get()` for the subscription lookup.
-	const query = {
-		where: jest.fn((field: string, _op: string, value: unknown) => {
-			if (field === 'statementId') captured.statementId = value;
-			if (field === 'userId') captured.userId = value;
+	// The admin check reads the subscription by doc id: `${uid}--${statementId}`.
+	const subscriptionRef = (id: string): { id: string } => {
+		const [userId, statementId] = id.split('--');
+		captured.userId = userId;
+		captured.statementId = statementId;
 
-			return query;
-		}),
-		limit: jest.fn(() => query),
-		get: jest.fn(async () => ({ empty: !isAdmin })),
+		return { id };
 	};
 
 	const firestore = {
 		collection: jest.fn((name: string) =>
-			name === 'statements' ? { doc: jest.fn(() => statementDocRef) } : query,
+			name === 'statements'
+				? { doc: jest.fn(() => statementDocRef) }
+				: { doc: jest.fn(subscriptionRef) },
+		),
+		getAll: jest.fn(async (...refs: Array<{ id: string }>) =>
+			refs.map((ref) => {
+				const [userId, statementId] = ref.id.split('--');
+
+				return {
+					id: ref.id,
+					exists: isAdmin,
+					data: () => (isAdmin ? { userId, statementId, role: 'admin' } : undefined),
+				};
+			}),
 		),
 	} as unknown as Firestore;
 
@@ -142,14 +152,11 @@ describe('applyRecomputeTopOptions', () => {
 								get: jest.fn(async () => ({ exists: true, data: () => ({}) })),
 							})),
 						}
-					: {
-							where: jest.fn().mockReturnThis(),
-							limit: jest.fn().mockReturnThis(),
-							get: jest.fn(async () => {
-								throw Object.assign(new Error('9 FAILED_PRECONDITION: needs index'), { code: 9 });
-							}),
-						},
+					: { doc: jest.fn((id: string) => ({ id })) },
 			),
+			getAll: jest.fn(async () => {
+				throw Object.assign(new Error('9 FAILED_PRECONDITION: needs index'), { code: 9 });
+			}),
 		} as unknown as Firestore;
 
 		await expect(applyRecomputeTopOptions(failing, 'u1', request)).rejects.toMatchObject({

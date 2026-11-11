@@ -14,6 +14,7 @@ import { Layers, Play, RotateCcw, Eye, ListChecks, Search, X, Check } from 'luci
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { CONDENSATION, CONDENSATION_VISIBILITY_DEFAULTS } from '@/constants/common';
 import { logError } from '@/utils/errorHandling';
+import { isQuestionResultsOff } from '../../../questionScreen/canSeeScore';
 import ToggleSwitch from './ToggleSwitch';
 import styles from './EnhancedAdvancedSettings.module.scss';
 
@@ -563,7 +564,7 @@ const GroupingSettings: FC<GroupingSettingsProps> = ({ statement, settings }) =>
 							{t('Last run')}: {new Date(statement.condensationStatus.lastRunAt).toLocaleString()}
 							{' · '}
 							{statement.condensationStatus.producedGroupCount ?? 0} {t('groups from')}{' '}
-							{statement.condensationStatus.inputCount ?? 0} {t('suggestions')}
+							{statement.condensationStatus.inputCount ?? 0} {t('answers')}
 						</p>
 					)}
 
@@ -584,6 +585,7 @@ const GroupingSettings: FC<GroupingSettingsProps> = ({ statement, settings }) =>
 			{/* Preview modal — dry-run results, Apply actually runs the pipeline */}
 			{previewPayload && (
 				<PreviewModal
+					showScores={!isQuestionResultsOff(statement, Date.now())}
 					payload={previewPayload}
 					applying={applying}
 					onApply={applyPreview}
@@ -599,9 +601,17 @@ interface PreviewModalProps {
 	applying: boolean;
 	onApply: () => void;
 	onClose: () => void;
+	/** Off while the question's results are off for everyone. */
+	showScores: boolean;
 }
 
-const PreviewModal: FC<PreviewModalProps> = ({ payload, applying, onApply, onClose }) => {
+const PreviewModal: FC<PreviewModalProps> = ({
+	payload,
+	applying,
+	onApply,
+	onClose,
+	showScores,
+}) => {
 	const { t } = useTranslation();
 	const { preview, created, updated, orphanedClusters } = payload;
 
@@ -741,20 +751,24 @@ const PreviewModal: FC<PreviewModalProps> = ({ payload, applying, onApply, onClo
 											{t('Evaluators')}:{' '}
 											<strong>{group.evaluationSnapshot.numberOfEvaluators}</strong>
 										</span>
-										<span>
-											{t('Avg')}:{' '}
-											<strong>{group.evaluationSnapshot.averageEvaluation.toFixed(2)}</strong>
-										</span>
-										<span>
-											{t('Consensus')}:{' '}
-											<strong>{group.evaluationSnapshot.agreement.toFixed(2)}</strong>
-										</span>
-										<span style={{ color: 'var(--agree, #2d8659)' }}>
-											+{group.evaluationSnapshot.numberOfProEvaluators}
-										</span>
-										<span style={{ color: 'var(--disagree, #c0392b)' }}>
-											−{group.evaluationSnapshot.numberOfConEvaluators}
-										</span>
+										{showScores && (
+											<>
+												<span>
+													{t('Avg')}:{' '}
+													<strong>{group.evaluationSnapshot.averageEvaluation.toFixed(2)}</strong>
+												</span>
+												<span>
+													{t('Agreement score')}:{' '}
+													<strong>{group.evaluationSnapshot.agreement.toFixed(2)}</strong>
+												</span>
+												<span style={{ color: 'var(--agree, #2d8659)' }}>
+													+{group.evaluationSnapshot.numberOfProEvaluators}
+												</span>
+												<span style={{ color: 'var(--disagree, #c0392b)' }}>
+													−{group.evaluationSnapshot.numberOfConEvaluators}
+												</span>
+											</>
+										)}
 									</span>
 								)}
 							</div>

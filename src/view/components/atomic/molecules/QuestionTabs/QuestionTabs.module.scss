@@ -1,5 +1,6 @@
 // QuestionTabs — underline tabs inside the lilac question header.
 // Sits on --tone-lilac; ink is inherited from the header (--tone-lilac-ink).
+@use '@/view/style/dark-scope' as *;
 
 .tabs {
 	display: flex;
@@ -32,6 +33,12 @@
 		white-space: nowrap;
 		opacity: 0.55;
 		cursor: pointer;
+
+		// 55% ink on the dark lilac header is 4.07:1, under AA; the underline,
+		// not the fade, marks the active tab.
+		@include dark {
+			opacity: 0.8;
+		}
 		transition:
 			opacity var(--motion-fast, 150ms) ease,
 			border-color var(--motion-fast, 150ms) ease;
@@ -57,6 +64,10 @@
 	&__count {
 		font-size: 11px;
 		opacity: 0.7;
+
+		@include dark {
+			opacity: 1;
+		}
 	}
 
 	&__unread {

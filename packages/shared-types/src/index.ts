@@ -171,16 +171,25 @@ export {
 } from "./models/organization";
 
 // Per-question participation funnel (server-maintained)
-export type { QuestionProgress, QuestionParticipation } from "./models/progress";
+export type { QuestionProgress, QuestionParticipation, CounterProgress } from "./models/progress";
 
 export {
   QuestionProgressSchema,
   QuestionParticipationSchema,
   getQuestionParticipationId,
+  isCounterCopyDue,
+  resolveMemberCount,
+  resolveViewCount,
 } from "./models/progress";
 
 // WizCol Studio — "Start a question with AI": plan sessions, diagnosis, scheduled actions
 export * from "./models/studio";
+export type { AnswerModeration } from "./models/statement/answerModeration";
+export {
+  AnswerModerationSchema,
+  ANSWER_MODERATION_REASON,
+  isAnswerHeldByModeration,
+} from "./models/statement/answerModeration";
 
 // MassConsensus models
 export type {
@@ -225,6 +234,8 @@ export {
   ODYSSEY_DIGEST_MAX_HOURS,
   createDefaultNotificationSettings,
 } from "./models/notification/NotificationSettings";
+export type { AnswerNoticeState, NoticeCapSlot } from "./models/notification/AnswerNotice";
+export { AnswerNoticeStateSchema, NoticeCapSlotSchema } from "./models/notification/AnswerNotice";
 
 // Question models
 export type { QuestionSettings } from "./models/question/QuestionType";
@@ -912,6 +923,8 @@ export {
 
 export type {
   NotificationQueueItem,
+  RoutableQueueItem,
+  LargeQuestionDigestMarker,
   CreditRule,
   CreditTransaction,
   UserEngagement,
@@ -1224,10 +1237,18 @@ export type {
 
 // Tables (שולחנות): shared table-assignment model and callables contract
 export {
+  TABLE_ASSIGNMENT_MIN_KNOWN_POSITIONS,
+  TableAssignmentClosenessSchema,
+  tableAssignmentCloseness,
+} from './models/tableAssignment/tableAssignmentCloseness';
+export type { TableAssignmentCloseness } from './models/tableAssignment/tableAssignmentCloseness';
+export {
   TABLE_ASSIGNMENT_TABLE_SIZE_DEFAULT,
   TABLE_ASSIGNMENT_BALANCE_TOLERANCE_DEFAULT,
   TABLE_ASSIGNMENT_MAX_PREFERENCES,
   TABLE_ASSIGNMENT_TABLE_SIZE_MIN,
+  TABLE_ASSIGNMENT_TABLE_SIZE_STORED_MIN,
+  TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC,
   TABLE_ASSIGNMENT_TABLE_SIZE_MAX,
   TABLE_ASSIGNMENT_TITLE_MAX_LENGTH,
   TABLE_ASSIGNMENT_DESCRIPTION_MAX_LENGTH,
@@ -1240,12 +1261,17 @@ export {
   TableAssignmentTopicSchema,
   TableAssignmentPreferencesSchema,
   TableAssignmentParticipantSchema,
+  TableAssignmentRosterEntrySchema,
+  TableAssignmentCounterSchema,
   TableAssignmentRunStatusSchema,
   TableAssignmentTableStatsSchema,
   TableAssignmentRunTableSchema,
   TableAssignmentMetricsSchema,
   TableAssignmentRunSchema,
   tableAssignmentParticipantId,
+  tableAssignmentNameKey,
+  TABLE_ASSIGNMENT_STRICTNESS,
+  TABLE_ASSIGNMENT_POSITION_STOPS,
 } from './models/tableAssignment/tableAssignmentModel';
 export type {
   TableAssignmentStatus,
@@ -1255,6 +1281,8 @@ export type {
   TableAssignment,
   TableAssignmentTopic,
   TableAssignmentParticipant,
+  TableAssignmentRosterEntry,
+  TableAssignmentCounter,
   TableAssignmentRunStatus,
   TableAssignmentTableStats,
   TableAssignmentRunTable,
@@ -1271,8 +1299,16 @@ export type {
   TablesSaveSettingsResponse,
   TablesSetStatusRequest,
   TablesSetStatusResponse,
+  TablesNameMatch,
   TablesRegisterRequest,
   TablesRegisterResponse,
+  TablesCancelRegistrationRequest,
+  TablesCancelRegistrationResponse,
+  TablesRemoveParticipantRequest,
+  TablesRemoveParticipantResponse,
+  TablesFixDetailsTopic,
+  TablesFixDetailsRequest,
+  TablesFixDetailsResponse,
   TablesSavePreferencesRequest,
   TablesSavePreferencesResponse,
   TablesJoinTableRequest,
@@ -1281,6 +1317,8 @@ export type {
   TablesComputePreviewResponse,
   TablesPublishRunRequest,
   TablesPublishRunResponse,
+  TablesDeleteSessionRequest,
+  TablesDeleteSessionResponse,
 } from './models/tableAssignment/tableAssignmentCallables';
 
 // Theme rebuild ("Re-theme with AI") callable contract
@@ -1301,6 +1339,45 @@ export {
 	resolveDerivedPipeline,
 } from './utils/derivedStatement';
 export type { DerivedPipeline } from './utils/derivedStatement';
+
+// Adaptive answer sampling (shared by MC and the main app's getAnswerBatch)
+export {
+	calculateAdjustedPriority,
+	calculatePriority,
+	calculateStatsFromAggregates,
+	calculateUCBPriority,
+	DEFAULT_SAMPLING_CONFIG,
+	gaussianThompsonSample,
+	getProposalStats,
+	getSamplingDiagnostics,
+	isStable,
+	thompsonSample,
+} from './utils/sampling/sampling';
+export type { ProposalStats, SamplingConfig } from './utils/sampling/sampling';
+export { createSampler, ProposalSampler } from './utils/sampling/proposalSampler';
+export type {
+	BatchResult,
+	BatchStats,
+	DiversityOptions,
+	SamplerLogger,
+	ScoredProposal,
+} from './utils/sampling/proposalSampler';
+export {
+	buildClusterMembershipMap,
+	deriveSeenClusters,
+	getClusterKey,
+	selectDiverseBatch,
+} from './utils/sampling/diverseBatch';
+export {
+	buildSynthMembershipMap,
+	expandEvaluatedIds,
+	isSynthesisCluster,
+} from './utils/sampling/synthesisMembership';
+export { ANSWER_BATCH, isAnswerBatchQuestion } from './utils/sampling/answerBatch';
+export type {
+	GetAnswerBatchRequest,
+	GetAnswerBatchResponse,
+} from './utils/sampling/answerBatch';
 export {
 	computeOtherIdeas,
 	isTheme,
@@ -1326,3 +1403,21 @@ export type {
 	FullExportRequest,
 	FullExportResponse,
 } from './utils/exportFormat';
+
+export {
+	OPEN_ACCESS_SCOPE,
+	QUARANTINED_ACCESS_SCOPE,
+	isQuarantinedScope,
+	isAnswerTypeLevel,
+	isOpenAccessValue,
+	ownAccessSetting,
+	resolveAccessScope,
+	newStatementAccessScope,
+	stampAccessScope,
+	inheritedAccessScope,
+	readScopesOf,
+	readScopesOfRoot,
+} from "./models/statement/accessScope";
+export type { AccessScopeLevel, AccessScopeParent } from "./models/statement/accessScope";
+export { childTopParentId } from "./models/statement/treeFields";
+export type { TreeParent } from "./models/statement/treeFields";

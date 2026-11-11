@@ -1,11 +1,24 @@
-import { CutoffBy, ResultsSettings, Statement, defaultResultsSettings } from '@freedi/shared-types';
+import {
+	CutoffBy,
+	DEFAULT_MIN_EVALUATORS,
+	ResultsSettings,
+	ResultsBy,
+	Statement,
+	defaultResultsSettings,
+} from '@freedi/shared-types';
 import { getConsensusScore } from '@/redux/utils/selectorFactories';
-import { QuestionStageIndex, STAGE_COLLECTING, STAGE_DECIDED } from './questionStage';
+import { formatScoreThreshold, toDisplayScore } from '@/helpers/scoreFormat';
+import {
+	QuestionStageIndex,
+	STAGE_COLLECTING,
+	STAGE_DECIDED,
+	STAGE_VOTING,
+} from '@/helpers/questionStage';
 
 /**
  * Pure decisions behind the Results tab and the answers counter: who may read
  * results right now, which answers count as "leading" under the question's own
- * results selection, and the one-line hint above the answers list.
+ * results selection, and the one-line cue under the stage bar.
  */
 
 export type ResultsAccess = 'visible' | 'rate-first' | 'hidden-by-host';
@@ -15,15 +28,29 @@ export interface ResultsAccessInput {
 	stage: QuestionStageIndex;
 	/** Answers the viewer rated under this question. */
 	ratedCount: number;
-	/** `statementSettings.showEvaluation` — the host's "live results for participants". */
+	/** `statementSettings.showEvaluation`, the "Show live results" switch. */
 	showLiveResults: boolean;
 	isDeadlinePassed: boolean;
 }
 
 /**
- * - Hosts always read results.
- * - A decided question (stage 3) or one whose clock ran out is always readable.
- * - Live results switched off by the host → hidden for participants.
+ * Results are off and the question is not settled, so nobody reads agreement:
+ * not a participant, not an author, not a host. A settled question (Decided, or
+ * its deadline passed) always shows results, or one that closes with the switch
+ * off would never show them to anyone.
+ */
+export function areResultsOffForEveryone({
+	showLiveResults,
+	stage,
+	isDeadlinePassed,
+}: Pick<ResultsAccessInput, 'showLiveResults' | 'stage' | 'isDeadlinePassed'>): boolean {
+	return !showLiveResults && stage !== STAGE_DECIDED && !isDeadlinePassed;
+}
+
+/**
+ * - Results off on an unsettled question → hidden for everyone, hosts included.
+ * - Otherwise hosts read results, and a decided question (stage 3) or one whose
+ *   clock ran out is readable by anyone.
  * - Mid-flow (rating or voting) with nothing rated yet → rate first, so the
  *   viewer's own rating stays independent.
  * - Otherwise readable (including while still collecting).
@@ -35,11 +62,18 @@ export function getResultsAccess({
 	showLiveResults,
 	isDeadlinePassed,
 }: ResultsAccessInput): ResultsAccess {
+	if (areResultsOffForEveryone({ showLiveResults, stage, isDeadlinePassed })) {
+		return 'hidden-by-host';
+	}
 	if (isHost || stage === STAGE_DECIDED || isDeadlinePassed) return 'visible';
-	if (!showLiveResults) return 'hidden-by-host';
 	if (stage !== STAGE_COLLECTING && ratedCount === 0) return 'rate-first';
 
 	return 'visible';
+}
+
+/** The Results tab's note while results are off: a host is the one who can turn them on. */
+export function hiddenResultsNoticeKey(isHost: boolean): string {
+	return isHost ? 'question.resultsOffHostNotice' : 'Results are hidden. Evaluate independently.';
 }
 
 /** Answers that take part in results: visible, and not a pipeline cluster (syntheses count). */
@@ -112,6 +146,17 @@ export interface Caption {
 	value?: string;
 }
 
+/**
+ * Only a consensus threshold within −1…1 is on the score's scale. Other metrics
+ * store their own raw number (12 likes), and consensus values outside the range
+ * are legacy percentages, so those are shown as stored.
+ */
+function thresholdText(resultsBy: ResultsBy, cutoffNumber: number): string {
+	const isOnScoreScale = resultsBy === ResultsBy.consensus && Math.abs(cutoffNumber) <= 1;
+
+	return isOnScoreScale ? formatScoreThreshold(cutoffNumber) : String(cutoffNumber);
+}
+
 /** The rule caption under "Leading now" / "What was chosen". */
 export function resultsRuleCaption(
 	settings: ResultsSettings | undefined,
@@ -121,7 +166,7 @@ export function resultsRuleCaption(
 	if (cutoffBy === CutoffBy.aboveThreshold) {
 		return {
 			key: decided ? 'By consensus · threshold {n}' : 'Above the agreement threshold ({n})',
-			value: String(cutoffNumber),
+			value: thresholdText(settings?.resultsBy ?? ResultsBy.consensus, cutoffNumber),
 		};
 	}
 	if (cutoffBy === CutoffBy.all) return { key: 'Every rated answer, by agreement' };
@@ -134,24 +179,26 @@ export function resultsRuleCaption(
 
 export type ScoreTone = 'positive' | 'split' | 'negative';
 
-/** Same bands as the design's bar colour: broad/partial agreement, split, opposition. */
-export const SCORE_POSITIVE_MIN = 0.3;
-export const SCORE_SPLIT_MIN = -0.1;
+/** The bands, on the −100…+100 scale people read. */
+export const SCORE_BROAD_MIN = 60;
+export const SCORE_POSITIVE_MIN = 30;
+export const SCORE_SPLIT_MIN = -10;
 
 export function scoreTone(score: number): ScoreTone {
-	if (score >= SCORE_POSITIVE_MIN) return 'positive';
-	if (score > SCORE_SPLIT_MIN) return 'split';
+	const display = toDisplayScore(score);
+	if (display >= SCORE_POSITIVE_MIN) return 'positive';
+	if (display > SCORE_SPLIT_MIN) return 'split';
 
 	return 'negative';
 }
 
-export const SCORE_BROAD_MIN = 0.6;
-
-/** The design's plain-language label for a score (broad / partial agreement, split, opposition). */
-export function scoreLabelKey(score: number): string {
-	if (score >= SCORE_BROAD_MIN) return 'Broad agreement';
-	if (score >= SCORE_POSITIVE_MIN) return 'Partial agreement';
-	if (score > SCORE_SPLIT_MIN) return 'Split';
+/** The plain-language label for an answer's score. A score from a few raters says little. */
+export function scoreLabelKey(score: number, raterCount: number): string {
+	if (raterCount < DEFAULT_MIN_EVALUATORS) return 'Too few ratings so far';
+	const display = toDisplayScore(score);
+	if (display >= SCORE_BROAD_MIN) return 'Broad agreement';
+	if (display >= SCORE_POSITIVE_MIN) return 'Partial agreement';
+	if (display > SCORE_SPLIT_MIN) return 'Split';
 
 	return 'Opposition';
 }
@@ -163,27 +210,140 @@ export function scorePercent(score: number): number {
 	return Math.round(((clamped + 1) / 2) * 100);
 }
 
-export interface RateHintInput {
-	canRate: boolean;
-	stage: QuestionStageIndex;
-	rated: number;
-	total: number;
+export interface AnswerCoverageInput {
+	/** Answers of this question in the store, hidden ones included. */
+	loadedAnswers: number;
+	/** Children of any type in the store: the listener's window counts these, not answers. */
+	loadedChildren: number;
+	/** Server counter. Missing on questions older than the counter. */
+	numberOfOptions: number | undefined;
+	isFullyLoaded: boolean;
+	/** How many children the question screen's first listener asks for. */
+	childrenWindow: number;
 }
 
-/** The hint beside the "{rated}/{total}" counter above the answers list. */
-export function getRateHint({ canRate, stage, rated, total }: RateHintInput): Caption {
-	if (!canRate) {
-		return {
-			key:
-				stage === STAGE_COLLECTING
-					? 'Still collecting ideas — rating opens later'
-					: 'Rating is closed',
-		};
-	}
-	if (rated === 0) return { key: 'Rate each answer on its own — what could you live with?' };
-	if (rated < total) return { key: '{n} more to rate', value: String(total - rated) };
+/**
+ * Whether the answers in the store are all the answers of the question, the
+ * only case where "none yet", "all rated" or a remaining count can be true.
+ * The store normally holds the newest children of any type, so a busy
+ * discussion can push every answer out of it.
+ *
+ * A counter that disagrees either way is treated as not known: below the loaded
+ * count it is provably stale, above it there are answers not loaded. Without a
+ * counter, a window that did not fill means nothing was left out.
+ */
+export function areAnswersComplete({
+	loadedAnswers,
+	loadedChildren,
+	numberOfOptions,
+	isFullyLoaded,
+	childrenWindow,
+}: AnswerCoverageInput): boolean {
+	if (isFullyLoaded) return true;
+	if (numberOfOptions === undefined) return loadedChildren < childrenWindow;
 
-	return { key: 'You rated them all. Thank you!' };
+	return loadedAnswers === numberOfOptions;
+}
+
+export interface StageCueInput {
+	stage: QuestionStageIndex;
+	/** Host halt, or the deadline passed. */
+	isHalted: boolean;
+	canRate: boolean;
+	canAddAnswer: boolean;
+	/** `evaluationUI === voting`: the question's answers are voted on, not rated. */
+	usesVotingUI: boolean;
+	hasVoted: boolean;
+	ratedCount: number;
+	rateableCount: number;
+	/** See `areAnswersComplete`: without it the counts say nothing about the whole question. */
+	answersComplete: boolean;
+}
+
+type RateProgress = 'nothing' | 'none' | 'some' | 'all';
+type RateRow = Readonly<Record<RateProgress, string>>;
+
+const COLLECTING_ADD_AND_RATE: RateRow = {
+	nothing: 'noneToRateAdd',
+	none: 'addOrRate',
+	some: 'moreToRateAdd',
+	all: 'ratedAllAdd',
+};
+const RATING_ADD_AND_RATE: RateRow = {
+	nothing: 'noneToRateAdd',
+	none: 'rateEach',
+	some: 'moreToRate',
+	all: 'ratedAllAdd',
+};
+const RATE_ONLY: RateRow = {
+	nothing: 'noneToRate',
+	none: 'rateEach',
+	some: 'moreToRate',
+	all: 'ratedAll',
+};
+
+/** Partly loaded answers read as "none": the row's general cue, with no number and no thanks. */
+function rateProgress(
+	ratedCount: number,
+	rateableCount: number,
+	answersComplete: boolean,
+): RateProgress {
+	if (!answersComplete) return 'none';
+	if (rateableCount === 0) return 'nothing';
+	if (ratedCount === 0) return 'none';
+
+	return ratedCount < rateableCount ? 'some' : 'all';
+}
+
+function votingCueName({
+	canRate,
+	canAddAnswer,
+	hasVoted,
+	rateableCount,
+	answersComplete,
+}: StageCueInput): string {
+	if (!canRate) return canAddAnswer ? 'votingClosedAdd' : 'votingClosedRead';
+	if (hasVoted) return canAddAnswer ? 'votedAdd' : 'voted';
+	if (answersComplete && rateableCount === 0) return canAddAnswer ? 'noneToVoteAdd' : 'noneToVote';
+
+	return canAddAnswer ? 'voteOrAdd' : 'voteOne';
+}
+
+function ratingCueName(input: StageCueInput): string {
+	const { stage, canRate, canAddAnswer, ratedCount, rateableCount, answersComplete } = input;
+	const isCollecting = stage === STAGE_COLLECTING;
+	if (!canRate) {
+		if (isCollecting) return canAddAnswer ? 'addRatingLater' : 'collectingRead';
+
+		return canAddAnswer ? 'ratingClosedAdd' : 'ratingClosedRead';
+	}
+	const collectingOrRating = isCollecting ? COLLECTING_ADD_AND_RATE : RATING_ADD_AND_RATE;
+
+	return (canAddAnswer ? collectingOrRating : RATE_ONLY)[
+		rateProgress(ratedCount, rateableCount, answersComplete)
+	];
+}
+
+/**
+ * The one line under the stage bar that says what to do now. Decided first,
+ * then a halted question, then the voting table for anyone who can vote on a
+ * voting UI, whatever the stage says, and otherwise the table of the actual stage.
+ */
+export function getStageCue(input: StageCueInput): Caption {
+	const { stage, isHalted, canRate, usesVotingUI, ratedCount, rateableCount } = input;
+	if (stage === STAGE_DECIDED) return { key: 'stageCue.over' };
+	if (isHalted) return { key: 'stageCue.closed' };
+
+	const name =
+		stage === STAGE_VOTING || (canRate && usesVotingUI)
+			? votingCueName(input)
+			: ratingCueName(input);
+	const isCounting = name === 'moreToRate' || name === 'moreToRateAdd';
+
+	return {
+		key: `stageCue.${name}`,
+		...(isCounting ? { value: String(rateableCount - ratedCount) } : {}),
+	};
 }
 
 /** How many of these answers the viewer rated (their own evaluation rows). */
@@ -201,4 +361,20 @@ export function countRated(
 	);
 
 	return rated.size;
+}
+
+/** When the viewer last rated one of these answers, or 0 if never. */
+export function latestRatingAt(
+	evaluations: ReadonlyArray<{ statementId: string; evaluatorId?: string; updatedAt: number }>,
+	answerIds: readonly string[],
+	userId: string | undefined,
+): number {
+	if (!userId) return 0;
+	const ids = new Set(answerIds);
+
+	return evaluations.reduce(
+		(latest, e) =>
+			e.evaluatorId === userId && ids.has(e.statementId) ? Math.max(latest, e.updatedAt) : latest,
+		0,
+	);
 }

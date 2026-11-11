@@ -28,15 +28,45 @@ const RESYNC_DEBOUNCE_MS = 250;
 
 type Target = Query<DocumentData> | DocumentReference<DocumentData>;
 
+export interface ListenerOptions {
+	/**
+	 * A refusal is how this read is expected to end (the person's registration
+	 * is gone): the caller is told, and nothing is logged or tried again.
+	 */
+	deniedIsFinal?: boolean;
+}
+
 interface Entry {
 	name: string;
 	target: Target;
 	onNext: (snap: DocumentSnapshot<DocumentData> | QuerySnapshot<DocumentData>) => void;
 	onError?: (error: FirestoreError) => void;
+	deniedIsFinal: boolean;
 	inner: Unsubscribe | null;
 	retryCount: number;
 	retryTimer: ReturnType<typeof setTimeout> | null;
 	active: boolean;
+	/** True once a snapshot was passed on: from then on an empty one is believed. */
+	confirmed: boolean;
+}
+
+/** A query snapshot where no document changed: only its metadata did (fromCache, pending writes). */
+function isMetadataOnly(
+	snap: DocumentSnapshot<DocumentData> | QuerySnapshot<DocumentData>,
+): boolean {
+	return 'docs' in snap && snap.docChanges().length === 0;
+}
+
+/**
+ * A first snapshot that comes from the local cache and says "missing" or "empty" only
+ * means "nothing cached yet", e.g. a phone that is offline. It is not an answer.
+ */
+function isUnconfirmedAbsence(
+	snap: DocumentSnapshot<DocumentData> | QuerySnapshot<DocumentData>,
+): boolean {
+	if (!snap.metadata.fromCache) return false;
+
+	return 'docs' in snap ? snap.empty : !snap.exists();
 }
 
 const registry = new Set<Entry>();
@@ -51,6 +81,7 @@ function clearRetry(entry: Entry): void {
 function handleStreamError(entry: Entry, error: FirestoreError): void {
 	entry.inner = null;
 	entry.onError?.(error);
+	if (entry.deniedIsFinal && error.code === 'permission-denied') return;
 	logError(error, {
 		operation: 'tables.listeners.streamError',
 		metadata: { listener: entry.name, code: error.code, retry: entry.retryCount },
@@ -78,8 +109,17 @@ function start(entry: Entry): void {
 	// onSnapshot accepts a document or a query at runtime; the overload split is a typing artifact.
 	entry.inner = onSnapshot(
 		entry.target as Query<DocumentData>,
+		// Metadata changes are delivered so a cache-empty first snapshot that the server then
+		// confirms as the same empty state (a metadata-only change) is not lost.
+		{ includeMetadataChanges: true },
 		(snap) => {
 			entry.retryCount = 0;
+			if (!entry.confirmed) {
+				if (isUnconfirmedAbsence(snap)) return;
+				entry.confirmed = true;
+			} else if (isMetadataOnly(snap)) {
+				return;
+			}
 			entry.onNext(snap);
 		},
 		(error) => handleStreamError(entry, error),
@@ -133,6 +173,7 @@ function register(
 	target: Target,
 	onNext: Entry['onNext'],
 	onError?: (error: FirestoreError) => void,
+	options: ListenerOptions = {},
 ): Unsubscribe {
 	installWakeHooks();
 
@@ -141,10 +182,12 @@ function register(
 		target,
 		onNext,
 		onError,
+		deniedIsFinal: options.deniedIsFinal === true,
 		inner: null,
 		retryCount: 0,
 		retryTimer: null,
 		active: true,
+		confirmed: false,
 	};
 
 	registry.add(entry);
@@ -173,6 +216,7 @@ export function resilientQuery(
 	target: Query<DocumentData>,
 	onNext: (snap: QuerySnapshot<DocumentData>) => void,
 	onError?: (error: FirestoreError) => void,
+	options?: ListenerOptions,
 ): Unsubscribe {
-	return register(name, target, onNext as Entry['onNext'], onError);
+	return register(name, target, onNext as Entry['onNext'], onError, options);
 }

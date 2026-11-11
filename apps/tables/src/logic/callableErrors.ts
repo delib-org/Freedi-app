@@ -41,6 +41,18 @@ const REASON_KEYS: Readonly<Record<string, string>> = {
 	'table-full': 'tableAssignment.error.tableFull',
 	'stale-run': 'tableAssignment.error.publishStale',
 	'registration-closed': 'tableAssignment.error.registrationClosed',
+	'claimed-by-name': 'tableAssignment.cancel.claimed',
+	'seated-in-published-run': 'tableAssignment.remove.seated',
+	'registration-full': 'tableAssignment.error.registrationFull',
+	'name-locked': 'tableAssignment.error.nameLocked',
+	'too-few-registrants': 'tableAssignment.error.tooFewRegistrants',
+	'preview-limit': 'tableAssignment.error.previewLimit',
+	'table-size-below-published': 'tableAssignment.error.tableSizeBelowPublished',
+};
+
+/** On the name screen, a registration continued by name cannot be renamed (not "cancelled"). */
+export const NAME_SCREEN_REASON_KEYS: Readonly<Record<string, string>> = {
+	'claimed-by-name': 'tableAssignment.error.nameClaimed',
 };
 
 export function classifyError(error: unknown): CallableErrorKind {
@@ -67,15 +79,22 @@ export function classifyError(error: unknown): CallableErrorKind {
 }
 
 /** The message key for a failed action; `failedPrecondition` has its own per-action key. */
-export function errorMessageKey(error: unknown, preconditionKey: string): string {
+export function errorMessageKey(
+	error: unknown,
+	preconditionKey: string,
+	overrides: Readonly<Record<string, string>> = {},
+): string {
 	switch (classifyError(error)) {
 		case 'unauthenticated':
 		case 'permissionDenied':
 			return 'tableAssignment.error.noPermission';
 		case 'notFound':
 			return 'tableAssignment.error.notFound';
-		case 'failedPrecondition':
-			return REASON_KEYS[errorReason(error)] ?? preconditionKey;
+		case 'failedPrecondition': {
+			const reason = errorReason(error);
+
+			return overrides[reason] ?? REASON_KEYS[reason] ?? preconditionKey;
+		}
 		case 'invalidArgument':
 			return 'tableAssignment.error.invalid';
 		case 'network':

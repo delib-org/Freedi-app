@@ -1,5 +1,34 @@
 import { SortType, Statement } from '@freedi/shared-types';
-import { applyManualOrder, sortStatements } from '../suggestionOrdering';
+import { applyManualOrder, includeAnswer, pinFirst, sortStatements } from '../suggestionOrdering';
+
+describe('includeAnswer', () => {
+	const list = ['a', 'b'].map((id) => ({ statementId: id }) as Statement);
+
+	it('adds an answer the list does not hold', () => {
+		const old = { statementId: 'old' } as Statement;
+
+		expect(includeAnswer(list, old)).toEqual([old, ...list]);
+	});
+
+	it('never duplicates, so paging can reach the same answer later', () => {
+		expect(includeAnswer(list, { statementId: 'b' } as Statement)).toBe(list);
+		expect(includeAnswer(list, undefined)).toBe(list);
+	});
+});
+
+describe('pinFirst', () => {
+	const list = ['a', 'b', 'c'].map((id) => ({ statementId: id }) as Statement);
+	const ids = (statements: Statement[]) => statements.map((s) => s.statementId);
+
+	it('moves the pinned card to the top and keeps the others in order', () => {
+		expect(ids(pinFirst(list, 'c'))).toEqual(['c', 'a', 'b']);
+	});
+
+	it('leaves the list alone when the card is not in it, or nothing is pinned', () => {
+		expect(pinFirst(list, 'gone')).toBe(list);
+		expect(pinFirst(list, undefined)).toBe(list);
+	});
+});
 
 function option(id: string, overrides: Partial<Statement> = {}): Statement {
 	return {

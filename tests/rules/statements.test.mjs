@@ -1,7 +1,7 @@
 import { after, before, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { agoraProposalDoc, makeEnv, seed, statementDoc } from './helpers.mjs';
+import { agoraProposalDoc, makeEnv, seed, seedDefaultParents, statementDoc } from './helpers.mjs';
 
 /**
  * /statements is shared by every Freedi app, and Agora's proposals live in it.
@@ -15,6 +15,7 @@ describe('/statements', () => {
 
 	before(async () => {
 		env = await makeEnv('statements');
+		await seedDefaultParents(env);
 	});
 
 	after(async () => {
@@ -210,6 +211,7 @@ describe('/statements — the permissive update branch', () => {
 
 	before(async () => {
 		env = await makeEnv('statements-permissive');
+		await seedDefaultParents(env);
 	});
 
 	after(async () => {

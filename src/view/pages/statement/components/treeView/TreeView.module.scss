@@ -11,6 +11,17 @@
 		position: relative;
 		padding: var(--padding, 16px);
 		padding-bottom: var(--page-bottom-clearance);
+
+		// The reply input is position: fixed on phones, and the shell no longer
+		// reserves the nav's clearance on Discussion: keep the last cards reachable.
+		// Where the floating nav shows, the input (and its "Replying to" banner)
+		// sits above it, so the nav's clearance is added on top.
+		@media (max-width: 1023px) {
+			padding-bottom: calc(
+				var(--space-2xl) * 2 + var(--space-md) + var(--bottom-nav-clearance, 0px) +
+					env(safe-area-inset-bottom, 0px)
+			);
+		}
 		flex: 1;
 	}
 
@@ -49,7 +60,10 @@
 
 	&__input {
 		position: fixed;
-		bottom: 0;
+		// Phones with the floating nav (Answers, Questions) sit above it: the shell
+		// publishes its height + safe area as --bottom-nav-clearance, and leaves it
+		// unset where the nav is hidden (Discussion), so the input stays at the edge.
+		bottom: var(--bottom-nav-clearance, 0px);
 		left: 50%;
 		transform: translateX(-50%);
 		z-index: 10;
@@ -65,7 +79,10 @@
 
 	&__bottom-nav {
 		position: fixed;
-		bottom: 0;
+		// Phones with the floating nav (Answers, Questions) sit above it: the shell
+		// publishes its height + safe area as --bottom-nav-clearance, and leaves it
+		// unset where the nav is hidden (Discussion), so the input stays at the edge.
+		bottom: var(--bottom-nav-clearance, 0px);
 		left: 50%;
 		transform: translateX(-50%);
 		z-index: 10;

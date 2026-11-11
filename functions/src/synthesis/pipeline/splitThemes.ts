@@ -1,7 +1,13 @@
 import { createHash } from 'node:crypto';
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
-import { Collections, StatementType, type Statement, getRandomUID } from '@freedi/shared-types';
+import {
+	Collections,
+	StatementType,
+	type Statement,
+	getRandomUID,
+	inheritedAccessScope,
+} from '@freedi/shared-types';
 import { proposeThemeSplit, type ThemeSplitMember } from '../../services/integration-ai-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
@@ -255,6 +261,7 @@ async function applySplit(
 			statementType: StatementType.option,
 			parentId: parent.parentId,
 			parents: parent.parents ?? [],
+			...inheritedAccessScope(parent),
 			topParentId: parent.topParentId ?? parent.parentId,
 			creatorId: parent.creatorId,
 			creator: parent.creator,

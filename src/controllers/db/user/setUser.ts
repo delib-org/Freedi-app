@@ -2,8 +2,9 @@ import { setUserAdvanceUser, setUserSystemAdmin } from '@/redux/creator/creatorS
 import { store } from '@/redux/store';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { DB } from '../config';
-import { Creator } from '@freedi/shared-types';
+import { Creator, User } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
+import { syncUserLanguage } from './userLanguage';
 
 export async function setUserAdvanceUserToDB(advanceUser: boolean) {
 	try {
@@ -52,9 +53,11 @@ export async function setUserToDB(user: Creator) {
 		try {
 			const userDB = await getDoc(userDocRef);
 			if (userDB.exists()) {
-				const existingUser = userDB.data() as Creator;
+				const existingUser = userDB.data() as Creator & Pick<User, 'defaultLanguage'>;
 				dispatch(setUserAdvanceUser(existingUser.advanceUser || false));
 				dispatch(setUserSystemAdmin(existingUser.systemAdmin || false));
+				// An offline copy may predate a stored language, so it cannot show that none exists.
+				if (!userDB.metadata.fromCache) syncUserLanguage(user.uid, existingUser.defaultLanguage);
 			}
 		} catch (error) {
 			// Non-critical error, just log it

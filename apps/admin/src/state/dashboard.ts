@@ -7,13 +7,13 @@ import {
 	fetchUserCount,
 	fetchEvaluationCount,
 	fetchVoteCount,
+	fetchVotesPerDay,
 	toMillis,
 	bucketize,
 	DayBucket,
 	StatementsByTypePerDay,
 	SourceAppPerDay,
 	fetchAdminStats,
-	generateDayKeys,
 	generateMonthKeys,
 	generateYearKeys,
 	computeTrend,
@@ -22,6 +22,7 @@ import {
 import type { Unsubscribe } from '../lib/queries';
 import type { AdminStatDoc } from '@freedi/shared-types';
 import { Collections } from '@freedi/shared-types';
+import { logError } from '@freedi/shared-utils';
 import type { PeriodMode } from '../components/PeriodToggle';
 
 interface DashboardState {
@@ -144,6 +145,18 @@ function processStatements(docs: Record<string, unknown>[]): void {
 	state.chartsLoading = false;
 }
 
+async function loadDailyVotes(): Promise<void> {
+	try {
+		const votesPerDay = await fetchVotesPerDay(DAYS + 1);
+		// The admin may have moved to monthly while this was on its way.
+		if (state.periodMode !== 'daily') return;
+		state.votesPerDay = votesPerDay;
+		m.redraw();
+	} catch (error) {
+		logError(error, { operation: 'admin.dashboard.loadDailyVotes' });
+	}
+}
+
 function subscribeRealTime(): void {
 	// Compute the time window once per subscription cycle so each listener
 	// runs as an indexed range scan (where >= startMs) rather than tailing
@@ -183,21 +196,9 @@ function subscribeRealTime(): void {
 		),
 	);
 
-	// Real-time: votes
-	unsubs.push(
-		listenToRecent(
-			Collections.votes,
-			'createdAt',
-			MAX_CHART_DOCS,
-			(snap) => {
-				const { startMs: rangeStart, endMs } = getRange();
-				const ts = snap.docs.map((d) => toMillis(d.data().createdAt));
-				state.votesPerDay = bucketize(ts, rangeStart, endMs);
-				m.redraw();
-			},
-			startMs,
-		),
-	);
+	// Votes come from the daily counters, once per load: a vote doc says who
+	// chose what, and the rules keep those away from this dashboard.
+	void loadDailyVotes();
 
 	// Real-time: subscriptions (proxy for new users)
 	unsubs.push(

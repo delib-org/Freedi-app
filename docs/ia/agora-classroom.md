@@ -1882,7 +1882,7 @@ header → vote results (state block) → "עד כמה אתם תומכים בה�
 
 ### 21.3 Avoiding mis-taps (phone)
 1. While a card is selected but not yet voted for, the order is frozen. The new order applies after "הצבעה", or when the selection is cleared.
-2. A re-order glides with FLIP (instant under `prefers-reduced-motion`). Taps are ignored until the glide ends.
+2. A re-order glides with FLIP (instant under `prefers-reduced-motion`). A tap made during the glide is remembered by the option's id (never its position) and sent the moment the glide ends; a later tap replaces an earlier one; it is dropped if voting closes or the screen goes away first.
 3. Selection is keyed by statementId, never by position.
 4. Ties never move a card.
 

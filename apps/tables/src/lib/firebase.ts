@@ -7,6 +7,7 @@ import type { Firestore } from 'firebase/firestore';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import type { Functions } from 'firebase/functions';
 import { logError } from '@freedi/shared-utils';
+import { initializeTablesAppCheck } from '@/lib/appCheck';
 
 // Functions deploy to me-west1 (Tel Aviv): never rely on the us-central1 default.
 const FUNCTIONS_REGION = 'me-west1';
@@ -41,6 +42,10 @@ export function emulatorPort(raw: string | undefined, fallback: number): number 
 }
 
 const app: FirebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+
+// App Check goes first, before Auth, Firestore and Functions create their clients.
+initializeTablesAppCheck(app);
+
 const auth: Auth = getAuth(app);
 const db: Firestore = getFirestore(app);
 const functions: Functions = getFunctions(app, FUNCTIONS_REGION);

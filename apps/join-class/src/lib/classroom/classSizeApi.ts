@@ -1,4 +1,4 @@
-import { Collections, StatementType, type Statement } from '@freedi/shared-types';
+import { Collections, StatementType, type Statement, readScopesOfRoot } from '@freedi/shared-types';
 import {
 	db,
 	doc,
@@ -44,6 +44,7 @@ export async function questionIdsOfLesson(mainId: string): Promise<string[]> {
 		query(
 			collection(db, Collections.statements),
 			where('parentId', '==', mainId),
+			where('accessScope', 'in', readScopesOfRoot(mainId)),
 			where('statementType', '==', StatementType.question),
 		),
 	);
@@ -85,7 +86,11 @@ export async function questionsWithRatings(questionIds: readonly string[]): Prom
 	const rated: string[] = [];
 	for (const questionId of questionIds) {
 		const snap = await getDocs(
-			query(collection(db, Collections.statements), where('parentId', '==', questionId)),
+			query(
+				collection(db, Collections.statements),
+				where('parentId', '==', questionId),
+				where('statementType', '==', StatementType.option),
+			),
 		);
 		const hasRatings = snap.docs.some(
 			(d) => ((d.data() as Statement).evaluation?.numberOfEvaluators ?? 0) > 0,

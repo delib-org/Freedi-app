@@ -5,17 +5,24 @@ import { SortType, Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { fullyLoadedScopeSelector } from '@/redux/statements/statementsSlice';
 import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
+import { useRankedAnswers } from '@/view/pages/statement/hooks/useRankedAnswers';
+import { resultsNeedCompleteSet } from '@/view/pages/statement/hooks/answerRanking';
+import { LoadAllBanner } from '@/view/components/atomic/molecules/LoadAllBanner';
+import { Button } from '@/view/components/atomic/atoms/Button';
 import QuestionProcess from '@/view/components/atomic/organisms/ThinkingSpace/QuestionProcess';
-import { STAGE_COLLECTING, STAGE_DECIDED } from '../questionStage';
+import { STAGE_COLLECTING, STAGE_DECIDED } from '@/helpers/questionStage';
 import {
-	getResultsAccess,
+	hiddenResultsNoticeKey,
 	rankAnswers,
 	resultsRuleCaption,
 	selectLeadingAnswers,
 } from '../resultsLogic';
+import { getScoreAccess, questionScoreInput } from '../canSeeScore';
 import type { QuestionScreenData } from '../useQuestionScreenData';
+import GroupProgress from '../GroupProgress';
 import AnswerResult from './AnswerResult';
 import AgreementCard from './AgreementCard';
+import HowToReadResults from './HowToReadResults';
 import styles from '../QuestionScreen.module.scss';
 
 interface ResultsTabProps {
@@ -35,18 +42,17 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 	const [showAll, setShowAll] = useState(false);
 	const listId = useId();
 
-	const access = getResultsAccess({
-		isHost: data.isHost,
-		stage: data.stage,
-		ratedCount: data.ratedCount,
-		showLiveResults: data.showLiveResults,
-		isDeadlinePassed: data.isDeadlinePassed,
-	});
+	const access = getScoreAccess(questionScoreInput(data));
 	const visible = access === 'visible';
+	// A threshold or "all rated" rule can only be counted over every answer. Top N
+	// is settled by the first page of the ranking.
+	const needsCompleteSet = resultsNeedCompleteSet(statement.resultsSettings, statement);
 	const { isAutoLoading } = useAutoLoadAllForSort(
-		visible ? statement.statementId : undefined,
+		visible && needsCompleteSet ? statement.statementId : undefined,
 		SortType.accepted,
 	);
+	const ranked = useRankedAnswers(statement.statementId, visible && !needsCompleteSet);
+	const { isListed } = ranked;
 	const loadedSelector = useMemo(
 		() => fullyLoadedScopeSelector(statement.statementId),
 		[statement.statementId],
@@ -61,7 +67,9 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 				: selectLeadingAnswers(data.answers, statement.resultsSettings),
 		[data.stage, data.answers, statement.resultsSettings],
 	);
-	const ranked = useMemo(() => rankAnswers(data.answers), [data.answers]);
+	const rankedAnswers = useMemo(() => {
+		return rankAnswers(data.answers).filter(isListed);
+	}, [data.answers, isListed]);
 	const caption = resultsRuleCaption(statement.resultsSettings, decided);
 	const captionText = caption.value ? t(caption.key).replace('{n}', caption.value) : t(caption.key);
 
@@ -79,6 +87,7 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 	if (access === 'rate-first') {
 		return (
 			<div className={styles.tab} data-testid="results-tab">
+				<GroupProgress statementId={statement.statementId} data={data} />
 				<div className={styles.gate} data-testid="results-gated">
 					<h2 className={styles.gate__title}>{t('Results are hidden until you rate')}</h2>
 					<p className={styles.gate__body}>
@@ -106,9 +115,11 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 
 	return (
 		<div className={styles.tab} data-testid="results-tab">
+			<GroupProgress statementId={statement.statementId} data={data} />
+
 			{access === 'hidden-by-host' && (
 				<p className={styles.notice} role="note">
-					{t('Results are hidden. Evaluate independently.')}
+					{t(hiddenResultsNoticeKey(data.isHost))}
 				</p>
 			)}
 
@@ -139,20 +150,23 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 						data-testid="results-all-toggle"
 					>
 						<span className={styles.allToggle__title}>
-							{t('All answers ({n})').replace('{n}', String(ranked.length))}
+							{t('All answers ({n})').replace(
+								'{n}',
+								String(Math.max(statement.numberOfOptions ?? 0, rankedAnswers.length)),
+							)}
 						</span>
 						<span className={styles.allToggle__action}>{showAll ? t('Collapse') : t('Show')}</span>
 					</button>
 					<p className={styles.caption}>{intro}</p>
 					{isAutoLoading && <p role="status">{t('Loading the complete set of options…')}</p>}
-					{!fullyLoaded && !isAutoLoading && (
+					{needsCompleteSet && !fullyLoaded && !isAutoLoading && (
 						<p className={styles.caption}>
 							{t('Loaded options only; the complete ranking is not available yet.')}
 						</p>
 					)}
 					{showAll && (
 						<ol id={`${listId}-all`} className={styles.ranked}>
-							{ranked.map((answer, index) => (
+							{rankedAnswers.map((answer, index) => (
 								<AnswerResult
 									key={answer.statementId}
 									answer={answer}
@@ -162,8 +176,22 @@ const ResultsTab: FC<ResultsTabProps> = ({ statement, data }) => {
 							))}
 						</ol>
 					)}
+					{showAll && ranked.hasMore && (
+						<Button
+							text={t('Show more')}
+							variant="secondary"
+							size="small"
+							loading={ranked.isLoading}
+							onClick={ranked.loadMore}
+						/>
+					)}
+					{showAll && !needsCompleteSet && (
+						<LoadAllBanner rootId={statement.statementId} mode="direct" />
+					)}
 				</section>
 			)}
+
+			{visible && <HowToReadResults />}
 
 			<AgreementCard statement={statement} decided={decided} />
 		</div>

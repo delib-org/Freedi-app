@@ -1,4 +1,5 @@
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import { isAccessScopeOnlyWrite } from './accessScope/scopeOnlyWrite';
 import { getFirestore } from 'firebase-admin/firestore';
 import { Statement, Collections, functionConfig } from '@freedi/shared-types';
 import { EvidenceType } from '@freedi/shared-types';
@@ -10,6 +11,7 @@ import {
 	migrateCorroborationScore,
 } from './helpers/consensusValidCalculator';
 import { logError } from './utils/errorHandling';
+import { TRIGGER_MAX_INSTANCES } from './config/triggerLimits';
 
 // Extended evidence interface with new corroborationScore field
 // (until delib-npm is updated)
@@ -211,6 +213,7 @@ export const onEvidencePostCreate = onDocumentCreated(
 	{
 		document: `${Collections.statements}/{statementId}`,
 		region: functionConfig.region,
+		maxInstances: TRIGGER_MAX_INSTANCES.statementCreate,
 	},
 	async (event) => {
 		const snapshot = event.data;
@@ -289,6 +292,7 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 	{
 		document: `${Collections.statements}/{statementId}`,
 		region: functionConfig.region,
+		maxInstances: TRIGGER_MAX_INSTANCES.statementWrite,
 	},
 	async (event) => {
 		const beforeSnapshot = event.data?.before;
@@ -304,6 +308,8 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 
 		const beforeStatement = beforeSnapshot.data() as Statement | undefined;
 		const afterStatement = afterSnapshot.data() as Statement | undefined;
+
+		if (isAccessScopeOnlyWrite(beforeStatement, afterStatement)) return;
 
 		// Only process if this is an evidence statement.
 		// Guard against undefined data and the common fan-out path where this

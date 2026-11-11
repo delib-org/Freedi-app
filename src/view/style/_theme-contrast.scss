@@ -1,0 +1,134 @@
+// =============================================================================
+// In-app "High contrast" switch: tokens that point at their `*-contrast` twins
+//
+// UserConfigContext sets data-contrast="high" on <html>. This used to be done
+// with inline styles on <html>, which beat every stylesheet: the light-only
+// contrast text then landed on dark mode's dark cards. As a stylesheet it
+// sits below the WizCol brand layer (shared-styles tokens/_brand-wizcol.scss,
+// `:root[data-brand=wizcol]`), which owns the page / card / ink palette for
+// light, dark and high contrast and therefore wins where it defines a token.
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Only twins that exist are listed; the rest of the legacy map pointed at
+//    undefined variables, which made the property invalid instead of themed.
+// -----------------------------------------------------------------------------
+:root[data-contrast='high'] {
+  --gray0-1: var(--gray0-1-high-contrast);
+  --gray0-1-border: var(--gray0-1-border-high-contrast);
+  --gray0-1-text: var(--gray0-1-text-high-contrast);
+  --gray0-125: var(--gray0-125-high-contrast);
+  --gray0-125-border: var(--gray0-125-border-high-contrast);
+  --gray0-125-text: var(--gray0-125-text-high-contrast);
+  --gray0-15: var(--gray0-15-high-contrast);
+  --gray0-15-border: var(--gray0-15-border-high-contrast);
+  --gray0-15-text: var(--gray0-15-text-high-contrast);
+  --gray0-2: var(--gray0-2-high-contrast);
+  --gray0-2-border: var(--gray0-2-border-high-contrast);
+  --gray0-2-text: var(--gray0-2-text-high-contrast);
+  --agree0: var(--agree0-high-contrast);
+  --agree0-border: var(--agree0-border-high-contrast);
+  --agree0-text: var(--agree0-text-high-contrast);
+  --agree1: var(--agree1-high-contrast);
+  --agree1-border: var(--agree1-border-high-contrast);
+  --agree1-text: var(--agree1-text-high-contrast);
+  --agree2: var(--agree2-high-contrast);
+  --agree2-border: var(--agree2-border-high-contrast);
+  --agree2-text: var(--agree2-text-high-contrast);
+  --agree3: var(--agree3-high-contrast);
+  --agree3-border: var(--agree3-border-high-contrast);
+  --agree3-text: var(--agree3-text-high-contrast);
+  --range-positive-100: var(--range-positive-100-contrast);
+  --range-positive-60: var(--range-positive-60-contrast);
+  --range-positive-30: var(--range-positive-30-contrast);
+  --range-conflict-100: var(--range-conflict-100-contrast);
+  --range-conflict-60: var(--range-conflict-60-contrast);
+  --range-conflict-30: var(--range-conflict-30-contrast);
+  --range-objections-100: var(--range-objections-100-contrast);
+  --range-objections-60: var(--range-objections-60-contrast);
+  --range-objections-30: var(--range-objections-30-contrast);
+  --range-hover-conflict-100: var(--range-conflict-100-contrast);
+  --range-hover-conflict-60: var(--range-conflict-60-contrast);
+  --range-hover-conflict-30: var(--range-conflict-30-contrast);
+  --range-hover-objections-100: var(--range-objections-100-contrast);
+  --range-hover-objections-60: var(--range-objections-60-contrast);
+  --range-hover-objections-30: var(--range-objections-30-contrast);
+  --btn-primary: var(--btn-primary-contrast);
+  --btn-secondary: var(--btn-secondary-contrast);
+  --add-btn: var(--add-btn-contrast);
+  --btn-disabled: var(--btn-disabled-contrast);
+  --btn-purple-default: var(--btn-purple-default-contrast);
+  --btn-purple-hover: var(--btn-purple-hover-contrast);
+  --btn-purple-disable: var(--btn-purple-disable-contrast);
+  --btn-purple-selected: var(--btn-purple-selected-contrast);
+  --btn-accessibility-icons: var(--btn-accessibility-icons-contrast);
+  --btn-accessibility-light-contrast: var(--btn-accessibility-light-contrast-contrast);
+  --btn-accessibility-light-contrast-text: var(--btn-accessibility-light-contrast-text-contrast);
+  --btn-accessibility-light-contrast-icons: var(--btn-accessibility-light-contrast-icons-contrast);
+  --btn-accessibility-light-contrast-text-contrast: var(--btn-accessibility-light-contrast-text);
+  --emoji-happy: var(--emoji-happy-contrast);
+  --emoji-smiley: var(--emoji-smiley-contrast);
+  --emoji-neutral: var(--emoji-neutral-contrast);
+  --emoji-thinking: var(--emoji-thinking-contrast);
+  --emoji-sad: var(--emoji-sad-contrast);
+  --group: var(--group-contrast);
+  --header-question: var(--header-question-contrast);
+  --header-group: var(--header-group-contrast);
+  --header-chosen: var(--header-chosen-contrast);
+  --header-home: var(--header-home-contrast);
+  --icons-white: var(--icons-white-contrast);
+  --icons-blue: var(--icons-blue-contrast);
+  --icons-red: var(--icons-red-contrast);
+  --icons-green: var(--icons-green-contrast);
+  --icons-disabled-dark: var(--icons-disabled-dark-contrast);
+  --map-question: var(--map-question-contrast);
+  --map-question-current: var(--map-question-current-contrast);
+  --question: var(--question-contrast);
+  --member-voter: var(--member-voter-contrast);
+  --member-blocked: var(--member-blocked-contrast);
+  --text-body: var(--text-body-contrast);
+  --text-blue: var(--text-blue-contrast);
+  --text-caption: var(--text-caption-contrast);
+  --text-disabled: var(--text-disabled-contrast);
+  --voting-palette-pair-1-light: var(--voting-palette-pair-1-light-contrast);
+  --voting-palette-pair-1-dark: var(--voting-palette-pair-1-dark-contrast);
+  --voting-palette-pair-2-light: var(--voting-palette-pair-2-light-contrast);
+  --voting-palette-pair-2-dark: var(--voting-palette-pair-2-dark-contrast);
+  --voting-palette-pair-3-light: var(--voting-palette-pair-3-light-contrast);
+  --voting-palette-pair-3-dark: var(--voting-palette-pair-3-dark-contrast);
+  --voting-palette-pair-4-light: var(--voting-palette-pair-4-light-contrast);
+  --voting-palette-pair-4-dark: var(--voting-palette-pair-4-dark-contrast);
+  --voting-palette-pair-5-light: var(--voting-palette-pair-5-light-contrast);
+  --voting-palette-pair-5-dark: var(--voting-palette-pair-5-dark-contrast);
+  --voting-palette-pair-6-light: var(--voting-palette-pair-6-light-contrast);
+  --voting-palette-pair-6-dark: var(--voting-palette-pair-6-dark-contrast);
+  --voting-palette-pair-7-light: var(--voting-palette-pair-7-light-contrast);
+  --voting-palette-pair-7-dark: var(--voting-palette-pair-7-dark-contrast);
+  --voting-palette-pair-8-light: var(--voting-palette-pair-8-light-contrast);
+  --voting-palette-pair-8-dark: var(--voting-palette-pair-8-dark-contrast);
+  --voting-palette-pair-9-light: var(--voting-palette-pair-9-light-contrast);
+  --voting-palette-pair-9-dark: var(--voting-palette-pair-9-dark-contrast);
+  --voting-palette-pair-10-light: var(--voting-palette-pair-10-light-contrast);
+  --voting-palette-pair-10-dark: var(--voting-palette-pair-10-dark-contrast);
+  --voting-palette-pair-11-light: var(--voting-palette-pair-11-light-contrast);
+  --voting-palette-pair-11-dark: var(--voting-palette-pair-11-dark-contrast);
+  --voting-palette-pair-12-light: var(--voting-palette-pair-12-light-contrast);
+  --voting-palette-pair-12-dark: var(--voting-palette-pair-12-dark-contrast);
+  --voting-palette-pair-13-light: var(--voting-palette-pair-13-light-contrast);
+  --voting-palette-pair-13-dark: var(--voting-palette-pair-13-dark-contrast);
+  --voting-palette-pair-14-light: var(--voting-palette-pair-14-light-contrast);
+  --voting-palette-pair-14-dark: var(--voting-palette-pair-14-dark-contrast);
+  --voting-palette-pair-15-light: var(--voting-palette-pair-15-light-contrast);
+  --voting-palette-pair-15-dark: var(--voting-palette-pair-15-dark-contrast);
+  --voting-palette-pair-16-light: var(--voting-palette-pair-16-light-contrast);
+  --voting-palette-pair-16-dark: var(--voting-palette-pair-16-dark-contrast);
+  --voting-palette-pair-17-light: var(--voting-palette-pair-17-light-contrast);
+  --voting-palette-pair-17-dark: var(--voting-palette-pair-17-dark-contrast);
+  --voting-palette-pair-18-light: var(--voting-palette-pair-18-light-contrast);
+  --voting-palette-pair-18-dark: var(--voting-palette-pair-18-dark-contrast);
+  --voting-palette-pair-19-light: var(--voting-palette-pair-19-light-contrast);
+  --voting-palette-pair-19-dark: var(--voting-palette-pair-19-dark-contrast);
+
+  --text-meta: var(--text-caption-contrast);
+  --border-light: #6d7ea6;
+}

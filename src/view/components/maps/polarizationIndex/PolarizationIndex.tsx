@@ -434,7 +434,7 @@ const PolarizationIndexComp = () => {
 						kind: 'hex',
 						x: bin.x,
 						y: bin.y,
-						label: `${bin.points.length} ${t('solutions')}`,
+						label: `${bin.points.length} ${t('answers')}`,
 						mean: bin.avgMean,
 						mad: bin.avgMad,
 						n: bin.totalN,
@@ -656,7 +656,7 @@ const PolarizationIndexComp = () => {
 		<div className={styles.collaborationIndex}>
 			{/* Header */}
 			<div className={styles.header}>
-				<h2 className={styles.header__title}>{t('Collaboration Index')}</h2>
+				<h2 className={styles.header__title}>{t('Disagreement map')}</h2>
 				<p className={styles.header__subtitle}>{t('How people feel about each topic')}</p>
 			</div>
 

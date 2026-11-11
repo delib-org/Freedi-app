@@ -3,8 +3,8 @@ import { t } from '@/lib/i18n';
 import { Action } from '@/lib/action';
 import { tablesApi } from '@/lib/tableAssignment/client';
 import { deriveDirectTables, isTableFull } from '@/logic/directTables';
-import { canEditPreferences } from '@/logic/nextAction';
 import { StateBox } from '@/components/StateBox';
+import { StepHeader } from '@/components/StepHeader';
 import type { ParticipantContext } from '@/components/ParticipantFrame';
 import { participantHomePath, participantScreenPath } from '@/paths';
 
@@ -29,21 +29,13 @@ export const DirectPicker: m.ClosureComponent<{ context: ParticipantContext }> =
 			const { session, topics, me, seats } = attrs.context;
 			const home = participantHomePath(sessionId);
 
-			if (!me) {
-				return m(StateBox, {
-					kind: 'denied',
-					messageKey: 'tableAssignment.preferences.notRegistered',
-					backHref: home,
-					backLabel: t('tableAssignment.back.toHome'),
-				});
-			}
+			if (!me) return null;
 			if (attrs.context.topicsState === 'loading') return m(StateBox, { kind: 'loading' });
 			if (attrs.context.topicsState !== 'ready') {
 				return m(StateBox, {
 					kind: attrs.context.topicsState,
 					onRetry: attrs.context.retryTopics,
 					backHref: home,
-					backLabel: t('tableAssignment.back.toHome'),
 				});
 			}
 
@@ -54,16 +46,14 @@ export const DirectPicker: m.ClosureComponent<{ context: ParticipantContext }> =
 					kind: 'empty',
 					messageKey: 'tableAssignment.topics.notOpen',
 					backHref: home,
-					backLabel: t('tableAssignment.back.toHome'),
 				});
 			}
 
-			const editable = canEditPreferences(session.status);
-
-			return [
-				!editable
-					? m('p.notice.notice--warn', { role: 'status' }, t('tableAssignment.preferences.closed'))
-					: null,
+			return m('.screen', [
+				m(StepHeader, {
+					title: t('tableAssignment.chooseTable'),
+					backHref: participantScreenPath(sessionId, 'name'),
+				}),
 				join.errorKey ? m('p.notice.notice--error', { role: 'alert' }, t(join.errorKey)) : null,
 				seats === null ? m('p.card__hint', t('tableAssignment.direct.seatsUnknown')) : null,
 				m(
@@ -95,7 +85,7 @@ export const DirectPicker: m.ClosureComponent<{ context: ParticipantContext }> =
 											'button.btn.btn--primary',
 											{
 												type: 'button',
-												disabled: !editable || full || join.busy,
+												disabled: full || join.busy,
 												onclick: () => void sit(table.index),
 											},
 											t(
@@ -115,7 +105,7 @@ export const DirectPicker: m.ClosureComponent<{ context: ParticipantContext }> =
 							t('tableAssignment.stage.seeMyTable'),
 						)
 					: null,
-			];
+			]);
 		},
 	};
 };

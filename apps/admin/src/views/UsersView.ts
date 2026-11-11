@@ -40,10 +40,7 @@ const columns: ColumnConfig<UserDoc>[] = [
 	{
 		key: 'admin',
 		label: 'System Admin',
-		render: (u) =>
-			u.systemAdmin
-				? m(Badge, { text: 'Admin', variant: 'violet' })
-				: '-',
+		render: (u) => (u.systemAdmin ? m(Badge, { text: 'Admin', variant: 'violet' }) : '-'),
 		width: '110px',
 	},
 ];

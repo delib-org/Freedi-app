@@ -4,6 +4,7 @@ import {
 	onDocumentUpdated,
 	onDocumentDeleted,
 } from 'firebase-functions/v2/firestore';
+import { isAccessScopeOnlyWrite } from './accessScope/scopeOnlyWrite';
 import { db } from '.';
 import { logger } from 'firebase-functions';
 import { FieldValue } from 'firebase-admin/firestore';
@@ -16,15 +17,18 @@ import {
 	functionConfig,
 } from '@freedi/shared-types';
 import { HOT_TRIGGER_MEMORY } from './utils/createFirestoreFunction';
-import { generateDescriptionFromChildren } from './helpers';
+import { DESCRIPTION_PREVIEW_PARAGRAPHS, generatePreviewFromNewestParagraphs } from './helpers';
 import { classifyChildUpdate } from './userFeed/classifyChildUpdate';
 import { recordDiscussionActivity } from './userFeed/recordDiscussionActivity';
+import { recordMessageDeleted } from './unread/messageCounter';
+import { sendDecidedNoticesOnStageChange } from './engagement/notifications/decidedNotices';
 import { writeHistoryEntry } from './statements/history/writeHistoryEntry';
 import { isResearchEnabledForTopParent } from './statements/history/isResearchEnabled';
 import {
 	syncTopAnswersOnOptionDeleted,
 	syncTopAnswersOnOptionUpdated,
 } from './evaluation/topAnswerSync';
+import { TRIGGER_MAX_INSTANCES } from './config/triggerLimits';
 
 /**
  * Updates parent statement when a child statement is created
@@ -62,11 +66,17 @@ export const updateParentOnChildUpdate = onDocumentUpdated(
 		document: `${Collections.statements}/{statementId}`,
 		region: functionConfig.region,
 		memory: HOT_TRIGGER_MEMORY,
+		maxInstances: TRIGGER_MAX_INSTANCES.statementWrite,
 	},
 	async (event) => {
 		try {
 			const before = event.data?.before.data() as Statement | undefined;
 			const after = event.data?.after.data() as Statement | undefined;
+
+			if (isAccessScopeOnlyWrite(before, after)) return;
+
+			// Before the parent check: a top-level question can reach Decided too.
+			if (before && after) await sendDecidedNoticesOnStageChange(before, after);
 
 			// Skip if no data or no parent or if parent is 'top'
 			if (!before || !after || !after.parentId || after.parentId === 'top') return;
@@ -169,6 +179,30 @@ export const updateParentStatementOnChildChange = onDocumentWritten(
 	},
 );
 
+/** Bounds the reads of a preview refresh on a parent with many hidden paragraphs. */
+const MAX_PARAGRAPHS_SCANNED_FOR_PREVIEW = 50;
+
+/**
+ * Enough paragraphs for the preview. Hidden ones must not count, and Firestore
+ * cannot filter "not hidden" on a field most documents lack, so a longer read
+ * happens only in the rare case that one of the newest is hidden. Past the limit
+ * the preview may be short; the language check then treats it as not a copy.
+ */
+async function readNewestParagraphs(parentId: string): Promise<Statement[]> {
+	const newestFirst = db
+		.collection(Collections.statements)
+		.where('parentId', '==', parentId)
+		.where('statementType', '==', StatementType.paragraph)
+		.orderBy('createdAt', 'desc');
+	const newest = await newestFirst.limit(DESCRIPTION_PREVIEW_PARAGRAPHS).get();
+	const isAnyHidden = newest.docs.some((doc) => doc.data().hide === true);
+	const snapshot = isAnyHidden
+		? await newestFirst.limit(MAX_PARAGRAPHS_SCANNED_FOR_PREVIEW).get()
+		: newest;
+
+	return snapshot.docs.map((doc) => doc.data() as Statement);
+}
+
 /**
  * Updates parent statement with the latest 3 sub-statements
  */
@@ -210,21 +244,7 @@ async function updateParentWithLatestChildren(parentId: string) {
 		// strictly from paragraph child statements — never from option,
 		// question, or other child types, otherwise option text leaks into
 		// the parent's description preview.
-		const paragraphsSnap = await db
-			.collection(Collections.statements)
-			.where('parentId', '==', parentId)
-			.where('statementType', '==', StatementType.paragraph)
-			.orderBy('createdAt', 'desc')
-			.limit(3)
-			.get();
-
-		const description = generateDescriptionFromChildren(
-			paragraphsSnap.docs.map((doc) => {
-				const stmt = doc.data() as Statement;
-
-				return { statement: stmt.statement, createdAt: stmt.createdAt };
-			}),
-		);
+		const description = generatePreviewFromNewestParagraphs(await readNewestParagraphs(parentId));
 
 		// Update parent with new sub-statements, timestamp, and description
 		await parentRef.update({
@@ -285,6 +305,9 @@ export const updateParentOnChildDelete = onDocumentDeleted(
 					subStatementsCount: FieldValue.increment(-1),
 				});
 			}
+
+			// Unread counters: -1 on every ancestor (never throws)
+			await recordMessageDeleted(db, deletedStatement);
 
 			// Update parent statement with latest children
 			await updateParentWithLatestChildren(deletedStatement.parentId);

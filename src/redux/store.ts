@@ -3,6 +3,7 @@ import { evaluationsSlice } from './evaluations/evaluationsSlice';
 import { resultsSlice } from './results/resultsSlice';
 import { statementsMetaSlice } from './statements/statementsMetaSlice';
 import { statementsSlice } from './statements/statementsSlice';
+import { answerViewsSlice } from './answerViews/answerViewsSlice';
 import { votesSlice } from './vote/votesSlice';
 import { choseBySlice } from './choseBy/choseBySlice';
 import { notificationsSlice } from './notificationsSlice/notificationsSlice';
@@ -16,10 +17,12 @@ import { engagementSlice } from './engagement/engagementSlice';
 import { clusterEvaluationLinksSlice } from './clusterEvaluationLinks/clusterEvaluationLinksSlice';
 import { searchSlice } from './search/searchSlice';
 import { userFeedSlice } from './userFeed/userFeedSlice';
+import { answerNotifyPromptSlice } from './answerNotifyPrompt/answerNotifyPromptSlice';
 
 export const store = configureStore({
 	reducer: {
 		statements: statementsSlice.reducer,
+		answerViews: answerViewsSlice.reducer,
 		statementMetaData: statementsMetaSlice.reducer,
 		evaluations: evaluationsSlice.reducer,
 		votes: votesSlice.reducer,
@@ -36,6 +39,7 @@ export const store = configureStore({
 		clusterEvaluationLinks: clusterEvaluationLinksSlice.reducer,
 		search: searchSlice.reducer,
 		userFeed: userFeedSlice.reducer,
+		answerNotifyPrompt: answerNotifyPromptSlice.reducer,
 	},
 });
 

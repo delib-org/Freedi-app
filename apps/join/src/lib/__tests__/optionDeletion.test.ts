@@ -32,8 +32,11 @@ vi.mock('../admin', () => ({
 import { deleteOption, deleteAllOptions } from '../optionDeletion';
 
 /** Shape the code actually touches — `id` on the snapshot docs. */
-function snapOf(ids: string[]): { docs: { id: string }[]; size: number } {
-	return { docs: ids.map((id) => ({ id })), size: ids.length };
+function snapOf(ids: string[]): { docs: { id: string; data: () => object }[]; size: number } {
+	return {
+		docs: ids.map((id) => ({ id, data: () => ({ accessScope: 'open' }) })),
+		size: ids.length,
+	};
 }
 
 /** Minimal Statement stub — only `statementId` is read by deleteOption. */
@@ -160,7 +163,7 @@ describe('deleteAllOptions', () => {
 		expect(result.optionsDeleted).toBe(0);
 	});
 
-	it('chunks parent-id reads into `in` queries of 30', async () => {
+	it('chunks parent-id reads into `in` queries of 15', async () => {
 		const manyOptions = Array.from({ length: 65 }, (_, i) => `opt-${i}`);
 		mockGetDocs
 			.mockResolvedValueOnce(snapOf(manyOptions)) // options query
@@ -168,9 +171,9 @@ describe('deleteAllOptions', () => {
 
 		await deleteAllOptions('q1');
 
-		// 1 options read + ceil(65/30)=3 level-1 reads. Level 2 short-circuits
+		// 1 options read + ceil(65/15)=5 level-1 reads. Level 2 short-circuits
 		// because level 1 came back empty.
-		expect(mockGetDocs).toHaveBeenCalledTimes(4);
+		expect(mockGetDocs).toHaveBeenCalledTimes(6);
 	});
 
 	it('splits deletes into batches of 500', async () => {

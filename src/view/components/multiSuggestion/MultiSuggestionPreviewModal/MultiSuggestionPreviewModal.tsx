@@ -96,7 +96,7 @@ const MultiSuggestionPreviewModal: FC<MultiSuggestionPreviewModalProps> = ({
 							disabled={isSubmitting}
 						/>
 						<Button
-							text={`${t('Submit')} ${activeSuggestionsCount} ${t('Suggestions')}`}
+							text={`${t('Submit')} ${activeSuggestionsCount} ${t('Answers')}`}
 							buttonType={ButtonType.PRIMARY}
 							onClick={() => onConfirm(activeSuggestions)}
 							disabled={isSubmitting || activeSuggestionsCount === 0}

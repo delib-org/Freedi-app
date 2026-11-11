@@ -1,7 +1,7 @@
 import React, { useId, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import clsx from 'clsx';
-import { Statement, isTheme } from '@freedi/shared-types';
+import { DEFAULT_MIN_EVALUATORS, Statement, isTheme } from '@freedi/shared-types';
 import {
 	Layers,
 	ChevronDown,
@@ -15,11 +15,13 @@ import {
 } from 'lucide-react';
 import { shallowEqual } from 'react-redux';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { formatScore } from '@/helpers/scoreFormat';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import type { RootState } from '@/redux/store';
 import { useGroupMembers } from '@/controllers/hooks/useGroupMembers';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import ScoreBreakdown from './ScoreBreakdown';
+import { useAnswerScoreGate } from '@/view/pages/statement/components/questionScreen/useAnswerScoreGate';
 import CollapsibleDetails from './CollapsibleDetails';
 import { useSynthesisAdminActions } from './useSynthesisAdminActions';
 
@@ -89,6 +91,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	// Authorize against the parent deliberation: a creator/admin of the
 	// parent (or any ancestor in the trust chain) can reverse / regenerate.
 	const { isAdmin } = useAuthorization(cluster.parentId);
+	const { canSee: canSeeScores } = useAnswerScoreGate(cluster);
 
 	const integratedOptions = useMemo(
 		() => cluster.integratedOptions ?? [],
@@ -157,6 +160,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 
 	const numberOfEvaluators = evaluation?.numberOfEvaluators ?? 0;
 	const isAwaiting = numberOfEvaluators === 0;
+	const agreementScore = cluster.consensus ?? evaluation?.agreement;
 
 	const classes = clsx(
 		'grouped-suggestion',
@@ -266,7 +270,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 
 	const detailsContent = (
 		<>
-			{evaluation && (
+			{evaluation && canSeeScores && (
 				<>
 					<div
 						className={clsx(
@@ -281,25 +285,22 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 							</span>
 						) : (
 							<>
-								<span className="grouped-suggestion__meta-item">
-									<Users size={14} aria-hidden />
-									{numberOfEvaluators} {t('evaluators')}
-								</span>
+								{typeof agreementScore === 'number' &&
+									numberOfEvaluators >= DEFAULT_MIN_EVALUATORS && (
+										<span className="grouped-suggestion__meta-item">
+											{t('Agreement score')}: <span dir="ltr">{formatScore(agreementScore)}</span>
+										</span>
+									)}
 								{typeof evaluation.averageEvaluation === 'number' && (
 									<span className="grouped-suggestion__meta-item">
-										{t('Average')}: {evaluation.averageEvaluation.toFixed(2)}
+										{t('Average rating')}:{' '}
+										<span dir="ltr">{formatScore(evaluation.averageEvaluation)}</span>
 									</span>
 								)}
-								{typeof evaluation.agreement === 'number' && (
-									<span className="grouped-suggestion__meta-item">
-										{t('Agreement')}: {(evaluation.agreement * 100).toFixed(0)}%
-									</span>
-								)}
-								{typeof evaluation.confidenceIndex === 'number' && (
-									<span className="grouped-suggestion__meta-item">
-										{t('Confidence')}: {(evaluation.confidenceIndex * 100).toFixed(0)}%
-									</span>
-								)}
+								<span className="grouped-suggestion__meta-item">
+									<Users size={14} aria-hidden />
+									{t('People who rated')}: {numberOfEvaluators}
+								</span>
 							</>
 						)}
 					</div>
@@ -319,7 +320,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 				</>
 			)}
 
-			<ScoreBreakdown clusterId={cluster.statementId} />
+			{canSeeScores && <ScoreBreakdown clusterId={cluster.statementId} />}
 
 			{drawerVisible && (
 				<button

@@ -167,7 +167,7 @@ const IntegrationPreview: FC<IntegrationPreviewProps> = ({
 				<div className={styles.preview__totalContent}>
 					<div className={styles.preview__totalItem}>
 						<span className={styles.preview__totalValue}>{selectedStatements.length}</span>
-						<span className={styles.preview__totalLabel}>{t('Suggestions')}</span>
+						<span className={styles.preview__totalLabel}>{t('Answers')}</span>
 					</div>
 					<div className={styles.preview__totalDivider} />
 					<div className={styles.preview__totalItem}>

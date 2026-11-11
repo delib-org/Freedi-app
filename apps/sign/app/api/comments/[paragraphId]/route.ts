@@ -3,7 +3,7 @@ import { denyWithoutDocumentAccess, filterAccessibleItems, getParticipantIdentit
 import { getParticipantId, getParticipantDisplayName, isAnonymousParticipant } from '@/lib/auth/requestIdentity';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getAnonymousDisplayName } from '@/lib/utils/user';
-import { Collections, StatementType } from '@freedi/shared-types';
+import { Collections, StatementType, inheritedAccessScope } from '@freedi/shared-types';
 import { isUserBlocked } from '@/lib/admin/blocklist';
 import { isDocumentFrozen, FROZEN_DOCUMENT_ERROR } from '@/lib/admin/documentStatus';
 import { getDemographicName } from '@/lib/firebase/demographicQueries';
@@ -176,6 +176,7 @@ export async function POST(
     const statementId = `${userId}--${Date.now()}--${Math.random().toString(36).substring(2, 9)}`;
 
     const comment = {
+      ...inheritedAccessScope(paragraphData),
       statementId,
       statement: statement.trim(),
       statementType: StatementType.statement,

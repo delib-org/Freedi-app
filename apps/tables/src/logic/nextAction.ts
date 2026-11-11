@@ -1,72 +1,44 @@
-import type { TableAssignmentMode, TableAssignmentStatus } from '@freedi/shared-types';
+import type { TableAssignmentParticipant, TableAssignmentStatus } from '@freedi/shared-types';
 
 /**
- * The one next action the host home offers (IA: "לדעת מה הפעולה הבאה").
- * `kind: 'go'` opens a sub-screen, `kind: 'status'` calls tablesSetStatus.
+ * Whether the person sits at a table of the published run: true seated, false
+ * not seated (a latecomer), null not known yet (the run is still being read).
  */
-export type NextAction =
-	| { key: 'addTopics'; kind: 'go'; screen: 'topics' }
-	| { key: 'openRegistration'; kind: 'status'; status: 'registrationOpen' }
-	| { key: 'closeRegistration'; kind: 'status'; status: 'registrationClosed' }
-	| { key: 'preview'; kind: 'go'; screen: 'preview' }
-	| { key: 'endSession'; kind: 'status'; status: 'ended' }
-	| { key: 'viewAssignment'; kind: 'go'; screen: 'assignment' }
-	| { key: 'done'; kind: 'none' };
+export type SeatKnowledge = boolean | null;
 
-export interface NextActionInput {
-	status: TableAssignmentStatus;
-	mode: TableAssignmentMode;
-	topicCount: number;
-}
+/** Where a participant stands when they ask to change their choices. */
+export type EditAccess = 'allowed' | 'checking' | 'denied';
 
 /**
- * draft -> add topics -> open registration -> close -> preview and publish
- * (ranked) or end (direct, where seats are taken live) -> view the result.
+ * Choices can be saved while registration is open, and after publishing by
+ * someone who has no seat yet (a latecomer). A seated person's table is fixed.
  */
-export function nextHostAction({ status, mode, topicCount }: NextActionInput): NextAction {
-	switch (status) {
-		case 'draft':
-			return topicCount === 0
-				? { key: 'addTopics', kind: 'go', screen: 'topics' }
-				: { key: 'openRegistration', kind: 'status', status: 'registrationOpen' };
-		case 'registrationOpen':
-			return { key: 'closeRegistration', kind: 'status', status: 'registrationClosed' };
-		case 'registrationClosed':
-			return mode === 'ranked'
-				? { key: 'preview', kind: 'go', screen: 'preview' }
-				: { key: 'endSession', kind: 'status', status: 'ended' };
-		case 'published':
-			return { key: 'viewAssignment', kind: 'go', screen: 'assignment' };
-		case 'ended':
-		default:
-			return { key: 'done', kind: 'none' };
-	}
-}
-
-/** Topics and settings can change until registration opens; locked afterwards (topic list is frozen). */
-export function canEditTopics(status: TableAssignmentStatus): boolean {
-	return status === 'draft';
-}
-
-/** A participant may save preferences only while registration is open. */
-export function canEditPreferences(status: TableAssignmentStatus): boolean {
-	return status === 'registrationOpen';
-}
-
-/** The status controls the participants screen shows: exactly the transitions tablesSetStatus accepts. */
-export function statusControls(
+export function preferencesAccess(
 	status: TableAssignmentStatus,
-): Array<'registrationOpen' | 'registrationClosed' | 'ended'> {
-	switch (status) {
-		case 'draft':
-			return ['registrationOpen'];
-		case 'registrationOpen':
-			return ['registrationClosed'];
-		case 'registrationClosed':
-		case 'published':
-			return ['ended'];
-		case 'ended':
-		default:
-			return [];
-	}
+	seated: SeatKnowledge = null,
+): EditAccess {
+	if (status === 'registrationOpen') return 'allowed';
+	if (status !== 'published') return 'denied';
+	if (seated === null) return 'checking';
+
+	return seated ? 'denied' : 'allowed';
+}
+
+export function canEditPreferences(
+	status: TableAssignmentStatus,
+	seated: SeatKnowledge = null,
+): boolean {
+	return preferencesAccess(status, seated) === 'allowed';
+}
+
+/**
+ * Cancel while registration is open, or after publishing for someone not yet
+ * seated. A registration continued by name is refused by the server too.
+ */
+export function canCancelRegistration(
+	status: TableAssignmentStatus,
+	participant: Pick<TableAssignmentParticipant, 'claimedByName'>,
+	seated: SeatKnowledge = null,
+): boolean {
+	return canEditPreferences(status, seated) && !participant.claimedByName;
 }

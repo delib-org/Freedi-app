@@ -1,14 +1,14 @@
 import m from 'mithril';
 import { logError } from '@freedi/shared-utils';
 import { t } from '@/lib/i18n';
-import { fetchSelectedOptions } from '@/lib/tableAssignment/data';
+import { fetchChosenOptions } from '@/lib/tableAssignment/data';
 import { classifyErrorCode } from '@/logic/topicImportErrors';
 import { draftFromStatement } from '@/logic/topics';
 import type { TopicDraft } from '@/logic/topics';
 
 /**
- * Import the selected options of a question as topics: paste the question's
- * statement id; statements with parentId == id and isSelected == true become
+ * Import the chosen options of a question as topics: paste the question's
+ * statement id; statements with parentId == id and isChosen == true become
  * drafts (title, description, consensus). A read that is not permitted shows
  * the error state; nothing is thrown at the screen.
  */
@@ -35,7 +35,7 @@ export const TopicImport: m.ClosureComponent<TopicImportAttrs> = () => {
 		m.redraw();
 
 		try {
-			const statements = await fetchSelectedOptions(id);
+			const statements = await fetchChosenOptions(id);
 
 			if (statements.length === 0) {
 				result = { kind: 'empty' };
@@ -53,7 +53,7 @@ export const TopicImport: m.ClosureComponent<TopicImportAttrs> = () => {
 	return {
 		view({ attrs }) {
 			return m(
-				'form.card.form',
+				'form.setup__panel',
 				{
 					onsubmit: (event: Event) => {
 						event.preventDefault();
@@ -61,8 +61,7 @@ export const TopicImport: m.ClosureComponent<TopicImportAttrs> = () => {
 					},
 				},
 				[
-					m('h2.card__title', t('tableAssignment.import.title')),
-					m('p.card__hint', t('tableAssignment.import.hint')),
+					m('p.setup__panel-hint', t('tableAssignment.import.hint')),
 					m('label.field', [
 						m('span.field__label', t('tableAssignment.import.statementId')),
 						m('input.field__input', {
@@ -75,7 +74,7 @@ export const TopicImport: m.ClosureComponent<TopicImportAttrs> = () => {
 						}),
 					]),
 					m(
-						'button.btn.btn--secondary',
+						'button.btn.btn--outline.setup__panel-button',
 						{ type: 'submit', disabled: result.kind === 'busy' || statementId.trim() === '' },
 						t(
 							result.kind === 'busy'

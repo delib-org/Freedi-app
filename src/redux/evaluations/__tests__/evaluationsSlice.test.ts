@@ -276,3 +276,44 @@ describe('evaluationsSlice', () => {
 		});
 	});
 });
+
+describe('evaluation lookups are shared across cards', () => {
+	const rating = (statementId: string, parentId: string, evaluatorId = 'me'): Evaluation => ({
+		evaluationId: `${evaluatorId}--${statementId}`,
+		statementId,
+		parentId,
+		evaluatorId,
+		evaluation: 1,
+		updatedAt: 1,
+	});
+	const stateWith = (userEvaluations: Evaluation[]) => ({
+		evaluations: { userEvaluations },
+		creator: { creator: { uid: 'me' } },
+	});
+
+	it('returns the same array for a parent until the ratings change', () => {
+		const state = stateWith([rating('a', 'q'), rating('b', 'other')]);
+
+		const first = evaluationsParentSelector('q')(state as never);
+		const second = evaluationsParentSelector('q')(state as never);
+
+		expect(first).toBe(second);
+		expect(first.map((e) => e.statementId)).toEqual(['a']);
+	});
+
+	it('returns one stable empty list for a parent with no ratings', () => {
+		const state = stateWith([]);
+
+		expect(evaluationsParentSelector('q')(state as never)).toBe(
+			evaluationsParentSelector(undefined)(state as never),
+		);
+	});
+
+	it('finds this person’s rating by answer, not someone else’s', () => {
+		const state = stateWith([{ ...rating('a', 'q', 'other'), evaluation: -1 }, rating('a', 'q')]);
+
+		expect(evaluationSelector('a')(state as never)).toBe(1);
+		expect(evaluationSelector('a', 'other')(state as never)).toBe(-1);
+		expect(evaluationSelector(undefined)(state as never)).toBeUndefined();
+	});
+});

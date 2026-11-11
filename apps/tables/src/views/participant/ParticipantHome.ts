@@ -1,157 +1,181 @@
 import m from 'mithril';
-import { TABLE_ASSIGNMENT_FULL_NAME_MAX_LENGTH } from '@freedi/shared-types';
+import type { TableAssignment } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
-import { Action } from '@/lib/action';
-import { tablesApi } from '@/lib/tableAssignment/client';
+import { safeStorage } from '@/lib/safeStorage';
+import { forgetRegistration, loadMemory } from '@/logic/localDraft';
 import { participantStage } from '@/logic/participantStage';
+import type { ParticipantStage } from '@/logic/participantStage';
 import { ParticipantFrame } from '@/components/ParticipantFrame';
 import type { ParticipantContext } from '@/components/ParticipantFrame';
-import { participantScreenPath } from '@/paths';
+import { Redirect } from '@/components/Redirect';
+import { StateBox } from '@/components/StateBox';
+import { WaitingTableArt } from '@/components/TableArt';
+import { joinIntro, NameForm } from '@/views/participant/ParticipantName';
+import { ParticipantWaiting } from '@/views/participant/ParticipantWaiting';
+import { participantHomePath, participantScreenPath } from '@/paths';
 
-interface HomeBodyAttrs {
-	context: ParticipantContext;
+function stageOf(context: ParticipantContext): ParticipantStage {
+	const { session, me, lost } = context;
+
+	return participantStage({
+		status: session.status,
+		mode: session.mode,
+		registered: me !== null,
+		hasChosenTable: me?.chosenTableIndex !== undefined,
+		lost,
+		seated: context.seated,
+	});
 }
 
-const HomeBody: m.ClosureComponent<HomeBodyAttrs> = () => {
-	const register = new Action(
-		'tables.participant.register',
-		'tableAssignment.error.registrationClosed',
-	);
-	let fullName = '';
+function notOpen(context: ParticipantContext): m.Vnode {
+	return m('.screen', [
+		m('.screen__center.screen__center--middle', [
+			m(WaitingTableArt),
+			m('span.screen__context', { dir: 'auto' }, context.session.title),
+			m('h1.screen__title.screen__title--notice', t('tableAssignment.notOpen.title')),
+			m('p.screen__text', t('tableAssignment.notOpen.thanks')),
+			m('p.screen__text', t('tableAssignment.notOpen.keepOpen')),
+		]),
+	]);
+}
 
-	async function submit(sessionId: string): Promise<void> {
-		const name = fullName.trim();
+function plainMessage(context: ParticipantContext, messageKey: string): m.Vnode {
+	return m('.screen', [
+		m('.screen__center.screen__center--middle', [
+			m('span.screen__context', { dir: 'auto' }, context.session.title),
+			m('h1.screen__title.screen__title--notice', t(messageKey)),
+		]),
+	]);
+}
 
-		if (name === '') return;
-		await register.run(() => tablesApi.register({ sessionId, fullName: name }), { sessionId });
-	}
+interface GoneCopy {
+	titleKey: string;
+	bodyKey: string;
+}
 
-	function registerForm(sessionId: string): m.Vnode {
-		return m(
-			'form.card.form',
-			{
-				onsubmit: (event: Event) => {
-					event.preventDefault();
-					void submit(sessionId);
-				},
-			},
-			[
-				m('h2.card__title', t('tableAssignment.home.registerTitle')),
-				m('label.field', [
-					m('span.field__label', t('tableAssignment.field.fullName')),
-					m('input.field__input', {
-						type: 'text',
-						name: 'name',
-						autocomplete: 'name',
-						required: true,
-						maxlength: TABLE_ASSIGNMENT_FULL_NAME_MAX_LENGTH,
-						value: fullName,
-						'aria-describedby': 'full-name-hint',
-						oninput: (event: Event) => {
-							fullName = (event.target as HTMLInputElement).value;
-						},
-					}),
-					m(
-						'small.field__hint',
-						{ id: 'full-name-hint' },
-						t('tableAssignment.field.fullName.hint'),
-					),
-				]),
-				register.errorKey
-					? m('p.notice.notice--error', { role: 'alert' }, t(register.errorKey))
-					: null,
-				m(
-					'button.btn.btn--primary',
-					{ type: 'submit', disabled: register.busy || fullName.trim() === '' },
-					t(register.busy ? 'tableAssignment.saving' : 'tableAssignment.home.register'),
-				),
-			],
-		);
-	}
+function cancelledCopy({ status }: TableAssignment): GoneCopy {
+	return {
+		titleKey: 'tableAssignment.cancelled.title',
+		bodyKey:
+			status === 'registrationOpen' || status === 'published'
+				? 'tableAssignment.cancelled.body'
+				: 'tableAssignment.cancelled.bodyClosed',
+	};
+}
+
+/**
+ * With return by full name on, the person may have moved to another device, which
+ * this browser cannot tell from the host's removal: the words must be true of both.
+ */
+function removedCopy({ settings }: TableAssignment): GoneCopy {
+	return settings.allowReturnByName
+		? {
+				titleKey: 'tableAssignment.removed.titleMaybeMoved',
+				bodyKey: 'tableAssignment.removed.bodyMaybeMoved',
+			}
+		: { titleKey: 'tableAssignment.removed.title', bodyKey: 'tableAssignment.removed.body' };
+}
+
+/** Registering is possible while it is open, and after publishing for a latecomer. */
+function isRegistrationAccepted({ status }: TableAssignment): boolean {
+	return status === 'registrationOpen' || status === 'published';
+}
+
+function registrationGone(
+	context: ParticipantContext,
+	{ titleKey, bodyKey }: GoneCopy,
+	onRegisterAgain: () => void,
+): m.Vnode {
+	return m('.screen.screen--airy', [
+		m('.screen__center', [
+			m('span.screen__context', { dir: 'auto' }, context.session.title),
+			m('h1.screen__title.screen__title--hero', t(titleKey)),
+			m('p.screen__text', t(bodyKey)),
+		]),
+		isRegistrationAccepted(context.session)
+			? m(
+					'button.btn.btn--primary.btn--cta',
+					{ type: 'button', onclick: onRegisterAgain },
+					t('tableAssignment.cancelled.again'),
+				)
+			: null,
+	]);
+}
+
+/** The assignment link shows the one thing that fits the person's state (IA section 4). */
+const HomeBody: m.ClosureComponent<{ context: ParticipantContext }> = () => {
+	let registering = false;
 
 	return {
 		view({ attrs }) {
-			const { session, me, topics } = attrs.context;
+			const { context } = attrs;
+			const { session, uid } = context;
 			const id = session.tableAssignmentId;
-			const stage = participantStage({
-				status: session.status,
-				mode: session.mode,
-				registered: me !== null,
-				hasChosenTable: me?.chosenTableIndex !== undefined,
-			});
-			const savedPrefs = !!me && me.preferences.length > 0;
+			const registerAgain = (): void => forgetRegistration(id, uid, safeStorage);
 
-			return [
-				me
-					? m('p.card__hint', t('tableAssignment.home.registeredAs', { name: me.fullName }))
-					: null,
-				stage === 'notOpen'
-					? m('p.notice', { role: 'status' }, t('tableAssignment.stage.notOpen'))
-					: null,
-				stage === 'closedNotRegistered'
-					? m('p.notice', { role: 'status' }, t('tableAssignment.stage.closedNotRegistered'))
-					: null,
-				stage === 'ended'
-					? m('p.notice', { role: 'status' }, t('tableAssignment.stage.ended'))
-					: null,
-				stage === 'register' ? registerForm(id) : null,
-				stage === 'act'
-					? m('section.card', [
-							m('h2.card__title', t(`tableAssignment.stage.act.${session.mode}`)),
-							m('p.card__hint', t(`tableAssignment.stage.act.${session.mode}.hint`)),
-							session.mode === 'ranked'
-								? m(
-										'p.badge',
-										t(
-											savedPrefs
-												? 'tableAssignment.stage.prefsSaved'
-												: 'tableAssignment.stage.prefsMissing',
-										),
-									)
-								: null,
-							m(
-								m.route.Link,
-								{ href: participantScreenPath(id, 'preferences'), class: 'btn btn--primary' },
-								t(`tableAssignment.stage.act.${session.mode}.button`),
-							),
-						])
-					: null,
-				stage === 'waiting'
-					? m('section.card', [
-							m('h2.card__title', t('tableAssignment.stage.waiting')),
-							m('p.card__hint', t('tableAssignment.stage.waiting.hint')),
-						])
-					: null,
-				stage === 'myTable'
-					? m('section.card', [
-							m('h2.card__title', t('tableAssignment.myTable')),
-							m(
-								m.route.Link,
-								{ href: participantScreenPath(id, 'my-table'), class: 'btn btn--primary' },
-								t('tableAssignment.stage.seeMyTable'),
-							),
-						])
-					: null,
-				topics.length > 0 && stage !== 'notOpen'
-					? m(
-							m.route.Link,
-							{ href: participantScreenPath(id, 'topics'), class: 'btn btn--ghost' },
-							t('tableAssignment.stage.readTopics'),
-						)
-					: null,
-			];
+			// Move on only once the record is here, so step 2 does not find it missing.
+			if (registering && context.me) {
+				return m(Redirect, { to: participantScreenPath(id, 'preferences'), push: true });
+			}
+
+			switch (stageOf(context)) {
+				case 'notOpen':
+					return notOpen(context);
+				case 'name':
+					return m(
+						NameForm,
+						{
+							context,
+							initialName: loadMemory(id, uid, safeStorage).lastName,
+							onPending: (pending: boolean) => {
+								registering = pending;
+							},
+						},
+						joinIntro(context),
+					);
+				case 'checkingSeat':
+					return m(StateBox, { kind: 'loading' });
+				case 'waiting':
+				case 'waitingClosed':
+				case 'waitingForSeat':
+					return m(ParticipantWaiting, { context });
+				case 'cancelled':
+					return registrationGone(context, cancelledCopy(session), registerAgain);
+				case 'removed':
+					return registrationGone(context, removedCopy(session), registerAgain);
+				case 'myTable':
+					return m(Redirect, { to: participantScreenPath(id, 'my-table') });
+				case 'closedNotRegistered':
+					return plainMessage(context, 'tableAssignment.stage.closedNotRegistered');
+				case 'ended':
+				default:
+					return plainMessage(context, 'tableAssignment.stage.ended');
+			}
 		},
 	};
 };
 
-/** `/sessions/:id`: Participant home. */
+function homeBarLabel(context: ParticipantContext): string | undefined {
+	return context.me && stageOf(context).startsWith('waiting') ? context.session.title : undefined;
+}
+
+/** `/sessions/:id`: the assignment link. */
 export const ParticipantHome: m.Component<{ id: string }> = {
 	view({ attrs }) {
 		return m(ParticipantFrame, {
 			sessionId: attrs.id,
-			titleKey: 'tableAssignment.screen.participantHome',
-			isHome: true,
+			topics: true,
+			counter: true,
+			barLabel: homeBarLabel,
+			largeLogo: (context: ParticipantContext) => stageOf(context) === 'name',
 			render: (context: ParticipantContext) => m(HomeBody, { context }),
 		});
+	},
+};
+
+/** The old topic-list links go to the assignment link (IA section 5). */
+export const LegacyTopicsRedirect: m.Component<{ id: string }> = {
+	view({ attrs }) {
+		return m(Redirect, { to: participantHomePath(attrs.id) });
 	},
 };

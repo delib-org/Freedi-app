@@ -7,9 +7,7 @@ export interface SpinnerAttrs {
 export const Spinner: m.Component<SpinnerAttrs> = {
 	view(vnode) {
 		const inline = vnode.attrs.inline;
-		return m(
-			`.spinner${inline ? '.spinner--inline' : ''}`,
-			m('.spinner__circle')
-		);
+
+		return m(`.spinner${inline ? '.spinner--inline' : ''}`, m('.spinner__circle'));
 	},
 };

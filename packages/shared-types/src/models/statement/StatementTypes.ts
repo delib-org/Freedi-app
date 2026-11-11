@@ -24,6 +24,7 @@ import {
 } from '../TypeEnums';
 import { AgoraMessageKind, AgoraSuggestionStatus } from '../agora/agoraEnums';
 import { AgoraModerationSchema } from '../agora/agoraModeration';
+import { AnswerModerationSchema } from './answerModeration';
 import { Role } from '../user/UserSettings';
 import { CreatorSchema, MembershipSchema, StepSchema, UserSchema } from '../user/User';
 import { ResultsSettingsSchema } from '../results/ResultsSettings';
@@ -171,6 +172,7 @@ export const StatementSchema = object({
 		}),
 	), // I think it is relevant to Freedi-sign
 	numberOfOptions: optional(number()), // the number of options of the statement
+	descendantMessageCount: optional(number()), // chat messages + answers anywhere below this statement (server-maintained; unread = this minus the subscription's seenMessageCount)
 	consensus: pipe(
 		nullable(number()),
 		transform((v) => v ?? 0),
@@ -189,7 +191,6 @@ export const StatementSchema = object({
 	votes: optional(number()), // the number of votes for the statement
 	topVotedOption: optional(SimpleStatementSchema), // the top voted option of the statement
 	selections: optional(any()), // the top-options of the statement
-	isSelected: optional(boolean()), // if true, the statement is selected
 	isCluster: optional(boolean()),
 	integratedOptions: optional(array(string())), // source statement IDs merged into this cluster-option (many-to-many)
 	/**
@@ -260,6 +261,7 @@ export const StatementSchema = object({
 	voted: optional(number()), // the number of votes for the statement
 	totalSubStatements: optional(number()), // the total number of sub statements of the statement
 	membership: optional(MembershipSchema), // the membership of the statement
+	accessScope: optional(string()), // 'open', or the id of the statement whose access setting governs this one; see accessScope.ts
 	maxConsensus: optional(number()), // the maximum consensus of the statement
 	selected: optional(boolean()), // if true, the statement is selected
 	isVoted: optional(boolean()), // if true - this is the top voted option of the statement
@@ -420,6 +422,8 @@ export const StatementSchema = object({
 	// shared `hide` flag it mirrors. See agoraModeration.ts for why no reason
 	// and no removed text ever sit here.
 	agoraModeration: optional(AgoraModerationSchema),
+	// Set only by the automatic language check on new answers; see answerModeration.ts.
+	answerModeration: optional(AnswerModerationSchema),
 	questionnaire: optional(QuestionnaireSchema), // if a statement is a questionnaire, it will have this field
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division
 	anchored: optional(boolean()), // if true, the statement is anchored to be represented in the evaluation.

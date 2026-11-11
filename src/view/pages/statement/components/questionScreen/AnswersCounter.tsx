@@ -1,28 +1,36 @@
 import { FC } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { getRateHint } from './resultsLogic';
 import type { QuestionScreenData } from './useQuestionScreenData';
 import styles from './QuestionScreen.module.scss';
 
 interface AnswersCounterProps {
 	data: QuestionScreenData;
+	/** On the Rate view, how many answers this person still has to rate. */
+	moreToRate?: number;
 }
 
-/** "{hint} · {rated}/{total}" above the answers list. */
-const AnswersCounter: FC<AnswersCounterProps> = ({ data }) => {
+/**
+ * "{rated}/{total}" above the answers list. The cue under the stage bar says what to do.
+ * Under the voting UI people vote instead of rating, so a ratings count would stay at 0.
+ */
+const AnswersCounter: FC<AnswersCounterProps> = ({ data, moreToRate }) => {
 	const { t } = useTranslation();
-	const hint = getRateHint({
-		canRate: data.canRate,
-		stage: data.stage,
-		rated: data.ratedCount,
-		total: data.rateableCount,
-	});
-	const hintText = hint.value ? t(hint.key).replace('{n}', hint.value) : t(hint.key);
+
+	if (moreToRate !== undefined) {
+		return (
+			<div className={styles.counter} data-testid="answers-counter">
+				{moreToRate > 0 && (
+					<span className={styles.counter__count}>
+						{t('{n} more to rate').replace('{n}', String(moreToRate))}
+					</span>
+				)}
+			</div>
+		);
+	}
 
 	return (
 		<div className={styles.counter} data-testid="answers-counter">
-			<span className={styles.counter__hint}>{hintText}</span>
-			{data.rateableCount > 0 && (
+			{!data.usesVotingUI && data.answersComplete && data.rateableCount > 0 && (
 				<span
 					className={styles.counter__count}
 					aria-label={t('{rated} of {total} rated')

@@ -671,7 +671,14 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				inQuestion && current.statementId ? (answersByQuestion[current.statementId] ?? []) : [];
 
 			const inVoting = current.stage === AgoraStage.voting;
-			if (inVoting && userId) listenToVoting(sessionId, session.challengeQuestionId, userId);
+			if (inVoting && userId) {
+				listenToVoting(
+					sessionId,
+					session.challengeQuestionId,
+					userId,
+					session.teacherId === userId,
+				);
+			}
 			const { voterUids } = getVotingState();
 			const challengePhase = getGame(session)?.phase;
 			const challengeLive =

@@ -10,6 +10,7 @@ import {
   getRandomUID,
   SourceApp,
   statementToSimpleStatement,
+  OPEN_ACCESS_SCOPE,
 } from '@freedi/shared-types';
 import { getFirestoreAdmin, initializeFirebaseAdmin } from '@/lib/firebase/admin';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
@@ -200,6 +201,7 @@ export async function POST(request: NextRequest) {
     const groupWithMembership = {
       ...groupStatement,
       membership: { access: Access.openToAll },
+      accessScope: OPEN_ACCESS_SCOPE,
     };
 
     // Create admin subscription

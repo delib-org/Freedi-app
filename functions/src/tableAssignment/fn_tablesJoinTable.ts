@@ -9,24 +9,19 @@ import type {
 } from '@freedi/shared-types';
 import { db } from '../db';
 import { buildDirectLayout } from './directLayout';
+import { rosterEntryFrom } from './roster';
 import {
 	actorFrom,
 	participantRef,
 	readSession,
 	requireId,
+	rosterRef,
 	seatRef,
 	sortTopics,
 	topicsQuery,
 } from './tablesAccess';
+import type { SeatDoc } from './tablesAccess';
 import { TablesError, toHttpsError } from './tablesErrors';
-
-interface SeatDoc {
-	sessionId: string;
-	tableIndex: number;
-	topicId: string;
-	/** Seats taken. Only ever changed inside a transaction that also read it. */
-	count: number;
-}
 
 /**
  * `tablesJoinTable` (the participant themself, direct mode): take a seat at
@@ -50,7 +45,8 @@ export async function joinTable(
 	if (typeof tableIndex !== 'number' || !Number.isInteger(tableIndex) || tableIndex < 0) {
 		throw new TablesError('invalid-argument', 'tableIndex must be a whole number');
 	}
-	const pRef = participantRef(firestore, tableAssignmentParticipantId(sessionId, uid));
+	const id = tableAssignmentParticipantId(sessionId, uid);
+	const pRef = participantRef(firestore, id);
 
 	return firestore.runTransaction(async (tx) => {
 		const session = await readSession(tx, firestore, sessionId);
@@ -104,7 +100,9 @@ export async function joinTable(
 				count: Math.max(0, old.count - 1),
 			});
 		}
-		tx.set(pRef, { ...participant, chosenTableIndex: tableIndex });
+		const seated: TableAssignmentParticipant = { ...participant, chosenTableIndex: tableIndex };
+		tx.set(pRef, seated);
+		tx.set(rosterRef(firestore, id), rosterEntryFrom(seated));
 
 		return { tableIndex, topicId: target.topicId };
 	});

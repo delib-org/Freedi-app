@@ -288,6 +288,12 @@ const AddStatementSheet: FC<AddStatementSheetProps> = ({
 						/>
 					)}
 
+					{state.rejection && (
+						<div className={styles.error} role="alert">
+							<p>{state.rejection}</p>
+						</div>
+					)}
+
 					{state.step === 'error' && (
 						<div className={styles.error} role="alert">
 							<p>{t(state.error ?? 'question.sheet.errorGeneric')}</p>

@@ -128,6 +128,33 @@ describe('nudgeQuestionSubscribersForAdmin', () => {
 		expect(typeof fake.read(Collections.questionProgress, Q)?.lastNudgeAt).toBe('number');
 	});
 
+	it('leaves out waiting people and anyone banned higher up the tree', async () => {
+		const GROUP = 'group-1';
+		fake.seed(Collections.statements, Q, {
+			statementId: Q,
+			statement: 'What should we do?',
+			statementType: StatementType.question,
+			parentId: GROUP,
+			parents: ['top', GROUP],
+			topParentId: GROUP,
+			creatorId: ADMIN,
+		});
+		seedSub('member');
+		seedSub('waiting', { role: Role.waiting });
+		seedSub('banned-above');
+		fake.seed(Collections.statementsSubscribe, `banned-above--${GROUP}`, {
+			role: Role.banned,
+			userId: 'banned-above',
+			statementId: GROUP,
+		});
+
+		const result = await nudgeQuestionSubscribersForAdmin(ADMIN, 'Admin', request() as never);
+
+		expect(result.sent).toBe(1);
+		const notifications = [...(fake.store.get(Collections.inAppNotifications)?.values() ?? [])];
+		expect(notifications.map((n) => n.userId)).toEqual(['member']);
+	});
+
 	it('filters the notSuggested audience by participation markers', async () => {
 		seedSub('u1');
 		seedSub('u2');

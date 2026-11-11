@@ -9,11 +9,14 @@ interface Props {
 	statement: Statement;
 	image: string;
 	setImage: React.Dispatch<React.SetStateAction<string>>;
-	displayMode: 'above' | 'inline';
+	displayMode: 'above' | 'inline' | 'thumb';
 	onRemove: () => void;
 	isAdmin: boolean;
 	fileInputRef?: React.RefObject<HTMLInputElement>;
 }
+
+// How the admin's upload zone sizes the picture in each mode.
+const UPLOAD_VARIANTS = { above: 'compact', inline: 'inline', thumb: 'cover' } as const;
 
 const StatementImage: FC<Props> = ({
 	statement,
@@ -27,12 +30,7 @@ const StatementImage: FC<Props> = ({
 	const { t, dir } = useTranslation();
 	const [isEnlarged, setIsEnlarged] = useState(false);
 
-	// Determine variant and container class based on display mode
-	const variant = displayMode === 'inline' ? 'inline' : 'compact';
-	const containerClass =
-		displayMode === 'inline'
-			? `${styles.imageContainer} ${styles.inline}`
-			: `${styles.imageContainer} ${styles.above}`;
+	const containerClass = `${styles.imageContainer} ${styles[displayMode]}`;
 
 	// Float direction for inline mode
 	const floatStyle =
@@ -50,7 +48,7 @@ const StatementImage: FC<Props> = ({
 					image={image}
 					setImage={setImage}
 					isAdmin={isAdmin}
-					variant={variant}
+					variant={UPLOAD_VARIANTS[displayMode]}
 				/>
 			) : (
 				<>

@@ -50,7 +50,6 @@ export interface ExportableStatementData {
 	votes?: number;
 	topVotedOption?: AnonymizedSimpleStatement;
 	selections?: unknown;
-	isSelected?: boolean;
 	voted?: number;
 	isVoted?: boolean;
 	results?: AnonymizedSimpleStatement[];
@@ -228,7 +227,6 @@ export function extractExportableData(statement: Statement): ExportableStatement
 		// Anonymize topVotedOption - remove creator info
 		topVotedOption: anonymizeSimpleStatement(statement.topVotedOption),
 		selections: statement.selections,
-		isSelected: statement.isSelected,
 		voted: statement.voted,
 		isVoted: statement.isVoted,
 		// Anonymize results - remove creator info from each
@@ -330,10 +328,6 @@ export const PROPERTY_DOCUMENTATION: PropertyDocumentation = {
 	selections: {
 		type: 'object',
 		description: 'Top options selected through voting/evaluation process',
-	},
-	isSelected: {
-		type: 'boolean',
-		description: 'Whether this statement has been selected as a choice',
 	},
 	voted: {
 		type: 'number',

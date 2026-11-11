@@ -1,52 +1,92 @@
 import m from 'mithril';
-import { TABLES_BASE_URL, tablesSessionUrl } from '@freedi/table-assignment-client';
+import type { TableAssignmentRosterEntry } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
-import { Action } from '@/lib/action';
-import { tablesApi } from '@/lib/tableAssignment/client';
-import { statusControls } from '@/logic/nextAction';
-import { participantNames, summarizeParticipants } from '@/logic/participants';
+import { LiveValue } from '@/lib/live';
+import { subscribeRuns } from '@/lib/tableAssignment/data';
+import { publishedRunOf, unseatedSincePublished } from '@/logic/latecomers';
+import { rosterMatching, summarizeParticipants } from '@/logic/participants';
 import { HostFrame } from '@/components/HostFrame';
 import type { HostContext } from '@/components/HostFrame';
-import { ShareLink } from '@/components/ShareLink';
 import { StateBox } from '@/components/StateBox';
-import { StatusChip } from '@/components/StatusChip';
-
-type ControlStatus = 'registrationOpen' | 'registrationClosed' | 'ended';
+import { RemoveParticipantDialog } from '@/views/host/RemoveParticipantDialog';
 
 interface ParticipantsBodyAttrs {
 	context: HostContext;
 }
 
-const ParticipantsBody: m.ClosureComponent<ParticipantsBodyAttrs> = () => {
-	const statusAction = new Action('tables.host.setStatus', 'tableAssignment.error.statusRefused');
+const ParticipantsBody: m.ClosureComponent<ParticipantsBodyAttrs> = (initial) => {
+	const runs = new LiveValue(
+		'runs',
+		subscribeRuns(initial.attrs.context.session.tableAssignmentId),
+	);
 	let search = '';
+	let removing: TableAssignmentRosterEntry | null = null;
 
-	async function change(sessionId: string, status: ControlStatus): Promise<void> {
-		await statusAction.run(() => tablesApi.setStatus({ sessionId, status }), { sessionId, status });
+	function row(
+		person: TableAssignmentRosterEntry,
+		canRemove: boolean,
+		unseated: ReadonlySet<string>,
+	): m.Vnode {
+		return m('li.roster__item', { key: person.uid }, [
+			m('span.roster__name', { dir: 'auto' }, person.fullName),
+			unseated.has(person.uid)
+				? m('span.pill.pill--warning.roster__tag', t('tableAssignment.participants.unseated'))
+				: null,
+			person.claimedByName
+				? m('span.pill.pill--neutral.roster__tag', t('tableAssignment.participants.claimedByName'))
+				: null,
+			canRemove
+				? m(
+						'button.btn.btn--text',
+						{
+							type: 'button',
+							'aria-label': t('tableAssignment.remove.ariaLabel', { name: person.fullName }),
+							onclick: () => {
+								removing = person;
+							},
+						},
+						t('tableAssignment.remove'),
+					)
+				: null,
+		]);
 	}
 
 	return {
+		oninit() {
+			runs.start();
+		},
+		onremove() {
+			runs.stop();
+		},
 		view({ attrs }) {
 			const { session, participants } = attrs.context;
 			const summary = summarizeParticipants(participants);
-			const names = participantNames(participants).filter((name) =>
-				name.toLowerCase().includes(search.trim().toLowerCase()),
+			// People who registered after publishing and have no seat yet (the host seats them by computing again).
+			const unseated = unseatedSincePublished(
+				session.status === 'published'
+					? publishedRunOf(runs.data ?? [], session.publishedRunId)
+					: undefined,
+				participants,
 			);
-			const controls = statusControls(session.status);
-			const id = session.tableAssignmentId;
+			const unseatedUids = new Set(unseated.map((person) => person.uid));
+			const canRemove = session.status !== 'ended';
+
+			if (participants.length === 0) {
+				return m(StateBox, { kind: 'empty', messageKey: 'tableAssignment.participants.empty' });
+			}
 
 			return [
 				m('section.card', [
-					m('.card__row', [m(StatusChip, { status: session.status })]),
 					m(
 						'dl.counts',
-						[
-							['registered', summary.registered],
-							['withPreferences', summary.withPreferences],
-							['withPosition', summary.withPosition],
-							['notSpecified', summary.notSpecified],
-						].map(([key, value]) =>
-							m('div.counts__item', { key: String(key) }, [
+						(
+							[
+								['registered', summary.registered],
+								['withPreferences', summary.withPreferences],
+								...(unseated.length > 0 ? ([['unseated', unseated.length]] as const) : []),
+							] as const
+						).map(([key, value]) =>
+							m('div.counts__item', { key }, [
 								m('dt', t(`tableAssignment.count.${key}`)),
 								m('dd', String(value)),
 							]),
@@ -54,69 +94,45 @@ const ParticipantsBody: m.ClosureComponent<ParticipantsBodyAttrs> = () => {
 					),
 					m('p.card__hint', t('tableAssignment.participants.privacy')),
 				]),
-				controls.length > 0
-					? m('section.card', [
-							m('h2.card__title', t('tableAssignment.participants.controls')),
-							m(
-								'.form__actions',
-								controls.map((status) =>
-									m(
-										'button.btn',
-										{
-											key: status,
-											type: 'button',
-											class: status === 'ended' ? 'btn--danger' : 'btn--primary',
-											disabled: statusAction.busy,
-											onclick: () => void change(id, status),
-										},
-										t(`tableAssignment.control.${status}`),
-									),
-								),
-							),
-							statusAction.errorKey
-								? m('p.notice.notice--error', { role: 'alert' }, t(statusAction.errorKey))
-								: null,
-						])
+				m('section.card', [
+					m('label.field', [
+						m('span.field__label', t('tableAssignment.participants.search')),
+						m('input.field__input', {
+							type: 'search',
+							value: search,
+							oninput: (event: Event) => {
+								search = (event.target as HTMLInputElement).value;
+							},
+						}),
+					]),
+					m(
+						'ul.roster',
+						rosterMatching(participants, search).map((person) =>
+							row(person, canRemove, unseatedUids),
+						),
+					),
+				]),
+				removing
+					? m(RemoveParticipantDialog, {
+							person: removing,
+							onClose: () => {
+								removing = null;
+							},
+						})
 					: null,
-				m('section.card', [
-					m('h2.card__title', t('tableAssignment.home.participantLink')),
-					m(ShareLink, { url: tablesSessionUrl(TABLES_BASE_URL, id) }),
-				]),
-				m('section.card', [
-					m('h2.card__title', t('tableAssignment.participants')),
-					participants.length === 0
-						? m(StateBox, { kind: 'empty', messageKey: 'tableAssignment.participants.empty' })
-						: [
-								m('label.field', [
-									m('span.field__label', t('tableAssignment.participants.search')),
-									m('input.field__input', {
-										type: 'search',
-										value: search,
-										oninput: (event: Event) => {
-											search = (event.target as HTMLInputElement).value;
-										},
-									}),
-								]),
-								m(
-									'ul.names',
-									names.map((name, index) =>
-										m('li.names__item', { key: `${index}-${name}` }, name),
-									),
-								),
-							],
-				]),
 			];
 		},
 	};
 };
 
-/** `/host/sessions/:id/participants`: Registered participants. */
+/** `/host/sessions/:id/participants`: names, search, and taking someone off the list. */
 export const HostParticipants: m.Component<{ id: string }> = {
 	view({ attrs }) {
 		return m(HostFrame, {
 			sessionId: attrs.id,
 			titleKey: 'tableAssignment.screen.participants',
 			participants: true,
+			deletable: true,
 			render: (context: HostContext) => m(ParticipantsBody, { context }),
 		});
 	},

@@ -14,7 +14,6 @@ import {
 	NotificationType,
 	QuestionParticipation,
 	QuestionProgress,
-	Role,
 	SourceApp,
 	Statement,
 	StatementSubscription,
@@ -26,6 +25,7 @@ import { assertStatementAdmin } from './progress/assertStatementAdmin';
 import { getEmailTransporter } from './utils/emailTransporter';
 import { createStatementUpdateEmail } from './email-templates';
 import { logError } from './utils/errorHandling';
+import { EXCLUDED_SUBSCRIBER_ROLES, loadBlockedAbove } from './notifications/subscriberDelivery';
 
 export type NudgeAudience = 'all' | 'notSuggested' | 'notEvaluated';
 export type NudgeChannel = 'inApp' | 'email';
@@ -51,7 +51,6 @@ const WRITE_BATCH_SIZE = 400;
 const EMAIL_CAP = 500;
 const AUDIENCES: readonly NudgeAudience[] = ['all', 'notSuggested', 'notEvaluated'];
 const CHANNELS: readonly NudgeChannel[] = ['inApp', 'email'];
-const EXCLUDED_ROLES: readonly Role[] = [Role.banned, Role.unsubscribed, Role.waiting];
 
 function validateRequest(data: Partial<NudgeRequest> | undefined): NudgeRequest {
 	const statementId = data?.statementId;
@@ -90,9 +89,11 @@ async function assertNotRateLimited(statementId: string, now: number): Promise<v
 }
 
 async function loadSubscribers(
-	statementId: string,
+	statement: Statement,
 	callerUid: string,
 ): Promise<StatementSubscription[]> {
+	const { statementId } = statement;
+	const blockedAbove = await loadBlockedAbove(db, statement);
 	const byUser = new Map<string, StatementSubscription>();
 	let cursor: QueryDocumentSnapshot | null = null;
 	for (;;) {
@@ -108,7 +109,7 @@ async function loadSubscribers(
 			const sub = doc.data() as StatementSubscription;
 			const uid = sub.user?.uid ?? sub.userId;
 			if (!uid || uid === callerUid) return;
-			if (EXCLUDED_ROLES.includes(sub.role)) return;
+			if (EXCLUDED_SUBSCRIBER_ROLES.includes(sub.role) || blockedAbove.has(sub.userId)) return;
 			byUser.set(uid, sub);
 		});
 		if (page.size < PAGE_SIZE) break;
@@ -260,7 +261,7 @@ export async function sendQuestionNudge(input: SendQuestionNudgeInput): Promise<
 		await assertNotRateLimited(statementId, now);
 	}
 
-	const subscribers = await loadSubscribers(statementId, callerUid);
+	const subscribers = await loadSubscribers(statement, callerUid);
 	const targets = await filterByAudience(statementId, subscribers, audience);
 
 	let inApp = 0;

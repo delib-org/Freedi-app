@@ -39,6 +39,8 @@ import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
 import { generateParagraphId } from '@/utils/paragraphUtils';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 import { QuestionAnswersTabContext } from '../../questionScreen/useQuestionScreenData';
+import { useQuestionScoreAccess } from '../../questionScreen/useAnswerScoreGate';
+import { isScoreOrderedSort } from '../../questionScreen/canSeeScore';
 
 interface Props {
 	showNav?: boolean;
@@ -102,11 +104,11 @@ const StatementBottomNav: FC<Props> = () => {
 	const statementColor = useStatementColor({ statement });
 
 	// Filter out sort options based on settings
-	const showEvaluation = statement?.statementSettings?.showEvaluation ?? true;
+	const { canSee: canSortByScore } = useQuestionScoreAccess(statement);
 	const joiningEnabled = statement?.statementSettings?.joiningEnabled ?? false;
 	const filteredSortItems = sortItems.filter((item) => {
-		// Filter out Agreement if evaluation is disabled
-		if (item.id === SortType.accepted && !showEvaluation) return false;
+		// A score order shows the ranking, so it follows the score guard
+		if (isScoreOrderedSort(item.id) && !canSortByScore) return false;
 		// When joining is enabled, show Joined instead of Update
 		if (item.id === SortType.mostJoined && !joiningEnabled) return false;
 		if (item.id === SortType.mostUpdated && joiningEnabled) return false;

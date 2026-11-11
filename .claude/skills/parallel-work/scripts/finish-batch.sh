@@ -13,8 +13,8 @@
 
 set -uo pipefail
 
-ROOT="/Users/talyaron/Documents/Freedi-app"
-TARGET="dev"
+ROOT="${PW_ROOT:-$(cd "$(git rev-parse --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd -P || echo /Users/talyaron/Documents/Freedi-app)}"
+TARGET="${PW_BASE:-dev}"
 TODAY="$(date +%Y-%m-%d)"
 
 [[ $# -ge 1 ]] || { echo "usage: finish-batch.sh <branch> [<branch> ...]" >&2; exit 1; }

@@ -96,7 +96,7 @@ const MapControlCard: FC<MapControlCardProps> = ({ statement, settings }) => {
 				: t('Originals only');
 
 	const filterMetricLabel = (m: MapFilterMetric): string =>
-		m === 'none' ? t('None') : m === 'consensus' ? t('Consensus') : t('Average rating');
+		m === 'none' ? t('None') : m === 'consensus' ? t('Agreement score') : t('Average rating');
 
 	return (
 		<div className={styles.sliderSection}>

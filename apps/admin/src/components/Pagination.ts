@@ -20,8 +20,8 @@ export const Pagination: m.Component<PaginationAttrs> = {
 					onclick: onLoadMore,
 					disabled: loading,
 				},
-				loading ? 'Loading...' : 'Load More'
-			)
+				loading ? 'Loading...' : 'Load More',
+			),
 		);
 	},
 };
