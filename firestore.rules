@@ -11,48 +11,6 @@ service cloud.firestore {
       return path.split('/').join('_');
     }
 
-    // PRIVATE LEVELS, shared by /statements and the collections tied to a
-    // statement (ratings, votes). `accessScope` is 'open' or the id of the private
-    // level governing a statement; see the /statements list rule.
-    function subRoleAt(id) {
-      let path = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(id)));
-      return exists(path) ? get(path).data.get('role', '') : '';
-    }
-    function statementPathOf(id) {
-      return /databases/$(database)/documents/statements/$(cleanPath(string(id)));
-    }
-    // Writing inside a private level G: a role at G, or a host role at the top;
-    // no ban or pending request at either. Cheaper than mayReadScope, so a write
-    // stays inside the read limit; a host of a level between G and the top who
-    // holds no role at G writes by naming no such change.
-    function rolesForWriting(scope, level) {
-      let top = level.get('topParentId', 'top');
-      return [subRoleAt(scope), (top == 'top' || top == scope) ? '' : subRoleAt(top)];
-    }
-    function mayWorkInRestrictedScope(scope) {
-      let level = get(statementPathOf(scope)).data;
-      return level.get('accessScope', '') == 'open' ||
-             (request.auth != null && mayWorkWithRoles(rolesForWriting(scope, level)));
-    }
-    function mayWorkWithRoles(roles) {
-      return !('banned' in roles) && !('waiting' in roles) &&
-             (roles[0] in ['member', 'admin', 'statement-creator'] ||
-              roles[1] in ['admin', 'statement-creator']);
-    }
-    function mayWorkInScope(scope) {
-      return scope == 'open' || (scope != 'quarantined' && mayWorkInRestrictedScope(scope));
-    }
-    // A write tied to a statement (a rating of it, a vote under it) needs a way
-    // into the private level governing it, as writing a statement there does. A
-    // statement with no stamp yet counts as open, and so does one that does not
-    // exist (a rating of nothing exposes nothing).
-    function mayActOnStatement(id) {
-      let path = statementPathOf(id);
-      return !exists(path) ||
-             mayWorkInScope(get(path).data.get('accessScope', 'open')) ||
-             isSystemAdminUser();
-    }
-
     // join-class: the students of a lesson write nothing while the teacher has
     // it paused or ended (statementSettings.lessonPlan.status; absent = live).
     // One get() of the main statement. Used ONLY behind a join-class-specific
@@ -1061,11 +1019,10 @@ service cloud.firestore {
                (get(topSubPath).data.role == 'admin' || get(topSubPath).data.role == 'statement-creator');
       }
 
-      // Check if user is a system-wide admin (usersV2 document). One read, not
-      // exists() and get(): a write may make ten, and each counts. A missing
-      // document is an error, which an `||` treats as false; never negate this.
+      // Check if user is a system-wide admin (usersV2 document)
       function isSystemAdmin() {
-        return get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.get('systemAdmin', false) == true;
+        return exists(/databases/$(database)/documents/usersV2/$(request.auth.uid)) &&
+               get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true;
       }
 
       // Join-app delegate check. A user listed in `joinDelegates/{qid--uid}`
@@ -1463,291 +1420,13 @@ service cloud.firestore {
       // join-class HOMES (IA docs/ia/join-class-lesson-plan.md 9.3): a class or
       // teacher home (statementSettings.classHome) is a teachers-only container.
       // `get` of a home needs an admin subscription on it; every other statement
-      // keeps today's open get.
+      // keeps today's open get. `list` stays open until the staged auth gate
+      // above ships (a home's title is a class name, not student content).
       allow get: if resource == null ||
                     !isClassHomeData(resource.data) ||
                     isAdmin() ||
                     isSystemAdmin();
-
-      // LIST. A list rule cannot look at the results, only at what the query
-      // filters on, and it cannot read the value of `parents array-contains X`.
-      // So every statement carries `accessScope` ('open', or the id of the
-      // statement whose access setting governs it) and a list must name it.
-      //
-      // A field the query does not filter on is an error, which fails that branch
-      // of the `||` and leaves the next to decide. Read the gated field directly. `resource.data.get('x', default)` returns
-      // the default when the query does not filter on x, and passes an open scan.
-      //
-      // Budget, against a limit of ten: at most 1 read of the parent, 1 of the
-      // governing level, 6 subscriptions and 1 of usersV2. That is why a query
-      // may name only one restricted scope.
-      function roleFromEnd(ids, position) {
-        return ids.size() > position ? subRoleAt(ids[ids.size() - 1 - position]) : '';
-      }
-      // The caller's role at a level, its four nearest ancestors, and the top.
-      function rolesAround(id, level) {
-        let ids = level.get('parents', []).removeAll(['top', id]);
-        let top = level.get('topParentId', 'top');
-        return [subRoleAt(id),
-                roleFromEnd(ids, 0), roleFromEnd(ids, 1), roleFromEnd(ids, 2), roleFromEnd(ids, 3),
-                (top == 'top' || top == id) ? '' : subRoleAt(top)];
-      }
-      function hasHostRole(roles) {
-        return roles.hasAny(['admin', 'statement-creator']);
-      }
-      // Into a private level G: a role at G itself, or a host role at G or above.
-      // Banned or waiting anywhere on that chain shuts the door. Who created a
-      // level gives nothing; only roles count, so a statement someone made inside
-      // G, or a role on a level below G, opens nothing.
-      function mayEnterLevel(id, level) {
-        let roles = rolesAround(id, level);
-        return !('banned' in roles) &&
-               !('waiting' in roles) &&
-               (roles[0] in ['member', 'admin', 'statement-creator'] || hasHostRole(roles));
-      }
-      // A level that turns out to be open passes, so a client can name a root
-      // without reading it first. Nothing is stamped with an open level's id.
-      // A missing level is an error here (one read, not exists() and get()), which
-      // the `||` around every use treats as false.
-      function mayReadRestrictedScope(scope) {
-        let level = get(statementPathOf(scope)).data;
-        return level.get('accessScope', '') == 'open' ||
-               (request.auth != null && mayEnterLevel(scope, level));
-      }
-      // 'quarantined' is the stamp of a statement on a loop of parents: it has no
-      // real place, so no one reads it through a scope (system admins excepted).
-      function mayReadScope(scope) {
-        return scope == 'open' || (scope != 'quarantined' && mayReadRestrictedScope(scope));
-      }
-      // Children that cannot be a private level of their own: answers, chat,
-      // paragraphs. These keep their old query shape, judged by the parent.
-      function asksForLeafChildren() {
-        return resource.data.statementType in ['option', 'synthesis', 'statement', 'comment', 'paragraph', 'suggestion', 'evidence'];
-      }
-      function asksForOfficialParagraphs() {
-        return resource.data.doc.isOfficialParagraph == true;
-      }
-      function asksForClusters() {
-        return resource.data.isCluster == true;
-      }
-      function mayReadChildrenOf(parentId) {
-        return exists(statementPathOf(parentId)) &&
-               mayReadScope(get(statementPathOf(parentId)).data.accessScope);
-      }
-      // A host of a level, or of anything above it, with no ban or pending request.
-      function isHostAround(id, level) {
-        let roles = rolesAround(id, level);
-        return !('banned' in roles) && !('waiting' in roles) && hasHostRole(roles);
-      }
-      // Who may list a level's children with no scope named. Under an open level,
-      // or a private level itself: a host of it or above. Under a private level
-      // above it: only a host of that private level or above (a host of the level
-      // itself, who is in the private level too, names the scope instead).
-      function mayHostLevel(id, level) {
-        let scope = level.get('accessScope', 'open');
-        return scope != 'quarantined' &&
-               ((scope == 'open' || scope == id)
-                 ? isHostAround(id, level)
-                 : (exists(statementPathOf(scope)) &&
-                    !(subRoleAt(id) in ['banned', 'waiting']) &&
-                    isHostAround(scope, get(statementPathOf(scope)).data)));
-      }
-
-      // WRITING INSIDE A PRIVATE LEVEL. Every check below runs against the limit
-      // of 1000 expressions per request, next to the rules that decide who may
-      // edit at all; one role read costs about 30 of them. So the parent is read
-      // once and handed down, and the cheap answers come first: an open scope, a
-      // role at the private level or a host role at the top, a host role on one
-      // of the four levels just above it (rule A), and last a system admin.
-      function mayCreateInScope(scope) {
-        return scope == 'open' ||
-               (scope != 'quarantined' && createInRestrictedScope(scope)) ||
-               isSystemAdmin();
-      }
-      function createInRestrictedScope(scope) {
-        return createInLevel(scope, get(statementPathOf(scope)).data);
-      }
-      // The two roles mayWorkWithRoles reads first, then the four nearest
-      // ancestors (rule A: a host role at or above it) without reading the first
-      // two again, and last a system admin. In this order a host four levels up
-      // and a system admin both stay within the ten reads of one write.
-      function createInLevel(scope, level) {
-        let near = rolesForWriting(scope, level);
-        return level.get('accessScope', '') == 'open' ||
-               mayWorkWithRoles(near) ||
-               (!('banned' in near) && !('waiting' in near) && isHostJustAbove(scope, level)) ||
-               isSystemAdmin();
-      }
-      function isHostJustAbove(scope, level) {
-        let ids = level.get('parents', []).removeAll(['top', scope]);
-        let roles = [roleFromEnd(ids, 0), roleFromEnd(ids, 1), roleFromEnd(ids, 2), roleFromEnd(ids, 3)];
-        return !('banned' in roles) && !('waiting' in roles) && hasHostRole(roles);
-      }
-
-      // A move uses the cheaper check: a role at the private level, or a host of
-      // the top. A host of a level between the two moves nothing in.
-      function mayMoveUnder(parentId) {
-        let path = statementPathOf(parentId);
-        return parentId == 'top' ||
-               (exists(path) && mayWorkInScope(get(path).data.get('accessScope', 'open')));
-      }
-
-      // The tree fields must follow the parent, or a statement could claim a place
-      // it does not have (an open statement listed among a private level's) and
-      // members would answer into it. Checked against the parent as it will be
-      // after this write, so a branch moved in one batch stays consistent.
-      // `parents` may be shorter than the full chain (many writers keep only the
-      // top and the parent), but every id in it must be a real ancestor.
-      // No ternary on a value read through getAfter(): the emulator, at least,
-      // fails the whole request instead of evaluating it.
-      function topIdMatches(data, parentData, parentId) {
-        let topId = data.get('topParentId', '');
-        let parentIsTop = parentData.get('parentId', 'top') == 'top';
-        return (parentIsTop && topId == parentId) ||
-               (!parentIsTop && topId == parentData.get('topParentId', parentId));
-      }
-      // A statement is never its own parent, nor its parent's parent: it is judged
-      // by its parent, and on a loop it would be judged by itself (and by whatever
-      // place it claims). A longer loop, made by moving existing statements, is
-      // caught by the stamping trigger, which quarantines it.
-      function followsParent(data, parentId, parentAfter) {
-        return parentId != statementId &&
-               parentAfter.get('parentId', 'top') != statementId &&
-               topIdMatches(data, parentAfter, parentId) &&
-               data.get('parents', []).hasOnly(
-                 parentAfter.get('parents', []).concat([parentId, parentAfter.get('topParentId', parentId), 'top']));
-      }
-      function topFieldsMatch(data) {
-        return data.get('parents', []).hasOnly(['top']) &&
-               data.get('topParentId', 'top') in [statementId, 'top'];
-      }
-
-      // A scope a client sends must be the true one. Absent is accepted: an old
-      // cached client does not know the field, and the create trigger stamps it.
-      function ownScopeOk(data, own) {
-        return own in ['public', 'open', 'openToAll', 'openForRegistered']
-          ? data.accessScope == 'open'
-          : data.accessScope == statementId;
-      }
-      function createScopeOk(data, parent) {
-        let own = data.get('membership', {}).get('access', null);
-        return !('accessScope' in data) ||
-               (own != null && ownScopeOk(data, own)) ||
-               (own == null &&
-                (parent == null
-                  ? data.accessScope == 'open'
-                  : (isClassHomeData(parent) ||
-                     data.accessScope == parent.get('accessScope', data.accessScope))));
-      }
-
-      // Everything a create decides from its parent, with the parent read once.
-      // A parent made in this same batch (a message and its paragraphs, a seeded
-      // game) passes on its own create, but must hang, within two levels, from the
-      // top or from something that existed before; so new statements alone cannot
-      // close a loop (Odyssey seeds a root, its islands and their stances at once).
-      function createPlaceOk(parentId) {
-        let data = request.resource.data;
-        let path = statementPathOf(parentId);
-        return parentId == 'top'
-          ? (topFieldsMatch(data) && createScopeOk(data, null))
-          : (exists(path)
-              ? createUnderParent(data, parentId, get(path).data)
-              : createUnderNewParent(data, parentId, path));
-      }
-      // The parent as it is before this write: a loop through it is caught on the
-      // parent's own update (its new parent may not be its child).
-      function createUnderParent(data, parentId, parent) {
-        return createScopeOk(data, parent) &&
-               mayCreateInScope(parent.get('accessScope', 'open')) &&
-               followsParent(data, parentId, parent);
-      }
-      function isRootedBefore(id) {
-        return id == 'top' || exists(statementPathOf(id));
-      }
-      function createUnderNewParent(data, parentId, path) {
-        return existsAfter(path) &&
-               newParentOk(data, parentId, getAfter(path).data);
-      }
-      function newParentOk(data, parentId, parentAfter) {
-        let grandId = parentAfter.get('parentId', 'top');
-        return followsParent(data, parentId, parentAfter) &&
-               (isRootedBefore(grandId) ||
-                (grandId != statementId &&
-                 existsAfter(statementPathOf(grandId)) &&
-                 isRootedBefore(getAfter(statementPathOf(grandId)).data.get('parentId', 'top'))));
-      }
-
-      // An update's access and place. With no change to either, nothing to check.
-      // A move that keeps its access setting and lands under a parent in the same
-      // scope stays where it was readable, so it needs no more than the right to
-      // edit. Any other change to access or place, inside a private level, needs
-      // a way into it (else an outsider could open members' content or move it
-      // out), and a move into another scope a way into that one too.
-      function updatePlaceOk() {
-        let changed = request.resource.data.diff(resource.data).affectedKeys();
-        let scope = resource.data.get('accessScope', 'open');
-        let next = request.resource.data.get('parentId', 'top');
-        return !changed.hasAny(['membership', 'parentId', 'parents', 'topParentId']) ||
-               (placeChangeOk(changed, scope, next) && updateTreeFieldsOk(changed, next));
-      }
-      function placeChangeOk(changed, scope, next) {
-        let movesParent = changed.hasAny(['parentId']);
-        return (!changed.hasAny(['membership']) &&
-                scope != 'quarantined' &&
-                (!movesParent || staysInScope(next, scope))) ||
-               (mayWorkInScope(scope) &&
-                (!movesParent || next == 'top' || mayMoveUnder(next)));
-      }
-      function staysInScope(next, scope) {
-        let path = statementPathOf(next);
-        return next != 'top' && exists(path) && get(path).data.get('accessScope', 'open') == scope;
-      }
-      function updateTreeFieldsOk(changed, parentId) {
-        let parentPath = statementPathOf(parentId);
-        return !changed.hasAny(['parentId', 'parents', 'topParentId']) ||
-               (parentId == 'top' && topFieldsMatch(request.resource.data)) ||
-               (parentId != 'top' &&
-                existsAfter(parentPath) &&
-                followsParent(request.resource.data, parentId, getAfter(parentPath).data));
-      }
-      function isHostOfLevel(id) {
-        return request.auth != null &&
-               exists(statementPathOf(id)) &&
-               mayHostLevel(id, get(statementPathOf(id)).data);
-      }
-
-      // By id: the same exposure as `get`. Range scans on the id do not pass.
-      function asksById() {
-        return statementId.size() > 0 || resource.data.statementId.size() > 0;
-      }
-      // One's own statements.
-      function asksForOwn() {
-        return request.auth != null && resource.data.creatorId == request.auth.uid;
-      }
-      // Leaf children of one parent, judged by the parent.
-      function asksForReadableLeaves() {
-        return (asksForLeafChildren() || asksForOfficialParagraphs() || asksForClusters()) &&
-               mayReadChildrenOf(resource.data.parentId);
-      }
-
-      // No-read shapes first. A host reads every child of what it hosts, and a
-      // whole tree it tops. Studio's console lists by organization.
-      allow list: if asksById() ||
-                     asksForOwn() ||
-                     ('accessScope' in resource.data && resource.data.accessScope == 'open') ||
-                     // Before the costly branches: a system admin's deep list would
-                     // otherwise run them all, and hit the expression limit.
-                     isSystemAdmin() ||
-                     ('accessScope' in resource.data && mayReadScope(resource.data.accessScope)) ||
-                     asksForReadableLeaves() ||
-                     ('parentId' in resource.data && isHostOfLevel(resource.data.parentId)) ||
-                     ('topParentId' in resource.data && isHostOfLevel(resource.data.topParentId)) ||
-                     ('organizationId' in resource.data && isOrgMember(resource.data.organizationId));
-
-      // Written only by the server, which recomputes it when access changes.
-      function changesAccessScope() {
-        return request.resource.data.get('accessScope', null) != resource.data.get('accessScope', null);
-      }
+      allow list: if true;
 
       // You may only create a statement as yourself. isCreator() cannot be
       // reused here: it reads `resource`, which is null at create time.
@@ -1755,7 +1434,6 @@ service cloud.firestore {
       // (statementSettingsCont.ts:152, promoteOptionToSubQuestion.ts:66) are
       // updates, not creates, so they are unaffected by this pin.
       allow create: if request.auth.uid != null &&
-                       statementId != 'quarantined' &&
                        !request.resource.data.keys().hasAny(['agreementBallot', 'agreementMeta', 'deliberationEnabled']) &&
                        !setsCreatorRoleOnCreate() &&
                        !setsOrganizationIdOnCreate() &&
@@ -1763,7 +1441,6 @@ service cloud.firestore {
                        !createsClassProposal() &&
                        !request.resource.data.keys().hasAny(['answerModeration']) &&
                        !createsClassHomeOrLesson() &&
-                       createPlaceOk(request.resource.data.get('parentId', 'top')) &&
                        classEnteredByOf(request.resource.data) == null &&
                        request.resource.data.creatorId == request.auth.uid &&
                        // A student the teacher removed writes nothing more
@@ -1780,8 +1457,6 @@ service cloud.firestore {
                        !changesCreatorRole() &&
                        !changesCreatorIdWithoutBeingCreator() &&
                        !changesOrganizationId() &&
-                       !changesAccessScope() &&
-                       updatePlaceOk() &&
                        !isClassReply() &&
                        !changesClassReplyFields() &&
                        !rewordsClassProposal() &&
@@ -1800,12 +1475,7 @@ service cloud.firestore {
       // The session teacher inherits an admin subscription on every proposal
       // (setupAdminsForStatement), which used to make isAuthorized() a hard
       // delete with no tombstone and no audit.
-      // Inside a private level, deleting needs a way into it as well: someone who
-      // has left could otherwise delete their question and make it again, open,
-      // over the members' answers still filed under it.
-      allow delete: if request.auth.uid != null && !isAgoraStatement() && !isClassReply() && !isClassHomeData(resource.data) && !resource.data.keys().hasAny(['agreementBallot']) &&
-                       (mayWorkInScope(resource.data.get('accessScope', 'open')) || isSystemAdmin()) &&
-                       isAuthorized();
+      allow delete: if request.auth.uid != null && !isAgoraStatement() && !isClassReply() && !isClassHomeData(resource.data) && !resource.data.keys().hasAny(['agreementBallot']) && isAuthorized();
 
       // Civil Activity Hub — join form submissions subcollection.
       // Scoped to the owning question document. Each user owns their own
@@ -1922,10 +1592,9 @@ service cloud.firestore {
                        (resource == null || resource.data.get('userId', '') == request.auth.uid);
     }
 
-    // Written only by the server (counts per statement); a client could forge them.
     match /statementsMeta/{statementId=**} {
       allow read: if request.auth.uid != null;
-      allow write: if false;
+      allow write: if request.auth.uid != null;
     }
 
     // Deletion tombstones — written only by Cloud Functions (admin SDK).
@@ -1935,42 +1604,24 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Legacy: no client reads or writes these any more (the survey export reads
-    // them through the Admin SDK). Closed, so nobody lists another group's
-    // marks on statements or forges them.
     match /importance/{importanceId=**} {
-      allow read, write: if false;
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
     }
 
-    // One doc per person and question, `{uid}--{statementId}`
-    // (useRecordQuestionView). Only the person's own.
-    match /statementViews/{statementViewId} {
-      function isOwnView() {
-        return request.auth != null && statementViewId.matches('^' + request.auth.uid + '--.+');
-      }
-      // useRecordQuestionView: { statementId, userId, viewed: increment(1), ... }.
-      // The count only ever grows by one.
-      function viewWriteOk() {
-        let d = request.resource.data;
-        let before = resource == null ? 0 : resource.data.get('viewed', 0);
-        return d.get('userId', '') == request.auth.uid &&
-               statementViewId == request.auth.uid + '--' + d.get('statementId', '') &&
-               d.get('viewed', 0) is int &&
-               d.viewed >= 1 &&
-               d.viewed <= before + 1;
-      }
-      allow read, delete: if isOwnView();
-      allow create, update: if isOwnView() && viewWriteOk();
+    match /statementViews/{statementId=**} {
+      allow write: if request.auth.uid != null;
+      allow read: if request.auth.uid != null;
     }
 
     match /statementSegments/{segementId=**} {
-      allow read, write: if false;
+      allow write: if request.auth.uid != null;
+      allow read: if request.auth.uid != null;
     }
 
-    // Sign's approvals: written and read by its server (Admin SDK) only.
     match /approval/{approvalId=**} {
       allow read: if request.auth.uid != null;
-      allow write: if false;
+      allow write: if request.auth.uid != null;
     }
     
     match /documentsSigns/{documentsSignId=**} {
@@ -1986,7 +1637,8 @@ service cloud.firestore {
     }
     
     match /agrees/{agreeId=**} {
-      allow read, write: if false;
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
     }
     
     // Numeric PIN invitations (main app, InvitePanel). A PIN resolves to a
@@ -2054,20 +1706,12 @@ service cloud.firestore {
                data.statementSettings.get('classHome', null) != null;
       }
 
-      // The access that judges a subscription: that of the level `accessScope`
-      // names, so a child of a private level is never judged by an open top.
-      // Without a named level: the statement's own; else, when the
+      // The access that judges a subscription: the statement's own; else, when the
       // top parent is a join-class HOME (secret, teachers only), the access of the
       // lesson, parents[1]; else the top parent's (IA join-class-lesson-plan 9.3).
       // At most three gets: the statement, its top parent, the lesson.
       function getAccess() {
         let statement = statementDataOf(getStatementId());
-        let scope = statement == null ? '' : statement.get('accessScope', '');
-        return (scope != '' && scope != 'open' && scope != getStatementId())
-          ? accessOf(statementDataOf(scope))
-          : getUnscopedAccess(statement);
-      }
-      function getUnscopedAccess(statement) {
         let own = accessOf(statement);
         let topId = statement == null ? null : statement.get('topParentId', null);
         let top = (own != null || topId == null) ? null : statementDataOf(topId);
@@ -2105,36 +1749,20 @@ service cloud.firestore {
         return !isHomeSubscription() || (isSubscriber() && isRoleUnchanged());
       }
 
-      // A child with no setting of its own follows the level governing it.
-      // Someone already in that level may follow a question inside it (the bell,
-      // an auto-subscribe). The governing level is the stamped one, else the top.
-      function isMemberUnderOwnTop() {
-        let statement = statementDataOf(getStatementId());
-        let scope = statement == null ? '' : statement.get('accessScope', '');
-        let topId = statement == null ? null : statement.get('topParentId', null);
-        let governingId = (scope != '' && scope != 'open') ? scope : topId;
-        let governingSub = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(governingId)));
-        return isMemberRole() &&
-               accessOf(statement) == null &&
-               governingId != null &&
-               exists(governingSub) &&
-               get(governingSub).data.role in ['member', 'admin', 'statement-creator'];
+      function isOpenToAll() {
+        return getAccess() == "openToAll";
       }
-
-      // The access is read once per request and passed in: getAccess() costs up to
-      // three reads and many expressions, and calling it once per setting hit the
-      // 1000-expression limit on a moderated level that names itself.
-      function isOpenSetting(access) {
-        return access in ['public', 'openToAll', 'openForRegistered'];
+      
+      function isOpenForRegistered() {
+        return getAccess() == "openForRegistered";
       }
-      function maySelfJoin(access) {
-        return isOpenSetting(access) ||
-               isMemberUnderOwnTop() ||
-               (access == 'moderated' && isWaitingRole());
+      
+      function isModerated() {
+        return getAccess() == "moderated";
       }
-      function maySelfChangeRole(access) {
-        return (access == 'moderated' && isWaitingRole()) ||
-               (isOpenSetting(access) && isMemberRole());
+      
+      function isPublic() {
+        return getAccess() == "public";
       }
       
       function isWaitingRole() {
@@ -2242,10 +1870,9 @@ service cloud.firestore {
                (userUidOf(after) == userUidOf(before) || userUidOf(after) == afterUser);
       }
 
-      // PUSH TOKENS ARE LEAVING THIS COLLECTION. A subscription is read by more
-      // people than its owner (those in the statement, hosts) and rules cannot
-      // hide one field, so a device's token now lives in the owner-only
-      // pushNotifications collection. The tokens field
+      // PUSH TOKENS ARE LEAVING THIS COLLECTION. Any signed-in user can read a
+      // subscription and rules cannot hide one field, so a device's token now
+      // lives in the owner-only pushNotifications collection. The tokens field
       // here may only shrink: new app versions never write it, and old cached
       // ones are refused when they try to add to it (those updates are
       // best-effort, and the device is already registered in pushNotifications).
@@ -2284,44 +1911,7 @@ service cloud.firestore {
         return request.resource.data.role in ['member', 'waiting', 'unsubscribed'];
       }
 
-      // READING SUBSCRIPTIONS. A subscription carries a copy of its statement, so
-      // it is read by the person it belongs to, by those already in the statement
-      // (a member, a host: people screens, the join-class roster and table-mates),
-      // by a host of its top, and by system admins. Not by anyone else signed in.
-      // A list must filter `userId == <own uid>` or `statementId == X`.
-      function ownsSubscription() {
-        return resource.data.get('userId', statementSubId.split('--')[0]) == request.auth.uid;
-      }
-      function isInStatement(sid) {
-        let role = subRoleAt(sid);
-        return role in ['member', 'admin', 'statement-creator'];
-      }
-      // A host of the statement's top, or of the private level governing it, so
-      // a host of a group sees the people of a question under it on which they
-      // hold no subscription of their own.
-      function hostsAbove(sid) {
-        let path = statementPathOf(sid);
-        let level = exists(path) ? get(path).data : {};
-        let top = level.get('topParentId', 'top');
-        let scope = level.get('accessScope', 'open');
-        return (top != 'top' && top != sid && subRoleAt(top) in ['admin', 'statement-creator']) ||
-               (scope != 'open' && scope != 'quarantined' && scope != sid &&
-                subRoleAt(scope) in ['admin', 'statement-creator']);
-      }
-      function maySeeSubscriptionsOf(sid) {
-        return isInStatement(sid) || hostsAbove(sid) || isSystemAdminUser();
-      }
-      // No `resource == null` pass: whether a get finds a document is itself an
-      // answer (is this person in that group, waiting, banned?). Only one's own
-      // id may be asked for before it exists.
-      allow get: if request.auth.uid != null &&
-                    (statementSubId.split('--')[0] == request.auth.uid ||
-                     ownsSubscription() ||
-                     maySeeSubscriptionsOf(resource.data.get('statementId', '')));
-      allow list: if request.auth.uid != null &&
-                     (resource.data.userId == request.auth.uid ||
-                      maySeeSubscriptionsOf(resource.data.statementId) ||
-                      isSystemAdminUser());
+      allow read: if request.auth.uid != null;
 
       // For create
       // A user may only create their OWN subscription (userId == uid). Elevated
@@ -2340,7 +1930,10 @@ service cloud.firestore {
                      (isAdminOrCreator() ||
                       (isSelfGrantableRole() &&
                        classCreateOk() &&
-                       maySelfJoin(getAccess())));
+                       (isPublic() ||
+                        isOpenToAll() ||
+                        isOpenForRegistered() ||
+                        (isModerated() && isWaitingRole()))));
 
       // For update
       // The subscriber branch is already an allow-list: a person may keep their
@@ -2355,7 +1948,9 @@ service cloud.firestore {
                       (isSubscriber() &&
                         classUpdateOk() &&
                         (isRoleUnchanged() ||
-                          (!isBanned() && maySelfChangeRole(getAccess()))
+                          (!isBanned() &&
+                            ((isModerated() && isWaitingRole()) ||
+                             ((isPublic() || isOpenToAll() || isOpenForRegistered()) && isMemberRole())))
                         )
                       ));
       
@@ -2392,7 +1987,8 @@ service cloud.firestore {
     }
     
     match /statementsSignatures/{signatureId=**} {
-      allow read, write: if false;
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
     }
 
     match /massConsensusMembers/{userId=**} {
@@ -2407,7 +2003,8 @@ service cloud.firestore {
     }
 
     match /statementRoomsAsked/{requestId=**} {
-      allow read, write: if false;
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
     }
 
     // No client writes this. A write fires updateResultsSettings.
@@ -2474,16 +2071,13 @@ service cloud.firestore {
     //
     // Everything below judges only the incoming document: a vote stays a direct
     // client write with no added lookup, because every get() here is paid on
-    // every vote. The lookups: the rated statement and, inside a private level,
-    // the caller's way into it (mayActOnStatement); notRemovedAgoraRater only for
-    // a rating that names an Agora session. An open option can be rated by
-    // anyone, anonymous included; one inside a private level only by those in it.
+    // every vote. The one lookup is notRemovedAgoraRater, and only for a rating
+    // that names an Agora session. Nothing here looks at the option, so anyone,
+    // anonymous included, can evaluate an option somebody else wrote.
     match /evaluations/{evaluationDocId} {
       // Cross-user reads stay open: Odyssey's opinion map reads the whole
       // game's evaluations, and Agora derives its "who rated when" timeline
-      // the same way. So ratings inside a private level, and who gave them,
-      // are readable by anyone signed in: a known gap, deferred (see
-      // docs/security/access-scope-release.md).
+      // the same way.
       allow read: if request.auth != null;
 
       function hasEvaluationShape() {
@@ -2517,11 +2111,7 @@ service cloud.firestore {
                !agoraRemovedFrom(request.resource.data.agoraSessionId);
       }
 
-      // Rating an answer inside a private level needs a way into that level, the
-      // same as writing there: an outsider, someone waiting or banned, or an
-      // anonymous visitor cannot rate members' answers.
-      allow create: if hasEvaluationShape() && isOwnEvaluation() && notRemovedAgoraRater() &&
-                       mayActOnStatement(request.resource.data.statementId);
+      allow create: if hasEvaluationShape() && isOwnEvaluation() && notRemovedAgoraRater();
 
       // On update both sides must be the caller: the existing document to stop
       // one student overwriting another's rating, and the incoming one to stop
@@ -2529,7 +2119,6 @@ service cloud.firestore {
       // parentId are pinned so a rating cannot be moved onto a different
       // proposal after the fact.
       allow update: if hasEvaluationShape() && isOwnEvaluation() && notRemovedAgoraRater()
-                    && mayActOnStatement(request.resource.data.statementId)
                     && resource.data.evaluatorId == request.auth.uid
                     && request.resource.data.statementId == resource.data.statementId
                     && request.resource.data.parentId == resource.data.parentId
@@ -2621,9 +2210,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /approval/{approvalId=**} {
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
+    }
 
     match /statementEvaluators/{statementEvaluatorsId=**} {
-      allow read, write: if false;
+      allow read: if request.auth.uid != null;
+      allow write: if request.auth.uid != null;
     }
 
     // One vote per user per question, and the doc id says whose it is:
@@ -2715,9 +2309,7 @@ service cloud.firestore {
       allow list: if request.auth != null &&
                      (resource.data.userId == request.auth.uid ||
                       mayReadQuestionBallots(resource.data.parentId));
-      // A vote on a question inside a private level needs a way into that level.
       allow create, update: if request.auth.uid != null &&
-                               mayActOnStatement(request.resource.data.parentId) &&
                                agreementBallotOpen(request.resource.data.parentId, request.resource.data.statementId) &&
                                notRemovedAgoraVoter(request.resource.data.parentId) &&
                                classBallotOpen(request.resource.data.parentId, request.resource.data.statementId) &&

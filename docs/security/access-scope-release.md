@@ -8,6 +8,60 @@ it, and shipping them late leaves private content readable.
 Production is `wizcol-app` (not the `.firebaserc` alias `prod`). Rehearse every
 step on `freedi-test` first.
 
+## Two stages (approved 2026-11-11)
+
+**Stage 1 is on dev; the rules are not.** `release/private-reads-stage1`
+merged this branch into dev with everything except the database rules: steps
+1-5 below (indexes, functions, backfill, clients). `firestore.rules` on dev is
+still dev's old file, and the rules tests that need the new rules moved to
+`tests/rules/next-rules/*.next.mjs`, which `npm run test:rules` does not run.
+
+Why: for the 2-3 days between the stages, other sessions keep deploying
+functions and apps from dev. Dev must carry the stamping triggers (or new
+statements go unstamped) and must not carry the new rules (or an early rules
+deploy breaks every client that has not reloaded yet).
+
+**Do not deploy `firestore.rules` from dev for this.** Dev's rules file is the
+old one on purpose.
+
+**No app deploys from dev until the backfill is done.** The new clients work
+under the old rules (`allow list: if true`): every query that names
+`accessScope` is a narrower query, nothing waits on the new rules. But:
+- a query that names `accessScope` needs its index: before the new indexes are
+  READY it fails outright;
+- `accessScope in [...]` cannot match a statement that has no `accessScope`,
+  and Firestore cannot query for a missing field, so there is no client
+  fallback. Until the backfill's dry run shows `toWrite: 0`, a new client
+  misses every unstamped statement: discussion and chat feeds, "Load older",
+  the mind map (even its root), results and top options, tree and subtree
+  views, "Load all", the Join / join-class / Sign / Chat / Odyssey / Agora
+  lists, and deleting a statement misses (orphans) its unstamped children.
+
+So from the stage-1 merge into dev until `toWrite: 0`: indexes READY first,
+functions next, then the backfill, and only then any app, by anyone. New
+statements after that are stamped by the client or, within a second or two, by
+`onStatementCreated`.
+
+### Stage 2: the rules
+
+The rules ship LAST, from `fix/private-statement-reads`, after Tal's separate
+yes, once step 5 (old tabs and installed apps) is satisfied. At that time:
+
+1. Rebase `fix/private-statement-reads` onto dev. Its stage-1 commits are already
+   in dev, so after the rebase it equals dev plus any later rules fixes.
+2. On it, `git revert` the stage-1 commit "chore(release): stage 1 keeps dev's
+   firestore.rules; the private-read rules tests wait in next-rules/". That
+   brings back the new `firestore.rules`, moves `next-rules/*.next.mjs` back to
+   `tests/rules/*.test.mjs` and flips the last test of
+   `subscription-tokens.test.mjs` to `assertFails`.
+3. Fold in any rules changes dev gained in the meantime (`git diff` dev's
+   `firestore.rules` since the stage-1 merge), then run the whole suite,
+   `npm run test:rules`, against the result. It must be green.
+4. Merge into dev and deploy the rules (step 6) from a clean worktree.
+
+Until then, `npm run test:rules:next` runs the waiting tests; they pass only
+against the new rules.
+
 ## 1. Indexes
 
 ```bash
@@ -149,6 +203,8 @@ Sentry or analytics, and give it at least a few days. Asking users to reload is
 a fallback.
 
 ## 6. Rules, last
+
+Stage 2 only: see "Stage 2: the rules" above. Not from dev as of stage 1.
 
 ```bash
 firebase deploy --only firestore:rules --project <project-id>

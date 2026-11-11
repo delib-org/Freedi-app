@@ -1,7 +1,21 @@
+/**
+ * STAGE 1 NOTE (private-level reads, `accessScope`): this file tests the NEW
+ * firestore.rules from `fix/private-statement-reads`, which are NOT on dev yet.
+ * Stage 1 shipped the stamping, the backfill, the indexes and the clients but
+ * kept dev's old rules, so these assertions fail against the rules on dev.
+ * That is why the file is named `*.next.mjs` and lives in `next-rules/`:
+ * `npm run test:rules` (node --test) does not pick it up.
+ *
+ * The rules ship LAST, after Tal's separate yes, from `fix/private-statement-reads`
+ * rebased onto dev at that time. See docs/security/access-scope-release.md,
+ * "Stage 2: the rules". Shipping them reverts the stage-1 commit that restored
+ * dev's rules, which moves this file back to `tests/rules/*.test.mjs`.
+ * Run it against the new rules only: `npm run test:rules:next`.
+ */
 import { after, before, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import { collection, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore';
-import { makeEnv, seed, statementDoc } from './helpers.mjs';
+import { makeEnv, seed, statementDoc } from '../helpers.mjs';
 
 /**
  * A subscription carries a copy of its statement, so it is read only by its
