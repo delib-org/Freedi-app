@@ -3,7 +3,7 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from '@sentry/nextjs';
-import { isLocalRuntime } from '@freedi/shared-utils';
+import { isLocalRuntime, isTransientAuthNetworkError } from '@freedi/shared-utils';
 
 Sentry.init({
   initialScope: { tags: { app: 'mass-consensus' } },
@@ -67,6 +67,12 @@ Sentry.init({
 
   // Before sending an event, you can modify or filter it
   beforeSend(event, hint) {
+    // Drop auth/network-request-failed (anonymous sign-in on a flaky
+    // connection) — the device's problem, not ours.
+    if (isTransientAuthNetworkError(event, hint?.originalException)) {
+      return null;
+    }
+
     // Drop Firestore offline / unavailable errors — these happen when the
     // user's device has no connection and are not actionable.
     const originalError = hint?.originalException as
