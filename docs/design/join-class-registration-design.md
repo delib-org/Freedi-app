@@ -1,7 +1,7 @@
 # join-class: registration before a lesson or gathering (use case 1) — design
 
-Status: proposed, 2026-11-11. Not implemented.
-Designs against: [docs/ia/join-class-tables-merge.md](../ia/join-class-tables-merge.md) (agreed 2026-11-11). Objects, labels, routes, flows and the nine decisions come from there and are not repeated.
+Status: proposed; reconciled on 2026-11-11 with Tal's decisions of that day (section 13). Not implemented.
+Designs against: [docs/ia/join-class-tables-merge.md](../ia/join-class-tables-merge.md) (agreed and reconciled 2026-11-11). Objects, labels, routes, flows and the decisions (its section 9) come from there and are not repeated.
 Keeps: the participant steps, privacy rules and Hebrew copy of [shared-table-assignment.md](../ia/shared-table-assignment.md) and [tables-design-brief.md](tables-design-brief.md), already built in `apps/tables`.
 Look: the Class app (`apps/join-class/src/styles`, [join-class-style-brief.md](join-class-style-brief.md)). Mithril, global BEM SCSS, Class tokens only.
 
@@ -11,7 +11,7 @@ Scope: every screen where registration exists.
 - Shape B, registration then discussion: up to the moment the host presses "התחלת הדיון".
 - Not designed here: the table-paced discussion (use case 2). Section 12 lists what this design leaves ready for it.
 
-Where the IA spec is silent or contradicts itself, this file says so in section 13 and marks the choice it made with **[IA]**.
+This design raised eleven points about the IA spec and five questions for Tal. All were settled on 2026-11-11 and the spec now says the same as this file; section 13 lists the outcomes.
 
 ---
 
@@ -63,8 +63,8 @@ Purpose: find or start a plan, a lesson or an assignment.
 Content in order (360px, one column):
 
 1. Header: logo, account name, "יציאה" (unchanged).
-2. `h1` "דף הבית" **[IA: today "מערכי השיעור שלי", which is no longer true; section 13.4]**.
-3. Group "פתוחים עכשיו" + button "+ שיעור עם כיתה".
+2. `h1` "דף הבית" (was "מערכי השיעור שלי"). The back bar uses the same name for `/t`. "מערכי השיעור" is the name of the group of lesson plans only.
+3. Group "פתוחים עכשיו" (lessons only) + button "+ שיעור עם כיתה".
 4. Group "מערכי השיעור" + button "+ מערך שיעור חדש".
 5. Group "חלוקות לשולחנות" + button "+ חלוקה חדשה".
 6. Footer.
@@ -104,9 +104,9 @@ How a group looks and collapses:
 - The group head is `.teacher-home__section-head`: an `h2` that contains a button (`aria-expanded`, `aria-controls`), the count in brackets, and the group's "+" button at the inline end. The whole head row is 48px high. A chevron at the inline start points down when open and to the inline end when closed.
 - Open by default: all three. The choice per group is remembered in the browser (try/catch around storage; without storage every group opens).
 - A group shows at most 5 rows, then a quiet button "הצגת הכול ({{n}})". "מערכי השיעור" keeps its class filter and name search; "חלוקות לשולחנות" gets the same search field ("חיפוש לפי שם") from 6 rows up.
-- "חלוקות לשולחנות" lists active assignments first (draft, open, closed, published). Ended ones sit under a second, closed disclosure "הסתיימו ({{n}})" inside the group.
+- "חלוקות לשולחנות" lists assignments whose registration is open first, then the other active ones (closed, published, draft). Ended ones sit under a second, closed disclosure "הסתיימו ({{n}})" inside the group.
 - A group with nothing in it moves below the groups that have rows (the spec's rule) and shrinks to its head plus one line: "אין עכשיו שיעורים פתוחים" / "עוד אין חלוקות לשולחנות". Its "+" button stays.
-- An assignment appears only in its own group. A lesson that has one shows it as a second line on the lesson's row ("הרשמה מראש · 42 נרשמו"), and the assignment's row shows "עם דיון". **[IA: section 13.9]**
+- An assignment appears only in its own group, also while its registration is open: "פתוחים עכשיו" is for lessons. A lesson that has an assignment shows it as a second line on the lesson's row ("הרשמה מראש · 42 נרשמו"), and the assignment's row shows "עם דיון".
 
 An assignment row: gathering name (`h3`, `bdi`), status chip, the count ("42 נרשמו"; after publishing "6 שולחנות · 3 מחכים לשולחן"), "עם דיון" when attached, and one button "לחלוקה". The button label does not change with status; the chip says the status.
 
@@ -136,16 +136,16 @@ Content in order, each a `.plan-card` under a `.plan__section-title`:
 5. Topics: one by one or a pasted list (kept).
 6. Position question with two poles (kept).
 7. "כמה חשוב שכל שולחן יהיה דומה לחדר?" — three choices (kept).
-8. Summary "מה יקרה במפגש" / "מה יקרה בשיעור": expected people, **"מקומות בשולחן", default 7**, range 2–20, and the live sentence ("42 אנשים, עד 7 בכל שולחן · בערך 6 שולחנות").
+8. Summary "מה יקרה במפגש" / "מה יקרה בשיעור": expected people, **"מקומות בשולחן", default 7**, the host can change it (today's range, 3–20), and the live sentence ("42 אנשים, עד 7 בכל שולחן · בערך 6 שולחנות").
 9. Sticky bar: autosave mark at the inline start, "פתיחת ההרשמה" (`btn--primary`) at the inline end.
 
-Removed from Setup: the "חזרה לפי שם מלא" switch and its warning. Returning by full name is always on (decision 4) and the host is not warned. **[IA: section 13.2]**
+Removed from Setup: the "חזרה לפי שם מלא" switch and its warning. Returning by full name is not a host setting: it always works, before and after publishing, and the host is shown nothing about it (decision 4). The stored field `settings.allowReturnByName` is no longer read or written.
 
 Desktop: the cards in one column, max 720px; the summary card becomes sticky at the inline end from 1024px so the "what will happen" sentence stays in view while typing topics.
 
 States: loading the draft (card skeletons); autosave failed ("לא נשמר. הטקסט נשאר כאן, וננסה שוב." next to the mark, fields keep their text); cannot open yet — the button is disabled and one line above it gives the first missing thing ("כדי לפתוח צריך לפחות נושא אחד", "בחרו מי המשתתפים"); not the host → home.
 
-Seats and a discussion: when a lesson is attached and seats are above 8, a `notice` under the field: "בדיון יושבים עד 8 בשולחן. אפשר להקטין את המספר, או להשאיר את החלוקה בלי דיון." The field is not capped. **[IA: decision 6 and sections 6–7 disagree; section 13.1]**
+Seats and a discussion: attaching a lesson changes nothing in this field. There is no cap at 8, no notice and no blocked state (decision 6). A lesson with no registration keeps its own default of 6 and today's behaviour.
 
 ### 3.3 Registration open — `/t/tables/:id` while open (kept, restyled, plus the discussion card)
 
@@ -194,13 +194,13 @@ States: not published yet (→ preview); loading one run; error; no latecomers (
 
 Purpose: check names, remove a person. A `.teacher-home__list` of names with search; each row: the name, "עדיין לא משובץ" when a latecomer waits, and "הסרה מהרשימה" (48px, `aria-label` "הסרת {{name}} מהרשימה"). The privacy line stays at the top: "כאן מוצגים רק שמות וספירות. עמדות ובחירות של נרשמים לא מוצגות."
 
-Removed: the tag "המשיך בשם" next to a name. Decision 4 says the host gets no mark for a return by name. **[IA: section 13.2]**
+Removed: the tag "המשיך בשם" next to a name. Nothing marks a return by name for the host (decision 4).
 
 States: empty ("עדיין אין נרשמים. שולחים את הקישור." + the copy-link button); loading; error; search with no result.
 
 ### 3.7 Modals (kept)
 
-Fix details, Remove from the list, Delete: Class `.modal`, the approved copy, one primary and one quiet button each, the destructive one styled with `--danger` and worded as the action ("כן, להסיר", "כן, למחוק הכול"). On phone the modal is a bottom sheet (`.modal` at full width, `--radius-lg` on the top corners); on desktop a centred dialog, max 480px.
+Fix details, Remove from the list, Delete, and the new Remove the discussion (section 3.8): Class `.modal`, the approved copy, one primary and one quiet button each, the destructive one styled with `--danger` and worded as the action ("כן, להסיר", "כן, למחוק הכול"). On phone the modal is a bottom sheet (`.modal` at full width, `--radius-lg` on the top corners); on desktop a centred dialog, max 480px.
 
 ### 3.8 Where "הוספת דיון" and "הרשמה מראש" sit
 
@@ -208,20 +208,37 @@ Fix details, Remove from the list, Delete: Class `.modal`, the approved copy, on
 
 | State of the card | Content |
 |---|---|
-| No discussion | Title "יהיה גם דיון בשולחנות?" · one line "אחרי שכולם יושבים, כל שולחן מדבר, כותב הצעות ומצביע בטלפון." · button "הוספת דיון" (`btn--secondary`) |
-| Choosing (opens inside the card, no route) **[IA: section 13.8]** | 1. "באיזה משחק?" — the LessonPicker list (plans, then their games). 2. School only: "עם איזו כיתה?" (ClassForm). 3. A place for "מי קובע את הקצב?" — drawn only when use case 2 ships; until then the pace is "כולם יחד". Buttons: "הוספת הדיון" (`btn--primary`), "ביטול" |
-| No game exists yet | "עוד אין משחק עם שאלות. מכינים אחד במערך שיעור, ואז חוזרים לכאן." · link "+ מערך שיעור חדש". The assignment is already saved |
-| Blocked by seats | "בדיון יושבים עד 8 בשולחן, וכאן נקבעו {{n}}." · link "שינוי מספר המקומות" (opens Fix details / Setup) |
-| Saving / failed | button busy; `role="alert"` line with retry, choices kept |
-| Attached | Title "הדיון: {{game name}}" · the lesson's status chip · button "לשיעור" / "למפגש" (`btn--secondary`) |
+| No discussion | Title "יהיה גם דיון בשולחנות?" · one line "אחרי שכולם יושבים, כל שולחן מדבר, כותב הצעות ומצביע בטלפון." · button "הוספת דיון" (`btn--secondary`) → `/t/tables/:id/discussion` |
+| Attached, discussion not started | Title "הדיון: {{game name}}" · the lesson's status chip · button "לשיעור" / "למפגש" (`btn--secondary`) · quiet button "הסרת הדיון" (`btn--tertiary`) |
+| Attached, discussion started or ended | The same, without "הסרת הדיון" |
 
-After "הוספת הדיון" the host lands on the lesson's console at "waiting" (spec flow).
+The number of seats per table never changes the card: there is no blocked state.
+
+**The screen "הוספת דיון" — `/t/tables/:id/discussion`** (the spec's step 2; its own route so the game list has room on a phone, back works, and a reload keeps the place). Back bar: the assignment's name. One `.plan-card` per question, in order:
+
+1. "באיזה משחק?" — the LessonPicker list (plans, then their games).
+2. School only: "עם איזו כיתה?" (ClassForm).
+3. A place for "מי קובע את הקצב?" — drawn only when use case 2 ships; until then the pace is "כולם יחד".
+4. Sticky bar: "הוספת הדיון" (`btn--primary`), "ביטול" (back to the assignment).
+
+The audience is not asked: the lesson takes the assignment's (section 7).
+
+| State | What shows |
+|---|---|
+| Loading | card skeletons |
+| No game exists yet | "עוד אין משחק עם שאלות. מכינים אחד במערך שיעור, ואז חוזרים לכאן." · link "+ מערך שיעור חדש". The assignment is already saved |
+| Saving / failed | button busy; `role="alert"` line with retry, choices kept |
+| Already attached | goes to the assignment's stage screen |
+| Not the host | the host sign-in (kept) |
+| Done | the lesson's console at "waiting" (spec flow) |
+
+**"הסרת הדיון".** Offered on the attached card until the discussion starts. It opens a confirm: "להסיר את הדיון מהחלוקה?" · "החלוקה והנרשמים נשארים כמו שהם. הדיון נשאר אצלכם בדף הבית, בלי הרשמה מראש." · "כן, להסיר" · "לא, להשאיר". After it the card is back at "No discussion", the console strip is gone from the lesson, and the lesson is an ordinary lesson without registration. A failed request keeps the dialog open with the message.
 
 **"הרשמה מראש" — on the lesson.**
 
 - **Console** (`/t/:lessonId`), room step "waiting", no assignment yet: one row at the end of the join panel (`.console__qr`, under the QR and the code): the line "רוצים שיירשמו ויקבלו שולחן לפני השיעור?" and the button "הרשמה מראש" (`btn--tertiary`). It opens `/t/tables/new` already tied to this lesson (audience and name taken from the lesson). It is offered only while the room is at "waiting"; after that seating belongs to the lesson.
 - **Console, assignment exists:** the row is replaced by a strip directly under the console bar, `.console__assignment`, a link to `/t/tables/:id`: "הרשמה מראש · הרשמה פתוחה · 42 נרשמו". After publishing: "הרשמה מראש · השיבוץ פורסם · 6 שולחנות", and "3 מחכים לשולחן" when latecomers wait. The strip stays for the whole lesson; it is the console's one entry to the assignment and where use case 2 will find latecomers.
-- **Console, primary button in shape B at "waiting":** "התחלת הדיון" instead of today's "פתיחת השלב הבא". Before the assignment is published it is disabled, with the reason and the way out on one line above it: "קודם מפרסמים את השיבוץ" + link "לחלוקה". The join panel's QR is the registration link; the code works too (the code box sends a person with no seat to registration).
+- **Console, primary button in shape B at "waiting":** "התחלת הדיון" instead of today's "פתיחת השלב הבא". Before the assignment is published it is disabled, with the reason and the way out on one line above it: "קודם מפרסמים את השיבוץ" + link "לחלוקה". In "לשבת איפה שירצו" there is no publishing: the button is enabled once registration is closed, and until then the line reads "קודם סוגרים את ההרשמה" (decision 15). The join panel's QR is the registration link; the code works too (the code box sends a person with no seat to registration).
 - **Plan** (`/t/plans/:planId`, the lesson rows under a game) and **home** ("פתוחים עכשיו"): no button. The lesson's row gains the second line "הרשמה מראש · {{status}} · {{count}}". Creating stays in one place, the console.
 - **Questions of this lesson** (`/t/:lessonId/plan`): nothing about registration. The audience choice lives in "פרטי השיעור" (section 7).
 
@@ -244,13 +261,13 @@ A lesson with an assignment: a person with no seat goes to `/tables/:id`; a seat
 | Loading | identity and assignment being read | frame with a skeleton title and button | — |
 | Error | read failed | "בעיית רשת. אפשר לנסות שוב." | "ניסיון נוסף" |
 | Not open yet | draft | `.lesson-state`: gathering name, "ההרשמה עוד לא נפתחה", "תודה שהקדמתם. {המארח/המורה} יפתח את ההרשמה בקרוב.", the keep-open line. Flips by itself | none |
-| Name (step 1) | open, or published (latecomer) | count pill ("42 כבר כאן"), gathering name as the hero title, the one-sentence intro, field "השם המלא שלך" with the hint "בלי סיסמה ובלי חשבון.", then the button, then "שלושה צעדים קצרים, בערך דקה", then the quiet button **"כבר נרשמתי"** | "בואו נתחיל" |
+| Name (step 1) | open, or published (latecomer). "כבר נרשמתי" shows in both | count pill ("42 כבר כאן"), gathering name as the hero title, the one-sentence intro, field "השם המלא שלך" with the hint "בלי סיסמה ובלי חשבון.", then the button, then "שלושה צעדים קצרים, בערך דקה", then the quiet button **"כבר נרשמתי"** | "בואו נתחיל" |
 | Already registered | after "כבר נרשמתי" | section 4.3 | "מציאת ההרשמה שלי" |
 | Is this you? | the typed name exists once | modal, section 4.3 | "כן, זה אני" |
 | Waiting | registered, open | "נשמר. תודה, {{name}}", the lead line, "הפרטים שלכם" card, the "מה קורה עכשיו" steps, then "עריכת הפרטים" and "ביטול השתתפות" as quiet buttons | none (the person is done) |
 | Waiting, unfinished | registered, steps not finished | "כמעט סיימנו, {{name}}" + what is left | "לדירוג הנושאים" / "לבחירת שולחן" |
 | Waiting, closed | registered, registration closed | as Waiting, the second step ticked, no edit, no cancel, the line "ההרשמה נסגרה, ולכן אי אפשר לשנות פרטים. כדי לבטל השתתפות, כדאי לדבר עם {המארח/המורה}." | none |
-| Waiting for a table (latecomer) | registered after publishing, not seated | title "נרשמתם. מחכים לשולחן", body "השולחנות כבר פורסמו. {המארח/המורה} יושיב אתכם, והשולחן יופיע בדף הזה. אפשר לסגור אותו ולחזור בקישור.", the clock mark. Moves to My table by itself | none |
+| Waiting for a table (latecomer) | registered after publishing, not seated | title "נרשמתם. מחכים לשולחן", body `waiting.late.note`: "השולחנות פורסמו לפני שנרשמתם. {המארח/המורה} ישבץ אתכם, והשולחן שלכם יופיע בדף הזה. אפשר לסגור אותו ולחזור בקישור.", the clock mark. Moves to My table by itself | none |
 | Cancelled | the person cancelled | "ההשתתפות בוטלה" + the approved body | "הרשמה מחדש" while registration accepts people; otherwise none |
 | Removed | the registration is gone from this browser | "ההרשמה שלכם כבר לא כאן" + "ההרשמה המשיכה בטלפון אחר לפי השם המלא, או ש{המארח/המורה} הסיר אותה." Now the only wording, since returning by name is always on | "כבר נרשמתי" (brings it back here), and the quiet "הרשמה מחדש" |
 | Closed, not registered | closed and not yet published | `.lesson-state`: "ההרשמה נסגרה." + "השולחנות יתפרסמו בקרוב. אחרי הפרסום אפשר יהיה להירשם כאן ולקבל שולחן." Flips to Name when published | none |
@@ -271,12 +288,12 @@ Two ways in, one outcome:
 | What the server finds | What the person sees | Then |
 |---|---|---|
 | One registration with this name | Modal "כבר נרשם מישהו בשם {{name}}. זה אתם?" · body by phase (below) · "כן, זה אני" · "לא, אני מישהו אחר" | Yes → the row below. No → the normal name form with the name kept; a second registration under the same name |
-| Yes, registration open | — | Waiting. The details card shows no choices: "הבחירות שלכם שמורות. הן לא מוצגות בטלפון הזה, כדי לשמור על הפרטיות." Quiet button "לענות מחדש" walks the steps empty **[Tal: question 1]** |
+| Yes, registration open | — | Waiting. The details card shows no choices: "הבחירות שלכם שמורות. הן לא מוצגות בטלפון הזה, כדי לשמור על הפרטיות." The topics and the position are not asked again. Quiet button "לענות מחדש" walks the steps empty for anyone who wants to (decision 10) |
 | Yes, closed and not published | — | Waiting, closed |
 | Yes, published and seated | — | My table |
 | Yes, published and not seated | — | Waiting for a table |
-| No registration with this name | Under the field, a neutral `notice` (not an error colour, `role="status"`): "לא מצאנו הרשמה בשם הזה. בדקו שהשם כתוב בדיוק כמו בהרשמה." The field keeps the text and the focus | Primary stays "מציאת ההרשמה שלי"; a second button appears: "הרשמה חדשה בשם הזה" → steps 2 and 3, then Waiting or Waiting for a table **[IA: section 13.3]** |
-| Two or more with this name | `notice`: "יש כמה נרשמים בשם הזה, ולכן אי אפשר לדעת מי מהם אתם. השולחן שלכם מופיע במקרן, ואפשר לשאול את {המארח/המורה}." | The same second button, "הרשמה חדשה בשם הזה" |
+| No registration with this name | Under the field, a neutral `notice` (not an error colour, `role="status"`): "לא מצאנו הרשמה בשם הזה. בדקו שהשם כתוב בדיוק כמו בהרשמה." The field keeps the text and the focus | Primary stays "מציאת ההרשמה שלי"; a second button appears: "הרשמה חדשה בשם הזה" → steps 2 and 3, then Waiting or Waiting for a table. Nobody is registered as new without pressing it (decision 11) |
+| Two or more with this name | `notice`: "יש כמה נרשמים בשם הזה, ולכן אי אפשר לדעת מי מהם אתם. השולחן שלכם מופיע במקרן, ואפשר לשאול את {המארח/המורה}." | The field keeps the text so the name can be fixed; the same second button, "הרשמה חדשה בשם הזה" |
 
 Modal body by phase:
 
@@ -297,7 +314,7 @@ The approved screen in the Class frame: "צעד 2 מתוך 3", the note about si
 
 ### 4.6 My table — `/tables/:id/my-table` (merged)
 
-Purpose: know where to sit; on the day, get into the live table. Section 6 has the component.
+Purpose: know where to sit; on the day, get into the live table. The look is the Class one, a very large table number (decision 13); the Tables drawing of a table with seats is not carried over. Section 6 has the component.
 
 ```text
 360px
@@ -327,14 +344,14 @@ Content in order: gathering name; "שולחן" and the number; the topic; the pi
 | Loading | number and chips as skeletons | — |
 | Error | "בעיית רשת. אפשר לנסות שוב." Never a draft seating | "ניסיון נוסף" |
 | Published, shape A | everything above | none: the person's job is to go and sit |
-| Published, shape B, discussion not started | everything above + one line "כש{המארח/המורה} יתחיל את הדיון, הוא ייפתח כאן." | none |
+| Published, shape B, discussion not started (free mode: registration closed, since that mode has no publishing) | everything above + one line "כש{המארח/המורה} יתחיל את הדיון, הוא ייפתח כאן." | none |
 | Discussion started while the screen is open | a banner at the top, `role="status"`: "הדיון מתחיל". After 3 seconds the screen moves to `/m/:lessonId`. The button is there for anyone who does not want to wait | "כניסה לדיון" |
 | Discussion already running when the person arrives | everything above, so they first see where to sit | "כניסה לדיון" |
 | Lesson paused / ended | the lesson's paused or ended screen (`.lesson-state`, kept) | — |
 | Registered late, not seated | goes back to the link home: Waiting for a table | — |
 | Not registered | goes back to the link home | — |
 | Tablemates not readable | the card is left out; number and topic still show | — |
-| Free mode, registration open | + quiet "בחירת שולחן אחר" and "ביטול השתתפות" | — |
+| Free mode, registration open | + quiet "בחירת שולחן אחר" and "ביטול השתתפות". The seat can still change, so there is no line about the discussion yet | — |
 | Assignment ended | the seat stays readable, with "החלוקה הסתיימה." under the topic | — |
 
 Desktop: the same column, centred. RTL: chips flow from the inline start; a Latin name inside a Hebrew list keeps its own direction (`bdi`).
@@ -385,7 +402,7 @@ Yes, one component, in two sizes.
 
 Who owns the data changes at "start" (the published run, then the lesson's tables); the component does not change. That is what lets My table become the way into the live table without a second screen.
 
-Retired: Tables' `.my-table` block and the table drawing (`TableArt`). The Class number is the arrival moment **[Tal: question 4]**.
+Retired: Tables' `.my-table` block and the table drawing (`TableArt`). The Class number is the arrival moment (decision 13).
 
 ---
 
@@ -394,24 +411,27 @@ Retired: Tables' `.my-table` block and the table drawing (`TableArt`). The Class
 **Where the host sets it.**
 
 - On an assignment: Setup, second card, **"מי המשתתפים?"** with two choices, "תלמידים בבית ספר" and "אנשים בקהילה", and one hint line: "לפי זה ייכתב במסכים: מורה ושיעור, או מארח ומפגש."
-- On a lesson: "פרטי השיעור" in Questions of this lesson, the same control next to the lesson's language.
-- An attached pair has one value. "הוספת דיון" gives the lesson the assignment's; "הרשמה מראש" gives the assignment the lesson's and hides the card in Setup. Changing it later on either side changes both. **[IA: section 13.6]**
+- On a lesson: "פרטי השיעור" in Questions of this lesson, the same control next to the lesson's language. A lesson where nothing was chosen reads as school, as today.
+- An attached pair has one value, and the object that existed first keeps its own: "הוספת דיון" gives the new lesson the assignment's; "הרשמה מראש" gives the new assignment the lesson's and hides the card in Setup. Changing it later on either side ("תיקון פרטים", "פרטי השיעור") changes both. Removing the discussion leaves each with that value.
 - First time, nothing is chosen and "פתיחת ההרשמה" waits for it. After that the host's last choice is preselected.
 - It can be changed until registration opens; after that through "תיקון פרטים" (it changes words only, never data).
 
-**Which strings change on these screens.** Only the four nouns. The Tables copy was written for a community (מארח, מפגש), so for these keys the school text is the new one.
+**Which strings change on these screens.** Only the four nouns. The Tables copy was written for a community (מארח, מפגש), so for the moved keys the school text is the new one: the base key gets the school text and key + `.community` keeps today's. The IA spec, section 3, has every key with both texts in Hebrew and English; this table says where each one shows.
 
-| Where | Community | School |
-|---|---|---|
-| Not open: `notOpen.thanks` | תודה שהקדמתם. המארח יפתח את ההרשמה בקרוב. | … המורה יפתח … |
-| Waiting steps: `waiting.step.closing` | המארח סוגר את ההרשמה | המורה סוגר את ההרשמה |
-| `waiting.closedNote`, `cancelled.bodyClosed`, `removed.body`, `removed.bodyMaybeMoved`, `cancel.claimed`, `error.nameLocked`, `error.nameClaimed` | … לדבר עם המארח | … לדבר עם המורה |
-| Latecomer: `waiting.late.lead`, `.note` | המארח יושיב אתכם | המורה יושיב אתכם |
-| My table, before the start | כשהמארח יתחיל את הדיון… | כשהמורה יתחיל את הדיון… |
-| Setup: `setup.name`, `setup.summary.title`, `fixDetails.name`, `setup.problem.name` | מפגש | שיעור |
-| Home and discussion card: the way to the lesson | למפגש | לשיעור |
-| Projector code label | קוד המפגש | קוד הכיתה |
-| Class keys a registered person can meet before the start: `lesson.code.unknown.title`, `.body`, `lesson.ended.title`, `lesson.paused.title`, `.body` | מפגש, מארח | שיעור, מורה (today's text) |
+| Where | Keys (`tableAssignment.` +) | Community | School |
+|---|---|---|---|
+| Not open | `notOpen.thanks` | המארח יפתח את ההרשמה | המורה יפתח … |
+| My position, the privacy line | `position.privacy` | גם לא למארח | גם לא למורה |
+| Waiting steps | `waiting.step.closing` | המארח סוגר את ההרשמה | המורה סוגר את ההרשמה |
+| Waiting closed, Cancelled, Removed, name errors | `waiting.closedNote`, `cancelled.bodyClosed`, `removed.bodyMaybeMoved`, `cancel.claimed`, `error.nameLocked`, `error.nameClaimed` | … לדבר עם המארח | … לדבר עם המורה |
+| Latecomer | `waiting.late.lead`, `waiting.late.note` | המארח ישבץ אתכם | המורה ישבץ אתכם |
+| New here: My table before the start; name found twice; the console hint | `myTable.beforeStart`, `returnByName.several`, `console.register_ahead.hint` | מארח, מפגש | מורה, שיעור |
+| Setup and Fix details | `setup.name`, `setup.summary.title`, `fixDetails.name`, `setup.problem.name` | מפגש | שיעור |
+| Home and discussion card: the way to the lesson | — | למפגש | לשיעור |
+| Projector code label | `projector.code` | קוד המפגש | קוד הכיתה |
+| Class keys a registered person can meet before the start | `lesson.code.unknown.title`, `.body`, `lesson.ended.title`, `lesson.paused.title`, `.body` | מפגש, מארח | שיעור, מורה (today's text) |
+
+One text for both: the home's search ("חיפוש לפי שם") and `state.notHost`, because the home serves both audiences. Deleted, not moved: `removed.title`, `removed.body` (the "כבר לא כאן" wording is the only one), the switch `returnByName`, `setup.return.*`, `participants.claimedByName`, and `returnByName.body` (replaced by `.bodyOpen` / `.bodyPublished`).
 
 Not switched: "החדר" (it is the crowd, in both), "שולחן", "נושא", "הרשמה", "חלוקה לשולחנות", every button on the registration steps. Host and teacher forms follow each language's own rule for gender; Hebrew keeps the plural address ("נרשמתם") the Tables copy already uses.
 
@@ -435,7 +455,8 @@ Not switched: "החדר" (it is the crowd, in both), "שולחן", "נושא", "
 | `tableAssignment.addDiscussion.lead` (new) | אחרי שכולם יושבים, כל שולחן מדבר, כותב הצעות ומצביע בטלפון. | Once everyone is seated, each table talks, writes proposals and votes on the phone. | |
 | `console.start_discussion` | התחלת הדיון | Start the discussion | Confirmed |
 | `console.start_discussion.blocked` (new) | קודם מפרסמים את השיבוץ | Publish the seating first | |
-| `tableAssignment.myTable.enter` | כניסה לדיון | Join the discussion | Changed from "לשולחן": the person is already looking at their table, and "לשולחן שלי" exists for another jump (section 13.10) |
+| `console.start_discussion.blockedOpen` (new) | קודם סוגרים את ההרשמה | Close registration first | "לשבת איפה שירצו": no publishing, so closing is the condition |
+| `tableAssignment.myTable.enter` | כניסה לדיון | Join the discussion | Changed from "לשולחן" and agreed in the spec: the person is already looking at their table, and "לשולחן שלי" (`tableAssignment.stage.seeMyTable`) is another jump |
 | `tableAssignment.myTable.starting` (new) | הדיון מתחיל | The discussion is starting | |
 | `tableAssignment.returnByName.late` | כבר נרשמתי | I already registered | Confirmed |
 | `tableAssignment.returnByName.lateTitle` (new) | נרשמתם כבר בטלפון אחר? | Already registered on another phone? | |
@@ -454,7 +475,7 @@ Not on these screens, left for use case 2: `console.table_at`, `turn.table_done`
 
 | Key | Hebrew | English |
 |---|---|---|
-| `teacher.home.title` (value changes) **[IA]** | דף הבית | Home |
+| `teacher.home.title` (value changes; also the back bar's name for `/t`) | דף הבית | Home |
 | `teacher.home.assignments` | חלוקות לשולחנות | Table assignments |
 | `tableAssignment.list.create` (kept) | + חלוקה חדשה | + New table assignment |
 | `teacher.home.assignments_empty` | עוד אין חלוקות לשולחנות | No table assignments yet |
@@ -465,7 +486,10 @@ Not on these screens, left for use case 2: `console.table_at`, `turn.table_done`
 | `teacher.row.registration` | הרשמה מראש · {{status}} · {{count}} | Advance registration · {{status}} · {{count}} |
 | `teacher.home.start.lesson` / `.assignment` (empty home cards) | שיעור עם כיתה · הרשמה לשולחנות | A lesson with a class · Registration for tables |
 | `tableAssignment.addDiscussion.none` | עוד אין משחק עם שאלות. מכינים אחד במערך שיעור, ואז חוזרים לכאן. | There is no game with questions yet. Make one in a lesson plan, then come back. |
-| `tableAssignment.addDiscussion.seats` | בדיון יושבים עד 8 בשולחן, וכאן נקבעו {{n}}. | A discussion seats up to 8 at a table; here it is {{n}}. |
+| `tableAssignment.removeDiscussion` | הסרת הדיון | Remove the discussion |
+| `tableAssignment.removeDiscussion.title` | להסיר את הדיון מהחלוקה? | Remove the discussion from this table assignment? |
+| `tableAssignment.removeDiscussion.body` | החלוקה והנרשמים נשארים כמו שהם. הדיון נשאר אצלכם בדף הבית, בלי הרשמה מראש. | The assignment and the people registered stay as they are. The discussion stays on your home page, without advance registration. |
+| `tableAssignment.removeDiscussion.confirm` / `.keep` | כן, להסיר · לא, להשאיר | Yes, remove · No, keep it |
 | `tableAssignment.addDiscussion.attached` | הדיון: {{name}} | The discussion: {{name}} |
 | `tableAssignment.live.codeToo` | אפשר להיכנס גם עם הקוד {{code}} | The code {{code}} works too |
 | `tableAssignment.myTable.beforeStart` | כשהמארח יתחיל את הדיון, הוא ייפתח כאן. | When the host starts the discussion, it opens here. |
@@ -488,6 +512,7 @@ Languages: Class has 7 (he, en, ar, de, es, fa, nl). Every key above, and every 
 - My table and the projector show names and the topic. No side marks in any lesson that used registration; the component is never given them (section 6).
 - A return by name shows the returning person nothing that the first phone entered: no choices, no position.
 - The host sees no mark, count or warning about returns by name.
+- "Support by side" in the Summary (a use case 2 screen, not drawn here) is shown in lessons with registration too, as totals the server computes from the private answers, with no minimum group size. No screen in this design receives a person's position, so nothing here has to change for it.
 
 ---
 
@@ -563,10 +588,10 @@ Each step can ship by itself.
 2. **Participant registration inside Class** (`/tables/:id` and its three steps, My table with `TableSeat`, all link-home states). Shape A works for participants on class.wizcol.com.
 3. **Host assignment screens inside Class** (`/t/tables/*`) and the home's third group. Shape A works end to end.
 4. **Projector:** the two views on `/t/tables/:id/screen`.
-5. **Cutover:** tables.wizcol.com redirects by the spec's table; `apps/tables` is removed.
-6. **"כבר נרשמתי", always on, before and after publishing.** Needs the server change of decision 4. Removes the Setup switch and the host tag.
-7. **The two doors:** "הוספת דיון" and "הרשמה מראש", the console strip, the audience on the lesson, the code-box branch, "התחלת הדיון" and "כניסה לדיון". This is shape B up to the start; it needs the server to copy the seating into the lesson's tables.
-8. **More than 8 seats with a discussion** (decision 6), when the turn machine is ready for it; until then the notice of section 3.2 holds.
+5. **Cutover:** every tables.wizcol.com path redirects at once, by the spec's table; `apps/tables` is removed. Nobody is registered there, so no identity is lost.
+6. **"כבר נרשמתי", always on, before and after publishing.** Needs the server change of decisions 4 and 10: a claim at any status that accepts people, with the answers kept. Removes the Setup switch and the host tag; `settings.allowReturnByName` is no longer read.
+7. **The two doors:** "הוספת דיון" (the card and its screen), "הסרת הדיון", "הרשמה מראש", the console strip, the audience on the lesson, the code-box branch, "התחלת הדיון" and "כניסה לדיון". This is shape B up to the start; it needs the server to copy the seating into the lesson's tables.
+8. **Tables larger than 8 in a discussion** (decision 6). The talk-in-turns machine (`MAX_TABLE_SIZE`, `functions/src/classroom`) is built and tested for 2–8; extend and test it for larger tables. This lands with step 7, not after it: the design has no cap, notice or blocked state to fall back on.
 
 Steps 2 to 5 change no behaviour, only where the screens live and how they look, so they can be checked against the live Tables screens side by side.
 
@@ -577,31 +602,33 @@ Steps 2 to 5 change no behaviour, only where the screens live and how they look,
 - The console strip `.console__assignment` is the one entry to the assignment during the lesson and already carries "N מחכים לשולחן".
 - `.tables-seats__tile` is the single table tile; the at-work facts (the table's step, time, stuck mark) can join it as a modifier.
 - `TableSeat` reads "the current owner" of the seating, so My table needs no change when the lesson's tables take over.
-- The discussion card has a reserved place for "מי קובע את הקצב?".
+- The "הוספת דיון" screen has a reserved place for "מי קובע את הקצב?".
 - The projector keeps "who sits where" as a view the free stretch can reuse.
 
 ---
 
-## 13. Points for the IA spec
+## 13. Resolved on 2026-11-11
 
-1. **Seats above 8 with a discussion.** Decision 6 says the host may set more than 8 also when a discussion is attached. Section 6 ("Seats per table above 8 block this step") and section 7 ("Attached to a lesson: seats per table 2..8") say the opposite. This design shows a notice and a blocked card until the server supports more, then drops both.
-2. **Return by full name as a setting.** Today it is a host switch, off by default, with a warning, and the host sees a tag "המשיך בשם". Decision 4 (always possible, no host warning, no mark) implies the switch, the warning and the tag all go. The spec does not say so. This design removes them.
-3. **"No match or two matches: registered as a latecomer."** Done silently, a typing mistake creates a second registration for a person who already has a seat, and with two namesakes it creates a third. This design adds one step: say what was found, let the person fix the name, and register as new only on a second press.
-4. **The home's title.** "מערכי השיעור שלי" is also the back bar's label. With assignments on the home it is wrong. The label table has no row for the home. Proposed: "דף הבית".
-5. **Default seats.** Class's `DEFAULT_TABLE_SIZE` is 6; decision 6 says 7. This design reads it as: 7 for an assignment, 6 stays for a lesson with no registration. The spec should say.
-6. **Where a lesson gets its audience.** The spec adds `audience` to the lesson and the assignment but names only Setup as the place to choose. This design adds it to "פרטי השיעור" and makes an attached pair share one value.
-7. **The moved copy is community-worded.** The spec's pattern is base key = school, `.community` = community, and its verified list has Class keys only. About twelve `tableAssignment.*` participant strings say "המארח" or "מפגש" (listed in section 7); for them the school text is the new one.
-8. **"הוספת דיון", step 2** (choose a game, a class, the pace) has no route and no row in the screen inventory. This design draws it inside the card. Removing a discussion from an assignment is not defined anywhere; it is not designed.
-9. **Is an open registration "open now"?** The spec says each group has one scheme and the first is "open now (by status)", without saying whether an assignment with open registration belongs there. This design keeps every assignment in its own group and shows it on its lesson's row.
-10. **Two near-identical labels.** `tableAssignment.myTable.enter` "לשולחן" and the existing `tableAssignment.stage.seeMyTable` "לשולחן שלי" name two different jumps. This design renames the first "כניסה לדיון".
-11. **Free mode with a discussion.** In "sit where you like" there is no publish step, yet shape B says publishing makes My table and enables the start. This design reads "published" as "registration closed" for free mode when enabling "התחלת הדיון"; the spec should confirm.
+The eleven points this design raised about the IA spec, and its five questions, as Tal decided them. The spec carries each one (its section 9); the interim workarounds are gone from this file.
+
+1. **Seats above 8 with a discussion.** No cap. Default 7 for an assignment, the host can change it, and attaching a discussion limits nothing. The notice and the blocked card are removed. The turn machine is built for 2–8 and must be extended and tested (build step 8).
+2. **Return by full name.** Not a host setting. It always works, before and after publishing, with no limit; the switch, its warning and the "המשיך בשם" tag are retired.
+3. **Name not found, or found twice.** The person is told and can fix the name; a new registration only if they ask (section 4.3).
+4. **The home's title.** "דף הבית", also in the back bar. "מערכי השיעור" names the group of plans.
+5. **Default seats.** 7 for an assignment; 6, unchanged, for a lesson with no registration.
+6. **The lesson's audience.** Set in "פרטי השיעור"; in an attached pair the object that existed first keeps its value and the pair shares it (section 7).
+7. **The moved copy.** Base key = the new school text, `.community` = today's text; the spec's section 3 lists every key in Hebrew and English.
+8. **"הוספת דיון", step 2.** Its own screen, `/t/tables/:id/discussion`. A discussion can be removed until it starts; the assignment and the lesson both stay (section 3.8).
+9. **An open registration.** Only under "חלוקות לשולחנות", first in the list. "פתוחים עכשיו" is for lessons.
+10. **"לשולחן" and "לשולחן שלי".** The jump into the discussion is "כניסה לדיון".
+11. **"Sit where you like" with a discussion.** No publish step, so "registration closed" is the condition for My table and for "התחלת הדיון".
+
+Also decided: a person who returns on another phone before publishing does not answer again; the answers stay saved and are not shown, and "לענות מחדש" is there (section 4.3). My table uses the Class look, the large number (section 6).
 
 ---
 
 ## 14. Questions for Tal
 
-1. **Someone returns on another phone before the tables are published and says "כן, זה אני". Must they answer the topics and the position again?** Today they must. Recommended: no. Their answers stay saved and are simply not shown on the new phone; "לענות מחדש" is there if they want it.
-2. **Someone presses "כבר נרשמתי" and the name is not found (a typing mistake, for example). Register them as a new person at once, or tell them first?** Recommended: tell them, let them fix the name, and register as new only if they ask (section 13.3).
-3. **The host's first page is called "מערכי השיעור שלי", and it now also holds the table assignments.** Recommended: "דף הבית".
-4. **My table: the drawing of a table with seats (approved for Tables on 11-10), or the large number the Class app uses?** Recommended: the Class number, so the two halves look like one product.
-5. **A registration that is open right now: should it also appear under "פתוחים עכשיו", or only under "חלוקות לשולחנות"?** Recommended: only under "חלוקות לשולחנות", first in the list, so each thing has one place.
+None open from the first round; all five were answered on 2026-11-11 (section 13).
+
+One new point, raised by the spec: in "לשבת איפה שירצו" with a discussion, a person who arrives after registration closed has no seat and no way to take one. The spec proposes that they register by name and wait for a table, as after publishing. If Tal agrees, the "Closed, not registered" state (section 4.2) follows the published rule in that mode.
