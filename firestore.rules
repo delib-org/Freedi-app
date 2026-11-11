@@ -1474,8 +1474,10 @@ service cloud.firestore {
                (get(path).data.get('accessScope', '') == 'open' ||
                 (request.auth != null && mayEnterLevel(scope, get(path).data)));
       }
+      // 'quarantined' is the stamp of a statement on a loop of parents: it has no
+      // real place, so no one reads it through a scope (system admins excepted).
       function mayReadScope(scope) {
-        return scope == 'open' || mayReadRestrictedScope(scope);
+        return scope == 'open' || (scope != 'quarantined' && mayReadRestrictedScope(scope));
       }
       function statementPathOf(id) {
         return /databases/$(database)/documents/statements/$(cleanPath(string(id)));
@@ -1506,11 +1508,12 @@ service cloud.firestore {
       // itself, who is in the private level too, names the scope instead).
       function mayHostLevel(id, level) {
         let scope = level.get('accessScope', 'open');
-        return (scope == 'open' || scope == id)
-          ? isHostAround(id, level)
-          : (exists(statementPathOf(scope)) &&
-             !(subRoleAt(id) in ['banned', 'waiting']) &&
-             isHostAround(scope, get(statementPathOf(scope)).data));
+        return scope != 'quarantined' &&
+               ((scope == 'open' || scope == id)
+                 ? isHostAround(id, level)
+                 : (exists(statementPathOf(scope)) &&
+                    !(subRoleAt(id) in ['banned', 'waiting']) &&
+                    isHostAround(scope, get(statementPathOf(scope)).data)));
       }
 
       // Writing inside a private level G: a role at G, or a host role at the top;
@@ -1533,7 +1536,7 @@ service cloud.firestore {
                 roles[1] in ['admin', 'statement-creator']);
       }
       function mayWorkInScope(scope) {
-        return scope == 'open' || mayWorkInRestrictedScope(scope);
+        return scope == 'open' || (scope != 'quarantined' && mayWorkInRestrictedScope(scope));
       }
       function scopeOfStatement(id) {
         return get(statementPathOf(id)).data.get('accessScope', 'open');
@@ -1605,13 +1608,37 @@ service cloud.firestore {
         return data.get('parents', []).hasOnly(['top']) &&
                data.get('topParentId', 'top') in [statementId, 'top'];
       }
+      // A statement is never its own parent, nor its parent's parent: it is judged
+      // by its parent, and on a loop it would be judged by itself (and by whatever
+      // place it claims). A longer loop, made by moving existing statements, is
+      // caught by the stamping trigger, which quarantines it.
+      function parentIsNotSelf(parentId, parentPath) {
+        return parentId != statementId &&
+               getAfter(parentPath).data.get('parentId', 'top') != statementId;
+      }
+      // A parent made in this same batch must hang, within two levels, from the
+      // top or from something that existed before; so new statements alone cannot
+      // close a loop (Odyssey seeds a root, its islands and their stances at once).
+      function isRootedBefore(id) {
+        return id == 'top' || exists(statementPathOf(id));
+      }
+      function newParentIsRooted(parentPath) {
+        let grandId = getAfter(parentPath).data.get('parentId', 'top');
+        return isRootedBefore(grandId) ||
+               (grandId != statementId &&
+                existsAfter(statementPathOf(grandId)) &&
+                isRootedBefore(getAfter(statementPathOf(grandId)).data.get('parentId', 'top')));
+      }
       function createTreeFieldsOk() {
         let data = request.resource.data;
         let parentId = data.get('parentId', 'top');
+        let parentPath = statementPathOf(parentId);
         return (parentId == 'top' && topFieldsMatch(data)) ||
                (parentId != 'top' &&
-                existsAfter(statementPathOf(parentId)) &&
-                treeFieldsMatch(data, getAfter(statementPathOf(parentId)).data, parentId));
+                existsAfter(parentPath) &&
+                parentIsNotSelf(parentId, parentPath) &&
+                (exists(parentPath) || newParentIsRooted(parentPath)) &&
+                treeFieldsMatch(data, getAfter(parentPath).data, parentId));
       }
       function updateTreeFieldsOk() {
         let data = request.resource.data;
@@ -1622,7 +1649,15 @@ service cloud.firestore {
                (parentId == 'top' && topFieldsMatch(data)) ||
                (parentId != 'top' &&
                 existsAfter(parentPath) &&
+                parentIsNotSelf(parentId, parentPath) &&
                 treeFieldsMatch(data, getAfter(parentPath).data, parentId));
+      }
+      // The tombstone of a deleted statement that sat inside a private level is
+      // kept (writeStatementDeletionTombstone), and its id is never used again:
+      // re-made as an open statement, it would open what is still filed under it.
+      function recreatesPrivateStatement() {
+        let path = /databases/$(database)/documents/statementDeletions/$(statementId);
+        return exists(path) && get(path).data.get('accessScope', 'open') != 'open';
       }
       function isHostOfLevel(id) {
         return request.auth != null &&
@@ -1690,6 +1725,7 @@ service cloud.firestore {
       // (statementSettingsCont.ts:152, promoteOptionToSubQuestion.ts:66) are
       // updates, not creates, so they are unaffected by this pin.
       allow create: if request.auth.uid != null &&
+                       statementId != 'quarantined' &&
                        !request.resource.data.keys().hasAny(['agreementBallot', 'agreementMeta', 'deliberationEnabled']) &&
                        !setsCreatorRoleOnCreate() &&
                        !setsOrganizationIdOnCreate() &&
@@ -1700,6 +1736,7 @@ service cloud.firestore {
                        createScopeOk() &&
                        mayWriteUnder(request.resource.data.get('parentId', 'top')) &&
                        createTreeFieldsOk() &&
+                       !recreatesPrivateStatement() &&
                        classEnteredByOf(request.resource.data) == null &&
                        request.resource.data.creatorId == request.auth.uid &&
                        // A student the teacher removed writes nothing more
@@ -1738,7 +1775,12 @@ service cloud.firestore {
       // The session teacher inherits an admin subscription on every proposal
       // (setupAdminsForStatement), which used to make isAuthorized() a hard
       // delete with no tombstone and no audit.
-      allow delete: if request.auth.uid != null && !isAgoraStatement() && !isClassReply() && !isClassHomeData(resource.data) && !resource.data.keys().hasAny(['agreementBallot']) && isAuthorized();
+      // Inside a private level, deleting needs a way into it as well: someone who
+      // has left could otherwise delete their question and make it again, open,
+      // over the members' answers still filed under it.
+      allow delete: if request.auth.uid != null && !isAgoraStatement() && !isClassReply() && !isClassHomeData(resource.data) && !resource.data.keys().hasAny(['agreementBallot']) &&
+                       (isSystemAdmin() || mayWorkInScope(resource.data.get('accessScope', 'open'))) &&
+                       isAuthorized();
 
       // Civil Activity Hub — join form submissions subcollection.
       // Scoped to the owning question document. Each user owns their own
@@ -2036,20 +2078,20 @@ service cloud.firestore {
                get(governingSub).data.role in ['member', 'admin', 'statement-creator'];
       }
 
-      function isOpenToAll() {
-        return getAccess() == "openToAll";
+      // The access is read once per request and passed in: getAccess() costs up to
+      // three reads and many expressions, and calling it once per setting hit the
+      // 1000-expression limit on a moderated level that names itself.
+      function isOpenSetting(access) {
+        return access in ['public', 'openToAll', 'openForRegistered'];
       }
-      
-      function isOpenForRegistered() {
-        return getAccess() == "openForRegistered";
+      function maySelfJoin(access) {
+        return isOpenSetting(access) ||
+               isMemberUnderOwnTop() ||
+               (access == 'moderated' && isWaitingRole());
       }
-      
-      function isModerated() {
-        return getAccess() == "moderated";
-      }
-      
-      function isPublic() {
-        return getAccess() == "public";
+      function maySelfChangeRole(access) {
+        return (access == 'moderated' && isWaitingRole()) ||
+               (isOpenSetting(access) && isMemberRole());
       }
       
       function isWaitingRole() {
@@ -2217,11 +2259,7 @@ service cloud.firestore {
                      (isAdminOrCreator() ||
                       (isSelfGrantableRole() &&
                        classCreateOk() &&
-                       (isPublic() ||
-                        isOpenToAll() ||
-                        isOpenForRegistered() ||
-                        isMemberUnderOwnTop() ||
-                        (isModerated() && isWaitingRole()))));
+                       maySelfJoin(getAccess())));
 
       // For update
       // The subscriber branch is already an allow-list: a person may keep their
@@ -2236,9 +2274,7 @@ service cloud.firestore {
                       (isSubscriber() &&
                         classUpdateOk() &&
                         (isRoleUnchanged() ||
-                          (!isBanned() &&
-                            ((isModerated() && isWaitingRole()) ||
-                             ((isPublic() || isOpenToAll() || isOpenForRegistered()) && isMemberRole())))
+                          (!isBanned() && maySelfChangeRole(getAccess()))
                         )
                       ));
       
