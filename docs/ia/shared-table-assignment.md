@@ -1,6 +1,6 @@
 # Shared Tables: חלוקה לשולחנות — IA spec
 
-Status: agreed (redesign approved by Tal, 2026-11-10); not implemented yet
+Status: agreed (redesign approved by Tal, 2026-11-10); implemented and live. Routes, host home and the "Room screen" label are superseded by [join-class-tables-merge.md](join-class-tables-merge.md) (agreed 2026-11-11).
 Date: 2026-11-10
 Supersedes: the 2026-11-05 version of this file (hub with five host sub-screens, separate topics and preferences screens).
 Companions: [build map](../plans/features/tables-redesign-build.md), [design brief](../design/tables-design-brief.md), [system plan](../plans/features/shared-table-assignment.md).

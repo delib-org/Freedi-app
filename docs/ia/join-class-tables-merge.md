@@ -1,6 +1,6 @@
 # join-class: Tables inside Class (registration and table-paced discussion) — IA spec
 
-Status: draft (direction approved by Tal, 2026-11-11; decisions in section 9 are open)
+Status: agreed (all nine decisions in section 9 decided by Tal, 2026-11-11); not implemented yet
 Date: 2026-11-11
 Supersedes: the routes, host home and "Room screen" label of [shared-table-assignment.md](shared-table-assignment.md). Its objects, privacy rules, participant steps and Hebrew copy stay approved and are not repeated here.
 Builds on: [join-class-lesson-plan.md](join-class-lesson-plan.md) (plan, game, lesson, class home), [agora-classroom.md](agora-classroom.md) (lesson status, console, projector), [join-class-no-device.md](join-class-no-device.md).
@@ -41,7 +41,7 @@ Rules of the model:
 
 - **Topic is not a question.** A topic is a label the table carries from registration ("Table 4 · Transport"). Guiding questions and the challenge stay lesson-wide. Proposals already carry their table (`ClassTableMarker.tableId`), so a proposal's topic is derived, never stored twice. A lesson with no registration has no topics. Decision 3 holds the richer alternative.
 - **Position and side are one concept.** Both are 0–100 between two named poles (`TableAssignmentParticipant.position` already uses `SideValueSchema`). Asked once: in registration when there is one, otherwise at the lesson's Side step.
-- **Privacy, the stricter rule.** A position answered in registration stays in the private answers. It is never copied to `side` / `camp` on the subscription. So in a lesson that used registration: the host, the tablemates and the projector see names only; My table shows no side marks; "support by side" in the Summary is off (decision 5). A lesson without registration keeps today's behaviour.
+- **Privacy, the stricter rule.** A position answered in registration stays in the private answers. It is never copied to `side` / `camp` on the subscription. So in a lesson that used registration: the host, the tablemates and the projector see names only; My table shows no side marks; "support by side" in the Summary is shown as server-computed totals only (decision 5). A lesson without registration keeps today's behaviour.
 - **One table, two records, one owner at a time.** Before the lesson starts, the published run owns "who sits where". When the lesson starts, the server copies it into the lesson's tables (table number = run index + 1) and from then on the lesson's tables own it: the host's "move to another table", people without a phone and latecomers all act there. My table and the projector read the current owner.
 - **Room step and table step.** `lessonPlan.stepIndex` is the room's step. Steps before Table talk (waiting, opening, side, tables) and from Vote on (vote, summary) are room steps in both paces. In table pace the room stays on Table talk through the free stretch and each table carries its own step (tableTalk, proposals, allProposals). What a participant sees: the room step when it is a room step, otherwise their table's step. No new step keys (a new picklist value breaks deployed clients); today `isTableTalk(table, lessonStep)` reads the room step, and in table pace it reads the table's.
 - **One seating engine.** `@freedi/table-assignment` seats both. A lesson without registration calls it at the Tables step with one implicit topic and each student's side. It must keep Class's promises: 2..8 per table, sizes differ by at most one, nobody alone, people without a phone stay put, "re-seat" gives a new plan.
@@ -154,7 +154,7 @@ Role: The room. One projector per event: shape A `/t/tables/:id/screen` (join by
   - registration link and QR: `/tables/:id`;
   - class code: `/c/:code`. A lesson with an assignment sends a person who has no seat to `/tables/:id` (they register as a latecomer) and a seated person to `/m/:lessonId`;
   - host: `/t/tables/:id`, `/t/:lessonId`.
-- **Old Tables links.** Anonymous identity does not cross from tables.wizcol.com to class.wizcol.com, so a plain redirect makes every registered person a stranger. Rule (decision 8): tables.wizcol.com serves the Class app at the old participant paths until every assignment created before cutover has ended; host paths redirect at once (Google identity crosses).
+- **Old Tables links.** Anonymous identity does not cross from tables.wizcol.com to class.wizcol.com, but nobody is registered on Tables at cutover (decision 8), so every old path redirects at once.
 
 | Old route (tables.wizcol.com) | Now |
 |---|---|
@@ -162,9 +162,9 @@ Role: The room. One projector per event: shape A `/t/tables/:id/screen` (join by
 | `/host/new` | → `/t/tables/new` |
 | `/host/sessions/:id` and `/preview`, `/assignment`, `/participants`, `/screen` | → `/t/tables/:id` and the same segment |
 | `/host/sessions/:id/topics`, `/settings` | → `/t/tables/:id` |
-| `/sessions/:id`, `/name`, `/position`, `/my-table` | served in place as `/tables/:id/...` during the transition; redirected after |
-| `/sessions/:id/preferences` | same, as `/tables/:id/choices` |
-| `/sessions/:id/topics`, `/topics/:topicId` | same, as `/tables/:id` |
+| `/sessions/:id`, `/name`, `/position`, `/my-table` | → `/tables/:id/...` |
+| `/sessions/:id/preferences` | → `/tables/:id/choices` |
+| `/sessions/:id/topics`, `/topics/:topicId` | → `/tables/:id` |
 
 ## 6. Task flows
 
@@ -235,7 +235,7 @@ Kept = same job, moved into Class. All Tables screens keep the states of shared-
 | Waiting step | Class WaitingView | `/m/:lessonId` | Wait for the start | Kept for shape C. Shape B shows My table instead |
 | Side step | Class SideView | `/m/:lessonId` | Choose a side | Kept for shape C. Absent in shape B |
 | Table at work | Class TableFlow and its parts | `/m/:lessonId` | Talk, write, rate | Kept. Table pace: every "חכו למורה" state gets an action or a "what happens next" line. Paused: lesson paused screen |
-| All proposals, Vote, Summary | Class | `/m/:lessonId` | Rate, vote, see the result | Kept. Lists group by topic when the lesson has topics. Support by side: off with registration |
+| All proposals, Vote, Summary | Class | `/m/:lessonId` | Rate, vote, see the result | Kept. Lists group by topic when the lesson has topics. Support by side: totals from the server with registration (decision 5) |
 | Table finished | NEW | `/m/:lessonId` | Say the table is done and what comes next | New. Empty: nothing more to rate. Done: flips to Vote by itself |
 | Tables app shell, Placeholder, HostGate | Tables | — | — | Retired |
 
@@ -247,17 +247,17 @@ Kept = same job, moved into Class. All Tables screens keep the states of shared-
 - All proposals, Vote, Summary with topics: grouped by topic, then today's order.
 - Participants never search: they land on their own state.
 
-## 9. Open decisions (for Tal) and assumptions
+## 9. Decisions (Tal, 2026-11-11) and assumptions
 
-1. **When does the vote open in table pace?** Recommended: tables go freely through questions and proposals, a finished table reads and rates the others' proposals, and the host opens the vote once for everyone. Alternative: each table votes when it gets there. Cost of the alternative: early tables vote on an unfinished list, results are not comparable, and the shortlist can no longer be frozen once.
-2. **One set of words or two?** Recommended: two small sets (teacher / host, student / participant, lesson / gathering, choosing a side / my position), chosen per lesson. First round: everything a participant reads, plus the registration screens. The console and the plan screens keep school words until a community host runs a discussion. Alternative: one neutral set (מנחה, משתתפים, מפגש) everywhere; cost: teachers lose the school words they asked for.
-3. **What is a topic during the discussion?** Recommended: a label on the table; everyone still answers the same question to solve, and lists are grouped by topic. Alternative: each topic has its own question to solve and its own vote; cost: a ballot per topic and a longer Summary.
-4. **A different phone on the day.** Today "return by full name" works only while registration is open (`fn_tablesRegister`), so a person who registered in WhatsApp's browser and scans the QR with the camera has no seat. Recommended: allow "כבר נרשמתי" after publishing, once per registration, marked for the host. Risk: someone types another person's name and takes the seat; the real person then shows as a latecomer and the host sorts it out.
-5. **"Support by side" in the Summary** needs each person's side. Recommended: off in lessons that used registration. Alternative: totals only, and only for groups above a minimum size.
-6. **Seats per table.** Tables allows 3–20 (default 7); a table that talks in turns allows 2–8 (default 6). Recommended: 8 at most whenever a discussion is attached.
-7. **Can a table start before the host presses start?** Recommended: no; one "start" for the room.
-8. **Old links.** Recommended: keep the old address working in place until running assignments end (section 5). Alternative: redirect at once; cost: everyone already registered loses their place.
-9. **Changing the pace during a lesson.** Recommended: the host may take the pace back (table → host; every table goes to the room's step), not the other way mid-lesson.
+1. **When does the vote open in table pace?** DECIDED: tables go freely through questions and proposals, a finished table reads and rates the others' proposals, and the host opens the vote once for everyone.
+2. **One set of words or two?** DECIDED: two small sets (teacher / host, student / participant, lesson / gathering, choosing a side / my position), chosen per lesson. First round: everything a participant reads, plus the registration screens. The console and the plan screens keep school words until a community host runs a discussion.
+3. **What is a topic during the discussion?** DECIDED: a label on the table; everyone still answers the same question to solve, and lists are grouped by topic.
+4. **A different phone on the day.** DECIDED: the full name is enough. "כבר נרשמתי" by full name works after publishing as well as before, with no once-only limit and no mark for the host; Tal judges the risk of someone typing another person's name as not real. Today `fn_tablesRegister` allows it only while registration is open, so this is new server work.
+5. **"Support by side" in the Summary.** DECIDED: shown in lessons that used registration too. To keep the privacy rule (nobody sees a person's position), the server computes the totals per side from the private answers and the clients receive totals only; the position is still never copied to `side` / `camp` on the subscription. No minimum group size: every side's total is shown, however small (Tal, 2026-11-11).
+6. **Seats per table.** DECIDED: default 7, and the host can change it. The host may set more than 8 also when a discussion is attached (Tal, 2026-11-11). The talk-in-turns machine is built and tested for 2–8 (`MAX_TABLE_SIZE`), so raising the limit needs server work and tests.
+7. **Can a table start before the host presses start?** DECIDED: no; one "start" for the room.
+8. **Old links.** DECIDED: redirect at once. Tables is new and nobody is registered on it, so no identity is lost; tables.wizcol.com does not need to serve the Class app during a transition.
+9. **Changing the pace during a lesson.** DECIDED: the host may take the pace back (table → host; every table goes to the room's step), not the other way mid-lesson.
 
 Assumptions: Tables and Class use the same Firebase project and Google accounts. A person without a phone is added at the table during the discussion (existing); there is no such path in registration only. "Sit where you like" seating works with a discussion: tables fill live. An assignment attached to a lesson with no topics typed gets one topic named after the game, and the rank step is skipped.
 
