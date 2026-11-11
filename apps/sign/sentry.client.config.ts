@@ -4,6 +4,7 @@
 
 import * as Sentry from "@sentry/nextjs";
 import {
+  CONNECTIVITY_IGNORE,
   isFirestoreInternalCrash,
   isLocalRuntime,
   isTransientAuthNetworkError,
@@ -31,8 +32,11 @@ Sentry.init({
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
 
-  // Ignore Firestore offline errors (user device lost connection — not actionable)
+  // Ignore connectivity and Firestore offline errors (user device lost
+  // connection — not actionable). Sign deliberately does not adopt the rest of
+  // the shared ignore list (permission-denied, IndexedDB, service worker).
   ignoreErrors: [
+    ...CONNECTIVITY_IGNORE,
     "Failed to get document because the client is offline",
     "Could not reach Cloud Firestore backend",
   ],

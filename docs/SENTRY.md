@@ -138,6 +138,12 @@ two apps ended up with no Firestore filter at all.
 - The shared `ignoreErrors` list: browser-extension noise, connectivity, IndexedDB
   in private mode, Firestore offline.
 
+- **Next.js apps (mass-consensus, sign)** keep their own `sentry.client.config.ts`
+  and deliberately do not adopt the whole shared list (it also hides
+  `permission-denied`, IndexedDB and service-worker noise). They share only the
+  connectivity strings (`CONNECTIVITY_IGNORE`; MC already listed them inline)
+  and the `isTransientAuthNetworkError` filter in `beforeSend` (Sign and MC).
+
 Each filter requires the stack to be rooted in the third-party bundle it names,
 so app code producing a similar message is still reported.
 

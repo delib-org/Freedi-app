@@ -1,4 +1,4 @@
-import { buildSentryOptions, isUsableDsn } from '../sentryOptions';
+import { buildSentryOptions, isUsableDsn, CONNECTIVITY_IGNORE } from '../sentryOptions';
 import type { SentryLikeEvent } from '../sentryFilters';
 
 const DSN = 'https://abc123@o1.ingest.sentry.io/2';
@@ -106,5 +106,25 @@ describe('isUsableDsn', () => {
 		[null, false],
 	])('%s -> %s', (dsn, expected) => {
 		expect(isUsableDsn(dsn as string | undefined)).toBe(expected);
+	});
+});
+
+describe('CONNECTIVITY_IGNORE', () => {
+	it('lists the connectivity strings and nothing broader', () => {
+		expect([...CONNECTIVITY_IGNORE]).toEqual([
+			'Network request failed',
+			'NetworkError',
+			'Failed to fetch',
+			'Load failed',
+			'auth/network-request-failed',
+		]);
+	});
+
+	it('is part of the shared ignore list', () => {
+		const ignore = options({}).ignoreErrors;
+
+		for (const entry of CONNECTIVITY_IGNORE) {
+			expect(ignore).toContain(entry);
+		}
 	});
 });

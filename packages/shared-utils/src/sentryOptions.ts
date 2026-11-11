@@ -51,6 +51,19 @@ export interface BuildSentryOptionsArgs {
 	tracesSampleRate?: number;
 }
 
+/**
+ * Connectivity noise: the device's problem, not ours. Exported so the Next.js
+ * apps (which keep their own Sentry configs) can share exactly these strings
+ * without adopting the rest of SHARED_IGNORE.
+ */
+export const CONNECTIVITY_IGNORE: readonly string[] = [
+	'Network request failed',
+	'NetworkError',
+	'Failed to fetch',
+	'Load failed',
+	'auth/network-request-failed',
+];
+
 /** Messages that are noise in every app. */
 const SHARED_IGNORE: (string | RegExp)[] = [
 	// Browser extensions and benign browser noise
@@ -58,12 +71,7 @@ const SHARED_IGNORE: (string | RegExp)[] = [
 	'ResizeObserver loop limit exceeded',
 	'ResizeObserver loop completed with undelivered notifications',
 	'Non-Error promise rejection captured',
-	// Connectivity — the device's problem, not ours
-	'Network request failed',
-	'NetworkError',
-	'Failed to fetch',
-	'Load failed',
-	'auth/network-request-failed',
+	...CONNECTIVITY_IGNORE,
 	// Firestore offline
 	'Failed to get document because the client is offline',
 	'Could not reach Cloud Firestore backend',
