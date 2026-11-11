@@ -449,6 +449,8 @@ const en: Record<string, string> = {
 		'{{count}} people registered after the tables were published. Computing again keeps everyone seated where they are and seats only them.',
 	'tableAssignment.participants.unseated': 'Not seated yet',
 	'tableAssignment.count.unseated': 'Not seated yet',
+	'tableAssignment.error.tableSizeBelowPublished':
+		'The table size is now smaller than a table that was already published. Set it back, or raise it, then compute again.',
 };
 
 export default en;

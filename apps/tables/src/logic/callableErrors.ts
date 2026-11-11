@@ -47,6 +47,7 @@ const REASON_KEYS: Readonly<Record<string, string>> = {
 	'name-locked': 'tableAssignment.error.nameLocked',
 	'too-few-registrants': 'tableAssignment.error.tooFewRegistrants',
 	'preview-limit': 'tableAssignment.error.previewLimit',
+	'table-size-below-published': 'tableAssignment.error.tableSizeBelowPublished',
 };
 
 /** On the name screen, a registration continued by name cannot be renamed (not "cancelled"). */

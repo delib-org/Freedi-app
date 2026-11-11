@@ -428,6 +428,8 @@ const he: Record<string, string> = {
 		'{{count}} אנשים נרשמו אחרי שהשולחנות פורסמו. חישוב נוסף משאיר את כולם במקומם ומושיב רק אותם.',
 	'tableAssignment.participants.unseated': 'עדיין לא משובץ',
 	'tableAssignment.count.unseated': 'עדיין לא משובצים',
+	'tableAssignment.error.tableSizeBelowPublished':
+		'גודל השולחן קטן עכשיו משולחן שכבר פורסם. אפשר להחזיר אותו או להגדיל אותו, ואז לחשב שוב.',
 };
 
 export default he;

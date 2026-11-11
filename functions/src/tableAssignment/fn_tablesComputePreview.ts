@@ -78,7 +78,17 @@ async function publishedPinnedTables(
 	if (session.status !== 'published' || !session.publishedRunId) return [];
 	const published = await runRef(firestore, session.publishedRunId).get();
 
-	return published.exists ? pinnedTablesOf(published.data() as TableAssignmentRun) : [];
+	const pinned = published.exists ? pinnedTablesOf(published.data() as TableAssignmentRun) : [];
+
+	if (pinned.some((table) => table.memberIds.length > session.settings.tableSize)) {
+		throw new TablesError(
+			'failed-precondition',
+			'The table size is now smaller than a published table',
+			'table-size-below-published',
+		);
+	}
+
+	return pinned;
 }
 
 /**

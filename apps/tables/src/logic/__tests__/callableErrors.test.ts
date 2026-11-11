@@ -11,6 +11,7 @@ function refusal(reason: string): { code: string; details: { reason: string } } 
 const NEW_REASONS: ReadonlyArray<[string, string]> = [
 	['too-few-registrants', 'tableAssignment.error.tooFewRegistrants'],
 	['preview-limit', 'tableAssignment.error.previewLimit'],
+	['table-size-below-published', 'tableAssignment.error.tableSizeBelowPublished'],
 	['registration-full', 'tableAssignment.error.registrationFull'],
 	['name-locked', 'tableAssignment.error.nameLocked'],
 ];

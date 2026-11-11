@@ -203,6 +203,22 @@ describe('tablesComputePreview once the tables are published', () => {
 		expect(run.tables[0].memberUids).toEqual(expect.arrayContaining(['u1', 'u3']));
 	});
 
+	it('refuses with a reason when the table size is now below a published table', async () => {
+		const fake = publishedRoom();
+
+		withNewcomers(fake);
+		seedSession(
+			fake,
+			{ status: 'published', publishedRunId: 'run-pub' },
+			{ tableSize: 2, balanceTolerance: 0.3 },
+		);
+		await expectRefusal(
+			computePreview(fake.asFirestore(), HOST, { sessionId: SID }, NOW, () => 7),
+			'failed-precondition',
+			'table-size-below-published',
+		);
+	});
+
 	it('does not pin anything before the first publication', async () => {
 		const fake = publishedRoom('registrationClosed');
 

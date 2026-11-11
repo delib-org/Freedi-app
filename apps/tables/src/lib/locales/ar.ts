@@ -437,6 +437,8 @@ const ar: Record<string, string> = {
 		'سجّل {{count}} شخص بعد نشر الطاولات. الحساب مجددًا يُبقي الجميع في أماكنهم ويجلس هؤلاء فقط.',
 	'tableAssignment.participants.unseated': 'لم يُجلَس بعد',
 	'tableAssignment.count.unseated': 'لم يُجلسوا بعد',
+	'tableAssignment.error.tableSizeBelowPublished':
+		'حجم الطاولة أصبح أصغر من طاولة نُشرت بالفعل. أعيدوه أو كبّروه ثم احسبوا مجددًا.',
 };
 
 export default ar;
