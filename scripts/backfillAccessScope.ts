@@ -33,8 +33,10 @@
  *
  * OPTIONS
  *   --limit=N   Stop after scanning N statements
- *   --rate=N    Most statements written per second (default 50). Each write
- *               starts 19 triggers, so this caps them at 19 x N per second.
+ *   --rate=N    Most statements written per second (default 5). Each write
+ *               starts about 19 triggers, so this caps them at 19 x N per second.
+ *               At 50, freedi-test's triggers ran out of memory about 235 times;
+ *               run a pilot first (docs/security/access-scope-release.md).
  *   --state=PATH  State file (default: scripts/.cache/backfillAccessScope[.emulator].<project>.json)
  *   --restart   Ignore the state file and start from the beginning
  */
@@ -54,7 +56,8 @@ import {
 	resolveProjectEnv,
 } from '../functions/src/migrations/backfillRunGuard';
 
-const DEFAULT_WRITES_PER_SECOND = 50;
+/** See docs/security/access-scope-release.md: 50 per second ran triggers out of memory. */
+const DEFAULT_WRITES_PER_SECOND = 5;
 
 function optionValue(name: string): string | undefined {
 	const prefix = `--${name}=`;
