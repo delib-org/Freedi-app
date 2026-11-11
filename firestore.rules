@@ -11,6 +11,48 @@ service cloud.firestore {
       return path.split('/').join('_');
     }
 
+    // PRIVATE LEVELS, shared by /statements and the collections tied to a
+    // statement (ratings, votes). `accessScope` is 'open' or the id of the private
+    // level governing a statement; see the /statements list rule.
+    function subRoleAt(id) {
+      let path = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(id)));
+      return exists(path) ? get(path).data.get('role', '') : '';
+    }
+    function statementPathOf(id) {
+      return /databases/$(database)/documents/statements/$(cleanPath(string(id)));
+    }
+    // Writing inside a private level G: a role at G, or a host role at the top;
+    // no ban or pending request at either. Cheaper than mayReadScope, so a write
+    // stays inside the read limit; a host of a level between G and the top who
+    // holds no role at G writes by naming no such change.
+    function rolesForWriting(scope, level) {
+      let top = level.get('topParentId', 'top');
+      return [subRoleAt(scope), (top == 'top' || top == scope) ? '' : subRoleAt(top)];
+    }
+    function mayWorkInRestrictedScope(scope) {
+      let level = get(statementPathOf(scope)).data;
+      return level.get('accessScope', '') == 'open' ||
+             (request.auth != null && mayWorkWithRoles(rolesForWriting(scope, level)));
+    }
+    function mayWorkWithRoles(roles) {
+      return !('banned' in roles) && !('waiting' in roles) &&
+             (roles[0] in ['member', 'admin', 'statement-creator'] ||
+              roles[1] in ['admin', 'statement-creator']);
+    }
+    function mayWorkInScope(scope) {
+      return scope == 'open' || (scope != 'quarantined' && mayWorkInRestrictedScope(scope));
+    }
+    // A write tied to a statement (a rating of it, a vote under it) needs a way
+    // into the private level governing it, as writing a statement there does. A
+    // statement with no stamp yet counts as open, and so does one that does not
+    // exist (a rating of nothing exposes nothing).
+    function mayActOnStatement(id) {
+      let path = statementPathOf(id);
+      return !exists(path) ||
+             mayWorkInScope(get(path).data.get('accessScope', 'open')) ||
+             isSystemAdminUser();
+    }
+
     // join-class: the students of a lesson write nothing while the teacher has
     // it paused or ended (statementSettings.lessonPlan.status; absent = live).
     // One get() of the main statement. Used ONLY behind a join-class-specific
@@ -1439,10 +1481,6 @@ service cloud.firestore {
       // Budget, against a limit of ten: at most 1 read of the parent, 1 of the
       // governing level, 6 subscriptions and 1 of usersV2. That is why a query
       // may name only one restricted scope.
-      function subRoleAt(id) {
-        let path = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(id)));
-        return exists(path) ? get(path).data.get('role', '') : '';
-      }
       function roleFromEnd(ids, position) {
         return ids.size() > position ? subRoleAt(ids[ids.size() - 1 - position]) : '';
       }
@@ -1481,9 +1519,6 @@ service cloud.firestore {
       function mayReadScope(scope) {
         return scope == 'open' || (scope != 'quarantined' && mayReadRestrictedScope(scope));
       }
-      function statementPathOf(id) {
-        return /databases/$(database)/documents/statements/$(cleanPath(string(id)));
-      }
       // Children that cannot be a private level of their own: answers, chat,
       // paragraphs. These keep their old query shape, judged by the parent.
       function asksForLeafChildren() {
@@ -1518,27 +1553,6 @@ service cloud.firestore {
                     isHostAround(scope, get(statementPathOf(scope)).data)));
       }
 
-      // Writing inside a private level G: a role at G, or a host role at the top;
-      // no ban or pending request at either. Cheaper than mayReadScope, so a write
-      // stays inside the read limit; a host of a level between G and the top who
-      // holds no role at G writes by naming no such change.
-      function rolesForWriting(scope, level) {
-        let top = level.get('topParentId', 'top');
-        return [subRoleAt(scope), (top == 'top' || top == scope) ? '' : subRoleAt(top)];
-      }
-      function mayWorkInRestrictedScope(scope) {
-        let level = get(statementPathOf(scope)).data;
-        return level.get('accessScope', '') == 'open' ||
-               (request.auth != null && mayWorkWithRoles(rolesForWriting(scope, level)));
-      }
-      function mayWorkWithRoles(roles) {
-        return !('banned' in roles) && !('waiting' in roles) &&
-               (roles[0] in ['member', 'admin', 'statement-creator'] ||
-                roles[1] in ['admin', 'statement-creator']);
-      }
-      function mayWorkInScope(scope) {
-        return scope == 'open' || (scope != 'quarantined' && mayWorkInRestrictedScope(scope));
-      }
       // WRITING INSIDE A PRIVATE LEVEL. Every check below runs against the limit
       // of 1000 expressions per request, next to the rules that decide who may
       // edit at all; one role read costs about 30 of them. So the parent is read
@@ -1908,9 +1922,10 @@ service cloud.firestore {
                        (resource == null || resource.data.get('userId', '') == request.auth.uid);
     }
 
+    // Written only by the server (counts per statement); a client could forge them.
     match /statementsMeta/{statementId=**} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow write: if false;
     }
 
     // Deletion tombstones — written only by Cloud Functions (admin SDK).
@@ -1920,24 +1935,28 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Legacy: no client reads or writes these any more (the survey export reads
+    // them through the Admin SDK). Closed, so nobody lists another group's
+    // marks on statements or forges them.
     match /importance/{importanceId=**} {
-      allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow read, write: if false;
     }
 
-    match /statementViews/{statementId=**} {
-      allow write: if request.auth.uid != null;
-      allow read: if request.auth.uid != null;
+    // One doc per person and question, `{uid}--{statementId}`
+    // (useRecordQuestionView). Only the person's own.
+    match /statementViews/{statementViewId} {
+      allow read, write: if request.auth != null &&
+                            statementViewId.matches('^' + request.auth.uid + '--.+');
     }
 
     match /statementSegments/{segementId=**} {
-      allow write: if request.auth.uid != null;
-      allow read: if request.auth.uid != null;
+      allow read, write: if false;
     }
 
+    // Sign's approvals: written and read by its server (Admin SDK) only.
     match /approval/{approvalId=**} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow write: if false;
     }
     
     match /documentsSigns/{documentsSignId=**} {
@@ -1953,8 +1972,7 @@ service cloud.firestore {
     }
     
     match /agrees/{agreeId=**} {
-      allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow read, write: if false;
     }
     
     // Numeric PIN invitations (main app, InvitePanel). A PIN resolves to a
@@ -2251,7 +2269,35 @@ service cloud.firestore {
         return request.resource.data.role in ['member', 'waiting', 'unsubscribed'];
       }
 
-      allow read: if request.auth.uid != null;
+      // READING SUBSCRIPTIONS. A subscription carries a copy of its statement, so
+      // it is read by the person it belongs to, by those already in the statement
+      // (a member, a host: people screens, the join-class roster and table-mates),
+      // by a host of its top, and by system admins. Not by anyone else signed in.
+      // A list must filter `userId == <own uid>` or `statementId == X`.
+      function ownsSubscription() {
+        return resource.data.get('userId', statementSubId.split('--')[0]) == request.auth.uid;
+      }
+      function isInStatement(sid) {
+        let role = subRoleAt(sid);
+        return role in ['member', 'admin', 'statement-creator'];
+      }
+      function hostsTopOf(sid) {
+        let path = statementPathOf(sid);
+        let top = exists(path) ? get(path).data.get('topParentId', 'top') : 'top';
+        return top != 'top' && top != sid && subRoleAt(top) in ['admin', 'statement-creator'];
+      }
+      function maySeeSubscriptionsOf(sid) {
+        return isInStatement(sid) || hostsTopOf(sid) || isSystemAdminUser();
+      }
+      allow get: if request.auth.uid != null &&
+                    (resource == null ||
+                     statementSubId.split('--')[0] == request.auth.uid ||
+                     ownsSubscription() ||
+                     maySeeSubscriptionsOf(resource.data.get('statementId', '')));
+      allow list: if request.auth.uid != null &&
+                     (resource.data.userId == request.auth.uid ||
+                      maySeeSubscriptionsOf(resource.data.statementId) ||
+                      isSystemAdminUser());
 
       // For create
       // A user may only create their OWN subscription (userId == uid). Elevated
@@ -2322,8 +2368,7 @@ service cloud.firestore {
     }
     
     match /statementsSignatures/{signatureId=**} {
-      allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow read, write: if false;
     }
 
     match /massConsensusMembers/{userId=**} {
@@ -2338,8 +2383,7 @@ service cloud.firestore {
     }
 
     match /statementRoomsAsked/{requestId=**} {
-      allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow read, write: if false;
     }
 
     // No client writes this. A write fires updateResultsSettings.
@@ -2446,7 +2490,11 @@ service cloud.firestore {
                !agoraRemovedFrom(request.resource.data.agoraSessionId);
       }
 
-      allow create: if hasEvaluationShape() && isOwnEvaluation() && notRemovedAgoraRater();
+      // Rating an answer inside a private level needs a way into that level, the
+      // same as writing there: an outsider, someone waiting or banned, or an
+      // anonymous visitor cannot rate members' answers.
+      allow create: if hasEvaluationShape() && isOwnEvaluation() && notRemovedAgoraRater() &&
+                       mayActOnStatement(request.resource.data.statementId);
 
       // On update both sides must be the caller: the existing document to stop
       // one student overwriting another's rating, and the incoming one to stop
@@ -2454,6 +2502,7 @@ service cloud.firestore {
       // parentId are pinned so a rating cannot be moved onto a different
       // proposal after the fact.
       allow update: if hasEvaluationShape() && isOwnEvaluation() && notRemovedAgoraRater()
+                    && mayActOnStatement(request.resource.data.statementId)
                     && resource.data.evaluatorId == request.auth.uid
                     && request.resource.data.statementId == resource.data.statementId
                     && request.resource.data.parentId == resource.data.parentId
@@ -2545,14 +2594,9 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    match /approval/{approvalId=**} {
-      allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
-    }
 
     match /statementEvaluators/{statementEvaluatorsId=**} {
-      allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow read, write: if false;
     }
 
     // One vote per user per question, and the doc id says whose it is:
@@ -2644,7 +2688,9 @@ service cloud.firestore {
       allow list: if request.auth != null &&
                      (resource.data.userId == request.auth.uid ||
                       mayReadQuestionBallots(resource.data.parentId));
+      // A vote on a question inside a private level needs a way into that level.
       allow create, update: if request.auth.uid != null &&
+                               mayActOnStatement(request.resource.data.parentId) &&
                                agreementBallotOpen(request.resource.data.parentId, request.resource.data.statementId) &&
                                notRemovedAgoraVoter(request.resource.data.parentId) &&
                                classBallotOpen(request.resource.data.parentId, request.resource.data.statementId) &&

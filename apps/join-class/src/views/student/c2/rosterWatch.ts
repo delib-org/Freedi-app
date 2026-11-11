@@ -6,7 +6,7 @@ import { listenRoster } from '@/lib/classroom/listeners';
  * A student screen's own view of the roster (who joined, their names and sides).
  * `watchClass` keeps the roster for teachers only, so the student screens that
  * need it (waiting count, table-mates) hold a small watcher of their own.
- * `statementsSubscribe` is readable by any signed-in user (see listeners.ts).
+ * A student who joined the lesson may list its subscriptions (see listeners.ts).
  */
 export interface RosterWatch {
 	/** Latest roster; empty until the first delivery or when reading is refused. */
