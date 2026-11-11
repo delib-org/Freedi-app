@@ -72,12 +72,12 @@ export function fakeStatementStore() {
 	};
 	const makeQuery = (
 		collection: string,
-		equals?: Array<{ field: string; value: string }>,
+		equals?: Array<{ field: string; value: string | string[]; op?: string }>,
 		pageSize = Number.MAX_SAFE_INTEGER,
 		after?: string,
 	) => ({
-		where: (field: string, _op: string, value: string) =>
-			makeQuery(collection, [...(equals ?? []), { field, value }], pageSize, after),
+		where: (field: string, op: string, value: string | string[]) =>
+			makeQuery(collection, [...(equals ?? []), { field, value, op }], pageSize, after),
 		orderBy: () => makeQuery(collection, equals, pageSize, after),
 		limit: (size: number) => makeQuery(collection, equals, size, after),
 		startAfter: (id: string) => makeQuery(collection, equals, pageSize, id),
@@ -86,9 +86,13 @@ export function fakeStatementStore() {
 				.sort()
 				.filter((id) => !after || id > after)
 				.filter((id) =>
-					(equals ?? []).every(
-						({ field, value }) => readPath(store(collection).get(id), field) === value,
-					),
+					(equals ?? []).every(({ field, value, op }) => {
+						const found = readPath(store(collection).get(id), field);
+
+						return op === 'in' && Array.isArray(value)
+							? value.includes(found as string)
+							: found === value;
+					}),
 				)
 				.slice(0, pageSize);
 			const docs = ids.map((id) => snap(collection, id));

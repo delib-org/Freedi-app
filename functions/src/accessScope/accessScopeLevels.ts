@@ -38,7 +38,11 @@ export type ScopeSubject = Pick<
 > &
 	Partial<Pick<Statement, 'statementType' | 'agreementBallot' | 'accessScope'>>;
 
-type LoadedLevel = AccessScopeLevel & { parentId?: string; hide?: boolean; accessScope?: string };
+export type LoadedLevel = AccessScopeLevel & {
+	parentId?: string;
+	hide?: boolean;
+	accessScope?: string;
+};
 
 /**
  * The access settings of the levels above a set of statements, read once. A
@@ -144,6 +148,32 @@ export class AccessScopeLevels {
 		return this.walk(subject).loop === true;
 	}
 
+	/** Whether a deleted ancestor breaks the chain above a loaded statement. */
+	isBroken(subject: ScopeSubject): boolean {
+		return this.walk(subject).broken === true;
+	}
+
+	/**
+	 * Whether a loaded statement really sits under `topId` by its `parentId`
+	 * chain, not only by the `topParentId` it claims.
+	 */
+	isUnder(subject: ScopeSubject, topId: string): boolean {
+		const seen = new Set([subject.statementId]);
+		let next: string | undefined = subject.parentId;
+		while (next && next !== TOP && !seen.has(next) && seen.size <= MAX_DEPTH) {
+			if (next === topId) return true;
+			seen.add(next);
+			next = this.levels.get(next)?.parentId;
+		}
+
+		return false;
+	}
+
+	/** Takes a level as given, so what is decided for it counts for its children. */
+	remember(level: LoadedLevel & { statementId: string }): void {
+		this.levels.set(level.statementId, level);
+	}
+
 	/**
 	 * The scope of a statement whose ancestors have been loaded. A statement on, or
 	 * under, a loop is quarantined: its `parents` and `topParentId` may claim any
@@ -168,7 +198,9 @@ export class AccessScopeLevels {
 			.filter((level): level is LoadedLevel => Boolean(level));
 		// Quarantine is lifted by a person, never by a re-stamp, and it covers what
 		// is under it: a re-made id's old children would otherwise resolve through
-		// its new, open setting the next time their tree is re-stamped.
+		// its new, open setting the next time their tree is re-stamped. A person
+		// lifts it with scripts/liftQuarantine.ts; see the runbook in
+		// docs/security/access-scope-quarantine.md.
 		if (
 			isQuarantinedScope(subject.accessScope) ||
 			levels.some((level) => isQuarantinedScope(level.accessScope))

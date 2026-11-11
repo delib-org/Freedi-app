@@ -8,6 +8,7 @@ import {
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { resolveStatementScope, type ScopeSubject } from './accessScopeLevels';
+import { walkSubtree } from './subtree';
 
 /** Enough of what is still filed under a deleted id to tell where it was. */
 const ORPHAN_SAMPLE = 20;
@@ -95,36 +96,42 @@ export async function scopeOfReusedId(
  * Quarantines a statement and everything filed under it. What a re-made id's
  * old children carry may already have been loosened through the new statement,
  * and nothing would re-stamp them otherwise: their tree (the old top) is not the
- * new statement's. Walks parentId, one level at a time.
+ * new statement's. Walks parentId, one level at a time, children by 30 parents
+ * per query. Returns how many it wrote.
  */
 export async function quarantineWithChildren(
 	firestore: Firestore,
 	statementId: string,
 ): Promise<number> {
-	const statements = firestore.collection(Collections.statements);
-	let level = [statementId];
-	const done = new Set<string>();
-	while (level.length > 0 && done.size < MAX_QUARANTINED) {
-		const next: string[] = [];
-		const refs = [];
-		for (const id of level) {
-			if (done.has(id)) continue;
-			done.add(id);
-			refs.push(statements.doc(id));
-			const children = await statements.where('parentId', '==', id).get();
-			children.docs.forEach((doc) => next.push(doc.id));
-		}
-		for (let start = 0; start < refs.length; start += BATCH_SIZE) {
-			const batch = firestore.batch();
-			refs
-				.slice(start, start + BATCH_SIZE)
-				.forEach((ref) => batch.update(ref, { accessScope: QUARANTINED_ACCESS_SCOPE }));
-			await batch.commit();
-		}
-		level = next;
+	let written = 0;
+	const walk = await walkSubtree(
+		firestore,
+		statementId,
+		async (level) => {
+			// One already quarantined costs no write; what is under it is still looked at.
+			const open = level.filter(
+				(doc) => (doc.data() as Partial<Statement>).accessScope !== QUARANTINED_ACCESS_SCOPE,
+			);
+			for (let start = 0; start < open.length; start += BATCH_SIZE) {
+				const batch = firestore.batch();
+				open
+					.slice(start, start + BATCH_SIZE)
+					.forEach((doc) => batch.update(doc.ref, { accessScope: QUARANTINED_ACCESS_SCOPE }));
+				await batch.commit();
+			}
+			written += open.length;
+		},
+		MAX_QUARANTINED,
+	);
+	if (walk.truncated) {
+		logError(new Error('Quarantine stopped at its limit; the rest of the subtree is not covered'), {
+			operation: 'accessScope.quarantineWithChildren',
+			statementId,
+			metadata: { visited: walk.visited },
+		});
 	}
 
-	return done.size;
+	return written;
 }
 
 /**
