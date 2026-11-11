@@ -181,13 +181,13 @@ describe('scope levels', () => {
 		await expect(resolveStatementScope(store.db, chat)).resolves.toBe('mid');
 	});
 
-	it('stops on a cycle in the parent chain', async () => {
+	it('quarantines a cycle in the parent chain (more in accessScopeLoops.test.ts)', async () => {
 		const store = fakeStatementStore();
 		store.seed(S, 'x', { statementId: 'x', parentId: 'y' });
 		store.seed(S, 'y', { statementId: 'y', parentId: 'x' });
 		await expect(
 			resolveStatementScope(store.db, statement({ statementId: 'x', parentId: 'y' })),
-		).resolves.toBe('open');
+		).resolves.toBe('quarantined');
 	});
 
 	it('copes with an ancestor that no longer exists', async () => {

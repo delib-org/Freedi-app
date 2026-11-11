@@ -4,6 +4,7 @@ import {
 	Access,
 	Collections,
 	OPEN_ACCESS_SCOPE,
+	isQuarantinedScope,
 	ownAccessSetting,
 	Role,
 	type Statement,
@@ -95,6 +96,10 @@ async function readAccessLevels(
 ): Promise<AccessLevel[]> {
 	const chain = new AccessScopeLevels(firestore);
 	await chain.load([statement]);
+	// A statement on a loop has no real place; nothing about it can be judged.
+	if (isQuarantinedScope(statement.accessScope) || chain.isLoop(statement)) {
+		throw new HttpsError('not-found', 'Statement not found');
+	}
 	const above = chain.idsAbove(statement);
 	const scope = statement.accessScope;
 	if (

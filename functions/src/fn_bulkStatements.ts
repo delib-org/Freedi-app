@@ -1,7 +1,12 @@
 import { Request, Response } from 'firebase-functions/v1';
 import { FirestoreEvent, QueryDocumentSnapshot } from 'firebase-functions/firestore';
 import { Timestamp } from 'firebase-admin/firestore';
-import { Collections, Statement, StatementDeletion } from '@freedi/shared-types';
+import {
+	Collections,
+	OPEN_ACCESS_SCOPE,
+	Statement,
+	StatementDeletion,
+} from '@freedi/shared-types';
 import { db } from './index';
 import { logError } from './utils/errorHandling';
 import { verifyAuthToken } from './utils/httpAuth';
@@ -175,7 +180,11 @@ export async function getBulkStatements(req: Request, res: Response): Promise<vo
  * Firestore onDocumentDeleted handler for statements/{statementId}.
  * Writes a tombstone to statementDeletions so clients with delta listeners
  * (which only see docs whose lastUpdate changed) learn about hard deletes.
- * Tombstones are purged by a Firestore TTL policy on `expireAt`.
+ * Tombstones are purged by a Firestore TTL policy on `expireAt`, except that of
+ * a statement inside a private level: it has no `expireAt` and stays, and the
+ * create rule refuses its id, so the id cannot come back as an open statement
+ * that its old children (still stamped private, still pointing at it) would be
+ * read under.
  */
 export async function writeStatementDeletionTombstone(
 	event: FirestoreEvent<QueryDocumentSnapshot | undefined, { statementId: string }>,
@@ -187,20 +196,25 @@ export async function writeStatementDeletionTombstone(
 
 	try {
 		const deletedAtMs = Date.now();
+		const accessScope = deleted.accessScope ?? OPEN_ACCESS_SCOPE;
 		const tombstone: StatementDeletion = {
 			statementId,
 			parentId: deleted.parentId,
 			topParentId: deleted.topParentId,
 			parents: deleted.parents ?? [],
 			deletedAtMs,
+			accessScope,
 		};
+		const keep = accessScope !== OPEN_ACCESS_SCOPE;
 
 		await db
 			.collection(Collections.statementDeletions)
 			.doc(statementId)
 			.set({
 				...tombstone,
-				expireAt: Timestamp.fromMillis(deletedAtMs + BULK_FETCH.TOMBSTONE_TTL_MS),
+				...(keep
+					? {}
+					: { expireAt: Timestamp.fromMillis(deletedAtMs + BULK_FETCH.TOMBSTONE_TTL_MS) }),
 			});
 	} catch (error) {
 		logError(error, {

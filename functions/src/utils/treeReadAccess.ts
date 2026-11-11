@@ -2,7 +2,13 @@ import type { Firestore } from 'firebase-admin/firestore';
 import { Access, Collections, Role, StatementType, type Statement } from '@freedi/shared-types';
 import { isSystemAdmin } from './httpAuth';
 import { ancestorIds } from './statementAncestors';
-import { isAdminThere, isOpenAccess, judgeAccessLevels, type AccessLevel } from './statementAccess';
+import {
+	isAdminThere,
+	isOpenAccess,
+	isRestrictedOwner,
+	judgeAccessLevels,
+	type AccessLevel,
+} from './statementAccess';
 
 const TREE_ACCESS = {
 	/**
@@ -294,6 +300,11 @@ export async function authorizeTreeRead(
 	if (await isSystemAdmin(uid)) return { allowed: true, levels };
 	if (verdict === 'banned') {
 		return { allowed: false, status: FORBIDDEN, error: 'You cannot take part in this space' };
+	}
+	// Inside a private level a pending request shuts the door, a host role above
+	// included, as the rules do.
+	if (verdict === 'waiting' && isRestrictedOwner(levels)) {
+		return { allowed: false, status: FORBIDDEN, error: 'Waiting for approval' };
 	}
 	if (await isAdminThere(uid, chain.root, levels)) {
 		// Counts as a host level when statements below the root are judged.

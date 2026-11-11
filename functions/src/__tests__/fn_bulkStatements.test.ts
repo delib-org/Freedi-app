@@ -256,7 +256,32 @@ describe('writeStatementDeletionTombstone', () => {
 		expect(written.topParentId).toBe('top-1');
 		expect(written.parents).toEqual(['top-1', 'parent-1']);
 		expect(typeof written.deletedAtMs).toBe('number');
+		expect(written.accessScope).toBe('open');
 		expect(written.expireAt).toBeDefined();
+	});
+
+	it('keeps the tombstone of a statement inside a private level for good', async () => {
+		mockDocSet.mockResolvedValue(undefined);
+		const event = {
+			params: { statementId: 'st-2' },
+			data: {
+				data: () => ({
+					statementId: 'st-2',
+					parentId: 'group',
+					topParentId: 'top-1',
+					accessScope: 'group',
+				}),
+			},
+		};
+
+		await writeStatementDeletionTombstone(
+			event as unknown as Parameters<typeof writeStatementDeletionTombstone>[0],
+		);
+
+		const written = mockDocSet.mock.calls[0]?.[0] as unknown as Record<string, unknown>;
+		// No expireAt: the TTL policy never removes it, and the create rule refuses the id.
+		expect(written.accessScope).toBe('group');
+		expect(written.expireAt).toBeUndefined();
 	});
 
 	it('does nothing when the event has no data', async () => {

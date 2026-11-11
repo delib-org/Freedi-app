@@ -3,9 +3,11 @@ import {
 	AccessScopeLevel,
 	Collections,
 	OPEN_ACCESS_SCOPE,
+	QUARANTINED_ACCESS_SCOPE,
 	resolveAccessScope,
 	type Statement,
 } from '@freedi/shared-types';
+import { logError } from '../utils/errorHandling';
 
 /** Firestore's getAll takes any number, but one request should stay small. */
 const GET_ALL_CHUNK = 300;
@@ -55,12 +57,17 @@ export class AccessScopeLevels {
 		return this.levels.size;
 	}
 
-	/** The ids above a subject as far as is known, and the next id to fetch, if any. */
-	private walk(subject: ScopeSubject): { ids: string[]; missing?: string } {
+	/**
+	 * The ids above a subject as far as is known, and the next id to fetch, if any.
+	 * `loop` is a chain that comes back to a statement already on it, or one too
+	 * deep to be a real tree: it has no place to be judged by.
+	 */
+	private walk(subject: ScopeSubject): { ids: string[]; missing?: string; loop?: boolean } {
 		const ids: string[] = [];
 		const seen = new Set([subject.statementId]);
 		let next: string | undefined = subject.parentId;
-		while (next && next !== TOP && !seen.has(next) && ids.length < MAX_DEPTH) {
+		while (next && next !== TOP) {
+			if (seen.has(next) || ids.length >= MAX_DEPTH) return { ids, loop: true };
 			const level = this.levels.get(next);
 			if (level === undefined) return { ids, missing: next };
 			if (level === null) break;
@@ -117,10 +124,30 @@ export class AccessScopeLevels {
 		return this.levels.get(id) ?? undefined;
 	}
 
-	/** The scope of a statement whose ancestors have been loaded. */
+	/** Whether the chain above a loaded statement loops back on itself. */
+	isLoop(subject: ScopeSubject): boolean {
+		return this.walk(subject).loop === true;
+	}
+
+	/**
+	 * The scope of a statement whose ancestors have been loaded. A statement on, or
+	 * under, a loop is quarantined: its `parents` and `topParentId` may claim any
+	 * place, so it is shown to no one until a person looks at it.
+	 */
 	scopeOf(subject: ScopeSubject): string {
-		const levels = this.walk(subject)
-			.ids.map((id) => this.levels.get(id))
+		const walk = this.walk(subject);
+		if (walk.loop) {
+			// Logged as an error so a person sees it: a loop is made on purpose.
+			logError(new Error('A loop in the statement tree; quarantined'), {
+				operation: 'accessScope.scopeOf',
+				statementId: subject.statementId,
+				metadata: { parentId: subject.parentId, topParentId: subject.topParentId },
+			});
+
+			return QUARANTINED_ACCESS_SCOPE;
+		}
+		const levels = walk.ids
+			.map((id) => this.levels.get(id))
 			.filter((level): level is LoadedLevel => Boolean(level));
 
 		return resolveAccessScope(subject, levels);

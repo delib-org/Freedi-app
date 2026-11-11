@@ -116,6 +116,15 @@ describe('getBulkStatements access', () => {
 			expect(withRole.ids).toEqual([q]);
 		});
 
+		it('refuses a host of the top who is waiting on the private level below', async () => {
+			const { top, q } = tree({ top: 'secret', question: 'secret' });
+			role(MEMBER, top, 'admin');
+			role(MEMBER, q, 'waiting');
+
+			// As the rules do: a pending request inside a private level shuts the door.
+			expect((await load(MEMBER, q)).status).toBe(403);
+		});
+
 		it('refuses someone banned', async () => {
 			const { top } = tree({ top: 'secret' });
 			role('banned-user', top, 'banned');
