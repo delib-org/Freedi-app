@@ -24,6 +24,7 @@ import {
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
 import { listenInScopes } from './readScopes';
+import { loadTreeForHost } from './loadTreeForHost';
 
 /**
  * Coerce a required-number field that arrived as null/undefined to 0, following
@@ -91,7 +92,11 @@ function parseStatement(raw: unknown): Statement {
  * Replaces dual listeners with a single efficient query
  */
 export function listenToMindMapData(statementId: string): Unsubscribe {
-	return listenInScopes(statementId, (scopes) => listenToMindMapDataInScopes(scopes, statementId));
+	return listenInScopes(
+		statementId,
+		(scopes) => listenToMindMapDataInScopes(scopes, statementId),
+		loadTreeForHost(statementId),
+	);
 }
 
 function listenToMindMapDataInScopes(scopes: string[], statementId: string): Unsubscribe {

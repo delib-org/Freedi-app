@@ -6,14 +6,13 @@ import {
 	Collections,
 	StatementType,
 	DeliberativeElement,
-	readScopesOf,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
 import { createStatementRef, createCollectionRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { isRefusedRead } from '@/helpers/firestoreRefusal';
-import { scopeChunksOf } from './readScopes';
+import { childListScopes, scopeChunksOf } from './readScopes';
 
 export async function getStatementFromDB(
 	statementId: string,
@@ -77,6 +76,7 @@ export async function getStatementDepth(
 		try {
 			const subStatements: Statement[] = [];
 			const statementsRef = createCollectionRef(Collections.statements);
+			const scopes = await childListScopes(statement.statementId);
 			const q = query(
 				statementsRef,
 				and(
@@ -86,7 +86,7 @@ export async function getStatementDepth(
 					),
 					where('statementType', '!=', 'document'),
 					where('parentId', '==', statement.statementId),
-					where('accessScope', 'in', readScopesOf(statement)),
+					...(scopes ? [where('accessScope', 'in', scopes)] : []),
 				),
 			);
 			const statementsDB = await getDocs(q);

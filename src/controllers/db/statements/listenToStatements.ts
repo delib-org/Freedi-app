@@ -42,7 +42,8 @@ import {
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
 import { DISCUSSABLE_STATEMENT_TYPES } from '@/helpers/statementTypeHelpers';
-import { listenInScopes, scopeChunksOf } from './readScopes';
+import { childListScopes, listenInScopes, scopeChunksOf } from './readScopes';
+import { loadTreeForHost } from './loadTreeForHost';
 
 // Tracks subscription docs whose schema-validation failure we've already
 // logged this session, so a malformed doc on a hot listener doesn't spam the
@@ -240,13 +241,15 @@ export const listenToSubStatements = (
 		return () => {};
 	}
 
-	return listenInScopes(statementId, (scopes) =>
-		listenToSubStatementsInScopes(scopes, statementId, topBottom, numberOfOptions),
+	return listenInScopes(
+		statementId,
+		(scopes) => listenToSubStatementsInScopes(scopes, statementId, topBottom, numberOfOptions),
+		() => listenToSubStatementsInScopes(null, statementId, topBottom, numberOfOptions),
 	);
 };
 
 const listenToSubStatementsInScopes = (
-	scopes: string[],
+	scopes: string[] | null,
 	statementId: string | undefined,
 	topBottom?: 'top' | 'bottom',
 	numberOfOptions?: number,
@@ -276,7 +279,7 @@ const listenToSubStatementsInScopes = (
 			statementsRef,
 			where('parentId', '==', statementId),
 			where('statementType', 'in', DISCUSSABLE_STATEMENT_TYPES),
-			where('accessScope', 'in', scopes),
+			...(scopes ? [where('accessScope', 'in', scopes)] : []),
 			orderBy('createdAt', descAsc),
 		);
 
@@ -288,7 +291,7 @@ const listenToSubStatementsInScopes = (
 		const listenerKey = generateListenerKey(
 			'sub-statements',
 			'statement',
-			`${statementId}-${topBottom || 'all'}-${numberOfOptions || 'all'}-${scopes.join('+')}`,
+			`${statementId}-${topBottom || 'all'}-${numberOfOptions || 'all'}-${scopes?.join('+') ?? 'host'}`,
 		);
 
 		let isFirstCall = true;
@@ -389,7 +392,7 @@ export async function fetchOlderSubStatements(
 ): Promise<{ statements: Statement[]; hasMore: boolean }> {
 	try {
 		const statementsRef = createCollectionRef(Collections.statements);
-		const [scopes] = await scopeChunksOf(statementId);
+		const scopes = await childListScopes(statementId);
 
 		// Query for messages older than the oldest loaded one.
 		// Using desc order so startAfter gives us messages with createdAt < oldestCreatedAt.
@@ -397,7 +400,7 @@ export async function fetchOlderSubStatements(
 		const q = query(
 			statementsRef,
 			where('parentId', '==', statementId),
-			where('accessScope', 'in', scopes),
+			...(scopes ? [where('accessScope', 'in', scopes)] : []),
 			orderBy('createdAt', 'desc'),
 			startAfter(oldestCreatedAt),
 			limit(batchSize + 1),
@@ -482,8 +485,10 @@ export const listenToMembers =
 	};
 
 export function listenToAllSubStatements(statementId: string, numberOfLastMessages = 7) {
-	return listenInScopes(statementId, (scopes) =>
-		listenToAllSubStatementsInScopes(scopes, statementId, numberOfLastMessages),
+	return listenInScopes(
+		statementId,
+		(scopes) => listenToAllSubStatementsInScopes(scopes, statementId, numberOfLastMessages),
+		loadTreeForHost(statementId),
 	);
 }
 
@@ -586,8 +591,10 @@ function listenToAllSubStatementsInScopes(
 const MAX_DESCENDANTS_LIMIT = 200;
 
 export function listenToAllDescendants(statementId: string): Unsubscribe {
-	return listenInScopes(statementId, (scopes) =>
-		listenToAllDescendantsInScopes(scopes, statementId),
+	return listenInScopes(
+		statementId,
+		(scopes) => listenToAllDescendantsInScopes(scopes, statementId),
+		loadTreeForHost(statementId),
 	);
 }
 
@@ -714,8 +721,10 @@ export function listenToTreeDescendants(
 	statementId: string,
 	queryLimit = MAX_DESCENDANTS_LIMIT,
 ): Unsubscribe {
-	return listenInScopes(statementId, (scopes) =>
-		listenToTreeDescendantsInScopes(scopes, statementId, queryLimit),
+	return listenInScopes(
+		statementId,
+		(scopes) => listenToTreeDescendantsInScopes(scopes, statementId, queryLimit),
+		loadTreeForHost(statementId),
 	);
 }
 
@@ -822,8 +831,10 @@ export function listenToTreeByTopParent(
 	topParentId: string,
 	queryLimit = MAX_DESCENDANTS_LIMIT,
 ): Unsubscribe {
-	return listenInScopes(topParentId, (scopes) =>
-		listenToTreeByTopParentInScopes(scopes, topParentId, queryLimit),
+	return listenInScopes(
+		topParentId,
+		(scopes) => listenToTreeByTopParentInScopes(scopes, topParentId, queryLimit),
+		loadTreeForHost(topParentId),
 	);
 }
 

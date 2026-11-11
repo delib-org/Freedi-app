@@ -1,4 +1,4 @@
-import { forgetTreeScopes, listenInScopes, scopeChunksOf } from '../readScopes';
+import { childListScopes, forgetTreeScopes, listenInScopes, scopeChunksOf } from '../readScopes';
 
 interface FakeDoc {
 	id: string;
@@ -87,14 +87,14 @@ describe('scopeChunksOf', () => {
 	});
 
 	it('adds the governing scope for its creator', async () => {
-		setStatement({ accessScope: 'g', creatorId: 'me' });
-		await expect(scopeChunksOf('s')).resolves.toEqual([['open', 'g']]);
+		setStatement({ statementId: 'g', accessScope: 'g', creatorId: 'me' });
+		await expect(scopeChunksOf('g')).resolves.toEqual([['open', 'g']]);
 	});
 
 	it('adds the governing scope for a host above it', async () => {
-		setStatement({ accessScope: 'g', parents: ['mid'] });
+		setStatement({ statementId: 'g', accessScope: 'g', parents: ['mid'] });
 		mockSubscriptions = [subscription('mid', 'admin')];
-		await expect(scopeChunksOf('s')).resolves.toEqual([['open', 'g']]);
+		await expect(scopeChunksOf('g')).resolves.toEqual([['open', 'g']]);
 	});
 
 	it('gives each further private level its own query', async () => {
@@ -143,6 +143,59 @@ describe('scopeChunksOf', () => {
 		await expect(scopeChunksOf('s')).resolves.toEqual([['open']]);
 		forgetTreeScopes();
 		await expect(scopeChunksOf('s')).resolves.toEqual([['open', 'g']]);
+	});
+});
+
+describe('a host or creator below the governing level', () => {
+	beforeEach(() => {
+		forgetTreeScopes();
+		mockState.creator = { uid: 'me' };
+		mockSubscriptions = [];
+		mockRestricted = [];
+		mockById = [];
+		mockState.statements = [
+			{ statementId: 'k', topParentId: 'top1', parents: ['top1', 'q'], accessScope: 'q' },
+			{ statementId: 'q', topParentId: 'top1', parents: ['top1'], accessScope: 'q' },
+		];
+	});
+
+	it('never names the governing scope, which rules would refuse', async () => {
+		mockSubscriptions = [subscription('k', 'admin')];
+		await expect(scopeChunksOf('k')).resolves.toEqual([['open']]);
+	});
+
+	it('gets an unscoped list of children', async () => {
+		mockSubscriptions = [subscription('k', 'admin')];
+		await expect(childListScopes('k')).resolves.toBeNull();
+	});
+
+	it('counts the creator of the level as a host', async () => {
+		mockState.statements[0].creatorId = 'me';
+		await expect(childListScopes('k')).resolves.toBeNull();
+	});
+
+	it('an outsider gets open only', async () => {
+		await expect(childListScopes('k')).resolves.toEqual(['open']);
+	});
+
+	it('a ban anywhere means open only', async () => {
+		mockSubscriptions = [subscription('k', 'admin'), subscription('top1', 'banned')];
+		await expect(childListScopes('k')).resolves.toEqual(['open']);
+	});
+
+	it('a host above names the scope as usual', async () => {
+		mockSubscriptions = [subscription('q', 'admin')];
+		await expect(scopeChunksOf('k')).resolves.toEqual([['open', 'q']]);
+	});
+
+	it('starts the host read as well as the open listener', async () => {
+		mockSubscriptions = [subscription('k', 'admin')];
+		const start = jest.fn(() => jest.fn());
+		const hostStart = jest.fn(() => jest.fn());
+		listenInScopes('k', start, hostStart);
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(start).toHaveBeenCalledWith(['open']);
+		expect(hostStart).toHaveBeenCalledTimes(1);
 	});
 });
 

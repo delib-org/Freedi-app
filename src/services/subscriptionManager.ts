@@ -16,6 +16,27 @@ import { normalizeStatementData } from '@/helpers/timestampHelpers';
 import { subscribeWhenAuthenticated } from '@/controllers/utils/subscribeWhenAuthenticated';
 import { listenInScopes } from '@/controllers/db/statements/readScopes';
 
+function listenToChildren(statementId: string, scopes: string[] | null): Unsubscribe {
+	return onSnapshot(
+		query(
+			collection(FireStore, Collections.statements),
+			where('parentId', '==', statementId),
+			...(scopes ? [where('accessScope', 'in', scopes)] : []),
+			orderBy('createdAt', 'desc'),
+			limit(20),
+		),
+		(snapshot) => {
+			snapshot.docChanges().forEach((change) => {
+				const statement = normalizeStatementData(change.doc.data()) as Statement;
+
+				if (change.type === 'added' || change.type === 'modified') {
+					store.dispatch(setStatement(statement));
+				}
+			});
+		},
+	);
+}
+
 interface ActiveListener {
 	unsubscribe: Unsubscribe;
 	statementId: string;
@@ -57,25 +78,10 @@ class SubscriptionManager {
 
 		// Listen to sub-statements
 		const unsubscribeSubStatements = subscribeWhenAuthenticated(() =>
-			listenInScopes(statementId, (scopes) =>
-				onSnapshot(
-					query(
-						collection(FireStore, Collections.statements),
-						where('parentId', '==', statementId),
-						where('accessScope', 'in', scopes),
-						orderBy('createdAt', 'desc'),
-						limit(20),
-					),
-					(snapshot) => {
-						snapshot.docChanges().forEach((change) => {
-							const statement = normalizeStatementData(change.doc.data()) as Statement;
-
-							if (change.type === 'added' || change.type === 'modified') {
-								store.dispatch(setStatement(statement));
-							}
-						});
-					},
-				),
+			listenInScopes(
+				statementId,
+				(scopes) => listenToChildren(statementId, scopes),
+				() => listenToChildren(statementId, null),
 			),
 		);
 

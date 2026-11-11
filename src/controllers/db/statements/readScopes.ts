@@ -113,16 +113,27 @@ async function loadTreeScopes(topParentId: string, uid: string): Promise<CachedT
 	return entry;
 }
 
+interface ReadPlan {
+	chunks: ScopeChunks;
+	/** A host or creator below the governing level: rules let them list children, not name it. */
+	isHostBelow: boolean;
+}
+
+function levelIds(level: Statement): string[] {
+	return [level.statementId, ...(level.parents ?? []), level.topParentId].filter(
+		(id) => Boolean(id) && id !== 'top',
+	);
+}
+
 /**
- * The queries to run under a statement. A person with no way into its governing
- * level asks only for open content, so a public question in a private group
- * still loads and the rules have nothing to refuse.
+ * What may be asked for under a statement. A scope is named only when the rules
+ * would accept it: a refused scope fails the whole query, open content included.
  */
-export async function scopeChunksOf(statementId: string): Promise<ScopeChunks> {
+async function readPlanOf(statementId: string): Promise<ReadPlan> {
 	const statement = await loadStatement(statementId);
-	const governing = statement?.accessScope;
-	const uid = store.getState().creator?.creator?.uid;
-	if (!statement || !uid) return [[OPEN_ACCESS_SCOPE]];
+	const creator = store.getState().creator?.creator;
+	const uid = creator?.uid;
+	if (!statement || !uid) return { chunks: [[OPEN_ACCESS_SCOPE]], isHostBelow: false };
 
 	const topParentId = statement.topParentId || statementId;
 	const { scopes, roles } = await loadTreeScopes(topParentId, uid).catch(
@@ -132,40 +143,68 @@ export async function scopeChunksOf(statementId: string): Promise<ScopeChunks> {
 			return { scopes: [], roles: new Map(), at: 0 };
 		},
 	);
+	const others = (governing: string | undefined) =>
+		scopes
+			.filter((scope) => scope !== governing && roles.get(scope) !== Role.banned)
+			.map((scope) => [scope]);
 
-	const isRestricted = Boolean(governing) && governing !== OPEN_ACCESS_SCOPE;
-	const role = governing ? roles.get(governing) : undefined;
+	const governing = statement.accessScope;
+	if (!governing || governing === OPEN_ACCESS_SCOPE) {
+		return { chunks: [[OPEN_ACCESS_SCOPE], ...others(governing)], isHostBelow: false };
+	}
+
+	const level = governing === statementId ? statement : await loadStatement(governing);
+	const aboveAndAt = level ? levelIds(level) : [governing];
+	const statementLevels = levelIds(statement);
+	const isBanned = [...aboveAndAt, ...statementLevels].some((id) => roles.get(id) === Role.banned);
 	const mayReadGoverning =
-		isRestricted &&
-		(isActiveRole(role) ||
-			scopes.includes(governing as string) ||
-			statement.creatorId === uid ||
-			hasHostRoleAbove(statement, roles));
-	const first =
-		mayReadGoverning && governing ? [OPEN_ACCESS_SCOPE, governing] : [OPEN_ACCESS_SCOPE];
-	const others = scopes.filter((scope) => scope !== governing).map((scope) => [scope]);
+		!isBanned &&
+		(isActiveRole(roles.get(governing)) ||
+			level?.creatorId === uid ||
+			aboveAndAt.some((id) => isHostRole(roles.get(id))) ||
+			creator?.systemAdmin === true);
+	const isHostBelow =
+		!isBanned &&
+		!mayReadGoverning &&
+		(statement.creatorId === uid || statementLevels.some((id) => isHostRole(roles.get(id))));
+	const first = mayReadGoverning ? [OPEN_ACCESS_SCOPE, governing] : [OPEN_ACCESS_SCOPE];
 
-	return [first, ...others];
+	return { chunks: [first, ...others(governing)], isHostBelow };
 }
 
-function hasHostRoleAbove(statement: Statement, roles: Map<string, Role>): boolean {
-	return [...(statement.parents ?? []), statement.statementId].some((id) =>
-		isHostRole(roles.get(id)),
-	);
+/** The queries to run under a statement. Nearly always one. */
+export async function scopeChunksOf(statementId: string): Promise<ScopeChunks> {
+	return (await readPlanOf(statementId)).chunks;
 }
 
-/** Starts one listener per scope chunk, once the chunks are known. */
+/**
+ * The scopes for a one-time list of a statement's children, or null when the
+ * reader is a host below the governing level and the list needs no filter.
+ */
+export async function childListScopes(statementId: string): Promise<string[] | null> {
+	const { chunks, isHostBelow } = await readPlanOf(statementId);
+
+	return isHostBelow ? null : chunks[0];
+}
+
+/**
+ * Starts one listener per scope chunk, once the chunks are known. `hostStart`
+ * is the extra read a host below the governing level gets: an unscoped listener
+ * for a list of children, or a one-time load for a whole tree.
+ */
 export function listenInScopes(
 	statementId: string,
 	start: (scopes: string[]) => Unsubscribe,
+	hostStart?: () => Unsubscribe,
 ): Unsubscribe {
 	let cancelled = false;
 	const stops: Unsubscribe[] = [];
 
-	scopeChunksOf(statementId)
-		.then((chunks) => {
+	readPlanOf(statementId)
+		.then(({ chunks, isHostBelow }) => {
 			if (cancelled) return;
 			chunks.forEach((scopes) => stops.push(start(scopes)));
+			if (isHostBelow && hostStart) stops.push(hostStart());
 		})
 		.catch((error: unknown) => {
 			logError(error, { operation: 'readScopes.listenInScopes', statementId });
