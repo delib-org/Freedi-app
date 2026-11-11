@@ -124,7 +124,6 @@ const ar: Record<string, string> = {
 	'tableAssignment.direct.seatsUnknown':
 		'تُفحص المقاعد الشاغرة في الخادم: إذا كانت الطاولة ممتلئة ستُبلَّغ.',
 	'tableAssignment.myTable.waiting': 'بانتظار نشر التوزيع. ستظهر طاولتك هنا عند نشره.',
-	'tableAssignment.myTable.notSeated': 'لم نجد لكم طاولة في التوزيع المنشور. تحدّثوا مع المضيف.',
 	'tableAssignment.myTable.chooseFirst': 'لم تختر طاولة بعد.',
 	'tableAssignment.error.tableFull': 'امتلأت هذه الطاولة للتو. يمكنك اختيار طاولة أخرى.',
 	'tableAssignment.error.preferencesClosed': 'أُغلق التسجيل، لذلك لا يمكن الحفظ.',
@@ -422,6 +421,22 @@ const ar: Record<string, string> = {
 	'tableAssignment.delete.keep': 'لا، أبقِه',
 	'tableAssignment.delete.confirm': 'نعم، احذف كل شيء',
 	'tableAssignment.participants.claimedByName': 'تابع بالاسم',
+	'tableAssignment.waiting.late.lead':
+		'نُشرت الطاولات بالفعل. حُفظت اختياراتكم وسيجلسكم المضيف على طاولة.',
+	'tableAssignment.waiting.late.note':
+		'نُشرت الطاولات قبل تسجيلكم. سيجلسكم المضيف على طاولة وستظهر طاولتكم في هذه الصفحة. يمكنكم إغلاقها والعودة بالرابط.',
+	'tableAssignment.preview.newcomers.one':
+		'سجّل شخص واحد بعد نشر الطاولات. الحساب مجددًا يُبقي الجميع في أماكنهم ويجلس هذا الشخص فقط.',
+	'tableAssignment.preview.newcomers.two':
+		'سجّل شخصان بعد نشر الطاولات. الحساب مجددًا يُبقي الجميع في أماكنهم ويجلس هذين الشخصين فقط.',
+	'tableAssignment.preview.newcomers.few':
+		'سجّل {{count}} أشخاص بعد نشر الطاولات. الحساب مجددًا يُبقي الجميع في أماكنهم ويجلس هؤلاء فقط.',
+	'tableAssignment.preview.newcomers.many':
+		'سجّل {{count}} شخصًا بعد نشر الطاولات. الحساب مجددًا يُبقي الجميع في أماكنهم ويجلس هؤلاء فقط.',
+	'tableAssignment.preview.newcomers.other':
+		'سجّل {{count}} شخص بعد نشر الطاولات. الحساب مجددًا يُبقي الجميع في أماكنهم ويجلس هؤلاء فقط.',
+	'tableAssignment.participants.unseated': 'لم يُجلَس بعد',
+	'tableAssignment.count.unseated': 'لم يُجلسوا بعد',
 };
 
 export default ar;

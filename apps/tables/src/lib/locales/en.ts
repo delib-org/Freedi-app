@@ -126,8 +126,6 @@ const en: Record<string, string> = {
 		'Free seats are checked on the server: if a table is full you will be told.',
 	'tableAssignment.myTable.waiting':
 		'Waiting for the assignment to be published. Your table will show here once it is.',
-	'tableAssignment.myTable.notSeated':
-		'No table was found for you in the published assignment. Talk to the host.',
 	'tableAssignment.myTable.chooseFirst': 'You have not chosen a table yet.',
 	'tableAssignment.error.tableFull': 'That table just filled up. You can choose another table.',
 	'tableAssignment.error.preferencesClosed': 'Registration has closed, so this cannot be saved.',
@@ -435,6 +433,22 @@ const en: Record<string, string> = {
 	'tableAssignment.delete.keep': 'No, keep it',
 	'tableAssignment.delete.confirm': 'Yes, delete everything',
 	'tableAssignment.participants.claimedByName': 'Continued by name',
+	'tableAssignment.waiting.late.lead':
+		'The tables are already published. Your choices are saved, and the host will seat you.',
+	'tableAssignment.waiting.late.note':
+		'The tables were published before you registered. The host will seat you, and your table will appear on this page. You can close it and come back with the link.',
+	'tableAssignment.preview.newcomers.one':
+		'One person registered after the tables were published. Computing again keeps everyone seated where they are and seats only them.',
+	'tableAssignment.preview.newcomers.two':
+		'{{count}} people registered after the tables were published. Computing again keeps everyone seated where they are and seats only them.',
+	'tableAssignment.preview.newcomers.few':
+		'{{count}} people registered after the tables were published. Computing again keeps everyone seated where they are and seats only them.',
+	'tableAssignment.preview.newcomers.many':
+		'{{count}} people registered after the tables were published. Computing again keeps everyone seated where they are and seats only them.',
+	'tableAssignment.preview.newcomers.other':
+		'{{count}} people registered after the tables were published. Computing again keeps everyone seated where they are and seats only them.',
+	'tableAssignment.participants.unseated': 'Not seated yet',
+	'tableAssignment.count.unseated': 'Not seated yet',
 };
 
 export default en;

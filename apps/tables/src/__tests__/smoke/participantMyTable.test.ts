@@ -109,7 +109,7 @@ describe('my table', () => {
 		expect(root.querySelector('.my-table__pill')).toBeNull();
 	});
 
-	it('says so when the person is not at any table', async () => {
+	it('sends a registered person with no table back to the link page, where the host seats them', async () => {
 		published(['a']);
 		mocks.store.current.run = makeRun({
 			status: 'published',
@@ -123,9 +123,9 @@ describe('my table', () => {
 			],
 		});
 
-		const { text } = await renderScreen(ParticipantMyTable, ID);
+		await renderScreen(ParticipantMyTable, ID);
 
-		expect(text).toContain(en['tableAssignment.myTable.notSeated']);
+		expect(mocks.replaceWith).toHaveBeenCalledWith(HOME);
 	});
 
 	it('goes home when not registered', async () => {

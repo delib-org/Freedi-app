@@ -5,7 +5,7 @@ import { ParticipantHome, LegacyTopicsRedirect } from '@/views/participant/Parti
 import { ParticipantPreferences } from '@/views/participant/ParticipantPreferences';
 import { markCancelledHere, rememberRegistration } from '@/logic/localDraft';
 import { participantScreenPath } from '@/paths';
-import { makeParticipant, makeSession, SESSION_ID } from '../fixtures';
+import { makeParticipant, makeRun, makeSession, SESSION_ID } from '../fixtures';
 import { renderScreen } from './testHarness';
 import {
 	buttonWithText,
@@ -147,6 +147,7 @@ describe('the assignment link: step 1', () => {
 
 	it('forwards a registered person to My table once tables are published', async () => {
 		mocks.store.current.session = makeSession({ status: 'published', publishedRunId: 'run-1' });
+		mocks.store.current.run = makeRun({ status: 'published' });
 		registered();
 
 		await renderScreen(ParticipantHome, ID);

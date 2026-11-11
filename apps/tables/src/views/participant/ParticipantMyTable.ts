@@ -187,13 +187,8 @@ const MyTableBody: m.ClosureComponent<{ context: ParticipantContext }> = (initia
 
 		const table = published.tables.find((candidate) => candidate.memberUids.includes(uid));
 
-		if (!table || !me) {
-			return m(StateBox, {
-				kind: 'empty',
-				messageKey: 'tableAssignment.myTable.notSeated',
-				backHref,
-			});
-		}
+		// Registered after publishing and not seated yet: the link page tells them the host will seat them.
+		if (!table || !me) return m(Redirect, { to: backHref });
 
 		const waitingForTopics = topicsNotReady(context, backHref);
 

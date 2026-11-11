@@ -118,7 +118,6 @@ const he: Record<string, string> = {
 	'tableAssignment.direct.yours': 'השולחן שלך',
 	'tableAssignment.direct.seatsUnknown': 'המקומות הפנויים נבדקים בשרת: אם השולחן מלא תקבלו הודעה.',
 	'tableAssignment.myTable.waiting': 'ממתינים לפרסום השיבוץ. כשיתפרסם, תראו כאן את השולחן שלכם.',
-	'tableAssignment.myTable.notSeated': 'לא נמצא לכם שולחן בשיבוץ שפורסם. כדאי לדבר עם המארח.',
 	'tableAssignment.myTable.chooseFirst': 'עוד לא בחרתם שולחן.',
 	'tableAssignment.error.tableFull': 'השולחן התמלא. אפשר לבחור שולחן אחר.',
 	'tableAssignment.error.preferencesClosed': 'ההרשמה נסגרה, ולכן אי אפשר לשמור.',
@@ -414,6 +413,21 @@ const he: Record<string, string> = {
 	'tableAssignment.delete.keep': 'לא, להשאיר',
 	'tableAssignment.delete.confirm': 'כן, למחוק הכול',
 	'tableAssignment.participants.claimedByName': 'המשיך בשם',
+	'tableAssignment.waiting.late.lead': 'השולחנות כבר פורסמו. הבחירות שלכם נשמרו, והמארח ישבץ אתכם.',
+	'tableAssignment.waiting.late.note':
+		'השולחנות פורסמו לפני שנרשמתם. המארח ישבץ אתכם, והשולחן שלכם יופיע בדף הזה. אפשר לסגור אותו ולחזור בקישור.',
+	'tableAssignment.preview.newcomers.one':
+		'אדם אחד נרשם אחרי שהשולחנות פורסמו. חישוב נוסף משאיר את כולם במקומם ומושיב רק אותו.',
+	'tableAssignment.preview.newcomers.two':
+		'{{count}} אנשים נרשמו אחרי שהשולחנות פורסמו. חישוב נוסף משאיר את כולם במקומם ומושיב רק אותם.',
+	'tableAssignment.preview.newcomers.few':
+		'{{count}} אנשים נרשמו אחרי שהשולחנות פורסמו. חישוב נוסף משאיר את כולם במקומם ומושיב רק אותם.',
+	'tableAssignment.preview.newcomers.many':
+		'{{count}} אנשים נרשמו אחרי שהשולחנות פורסמו. חישוב נוסף משאיר את כולם במקומם ומושיב רק אותם.',
+	'tableAssignment.preview.newcomers.other':
+		'{{count}} אנשים נרשמו אחרי שהשולחנות פורסמו. חישוב נוסף משאיר את כולם במקומם ומושיב רק אותם.',
+	'tableAssignment.participants.unseated': 'עדיין לא משובץ',
+	'tableAssignment.count.unseated': 'עדיין לא משובצים',
 };
 
 export default he;

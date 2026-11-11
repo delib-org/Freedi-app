@@ -2,7 +2,7 @@ import { randomInt } from 'crypto';
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
 import type { DocumentSnapshot, Firestore } from 'firebase-admin/firestore';
 import { TableAssignmentError, assignTables } from '@freedi/table-assignment';
-import type { Participant, Topic } from '@freedi/table-assignment';
+import type { Participant, PinnedTable, Topic } from '@freedi/table-assignment';
 import { functionConfig } from '@freedi/shared-types';
 import type {
 	TableAssignment,
@@ -17,6 +17,7 @@ import {
 	MAX_PREVIEWS_PER_SESSION,
 	MIN_REGISTRANTS_FOR_PREVIEW,
 } from './constants';
+import { pinnedTablesOf } from './publishedSeating';
 import { coarseRunFields } from './runPrivacy';
 import { loadRunInputs } from './runInputs';
 import type { PreviewBudgetDoc } from './tablesAccess';
@@ -69,6 +70,17 @@ function spendablePreviews(budget: DocumentSnapshot, limit: number): number {
 	return computed;
 }
 
+/** The published run's tables when the session has one, else none (a first computation). */
+async function publishedPinnedTables(
+	firestore: Firestore,
+	session: TableAssignment,
+): Promise<PinnedTable[]> {
+	if (session.status !== 'published' || !session.publishedRunId) return [];
+	const published = await runRef(firestore, session.publishedRunId).get();
+
+	return published.exists ? pinnedTablesOf(published.data() as TableAssignmentRun) : [];
+}
+
 /**
  * `tablesComputePreview` (host, ranked mode): runs the engine over the
  * registrants and stores the result as a 'ready' TableAssignmentRun that the
@@ -78,6 +90,10 @@ function spendablePreviews(budget: DocumentSnapshot, limit: number): number {
  * a hash over a handful of answers can be guessed by trying them all. The balance policy (tolerance as the
  * hard constraint, preferences maximised inside it) is the engine's; nothing
  * is re-implemented here.
+ *
+ * Once the tables are published, a recompute pins them: the people seated stay
+ * where they are, and only those the published run does not seat are placed (at
+ * a free seat of a topic they ranked, or at a table opened for them).
  *
  * Every preview shows the host one more seating and one more set of closeness
  * pills, so both are rationed: at least MIN_REGISTRANTS_FOR_PREVIEW people,
@@ -131,12 +147,16 @@ export async function computePreview(
 		}));
 	const engineTopics: Topic[] = topics.map((t) => ({ id: t.topicId, maxTables: t.maxTables }));
 
+	// After publishing, the published tables stay as they are and only newcomers are seated.
+	const pinnedTables = await publishedPinnedTables(firestore, session);
+
 	let assignment: ReturnType<typeof assignTables>;
 	try {
 		assignment = assignTables(engineParticipants, engineTopics, {
 			tableSize: session.settings.tableSize,
 			balanceTolerance: session.settings.balanceTolerance,
 			seed: drawSeed(),
+			pinnedTables,
 		});
 	} catch (error) {
 		if (error instanceof TableAssignmentError) {

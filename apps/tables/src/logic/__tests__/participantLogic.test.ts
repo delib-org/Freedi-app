@@ -14,7 +14,7 @@ import {
 	serializeDraft,
 	unmarkCancelledHere,
 } from '../localDraft';
-import { canCancelRegistration } from '../nextAction';
+import { canCancelRegistration, canEditPreferences, preferencesAccess } from '../nextAction';
 import { participantStage } from '../participantStage';
 import type { ParticipantStage, StageInput } from '../participantStage';
 import {
@@ -145,7 +145,7 @@ describe('participantStage', () => {
 		['registrationClosed', false, false, 'closedNotRegistered'],
 		['registrationClosed', false, true, 'cancelled'],
 		['registrationClosed', true, false, 'waitingClosed'],
-		['published', false, false, 'closedNotRegistered'],
+		['published', false, false, 'name'],
 		['published', false, true, 'cancelled'],
 		['published', true, false, 'myTable'],
 		['ended', false, false, 'ended'],
@@ -163,6 +163,7 @@ describe('participantStage', () => {
 					registered,
 					lost: cancelled ? 'cancelled' : null,
 					hasChosenTable: false,
+					seated: true,
 				}),
 			).toBe(stage);
 		},
@@ -186,6 +187,7 @@ describe('participantStage', () => {
 					registered,
 					lost: cancelled ? 'cancelled' : null,
 					hasChosenTable: false,
+					seated: true,
 				}),
 			).toBe(stage);
 		},
@@ -201,10 +203,42 @@ describe('participantStage', () => {
 					registered: true,
 					lost: null,
 					hasChosenTable: true,
+					seated: true,
 				}),
 			).toBe('myTable');
 		},
 	);
+});
+
+describe('participantStage for latecomers (after publishing)', () => {
+	const base = {
+		status: 'published',
+		mode: 'ranked',
+		hasChosenTable: false,
+		lost: null,
+	} as const;
+
+	it('a person who is not registered goes to the name stage, not to "closed"', () => {
+		expect(participantStage({ ...base, registered: false, seated: null })).toBe('name');
+	});
+
+	it('registration that is closed stays closed', () => {
+		expect(
+			participantStage({ ...base, status: 'registrationClosed', registered: false, seated: null }),
+		).toBe('closedNotRegistered');
+	});
+
+	it('an unseated person waits for the host to seat them', () => {
+		expect(participantStage({ ...base, registered: true, seated: false })).toBe('waitingForSeat');
+	});
+
+	it('a seated person goes to their table, as before', () => {
+		expect(participantStage({ ...base, registered: true, seated: true })).toBe('myTable');
+	});
+
+	it('does not guess before the published run is read', () => {
+		expect(participantStage({ ...base, registered: true, seated: null })).toBe('checkingSeat');
+	});
 });
 
 describe('participantStage after losing a registration', () => {
@@ -218,6 +252,7 @@ describe('participantStage after losing a registration', () => {
 					registered: false,
 					lost: 'removed',
 					hasChosenTable: false,
+					seated: true,
 				}),
 			).toBe('removed');
 		},
@@ -231,8 +266,26 @@ describe('participantStage after losing a registration', () => {
 				registered: true,
 				lost: 'removed',
 				hasChosenTable: false,
+				seated: true,
 			}),
 		).toBe('waiting');
+	});
+});
+
+describe('latecomer rights after publishing', () => {
+	it('lets an unseated person change choices and cancel, never a seated one', () => {
+		expect(canEditPreferences('published', false)).toBe(true);
+		expect(canEditPreferences('published', true)).toBe(false);
+		expect(canEditPreferences('published', null)).toBe(false);
+		expect(preferencesAccess('published', null)).toBe('checking');
+		expect(canCancelRegistration('published', {}, false)).toBe(true);
+		expect(canCancelRegistration('published', {}, true)).toBe(false);
+		expect(canCancelRegistration('published', { claimedByName: true }, false)).toBe(false);
+	});
+
+	it('keeps a closed registration closed for everyone', () => {
+		expect(canEditPreferences('registrationClosed', false)).toBe(false);
+		expect(canEditPreferences('ended', false)).toBe(false);
 	});
 });
 

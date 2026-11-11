@@ -9,7 +9,10 @@ import type { RegistrationLoss } from '@/logic/localDraft';
  *  - cancelled: this browser cancelled its registration;
  *  - removed: this browser's registration is gone and it did not cancel it (the host
  *    removed it, or the person continued by full name on another device);
- *  - closedNotRegistered: registration is over and the person never registered;
+ *  - waitingForSeat: registered after the tables were published and not seated yet: the host
+ *    will seat them (a latecomer);
+ *  - checkingSeat: published and registered, the published run is still being read;
+ *  - closedNotRegistered: registration is closed and the person never registered;
  *  - myTable: tables are published, or in free mode the person already sits at one;
  *  - ended: the assignment is over.
  */
@@ -20,6 +23,8 @@ export type ParticipantStage =
 	| 'waitingClosed'
 	| 'cancelled'
 	| 'removed'
+	| 'waitingForSeat'
+	| 'checkingSeat'
 	| 'closedNotRegistered'
 	| 'myTable'
 	| 'ended';
@@ -32,6 +37,8 @@ export interface StageInput {
 	hasChosenTable: boolean;
 	/** Why a registration this browser held no longer exists; null when none is missing. */
 	lost: RegistrationLoss | null;
+	/** Published ranked run: does the person sit at one of its tables? Null while unknown. */
+	seated: boolean | null;
 }
 
 function stageWithoutRegistration(
@@ -40,7 +47,14 @@ function stageWithoutRegistration(
 ): ParticipantStage {
 	if (lost) return lost;
 
-	return status === 'registrationOpen' ? 'name' : 'closedNotRegistered';
+	// Latecomers may register after publishing; only a closed registration is shut.
+	return status === 'registrationOpen' || status === 'published' ? 'name' : 'closedNotRegistered';
+}
+
+function stageInPublished(mode: TableAssignmentMode, seated: boolean | null): ParticipantStage {
+	if (mode === 'direct' || seated === true) return 'myTable';
+
+	return seated === false ? 'waitingForSeat' : 'checkingSeat';
 }
 
 export function participantStage({
@@ -49,11 +63,13 @@ export function participantStage({
 	registered,
 	hasChosenTable,
 	lost,
+	seated,
 }: StageInput): ParticipantStage {
 	if (status === 'draft') return 'notOpen';
 	if (status === 'ended') return 'ended';
 	if (!registered) return stageWithoutRegistration(status, lost);
-	if (status === 'published' || (mode === 'direct' && hasChosenTable)) return 'myTable';
+	if (mode === 'direct' && hasChosenTable) return 'myTable';
+	if (status === 'published') return stageInPublished(mode, seated);
 
 	return status === 'registrationOpen' ? 'waiting' : 'waitingClosed';
 }
