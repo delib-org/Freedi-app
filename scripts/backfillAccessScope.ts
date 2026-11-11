@@ -8,6 +8,10 @@
  * that must report `toWrite: 0` (an access change during the run can be undone by
  * the ancestor cache). Review `pocketsToReview` before the rules go out.
  *
+ * Functions go out before both: this backfill and the rules rely on the new
+ * stamping (an older `scopeOf` resolves a loop of parents to 'open', and an
+ * older create trigger does not check a reused id against its tombstone).
+ *
  * Dry run by default. Safe to rerun: a correct statement is not written.
  * Resumable: the last statement reached is kept in a state file; if that file is
  * lost the rerun rescans and writes nothing it already wrote.
@@ -112,7 +116,9 @@ async function main(): Promise<void> {
 	});
 
 	console.info(JSON.stringify(result));
-	console.info(`Full run cost: ${JSON.stringify(estimateBackfillCost(result.toWrite, result.ancestorReads))}`);
+	console.info(
+		`Full run cost: ${JSON.stringify(estimateBackfillCost(result.toWrite, result.ancestorReads))}`,
+	);
 }
 
 main().catch((error: unknown) => {

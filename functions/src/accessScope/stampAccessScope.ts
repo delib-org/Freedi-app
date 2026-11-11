@@ -8,17 +8,24 @@ import {
 import { db } from '../db';
 import { logError } from '../utils/errorHandling';
 import { resolveStatementScope } from './accessScopeLevels';
+import { scopeOfReusedId } from './recreatedStatements';
 
 /**
  * The safety net behind client stamping. A statement that arrives without a
  * scope (an old cached client, a parent that had no scope yet) is invisible to
- * every scoped list until this runs. A statement that already has one costs no
- * read: the create rule has checked it.
+ * every scoped list until this runs. A statement that already has one costs one
+ * read, of its id's tombstone: the create rule has checked the scope, but not
+ * whether the id was deleted from a private level (a rule reading a tombstone
+ * per statement broke batches), so with a tombstone the scope is judged here.
  */
 export async function stampNewStatement(statement: Statement | undefined): Promise<void> {
-	if (!statement?.statementId || statement.accessScope) return;
+	if (!statement?.statementId) return;
 	try {
-		const accessScope = await resolveStatementScope(db, statement);
+		const reused = await scopeOfReusedId(db, statement);
+		if (reused === undefined && statement.accessScope) return;
+
+		const accessScope = reused ?? (await resolveStatementScope(db, statement));
+		if (accessScope === statement.accessScope) return;
 		await db.collection(Collections.statements).doc(statement.statementId).update({ accessScope });
 	} catch (error) {
 		logError(error, {
@@ -28,11 +35,27 @@ export async function stampNewStatement(statement: Statement | undefined): Promi
 	}
 }
 
-/** Cheap gate, no reads: only these changes can move a statement's scope. */
+function sameIds(
+	left: readonly string[] | undefined,
+	right: readonly string[] | undefined,
+): boolean {
+	const a = left ?? [];
+	const b = right ?? [];
+
+	return a.length === b.length && a.every((id, index) => id === b[index]);
+}
+
+/**
+ * Cheap gate, no reads: only these changes can move a statement's scope. The
+ * tree fields count too: rewriting `topParentId` or `parents` alone is how a
+ * loop, once closed, claims a place inside a private level.
+ */
 export function mayChangeScope(before: Statement, after: Statement): boolean {
 	return (
 		before.membership?.access !== after.membership?.access ||
 		before.parentId !== after.parentId ||
+		before.topParentId !== after.topParentId ||
+		!sameIds(before.parents, after.parents) ||
 		(Boolean(before.accessScope) && !after.accessScope)
 	);
 }

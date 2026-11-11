@@ -95,6 +95,19 @@ async function clearCopiedSettings(
 }
 
 /**
+ * The tree the root is in now. The job was queued from a trigger's snapshot,
+ * and the root's `topParentId` may have changed since (a loop closed in one
+ * batch and moved into another tree in the next).
+ */
+async function currentTopOf(firestore: Firestore, job: AccessScopeJob): Promise<string> {
+	const snap = await firestore.collection(Collections.statements).doc(job.rootId).get();
+	const root = snap.data() as Statement | undefined;
+	if (!root) return job.topParentId;
+
+	return root.parentId === 'top' || !root.topParentId ? job.rootId : root.topParentId;
+}
+
+/**
  * Re-stamps one slice of a subtree and records how far it got. Writing the
  * cursor fires this function again for the next slice, so no single run is
  * long; `done` ends the chain. Safe to repeat: a statement already correct is
@@ -109,12 +122,14 @@ export async function runAccessScopeJob(firestore: Firestore, jobId: string): Pr
 	if (job.cursor === null && job.clearCopiesOf) {
 		await clearCopiedSettings(firestore, job.rootId, job.clearCopiesOf);
 	}
+	// Read once, at the start: later runs follow the same tree with their cursor.
+	const topParentId = job.cursor === null ? await currentTopOf(firestore, job) : job.topParentId;
 
 	const levels = new AccessScopeLevels(firestore);
 	let cursor = job.cursor;
 	let isLast = false;
 	for (let page = 0; page < PAGES_PER_RUN && !isLast; page += 1) {
-		const result = await restampPage(firestore, job.topParentId, cursor, levels);
+		const result = await restampPage(firestore, topParentId, cursor, levels);
 		cursor = result.lastId;
 		isLast = result.isLast;
 	}
@@ -124,6 +139,7 @@ export async function runAccessScopeJob(firestore: Firestore, jobId: string): Pr
 		if (!current || current.generation !== job.generation) return;
 		transaction.update(jobRef, {
 			cursor,
+			topParentId,
 			status: isLast ? 'done' : 'pending',
 			updatedAt: Date.now(),
 		});
