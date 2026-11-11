@@ -325,3 +325,53 @@ describe('only the level owning the setting counts', () => {
 		});
 	});
 });
+
+describe('a host role on a level planted inside a private one', () => {
+	beforeEach(() => {
+		statement('top-group', {
+			parentId: 'top',
+			statementType: 'group',
+			membership: { access: 'public' },
+		});
+		statement('private-q', {
+			parentId: 'top-group',
+			parents: ['top-group'],
+			statementType: 'question',
+			accessScope: 'private-q',
+			membership: { access: 'secret' },
+		});
+	});
+
+	function levelBy(creatorId: string): void {
+		statement('level', {
+			parentId: 'private-q',
+			parents: ['top-group', 'private-q'],
+			statementType: 'question',
+			accessScope: 'private-q',
+			creatorId,
+		});
+	}
+
+	it('does not let the planter in', async () => {
+		levelBy(UID);
+		role('level', 'admin');
+
+		await expect(resolveQuestionParticipation(db, UID, 'level')).rejects.toMatchObject({
+			code: 'permission-denied',
+		});
+	});
+
+	it('lets a host in when a member of the private level made it', async () => {
+		levelBy('a-member');
+		seed('statementsSubscribe', 'a-member--private-q', {
+			userId: 'a-member',
+			statementId: 'private-q',
+			role: 'member',
+		});
+		role('level', 'admin');
+
+		await expect(resolveQuestionParticipation(db, UID, 'level')).resolves.toMatchObject({
+			statementId: 'level',
+		});
+	});
+});

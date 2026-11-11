@@ -25,6 +25,8 @@ const LEVEL_FIELDS = [
 	'statementSettings',
 	'agreementBallot',
 	'hide',
+	'accessScope',
+	'creatorId',
 ];
 
 export type ScopeSubject = Pick<

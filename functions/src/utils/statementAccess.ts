@@ -10,6 +10,7 @@ import {
 } from '@freedi/shared-types';
 import { findStatementAdminSource } from '../progress/assertStatementAdmin';
 import { AccessScopeLevels } from '../accessScope/accessScopeLevels';
+import { levelOriginOf, withoutPlantedHosts, type LevelOrigin } from '../accessScope/plantedLevels';
 
 const OPEN_ACCESS: ReadonlySet<string> = new Set([
 	Access.public,
@@ -115,10 +116,16 @@ async function readAccessLevels(
 		...ids.map((id) => subscriptions.doc(`${uid}--${id}`)),
 	);
 
-	return ids.map((id, index) => ({
+	const levels = ids.map((id, index) => ({
 		statement: index === 0 ? statement : (chain.levelOf(id) as AccessLevel['statement']),
 		role: (subscriptionSnaps[index].data() as { role?: string } | undefined)?.role,
 	}));
+	const origins = ids.map((id, index) =>
+		index === 0 ? levelOriginOf(statement) : (chain.levelOf(id) as LevelOrigin | undefined),
+	);
+
+	// A host role counts at any level, except on a level planted inside a private one.
+	return withoutPlantedHosts(firestore, levels, origins);
 }
 
 /**

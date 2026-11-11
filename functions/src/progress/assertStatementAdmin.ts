@@ -10,6 +10,7 @@ import {
 } from '@freedi/shared-types';
 import { db } from '../db';
 import { logError } from '../utils/errorHandling';
+import { isPlantedLevel } from '../accessScope/plantedLevels';
 
 export type StatementAdminSource = 'creator' | 'subscription' | 'topSubscription' | 'organization';
 
@@ -67,9 +68,13 @@ export async function findStatementAdminSource(
 	uid: string,
 	statement: Statement,
 ): Promise<StatementAdminSource | null> {
-	if (statement.creatorId === uid) return 'creator';
-
-	if (await hasAdminSubscription(uid, statement.statementId)) return 'subscription';
+	// The creator, or a host of the statement itself, administers it, unless it was
+	// planted inside a private level (see plantedLevels).
+	const isOwnRole =
+		statement.creatorId === uid || (await hasAdminSubscription(uid, statement.statementId));
+	if (isOwnRole && !(await isPlantedLevel(db, statement))) {
+		return statement.creatorId === uid ? 'creator' : 'subscription';
+	}
 
 	const topParentId = statement.topParentId;
 	if (
