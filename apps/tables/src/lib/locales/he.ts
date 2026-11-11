@@ -397,6 +397,23 @@ const he: Record<string, string> = {
 	'tableAssignment.live.estimate.few': 'עד עכשיו זה בערך {{count}} שולחנות',
 	'tableAssignment.live.estimate.many': 'עד עכשיו זה בערך {{count}} שולחנות',
 	'tableAssignment.live.estimate.other': 'עד עכשיו זה בערך {{count}} שולחנות',
+	'tableAssignment.error.tooFewRegistrants':
+		'נרשמו מעט מדי אנשים כדי לחשב שולחנות. כדאי להמתין ליותר נרשמים ואז לחשב שוב.',
+	'tableAssignment.error.previewLimit':
+		'הגעתם למגבלת החישובים. את אותן תשובות אפשר לחשב רק כמה פעמים, ולכל שיבוץ יש גם מגבלה כוללת. אפשר לחשב שוב כשיגיעו תשובות נוספות, או לפרסם את התצוגה האחרונה.',
+	'tableAssignment.error.registrationFull':
+		'באירוע הזה כבר נרשם המספר המרבי של אנשים, ולכן אי אפשר להירשם עוד.',
+	'tableAssignment.error.nameLocked':
+		'השולחנות כבר פורסמו, ולכן אי אפשר לשנות שם. אם יש טעות, כדאי לדבר עם המארח.',
+	'tableAssignment.error.nameClaimed':
+		'המשכתם את הרישום הזה בשם מלא, ולכן אי אפשר לשנות את השם. אם יש טעות, כדאי לדבר עם המארח.',
+	'tableAssignment.delete': 'מחיקת השיבוץ',
+	'tableAssignment.delete.title': 'למחוק את השיבוץ?',
+	'tableAssignment.delete.body':
+		'הפעולה מוחקת לצמיתות את השמות, את התשובות ואת השולחנות של כולם. אי אפשר לבטל אותה.',
+	'tableAssignment.delete.keep': 'לא, להשאיר',
+	'tableAssignment.delete.confirm': 'כן, למחוק הכול',
+	'tableAssignment.participants.claimedByName': 'המשיך בשם',
 };
 
 export default he;

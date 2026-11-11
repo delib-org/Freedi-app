@@ -418,6 +418,23 @@ const en: Record<string, string> = {
 	'tableAssignment.live.estimate.few': 'So far that is about {{count}} tables',
 	'tableAssignment.live.estimate.many': 'So far that is about {{count}} tables',
 	'tableAssignment.live.estimate.other': 'So far that is about {{count}} tables',
+	'tableAssignment.error.tooFewRegistrants':
+		'Too few people have registered to compute tables. Wait for more people, then compute again.',
+	'tableAssignment.error.previewLimit':
+		'The limit on computing was reached. The same answers can be computed only a few times, and one assignment has a total limit. Compute again after more answers arrive, or publish the last preview.',
+	'tableAssignment.error.registrationFull':
+		'This gathering has reached its limit of registered people, so no one else can register.',
+	'tableAssignment.error.nameLocked':
+		'The tables are published, so a name can no longer be changed. Talk to the host if it is wrong.',
+	'tableAssignment.error.nameClaimed':
+		'You continued this registration by full name, so the name cannot be changed. Talk to the host if it is wrong.',
+	'tableAssignment.delete': 'Delete this assignment',
+	'tableAssignment.delete.title': 'Delete this assignment?',
+	'tableAssignment.delete.body':
+		'This removes the names, the answers and the tables of everyone, permanently. It cannot be undone.',
+	'tableAssignment.delete.keep': 'No, keep it',
+	'tableAssignment.delete.confirm': 'Yes, delete everything',
+	'tableAssignment.participants.claimedByName': 'Continued by name',
 };
 
 export default en;

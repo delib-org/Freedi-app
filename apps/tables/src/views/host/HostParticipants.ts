@@ -18,6 +18,9 @@ const ParticipantsBody: m.ClosureComponent<ParticipantsBodyAttrs> = () => {
 	function row(person: TableAssignmentRosterEntry, canRemove: boolean): m.Vnode {
 		return m('li.roster__item', { key: person.uid }, [
 			m('span.roster__name', { dir: 'auto' }, person.fullName),
+			person.claimedByName
+				? m('span.pill.pill--neutral.roster__tag', t('tableAssignment.participants.claimedByName'))
+				: null,
 			canRemove
 				? m(
 						'button.btn.btn--text',
@@ -98,6 +101,7 @@ export const HostParticipants: m.Component<{ id: string }> = {
 			sessionId: attrs.id,
 			titleKey: 'tableAssignment.screen.participants',
 			participants: true,
+			deletable: true,
 			render: (context: HostContext) => m(ParticipantsBody, { context }),
 		});
 	},

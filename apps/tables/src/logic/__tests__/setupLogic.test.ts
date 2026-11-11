@@ -1,3 +1,4 @@
+import { TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC } from '@freedi/shared-types';
 import { describe, expect, it } from 'vitest';
 import { makeSession, makeTopic } from '../../__tests__/fixtures';
 import { previewVerdict } from '../previewVerdict';
@@ -25,7 +26,7 @@ import type { SetupDraft } from '../setupDraft';
 import { setupSummary } from '../setupSummary';
 import { chipOfTolerance, formatTolerance, toleranceOfChip } from '../strictness';
 import { MAX_TOPICS, splitTopicList, topicsToAdd } from '../topicList';
-import { emptyDraft } from '../topics';
+import { emptyDraft, parseMaxTables } from '../topics';
 import { makeRun } from '../../__tests__/fixtures';
 
 function memoryStore(): Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> {
@@ -156,10 +157,33 @@ describe('setupDraft', () => {
 
 	it('validates seats and expected people', () => {
 		expect(parseSeats('1')).toBeNull();
+		expect(parseSeats('2')).toBeNull();
+		expect(parseSeats('3')).toBe(3);
 		expect(parseSeats('21')).toBeNull();
 		expect(parseSeats('20')).toBe(20);
 		expect(parseExpected('')).toBeNull();
 		expect(parseExpected('abc')).toBeNaN();
+	});
+
+	it('opens an existing session of size 2 without blocking, until the size is changed', () => {
+		const session = makeSession({ settings: { tableSize: 2, balanceTolerance: 0.3 } });
+		const draft = { ...readyDraft(), ...setupDraftFromSession(session, [makeTopic('a', 0)]) };
+
+		expect(draft.seats).toBe('2');
+		expect(settingsProblem(draft)).toBeNull();
+		expect(settingsRequest('s1', draft)?.tableSize).toBe(2);
+		expect(settingsProblem({ ...draft, seats: '1' })).toBe('seats');
+		expect(settingsProblem({ ...draft, seats: '4' })).toBeNull();
+	});
+
+	it('holds a topic cap to the server limit', () => {
+		expect(parseMaxTables('')).toBeUndefined();
+		expect(parseMaxTables('abc')).toBeUndefined();
+		expect(parseMaxTables('7')).toBe(7);
+		expect(parseMaxTables('500')).toBe(TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC);
+		expect(freeTableCount({ topics: [{ ...emptyDraft(), title: 'A', maxTables: '500' }] })).toBe(
+			TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC,
+		);
 	});
 
 	it('names what stops the settings from being saved', () => {

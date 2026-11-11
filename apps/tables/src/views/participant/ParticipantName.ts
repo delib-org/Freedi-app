@@ -6,6 +6,7 @@ import { Action } from '@/lib/action';
 import { goTo } from '@/lib/navigate';
 import { safeStorage } from '@/lib/safeStorage';
 import { tablesApi } from '@/lib/tableAssignment/client';
+import { NAME_SCREEN_REASON_KEYS } from '@/logic/callableErrors';
 import { canEditPreferences } from '@/logic/nextAction';
 import { clearDraft } from '@/logic/localDraft';
 import { nextStep, stepNumber, stepsOf } from '@/logic/steps';
@@ -57,6 +58,7 @@ export const NameForm: m.ClosureComponent<NameFormAttrs> = (initial) => {
 	const register = new Action(
 		'tables.participant.register',
 		'tableAssignment.error.registrationClosed',
+		NAME_SCREEN_REASON_KEYS,
 	);
 	let fullName = initial.attrs.initialName;
 	let askAboutName: string | null = null;

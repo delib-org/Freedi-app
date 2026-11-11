@@ -261,6 +261,7 @@ export const HostPreview: m.Component<{ id: string }> = {
 			topics: true,
 			participants: true,
 			wide: true,
+			deletable: true,
 			shellFor: () => ({ title: undefined }),
 			render: (context: HostContext) => m(PreviewBody, { context }),
 		});

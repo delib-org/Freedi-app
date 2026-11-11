@@ -1,5 +1,6 @@
 import {
 	TABLE_ASSIGNMENT_DESCRIPTION_MAX_LENGTH,
+	TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC,
 	TABLE_ASSIGNMENT_TITLE_MAX_LENGTH,
 } from '@freedi/shared-types';
 import type { Statement, TableAssignmentTopic, TablesTopicInput } from '@freedi/shared-types';
@@ -40,15 +41,24 @@ export function parseOptionalPositiveInt(text: string): number | undefined {
 	return Number.isInteger(value) && value >= 1 ? value : Number.NaN;
 }
 
+/** A topic's table cap: a whole number from 1, held to the server's limit; undefined when empty or not a number. */
+export function parseMaxTables(text: string): number | undefined {
+	const value = parseOptionalPositiveInt(text);
+
+	if (value === undefined || Number.isNaN(value)) return undefined;
+
+	return Math.min(value, TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC);
+}
+
 /** Build the wire input of one topic; optional fields are omitted when empty. */
 export function draftToInput(draft: TopicDraft): TablesTopicInput {
 	const input: TablesTopicInput = { title: draft.title.trim() };
 	const description = draft.description.trim();
-	const maxTables = parseOptionalPositiveInt(draft.maxTables);
+	const maxTables = parseMaxTables(draft.maxTables);
 
 	if (draft.topicId) input.topicId = draft.topicId;
 	if (description !== '') input.description = description;
-	if (maxTables !== undefined && !Number.isNaN(maxTables)) input.maxTables = maxTables;
+	if (maxTables !== undefined) input.maxTables = maxTables;
 	if (draft.sourceStatementId) input.sourceStatementId = draft.sourceStatementId;
 	if (draft.consensus !== undefined) input.consensus = draft.consensus;
 

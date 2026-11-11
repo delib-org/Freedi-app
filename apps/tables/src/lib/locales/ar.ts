@@ -405,6 +405,23 @@ const ar: Record<string, string> = {
 	'tableAssignment.live.estimate.few': 'حتى الآن هذا نحو {{count}} طاولات',
 	'tableAssignment.live.estimate.many': 'حتى الآن هذا نحو {{count}} طاولة',
 	'tableAssignment.live.estimate.other': 'حتى الآن هذا نحو {{count}} طاولة',
+	'tableAssignment.error.tooFewRegistrants':
+		'عدد المسجّلين قليل جدًا لحساب الطاولات. انتظروا مزيدًا من المسجّلين ثم احسبوا مجددًا.',
+	'tableAssignment.error.previewLimit':
+		'تم بلوغ حدّ الحساب. يمكن حساب الإجابات نفسها بضع مرات فقط، ولكل توزيع حدّ إجمالي أيضًا. احسبوا مجددًا عند وصول إجابات جديدة، أو انشروا آخر معاينة.',
+	'tableAssignment.error.registrationFull':
+		'بلغ هذا اللقاء الحدّ الأقصى من المسجّلين، ولا يمكن تسجيل أحد آخر.',
+	'tableAssignment.error.nameLocked':
+		'نُشرت الطاولات، لذا لا يمكن تغيير الاسم بعد الآن. إن كان فيه خطأ فتحدّثوا مع المضيف.',
+	'tableAssignment.error.nameClaimed':
+		'تابعتم هذا التسجيل بالاسم الكامل، لذا لا يمكن تغيير الاسم. إن كان فيه خطأ فتحدّثوا مع المضيف.',
+	'tableAssignment.delete': 'حذف هذا التوزيع',
+	'tableAssignment.delete.title': 'حذف هذا التوزيع؟',
+	'tableAssignment.delete.body':
+		'يؤدي هذا إلى حذف الأسماء والإجابات والطاولات للجميع نهائيًا. لا يمكن التراجع.',
+	'tableAssignment.delete.keep': 'لا، أبقِه',
+	'tableAssignment.delete.confirm': 'نعم، احذف كل شيء',
+	'tableAssignment.participants.claimedByName': 'تابع بالاسم',
 };
 
 export default ar;
