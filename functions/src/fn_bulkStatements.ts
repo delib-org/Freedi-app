@@ -1,12 +1,7 @@
 import { Request, Response } from 'firebase-functions/v1';
 import { FirestoreEvent, QueryDocumentSnapshot } from 'firebase-functions/firestore';
 import { Timestamp } from 'firebase-admin/firestore';
-import {
-	Collections,
-	OPEN_ACCESS_SCOPE,
-	Statement,
-	StatementDeletion,
-} from '@freedi/shared-types';
+import { Collections, OPEN_ACCESS_SCOPE, Statement, StatementDeletion } from '@freedi/shared-types';
 import { db } from './index';
 import { logError } from './utils/errorHandling';
 import { verifyAuthToken } from './utils/httpAuth';

@@ -1,5 +1,10 @@
 import { setDoc } from 'firebase/firestore';
-import { Statement, StatementType, createStatementObject, childTopParentId } from '@freedi/shared-types';
+import {
+	Statement,
+	StatementType,
+	createStatementObject,
+	childTopParentId,
+} from '@freedi/shared-types';
 import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { store } from '@/redux/store';

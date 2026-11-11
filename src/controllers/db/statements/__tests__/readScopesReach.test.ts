@@ -67,10 +67,22 @@ describe('a host the rules cannot see', () => {
 
 	// g sits six levels under the top: the rules read roles on g, its four
 	// nearest listed ancestors (l2..l5) and the top, never on l1.
-	const deep = { statementId: 'g', accessScope: 'g', topParentId: 'top1', parents: ['top1', 'l1', 'l2', 'l3', 'l4', 'l5'] };
+	const deep = {
+		statementId: 'g',
+		accessScope: 'g',
+		topParentId: 'top1',
+		parents: ['top1', 'l1', 'l2', 'l3', 'l4', 'l5'],
+	};
 
 	it('lists the levels the rules read roles on', () => {
-		expect(levelsTheRulesSee(deep as unknown as Statement)).toEqual(['g', 'l2', 'l3', 'l4', 'l5', 'top1']);
+		expect(levelsTheRulesSee(deep as unknown as Statement)).toEqual([
+			'g',
+			'l2',
+			'l3',
+			'l4',
+			'l5',
+			'top1',
+		]);
 	});
 
 	it('leaves out "top" and the level itself from its ancestors', () => {

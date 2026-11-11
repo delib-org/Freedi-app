@@ -8,6 +8,9 @@
 // Mock @freedi/shared-types before import to prevent valibot loading
 jest.mock('@freedi/shared-types', () => ({
 	newStatementAccessScope: () => undefined,
+	// The real helper, inline: the mock keeps valibot out.
+	childTopParentId: (parent: { statementId: string; parentId?: string; topParentId?: string }) =>
+		parent.parentId === 'top' ? parent.statementId : parent.topParentId || parent.statementId,
 	StatementType: {
 		statement: 'statement',
 		option: 'option',

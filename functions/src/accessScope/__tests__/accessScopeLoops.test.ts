@@ -78,9 +78,9 @@ describe('loops in the tree', () => {
 				parentId: index === 0 ? 'top' : `n${index - 1}`,
 			});
 		}
-		await expect(
-			resolveStatementScope(store.db, read(store, `n${depth - 1}`)),
-		).resolves.toBe(QUARANTINED_ACCESS_SCOPE);
+		await expect(resolveStatementScope(store.db, read(store, `n${depth - 1}`))).resolves.toBe(
+			QUARANTINED_ACCESS_SCOPE,
+		);
 	});
 
 	it('the re-stamp job writes the quarantine onto a forged loop', async () => {
