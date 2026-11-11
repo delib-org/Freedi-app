@@ -126,6 +126,26 @@ function levelIds(level: Statement): string[] {
 	);
 }
 
+/** How many of a private level's nearest ancestors the rules read roles on. */
+const RULES_ANCESTOR_REACH = 4;
+
+/**
+ * The levels whose host roles the rules count for a private level: the level,
+ * its four nearest listed ancestors and its top (`rolesAround` in
+ * firestore.rules). A host further up is real, but the rules cannot see it, and
+ * naming the scope on its strength would fail the whole query.
+ */
+export function levelsTheRulesSee(level: Statement): string[] {
+	const ancestors = (level.parents ?? []).filter(
+		(id) => Boolean(id) && id !== 'top' && id !== level.statementId,
+	);
+	const top = level.topParentId === level.statementId ? undefined : level.topParentId;
+
+	return [level.statementId, ...ancestors.slice(-RULES_ANCESTOR_REACH), top].filter(
+		(id): id is string => Boolean(id) && id !== 'top',
+	);
+}
+
 /**
  * What may be asked for under a statement. A scope is named only when the rules
  * would accept it: a refused scope fails the whole query, open content included.
@@ -156,6 +176,7 @@ async function readPlanOf(statementId: string): Promise<ReadPlan> {
 
 	const level = governing === statementId ? statement : await loadStatement(governing);
 	const aboveAndAt = level ? levelIds(level) : [governing];
+	const hostLevels = level ? levelsTheRulesSee(level) : [governing];
 	const statementLevels = levelIds(statement);
 	// The same rule as the database: banned or waiting anywhere shuts the door; a
 	// role at the private level, or a host role at it or above, opens it. A host
@@ -168,7 +189,7 @@ async function readPlanOf(statementId: string): Promise<ReadPlan> {
 	const mayReadGoverning =
 		!isShut &&
 		(isActiveRole(roles.get(governing)) ||
-			aboveAndAt.some((id) => isHostRole(roles.get(id))) ||
+			hostLevels.some((id) => isHostRole(roles.get(id))) ||
 			creator?.systemAdmin === true);
 	const first = mayReadGoverning ? [OPEN_ACCESS_SCOPE, governing] : [OPEN_ACCESS_SCOPE];
 
