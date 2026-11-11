@@ -285,10 +285,23 @@ describe('only the level owning the setting counts', () => {
 		await expect(callChild()).rejects.toMatchObject({ code: 'permission-denied' });
 	});
 
-	it('still lets a host at any level in', async () => {
+	it('does not count a host of a level below the private one', async () => {
 		role('child', 'admin');
 
+		await expect(callChild()).rejects.toMatchObject({ code: 'permission-denied' });
+	});
+
+	it('counts a host of the private level or above it', async () => {
+		role('top-group', 'admin');
+
 		await expect(callChild()).resolves.toMatchObject({ statementId: 'child' });
+	});
+
+	it('refuses someone waiting anywhere on the chain, even a member', async () => {
+		role('private-q', 'member');
+		role('top-group', 'waiting');
+
+		await expect(callChild()).rejects.toMatchObject({ code: 'permission-denied' });
 	});
 
 	describe('resolveStatementAccess', () => {
@@ -310,8 +323,11 @@ describe('only the level owning the setting counts', () => {
 			await expect(search()).resolves.toMatchObject({ topParentId: 'top-group' });
 		});
 
-		it('lets a host below it in, and refuses a ban anywhere', async () => {
+		it('does not let a host below it in, and refuses a ban anywhere', async () => {
 			role('child', 'admin');
+			await expect(search()).rejects.toMatchObject({ code: 'permission-denied' });
+
+			role('top-group', 'admin');
 			await expect(search()).resolves.toBeDefined();
 
 			role('private-q', 'banned');
@@ -326,7 +342,7 @@ describe('only the level owning the setting counts', () => {
 	});
 });
 
-describe('a host role on a level planted inside a private one', () => {
+describe('who made a level inside a private one gives no way in', () => {
 	beforeEach(() => {
 		statement('top-group', {
 			parentId: 'top',
@@ -361,7 +377,7 @@ describe('a host role on a level planted inside a private one', () => {
 		});
 	});
 
-	it('lets a host in when a member of the private level made it', async () => {
+	it('refuses a host of the level even when a member made it', async () => {
 		levelBy('a-member');
 		seed('statementsSubscribe', 'a-member--private-q', {
 			userId: 'a-member',
@@ -369,6 +385,16 @@ describe('a host role on a level planted inside a private one', () => {
 			role: 'member',
 		});
 		role('level', 'admin');
+
+		await expect(resolveQuestionParticipation(db, UID, 'level')).rejects.toMatchObject({
+			code: 'permission-denied',
+		});
+	});
+
+	it('lets a host of the level in once they are a member of the private level', async () => {
+		levelBy('someone');
+		role('level', 'admin');
+		role('private-q', 'member');
 
 		await expect(resolveQuestionParticipation(db, UID, 'level')).resolves.toMatchObject({
 			statementId: 'level',

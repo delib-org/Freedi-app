@@ -10,7 +10,6 @@ import {
 } from '@freedi/shared-types';
 import { findStatementAdminSource } from '../progress/assertStatementAdmin';
 import { AccessScopeLevels } from '../accessScope/accessScopeLevels';
-import { levelOriginOf, withoutPlantedHosts, type LevelOrigin } from '../accessScope/plantedLevels';
 
 const OPEN_ACCESS: ReadonlySet<string> = new Set([
 	Access.public,
@@ -47,16 +46,14 @@ export async function resolveStatementAccess(
 	const topParentId =
 		statement.parentId === 'top' || !statement.topParentId ? statementId : statement.topParentId;
 	const levels = await readAccessLevels(firestore, uid, statement);
-
-	if (levels.some(({ role }) => role === Role.banned)) {
+	const verdict = judgeAccessLevels(levels, 'open');
+	if (verdict === 'banned') {
 		throw new HttpsError('permission-denied', 'You cannot take part in this space');
 	}
-	if (levels.some(({ role }) => isHostRole(role))) return { statement, topParentId };
-
-	const { access, governing } = governingOf(levels);
-	if (governing.some(({ role }) => isActiveRole(role))) return { statement, topParentId };
-	// No setting at any level means open (the same answer as resolveAccessScope).
-	if (!access || OPEN_ACCESS.has(access)) return { statement, topParentId };
+	// Search and the answer batch never hid hidden statements here, and in an open
+	// space a pending request did not shut anyone out.
+	if (verdict === 'allowed' || verdict === 'hidden') return { statement, topParentId };
+	if (verdict === 'waiting' && !isRestrictedOwner(levels)) return { statement, topParentId };
 
 	throw new HttpsError('permission-denied', 'You are not a member of this space');
 }
@@ -116,16 +113,10 @@ async function readAccessLevels(
 		...ids.map((id) => subscriptions.doc(`${uid}--${id}`)),
 	);
 
-	const levels = ids.map((id, index) => ({
+	return ids.map((id, index) => ({
 		statement: index === 0 ? statement : (chain.levelOf(id) as AccessLevel['statement']),
 		role: (subscriptionSnaps[index].data() as { role?: string } | undefined)?.role,
 	}));
-	const origins = ids.map((id, index) =>
-		index === 0 ? levelOriginOf(statement) : (chain.levelOf(id) as LevelOrigin | undefined),
-	);
-
-	// A host role counts at any level, except on a level planted inside a private one.
-	return withoutPlantedHosts(firestore, levels, origins);
 }
 
 /**
@@ -133,7 +124,11 @@ async function readAccessLevels(
  * owns the setting: a role below it can be self-granted, and a role above it is
  * not membership of a private level inside.
  */
-function governingOf(levels: AccessLevel[]): { access?: string; governing: AccessLevel[] } {
+function governingOf(levels: AccessLevel[]): {
+	access?: string;
+	governing: AccessLevel[];
+	ownerIndex: number;
+} {
 	const settingAt = (index: number): string | undefined => {
 		const statement = levels[index]?.statement;
 
@@ -142,15 +137,24 @@ function governingOf(levels: AccessLevel[]): { access?: string; governing: Acces
 	const ownerIndex = levels.findIndex((_, index) => settingAt(index));
 
 	return ownerIndex >= 0
-		? { access: settingAt(ownerIndex), governing: [levels[ownerIndex]] }
-		: { governing: levels };
+		? { access: settingAt(ownerIndex), governing: [levels[ownerIndex]], ownerIndex }
+		: { governing: levels, ownerIndex };
+}
+
+/** Whether the setting that governs these levels is a private one. */
+export function isRestrictedOwner(levels: AccessLevel[]): boolean {
+	const { access } = governingOf(levels);
+
+	return Boolean(access) && !isOpenAccess(access as string);
 }
 
 /**
  * The verdict on one statement, given the statement and each ancestor up to the
  * top, nearest first. The rules follow the app (`useAuthorization`):
  *
- * - a ban at any level refuses; a host at any level gets in;
+ * - a ban at any level refuses; inside a private level, so does waiting at any
+ *   level, and a host role counts only at that level or above it (elsewhere a
+ *   host at any level gets in);
  * - a hidden statement, or one under something hidden, is `hidden` to anyone
  *   but a host;
  * - a statement's own access setting wins, else the nearest ancestor's, so a
@@ -165,13 +169,21 @@ export function judgeAccessLevels(
 ): AccessVerdict {
 	if (levels.some(({ role }) => role === Role.banned)) return 'banned';
 
-	const isHostInTree = levels.some(({ role }) => isHostRole(role));
+	const { access, governing, ownerIndex } = governingOf(levels);
+	const isRestricted = Boolean(access) && !isOpenAccess(access as string);
+	// Inside a private level, waiting anywhere on the chain shuts the door.
+	if (isRestricted && levels.some(({ role }) => role === Role.waiting)) return 'waiting';
+
+	// Inside a private level, a host role counts only at that level or above it: a
+	// host of something below holds nothing the private level gave them.
+	const isHostInTree = levels.some(
+		({ role }, index) => isHostRole(role) && (!isRestricted || index >= ownerIndex),
+	);
 	if (levels.some(({ statement }) => statement?.hide === true)) {
 		return isHostInTree ? 'allowed' : 'hidden';
 	}
 	if (isHostInTree) return 'allowed';
 
-	const { access, governing } = governingOf(levels);
 	if (governing.some(({ role }) => isActiveRole(role))) return 'allowed';
 	if (access === Access.public) return 'allowed';
 	if (governing.some(({ role }) => role === Role.waiting)) return 'waiting';
@@ -200,7 +212,7 @@ export async function resolveQuestionParticipation(
 	if (verdict === 'banned') {
 		throw new HttpsError('permission-denied', 'You cannot take part in this space');
 	}
-	if (verdict === 'hidden' && (await findStatementAdminSource(uid, question)) === null) {
+	if (verdict === 'hidden' && !(await isAdminThere(uid, question, levels))) {
 		throw new HttpsError('not-found', 'Statement not found');
 	}
 	if (verdict === 'waiting') throw new HttpsError('permission-denied', 'Waiting for approval');
@@ -209,4 +221,23 @@ export async function resolveQuestionParticipation(
 	}
 
 	return question;
+}
+
+/**
+ * Whether `uid` administers `statement` in a way that counts for reading it.
+ * Inside a private level only roles count: having created the statement gives
+ * nothing, and a host role on the statement counts only when the statement is
+ * the private level itself. A host of the top, or an organization admin, counts.
+ */
+export async function isAdminThere(
+	uid: string,
+	statement: Statement,
+	levels: AccessLevel[],
+): Promise<boolean> {
+	const via = await findStatementAdminSource(uid, statement);
+	if (via === null) return false;
+	if (!isRestrictedOwner(levels)) return true;
+	if (via === 'topSubscription' || via === 'organization') return true;
+
+	return via === 'subscription' && governingOf(levels).ownerIndex === 0;
 }

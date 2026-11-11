@@ -1,15 +1,8 @@
 import type { Firestore } from 'firebase-admin/firestore';
 import { Access, Collections, Role, StatementType, type Statement } from '@freedi/shared-types';
-import { findStatementAdminSource } from '../progress/assertStatementAdmin';
 import { isSystemAdmin } from './httpAuth';
 import { ancestorIds } from './statementAncestors';
-import { isOpenAccess, judgeAccessLevels, type AccessLevel } from './statementAccess';
-import {
-	findPlantedLevels,
-	levelOriginOf,
-	withoutPlantedHosts,
-	type LevelOrigin,
-} from '../accessScope/plantedLevels';
+import { isAdminThere, isOpenAccess, judgeAccessLevels, type AccessLevel } from './statementAccess';
 
 const TREE_ACCESS = {
 	/**
@@ -35,8 +28,6 @@ type LevelSettings = AccessLevel['statement'];
 interface TreeNode {
 	parentId: string | undefined;
 	settings: NonNullable<LevelSettings>;
-	/** Who made it and under which scope: whether a host role on it can be trusted. */
-	origin: LevelOrigin;
 	/** An answer-type statement, whose writer may have copied its parent's setting. */
 	mayCopyParent: boolean;
 }
@@ -47,7 +38,6 @@ type KnownNodes = Map<string, TreeNode | null>;
 interface ChainWalk {
 	ids: string[];
 	settings: LevelSettings[];
-	origins: (LevelOrigin | undefined)[];
 	nextId: string | null;
 	/** Listed ancestors, used only past a broken `parentId` link. */
 	listed: string[];
@@ -67,7 +57,6 @@ interface TreeChain {
 	root: Statement;
 	ids: string[];
 	settings: LevelSettings[];
-	origins: (LevelOrigin | undefined)[];
 }
 
 export type TreeReadAccess =
@@ -81,8 +70,6 @@ export type TreeReadAccess =
 export interface GatedChain {
 	ids: string[];
 	settings: LevelSettings[];
-	/** Per level, to tell a planted level's host role from a real one. */
-	origins?: (LevelOrigin | undefined)[];
 	/** Per level: it only inherits, so only a host role on it counts. */
 	hostOnly?: boolean[];
 }
@@ -95,12 +82,6 @@ const UNTRUSTED_LEVEL: LevelSettings = { membership: { access: Access.secret } }
 
 const chainCache = new Map<string, { at: number; chain: Promise<TreeChain | null> }>();
 const nodeCache = new Map<string, { at: number; node: TreeNode | null }>();
-
-const HOST_ROLES_HERE: readonly string[] = [Role.admin, Role.creator];
-
-function isHostRole(role: string | undefined): boolean {
-	return role !== undefined && HOST_ROLES_HERE.includes(role);
-}
 
 function subscriptionRefs(firestore: Firestore, uid: string, statementIds: string[]) {
 	const subscriptions = firestore.collection(Collections.statementsSubscribe);
@@ -123,7 +104,6 @@ function toNode(statement: Statement): TreeNode {
 	return {
 		parentId: statement.parentId,
 		settings: { membership: statement.membership, hide: statement.hide },
-		origin: levelOriginOf(statement),
 		mayCopyParent: isAnswerType(statement),
 	};
 }
@@ -183,7 +163,6 @@ function startWalk(id: string, statement: Statement): ChainWalk {
 	const walk: ChainWalk = {
 		ids: [id],
 		settings: [node.settings],
-		origins: [node.origin],
 		nextId: null,
 		listed: ancestorIds(statement, Infinity),
 		unsafe: false,
@@ -216,7 +195,6 @@ function climb(walk: ChainWalk, known: KnownNodes, options: ClimbOptions): strin
 
 		walk.ids.push(id);
 		walk.settings.push(node?.settings);
-		walk.origins.push(node?.origin);
 		walk.nextId = nextLevel(walk, node);
 	}
 
@@ -261,7 +239,6 @@ async function readChain(firestore: Firestore, rootId: string): Promise<TreeChai
 		root,
 		ids: walk.ids,
 		settings: walk.ids.map((id) => ownSettings(known.get(id), known)),
-		origins: walk.origins,
 	};
 }
 
@@ -307,14 +284,10 @@ export async function authorizeTreeRead(
 	if (!chain) return { allowed: false, status: NOT_FOUND, error: 'Statement not found' };
 
 	const roleSnaps = await firestore.getAll(...subscriptionRefs(firestore, uid, chain.ids));
-	const levels: AccessLevel[] = await withoutPlantedHosts(
-		firestore,
-		chain.settings.map((statement, index) => ({
-			statement,
-			role: (roleSnaps[index].data() as { role?: string } | undefined)?.role,
-		})),
-		chain.origins,
-	);
+	const levels: AccessLevel[] = chain.settings.map((statement, index) => ({
+		statement,
+		role: (roleSnaps[index].data() as { role?: string } | undefined)?.role,
+	}));
 
 	const verdict = judgeAccessLevels(levels, 'open');
 	if (verdict === 'allowed') return { allowed: true, levels };
@@ -322,7 +295,7 @@ export async function authorizeTreeRead(
 	if (verdict === 'banned') {
 		return { allowed: false, status: FORBIDDEN, error: 'You cannot take part in this space' };
 	}
-	if ((await findStatementAdminSource(uid, chain.root)) !== null) {
+	if (await isAdminThere(uid, chain.root, levels)) {
 		// Counts as a host level when statements below the root are judged.
 		return { allowed: true, levels: [...levels, { statement: undefined, role: Role.admin }] };
 	}
@@ -341,27 +314,21 @@ function ownsSettingOrHides(level: LevelSettings): boolean {
 }
 
 /**
- * The levels a statement is judged on. Those with a setting or hidden, as
- * before, and also the levels above it that only inherit: a host role counts
- * wherever it is (unless the level was planted), so a host of an inheriting
- * middle level reads what is under it. On an inheriting level only a host role
- * counts; a membership or a ban placed there does not. The statement itself is
- * left out unless it owns a setting, so a page of plain answers costs no extra
- * role read each.
+ * The levels a statement is judged on: those with a setting or hidden, and the
+ * levels above it that only inherit, since a host role there counts when it is
+ * at or above the private level (judgeAccessLevels decides). On an inheriting
+ * level only a host role counts; a membership or a ban placed there does not.
+ * The statement itself is left out unless it owns a setting, so a page of plain
+ * answers costs no extra role read each.
  */
-function judgedLevels(
-	ids: string[],
-	settings: LevelSettings[],
-	origins: (LevelOrigin | undefined)[],
-): GatedChain {
+function judgedLevels(ids: string[], settings: LevelSettings[]): GatedChain {
 	const kept = ids
-		.map((id, index) => ({ id, level: settings[index], origin: origins[index], index }))
+		.map((id, index) => ({ id, level: settings[index], index }))
 		.filter(({ level, index }) => index > 0 || ownsSettingOrHides(level));
 
 	return {
 		ids: kept.map(({ id }) => id),
 		settings: kept.map(({ level }) => level),
-		origins: kept.map(({ origin }) => origin),
 		hostOnly: kept.map(({ level }) => !ownsSettingOrHides(level)),
 	};
 }
@@ -394,9 +361,7 @@ export async function findPrivateGates(
 		const settings = walk.ids.map((levelId) => ownSettings(known.get(levelId), known));
 		const access = nearestAccess(settings);
 		if (walk.unsafe) gates.set(id, { ids: [id], settings: [UNTRUSTED_LEVEL] });
-		else if (access && !isOpenAccess(access)) {
-			gates.set(id, judgedLevels(walk.ids, settings, walk.origins));
-		}
+		else if (access && !isOpenAccess(access)) gates.set(id, judgedLevels(walk.ids, settings));
 	});
 
 	return gates;
@@ -424,26 +389,15 @@ export async function findRefusedStatements(
 		]),
 	);
 
-	const levelOrigins = new Map(
-		[...gates.values()].flatMap(({ ids, origins }) =>
-			ids.map((id, index) => [id, origins?.[index]] as const),
-		),
-	);
-	const planted = await findPlantedLevels(
-		firestore,
-		levelIds.filter((id) => isHostRole(roles.get(id))).map((id) => levelOrigins.get(id)),
-	);
-	const trustedRole = (id: string) =>
-		planted.has(id) && isHostRole(roles.get(id)) ? undefined : roles.get(id);
-
 	const refused = [...gates]
 		.filter(([, { ids, settings, hostOnly }]) => {
 			const levels = ids.map((id, index) => {
-				const role = trustedRole(id);
+				const role = roles.get(id);
+				const isHost = role === Role.admin || role === Role.creator;
 
 				return {
 					statement: settings[index],
-					role: hostOnly?.[index] && !isHostRole(role) ? undefined : role,
+					role: hostOnly?.[index] && !isHost ? undefined : role,
 				};
 			});
 

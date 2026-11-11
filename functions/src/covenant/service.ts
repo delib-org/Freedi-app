@@ -50,8 +50,11 @@ export async function covenantService(uid: string, input: unknown): Promise<Cove
 			scopeId === questionId
 				? ownSub
 				: (await tx.get(db.collection('statementsSubscribe').doc(`${uid}--${scopeId}`))).data();
-		const creator = q.creatorId === uid || q.creator?.uid === uid;
-		const scopeCreator = scope?.creatorId === uid || scope?.creator?.uid === uid;
+		// Inside a private level, having created something gives no way in: only roles do.
+		const isInsidePrivate = governingId !== null && governingId !== questionId;
+		const creator = !isInsidePrivate && (q.creatorId === uid || q.creator?.uid === uid);
+		const scopeCreator =
+			!isInsidePrivate && (scope?.creatorId === uid || scope?.creator?.uid === uid);
 		if (
 			['banned', 'waiting'].includes(ownSub?.role) ||
 			scopeSub?.role === 'banned' ||

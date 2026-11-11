@@ -96,7 +96,7 @@ describe('getBulkStatements access', () => {
 			expect(result.ids).toEqual([q]);
 		});
 
-		it('lets the creator in without a subscription, as the app does', async () => {
+		it('does not let the creator of a private level in without a role there', async () => {
 			const { top, q } = tree({ top: 'secret' });
 			statement(top, {
 				parentId: 'top',
@@ -108,8 +108,12 @@ describe('getBulkStatements access', () => {
 
 			const result = await load('author', top);
 
-			expect(result.status).toBe(200);
-			expect(result.ids).toEqual([q]);
+			// Only roles count inside a private level (Tal's rule A): a creator holds one.
+			expect(result.status).toBe(403);
+			role('author', top, 'statement-creator');
+			const withRole = await load('author', top);
+			expect(withRole.status).toBe(200);
+			expect(withRole.ids).toEqual([q]);
 		});
 
 		it('refuses someone banned', async () => {
