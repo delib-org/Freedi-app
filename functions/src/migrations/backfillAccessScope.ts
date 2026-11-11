@@ -1,5 +1,5 @@
 import type { Firestore } from 'firebase-admin/firestore';
-import { Collections, OPEN_ACCESS_SCOPE, type Statement } from '@freedi/shared-types';
+import { Collections, OPEN_ACCESS_SCOPE, Role, type Statement } from '@freedi/shared-types';
 import { AccessScopeLevels } from '../accessScope/accessScopeLevels';
 
 /**
@@ -36,6 +36,13 @@ export interface BackfillAccessScopeResult {
 	restricted: number;
 	/** Open only because of their own setting, under a restricted level. */
 	ownOpenUnderRestricted: number;
+	/**
+	 * Levels with their own setting, open or private, inside a private level,
+	 * whose creator holds no role there: a pocket someone outside may have made
+	 * before the rules checked who changes access. For a person to review; the
+	 * backfill changes nothing about them.
+	 */
+	pocketsToReview: string[];
 	ancestorReads: number;
 	cursor: string | null;
 	finished: boolean;
@@ -61,6 +68,28 @@ function withoutOwnSetting(subject: Statement): Statement {
 	return copy;
 }
 
+const MEMBER_ROLES: readonly string[] = [Role.member, Role.admin, Role.creator];
+
+/** The pockets whose creator holds no role at the private level they sit in. */
+async function pocketsMadeByOutsiders(
+	firestore: Firestore,
+	pockets: Array<{ statementId: string; creatorId: string; scope: string }>,
+): Promise<string[]> {
+	if (pockets.length === 0) return [];
+	const subscriptions = firestore.collection(Collections.statementsSubscribe);
+	const snaps = await firestore.getAll(
+		...pockets.map(({ creatorId, scope }) => subscriptions.doc(`${creatorId}--${scope}`)),
+	);
+
+	return pockets
+		.filter((_, index) => {
+			const role = (snaps[index].data() as { role?: string } | undefined)?.role;
+
+			return !role || !MEMBER_ROLES.includes(role);
+		})
+		.map(({ statementId }) => statementId);
+}
+
 export async function runAccessScopeBackfill(
 	firestore: Firestore,
 	options: BackfillAccessScopeOptions,
@@ -75,6 +104,7 @@ export async function runAccessScopeBackfill(
 		open: 0,
 		restricted: 0,
 		ownOpenUnderRestricted: 0,
+		pocketsToReview: [],
 		ancestorReads: 0,
 		cursor: options.cursor ?? null,
 		finished: false,
@@ -98,15 +128,26 @@ export async function runAccessScopeBackfill(
 
 		const batch = firestore.batch();
 		let pageWrites = 0;
+		const pockets: Array<{ statementId: string; creatorId: string; scope: string }> = [];
 		subjects.forEach((subject, index) => {
 			result.scanned += 1;
 			const accessScope = levels.scopeOf(subject);
+			// A level with its own setting inside a private level: a pocket, open or
+			// private, that someone outside may have set before the rules checked who
+			// changes access there. Its creator is checked below.
+			const inherited = subject.membership?.access
+				? levels.scopeOf(withoutOwnSetting(subject))
+				: accessScope;
+			if (subject.creatorId && inherited !== OPEN_ACCESS_SCOPE && inherited !== accessScope) {
+				pockets.push({
+					statementId: subject.statementId,
+					creatorId: subject.creatorId,
+					scope: inherited,
+				});
+			}
 			if (accessScope === OPEN_ACCESS_SCOPE) {
 				result.open += 1;
-				if (
-					subject.membership?.access &&
-					levels.scopeOf(withoutOwnSetting(subject)) !== accessScope
-				) {
+				if (subject.membership?.access && inherited !== accessScope) {
 					result.ownOpenUnderRestricted += 1;
 				}
 			} else {
@@ -123,6 +164,8 @@ export async function runAccessScopeBackfill(
 				pageWrites += 1;
 			}
 		});
+
+		result.pocketsToReview.push(...(await pocketsMadeByOutsiders(firestore, pockets)));
 
 		if (pageWrites > 0) {
 			await batch.commit();

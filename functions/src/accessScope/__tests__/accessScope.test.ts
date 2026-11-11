@@ -400,6 +400,34 @@ describe('runAccessScopeBackfill', () => {
 		expect(result.ownOpenUnderRestricted).toBe(1);
 	});
 
+	it('lists open pockets made by someone outside the private level, for review', async () => {
+		const store = tree();
+		store.seed(S, 'pocket', {
+			statementId: 'pocket',
+			parentId: 'group',
+			parents: ['group'],
+			creatorId: 'stranger',
+			membership: { access: 'public' },
+		});
+		store.seed(S, 'fine', {
+			statementId: 'fine',
+			parentId: 'group',
+			parents: ['group'],
+			creatorId: 'insider',
+			membership: { access: 'public' },
+		});
+		store.seed(S, 'private-pocket', {
+			statementId: 'private-pocket',
+			parentId: 'group',
+			parents: ['group'],
+			creatorId: 'stranger',
+			membership: { access: 'secret' },
+		});
+		store.seed(Collections.statementsSubscribe, 'insider--group', { role: 'member' });
+		const result = await runAccessScopeBackfill(store.db, { execute: false });
+		expect(result.pocketsToReview.sort()).toEqual(['pocket', 'private-pocket']);
+	});
+
 	it('treats a question’s setting copied onto its answer as inherited', async () => {
 		const store = tree();
 		store.seed(S, 'q', {

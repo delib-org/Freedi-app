@@ -3,7 +3,10 @@
  * functions/src/migrations/backfillAccessScope.ts for what it writes and why.
  *
  * Must finish before the rules that read `accessScope` are deployed: a statement
- * without the field is invisible to every scoped list.
+ * without the field is invisible to every scoped list, and the create rule reads
+ * an unstamped parent as open. Run it with --execute, then once more as a dry run:
+ * that must report `toWrite: 0` (an access change during the run can be undone by
+ * the ancestor cache). Review `pocketsToReview` before the rules go out.
  *
  * Dry run by default. Safe to rerun: a correct statement is not written.
  * Resumable: the last statement reached is kept in a state file; if that file is
