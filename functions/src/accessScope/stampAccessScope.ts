@@ -8,7 +8,7 @@ import {
 import { db } from '../db';
 import { logError } from '../utils/errorHandling';
 import { resolveStatementScope } from './accessScopeLevels';
-import { scopeOfReusedId } from './recreatedStatements';
+import { stampReusedId } from './recreatedStatements';
 
 /**
  * The safety net behind client stamping. A statement that arrives without a
@@ -21,11 +21,10 @@ import { scopeOfReusedId } from './recreatedStatements';
 export async function stampNewStatement(statement: Statement | undefined): Promise<void> {
 	if (!statement?.statementId) return;
 	try {
-		const reused = await scopeOfReusedId(db, statement);
-		if (reused === undefined && statement.accessScope) return;
+		if (await stampReusedId(db, statement)) return;
+		if (statement.accessScope) return;
 
-		const accessScope = reused ?? (await resolveStatementScope(db, statement));
-		if (accessScope === statement.accessScope) return;
+		const accessScope = await resolveStatementScope(db, statement);
 		await db.collection(Collections.statements).doc(statement.statementId).update({ accessScope });
 	} catch (error) {
 		logError(error, {

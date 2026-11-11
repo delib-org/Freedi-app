@@ -4,6 +4,7 @@ import {
 	Collections,
 	OPEN_ACCESS_SCOPE,
 	QUARANTINED_ACCESS_SCOPE,
+	isQuarantinedScope,
 	resolveAccessScope,
 	type Statement,
 } from '@freedi/shared-types';
@@ -35,9 +36,9 @@ export type ScopeSubject = Pick<
 	Statement,
 	'statementId' | 'parentId' | 'topParentId' | 'membership' | 'statementSettings'
 > &
-	Partial<Pick<Statement, 'statementType' | 'agreementBallot'>>;
+	Partial<Pick<Statement, 'statementType' | 'agreementBallot' | 'accessScope'>>;
 
-type LoadedLevel = AccessScopeLevel & { parentId?: string; hide?: boolean };
+type LoadedLevel = AccessScopeLevel & { parentId?: string; hide?: boolean; accessScope?: string };
 
 /**
  * The access settings of the levels above a set of statements, read once. A
@@ -62,7 +63,12 @@ export class AccessScopeLevels {
 	 * `loop` is a chain that comes back to a statement already on it, or one too
 	 * deep to be a real tree: it has no place to be judged by.
 	 */
-	private walk(subject: ScopeSubject): { ids: string[]; missing?: string; loop?: boolean } {
+	private walk(subject: ScopeSubject): {
+		ids: string[];
+		missing?: string;
+		loop?: boolean;
+		broken?: boolean;
+	} {
 		const ids: string[] = [];
 		const seen = new Set([subject.statementId]);
 		let next: string | undefined = subject.parentId;
@@ -70,11 +76,20 @@ export class AccessScopeLevels {
 			if (seen.has(next) || ids.length >= MAX_DEPTH) return { ids, loop: true };
 			const level = this.levels.get(next);
 			if (level === undefined) return { ids, missing: next };
-			if (level === null) break;
+			if (level === null) return { ...this.withTop(subject, ids, seen), broken: true };
 			ids.push(next);
 			seen.add(next);
 			next = level.parentId;
 		}
+
+		return this.withTop(subject, ids, seen);
+	}
+
+	private withTop(
+		subject: ScopeSubject,
+		ids: string[],
+		seen: ReadonlySet<string>,
+	): { ids: string[]; missing?: string } {
 		const top = subject.topParentId;
 		if (top && top !== TOP && !seen.has(top)) {
 			if (this.levels.get(top) === undefined) return { ids, missing: top };
@@ -132,7 +147,9 @@ export class AccessScopeLevels {
 	/**
 	 * The scope of a statement whose ancestors have been loaded. A statement on, or
 	 * under, a loop is quarantined: its `parents` and `topParentId` may claim any
-	 * place, so it is shown to no one until a person looks at it.
+	 * place, so it is shown to no one until a person looks at it. So is one already
+	 * quarantined, or under a quarantined level. One whose chain is broken by a
+	 * deleted ancestor keeps a private stamp.
 	 */
 	scopeOf(subject: ScopeSubject): string {
 		const walk = this.walk(subject);
@@ -149,6 +166,21 @@ export class AccessScopeLevels {
 		const levels = walk.ids
 			.map((id) => this.levels.get(id))
 			.filter((level): level is LoadedLevel => Boolean(level));
+		// Quarantine is lifted by a person, never by a re-stamp, and it covers what
+		// is under it: a re-made id's old children would otherwise resolve through
+		// its new, open setting the next time their tree is re-stamped.
+		if (
+			isQuarantinedScope(subject.accessScope) ||
+			levels.some((level) => isQuarantinedScope(level.accessScope))
+		) {
+			return QUARANTINED_ACCESS_SCOPE;
+		}
+		// An ancestor was deleted, so the levels that judged it may be gone from the
+		// walk: an orphan of a deleted private question would come out open. It
+		// keeps the private stamp it has.
+		if (walk.broken && subject.accessScope && subject.accessScope !== OPEN_ACCESS_SCOPE) {
+			return subject.accessScope;
+		}
 
 		return resolveAccessScope(subject, levels);
 	}

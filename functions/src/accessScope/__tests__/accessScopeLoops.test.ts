@@ -83,6 +83,53 @@ describe('loops in the tree', () => {
 		);
 	});
 
+	it('keeps a quarantine, and spreads it to what is under it, on any later re-stamp', async () => {
+		const store = fakeStatementStore();
+		store.seed(S, 'root', { statementId: 'root', parentId: 'top', topParentId: 'root' });
+		store.seed(S, 'reused', {
+			statementId: 'reused',
+			parentId: 'top',
+			topParentId: 'reused',
+			membership: { access: 'public' },
+			accessScope: QUARANTINED_ACCESS_SCOPE,
+		});
+		store.seed(S, 'orphan', {
+			statementId: 'orphan',
+			statementType: 'option',
+			parentId: 'reused',
+			topParentId: 'root',
+			accessScope: 'pg',
+		});
+		const levels = new AccessScopeLevels(store.db);
+		const subjects = ['reused', 'orphan'].map((id) => read(store, id));
+		await levels.load(subjects);
+
+		expect(levels.scopeOf(subjects[0])).toBe(QUARANTINED_ACCESS_SCOPE);
+		expect(levels.scopeOf(subjects[1])).toBe(QUARANTINED_ACCESS_SCOPE);
+	});
+
+	it('keeps the private stamp of an orphan whose parent was deleted', async () => {
+		const store = fakeStatementStore();
+		store.seed(S, 'root', { statementId: 'root', parentId: 'top', topParentId: 'root' });
+		store.seed(S, 'orphan', {
+			statementId: 'orphan',
+			statementType: 'option',
+			parentId: 'deleted-question',
+			topParentId: 'root',
+			accessScope: 'pg',
+		});
+		store.seed(S, 'unstamped-orphan', {
+			statementId: 'unstamped-orphan',
+			parentId: 'deleted-question',
+			topParentId: 'root',
+		});
+
+		await expect(resolveStatementScope(store.db, read(store, 'orphan'))).resolves.toBe('pg');
+		await expect(resolveStatementScope(store.db, read(store, 'unstamped-orphan'))).resolves.toBe(
+			'open',
+		);
+	});
+
 	it('the re-stamp job writes the quarantine onto a forged loop', async () => {
 		const store = loopTree();
 		store.seed(Collections.accessScopeJobs, 'A', {

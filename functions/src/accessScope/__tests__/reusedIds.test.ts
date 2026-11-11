@@ -45,14 +45,45 @@ const madeAgain = (fields: Partial<Statement>) =>
 	({ statementId: 'q', creatorId: 'leaver', ...fields }) as Statement;
 
 describe('an id deleted from a private level', () => {
-	it('is quarantined when made again at the top, open', async () => {
+	it('is quarantined when made again at the top, open, with what is filed under it', async () => {
 		const store = world({ parentId: 'pg', deletedAtMs: 1, accessScope: 'pg' });
 		const again = madeAgain({ parentId: 'top', topParentId: 'q', accessScope: 'open' });
 		store.seed(S, 'q', again as unknown as Record<string, unknown>);
+		// A re-stamp already loosened the old answer through the new, open q.
+		store.seed(S, 'a', {
+			statementId: 'a',
+			parentId: 'q',
+			topParentId: 'root',
+			accessScope: 'open',
+		});
+		store.seed(S, 'a-reply', {
+			statementId: 'a-reply',
+			parentId: 'a',
+			topParentId: 'root',
+			accessScope: 'open',
+		});
 
 		await stampNewStatement(again);
 
-		expect(read(store, 'q').accessScope).toBe(QUARANTINED_ACCESS_SCOPE);
+		for (const id of ['q', 'a', 'a-reply']) {
+			expect(read(store, id).accessScope).toBe(QUARANTINED_ACCESS_SCOPE);
+		}
+		expect(read(store, 'pg').accessScope).toBe('pg');
+	});
+
+	it('reads a legacy tombstone by the parent it was deleted from, even once the children were loosened', async () => {
+		const store = world({ parentId: 'pg', deletedAtMs: 1 });
+		store.seed(S, 'a', {
+			statementId: 'a',
+			parentId: 'q',
+			topParentId: 'root',
+			accessScope: 'open',
+		});
+		const again = madeAgain({ parentId: 'top', topParentId: 'q', accessScope: 'open' });
+
+		await expect(scopeOfReusedId(store.db as unknown as Firestore, again)).resolves.toBe(
+			QUARANTINED_ACCESS_SCOPE,
+		);
 	});
 
 	it('is stamped as usual when made again in the same private level', async () => {
@@ -63,7 +94,7 @@ describe('an id deleted from a private level', () => {
 	});
 
 	it('is judged by its old children when the tombstone predates scopes', async () => {
-		const store = world({ parentId: 'pg', deletedAtMs: 1 });
+		const store = world({ parentId: 'gone', deletedAtMs: 1 });
 		const again = madeAgain({ parentId: 'top', topParentId: 'q', accessScope: 'open' });
 
 		await expect(scopeOfReusedId(store.db as unknown as Firestore, again)).resolves.toBe(
