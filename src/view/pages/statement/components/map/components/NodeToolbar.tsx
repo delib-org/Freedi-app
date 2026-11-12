@@ -1,6 +1,7 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { StatementType } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useIsPhoneViewport } from '@/controllers/hooks/useIsPhoneViewport';
 import { TYPE_LABEL_KEYS } from '../mapHelpers/statementTypeChoices';
 import type { TypeChoice } from '../mapHelpers/statementTypeChoices';
 import type { MapEvaluationFace } from '../mapHelpers/mapEvaluationFaces';
@@ -24,6 +25,8 @@ interface NodeToolbarProps {
 	/** Viewport x of the node's horizontal centre. */
 	anchorLeft: number;
 	onOpen: () => void;
+	/** Closes the panel and deselects the node (phone sheet: close button, Escape). */
+	onClose?: () => void;
 	/** Omit to hide the control. */
 	onEdit?: () => void;
 	onDelete?: () => void;
@@ -58,6 +61,7 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
 	anchorBottom,
 	anchorLeft,
 	onOpen,
+	onClose,
 	onEdit,
 	onDelete,
 	typeChoices,
@@ -68,6 +72,8 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
 	const panelRef = useRef<HTMLDivElement>(null);
 	const [typeMenuOpen, setTypeMenuOpen] = useState(false);
 	const [placement, setPlacement] = useState<Placement>({ below: false, left: anchorLeft });
+
+	const isPhone = useIsPhoneViewport();
 
 	const canChangeType = Boolean(onChangeType && typeChoices);
 	const hasRating = Boolean(rating);
@@ -91,16 +97,56 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
 		});
 	}, [anchorTop, anchorLeft, canChangeType, hasRating, hasEdit, hasDelete]);
 
+	// Phone: the panel is a bottom sheet. Focus moves into it and returns to
+	// where it came from; Escape closes it.
+	useEffect(() => {
+		if (!isPhone) return;
+
+		const previouslyFocused = document.activeElement as HTMLElement | null;
+		panelRef.current?.focus({ preventScroll: true });
+
+		const handleKeyDown = (e: KeyboardEvent): void => {
+			if (e.key === 'Escape') onClose?.();
+		};
+		document.addEventListener('keydown', handleKeyDown);
+
+		return () => {
+			document.removeEventListener('keydown', handleKeyDown);
+			previouslyFocused?.focus?.({ preventScroll: true });
+		};
+	}, [isPhone, onClose]);
+
 	const ratingLabel = rating?.readOnly ? t('Counted into the merged idea') : t('Rate this');
 
 	return (
 		<div
 			ref={panelRef}
-			className={`${styles.toolbar} ${placement.below ? styles['toolbar--below'] : ''}`}
-			style={{ top: placement.below ? anchorBottom : anchorTop, left: placement.left }}
+			className={`${styles.toolbar} ${placement.below ? styles['toolbar--below'] : ''} ${isPhone ? styles['toolbar--sheet'] : ''}`}
+			style={
+				isPhone
+					? undefined
+					: { top: placement.below ? anchorBottom : anchorTop, left: placement.left }
+			}
+			role={isPhone ? 'dialog' : undefined}
+			aria-label={isPhone ? t('map.node.menu') : undefined}
+			tabIndex={isPhone ? -1 : undefined}
 			onMouseDown={(e) => e.stopPropagation()}
 			onPointerDown={(e) => e.stopPropagation()}
 		>
+			{isPhone && onClose && (
+				<button
+					type="button"
+					className={styles.toolbar__close}
+					onClick={onClose}
+					aria-label={t('Close')}
+					title={t('Close')}
+				>
+					<Icon>
+						<line x1="18" y1="6" x2="6" y2="18" />
+						<line x1="6" y1="6" x2="18" y2="18" />
+					</Icon>
+				</button>
+			)}
 			<div className={styles.toolbar__row}>
 				<button
 					type="button"

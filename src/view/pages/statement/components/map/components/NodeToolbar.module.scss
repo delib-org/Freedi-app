@@ -25,6 +25,70 @@ $touch-target: 44px;
 		transform: translate(-50%, 0);
 	}
 
+	// Phone: a full-width bottom sheet above the map controls and the
+	// accessibility button, instead of a popover floating over the node.
+	&--sheet {
+		top: auto;
+		bottom: 0;
+		inset-inline: 0;
+		transform: none;
+		max-width: none;
+		max-height: 70vh;
+		overflow-y: auto;
+		border-radius: 16px 16px 0 0;
+		padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+		box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+		z-index: 1100;
+		animation: toolbarSlideUp 0.2s ease-out;
+		outline: none;
+
+		.toolbar__row {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 4px;
+			padding-inline-end: $touch-target;
+		}
+
+		.toolbar__btn {
+			min-height: $touch-target;
+		}
+
+		.toolbar__divider {
+			display: none;
+		}
+
+		.rating__faces {
+			gap: 4px;
+		}
+	}
+
+	&__close {
+		position: absolute;
+		top: 8px;
+		inset-inline-end: 8px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: $touch-target;
+		height: $touch-target;
+		padding: 0;
+		border: none;
+		border-radius: 50%;
+		background: transparent;
+		color: var(--text-body, #555);
+		cursor: pointer;
+
+		svg {
+			width: 20px;
+			height: 20px;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: -2px;
+		}
+	}
+
 	&__row {
 		display: flex;
 		flex-wrap: wrap;
@@ -270,6 +334,15 @@ $touch-target: 44px;
 	}
 	to {
 		opacity: 1;
+	}
+}
+
+@keyframes toolbarSlideUp {
+	from {
+		transform: translateY(100%);
+	}
+	to {
+		transform: translateY(0);
 	}
 }
 

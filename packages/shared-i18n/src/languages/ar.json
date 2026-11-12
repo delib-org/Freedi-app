@@ -4870,6 +4870,7 @@
   "answerStrip.notChosen": "إجابة",
   "answerStrip.chosen": "إجابة مختارة",
   "map.node.open": "فتح",
+  "map.node.menu": "إجراءات العقدة",
   "map.node.newQuestion": "سؤال جديد",
   "map.node.newAnswer": "إجابة جديدة",
   "Edit": "تعديل",

@@ -647,3 +647,11 @@
 		}
 	}
 }
+
+// Phone: the node sheet owns the bottom of the screen, so the "add" pills that
+// sit beside the selected node step aside while it is open.
+@media (max-width: 767px) {
+	.nodeSheetOpen :global(.mind-map-add-btn) {
+		display: none !important;
+	}
+}

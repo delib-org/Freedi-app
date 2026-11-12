@@ -4751,6 +4751,7 @@
   "answerStrip.notChosen": "Respuesta",
   "answerStrip.chosen": "Respuesta elegida",
   "map.node.open": "Abrir",
+  "map.node.menu": "Acciones del nodo",
   "map.node.newQuestion": "Nueva pregunta",
   "map.node.newAnswer": "Nueva respuesta",
   "Edit": "Editar",

@@ -5201,6 +5201,7 @@
   "answerStrip.notChosen": "پاسخ",
   "answerStrip.chosen": "پاسخ انتخاب‌شده",
   "map.node.open": "باز کردن",
+  "map.node.menu": "اقدامات گره",
   "map.node.newQuestion": "پرسش جدید",
   "map.node.newAnswer": "پاسخ جدید",
   "{n} answers": "{n} پاسخ",

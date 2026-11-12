@@ -5467,6 +5467,7 @@
   "answerStrip.notChosen": "תשובה",
   "answerStrip.chosen": "תשובה שנבחרה",
   "map.node.open": "פתיחה",
+  "map.node.menu": "פעולות על הצומת",
   "map.node.newQuestion": "שאלה חדשה",
   "map.node.newAnswer": "תשובה חדשה",
   "{n} answers": "{n} תשובות",

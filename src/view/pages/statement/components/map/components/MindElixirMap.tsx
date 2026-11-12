@@ -1346,6 +1346,12 @@ function MindElixirMap({
 	const handleZoomOut = useCallback(() => handleZoomBy(1 / ZOOM_BUTTON_STEP), [handleZoomBy]);
 
 	// Toolbar action handlers
+	// Phone sheet: close control / Escape deselect the node like a tap on the map.
+	const handleToolbarClose = useCallback(() => {
+		removeNodeButtons();
+		setMapContext((prev) => ({ ...prev, selectedId: null }));
+	}, [removeNodeButtons]);
+
 	const handleToolbarLink = useCallback(() => {
 		if (!toolbarState.statementId) return;
 		navigate(`/statement/${toolbarState.statementId}/chat`, {
@@ -1529,7 +1535,7 @@ function MindElixirMap({
 		<>
 			<div
 				ref={containerRef}
-				className={`${styles.mindElixirContainer}${boardMode ? ` ${styles.boardMode}` : ''}`}
+				className={`${styles.mindElixirContainer}${boardMode ? ` ${styles.boardMode}` : ''}${toolbarState.visible ? ` ${styles.nodeSheetOpen}` : ''}`}
 				tabIndex={0}
 			/>
 
@@ -1541,6 +1547,7 @@ function MindElixirMap({
 					anchorBottom={toolbarState.bottom}
 					anchorLeft={toolbarState.left}
 					onOpen={handleToolbarLink}
+					onClose={handleToolbarClose}
 					onEdit={canEditSelected ? handleToolbarEdit : undefined}
 					onDelete={canDeleteSelected ? handleToolbarDelete : undefined}
 					typeChoices={canChangeType ? typeChoices : undefined}
