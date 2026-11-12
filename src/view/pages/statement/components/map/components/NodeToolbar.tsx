@@ -4,6 +4,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useIsPhoneViewport } from '@/controllers/hooks/useIsPhoneViewport';
 import { TYPE_LABEL_KEYS } from '../mapHelpers/statementTypeChoices';
 import type { TypeChoice } from '../mapHelpers/statementTypeChoices';
+import type { NodeAddAction, NodeAddActions } from '../mapHelpers/nodeAddActions';
 import type { MapEvaluationFace } from '../mapHelpers/mapEvaluationFaces';
 import styles from './NodeToolbar.module.scss';
 
@@ -27,6 +28,9 @@ interface NodeToolbarProps {
 	onOpen: () => void;
 	/** Closes the panel and deselects the node (phone sheet: close button, Escape). */
 	onClose?: () => void;
+	/** Phone sheet only: the add child / add sibling actions the node's "+" pills offer. */
+	addActions?: NodeAddActions;
+	onAdd?: (action: NodeAddAction) => void;
 	/** Omit to hide the control. */
 	onEdit?: () => void;
 	onDelete?: () => void;
@@ -62,6 +66,8 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
 	anchorLeft,
 	onOpen,
 	onClose,
+	addActions,
+	onAdd,
 	onEdit,
 	onDelete,
 	typeChoices,
@@ -146,6 +152,26 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
 						<line x1="6" y1="6" x2="18" y2="18" />
 					</Icon>
 				</button>
+			)}
+			{isPhone && onAdd && (addActions?.child || addActions?.sibling) && (
+				<div className={styles.toolbar__adds}>
+					{[addActions.child, addActions.sibling].map((action, index) =>
+						action ? (
+							<button
+								key={index === 0 ? 'child' : 'sibling'}
+								type="button"
+								className={`${styles.toolbar__btn} ${styles['toolbar__btn--add']}`}
+								onClick={() => onAdd(action)}
+							>
+								<Icon>
+									<line x1="12" y1="5" x2="12" y2="19" />
+									<line x1="5" y1="12" x2="19" y2="12" />
+								</Icon>
+								<span className={styles.toolbar__label}>{action.label}</span>
+							</button>
+						) : null,
+					)}
+				</div>
 			)}
 			<div className={styles.toolbar__row}>
 				<button

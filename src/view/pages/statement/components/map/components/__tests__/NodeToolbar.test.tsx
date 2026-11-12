@@ -167,4 +167,62 @@ describe('NodeToolbar phone sheet', () => {
 		expect(screen.queryByRole('dialog')).toBeNull();
 		expect(screen.queryByLabelText('t:Close')).toBeNull();
 	});
+
+	describe('add actions', () => {
+		const child = { label: 'Add answer +', run: jest.fn() };
+		const sibling = { label: 'Add question +', run: jest.fn() };
+
+		function renderWithAdds(addActions: { child?: typeof child; sibling?: typeof sibling }) {
+			const onAdd = jest.fn();
+			render(
+				<NodeToolbar
+					anchorTop={200}
+					anchorBottom={240}
+					anchorLeft={300}
+					onOpen={jest.fn()}
+					onClose={jest.fn()}
+					addActions={addActions}
+					onAdd={onAdd}
+				/>,
+			);
+
+			return onAdd;
+		}
+
+		it('shows both add actions first and hands the action to onAdd', () => {
+			const onAdd = renderWithAdds({ child, sibling });
+			const labels = screen.getAllByRole('button').map((b) => b.textContent);
+
+			expect(labels.indexOf('Add answer +')).toBeLessThan(labels.indexOf('t:map.node.open'));
+			expect(labels.indexOf('Add question +')).toBeLessThan(labels.indexOf('t:map.node.open'));
+
+			fireEvent.click(screen.getByText('Add answer +'));
+			fireEvent.click(screen.getByText('Add question +'));
+
+			expect(onAdd).toHaveBeenNthCalledWith(1, child);
+			expect(onAdd).toHaveBeenNthCalledWith(2, sibling);
+		});
+
+		it('omits an action the pill would not show', () => {
+			renderWithAdds({ sibling });
+
+			expect(screen.queryByText('Add answer +')).toBeNull();
+			expect(screen.getByText('Add question +')).toBeTruthy();
+		});
+
+		it('shows no add actions when none are allowed', () => {
+			renderWithAdds({});
+
+			expect(screen.queryByText('Add answer +')).toBeNull();
+			expect(screen.queryByText('Add question +')).toBeNull();
+		});
+
+		it('keeps the desktop toolbar free of add actions', () => {
+			mockViewport(false);
+			renderWithAdds({ child, sibling });
+
+			expect(screen.queryByText('Add answer +')).toBeNull();
+			expect(screen.queryByText('Add question +')).toBeNull();
+		});
+	});
 });
