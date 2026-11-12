@@ -162,6 +162,11 @@
   --p-font-size: 1rem;
 
   --white: white;
+
+  // Tooltip bubble: inverted surface in light mode, raised surface in dark mode
+  --tooltip-surface: #191e29;
+  --tooltip-ink: #ffffff;
+  --tooltip-edge: transparent;
   --red: #e8749e;
   --placeHolder: #93b6da;
   --link: #4848df;
