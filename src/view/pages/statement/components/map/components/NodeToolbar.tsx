@@ -128,7 +128,7 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
 					: { top: placement.below ? anchorBottom : anchorTop, left: placement.left }
 			}
 			role={isPhone ? 'dialog' : undefined}
-			aria-label={isPhone ? t('map.node.open') : undefined}
+			aria-label={isPhone ? t('map.node.menu') : undefined}
 			tabIndex={isPhone ? -1 : undefined}
 			onMouseDown={(e) => e.stopPropagation()}
 			onPointerDown={(e) => e.stopPropagation()}

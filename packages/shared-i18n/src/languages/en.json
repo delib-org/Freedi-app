@@ -5429,6 +5429,7 @@
   "answerStrip.notChosen": "Answer",
   "answerStrip.chosen": "Chosen answer",
   "map.node.open": "Open",
+  "map.node.menu": "Node actions",
   "map.node.newQuestion": "New question",
   "map.node.newAnswer": "New answer",
   "{n} answers": "{n} answers",

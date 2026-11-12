@@ -4751,6 +4751,7 @@
   "answerStrip.notChosen": "Antwoord",
   "answerStrip.chosen": "Gekozen antwoord",
   "map.node.open": "Openen",
+  "map.node.menu": "Knooppuntacties",
   "map.node.newQuestion": "Nieuwe vraag",
   "map.node.newAnswer": "Nieuw antwoord",
   "Edit": "Bewerken",
