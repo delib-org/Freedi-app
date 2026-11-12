@@ -98,6 +98,14 @@
 			outline: 3px solid var(--space-ink);
 			outline-offset: 5px;
 		}
+		// The nav's generic `button` chrome (padding, border, pill background)
+		// also matches the language pill button; reset it so the pill keeps its own size.
+		:global(.language-pill) {
+			padding: 0;
+			border: 0;
+			background: transparent;
+			border-radius: 50%;
+		}
 		:global(.language-pill__code) {
 			color: var(--space-paper);
 			background-color: var(--space-ink);
@@ -500,28 +508,21 @@
 			width: 44px;
 			height: 44px;
 			justify-content: center;
-			border: 1px solid var(--space-line);
-			border-radius: 50%;
-			background: var(--space-surface);
+			border: 0;
+			background: transparent;
 			box-shadow: none;
 			padding: 0;
 			gap: 0;
-			> svg {
-				display: block;
-				width: 21px;
-			}
+			// The decorative translate icon and chevron duplicate the globe pill on phones
+			> svg,
 			> .landing__languageChevron {
 				display: none;
 			}
-			label {
-				position: absolute;
-				inset: 0;
-			}
-			select {
-				width: 100%;
-				height: 100%;
-				opacity: 0;
-				cursor: pointer;
+			:global(.language-pill) {
+				width: 44px;
+				height: 44px;
+				border: 1px solid var(--space-line);
+				background: var(--space-surface);
 			}
 		}
 		&__loginLabel,
