@@ -48,14 +48,10 @@ import type { DropKind } from '../mapHelpers/moveBranch';
 import { FilterType } from '@/controllers/general/sorting';
 import PanZoomControls from './PanZoomControls';
 import NodeToolbar from './NodeToolbar';
-import {
-	canDeleteNode,
-	canEditNode,
-	getChildAddLabelKey,
-	getNewNodeText,
-	getSiblingAddLabelKey,
-} from '../mapHelpers/nodeMenuLabels';
+import { canDeleteNode, canEditNode, getNewNodeText } from '../mapHelpers/nodeMenuLabels';
 import { getDefaultChildType, getDefaultSiblingType } from '../mapHelpers/mindMapStatements';
+import { resolveNodeAddActions } from '../mapHelpers/nodeAddActions';
+import type { NodeAddAction } from '../mapHelpers/nodeAddActions';
 import { findMapRoot } from '../hooks/useMapFullScreen';
 import styles from './MindElixirMap.module.scss';
 import { logError } from '@/utils/errorHandling';
@@ -334,6 +330,16 @@ function MindElixirMap({
 		[removeNodeButtons],
 	);
 
+	// Shared by the "+" pills and the phone sheet: create the node, then edit it
+	// (which also dismisses the pills and the sheet).
+	const runAddAction = useCallback(
+		async (action: NodeAddAction) => {
+			const created = await action.run();
+			if (created) waitAndEditNode(created.statementId);
+		},
+		[waitAndEditNode],
+	);
+
 	// Inject "+" buttons on a selected MindElixir node
 	const injectNodeButtons = useCallback(
 		(nodeId: string) => {
@@ -358,63 +364,48 @@ function MindElixirMap({
 			const statement = findStatementById(descendantsRef.current, statementId);
 			if (!statement) return;
 
-			const nodeCanAddChild = canHaveChildren(statement.statementType);
+			const parentOfNode = statement.parentId
+				? findStatementById(descendantsRef.current, statement.parentId)
+				: null;
 			// Each "+" and its keyboard hint say what the press creates.
-			const childLabel = tRef.current(getChildAddLabelKey(statement.statementType));
-			const siblingLabel = tRef.current(getSiblingAddLabelKey(statement.statementType));
+			const { child: childAction, sibling: siblingAction } = resolveNodeAddActions(
+				statement,
+				parentOfNode,
+				tRef.current,
+			);
 
 			// Show React toolbar overlay (positioned outside MindElixir DOM)
 			showToolbarForNode(nodeId);
 
 			// Create child "+" button (if allowed)
-			if (nodeCanAddChild) {
+			if (childAction) {
 				const childBtn = document.createElement('button');
 				childBtn.className = 'mind-map-add-btn mind-map-add-btn--child';
 				childBtn.textContent = '+';
-				childBtn.setAttribute('aria-label', childLabel);
-				childBtn.title = childLabel;
-				childBtn.appendChild(createAddLabel(childLabel));
-				childBtn.addEventListener('click', async (e) => {
+				childBtn.setAttribute('aria-label', childAction.label);
+				childBtn.title = childAction.label;
+				childBtn.appendChild(createAddLabel(childAction.label));
+				childBtn.addEventListener('click', (e) => {
 					e.stopPropagation();
 					e.preventDefault();
-					const newChild = await createMindMapChild({
-						parentStatement: statement,
-						defaultText: getNewNodeText(getDefaultChildType(statement.statementType), tRef.current),
-					});
-					if (newChild) {
-						waitAndEditNode(newChild.statementId);
-					}
+					void runAddAction(childAction);
 				});
 				parentElement.appendChild(childBtn);
 				injectedElementsRef.current.push(childBtn);
 			}
 
 			// Create sibling "+" button (only if parent is in the tree)
-			const parentOfNode = statement.parentId
-				? findStatementById(descendantsRef.current, statement.parentId)
-				: null;
-
-			if (parentOfNode) {
+			if (siblingAction) {
 				const siblingBtn = document.createElement('button');
 				siblingBtn.className = 'mind-map-add-btn mind-map-add-btn--sibling';
 				siblingBtn.textContent = '+';
-				siblingBtn.setAttribute('aria-label', siblingLabel);
-				siblingBtn.title = siblingLabel;
-				siblingBtn.appendChild(createAddLabel(siblingLabel));
-				siblingBtn.addEventListener('click', async (e) => {
+				siblingBtn.setAttribute('aria-label', siblingAction.label);
+				siblingBtn.title = siblingAction.label;
+				siblingBtn.appendChild(createAddLabel(siblingAction.label));
+				siblingBtn.addEventListener('click', (e) => {
 					e.stopPropagation();
 					e.preventDefault();
-					const newSibling = await createMindMapSibling({
-						currentStatement: statement,
-						parentStatement: parentOfNode,
-						defaultText: getNewNodeText(
-							getDefaultSiblingType(statement.statementType),
-							tRef.current,
-						),
-					});
-					if (newSibling) {
-						waitAndEditNode(newSibling.statementId);
-					}
+					void runAddAction(siblingAction);
 				});
 				parentElement.appendChild(siblingBtn);
 				injectedElementsRef.current.push(siblingBtn);
@@ -424,17 +415,17 @@ function MindElixirMap({
 			const hints = document.createElement('div');
 			hints.className = 'mind-map-hints';
 
-			if (nodeCanAddChild) {
+			if (childAction) {
 				const childHint = document.createElement('div');
 				childHint.className = 'mind-map-hint';
-				childHint.appendChild(createHintContent('Tab', childLabel));
+				childHint.appendChild(createHintContent('Tab', childAction.label));
 				hints.appendChild(childHint);
 			}
 
-			if (parentOfNode) {
+			if (siblingAction) {
 				const siblingHint = document.createElement('div');
 				siblingHint.className = 'mind-map-hint';
-				siblingHint.appendChild(createHintContent('Enter', siblingLabel));
+				siblingHint.appendChild(createHintContent('Enter', siblingAction.label));
 				hints.appendChild(siblingHint);
 			}
 
@@ -452,7 +443,7 @@ function MindElixirMap({
 				});
 			}
 		},
-		[removeNodeButtons, showToolbarForNode],
+		[removeNodeButtons, showToolbarForNode, runAddAction],
 	);
 
 	// Keep ref in sync for use inside MindElixir event handlers (avoids stale closures)
@@ -1415,6 +1406,21 @@ function MindElixirMap({
 		[descendants, toolbarState.statementId],
 	);
 
+	// The same add actions the "+" pills offer, shown in the phone sheet.
+	const sheetAddActions = useMemo(
+		() =>
+			selectedStatement
+				? resolveNodeAddActions(
+						selectedStatement,
+						selectedStatement.parentId
+							? findStatementById(descendants, selectedStatement.parentId)
+							: null,
+						t,
+					)
+				: {},
+		[selectedStatement, descendants, t],
+	);
+
 	// The map is rooted at the question being viewed, which is not necessarily
 	// the top question — read that one from the store so its settings still act
 	// as the global fallback for a node deep inside a sub-question.
@@ -1548,6 +1554,8 @@ function MindElixirMap({
 					anchorLeft={toolbarState.left}
 					onOpen={handleToolbarLink}
 					onClose={handleToolbarClose}
+					addActions={sheetAddActions}
+					onAdd={runAddAction}
 					onEdit={canEditSelected ? handleToolbarEdit : undefined}
 					onDelete={canDeleteSelected ? handleToolbarDelete : undefined}
 					typeChoices={canChangeType ? typeChoices : undefined}

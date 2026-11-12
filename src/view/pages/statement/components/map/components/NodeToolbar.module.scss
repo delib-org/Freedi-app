@@ -53,6 +53,13 @@ $touch-target: 44px;
 			min-height: $touch-target;
 		}
 
+		.toolbar__adds {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 4px;
+			padding-inline-end: $touch-target;
+		}
+
 		.toolbar__divider {
 			display: none;
 		}
@@ -133,6 +140,15 @@ $touch-target: 44px;
 		&--active {
 			background: var(--btn-primary, #5f88e5);
 			color: var(--btn-primary-text, #ffffff);
+		}
+
+		// Primary actions of the phone sheet: add a child / a sibling.
+		&--add {
+			background: var(--btn-primary, #5f88e5);
+			color: var(--btn-primary-text, #ffffff);
+			font-weight: 600;
+			white-space: normal;
+			text-align: start;
 		}
 
 		&--delete:hover {
