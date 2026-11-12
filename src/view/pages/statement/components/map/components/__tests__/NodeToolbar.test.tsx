@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { StatementType } from '@freedi/shared-types';
 import NodeToolbar from '../NodeToolbar';
 import { canDeleteNode, canEditNode } from '../../mapHelpers/nodeMenuLabels';
@@ -100,5 +100,71 @@ describe('NodeToolbar', () => {
 
 		expect(screen.getByText('t:Counted into the merged idea')).toBeTruthy();
 		expect((screen.getByLabelText('t:Agree') as HTMLButtonElement).disabled).toBe(true);
+	});
+});
+
+describe('NodeToolbar phone sheet', () => {
+	const originalMatchMedia = window.matchMedia;
+
+	function mockViewport(isPhone: boolean): void {
+		window.matchMedia = jest.fn().mockImplementation((query: string) => ({
+			matches: isPhone && query.includes('max-width: 767px'),
+			media: query,
+			addEventListener: jest.fn(),
+			removeEventListener: jest.fn(),
+		}));
+	}
+
+	beforeEach(() => mockViewport(true));
+
+	afterEach(() => {
+		window.matchMedia = originalMatchMedia;
+	});
+
+	function renderSheet(onClose: () => void): void {
+		render(
+			<NodeToolbar
+				anchorTop={200}
+				anchorBottom={240}
+				anchorLeft={300}
+				onOpen={jest.fn()}
+				onClose={onClose}
+			/>,
+		);
+	}
+
+	it('renders as a dialog, takes focus and keeps the actions', () => {
+		renderSheet(jest.fn());
+
+		const dialog = screen.getByRole('dialog');
+
+		expect(document.activeElement).toBe(dialog);
+		expect(screen.getByText('t:map.node.open')).toBeTruthy();
+	});
+
+	it('closes from the close button', () => {
+		const onClose = jest.fn();
+		renderSheet(onClose);
+
+		fireEvent.click(screen.getByLabelText('t:Close'));
+
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
+	it('closes on Escape', () => {
+		const onClose = jest.fn();
+		renderSheet(onClose);
+
+		fireEvent.keyDown(document, { key: 'Escape' });
+
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
+	it('stays a floating panel on desktop', () => {
+		mockViewport(false);
+		renderSheet(jest.fn());
+
+		expect(screen.queryByRole('dialog')).toBeNull();
+		expect(screen.queryByLabelText('t:Close')).toBeNull();
 	});
 });
