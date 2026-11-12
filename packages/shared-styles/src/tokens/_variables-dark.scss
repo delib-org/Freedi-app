@@ -71,6 +71,11 @@
 
     --white: #ffffff; // keep literal white available for on-colour text
 
+    // Tooltip: raised surface + light ink (~12:1) with an edge to separate it from cards
+    --tooltip-surface: #232c40;
+    --tooltip-ink: #f2f5fb;
+    --tooltip-edge: #4a5578;
+
     --placeHolder: #6d7590;
     --link: #8fa8ff;
     --link-contrast: #b8c6ff;

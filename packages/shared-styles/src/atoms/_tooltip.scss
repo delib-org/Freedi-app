@@ -61,8 +61,9 @@
     word-wrap: break-word;
     word-break: break-word;
     hyphens: auto;
-    background-color: var(--text-title, rgba(0, 0, 0, 0.85));
-    color: var(--white, #fff);
+    background-color: var(--tooltip-surface, rgba(0, 0, 0, 0.85));
+    color: var(--tooltip-ink, #fff);
+    border: 1px solid var(--tooltip-edge, transparent);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     pointer-events: none;
     animation: tooltipFadeIn 0.2s ease-out forwards;
@@ -123,7 +124,7 @@
       bottom: -10px;
       left: 50%;
       transform: translateX(-50%);
-      border-top-color: var(--text-title, rgba(0, 0, 0, 0.85));
+      border-top-color: var(--tooltip-surface, rgba(0, 0, 0, 0.85));
       border-bottom: 0;
     }
   }
@@ -139,7 +140,7 @@
       top: -10px;
       left: 50%;
       transform: translateX(-50%);
-      border-bottom-color: var(--text-title, rgba(0, 0, 0, 0.85));
+      border-bottom-color: var(--tooltip-surface, rgba(0, 0, 0, 0.85));
       border-top: 0;
     }
   }
@@ -155,7 +156,7 @@
       right: -10px;
       top: 50%;
       transform: translateY(-50%);
-      border-left-color: var(--text-title, rgba(0, 0, 0, 0.85));
+      border-left-color: var(--tooltip-surface, rgba(0, 0, 0, 0.85));
       border-right: 0;
     }
   }
@@ -171,7 +172,7 @@
       left: -10px;
       top: 50%;
       transform: translateY(-50%);
-      border-right-color: var(--text-title, rgba(0, 0, 0, 0.85));
+      border-right-color: var(--tooltip-surface, rgba(0, 0, 0, 0.85));
       border-left: 0;
     }
   }
@@ -185,7 +186,7 @@
     .tooltip__arrow {
       bottom: -10px;
       right: 1rem;
-      border-top-color: var(--text-title, rgba(0, 0, 0, 0.85));
+      border-top-color: var(--tooltip-surface, rgba(0, 0, 0, 0.85));
       border-bottom: 0;
     }
   }
@@ -199,7 +200,7 @@
     .tooltip__arrow {
       bottom: -10px;
       left: 1rem;
-      border-top-color: var(--text-title, rgba(0, 0, 0, 0.85));
+      border-top-color: var(--tooltip-surface, rgba(0, 0, 0, 0.85));
       border-bottom: 0;
     }
   }
@@ -213,7 +214,7 @@
     .tooltip__arrow {
       top: -10px;
       right: 1rem;
-      border-bottom-color: var(--text-title, rgba(0, 0, 0, 0.85));
+      border-bottom-color: var(--tooltip-surface, rgba(0, 0, 0, 0.85));
       border-top: 0;
     }
   }
@@ -227,7 +228,7 @@
     .tooltip__arrow {
       top: -10px;
       left: 1rem;
-      border-bottom-color: var(--text-title, rgba(0, 0, 0, 0.85));
+      border-bottom-color: var(--tooltip-surface, rgba(0, 0, 0, 0.85));
       border-top: 0;
     }
   }
@@ -245,19 +246,19 @@
     }
 
     &.tooltip--top .tooltip__arrow {
-      border-top-color: var(--white);
+      border-top-color: var(--card-default);
     }
 
     &.tooltip--bottom .tooltip__arrow {
-      border-bottom-color: var(--white);
+      border-bottom-color: var(--card-default);
     }
 
     &.tooltip--left .tooltip__arrow {
-      border-left-color: var(--white);
+      border-left-color: var(--card-default);
     }
 
     &.tooltip--right .tooltip__arrow {
-      border-right-color: var(--white);
+      border-right-color: var(--card-default);
     }
   }
 
@@ -271,12 +272,11 @@
     }
   }
 
+  // Tokens are re-pointed on the block so the arrows follow the bubble.
   @media (prefers-contrast: more) {
-    .tooltip__content {
-      background-color: #000;
-      color: #fff;
-      border: 1px solid #fff;
-    }
+    --tooltip-surface: #000;
+    --tooltip-ink: #fff;
+    --tooltip-edge: #fff;
   }
 }
 
