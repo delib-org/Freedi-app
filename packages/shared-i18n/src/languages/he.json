@@ -5469,6 +5469,7 @@
   "map.node.open": "פתיחה",
   "map.node.menu": "פעולות על הצומת",
   "map.node.newQuestion": "שאלה חדשה",
+  "map.node.addSubQuestion": "הוספת תת-שאלה",
   "map.node.newAnswer": "תשובה חדשה",
   "{n} answers": "{n} תשובות",
   "answers": "תשובות",

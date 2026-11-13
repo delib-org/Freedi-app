@@ -4753,6 +4753,7 @@
   "map.node.open": "Openen",
   "map.node.menu": "Knooppuntacties",
   "map.node.newQuestion": "Nieuwe vraag",
+  "map.node.addSubQuestion": "Subvraag toevoegen",
   "map.node.newAnswer": "Nieuw antwoord",
   "Edit": "Bewerken",
   "{n} answers": "{n} antwoorden",

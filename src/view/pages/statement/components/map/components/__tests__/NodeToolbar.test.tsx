@@ -203,6 +203,30 @@ describe('NodeToolbar phone sheet', () => {
 			expect(onAdd).toHaveBeenNthCalledWith(2, sibling);
 		});
 
+		it('shows the sub-question action between answer and sibling', () => {
+			const subQuestion = { label: 'Add sub-question +', run: jest.fn() };
+			const onAdd = jest.fn();
+			render(
+				<NodeToolbar
+					anchorTop={200}
+					anchorBottom={240}
+					anchorLeft={300}
+					onOpen={jest.fn()}
+					onClose={jest.fn()}
+					addActions={{ child, subQuestion, sibling }}
+					onAdd={onAdd}
+				/>,
+			);
+			const labels = screen.getAllByRole('button').map((b) => b.textContent);
+
+			expect(labels.indexOf('Add answer +')).toBeLessThan(labels.indexOf('Add sub-question +'));
+			expect(labels.indexOf('Add sub-question +')).toBeLessThan(labels.indexOf('Add question +'));
+
+			fireEvent.click(screen.getByText('Add sub-question +'));
+
+			expect(onAdd).toHaveBeenCalledWith(subQuestion);
+		});
+
 		it('omits an action the pill would not show', () => {
 			renderWithAdds({ sibling });
 

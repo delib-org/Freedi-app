@@ -44,7 +44,7 @@ $touch-target: 44px;
 
 		.toolbar__row {
 			display: grid;
-			grid-template-columns: repeat(2, 1fr);
+			grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
 			gap: 4px;
 			padding-inline-end: $touch-target;
 		}
@@ -55,7 +55,7 @@ $touch-target: 44px;
 
 		.toolbar__adds {
 			display: grid;
-			grid-template-columns: repeat(2, 1fr);
+			grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
 			gap: 4px;
 			padding-inline-end: $touch-target;
 		}

@@ -291,6 +291,13 @@
 				margin-top: -12px;
 			}
 
+			// Sub-question button: right edge, just under the child button
+			&--sub-question {
+				right: -14px;
+				top: 50%;
+				margin-top: 18px;
+			}
+
 			// Sibling button: bottom edge of node
 			&--sibling {
 				bottom: -14px;
@@ -379,6 +386,11 @@
 					margin-top: -16px;
 				}
 
+				&--sub-question {
+					right: -18px;
+					margin-top: 22px;
+				}
+
 				&--sibling {
 					bottom: -18px;
 					margin-left: -16px;
@@ -413,6 +425,14 @@
 					right: auto;
 					top: 50%;
 					margin-top: -22px;
+				}
+
+				// Sub-question pill sits under the child pill, beside the node.
+				&--sub-question {
+					left: calc(100% + 8px);
+					right: auto;
+					top: 50%;
+					margin-top: 30px;
 				}
 
 				&--sibling {

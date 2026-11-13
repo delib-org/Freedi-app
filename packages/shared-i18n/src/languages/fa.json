@@ -5203,6 +5203,7 @@
   "map.node.open": "باز کردن",
   "map.node.menu": "اقدامات گره",
   "map.node.newQuestion": "پرسش جدید",
+  "map.node.addSubQuestion": "افزودن زیرپرسش",
   "map.node.newAnswer": "پاسخ جدید",
   "{n} answers": "{n} پاسخ",
   "answers": "پاسخ",

@@ -368,11 +368,11 @@ function MindElixirMap({
 				? findStatementById(descendantsRef.current, statement.parentId)
 				: null;
 			// Each "+" and its keyboard hint say what the press creates.
-			const { child: childAction, sibling: siblingAction } = resolveNodeAddActions(
-				statement,
-				parentOfNode,
-				tRef.current,
-			);
+			const {
+				child: childAction,
+				subQuestion: subQuestionAction,
+				sibling: siblingAction,
+			} = resolveNodeAddActions(statement, parentOfNode, tRef.current, isAdminRef.current);
 
 			// Show React toolbar overlay (positioned outside MindElixir DOM)
 			showToolbarForNode(nodeId);
@@ -392,6 +392,23 @@ function MindElixirMap({
 				});
 				parentElement.appendChild(childBtn);
 				injectedElementsRef.current.push(childBtn);
+			}
+
+			// Sub-question "+" (question nodes only), stacked under the child pill
+			if (subQuestionAction) {
+				const subBtn = document.createElement('button');
+				subBtn.className = 'mind-map-add-btn mind-map-add-btn--sub-question';
+				subBtn.textContent = '+';
+				subBtn.setAttribute('aria-label', subQuestionAction.label);
+				subBtn.title = subQuestionAction.label;
+				subBtn.appendChild(createAddLabel(subQuestionAction.label));
+				subBtn.addEventListener('click', (e) => {
+					e.stopPropagation();
+					e.preventDefault();
+					void runAddAction(subQuestionAction);
+				});
+				parentElement.appendChild(subBtn);
+				injectedElementsRef.current.push(subBtn);
 			}
 
 			// Create sibling "+" button (only if parent is in the tree)
@@ -1416,9 +1433,10 @@ function MindElixirMap({
 							? findStatementById(descendants, selectedStatement.parentId)
 							: null,
 						t,
+						isAdmin,
 					)
 				: {},
-		[selectedStatement, descendants, t],
+		[selectedStatement, descendants, t, isAdmin],
 	);
 
 	// The map is rooted at the question being viewed, which is not necessarily

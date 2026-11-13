@@ -4753,6 +4753,7 @@
   "map.node.open": "Öffnen",
   "map.node.menu": "Knotenaktionen",
   "map.node.newQuestion": "Neue Frage",
+  "map.node.addSubQuestion": "Unterfrage hinzufügen",
   "map.node.newAnswer": "Neue Antwort",
   "Edit": "Bearbeiten",
   "{n} answers": "{n} Antworten",
