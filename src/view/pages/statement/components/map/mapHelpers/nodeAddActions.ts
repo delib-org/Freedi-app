@@ -1,3 +1,4 @@
+import { StatementType } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { canHaveChildren } from './mindElixirTransform';
 import {
@@ -17,7 +18,21 @@ export interface NodeAddAction {
 
 export interface NodeAddActions {
 	child?: NodeAddAction;
+	/** A question under the selected question (question nodes only). */
+	subQuestion?: NodeAddAction;
 	sibling?: NodeAddAction;
+}
+
+/**
+ * Same rule as the regular UI (AddStatementSheet / questionScreenLogic): a
+ * question accepts sub-questions when its enableAddNewSubQuestionsButton
+ * setting is on; admins get it unless it is explicitly switched off.
+ */
+export function canAddSubQuestion(statement: Statement, isAdmin: boolean): boolean {
+	if (statement.statementType !== StatementType.question) return false;
+	const setting = statement.statementSettings?.enableAddNewSubQuestionsButton;
+
+	return isAdmin ? setting !== false : setting === true;
 }
 
 /**
@@ -29,6 +44,7 @@ export function resolveNodeAddActions(
 	statement: Statement,
 	parentOfNode: Statement | null | undefined,
 	t: (key: string) => string,
+	isAdmin = false,
 ): NodeAddActions {
 	const actions: NodeAddActions = {};
 
@@ -39,6 +55,18 @@ export function resolveNodeAddActions(
 				createMindMapChild({
 					parentStatement: statement,
 					defaultText: getNewNodeText(getDefaultChildType(statement.statementType), t),
+				}),
+		};
+	}
+
+	if (canAddSubQuestion(statement, isAdmin)) {
+		actions.subQuestion = {
+			label: t('map.node.addSubQuestion'),
+			run: () =>
+				createMindMapChild({
+					parentStatement: statement,
+					childType: StatementType.question,
+					defaultText: getNewNodeText(StatementType.question, t),
 				}),
 		};
 	}

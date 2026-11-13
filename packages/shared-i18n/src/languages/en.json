@@ -5431,6 +5431,7 @@
   "map.node.open": "Open",
   "map.node.menu": "Node actions",
   "map.node.newQuestion": "New question",
+  "map.node.addSubQuestion": "Add sub-question",
   "map.node.newAnswer": "New answer",
   "{n} answers": "{n} answers",
   "answers": "answers",

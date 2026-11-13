@@ -75,6 +75,13 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
 	rating,
 }) => {
 	const { t } = useTranslation();
+	const addActionEntries = (
+		[
+			{ key: 'child', action: addActions?.child },
+			{ key: 'subQuestion', action: addActions?.subQuestion },
+			{ key: 'sibling', action: addActions?.sibling },
+		] as const
+	).flatMap(({ key, action }) => (action ? [{ key, action }] : []));
 	const panelRef = useRef<HTMLDivElement>(null);
 	const [typeMenuOpen, setTypeMenuOpen] = useState(false);
 	const [placement, setPlacement] = useState<Placement>({ below: false, left: anchorLeft });
@@ -153,24 +160,22 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
 					</Icon>
 				</button>
 			)}
-			{isPhone && onAdd && (addActions?.child || addActions?.sibling) && (
+			{isPhone && onAdd && addActionEntries.length > 0 && (
 				<div className={styles.toolbar__adds}>
-					{[addActions.child, addActions.sibling].map((action, index) =>
-						action ? (
-							<button
-								key={index === 0 ? 'child' : 'sibling'}
-								type="button"
-								className={`${styles.toolbar__btn} ${styles['toolbar__btn--add']}`}
-								onClick={() => onAdd(action)}
-							>
-								<Icon>
-									<line x1="12" y1="5" x2="12" y2="19" />
-									<line x1="5" y1="12" x2="19" y2="12" />
-								</Icon>
-								<span className={styles.toolbar__label}>{action.label}</span>
-							</button>
-						) : null,
-					)}
+					{addActionEntries.map(({ key, action }) => (
+						<button
+							key={key}
+							type="button"
+							className={`${styles.toolbar__btn} ${styles['toolbar__btn--add']}`}
+							onClick={() => onAdd(action)}
+						>
+							<Icon>
+								<line x1="12" y1="5" x2="12" y2="19" />
+								<line x1="5" y1="12" x2="19" y2="12" />
+							</Icon>
+							<span className={styles.toolbar__label}>{action.label}</span>
+						</button>
+					))}
 				</div>
 			)}
 			<div className={styles.toolbar__row}>

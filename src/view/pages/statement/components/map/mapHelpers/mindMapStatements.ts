@@ -63,6 +63,8 @@ export function getDefaultSiblingType(currentType: StatementType | undefined): S
 interface CreateMindMapChildParams {
 	parentStatement: Statement;
 	defaultText?: string;
+	/** Explicit type of the new child; defaults to getDefaultChildType(parent). */
+	childType?: StatementType;
 }
 
 /**
@@ -72,6 +74,7 @@ interface CreateMindMapChildParams {
 export async function createMindMapChild({
 	parentStatement,
 	defaultText,
+	childType: explicitType,
 }: CreateMindMapChildParams): Promise<Statement | undefined> {
 	try {
 		// Check if parent can have children
@@ -80,7 +83,7 @@ export async function createMindMapChild({
 		}
 
 		// Determine child type based on parent
-		const childType = getDefaultChildType(parentStatement.statementType);
+		const childType = explicitType ?? getDefaultChildType(parentStatement.statementType);
 		if (!childType) {
 			return undefined;
 		}

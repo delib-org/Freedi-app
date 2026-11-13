@@ -4872,6 +4872,7 @@
   "map.node.open": "فتح",
   "map.node.menu": "إجراءات العقدة",
   "map.node.newQuestion": "سؤال جديد",
+  "map.node.addSubQuestion": "إضافة سؤال فرعي",
   "map.node.newAnswer": "إجابة جديدة",
   "Edit": "تعديل",
   "{n} answers": "{n} إجابات",
