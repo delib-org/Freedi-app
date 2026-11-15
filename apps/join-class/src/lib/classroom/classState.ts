@@ -73,12 +73,24 @@ function readNoticeSnapshot(): NoticeSnapshot | null {
 
 export type ClassWatchRole = 'student' | 'teacher';
 
+export interface ClassWatchOptions {
+	/**
+	 * Student role: join the lesson as soon as the screen opens (the ordinary join). False in a
+	 * connected lesson, where everyone comes in through the name gate (`classArriveByName`).
+	 */
+	autoJoin?: boolean;
+}
+
 /**
  * Start the listeners for a role and return one stop function.
  * student: ensures the member subscription exists, then my subscription + my table.
  * teacher: all tables + the roster.
  */
-export function watchClass(mainId: string, role: ClassWatchRole): () => void {
+export function watchClass(
+	mainId: string,
+	role: ClassWatchRole,
+	options: ClassWatchOptions = {},
+): () => void {
 	resetClassState(mainId);
 	void initServerClock();
 	const stops: Unsubscribe[] = [];
@@ -110,7 +122,7 @@ export function watchClass(mainId: string, role: ClassWatchRole): () => void {
 			),
 		);
 	} else {
-		void ensureMemberSubscription(mainId).catch(() => undefined);
+		if (options.autoJoin !== false) void ensureMemberSubscription(mainId).catch(() => undefined);
 		stops.push(
 			startStudentNotices(readNoticeSnapshot),
 			listenMySubscription(

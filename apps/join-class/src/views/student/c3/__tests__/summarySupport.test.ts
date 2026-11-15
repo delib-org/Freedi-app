@@ -6,6 +6,7 @@ import { draw } from '../../../__tests__/vnodeText';
 const current = vi.hoisted(() => ({ challenge: null as Statement | null }));
 
 vi.mock('@/lib/i18n', () => ({ t: (key: string) => key }));
+vi.mock('@/lib/classroom/api', () => ({ classRegistrationSupport: vi.fn() }));
 vi.mock('@/styles/student-c3.scss', () => ({}));
 vi.mock('@/components/StudentFrame', () => ({
 	StudentFrame: { view: (vnode: { children: m.Children }) => vnode.children },

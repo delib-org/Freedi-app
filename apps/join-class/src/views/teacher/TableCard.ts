@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { proposalsDone, proposalsMaxTurns, proposalsTurnOf } from '@freedi/shared-types';
-import type { ClassTable } from '@freedi/shared-types';
+import type { ClassTable, ReservedSeat } from '@freedi/shared-types';
 import { getLang, t } from '@/lib/i18n';
 import { getServerOffset, remainingMs, serverNow } from '@/lib/classroom/serverClock';
 import { maxTurns } from '@/lib/classroom/turnMoment';
@@ -26,6 +26,7 @@ import { addNoDevice, tableAction } from './consoleActions';
 import { consoleState, isBusy } from './consoleState';
 import { openActFor } from './actFor/actForState';
 import { MemberChip } from './MemberChip';
+import { TableBridgeLines } from './TableBridgeLines';
 import { dropAttrs } from './dragController';
 
 /**
@@ -47,6 +48,8 @@ export interface TableCardAttrs {
 	tableNumbers: readonly number[];
 	/** After the Side step: each member shows whether they chose a side (never which). */
 	showSides?: boolean;
+	/** The lesson uses a registration: the table shows its topic, reserved names and the lone-person flag. */
+	connected?: boolean;
 	// >>> allProposals BEGIN
 	/** "כל ההצעות": "n/m rated everything" for this table. */
 	ratedLine?: string;
@@ -187,7 +190,11 @@ function timerRows(attrs: TableCardAttrs): m.Children {
 	];
 }
 
-export function noDeviceForm(mainId: string, n: number): m.Vnode {
+export function noDeviceForm(
+	mainId: string,
+	n: number,
+	reserved: readonly ReservedSeat[] = [],
+): m.Vnode {
 	const submit = (): void => {
 		const name = noDeviceName.trim();
 		if (!name) return;
@@ -208,6 +215,31 @@ export function noDeviceForm(mainId: string, n: number): m.Vnode {
 			},
 		},
 		[
+			reserved.length > 0
+				? m(
+						'div.table-card__nd-reserved',
+						{ role: 'group', 'aria-label': t('console.no_device.pick_reserved') },
+						[
+							m('p.table-card__nd-reserved-label', t('console.no_device.pick_reserved')),
+							reserved.map((seat) =>
+								m(
+									'button.btn.btn--tertiary.table-card__nd-pick',
+									{
+										key: seat.seatId,
+										type: 'button',
+										'data-testid': 'nd-pick-reserved',
+										disabled: isBusy(`nodevice:${n}`),
+										onclick: () =>
+											void addNoDevice(mainId, n, seat.name, seat.seatId).then((ok) => {
+												if (ok) consoleState.noDeviceFor = null;
+											}),
+									},
+									seat.name,
+								),
+							),
+						],
+					)
+				: null,
 			m('input.table-card__nd-input', {
 				type: 'text',
 				'aria-label': t('console.no_device_name'),
@@ -321,10 +353,11 @@ export const TableCard: m.Component<TableCardAttrs> = {
 						}),
 					),
 				]),
+				m(TableBridgeLines, { table, connected: attrs.connected === true }),
 				attrs.done
 					? null
 					: consoleState.noDeviceFor === table.n
-						? noDeviceForm(mainId, table.n)
+						? noDeviceForm(mainId, table.n, table.reservedSeats ?? [])
 						: m(
 								'button.btn.btn--tertiary.table-card__nd-open',
 								{

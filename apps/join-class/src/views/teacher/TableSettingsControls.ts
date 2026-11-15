@@ -194,7 +194,7 @@ const TABLE_SIZE_OPTIONS: readonly SelectOption[] = Array.from(
 	(_, i) => ({ value: MIN_TABLE_SIZE + i, label: String(MIN_TABLE_SIZE + i) }),
 );
 
-/** "Group size at the tables": MIN_TABLE_SIZE..MAX_TABLE_SIZE (2 to 8); applies at the next deal. Console only. */
+/** "Seats per table": MIN_TABLE_SIZE..MAX_TABLE_SIZE (3 to 20, the most people at one table); applies at the next deal. Console only. */
 export const TableSizeSelect: m.Component<TableSizeAttrs> = {
 	view({ attrs }) {
 		return settingsSelect({
@@ -206,5 +206,19 @@ export const TableSizeSelect: m.Component<TableSizeAttrs> = {
 			disabled: attrs.disabled,
 			onChange: attrs.onChange,
 		});
+	},
+};
+
+export interface TableSizeFromRegistrationAttrs {
+	size: number;
+}
+
+/** A connected lesson has no seats setting of its own: the registration's number, read-only. */
+export const TableSizeFromRegistration: m.Component<TableSizeFromRegistrationAttrs> = {
+	view({ attrs }) {
+		return m('.table-settings__select-row', { 'data-testid': 'table-size-from-registration' }, [
+			m('p.table-settings__select-label', t('console.table_size')),
+			m('p.table-settings__help', t('console.table_size.from_registration', { n: attrs.size })),
+		]);
 	},
 };

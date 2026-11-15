@@ -9,6 +9,7 @@ import reply from './reply/he';
 import look from './look/he';
 import challenge from './challenge/he';
 import actFor from './actFor/he';
+import bridge from './bridge/he';
 
 const he: Record<string, string> = {
 	...vote,
@@ -17,6 +18,7 @@ const he: Record<string, string> = {
 	...look,
 	...challenge,
 	...actFor,
+	...bridge,
 	'step.waiting': 'ממתינים למורה',
 	'step.opening': 'פתיחה',
 	'step.side': 'בחירת צד',
@@ -465,9 +467,9 @@ const he: Record<string, string> = {
 	'console.speak_time_help': 'כמה זמן כל אחד מדבר כשהוא עונה או מציע',
 	'console.proposals_turns': 'סבבים בשלב ההצעות',
 	'console.proposals_turns_help': 'בכל סבב כל אחד בשולחן מדבר פעם אחת',
-	'console.table_size': 'גודל קבוצה בשולחן',
+	'console.table_size': 'מקומות בשולחן',
 	'console.table_size_help':
-		'כמה אנשים יושבים בכל שולחן (2 עד 8). חל בחלוקה או בערבוב הבא של השולחנות',
+		'הכי הרבה אנשים בשולחן אחד (3 עד 20). חל בחלוקה או בערבוב הבא של השולחנות',
 	'console.another_turn_all': 'סבב נוסף בכל השולחנות',
 	'console.another_turn': 'סבב נוסף',
 	'door.code.title': 'הקלידו את הקוד',

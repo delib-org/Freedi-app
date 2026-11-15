@@ -265,6 +265,31 @@ $projector-band-height: 64px;
     margin: 0;
     overflow-wrap: anywhere;
   }
+
+  &__topic {
+    margin: 0 0 var(--space-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--ink-soft);
+    overflow-wrap: anywhere;
+  }
+
+  &__reserved {
+    margin: var(--space-xs) 0 0;
+    color: var(--ink-muted);
+    overflow-wrap: anywhere;
+  }
+
+  // up to 20 sit at one table: smaller type and tighter lines so the tile stays on the screen
+  &--many &__title {
+    font-size: 40px;
+  }
+
+  &--many &__names,
+  &--many &__reserved,
+  &--many &__topic {
+    font-size: 0.75em;
+    line-height: 1.25;
+  }
 }
 
 .projector-loose {

@@ -31,6 +31,8 @@ export interface TablesBoardAttrs {
 	questions?: readonly Statement[];
 	/** After the Side step the board counts who chose a side (never which side). */
 	showSides: boolean;
+	/** The lesson uses a registration: its tables show topic, reserved names and the lone-person flag. */
+	connected?: boolean;
 	/** The Opening panel (UX 15.L): while the class is unseated it takes the main column and the roster the side one. */
 	opening?: m.Children;
 	// >>> allProposals BEGIN
@@ -153,6 +155,7 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 									mainId: attrs.mainId,
 									tableNumbers,
 									showSides: attrs.showSides,
+									connected: attrs.connected,
 									ratedLine: attrs.ratedLineOf?.(table), // >>> allProposals
 								}),
 							),

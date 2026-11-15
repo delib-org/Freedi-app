@@ -48,6 +48,8 @@ export interface SwitchBandAttrs {
 	flagCount?: number;
 	onView: (view: ConsoleView) => void;
 	onSplit: (replace: boolean) => void;
+	/** A connected lesson's Tables step: "הבאת השולחנות מההרשמה" replaces the dealing buttons. */
+	copySeating?: m.Children;
 	onAllToRate: () => void;
 	/** Proposals (IA 25.6): the next turn at every table. */
 	onAnotherTurnAll: () => void;
@@ -140,9 +142,11 @@ function stepActions(attrs: SwitchBandAttrs): m.Children {
 	}
 	if (stepKey === 'tables') {
 		actions.push(
-			attrs.hasTables
-				? action(t('console.resplit'), 'assign', () => attrs.onSplit(true))
-				: action(t('console.split'), 'assign', () => attrs.onSplit(false)),
+			attrs.copySeating
+				? attrs.copySeating
+				: attrs.hasTables
+					? action(t('console.resplit'), 'assign', () => attrs.onSplit(true))
+					: action(t('console.split'), 'assign', () => attrs.onSplit(false)),
 		);
 	}
 	if (stepKey === 'tableTalk' && attrs.hasTables) {
