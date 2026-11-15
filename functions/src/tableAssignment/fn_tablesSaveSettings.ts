@@ -132,7 +132,7 @@ export async function saveSettings(
 }
 
 export const tablesSaveSettings = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (
 		request: CallableRequest<TablesSaveSettingsRequest>,
 	): Promise<TablesSaveSettingsResponse> => {

@@ -75,7 +75,7 @@ export async function createSession(
 }
 
 export const tablesCreateSession = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (
 		request: CallableRequest<TablesCreateSessionRequest>,
 	): Promise<TablesCreateSessionResponse> => {

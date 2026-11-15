@@ -60,7 +60,7 @@ export async function seatLink(
 }
 
 export const tablesSeatLink = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (request: CallableRequest<TablesSeatLinkRequest>): Promise<TablesSeatLinkResponse> => {
 		let uid: string | undefined;
 		try {

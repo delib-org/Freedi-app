@@ -248,7 +248,7 @@ export async function register(
 }
 
 export const tablesRegister = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (request: CallableRequest<TablesRegisterRequest>): Promise<TablesRegisterResponse> => {
 		let uid: string | undefined;
 		try {

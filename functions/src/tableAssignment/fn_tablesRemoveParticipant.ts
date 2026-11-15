@@ -62,7 +62,7 @@ export async function removeParticipant(
 }
 
 export const tablesRemoveParticipant = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (
 		request: CallableRequest<TablesRemoveParticipantRequest>,
 	): Promise<TablesRemoveParticipantResponse> => {

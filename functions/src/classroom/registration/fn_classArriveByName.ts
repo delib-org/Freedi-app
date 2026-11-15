@@ -164,7 +164,7 @@ export async function arriveByName(
 }
 
 export const classArriveByName = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (
 		request: CallableRequest<ClassArriveByNameRequest>,
 	): Promise<ClassArriveByNameResponse> => {

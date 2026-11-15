@@ -205,7 +205,7 @@ export async function copySeating(
 }
 
 export const classCopySeating = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (request: CallableRequest<ClassCopySeatingRequest>): Promise<ClassCopySeatingResponse> => {
 		let uid: string | undefined;
 		try {

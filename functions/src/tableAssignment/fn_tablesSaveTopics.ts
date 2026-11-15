@@ -138,7 +138,7 @@ export async function saveTopics(
 }
 
 export const tablesSaveTopics = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (request: CallableRequest<TablesSaveTopicsRequest>): Promise<TablesSaveTopicsResponse> => {
 		let uid: string | undefined;
 		try {

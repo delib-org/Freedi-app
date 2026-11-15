@@ -129,7 +129,7 @@ export async function setStatus(
 }
 
 export const tablesSetStatus = onCall(
-	{ region: functionConfig.region, timeoutSeconds: 120 },
+	{ region: functionConfig.region, timeoutSeconds: 120, memory: '512MiB' },
 	async (request: CallableRequest<TablesSetStatusRequest>): Promise<TablesSetStatusResponse> => {
 		let uid: string | undefined;
 		try {

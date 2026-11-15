@@ -82,7 +82,7 @@ export async function seatByCode(
 }
 
 export const classSeatByCode = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (request: CallableRequest<ClassSeatByCodeRequest>): Promise<ClassSeatByCodeResponse> => {
 		let uid: string | undefined;
 		try {

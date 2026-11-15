@@ -54,7 +54,7 @@ export async function cancelRegistration(
 }
 
 export const tablesCancelRegistration = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (
 		request: CallableRequest<TablesCancelRegistrationRequest>,
 	): Promise<TablesCancelRegistrationResponse> => {

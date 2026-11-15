@@ -120,7 +120,7 @@ export async function joinTable(
 }
 
 export const tablesJoinTable = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (request: CallableRequest<TablesJoinTableRequest>): Promise<TablesJoinTableResponse> => {
 		let uid: string | undefined;
 		try {
