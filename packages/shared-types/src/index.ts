@@ -1058,6 +1058,9 @@ export {
   MIN_TABLE_SIZE,
   MAX_TABLE_SIZE,
   DEFAULT_TABLE_SIZE,
+  STORED_MIN_TABLE_SIZE,
+  ReservedSeatSchema,
+  ClassRegistrationSchema,
   TableStepSchema,
   WritingModeSchema,
   CampSchema,
@@ -1093,7 +1096,38 @@ export type {
   ClassLanguageFlag,
   ClassLanguageFlagKind,
   ClassProposalLimit,
+  ReservedSeat,
+  ClassRegistration,
 } from './models/classroom/classroomModel';
+export {
+  classRegistrationOf,
+  isRegistrationConnectable,
+  seatsPerTableOf,
+  reservedSeatsOf,
+  presentCountOf,
+  takenSeatsOf,
+  isTableAlone,
+} from './models/classroom/classRegistrationLogic';
+export type {
+  ClassRegistrationErrorReason,
+  ClassConnectRegistrationRequest,
+  ClassConnectRegistrationResponse,
+  ClassDisconnectRegistrationRequest,
+  ClassDisconnectRegistrationResponse,
+  ClassCopySeatingRequest,
+  ClassCopySeatingResponse,
+  ClassCloseRegistrationRequest,
+  ClassCloseRegistrationResponse,
+  ClassArrival,
+  ClassSeatByCodeRequest,
+  ClassSeatByCodeResponse,
+  ClassNameAnswer,
+  ClassNameChoice,
+  ClassArriveByNameRequest,
+  ClassArriveByNameResponse,
+  ClassRegistrationSupportRequest,
+  ClassRegistrationSupportResponse,
+} from './models/classroom/classRegistrationCallables';
 export {
   campOf,
   supportBySide,
@@ -1272,6 +1306,11 @@ export {
   tableAssignmentNameKey,
   TABLE_ASSIGNMENT_STRICTNESS,
   TABLE_ASSIGNMENT_POSITION_STOPS,
+  TABLE_ASSIGNMENT_TOPIC_COUNTS,
+  TABLE_ASSIGNMENT_TOPIC_COUNT_DEFAULT,
+  tableAssignmentTopicCountOf,
+  isTableAssignmentSplitByTopic,
+  tableAssignmentTableSizes,
 } from './models/tableAssignment/tableAssignmentModel';
 export type {
   TableAssignmentStatus,
@@ -1288,6 +1327,7 @@ export type {
   TableAssignmentRunTable,
   TableAssignmentMetrics,
   TableAssignmentRun,
+  TableAssignmentTopicCount,
 } from './models/tableAssignment/tableAssignmentModel';
 export type {
   TablesCreateSessionRequest,
@@ -1319,6 +1359,8 @@ export type {
   TablesPublishRunResponse,
   TablesDeleteSessionRequest,
   TablesDeleteSessionResponse,
+  TablesSeatLinkRequest,
+  TablesSeatLinkResponse,
 } from './models/tableAssignment/tableAssignmentCallables';
 
 // Theme rebuild ("Re-theme with AI") callable contract

@@ -69,10 +69,17 @@ export const CAMP_B_ABOVE = 60;
 export const SUPPORT_MIN = -1;
 export const SUPPORT_MAX = 1;
 
-/** Table size bounds: the teacher picks the group size at the tables (saved on the lesson). */
-export const MIN_TABLE_SIZE = 2;
-export const MAX_TABLE_SIZE = 8;
-export const DEFAULT_TABLE_SIZE = 6;
+/**
+ * Seats per table ("מקומות בשולחן"): the most people at one table, the same
+ * meaning and range as Tables (IA tables-class-bridge 2.2). The teacher chooses
+ * MIN_TABLE_SIZE..MAX_TABLE_SIZE; a lesson saved earlier with 2 still runs
+ * (STORED_MIN_TABLE_SIZE). A connected lesson reads its number from the registration.
+ */
+export const MIN_TABLE_SIZE = 3;
+export const MAX_TABLE_SIZE = 20;
+export const DEFAULT_TABLE_SIZE = 7;
+/** The smallest size a stored lesson may carry: lessons saved before the bridge were allowed 2. */
+export const STORED_MIN_TABLE_SIZE = 2;
 
 export const TableStepSchema = picklist(['pick', 'talk', 'write', 'rate']);
 export type TableStep = InferOutput<typeof TableStepSchema>;
@@ -92,6 +99,18 @@ export const NoDeviceMemberSchema = object({
 	name: string(),
 });
 export type NoDeviceMember = InferOutput<typeof NoDeviceMemberSchema>;
+
+/**
+ * A reserved seat (IA tables-class-bridge 5.4): a registered person seated by
+ * the registration who has not opened Class yet. A name only: no uid, no
+ * answers. `seatId` is an opaque server id (never the Tables uid); the
+ * teacher's "add without a device" passes it to turn the seat into that person.
+ */
+export const ReservedSeatSchema = object({
+	seatId: string(),
+	name: string(),
+});
+export type ReservedSeat = InferOutput<typeof ReservedSeatSchema>;
 
 /** A student without a device has no account: this prefix marks the id `classAddNoDevice` made. */
 export const NO_DEVICE_ID_PREFIX = 'nd_';
@@ -153,6 +172,10 @@ export const ClassTableSchema = object({
 	 * did, see moveOnLogic.ts). Cleared when the table moves. Server-written.
 	 */
 	moveOnUids: optional(array(string())),
+	/** Copied from the registration: the topic's title. Absent in a one-topic event and in lessons without registration. */
+	topic: optional(string()),
+	/** Registered people seated here who have not arrived (not counted for turns or "move on"). Server-written. */
+	reservedSeats: optional(array(ReservedSeatSchema)),
 	updatedAt: number(),
 });
 export type ClassTable = InferOutput<typeof ClassTableSchema>;
@@ -183,7 +206,32 @@ export const ClassSubscriptionFieldsSchema = {
 	 * The student's name form stays up until they save a name, which sets it back to false.
 	 */
 	renameRequested: optional(boolean()),
+	/**
+	 * Server-written: this device held a registration's seat and the person
+	 * opened it on another device (the latest device holds it). The phone shows
+	 * "הדיון ממשיך במכשיר אחר"; arriving again (name or link) clears it.
+	 */
+	seatMovedAt: optional(number()),
 };
+
+/**
+ * The lesson's connection to a Tables registration (IA tables-class-bridge
+ * 5.3), on the main statement's `statementSettings.classRegistration`.
+ * Server-written only (classConnectRegistration and the bridge callables).
+ */
+export const ClassRegistrationSchema = object({
+	tableAssignmentId: string(),
+	connectedAt: number(),
+	/** Connecting took 'side' out of the steps (the registration asks a position); removing puts it back. */
+	sideStepRemoved: optional(boolean()),
+	/** When the seating was last copied from the registration. Set = the lesson's tables own the seating. */
+	seatingCopiedAt: optional(number()),
+	/** The registration's seats per table when copied (3..20). Read here, never written to `tableSize`. */
+	seatsPerTable: optional(number()),
+	/** Registrations a device arrived on (first arrival only; a move to another device does not count). */
+	arrivedCount: optional(number()),
+});
+export type ClassRegistration = InferOutput<typeof ClassRegistrationSchema>;
 
 /** IA 22: the longest reply on a proposal, in characters (callable + phone). */
 export const CLASS_REPLY_MAX_LENGTH = 200;

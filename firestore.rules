@@ -882,10 +882,13 @@ service cloud.firestore {
     }
 
     // Who sits where is public once tables exist: after publishing, and from
-    // the start in direct mode, where people pick a table themselves.
+    // the start in an older direct session, where people pick a table
+    // themselves. A splitByTopic session (people choose a topic, the tables are
+    // made at closing) shows no tablemates before closing.
     function areTablemateNamesVisible(sessionId) {
       let session = get(/databases/$(database)/documents/tableAssignments/$(sessionId)).data;
-      return session.get('publishedRunId', null) != null || session.mode == 'direct';
+      return session.get('publishedRunId', null) != null ||
+             (session.mode == 'direct' && session.get('splitByTopic', false) != true);
     }
 
     // Every signed-in user may get a session in any status, so the not-open

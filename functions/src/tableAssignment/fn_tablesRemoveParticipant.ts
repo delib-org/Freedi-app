@@ -55,7 +55,7 @@ export async function removeParticipant(
 		}
 		await assertNotSeatedInPublishedRun(tx, firestore, session, uid);
 		const registration = await loadRegistration(tx, firestore, sessionId, uid);
-		if (registration) deleteCountedRegistration(tx, firestore, registration);
+		if (registration) deleteCountedRegistration(tx, firestore, registration, session);
 
 		return { removed: true };
 	});

@@ -1,6 +1,10 @@
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
 import type { Firestore } from 'firebase-admin/firestore';
-import { functionConfig, tableAssignmentParticipantId } from '@freedi/shared-types';
+import {
+	functionConfig,
+	isTableAssignmentSplitByTopic,
+	tableAssignmentParticipantId,
+} from '@freedi/shared-types';
 import type {
 	TableAssignmentParticipant,
 	TableAssignmentTopic,
@@ -54,6 +58,13 @@ export async function joinTable(
 			throw new TablesError(
 				'failed-precondition',
 				'Tables are not chosen directly in this session',
+			);
+		}
+		if (isTableAssignmentSplitByTopic(session)) {
+			throw new TablesError(
+				'failed-precondition',
+				'People choose a topic in this session; the tables are made at closing',
+				'split-by-topic',
 			);
 		}
 		if (session.status !== 'registrationOpen') {

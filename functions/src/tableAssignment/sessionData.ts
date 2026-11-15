@@ -2,6 +2,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import type { DocumentSnapshot, Firestore, Query, WriteBatch } from 'firebase-admin/firestore';
 import type { TableAssignment } from '@freedi/shared-types';
 import { WRITE_BATCH_SIZE } from './constants';
+import { seatCodesQuery } from './seatCodes';
 import {
 	counterRef,
 	participantsQuery,
@@ -38,6 +39,7 @@ async function docsOf(queries: readonly Query[]): Promise<DocumentSnapshot[]> {
 /**
  * Removes every answer of an ended session and all that was derived from them.
  * Kept: names, seats and the published seating, which are the session's result.
+ * The personal links end with the session, so their codes go too.
  * `preferences` is emptied rather than removed because the record's type
  * requires it. `answersErasedAt` goes last, so it is only there when all the
  * rest is done.
@@ -51,12 +53,20 @@ export async function eraseSessionAnswers(
 	const [participants, runs, derived] = await Promise.all([
 		docsOf([participantsQuery(firestore, sessionId)]),
 		docsOf([runsQuery(firestore, sessionId)]),
-		docsOf([runInputsQuery(firestore, sessionId), previewBudgetsQuery(firestore, sessionId)]),
+		docsOf([
+			runInputsQuery(firestore, sessionId),
+			previewBudgetsQuery(firestore, sessionId),
+			seatCodesQuery(firestore, sessionId),
+		]),
 	]);
 	const unpublishedRuns = runs.filter((run) => run.id !== session.publishedRunId);
 
 	await inBatches(firestore, participants, (batch, doc) =>
-		batch.update(doc.ref, { position: FieldValue.delete(), preferences: [] }),
+		batch.update(doc.ref, {
+			position: FieldValue.delete(),
+			seatCode: FieldValue.delete(),
+			preferences: [],
+		}),
 	);
 	await inBatches(firestore, [...unpublishedRuns, ...derived], (batch, doc) =>
 		batch.delete(doc.ref),
@@ -78,6 +88,7 @@ export async function deleteSessionData(firestore: Firestore, sessionId: string)
 		runsQuery(firestore, sessionId),
 		runInputsQuery(firestore, sessionId),
 		previewBudgetsQuery(firestore, sessionId),
+		seatCodesQuery(firestore, sessionId),
 	]);
 
 	await inBatches(firestore, docs, (batch, doc) => batch.delete(doc.ref));

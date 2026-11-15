@@ -5,6 +5,7 @@ import type {
 	TableAssignmentPositionQuestion,
 	TableAssignmentSettings,
 	TableAssignmentStatus,
+	TableAssignmentTopicCount,
 } from './tableAssignmentModel';
 
 /**
@@ -15,7 +16,12 @@ import type {
  * Participants are Firebase anonymous-auth or signed-in users.
  */
 
-/** `tablesCreateSession` (host, signed in with Google). */
+/**
+ * `tablesCreateSession` (host, signed in with Google). Every new session gets
+ * `splitByTopic: true`. With `settings.topicCount: 'one'` the server makes the
+ * single topic (titled after the session) and the mode is `ranked` whatever
+ * was asked.
+ */
 export interface TablesCreateSessionRequest {
 	title: string;
 	mode: TableAssignmentMode;
@@ -58,18 +64,37 @@ export interface TablesSaveSettingsRequest {
 	/** `null` removes the number. */
 	expectedParticipants?: number | null;
 	allowReturnByName?: boolean;
+	/**
+	 * Draft only. 'one' replaces the topics with one topic named after the
+	 * session and makes the mode `ranked`; 'several' keeps the topics as they
+	 * are for the host to edit. While 'one', a title change renames that topic.
+	 */
+	topicCount?: TableAssignmentTopicCount;
 }
 export interface TablesSaveSettingsResponse {
 	settings: TableAssignmentSettings;
 }
 
-/** `tablesSetStatus` (host): open or close registration, or end. Publishing is `tablesPublishRun`. */
+/**
+ * `tablesSetStatus` (host): open or close registration, or end. Publishing a
+ * ranked session is `tablesPublishRun`. Closing a direct session with
+ * `splitByTopic` ("sit where you like") is one press: the server splits each
+ * topic into tables (IA tables-class-bridge 2.1), publishes them, and the
+ * answer's status is `published`. Class's `classCloseRegistration` calls the same path.
+ */
 export interface TablesSetStatusRequest {
 	sessionId: string;
 	status: Extract<TableAssignmentStatus, 'registrationOpen' | 'registrationClosed' | 'ended'>;
 }
 export interface TablesSetStatusResponse {
 	status: TableAssignmentStatus;
+	/** Closing a splitByTopic session: the run it published. */
+	publishedRunId?: string;
+	/**
+	 * Closing a splitByTopic session: topics one person chose, now a table of
+	 * one. Nobody is moved; the host decides (the flag "בנושא {{topic}} נרשם אדם אחד").
+	 */
+	topicsWithOnePerson?: string[];
 	/**
 	 * Only when moving to `ended`: whether the answers are gone. `false` means the
 	 * session did end but the erase failed; calling `ended` again retries it.
@@ -148,19 +173,46 @@ export interface TablesFixDetailsResponse {
 	topicIds: string[];
 }
 
-/** `tablesSavePreferences` (participant, before registration closes). */
+/**
+ * `tablesSavePreferences` (participant, before registration closes; after
+ * publishing only a latecomer the tables do not seat). In a splitByTopic
+ * session the list is the chosen topic, one id at most, and the topic's
+ * `chosenCount` follows. A latecomer there is seated at once at the emptiest
+ * table of their topic that has a free seat; with none they wait for the host.
+ */
 export interface TablesSavePreferencesRequest {
 	sessionId: string;
-	/** Topic ids, best first, at most three. */
+	/** Topic ids, best first, at most three (one in a splitByTopic session). */
 	preferences: string[];
 	/** One of TABLE_ASSIGNMENT_POSITION_STOPS; omit to leave "not specified". */
 	position?: number;
 }
 export interface TablesSavePreferencesResponse {
 	participant: TableAssignmentParticipant;
+	/** A latecomer this call seated: their table's index in the published run. */
+	tableIndex?: number;
 }
 
-/** `tablesJoinTable` (participant, direct mode). Atomic; fails with `failed-precondition` when the table is full. */
+/**
+ * `tablesSeatLink` (the participant themself). The code of their personal link
+ * into the connected lesson, `class.wizcol.com/seat/:seatCode`. Made on the
+ * first call and the same code ever after (reusable); also stored on the
+ * caller's own registration as `seatCode`. Refused with reason `not-connected`
+ * when no lesson uses the session, `not-registered` when the caller has no
+ * registration, and `failed-precondition` once the session has ended.
+ */
+export interface TablesSeatLinkRequest {
+	sessionId: string;
+}
+export interface TablesSeatLinkResponse {
+	seatCode: string;
+}
+
+/**
+ * `tablesJoinTable` (participant, direct mode of an older session). Atomic;
+ * fails with `failed-precondition` when the table is full, and with reason
+ * `split-by-topic` in a splitByTopic session (people choose a topic there).
+ */
 export interface TablesJoinTableRequest {
 	sessionId: string;
 	tableIndex: number;
@@ -183,7 +235,11 @@ export interface TablesComputePreviewResponse {
 	runId: string;
 }
 
-/** `tablesPublishRun` (host). Idempotent; refused when the run's input is stale. */
+/**
+ * `tablesPublishRun` (host). Idempotent; refused when the run's input is stale.
+ * Ranked sessions, and splitByTopic sessions once published (seating the
+ * latecomers who found no free seat, after a `tablesComputePreview`).
+ */
 export interface TablesPublishRunRequest {
 	sessionId: string;
 	runId: string;

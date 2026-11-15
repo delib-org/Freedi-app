@@ -6,7 +6,7 @@ import {
 	DEFAULT_SPEAK_SECONDS,
 	DEFAULT_TABLE_SIZE,
 	MAX_TABLE_SIZE,
-	MIN_TABLE_SIZE,
+	STORED_MIN_TABLE_SIZE,
 	PROPOSALS_TURNS_CHOICES,
 	SPEAK_SECONDS_CHOICES,
 	Camp,
@@ -32,6 +32,7 @@ export interface LessonSettingsHolder {
 		| 'noDeviceCount'
 		| 'lessonLook'
 		| 'tableSize'
+		| 'classRegistration'
 	> | null;
 }
 
@@ -40,13 +41,17 @@ export function lessonLookOf(main: LessonSettingsHolder | null | undefined): Les
 	return main?.statementSettings?.lessonLook === 'solid' ? 'solid' : 'game';
 }
 
-/** Group size at the tables: the lesson's whole number in 2..8, else the default (6). */
+/**
+ * Seats per table of a lesson without registration: its whole number in 2..20
+ * (2 only on lessons saved before the bridge), else the default (7). A
+ * connected lesson reads the registration's number (seatsPerTableOf).
+ */
 export function tableSizeOf(main: LessonSettingsHolder | null | undefined): number {
 	const own = main?.statementSettings?.tableSize;
 
 	return typeof own === 'number' &&
 		Number.isInteger(own) &&
-		own >= MIN_TABLE_SIZE &&
+		own >= STORED_MIN_TABLE_SIZE &&
 		own <= MAX_TABLE_SIZE
 		? own
 		: DEFAULT_TABLE_SIZE;

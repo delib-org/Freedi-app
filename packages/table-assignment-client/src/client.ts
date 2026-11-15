@@ -25,6 +25,8 @@ import type {
 	TablesSaveSettingsResponse,
 	TablesSaveTopicsRequest,
 	TablesSaveTopicsResponse,
+	TablesSeatLinkRequest,
+	TablesSeatLinkResponse,
 	TablesSetStatusRequest,
 	TablesSetStatusResponse,
 } from '@freedi/shared-types';
@@ -44,6 +46,7 @@ export const TABLES_CALLABLES = {
 	removeParticipant: 'tablesRemoveParticipant',
 	fixDetails: 'tablesFixDetails',
 	deleteSession: 'tablesDeleteSession',
+	seatLink: 'tablesSeatLink',
 } as const;
 
 export interface TablesClient {
@@ -64,6 +67,7 @@ export interface TablesClient {
 	): Promise<TablesRemoveParticipantResponse>;
 	fixDetails(request: TablesFixDetailsRequest): Promise<TablesFixDetailsResponse>;
 	deleteSession(request: TablesDeleteSessionRequest): Promise<TablesDeleteSessionResponse>;
+	seatLink(request: TablesSeatLinkRequest): Promise<TablesSeatLinkResponse>;
 }
 
 /**
@@ -92,5 +96,6 @@ export function createTablesClient(functions: Functions): TablesClient {
 		removeParticipant: (request) => call(TABLES_CALLABLES.removeParticipant, request),
 		fixDetails: (request) => call(TABLES_CALLABLES.fixDetails, request),
 		deleteSession: (request) => call(TABLES_CALLABLES.deleteSession, request),
+		seatLink: (request) => call(TABLES_CALLABLES.seatLink, request),
 	};
 }

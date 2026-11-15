@@ -37,7 +37,11 @@ export type TablesErrorReason =
 	| 'name-locked'
 	| 'too-few-registrants'
 	| 'preview-limit'
-	| 'table-size-below-published';
+	| 'table-size-below-published'
+	| 'split-by-topic'
+	| 'one-topic'
+	| 'not-connected'
+	| 'not-registered';
 
 /** Fewer registrants than this are refused a preview: tables that small say too much about each person. */
 export const MIN_REGISTRANTS_FOR_PREVIEW = 5;
@@ -50,3 +54,6 @@ export const MAX_PREVIEWS_PER_SESSION = 30;
 
 /** Seeds are drawn from this range: the engine's random generator keeps 32 bits of state. */
 export const ENGINE_SEED_RANGE = 2 ** 32;
+
+/** Random bytes in a personal link's code: 256 bits, so a code cannot be guessed. */
+export const SEAT_CODE_BYTES = 32;

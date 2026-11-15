@@ -13,7 +13,9 @@ export interface ClassAssignTablesRequest {
 	/**
 	 * Only a fallback for a lesson that has no saved size: the lesson's own
 	 * `statementSettings.tableSize` always wins (tableSizeOf). Whole number in
-	 * MIN_TABLE_SIZE..MAX_TABLE_SIZE.
+	 * MIN_TABLE_SIZE..MAX_TABLE_SIZE (3..20): the most at one table. A lesson
+	 * connected to a registration is refused (reason `registration-connected`):
+	 * its tables come from classCopySeating.
 	 */
 	tableSize?: number;
 	replace?: boolean;
@@ -45,11 +47,18 @@ export interface ClassRequestRenameResponse {
 	ok: true;
 }
 
-/** `classAddNoDevice` (admin). Adds a named student without a phone to table `n`. */
+/**
+ * `classAddNoDevice` (admin). Adds a named student without a phone to table `n`.
+ * With `seatId` (a reserved seat of a connected lesson, IA tables-class-bridge
+ * 5.4) the registered person arrives without a phone: that seat becomes them,
+ * under the registration's name, and `name` is not needed. Refused with
+ * reason `seat-taken` when the seat is no longer reserved.
+ */
 export interface ClassAddNoDeviceRequest {
 	mainId: string;
 	n: number;
-	name: string;
+	name?: string;
+	seatId?: string;
 }
 export interface ClassAddNoDeviceResponse {
 	id: string;

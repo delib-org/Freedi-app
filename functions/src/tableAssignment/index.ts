@@ -19,3 +19,4 @@ export { tablesCancelRegistration } from './fn_tablesCancelRegistration';
 export { tablesRemoveParticipant } from './fn_tablesRemoveParticipant';
 export { tablesFixDetails } from './fn_tablesFixDetails';
 export { tablesDeleteSession } from './fn_tablesDeleteSession';
+export { tablesSeatLink } from './fn_tablesSeatLink';

@@ -9,7 +9,8 @@ import type {
 import { TableAssignmentModeSchema } from '@freedi/shared-types';
 import { is } from 'valibot';
 import { db } from '../db';
-import { Actor, actorFrom, newId, requireId, sessionRef } from './tablesAccess';
+import { isOneTopic, oneTopicDoc, parseTopicCount } from './oneTopic';
+import { Actor, actorFrom, newId, requireId, sessionRef, topicsCollection } from './tablesAccess';
 import { TablesError, toHttpsError } from './tablesErrors';
 import {
 	assertChoosableTableSize,
@@ -22,6 +23,10 @@ import {
  * `tablesCreateSession` (host): creates a draft session. The caller must be
  * signed in with Google: anyone can mint an anonymous or email account, and a
  * session is the only thing here that lets its owner collect other people's names.
+ *
+ * Every new session is `splitByTopic` (IA tables-class-bridge 2.3: in direct
+ * mode people choose a topic and the tables are made at closing). A one-topic
+ * session (2.4) is `ranked` and gets its single topic here, named after it.
  */
 export async function createSession(
 	firestore: Firestore,
@@ -42,6 +47,8 @@ export async function createSession(
 			: requireId(req.contextStatementId, 'contextStatementId');
 	const settings = parseSettings(req.settings);
 	assertChoosableTableSize(settings.tableSize);
+	parseTopicCount(settings.topicCount);
+	const oneTopic = isOneTopic(settings);
 
 	const sessionId = newId();
 	const session: TableAssignment = withoutUndefined({
@@ -49,13 +56,20 @@ export async function createSession(
 		hostUid: actor.uid,
 		contextStatementId,
 		title,
-		mode: req.mode,
+		mode: oneTopic ? ('ranked' as const) : req.mode,
 		status: 'draft' as const,
 		settings,
+		splitByTopic: true,
 		createdAt: now,
 		lastUpdate: now,
 	});
-	await sessionRef(firestore, sessionId).create(session);
+	await firestore.runTransaction(async (tx) => {
+		tx.create(sessionRef(firestore, sessionId), session);
+		if (oneTopic) {
+			const topic = oneTopicDoc(sessionId, title);
+			tx.set(topicsCollection(firestore).doc(topic.topicId), topic);
+		}
+	});
 
 	return { session };
 }

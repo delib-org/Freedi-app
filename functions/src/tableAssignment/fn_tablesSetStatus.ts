@@ -1,6 +1,6 @@
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
 import type { Firestore } from 'firebase-admin/firestore';
-import { functionConfig } from '@freedi/shared-types';
+import { functionConfig, isTableAssignmentSplitByTopic } from '@freedi/shared-types';
 import type {
 	TableAssignment,
 	TableAssignmentStatus,
@@ -9,6 +9,8 @@ import type {
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { db } from '../db';
+import { closeAndPublishSplit } from './directClose';
+import type { DirectCloseResult } from './directClose';
 import { eraseSessionAnswers } from './sessionData';
 import {
 	actorFrom,
@@ -21,8 +23,8 @@ import {
 import { TablesError, toHttpsError } from './tablesErrors';
 
 /**
- * Allowed moves. `published` is reached only through tablesPublishRun, but a
- * published session can still be ended.
+ * Allowed moves. `published` is reached through tablesPublishRun, or by
+ * closing a splitByTopic session; a published session can still be ended.
  */
 const TRANSITIONS: Readonly<Record<TableAssignmentStatus, readonly TableAssignmentStatus[]>> = {
 	draft: ['registrationOpen'],
@@ -68,6 +70,11 @@ async function eraseAfterEnd(
  * ended, nothing else. Ending erases the answers once the status is committed,
  * and no answer can arrive after that. Asking for `ended` again retries an
  * erase that failed and changes nothing else.
+ *
+ * A splitByTopic session skips `registrationClosed`: closing it splits every
+ * topic into tables and publishes them in the same transaction (IA
+ * tables-class-bridge 2.3), so its answer is `published`. Class's
+ * classCloseRegistration calls this function too.
  */
 export async function setStatus(
 	firestore: Firestore,
@@ -84,10 +91,13 @@ export async function setStatus(
 		);
 	}
 
-	const session = await firestore.runTransaction(async (tx) => {
+	const { session, published } = await firestore.runTransaction(async (tx) => {
 		const current = await readSession(tx, firestore, sessionId);
 		assertHost(current, uid);
-		if (current.status === 'ended' && next === 'ended') return current;
+		const unchanged: { session: TableAssignment; published?: DirectCloseResult } = {
+			session: current,
+		};
+		if (current.status === 'ended' && next === 'ended') return unchanged;
 		if (!TRANSITIONS[current.status].includes(next)) {
 			throw new TablesError('failed-precondition', `Cannot move from ${current.status} to ${next}`);
 		}
@@ -100,10 +110,17 @@ export async function setStatus(
 				);
 			}
 		}
+		if (next === 'registrationClosed' && isTableAssignmentSplitByTopic(current)) {
+			return {
+				session: current,
+				published: await closeAndPublishSplit(tx, firestore, current, now),
+			};
+		}
 		tx.update(sessionRef(firestore, sessionId), { status: next, lastUpdate: now });
 
-		return current;
+		return unchanged;
 	});
+	if (published) return { status: 'published', ...published };
 	if (next !== 'ended') return { status: next };
 	const answersErased =
 		session.answersErasedAt !== undefined || (await eraseAfterEnd(firestore, session, uid, now));

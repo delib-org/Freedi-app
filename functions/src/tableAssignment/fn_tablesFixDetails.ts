@@ -18,6 +18,7 @@ import {
 	sessionRef,
 	topicsQuery,
 } from './tablesAccess';
+import { isOneTopic } from './oneTopic';
 import { TablesError, toHttpsError } from './tablesErrors';
 import { requireTitle } from './validation';
 
@@ -103,6 +104,10 @@ export async function fixDetails(
 			topicDocs.forEach((d, index) => tx.update(d.ref, { title: topicTitles[index].title }));
 		}
 		const title = newTitle ?? session.title;
+		// A one-topic event's single topic is named after the event (IA tables-class-bridge 2.4).
+		if (newTitle && isOneTopic(session.settings)) {
+			topicDocs.forEach((d) => tx.update(d.ref, { title: newTitle }));
+		}
 		tx.update(sessionRef(firestore, sessionId), { title, lastUpdate: now });
 
 		return { title, topicIds: topicDocs.map((d) => d.id) };

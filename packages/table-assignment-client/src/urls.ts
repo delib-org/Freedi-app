@@ -19,3 +19,15 @@ export function tablesHostUrl(baseUrl: string, sessionId?: string): string {
 
 	return sessionId ? `${host}/sessions/${encodeURIComponent(sessionId)}` : host;
 }
+
+/** Where the Class app lives: the personal link opens there. */
+export const CLASS_BASE_URL = 'https://class.wizcol.com';
+
+/**
+ * The personal link into a connected lesson (IA tables-class-bridge 5.1):
+ * `<base>/seat/<seatCode>`. The code comes from `tablesSeatLink`; the URL
+ * carries nothing else (no name, no session id, no lesson id).
+ */
+export function classSeatUrl(baseUrl: string, seatCode: string): string {
+	return `${trimTrailingSlashes(baseUrl)}/seat/${encodeURIComponent(seatCode)}`;
+}

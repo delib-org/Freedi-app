@@ -53,6 +53,17 @@ export const TABLE_ASSIGNMENT_STRICTNESS = { strict: 0.15, balanced: 0.3, flexib
 /** The five stops a participant answers the position question on. */
 export const TABLE_ASSIGNMENT_POSITION_STOPS = [0, 25, 50, 75, 100] as const;
 
+/**
+ * How many topics the gathering has (Setup's "כמה נושאים יש במפגש?"). `one`: the
+ * server keeps a single topic named after the event and the mode is `ranked`;
+ * nobody picks a topic. Stored as a plain string (strict-parse trap): read it
+ * through tableAssignmentTopicCountOf.
+ */
+export const TABLE_ASSIGNMENT_TOPIC_COUNTS = ['one', 'several'] as const;
+export type TableAssignmentTopicCount = (typeof TABLE_ASSIGNMENT_TOPIC_COUNTS)[number];
+/** Sessions saved before the question existed have several topics. */
+export const TABLE_ASSIGNMENT_TOPIC_COUNT_DEFAULT: TableAssignmentTopicCount = 'several';
+
 /** Lifecycle of one TableAssignment: draft, registration open/closed, published, ended. */
 export const TableAssignmentStatusSchema = picklist([
 	'draft',
@@ -100,6 +111,8 @@ export const TableAssignmentSettingsSchema = object({
 	expectedParticipants: optional(pipe(number(), integer(), minValue(1))),
 	/** Lets a person take over a registration by typing the same full name. Absent means off. */
 	allowReturnByName: optional(boolean()),
+	/** 'one' | 'several' (TABLE_ASSIGNMENT_TOPIC_COUNTS), a plain string. Fixed once registration opens. */
+	topicCount: optional(string()),
 });
 export type TableAssignmentSettings = InferOutput<typeof TableAssignmentSettingsSchema>;
 
@@ -113,6 +126,13 @@ export const TableAssignmentSchema = object({
 	status: TableAssignmentStatusSchema,
 	settings: TableAssignmentSettingsSchema,
 	publishedRunId: optional(string()),
+	/**
+	 * Direct mode under the bridge rule (IA tables-class-bridge 2.3): a person
+	 * chooses a topic, the system makes the tables, and closing registration
+	 * also publishes them. Set on every session created since; absent on older
+	 * sessions, which finish under the choose-a-table rule (seat counters).
+	 */
+	splitByTopic: optional(boolean()),
 	/** When the answers were erased after the session ended. Absent while they are still stored. */
 	answersErasedAt: optional(MillisSchema),
 	createdAt: MillisSchema,
@@ -135,6 +155,11 @@ export const TableAssignmentTopicSchema = object({
 		pipe(number(), integer(), minValue(1), maxValue(TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC)),
 	),
 	order: NonNegativeIntSchema,
+	/**
+	 * Direct mode under splitByTopic: how many people chose this topic. A count,
+	 * no identities; server-written. Absent means nobody yet.
+	 */
+	chosenCount: optional(NonNegativeIntSchema),
 });
 export type TableAssignmentTopic = InferOutput<typeof TableAssignmentTopicSchema>;
 
@@ -161,6 +186,12 @@ export const TableAssignmentParticipantSchema = object({
 	registeredAt: MillisSchema,
 	/** This registration took over another one by full name, so it cannot be cancelled. */
 	claimedByName: optional(boolean()),
+	/**
+	 * The personal link's code (class.wizcol.com/seat/:seatCode), made by
+	 * tablesSeatLink. Lives here because only the owner reads this record; the
+	 * server keeps a hash of it apart to find the registration again.
+	 */
+	seatCode: optional(string()),
 });
 export type TableAssignmentParticipant = InferOutput<typeof TableAssignmentParticipantSchema>;
 
@@ -193,6 +224,36 @@ export type TableAssignmentCounter = InferOutput<typeof TableAssignmentCounterSc
 /** Two spellings of one full name compare equal: spacing, case and Unicode form are ignored. */
 export function tableAssignmentNameKey(fullName: string): string {
 	return fullName.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+}
+
+/** The session's topic count; anything but 'one' reads as several. */
+export function tableAssignmentTopicCountOf(
+	settings: Pick<TableAssignmentSettings, 'topicCount'> | undefined,
+): TableAssignmentTopicCount {
+	return settings?.topicCount === 'one' ? 'one' : TABLE_ASSIGNMENT_TOPIC_COUNT_DEFAULT;
+}
+
+/** Direct mode where people choose a topic and the tables are made at closing (2.3). */
+export function isTableAssignmentSplitByTopic(
+	session: Pick<TableAssignment, 'mode' | 'splitByTopic'>,
+): boolean {
+	return session.mode === 'direct' && session.splitByTopic === true;
+}
+
+/**
+ * The split rule (IA tables-class-bridge 2.1): `people` who chose one topic at
+ * tables of at most `tableSize` open ceil(people / tableSize) tables whose sizes
+ * differ by at most one, largest first. 70 at 7: ten of 7; 71: five of 7 and six
+ * of 6. With tableSize >= 3 no table of one comes out unless people is 1.
+ */
+export function tableAssignmentTableSizes(people: number, tableSize: number): number[] {
+	if (!Number.isInteger(people) || people <= 0) return [];
+	const size = Math.max(1, Math.floor(tableSize));
+	const tables = Math.ceil(people / size);
+	const base = Math.floor(people / tables);
+	const extra = people % tables;
+
+	return Array.from({ length: tables }, (_, i) => (i < extra ? base + 1 : base));
 }
 
 export function tableAssignmentParticipantId(sessionId: string, uid: string): string {

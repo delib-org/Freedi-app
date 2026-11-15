@@ -19,6 +19,7 @@ import {
 	runRef,
 	sessionRef,
 } from './tablesAccess';
+import { seatsByEngine } from './publishedSeating';
 import { TablesError, toHttpsError } from './tablesErrors';
 
 /**
@@ -42,7 +43,7 @@ export async function publishRun(
 	return firestore.runTransaction(async (tx) => {
 		const session = await readSession(tx, firestore, sessionId);
 		assertHost(session, uid);
-		if (session.mode !== 'ranked') {
+		if (!seatsByEngine(session)) {
 			throw new TablesError('failed-precondition', 'Only ranked sessions are published');
 		}
 		const runSnap = await tx.get(runRef(firestore, runId));

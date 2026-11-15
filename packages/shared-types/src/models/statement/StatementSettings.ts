@@ -17,10 +17,11 @@ import {
 import { DeliberationType, SortType, ThemeStyle } from '../TypeEnums';
 import {
 	ClassBallotSchema,
+	ClassRegistrationSchema,
 	ClassVoteDisplaySchema,
 	MAX_TABLE_SIZE,
-	MIN_TABLE_SIZE,
 	RoundPhaseSchema,
+	STORED_MIN_TABLE_SIZE,
 } from '../classroom/classroomModel';
 
 /**
@@ -32,8 +33,8 @@ export const JoinFormFieldTypeSchema = picklist(['text', 'phone', 'email']);
 export type JoinFormFieldType = InferOutput<typeof JoinFormFieldTypeSchema>;
 
 export const JoinFormFieldSchema = object({
-	id: string(),       // stable slug used as the form key
-	label: string(),    // display label (admin-provided, admin handles translation)
+	id: string(), // stable slug used as the form key
+	label: string(), // display label (admin-provided, admin handles translation)
 	type: JoinFormFieldTypeSchema,
 	required: boolean(),
 });
@@ -267,7 +268,6 @@ export type RatingMode = InferOutput<typeof RatingModeSchema>;
 export const VotingOptionsSourceSchema = picklist(['all', 'positivelyEvaluated']);
 export type VotingOptionsSource = InferOutput<typeof VotingOptionsSourceSchema>;
 
-
 /**
  * join-class (classroom): the step keys of a lesson. A lesson stores its own
  * ordered list in `LessonPlan.steps` and `stepIndex` points into THAT list:
@@ -499,9 +499,12 @@ export const StatementSettingsSchema = object({
 	),
 	// join-class: the lesson's look, followed live by students and the projector. Absent = 'game'. Main statement only.
 	lessonLook: optional(LessonLookSchema),
-	// join-class: group size at the tables, a whole number MIN_TABLE_SIZE..MAX_TABLE_SIZE (2..8). Absent = DEFAULT_TABLE_SIZE (6). Main statement only.
-	tableSize: optional(pipe(number(), integer(), minValue(MIN_TABLE_SIZE), maxValue(MAX_TABLE_SIZE))),
+	// join-class: seats per table (the most at one table), chosen MIN_TABLE_SIZE..MAX_TABLE_SIZE (3..20); a lesson saved earlier may hold 2 (STORED_MIN_TABLE_SIZE). Absent = DEFAULT_TABLE_SIZE (7). Main statement only.
+	tableSize: optional(
+		pipe(number(), integer(), minValue(STORED_MIN_TABLE_SIZE), maxValue(MAX_TABLE_SIZE)),
+	),
+	// join-class: the lesson's connection to a Tables registration (IA tables-class-bridge). Server-written. Main statement only.
+	classRegistration: optional(ClassRegistrationSchema),
 });
-
 
 export type StatementSettings = InferOutput<typeof StatementSettingsSchema>;

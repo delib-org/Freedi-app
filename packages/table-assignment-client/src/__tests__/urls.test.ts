@@ -1,4 +1,4 @@
-import { tablesHostUrl, tablesSessionUrl } from '../urls';
+import { classSeatUrl, tablesHostUrl, tablesSessionUrl } from '../urls';
 
 describe('tablesSessionUrl', () => {
 	it('builds the participant link', () => {
@@ -22,6 +22,14 @@ describe('tablesHostUrl', () => {
 	it('points at one session home with an id', () => {
 		expect(tablesHostUrl('https://tables.wizcol.com/', 'abc')).toBe(
 			'https://tables.wizcol.com/host/sessions/abc',
+		);
+	});
+});
+
+describe('classSeatUrl', () => {
+	it('builds the personal link with the code and nothing else', () => {
+		expect(classSeatUrl('https://class.wizcol.com/', 'Ab-_9')).toBe(
+			'https://class.wizcol.com/seat/Ab-_9',
 		);
 	});
 });
