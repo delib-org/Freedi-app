@@ -1351,6 +1351,9 @@ export type {
   TablesCancelRegistrationResponse,
   TablesRemoveParticipantRequest,
   TablesRemoveParticipantResponse,
+  TablesRemoveParticipantsRequest,
+  TablesRemoveParticipantsFailure,
+  TablesRemoveParticipantsResponse,
   TablesFixDetailsTopic,
   TablesFixDetailsRequest,
   TablesFixDetailsResponse,
@@ -1367,6 +1370,7 @@ export type {
   TablesSeatLinkRequest,
   TablesSeatLinkResponse,
 } from './models/tableAssignment/tableAssignmentCallables';
+export { TABLE_ASSIGNMENT_REMOVE_BATCH_MAX } from './models/tableAssignment/tableAssignmentCallables';
 
 // Theme rebuild ("Re-theme with AI") callable contract
 export type {

@@ -17,6 +17,7 @@ export { tablesComputePreview } from './fn_tablesComputePreview';
 export { tablesPublishRun } from './fn_tablesPublishRun';
 export { tablesCancelRegistration } from './fn_tablesCancelRegistration';
 export { tablesRemoveParticipant } from './fn_tablesRemoveParticipant';
+export { tablesRemoveParticipants } from './fn_tablesRemoveParticipants';
 export { tablesFixDetails } from './fn_tablesFixDetails';
 export { tablesDeleteSession } from './fn_tablesDeleteSession';
 export { tablesSeatLink } from './fn_tablesSeatLink';

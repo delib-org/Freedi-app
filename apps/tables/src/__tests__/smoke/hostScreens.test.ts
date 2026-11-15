@@ -18,7 +18,15 @@ import {
 	makeTopic,
 } from '../fixtures';
 import { renderScreen } from './testHarness';
-import { ID, buttonByText, buttonsByText, mocks, settle, useHostScreens } from './hostMocks';
+import {
+	ID,
+	buttonByText,
+	buttonsByText,
+	mocks,
+	settle,
+	typeInto,
+	useHostScreens,
+} from './hostMocks';
 
 vi.mock('@/lib/firebase', () => ({ app: {}, auth: {}, db: {}, functions: {} }));
 vi.mock('@/lib/tableAssignment/client', async () => ({
@@ -145,6 +153,62 @@ describe('host participants', () => {
 
 		expect(root.textContent).toContain(en['tableAssignment.remove.seated']);
 		expect(root.querySelector('.modal')).not.toBeNull();
+	});
+
+	describe('removing several people', () => {
+		const click = (el: Element): void => {
+			(el as HTMLElement).click();
+			m.redraw.sync();
+		};
+
+		it('selects what the search shows, then removes them after one confirmation', async () => {
+			mocks.store.current.everyone = [
+				makeRosterEntry('u1', { fullName: 'Test One' }),
+				makeRosterEntry('u2', { fullName: 'Dana Levi' }),
+				makeRosterEntry('u3', { fullName: 'Test Two' }),
+			];
+			mocks.api.removeParticipants.mockResolvedValue({ removed: ['u1', 'u3'], failed: [] });
+			const { root } = await renderScreen(HostParticipants, ID);
+
+			typeInto(root.querySelector<HTMLInputElement>('input[type="search"]')!, 'test');
+			m.redraw.sync();
+			click(root.querySelector('.roster__select-all input')!);
+			expect(root.querySelector('.roster__selected')?.textContent).toBe('2 selected');
+			click(buttonByText(root, 'Remove 2 people'));
+			expect(mocks.api.removeParticipants).not.toHaveBeenCalled();
+
+			buttonByText(root, en['tableAssignment.removeMany.confirm']).click();
+			await settle();
+
+			expect(mocks.api.removeParticipants).toHaveBeenCalledTimes(1);
+			expect(mocks.api.removeParticipants).toHaveBeenCalledWith({
+				sessionId: SESSION_ID,
+				uids: ['u1', 'u3'],
+			});
+			expect(root.querySelector('.modal')?.textContent).toContain('Removed 2 people');
+		});
+
+		it('names the people who could not be removed', async () => {
+			mocks.api.removeParticipants.mockResolvedValue({
+				removed: ['u1'],
+				failed: [{ uid: 'u2', reason: 'internal' }],
+			});
+			const { root } = await renderScreen(HostParticipants, ID);
+
+			click(root.querySelector('.roster__select-all input')!);
+			click(buttonByText(root, 'Remove 2 people'));
+			buttonByText(root, en['tableAssignment.removeMany.confirm']).click();
+			await settle();
+
+			expect(root.querySelector('.modal')?.textContent).toContain('Could not remove: Name u2');
+		});
+
+		it('offers no tick boxes once the assignment has ended', async () => {
+			mocks.store.current.session = makeSession({ status: 'ended' });
+			const { root } = await renderScreen(HostParticipants, ID);
+
+			expect(root.querySelector('input[type="checkbox"]')).toBeNull();
+		});
 	});
 
 	it('offers no removal once the assignment has ended', async () => {

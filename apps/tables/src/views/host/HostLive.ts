@@ -70,6 +70,14 @@ export const LiveBody: m.ClosureComponent<LiveBodyAttrs> = ({ attrs: first }) =>
 			registered > 0
 				? m('span.live__estimate', tPlural('tableAssignment.live.estimate', tables))
 				: null,
+			m(
+				m.route.Link,
+				{
+					href: hostScreenPath(sessionId, 'participants'),
+					class: 'btn btn--soft live__manage',
+				},
+				t('tableAssignment.participants.manage'),
+			),
 		]);
 	}
 

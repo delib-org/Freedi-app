@@ -61,3 +61,38 @@ export function seatsByEngine(
 		(isTableAssignmentSplitByTopic(session) && session.status === 'published')
 	);
 }
+
+/** The published run as stored, or undefined when the session has none or it cannot be read. */
+export async function readPublishedRun(
+	tx: Transaction,
+	firestore: Firestore,
+	session: Pick<TableAssignment, 'publishedRunId'>,
+): Promise<TableAssignmentRun | undefined> {
+	if (!session.publishedRunId) return undefined;
+	const runSnap = await tx.get(runRef(firestore, session.publishedRunId));
+
+	return runSnap.data() as TableAssignmentRun | undefined;
+}
+
+/** Whether the run seats this person at any table. */
+export function runSeats(run: Pick<TableAssignmentRun, 'tables'>, uid: string): boolean {
+	return run.tables.some((table) => table.memberUids.includes(uid));
+}
+
+/**
+ * Takes a person off the published run's seat lists, so the participant view
+ * and the host view stop listing them. The table keeps its index and topic,
+ * so nobody else moves. The run holds no counts of its own to correct.
+ */
+export function unseatFromRun(
+	tx: Transaction,
+	firestore: Firestore,
+	run: Pick<TableAssignmentRun, 'runId' | 'tables'>,
+	uid: string,
+): void {
+	const tables = run.tables.map((table) => ({
+		...table,
+		memberUids: table.memberUids.filter((memberUid) => memberUid !== uid),
+	}));
+	tx.update(runRef(firestore, run.runId), { tables });
+}

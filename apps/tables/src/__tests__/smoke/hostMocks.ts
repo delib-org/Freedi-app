@@ -19,6 +19,7 @@ export const mocks = {
 		publishRun: vi.fn(),
 		fixDetails: vi.fn(),
 		removeParticipant: vi.fn(),
+		removeParticipants: vi.fn(),
 		deleteSession: vi.fn(),
 	},
 };

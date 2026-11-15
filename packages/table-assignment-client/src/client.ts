@@ -19,6 +19,8 @@ import type {
 	TablesRegisterResponse,
 	TablesRemoveParticipantRequest,
 	TablesRemoveParticipantResponse,
+	TablesRemoveParticipantsRequest,
+	TablesRemoveParticipantsResponse,
 	TablesSavePreferencesRequest,
 	TablesSavePreferencesResponse,
 	TablesSaveSettingsRequest,
@@ -44,6 +46,7 @@ export const TABLES_CALLABLES = {
 	publishRun: 'tablesPublishRun',
 	cancelRegistration: 'tablesCancelRegistration',
 	removeParticipant: 'tablesRemoveParticipant',
+	removeParticipants: 'tablesRemoveParticipants',
 	fixDetails: 'tablesFixDetails',
 	deleteSession: 'tablesDeleteSession',
 	seatLink: 'tablesSeatLink',
@@ -65,6 +68,9 @@ export interface TablesClient {
 	removeParticipant(
 		request: TablesRemoveParticipantRequest,
 	): Promise<TablesRemoveParticipantResponse>;
+	removeParticipants(
+		request: TablesRemoveParticipantsRequest,
+	): Promise<TablesRemoveParticipantsResponse>;
 	fixDetails(request: TablesFixDetailsRequest): Promise<TablesFixDetailsResponse>;
 	deleteSession(request: TablesDeleteSessionRequest): Promise<TablesDeleteSessionResponse>;
 	seatLink(request: TablesSeatLinkRequest): Promise<TablesSeatLinkResponse>;
@@ -94,6 +100,7 @@ export function createTablesClient(functions: Functions): TablesClient {
 		publishRun: (request) => call(TABLES_CALLABLES.publishRun, request),
 		cancelRegistration: (request) => call(TABLES_CALLABLES.cancelRegistration, request),
 		removeParticipant: (request) => call(TABLES_CALLABLES.removeParticipant, request),
+		removeParticipants: (request) => call(TABLES_CALLABLES.removeParticipants, request),
 		fixDetails: (request) => call(TABLES_CALLABLES.fixDetails, request),
 		deleteSession: (request) => call(TABLES_CALLABLES.deleteSession, request),
 		seatLink: (request) => call(TABLES_CALLABLES.seatLink, request),
