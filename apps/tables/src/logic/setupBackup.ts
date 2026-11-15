@@ -1,3 +1,4 @@
+import { EMPTY_EVENT_DRAFT } from '@/logic/setupDraft';
 import type { SetupDraft } from '@/logic/setupDraft';
 
 /**
@@ -80,7 +81,8 @@ export function readSetupBackup(
 		if (!looksLikeBackup(parsed) || parsed.uid !== scope.uid) return null;
 		if (serverUpdate !== null && (parsed.serverUpdate ?? 0) < serverUpdate) return null;
 
-		return parsed.draft;
+		// A copy from before the event fields existed has none: read them as empty.
+		return { ...EMPTY_EVENT_DRAFT, ...parsed.draft };
 	} catch {
 		return null;
 	}

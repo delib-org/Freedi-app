@@ -18,3 +18,10 @@
     overflow-wrap: anywhere;
   }
 }
+
+// When and where the gathering is: one calm line near the top of the waiting and my-table screens.
+.event-note {
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
+}

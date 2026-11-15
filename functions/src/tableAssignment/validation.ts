@@ -64,9 +64,33 @@ export function assertChoosableTableSize(tableSize: number): void {
 	}
 }
 
+type EventInput = { date?: unknown; time?: unknown; place?: unknown };
+
+/**
+ * The event the host typed, ready for the schema: the place is cleaned (it is shown to other
+ * people) and an empty part is dropped; no part left means no event. Anything that is not an
+ * object is passed on so the schema can refuse it.
+ */
+export function normalizeEvent(raw: unknown): unknown {
+	if (raw === null || raw === undefined) return undefined;
+	if (typeof raw !== 'object') return raw;
+	const { date, time, place } = raw as EventInput;
+	const event = withoutUndefined({
+		date: date === '' ? undefined : date,
+		time: time === '' ? undefined : time,
+		place: typeof place === 'string' ? cleanText(place) || undefined : place,
+	});
+
+	return Object.keys(event).length === 0 ? undefined : event;
+}
+
 /** Validate settings with the shared schema; missing fields get the contract defaults. */
 export function parseSettings(raw: unknown): TableAssignmentSettings {
-	const result = safeParse(TableAssignmentSettingsSchema, raw ?? {});
+	const hasEvent = typeof raw === 'object' && raw !== null && 'event' in raw;
+	const input = hasEvent
+		? { ...raw, event: normalizeEvent((raw as EventInput & { event?: unknown }).event) }
+		: raw;
+	const result = safeParse(TableAssignmentSettingsSchema, input ?? {});
 	if (!result.success) {
 		const first = result.issues[0];
 		const path = first.path?.map((p) => String(p.key)).join('.') ?? 'settings';

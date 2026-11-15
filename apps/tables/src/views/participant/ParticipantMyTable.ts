@@ -1,5 +1,5 @@
 import m from 'mithril';
-import type { TableAssignmentRosterEntry } from '@freedi/shared-types';
+import type { TableAssignment, TableAssignmentRosterEntry } from '@freedi/shared-types';
 import { t, tPlural } from '@/lib/i18n';
 import { LiveValue } from '@/lib/live';
 import { subscribeRun, subscribeTablemates } from '@/lib/tableAssignment/data';
@@ -14,6 +14,7 @@ import type { ChoiceOutcome } from '@/logic/myTable';
 import { ParticipantFrame } from '@/components/ParticipantFrame';
 import type { ParticipantContext } from '@/components/ParticipantFrame';
 import { EnterDiscussion } from '@/components/EnterDiscussion';
+import { EventNote } from '@/components/EventNote';
 import { Redirect } from '@/components/Redirect';
 import { StateBox } from '@/components/StateBox';
 import { MyTableArt } from '@/components/TableArt';
@@ -54,7 +55,11 @@ function matesCard(mates: readonly string[]): m.Vnode | null {
 	]);
 }
 
-function seatScreen(seat: Seat, extra?: m.Children): m.Vnode {
+function seatScreen(
+	seat: Seat,
+	session: Pick<TableAssignment, 'settings'>,
+	extra?: m.Children,
+): m.Vnode {
 	return m('.screen.my-table', [
 		m(MyTableArt, {
 			number: seat.number,
@@ -72,6 +77,7 @@ function seatScreen(seat: Seat, extra?: m.Children): m.Vnode {
 				? m('p.my-table__note', t('tableAssignment.myTable.outsideNote'))
 				: null,
 		]),
+		m(EventNote, { session }),
 		matesCard(seat.mates),
 		extra,
 	]);
@@ -149,6 +155,7 @@ const MyTableBody: m.ClosureComponent<{ context: ParticipantContext }> = (initia
 				seatCount: mates.length + 1,
 				mates,
 			},
+			session,
 			[
 				canEditPreferences(session.status)
 					? m(
@@ -195,6 +202,7 @@ const MyTableBody: m.ClosureComponent<{ context: ParticipantContext }> = (initia
 				m('p.my-table__note', tPlural('tableAssignment.direct.count', chosenCountOf(mine))),
 				m('p.my-table__note', t('tableAssignment.myTable.numberLater')),
 			]),
+			m(EventNote, { session }),
 			canEditPreferences(session.status)
 				? m(
 						m.route.Link,
@@ -259,6 +267,7 @@ const MyTableBody: m.ClosureComponent<{ context: ParticipantContext }> = (initia
 				seatCount: table.memberUids.length,
 				mates: matesOfRunTable(table.memberUids, uid, namesOnceReadable()),
 			},
+			session,
 			offersEntry(session) ? m(EnterDiscussion, { sessionId }) : null,
 		);
 	}

@@ -12,6 +12,7 @@ import {
 	optional,
 	picklist,
 	pipe,
+	regex,
 	string,
 } from 'valibot';
 import { SideValueSchema } from '../classroom/classroomModel';
@@ -46,6 +47,12 @@ export const TABLE_ASSIGNMENT_MAX_TABLES_PER_TOPIC = 50;
 export const TABLE_ASSIGNMENT_TITLE_MAX_LENGTH = 200;
 /** Longest topic description. */
 export const TABLE_ASSIGNMENT_DESCRIPTION_MAX_LENGTH = 2000;
+/** Longest place of the event (free text). */
+export const TABLE_ASSIGNMENT_EVENT_PLACE_MAX_LENGTH = 200;
+/** The event date: a calendar day, 'YYYY-MM-DD'. Not a timestamp. */
+export const TABLE_ASSIGNMENT_EVENT_DATE_PATTERN = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+/** The event time: wall-clock 'HH:MM', 24 hours. Not a timestamp. */
+export const TABLE_ASSIGNMENT_EVENT_TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 /** Longest participant full name. */
 export const TABLE_ASSIGNMENT_FULL_NAME_MAX_LENGTH = 100;
 /** The balance tolerance behind each strictness choice. Any other stored number is a custom value. */
@@ -92,6 +99,20 @@ export type TableAssignmentPositionQuestion = InferOutput<
 	typeof TableAssignmentPositionQuestionSchema
 >;
 
+/**
+ * When and where the gathering is, as the host wants participants to see it.
+ * All three parts are optional and independent. Date and time are wall-clock
+ * strings (the event's own local time), never timestamps.
+ */
+export const TableAssignmentEventSchema = object({
+	date: optional(pipe(string(), regex(TABLE_ASSIGNMENT_EVENT_DATE_PATTERN))),
+	time: optional(pipe(string(), regex(TABLE_ASSIGNMENT_EVENT_TIME_PATTERN))),
+	place: optional(
+		pipe(string(), minLength(1), maxLength(TABLE_ASSIGNMENT_EVENT_PLACE_MAX_LENGTH)),
+	),
+});
+export type TableAssignmentEvent = InferOutput<typeof TableAssignmentEventSchema>;
+
 export const TableAssignmentSettingsSchema = object({
 	tableSize: optional(
 		pipe(
@@ -113,6 +134,8 @@ export const TableAssignmentSettingsSchema = object({
 	allowReturnByName: optional(boolean()),
 	/** 'one' | 'several' (TABLE_ASSIGNMENT_TOPIC_COUNTS), a plain string. Fixed once registration opens. */
 	topicCount: optional(string()),
+	/** When and where the gathering is; shown to participants once they registered. Absent on older sessions. */
+	event: optional(TableAssignmentEventSchema),
 });
 export type TableAssignmentSettings = InferOutput<typeof TableAssignmentSettingsSchema>;
 

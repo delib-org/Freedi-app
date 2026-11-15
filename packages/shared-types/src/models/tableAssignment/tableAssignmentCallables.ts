@@ -3,6 +3,7 @@ import type {
 	TableAssignmentMode,
 	TableAssignmentParticipant,
 	TableAssignmentPositionQuestion,
+	TableAssignmentEvent,
 	TableAssignmentSettings,
 	TableAssignmentStatus,
 	TableAssignmentTopicCount,
@@ -64,6 +65,8 @@ export interface TablesSaveSettingsRequest {
 	/** `null` removes the number. */
 	expectedParticipants?: number | null;
 	allowReturnByName?: boolean;
+	/** When and where the gathering is. `null` removes it; empty parts are dropped by the server. */
+	event?: TableAssignmentEvent | null;
 	/**
 	 * Draft only. 'one' replaces the topics with one topic named after the
 	 * session and makes the mode `ranked`; 'several' keeps the topics as they

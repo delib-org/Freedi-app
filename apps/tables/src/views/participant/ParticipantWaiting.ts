@@ -9,6 +9,7 @@ import { isSplitSession } from '@/logic/topicPicker';
 import { t } from '@/lib/i18n';
 import { checkIcon } from '@/components/icons';
 import type { ParticipantContext } from '@/components/ParticipantFrame';
+import { EventNote } from '@/components/EventNote';
 import { StateBox } from '@/components/StateBox';
 import { CancelParticipation } from '@/views/participant/CancelDialog';
 import { participantScreenPath } from '@/paths';
@@ -180,6 +181,7 @@ export const ParticipantWaiting: m.Component<{ context: ParticipantContext }> = 
 								: 'tableAssignment.waiting.lead'
 							: null,
 					),
+			m(EventNote, { session }),
 			detailsCard(context, me, editTo),
 			isLate ? latecomerNote() : whatHappensNow(isOpen),
 			isOpen || isLate
