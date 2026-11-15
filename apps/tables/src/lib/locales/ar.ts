@@ -46,7 +46,8 @@ const ar: Record<string, string> = {
 	'tableAssignment.list.createFirst': 'أنشئ أول توزيع',
 	'tableAssignment.list.create': 'توزيع جديد',
 
-	'tableAssignment.mode.direct.hint': 'يختار كل شخص طاولته بنفسه، ومن يصل أولًا يأخذ المقعد.',
+	'tableAssignment.mode.direct.hint':
+		'يختار كل شخص موضوعه بنفسه. يفتح كل موضوع ما يلزمه من طاولات.',
 	'tableAssignment.mode.ranked.hint':
 		'يرتّب الناس المواضيع، ويكوّن النظام طاولات تكون كل واحدة منها صورة مصغّرة عن القاعة.',
 
@@ -439,6 +440,49 @@ const ar: Record<string, string> = {
 	'tableAssignment.count.unseated': 'لم يُجلسوا بعد',
 	'tableAssignment.error.tableSizeBelowPublished':
 		'حجم الطاولة أصبح أصغر من طاولة نُشرت بالفعل. أعيدوه أو كبّروه ثم احسبوا مجددًا.',
+	'tableAssignment.setup.topicCount': 'كم موضوعًا في اللقاء؟',
+	'tableAssignment.setup.topicCount.one': 'موضوع واحد',
+	'tableAssignment.setup.topicCount.several': 'عدة مواضيع',
+	'tableAssignment.setup.topicCount.one.hint':
+		'الجميع يتحدثون عن الموضوع نفسه، ولا يحتاج أحد إلى الاختيار.',
+	'tableAssignment.setup.seats.hint':
+		'أكبر عدد من الأشخاص على طاولة واحدة. الموضوع الذي اختاره أشخاص أكثر تُفتح له طاولات أكثر.',
+	'tableAssignment.setup.summary.tablesAtLeast.one': 'طاولة واحدة على الأقل',
+	'tableAssignment.setup.summary.tablesAtLeast.two': 'طاولتان على الأقل',
+	'tableAssignment.setup.summary.tablesAtLeast.few': '{{count}} طاولات على الأقل',
+	'tableAssignment.setup.summary.tablesAtLeast.many': '{{count}} طاولة على الأقل',
+	'tableAssignment.setup.summary.tablesAtLeast.other': '{{count}} طاولة على الأقل',
+	'tableAssignment.setup.summary.splitUnknown': 'كم طاولة؟',
+	'tableAssignment.setup.summary.splitUnknownHint':
+		'يفتح كل موضوع ما يلزمه من طاولات، بحسب عدد من اختاروه.',
+	'tableAssignment.direct.count.one': 'شخص واحد اختار هذا الموضوع',
+	'tableAssignment.direct.count.two': 'شخصان اختارا هذا الموضوع',
+	'tableAssignment.direct.count.few': '{{count}} أشخاص اختاروا هذا الموضوع',
+	'tableAssignment.direct.count.many': '{{count}} شخصًا اختاروا هذا الموضوع',
+	'tableAssignment.direct.count.other': '{{count}} شخص اختاروا هذا الموضوع',
+	'tableAssignment.live.topicTables.one': 'ستُفتح طاولة واحدة',
+	'tableAssignment.live.topicTables.two': 'ستُفتح طاولتان',
+	'tableAssignment.live.topicTables.few': 'ستُفتح {{count}} طاولات',
+	'tableAssignment.live.topicTables.many': 'ستُفتح {{count}} طاولة',
+	'tableAssignment.live.topicTables.other': 'ستُفتح {{count}} طاولة',
+	'tableAssignment.live.close.direct': 'إغلاق التسجيل وتحديد الطاولات',
+	'tableAssignment.close.oneInTopic': 'سجّل شخص واحد فقط في موضوع {{topic}}',
+	'tableAssignment.chooseTopic': 'اختيار موضوع',
+	'tableAssignment.topic.choose': 'اختيار هذا الموضوع',
+	'tableAssignment.topic.yours': 'موضوعك',
+	'tableAssignment.stage.act.topic.button': 'اختر موضوعًا',
+	'tableAssignment.myTable.chooseFirstTopic': 'لم تختر موضوعًا بعد.',
+	'tableAssignment.myTable.chooseAnotherTopic': 'اختيار موضوع آخر',
+	'tableAssignment.myTable.numberLater': 'سيظهر رقم طاولتك هنا عند إغلاق التسجيل.',
+	'tableAssignment.myTable.enter': 'الدخول إلى النقاش',
+	'tableAssignment.myTable.enter.hint': 'هذا الرابط شخصي. يجلسك على طاولتك دون كتابة اسمك.',
+	'tableAssignment.myTable.enter.failed':
+		'يمكنك الدخول بالرمز الظاهر على الشاشة وكتابة اسمك الكامل.',
+	'tableAssignment.waiting.unfinished.lead.split': 'بقي أن تختاروا موضوعًا.',
+	'tableAssignment.waiting.unfinished.button.split': 'إلى اختيار موضوع',
+	'tableAssignment.home.intro.split':
+		'اليوم سنجلس إلى طاولات صغيرة. اختاروا موضوعًا، ويظهر رقم طاولتكم عند إغلاق التسجيل.',
+	'tableAssignment.home.stepsHint.1': 'خطوة قصيرة واحدة، دقيقة تقريبًا',
 };
 
 export default ar;

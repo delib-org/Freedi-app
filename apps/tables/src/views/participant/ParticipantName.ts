@@ -10,6 +10,7 @@ import { NAME_SCREEN_REASON_KEYS } from '@/logic/callableErrors';
 import { canEditPreferences } from '@/logic/nextAction';
 import { clearDraft } from '@/logic/localDraft';
 import { nextStep, stepNumber, stepsOf } from '@/logic/steps';
+import { isSplitSession } from '@/logic/topicPicker';
 import { ParticipantFrame } from '@/components/ParticipantFrame';
 import type { ParticipantContext } from '@/components/ParticipantFrame';
 import { Redirect } from '@/components/Redirect';
@@ -158,7 +159,10 @@ export function joinIntro(context: ParticipantContext): m.Children {
 			? m('span.pill.pill--success', tPlural('tableAssignment.home.count', registeredCount))
 			: null,
 		m('h1.screen__title.screen__title--hero', { dir: 'auto' }, session.title),
-		m('p.screen__text', t(`tableAssignment.home.intro.${session.mode}`)),
+		m(
+			'p.screen__text',
+			t(`tableAssignment.home.intro.${isSplitSession(session) ? 'split' : session.mode}`),
+		),
 	];
 }
 

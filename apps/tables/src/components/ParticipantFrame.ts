@@ -18,6 +18,7 @@ import {
 	subscribeTopics,
 } from '@/lib/tableAssignment/data';
 import type { Subscription } from '@/lib/tableAssignment/data';
+import { isSplitSession } from '@/logic/topicPicker';
 import { combineStates } from '@/logic/loadable';
 import type { LoadState } from '@/logic/loadable';
 import { loadMemory, registrationLoss, rememberRegistration } from '@/logic/localDraft';
@@ -63,6 +64,11 @@ export interface ParticipantFrameAttrs {
 	barLabel?: (context: ParticipantContext) => string | undefined;
 	largeLogo?: (context: ParticipantContext) => boolean;
 	render: (context: ParticipantContext) => m.Children;
+}
+
+/** A mix, and a split session once published, seat people through the published run. */
+function followsRun(session: TableAssignment): boolean {
+	return session.mode === 'ranked' || isSplitSession(session);
 }
 
 type Identity = { state: 'loading' } | { state: 'error' } | { state: 'ready'; uid: string };
@@ -141,7 +147,7 @@ export const ParticipantFrame: m.ClosureComponent<ParticipantFrameAttrs> = (init
 	function followSeatRun(): void {
 		const current = session.data;
 		const wanted =
-			current?.status === 'published' && current.mode === 'ranked' && me?.data
+			current?.status === 'published' && followsRun(current) && me?.data
 				? current.publishedRunId
 				: undefined;
 

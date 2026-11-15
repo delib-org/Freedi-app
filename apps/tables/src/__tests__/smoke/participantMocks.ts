@@ -15,6 +15,7 @@ export const mocks = {
 		savePreferences: vi.fn(),
 		joinTable: vi.fn(),
 		cancelRegistration: vi.fn(),
+		seatLink: vi.fn(),
 	},
 	goTo: vi.fn(),
 	replaceWith: vi.fn(),

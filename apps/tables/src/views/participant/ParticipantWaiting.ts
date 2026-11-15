@@ -1,5 +1,11 @@
 import m from 'mithril';
-import type { TableAssignmentParticipant, TableAssignmentTopic } from '@freedi/shared-types';
+import type {
+	TableAssignment,
+	TableAssignmentParticipant,
+	TableAssignmentTopic,
+} from '@freedi/shared-types';
+import { isOneTopic } from '@/logic/steps';
+import { isSplitSession } from '@/logic/topicPicker';
 import { t } from '@/lib/i18n';
 import { checkIcon } from '@/components/icons';
 import type { ParticipantContext } from '@/components/ParticipantFrame';
@@ -15,8 +21,12 @@ function firstName(fullName: string): string {
 	return fullName.trim().split(FIRST_NAME_SEPARATOR)[0];
 }
 
-function hasAnswers(me: TableAssignmentParticipant): boolean {
-	return me.preferences.length > 0 || me.chosenTableIndex !== undefined;
+function hasAnswers(
+	me: TableAssignmentParticipant,
+	session: Pick<TableAssignment, 'settings'>,
+): boolean {
+	// Nobody chooses a topic in a one-topic event: the name is the whole answer.
+	return isOneTopic(session) || me.preferences.length > 0 || me.chosenTableIndex !== undefined;
 }
 
 function choicesList(me: TableAssignmentParticipant, topics: TableAssignmentTopic[]): m.Vnode {
@@ -102,6 +112,11 @@ function whatHappensNow(isOpen: boolean): m.Vnode {
 	]);
 }
 
+/** The wording follows what the person chooses: a topic in a split session, a table in an older free one. */
+function modeKey(session: TableAssignment): string {
+	return isSplitSession(session) ? 'split' : session.mode;
+}
+
 function unfinishedPrompt(context: ParticipantContext, name: string): m.Vnode {
 	const { session } = context;
 
@@ -111,14 +126,14 @@ function unfinishedPrompt(context: ParticipantContext, name: string): m.Vnode {
 			{ dir: 'auto' },
 			t('tableAssignment.waiting.unfinished.title', { name }),
 		),
-		m('p.waiting__lead', t(`tableAssignment.waiting.unfinished.lead.${session.mode}`)),
+		m('p.waiting__lead', t(`tableAssignment.waiting.unfinished.lead.${modeKey(session)}`)),
 		m(
 			m.route.Link,
 			{
 				href: participantScreenPath(session.tableAssignmentId, 'preferences'),
 				class: 'btn btn--primary btn--cta',
 			},
-			t(`tableAssignment.waiting.unfinished.button.${session.mode}`),
+			t(`tableAssignment.waiting.unfinished.button.${modeKey(session)}`),
 		),
 	]);
 }
@@ -147,7 +162,7 @@ export const ParticipantWaiting: m.Component<{ context: ParticipantContext }> = 
 		const isOpen = session.status === 'registrationOpen';
 		const isLate = session.status === 'published';
 		const name = firstName(me.fullName);
-		const answered = hasAnswers(me);
+		const answered = hasAnswers(me, session);
 		const mayAnswer = isOpen || isLate;
 		let editTo: 'name' | 'preferences' | null = null;
 

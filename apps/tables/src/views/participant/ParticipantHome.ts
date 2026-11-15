@@ -4,6 +4,8 @@ import { t } from '@/lib/i18n';
 import { safeStorage } from '@/lib/safeStorage';
 import { forgetRegistration, loadMemory } from '@/logic/localDraft';
 import { participantStage } from '@/logic/participantStage';
+import { isSplitSession } from '@/logic/topicPicker';
+import { nextStep } from '@/logic/steps';
 import type { ParticipantStage } from '@/logic/participantStage';
 import { ParticipantFrame } from '@/components/ParticipantFrame';
 import type { ParticipantContext } from '@/components/ParticipantFrame';
@@ -19,7 +21,8 @@ function stageOf(context: ParticipantContext): ParticipantStage {
 
 	return participantStage({
 		status: session.status,
-		mode: session.mode,
+		// A split session publishes tables at closing, so it follows the published run like a mix.
+		mode: isSplitSession(session) ? 'ranked' : session.mode,
 		registered: me !== null,
 		hasChosenTable: me?.chosenTableIndex !== undefined,
 		lost,
@@ -114,8 +117,10 @@ const HomeBody: m.ClosureComponent<{ context: ParticipantContext }> = () => {
 			const registerAgain = (): void => forgetRegistration(id, uid, safeStorage);
 
 			// Move on only once the record is here, so step 2 does not find it missing.
-			if (registering && context.me) {
-				return m(Redirect, { to: participantScreenPath(id, 'preferences'), push: true });
+			const next = nextStep(session, 'name');
+
+			if (registering && context.me && next) {
+				return m(Redirect, { to: participantScreenPath(id, next), push: true });
 			}
 
 			switch (stageOf(context)) {

@@ -7,10 +7,12 @@ import { subscribeRun } from '@/lib/tableAssignment/data';
 import { deriveDirectTables, seatCountsFromParticipants } from '@/logic/directTables';
 import { formatMoment } from '@/logic/format';
 import { nameByUid } from '@/logic/participants';
+import { isSplitSession, lonePersonTitles } from '@/logic/topicPicker';
 import { HostFrame } from '@/components/HostFrame';
 import type { HostContext } from '@/components/HostFrame';
 import { StateBox } from '@/components/StateBox';
 import { TableCards, tableViewsFromDirect, tableViewsFromRun } from '@/components/TableCards';
+import { LoneTopicFlags } from '@/components/TopicCounts';
 import { FixDetailsDialog } from '@/views/host/FixDetailsDialog';
 import { backTargetFor } from '@/logic/hostBack';
 import type { BackTarget } from '@/logic/hostBack';
@@ -51,7 +53,7 @@ const AssignmentBody: m.ClosureComponent<AssignmentBodyAttrs> = () => {
 				{ type: 'button', onclick: () => window.print() },
 				t('tableAssignment.assignment.print'),
 			),
-			canFix && session.mode === 'ranked'
+			canFix && (session.mode === 'ranked' || isSplitSession(session))
 				? m(
 						m.route.Link,
 						{ href: hostScreenPath(id, 'preview'), class: 'btn btn--outline' },
@@ -107,7 +109,7 @@ const AssignmentBody: m.ClosureComponent<AssignmentBodyAttrs> = () => {
 		const { session, topics, participants } = context;
 		const home = backTargetFor(session, 'assignment');
 
-		if (session.mode === 'direct') {
+		if (session.mode === 'direct' && !isSplitSession(session)) {
 			const tables = deriveDirectTables(
 				topics,
 				seatCountsFromParticipants(participants),
@@ -141,6 +143,11 @@ const AssignmentBody: m.ClosureComponent<AssignmentBodyAttrs> = () => {
 							: formatMoment(published.publishedAt, getLang()),
 				}),
 			]),
+			isSplitSession(session)
+				? m(LoneTopicFlags, {
+						titles: lonePersonTitles(session.tableAssignmentId, topics),
+					})
+				: null,
 			actions(context),
 			m(TableCards, { tables: tableViewsFromRun(published, topics, nameByUid(participants)) }),
 		];

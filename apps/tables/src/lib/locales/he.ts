@@ -45,7 +45,7 @@ const he: Record<string, string> = {
 	'tableAssignment.list.createFirst': 'יצירת החלוקה הראשונה',
 	'tableAssignment.list.create': 'חלוקה חדשה',
 
-	'tableAssignment.mode.direct.hint': 'כל אחד בוחר שולחן בעצמו, ומי שמגיע ראשון תופס מקום.',
+	'tableAssignment.mode.direct.hint': 'כל אחד בוחר נושא בעצמו. לכל נושא נפתחים כמה שולחנות שצריך.',
 	'tableAssignment.mode.ranked.hint':
 		'אנשים מדרגים נושאים, והמערכת מרכיבה שולחנות שכל אחד מהם הוא תמונה קטנה של החדר.',
 
@@ -430,6 +430,47 @@ const he: Record<string, string> = {
 	'tableAssignment.count.unseated': 'עדיין לא משובצים',
 	'tableAssignment.error.tableSizeBelowPublished':
 		'גודל השולחן קטן עכשיו משולחן שכבר פורסם. אפשר להחזיר אותו או להגדיל אותו, ואז לחשב שוב.',
+	'tableAssignment.setup.topicCount': 'כמה נושאים יש במפגש?',
+	'tableAssignment.setup.topicCount.one': 'נושא אחד',
+	'tableAssignment.setup.topicCount.several': 'כמה נושאים',
+	'tableAssignment.setup.topicCount.one.hint': 'כולם מדברים על אותו נושא, ואף אחד לא צריך לבחור.',
+	'tableAssignment.setup.seats.hint':
+		'הכי הרבה אנשים בשולחן אחד. נושא שבחרו בו יותר אנשים נפתח בכמה שולחנות.',
+	'tableAssignment.setup.summary.tablesAtLeast.one': 'לפחות שולחן אחד',
+	'tableAssignment.setup.summary.tablesAtLeast.two': 'לפחות שני שולחנות',
+	'tableAssignment.setup.summary.tablesAtLeast.few': 'לפחות {{count}} שולחנות',
+	'tableAssignment.setup.summary.tablesAtLeast.many': 'לפחות {{count}} שולחנות',
+	'tableAssignment.setup.summary.tablesAtLeast.other': 'לפחות {{count}} שולחנות',
+	'tableAssignment.setup.summary.splitUnknown': 'כמה שולחנות?',
+	'tableAssignment.setup.summary.splitUnknownHint':
+		'כל נושא נפתח בכמה שולחנות שצריך, לפי מי שבחר בו.',
+	'tableAssignment.direct.count.one': 'אדם אחד בחר בנושא הזה',
+	'tableAssignment.direct.count.two': 'שני אנשים בחרו בנושא הזה',
+	'tableAssignment.direct.count.few': '{{count}} בחרו בנושא הזה',
+	'tableAssignment.direct.count.many': '{{count}} בחרו בנושא הזה',
+	'tableAssignment.direct.count.other': '{{count}} בחרו בנושא הזה',
+	'tableAssignment.live.topicTables.one': 'ייפתח שולחן אחד',
+	'tableAssignment.live.topicTables.two': 'ייפתחו שני שולחנות',
+	'tableAssignment.live.topicTables.few': 'ייפתחו {{count}} שולחנות',
+	'tableAssignment.live.topicTables.many': 'ייפתחו {{count}} שולחנות',
+	'tableAssignment.live.topicTables.other': 'ייפתחו {{count}} שולחנות',
+	'tableAssignment.live.close.direct': 'סגירת ההרשמה וקביעת השולחנות',
+	'tableAssignment.close.oneInTopic': 'בנושא {{topic}} נרשם אדם אחד',
+	'tableAssignment.chooseTopic': 'בחירת נושא',
+	'tableAssignment.topic.choose': 'לבחור בנושא הזה',
+	'tableAssignment.topic.yours': 'הנושא שלך',
+	'tableAssignment.stage.act.topic.button': 'לבחור נושא',
+	'tableAssignment.myTable.chooseFirstTopic': 'עוד לא בחרתם נושא.',
+	'tableAssignment.myTable.chooseAnotherTopic': 'בחירת נושא אחר',
+	'tableAssignment.myTable.numberLater': 'מספר השולחן יופיע כאן כשההרשמה תיסגר.',
+	'tableAssignment.myTable.enter': 'כניסה לדיון',
+	'tableAssignment.myTable.enter.hint': 'הקישור אישי. הוא מושיב אתכם בשולחן שלכם בלי להקליד שם.',
+	'tableAssignment.myTable.enter.failed': 'אפשר להיכנס עם הקוד שעל המסך ולכתוב שם מלא.',
+	'tableAssignment.waiting.unfinished.lead.split': 'נשאר לבחור נושא.',
+	'tableAssignment.waiting.unfinished.button.split': 'לבחירת נושא',
+	'tableAssignment.home.intro.split':
+		'היום נשב בשולחנות קטנים. בוחרים נושא, ומספר השולחן יופיע כשההרשמה תיסגר.',
+	'tableAssignment.home.stepsHint.1': 'צעד אחד קצר, בערך דקה',
 };
 
 export default he;

@@ -27,6 +27,47 @@
   }
 }
 
+.topic-counts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-xs) var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    background: var(--paper-soft);
+  }
+
+  &__title {
+    font-weight: var(--font-weight-semibold);
+    overflow-wrap: anywhere;
+  }
+
+  &__numbers {
+    color: var(--ink-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  &__flag {
+    flex-basis: 100%;
+    margin: 0;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    background: var(--warning-soft);
+    color: var(--warning);
+    font-size: var(--font-size-note);
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
 .live {
   display: flex;
   flex-direction: column;

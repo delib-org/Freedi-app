@@ -115,6 +115,20 @@
     font-weight: var(--font-weight-bold);
   }
 
+  &__enter {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    text-align: center;
+  }
+
+  &__enter-hint,
+  &__enter-failed {
+    margin: 0;
+    font-size: var(--font-size-note);
+    line-height: var(--line-height-normal);
+  }
+
   &__names {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
