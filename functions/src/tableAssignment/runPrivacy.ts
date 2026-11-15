@@ -118,3 +118,22 @@ export function scrubStoredRun(
 
 	return run.status === 'published' ? publishedRunFields(scrubbed) : scrubbed;
 }
+
+/**
+ * A seating made at closing in a splitByTopic session, as a published run
+ * stores it: who sits where and nothing about positions.
+ */
+export function splitRunFields(
+	tables: ReadonlyArray<Pick<StoredTable, 'index' | 'topicId' | 'memberUids'>>,
+	tolerance: number,
+): StoredFields {
+	return publishedRunFields({
+		tables: tables.map(({ index, topicId, memberUids }) => ({
+			index,
+			topicId,
+			memberUids: [...memberUids],
+			stats: EMPTY_TABLE_STATS,
+		})),
+		metrics: storedMetrics({ tolerance, withinTolerance: true }, EMPTY_PREFERENCES, false),
+	});
+}

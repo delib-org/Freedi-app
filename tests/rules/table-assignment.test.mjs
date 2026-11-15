@@ -35,6 +35,8 @@ describe('Tables rules', () => {
 	const OPEN = 'sess-open';
 	const PUBLISHED = 'sess-with-run';
 	const DIRECT = 'sess-direct';
+	const SPLIT = 'sess-split';
+	const SPLIT_PUBLISHED = 'sess-split-published';
 	const DRAFT = 'sess-draft';
 	const T0 = 1_800_000_000_000;
 
@@ -99,11 +101,23 @@ describe('Tables rules', () => {
 			await setDoc(doc(db, 'tableAssignmentSeats', `${OPEN}_0`), { sessionId: OPEN, tableIndex: 0, count: 1 });
 			await setDoc(doc(db, 'tableAssignments', PUBLISHED), { ...session(PUBLISHED, 'published'), publishedRunId: 'run-pub' });
 			await setDoc(doc(db, 'tableAssignments', DIRECT), { ...session(DIRECT, 'registrationOpen'), mode: 'direct' });
-			for (const sessionId of [OPEN, PUBLISHED, DIRECT]) {
+			await setDoc(doc(db, 'tableAssignments', SPLIT), {
+				...session(SPLIT, 'registrationOpen'),
+				mode: 'direct',
+				splitByTopic: true,
+			});
+			await setDoc(doc(db, 'tableAssignments', SPLIT_PUBLISHED), {
+				...session(SPLIT_PUBLISHED, 'published'),
+				mode: 'direct',
+				splitByTopic: true,
+				publishedRunId: 'run-pub',
+			});
+			await setDoc(doc(db, 'tableAssignmentSeatCodes', 'hash-1'), { sessionId: SPLIT, uid: P1, createdAt: T0 });
+			for (const sessionId of [OPEN, PUBLISHED, DIRECT, SPLIT, SPLIT_PUBLISHED]) {
 				await setDoc(doc(db, 'tableAssignmentRoster', `${sessionId}_${P1}`), card(sessionId, P1));
 				await setDoc(doc(db, 'tableAssignmentRoster', `${sessionId}_${P2}`), card(sessionId, P2));
 			}
-			for (const sessionId of [PUBLISHED, DIRECT]) {
+			for (const sessionId of [PUBLISHED, DIRECT, SPLIT, SPLIT_PUBLISHED]) {
 				await setDoc(doc(db, 'tableAssignmentParticipants', `${sessionId}_${P1}`), participant(sessionId, P1));
 				await setDoc(doc(db, 'tableAssignmentParticipants', `${sessionId}_${P2}`), participant(sessionId, P2));
 			}
@@ -256,6 +270,14 @@ describe('Tables rules', () => {
 			await assertSucceeds(rosterOf(as(P1), DIRECT));
 		});
 
+		it('in a splitByTopic session, tablemates stay hidden until closing publishes the tables', async () => {
+			await assertSucceeds(getDoc(doc(as(P1), 'tableAssignmentRoster', `${SPLIT}_${P1}`)));
+			await assertFails(getDoc(doc(as(P1), 'tableAssignmentRoster', `${SPLIT}_${P2}`)));
+			await assertFails(rosterOf(as(P1), SPLIT));
+			await assertSucceeds(rosterOf(as(HOST), SPLIT));
+			await assertSucceeds(rosterOf(as(P1), SPLIT_PUBLISHED));
+		});
+
 		it('denies an outsider and a signed-out reader in every state', async () => {
 			for (const sessionId of [OPEN, PUBLISHED, DIRECT]) {
 				await assertFails(getDoc(doc(as(STRANGER), 'tableAssignmentRoster', `${sessionId}_${P1}`)));
@@ -333,6 +355,18 @@ describe('Tables rules', () => {
 			await assertFails(updateDoc(doc(as(HOST), 'tableAssignmentRuns', 'run-ready'), { status: 'published' }));
 			await assertFails(setDoc(doc(as(HOST), 'tableAssignmentRuns', 'new'), run('new', OPEN, 'ready')));
 			await assertFails(deleteDoc(doc(as(HOST), 'tableAssignmentRuns', 'run-pub')));
+		});
+	});
+
+	describe('tableAssignmentSeatCodes (personal links, server only)', () => {
+		it('denies every client, the owner and the host included', async () => {
+			for (const firestore of [as(P1), as(HOST), as(STRANGER), guest()]) {
+				await assertFails(getDoc(doc(firestore, 'tableAssignmentSeatCodes', 'hash-1')));
+				await assertFails(
+					getDocs(query(collection(firestore, 'tableAssignmentSeatCodes'), where('sessionId', '==', SPLIT))),
+				);
+				await assertFails(setDoc(doc(firestore, 'tableAssignmentSeatCodes', 'hash-2'), { sessionId: SPLIT, uid: P1 }));
+			}
 		});
 	});
 

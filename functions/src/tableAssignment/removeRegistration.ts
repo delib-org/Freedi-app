@@ -1,7 +1,13 @@
 import type { DocumentSnapshot, Firestore, Transaction } from 'firebase-admin/firestore';
 import { tableAssignmentParticipantId } from '@freedi/shared-types';
-import type { TableAssignmentCounter, TableAssignmentParticipant } from '@freedi/shared-types';
+import type {
+	TableAssignment,
+	TableAssignmentCounter,
+	TableAssignmentParticipant,
+} from '@freedi/shared-types';
+import { forgetSeatCode } from './seatCodes';
 import { counterRef, participantRef, rosterRef, seatRef } from './tablesAccess';
+import { countTopicChoice } from './topicCounts';
 import type { SeatDoc } from './tablesAccess';
 
 /**
@@ -53,13 +59,20 @@ export function deleteRegistrationRecords(
 	tx.delete(rosterRef(firestore, id));
 }
 
-/** Deletes the private record and the name card and frees any seat. The count is left alone. */
+/**
+ * Deletes the private record and the name card, frees any seat, takes the
+ * person off their topic's count and ends their personal link. The registered
+ * count is left alone.
+ */
 function deleteRegistration(
 	tx: Transaction,
 	firestore: Firestore,
 	{ participant, seat }: LoadedRegistration,
+	session: Pick<TableAssignment, 'mode' | 'splitByTopic'>,
 ): void {
 	deleteRegistrationRecords(tx, firestore, participant);
+	forgetSeatCode(tx, firestore, participant);
+	countTopicChoice(tx, firestore, session, participant.preferences[0], -1);
 	if (seat?.exists) {
 		const held = seat.data() as SeatDoc;
 		tx.set(seat.ref, { ...held, count: Math.max(0, held.count - 1) });
@@ -75,8 +88,9 @@ export function deleteCountedRegistration(
 	tx: Transaction,
 	firestore: Firestore,
 	registration: LoadedRegistration,
+	session: Pick<TableAssignment, 'mode' | 'splitByTopic'>,
 ): void {
-	deleteRegistration(tx, firestore, registration);
+	deleteRegistration(tx, firestore, registration, session);
 	const { sessionId } = registration.participant;
 	const counter: TableAssignmentCounter = {
 		sessionId,

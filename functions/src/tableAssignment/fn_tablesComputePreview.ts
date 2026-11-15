@@ -17,7 +17,7 @@ import {
 	MAX_PREVIEWS_PER_SESSION,
 	MIN_REGISTRANTS_FOR_PREVIEW,
 } from './constants';
-import { pinnedTablesOf } from './publishedSeating';
+import { pinnedTablesOf, seatsByEngine } from './publishedSeating';
 import { coarseRunFields } from './runPrivacy';
 import { loadRunInputs } from './runInputs';
 import type { PreviewBudgetDoc } from './tablesAccess';
@@ -124,7 +124,7 @@ export async function computePreview(
 	if (!sessionSnap.exists) throw new TablesError('not-found', 'Session not found');
 	const session = sessionSnap.data() as TableAssignment;
 	assertHost(session, uid);
-	if (session.mode !== 'ranked') {
+	if (!seatsByEngine(session)) {
 		throw new TablesError('failed-precondition', 'Only ranked sessions are computed');
 	}
 	assertComputable(session);

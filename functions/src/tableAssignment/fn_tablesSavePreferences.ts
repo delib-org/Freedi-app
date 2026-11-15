@@ -3,6 +3,7 @@ import type { Firestore } from 'firebase-admin/firestore';
 import {
 	TABLE_ASSIGNMENT_MAX_PREFERENCES,
 	functionConfig,
+	isTableAssignmentSplitByTopic,
 	tableAssignmentParticipantId,
 } from '@freedi/shared-types';
 import type {
@@ -11,6 +12,7 @@ import type {
 	TablesSavePreferencesResponse,
 } from '@freedi/shared-types';
 import { db } from '../db';
+import { planSplitLatecomerSeat } from './directClose';
 import { isUnseatedLatecomer } from './publishedSeating';
 import { rosterEntryFrom } from './roster';
 import {
@@ -22,6 +24,7 @@ import {
 	topicsQuery,
 } from './tablesAccess';
 import { TablesError, toHttpsError } from './tablesErrors';
+import { moveTopicChoice } from './topicCounts';
 import { parsePosition, withoutUndefined } from './validation';
 
 function parsePreferenceList(value: unknown): string[] {
@@ -47,6 +50,10 @@ function parsePreferenceList(value: unknown): string[] {
  * the middle). Allowed while registration is open, and after publishing only for
  * someone the published run does not seat (a latecomer); a seated person's table
  * is fixed, so the call is refused for them.
+ *
+ * In a splitByTopic session the list is one topic at most (the topic chosen in
+ * "sit where you like"), the topics' counts follow the choice, and a latecomer
+ * is seated at once at the emptiest table of their topic with a free seat.
  */
 export async function savePreferences(
 	firestore: Firestore,
@@ -80,10 +87,21 @@ export async function savePreferences(
 		if (!preferences.every((id) => topicIds.has(id))) {
 			throw new TablesError('invalid-argument', 'A preference is not a topic of this session');
 		}
+		const split = isTableAssignmentSplitByTopic(session);
+		if (split && preferences.length > 1) {
+			throw new TablesError('invalid-argument', 'Choose one topic', 'split-by-topic');
+		}
+		const seat =
+			split && !open
+				? await planSplitLatecomerSeat(tx, firestore, session, uid, preferences[0])
+				: undefined;
 
+		// ---- writes (all reads are done) ----
 		// Build from the stored doc, dropping its old position: the call replaces it.
 		const stored = { ...(snap.data() as TableAssignmentParticipant) };
 		delete stored.position;
+		moveTopicChoice(tx, firestore, session, stored.preferences[0], preferences[0]);
+		seat?.write();
 		const participant: TableAssignmentParticipant = withoutUndefined({
 			...stored,
 			preferences,
@@ -92,7 +110,7 @@ export async function savePreferences(
 		tx.set(ref, participant);
 		tx.set(rosterRef(firestore, id), rosterEntryFrom(participant));
 
-		return { participant };
+		return seat ? { participant, tableIndex: seat.tableIndex } : { participant };
 	});
 }
 

@@ -23,6 +23,7 @@ import {
 	topicsCollection,
 	topicsQuery,
 } from './tablesAccess';
+import { isOneTopic } from './oneTopic';
 import { TablesError, toHttpsError } from './tablesErrors';
 import { requireTitle, withoutUndefined } from './validation';
 
@@ -95,6 +96,13 @@ export async function saveTopics(
 			throw new TablesError(
 				'failed-precondition',
 				'Topics can only be changed before registration opens',
+			);
+		}
+		if (isOneTopic(session.settings)) {
+			throw new TablesError(
+				'failed-precondition',
+				'A one-topic session keeps the one topic the server made',
+				'one-topic',
 			);
 		}
 		const existing = await tx.get(topicsQuery(firestore, sessionId));

@@ -8,7 +8,15 @@ import type {
 	TablesSaveSettingsResponse,
 } from '@freedi/shared-types';
 import { db } from '../db';
-import { actorFrom, assertHost, readSession, requireId, sessionRef } from './tablesAccess';
+import { isOneTopic, parseTopicCount, writeOneTopic } from './oneTopic';
+import {
+	actorFrom,
+	assertHost,
+	readSession,
+	requireId,
+	sessionRef,
+	topicsQuery,
+} from './tablesAccess';
 import { TablesError, toHttpsError } from './tablesErrors';
 import {
 	assertChoosableTableSize,
@@ -33,6 +41,7 @@ function mergedSettings(
 			positionQuestion: clearable(req.positionQuestion, current.positionQuestion),
 			expectedParticipants: clearable(req.expectedParticipants, current.expectedParticipants),
 			allowReturnByName: req.allowReturnByName ?? current.allowReturnByName,
+			topicCount: req.topicCount ?? current.topicCount,
 		}),
 	);
 }
@@ -43,6 +52,11 @@ function mergedSettings(
  * and, in a draft only, the mode. Changing an input makes any earlier preview stale (the run's inputHash no longer
  * matches). In direct mode the table size is frozen once registration opens,
  * because seats are already counted against it.
+ *
+ * The topic count (IA tables-class-bridge 2.4) changes in a draft only. With
+ * 'one' the session is `ranked` (asking for `direct` is refused, reason
+ * `one-topic`) and its topics are replaced by one topic carrying the title;
+ * a later title change renames that topic too.
  */
 export async function saveSettings(
 	firestore: Firestore,
@@ -55,6 +69,7 @@ export async function saveSettings(
 	if (req.mode !== undefined && !is(TableAssignmentModeSchema, req.mode)) {
 		throw new TablesError('invalid-argument', 'mode must be direct or ranked');
 	}
+	parseTopicCount(req.topicCount);
 
 	return firestore.runTransaction(async (tx) => {
 		const session = await readSession(tx, firestore, sessionId);
@@ -85,9 +100,31 @@ export async function saveSettings(
 			);
 		}
 
+		const topicCountChanged =
+			req.topicCount !== undefined && isOneTopic(settings) !== isOneTopic(session.settings);
+		if (topicCountChanged && session.status !== 'draft') {
+			throw new TablesError(
+				'failed-precondition',
+				'The number of topics is fixed once registration opens',
+			);
+		}
+		const oneTopic = isOneTopic(settings);
+		if (oneTopic && req.mode === 'direct') {
+			throw new TablesError(
+				'failed-precondition',
+				'A one-topic session seats people by the system',
+				'one-topic',
+			);
+		}
+		const renamesTopic = oneTopic && (topicCountChanged || (title && title !== session.title));
+		const topics = renamesTopic ? await tx.get(topicsQuery(firestore, sessionId)) : undefined;
+
+		// ---- writes (all reads are done) ----
+		if (topics) writeOneTopic(tx, firestore, sessionId, title ?? session.title, topics.docs);
+		const mode = oneTopic && session.mode !== 'ranked' ? 'ranked' : req.mode;
 		tx.update(
 			sessionRef(firestore, sessionId),
-			withoutUndefined({ settings, title, mode: req.mode, lastUpdate: now }),
+			withoutUndefined({ settings, title, mode, lastUpdate: now }),
 		);
 
 		return { settings };

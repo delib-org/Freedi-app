@@ -24,6 +24,7 @@ const WRAPPERS: ReadonlyArray<[keyof TablesClient, string]> = [
 	['removeParticipant', TABLES_CALLABLES.removeParticipant],
 	['fixDetails', TABLES_CALLABLES.fixDetails],
 	['deleteSession', TABLES_CALLABLES.deleteSession],
+	['seatLink', TABLES_CALLABLES.seatLink],
 ];
 
 describe('createTablesClient', () => {
@@ -31,7 +32,7 @@ describe('createTablesClient', () => {
 		jest.clearAllMocks();
 	});
 
-	it('covers all thirteen callables with their deployed names', () => {
+	it('covers all fourteen callables with their deployed names', () => {
 		expect(Object.values(TABLES_CALLABLES).sort()).toEqual(
 			[
 				'tablesCancelRegistration',
@@ -46,6 +47,7 @@ describe('createTablesClient', () => {
 				'tablesSavePreferences',
 				'tablesSaveSettings',
 				'tablesSaveTopics',
+				'tablesSeatLink',
 				'tablesSetStatus',
 			].sort(),
 		);

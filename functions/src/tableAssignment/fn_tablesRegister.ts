@@ -25,6 +25,7 @@ import {
 } from './constants';
 import { deleteRegistrationRecords } from './removeRegistration';
 import { rosterEntryFrom } from './roster';
+import { repointSeatCode } from './seatCodes';
 import {
 	actorFrom,
 	counterRef,
@@ -35,6 +36,7 @@ import {
 	rosterRef,
 } from './tablesAccess';
 import { TablesError, toHttpsError } from './tablesErrors';
+import { countTopicChoice } from './topicCounts';
 import { cleanText, requireText, withoutUndefined } from './validation';
 
 const NAME_MATCHES: readonly TablesNameMatch[] = ['ask', 'claim', 'separate'];
@@ -128,14 +130,21 @@ function updateName(
 	return { outcome: 'registered', participant: stored };
 }
 
-/** Takes the namesake's place: its answers are gone, its seat and its place in the count stay. */
+/**
+ * Takes the namesake's place: its answers are gone (so is its topic's count),
+ * its seat, its place in the count and its personal link stay.
+ */
 function claimRegistration(
 	tx: Transaction,
 	firestore: Firestore,
+	session: TableAssignment,
 	namesake: TableAssignmentParticipant,
 	fresh: TableAssignmentParticipant,
+	now: number,
 ): TablesRegisterResponse {
 	deleteRegistrationRecords(tx, firestore, namesake);
+	countTopicChoice(tx, firestore, session, namesake.preferences[0], -1);
+	repointSeatCode(tx, firestore, namesake, fresh.uid, now);
 
 	return saveRegistration(
 		tx,
@@ -144,6 +153,7 @@ function claimRegistration(
 			...fresh,
 			claimedByName: true,
 			chosenTableIndex: namesake.chosenTableIndex,
+			seatCode: namesake.seatCode,
 		}),
 	);
 }
@@ -216,7 +226,9 @@ export async function register(
 		};
 		const namesake = await findNamesake(tx, firestore, session, fullName);
 		if (namesake && nameMatch === 'ask') return { outcome: 'nameExists' };
-		if (namesake && nameMatch === 'claim') return claimRegistration(tx, firestore, namesake, fresh);
+		if (namesake && nameMatch === 'claim') {
+			return claimRegistration(tx, firestore, session, namesake, fresh, now);
+		}
 		if (registeredSoFar >= registrationCap(session.settings.expectedParticipants)) {
 			throw new TablesError(
 				'failed-precondition',

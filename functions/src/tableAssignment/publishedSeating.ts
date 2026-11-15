@@ -1,5 +1,6 @@
 import type { Firestore, Transaction } from 'firebase-admin/firestore';
 import type { PinnedTable } from '@freedi/table-assignment';
+import { isTableAssignmentSplitByTopic } from '@freedi/shared-types';
 import type { TableAssignment, TableAssignmentRun } from '@freedi/shared-types';
 import { runRef } from './tablesAccess';
 
@@ -45,4 +46,18 @@ export function pinnedTablesOf(published: Pick<TableAssignmentRun, 'tables'>): P
 	return [...published.tables]
 		.sort((a, b) => a.index - b.index)
 		.map((table) => ({ topicId: table.topicId, memberIds: table.memberUids }));
+}
+
+/**
+ * Sessions whose seating the host computes and publishes: ranked ones, and a
+ * splitByTopic one once its tables are out, to seat the latecomers whose topic
+ * had no free seat (IA tables-class-bridge 2.3).
+ */
+export function seatsByEngine(
+	session: Pick<TableAssignment, 'mode' | 'splitByTopic' | 'status'>,
+): boolean {
+	return (
+		session.mode === 'ranked' ||
+		(isTableAssignmentSplitByTopic(session) && session.status === 'published')
+	);
 }

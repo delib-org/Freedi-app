@@ -47,7 +47,7 @@ export async function cancelRegistration(
 				'claimed-by-name',
 			);
 		}
-		deleteCountedRegistration(tx, firestore, registration);
+		deleteCountedRegistration(tx, firestore, registration, session);
 
 		return { cancelled: true };
 	});

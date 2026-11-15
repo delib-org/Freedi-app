@@ -1,5 +1,7 @@
 export { assignTables } from './assignTables';
 export { allocateTables } from './allocateTables';
+export { splitByChosenTopic, emptiestTableWithSeat } from './splitByTopic';
+export type { SplitOptions, TopicSplit, SeatableTable } from './splitByTopic';
 export { sideStats, tableDeviation, tableStats } from './stats';
 export { createRng, shuffle } from './rng';
 export type { Rng } from './rng';

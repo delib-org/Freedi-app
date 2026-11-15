@@ -1272,6 +1272,11 @@ export {
   tableAssignmentNameKey,
   TABLE_ASSIGNMENT_STRICTNESS,
   TABLE_ASSIGNMENT_POSITION_STOPS,
+  TABLE_ASSIGNMENT_TOPIC_COUNTS,
+  TABLE_ASSIGNMENT_TOPIC_COUNT_DEFAULT,
+  tableAssignmentTopicCountOf,
+  isTableAssignmentSplitByTopic,
+  tableAssignmentTableSizes,
 } from './models/tableAssignment/tableAssignmentModel';
 export type {
   TableAssignmentStatus,
@@ -1288,6 +1293,7 @@ export type {
   TableAssignmentRunTable,
   TableAssignmentMetrics,
   TableAssignmentRun,
+  TableAssignmentTopicCount,
 } from './models/tableAssignment/tableAssignmentModel';
 export type {
   TablesCreateSessionRequest,
@@ -1319,6 +1325,8 @@ export type {
   TablesPublishRunResponse,
   TablesDeleteSessionRequest,
   TablesDeleteSessionResponse,
+  TablesSeatLinkRequest,
+  TablesSeatLinkResponse,
 } from './models/tableAssignment/tableAssignmentCallables';
 
 // Theme rebuild ("Re-theme with AI") callable contract
