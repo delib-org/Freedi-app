@@ -5,6 +5,7 @@ Date: 2026-11-11
 Supersedes: the routes, host home and "Room screen" label of [shared-table-assignment.md](shared-table-assignment.md). Its objects, privacy rules, participant steps and Hebrew copy stay approved and are not repeated here.
 Builds on: [join-class-lesson-plan.md](join-class-lesson-plan.md) (plan, game, lesson, class home), [agora-classroom.md](agora-classroom.md) (lesson status, console, projector), [join-class-no-device.md](join-class-no-device.md).
 Hosts: class.wizcol.com (`apps/join-class`). `apps/tables` is retired after cutover (section 5).
+Phase 1, before the cutover: [tables-class-bridge.md](tables-class-bridge.md) (register in Tables, discuss in Class; it replaces decisions 6 and 15 here).
 
 Two use cases, one product:
 1. **Pre-registration**: people register before an event and get a table. A discussion afterwards is optional.
