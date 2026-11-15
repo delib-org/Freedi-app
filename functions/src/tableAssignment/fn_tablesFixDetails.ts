@@ -2,6 +2,9 @@ import { onCall, CallableRequest } from 'firebase-functions/v2/https';
 import type { Firestore, QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { functionConfig } from '@freedi/shared-types';
 import type {
+	TableAssignment,
+	TableAssignmentPositionQuestion,
+	TableAssignmentSettings,
 	TableAssignmentStatus,
 	TableAssignmentTopic,
 	TablesFixDetailsRequest,
@@ -20,13 +23,92 @@ import {
 } from './tablesAccess';
 import { isOneTopic } from './oneTopic';
 import { TablesError, toHttpsError } from './tablesErrors';
-import { requireTitle } from './validation';
+import { mergedSettings } from './fn_tablesSaveSettings';
+import { assertChoosableTableSize, requireTitle } from './validation';
 
 const FIXABLE_STATUSES: readonly TableAssignmentStatus[] = [
 	'registrationOpen',
 	'registrationClosed',
 	'published',
 ];
+
+/**
+ * What can still be fixed once the tables are formed is only what no answer depends on.
+ * The rest changes who sits where, or what people were asked, so it ends with registration.
+ */
+function changesFixedAtOpenRegistration(
+	current: TableAssignmentSettings,
+	req: TablesFixDetailsRequest,
+): boolean {
+	const questionChanged =
+		req.positionQuestionLabel !== undefined &&
+		req.positionQuestionLabel !== current.positionQuestion?.label;
+	const expectedChanged =
+		req.expectedParticipants !== undefined &&
+		(req.expectedParticipants ?? undefined) !== current.expectedParticipants;
+	const returnChanged =
+		req.allowReturnByName !== undefined &&
+		req.allowReturnByName !== (current.allowReturnByName === true);
+	const sizeChanged = req.tableSize !== undefined && req.tableSize !== current.tableSize;
+
+	return questionChanged || expectedChanged || returnChanged || sizeChanged;
+}
+
+function hasSettingsPart(req: TablesFixDetailsRequest): boolean {
+	return (
+		req.event !== undefined ||
+		req.tableSize !== undefined ||
+		req.expectedParticipants !== undefined ||
+		req.allowReturnByName !== undefined ||
+		req.positionQuestionLabel !== undefined
+	);
+}
+
+/** Only the wording of the existing question moves: its two ends stay, so every answer keeps its meaning. */
+function reworded(
+	current: TableAssignmentSettings,
+	label: string | undefined,
+): TableAssignmentPositionQuestion | undefined {
+	if (label === undefined) return current.positionQuestion;
+	if (!current.positionQuestion) {
+		throw new TablesError('invalid-argument', 'There is no position question to reword');
+	}
+
+	return { ...current.positionQuestion, label };
+}
+
+/** The settings after the fix, refusing what registration no longer allows. */
+function fixedSettings(
+	session: TableAssignment,
+	req: TablesFixDetailsRequest,
+	positionLabel: string | undefined,
+): TableAssignmentSettings {
+	const { settings: current } = session;
+	if (session.status !== 'registrationOpen' && changesFixedAtOpenRegistration(current, req)) {
+		throw new TablesError(
+			'failed-precondition',
+			`Table size, expected people, return by name and the question are fixed once registration closes (${session.status})`,
+		);
+	}
+	const settings = mergedSettings(current, {
+		tableSize: req.tableSize,
+		expectedParticipants: req.expectedParticipants,
+		allowReturnByName: req.allowReturnByName,
+		event: req.event,
+		positionQuestion: reworded(current, positionLabel),
+	});
+	if (settings.tableSize !== current.tableSize) {
+		assertChoosableTableSize(settings.tableSize);
+		if (session.mode === 'direct') {
+			throw new TablesError(
+				'failed-precondition',
+				'Table size is fixed once registration has opened in direct mode',
+			);
+		}
+	}
+
+	return settings;
+}
 
 function parseTopicTitles(value: unknown): TablesFixDetailsTopic[] | undefined {
 	if (value === undefined) return undefined;
@@ -72,8 +154,10 @@ function sortedTopicDocs(docs: QueryDocumentSnapshot[]): QueryDocumentSnapshot[]
 }
 
 /**
- * `tablesFixDetails` (host): corrects the gathering name and topic titles once
- * registration has opened. Titles are not part of the inputHash, so a ready
+ * `tablesFixDetails` (host): one save that corrects the gathering name, topic
+ * titles and event (any stage until it ends) and, while registration is open,
+ * the table size, expected people, return by name and the question's wording.
+ * Titles, the event and wording are not part of the inputHash, so a ready
  * preview stays publishable and choices keep pointing at the same topics.
  */
 export async function fixDetails(
@@ -85,6 +169,10 @@ export async function fixDetails(
 	const sessionId = requireId(req?.sessionId, 'sessionId');
 	const newTitle = req.title === undefined ? undefined : requireTitle(req.title, 'title');
 	const topicTitles = parseTopicTitles(req.topics);
+	const positionLabel =
+		req.positionQuestionLabel === undefined
+			? undefined
+			: requireTitle(req.positionQuestionLabel, 'positionQuestionLabel');
 
 	return firestore.runTransaction(async (tx) => {
 		const session = await readSession(tx, firestore, sessionId);
@@ -95,6 +183,7 @@ export async function fixDetails(
 				`Details cannot be fixed while the session is ${session.status}`,
 			);
 		}
+		const settings = hasSettingsPart(req) ? fixedSettings(session, req, positionLabel) : undefined;
 		const topicDocs = sortedTopicDocs((await tx.get(topicsQuery(firestore, sessionId))).docs);
 		if (topicTitles) {
 			assertSameTopicList(
@@ -108,7 +197,11 @@ export async function fixDetails(
 		if (newTitle && isOneTopic(session.settings)) {
 			topicDocs.forEach((d) => tx.update(d.ref, { title: newTitle }));
 		}
-		tx.update(sessionRef(firestore, sessionId), { title, lastUpdate: now });
+		tx.update(sessionRef(firestore, sessionId), {
+			title,
+			...(settings && { settings }),
+			lastUpdate: now,
+		});
 
 		return { title, topicIds: topicDocs.map((d) => d.id) };
 	});

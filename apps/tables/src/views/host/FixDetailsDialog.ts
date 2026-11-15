@@ -5,6 +5,15 @@ import { t } from '@/lib/i18n';
 import { Action } from '@/lib/action';
 import { tablesApi } from '@/lib/tableAssignment/client';
 import { Modal } from '@/components/Modal';
+import {
+	canFixRegistration,
+	fixDetailsDraft,
+	fixDetailsProblem,
+	fixDetailsRequest,
+} from '@/logic/fixDetails';
+import type { SetupDraft } from '@/logic/setupDraft';
+import { FixDetailsRegistration } from '@/views/host/FixDetailsRegistration';
+import { SetupEvent } from '@/views/host/SetupEvent';
 
 export interface FixDetailsDialogAttrs {
 	session: TableAssignment;
@@ -12,35 +21,27 @@ export interface FixDetailsDialogAttrs {
 	onClose: () => void;
 }
 
-interface TopicField {
-	topicId: string;
-	title: string;
-}
-
-function isFilled(text: string): boolean {
-	return text.trim().length > 0;
-}
-
-/** "Fix details": the gathering name and topic titles only. Choices and seats are untouched. */
+/**
+ * "Fix details": the name, topic titles and event at any stage; while registration is open also
+ * table size, expected people, return by name and the question's wording. Never the topics
+ * themselves, the question's ends or anyone's answers, so choices and seats are untouched.
+ */
 export const FixDetailsDialog: m.ClosureComponent<FixDetailsDialogAttrs> = ({ attrs: first }) => {
 	const save = new Action('tables.host.fixDetails', 'tableAssignment.error.generic');
 	const sessionId = first.session.tableAssignmentId;
-	let title = first.session.title;
-	const fields: TopicField[] = first.topics.map(({ topicId, title: topicTitle }) => ({
-		topicId,
-		title: topicTitle,
-	}));
+	const draft = fixDetailsDraft(first.session, first.topics);
+	const { setup, topics: fields } = draft;
+
+	function change(patch: Partial<SetupDraft>): void {
+		Object.assign(setup, patch);
+	}
 
 	async function submit(attrs: FixDetailsDialogAttrs): Promise<void> {
-		const saved = await save.run(
-			() =>
-				tablesApi.fixDetails({
-					sessionId,
-					title: title.trim(),
-					topics: fields.map((field) => ({ ...field, title: field.title.trim() })),
-				}),
-			{ sessionId },
-		);
+		const request = fixDetailsRequest(attrs.session, draft);
+
+		if (!request) return;
+
+		const saved = await save.run(() => tablesApi.fixDetails(request), { sessionId });
 
 		if (saved) attrs.onClose();
 	}
@@ -64,7 +65,8 @@ export const FixDetailsDialog: m.ClosureComponent<FixDetailsDialogAttrs> = ({ at
 
 	return {
 		view({ attrs }) {
-			const complete = isFilled(title) && fields.every((field) => isFilled(field.title));
+			const problem = fixDetailsProblem(attrs.session, draft);
+			const atOpen = canFixRegistration(attrs.session);
 
 			return m(
 				Modal,
@@ -85,7 +87,7 @@ export const FixDetailsDialog: m.ClosureComponent<FixDetailsDialogAttrs> = ({ at
 					[
 						m('label.field', [
 							m('span.field__label.field__label--small', t('tableAssignment.fixDetails.name')),
-							fieldInput(title, (text) => (title = text), {}),
+							fieldInput(setup.title, (text) => (setup.title = text), {}),
 						]),
 						m('.field', [
 							m('span.field__label.field__label--small', t('tableAssignment.fixDetails.topics')),
@@ -102,12 +104,28 @@ export const FixDetailsDialog: m.ClosureComponent<FixDetailsDialogAttrs> = ({ at
 								),
 							),
 						]),
+						m(SetupEvent, { draft: setup, onChange: change }),
+						atOpen
+							? m(FixDetailsRegistration, {
+									session: attrs.session,
+									draft: setup,
+									disabled: save.busy,
+									onChange: change,
+								})
+							: m('p.modal__text', t('tableAssignment.fixDetails.open.locked')),
 						m('p.modal__text', t('tableAssignment.fixDetails.note')),
+						problem && problem !== 'name' && problem !== 'topics'
+							? m(
+									'p.notice.notice--error',
+									{ role: 'alert' },
+									t(`tableAssignment.setup.problem.${problem}`),
+								)
+							: null,
 						save.errorKey ? m('p.notice.notice--error', { role: 'alert' }, t(save.errorKey)) : null,
 						m('.fix-details__actions', [
 							m(
 								'button.btn.btn--primary',
-								{ type: 'submit', disabled: save.busy || !complete },
+								{ type: 'submit', disabled: save.busy || problem !== null },
 								t(save.busy ? 'tableAssignment.saving' : 'tableAssignment.save'),
 							),
 							m(

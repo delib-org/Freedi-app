@@ -30,9 +30,9 @@ function clearable<T>(requested: T | null | undefined, current: T | undefined): 
 	return requested === undefined ? current : (requested ?? undefined);
 }
 
-function mergedSettings(
+export function mergedSettings(
 	current: TableAssignmentSettings,
-	req: TablesSaveSettingsRequest,
+	req: Omit<TablesSaveSettingsRequest, 'sessionId'>,
 ): TableAssignmentSettings {
 	return parseSettings(
 		withoutUndefined({

@@ -2,6 +2,8 @@
 import m from 'mithril';
 import { describe, expect, it, vi } from 'vitest';
 import en from '@/lib/locales/en';
+import { FixDetailsDialog } from '@/views/host/FixDetailsDialog';
+import type { FixDetailsDialogAttrs } from '@/views/host/FixDetailsDialog';
 import { HostHome } from '@/views/host/HostHome';
 import { HostNew, SetupBody } from '@/views/host/HostSetup';
 import { readSetupBackup } from '@/logic/setupBackup';
@@ -26,6 +28,10 @@ vi.mock('@/lib/hostAuth', async () => (await import('./hostMocks')).fakeHostAuth
 vi.mock('@/lib/tableAssignment/data', async () => (await import('./hostMocks')).fakeData);
 
 useHostScreens();
+
+const DialogScreen: m.Component<FixDetailsDialogAttrs> = {
+	view: ({ attrs }) => m(FixDetailsDialog, attrs),
+};
 
 describe('Setup', () => {
 	it('with no session yet: nothing is created until there is a name', async () => {
@@ -385,4 +391,57 @@ describe('Fix details', () => {
 		expect(root.textContent).toContain(en['tableAssignment.error.network']);
 		expect(root.querySelector<HTMLInputElement>('.fix-details input')?.value).toBe('New name');
 	});
+
+	it('while registration is open offers size, expected people, return by name and the question wording', async () => {
+		mocks.store.current.session = makeSession({
+			status: 'registrationOpen',
+			settings: {
+				tableSize: 6,
+				balanceTolerance: 0.3,
+				positionQuestion: { label: 'Where?', poleA: 'Left', poleB: 'Right' },
+			},
+		});
+		const root = await openDialog();
+		const dialog = root.querySelector('.fix-details') as HTMLElement;
+		const seats = dialog.querySelector<HTMLInputElement>('input[type=number]');
+		const date = dialog.querySelector<HTMLInputElement>('input[type=date]');
+		const question = Array.from(dialog.querySelectorAll<HTMLInputElement>('input')).find(
+			(input) => input.value === 'Where?',
+		);
+
+		expect(seats).not.toBeNull();
+		expect(dialog.textContent).toContain(en['tableAssignment.returnByName']);
+		expect(dialog.textContent).toContain('"Left"');
+		typeInto(seats as HTMLInputElement, '8');
+		typeInto(question as HTMLInputElement, 'Where now?');
+		typeInto(date as HTMLInputElement, '2027-03-19');
+		m.redraw.sync();
+		buttonByText(root, en['tableAssignment.save']).click();
+		await settle();
+
+		expect(mocks.api.fixDetails).toHaveBeenCalledWith(
+			expect.objectContaining({
+				tableSize: 8,
+				positionQuestionLabel: 'Where now?',
+				event: { date: '2027-03-19' },
+			}),
+		);
+	});
+
+	it.each(['registrationClosed', 'published'] as const)(
+		'in %s keeps the open-registration fields out and still edits the event',
+		async (status) => {
+			const { root } = await renderScreen<FixDetailsDialogAttrs>(DialogScreen, {
+				session: makeSession({ status }),
+				topics: [makeTopic('a', 0)],
+				onClose: () => {},
+			});
+			const dialog = root.querySelector('.fix-details') as HTMLElement;
+
+			expect(dialog.querySelector('input[type=number]')).toBeNull();
+			expect(dialog.querySelector('input[type=checkbox]')).toBeNull();
+			expect(dialog.querySelector('input[type=date]')).not.toBeNull();
+			expect(dialog.textContent).toContain(en['tableAssignment.fixDetails.open.locked']);
+		},
+	);
 });

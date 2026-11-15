@@ -304,6 +304,13 @@ const he: Record<string, string> = {
 	'tableAssignment.fixDetails.name': 'שם המפגש',
 	'tableAssignment.fixDetails.topics': 'נושאים',
 	'tableAssignment.fixDetails.note': 'מי שכבר נרשם יראה את השם המתוקן, והבחירות שלו יישמרו.',
+	'tableAssignment.fixDetails.open.title': 'כל עוד ההרשמה פתוחה',
+	'tableAssignment.fixDetails.open.locked':
+		'את מספר המקומות בשולחן, מספר הצפויים, החזרה לפי שם והשאלה אפשר לשנות רק כל עוד ההרשמה פתוחה.',
+	'tableAssignment.fixDetails.question.ends':
+		'משתנה רק הניסוח. שני הקצוות נשארים "{{poleA}}" ו"{{poleB}}", כך שהתשובות שכבר ניתנו שומרות על משמעותן.',
+	'tableAssignment.fixDetails.seats.fixed':
+		'כשהאנשים בוחרים שולחן בעצמם, מספר המקומות בשולחן קבוע מרגע שההרשמה נפתחת.',
 	'tableAssignment.preview.notPublic': 'תצוגה מקדימה. עדיין אף אחד לא רואה את זה.',
 	'tableAssignment.preview.good.title': 'השולחנות האלה טובים',
 	'tableAssignment.preview.good.lead':

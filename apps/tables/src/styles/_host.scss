@@ -163,6 +163,25 @@
     gap: var(--space-6);
   }
 
+  // The setup cards, reused here, sit flat inside the dialog's own card.
+  .setup__card {
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+  }
+
+  &__heading {
+    margin: 0;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+  }
+
   &__actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
