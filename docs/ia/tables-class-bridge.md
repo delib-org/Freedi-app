@@ -1,6 +1,6 @@
 # Tables and Class: the bridge (register in Tables, discuss in Class) — IA spec
 
-Status: draft, for Tal's review; nothing built
+Status: agreed 2026-11-15 (section 9); server half in progress
 Date: 2026-11-15
 Phase 1 of [join-class-tables-merge.md](join-class-tables-merge.md). That spec stays the target; this one says how the two live apps work together until Tables moves into Class. Design reference: [join-class-registration-design.md](../design/join-class-registration-design.md).
 Hosts: tables.wizcol.com (`apps/tables`) and class.wizcol.com (`apps/join-class`), one Firebase project.
@@ -37,7 +37,7 @@ Statement tree: unchanged. The lesson is the only Statement. Assignment, topics,
 - Tables for a topic = people ÷ seats per table, rounded up. A topic with nobody opens no table.
 - Sizes are balanced: tables of one topic differ by at most one person. 70 people, 7 seats: 10 tables of 7. 71 people: 11 tables, five of 7 and six of 6.
 - No table of one. With 3 or more seats per table (2.2) the rule cannot produce one: the smallest table of a topic that needs two tables or more has at least half the seats, so never fewer than 2. Minimum table size is therefore 2, as a result of the rule, not a setting. (With 2 seats, three people would split into 2 and 1; that is why the shared range starts at 3.)
-- The only way to a table of one is a topic that one person chose. Ranked mode: the engine seats that person by their next choice. "Sit where you like": the host sees the flag "בנושא {{topic}} נרשם אדם אחד" when closing and decides; nobody is moved out of a chosen topic by the system. (Needs Tal, question 1.)
+- The only way to a table of one is a topic that one person chose. Ranked mode: the engine seats that person by their next choice. "Sit where you like": the host sees the flag "בנושא {{topic}} נרשם אדם אחד" when closing and decides; nobody is moved out of a chosen topic by the system. (Decided, section 9.)
 - Table numbers run through the topics in the host's topic order, so one topic's tables are neighbours.
 
 ### 2.2 One seats setting, one range (point 4)
@@ -45,11 +45,11 @@ Statement tree: unchanged. The lesson is the only Statement. Assignment, topics,
 - One label, "מקומות בשולחן", one meaning (the maximum), one range, **3–20**, in both apps. Tables keeps its range; Class goes from 2–8 to 3–20 and loses the value 2 (a lesson already saved with 2 still runs). Class's own label "גודל קבוצה בשולחן" is retired.
 - A connected lesson has no setting of its own: it shows the registration's number, read-only ("נקבע בהרשמה: 7"). The value is read from the assignment and is not written to the lesson (an old Class client refuses a lesson whose stored size is above 8).
 - A lesson without registration: the setting becomes a maximum too. Today it is a target (31 students at 6 give a table of 7); with the shared meaning they give 6 tables of 5–6.
-- Default: 7 for an assignment, 6 for a lesson without registration, as today, until the merge. (Question 2.)
+- Default: 7 in both apps, for an assignment and for a lesson without registration (decided, section 9).
 - What Class must change before a connected lesson can run with more than 8 at a table:
   - the size chooser on the console and the plan screen (7 values today, 18 then);
   - every place that lists the people of one table: the student's Tables step and table header, the console's table card and table sheet, the projector's "who sits where", "act for" a person without a phone;
-  - talking in turns: everyone speaks for the set time before the table moves on. Twenty people at one minute is twenty minutes a question. A rule for large tables is needed (question 3);
+  - talking in turns: everyone speaks for the set time before the table moves on. Twenty people at one minute is twenty minutes a question. Decided: turns always, at any size up to 20 (section 9);
   - "move on" needs two presses whatever the size (kept);
   - the server checks that refuse a size outside 2–8 (`fn_classAssignTables`, `statementSettings.tableSize`).
 
@@ -249,13 +249,14 @@ Role: Walk-in, task: join without registering: 3 steps. Code; name; "להצטר�
 
 ## 9. Open questions and assumptions
 
-Needs Tal:
-1. A topic that one person chose in "sit where you like". Recommended: flag it to the host at closing, move nobody automatically.
-2. One default for seats per table now (7 everywhere), or keep 7 for a registration and 6 for a lesson without one until the merge? Recommended: keep until the merge. Also: Class loses "2 at a table" (pairs) so that the split never leaves a person alone. Acceptable?
-3. Talking in turns at a table of up to 20. Who speaks, and for how long, when a full round would take twenty minutes? Class cannot run tables above 8 well until this is answered.
-4. The position question in the registration and "בחירת צד" in the game are written in two places and may be two different questions. Recommended: the registration's replaces the game's in a connected lesson, and the Summary uses the registration's poles. Agree?
-5. Should the system ever merge a table that has one person present? Recommended: no, the host decides.
-6. May the host close registration from Class on the day, or is going to Tables for it acceptable in phase 1? Recommended: go to Tables.
+Decided by Tal (2026-11-15):
+1. A topic that one person chose in "sit where you like": flagged to the host at closing ("בנושא {{topic}} נרשם אדם אחד"); nobody is moved automatically.
+2. One default, 7 seats per table, in both apps (registration and lesson without one). Range 3–20 in both; Class loses tables of 2 (a lesson saved with 2 still runs).
+3. Talking in turns: always, at any table size up to 20. No free-talk mode; the per-table turn logic must work for up to 20 members.
+4. When the registration asked a position question ("העמדה שלי"), the connected lesson skips "בחירת צד" (2.5 as written); the Summary uses the registration's poles.
+5. A table with one person present is never merged by the system; it is flagged and the host decides.
+6. The host may close registration from Class too; Class calls the same server path as Tables.
+7. Personal link plus full-name fallback, as in 5.1 and 5.2.
 
 Assumptions (the spec changes if one is wrong):
 - The host uses the same Google account in both apps, so the account's id is the same and "my registrations" needs no pairing step.
