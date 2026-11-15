@@ -317,6 +317,13 @@ const ar: Record<string, string> = {
 	'tableAssignment.fixDetails.name': 'اسم اللقاء',
 	'tableAssignment.fixDetails.topics': 'المواضيع',
 	'tableAssignment.fixDetails.note': 'من سجّل سيرى الاسم المصحّح، وتبقى اختياراته محفوظة.',
+	'tableAssignment.fixDetails.open.title': 'ما دام التسجيل مفتوحًا',
+	'tableAssignment.fixDetails.open.locked':
+		'لا يمكن تغيير عدد المقاعد على الطاولة وعدد المتوقَّعين والعودة بالاسم والسؤال إلا ما دام التسجيل مفتوحًا.',
+	'tableAssignment.fixDetails.question.ends':
+		'تتغيّر الصياغة فقط. يبقى الطرفان "{{poleA}}" و"{{poleB}}"، فتحتفظ الإجابات المعطاة بمعناها.',
+	'tableAssignment.fixDetails.seats.fixed':
+		'عندما يختار الناس طاولتهم بأنفسهم، يثبت عدد المقاعد على الطاولة منذ فتح التسجيل.',
 	'tableAssignment.preview.notPublic': 'معاينة. لا أحد يرى هذا بعد.',
 	'tableAssignment.preview.good.title': 'هذه الطاولات جيدة',
 	'tableAssignment.preview.good.lead':

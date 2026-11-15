@@ -324,6 +324,13 @@ const en: Record<string, string> = {
 	'tableAssignment.fixDetails.topics': 'Topics',
 	'tableAssignment.fixDetails.note':
 		'Whoever has registered sees the corrected name, and their choices are kept.',
+	'tableAssignment.fixDetails.open.title': 'While registration is open',
+	'tableAssignment.fixDetails.open.locked':
+		'Seats per table, expected people, return by name and the question can only be changed while registration is open.',
+	'tableAssignment.fixDetails.question.ends':
+		'Only the wording changes. The two ends stay "{{poleA}}" and "{{poleB}}", so the answers already given keep their meaning.',
+	'tableAssignment.fixDetails.seats.fixed':
+		'Seats per table are fixed once registration opens when people choose their own table.',
 	'tableAssignment.preview.notPublic': 'Preview. Nobody can see this yet.',
 	'tableAssignment.preview.good.title': 'These tables are good',
 	'tableAssignment.preview.good.lead':

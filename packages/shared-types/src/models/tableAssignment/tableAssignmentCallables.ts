@@ -163,13 +163,24 @@ export interface TablesFixDetailsTopic {
 
 /**
  * `tablesFixDetails` (host, after registration opens and until the session ends).
- * Titles only, so a ready preview stays publishable. `topics`, when sent, lists
- * every topic of the session, once each, in the current order.
+ * One atomic save of what can be corrected without touching anyone's answers.
+ * `topics`, when sent, lists every topic of the session, once each, in the current order.
+ * Any stage: `title`, `topics` (titles only), `event` (`null` removes it).
+ * While registration is open only: `tableSize` (a direct session's is fixed once it
+ * opens), `expectedParticipants` (`null` removes it), `allowReturnByName`, and
+ * `positionQuestionLabel` (the wording of an existing question; its two ends and the
+ * answers stay as they are, so a question cannot be added, removed or reversed here).
+ * Omitted means keep. A value equal to the stored one is not a change.
  */
 export interface TablesFixDetailsRequest {
 	sessionId: string;
 	title?: string;
 	topics?: TablesFixDetailsTopic[];
+	event?: TableAssignmentEvent | null;
+	tableSize?: number;
+	expectedParticipants?: number | null;
+	allowReturnByName?: boolean;
+	positionQuestionLabel?: string;
 }
 export interface TablesFixDetailsResponse {
 	title: string;
