@@ -148,7 +148,7 @@ const he: Record<string, string> = {
 	'tableAssignment.home.count.many': '{{count}} כבר כאן',
 	'tableAssignment.home.count.other': '{{count}} כבר כאן',
 	'tableAssignment.home.intro.ranked':
-		'היום נשב בשולחנות קטנים. כל שולחן יהיה תמונה קטנה של כל החדר, כדי שנשמע גם מי שחושב אחרת.',
+		'נא להירשם לאירוע.',
 	'tableAssignment.home.intro.direct': 'היום נשב בשולחנות קטנים. בוחרים שולחן, והמקום נשמר מיד.',
 	'tableAssignment.home.fullName': 'השם המלא שלך',
 	'tableAssignment.home.fullName.hint': 'בלי סיסמה ובלי חשבון.',
