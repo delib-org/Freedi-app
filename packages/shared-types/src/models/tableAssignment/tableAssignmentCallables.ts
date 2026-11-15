@@ -155,6 +155,29 @@ export interface TablesRemoveParticipantResponse {
 	removed: true;
 }
 
+/** Most people one `tablesRemoveParticipants` call may name. */
+export const TABLE_ASSIGNMENT_REMOVE_BATCH_MAX = 200;
+
+/**
+ * `tablesRemoveParticipants` (host, any status but `ended`): the batch form of
+ * `tablesRemoveParticipant`. Unlike the single remove it also takes people out
+ * of the published assignment, freeing their seat. Each person is handled on
+ * their own, so one failure never undoes the others.
+ */
+export interface TablesRemoveParticipantsRequest {
+	sessionId: string;
+	/** At most TABLE_ASSIGNMENT_REMOVE_BATCH_MAX; duplicates are ignored. */
+	uids: string[];
+}
+export interface TablesRemoveParticipantsFailure {
+	uid: string;
+	reason: string;
+}
+export interface TablesRemoveParticipantsResponse {
+	removed: string[];
+	failed: TablesRemoveParticipantsFailure[];
+}
+
 /** One topic's new title in a `tablesFixDetails` call. */
 export interface TablesFixDetailsTopic {
 	topicId: string;

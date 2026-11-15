@@ -203,7 +203,7 @@ const PreviewBody: m.ClosureComponent<PreviewBodyAttrs> = (initial) => {
 			m(
 				m.route.Link,
 				{ href: hostScreenPath(sessionId, 'participants'), class: 'btn btn--text' },
-				t('tableAssignment.screen.participants'),
+				t('tableAssignment.participants.manage'),
 			),
 			m(
 				'button.btn.btn--text',

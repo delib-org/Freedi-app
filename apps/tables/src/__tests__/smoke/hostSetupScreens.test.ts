@@ -298,6 +298,14 @@ describe('Registration open', () => {
 		expect(root.querySelector('img.live__qr')).not.toBeNull();
 	});
 
+	it('has a visible way to the people list, under the count', async () => {
+		const { root } = await renderScreen(HostHome, ID);
+		const link = root.querySelector<HTMLAnchorElement>('.live__count a.live__manage');
+
+		expect(link?.textContent).toBe(en['tableAssignment.participants.manage']);
+		expect(link?.getAttribute('href')).toContain('/participants');
+	});
+
 	it('closes, computes and only then is done', async () => {
 		const { root } = await renderScreen(HostHome, ID);
 

@@ -205,8 +205,44 @@
   }
 
   &__name {
+    flex: 1;
     min-inline-size: 0;
     overflow-wrap: anywhere;
+  }
+
+  // A tick box with a full-size touch target around it.
+  &__check,
+  &__select-all {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-sm);
+    min-block-size: var(--tap-target);
+    min-inline-size: var(--tap-target);
+    cursor: pointer;
+
+    input {
+      inline-size: var(--space-lg);
+      block-size: var(--space-lg);
+      margin: 0;
+      accent-color: var(--brand);
+    }
+  }
+
+  &__check {
+    justify-content: center;
+  }
+
+  &__bulk {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm) var(--space-md);
+    border-block-end: var(--hairline) solid var(--paper-line);
+  }
+
+  &__selected {
+    font-weight: var(--font-weight-semibold);
   }
 
   &__tag {
