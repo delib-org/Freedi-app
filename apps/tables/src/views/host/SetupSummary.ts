@@ -4,7 +4,13 @@ import {
 	TABLE_ASSIGNMENT_TABLE_SIZE_MIN,
 } from '@freedi/shared-types';
 import { t, tPlural } from '@/lib/i18n';
-import { freeTableCount, openProblem, parseExpected, parseSeats } from '@/logic/setupDraft';
+import {
+	effectiveMode,
+	freeTableCount,
+	openProblem,
+	parseExpected,
+	parseSeats,
+} from '@/logic/setupDraft';
 import type { SetupDraft } from '@/logic/setupDraft';
 import { setupSummary } from '@/logic/setupSummary';
 import type { SetupSummary as Summary } from '@/logic/setupSummary';
@@ -39,6 +45,18 @@ function lines(summary: Summary): { headline: string; subline: string } {
 				subline: tPlural('tableAssignment.setup.summary.capacity', summary.capacity, {
 					people: summary.people,
 				}),
+			};
+		case 'split':
+			return {
+				headline: tPlural('tableAssignment.setup.summary.tablesAtLeast', summary.tables),
+				subline: tPlural('tableAssignment.setup.summary.people', summary.people, {
+					seats: summary.seats,
+				}),
+			};
+		case 'splitUnknown':
+			return {
+				headline: t('tableAssignment.setup.summary.splitUnknown'),
+				subline: t('tableAssignment.setup.summary.splitUnknownHint'),
 			};
 		case 'freeUnknown':
 		default:
@@ -75,10 +93,11 @@ export const SetupSummary: m.Component<SetupSummaryAttrs> = {
 		const expected = parseExpected(draft.expected);
 		const problem = openProblem(draft);
 		const summary = setupSummary({
-			mode: draft.mode,
+			mode: effectiveMode(draft),
 			expected: expected === null || Number.isNaN(expected) ? null : expected,
 			seats: parseSeats(draft.seats, draft.legacySeats) ?? DEFAULT_SEATS_FOR_SUMMARY,
 			freeTables: freeTableCount(draft),
+			splitByTopic: true,
 		});
 		const { headline, subline } = lines(summary);
 
@@ -104,6 +123,7 @@ export const SetupSummary: m.Component<SetupSummaryAttrs> = {
 					{ min: TABLE_ASSIGNMENT_TABLE_SIZE_MIN, max: TABLE_ASSIGNMENT_TABLE_SIZE_MAX },
 				),
 			]),
+			m('p.setup__summary-hint', t('tableAssignment.setup.seats.hint')),
 			summary.kind === 'free' && summary.missing > 0
 				? m('p.setup__shortage', tPlural('tableAssignment.setup.summary.missing', summary.missing))
 				: null,

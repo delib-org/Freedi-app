@@ -47,7 +47,7 @@ const en: Record<string, string> = {
 	'tableAssignment.list.create': 'New assignment',
 
 	'tableAssignment.mode.direct.hint':
-		'Everyone picks a table themselves, and whoever comes first takes the seat.',
+		'Everyone picks a topic themselves. Each topic opens as many tables as it needs.',
 	'tableAssignment.mode.ranked.hint':
 		'People rank topics, and the system builds tables that are each a small picture of the room.',
 
@@ -451,6 +451,51 @@ const en: Record<string, string> = {
 	'tableAssignment.count.unseated': 'Not seated yet',
 	'tableAssignment.error.tableSizeBelowPublished':
 		'The table size is now smaller than a table that was already published. Set it back, or raise it, then compute again.',
+	'tableAssignment.setup.topicCount': 'How many topics does the gathering have?',
+	'tableAssignment.setup.topicCount.one': 'One topic',
+	'tableAssignment.setup.topicCount.several': 'Several topics',
+	'tableAssignment.setup.topicCount.one.hint':
+		'Everyone talks about the same topic, and nobody has to choose.',
+	'tableAssignment.setup.seats.hint':
+		'The most people at one table. A topic that more people chose opens more tables.',
+	'tableAssignment.setup.summary.tablesAtLeast.one': 'At least one table',
+	'tableAssignment.setup.summary.tablesAtLeast.two': 'At least {{count}} tables',
+	'tableAssignment.setup.summary.tablesAtLeast.few': 'At least {{count}} tables',
+	'tableAssignment.setup.summary.tablesAtLeast.many': 'At least {{count}} tables',
+	'tableAssignment.setup.summary.tablesAtLeast.other': 'At least {{count}} tables',
+	'tableAssignment.setup.summary.splitUnknown': 'How many tables?',
+	'tableAssignment.setup.summary.splitUnknownHint':
+		'Each topic opens as many tables as it needs, by how many chose it.',
+	'tableAssignment.direct.count.one': 'One person chose this topic',
+	'tableAssignment.direct.count.two': '{{count}} people chose this topic',
+	'tableAssignment.direct.count.few': '{{count}} people chose this topic',
+	'tableAssignment.direct.count.many': '{{count}} people chose this topic',
+	'tableAssignment.direct.count.other': '{{count}} people chose this topic',
+	'tableAssignment.live.topicTables.one': 'One table will open',
+	'tableAssignment.live.topicTables.two': '{{count}} tables will open',
+	'tableAssignment.live.topicTables.few': '{{count}} tables will open',
+	'tableAssignment.live.topicTables.many': '{{count}} tables will open',
+	'tableAssignment.live.topicTables.other': '{{count}} tables will open',
+	'tableAssignment.live.close.direct': 'Close registration and set the tables',
+	'tableAssignment.close.oneInTopic': 'One person registered for {{topic}}',
+	'tableAssignment.chooseTopic': 'Choose a topic',
+	'tableAssignment.topic.choose': 'Choose this topic',
+	'tableAssignment.topic.yours': 'Your topic',
+	'tableAssignment.stage.act.topic.button': 'Choose a topic',
+	'tableAssignment.myTable.chooseFirstTopic': 'You have not chosen a topic yet.',
+	'tableAssignment.myTable.chooseAnotherTopic': 'Choose another topic',
+	'tableAssignment.myTable.numberLater':
+		'Your table number will appear here when registration closes.',
+	'tableAssignment.myTable.enter': 'Join the discussion',
+	'tableAssignment.myTable.enter.hint':
+		'This link is personal. It seats you at your table without typing your name.',
+	'tableAssignment.myTable.enter.failed':
+		'You can join with the code on the screen and write your full name.',
+	'tableAssignment.waiting.unfinished.lead.split': 'All that is left is to choose a topic.',
+	'tableAssignment.waiting.unfinished.button.split': 'Choose a topic',
+	'tableAssignment.home.intro.split':
+		'Today we sit at small tables. Choose a topic, and your table number appears when registration closes.',
+	'tableAssignment.home.stepsHint.1': 'One short step, about a minute',
 };
 
 export default en;

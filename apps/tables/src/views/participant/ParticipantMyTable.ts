@@ -1,15 +1,19 @@
 import m from 'mithril';
 import type { TableAssignmentRosterEntry } from '@freedi/shared-types';
-import { t } from '@/lib/i18n';
+import { t, tPlural } from '@/lib/i18n';
 import { LiveValue } from '@/lib/live';
 import { subscribeRun, subscribeTablemates } from '@/lib/tableAssignment/data';
 import { deriveDirectTables, tableByIndex } from '@/logic/directTables';
 import { tableNumber } from '@/logic/format';
+import { offersEntry } from '@/logic/enterDiscussion';
 import { canEditPreferences } from '@/logic/nextAction';
+import { isOneTopic } from '@/logic/steps';
+import { chosenCountOf, chosenTopicId, isSplitSession } from '@/logic/topicPicker';
 import { choiceOutcome, matesAtChosenTable, matesOfRunTable } from '@/logic/myTable';
 import type { ChoiceOutcome } from '@/logic/myTable';
 import { ParticipantFrame } from '@/components/ParticipantFrame';
 import type { ParticipantContext } from '@/components/ParticipantFrame';
+import { EnterDiscussion } from '@/components/EnterDiscussion';
 import { Redirect } from '@/components/Redirect';
 import { StateBox } from '@/components/StateBox';
 import { MyTableArt } from '@/components/TableArt';
@@ -18,7 +22,8 @@ import { participantHomePath, participantScreenPath } from '@/paths';
 
 interface Seat {
 	number: number;
-	topicTitle: string;
+	/** Null in a one-topic event: the number is shown without a topic line. */
+	topicTitle: string | null;
 	outcome: ChoiceOutcome;
 	/** Everyone at the table, the person included. */
 	seatCount: number;
@@ -59,7 +64,9 @@ function seatScreen(seat: Seat, extra?: m.Children): m.Vnode {
 			meWord: t('tableAssignment.myTable.me'),
 		}),
 		m('.my-table__summary', [
-			m('h1.screen__title.screen__title--page', { dir: 'auto' }, seat.topicTitle),
+			seat.topicTitle === null
+				? m('h1.visually-hidden', t('tableAssignment.myTable.aria', { number: seat.number }))
+				: m('h1.screen__title.screen__title--page', { dir: 'auto' }, seat.topicTitle),
 			pill(seat.outcome),
 			seat.outcome.kind === 'outside'
 				? m('p.my-table__note', t('tableAssignment.myTable.outsideNote'))
@@ -155,6 +162,50 @@ const MyTableBody: m.ClosureComponent<{ context: ParticipantContext }> = (initia
 		);
 	}
 
+	/** "Sit where you like" before closing: the topic and how many chose it; the number comes later. */
+	function splitBeforeClose(context: ParticipantContext): m.Children {
+		const { session, topics, me } = context;
+
+		if (!me) return null;
+
+		const home = participantHomePath(sessionId);
+		const waitingForTopics = topicsNotReady(context, home);
+
+		if (waitingForTopics) return waitingForTopics;
+
+		const choose = participantScreenPath(sessionId, 'preferences');
+		const mine = topics.find((topic) => topic.topicId === chosenTopicId(me));
+
+		if (!mine) {
+			return m(StateBox, {
+				kind: 'empty',
+				messageKey: 'tableAssignment.myTable.chooseFirstTopic',
+				action: m(
+					m.route.Link,
+					{ href: choose, class: 'btn btn--primary' },
+					t('tableAssignment.stage.act.topic.button'),
+				),
+				backHref: home,
+			});
+		}
+
+		return m('.screen.my-table', [
+			m('.my-table__summary', [
+				m('h1.screen__title.screen__title--page', { dir: 'auto' }, mine.title),
+				m('p.my-table__note', tPlural('tableAssignment.direct.count', chosenCountOf(mine))),
+				m('p.my-table__note', t('tableAssignment.myTable.numberLater')),
+			]),
+			canEditPreferences(session.status)
+				? m(
+						m.route.Link,
+						{ href: choose, class: 'btn btn--soft' },
+						t('tableAssignment.myTable.chooseAnotherTopic'),
+					)
+				: null,
+			m(CancelParticipation, { context }),
+		]);
+	}
+
 	function publishedSeat(context: ParticipantContext): m.Children {
 		const { session, topics, me, uid } = context;
 		const backHref = participantHomePath(sessionId);
@@ -194,15 +245,22 @@ const MyTableBody: m.ClosureComponent<{ context: ParticipantContext }> = (initia
 
 		if (waitingForTopics) return waitingForTopics;
 
-		return seatScreen({
-			number: tableNumber(table.index),
-			topicTitle:
-				topics.find((topic) => topic.topicId === table.topicId)?.title ??
-				t('tableAssignment.topic.unknown'),
-			outcome: choiceOutcome(me.preferences, table.topicId),
-			seatCount: table.memberUids.length,
-			mates: matesOfRunTable(table.memberUids, uid, namesOnceReadable()),
-		});
+		const split = isSplitSession(session);
+
+		return seatScreen(
+			{
+				number: tableNumber(table.index),
+				topicTitle: isOneTopic(session)
+					? null
+					: (topics.find((topic) => topic.topicId === table.topicId)?.title ??
+						t('tableAssignment.topic.unknown')),
+				// A split session asked for one topic, not a ranking: there is no choice to grade.
+				outcome: split ? { kind: 'none' } : choiceOutcome(me.preferences, table.topicId),
+				seatCount: table.memberUids.length,
+				mates: matesOfRunTable(table.memberUids, uid, namesOnceReadable()),
+			},
+			offersEntry(session) ? m(EnterDiscussion, { sessionId }) : null,
+		);
 	}
 
 	return {
@@ -213,7 +271,13 @@ const MyTableBody: m.ClosureComponent<{ context: ParticipantContext }> = (initia
 		view({ attrs }) {
 			const { context } = attrs;
 
-			return context.session.mode === 'direct' ? directSeat(context) : publishedSeat(context);
+			const { session } = context;
+
+			if (isSplitSession(session)) {
+				return session.status === 'published' ? publishedSeat(context) : splitBeforeClose(context);
+			}
+
+			return session.mode === 'direct' ? directSeat(context) : publishedSeat(context);
 		},
 	};
 };

@@ -3,14 +3,18 @@ import { TABLES_BASE_URL, tablesSessionUrl } from '@freedi/table-assignment-clie
 import { t, tPlural } from '@/lib/i18n';
 import { Action } from '@/lib/action';
 import { LiveValue } from '@/lib/live';
+import { goTo } from '@/lib/navigate';
 import { closeAndSplit, computeActionFor } from '@/lib/tableAssignment/closeAndSplit';
 import { tablesApi } from '@/lib/tableAssignment/client';
 import { subscribeCounter } from '@/lib/tableAssignment/data';
+import { rememberCloseFlags } from '@/logic/closeFlags';
 import { deriveDirectTables, seatCountsFromParticipants } from '@/logic/directTables';
+import { isSplitSession } from '@/logic/topicPicker';
 import { CopyLink } from '@/components/CopyLink';
 import type { HostContext } from '@/components/HostFrame';
 import { QrCode } from '@/components/QrCode';
 import { TableCards, tableViewsFromDirect } from '@/components/TableCards';
+import { TopicCounts } from '@/components/TopicCounts';
 import { FixDetailsDialog } from '@/views/host/FixDetailsDialog';
 import { hostScreenPath } from '@/paths';
 
@@ -33,6 +37,18 @@ export const LiveBody: m.ClosureComponent<LiveBodyAttrs> = ({ attrs: first }) =>
 		void close.run(() => tablesApi.setStatus({ sessionId, status: 'registrationClosed' }), {
 			sessionId,
 		});
+	}
+
+	/** "Sit where you like": one press closes registration and publishes the tables. */
+	async function closeAndPublish(): Promise<void> {
+		const closed = await close.run(
+			() => tablesApi.setStatus({ sessionId, status: 'registrationClosed' }),
+			{ sessionId },
+		);
+
+		if (!closed) return;
+		rememberCloseFlags(sessionId, closed.topicsWithOnePerson ?? []);
+		goTo(hostScreenPath(sessionId, 'assignment'));
 	}
 
 	function endSession(): void {
@@ -88,6 +104,17 @@ export const LiveBody: m.ClosureComponent<LiveBodyAttrs> = ({ attrs: first }) =>
 		}
 
 		const isMix = session.mode === 'ranked';
+		const isSplit = isSplitSession(session);
+		const onClose = (): void => {
+			if (isMix) void closeAndSplit(sessionId, close);
+			else if (isSplit) void closeAndPublish();
+			else closeFreeMode();
+		};
+		const label = isMix
+			? 'tableAssignment.live.close'
+			: isSplit
+				? 'tableAssignment.live.close.direct'
+				: 'tableAssignment.control.registrationClosed';
 
 		return [
 			m(
@@ -95,15 +122,9 @@ export const LiveBody: m.ClosureComponent<LiveBodyAttrs> = ({ attrs: first }) =>
 				{
 					type: 'button',
 					disabled: close.busy || compute.busy,
-					onclick: isMix ? () => void closeAndSplit(sessionId, close) : closeFreeMode,
+					onclick: onClose,
 				},
-				t(
-					close.busy || compute.busy
-						? 'tableAssignment.saving'
-						: isMix
-							? 'tableAssignment.live.close'
-							: 'tableAssignment.control.registrationClosed',
-				),
+				t(close.busy || compute.busy ? 'tableAssignment.saving' : label),
 			),
 			close.errorKey ? m('p.notice.notice--error', { role: 'alert' }, t(close.errorKey)) : null,
 			isMix ? m('p.live__note', t('tableAssignment.live.closeNote')) : null,
@@ -113,6 +134,11 @@ export const LiveBody: m.ClosureComponent<LiveBodyAttrs> = ({ attrs: first }) =>
 	function freeTables(context: HostContext): m.Children {
 		const { session, topics, participants } = context;
 		const tableSize = session.settings.tableSize ?? 0;
+
+		if (isSplitSession(session)) {
+			return m(TopicCounts, { topics, seatsPerTable: tableSize });
+		}
+
 		const tables = deriveDirectTables(topics, seatCountsFromParticipants(participants), tableSize);
 
 		return m(TableCards, {

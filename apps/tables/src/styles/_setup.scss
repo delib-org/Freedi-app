@@ -293,6 +293,12 @@
     font-weight: var(--font-weight-bold);
   }
 
+  &__summary-hint {
+    margin: 0;
+    font-size: var(--font-size-note);
+    line-height: var(--line-height-normal);
+  }
+
   &__shortage {
     margin: 0;
     padding: var(--space-12) var(--space-14);

@@ -9,7 +9,7 @@ import { loadDraft, saveDraft } from '@/logic/localDraft';
 import type { ChoicesDraft } from '@/logic/localDraft';
 import { answerFromRecord, POSITION_DECLINED, stopLabel } from '@/logic/positionStops';
 import type { PositionAnswer } from '@/logic/positionStops';
-import { stepNumber, stepsOf } from '@/logic/steps';
+import { isOneTopic, stepNumber, stepsOf } from '@/logic/steps';
 import { checkIcon, lockIcon } from '@/components/icons';
 import { ParticipantFrame } from '@/components/ParticipantFrame';
 import type { ParticipantContext } from '@/components/ParticipantFrame';
@@ -118,7 +118,10 @@ const PositionBody: m.ClosureComponent<{ context: ParticipantContext; draft: Cho
 						eyebrow: t('tableAssignment.position.eyebrow'),
 						title: question.label,
 						titleId: TITLE_ID,
-						backHref: participantScreenPath(sessionId, 'preferences'),
+						backHref: participantScreenPath(
+							sessionId,
+							isOneTopic(session) ? 'name' : 'preferences',
+						),
 					}),
 					m('.position__why', [
 						m('p', t('tableAssignment.position.why')),
@@ -172,7 +175,7 @@ function draftForPosition(context: ParticipantContext): ChoicesDraft | null {
 	return me ? { ranked: me.preferences, position: answerFromRecord(me) } : null;
 }
 
-/** `/sessions/:id/position`: the last step, only when the host asked and topics were picked. */
+/** `/sessions/:id/position`: the last step, only when the host asked and topics were picked (a one-topic event has none to pick). */
 export const ParticipantPosition: m.Component<{ id: string }> = {
 	view({ attrs }) {
 		return m(ParticipantFrame, {
@@ -192,7 +195,7 @@ export const ParticipantPosition: m.Component<{ id: string }> = {
 
 				const draft = draftForPosition(context);
 
-				if (!draft || draft.ranked.length === 0) {
+				if (!draft || (draft.ranked.length === 0 && !isOneTopic(session))) {
 					return m(Redirect, { to: participantScreenPath(attrs.id, 'preferences') });
 				}
 

@@ -1,5 +1,7 @@
 import {
 	TABLE_ASSIGNMENT_BALANCE_TOLERANCE_DEFAULT,
+	TABLE_ASSIGNMENT_TOPIC_COUNT_DEFAULT,
+	tableAssignmentTopicCountOf,
 	TABLE_ASSIGNMENT_TABLE_SIZE_DEFAULT,
 	TABLE_ASSIGNMENT_TABLE_SIZE_MAX,
 	TABLE_ASSIGNMENT_TABLE_SIZE_MIN,
@@ -9,6 +11,7 @@ import type {
 	TableAssignmentMode,
 	TableAssignmentPositionQuestion,
 	TableAssignmentTopic,
+	TableAssignmentTopicCount,
 	TablesSaveSettingsRequest,
 	TablesTopicInput,
 } from '@freedi/shared-types';
@@ -25,6 +28,8 @@ import type { TopicDraft } from '@/logic/topics';
 /** Everything on the Setup page. Numbers stay strings while typed. */
 export interface SetupDraft {
 	title: string;
+	/** One topic, or several: asked first, it decides whether the topic list and the mode are asked at all. */
+	topicCount: TableAssignmentTopicCount;
 	mode: TableAssignmentMode;
 	topics: TopicDraft[];
 	askPosition: boolean;
@@ -47,6 +52,7 @@ const DEFAULT_MODE: TableAssignmentMode = 'ranked';
 export function emptySetupDraft(): SetupDraft {
 	return {
 		title: '',
+		topicCount: TABLE_ASSIGNMENT_TOPIC_COUNT_DEFAULT,
 		mode: DEFAULT_MODE,
 		topics: [emptyDraft()],
 		askPosition: true,
@@ -69,6 +75,7 @@ export function setupDraftFromSession(
 
 	return {
 		title: session.title,
+		topicCount: tableAssignmentTopicCountOf(settings),
 		mode: session.mode,
 		topics: topics.length > 0 ? topics.map(draftFromTopic) : [emptyDraft()],
 		askPosition: settings.positionQuestion !== undefined,
@@ -85,6 +92,16 @@ export function setupDraftFromSession(
 				: undefined,
 		allowReturn: settings.allowReturnByName === true,
 	};
+}
+
+/** A copy saved before the question existed has no count: it reads as several. */
+export function isOneTopicDraft(draft: Pick<SetupDraft, 'topicCount'>): boolean {
+	return draft.topicCount === 'one';
+}
+
+/** One topic is always a mix: the mode question is not asked. */
+export function effectiveMode(draft: Pick<SetupDraft, 'topicCount' | 'mode'>): TableAssignmentMode {
+	return isOneTopicDraft(draft) ? DEFAULT_MODE : draft.mode;
 }
 
 export function filledTopics(draft: Pick<SetupDraft, 'topics'>): TopicDraft[] {
@@ -117,7 +134,7 @@ function positionFields(draft: SetupDraft): TableAssignmentPositionQuestion {
 
 /** The position question is a ranked-mode feature: in direct mode it is neither checked nor sent. */
 function isRanked(draft: SetupDraft): boolean {
-	return draft.mode === 'ranked';
+	return effectiveMode(draft) === 'ranked';
 }
 
 function isPositionPartial(draft: SetupDraft): boolean {
@@ -137,7 +154,7 @@ export function settingsProblem(draft: SetupDraft): SetupProblem | null {
 /** The first thing that stops registration from opening. */
 export function openProblem(draft: SetupDraft): SetupProblem | null {
 	if (draft.title.trim() === '') return 'name';
-	if (filledTopics(draft).length === 0) return 'topics';
+	if (!isOneTopicDraft(draft) && filledTopics(draft).length === 0) return 'topics';
 
 	return settingsProblem(draft);
 }
@@ -154,7 +171,8 @@ export function settingsRequest(
 
 	return {
 		sessionId,
-		mode: draft.mode,
+		topicCount: draft.topicCount === 'one' ? 'one' : 'several',
+		mode: effectiveMode(draft),
 		tableSize: seats,
 		balanceTolerance: draft.tolerance,
 		positionQuestion: isRanked(draft) && draft.askPosition && fields.label !== '' ? fields : null,

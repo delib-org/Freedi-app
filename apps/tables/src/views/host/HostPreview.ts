@@ -14,6 +14,7 @@ import { previewVerdict } from '@/logic/previewVerdict';
 import type { PreviewVerdict } from '@/logic/previewVerdict';
 import { publishedRunOf, unseatedSincePublished } from '@/logic/latecomers';
 import { latestRun } from '@/logic/runs';
+import { isSplitSession } from '@/logic/topicPicker';
 import { canPublish, isDraftStale } from '@/logic/stale';
 import { ChoiceSummary } from '@/components/ChoiceSummary';
 import { HostFrame } from '@/components/HostFrame';
@@ -237,7 +238,7 @@ const PreviewBody: m.ClosureComponent<PreviewBodyAttrs> = (initial) => {
 			const { context } = attrs;
 			const { session } = context;
 
-			if (session.mode === 'direct') return directLive(context);
+			if (session.mode === 'direct' && !isSplitSession(session)) return directLive(context);
 			if (runs.state === 'loading') return m(StateBox, { kind: 'loading' });
 			if (runs.state === 'denied' || runs.state === 'error') {
 				return m(StateBox, { kind: runs.state, onRetry: () => runs.retry() });

@@ -14,8 +14,10 @@ import type { SaveOutcome } from '@/logic/autosave';
 import { clearSetupBackup, readSetupBackup, writeSetupBackup } from '@/logic/setupBackup';
 import type { BackupScope } from '@/logic/setupBackup';
 import {
+	effectiveMode,
 	emptySetupDraft,
 	filledTopics,
+	isOneTopicDraft,
 	openProblem,
 	settingsProblem,
 	settingsRequest,
@@ -44,6 +46,7 @@ type SaveKind = 'title' | 'settings' | 'topics';
 
 const SAVE_KINDS: readonly SaveKind[] = ['title', 'settings', 'topics'];
 const MODES = ['ranked', 'direct'] as const;
+const TOPIC_COUNTS = ['one', 'several'] as const;
 const OPERATION = 'tables.host.setup';
 
 function initialDraft(attrs: SetupBodyAttrs): SetupDraft {
@@ -93,7 +96,7 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 
 	function createSession(title: string): Promise<string> {
 		creating ??= tablesApi
-			.createSession({ title, mode: draft.mode })
+			.createSession({ title, mode: effectiveMode(draft) })
 			.then((result) => {
 				const id = result.session.tableAssignmentId;
 
@@ -163,6 +166,8 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 		const id = await ensureSession();
 
 		if (id === null) return 'blocked';
+		// One topic: the server keeps it, named after the event, and refuses a topic list.
+		if (isOneTopicDraft(draft)) return 'saved';
 		const sent = filledTopics(draft);
 		const result = await tablesApi.saveTopics({ sessionId: id, topics: topicInputs(draft) });
 
@@ -278,6 +283,24 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 		);
 	}
 
+	function topicCountCard(topicCount: (typeof TOPIC_COUNTS)[number]): m.Vnode {
+		return m(
+			'button.setup__mode',
+			{
+				key: topicCount,
+				type: 'button',
+				'aria-pressed': String((isOneTopicDraft(draft) ? 'one' : 'several') === topicCount),
+				onclick: () => changeSettings({ topicCount }),
+			},
+			[
+				m('span.setup__mode-title', t(`tableAssignment.setup.topicCount.${topicCount}`)),
+				topicCount === 'one'
+					? m('span.setup__mode-text', t('tableAssignment.setup.topicCount.one.hint'))
+					: null,
+			],
+		);
+	}
+
 	function returnByName(): m.Vnode {
 		return m('section.setup__card', [
 			m('h2.setup__heading', t('tableAssignment.setup.return.title')),
@@ -320,6 +343,8 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 			void saver.flush();
 		},
 		view() {
+			const oneTopic = isOneTopicDraft(draft);
+
 			return m('.setup', [
 				m('h1.setup__title', t('tableAssignment.setup.title')),
 				m('.setup__mark', saveMark()),
@@ -340,11 +365,19 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 							}),
 						]),
 						m('section.setup__card', [
-							m('h2.setup__heading', t('tableAssignment.setup.mode')),
-							m('.setup__modes', MODES.map(modeCard)),
+							m('h2.setup__heading', t('tableAssignment.setup.topicCount')),
+							m('.setup__modes', TOPIC_COUNTS.map(topicCountCard)),
 						]),
-						m(SetupTopics, { topics: draft.topics, onChange: changeTopics }),
-						draft.mode === 'ranked' ? m(SetupPosition, { draft, onChange: changeSettings }) : null,
+						oneTopic
+							? null
+							: m('section.setup__card', [
+									m('h2.setup__heading', t('tableAssignment.setup.mode')),
+									m('.setup__modes', MODES.map(modeCard)),
+								]),
+						oneTopic ? null : m(SetupTopics, { topics: draft.topics, onChange: changeTopics }),
+						effectiveMode(draft) === 'ranked'
+							? m(SetupPosition, { draft, onChange: changeSettings })
+							: null,
 						returnByName(),
 					]),
 					m(SetupSummary, {
