@@ -8,6 +8,7 @@ import {
 	isOneTopicDraft,
 	openProblem,
 	setupDraftFromSession,
+	withTopicCount,
 	settingsRequest,
 } from '../setupDraft';
 import { setupSummary } from '../setupSummary';
@@ -16,6 +17,7 @@ import {
 	chosenTopicId,
 	isSplitSession,
 	loneTopics,
+	lonePersonTitles,
 	tablesThatWouldOpen,
 	topicOptions,
 	topicTitlesOf,
@@ -197,5 +199,41 @@ describe('table count hint', () => {
 		expect(setupSummary({ mode: 'direct', expected: 30, seats: 7, freeTables: 3 }).kind).toBe(
 			'free',
 		);
+	});
+});
+
+describe('switching the topic count back', () => {
+	it('drops the stale topic rows and ids when going from one topic back to several', () => {
+		const stale = {
+			...emptySetupDraft(),
+			topicCount: 'one' as const,
+			topics: [{ topicId: 'gone', title: 'Town hall', description: '', maxTables: '' }],
+		};
+		const back = withTopicCount(stale, 'several');
+
+		expect(back.topicCount).toBe('several');
+		expect(back.topics).toHaveLength(1);
+		expect(back.topics[0].topicId).toBeUndefined();
+		expect(back.topics[0].title).toBe('');
+	});
+
+	it('keeps the rows when only choosing one, or when already several', () => {
+		const several = emptySetupDraft();
+
+		expect(withTopicCount(several, 'one').topics).toBe(several.topics);
+		expect(withTopicCount(several, 'several').topics).toBe(several.topics);
+	});
+});
+
+describe('flags after a reload', () => {
+	const topics = [makeTopic('a', 0, { chosenCount: 1 }), makeTopic('b', 1, { chosenCount: 5 })];
+
+	it('falls back to the topics chosen by one person when the close answer is gone', () => {
+		expect(lonePersonTitles('fresh-session', topics)).toEqual(['Topic a']);
+	});
+
+	it('prefers what the close reported', () => {
+		rememberCloseFlags('reported', ['b']);
+		expect(lonePersonTitles('reported', topics)).toEqual(['Topic b']);
 	});
 });

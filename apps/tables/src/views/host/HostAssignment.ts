@@ -4,11 +4,10 @@ import { Action } from '@/lib/action';
 import { LiveValue } from '@/lib/live';
 import { tablesApi } from '@/lib/tableAssignment/client';
 import { subscribeRun } from '@/lib/tableAssignment/data';
-import { closeFlagsOf } from '@/logic/closeFlags';
 import { deriveDirectTables, seatCountsFromParticipants } from '@/logic/directTables';
 import { formatMoment } from '@/logic/format';
 import { nameByUid } from '@/logic/participants';
-import { isSplitSession, topicTitlesOf } from '@/logic/topicPicker';
+import { isSplitSession, lonePersonTitles } from '@/logic/topicPicker';
 import { HostFrame } from '@/components/HostFrame';
 import type { HostContext } from '@/components/HostFrame';
 import { StateBox } from '@/components/StateBox';
@@ -146,7 +145,7 @@ const AssignmentBody: m.ClosureComponent<AssignmentBodyAttrs> = () => {
 			]),
 			isSplitSession(session)
 				? m(LoneTopicFlags, {
-						titles: topicTitlesOf(closeFlagsOf(session.tableAssignmentId), topics),
+						titles: lonePersonTitles(session.tableAssignmentId, topics),
 					})
 				: null,
 			actions(context),

@@ -1,4 +1,5 @@
 import { isTableAssignmentSplitByTopic, tableAssignmentTableSizes } from '@freedi/shared-types';
+import { closeFlagsOf } from '@/logic/closeFlags';
 import type {
 	TableAssignment,
 	TableAssignmentParticipant,
@@ -63,6 +64,21 @@ export function loneTopics(topics: readonly TableAssignmentTopic[]): TableAssign
 	return [...topics]
 		.sort((a, b) => a.order - b.order)
 		.filter((topic) => topic.chosenCount === LONE_TOPIC_COUNT);
+}
+
+/**
+ * Titles of the topics where one person registered: what the close answered, or, after a reload
+ * or on another device, the topics whose `chosenCount` is one.
+ */
+export function lonePersonTitles(
+	sessionId: string,
+	topics: readonly TableAssignmentTopic[],
+): string[] {
+	const reported = closeFlagsOf(sessionId);
+
+	return reported.length > 0
+		? topicTitlesOf(reported, topics)
+		: loneTopics(topics).map((topic) => topic.title);
 }
 
 /** The server answers with topic ids; a reference that matches no topic is shown as it came. */

@@ -104,6 +104,20 @@ export function effectiveMode(draft: Pick<SetupDraft, 'topicCount' | 'mode'>): T
 	return isOneTopicDraft(draft) ? DEFAULT_MODE : draft.mode;
 }
 
+/**
+ * The draft after the host picks a topic count. Saving 'one' made the server replace the topics
+ * with its own single topic, so going back to several starts from one empty row: the old rows'
+ * ids no longer exist there.
+ */
+export function withTopicCount(
+	draft: SetupDraft,
+	topicCount: TableAssignmentTopicCount,
+): SetupDraft {
+	if (topicCount === 'one' || !isOneTopicDraft(draft)) return { ...draft, topicCount };
+
+	return { ...draft, topicCount, topics: [emptyDraft()] };
+}
+
 export function filledTopics(draft: Pick<SetupDraft, 'topics'>): TopicDraft[] {
 	return draft.topics.filter((topic) => topic.title.trim() !== '');
 }

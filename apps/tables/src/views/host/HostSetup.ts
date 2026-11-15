@@ -23,6 +23,7 @@ import {
 	settingsRequest,
 	setupDraftFromSession,
 	topicInputs,
+	withTopicCount,
 } from '@/logic/setupDraft';
 import type { SetupDraft } from '@/logic/setupDraft';
 import type { TopicDraft } from '@/logic/topics';
@@ -198,6 +199,15 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 		changed('settings');
 	}
 
+	function chooseTopicCount(topicCount: (typeof TOPIC_COUNTS)[number]): void {
+		if (isOneTopicDraft(draft) === (topicCount === 'one')) return;
+		const wasOne = isOneTopicDraft(draft);
+
+		Object.assign(draft, withTopicCount(draft, topicCount));
+		changed('settings');
+		if (wasOne) changed('topics');
+	}
+
 	function changeTopics(topics: TopicDraft[]): void {
 		draft.topics = topics;
 		changed('topics');
@@ -290,7 +300,7 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 				key: topicCount,
 				type: 'button',
 				'aria-pressed': String((isOneTopicDraft(draft) ? 'one' : 'several') === topicCount),
-				onclick: () => changeSettings({ topicCount }),
+				onclick: () => chooseTopicCount(topicCount),
 			},
 			[
 				m('span.setup__mode-title', t(`tableAssignment.setup.topicCount.${topicCount}`)),
