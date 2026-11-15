@@ -3,9 +3,11 @@ import {
 	TABLE_ASSIGNMENT_TABLE_SIZE_MAX,
 	TABLE_ASSIGNMENT_TABLE_SIZE_MIN,
 } from '@freedi/shared-types';
-import { t, tPlural } from '@/lib/i18n';
+import { getLang, t, tPlural } from '@/lib/i18n';
+import { eventLine } from '@/logic/eventLine';
 import {
 	effectiveMode,
+	eventFromDraft,
 	freeTableCount,
 	openProblem,
 	parseExpected,
@@ -100,6 +102,7 @@ export const SetupSummary: m.Component<SetupSummaryAttrs> = {
 			splitByTopic: true,
 		});
 		const { headline, subline } = lines(summary);
+		const when = eventLine(eventFromDraft(draft) ?? undefined, getLang(), t);
 
 		return m('aside.setup__summary', [
 			m('h2.setup__summary-title', t('tableAssignment.setup.summary.title')),
@@ -107,6 +110,7 @@ export const SetupSummary: m.Component<SetupSummaryAttrs> = {
 				m('span.setup__headline-big', headline),
 				m('span.setup__headline-sub', subline),
 			]),
+			when ? m('p.setup__summary-hint', { dir: 'auto' }, when) : null,
 			m('.setup__summary-fields', [
 				numberField(
 					'setup-expected',

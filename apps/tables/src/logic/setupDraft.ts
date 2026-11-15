@@ -8,6 +8,7 @@ import {
 } from '@freedi/shared-types';
 import type {
 	TableAssignment,
+	TableAssignmentEvent,
 	TableAssignmentMode,
 	TableAssignmentPositionQuestion,
 	TableAssignmentTopic,
@@ -42,7 +43,18 @@ export interface SetupDraft {
 	/** A size below the current minimum that the session already has: kept while the host does not change it. */
 	legacySeats?: number;
 	allowReturn: boolean;
+	/** When and where, all optional: 'YYYY-MM-DD', 'HH:MM' and free text, '' while empty. */
+	eventDate: string;
+	eventTime: string;
+	eventPlace: string;
 }
+
+/** What a copy of the page saved before the event fields existed is read with. */
+export const EMPTY_EVENT_DRAFT: Pick<SetupDraft, 'eventDate' | 'eventTime' | 'eventPlace'> = {
+	eventDate: '',
+	eventTime: '',
+	eventPlace: '',
+};
 
 /** Why something cannot be saved or opened yet. */
 export type SetupProblem = 'name' | 'topics' | 'question' | 'seats' | 'expected';
@@ -63,6 +75,7 @@ export function emptySetupDraft(): SetupDraft {
 		expected: '',
 		seats: String(TABLE_ASSIGNMENT_TABLE_SIZE_DEFAULT),
 		allowReturn: false,
+		...EMPTY_EVENT_DRAFT,
 	};
 }
 
@@ -91,6 +104,9 @@ export function setupDraftFromSession(
 				? settings.tableSize
 				: undefined,
 		allowReturn: settings.allowReturnByName === true,
+		eventDate: settings.event?.date ?? '',
+		eventTime: settings.event?.time ?? '',
+		eventPlace: settings.event?.place ?? '',
 	};
 }
 
@@ -140,6 +156,22 @@ export function parseExpected(text: string): number | null {
 	const value = parseOptionalPositiveInt(text);
 
 	return value === undefined ? null : value;
+}
+
+/** The parts the host filled in; null when none, which removes the event on the server. */
+export function eventFromDraft(
+	draft: Pick<SetupDraft, 'eventDate' | 'eventTime' | 'eventPlace'>,
+): TableAssignmentEvent | null {
+	const date = draft.eventDate.trim();
+	const time = draft.eventTime.trim();
+	const place = draft.eventPlace.trim();
+	const event: TableAssignmentEvent = {
+		...(date !== '' && { date }),
+		...(time !== '' && { time }),
+		...(place !== '' && { place }),
+	};
+
+	return Object.keys(event).length === 0 ? null : event;
 }
 
 function positionFields(draft: SetupDraft): TableAssignmentPositionQuestion {
@@ -192,6 +224,7 @@ export function settingsRequest(
 		positionQuestion: isRanked(draft) && draft.askPosition && fields.label !== '' ? fields : null,
 		expectedParticipants: parseExpected(draft.expected),
 		allowReturnByName: draft.allowReturn,
+		event: eventFromDraft(draft),
 	};
 }
 

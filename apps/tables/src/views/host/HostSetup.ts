@@ -29,6 +29,7 @@ import type { SetupDraft } from '@/logic/setupDraft';
 import type { TopicDraft } from '@/logic/topics';
 import { HostGate } from '@/components/HostGate';
 import { Shell } from '@/components/Shell';
+import { SetupEvent } from '@/views/host/SetupEvent';
 import { SetupPosition } from '@/views/host/SetupPosition';
 import { SetupSummary } from '@/views/host/SetupSummary';
 import { SetupTopics } from '@/views/host/SetupTopics';
@@ -374,6 +375,7 @@ export const SetupBody: m.ClosureComponent<SetupBodyAttrs> = ({ attrs: first }) 
 								},
 							}),
 						]),
+						m(SetupEvent, { draft, onChange: changeSettings }),
 						m('section.setup__card', [
 							m('h2.setup__heading', t('tableAssignment.setup.topicCount')),
 							m('.setup__modes', TOPIC_COUNTS.map(topicCountCard)),

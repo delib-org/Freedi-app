@@ -42,13 +42,15 @@ function mergedSettings(
 			expectedParticipants: clearable(req.expectedParticipants, current.expectedParticipants),
 			allowReturnByName: req.allowReturnByName ?? current.allowReturnByName,
 			topicCount: req.topicCount ?? current.topicCount,
+			event: clearable(req.event, current.event),
 		}),
 	);
 }
 
 /**
  * `tablesSaveSettings` (host): table size, balance tolerance, position
- * question, expected people (null removes either), return by full name, title
+ * question, expected people (null removes either), return by full name, the event
+ * (date, time, place; each optional, null removes it), title
  * and, in a draft only, the mode. Changing an input makes any earlier preview stale (the run's inputHash no longer
  * matches). In direct mode the table size is frozen once registration opens,
  * because seats are already counted against it.

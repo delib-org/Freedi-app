@@ -182,7 +182,7 @@ const ar: Record<string, string> = {
 	'tableAssignment.rank.removed': 'تمت إزالة {{topic}}.',
 	'tableAssignment.rank.handle': 'تغيير مكان {{topic}}. اسحبوه، أو استخدموا مفاتيح الأسهم.',
 	'tableAssignment.rank.note':
-		'سنحاول إجلاسكم عند موضوع اخترتموه. وأحيانًا ستجلسون عند موضوع آخر، كي تبقى كل طاولة صورة مصغّرة عن القاعة كلها.',
+		'يجمع توزيع الطاولات بين اختياركم والحاجة إلى تنوّع الآراء على كل طاولة، لذلك قد يتم توزيعكم على موضوع لم يكن خياركم الأول.',
 	'tableAssignment.rank.pickOne': 'اختاروا موضوعًا واحدًا على الأقل',
 	'tableAssignment.rank.explain': 'شرح عن {{topic}}',
 	'tableAssignment.rank.place': 'المكان {{place}}',
@@ -263,6 +263,19 @@ const ar: Record<string, string> = {
 	'tableAssignment.setup.list.placeholder': 'الصحة، التعليم، الأمن',
 	'tableAssignment.setup.list.hint': 'يمكن أيضًا كتابة موضوع في كل سطر.',
 	'tableAssignment.setup.list.addEmpty': 'إضافة مواضيع',
+	'tableAssignment.setup.event.title': 'متى وأين؟',
+	'tableAssignment.setup.event.lead':
+		'يمكنكم ملء أي جزء أو تركه فارغًا. يراه المشاركون بعد تسجيلهم.',
+	'tableAssignment.setup.event.date': 'التاريخ',
+	'tableAssignment.setup.event.time': 'الساعة',
+	'tableAssignment.setup.event.place': 'المكان',
+	'tableAssignment.event.line.d': 'نراكم في {{date}}.',
+	'tableAssignment.event.line.t': 'نراكم في الساعة {{time}}.',
+	'tableAssignment.event.line.p': 'نراكم في {{place}}.',
+	'tableAssignment.event.line.dt': 'نراكم في {{date}} في الساعة {{time}}.',
+	'tableAssignment.event.line.dp': 'نراكم في {{date}} في {{place}}.',
+	'tableAssignment.event.line.tp': 'نراكم في الساعة {{time}} في {{place}}.',
+	'tableAssignment.event.line.dtp': 'نراكم في {{date}} في الساعة {{time}} في {{place}}.',
 	'tableAssignment.setup.position.title': 'ما الذي يختلف عليه الناس؟',
 	'tableAssignment.setup.position.lead':
 		'يجيب كل شخص بهدوء، ولا تُعرض الإجابة على أحد. بفضلها تضمّ كل طاولة كل الأصوات في القاعة.',

@@ -183,7 +183,7 @@ const en: Record<string, string> = {
 	'tableAssignment.rank.removed': '{{topic}} removed.',
 	'tableAssignment.rank.handle': 'Change the place of {{topic}}. Drag it, or use the arrow keys.',
 	'tableAssignment.rank.note':
-		'We will try to seat you at a topic you picked. Sometimes you will sit at another topic, so that each table stays a small picture of the whole room.',
+		'Table seating balances your choice with the need for a mix of views at each table, so you may be placed at a topic that was not your first choice.',
 	'tableAssignment.rank.pickOne': 'Pick at least one topic',
 	'tableAssignment.rank.explain': 'About {{topic}}',
 	'tableAssignment.rank.place': 'Place {{place}}',
@@ -269,6 +269,19 @@ const en: Record<string, string> = {
 	'tableAssignment.setup.list.placeholder': 'Health, education, security',
 	'tableAssignment.setup.list.hint': 'You can also put one topic on each line.',
 	'tableAssignment.setup.list.addEmpty': 'Add topics',
+	'tableAssignment.setup.event.title': 'When and where?',
+	'tableAssignment.setup.event.lead':
+		'Fill in any part or leave it empty. Participants see it once they have registered.',
+	'tableAssignment.setup.event.date': 'Date',
+	'tableAssignment.setup.event.time': 'Time',
+	'tableAssignment.setup.event.place': 'Place',
+	'tableAssignment.event.line.d': 'See you on {{date}}.',
+	'tableAssignment.event.line.t': 'See you at {{time}}.',
+	'tableAssignment.event.line.p': 'See you at {{place}}.',
+	'tableAssignment.event.line.dt': 'See you on {{date}} at {{time}}.',
+	'tableAssignment.event.line.dp': 'See you on {{date}} at {{place}}.',
+	'tableAssignment.event.line.tp': 'See you at {{time}}, at {{place}}.',
+	'tableAssignment.event.line.dtp': 'See you on {{date}}, {{time}} at {{place}}.',
 	'tableAssignment.setup.position.title': 'What do people disagree about?',
 	'tableAssignment.setup.position.lead':
 		'Everyone answers quietly, and the answer is shown to no one. It helps each table hold all the voices in the room.',
