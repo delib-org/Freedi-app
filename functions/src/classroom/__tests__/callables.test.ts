@@ -103,7 +103,7 @@ describe('classAssignTables', () => {
 		const fake = new FakeFirestore();
 		const uids = seedLesson(fake, 12);
 		const res = await assignTables(fake.asFirestore(), TEACHER, { mainId: MAIN }, fixedRng());
-		expect(res).toEqual({ tables: 2, placed: 12 }); // default size 6
+		expect(res).toEqual({ tables: 2, placed: 12 }); // default: at most 7 a table
 		const tables = fake.list('classTables') as unknown as ClassTable[];
 		expect(tables.map((t) => t.n).sort()).toEqual([1, 2]);
 		expect(tables.flatMap((t) => t.memberUids).sort()).toEqual(uids);
@@ -135,15 +135,16 @@ describe('classAssignTables', () => {
 			{ mainId: MAIN, tableSize: 5, replace: true },
 			fixedRng(),
 		);
-		expect(res).toEqual({ tables: 2, placed: 11 }); // 11 at size 5: 5 + 6
-		expect(fake.list('classTables')).toHaveLength(2);
+		expect(res).toEqual({ tables: 3, placed: 11 }); // 11 at most 5 a table: 4 + 4 + 3
+		expect(fake.list('classTables')).toHaveLength(3);
 		expect(fake.read(`statementsSubscribe/s00--${MAIN}`)?.tableId).toBeUndefined();
 	});
 
 	it('rejects a bad table size', async () => {
 		const fake = new FakeFirestore();
 		seedLesson(fake);
-		for (const tableSize of [1, 9, 4.5, Number.NaN, '5' as unknown as number]) {
+		// 2 is gone (IA tables-class-bridge 2.2): the range is 3..20.
+		for (const tableSize of [1, 2, 21, 4.5, Number.NaN, '5' as unknown as number]) {
 			await expectCode(
 				assignTables(fake.asFirestore(), TEACHER, { mainId: MAIN, tableSize }),
 				'invalid-argument',
@@ -151,10 +152,11 @@ describe('classAssignTables', () => {
 		}
 	});
 
-	it('accepts any size from 2 to 8 as a fallback', async () => {
+	it('accepts any size from 3 to 20 as a fallback', async () => {
 		for (const [tableSize, tables] of [
-			[2, 6],
+			[3, 4],
 			[8, 2],
+			[20, 1],
 		] as const) {
 			const fake = new FakeFirestore();
 			seedLesson(fake, 12);
@@ -174,7 +176,7 @@ describe('classAssignTables', () => {
 		expect(again.tables).toBe(4);
 	});
 
-	it('an unusable saved size falls back to the default (6)', async () => {
+	it('an unusable saved size falls back to the default (7)', async () => {
 		const fake = new FakeFirestore();
 		seedLesson(fake, 12, 99);
 		const res = await assignTables(fake.asFirestore(), TEACHER, { mainId: MAIN }, fixedRng());

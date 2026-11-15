@@ -113,6 +113,12 @@ describe('Tables rules', () => {
 				publishedRunId: 'run-pub',
 			});
 			await setDoc(doc(db, 'tableAssignmentSeatCodes', 'hash-1'), { sessionId: SPLIT, uid: P1, createdAt: T0 });
+			await setDoc(doc(db, 'classRegistrationSeats', `lesson-1--${P1}`), {
+				mainId: 'lesson-1',
+				sessionId: SPLIT,
+				registrationUid: P1,
+				classUid: P2,
+			});
 			for (const sessionId of [OPEN, PUBLISHED, DIRECT, SPLIT, SPLIT_PUBLISHED]) {
 				await setDoc(doc(db, 'tableAssignmentRoster', `${sessionId}_${P1}`), card(sessionId, P1));
 				await setDoc(doc(db, 'tableAssignmentRoster', `${sessionId}_${P2}`), card(sessionId, P2));
@@ -366,6 +372,18 @@ describe('Tables rules', () => {
 					getDocs(query(collection(firestore, 'tableAssignmentSeatCodes'), where('sessionId', '==', SPLIT))),
 				);
 				await assertFails(setDoc(doc(firestore, 'tableAssignmentSeatCodes', 'hash-2'), { sessionId: SPLIT, uid: P1 }));
+			}
+		});
+	});
+
+	describe('classRegistrationSeats (the Class ledger of the bridge, server only)', () => {
+		it('denies every client, the device holding the seat and the host included', async () => {
+			for (const firestore of [as(P1), as(P2), as(HOST), guest()]) {
+				await assertFails(getDoc(doc(firestore, 'classRegistrationSeats', `lesson-1--${P1}`)));
+				await assertFails(
+					getDocs(query(collection(firestore, 'classRegistrationSeats'), where('mainId', '==', 'lesson-1'))),
+				);
+				await assertFails(setDoc(doc(firestore, 'classRegistrationSeats', 'x'), { mainId: 'lesson-1' }));
 			}
 		});
 	});

@@ -1,9 +1,4 @@
-import {
-	DEFAULT_TABLE_SIZE,
-	MAX_NO_DEVICE_PER_TABLE,
-	MAX_TABLE_SIZE,
-	MIN_TABLE_SIZE,
-} from '@freedi/shared-types';
+import { DEFAULT_TABLE_SIZE, MAX_NO_DEVICE_PER_TABLE, classTableId } from '@freedi/shared-types';
 import type { Camp, ClassTable, NoDeviceMember } from '@freedi/shared-types';
 
 /**
@@ -12,12 +7,16 @@ import type { Camp, ClassTable, NoDeviceMember } from '@freedi/shared-types';
  * Every table mixes the sides: students are dealt round-robin, camp by camp,
  * with the deal index carried across camps — so the first 'b' student lands on
  * the first table that got no 'a', and the centre (plus students who never
- * picked a side) is spread last over whatever is left. Table sizes differ by
- * at most one and always stay inside MIN_TABLE_SIZE..MAX_TABLE_SIZE (2..8), so
- * no table is ever left with one student, except for a class of 1 student
- * (one small table is the only possible answer). The size the teacher wants
- * (default 6) only decides how many tables.
+ * picked a side) is spread last over whatever is left.
+ *
+ * The size is a MAXIMUM, the same meaning as in Tables (IA tables-class-bridge
+ * 2.2): ceil(students / size) tables whose sizes differ by at most one, so 31
+ * students at 6 sit at 6 tables of 5-6. With the sizes on offer (3..20) no table
+ * is ever left with one student, except for a class of 1 student.
  */
+
+/** No deal leaves a table smaller than this, unless the class has one student. */
+const SMALLEST_DEALT_TABLE = 2;
 
 export interface SeatableStudent {
 	uid: string;
@@ -37,21 +36,17 @@ export interface SeatedTable {
 export type Rng = () => number;
 
 /**
- * Number of tables for `count` students aiming at `size` per table: the valid
- * count (every table 2..8) closest to count/size; ties go to fewer tables.
+ * Number of tables for `count` students at most `size` per table:
+ * ceil(count / size). Only an older lesson's size of 2 could leave a table of
+ * one (3 students at 2 = 2 + 1); one table fewer is taken then, a table above
+ * the size being better than a student alone.
  */
 export function computeTableCount(count: number, size: number = DEFAULT_TABLE_SIZE): number {
 	if (count <= 0) return 0;
-	if (count < MIN_TABLE_SIZE) return 1;
-	const target = count / size;
-	let best = 0;
-	for (let t = 1; t <= count; t++) {
-		const valid = Math.floor(count / t) >= MIN_TABLE_SIZE && Math.ceil(count / t) <= MAX_TABLE_SIZE;
-		if (!valid) continue;
-		if (best === 0 || Math.abs(t - target) < Math.abs(best - target)) best = t;
-	}
+	let tables = Math.ceil(count / Math.max(1, size));
+	while (tables > 1 && Math.floor(count / tables) < SMALLEST_DEALT_TABLE) tables--;
 
-	return best;
+	return tables;
 }
 
 function shuffled<T>(items: T[], rng: Rng): T[] {
@@ -128,4 +123,29 @@ export function carryNoDeviceMembers(
 	}
 
 	return placed;
+}
+
+/** A fresh table doc: nobody asks yet, turn 1, at the pick step. */
+export function newTable(
+	mainId: string,
+	n: number,
+	memberUids: string[],
+	now: number,
+	noDeviceMembers: NoDeviceMember[] = [],
+): ClassTable {
+	return {
+		tableId: classTableId(mainId, n),
+		mainId,
+		n,
+		memberUids,
+		noDeviceMembers,
+		step: 'pick',
+		askerUid: null,
+		turn: 1,
+		writingMode: 'each',
+		writingLocked: false,
+		spokenUids: [],
+		usedQuestionIds: [],
+		updatedAt: now,
+	};
 }

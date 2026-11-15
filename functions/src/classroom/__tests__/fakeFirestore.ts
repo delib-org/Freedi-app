@@ -7,7 +7,8 @@
  * orderBy / limit / startAfter, get/create/set (with { merge })/update,
  * getAll, batch and runTransaction (reads then writes, applied at the end).
  * FieldValue.delete() comes from jest.setup.ts's mock as `{ _delete: true }`
- * and a merged FieldValue.increment(n) as `{ _increment: n }`;
+ * and FieldValue.increment(n) as `{ _increment: n }` (applied by update and
+ * by a merged set);
  * a dotted update key ('statementSettings.ballot') writes a nested field, as
  * Firestore does.
  */
@@ -77,7 +78,9 @@ function applyUpdate(target: Data, patch: Data): Data {
 			node = node[part] as Data;
 		}
 		const last = parts[parts.length - 1];
+		const increment = incrementOf(value);
 		if (isDelete(value)) delete node[last];
+		else if (increment !== undefined) node[last] = ((node[last] as number) ?? 0) + increment;
 		else node[last] = clone(value);
 	}
 

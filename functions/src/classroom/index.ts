@@ -27,3 +27,13 @@ export { classSetLessonStatus } from './fn_classSetLessonStatus';
 export { classCloneLesson } from './fn_classCloneLesson';
 export { classStartLesson } from './fn_classStartLesson';
 export { classSnapshotGame } from './fn_classSnapshotGame';
+// Tables-Class bridge (IA tables-class-bridge): a lesson that seats a Tables registration.
+export {
+	classConnectRegistration,
+	classDisconnectRegistration,
+} from './registration/fn_classRegistrationConnection';
+export { classCopySeating } from './registration/fn_classCopySeating';
+export { classCloseRegistration } from './registration/fn_classCloseRegistration';
+export { classSeatByCode } from './registration/fn_classSeatByCode';
+export { classArriveByName } from './registration/fn_classArriveByName';
+export { classRegistrationSupport } from './registration/fn_classRegistrationSupport';

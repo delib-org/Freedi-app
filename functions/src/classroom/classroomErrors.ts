@@ -1,4 +1,5 @@
 import { HttpsError, FunctionsErrorCode } from 'firebase-functions/v2/https';
+import type { ClassRegistrationErrorReason } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 
 /** Refusals the client treats specially instead of showing a generic error. */
@@ -31,7 +32,10 @@ export type ClassroomErrorReason =
 	| 'own-questions-off'
 	| 'turns-done'
 	| 'not-talking'
-	| 'already-moved';
+	| 'already-moved'
+	/** The lesson's tables come from its registration (classCopySeating), not from a deal. */
+	| 'registration-connected'
+	| ClassRegistrationErrorReason;
 
 /**
  * A refusal the engine's pure logic raises. It carries the callable error code

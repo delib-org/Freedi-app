@@ -33,7 +33,7 @@ function makeClass(a: number, center: number, b: number, unknown = 0): SeatableS
 	return out;
 }
 
-describe('computeTableCount', () => {
+describe('computeTableCount (the size is a maximum, IA tables-class-bridge 2.2)', () => {
 	it('returns 0 tables for no students and 1 for a tiny class', () => {
 		expect(computeTableCount(0)).toBe(0);
 		expect(computeTableCount(1)).toBe(1);
@@ -41,56 +41,45 @@ describe('computeTableCount', () => {
 		expect(computeTableCount(3)).toBe(1);
 	});
 
-	it('keeps every table inside 2..8 for every size 2..8 and every class of 2 to 80', () => {
+	it('opens ceil(n / size) tables, never above the size and never a table of one, for 3..20', () => {
 		for (let size = MIN_TABLE_SIZE; size <= MAX_TABLE_SIZE; size++) {
-			for (let n = 2; n <= 80; n++) {
+			for (let n = 2; n <= 120; n++) {
 				const t = computeTableCount(n, size);
-				expect(Math.floor(n / t)).toBeGreaterThanOrEqual(MIN_TABLE_SIZE);
-				expect(Math.ceil(n / t)).toBeLessThanOrEqual(MAX_TABLE_SIZE);
+				expect(t).toBe(Math.ceil(n / size));
+				expect(Math.ceil(n / t)).toBeLessThanOrEqual(size);
+				expect(Math.floor(n / t)).toBeGreaterThanOrEqual(2);
 			}
 		}
 	});
 
-	it('defaults to a table size of 6', () => {
-		expect(computeTableCount(24)).toBe(4);
-		expect(computeTableCount(13)).toBe(2);
-		expect(computeTableCount(12)).toBe(2);
+	it('defaults to at most 7 a table', () => {
+		expect(computeTableCount(28)).toBe(4);
+		expect(computeTableCount(29)).toBe(5);
+		expect(computeTableCount(7)).toBe(1);
+		expect(computeTableCount(8)).toBe(2);
 	});
 
-	it('aims at size 2', () => {
+	it('31 students at 6 sit at 6 tables (it was a target of 6, giving a table of 7)', () => {
+		expect(computeTableCount(31, 6)).toBe(6);
+		expect(computeTableCount(13, 6)).toBe(3);
+	});
+
+	it('runs a table of 20', () => {
+		expect(computeTableCount(20, 20)).toBe(1);
+		expect(computeTableCount(21, 20)).toBe(2);
+		expect(computeTableCount(41, 20)).toBe(3);
+	});
+
+	it('still runs an older lesson saved with 2 without leaving anyone alone', () => {
 		expect(computeTableCount(10, 2)).toBe(5);
-		expect(computeTableCount(11, 2)).toBe(5);
-		expect(computeTableCount(5, 2)).toBe(2);
 		expect(computeTableCount(3, 2)).toBe(1);
-	});
-
-	it('aims at size 6 without leaving a table of one', () => {
-		expect(computeTableCount(13, 6)).toBe(2);
-		expect(computeTableCount(7, 6)).toBe(1);
-		expect(computeTableCount(9, 6)).toBe(2);
-		expect(computeTableCount(19, 6)).toBe(3);
-		expect(computeTableCount(31, 6)).toBe(5);
-	});
-
-	it('aims at size 8', () => {
-		expect(computeTableCount(24, 8)).toBe(3);
-		expect(computeTableCount(9, 8)).toBe(2);
-		expect(computeTableCount(8, 8)).toBe(1);
-		expect(computeTableCount(16, 8)).toBe(2);
-		expect(computeTableCount(17, 8)).toBe(3);
-		expect(computeTableCount(25, 8)).toBe(4);
-	});
-
-	it('aims at the other sizes too', () => {
-		expect(computeTableCount(24, 4)).toBe(6);
-		expect(computeTableCount(24, 3)).toBe(8);
-		expect(computeTableCount(25, 5)).toBe(5);
+		expect(computeTableCount(5, 2)).toBe(2);
 	});
 });
 
 describe('assignStudents', () => {
-	it('seats everyone exactly once with sizes 2..8 that differ by at most one', () => {
-		for (const size of [2, 6, 8]) {
+	it('seats everyone exactly once at tables of 2..size that differ by at most one', () => {
+		for (const size of [MIN_TABLE_SIZE, 6, 8, MAX_TABLE_SIZE]) {
 			for (let n = 3; n <= 60; n++) {
 				const third = Math.floor(n / 3);
 				const students = makeClass(third, third, n - 2 * third);
@@ -98,19 +87,19 @@ describe('assignStudents', () => {
 				const seated = tables.flatMap((t) => t.memberUids);
 				expect(seated.sort()).toEqual(students.map((s) => s.uid).sort());
 				const sizes = tables.map((t) => t.memberUids.length);
-				expect(Math.min(...sizes)).toBeGreaterThanOrEqual(MIN_TABLE_SIZE);
-				expect(Math.max(...sizes)).toBeLessThanOrEqual(MAX_TABLE_SIZE);
+				expect(Math.min(...sizes)).toBeGreaterThanOrEqual(2);
+				expect(Math.max(...sizes)).toBeLessThanOrEqual(size);
 				expect(Math.max(...sizes) - Math.min(...sizes)).toBeLessThanOrEqual(1);
 			}
 		}
 	});
 
-	it('13 students at size 6 sit at two tables of 6 and 7', () => {
+	it('13 students at size 6 sit at three tables of 4 and 5', () => {
 		const tables = assignStudents(makeClass(5, 4, 4), 6, seededRng());
-		expect(tables.map((t) => t.memberUids.length).sort()).toEqual([6, 7]);
+		expect(tables.map((t) => t.memberUids.length).sort()).toEqual([4, 4, 5]);
 	});
 
-	it('uses the default size (6) when none is given', () => {
+	it('uses the default size (at most 7) when none is given', () => {
 		expect(assignStudents(makeClass(8, 8, 8), undefined, seededRng())).toHaveLength(4);
 	});
 

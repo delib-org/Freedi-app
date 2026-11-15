@@ -50,16 +50,17 @@ describe('StatementSettingsSchema.lessonLook', () => {
 });
 
 describe('StatementSettingsSchema.tableSize', () => {
-	it('is optional (old lessons parse) and accepts 2..8', () => {
+	// Seats per table 3..20 (IA tables-class-bridge 2.2); a lesson saved earlier with 2 still parses.
+	it('is optional (old lessons parse) and accepts 2..20', () => {
 		expect(safeParse(StatementSettingsSchema, {}).success).toBe(true);
 		expect(safeParse(StatementSettingsSchema, { tableSize: 2 }).success).toBe(true);
 		expect(safeParse(StatementSettingsSchema, { tableSize: 6 }).success).toBe(true);
-		expect(safeParse(StatementSettingsSchema, { tableSize: 8 }).success).toBe(true);
+		expect(safeParse(StatementSettingsSchema, { tableSize: 20 }).success).toBe(true);
 	});
 
 	it('refuses out-of-range and fractional sizes', () => {
 		expect(safeParse(StatementSettingsSchema, { tableSize: 1 }).success).toBe(false);
-		expect(safeParse(StatementSettingsSchema, { tableSize: 9 }).success).toBe(false);
+		expect(safeParse(StatementSettingsSchema, { tableSize: 21 }).success).toBe(false);
 		expect(safeParse(StatementSettingsSchema, { tableSize: 3.5 }).success).toBe(false);
 	});
 });

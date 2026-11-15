@@ -7,6 +7,7 @@ import {
 	MAX_TABLE_SIZE,
 	MIN_TABLE_SIZE,
 	Role,
+	classRegistrationOf,
 	classTableId,
 	functionConfig,
 	noDeviceCountOf,
@@ -16,7 +17,6 @@ import type {
 	ClassAssignTablesRequest,
 	ClassAssignTablesResponse,
 	ClassTable,
-	NoDeviceMember,
 	Statement,
 	StatementSubscription,
 } from '@freedi/shared-types';
@@ -30,16 +30,24 @@ import {
 } from './classroomAccess';
 import { ClassroomError, toHttpsError } from './classroomErrors';
 import { assertLessonRunning } from './lessonStatusGuard';
-import { Rng, SeatableStudent, assignStudents, carryNoDeviceMembers } from './assignTables';
+import {
+	Rng,
+	SeatableStudent,
+	assignStudents,
+	carryNoDeviceMembers,
+	newTable,
+} from './assignTables';
 import { countNoDevice } from './noDeviceMembers';
 
 /**
  * `classAssignTables` (admin): seat the class. Students = the workspace's
  * `role: member` subscriptions (admins / creators are not seated). Each table
- * mixes the sides (round-robin by camp, see assignTables.ts), 2-8 per table.
+ * mixes the sides (round-robin by camp, see assignTables.ts), at most the
+ * lesson's seats per table (3..20), never one alone. A lesson connected to a
+ * registration is refused: its tables come from classCopySeating.
  *
  * Group size: the lesson's saved `statementSettings.tableSize` (tableSizeOf,
- * default 6) ALWAYS wins, so every deal and reshuffle of a lesson uses the one
+ * default 7) ALWAYS wins, so every deal and reshuffle of a lesson uses the one
  * size the teacher chose. The request's `tableSize` is only a fallback for a
  * lesson that has none saved; it is validated either way.
  *
@@ -75,30 +83,6 @@ function tableSizeFor(main: Statement, requested: number | undefined): number {
 	return requested ?? tableSizeOf(main);
 }
 
-export function newTable(
-	mainId: string,
-	n: number,
-	memberUids: string[],
-	now: number,
-	noDeviceMembers: NoDeviceMember[] = [],
-): ClassTable {
-	return {
-		tableId: classTableId(mainId, n),
-		mainId,
-		n,
-		memberUids,
-		noDeviceMembers,
-		step: 'pick',
-		askerUid: null,
-		turn: 1,
-		writingMode: 'each',
-		writingLocked: false,
-		spokenUids: [],
-		usedQuestionIds: [],
-		updatedAt: now,
-	};
-}
-
 export async function assignTables(
 	firestore: Firestore,
 	uid: string,
@@ -110,6 +94,13 @@ export async function assignTables(
 	const replace = req?.replace === true;
 	const main = await assertWorkspaceAdmin(firestore, mainId, uid);
 	assertLessonRunning(main);
+	if (classRegistrationOf(main)) {
+		throw new ClassroomError(
+			'failed-precondition',
+			'This lesson takes its tables from the registration',
+			'registration-connected',
+		);
+	}
 	const size = tableSizeFor(main, requested);
 
 	const subsQuery = firestore
