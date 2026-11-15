@@ -37,6 +37,11 @@ import {
 } from '@/lib/store';
 import { isStartBlockedByMissingChallenge } from '@/lib/challengeGate';
 import { t } from '@/lib/i18n';
+import {
+	refusalKeyOf,
+	registrationReasonOf,
+	isConnectedLesson,
+} from '@/lib/classroom/registrationLogic';
 import { act, consoleState } from './consoleState';
 
 /** The machine-readable cause a classroom callable attached to its refusal, if any. */
@@ -110,7 +115,10 @@ export async function goToStep(mainId: string, index: number): Promise<boolean> 
 	let splits = false;
 	const moved = await guardedAct(`step:${index}`, t('console.act_step'), async () => {
 		const from = getLessonStep().index;
-		splits = splitsTablesOnEnter(from, index, getLessonSteps(), classState.tables.length > 0);
+		// A connected lesson brings its tables from the registration (classAssignTables is refused there).
+		splits =
+			!isConnectedLesson(getMainStatement()) &&
+			splitsTablesOnEnter(from, index, getLessonSteps(), classState.tables.length > 0);
 		await setLessonStep(mainId, index);
 		if (!clearsTableClocksOnEnter(from, index, getLessonSteps())) return;
 		// The step has moved; a failure here only leaves the old clock on the tables, so it must not undo the move.
@@ -286,9 +294,28 @@ export function requestNewName(mainId: string, uid: string, name: string): Promi
 	});
 }
 
-export function addNoDevice(mainId: string, n: number, name: string): Promise<boolean> {
-	return guardedAct(`nodevice:${n}`, t('console.add_no_device'), () =>
-		classAddNoDevice({ mainId, n, name: name.trim() }),
+/**
+ * A student without a device at table `n`: by a typed name, or (`seatId`) by
+ * turning one of the table's reserved names into that person (the registered
+ * person is here, without a phone).
+ */
+export function addNoDevice(
+	mainId: string,
+	n: number,
+	name: string,
+	seatId?: string,
+): Promise<boolean> {
+	if (consoleState.held) return Promise.resolve(false);
+
+	return act(
+		`nodevice:${n}`,
+		t('console.add_no_device'),
+		() => classAddNoDevice(seatId ? { mainId, n, seatId } : { mainId, n, name: name.trim() }),
+		(error) => {
+			const key = refusalKeyOf(registrationReasonOf(error));
+
+			return key ? t(key) : undefined;
+		},
 	);
 }
 

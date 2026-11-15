@@ -17,8 +17,8 @@ import {
 	stepLabel,
 } from '@/lib/lesson';
 import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
-import { proposalLimitOf } from '@freedi/shared-types';
-import type { ClassVoteOrder, LessonStatus, Statement } from '@freedi/shared-types';
+import { classRegistrationOf, proposalLimitOf } from '@freedi/shared-types';
+import type { ClassVoteOrder, Statement } from '@freedi/shared-types';
 import { classState } from '@/lib/classroom/classState';
 import { gateOf } from '@/lib/classroom/classSettings';
 import {
@@ -42,6 +42,13 @@ import { noDeviceTotal } from '@/lib/classroom/actFor';
 import { groupWrittenTexts } from '@/lib/classroom/textsHelpers';
 import { flagState } from '@/lib/classroom/languageFlags';
 import { unseenFlagCount } from '@/lib/classroom/flagLogic';
+import { syncRegistrationWatch, watchedRegistration } from '@/lib/classroom/registrationData';
+import {
+	copyOfferOf,
+	isSeatingCopied,
+	sidesShownAt,
+	withoutTableCount,
+} from '@/lib/classroom/registrationLogic';
 import { QRShare } from '@/components/QRShare';
 import { WizColFooter } from '@/components/WizColFooter';
 import { readClassCode, studentJoinUrl } from './planHelpers';
@@ -60,14 +67,13 @@ import {
 	startPlenum,
 } from './consoleActions';
 import { releaseConsole, retainConsole, session } from './consoleSession';
-import { consoleState, dismissFailure, isBusy, watchOptions } from './consoleState';
+import { consoleState, watchOptions } from './consoleState';
 import type { ConsoleView } from './consoleState';
 import { consoleViewOf } from './consoleView';
 import { LazyStudentScreen } from './studentScreen/LazyStudentScreen';
 import { abortDrag } from './dragController';
 import { EndChoice, openEndChoice } from './EndChoice';
-import { planBack } from './consoleBack';
-import { TeacherBackBar } from './TeacherBackBar';
+import { backBar, failureBanner, header } from './ConsoleBar';
 import { lessonNameOf } from '@/lib/lessonLinks';
 import { LessonBanner } from './LessonBanner';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -78,8 +84,6 @@ import {
 	confirmResetVote,
 } from './consoleConfirms';
 import { NotYourLesson } from './NotYourLesson';
-import { ConsoleSettings } from './ConsoleSettings';
-import { ProjectorMenu } from './ProjectorMenu';
 import { GatePanel } from './GatePanel';
 import { SupportPanel } from './SupportPanel';
 import { voteScopeOf } from './voteScopeState';
@@ -93,6 +97,8 @@ import { TableSheetPanel } from './TableSheetPanel';
 import { OpeningPanel } from './OpeningPanel';
 import { ChallengeNeeded } from './ChallengeNeeded';
 import { TablesBoard } from './TablesBoard';
+import { CopySeating } from './CopySeating';
+import { RegisterAheadRow, RegistrationStrip } from './RegistrationStrip';
 import { WhatTheyWrote } from './WhatTheyWrote';
 // >>> allProposals BEGIN
 import {
@@ -113,10 +119,16 @@ export interface TeacherConsoleAttrs {
 	sheetN?: number;
 }
 
-/** Index of the Side step: marks appear on the roster from here on. */
-const SIDE_STEP_INDEX = 2;
-
 let showQr = false;
+
+const qr = {
+	get shown(): boolean {
+		return showQr;
+	},
+	toggle: (): void => {
+		showQr = !showQr;
+	},
+};
 
 // >>> voteSummary BEGIN
 /** Votes cast on the running ballot, and the students in the room. */
@@ -143,90 +155,6 @@ function allVotedOn(challenge: Statement | null): boolean {
 
 function currentView(): ConsoleView {
 	return consoleViewOf(m.route.param('view'));
-}
-
-/** "Pause the lesson" and "End the lesson" (UX 13.E): the status group at the bar's end. */
-function statusGroup(mid: string, status: LessonStatus | null): m.Children {
-	if (status !== 'live' && status !== 'open') return null;
-	const pausing = isBusy('status:pause');
-
-	return m('div.console__status', [
-		m(
-			'button.btn.btn--secondary.btn--small.console__pause',
-			{
-				type: 'button',
-				'data-testid': 'console-pause',
-				disabled: pausing,
-				'aria-busy': pausing ? 'true' : undefined,
-				onclick: () => void changeLessonStatus(mid, 'pause'),
-			},
-			[
-				m('span.status-mark.status-mark--paused', { 'aria-hidden': 'true' }),
-				m('span', pausing ? t('console.busy_pausing') : t('console.pause')),
-			],
-		),
-		// An open lesson keeps its "End the lesson" in the banner below.
-		status === 'live'
-			? m(
-					'button.btn.btn--tertiary.btn--small.console__end',
-					{ type: 'button', 'data-testid': 'console-end', onclick: openEndChoice },
-					t('console.end'),
-				)
-			: null,
-	]);
-}
-
-function backBar(mid: string): m.Children {
-	const back = planBack(mid);
-
-	return m(TeacherBackBar, { href: back.href, label: back.label });
-}
-
-function header(
-	mid: string,
-	lessonName: string | undefined,
-	code: string | undefined,
-	status: LessonStatus | null,
-): m.Vnode {
-	return m('header.console__bar', [
-		m('h1.console__title', lessonName ?? t('teacher.console.title')),
-		code
-			? m('p.console__code', [
-					m('span.console__code-label', `${t('teacher.console.code')}:`),
-					m('strong.console__code-value', { dir: 'ltr' }, code),
-				])
-			: null,
-		m(
-			'button.btn.btn--tertiary.console__qr-btn',
-			{
-				type: 'button',
-				'aria-expanded': showQr ? 'true' : 'false',
-				onclick: () => {
-					showQr = !showQr;
-				},
-			},
-			t('console.qr'),
-		),
-		m(ProjectorMenu, { mid }),
-		m(m.route.Link, { class: 'console__link', href: `/t/${mid}/plan` }, t('teacher.row.plan')),
-		m(ConsoleSettings),
-		statusGroup(mid, status),
-	]);
-}
-
-function failureBanner(): m.Children {
-	const failure = consoleState.failure;
-	if (!failure) return null;
-
-	return m('div.console__failure', { role: 'alert' }, [
-		m('span', failure.message ?? t('console.failed', { label: failure.label })),
-		m('button.btn.btn--secondary', { type: 'button', onclick: failure.retry }, t('console.retry')),
-		m(
-			'button.btn.btn--tertiary',
-			{ type: 'button', onclick: dismissFailure },
-			t('console.dismiss'),
-		),
-	]);
 }
 
 function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
@@ -268,7 +196,8 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 			tableTalk: stepKey === 'tableTalk',
 			done: tablesAreDone(stepKey),
 			questions,
-			showSides: stepIndex >= SIDE_STEP_INDEX,
+			showSides: sidesShownAt(getLessonSteps(), stepIndex),
+			connected: classRegistrationOf(main) !== undefined,
 			opening: stepKey === 'opening' && main ? m(OpeningPanel, { main }) : undefined,
 			ratedLineOf:
 				stepKey === 'allProposals' ? (table) => tableRatedText(table, challenge) : undefined, // >>> allProposals
@@ -297,6 +226,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 	onremove(vnode) {
 		abortDrag();
 		stopAllProposalsRatings(); // >>> allProposals
+		syncRegistrationWatch(null);
 		if ((vnode.state as { held?: boolean }).held) releaseConsole();
 	},
 
@@ -311,7 +241,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 		if (!ready) {
 			return m('.console', [
 				backBar(mid),
-				header(mid, main ? lessonNameOf(main) : undefined, undefined, null),
+				header(mid, main ? lessonNameOf(main) : undefined, undefined, null, qr),
 				m(
 					'main.console__board',
 					session.status === 'failed'
@@ -340,6 +270,15 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 		]);
 		const code = readClassCode(main);
 		const steps = getLessonSteps();
+		const registration = classRegistrationOf(main);
+		syncRegistrationWatch(registration?.tableAssignmentId ?? null);
+		const copyOffer = copyOfferOf({
+			connected: registration !== undefined,
+			copied: isSeatingCopied(main),
+			status: watchedRegistration.assignment?.status,
+			splitByTopic: watchedRegistration.assignment?.splitByTopic === true,
+			stepKey: step.key,
+		});
 		// >>> allProposals BEGIN
 		const atAllProposals = step.key === 'allProposals';
 		watchAllProposalsRatings(atAllProposals ? (challenge?.statementId ?? null) : null);
@@ -358,12 +297,17 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 
 		return m('.console', { 'data-step': step.key }, [
 			backBar(mid),
-			header(mid, lessonNameOf(main), code, status),
+			header(mid, lessonNameOf(main), code, status, qr),
 			showQr
 				? m('section.console__qr', [
 						m(QRShare, { url: studentJoinUrl(window.location.origin, mid), title: main.statement }),
 					])
 				: null,
+			registration
+				? m(RegistrationStrip, { mid, registration })
+				: step.key === 'waiting'
+					? m(RegisterAheadRow, { mid })
+					: null,
 			m(LessonBanner, {
 				status,
 				onResume: () => void changeLessonStatus(mid, 'resume'),
@@ -429,6 +373,18 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 					m.route.set(m.route.get().split('?')[0], next === 'tables' ? {} : { view: next }, {
 						replace: true,
 					}),
+				copySeating:
+					registration && copyOffer.kind !== 'ordinary'
+						? m(CopySeating, {
+								mid,
+								registrationId: registration.tableAssignmentId,
+								offer: copyOffer,
+								withoutTable: withoutTableCount(
+									rosterStudents(classState.roster).map((student) => student.uid),
+									classState.tables,
+								),
+							})
+						: undefined,
 				onSplit: (replace: boolean) => {
 					if (replace && !window.confirm(t('console.resplit_confirm'))) return;
 					void assignTables(mid, replace);
@@ -478,6 +434,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 						plenum: isPlenum(challenge),
 						tableTalk: step.key === 'tableTalk',
 						lessonName: lessonNameOf(main),
+						connected: registration !== undefined,
 						onClose: () => {
 							consoleState.focusTableN = attrs.sheetN ?? null;
 							m.route.set(`/t/${mid}`);

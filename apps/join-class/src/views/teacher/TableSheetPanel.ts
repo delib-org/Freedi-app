@@ -8,6 +8,7 @@ import { getServerOffset, remainingMs, serverNow } from '@/lib/classroom/serverC
 import { moveStudent } from './consoleActions';
 import { consoleState, isBusy } from './consoleState';
 import { answerMark, askMark, type TableMode } from '@/lib/classroom/tableTurnConsole';
+import { TableBridgeLines } from './TableBridgeLines';
 import { noDeviceForm, proposalsTurnLine, tableModeOf, turnLine } from './TableCard';
 import { tableSpeakMs } from '@/lib/classroom/speakTime';
 import { getMainStatement } from '@/lib/store';
@@ -37,6 +38,8 @@ export interface TableSheetPanelAttrs {
 	onClose: () => void;
 	/** The lesson's name: the back bar at the top of the sheet goes up to the console. */
 	lessonName: string;
+	/** The lesson uses a registration (topic, reserved names, lone-person flag). */
+	connected?: boolean;
 }
 
 let showNoDevice = false;
@@ -190,7 +193,11 @@ export const TableSheetPanel: m.Component<TableSheetPanelAttrs> = {
 											)
 										: null,
 								]),
-								m('h3.table-sheet__section', t('console.members')),
+								m(TableBridgeLines, { table, connected: attrs.connected === true }),
+								m(
+									'h3.table-sheet__section',
+									`${t('console.members')} · ${table.memberUids.length + table.noDeviceMembers.length}`,
+								),
 								m('ul.table-sheet__members', [
 									table.memberUids.map((uid) =>
 										memberRow(byUid.get(uid), uid, table, tableNumbers, tableModeOf(attrs)),
@@ -218,7 +225,7 @@ export const TableSheetPanel: m.Component<TableSheetPanelAttrs> = {
 									),
 								]),
 								showNoDevice
-									? noDeviceForm(attrs.mainId, table.n)
+									? noDeviceForm(attrs.mainId, table.n, table.reservedSeats ?? [])
 									: m(
 											'button.btn.btn--tertiary',
 											{

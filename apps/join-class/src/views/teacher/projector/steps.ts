@@ -21,6 +21,7 @@ import {
 	readRoundPhase,
 	studentsOf,
 	supportPercent,
+	PROJECTOR_MANY_NAMES,
 	tableTiles,
 	topProposals,
 	unseatedNames,
@@ -93,10 +94,27 @@ function tables(): m.Vnode {
 		m(
 			'ol.projector-grid',
 			tiles.map((tile) =>
-				m('li.projector-tile', { key: tile.n }, [
-					m('h2.projector-tile__title', t('projector.table', { n: tile.n })),
-					m('p.projector-tile__names', tile.names.join(' · ')),
-				]),
+				m(
+					'li.projector-tile',
+					{
+						key: tile.n,
+						class:
+							tile.names.length + (tile.reserved?.length ?? 0) > PROJECTOR_MANY_NAMES
+								? 'projector-tile--many'
+								: '',
+					},
+					[
+						m('h2.projector-tile__title', t('projector.table', { n: tile.n })),
+						tile.topic ? m('p.projector-tile__topic', { dir: 'auto' }, tile.topic) : null,
+						m('p.projector-tile__names', tile.names.join(' · ')),
+						tile.reserved
+							? m('p.projector-tile__reserved', [
+									m('strong', `${t('table.not_arrived')}: `),
+									tile.reserved.join(' · '),
+								])
+							: null,
+					],
+				),
 			),
 		),
 		loose.length > 0

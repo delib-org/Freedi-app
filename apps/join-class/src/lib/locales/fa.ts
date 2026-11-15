@@ -9,6 +9,7 @@ import reply from './reply/fa';
 import look from './look/fa';
 import challenge from './challenge/fa';
 import actFor from './actFor/fa';
+import bridge from './bridge/fa';
 
 const fa: Record<string, string> = {
 	...vote,
@@ -17,6 +18,7 @@ const fa: Record<string, string> = {
 	...look,
 	...challenge,
 	...actFor,
+	...bridge,
 	'step.waiting': 'در انتظار معلم',
 	'step.opening': 'شروع',
 	'step.side': 'انتخاب جانب',
@@ -458,9 +460,9 @@ const fa: Record<string, string> = {
 	'console.speak_time_help': 'هر نفر هنگام پاسخ دادن یا پیشنهاد دادن چقدر وقت دارد',
 	'console.proposals_turns': 'دورها در مرحلهٔ پیشنهادها',
 	'console.proposals_turns_help': 'در هر دور هر نفر سر میز یک بار صحبت می‌کند',
-	'console.table_size': 'اندازهٔ گروه سر میزها',
+	'console.table_size': 'جای هر میز',
 	'console.table_size_help':
-		'چند نفر سر هر میز می‌نشینند (۲ تا ۸). از دفعهٔ بعدی که میزها تقسیم یا دوباره چیده شوند اعمال می‌شود',
+		'بیشترین تعداد افراد پشت یک میز (۳ تا ۲۰). از تقسیم یا برهم‌زدن بعدی میزها اعمال می‌شود',
 	'console.another_turn_all': 'یک دور دیگر در همهٔ میزها',
 	'console.another_turn': 'یک دور دیگر',
 	'door.code.title': 'کد را بنویسید',

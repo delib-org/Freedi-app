@@ -1,6 +1,7 @@
 import m from 'mithril';
 import {
 	allowOwnQuestionsOf,
+	seatsPerTableOf,
 	proposalLimitOf,
 	proposalsTurnsOf,
 	speakSecondsOf,
@@ -9,6 +10,8 @@ import {
 import type { ClassProposalLimit } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { getMainStatement } from '@/lib/store';
+import { watchedRegistration } from '@/lib/classroom/registrationData';
+import { isConnectedLesson } from '@/lib/classroom/registrationLogic';
 import { setTableSetting } from './consoleActions';
 import { isBusy } from './consoleState';
 import {
@@ -16,6 +19,7 @@ import {
 	ProposalLimitSelect,
 	ProposalsTurnsSelect,
 	SpeakTimeSelect,
+	TableSizeFromRegistration,
 	TableSizeSelect,
 } from './TableSettingsControls';
 
@@ -55,11 +59,15 @@ export const ConsoleTableSettings: m.Component = {
 				disabled: !main || isBusy('tableSetting:proposalLimit'),
 				onChange: (limit: ClassProposalLimit) => void setTableSetting({ proposalLimit: limit }),
 			}),
-			m(TableSizeSelect, {
-				size: tableSizeOf(main),
-				disabled: !main || isBusy('tableSetting:tableSize'),
-				onChange: (size: number) => void setTableSetting({ tableSize: size }),
-			}),
+			isConnectedLesson(main)
+				? m(TableSizeFromRegistration, {
+						size: seatsPerTableOf(main, watchedRegistration.assignment?.settings.tableSize),
+					})
+				: m(TableSizeSelect, {
+						size: tableSizeOf(main),
+						disabled: !main || isBusy('tableSetting:tableSize'),
+						onChange: (size: number) => void setTableSetting({ tableSize: size }),
+					}),
 		]);
 	},
 };

@@ -9,6 +9,7 @@ import reply from './reply/de';
 import look from './look/de';
 import challenge from './challenge/de';
 import actFor from './actFor/de';
+import bridge from './bridge/de';
 
 const de: Record<string, string> = {
 	...vote,
@@ -17,6 +18,7 @@ const de: Record<string, string> = {
 	...look,
 	...challenge,
 	...actFor,
+	...bridge,
 	'step.waiting': 'Warten auf die Lehrkraft',
 	'step.opening': 'Einstieg',
 	'step.side': 'Seite wählen',
@@ -470,9 +472,9 @@ const de: Record<string, string> = {
 		'Wie lange jede Person spricht, wenn sie antwortet oder etwas vorschlägt',
 	'console.proposals_turns': 'Runden bei den Vorschlägen',
 	'console.proposals_turns_help': 'In jeder Runde spricht jede Person am Tisch einmal',
-	'console.table_size': 'Gruppengröße an den Tischen',
+	'console.table_size': 'Plätze pro Tisch',
 	'console.table_size_help':
-		'Wie viele Personen an jedem Tisch sitzen (2 bis 8). Gilt bei der nächsten Verteilung oder Neumischung der Tische',
+		'Die meisten Personen an einem Tisch (3 bis 20). Gilt bei der nächsten Verteilung oder Mischung der Tische',
 	'console.another_turn_all': 'Noch eine Runde, alle Tische',
 	'console.another_turn': 'Noch eine Runde',
 	'door.code.title': 'Gib den Code ein',

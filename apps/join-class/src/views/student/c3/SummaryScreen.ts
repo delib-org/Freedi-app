@@ -23,6 +23,7 @@ import { ErrorLine } from './ErrorLine';
 import { FlowFeed } from './FlowFeed';
 import { RateFaces } from './RateFaces';
 import { SupportBySide } from './SupportBySide';
+import { supportForScreen } from '@/lib/classroom/registrationSupport';
 import { VoteResults } from './VoteResults';
 
 export interface SummaryScreenAttrs {
@@ -77,7 +78,13 @@ export const SummaryScreen: m.ClassComponent<SummaryScreenAttrs> = {
 			resultsShown: liveResultsOn(challenge),
 		});
 		const mine = self.pending ?? classState.mySubscription?.decisionSupport;
-		const result = supportBySide(self.roster, gateOf(challenge, main));
+		const shared = supportVisibleToClass(challenge);
+		// A registration that asked a position: totals from the server, only when the teacher shared them.
+		const registered = supportForScreen(main, main.statementId, shared);
+		const result =
+			registered.kind === 'ready'
+				? registered.result
+				: supportBySide(self.roster, gateOf(challenge, main));
 		const rate = (score: number): void => {
 			self.pending = score;
 			self.error = null;
@@ -115,11 +122,11 @@ export const SummaryScreen: m.ClassComponent<SummaryScreenAttrs> = {
 							testPrefix: 'support-face',
 						}),
 						m(ErrorLine, { message: self.error }),
-						supportVisibleToClass(challenge)
+						shared && registered.kind !== 'loading' && registered.kind !== 'failed'
 							? m(SupportBySide, {
 									result,
 									gate: gateOf(challenge, main),
-									names: sideNamesOf(main),
+									names: registered.kind === 'ready' ? registered.names : sideNamesOf(main),
 								})
 							: m('p.summary__support-later', { role: 'status' }, t('summary.support_later')),
 					]

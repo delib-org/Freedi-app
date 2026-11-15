@@ -101,9 +101,16 @@ export function displayNameOf(sub: StatementSubscription): string {
 	return sub.user?.displayName ?? '';
 }
 
+/** Tables with more people than this use the smaller projector type (up to 20 sit at one table). */
+export const PROJECTOR_MANY_NAMES = 8;
+
 export interface TableTile {
 	n: number;
 	names: string[];
+	/** The table's topic, when the registration has several. */
+	topic?: string;
+	/** Registered people who have not arrived yet (names only). */
+	reserved?: string[];
 }
 
 /** One tile per table in table order: member names from the roster plus "no device" members. */
@@ -114,13 +121,19 @@ export function tableTiles(
 	const nameByUid = new Map<string, string>();
 	for (const sub of roster) nameByUid.set(sub.userId, displayNameOf(sub));
 
-	return tables.map((table) => ({
-		n: table.n,
-		names: [
-			...table.memberUids.map((uid) => nameByUid.get(uid) ?? ''),
-			...table.noDeviceMembers.map((member) => member.name),
-		].filter((name) => name !== ''),
-	}));
+	return tables.map((table) => {
+		const reserved = (table.reservedSeats ?? []).map((seat) => seat.name);
+
+		return {
+			n: table.n,
+			names: [
+				...table.memberUids.map((uid) => nameByUid.get(uid) ?? ''),
+				...table.noDeviceMembers.map((member) => member.name),
+			].filter((name) => name !== ''),
+			...(table.topic ? { topic: table.topic } : {}),
+			...(reserved.length > 0 ? { reserved } : {}),
+		};
+	});
 }
 
 /** Names of students who have no table yet (the "no table" tile). */

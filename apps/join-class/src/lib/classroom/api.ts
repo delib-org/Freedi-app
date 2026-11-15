@@ -1,4 +1,18 @@
 import type {
+	ClassArriveByNameRequest,
+	ClassArriveByNameResponse,
+	ClassCloseRegistrationRequest,
+	ClassCloseRegistrationResponse,
+	ClassConnectRegistrationRequest,
+	ClassConnectRegistrationResponse,
+	ClassCopySeatingRequest,
+	ClassCopySeatingResponse,
+	ClassDisconnectRegistrationRequest,
+	ClassDisconnectRegistrationResponse,
+	ClassRegistrationSupportRequest,
+	ClassRegistrationSupportResponse,
+	ClassSeatByCodeRequest,
+	ClassSeatByCodeResponse,
 	ClassAddNoDeviceRequest,
 	ClassAddNoDeviceResponse,
 	ClassAllTablesToRequest,
@@ -49,7 +63,7 @@ import { functions, httpsCallable } from '../firebase';
  * rethrown so the view can show its own message.
  */
 
-async function call<Req, Res>(name: string, payload: Req): Promise<Res> {
+export async function call<Req, Res>(name: string, payload: Req): Promise<Res> {
 	try {
 		const result = await httpsCallable<Req, Res>(functions, name)(payload);
 
@@ -172,4 +186,51 @@ export function classEditProposal(
 	req: ClassEditProposalRequest,
 ): Promise<ClassEditProposalResponse> {
 	return call('classEditProposal', req);
+}
+
+// ---- the Tables-Class bridge (IA tables-class-bridge) -----------------------
+
+/** Admin, who also hosts the registration: connect it to this lesson (idempotent). */
+export function classConnectRegistration(
+	req: ClassConnectRegistrationRequest,
+): Promise<ClassConnectRegistrationResponse> {
+	return call('classConnectRegistration', req);
+}
+
+/** Admin: remove the connection, until the seating is copied (else reason `seating-copied`). */
+export function classDisconnectRegistration(
+	req: ClassDisconnectRegistrationRequest,
+): Promise<ClassDisconnectRegistrationResponse> {
+	return call('classDisconnectRegistration', req);
+}
+
+/** Admin, at the Tables step: bring the published tables into the lesson (`replace` = "עדכון מההרשמה"). */
+export function classCopySeating(req: ClassCopySeatingRequest): Promise<ClassCopySeatingResponse> {
+	return call('classCopySeating', req);
+}
+
+/** Admin: close the registration from Class (the same server path as Tables). */
+export function classCloseRegistration(
+	req: ClassCloseRegistrationRequest,
+): Promise<ClassCloseRegistrationResponse> {
+	return call('classCloseRegistration', req);
+}
+
+/** Anyone signed in: exchange a personal link's code for the seat. */
+export function classSeatByCode(req: ClassSeatByCodeRequest): Promise<ClassSeatByCodeResponse> {
+	return call('classSeatByCode', req);
+}
+
+/** Anyone signed in: the name gate of a connected lesson. */
+export function classArriveByName(
+	req: ClassArriveByNameRequest,
+): Promise<ClassArriveByNameResponse> {
+	return call('classArriveByName', req);
+}
+
+/** Admin (or a member when the challenge shows support to everyone): support by the registration's poles. */
+export function classRegistrationSupport(
+	req: ClassRegistrationSupportRequest,
+): Promise<ClassRegistrationSupportResponse> {
+	return call('classRegistrationSupport', req);
 }

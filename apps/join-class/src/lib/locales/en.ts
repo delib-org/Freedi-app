@@ -9,6 +9,7 @@ import reply from './reply/en';
 import look from './look/en';
 import challenge from './challenge/en';
 import actFor from './actFor/en';
+import bridge from './bridge/en';
 
 const en: Record<string, string> = {
 	...vote,
@@ -17,6 +18,7 @@ const en: Record<string, string> = {
 	...look,
 	...challenge,
 	...actFor,
+	...bridge,
 	'step.waiting': 'Waiting for the teacher',
 	'step.opening': 'Opening',
 	'step.side': 'Choose a side',
@@ -469,9 +471,9 @@ const en: Record<string, string> = {
 	'console.speak_time_help': 'How long each person speaks when answering or proposing',
 	'console.proposals_turns': 'Turns at Proposals',
 	'console.proposals_turns_help': 'In each turn everyone at the table speaks once',
-	'console.table_size': 'Group size at the tables',
+	'console.table_size': 'Seats per table',
 	'console.table_size_help':
-		'How many people sit at each table (2 to 8). Applies the next time the tables are dealt or reshuffled',
+		'The most people at one table (3 to 20). Applies at the next deal or shuffle of the tables',
 	'console.another_turn_all': 'Another turn, all tables',
 	'console.another_turn': 'Another turn',
 	'door.code.title': 'Type the code',

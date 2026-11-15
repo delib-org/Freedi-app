@@ -1,5 +1,6 @@
 import m from 'mithril';
 import { supportBySide } from '@freedi/shared-types';
+import { supportForScreen } from '@/lib/classroom/registrationSupport';
 import { t } from '@/lib/i18n';
 import { classState } from '@/lib/classroom/classState';
 import { gateOf, sideNamesOf } from '@/lib/classroom/classSettings';
@@ -193,11 +194,15 @@ export function resultsBlock(summary: VoteSummary): m.Children {
 
 function supportBlock(): m.Vnode {
 	const challenge = projectorData.challenge;
-	const names = sideNamesOf(projectorData.main);
-	const support = supportBySide(
-		studentsOf(classState.roster, projectorData.main?.creatorId),
-		gateOf(challenge, projectorData.main),
-	);
+	const registered = supportForScreen(projectorData.main, projectorData.main?.statementId ?? '');
+	const names = registered.kind === 'ready' ? registered.names : sideNamesOf(projectorData.main);
+	const support =
+		registered.kind === 'ready'
+			? registered.result
+			: supportBySide(
+					studentsOf(classState.roster, projectorData.main?.creatorId),
+					gateOf(challenge, projectorData.main),
+				);
 	const rows = [
 		{ key: 'a', label: names.a, camp: support.a },
 		{ key: 'center', label: t('projector.center'), camp: support.center },

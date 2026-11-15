@@ -10,6 +10,7 @@ import { MainHub } from '@/views/MainHub';
 import { Login } from '@/views/Login';
 import { ClassCode } from '@/views/ClassCode';
 import { FrontDoor } from '@/views/FrontDoor';
+import { SeatExchange } from '@/views/seat/SeatExchange';
 
 initSentry();
 // Kicked off before the i18n await below so the auth handshake and the locale
@@ -94,6 +95,8 @@ i18nReady.then(() => {
 
 	m.route(root, '/', {
 		'/c/:code': ClassCode,
+		// The personal link from Tables' "My table": exchanged for the seat, then replaced by /m/:mid.
+		'/seat/:seatCode': SeatExchange,
 		// Unknown paths (the old /q/*, /m/:mid/q/*, /invite) fall to this default route.
 		'/': frontDoor,
 		'/login': Login,
@@ -112,6 +115,9 @@ i18nReady.then(() => {
 		),
 		'/t/:mid/plan': teacherRoute(() =>
 			import('@/views/teacher/PlanScreen').then((mod) => mod.PlanScreen),
+		),
+		'/t/:mid/registration': teacherRoute(() =>
+			import('@/views/teacher/RegistrationPage').then((mod) => mod.RegistrationPage),
 		),
 		'/t/:mid/table/:n': teacherRoute(() =>
 			import('@/views/teacher/TableSheet').then((mod) => mod.TableSheet),

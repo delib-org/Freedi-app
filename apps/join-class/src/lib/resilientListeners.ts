@@ -224,6 +224,8 @@ export const CLASS_LISTENER_KINDS = {
 	tables: 'classTables',
 	mySubscription: 'classMySubscription',
 	roster: 'classRoster',
+	registration: 'classRegistration',
+	registrationCounter: 'classRegistrationCounter',
 } as const;
 
 /** Test-only: number of live listeners in the registry. */
