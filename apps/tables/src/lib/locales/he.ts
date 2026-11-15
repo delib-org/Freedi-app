@@ -172,7 +172,7 @@ const he: Record<string, string> = {
 	'tableAssignment.rank.removed': '{{topic}} הוסר.',
 	'tableAssignment.rank.handle': 'שינוי המקום של {{topic}}. גוררים, או משתמשים בחיצים במקלדת.',
 	'tableAssignment.rank.note':
-		'ננסה להושיב אתכם בנושא שבחרתם. לפעמים תשבו בנושא אחר, כדי שכל שולחן יישאר תמונה קטנה של כל החדר.',
+		'השיבוץ לשולחנות משלב בין הבחירה שלכם לבין הצורך במגוון דעות בכל שולחן – לכן ייתכן שתשובצו לנושא שלא היה העדיפות הראשונה שלכם.',
 	'tableAssignment.rank.pickOne': 'בחרו לפחות נושא אחד',
 	'tableAssignment.rank.explain': 'הסבר על {{topic}}',
 	'tableAssignment.rank.place': 'מקום {{place}}',

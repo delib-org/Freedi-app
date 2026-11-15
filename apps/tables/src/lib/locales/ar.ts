@@ -182,7 +182,7 @@ const ar: Record<string, string> = {
 	'tableAssignment.rank.removed': 'تمت إزالة {{topic}}.',
 	'tableAssignment.rank.handle': 'تغيير مكان {{topic}}. اسحبوه، أو استخدموا مفاتيح الأسهم.',
 	'tableAssignment.rank.note':
-		'سنحاول إجلاسكم عند موضوع اخترتموه. وأحيانًا ستجلسون عند موضوع آخر، كي تبقى كل طاولة صورة مصغّرة عن القاعة كلها.',
+		'يجمع توزيع الطاولات بين اختياركم والحاجة إلى تنوّع الآراء على كل طاولة، لذلك قد يتم توزيعكم على موضوع لم يكن خياركم الأول.',
 	'tableAssignment.rank.pickOne': 'اختاروا موضوعًا واحدًا على الأقل',
 	'tableAssignment.rank.explain': 'شرح عن {{topic}}',
 	'tableAssignment.rank.place': 'المكان {{place}}',
