@@ -185,7 +185,7 @@ export async function assignTables(
 }
 
 export const classAssignTables = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (
 		request: CallableRequest<ClassAssignTablesRequest>,
 	): Promise<ClassAssignTablesResponse> => {

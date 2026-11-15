@@ -145,7 +145,7 @@ export async function addNoDevice(
 }
 
 export const classAddNoDevice = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (request: CallableRequest<ClassAddNoDeviceRequest>): Promise<ClassAddNoDeviceResponse> => {
 		let uid: string | undefined;
 		try {

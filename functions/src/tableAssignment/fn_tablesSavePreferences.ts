@@ -115,7 +115,7 @@ export async function savePreferences(
 }
 
 export const tablesSavePreferences = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (
 		request: CallableRequest<TablesSavePreferencesRequest>,
 	): Promise<TablesSavePreferencesResponse> => {

@@ -91,7 +91,7 @@ export async function publishRun(
 }
 
 export const tablesPublishRun = onCall(
-	{ region: functionConfig.region, timeoutSeconds: 120 },
+	{ region: functionConfig.region, timeoutSeconds: 120, memory: '512MiB' },
 	async (request: CallableRequest<TablesPublishRunRequest>): Promise<TablesPublishRunResponse> => {
 		let uid: string | undefined;
 		try {

@@ -141,7 +141,7 @@ export async function disconnectRegistration(
 }
 
 export const classConnectRegistration = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (
 		request: CallableRequest<ClassConnectRegistrationRequest>,
 	): Promise<ClassConnectRegistrationResponse> => {
@@ -162,7 +162,7 @@ export const classConnectRegistration = onCall(
 );
 
 export const classDisconnectRegistration = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (
 		request: CallableRequest<ClassDisconnectRegistrationRequest>,
 	): Promise<ClassDisconnectRegistrationResponse> => {

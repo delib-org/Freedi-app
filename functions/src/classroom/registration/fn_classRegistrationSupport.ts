@@ -105,7 +105,7 @@ export async function registrationSupport(
 }
 
 export const classRegistrationSupport = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (
 		request: CallableRequest<ClassRegistrationSupportRequest>,
 	): Promise<ClassRegistrationSupportResponse> => {

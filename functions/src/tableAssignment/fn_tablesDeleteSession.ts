@@ -40,7 +40,7 @@ export async function deleteSession(
 }
 
 export const tablesDeleteSession = onCall(
-	{ region: functionConfig.region, timeoutSeconds: 120 },
+	{ region: functionConfig.region, timeoutSeconds: 120, memory: '512MiB' },
 	async (
 		request: CallableRequest<TablesDeleteSessionRequest>,
 	): Promise<TablesDeleteSessionResponse> => {

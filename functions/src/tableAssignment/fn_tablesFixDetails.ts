@@ -115,7 +115,7 @@ export async function fixDetails(
 }
 
 export const tablesFixDetails = onCall(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, memory: '512MiB' },
 	async (request: CallableRequest<TablesFixDetailsRequest>): Promise<TablesFixDetailsResponse> => {
 		let uid: string | undefined;
 		try {
