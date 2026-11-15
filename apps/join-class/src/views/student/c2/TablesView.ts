@@ -1,6 +1,6 @@
 import m from 'mithril';
-import { SIDE_MAX, SIDE_MIN } from '@freedi/shared-types';
-import type { Camp } from '@freedi/shared-types';
+import { SIDE_MAX, SIDE_MIN, isTableAlone, reservedSeatsOf } from '@freedi/shared-types';
+import type { Camp, ClassTable } from '@freedi/shared-types';
 import type { SideNames } from '@/lib/classroom/classSettings';
 import '@/styles/student-c2.scss';
 import { StudentFrame } from '@/components/StudentFrame';
@@ -8,6 +8,8 @@ import { classState } from '@/lib/classroom/classState';
 import { getUserState } from '@/lib/user';
 import { sideNamesOf } from '@/lib/classroom/classSettings';
 import { t } from '@/lib/i18n';
+import { gateMemory, hasDeferredPick } from '@/lib/classroom/arrivalActions';
+import { isConnectedLesson, isSeatingCopied } from '@/lib/classroom/registrationLogic';
 import { watchRoster } from '../c2/rosterWatch';
 import type { RosterWatch } from '../c2/rosterWatch';
 import { SIDE_CENTER, sideWordKey, tableChips, tableNumberOf } from '../c2/c2Helpers';
@@ -44,6 +46,43 @@ function chip(c: TableChip): m.Vnode {
 	);
 }
 
+/** "Pick my table": two registrations share the student's name and the tables have arrived. */
+function pickMyTable(mainId: string, tablesArrived: boolean): m.Children {
+	if (!tablesArrived || !hasDeferredPick(mainId)) return null;
+
+	return m(
+		'button.btn.btn--primary.table-step__pick',
+		{
+			type: 'button',
+			'data-testid': 'table-pick-mine',
+			onclick: () => {
+				gateMemory.reenter = true;
+				m.redraw();
+			},
+		},
+		t('table.pick_mine'),
+	);
+}
+
+/** Registered tablemates who have not arrived: names only, apart from the people present. */
+function reserved(table: ClassTable | null): m.Children {
+	const seats = table ? reservedSeatsOf(table) : [];
+	if (seats.length === 0) return null;
+
+	return m('section.table-step__card', { 'aria-labelledby': 'table-reserved-title' }, [
+		m('h2.table-step__members-title#table-reserved-title', t('table.not_arrived')),
+		m(
+			'ul.table-step__chips',
+			{ 'data-testid': 'table-reserved' },
+			seats.map((seat) =>
+				m('li.table-chip.table-chip--reserved', { key: seat.seatId }, [
+					m('span.table-chip__name', { dir: 'auto' }, seat.name),
+				]),
+			),
+		),
+	]);
+}
+
 export const TablesView: m.Component<StepAttrs> = {
 	oninit(vnode) {
 		(vnode.state as unknown as TablesState).roster = watchRoster(vnode.attrs.main.statementId);
@@ -57,9 +96,15 @@ export const TablesView: m.Component<StepAttrs> = {
 		const state = vnode.state as unknown as TablesState;
 		const tableId = classState.mySubscription?.tableId;
 		const header = t('table.header');
+		const connected = isConnectedLesson(vnode.attrs.main);
 		if (!tableId) {
 			return m(StudentFrame, { headerLine: header }, [
-				m('p.table-step__empty', { role: 'status' }, t('table.not_placed')),
+				m(
+					'p.table-step__empty',
+					{ role: 'status' },
+					t(connected ? 'table.no_seat_yet' : 'table.not_placed'),
+				),
+				pickMyTable(vnode.attrs.main.statementId, connected && isSeatingCopied(vnode.attrs.main)),
 			]);
 		}
 		const n = classState.table?.n ?? tableNumberOf(tableId);
@@ -77,12 +122,27 @@ export const TablesView: m.Component<StepAttrs> = {
 					{ 'aria-live': 'polite', 'data-testid': 'table-number' },
 					t('table.number', { n: n ?? '' }),
 				),
+				classState.table?.topic
+					? m(
+							'p.table-step__topic',
+							{ dir: 'auto', 'data-testid': 'table-topic' },
+							t('table.topic', { topic: classState.table.topic }),
+						)
+					: null,
+				connected && classState.table && isTableAlone(classState.table)
+					? m(
+							'p.table-step__note',
+							{ role: 'status', 'data-testid': 'table-alone' },
+							t('table.alone'),
+						)
+					: null,
 				chips.length > 0
 					? m('section.table-step__card', { 'aria-labelledby': 'table-members-title' }, [
 							m('h2.table-step__members-title#table-members-title', t('table.members')),
 							m('ul.table-step__chips', { 'data-testid': 'table-mates' }, chips.map(chip)),
 						])
 					: null,
+				reserved(classState.table),
 			]),
 		]);
 	},

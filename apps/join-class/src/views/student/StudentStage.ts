@@ -5,10 +5,14 @@ import { lessonStatusOfMain } from '@/lib/lessonCore';
 import { AllProposalsStep } from './steps/AllProposalsStep';
 import { setStudentStage } from '@/lib/studentStage';
 import { classState, watchClass } from '@/lib/classroom/classState';
-import { needsNameForm } from '@/lib/classroom/nameGate';
+import { studentGateOf } from '@/lib/classroom/studentGate';
+import { gateMemory } from '@/lib/classroom/arrivalActions';
+import { isConnectedLesson } from '@/lib/classroom/registrationLogic';
 import { getCustomDisplayName } from '@/lib/store';
 import { getUserState } from '@/lib/user';
 import { NameGate } from './c2/NameGate';
+import { RegisteredNameGate } from './c2/RegisteredNameGate';
+import { SeatMoved } from './c2/SeatMoved';
 import { OpeningStep } from './steps/OpeningStep';
 import { ProposalsStep } from './steps/ProposalsStep';
 import { SideStep } from './steps/SideStep';
@@ -83,7 +87,10 @@ export interface StudentStageAttrs {
 export const StudentStage: m.Component<StudentStageAttrs> = {
 	oninit(vnode) {
 		const state = vnode.state as StageState;
-		state.stop = watchClass(vnode.attrs.main.statementId, 'student');
+		// In a connected lesson nobody joins on their own: the name gate calls `classArriveByName`.
+		state.stop = watchClass(vnode.attrs.main.statementId, 'student', {
+			autoJoin: !isConnectedLesson(vnode.attrs.main),
+		});
 		// The later steps' code downloads now, not when the teacher presses the button.
 		prefetchStepChunks();
 		// The replies layer (IA 22) is its own chunk: it is not on the first paint.
@@ -113,15 +120,21 @@ export const StudentStage: m.Component<StudentStageAttrs> = {
 			return renderState(attrs.main, status);
 		}
 		// No student reaches any step without a name: the form comes before the step (Trello dZQmKXRY).
-		if (
-			needsNameForm({
-				user: getUserState().user,
-				deviceName: getCustomDisplayName(),
-				sub: classState.mySubscription,
-				subLoaded: classState.mySubscriptionLoaded,
-			})
-		) {
+		// A connected lesson asks the full name as registered, or says the seat moved to another device.
+		const gate = studentGateOf({
+			connected: isConnectedLesson(attrs.main),
+			user: getUserState().user,
+			deviceName: getCustomDisplayName(),
+			sub: classState.mySubscription,
+			subLoaded: classState.mySubscriptionLoaded,
+			reenter: gateMemory.reenter,
+		});
+		if (gate !== 'none') {
 			setStudentStage(null);
+			if (gate === 'seat-moved') return m(SeatMoved, { key: 'seat-moved' });
+			if (gate === 'registered') {
+				return m(RegisteredNameGate, { mainId: attrs.main.statementId, key: 'registered-gate' });
+			}
 
 			return m(NameGate, { mainId: attrs.main.statementId, key: 'name-gate' });
 		}
