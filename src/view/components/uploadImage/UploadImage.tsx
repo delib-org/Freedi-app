@@ -4,6 +4,7 @@ import { setImageLocally } from './uploadImageCont';
 import { Statement } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { statementImageAttrs } from '@/helpers/statementImageAttrs';
 
 type SizeVariant = 'default' | 'compact' | 'inline' | 'cover';
 
@@ -21,6 +22,8 @@ interface Props {
 	readonly setImage: React.Dispatch<React.SetStateAction<string>>;
 	readonly isAdmin?: boolean;
 	readonly variant?: SizeVariant;
+	/** Rendered width of the picture; lets the browser load the small copy. */
+	readonly sizes?: string;
 }
 
 export default function UploadImage({
@@ -30,6 +33,7 @@ export default function UploadImage({
 	setImage,
 	isAdmin = true, // Default to true for backwards compatibility
 	variant = 'default', // Default variant
+	sizes,
 }: Props) {
 	const { t } = useTranslation();
 	const [isDragging, setIsDragging] = useState(false);
@@ -124,9 +128,10 @@ export default function UploadImage({
 			{image !== '' && (
 				<div className={styles.imageContainer}>
 					<img
-						src={image}
+						{...statementImageAttrs(statement, image, sizes)}
 						alt={`image of ${statement?.statement || 'statement'}`}
 						className={styles.imagePreview}
+						decoding="async"
 					/>
 					{showSuccess && (
 						<div className={styles.successOverlay}>

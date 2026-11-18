@@ -130,7 +130,8 @@
 	--tone-glass: rgba(255, 255, 255, 0.08);
 
 	--accent-violet: #8b6ff7;
-	--accent-violet-ink: #ffffff;
+	// White on #8b6ff7 is 3.7:1 (under AA); dark ink is 5.1:1.
+	--accent-violet-ink: #0b0f17;
 	--accent-violet-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 
 	--score-positive: #3ecf73;

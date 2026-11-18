@@ -24,7 +24,13 @@ import {
 	QuestionStageIndex,
 	STAGE_DECIDED,
 } from '@/helpers/questionStage';
-import { areAnswersComplete, countRated, latestRatingAt, rankableAnswers } from './resultsLogic';
+import {
+	areAnswersComplete,
+	countRated,
+	latestRatingAt,
+	rankableAnswers,
+	stageAnswerCount,
+} from './resultsLogic';
 import { isLiveResultsOn } from '@/helpers/liveResults';
 
 /**
@@ -90,7 +96,19 @@ export function useQuestionScreenData(statement: Statement | undefined): Questio
 		const deadline = statement?.questionSettings?.deadline;
 		const isDeadlinePassed = typeof deadline === 'number' && deadline > 0 && deadline <= now;
 		const isHalted = statement?.questionSettings?.isHalted === true || isDeadlinePassed;
-		const stage = getQuestionStage({ statement, answerCount: answers.length, now });
+		const answersComplete = areAnswersComplete({
+			loadedAnswers: options.length,
+			loadedChildren,
+			numberOfOptions: statement?.numberOfOptions,
+			isFullyLoaded,
+			childrenWindow: CHAT.INITIAL_MESSAGES_LIMIT,
+		});
+		const answerCount = stageAnswerCount({
+			loadedAnswers: answers.length,
+			answersComplete,
+			numberOfOptions: statement?.numberOfOptions,
+		});
+		const stage = getQuestionStage({ statement, answerCount, now });
 		const addState = getAddAnswerState({
 			isHost,
 			canParticipantsAdd: canParticipantsAddAnswers(statement),
@@ -106,13 +124,7 @@ export function useQuestionScreenData(statement: Statement | undefined): Questio
 			rateableCount: rateable.length,
 			ratedCount,
 			lastRatedAt: latestRatingAt(evaluations, rateableIds, userId),
-			answersComplete: areAnswersComplete({
-				loadedAnswers: options.length,
-				loadedChildren,
-				numberOfOptions: statement?.numberOfOptions,
-				isFullyLoaded,
-				childrenWindow: CHAT.INITIAL_MESSAGES_LIMIT,
-			}),
+			answersComplete,
 			isDeadlinePassed,
 			isHalted,
 			canRate: canRateQuestion(statement, stage, isHalted),

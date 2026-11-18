@@ -141,13 +141,15 @@ export const useOnlineUsers = (statementId: string | undefined) => {
 			cleanup(statementId, currentUser);
 		};
 
+		// pagehide, not unload: unload listeners are deprecated and block the
+		// back/forward cache.
 		window.addEventListener('beforeunload', handleBeforeUnload);
-		window.addEventListener('unload', handleBeforeUnload);
+		window.addEventListener('pagehide', handleBeforeUnload);
 
 		// Cleanup on component unmount
 		return () => {
 			window.removeEventListener('beforeunload', handleBeforeUnload);
-			window.removeEventListener('unload', handleBeforeUnload);
+			window.removeEventListener('pagehide', handleBeforeUnload);
 			cleanup(statementId, currentUser);
 		};
 	}, [statementId, currentUser]);

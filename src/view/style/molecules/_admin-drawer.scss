@@ -133,11 +133,21 @@ $admin-drawer-width: 320px;
 		background: var(--card-default);
 		box-shadow: -4px 0 18px rgba(0, 0, 0, 0.2);
 		transform: translateX(100%);
-		transition: transform 0.22s ease;
+		// Closed = hidden, not only off-screen: its buttons must leave the tab
+		// order (aria-hidden content may not stay focusable). Visibility flips
+		// after the slide-out and before the slide-in.
+		visibility: hidden;
+		transition:
+			transform 0.22s ease,
+			visibility 0s linear 0.22s;
 		overflow-y: auto;
 
 		&--open {
 			transform: translateX(0);
+			visibility: visible;
+			transition:
+				transform 0.22s ease,
+				visibility 0s;
 		}
 	}
 

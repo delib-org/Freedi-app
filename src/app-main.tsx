@@ -15,6 +15,7 @@ import RootErrorBoundary from './components/ErrorBoundary/RootErrorBoundary';
 import { schedulePrefetchLazyRoutes } from './routes/prefetchRoutes';
 import { setupIndexedDBErrorHandler } from './utils/indexedDBErrorHandler';
 import { isChunkLoadError, handleChunkLoadError } from './utils/errorBoundaryHelpers';
+import { afterPageSettles } from './utils/afterPageSettles';
 
 const materialSymbols = document.createElement('link');
 materialSymbols.rel = 'stylesheet';
@@ -41,22 +42,15 @@ window.addEventListener('unhandledrejection', (event) => {
 	}
 });
 
-const runWhenIdle = (callback: () => void): void => {
-	if (typeof window.requestIdleCallback === 'function') {
-		window.requestIdleCallback(() => callback(), { timeout: 5000 });
-	} else {
-		window.setTimeout(callback, 1500);
-	}
-};
-
-runWhenIdle(() => {
+// Optional work waits until the question is on screen: on slow 4G it used to
+// compete with the auth and Firestore requests that put data there.
+afterPageSettles(() => {
 	import('@microsoft/clarity')
 		.then((module) => module.default.init('vipo4d20gg'))
 		.catch(() => undefined);
 	import('./utils/ensureFirebaseServiceWorker').catch(() => undefined);
+	schedulePrefetchLazyRoutes();
 });
-
-schedulePrefetchLazyRoutes();
 
 if (import.meta.env.DEV || import.meta.env.MODE === 'testing') {
 	import('./utils/testSentry');

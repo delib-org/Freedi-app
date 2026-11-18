@@ -23,11 +23,11 @@ import { getAnalytics, isSupported, type Analytics } from 'firebase/analytics';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 // Removed import to avoid circular dependency - isProduction is inlined below
 import firebaseConfig from './configKey';
+import { afterPageSettles } from '@/utils/afterPageSettles';
 import { initializeFirebaseAppCheck } from './appCheck';
 import { hasPersistedFirebaseUser } from '@/utils/persistedAuthUser';
 import { warmPopupResolver } from '@/controllers/auth/popupResolver';
 import { logError } from '@/utils/errorHandling';
-import { TIME } from '@/constants/common';
 import {
 	clearIndexedDBErrorRecord,
 	recordIndexedDBError,
@@ -215,9 +215,6 @@ const storage = getStorage(app);
 const auth = createAuth(app);
 const functions = getFunctions(app, 'me-west1');
 
-const ANALYTICS_IDLE_TIMEOUT_MS = 5 * TIME.SECOND;
-const ANALYTICS_FALLBACK_DELAY_MS = 1.5 * TIME.SECOND;
-
 // Initialize Analytics only in production and if supported
 let analytics: Analytics | null = null;
 // Inline isProduction check to avoid circular dependency
@@ -225,25 +222,6 @@ const isProduction =
 	typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
 		? false
 		: typeof window !== 'undefined' && !isLocalRuntime();
-
-/**
- * Run after the page has loaded and the main thread is idle. Analytics pulls in
- * gtag.js plus an Installations call; on slow 4G those competed with the auth
- * and Firestore requests that put data on screen. Events logged before this
- * are queued by analyticsService and flushed once `analytics` is set.
- */
-function afterLoadWhenIdle(callback: () => void): void {
-	const whenIdle = () => {
-		if (typeof window.requestIdleCallback === 'function') {
-			window.requestIdleCallback(() => callback(), { timeout: ANALYTICS_IDLE_TIMEOUT_MS });
-		} else {
-			window.setTimeout(callback, ANALYTICS_FALLBACK_DELAY_MS);
-		}
-	};
-
-	if (document.readyState === 'complete') whenIdle();
-	else window.addEventListener('load', whenIdle, { once: true });
-}
 
 function initializeAnalytics(): void {
 	// Check both isSupported and IndexedDB availability before initializing analytics
@@ -278,7 +256,7 @@ function initializeAnalytics(): void {
 }
 
 if (isProduction) {
-	afterLoadWhenIdle(initializeAnalytics);
+	afterPageSettles(initializeAnalytics);
 }
 
 /**
@@ -291,7 +269,7 @@ if (isProduction) {
 function warmPopupIframe(): void {
 	if (typeof window === 'undefined') return;
 	const warm = () => void warmPopupResolver(auth);
-	if (hasPersistedFirebaseUser()) afterLoadWhenIdle(warm);
+	if (hasPersistedFirebaseUser()) afterPageSettles(warm);
 	else warm();
 }
 

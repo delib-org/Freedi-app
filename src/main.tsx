@@ -7,7 +7,7 @@ import { hasPersistedFirebaseUser } from './utils/persistedAuthUser';
 import { LocalStorageObjects } from './types/localStorage/LocalStorageObjects';
 
 /**
- * Origins the signed-in app talks to before it can show any data: reCAPTCHA
+ * Origins the app talks to before it can show any data: reCAPTCHA
  * (App Check) scripts, the App Check token exchange, Auth's account lookup and
  * token refresh, and Firestore. On slow 4G every new origin costs DNS + TCP +
  * TLS (~3 round trips, ~1.7 s) and the app used to discover them one after
@@ -18,11 +18,13 @@ import { LocalStorageObjects } from './types/localStorage/LocalStorageObjects';
  * Firebase REST/WebChannel calls are anonymous CORS requests, which use a
  * separate pool and need `crossorigin` on the hint to share the connection.
  */
-const SCRIPT_ORIGINS = ['https://www.google.com', 'https://www.gstatic.com'];
+// Four at most: more preconnects compete with each other. www.google.com is
+// opened by the reCAPTCHA preload below; securetoken is only needed once an
+// ID token expires, well after first paint.
+const SCRIPT_ORIGINS = ['https://www.gstatic.com'];
 const API_ORIGINS = [
 	'https://content-firebaseappcheck.googleapis.com',
 	'https://identitytoolkit.googleapis.com',
-	'https://securetoken.googleapis.com',
 	'https://firestore.googleapis.com',
 ];
 // The exact URL App Check's ReCaptchaV3Provider injects as a classic script.
@@ -67,7 +69,9 @@ if (isLandingPath && !isSignedIn) {
 	void import('./landing-main');
 } else {
 	warmUpDictionary();
-	if (isSignedIn) warmUpSignedInConnections();
+	// A new visitor on a shared link is signed in anonymously at once, so they
+	// need the same origins as a returning one.
+	warmUpSignedInConnections();
 	// A known signed-in visitor at the marketing URL can skip its component and
 	// dictionary entirely. Firebase still verifies the session in the full app.
 	if (isLandingPath) history.replaceState(null, '', '/home');

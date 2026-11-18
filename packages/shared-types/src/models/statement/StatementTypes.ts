@@ -272,6 +272,12 @@ export const StatementSchema = object({
 			main: optional(string()), // the main image of the statement
 			more: optional(array(string())), // the other images of the statement
 			alt: optional(string()), // text alternative for the main image, read by screen readers
+			// Small WebP copy for cards, written by fn_imageThumbnail. Only valid
+			// while thumbOf === main: a replaced main leaves a stale thumb behind.
+			thumb: optional(string()),
+			thumbOf: optional(string()), // the main URL the thumb was made from
+			thumbWidth: optional(number()), // px, for srcset
+			mainWidth: optional(number()), // px, for srcset
 		}),
 	),
 	totalEvaluators: optional(number()), // the total number of evaluators of the statement
