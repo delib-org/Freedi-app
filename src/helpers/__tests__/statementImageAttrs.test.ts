@@ -41,4 +41,15 @@ describe('statementImageAttrs', () => {
 		});
 		expect(statementImageAttrs(undefined, MAIN, '120px')).toEqual({ src: MAIN });
 	});
+
+	it('loads a same-size, lighter thumb directly', () => {
+		const sameSize = statementWith({
+			main: MAIN,
+			thumb: THUMB,
+			thumbOf: MAIN,
+			thumbWidth: 476,
+			mainWidth: 476,
+		});
+		expect(statementImageAttrs(sameSize, MAIN, '120px')).toEqual({ src: THUMB });
+	});
 });

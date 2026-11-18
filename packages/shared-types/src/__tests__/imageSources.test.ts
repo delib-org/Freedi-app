@@ -37,9 +37,9 @@ describe('getImageSources', () => {
 		).toEqual({ src: MAIN });
 	});
 
-	it('ignores a thumb that is not smaller than the main image', () => {
+	it('uses a same-size thumb directly (lighter file, same pixels)', () => {
 		expect(
-			getImageSources({ main: MAIN, thumb: THUMB, thumbOf: MAIN, thumbWidth: 640, mainWidth: 640 }),
-		).toEqual({ src: MAIN });
+			getImageSources({ main: MAIN, thumb: THUMB, thumbOf: MAIN, thumbWidth: 476, mainWidth: 476 }),
+		).toEqual({ src: THUMB });
 	});
 });

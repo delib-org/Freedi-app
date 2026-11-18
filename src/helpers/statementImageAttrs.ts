@@ -18,7 +18,8 @@ export function statementImageAttrs(
 ): StatementImageAttrs {
 	if (!sizes || !statement || shown !== statement.imagesURL?.main) return { src: shown };
 	const sources = getImageSources(statement.imagesURL);
-	if (!sources?.srcSet) return { src: shown };
+	if (!sources) return { src: shown };
+	if (!sources.srcSet) return { src: sources.src };
 
 	return { src: sources.src, srcSet: sources.srcSet, sizes };
 }

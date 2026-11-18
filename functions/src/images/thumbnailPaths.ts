@@ -13,7 +13,23 @@ export const THUMB = {
 	WEBP_QUALITY: 75,
 	FOLDER: 'thumbs',
 	CACHE_CONTROL: 'public, max-age=31536000, immutable',
+	/** A copy no narrower than the original is kept only below this share of its bytes. */
+	MAX_SAME_SIZE_BYTES_RATIO: 0.8,
 } as const;
+
+/**
+ * Whether the WebP copy is worth keeping: narrower than the original, or the
+ * same size but much lighter (a 476px PNG screenshot is ~290 KB; as WebP ~19 KB).
+ */
+export function thumbIsWorthIt(
+	thumb: { width: number; bytes: number },
+	main: { width: number; bytes: number },
+): boolean {
+	if (!main.width || !main.bytes) return false;
+	if (thumb.width < main.width) return true;
+
+	return thumb.bytes <= main.bytes * THUMB.MAX_SAME_SIZE_BYTES_RATIO;
+}
 
 const SOURCE_PATTERN = /^statements\/([^/]+)\/((?:imgId-|card-)[^/]+)$/;
 

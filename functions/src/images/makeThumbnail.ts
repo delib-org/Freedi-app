@@ -9,12 +9,13 @@ import {
 	firebaseDownloadUrl,
 	mainPointsAt,
 	parseThumbSource,
+	thumbIsWorthIt,
 	thumbPathFor,
 } from './thumbnailPaths';
 
 export type ThumbOutcome =
 	| 'skipped' // not a statement main image
-	| 'too-small' // the image is already no bigger than a thumb
+	| 'no-gain' // the copy would be neither narrower nor much lighter
 	| 'attached' // thumb written and recorded on the statement
 	| 'not-current'; // the statement no longer (or never) points at this image
 
@@ -77,7 +78,14 @@ export async function makeThumbnail(
 		.webp({ quality: THUMB.WEBP_QUALITY })
 		.toBuffer({ resolveWithObject: true });
 
-	if (!mainWidth || info.width >= mainWidth) return 'too-small';
+	if (
+		!thumbIsWorthIt(
+			{ width: info.width, bytes: data.length },
+			{ width: mainWidth, bytes: bytes.length },
+		)
+	) {
+		return 'no-gain';
+	}
 
 	const thumbPath = thumbPathFor(source);
 	const token = randomUUID();
