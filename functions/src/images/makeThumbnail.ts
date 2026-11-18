@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import sharp from 'sharp';
+import type { Metadata, Sharp, SharpOptions } from 'sharp';
 import { getStorage } from 'firebase-admin/storage';
 import { getFirestore } from 'firebase-admin/firestore';
 import { Collections } from '@freedi/shared-types';
@@ -29,8 +29,21 @@ export interface MakeThumbnailOptions {
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+type SharpFactory = (input?: Buffer, options?: SharpOptions) => Sharp;
+
+/**
+ * sharp is a native module. Loaded here, not at the top: index.ts loads every
+ * function's module at cold start, so a missing native binary would otherwise
+ * crash every function in the codebase instead of only this one.
+ */
+async function loadSharp(): Promise<SharpFactory> {
+	const module = await import('sharp');
+
+	return module.default as SharpFactory;
+}
+
 /** Orientation 5-8 store the picture rotated by 90°: width and height swap. */
-function displayedWidth(meta: sharp.Metadata): number {
+function displayedWidth(meta: Metadata): number {
 	const width = meta.width ?? 0;
 	const height = meta.height ?? 0;
 
@@ -48,6 +61,7 @@ export async function makeThumbnail(
 	const source = parseThumbSource(objectName);
 	if (!source) return 'skipped';
 
+	const sharp = await loadSharp();
 	const bucket = getStorage().bucket();
 	const [bytes] = await bucket.file(objectName).download();
 	const mainWidth = displayedWidth(await sharp(bytes).metadata());
