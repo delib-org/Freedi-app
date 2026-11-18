@@ -3,6 +3,7 @@ import { Statement } from '@freedi/shared-types';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 import { ImageLightbox } from '@/view/components/atomic/molecules/ImageLightbox';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { statementImageAttrs } from '@/helpers/statementImageAttrs';
 import styles from './StatementImage.module.scss';
 
 interface Props {
@@ -17,6 +18,14 @@ interface Props {
 
 // How the admin's upload zone sizes the picture in each mode.
 const UPLOAD_VARIANTS = { above: 'compact', inline: 'inline', thumb: 'cover' } as const;
+
+// Rendered width per mode (StatementImage.module.scss, --card-photo-width), so
+// the browser picks the small copy where the full photo would be wasted.
+const RENDERED_SIZES = {
+	above: '(max-width: 768px) 100vw, 768px',
+	inline: '200px',
+	thumb: '120px',
+} as const;
 
 const StatementImage: FC<Props> = ({
 	statement,
@@ -49,6 +58,7 @@ const StatementImage: FC<Props> = ({
 					setImage={setImage}
 					isAdmin={isAdmin}
 					variant={UPLOAD_VARIANTS[displayMode]}
+					sizes={RENDERED_SIZES[displayMode]}
 				/>
 			) : (
 				<>
@@ -58,7 +68,13 @@ const StatementImage: FC<Props> = ({
 						onClick={() => setIsEnlarged(true)}
 						aria-label={`${t('Enlarge image')}: ${statement.statement}`}
 					>
-						<img src={image} alt="" className={styles.picture} loading="lazy" decoding="async" />
+						<img
+							{...statementImageAttrs(statement, image, RENDERED_SIZES[displayMode])}
+							alt=""
+							className={styles.picture}
+							loading="lazy"
+							decoding="async"
+						/>
 					</button>
 					<ImageLightbox
 						isOpen={isEnlarged}

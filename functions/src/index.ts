@@ -1453,3 +1453,6 @@ export * from './tableAssignment';
 export { deliberation, updateDeliberations } from './deliberation/functions';
 exports.queueDeliberation = legacyStatementTriggers.queueDeliberation;
 export { createAgreementHandoff, redeemAgreementHandoff } from './deliberation/handoff';
+
+// Small WebP copy of each statement image, for cards (region me-central1, with the bucket)
+export { onStatementImageUploaded } from './images/fn_imageThumbnail';

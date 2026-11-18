@@ -289,6 +289,7 @@ export {
 export {
   statementToSimpleStatement
 } from "./models/statement/statementToSimple";
+export { getImageSources, type ImageSources } from "./models/statement/imageSources";
 export type {
   StatementSettings,
   JoinFormField,
