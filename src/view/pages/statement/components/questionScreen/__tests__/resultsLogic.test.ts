@@ -12,6 +12,7 @@ import {
 	scorePercent,
 	scoreTone,
 	selectLeadingAnswers,
+	stageAnswerCount,
 } from '../resultsLogic';
 
 function answer(id: string, consensus: number, evaluators: number, createdAt = 1): Statement {
@@ -546,5 +547,25 @@ describe('resultsLogic', () => {
 				false,
 			).value,
 		).toBe('−10');
+	});
+
+	describe('stageAnswerCount', () => {
+		it('trusts the server count while answers are still loading', () => {
+			expect(
+				stageAnswerCount({ loadedAnswers: 0, answersComplete: false, numberOfOptions: 2 }),
+			).toBe(2);
+		});
+
+		it('uses the loaded answers once the list is complete', () => {
+			expect(
+				stageAnswerCount({ loadedAnswers: 0, answersComplete: true, numberOfOptions: 2 }),
+			).toBe(0);
+		});
+
+		it('never counts fewer than the answers already loaded', () => {
+			expect(
+				stageAnswerCount({ loadedAnswers: 3, answersComplete: false, numberOfOptions: undefined }),
+			).toBe(3);
+		});
 	});
 });

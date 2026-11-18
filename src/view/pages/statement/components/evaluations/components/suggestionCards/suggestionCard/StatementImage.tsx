@@ -58,7 +58,7 @@ const StatementImage: FC<Props> = ({
 						onClick={() => setIsEnlarged(true)}
 						aria-label={`${t('Enlarge image')}: ${statement.statement}`}
 					>
-						<img src={image} alt="" className={styles.picture} />
+						<img src={image} alt="" className={styles.picture} loading="lazy" decoding="async" />
 					</button>
 					<ImageLightbox
 						isOpen={isEnlarged}

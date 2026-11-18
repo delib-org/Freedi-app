@@ -245,6 +245,26 @@ export function areAnswersComplete({
 	return loadedAnswers === numberOfOptions;
 }
 
+/**
+ * How many answers the stage should count. While the list is still loading,
+ * 0 loaded answers does not mean "no answers": trust the server's count, or
+ * the header flashes the Collecting stage and its cue, then jumps back to
+ * Rating and shifts the whole page.
+ */
+export function stageAnswerCount({
+	loadedAnswers,
+	answersComplete,
+	numberOfOptions,
+}: {
+	loadedAnswers: number;
+	answersComplete: boolean;
+	numberOfOptions: number | undefined;
+}): number {
+	if (answersComplete) return loadedAnswers;
+
+	return Math.max(loadedAnswers, numberOfOptions ?? 0);
+}
+
 export interface StageCueInput {
 	stage: QuestionStageIndex;
 	/** Host halt, or the deadline passed. */

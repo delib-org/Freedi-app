@@ -197,7 +197,10 @@
 
 	&__bar {
 		height: 100%;
-		width: 30%;
+		width: 100%;
+		// Moves with transform only: animating width/margin re-laid out the page
+		// every frame and logged a layout shift per frame.
+		transform-origin: left center;
 		background: linear-gradient(90deg, var(--accent), var(--agree), var(--accent));
 		background-size: 200% 100%;
 		border-radius: 4px;
@@ -323,16 +326,13 @@
 
 @keyframes progressIndeterminate {
 	0% {
-		width: 0%;
-		margin-left: 0%;
+		transform: translateX(0) scaleX(0);
 	}
 	50% {
-		width: 60%;
-		margin-left: 20%;
+		transform: translateX(20%) scaleX(0.6);
 	}
 	100% {
-		width: 0%;
-		margin-left: 100%;
+		transform: translateX(100%) scaleX(0);
 	}
 }
 
