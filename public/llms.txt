@@ -1,0 +1,8 @@
+# WizCol
+
+> WizCol helps communities turn different views into decisions they can stand behind: people add answers to a shared question, rate each other's answers, and see where agreement forms.
+
+## Main pages
+
+- [WizCol app](https://app.wizcol.com/): start or join a question
+- [About WizCol](https://wizcol.com/): what the platform is and who it is for

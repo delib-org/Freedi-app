@@ -18,11 +18,13 @@ import { LocalStorageObjects } from './types/localStorage/LocalStorageObjects';
  * Firebase REST/WebChannel calls are anonymous CORS requests, which use a
  * separate pool and need `crossorigin` on the hint to share the connection.
  */
-const SCRIPT_ORIGINS = ['https://www.google.com', 'https://www.gstatic.com'];
+// Four at most: more preconnects compete with each other. www.google.com is
+// opened by the reCAPTCHA preload below; securetoken is only needed once an
+// ID token expires, well after first paint.
+const SCRIPT_ORIGINS = ['https://www.gstatic.com'];
 const API_ORIGINS = [
 	'https://content-firebaseappcheck.googleapis.com',
 	'https://identitytoolkit.googleapis.com',
-	'https://securetoken.googleapis.com',
 	'https://firestore.googleapis.com',
 ];
 // The exact URL App Check's ReCaptchaV3Provider injects as a classic script.

@@ -233,12 +233,16 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 							type="button"
 							className={styles.header__titleButton}
 							onClick={() => setEdit(true)}
-							aria-label={edit ? undefined : t('Edit title')}
 						>
 							{!edit ? (
-								<h1 className={styles.header__title} dir="auto">
-									{renderInlineMarkdown(statement?.statement)}
-								</h1>
+								<>
+									<h1 className={styles.header__title} dir="auto">
+										{renderInlineMarkdown(statement?.statement)}
+									</h1>
+									{/* The name keeps the visible title and adds the action
+									    (an aria-label would hide the title from voice users). */}
+									<span className={styles.header__srOnly}>{t('Edit title')}</span>
+								</>
 							) : (
 								<h1 className={styles.header__title} dir="auto">
 									<input
