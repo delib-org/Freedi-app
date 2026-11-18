@@ -56,6 +56,49 @@ async function decodeImage(file: File): Promise<DecodedImage> {
 	}
 }
 
+/** Formats whose encoder honours the quality setting; kept as they are. */
+const LOSSY_TYPES = new Set(['image/jpeg', 'image/webp']);
+
+/**
+ * The format to upload. A lossless or odd format (PNG screenshots, GIF, HEIC)
+ * ignores the quality setting, so a 476px PNG stayed ~300 KB: without
+ * transparency it becomes JPEG. With transparency it stays PNG, or the clear
+ * parts would turn black.
+ */
+export function chooseOutputType(fileType: string, hasTransparency: boolean): string {
+	if (LOSSY_TYPES.has(fileType)) return fileType;
+
+	return hasTransparency ? 'image/png' : 'image/jpeg';
+}
+
+/** Whether any pixel of the drawn canvas is not fully opaque. */
+function canvasHasTransparency(
+	ctx: CanvasRenderingContext2D,
+	width: number,
+	height: number,
+): boolean {
+	const { data } = ctx.getImageData(0, 0, width, height);
+	for (let alpha = 3; alpha < data.length; alpha += 4) {
+		if (data[alpha] < 255) return true;
+	}
+
+	return false;
+}
+
+const EXTENSIONS: Record<string, string> = {
+	'image/jpeg': 'jpg',
+	'image/png': 'png',
+	'image/webp': 'webp',
+};
+
+function renameFor(name: string, type: string): string {
+	const extension = EXTENSIONS[type];
+	if (!extension) return name;
+	const base = name.includes('.') ? name.slice(0, name.lastIndexOf('.')) : name;
+
+	return `${base}.${extension}`;
+}
+
 function encode(canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob | null> {
 	return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
 }
@@ -87,6 +130,7 @@ export const compressImage = async (
 		);
 		let quality: number = IMAGE_UPLOAD.INITIAL_QUALITY;
 		let best: Blob | null = null;
+		let outputType: string | null = null;
 
 		for (let tries = 0; tries <= IMAGE_UPLOAD.MAX_TRIES; tries++) {
 			canvas.width = Math.max(1, Math.round(width));
@@ -94,7 +138,12 @@ export const compressImage = async (
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			ctx.drawImage(decoded.source, 0, 0, canvas.width, canvas.height);
 
-			const blob = await encode(canvas, file.type, quality);
+			// Decided once, on the first draw: shrinking does not change transparency.
+			outputType ??= LOSSY_TYPES.has(file.type)
+				? file.type
+				: chooseOutputType(file.type, canvasHasTransparency(ctx, canvas.width, canvas.height));
+
+			const blob = await encode(canvas, outputType, quality);
 			if (!blob) {
 				throw new ValidationError('Image could not be encoded', { type: file.type });
 			}
@@ -120,7 +169,9 @@ export const compressImage = async (
 
 		// blob.type is what the canvas really produced (PNG when the original
 		// type, e.g. HEIC or GIF, cannot be encoded), so use it, not file.type.
-		return new File([best], file.name, { type: best.type || file.type });
+		const type = best.type || outputType || file.type;
+
+		return new File([best], renameFor(file.name, type), { type });
 	} finally {
 		decoded.release();
 		canvas.width = 0;

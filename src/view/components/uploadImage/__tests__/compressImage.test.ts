@@ -1,4 +1,4 @@
-import { compressImage } from '../compressImage';
+import { chooseOutputType, compressImage } from '../compressImage';
 import { IMAGE_UPLOAD } from '@/constants/common';
 
 jest.mock('@/utils/errorHandling', () => {
@@ -19,7 +19,7 @@ interface CanvasSetup {
 	toBlob: jest.Mock;
 }
 
-function mockCanvas(sizesBytes: number[], type = 'image/jpeg'): CanvasSetup {
+function mockCanvas(sizesBytes: number[], type = 'image/jpeg', alpha = 255): CanvasSetup {
 	const drawImage = jest.fn();
 	let call = 0;
 	const toBlob = jest.fn((cb: BlobCallback) => {
@@ -28,9 +28,12 @@ function mockCanvas(sizesBytes: number[], type = 'image/jpeg'): CanvasSetup {
 		cb(new Blob([new Uint8Array(size)], { type }));
 	});
 
-	jest
-		.spyOn(HTMLCanvasElement.prototype, 'getContext')
-		.mockReturnValue({ drawImage, clearRect: jest.fn() } as unknown as CanvasRenderingContext2D);
+	const getImageData = jest.fn(() => ({ data: new Uint8ClampedArray([0, 0, 0, alpha]) }));
+	jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+		drawImage,
+		clearRect: jest.fn(),
+		getImageData,
+	} as unknown as CanvasRenderingContext2D);
 	HTMLCanvasElement.prototype.toBlob = toBlob as unknown as HTMLCanvasElement['toBlob'];
 
 	return { drawImage, toBlob };
@@ -158,5 +161,46 @@ describe('compressImage', () => {
 		const result = await compressImage(makeFile('image/heic'), 200, jest.fn());
 
 		expect(result.type).toBe('image/png');
+	});
+
+	it('saves an opaque PNG as JPEG, so quality can shrink it', async () => {
+		mockDecode(476, 268);
+		const { toBlob } = mockCanvas([20 * KB], 'image/jpeg', 255);
+		const png = new File(['x'], 'shot.png', { type: 'image/png' });
+
+		const result = await compressImage(png, 200, jest.fn());
+
+		expect(toBlob).toHaveBeenCalledWith(expect.any(Function), 'image/jpeg', expect.any(Number));
+		expect(result.type).toBe('image/jpeg');
+		expect(result.name).toBe('shot.jpg');
+	});
+
+	it('keeps a transparent PNG as PNG', async () => {
+		mockDecode(476, 268);
+		const { toBlob } = mockCanvas([20 * KB], 'image/png', 0);
+		const png = new File(['x'], 'logo.png', { type: 'image/png' });
+
+		const result = await compressImage(png, 200, jest.fn());
+
+		expect(toBlob).toHaveBeenCalledWith(expect.any(Function), 'image/png', expect.any(Number));
+		expect(result.type).toBe('image/png');
+	});
+});
+
+describe('chooseOutputType', () => {
+	it('keeps lossy formats', () => {
+		expect(chooseOutputType('image/jpeg', false)).toBe('image/jpeg');
+		expect(chooseOutputType('image/webp', true)).toBe('image/webp');
+	});
+
+	it('turns opaque lossless or odd formats into JPEG', () => {
+		expect(chooseOutputType('image/png', false)).toBe('image/jpeg');
+		expect(chooseOutputType('image/gif', false)).toBe('image/jpeg');
+		expect(chooseOutputType('image/heic', false)).toBe('image/jpeg');
+	});
+
+	it('keeps transparency as PNG', () => {
+		expect(chooseOutputType('image/png', true)).toBe('image/png');
+		expect(chooseOutputType('image/gif', true)).toBe('image/png');
 	});
 });
