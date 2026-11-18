@@ -9,6 +9,7 @@
 
 	&__list {
 		position: relative;
+		flex: 1;
 		padding: var(--padding, 16px);
 		padding-bottom: var(--page-bottom-clearance);
 
@@ -22,7 +23,6 @@
 					env(safe-area-inset-bottom, 0px)
 			);
 		}
-		flex: 1;
 	}
 
 	&__empty {
