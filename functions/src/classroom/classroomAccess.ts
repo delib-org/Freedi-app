@@ -71,17 +71,25 @@ export async function loadMain(db: Firestore, mainId: string): Promise<Statement
 	return main;
 }
 
+function isCreatorOf(main: Statement, uid: string): boolean {
+	return main.creatorId === uid || main.creator?.uid === uid;
+}
+
+function hasAdminRole(sub: { exists: boolean; data: () => unknown }): boolean {
+	const role = sub.exists ? (sub.data() as StatementSubscription).role : undefined;
+
+	return typeof role === 'string' && ADMIN_ROLES.has(role);
+}
+
 export async function isWorkspaceAdmin(
 	db: Firestore,
 	mainId: string,
 	uid: string,
 	main?: Statement,
 ): Promise<boolean> {
-	if (main && (main.creatorId === uid || main.creator?.uid === uid)) return true;
-	const sub = await subscriptionRef(db, mainId, uid).get();
-	const role = sub.exists ? (sub.data() as StatementSubscription).role : undefined;
+	if (main && isCreatorOf(main, uid)) return true;
 
-	return typeof role === 'string' && ADMIN_ROLES.has(role);
+	return hasAdminRole(await subscriptionRef(db, mainId, uid).get());
 }
 
 /** Loads the workspace and refuses anyone who is not its admin. */
@@ -92,6 +100,27 @@ export async function assertWorkspaceAdmin(
 ): Promise<Statement> {
 	const main = await loadMain(db, mainId);
 	if (!(await isWorkspaceAdmin(db, mainId, uid, main))) {
+		throw new ClassroomError('permission-denied', "Only the lesson's teacher can do this");
+	}
+
+	return main;
+}
+
+/**
+ * `assertWorkspaceAdmin` with the lesson and the caller's subscription read
+ * together (neither needs the other). The same refusals in the same order: a
+ * missing lesson or a class home is reported before a missing role.
+ */
+export async function assertWorkspaceAdminTogether(
+	db: Firestore,
+	mainId: string,
+	uid: string,
+): Promise<Statement> {
+	const subRead = subscriptionRef(db, mainId, uid).get();
+	// If the lesson read refuses first, this read's outcome is not wanted: never an unhandled rejection.
+	subRead.catch(() => undefined);
+	const main = await loadMain(db, mainId);
+	if (!isCreatorOf(main, uid) && !hasAdminRole(await subRead)) {
 		throw new ClassroomError('permission-denied', "Only the lesson's teacher can do this");
 	}
 

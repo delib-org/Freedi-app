@@ -8,6 +8,9 @@ import { getChallengeQuestion, lessonStepOf } from '../lessonCore';
 import { startStudentNotices } from './studentNotices';
 import type { NoticeSnapshot } from './noticeLogic';
 import { listenMySubscription, listenRoster, listenTable, listenTables } from './listeners';
+import { OptimisticOverlay } from './optimisticOverlay';
+import type { TableChange } from './tableOptimism';
+import { captureException } from '../sentry';
 
 /**
  * Module-level classroom state that views read (Join's store pattern: plain
@@ -42,7 +45,57 @@ export const classState: ClassState = {
 	roster: [],
 };
 
+/**
+ * What the server last sent for the tables, apart from `classState`, which shows
+ * it with the pending optimistic changes laid over it (see optimisticOverlay.ts).
+ * The student's own table is a list of one so the same changes apply to it.
+ */
+const server: { tables: ClassTable[]; table: ClassTable | null } = { tables: [], table: null };
+
+function showTables(): void {
+	classState.tables = tableOverlay.view(server.tables);
+	classState.table = server.table ? (tableOverlay.view([server.table])[0] ?? null) : null;
+}
+
+const tableOverlay = new OptimisticOverlay<ClassTable[]>(
+	() => {
+		showTables();
+		m.redraw();
+	},
+	(error) => captureException(error, { operation: 'classState.optimisticTables' }),
+);
+
+/**
+ * Run a table call and show its expected result at once. If the call fails the
+ * screen goes back to the server's data and the error is thrown to the caller.
+ * A `null` change just runs the call.
+ */
+export function trackTableChange<R>(
+	change: TableChange | null,
+	call: () => Promise<R>,
+): Promise<R> {
+	// What the server shows now: a snapshot that merely repeats it cannot confirm the change.
+	const baseline = server.tables.length > 0 ? server.tables : server.table ? [server.table] : [];
+
+	return change ? tableOverlay.track(change, call, baseline) : call();
+}
+
+function setServerTables(tables: ClassTable[]): void {
+	server.tables = tables;
+	tableOverlay.reconcile(tables);
+	showTables();
+}
+
+function setServerTable(table: ClassTable | null): void {
+	server.table = table;
+	if (table) tableOverlay.reconcile([table]);
+	showTables();
+}
+
 export function resetClassState(mainId: string | null = null): void {
+	tableOverlay.clear();
+	server.tables = [];
+	server.table = null;
 	classState.mainId = mainId;
 	classState.table = null;
 	classState.tables = [];
@@ -107,7 +160,7 @@ export function watchClass(
 			listenTables(
 				mainId,
 				(tables) => {
-					classState.tables = tables;
+					setServerTables(tables);
 					m.redraw();
 				},
 				onError,
@@ -135,12 +188,12 @@ export function watchClass(
 						watchedTableId = tableId;
 						tableStop?.();
 						tableStop = null;
-						classState.table = null;
+						setServerTable(null);
 						if (tableId && !stopped) {
 							tableStop = listenTable(
 								tableId,
 								(table) => {
-									classState.table = table;
+									setServerTable(table);
 									m.redraw();
 								},
 								onError,

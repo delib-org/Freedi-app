@@ -37,16 +37,17 @@ export async function resolveSeatCode(
 	if (!isWellFormedSeatCode(seatCode)) throw inactive();
 	const target = (await seatCodeRef(firestore, seatCode).get()).data() as SeatCodeDoc | undefined;
 	if (!target) throw inactive();
-	const participant = (
-		await firestore
+	// The participant and the session both hang off the code's target: read them together.
+	const [participantSnap, sessionSnap] = await Promise.all([
+		firestore
 			.collection(Collections.tableAssignmentParticipants)
 			.doc(tableAssignmentParticipantId(target.sessionId, target.uid))
-			.get()
-	).data() as TableAssignmentParticipant | undefined;
+			.get(),
+		firestore.collection(Collections.tableAssignments).doc(target.sessionId).get(),
+	]);
+	const participant = participantSnap.data() as TableAssignmentParticipant | undefined;
 	if (!participant || participant.seatCode !== seatCode) throw inactive();
-	const session = (
-		await firestore.collection(Collections.tableAssignments).doc(target.sessionId).get()
-	).data() as { contextStatementId?: string } | undefined;
+	const session = sessionSnap.data() as { contextStatementId?: string } | undefined;
 	if (!session?.contextStatementId) throw inactive();
 	try {
 		const connected = await loadConnectedLesson(firestore, session.contextStatementId);

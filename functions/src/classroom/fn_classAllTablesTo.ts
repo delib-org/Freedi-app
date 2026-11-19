@@ -15,7 +15,7 @@ import type {
 } from '@freedi/shared-types';
 import { number, record, safeParse, string } from 'valibot';
 import { db } from '../db';
-import { assertWorkspaceAdmin, requireId, requireUid } from './classroomAccess';
+import { assertWorkspaceAdminTogether, requireId, requireUid } from './classroomAccess';
 import { ClassroomError, toHttpsError } from './classroomErrors';
 import { assertLessonRunning } from './lessonStatusGuard';
 
@@ -72,12 +72,15 @@ export async function allTablesTo(
 		}
 		fromTurns = turns.output;
 	}
-	assertLessonRunning(await assertWorkspaceAdmin(firestore, mainId, actorUid));
-
-	const snap = await firestore
+	// The tables are read while the lesson and the caller's role are checked: none needs the others.
+	const tablesRead = firestore
 		.collection(CLASS_TABLES_COLLECTION)
 		.where('mainId', '==', mainId)
 		.get();
+	tablesRead.catch(() => undefined);
+	assertLessonRunning(await assertWorkspaceAdminTogether(firestore, mainId, actorUid));
+
+	const snap = await tablesRead;
 	if (snap.empty) return { updated: 0 };
 	const now = Date.now();
 	const batch = firestore.batch();

@@ -243,3 +243,26 @@ body.c3-lock {
 .write-panel__note--limit {
   font-weight: var(--font-weight-semibold);
 }
+
+// A claim whose winner the server decides (the floor, the pen): the pressed button itself says
+// "working" while the answer comes; the rest of the screen stays as it is.
+.btn[aria-busy='true'] {
+  cursor: progress;
+  animation: btn-working 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes btn-working {
+  from {
+    opacity: 0.6;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn[aria-busy='true'] {
+    animation: none;
+  }
+}

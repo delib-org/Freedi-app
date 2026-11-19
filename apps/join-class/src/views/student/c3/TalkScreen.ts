@@ -107,7 +107,13 @@ function speakerButton(
 ): m.Children {
 	return m(
 		'button.btn.btn--secondary.tt__finish',
-		{ type: 'button', 'data-testid': testId, disabled: busy, onclick },
+		{
+			type: 'button',
+			'data-testid': testId,
+			disabled: busy,
+			'aria-busy': busy ? 'true' : undefined,
+			onclick,
+		},
 		label,
 	);
 }

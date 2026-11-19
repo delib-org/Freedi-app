@@ -38,6 +38,7 @@ export const PenClaim: m.Component<PenClaimAttrs> = {
 							type: 'button',
 							'data-testid': 'pen-claim',
 							disabled: attrs.busy,
+							'aria-busy': attrs.busy ? 'true' : undefined,
 							onclick: attrs.onClaim,
 						},
 						t('proposals.write.claim'),

@@ -6,7 +6,8 @@ import { t } from '@/lib/i18n';
 import { getChallengeQuestion } from '@/lib/lesson';
 import { initLiveDrafts, teardownLiveDrafts } from '@/lib/liveDrafts';
 import { getSubQuestions } from '@/lib/store';
-import { classState } from '@/lib/classroom/classState';
+import { classState, trackTableChange } from '@/lib/classroom/classState';
+import { predictTableAction } from '@/lib/classroom/tableOptimism';
 import { classTableStep } from '@/lib/classroom/api';
 import { currentUid } from '@/lib/classroom/c3Data';
 import { officialSubstep, type FlowKind } from '@/lib/classroom/c3Logic';
@@ -14,7 +15,7 @@ import { refusalReason } from '@/lib/classroom/turnMoment';
 import { serverNow } from '@/lib/classroom/serverClock';
 import { clearImproveHandler } from '@/lib/classroom/replyUi';
 import { ErrorLine } from './ErrorLine';
-import { FlowError, FlowState, type FlowCtx, type FlowParts } from './flowTypes';
+import { FlowError, FlowState, type FlowCtx, type FlowParts, type RunOptions } from './flowTypes';
 import { proposalsParts } from './proposalsParts';
 import { SubStepStrip } from './SubStepStrip';
 import { tableTalkParts } from './tableTalkParts';
@@ -103,11 +104,14 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 		// One screen per state at Table talk; at Proposals the phone follows the table's step.
 		const step = tableTalk ? table.step : officialSubstep(table);
 
-		const run = (op: () => Promise<unknown>): void => {
-			if (self.busy) return;
+		const run = (op: () => Promise<unknown>, options?: RunOptions): void => {
+			const key = options?.optimistic?.key;
+			if (self.busy || (key !== undefined && self.pending.has(key))) return;
 			self.lastTapAt = Date.now();
 			const attempt = async (): Promise<void> => {
-				self.busy = true;
+				// An optimistic action already shows its result: the screen stays live while it is out.
+				if (key === undefined) self.busy = true;
+				else self.pending.add(key);
 				self.error = null;
 				self.retry = attempt;
 				m.redraw();
@@ -122,14 +126,25 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 					);
 					self.error = failureText(error);
 				} finally {
-					self.busy = false;
+					if (key === undefined) self.busy = false;
+					else self.pending.delete(key);
 					m.redraw();
 				}
 			};
 			void attempt();
 		};
 		const act = (action: ClassTableAction): void => {
-			run(() => classTableStep({ tableId: table.tableId, ...action }));
+			const change = predictTableAction(table.tableId, action, {
+				uid,
+				isAdmin: false,
+				now: serverNow(),
+				table,
+				main,
+			});
+			run(
+				() => trackTableChange(change, () => classTableStep({ tableId: table.tableId, ...action })),
+				change ? { optimistic: { key: action.action } } : undefined,
+			);
 		};
 		const ctx: FlowCtx = {
 			main,
