@@ -33,6 +33,8 @@ export type ClassroomErrorReason =
 	| 'turns-done'
 	| 'not-talking'
 	| 'already-moved'
+	/** A running, paused or open lesson cannot be removed from the teacher's lists. */
+	| 'lesson-running'
 	/** The lesson's tables come from its registration (classCopySeating), not from a deal. */
 	| 'registration-connected'
 	| ClassRegistrationErrorReason;

@@ -611,6 +611,15 @@ const en: Record<string, string> = {
 	'teacher.lesson.not_approved':
 		"Your teacher account isn't approved yet for classes. You can start without a class.",
 	'plan.intro.text.line_too_long': 'A line is too long. Shorten it to {{max}} characters.',
+	'teacher.row.remove': 'Remove',
+	'teacher.row.restore': 'Restore',
+	'teacher.home.removed': 'Removed ({{n}})',
+	'teacher.row.removed_line': '{{name}} was removed',
+	'classPlan.removed': 'This lesson plan was removed',
+	'game.removed': 'This game was removed',
+	'teacher.home.removed_plans': 'Lesson plans',
+	'teacher.home.removed_games': 'Games',
+	'teacher.home.removed_lessons': 'Lessons',
 };
 
 export default en;

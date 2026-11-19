@@ -7,12 +7,16 @@ import { setFollowLessonLanguage } from '@/lib/store';
 import { WizColFooter } from '@/components/WizColFooter';
 import { BrandLogo } from '@/components/BrandLogo';
 import type { Unsubscribe } from '@/lib/firebase';
-import { ensurePlan, loadGames, writeGame } from '@/lib/classPlans';
+import { activeGames, ensurePlan, loadGames, writeGame } from '@/lib/classPlans';
+import type { ClassGame } from '@freedi/shared-types';
 import { emptySnapshot } from '@/lib/classroom/gameSnapshotEdit';
 import { gamePathOf, planPathOf } from '@/lib/lessonLinks';
 import type { ClassLessonEntry } from '@/lib/joinSubscriptions';
 import { buildPlanRows, openNow, type PlanRow } from '@/lib/planTree';
 import { watchLibrary, type TeacherLibrary } from '@/lib/teacherLibrary';
+import { buildRemoved } from '@/lib/removedItems';
+import { renderRemoveAnnouncer, resetRemoveState } from './RemoveControl';
+import { renderRemovedSection, resetRemovedSection } from './RemovedSection';
 import { filterLessons } from './homeHelpers';
 import {
 	renderChip,
@@ -44,7 +48,10 @@ let library: TeacherLibrary = { plans: [], lessons: [], ready: false };
 let unsub: Unsubscribe | null = null;
 let filterText = '';
 /** Games per plan, read once per plan change (the plan doc's `lastUpdate` moves when a game is added). */
-const gameCounts = new Map<string, { stamp: number; count: number | null | undefined }>();
+const gameCounts = new Map<
+	string,
+	{ stamp: number; count: number | null | undefined; games?: ClassGame[] }
+>();
 /** A stamp no plan doc has, so a failed count read is tried again on the next update. */
 const FAILED_STAMP = -1;
 /** The rows the view last drew, for the picker's open (it opens from a click, outside the view). */
@@ -94,10 +101,11 @@ function refreshCounts(rows: readonly PlanRow[]): void {
 		if (!row.doc) continue;
 		const stamp = row.doc.lastUpdate;
 		if (gameCounts.get(row.planId)?.stamp === stamp) continue;
-		gameCounts.set(row.planId, { stamp, count: gameCounts.get(row.planId)?.count });
+		const known = gameCounts.get(row.planId);
+		gameCounts.set(row.planId, { stamp, count: known?.count, games: known?.games });
 		loadGames(row.planId, uid)
 			.then((games) => {
-				gameCounts.set(row.planId, { stamp, count: games.length });
+				gameCounts.set(row.planId, { stamp, count: activeGames(games).length, games });
 				m.redraw();
 			})
 			.catch((err: unknown) => {
@@ -125,6 +133,13 @@ function renderOpenRow(w: (typeof library.lessons)[number]): m.Vnode {
 		renderChip(w),
 		renderLessonActions(w, name),
 	]);
+}
+
+function removedGames(): Map<string, readonly ClassGame[]> {
+	const byPlan = new Map<string, readonly ClassGame[]>();
+	for (const [planId, known] of gameCounts) if (known.games) byPlan.set(planId, known.games);
+
+	return byPlan;
 }
 
 function renderPlanRow(row: PlanRow): m.Vnode {
@@ -235,10 +250,13 @@ function renderLists(rows: PlanRow[]): m.Children {
 	if (!library.ready) {
 		return m('.teacher-home__skeleton', { 'aria-busy': 'true', 'aria-label': t('plan.loading') });
 	}
+	const removed = renderRemovedSection(
+		buildRemoved(library.lessons, library.plans, removedGames()),
+	);
 	// No plans yet: the name form is already open (the "+" buttons would only repeat it).
-	if (rows.length === 0) return renderCreate(true);
+	if (rows.length === 0) return [renderCreate(true), removed];
 
-	return [renderOpenNow(openNow(library.lessons, Date.now())), renderPlans(rows)];
+	return [renderOpenNow(openNow(library.lessons, Date.now())), renderPlans(rows), removed];
 }
 
 /** Escape: the picker's list or class form steps back; the name forms step back themselves. */
@@ -267,6 +285,8 @@ export const TeacherHome: m.Component = {
 			createCopy: () => Promise.reject(new Error('a plan has no copy form')),
 		});
 		filterText = '';
+		resetRemoveState();
+		resetRemovedSection();
 		const uid = getUserState().user?.uid;
 		if (!uid) return;
 		if (unsub) unsub();
@@ -305,6 +325,7 @@ export const TeacherHome: m.Component = {
 				m('h1.teacher-home__title', t('teacher.home.title')),
 				emptyState ? m('p.teacher-home__how', t('teacher.home.how')) : null,
 				renderLists(rows),
+				renderRemoveAnnouncer(),
 			]),
 			m(WizColFooter),
 		]);

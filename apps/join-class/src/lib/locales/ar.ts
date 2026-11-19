@@ -603,6 +603,15 @@ const ar: Record<string, string> = {
 	'teacher.lesson.not_approved':
 		'لم تتم الموافقة بعد على حسابكم للعمل مع الصفوف. يمكنكم البدء بلا صف.',
 	'plan.intro.text.line_too_long': 'السطر طويل جدًا. اختصروه إلى {{max}} حرفًا.',
+	'teacher.row.remove': 'إزالة',
+	'teacher.row.restore': 'استعادة',
+	'teacher.home.removed': 'تمت الإزالة ({{n}})',
+	'teacher.row.removed_line': 'تمت إزالة {{name}}',
+	'classPlan.removed': 'تمت إزالة خطة الدرس هذه',
+	'game.removed': 'تمت إزالة هذه اللعبة',
+	'teacher.home.removed_plans': 'خطط الدروس',
+	'teacher.home.removed_games': 'ألعاب',
+	'teacher.home.removed_lessons': 'دروس',
 };
 
 export default ar;

@@ -1,0 +1,65 @@
+// =============================================================================
+// Removing plans, games and lessons (docs/ia/join-class-remove-lessons.md): the Remove
+// button, the done line, the removed strip and the "הוסרו" disclosure at the bottom of the
+// home. Tokens only, BEM, logical properties.
+// =============================================================================
+
+.remove-control {
+  &__done {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm);
+    flex: 1 1 100%;
+    padding: var(--space-sm);
+    border-radius: var(--radius-md);
+    background: var(--bg-subtle);
+    color: var(--ink-muted);
+  }
+
+  &__done-text,
+  &__strip-text {
+    flex: 1 1 auto;
+    font-size: var(--font-size-sm);
+  }
+
+  &__strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-block-end: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    background: var(--bg-subtle);
+    color: var(--ink-muted);
+  }
+}
+
+.teacher-home__removed {
+  margin-block-start: var(--space-lg);
+  border-block-start: 1px solid var(--border-medium);
+  padding-block-start: var(--space-sm);
+
+  &-summary {
+    display: flex;
+    align-items: center;
+    min-block-size: 44px;
+    cursor: pointer;
+    font-size: var(--font-size-md);
+    color: var(--ink-muted);
+  }
+
+  &-group-title {
+    margin: var(--space-md) 0 var(--space-xs);
+    font-size: var(--font-size-sm);
+    color: var(--ink-muted);
+  }
+
+  &-context {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--ink-muted);
+  }
+}

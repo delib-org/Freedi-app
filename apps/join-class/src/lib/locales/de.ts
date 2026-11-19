@@ -618,6 +618,15 @@ const de: Record<string, string> = {
 	'teacher.lesson.not_approved':
 		'Dein Lehrerkonto ist für Klassen noch nicht freigegeben. Du kannst ohne Klasse starten.',
 	'plan.intro.text.line_too_long': 'Eine Zeile ist zu lang. Kürze sie auf {{max}} Zeichen.',
+	'teacher.row.remove': 'Entfernen',
+	'teacher.row.restore': 'Wiederherstellen',
+	'teacher.home.removed': 'Entfernt ({{n}})',
+	'teacher.row.removed_line': '{{name}} wurde entfernt',
+	'classPlan.removed': 'Dieser Unterrichtsplan wurde entfernt',
+	'game.removed': 'Dieses Spiel wurde entfernt',
+	'teacher.home.removed_plans': 'Unterrichtspläne',
+	'teacher.home.removed_games': 'Spiele',
+	'teacher.home.removed_lessons': 'Stunden',
 };
 
 export default de;

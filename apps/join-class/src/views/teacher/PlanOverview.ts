@@ -7,39 +7,49 @@ import { getLang, t } from '@/lib/i18n';
 import { setFollowLessonLanguage } from '@/lib/store';
 import { WizColFooter } from '@/components/WizColFooter';
 import type { Unsubscribe } from '@/lib/firebase';
-import { loadGames, renamePlan, subscribeToGames, writeGame } from '@/lib/classPlans';
+import { activeGames, loadGames, renamePlan, subscribeToGames, writeGame } from '@/lib/classPlans';
 import { classSnapshotGame } from '@/lib/classroom/api';
 import { cleaned, emptySnapshot } from '@/lib/classroom/gameSnapshotEdit';
 import { gamePathOf } from '@/lib/lessonLinks';
 import {
 	FILTER_ALL,
 	FILTER_NO_CLASS,
+	buildAllPlanRows,
 	buildPlanRows,
 	classesOf,
 	copySources,
 	gameSections,
 	lessonsOfClass,
 	showsClassFilter,
+	visibleLessons,
 	type CopySource,
 	type GameSection,
 	type PlanRow,
 } from '@/lib/planTree';
 import { watchLibrary, type TeacherLibrary } from '@/lib/teacherLibrary';
+import type { RemovalTarget } from '@/lib/removalTargets';
+import { planIsRemovedOf, planRemovableOf, planTargetOf } from './planRemoval';
 import { NotYourLesson } from './NotYourLesson';
+import { renderPickList, type SourcesLoad } from './PlanPickList';
 import { renderChip, renderLessonActions, renderLessonName, rowAriaName } from './LessonRow';
+import {
+	renderRemove,
+	renderRemoveAnnouncer,
+	renderRemovedStrip,
+	resetRemoveState,
+	wasRemovedHere,
+} from './RemoveControl';
 import { TeacherBackBar } from './TeacherBackBar';
 import { ClassForm, closeClassForm, isClassFormOpen, openClassForm } from './ClassForm';
 import {
 	configureCreate,
 	createIdle,
 	onPageEscape,
-	pickRow,
 	picking,
 	renderCreate,
 	resetCreate,
 	startCreate,
 } from './HomeCreate';
-import { filterLessons } from './homeHelpers';
 import { captureException } from '@/lib/sentry';
 
 /**
@@ -48,8 +58,6 @@ import { captureException } from '@/lib/sentry';
  * and the lessons played from it (newest first, with a class filter at two or more classes),
  * and "+ משחק חדש" at the end. An old lesson shows here as a plan of its own.
  */
-
-const FILTER_FROM = 10;
 
 let planId = '';
 let library: TeacherLibrary = { plans: [], lessons: [], ready: false };
@@ -63,10 +71,9 @@ let classFilter = FILTER_ALL;
 let renaming = false;
 let renameText = '';
 let renameFailed = false;
-let pickFilter = '';
 /** Sources for "questions from another game", loaded when the pick step opens. */
 let sources: CopySource[] = [];
-let sourcesLoad: 'idle' | 'loading' | 'ready' | 'error' = 'idle';
+let sourcesLoad: SourcesLoad = 'idle';
 /** The id of the game being made, kept until it succeeds so a retry reuses it. */
 let pendingGameId: string | null = null;
 
@@ -74,9 +81,13 @@ function uid(): string {
 	return getUserState().user?.uid ?? '';
 }
 
+/** The plan as stored, removed lessons and a removed plan included (a removed plan opens from "הוסרו"). */
 function row(): PlanRow | undefined {
-	return buildPlanRows(library.lessons, library.plans).find((r) => r.planId === planId);
+	return buildAllPlanRows(library.lessons, library.plans).find((r) => r.planId === planId);
 }
+
+const targetOf = (): RemovalTarget | null => planTargetOf(plan, row(), planId);
+const planIsRemoved = (): boolean => planIsRemovedOf(plan, row(), planId);
 
 /** The plan exists as a doc of this teacher. An old lesson that is only a plan so far has none. */
 const hasPlanDoc = (): boolean => plan !== null;
@@ -126,6 +137,11 @@ async function copyGame(sourceId: string, title: string, newId: string): Promise
 	});
 
 	return gamePathOf(planId, newId);
+}
+
+function retrySources(): void {
+	sourcesLoad = 'idle';
+	void loadSources();
 }
 
 /** Loads every plan's games once the pick step opens (the list groups them by plan). */
@@ -205,8 +221,13 @@ function renderTitle(title: string): m.Children {
 		);
 	}
 
+	const target = targetOf();
+
 	return [
 		m('h1.plan-overview__title', { dir: 'auto' }, title),
+		target && !planIsRemoved() && planRemovableOf(plan, row(), planId)
+			? renderRemove(target, title)
+			: null,
 		hasPlanDoc()
 			? m(
 					'button.btn.btn--tertiary.btn--small',
@@ -228,6 +249,12 @@ function renderTitle(title: string): m.Children {
 
 function renderLesson(l: PlanRow['lessons'][number]): m.Vnode {
 	const name = rowAriaName(l);
+	const target: RemovalTarget = { kind: 'lesson', mainId: l.id };
+	if (wasRemovedHere(target)) {
+		return m('li.teacher-home__row.plan-overview__lesson', { key: l.id, 'data-lesson': l.id }, [
+			renderRemove(target, name),
+		]);
+	}
 
 	return m('li.teacher-home__row.plan-overview__lesson', { key: l.id, 'data-lesson': l.id }, [
 		m('h3.teacher-home__row-title', { dir: 'auto' }, renderLessonName(l)),
@@ -262,6 +289,9 @@ function renderSection(section: GameSection, filtered: PlanRow['lessons']): m.Vn
 						t('teacher.lesson.new'),
 					)
 				: null,
+			section.game
+				? renderRemove({ kind: 'game', planId, gameId: section.gameId }, section.title)
+				: null,
 		]),
 		section.game && isClassFormOpen(section.gameId)
 			? m(ClassForm, { planId, gameId: section.gameId })
@@ -270,6 +300,24 @@ function renderSection(section: GameSection, filtered: PlanRow['lessons']): m.Vn
 			? m('ul.teacher-home__list', lessons.map(renderLesson))
 			: m('p.teacher-home__empty', t('game.no_lessons')),
 	]);
+}
+
+/** A game removed on this screen: its done line stays (with "Restore") until the teacher leaves. */
+function removedHereGames(): ClassGame[] {
+	return games.filter(
+		(g) =>
+			typeof g.removedAt === 'number' && wasRemovedHere({ kind: 'game', planId, gameId: g.gameId }),
+	);
+}
+
+function renderRemovedGames(): m.Children {
+	return removedHereGames().map((g) =>
+		m(
+			'section.plan-overview__game',
+			{ key: `removed-${g.gameId}`, 'data-game-removed': g.gameId },
+			[renderRemove({ kind: 'game', planId, gameId: g.gameId }, g.title)],
+		),
+	);
 }
 
 function renderClassFilter(all: PlanRow['lessons']): m.Children {
@@ -299,84 +347,10 @@ function renderClassFilter(all: PlanRow['lessons']): m.Children {
 	]);
 }
 
-function renderPickList(): m.Children {
-	if (sourcesLoad === 'loading' || sourcesLoad === 'idle') {
-		return m('.teacher-home__skeleton', { 'aria-busy': 'true', 'aria-label': t('plan.loading') });
-	}
-	if (sourcesLoad === 'error') {
-		return m('.teacher-home__error', { role: 'alert' }, [
-			m('span', t('teacher.copy.failed')),
-			m(
-				'button.btn.btn--tertiary.btn--small',
-				{
-					type: 'button',
-					onclick: () => {
-						sourcesLoad = 'idle';
-						void loadSources();
-					},
-				},
-				t('plan.error.retry'),
-			),
-		]);
-	}
-	const filtering = sources.length > FILTER_FROM;
-	const shown = filtering ? filterLessons(sources, pickFilter) : sources;
-	const planIds = [...new Set(shown.map((s) => s.planId))];
-
-	return [
-		filtering
-			? m('input.teacher-home__filter', {
-					type: 'search',
-					value: pickFilter,
-					placeholder: t('teacher.home.filter'),
-					'aria-label': t('teacher.home.filter'),
-					oninput: (e: Event) => {
-						pickFilter = (e.target as HTMLInputElement).value;
-					},
-				})
-			: null,
-		m(
-			'.plan-overview__pick-groups',
-			planIds.map((id) => {
-				const group = shown.filter((s) => s.planId === id);
-
-				return m('section.plan-overview__pick-group', { key: id }, [
-					m('h2.teacher-home__section-title', { dir: 'auto' }, group[0].planTitle),
-					m(
-						'ul.teacher-home__list',
-						{ 'aria-labelledby': 'pick-lead' },
-						group.map((s) =>
-							m('li.teacher-home__row', { key: s.id }, [
-								m('h3.teacher-home__row-title', { dir: 'auto' }, s.title),
-								m('.teacher-home__row-actions', [
-									m(
-										'button.btn.btn--primary.btn--small',
-										{
-											type: 'button',
-											'data-action': 'pick',
-											'data-id': s.id,
-											'aria-label': t('teacher.row.for', {
-												action: t('teacher.row.pick'),
-												name: s.title,
-											}),
-											onclick: () => pickRow(s.id, s.title),
-										},
-										t('teacher.row.pick'),
-									),
-								]),
-							]),
-						),
-					),
-				]);
-			}),
-		),
-	];
-}
-
 function sourceCount(): number {
 	const own = row();
 
-	return games.length + (own?.lessons.filter((l) => l.link.legacy).length ?? 0);
+	return activeGames(games).length + (own?.lessons.filter((l) => l.link.legacy).length ?? 0);
 }
 
 export const PlanOverview: m.Component = {
@@ -391,6 +365,7 @@ export const PlanOverview: m.Component = {
 		gamesDenied = false;
 		classFilter = FILTER_ALL;
 		renaming = false;
+		resetRemoveState();
 		sources = [];
 		sourcesLoad = 'idle';
 		pendingGameId = null;
@@ -443,22 +418,34 @@ export const PlanOverview: m.Component = {
 		// not ours: no plan doc and no old lesson standing for it
 		if (loaded && ((!plan && !own) || (gamesDenied && !plan))) return m(NotYourLesson);
 		const title = plan?.title ?? own?.title ?? '';
-		const lessons = own?.lessons ?? [];
+		const hereIds = new Set(
+			(own?.lessons ?? [])
+				.filter((l) => wasRemovedHere({ kind: 'lesson', mainId: l.id }))
+				.map((l) => l.id),
+		);
+		const lessons = visibleLessons(own?.lessons ?? [], hereIds);
+		const removedTarget = planIsRemoved() ? targetOf() : null;
 		const filtered = lessonsOfClass(lessons, classFilter);
 		const sections = gameSections(games, lessons);
-		const emptyState = loaded && sections.length === 0;
+		const emptyState = loaded && sections.length === 0 && removedHereGames().length === 0;
 		const isPicking = picking();
 		if (isPicking && sourcesLoad === 'idle') void loadSources();
 
 		return m('.teacher-home.plan-overview', { onkeydown: (e: KeyboardEvent) => onPageEscape(e) }, [
 			m(TeacherBackBar, {}),
 			m('main.teacher-home__body', [
+				loaded && removedTarget
+					? renderRemovedStrip('classPlan.removed', removedTarget, title)
+					: null,
 				loaded
 					? m('.plan-overview__head', renderTitle(title))
 					: m('.teacher-home__skeleton', { 'aria-busy': 'true', 'aria-label': t('plan.loading') }),
 				loaded ? renderClassFilter(lessons) : null,
+				loaded && !isPicking ? renderRemovedGames() : null,
 				loaded && !isPicking ? sections.map((s) => renderSection(s, filtered)) : null,
-				loaded && isPicking ? renderPickList() : null,
+				loaded && isPicking
+					? renderPickList({ sources, load: sourcesLoad, onRetry: retrySources })
+					: null,
 				loaded && !createIdle(emptyState)
 					? renderCreate(emptyState)
 					: loaded
@@ -469,6 +456,7 @@ export const PlanOverview: m.Component = {
 							)
 						: null,
 			]),
+			renderRemoveAnnouncer(),
 			m(WizColFooter),
 		]);
 	},

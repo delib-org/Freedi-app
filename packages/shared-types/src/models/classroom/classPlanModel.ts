@@ -47,6 +47,8 @@ export const ClassPlanSchema = object({
 	ownerUid: string(),
 	createdAt: number(),
 	lastUpdate: number(),
+	/** When the teacher removed the plan (ms). Present = removed; restore deletes it. */
+	removedAt: optional(number()),
 });
 export type ClassPlan = InferOutput<typeof ClassPlanSchema>;
 
@@ -118,6 +120,8 @@ export const ClassGameSchema = object({
 	sourceMainId: optional(string()),
 	createdAt: number(),
 	lastUpdate: number(),
+	/** When the teacher removed the game (ms). Present = removed; restore deletes it. */
+	removedAt: optional(number()),
 });
 export type ClassGame = InferOutput<typeof ClassGameSchema>;
 

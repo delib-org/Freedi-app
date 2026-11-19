@@ -88,6 +88,10 @@ export async function setLessonStatus(
 		if (change.clearPausedAt) patch['statementSettings.lessonPlan.pausedAt'] = FieldValue.delete();
 		if (change.endedAt !== undefined)
 			patch['statementSettings.lessonPlan.endedAt'] = change.endedAt;
+		// A lesson the class runs again belongs on the lists again (join-class-remove-lessons.md 2).
+		if (action === 'reopen' && typeof main.statementSettings?.lessonRemovedAt === 'number') {
+			patch['statementSettings.lessonRemovedAt'] = FieldValue.delete();
+		}
 		tx.update(mainRef, patch);
 
 		for (const doc of tables) {

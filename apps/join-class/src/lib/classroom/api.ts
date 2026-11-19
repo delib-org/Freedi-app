@@ -47,6 +47,8 @@ import type {
 	ClassResetVoteResponse,
 	ClassSetItemHiddenRequest,
 	ClassSetItemHiddenResponse,
+	ClassSetLessonRemovedRequest,
+	ClassSetLessonRemovedResponse,
 	ClassSetLessonStatusRequest,
 	ClassSetLessonStatusResponse,
 	ClassTableStepRequest,
@@ -130,6 +132,13 @@ export function classSetLessonStatus(
 	req: ClassSetLessonStatusRequest,
 ): Promise<ClassSetLessonStatusResponse> {
 	return call('classSetLessonStatus', req);
+}
+
+/** Admin: take a lesson off the lists, or put it back. Refused while the lesson is running. */
+export function classSetLessonRemoved(
+	req: ClassSetLessonRemovedRequest,
+): Promise<ClassSetLessonRemovedResponse> {
+	return call('classSetLessonRemoved', req);
 }
 
 /** Owner of the plan: play a prepared game with a class (or none). Safe to repeat with the same `newMainId`. */

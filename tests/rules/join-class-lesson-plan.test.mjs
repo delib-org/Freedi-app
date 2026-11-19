@@ -3,6 +3,7 @@ import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import {
 	collection,
 	deleteDoc,
+	deleteField,
 	doc,
 	getDoc,
 	getDocs,
@@ -189,6 +190,31 @@ describe('join-class lesson plans and homes', () => {
 			await assertFails(updateDoc(doc(as(OWNER), 'classPlans', PLAN), { ownerUid: OTHER }));
 			await assertFails(deleteDoc(doc(as(OWNER), 'classPlans', PLAN)));
 			await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), 'classPlans', PLAN)));
+		});
+	});
+
+	describe('removing and restoring (join-class-remove-lessons.md)', () => {
+		it('lets the owner remove a plan with a ms number and restore it by deleting the field', async () => {
+			const db = as(OWNER);
+			const ref = doc(db, 'classPlans', PLAN);
+			await assertSucceeds(updateDoc(ref, { removedAt: T0 + 5, lastUpdate: T0 + 5 }));
+			await assertSucceeds(updateDoc(ref, { removedAt: deleteField(), lastUpdate: T0 + 6 }));
+		});
+
+		it('refuses a removedAt that is not a number, on a plan and on a game', async () => {
+			const db = as(OWNER);
+			await assertFails(updateDoc(doc(db, 'classPlans', PLAN), { removedAt: 'yesterday' }));
+			await assertFails(updateDoc(doc(db, 'classPlans', PLAN, 'games', GAME), { removedAt: true }));
+		});
+
+		it('lets the owner remove and restore a game, and refuses another teacher', async () => {
+			const ref = doc(as(OWNER), 'classPlans', PLAN, 'games', GAME);
+			await assertSucceeds(updateDoc(ref, { removedAt: T0 + 5, lastUpdate: T0 + 5 }));
+			await assertSucceeds(updateDoc(ref, { removedAt: deleteField(), lastUpdate: T0 + 6 }));
+			await assertFails(updateDoc(doc(as(OTHER), 'classPlans', PLAN), { removedAt: T0 + 7 }));
+			await assertFails(
+				updateDoc(doc(as(OTHER), 'classPlans', PLAN, 'games', GAME), { removedAt: T0 + 7 }),
+			);
 		});
 	});
 

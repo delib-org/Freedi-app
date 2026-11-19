@@ -602,6 +602,15 @@ const he: Record<string, string> = {
 	'plan.lesson_from': 'משחק: „{{game}}” · כיתה: {{class}}',
 	'teacher.lesson.not_approved': 'החשבון שלכם עוד לא אושר לעבודה עם כיתות. אפשר להתחיל בלי כיתה.',
 	'plan.intro.text.line_too_long': 'שורה ארוכה מדי. קצרו אותה ל-{{max}} תווים.',
+	'teacher.row.remove': 'הסרה',
+	'teacher.row.restore': 'החזרה',
+	'teacher.home.removed': 'הוסרו ({{n}})',
+	'teacher.row.removed_line': '{{name}} הוסר',
+	'classPlan.removed': 'מערך השיעור הוסר',
+	'game.removed': 'המשחק הוסר',
+	'teacher.home.removed_plans': 'מערכי שיעור',
+	'teacher.home.removed_games': 'משחקים',
+	'teacher.home.removed_lessons': 'שיעורים',
 };
 
 export default he;

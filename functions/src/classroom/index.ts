@@ -24,6 +24,7 @@ export { classPostProposal } from './fn_classPostProposal';
 export { classEditProposal } from './fn_classEditProposal';
 export { classCastVoteFor } from './fn_classCastVoteFor';
 export { classSetLessonStatus } from './fn_classSetLessonStatus';
+export { classSetLessonRemoved } from './fn_classSetLessonRemoved';
 export { classCloneLesson } from './fn_classCloneLesson';
 export { classStartLesson } from './fn_classStartLesson';
 export { classSnapshotGame } from './fn_classSnapshotGame';

@@ -3,7 +3,8 @@ import '@/styles/teacher.scss';
 import type { Statement } from '@freedi/shared-types';
 import { getAvailableLanguages, t } from '@/lib/i18n';
 import { setFollowLessonLanguage } from '@/lib/store';
-import { getPlanMain, isGameMode } from './planSource';
+import { getGame, getPlanMain, isGameMode } from './planSource';
+import { renderRemovedStrip, resetRemoveState } from './RemoveControl';
 import { TeacherBackBar, type TeacherBackBarAttrs } from './TeacherBackBar';
 import { createLeaveGuard } from './leaveGuard';
 import { lessonNameOf } from '@/lib/lessonLinks';
@@ -471,6 +472,7 @@ const leaveGuard = createLeaveGuard({
 export const PlanScreen: m.Component = {
 	oninit() {
 		leaveGuard.reset();
+		resetRemoveState();
 		setFollowLessonLanguage(false);
 		closeClassForm();
 		const game = routeGame();
@@ -510,6 +512,13 @@ export const PlanScreen: m.Component = {
 				ready && getTitle() ? m('p.plan__lesson', getTitle()) : null,
 			]),
 			m('main.plan__body', [
+				game && ready && typeof getGame()?.removedAt === 'number'
+					? renderRemovedStrip(
+							'game.removed',
+							{ kind: 'game', planId: game.planId, gameId: game.gameId },
+							getTitle() || t('plan.title'),
+						)
+					: null,
 				game && ready && isClassFormOpen(game.gameId)
 					? m(ClassForm, { planId: game.planId, gameId: game.gameId })
 					: null,
