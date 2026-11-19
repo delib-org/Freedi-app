@@ -10,6 +10,7 @@ import look from './look/fa';
 import challenge from './challenge/fa';
 import actFor from './actFor/fa';
 import bridge from './bridge/fa';
+import consoleUi from './consoleUi/fa';
 
 const fa: Record<string, string> = {
 	...vote,
@@ -19,6 +20,7 @@ const fa: Record<string, string> = {
 	...challenge,
 	...actFor,
 	...bridge,
+	...consoleUi,
 	'step.waiting': 'در انتظار معلم',
 	'step.opening': 'شروع',
 	'step.side': 'انتخاب جانب',
@@ -75,9 +77,9 @@ const fa: Record<string, string> = {
 	'plan.details.claim_a': 'سمت اول چه می‌گوید',
 	'plan.details.claim_b': 'سمت دوم چه می‌گوید',
 	'plan.details.claim.placeholder': 'اختیاری. یک جمله که زیر نام نمایش داده می‌شود',
-	'console.gate.label': 'آستانهٔ موافقت برای پرسش اصلی',
-	'console.gate.value': 'آستانه: {{value}}',
-	'console.gate.help': 'پیشنهاد وقتی می‌گذرد که موافقت با آن به این عدد برسد.',
+	'console.gate.label': 'هدف: چقدر موافقت برای گذشتن لازم است',
+	'console.gate.value': 'هدف: {{value}}%',
+	'console.gate.help': 'پیشنهاد وقتی از هدف می‌گذرد که موافقت با آن به این درصد برسد.',
 	'plan.tables.title': 'پرسش‌های میزها',
 	'plan.tables.help': 'هر میز یک پرسش انتخاب می‌کند. بین ۳ تا ۸ پرسش اضافه کنید.',
 	'plan.own_questions': 'دانش‌آموزان می‌توانند پرسش خودشان را اضافه کنند',
@@ -238,7 +240,7 @@ const fa: Record<string, string> = {
 	'proposals.heading': 'برای پرسش «{{question}}» راه‌حل پیشنهاد دهید',
 	'proposal.mine': 'پیشنهاد من',
 	'proposal.placeholder': 'یک پیشنهاد بنویسید',
-	'proposal.none': 'هنوز سؤالی برای پیشنهادها نیست',
+	'proposal.none': 'هنوز پرسشی برای حل نیست',
 	'proposal.send': 'ارسال',
 	'proposal.none_yet': 'هنوز پیشنهادی نیست',
 	'proposal.plenum_line': 'پیشنهادهای برتر روی پروژکتور است',
@@ -288,7 +290,7 @@ const fa: Record<string, string> = {
 	'console.rail_step': 'مرحله {{n}}: {{name}}، {{state}}',
 	'console.state_done': 'تمام شده',
 	'console.state_current': 'فعلی',
-	'console.state_upcoming': 'بعدی',
+	'console.state_upcoming': 'بعداً',
 	'console.step_of': 'مرحله {{n}} از {{total}}',
 	'console.next': 'باز کردن مرحله بعد: {{name}}',
 	'console.end': 'پایان درس',
@@ -357,7 +359,7 @@ const fa: Record<string, string> = {
 	'console.move_cancelled': 'انتقال لغو شد',
 	'console.over_target': '{{target}}',
 	'console.gate_title': 'پیشنهادها در برابر آستانه',
-	'console.gate_at': 'آستانه در {{gate}}',
+	'console.gate_at': 'هدف: {{gate}}%',
 	'console.gate_empty': 'هنوز پیشنهادی نیست',
 	'console.gate_passed': 'از آستانه گذشت',
 	'console.gate_gap': '{{gap}} دیگر',

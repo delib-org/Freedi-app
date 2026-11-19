@@ -43,10 +43,10 @@ const vote: Record<string, string> = {
 	'console.vote_order_random': 'ترتیب تصادفی',
 	'console.vote_scope': 'پیشنهادها در رأی‌گیری',
 	'console.vote_scope_all': 'همه پیشنهادها',
-	'console.vote_scope_above': 'فقط بالاتر از هدف',
-	'console.vote_scope_count': '{{above}} از {{total}} بالاتر از هدف',
+	'console.vote_scope_above': 'فقط پیشنهادهایی که از هدف گذشتند',
+	'console.vote_scope_count': '{{above}} از {{total}} از هدف گذشتند',
 	'console.vote_scope_none':
-		'کمتر از دو پیشنهاد بالاتر از هدف است، پس رأی‌گیری بهترین پیشنهادها را شامل می‌شود',
+		'کمتر از دو پیشنهاد از هدف گذشتند، پس رأی‌گیری بهترین پیشنهادها را شامل می‌شود',
 	'console.vote_scope_locked': 'پیش از باز کردن رأی‌گیری تنظیم می‌شود',
 	'console.vote_status_not_open': 'رأی‌گیری هنوز باز نشده',
 	'console.vote_status_open': 'رأی‌گیری باز است',

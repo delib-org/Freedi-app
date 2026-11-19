@@ -44,10 +44,10 @@ const vote: Record<string, string> = {
 	'console.vote_order_random': 'Zufällige Reihenfolge',
 	'console.vote_scope': 'Vorschläge in der Abstimmung',
 	'console.vote_scope_all': 'Alle Vorschläge',
-	'console.vote_scope_above': 'Nur über dem Ziel',
-	'console.vote_scope_count': '{{above}} von {{total}} über dem Ziel',
+	'console.vote_scope_above': 'Nur Vorschläge, die das Ziel erreicht haben',
+	'console.vote_scope_count': '{{above}} von {{total}} haben das Ziel erreicht',
 	'console.vote_scope_none':
-		'Weniger als zwei Vorschläge liegen über dem Ziel, die Abstimmung nimmt daher die besten',
+		'Weniger als zwei Vorschläge haben das Ziel erreicht, die Abstimmung nimmt daher die besten',
 	'console.vote_scope_locked': 'Vor dem Öffnen der Abstimmung festlegen',
 	'console.vote_status_not_open': 'Noch nicht geöffnet',
 	'console.vote_status_open': 'Abstimmung offen',

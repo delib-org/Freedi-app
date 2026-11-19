@@ -1,7 +1,7 @@
 import m from 'mithril';
 import type { LessonStepKey } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
-import { stepLabel } from '@/lib/lesson';
+import { consoleStepLabel as stepLabel } from '@/lib/classroom/consoleStepLabel';
 import { forwardControl, formatClock, railSteps } from '@/lib/classroom/consoleHelpers';
 import type { RailStep } from '@/lib/classroom/consoleHelpers';
 import { isBusy } from './consoleState';

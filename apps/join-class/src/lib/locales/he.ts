@@ -10,6 +10,7 @@ import look from './look/he';
 import challenge from './challenge/he';
 import actFor from './actFor/he';
 import bridge from './bridge/he';
+import consoleUi from './consoleUi/he';
 
 const he: Record<string, string> = {
 	...vote,
@@ -19,6 +20,7 @@ const he: Record<string, string> = {
 	...challenge,
 	...actFor,
 	...bridge,
+	...consoleUi,
 	'step.waiting': 'ממתינים למורה',
 	'step.opening': 'פתיחה',
 	'step.side': 'בחירת צד',
@@ -85,9 +87,9 @@ const he: Record<string, string> = {
 	'plan.details.claim_a': 'מה אומר הצד הראשון',
 	'plan.details.claim_b': 'מה אומר הצד השני',
 	'plan.details.claim.placeholder': 'לא חובה. משפט אחד שיופיע מתחת לשם',
-	'console.gate.label': 'רף ההסכמה לשאלה המרכזית',
-	'console.gate.value': 'רף: {{value}}',
-	'console.gate.help': 'הצעה עוברת את הרף כשההסכמה אליה מגיעה למספר הזה.',
+	'console.gate.label': 'השער: כמה הסכמה צריך כדי לעבור',
+	'console.gate.value': 'השער: {{value}}%',
+	'console.gate.help': 'הצעה עוברת את השער כשההסכמה אליה מגיעה לאחוז הזה.',
 	'plan.tables.title': 'השאלות לשולחנות',
 	'plan.tables.help': 'כל שולחן בוחר שאלה אחת. הוסיפו בין 3 ל-8.',
 	'plan.own_questions': 'התלמידים יכולים להוסיף שאלה משלהם',
@@ -246,7 +248,7 @@ const he: Record<string, string> = {
 	'proposals.heading': 'הציעו פתרון לשאלה ״{{question}}״',
 	'proposal.mine': 'ההצעה שלי',
 	'proposal.placeholder': 'כתבו הצעה',
-	'proposal.none': 'עוד אין שאלה להצעות',
+	'proposal.none': 'עוד אין שאלה לפתרון',
 	'proposal.send': 'שליחה',
 	'proposal.none_yet': 'עוד אין הצעות',
 	'proposal.plenum_line': 'ההצעות המובילות על המקרן',
@@ -296,7 +298,7 @@ const he: Record<string, string> = {
 	'console.rail_step': 'שלב {{n}}: {{name}}, {{state}}',
 	'console.state_done': 'הסתיים',
 	'console.state_current': 'נוכחי',
-	'console.state_upcoming': 'הבא',
+	'console.state_upcoming': 'בהמשך',
 	'console.step_of': 'שלב {{n}} מתוך {{total}}',
 	'console.next': 'פתיחת השלב הבא: {{name}}',
 	'console.end': 'סיום השיעור',
@@ -364,7 +366,7 @@ const he: Record<string, string> = {
 	'console.move_cancelled': 'ההעברה בוטלה',
 	'console.over_target': '{{target}}',
 	'console.gate_title': 'הצעות מול השער',
-	'console.gate_at': 'השער ב-{{gate}}',
+	'console.gate_at': 'השער: {{gate}}%',
 	'console.gate_empty': 'עוד אין הצעות',
 	'console.gate_passed': 'עברה את השער',
 	'console.gate_gap': 'עוד {{gap}}',

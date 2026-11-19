@@ -18,7 +18,7 @@ const actFor: Record<string, string> = {
 	'console.act_for_next': 'הבא: {{name}}',
 	'console.act_for_limit': 'כבר יש הצעה בשם {{name}}. אפשר לערוך אותה',
 	'console.act_for_closed': 'ההצבעה נפתחה: אי אפשר עוד לשנות הצעות',
-	'console.act_for_held': 'השיעור עצור: כרגע אי אפשר לשנות כלום',
+	'console.act_for_held': 'השיעור בהפסקה: כרגע אי אפשר לשנות כלום',
 	'console.act_for_vote_not_open': 'ההצבעה עוד לא נפתחה',
 	'console.act_for_empty': 'עדיין אין כאן אף אחד בלי מכשיר. אפשר להוסיף',
 	'console.act_for_pick': 'בחרו שם מהרשימה',

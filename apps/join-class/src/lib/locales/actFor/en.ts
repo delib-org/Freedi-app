@@ -18,7 +18,7 @@ const actFor: Record<string, string> = {
 	'console.act_for_next': 'Next: {{name}}',
 	'console.act_for_limit': '{{name}} already has a proposal. It can be edited',
 	'console.act_for_closed': 'The vote has opened: proposals can no longer change',
-	'console.act_for_held': 'The lesson is stopped: nothing can change now',
+	'console.act_for_held': 'The lesson is paused: nothing can change right now',
 	'console.act_for_vote_not_open': 'The vote is not open yet',
 	'console.act_for_empty': 'Nobody here without a device yet. Add someone',
 	'console.act_for_pick': 'Choose a name from the list',
