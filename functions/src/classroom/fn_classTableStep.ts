@@ -110,6 +110,21 @@ export function parseAction(req: ClassTableStepRequest): ClassTableAction {
 	}
 }
 
+interface ChallengeRead {
+	challenge?: Statement;
+	/** A failure that is not "the lesson has no challenge" (a real read error): rethrown where the old code did. */
+	error?: unknown;
+}
+
+/** The lesson's challenge, or why not: never throws, so it can be read beside other reads. */
+async function readChallenge(firestore: Firestore, mainId: string): Promise<ChallengeRead> {
+	try {
+		return { challenge: await loadChallenge(firestore, mainId) };
+	} catch (error) {
+		return error instanceof ClassroomError ? {} : { error };
+	}
+}
+
 export async function tableStep(
 	firestore: Firestore,
 	actorUid: string,
@@ -125,11 +140,18 @@ export async function tableStep(
 	const first = await ref.get();
 	if (!first.exists) throw new ClassroomError('not-found', 'Table not found');
 	const { mainId } = first.data() as ClassTable;
-	const isAdmin = await isWorkspaceAdmin(firestore, mainId, actorUid);
+	// The role, the picked question and the challenge do not depend on each other: read them together.
+	const needsQuestion = action.action === 'pickQuestion' || action.action === 'claimTurn';
+	const [isAdmin, qSnap, challengeRead] = await Promise.all([
+		isWorkspaceAdmin(firestore, mainId, actorUid),
+		needsQuestion
+			? firestore.collection(Collections.statements).doc(action.questionId).get()
+			: Promise.resolve(null),
+		action.action === 'claimPen' ? readChallenge(firestore, mainId) : Promise.resolve(null),
+	]);
 	let questionIsOwn = false;
 
-	if (action.action === 'pickQuestion' || action.action === 'claimTurn') {
-		const qSnap = await firestore.collection(Collections.statements).doc(action.questionId).get();
+	if (needsQuestion && qSnap) {
 		const question = qSnap.exists ? (qSnap.data() as Statement) : undefined;
 		const ownerTable = question?.classTable?.tableId;
 		questionIsOwn = ownerTable !== undefined;
@@ -146,14 +168,13 @@ export async function tableStep(
 	// Writing is only possible with a challenge question and a ballot that has not opened (the
 	// conditions classPostProposal enforces): nobody takes a pen they could not use.
 	let writeBlocked: 'vote-running' | 'no-challenge' | undefined;
-	if (action.action === 'claimPen') {
-		try {
-			const challenge = await loadChallenge(firestore, mainId);
-			if (challenge.statementSettings?.ballot !== undefined) writeBlocked = 'vote-running';
-		} catch (error) {
-			if (!(error instanceof ClassroomError)) throw error;
-			writeBlocked = 'no-challenge';
-		}
+	if (challengeRead) {
+		if (challengeRead.error) throw challengeRead.error;
+		writeBlocked = challengeRead.challenge
+			? challengeRead.challenge.statementSettings?.ballot !== undefined
+				? 'vote-running'
+				: undefined
+			: 'no-challenge';
 	}
 
 	const mainRef = firestore.collection(Collections.statements).doc(mainId);

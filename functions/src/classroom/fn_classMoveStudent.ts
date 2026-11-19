@@ -10,7 +10,7 @@ import type {
 } from '@freedi/shared-types';
 import { db } from '../db';
 import {
-	assertWorkspaceAdmin,
+	assertWorkspaceAdminTogether,
 	requireId,
 	requireUid,
 	subscriptionRef,
@@ -53,7 +53,7 @@ export async function moveStudent(
 	const mainId = requireId(req?.mainId, 'mainId');
 	const uid = requireId(req?.uid, 'uid');
 	const toTable = validTarget(req?.toTable);
-	const main = await assertWorkspaceAdmin(firestore, mainId, actorUid);
+	const main = await assertWorkspaceAdminTogether(firestore, mainId, actorUid);
 	// Moves work while paused too (Trello 3sq65nGv, Tal 2026-11-05); only an ended lesson refuses.
 	assertLessonNotEnded(main);
 	const held = lessonStatusOf(main?.statementSettings?.lessonPlan) === 'paused';
