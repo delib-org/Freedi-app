@@ -1,12 +1,10 @@
 import m from 'mithril';
-import { supportBySide, type Statement } from '@freedi/shared-types';
+import type { Statement } from '@freedi/shared-types';
 import '@/styles/console-support-panel.scss';
 import { t } from '@/lib/i18n';
-import { classState } from '@/lib/classroom/classState';
 import { gateOf, sideNamesOf } from '@/lib/classroom/classSettings';
 import { SupportBySide } from '@/views/student/c3/SupportBySide';
-import { refreshRegistrationSupport, supportForScreen } from '@/lib/classroom/registrationSupport';
-import { studentsOf } from './projector/projectorLogic';
+import { retrySupport, supportForScreen } from '@/lib/classroom/registrationSupport';
 
 export interface SupportPanelAttrs {
 	main: Statement;
@@ -24,13 +22,9 @@ export const SupportPanel: m.Component<SupportPanelAttrs> = {
 	view({ attrs }) {
 		const { main, challenge, shownToClass } = attrs;
 		const gate = gateOf(challenge, main);
-		// A registration that asked a position: the totals come from the server, by the registration's poles.
+		// The totals come from the server: the sides are private (a registration's poles name them when it asked a position).
 		const registered = supportForScreen(main, main.statementId);
-		const result =
-			registered.kind === 'ready'
-				? registered.result
-				: supportBySide(studentsOf(classState.roster, main.creatorId), gate);
-		const names = registered.kind === 'ready' ? registered.names : sideNamesOf(main);
+		const names = (registered.kind === 'ready' && registered.names) || sideNamesOf(main);
 
 		return m('section.support-panel', { 'data-testid': 'support-panel' }, [
 			m('h2.support-panel__title', t('summary.by_side')),
@@ -48,14 +42,14 @@ export const SupportPanel: m.Component<SupportPanelAttrs> = {
 						' ',
 						m(
 							'button.btn.btn--tertiary',
-							{ type: 'button', onclick: () => refreshRegistrationSupport(main.statementId, true) },
+							{ type: 'button', onclick: () => retrySupport(main, main.statementId) },
 							t('console.retry'),
 						),
 					])
 				: null,
-			registered.kind === 'loading' || registered.kind === 'failed'
-				? null
-				: m(SupportBySide, { result, gate, names }),
+			registered.kind === 'ready'
+				? m(SupportBySide, { result: registered.result, gate, names })
+				: null,
 		]);
 	},
 };

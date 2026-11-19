@@ -1,10 +1,5 @@
 import m from 'mithril';
-import {
-	noDeviceCountOf,
-	supportBySide,
-	type Statement,
-	type StatementSubscription,
-} from '@freedi/shared-types';
+import { noDeviceCountOf, type Statement } from '@freedi/shared-types';
 import '@/styles/student-c3.scss';
 import { StudentFrame } from '@/components/StudentFrame';
 import { t } from '@/lib/i18n';
@@ -12,6 +7,7 @@ import { getChallengeQuestion } from '@/lib/lesson';
 import { getSubQuestions } from '@/lib/store';
 import { classState } from '@/lib/classroom/classState';
 import { listenRoster } from '@/lib/classroom/listeners';
+import type { RosterSubscription } from '@/lib/classroom/rosterPrivacy';
 import { currentUid } from '@/lib/classroom/c3Data';
 import { setMyDecisionSupport } from '@/lib/classroom/studentWrites';
 import { gateOf, sideNamesOf } from '@/lib/classroom/classSettings';
@@ -32,7 +28,7 @@ export interface SummaryScreenAttrs {
 
 class SummaryState {
 	feed = new FlowFeed();
-	roster: StatementSubscription[] = [];
+	roster: RosterSubscription[] = [];
 	rosterStop: Unsubscribe | null = null;
 	pending: number | undefined;
 	error: string | null = null;
@@ -77,14 +73,10 @@ export const SummaryScreen: m.ClassComponent<SummaryScreenAttrs> = {
 			present: presentCount(self.roster, main.creatorId) + noDeviceCountOf(main),
 			resultsShown: liveResultsOn(challenge),
 		});
-		const mine = self.pending ?? classState.mySubscription?.decisionSupport;
+		const mine = self.pending ?? classState.mySide?.decisionSupport;
 		const shared = supportVisibleToClass(challenge);
-		// A registration that asked a position: totals from the server, only when the teacher shared them.
+		// Totals from the server (the sides are private), only when the teacher shared them.
 		const registered = supportForScreen(main, main.statementId, shared);
-		const result =
-			registered.kind === 'ready'
-				? registered.result
-				: supportBySide(self.roster, gateOf(challenge, main));
 		const rate = (score: number): void => {
 			self.pending = score;
 			self.error = null;
@@ -122,11 +114,11 @@ export const SummaryScreen: m.ClassComponent<SummaryScreenAttrs> = {
 							testPrefix: 'support-face',
 						}),
 						m(ErrorLine, { message: self.error }),
-						shared && registered.kind !== 'loading' && registered.kind !== 'failed'
+						shared && registered.kind === 'ready'
 							? m(SupportBySide, {
-									result,
+									result: registered.result,
 									gate: gateOf(challenge, main),
-									names: registered.kind === 'ready' ? registered.names : sideNamesOf(main),
+									names: registered.names ?? sideNamesOf(main),
 								})
 							: m('p.summary__support-later', { role: 'status' }, t('summary.support_later')),
 					]

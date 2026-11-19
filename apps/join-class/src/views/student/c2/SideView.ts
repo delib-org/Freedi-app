@@ -81,7 +81,7 @@ function actionButton(state: SideState, mainId: string): m.Vnode {
 export const SideView: m.Component<StepAttrs> = {
 	oninit(vnode) {
 		const state = vnode.state as unknown as SideState;
-		const saved = classState.mySubscription?.side;
+		const saved = classState.mySide?.side;
 		state.touched = typeof saved === 'number';
 		state.value = state.touched ? (saved as number) : SIDE_CENTER;
 		state.status = state.touched ? 'saved' : 'idle';
@@ -107,7 +107,7 @@ export const SideView: m.Component<StepAttrs> = {
 		const names = sideNamesOf(vnode.attrs.main);
 		const claims = sideClaimsOf(vnode.attrs.main);
 		// a refreshed phone: the saved side arrives after the first render
-		const saved = classState.mySubscription?.side;
+		const saved = classState.mySide?.side;
 		if (!state.touched && typeof saved === 'number') {
 			state.touched = true;
 			state.value = saved;

@@ -23,7 +23,7 @@ import { playFlip, recordPositions } from '@/lib/flipReorder';
 import type { Positions } from '@/lib/flipReorder';
 import { GateStage } from './GateStage';
 import { ballotOptions, gateView } from './gateLogic';
-import { readBallot, studentsOf, supportPercent, tallyBars, voteStatus } from './projectorLogic';
+import { readBallot, supportPercent, tallyBars, voteStatus } from './projectorLogic';
 
 /**
  * The projector's Vote and Summary steps. The tally follows the teacher's
@@ -195,15 +195,14 @@ export function resultsBlock(summary: VoteSummary): m.Children {
 
 function supportBlock(): m.Vnode {
 	const challenge = projectorData.challenge;
+	// Totals from the server: the sides are private (Trello btMVQMM5).
 	const registered = supportForScreen(projectorData.main, projectorData.main?.statementId ?? '');
-	const names = registered.kind === 'ready' ? registered.names : sideNamesOf(projectorData.main);
+	const names =
+		(registered.kind === 'ready' && registered.names) || sideNamesOf(projectorData.main);
 	const support =
 		registered.kind === 'ready'
 			? registered.result
-			: supportBySide(
-					studentsOf(classState.roster, projectorData.main?.creatorId),
-					gateOf(challenge, projectorData.main),
-				);
+			: supportBySide([], gateOf(challenge, projectorData.main));
 	const rows = [
 		{ key: 'a', label: names.a, camp: support.a },
 		{ key: 'center', label: t('projector.center'), camp: support.center },

@@ -408,7 +408,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 							uid,
 							name: nameOf(uid, students),
 							speaking: speakingUid === uid,
-							chosen: attrs.showSides ? (students.get(uid)?.camp ?? null) !== null : undefined,
+							chosen: attrs.showSides ? students.get(uid)?.chosen === true : undefined,
 							from: table.n,
 							tableNumbers: attrs.tableNumbers,
 							askMark: attrs.tableTalk ? askMark(table, uid, serverNow()) : undefined,

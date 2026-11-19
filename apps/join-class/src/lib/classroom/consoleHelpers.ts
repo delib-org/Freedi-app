@@ -1,5 +1,7 @@
-import { LessonStepKey, Role, campOf } from '@freedi/shared-types';
-import type { Camp, ClassTable, Statement, StatementSubscription } from '@freedi/shared-types';
+import { LessonStepKey, Role } from '@freedi/shared-types';
+import type { ClassTable, Statement } from '@freedi/shared-types';
+import { sideChosen } from './rosterPrivacy';
+import type { RosterSubscription } from './rosterPrivacy';
 
 /**
  * Pure helpers of the teacher console (no Firebase, no DOM): the step rail,
@@ -163,23 +165,24 @@ export function gateRows(options: readonly Statement[], gate: number): GateRow[]
 
 // ---- roster ----------------------------------------------------------------
 
+/** A student as the teacher views get them: whether they chose a side, never which (Trello btMVQMM5). */
 export interface RosterStudent {
 	uid: string;
 	name: string;
-	camp: Camp | null;
+	chosen: boolean;
 	tableId: string | null;
 }
 
 const SHORT_UID_LENGTH = 4;
 
 /** Joined students (the teacher and other admins are not students). */
-export function rosterStudents(roster: readonly StatementSubscription[]): RosterStudent[] {
+export function rosterStudents(roster: readonly RosterSubscription[]): RosterStudent[] {
 	return roster
 		.filter((sub) => sub.role !== Role.admin && sub.role !== Role.creator)
 		.map((sub) => ({
 			uid: sub.userId,
 			name: sub.user?.displayName?.trim() || sub.userId.slice(0, SHORT_UID_LENGTH),
-			camp: sub.camp ?? (typeof sub.side === 'number' ? campOf(sub.side) : null),
+			chosen: sideChosen(sub),
 			tableId: sub.tableId ?? null,
 		}))
 		.sort((a, b) => a.name.localeCompare(b.name) || a.uid.localeCompare(b.uid));

@@ -3,7 +3,10 @@ import type { Statement } from '@freedi/shared-types';
 import { draw, textOf } from '../../../__tests__/vnodeText';
 
 vi.mock('@/lib/i18n', () => ({ t: (key: string) => key }));
-vi.mock('@/lib/classroom/api', () => ({ classRegistrationSupport: vi.fn() }));
+vi.mock('@/lib/classroom/api', () => ({
+	classRegistrationSupport: vi.fn(),
+	classSupportBySide: vi.fn(() => new Promise(() => undefined)),
+}));
 vi.mock('@/lib/classroom/classState', () => ({ classState: { roster: [], tables: [] } }));
 
 interface Fake {

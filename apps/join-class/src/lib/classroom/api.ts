@@ -13,6 +13,8 @@ import type {
 	ClassRegistrationSupportResponse,
 	ClassSeatByCodeRequest,
 	ClassSeatByCodeResponse,
+	ClassSupportBySideRequest,
+	ClassSupportBySideResponse,
 	ClassAddNoDeviceRequest,
 	ClassAddNoDeviceResponse,
 	ClassAllTablesToRequest,
@@ -254,4 +256,11 @@ export function classRegistrationSupport(
 	req: ClassRegistrationSupportRequest,
 ): Promise<ClassRegistrationSupportResponse> {
 	return call('classRegistrationSupport', req);
+}
+
+/** Admin (or a member when the challenge shows support to everyone), at Vote / Summary: the lesson's own support by side. */
+export function classSupportBySide(
+	req: ClassSupportBySideRequest,
+): Promise<ClassSupportBySideResponse> {
+	return call('classSupportBySide', req);
 }

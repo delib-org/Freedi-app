@@ -111,6 +111,7 @@ export const TablesView: m.Component<StepAttrs> = {
 		const names = sideNamesOf(vnode.attrs.main);
 		const chips = tableChips(classState.table, state.roster?.subs ?? [], {
 			myUid: getUserState().user?.uid,
+			myCamp: classState.mySide?.camp,
 			labelOf: (name, camp) => (camp ? `${name}, ${campWord(camp, names)}` : name),
 			fallbackName: t('table.unnamed'),
 		});

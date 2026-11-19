@@ -129,14 +129,14 @@ describe('roster', () => {
 	const sub = (uid: string, role: Role, extra: object = {}): StatementSubscription =>
 		({ userId: uid, role, user: { displayName: `n-${uid}` }, ...extra }) as StatementSubscription;
 
-	it('drops admins, derives camp from side and finds the unplaced', () => {
+	it('drops admins, says who chose a side (never which) and finds the unplaced', () => {
 		const students = rosterStudents([
 			sub('t', Role.admin),
-			sub('a', Role.member, { side: 10 }),
-			sub('b', Role.member, { camp: 'b', tableId: 'm--1' }),
+			sub('a', Role.member, { sidePickedAt: 10 }),
+			sub('b', Role.member, { tableId: 'm--1' }),
 		]);
 		expect(students.map((s) => s.uid)).toEqual(['a', 'b']);
-		expect(students[0].camp).toBe('a');
+		expect(students.map((s) => s.chosen)).toEqual([true, false]);
 		const unplaced = unplacedStudents(students, [table({ memberUids: ['b'] })]);
 		expect(unplaced.map((s) => s.uid)).toEqual(['a']);
 	});

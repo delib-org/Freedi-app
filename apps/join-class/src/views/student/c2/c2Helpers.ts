@@ -1,5 +1,6 @@
 import { CAMP_A_BELOW, CAMP_B_ABOVE, Role, SIDE_MAX, SIDE_MIN } from '@freedi/shared-types';
-import type { Camp, ClassTable, Statement, StatementSubscription } from '@freedi/shared-types';
+import type { Camp, ClassTable, Statement } from '@freedi/shared-types';
+import type { RosterSubscription } from '@/lib/classroom/rosterPrivacy';
 
 /**
  * Pure helpers of the first student screens (waiting, opening, side, my table).
@@ -29,7 +30,7 @@ export function campMark(camp: Camp | undefined): string {
 }
 
 /** Students joined so far: the roster minus the teacher (admin role). */
-export function rosterCount(roster: readonly StatementSubscription[]): number {
+export function rosterCount(roster: readonly RosterSubscription[]): number {
 	return roster.filter((sub) => sub.role !== Role.admin).length;
 }
 
@@ -62,6 +63,8 @@ export interface TableChip {
 
 export interface TableChipOptions {
 	myUid: string | undefined;
+	/** The student's own camp (from their private side doc); tablemates' sides are private. */
+	myCamp?: Camp;
 	/** Spoken label of a chip, e.g. "Dana, close to Noa". */
 	labelOf: (name: string, camp: Camp | undefined) => string;
 	/** Name shown when a tablemate has no name yet. */
@@ -70,12 +73,13 @@ export interface TableChipOptions {
 
 /**
  * Chips for the students at a table (device members by uid, looked up in the
- * roster for name and side) followed by the no-device members (no side mark).
+ * roster for the name) followed by the no-device members. Only the student's
+ * own chip carries a side mark: everyone's side is private (Trello btMVQMM5).
  * Me first, so the student finds themselves.
  */
 export function tableChips(
 	table: ClassTable | null,
-	roster: readonly StatementSubscription[],
+	roster: readonly RosterSubscription[],
 	options: TableChipOptions,
 ): TableChip[] {
 	if (!table) return [];
@@ -83,7 +87,7 @@ export function tableChips(
 	const members: TableChip[] = table.memberUids.map((uid) => {
 		const sub = byUid.get(uid);
 		const name = sub?.user?.displayName?.trim() || options.fallbackName;
-		const camp = sub?.camp;
+		const camp = uid === options.myUid ? options.myCamp : undefined;
 
 		return {
 			key: uid,

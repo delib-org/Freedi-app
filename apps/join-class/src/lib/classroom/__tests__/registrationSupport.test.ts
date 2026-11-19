@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { SupportBySide } from '@freedi/shared-types';
 
-vi.mock('../api', () => ({ classRegistrationSupport: vi.fn() }));
+vi.mock('../api', () => ({ classRegistrationSupport: vi.fn(), classSupportBySide: vi.fn() }));
+vi.mock('../../sentry', () => ({ captureException: vi.fn() }));
 
 import {
 	SUPPORT_REFRESH_MS,
 	fetchIsDue,
+	sourceOf,
 	supportViewOf,
 	type RegistrationSupportState,
 } from '../registrationSupport';
@@ -18,7 +20,15 @@ const SUPPORT: SupportBySide = {
 };
 
 function state(overrides: Partial<RegistrationSupportState> = {}): RegistrationSupportState {
-	return { mainId: null, data: null, loading: false, failed: false, fetchedAt: 0, ...overrides };
+	return {
+		mainId: null,
+		source: null,
+		data: null,
+		loading: false,
+		failed: false,
+		fetchedAt: 0,
+		...overrides,
+	};
 }
 
 const ASKED = {
@@ -31,29 +41,46 @@ const NOT_ASKED = {
 };
 
 describe('supportViewOf', () => {
-	it('leaves a lesson whose registration asked no position to its own Side step', () => {
-		expect(supportViewOf(NOT_ASKED, state(), 'm1')).toEqual({ kind: 'own' });
-		expect(supportViewOf(null, state(), 'm1')).toEqual({ kind: 'own' });
+	it('takes a lesson whose registration asked no position to its own totals, from the server too', () => {
+		expect(supportViewOf(NOT_ASKED, state(), 'm1')).toEqual({ kind: 'loading' });
+		expect(supportViewOf(null, state(), 'm1')).toEqual({ kind: 'loading' });
+		const own = state({ mainId: 'm1', source: 'own', data: { support: SUPPORT, names: null } });
+		expect(supportViewOf(NOT_ASKED, own, 'm1')).toEqual({
+			kind: 'ready',
+			result: SUPPORT,
+			names: null,
+		});
+		// an answer for the registration's poles is not this lesson's own one
+		expect(supportViewOf(ASKED, own, 'm1')).toEqual({ kind: 'loading' });
 	});
 
 	it('waits while the totals load, and says so when they fail', () => {
 		expect(supportViewOf(ASKED, state(), 'm1')).toEqual({ kind: 'loading' });
-		expect(supportViewOf(ASKED, state({ mainId: 'm1', failed: true }), 'm1')).toEqual({
-			kind: 'failed',
-		});
+		expect(
+			supportViewOf(ASKED, state({ mainId: 'm1', source: 'registration', failed: true }), 'm1'),
+		).toEqual({ kind: 'failed' });
 		// a failure of another lesson is not this lesson's
-		expect(supportViewOf(ASKED, state({ mainId: 'other', failed: true }), 'm1')).toEqual({
-			kind: 'loading',
-		});
+		expect(
+			supportViewOf(ASKED, state({ mainId: 'other', source: 'registration', failed: true }), 'm1'),
+		).toEqual({ kind: 'loading' });
 	});
 
 	it('names the two sides by the registration poles', () => {
 		const ready = supportViewOf(
 			ASKED,
-			state({ mainId: 'm1', data: { poleA: 'Pro', poleB: 'Con', support: SUPPORT } }),
+			state({
+				mainId: 'm1',
+				source: 'registration',
+				data: { support: SUPPORT, names: { a: 'Pro', b: 'Con' } },
+			}),
 			'm1',
 		);
 		expect(ready).toEqual({ kind: 'ready', result: SUPPORT, names: { a: 'Pro', b: 'Con' } });
+	});
+
+	it('picks the callable from the lesson', () => {
+		expect(sourceOf(ASKED)).toBe('registration');
+		expect(sourceOf(NOT_ASKED)).toBe('own');
 	});
 });
 
@@ -68,8 +95,13 @@ describe('fetchIsDue', () => {
 	});
 
 	it('asks again only once the answer is stale', () => {
-		const fresh = state({ mainId: 'm1', fetchedAt: 1000 });
+		const fresh = state({ mainId: 'm1', source: 'registration', fetchedAt: 1000 });
 		expect(fetchIsDue(fresh, 'm1', 1000 + SUPPORT_REFRESH_MS - 1)).toBe(false);
 		expect(fetchIsDue(fresh, 'm1', 1000 + SUPPORT_REFRESH_MS)).toBe(true);
+	});
+
+	it('asks at once when the lesson needs the other callable', () => {
+		const fresh = state({ mainId: 'm1', source: 'registration', fetchedAt: 1000 });
+		expect(fetchIsDue(fresh, 'm1', 1001, 'own')).toBe(true);
 	});
 });

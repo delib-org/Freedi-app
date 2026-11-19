@@ -1,23 +1,24 @@
 import m from 'mithril';
-import type { StatementSubscription } from '@freedi/shared-types';
 import { listenRoster } from '@/lib/classroom/listeners';
+import type { RosterSubscription } from '@/lib/classroom/rosterPrivacy';
 
 /**
- * A student screen's own view of the roster (who joined, their names and sides).
+ * A student screen's own view of the roster (who joined and their names; never
+ * anyone's side, those are private).
  * `watchClass` keeps the roster for teachers only, so the student screens that
  * need it (waiting count, table-mates) hold a small watcher of their own.
  * A student who joined the lesson may list its subscriptions (see listeners.ts).
  */
 export interface RosterWatch {
 	/** Latest roster; empty until the first delivery or when reading is refused. */
-	readonly subs: readonly StatementSubscription[];
+	readonly subs: readonly RosterSubscription[];
 	/** True once the first snapshot (or an error) arrived. */
 	readonly ready: boolean;
 	stop(): void;
 }
 
 export function watchRoster(mainId: string): RosterWatch {
-	const watch = { subs: [] as readonly StatementSubscription[], ready: false };
+	const watch = { subs: [] as readonly RosterSubscription[], ready: false };
 	const unsubscribe = listenRoster(
 		mainId,
 		(subs) => {
