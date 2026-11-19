@@ -178,7 +178,7 @@ describe('classSupportBySide', () => {
 });
 
 describe('supportStepOpen', () => {
-	it('is open at Vote and Summary, and in a lesson without a plan', () => {
+	it('is open at Vote and Summary only, never in a lesson without a plan', () => {
 		const at = (stepIndex: number): boolean =>
 			supportStepOpen({
 				statementSettings: { lessonPlan: { steps: STEPS, stepIndex } },
@@ -187,6 +187,6 @@ describe('supportStepOpen', () => {
 		expect(at(SUMMARY)).toBe(true);
 		expect(at(SIDE_STEP)).toBe(false);
 		expect(at(STEPS.indexOf('tables'))).toBe(false);
-		expect(supportStepOpen({} as Statement)).toBe(true);
+		expect(supportStepOpen({} as Statement)).toBe(false);
 	});
 });

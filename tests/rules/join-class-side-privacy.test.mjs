@@ -1,7 +1,7 @@
 import { after, before, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { collection, deleteDoc, deleteField, doc, getDoc, getDocs, query, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore';
+import { collection, collectionGroup, deleteDoc, deleteField, doc, getDoc, getDocs, query, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore';
 import { makeEnv, seed } from './helpers.mjs';
 
 /**
@@ -53,6 +53,23 @@ describe('join-class side privacy rules', () => {
 				{ merge: true },
 			);
 		});
+
+	const STEPS = ['waiting', 'opening', 'side', 'tables', 'tableTalk', 'proposals', 'allProposals', 'vote', 'summary'];
+	const setStep = (key) =>
+		seed(env, async (db) => {
+			await setDoc(
+				doc(db, 'statements', MAIN),
+				{ statementSettings: { lessonPlan: { steps: STEPS, stepIndex: STEPS.indexOf(key), status: 'live' } } },
+				{ merge: true },
+			);
+		});
+	const pick = (uid, value, camp, flag = true) => {
+		const db = as(uid);
+		const batch = writeBatch(db);
+		batch.set(doc(db, 'classSides', `${uid}--${MAIN}`), side(uid, { side: value, camp, lastUpdate: T0 + 9 }), { merge: true });
+		if (flag) batch.update(doc(db, 'statementsSubscribe', `${uid}--${MAIN}`), { sidePickedAt: T0 + 9 });
+		return batch.commit();
+	};
 
 	before(async () => {
 		env = await makeEnv('join-class-side-privacy');
@@ -232,6 +249,89 @@ describe('join-class side privacy rules', () => {
 		it('cannot come with a new subscription', async () => {
 			const fresh = 'u-fresh2';
 			await assertFails(setDoc(doc(as(fresh), 'statementsSubscribe', `${fresh}--${MAIN}`), { ...sub(fresh, 'member'), sidePickedAt: T0 }));
+		});
+	});
+
+	describe('sides are frozen at Vote and Summary (no late pick, no change)', () => {
+		it('refuses a first pick at Vote and at Summary, with or without the flag', async () => {
+			for (const step of ['vote', 'summary']) {
+				await setStep(step);
+				await assertFails(pick(S1, 20, 'a'));
+				await assertFails(pick(S1, 20, 'a', false));
+			}
+		});
+
+		it('refuses changing side or camp at Vote and at Summary', async () => {
+			for (const step of ['vote', 'summary']) {
+				await setStep(step);
+				await assertFails(updateDoc(doc(as(S2), 'classSides', SIDE2), { side: 10, camp: 'a', lastUpdate: T0 + 9 }));
+				await assertFails(updateDoc(doc(as(S2), 'classSides', SIDE2), { side: 70, lastUpdate: T0 + 9 }));
+			}
+		});
+
+		it('refuses setting the flag alone at Vote and at Summary', async () => {
+			for (const step of ['vote', 'summary']) {
+				await setStep(step);
+				await assertFails(updateDoc(doc(as(S2), 'statementsSubscribe', SIDE2), { sidePickedAt: T0 }));
+			}
+		});
+
+		it('keeps decisionSupport writable at Summary (new doc and existing doc)', async () => {
+			await setStep('summary');
+			await assertSucceeds(updateDoc(doc(as(S2), 'classSides', SIDE2), { decisionSupport: -0.5, lastUpdate: T0 + 9 }));
+			await assertSucceeds(setDoc(doc(as(S1), 'classSides', SIDE1), side(S1, { decisionSupport: 1 })));
+		});
+
+		it('still allows a pick and a change at Side and at the steps before Vote', async () => {
+			for (const step of ['side', 'tables', 'proposals', 'allProposals']) {
+				await setStep(step);
+				await assertSucceeds(pick(S1, 20, 'a', step === 'side'));
+				await assertSucceeds(updateDoc(doc(as(S2), 'classSides', SIDE2), { side: 10, camp: 'a', lastUpdate: T0 + 9 }));
+			}
+		});
+
+		it('an old tab cannot do it through the subscription either, even with the window open', async () => {
+			await setFlag(true);
+			await setStep('vote');
+			await assertFails(updateDoc(doc(as(S1), 'statementsSubscribe', SIDE1), { side: 20, camp: 'a', lastUpdate: T0 + 9 }));
+			await assertSucceeds(updateDoc(doc(as(S1), 'statementsSubscribe', SIDE1), { decisionSupport: 1, lastUpdate: T0 + 9 }));
+			await setStep('side');
+			await assertSucceeds(updateDoc(doc(as(S1), 'statementsSubscribe', SIDE1), { side: 20, camp: 'a', lastUpdate: T0 + 10 }));
+			await setFlag(undefined);
+		});
+	});
+
+	describe('classSides: a side once set stays', () => {
+		it('the owner cannot remove camp or side (the flag would outlive its camp)', async () => {
+			await assertFails(updateDoc(doc(as(S2), 'classSides', SIDE2), { camp: deleteField(), lastUpdate: T0 + 9 }));
+			await assertFails(updateDoc(doc(as(S2), 'classSides', SIDE2), { side: deleteField(), lastUpdate: T0 + 9 }));
+			await assertFails(setDoc(doc(as(S2), 'classSides', SIDE2), side(S2, { decisionSupport: 1 })));
+		});
+
+		it('a collection-group query on classSides is refused', async () => {
+			await assertFails(getDocs(collectionGroup(as(S2), 'classSides')));
+			await assertFails(getDocs(query(collectionGroup(as(TEACHER), 'classSides'), where('mainId', '==', MAIN))));
+		});
+	});
+
+	describe('old subscriptions that still hold a side keep working (window closed)', () => {
+		beforeEach(async () => {
+			await seed(env, (db) =>
+				setDoc(doc(db, 'statementsSubscribe', SIDE1), sub(S1, 'member', { side: 20, camp: 'a', decisionSupport: 1 })),
+			);
+		});
+
+		it('the owner\'s unrelated update succeeds', async () => {
+			await assertSucceeds(updateDoc(doc(as(S1), 'statementsSubscribe', SIDE1), { getInAppNotification: true, lastUpdate: T0 + 9 }));
+		});
+
+		it('the teacher\'s unrelated update succeeds', async () => {
+			await assertSucceeds(updateDoc(doc(as(TEACHER), 'statementsSubscribe', SIDE1), { renameRequested: true }));
+		});
+
+		it('but nobody changes the old fields there', async () => {
+			await assertFails(updateDoc(doc(as(S1), 'statementsSubscribe', SIDE1), { camp: 'b' }));
+			await assertFails(updateDoc(doc(as(TEACHER), 'statementsSubscribe', SIDE1), { camp: 'b' }));
 		});
 	});
 });

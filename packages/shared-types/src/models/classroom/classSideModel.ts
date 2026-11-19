@@ -42,6 +42,25 @@ export type ClassSideValues = Pick<ClassSide, 'side' | 'camp' | 'decisionSupport
 export const CLASS_SIDE_PRIVATE_FIELDS = ['side', 'camp', 'decisionSupport'] as const;
 
 /**
+ * The steps at which the sides are frozen and their totals are shown (the
+ * projector's Vote and Summary, the phones' Summary). Totals are visible only
+ * here, and here no side may be picked or changed: otherwise a "chose" mark
+ * appearing next to one camp's count rising would tell the teacher which side
+ * that student picked. decisionSupport stays writable (it is entered at Summary).
+ */
+export const CLASS_SIDE_LOCKED_STEPS: readonly string[] = ['vote', 'summary'];
+
+/** The lesson stands at a step where sides are frozen (and totals shown). No plan = not locked. */
+export function sidesLocked(
+	plan: { steps?: readonly string[]; stepIndex?: number } | null | undefined,
+): boolean {
+	if (!plan || !Array.isArray(plan.steps) || typeof plan.stepIndex !== 'number') return false;
+	const step = plan.steps[plan.stepIndex];
+
+	return typeof step === 'string' && CLASS_SIDE_LOCKED_STEPS.includes(step);
+}
+
+/**
  * Rollout switch, read only by firestore.rules and written only by the
  * backfill script (Admin SDK): while `classFlags/legacySideWrites` has
  * `open: true`, an app version from before this change may still write
@@ -71,7 +90,7 @@ export function mergeClassSide(
 
 /**
  * `classSupportBySide` (the teacher; a student when support by side is shown
- * to everyone), only at the Vote and Summary steps: the lesson's own support
+ * to everyone), only while `sidesLocked` (Vote and Summary): the lesson's own support
  * by side, computed on the server from the private side docs. Totals only.
  */
 export interface ClassSupportBySideRequest {

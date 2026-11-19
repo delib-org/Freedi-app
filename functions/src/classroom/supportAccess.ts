@@ -1,4 +1,4 @@
-import { DEFAULT_GATE } from '@freedi/shared-types';
+import { DEFAULT_GATE, sidesLocked } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 
 /**
@@ -6,9 +6,6 @@ import type { Statement } from '@freedi/shared-types';
  * classRegistrationSupport (a registration's positions) and classSupportBySide
  * (the lesson's own Side step). Both answer with totals only.
  */
-
-/** The lesson steps at which support by side is on a screen (projector Vote / Summary, the phones' Summary). */
-export const SUPPORT_STEPS: ReadonlySet<string> = new Set(['vote', 'summary']);
 
 function finiteNumber(value: unknown): number | undefined {
 	return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
@@ -31,15 +28,13 @@ export function supportShownToAll(challenge: Statement): boolean {
 }
 
 /**
- * The lesson stands at a step that shows support by side (a lesson without a
- * plan always does). Outside those steps the totals are refused even to the
- * teacher: while students pick their sides, live per-camp counts next to the
- * live "chose a side" marks would tell her who picked which.
+ * The lesson stands at a step that shows support by side (Vote, Summary). Those
+ * are exactly the steps at which the rules freeze every side (sidesLocked), so a
+ * late pick or a change can never move a total the teacher is watching; before
+ * them the totals are refused even to her, since per-camp counts next to the
+ * live "chose a side" marks would tell her who picked which. A lesson without a
+ * plan never reaches these steps on the phones and gets no totals.
  */
 export function supportStepOpen(main: Statement): boolean {
-	const plan = main.statementSettings?.lessonPlan;
-	if (!plan) return true;
-	const step = plan.steps[plan.stepIndex];
-
-	return typeof step === 'string' && SUPPORT_STEPS.has(step);
+	return sidesLocked(main.statementSettings?.lessonPlan);
 }

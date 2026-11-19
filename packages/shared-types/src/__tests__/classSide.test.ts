@@ -3,6 +3,7 @@ import {
 	CLASS_SIDE_PRIVATE_FIELDS,
 	classSideId,
 	mergeClassSide,
+	sidesLocked,
 } from '../index';
 
 describe('classSideId', () => {
@@ -37,5 +38,26 @@ describe('mergeClassSide', () => {
 describe('CLASS_SIDE_PRIVATE_FIELDS', () => {
 	it('names exactly the three private fields', () => {
 		expect([...CLASS_SIDE_PRIVATE_FIELDS]).toEqual(['side', 'camp', 'decisionSupport']);
+	});
+});
+
+describe('sidesLocked', () => {
+	const steps = ['waiting', 'opening', 'side', 'tables', 'tableTalk', 'proposals', 'vote', 'summary'];
+	it('locks the sides at Vote and Summary only', () => {
+		expect(steps.map((_, stepIndex) => sidesLocked({ steps, stepIndex }))).toEqual([
+			false,
+			false,
+			false,
+			false,
+			false,
+			false,
+			true,
+			true,
+		]);
+	});
+	it('does not lock a lesson without a usable plan', () => {
+		expect(sidesLocked(undefined)).toBe(false);
+		expect(sidesLocked({ steps })).toBe(false);
+		expect(sidesLocked({ steps, stepIndex: 99 })).toBe(false);
 	});
 });

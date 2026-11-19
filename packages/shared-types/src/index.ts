@@ -1105,9 +1105,11 @@ export {
   CLASS_SIDE_PRIVATE_FIELDS,
   CLASS_FLAGS_COLLECTION,
   CLASS_FLAG_LEGACY_SIDE_WRITES,
+  CLASS_SIDE_LOCKED_STEPS,
   ClassSideSchema,
   classSideId,
   mergeClassSide,
+  sidesLocked,
 } from './models/classroom/classSideModel';
 export type {
   ClassSide,

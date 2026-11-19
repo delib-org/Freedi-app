@@ -12,6 +12,7 @@ import {
 	Vote,
 	campOf,
 	classSideId,
+	sidesLocked,
 	getStatementSubscriptionId,
 	getVoteId,
 } from '@freedi/shared-types';
@@ -20,6 +21,7 @@ import { db, doc, getDoc, setDoc, updateDoc, writeBatch } from '../firebase';
 import { getCustomDisplayName, getMainStatement } from '../store';
 import { getUserState } from '../user';
 import { resolveSubscriptionName } from './subscriptionName';
+import { captureException } from '../sentry';
 
 /**
  * What a student device writes in the classroom (all on its own docs).
@@ -130,6 +132,9 @@ function sideRef(mainId: string, uid: string) {
 export async function setMySide(mainId: string, side: number): Promise<void> {
 	try {
 		const uid = requireUid('setMySide');
+		// Sides are frozen at Vote and Summary (the rules refuse it): a move still
+		// in the debounce when the teacher jumps there is dropped, not failed.
+		if (sidesLocked(getMainStatement()?.statementSettings?.lessonPlan)) return;
 		const sub = await ensureMemberSubscription(mainId);
 		const value = clamp(Math.round(side), SIDE_MIN, SIDE_MAX);
 		const now = Date.now();
@@ -149,7 +154,7 @@ export async function setMySide(mainId: string, side: number): Promise<void> {
 		}
 		await batch.commit();
 	} catch (error) {
-		console.error('[Classroom] setMySide failed:', error);
+		captureException(error, { operation: 'classroom.setMySide', mainId });
 		throw error;
 	}
 }
@@ -170,7 +175,7 @@ export async function setMyDecisionSupport(mainId: string, value: number): Promi
 			{ merge: true },
 		);
 	} catch (error) {
-		console.error('[Classroom] setMyDecisionSupport failed:', error);
+		captureException(error, { operation: 'classroom.setMyDecisionSupport', mainId });
 		throw error;
 	}
 }

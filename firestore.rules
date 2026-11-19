@@ -22,6 +22,22 @@ service cloud.firestore {
              !(get(path).data.get('statementSettings', {}).get('lessonPlan', {}).get('status', 'live') in ['paused', 'ended']);
     }
 
+    // join-class: the sides are FROZEN at Vote and Summary (Trello btMVQMM5,
+    // CLASS_SIDE_LOCKED_STEPS in shared-types). Those are the steps where the
+    // per-camp totals are shown, so a first pick or a change there would show
+    // as one "chose" mark next to one camp's count moving, i.e. which side that
+    // student picked. Null-safe: a lesson without a usable plan is not frozen.
+    // Same get() of the main statement as classLessonWritable.
+    function classSidesFrozen(mainId) {
+      let path = /databases/$(database)/documents/statements/$(mainId);
+      let settings = exists(path) ? get(path).data.get('statementSettings', null) : null;
+      let plan = settings is map ? settings.get('lessonPlan', null) : null;
+      let steps = plan is map ? plan.get('steps', null) : null;
+      let i = plan is map ? plan.get('stepIndex', null) : null;
+      return steps is list && i is int && i >= 0 && i < steps.size() &&
+             steps[i] in ['vote', 'summary'];
+    }
+
     // WizCol Studio — consultant organizations. Membership lives in
     // `organizationMembers/{orgId}--{uid}` (deterministic id, one exists()
     // per check). These helpers are used ONLY by the org collections and by
@@ -864,6 +880,8 @@ service cloud.firestore {
     // SDK: table mixing, support by side). Same validation as the old
     // subscription fields, the same lesson gate (paused / ended = no writes),
     // and the student must already hold the subscription of the same id.
+    // side / camp are frozen at Vote and Summary (classSidesFrozen) and never
+    // removed once set; decisionSupport stays writable there.
     // A get of a missing doc is answered only to its owner (listener before
     // the first pick), so nobody else can even probe it.
     match /classSides/{sideId} {
@@ -884,15 +902,26 @@ service cloud.firestore {
                       ? sideId.split('--')[0] == request.auth.uid
                       : resource.data.userId == request.auth.uid);
       allow list: if false;
+      // A side, once set, is never removed (a flag must not outlive its camp).
+      function classSideKeptOk() {
+        return (!('camp' in resource.data) || 'camp' in request.resource.data) &&
+               (!('side' in resource.data) || 'side' in request.resource.data);
+      }
+
       allow create: if request.auth != null &&
                        classSideValuesOk(request.resource.data) &&
                        exists(/databases/$(database)/documents/statementsSubscribe/$(sideId)) &&
-                       classLessonWritable(request.resource.data.mainId);
+                       classLessonWritable(request.resource.data.mainId) &&
+                       (!('side' in request.resource.data || 'camp' in request.resource.data) ||
+                        !classSidesFrozen(request.resource.data.mainId));
       allow update: if request.auth != null &&
                        resource.data.userId == request.auth.uid &&
                        request.resource.data.mainId == resource.data.mainId &&
                        classSideValuesOk(request.resource.data) &&
-                       classLessonWritable(resource.data.mainId);
+                       classSideKeptOk() &&
+                       classLessonWritable(resource.data.mainId) &&
+                       (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['side', 'camp']) ||
+                        !classSidesFrozen(resource.data.mainId));
       allow delete: if false;
     }
 
@@ -1902,6 +1931,7 @@ service cloud.firestore {
       function sidePickedOk() {
         let sidePath = /databases/$(database)/documents/classSides/$(statementSubId);
         return request.resource.data.get('sidePickedAt', null) is number &&
+               !classSidesFrozen(resource.data.statementId) &&
                existsAfter(sidePath) &&
                getAfter(sidePath).data.get('camp', null) != null;
       }
@@ -1909,7 +1939,8 @@ service cloud.firestore {
       function sideFieldsCreateOk() {
         let d = request.resource.data;
         return !('sidePickedAt' in d) &&
-               (!('side' in d || 'camp' in d || 'decisionSupport' in d) || legacySideWritesOpen());
+               (!('side' in d || 'camp' in d || 'decisionSupport' in d) || legacySideWritesOpen()) &&
+               (!('side' in d || 'camp' in d) || !classSidesFrozen(d.statementId));
       }
 
       function sideFieldsUpdateOk() {
@@ -1917,6 +1948,7 @@ service cloud.firestore {
         return !changed.hasAny(['side', 'camp', 'decisionSupport', 'sidePickedAt']) ||
                (isSubscriber() &&
                 (!changed.hasAny(['side', 'camp', 'decisionSupport']) || legacySideWritesOpen()) &&
+                (!changed.hasAny(['side', 'camp']) || !classSidesFrozen(resource.data.statementId)) &&
                 (!changed.hasAny(['sidePickedAt']) || sidePickedOk()));
       }
 
