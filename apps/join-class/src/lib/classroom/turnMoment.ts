@@ -1,9 +1,9 @@
-import type { ClassTable, TableStep } from '@freedi/shared-types';
+import type { ClassTable } from '@freedi/shared-types';
 import type { Mate } from './c3Logic';
 
 /**
  * Small pure rules shared by the table screens: the turn count in the header,
- * the Proposals instruction, names, and the reason a callable was refused. The
+ * names, and the reason a callable was refused. The
  * eight states of Table talk live in tableTalkState.ts. No Firebase, no DOM.
  */
 
@@ -18,18 +18,6 @@ export function maxTurns(table: ClassTable, questionCap: number | null = null): 
 	const capped = questionCap === null ? kept : Math.min(kept, questionCap);
 
 	return Math.max(capped, table.turn);
-}
-
-export interface Instruction {
-	key: string;
-	params?: Record<string, string>;
-}
-
-/** The one instruction of a Proposals step (talk, write, rate). */
-export function instructionFor(step: TableStep): Instruction {
-	if (step === 'talk') return { key: 'turn.instr_talk' };
-
-	return { key: step === 'write' ? 'turn.instr_write_proposals' : 'turn.instr_rate_proposals' };
 }
 
 /** The not-yet tablemates' names, in the order given. */
@@ -69,6 +57,11 @@ export const RACE_REASONS: ReadonlySet<string> = new Set([
 	// "Move on" tapped just after the table moved on without it.
 	'not-talking',
 	'already-moved',
+	// The pen (Proposals): someone took it first, the table moved on, or a stale tap.
+	'pen-taken',
+	'not-writing',
+	'already-written',
+	'no-pen',
 ]);
 
 /** Is this refusal one the screen swallows? */

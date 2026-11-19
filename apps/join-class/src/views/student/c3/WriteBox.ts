@@ -1,5 +1,4 @@
 import m from 'mithril';
-import type { WritingMode } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 
 export type WriteState = 'idle' | 'sending' | 'sent' | 'failed' | 'refused';
@@ -60,39 +59,5 @@ export const WriteBox: m.Component<WriteBoxAttrs> = {
 			// The language check refused the words (IA 24.3): the text stays, the student rewrites it.
 			state === 'refused' ? m('p.write__refused', { role: 'alert' }, t('proposal.refused')) : null,
 		]);
-	},
-};
-
-export interface ModeSwitchAttrs {
-	mode: WritingMode;
-	/** Only the asker; locked after the table's first send. */
-	disabled: boolean;
-	onChange: (mode: WritingMode) => void;
-}
-
-const MODES: readonly WritingMode[] = ['each', 'table'];
-
-/** "Everyone writes | One answer for the table" (a two-option segment). */
-export const ModeSwitch: m.Component<ModeSwitchAttrs> = {
-	view({ attrs }) {
-		return m(
-			'.mode',
-			{ role: 'radiogroup', 'aria-label': t('answer.mode_label') },
-			MODES.map((mode) =>
-				m(
-					'button.mode__option',
-					{
-						key: mode,
-						type: 'button',
-						role: 'radio',
-						'aria-checked': attrs.mode === mode ? 'true' : 'false',
-						disabled: attrs.disabled ? true : undefined,
-						class: attrs.mode === mode ? 'mode__option--on' : '',
-						onclick: () => attrs.onChange(mode),
-					},
-					t(`answer.mode_${mode}`),
-				),
-			),
-		);
 	},
 };

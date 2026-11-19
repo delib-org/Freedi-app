@@ -177,8 +177,8 @@ export function proposalsSample(): m.Children {
 	return m(
 		StudentFrame,
 		{
-			headerLine: t('turn.header_proposals', { n: SAMPLE_TABLE_N, step: t('turn.now_write') }),
-			instruction: t('turn.instr_write_proposals'),
+			headerLine: t('turn.table_n', { n: SAMPLE_TABLE_N }),
+			instruction: t('proposals.write.mine_line'),
 			ask: challenge?.statement
 				? t('proposals.heading', { question: challenge.statement })
 				: undefined,

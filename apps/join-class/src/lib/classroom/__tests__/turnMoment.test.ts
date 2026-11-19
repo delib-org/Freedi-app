@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ClassTable } from '@freedi/shared-types';
-import { instructionFor, isRaceRefusal, maxTurns, namesOf, refusalReason } from '../turnMoment';
+import { isRaceRefusal, maxTurns, namesOf, refusalReason } from '../turnMoment';
 
 const MATES = [
 	{ uid: 'dana', name: 'Dana' },
@@ -39,14 +39,6 @@ describe('maxTurns (the "of n" of the header)', () => {
 	});
 });
 
-describe('instructionFor (Proposals only; Table talk has its own states)', () => {
-	it('talk, write and rate each have one instruction', () => {
-		expect(instructionFor('talk').key).toBe('turn.instr_talk');
-		expect(instructionFor('write').key).toBe('turn.instr_write_proposals');
-		expect(instructionFor('rate').key).toBe('turn.instr_rate_proposals');
-	});
-});
-
 describe('namesOf + refusalReason', () => {
 	it('names in the given order, with a fallback for an unknown uid', () => {
 		expect(namesOf(['omri', 'noa', 'zz'], MATES, 'someone')).toEqual(['Omri', 'Noa', 'someone']);
@@ -63,7 +55,15 @@ describe('namesOf + refusalReason', () => {
 
 describe('isRaceRefusal (the lost races the screen swallows)', () => {
 	it('swallows "someone was first" refusals and nothing else', () => {
-		for (const reason of ['turn-claimed', 'floor-taken', 'already-answered', 'others-first']) {
+		for (const reason of [
+			'turn-claimed',
+			'floor-taken',
+			'already-answered',
+			'others-first',
+			'pen-taken',
+			'not-writing',
+			'no-pen',
+		]) {
 			expect(isRaceRefusal({ details: { reason } })).toBe(true);
 		}
 		expect(isRaceRefusal({ details: { reason: 'question-used' } })).toBe(false);

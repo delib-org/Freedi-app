@@ -37,11 +37,6 @@ export function rateBody(input: RateScreenInput): m.Children {
 		emptyText: t('proposal.none_yet'),
 		onError: input.onError,
 	});
-	if (!plenum) return list;
-	const mine = myProposals(
-		feed.options.filter((o) => o.parentId === challengeId),
-		uid,
-	);
 	const editDone = input.editing
 		? m(
 				'button.btn.btn--secondary.btn--small',
@@ -49,6 +44,12 @@ export function rateBody(input: RateScreenInput): m.Children {
 				t('proposal.edit_done'),
 			)
 		: null;
+	// "Improve my proposal" from the replies opens the edit box above the list, at the plenum or not.
+	if (!plenum) return [input.editing ? [input.editor, editDone] : null, list];
+	const mine = myProposals(
+		feed.options.filter((o) => o.parentId === challengeId),
+		uid,
+	);
 
 	return [
 		m('p.flow__plenum', t('proposal.plenum_line')),
