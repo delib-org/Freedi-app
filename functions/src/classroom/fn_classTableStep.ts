@@ -84,6 +84,7 @@ export function parseAction(req: ClassTableStepRequest): ClassTableAction {
 		case 'toWrite':
 		case 'toRate':
 		case 'claimPen':
+		case 'releasePen':
 		case 'claimSpeaker':
 		case 'finishSpeaking':
 			return { action: req.action };

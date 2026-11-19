@@ -9,7 +9,7 @@ import {
 import type { ClassTable, ClassTableAction, LessonStepKey, TableStep } from '@freedi/shared-types';
 import { ClassroomError } from './classroomErrors';
 import { assertMayMoveOn } from './tableMoveOn';
-import { assertMayClaimPen, assertMayPassWriting } from './tablePen';
+import { assertMayClaimPen, assertMayPassWriting, assertMayReleasePen } from './tablePen';
 
 /**
  * Who may run which table action, from which step (IA 16 rev 3). Pure guards
@@ -68,6 +68,7 @@ export const ALLOWED_FROM: Record<ClassTableAction['action'], readonly TableStep
 	moveOn: ['pick', 'talk'],
 	// Proposals pen: only while the table writes.
 	claimPen: ['write'],
+	releasePen: ['write'],
 	passWriting: ['write'],
 };
 
@@ -355,6 +356,10 @@ export function assertMayAct(
 			return;
 		case 'passWriting':
 			assertMayPassWriting(table, action, ctx);
+
+			return;
+		case 'releasePen':
+			assertMayReleasePen(table, ctx);
 
 			return;
 		default:

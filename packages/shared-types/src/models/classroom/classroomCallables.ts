@@ -103,6 +103,12 @@ export type ClassTableAction =
 	 */
 	| { action: 'claimPen' }
 	/**
+	 * Proposals, at write: the pen holder gives the pen back without sending or passing (they left
+	 * the screen). They have not written yet, so they may take it again. Refused as `no-pen` for
+	 * anyone else.
+	 */
+	| { action: 'releasePen' }
+	/**
 	 * Proposals, at write: pass writing (a member for themselves, or an admin naming `uid`, which
 	 * also frees a stuck pen). Counts as written; when every tablemate with a phone wrote or passed,
 	 * the table moves to rate.

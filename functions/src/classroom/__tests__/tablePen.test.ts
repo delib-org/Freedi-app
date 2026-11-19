@@ -93,6 +93,22 @@ describe('claimPen', () => {
 	});
 });
 
+describe('releasePen', () => {
+	it('gives the pen back without counting the holder as written', () => {
+		const next = run(writing({ writerUid: 'a' }), { action: 'releasePen' }, 'a');
+		expect(next.writerUid).toBeUndefined();
+		expect(next.writtenUids).toBeUndefined();
+		expect(run(next, CLAIM, 'b').writerUid).toBe('b');
+	});
+
+	it('is refused for a tablemate who does not hold the pen', () => {
+		expect(reasonOf(() => run(writing({ writerUid: 'a' }), { action: 'releasePen' }, 'b'))).toBe(
+			'no-pen',
+		);
+		expect(reasonOf(() => run(writing(), { action: 'releasePen' }, 'a'))).toBe('no-pen');
+	});
+});
+
 describe('passWriting', () => {
 	it('counts the pass as written without holding the pen', () => {
 		const next = run(writing(), PASS, 'a');

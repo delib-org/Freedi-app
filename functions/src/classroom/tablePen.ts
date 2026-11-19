@@ -101,6 +101,22 @@ export function assertMayPassWriting(
 	}
 }
 
+/** The pen holder gives the pen back (they left the screen); anyone else is refused. */
+export function assertMayReleasePen(table: ClassTable, ctx: PenCtx): void {
+	if (!table.memberUids.includes(ctx.actorUid)) {
+		throw new ClassroomError('permission-denied', 'You are not seated at this table');
+	}
+	assertProposalsWriting(table, ctx);
+	if (table.writerUid !== ctx.actorUid) {
+		throw new ClassroomError('failed-precondition', 'You do not hold the pen', 'no-pen');
+	}
+}
+
+/** Give the pen back: free again, and the holder has not written. */
+export function releasePen(base: ClassTable): ClassTable {
+	return withoutWriter(base);
+}
+
 /** "I want to write": the pen is theirs. */
 export function claimPen(base: ClassTable, actorUid: string): ClassTable {
 	return { ...base, writerUid: actorUid };

@@ -23,7 +23,7 @@ import {
 } from './tableGuards';
 import type { ActorRole, TransitionContext } from './tableGuards';
 import { moveOn } from './tableMoveOn';
-import { claimPen, passWriting, withoutPen } from './tablePen';
+import { claimPen, passWriting, releasePen, withoutPen } from './tablePen';
 
 export { ALLOWED_FROM, actorRole };
 export type { ActorRole, TransitionContext };
@@ -453,6 +453,8 @@ function applyAction(
 			return claimPen(base, ctx.actorUid);
 		case 'passWriting':
 			return passWriting(base, action, ctx);
+		case 'releasePen':
+			return releasePen(base);
 		case 'nextProposalsTurn':
 			// A tap that names an earlier turn arrived after the table moved on: nothing to do.
 			if (action.fromTurn !== undefined && action.fromTurn !== proposalsTurnOf(table)) return table;
