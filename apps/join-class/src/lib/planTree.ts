@@ -44,8 +44,41 @@ function titleOf(
 	return (lessons.find((l) => l.id === planId) ?? lessons[0])?.title ?? '';
 }
 
-/** Every plan the teacher has: plan docs, and the plans old lessons stand for. Newest activity first. */
+/** True for a plan, game or lesson the teacher removed from her lists. */
+export function isRemoved(item: { removedAt?: number }): boolean {
+	return typeof item.removedAt === 'number';
+}
+
+/**
+ * The plans on the teacher's lists (docs/ia/join-class-remove-lessons.md 9): a removed plan
+ * is left out and its lessons are NOT rebuilt as a plan with no doc; a removed lesson is left
+ * out. Newest activity first.
+ */
 export function buildPlanRows(
+	entries: readonly ClassLessonEntry[],
+	planDocs: readonly ClassPlan[],
+): PlanRow[] {
+	const removedPlans = new Set(planDocs.filter(isRemoved).map((p) => p.planId));
+
+	return buildAllPlanRows(
+		entries.filter((e) => !isRemoved(e) && !removedPlans.has(e.link.planId)),
+		planDocs.filter((p) => !removedPlans.has(p.planId)),
+	);
+}
+
+/** The lessons not removed, plus those named in `keep` (the ones just removed on this screen, shown as a done line). */
+export function visibleLessons(
+	lessons: readonly ClassLessonEntry[],
+	keep: ReadonlySet<string> = new Set(),
+): ClassLessonEntry[] {
+	return lessons.filter((l) => !isRemoved(l) || keep.has(l.id));
+}
+
+/**
+ * Every plan and lesson as stored, removed ones too: what the plan screen reads, so a removed
+ * plan opened from "הוסרו" still shows its lessons. Newest activity first.
+ */
+export function buildAllPlanRows(
 	entries: readonly ClassLessonEntry[],
 	planDocs: readonly ClassPlan[],
 ): PlanRow[] {
@@ -80,7 +113,10 @@ export function planRowById(rows: readonly PlanRow[], planId: string): PlanRow |
 /** Lessons running or waiting (live, paused, open) that were opened in the last OPEN_NOW_DAYS days. */
 export function openNow(entries: readonly ClassLessonEntry[], now: number): ClassLessonEntry[] {
 	return entries
-		.filter((e) => e.status !== 'ended' && now - e.openedInClass <= OPEN_NOW_DAYS * DAY_MS)
+		.filter(
+			(e) =>
+				!isRemoved(e) && e.status !== 'ended' && now - e.openedInClass <= OPEN_NOW_DAYS * DAY_MS,
+		)
 		.sort((a, b) => b.openedInClass - a.openedInClass);
 }
 
@@ -93,11 +129,15 @@ export interface GameSection {
 	lessons: ClassLessonEntry[];
 }
 
-/** The plan's games in order, then one section per old lesson whose game has no doc. */
+/**
+ * The plan's games in order, then one section per game with no (visible) doc. A removed game
+ * is left out, so the lessons the class already ran from it stay in an action-less section.
+ */
 export function gameSections(
-	games: readonly ClassGame[],
+	allGames: readonly ClassGame[],
 	lessons: readonly ClassLessonEntry[],
 ): GameSection[] {
+	const games = allGames.filter((g) => !isRemoved(g));
 	const known = new Set(games.map((g) => g.gameId));
 	const sections: GameSection[] = games.map((game) => ({
 		gameId: game.gameId,
@@ -166,7 +206,7 @@ export function copySources(
 	const sources: CopySource[] = [];
 	for (const row of rows) {
 		const games = gamesByPlan.get(row.planId) ?? [];
-		for (const game of games) {
+		for (const game of games.filter((g) => !isRemoved(g))) {
 			sources.push({
 				kind: 'game',
 				id: game.gameId,
@@ -177,7 +217,7 @@ export function copySources(
 			});
 		}
 		const known = new Set(games.map((g) => g.gameId));
-		for (const lesson of row.lessons) {
+		for (const lesson of row.lessons.filter((l) => !isRemoved(l))) {
 			if (!lesson.link.legacy || known.has(lesson.id)) continue;
 			sources.push({
 				kind: 'lesson',

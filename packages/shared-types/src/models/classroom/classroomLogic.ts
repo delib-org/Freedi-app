@@ -272,6 +272,20 @@ export function lessonStatusOf(plan: Pick<LessonPlan, 'status'> | undefined | nu
 	return plan?.status ?? 'live';
 }
 
+/**
+ * A lesson the teacher may remove from her lists: one that ended, or one that
+ * has not started (live or no status, still on step 0). Never one that is
+ * running, paused or kept open (docs/ia/join-class-remove-lessons.md 2).
+ */
+export function isLessonRemovable(
+	plan: Pick<LessonPlan, 'status' | 'stepIndex'> | undefined | null,
+): boolean {
+	const status = lessonStatusOf(plan);
+	if (status === 'ended') return true;
+
+	return status === 'live' && (plan?.stepIndex ?? 0) === 0;
+}
+
 /** What a status move writes. `shiftMs` is the pause length to add to table timers (resume only). */
 export interface LessonStatusChange {
 	status: LessonStatus;

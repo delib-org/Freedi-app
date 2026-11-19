@@ -4,6 +4,8 @@ import { classSetLessonStatus } from '@/lib/classroom/api';
 import type { ClassLessonEntry } from '@/lib/joinSubscriptions';
 import { statusChipOf } from './homeHelpers';
 import { captureException } from '@/lib/sentry';
+import { lessonRemovable } from '@/lib/removalTargets';
+import { renderRemove } from './RemoveControl';
 
 /**
  * One lesson (a game played with one class) as a row: its status chip and the one
@@ -82,8 +84,7 @@ export function renderLessonActions(entry: ClassLessonEntry, name: string): m.Ch
 	const hintId = `reopen-hint-${entry.id}`;
 
 	return [
-		m(
-			'.teacher-home__row-actions',
+		m('.teacher-home__row-actions', [
 			ended
 				? m(
 						'button.btn.btn--primary.btn--small',
@@ -108,7 +109,8 @@ export function renderLessonActions(entry: ClassLessonEntry, name: string): m.Ch
 						},
 						t('teacher.row.open'),
 					),
-		),
+			lessonRemovable(entry) ? renderRemove({ kind: 'lesson', mainId: entry.id }, name) : null,
+		]),
 		ended ? m('p.teacher-home__hint', { id: hintId }, t('teacher.row.reopen_hint')) : null,
 		reopenErrors.has(entry.id)
 			? m('.teacher-home__error', { role: 'alert' }, [

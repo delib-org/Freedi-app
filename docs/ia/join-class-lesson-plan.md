@@ -24,7 +24,7 @@ Tal's binding decisions (2026-10-29):
 ## 2. Object model
 | Object | What it is | Stored as | Cardinality | Lifecycle |
 |---|---|---|---|---|
-| Lesson plan (מערך שיעור) | The topic the teacher prepares, e.g. "בריונות" | doc `classPlans/{planId}` (not a statement) | teacher 1–n plans | exists (no delete in this batch) |
+| Lesson plan (מערך שיעור) | The topic the teacher prepares, e.g. "בריונות" | doc `classPlans/{planId}` (not a statement) | teacher 1–n plans | exists; removable (hide with restore), never deleted: see [join-class-remove-lessons.md](join-class-remove-lessons.md) |
 | Game (משחק) | One prepared game: questions, intro, videos, side claims, settings | doc `classPlans/{planId}/games/{gameId}` (not a statement), holding a **snapshot** (§9). No class code | plan 1–n games | prepared; edited at any time |
 | Class (כיתה) | A Studio class, e.g. "ט׳2" | `agoraClasses/{classId}` (exists). Its **class home**, a top-level group statement, is created lazily | teacher 0–n classes | Studio's |
 | Teacher home | Where lessons go when the teacher has no class, or picks none | top-level group statement, one per teacher, created lazily | teacher 0–1 | — |

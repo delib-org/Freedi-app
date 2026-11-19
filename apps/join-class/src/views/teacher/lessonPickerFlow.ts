@@ -1,4 +1,5 @@
-import type { PlanRow } from '@/lib/planTree';
+import type { ClassGame } from '@freedi/shared-types';
+import { isRemoved, type PlanRow } from '@/lib/planTree';
 
 /**
  * "+ שיעור עם כיתה" on the teacher home (task dr6ZNqxq, extends
@@ -142,4 +143,9 @@ export function stepBack(step: PickerStep): PickerMove {
 		default:
 			return { step: IDLE_PICKER, focus: 'addLesson' };
 	}
+}
+
+/** The games a plan offers to start a lesson from: a removed game is neither shown nor startable. */
+export function pickerGames(list: readonly ClassGame[]): PickerGame[] {
+	return list.filter((g) => !isRemoved(g)).map((g) => ({ gameId: g.gameId, title: g.title }));
 }

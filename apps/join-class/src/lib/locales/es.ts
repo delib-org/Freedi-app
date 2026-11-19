@@ -618,6 +618,15 @@ const es: Record<string, string> = {
 	'teacher.lesson.not_approved':
 		'Tu cuenta de docente aún no está aprobada para trabajar con grupos. Puedes empezar sin grupo.',
 	'plan.intro.text.line_too_long': 'Una línea es demasiado larga. Acórtala a {{max}} caracteres.',
+	'teacher.row.remove': 'Quitar',
+	'teacher.row.restore': 'Restaurar',
+	'teacher.home.removed': 'Quitados ({{n}})',
+	'teacher.row.removed_line': 'Se quitó {{name}}',
+	'classPlan.removed': 'Este plan de clase se quitó',
+	'game.removed': 'Este juego se quitó',
+	'teacher.home.removed_plans': 'Planes de clase',
+	'teacher.home.removed_games': 'Juegos',
+	'teacher.home.removed_lessons': 'Lecciones',
 };
 
 export default es;

@@ -7,6 +7,7 @@ import type { ClassGame, ClassGameSnapshot, ClassPlan } from '@freedi/shared-typ
 import {
 	collection,
 	db,
+	deleteField,
 	doc,
 	getDoc,
 	getDocs,
@@ -43,6 +44,7 @@ function planOf(raw: Partial<ClassPlan>, id: string): ClassPlan | null {
 		ownerUid: raw.ownerUid,
 		createdAt: raw.createdAt ?? 0,
 		lastUpdate: raw.lastUpdate ?? 0,
+		...(typeof raw.removedAt === 'number' ? { removedAt: raw.removedAt } : {}),
 	};
 }
 
@@ -67,6 +69,7 @@ export function gameOf(raw: Partial<ClassGame>, planId: string, id: string): Cla
 		...(raw.sourceMainId ? { sourceMainId: raw.sourceMainId } : {}),
 		createdAt: raw.createdAt ?? 0,
 		lastUpdate: raw.lastUpdate ?? 0,
+		...(typeof raw.removedAt === 'number' ? { removedAt: raw.removedAt } : {}),
 	};
 }
 
@@ -254,4 +257,35 @@ export async function touchPlan(planId: string): Promise<void> {
 	} catch (err) {
 		captureException(err, { operation: 'classPlans.touchPlan', planId });
 	}
+}
+
+/** The games still on the lists. */
+export function activeGames(games: readonly ClassGame[]): ClassGame[] {
+	return games.filter((g) => typeof g.removedAt !== 'number');
+}
+
+/**
+ * Removes a plan from the lists, or puts it back (docs/ia/join-class-remove-lessons.md).
+ * Sets or deletes `removedAt`; nothing is deleted. Its games hide with it.
+ */
+export async function setPlanRemoved(planId: string, removed: boolean): Promise<void> {
+	const now = Date.now();
+	await updateDoc(doc(db, CLASS_PLANS_COLLECTION, planId), {
+		removedAt: removed ? now : deleteField(),
+		lastUpdate: now,
+	});
+}
+
+/** Removes one game from the lists, or puts it back. Bumps the plan so its game count is read again. */
+export async function setGameRemoved(
+	planId: string,
+	gameId: string,
+	removed: boolean,
+): Promise<void> {
+	const now = Date.now();
+	await updateDoc(doc(db, CLASS_PLANS_COLLECTION, planId, CLASS_GAMES_SUBCOLLECTION, gameId), {
+		removedAt: removed ? now : deleteField(),
+		lastUpdate: now,
+	});
+	await touchPlan(planId);
 }

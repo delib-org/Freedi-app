@@ -50,6 +50,8 @@ export interface ClassLessonEntry {
 	link: LessonLink;
 	/** When the lesson statement was made (ms); orders a game's lessons, newest first. */
 	createdAt: number;
+	/** When the teacher removed the lesson from her lists (ms); absent = on the lists. */
+	removedAt?: number;
 }
 
 /** Firestore `in` queries take at most 30 ids; a teacher rarely has more than one chunk. */
@@ -172,6 +174,9 @@ function entryOf(
 		stepCount: planStepKeys(plan).length,
 		link: linkOf(source),
 		createdAt: source.createdAt ?? opened,
+		...(typeof source.statementSettings?.lessonRemovedAt === 'number'
+			? { removedAt: source.statementSettings.lessonRemovedAt }
+			: {}),
 	};
 }
 

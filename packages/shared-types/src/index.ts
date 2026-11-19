@@ -1134,6 +1134,7 @@ export {
   supportBySide,
   decideBallot,
   lessonStatusOf,
+  isLessonRemovable,
   planLessonStatus,
   notAskedUids,
   speakerTimeOver,
@@ -1267,6 +1268,8 @@ export type {
   ClassCloneLessonResponse,
   ClassSetLessonStatusRequest,
   ClassSetLessonStatusResponse,
+  ClassSetLessonRemovedRequest,
+  ClassSetLessonRemovedResponse,
   LessonStatusAction,
 } from './models/classroom/classroomCallables';
 

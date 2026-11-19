@@ -2,7 +2,7 @@
 jest.unmock('valibot');
 
 import { safeParse } from 'valibot';
-import { LessonPlanSchema, lessonStatusOf, planLessonStatus } from '../index';
+import { LessonPlanSchema, isLessonRemovable, lessonStatusOf, planLessonStatus } from '../index';
 
 const STEPS = ['waiting', 'opening'] as const;
 
@@ -100,5 +100,26 @@ describe('planLessonStatus', () => {
 		expect(() => planLessonStatus({ status: 'ended' }, 'keepOpen', NOW)).toThrow(RangeError);
 		expect(() => planLessonStatus({ status: 'open' }, 'resume', NOW)).toThrow(RangeError);
 		expect(() => planLessonStatus({ status: 'paused' }, 'reopen', NOW)).toThrow(RangeError);
+	});
+});
+
+describe('isLessonRemovable', () => {
+	it('allows an ended lesson at any step', () => {
+		expect(isLessonRemovable({ status: 'ended', stepIndex: 5 })).toBe(true);
+	});
+
+	it('allows a lesson that has not started, with or without a status', () => {
+		expect(isLessonRemovable({ stepIndex: 0 })).toBe(true);
+		expect(isLessonRemovable({ status: 'live', stepIndex: 0 })).toBe(true);
+	});
+
+	it('refuses a lesson that is running, paused or kept open', () => {
+		expect(isLessonRemovable({ status: 'live', stepIndex: 2 })).toBe(false);
+		expect(isLessonRemovable({ status: 'paused', stepIndex: 0 })).toBe(false);
+		expect(isLessonRemovable({ status: 'open', stepIndex: 0 })).toBe(false);
+	});
+
+	it('treats a missing plan as a lesson that has not started', () => {
+		expect(isLessonRemovable(undefined)).toBe(true);
 	});
 });

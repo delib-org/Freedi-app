@@ -617,6 +617,15 @@ const nl: Record<string, string> = {
 	'teacher.lesson.not_approved':
 		'Je lerarenaccount is nog niet goedgekeurd voor klassen. Je kunt zonder klas beginnen.',
 	'plan.intro.text.line_too_long': 'Een regel is te lang. Kort hem in tot {{max}} tekens.',
+	'teacher.row.remove': 'Weghalen',
+	'teacher.row.restore': 'Terugzetten',
+	'teacher.home.removed': 'Weggehaald ({{n}})',
+	'teacher.row.removed_line': '{{name}} is weggehaald',
+	'classPlan.removed': 'Dit lesplan is weggehaald',
+	'game.removed': 'Dit spel is weggehaald',
+	'teacher.home.removed_plans': 'Lesplannen',
+	'teacher.home.removed_games': 'Spellen',
+	'teacher.home.removed_lessons': 'Lessen',
 };
 
 export default nl;

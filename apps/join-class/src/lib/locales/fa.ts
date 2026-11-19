@@ -604,6 +604,15 @@ const fa: Record<string, string> = {
 	'teacher.lesson.not_approved':
 		'حساب شما هنوز برای کار با کلاس‌ها تأیید نشده است. می‌توانید بدون کلاس شروع کنید.',
 	'plan.intro.text.line_too_long': 'یک خط خیلی بلند است. آن را به {{max}} نویسه کوتاه کنید.',
+	'teacher.row.remove': 'برداشتن',
+	'teacher.row.restore': 'بازگرداندن',
+	'teacher.home.removed': 'برداشته‌شده‌ها ({{n}})',
+	'teacher.row.removed_line': '{{name}} برداشته شد',
+	'classPlan.removed': 'این طرح درس برداشته شد',
+	'game.removed': 'این بازی برداشته شد',
+	'teacher.home.removed_plans': 'طرح‌های درس',
+	'teacher.home.removed_games': 'بازی‌ها',
+	'teacher.home.removed_lessons': 'درس‌ها',
 };
 
 export default fa;

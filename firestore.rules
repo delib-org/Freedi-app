@@ -759,12 +759,14 @@ service cloud.firestore {
     match /classPlans/{planId} {
       function isValidClassPlan() {
         let d = request.resource.data;
-        return d.keys().hasOnly(['planId', 'title', 'ownerUid', 'createdAt', 'lastUpdate']) &&
+        return d.keys().hasOnly(['planId', 'title', 'ownerUid', 'createdAt', 'lastUpdate',
+                                   'removedAt']) &&
                d.planId == planId &&
                d.title is string &&
                d.title.size() > 0 &&
                d.title.size() <= 200 &&
                d.ownerUid is string &&
+               (!('removedAt' in d) || d.removedAt is number) &&
                d.createdAt is number &&
                d.lastUpdate is number;
       }
@@ -795,7 +797,7 @@ service cloud.firestore {
         function isValidClassGame() {
           let d = request.resource.data;
           return d.keys().hasOnly(['gameId', 'planId', 'ownerUid', 'title', 'order', 'snapshot',
-                                   'sourceMainId', 'createdAt', 'lastUpdate']) &&
+                                   'sourceMainId', 'createdAt', 'lastUpdate', 'removedAt']) &&
                  d.gameId == gameId &&
                  d.planId == planId &&
                  d.title is string &&
@@ -805,6 +807,7 @@ service cloud.firestore {
                  d.snapshot is map &&
                  d.ownerUid is string &&
                  (!('sourceMainId' in d) || d.sourceMainId is string) &&
+                 (!('removedAt' in d) || d.removedAt is number) &&
                  d.createdAt is number &&
                  d.lastUpdate is number;
         }

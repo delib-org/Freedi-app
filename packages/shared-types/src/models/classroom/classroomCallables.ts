@@ -296,6 +296,21 @@ export interface ClassSetLessonStatusResponse {
 }
 
 /**
+ * `classSetLessonRemoved` (admin). Removes a lesson from the teacher's lists, or
+ * restores it: sets or clears `statementSettings.lessonRemovedAt`. Never deletes.
+ * Refused while the lesson is live, paused or open, or has started. Repeats are no-ops.
+ */
+export interface ClassSetLessonRemovedRequest {
+	mainId: string;
+	removed: boolean;
+}
+export interface ClassSetLessonRemovedResponse {
+	removed: boolean;
+	/** When it was removed (ms); absent after a restore. */
+	removedAt?: number;
+}
+
+/**
  * `classCloneLesson` (admin of the source). A new lesson with the source's plan:
  * questions (text, role, hint, order), intro paragraphs, intro videos, side
  * names, lesson language. Never the class work (students, tables, answers,

@@ -487,6 +487,10 @@ export const StatementSettingsSchema = object({
 			lessonName: optional(string()),
 		}),
 	),
+	// join-class: when the teacher removed this lesson from her lists (ms). Present = removed,
+	// restore deletes it. Written only by classSetLessonRemoved; reopen clears it. A number on
+	// purpose (strict-parse trap). Main statement only.
+	lessonRemovedAt: optional(number()),
 	// join-class: this top-level group statement is a HOME holding lessons: kind 'class'
 	// (id jcClass_{classId}) or 'teacher' (id jcTeacher_{uid}). Written only by the server.
 	// Students never get() a home (firestore.rules). `kind` is a plain string on purpose.

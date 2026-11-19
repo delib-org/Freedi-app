@@ -22,6 +22,7 @@ import {
 	type PickerGame,
 	type PickerMove,
 	type PickerStep,
+	pickerGames,
 } from './lessonPickerFlow';
 
 /**
@@ -118,7 +119,7 @@ async function choosePlan(row: PlanRow): Promise<void> {
 		const list = await loadGames(row.planId, uid);
 		// the teacher went back or closed while the read ran: the answer is not theirs any more
 		if (!reads.isCurrent(token)) return;
-		games = list.map((g) => ({ gameId: g.gameId, title: g.title }));
+		games = pickerGames(list);
 		loadingPlanId = null;
 		const move = pickPlan(step, row.planId, games);
 		if (move) apply(move);
