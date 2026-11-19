@@ -14,6 +14,8 @@ export interface PenClaimAttrs {
 	busy: boolean;
 	/** "I want to write": take the table's one pen. A lost race just shows who holds it. */
 	onClaim: () => void;
+	/** Writing is closed (the vote opened, or no question to answer): says why and offers no pen. */
+	closedText?: string;
 	/** "I want to pass": no proposal from me (W1 only). */
 	onPass?: () => void;
 }
@@ -28,16 +30,18 @@ export const PenClaim: m.Component<PenClaimAttrs> = {
 			attrs.statusText
 				? m('p.pen__status', { 'data-testid': 'pen-status' }, attrs.statusText)
 				: null,
-			m(
-				'button.btn.btn--primary.pen__claim',
-				{
-					type: 'button',
-					'data-testid': 'pen-claim',
-					disabled: attrs.busy,
-					onclick: attrs.onClaim,
-				},
-				t('proposals.write.claim'),
-			),
+			attrs.closedText
+				? m('p.pen__closed', { role: 'status', 'data-testid': 'pen-closed' }, attrs.closedText)
+				: m(
+						'button.btn.btn--primary.pen__claim',
+						{
+							type: 'button',
+							'data-testid': 'pen-claim',
+							disabled: attrs.busy,
+							onclick: attrs.onClaim,
+						},
+						t('proposals.write.claim'),
+					),
 			attrs.onPass
 				? m(
 						'button.btn.btn--text.pen__pass',

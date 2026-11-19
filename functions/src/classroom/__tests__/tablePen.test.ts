@@ -1,6 +1,6 @@
 import type { ClassTable, ClassTableAction } from '@freedi/shared-types';
 import { ClassroomError } from '../classroomErrors';
-import { removeMember } from '../tableMembership';
+import { addMember, removeMember } from '../tableMembership';
 import { afterProposalSent } from '../tablePen';
 import { applyTableAction, TransitionContext } from '../tableTransitions';
 
@@ -270,5 +270,43 @@ describe('Table talk keeps working as before', () => {
 		const next = run(t, { action: 'toWrite' }, 'a', { lessonStep: 'tableTalk' });
 		expect(next.step).toBe('write');
 		expect(next.writerUid).toBeUndefined();
+	});
+});
+
+describe('a member who joins while the table writes', () => {
+	it('keeps the table from moving to rate until they send or pass', () => {
+		const joined = addMember(writing({ writtenUids: ['a', 'b', 'c'] }), 'e', NOW);
+		expect(joined.step).toBe('write');
+		expect(run(joined, CLAIM, 'e').writerUid).toBe('e');
+		expect(run(joined, PASS, 'e').step).toBe('rate');
+		expect(afterProposalSent({ ...joined, writerUid: 'e' }, 'e', NOW).step).toBe('rate');
+	});
+});
+
+describe('a student never moves the table by themselves at Proposals', () => {
+	it('refuses toRate from a tablemate, at write and at talk, and still lets a teacher', () => {
+		const rate: ClassTableAction = { action: 'toRate' };
+		for (const step of ['write', 'talk'] as const) {
+			expect(reasonOf(() => run(writing({ step }), rate, 'a'))).toBeDefined();
+			expect(() => run(writing({ step }), rate, 'a')).toThrow(ClassroomError);
+		}
+		expect(run(writing(), rate, 'teacher', { isAdmin: true }).step).toBe('rate');
+	});
+
+	it('refuses toWrite while rounds are unspoken, allows it after, and a teacher any time', () => {
+		const talking = writing({ step: 'talk', spokenUids: ['a'] });
+		expect(reasonOf(() => run(talking, { action: 'toWrite' }, 'b'))).toBe('talk-not-over');
+		const second = { lessonStep: 'proposals' as const, proposalsTurns: 2 };
+		const oneRoundOfTwo = writing({ step: 'talk', spokenUids: ['a', 'b', 'c'] });
+		expect(reasonOf(() => run(oneRoundOfTwo, { action: 'toWrite' }, 'b', second))).toBe(
+			'talk-not-over',
+		);
+		expect(run(writing({ step: 'talk' }), { action: 'toWrite' }, 'b').step).toBe('write');
+		expect(run(talking, { action: 'toWrite' }, 'teacher', { isAdmin: true }).step).toBe('write');
+	});
+
+	it('leaves Table talk alone: its asker still moves the table to rate', () => {
+		const t = writing({ askerUid: 'a', questionId: 'q' });
+		expect(run(t, { action: 'toRate' }, 'a', { lessonStep: 'tableTalk' }).step).toBe('rate');
 	});
 });

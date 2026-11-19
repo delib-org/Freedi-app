@@ -80,6 +80,8 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 		unlimited: proposalLimitOf(main) === 'unlimited',
 	});
 	const controls = controlsOf(screen);
+	// Nobody may take the pen when nothing can be sent (the vote opened, or the lesson has no question).
+	const writeClosed = ballotFrozen || !challenge;
 	const lang = getLang();
 	const nameFor = (id: string): string => nameOf(ctx, id);
 	const nextText = nextLineText(nextLineOf(screen, uid), nameFor, lang);
@@ -171,6 +173,7 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 				statusText: writeStatus(screen, writerName, false),
 				nextText,
 				busy: self.busy,
+				closedText: writeClosed ? t('proposals.write.closed') : undefined,
 				onClaim: () => tableStep(ctx, { action: 'claimPen' }),
 				onPass: () => tableStep(ctx, { action: 'passWriting' }),
 			});
@@ -190,7 +193,7 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 				watching
 					? m(PenWatch, { name: writerName, text: live, nextText, testId: 'pen-watch' })
 					: nextLineView(nextText),
-				controls.claimPen
+				controls.claimPen && !writeClosed
 					? m(PenClaim, {
 							statusText: '',
 							nextText: null,

@@ -613,6 +613,7 @@ const en: Record<string, string> = {
 	'console.proposals_spoken': 'Everyone has spoken',
 	'console.writing_now': '{{name}} is writing · {{sent}} of {{total}} sent',
 	'console.writing_nobody': 'Nobody is writing · {{sent}} of {{total}} sent',
+	'proposals.write.closed': 'Proposals are closed now, so nobody can write',
 };
 
 export default en;

@@ -541,7 +541,12 @@ describe('a whole table, claim to done', () => {
 
 describe('askerless fallback (the asker left)', () => {
 	it('lets any tablemate leave an askerless pick for writing only at Proposals', () => {
-		expect(run(table(), { action: 'toWrite' }, atProposals('c')).step).toBe('write');
+		const spoken = table({ spokenUids: ['a', 'b', 'c', 'd'] });
+		expect(run(spoken, { action: 'toWrite' }, atProposals('c')).step).toBe('write');
+		// not before every round is spoken (Tal 2026-11-19)
+		expect(refusal(table(), { action: 'toWrite' }, atProposals('c')).code).toBe(
+			'failed-precondition',
+		);
 		expect(refusal(table(), { action: 'toWrite' }, as('c')).code).toBe('permission-denied');
 	});
 });

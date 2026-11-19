@@ -603,6 +603,7 @@ const fa: Record<string, string> = {
 	'console.proposals_spoken': 'همه صحبت کردند',
 	'console.writing_now': '{{name}} می‌نویسد · {{sent}} از {{total}} فرستادند',
 	'console.writing_nobody': 'کسی نمی‌نویسد · {{sent}} از {{total}} فرستادند',
+	'proposals.write.closed': 'پیشنهادها اکنون بسته است و نوشتن ممکن نیست',
 };
 
 export default fa;

@@ -73,6 +73,22 @@ describe('W1: the pen is free', () => {
 	});
 });
 
+describe('W1 when writing is closed (the vote opened)', () => {
+	it('says why, offers no pen and keeps the quiet pass', () => {
+		const tree = render(PenClaim, {
+			statusText: 'who writes first',
+			nextText: null,
+			busy: false,
+			closedText: 'closed',
+			onClaim: vi.fn(),
+			onPass: vi.fn(),
+		});
+
+		expect(buttonsOf(tree).map(testIdOf)).toEqual(['pen-pass']);
+		expect(JSON.stringify(tree)).toContain('pen-closed');
+	});
+});
+
 describe('W3: a tablemate holds the pen', () => {
 	it('is her text, read only, and has no button at all', () => {
 		const tree = render(PenWatch, {

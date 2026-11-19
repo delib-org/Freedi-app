@@ -2,6 +2,7 @@ import m from 'mithril';
 import { proposalLimitOf } from '@freedi/shared-types';
 import type { ClassTable, Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
+import { captureException } from '@/lib/sentry';
 import {
 	isBroadcasting,
 	startBroadcast,
@@ -77,6 +78,8 @@ class PanelState {
 	/** Pen: the latest `onRelease`, called when the page is hidden or closed. */
 	release: (() => void) | null = null;
 	onLeave: (() => void) | null = null;
+	/** The page was hidden during a send: give the pen back if that send fails and the page is still hidden. */
+	releaseAfterSend = false;
 }
 
 function ownProposalsOf(a: WritePanelAttrs): Statement[] {
@@ -91,6 +94,12 @@ function ownProposalsOf(a: WritePanelAttrs): Statement[] {
 
 /** The pen holder left the screen (the phone locked, another app, the tab closed): the pen goes back to the table. */
 function leave(self: PanelState): void {
+	// A send in flight frees the pen itself when it lands; letting go now could make it refused.
+	if (self.sending) {
+		self.releaseAfterSend = true;
+
+		return;
+	}
 	if (isBroadcasting()) void stopBroadcast();
 	self.release?.();
 }
@@ -248,11 +257,17 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 				if (isBroadcasting()) await stopBroadcast();
 			})()
 				.catch((error: unknown) => {
-					console.error('[WritePanel] send failed', { tableId: a.table.tableId, uid }, error);
+					captureException(error, {
+						operation: 'writePanel.send',
+						tableId: a.table.tableId,
+						mainId,
+					});
 					self.error = t('answer.send_failed');
+					if (self.releaseAfterSend && document.visibilityState === 'hidden') leave(self);
 				})
 				.finally(() => {
 					self.sending = false;
+					self.releaseAfterSend = false;
 					m.redraw();
 				});
 		};
@@ -311,18 +326,21 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 			ownCards,
 			!sentProposal && mine.length > 0 ? m(PushAsk, { mainId }) : null,
 			m(ErrorLine, { message: self.error, onRetry: canSend ? send : undefined }),
-			showBox && !a.locked
+			showBox || (pen && a.onPass)
 				? m('.write-panel__footer', [
-						m(
-							'button.btn.btn--primary.write-panel__send',
-							{
-								type: 'button',
-								'data-testid': 'proposal-send',
-								disabled: !canSend || undefined,
-								onclick: send,
-							},
-							busySend ? t('text.checking') : t('proposal.send_mine'),
-						),
+						showBox && !a.locked
+							? m(
+									'button.btn.btn--primary.write-panel__send',
+									{
+										type: 'button',
+										'data-testid': 'proposal-send',
+										disabled: !canSend || undefined,
+										onclick: send,
+									},
+									busySend ? t('text.checking') : t('proposal.send_mine'),
+								)
+							: null,
+						// The holder can always give the pen back, even when the box is locked (a freeze while writing).
 						pen && a.onPass
 							? m(
 									'button.btn.btn--text.write-panel__pass',

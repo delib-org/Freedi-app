@@ -9,7 +9,12 @@ import {
 import type { ClassTable, ClassTableAction, LessonStepKey, TableStep } from '@freedi/shared-types';
 import { ClassroomError } from './classroomErrors';
 import { assertMayMoveOn } from './tableMoveOn';
-import { assertMayClaimPen, assertMayPassWriting, assertMayReleasePen } from './tablePen';
+import {
+	assertMayClaimPen,
+	assertMayPassWriting,
+	assertMayReleasePen,
+	assertProposalsStudentMove,
+} from './tablePen';
 
 /**
  * Who may run which table action, from which step (IA 16 rev 3). Pure guards
@@ -34,6 +39,8 @@ export interface TransitionContext {
 	speakMs?: number;
 	/** Turns at Proposals (`proposalsTurnsOf(main)`); absent = one. */
 	proposalsTurns?: number;
+	/** At claimPen: writing is not possible now (the vote has opened, or the lesson has no challenge). Set by the callable. */
+	writeBlocked?: 'vote-running' | 'no-challenge';
 	/** The lesson lets an author send more than one proposal (`proposalLimitOf(main) === 'unlimited'`). */
 	unlimitedProposals?: boolean;
 }
@@ -395,6 +402,8 @@ export function assertMayAct(
 		default:
 			break;
 	}
+	// Proposals: a student never moves the table between steps by themselves (Tal 2026-11-19).
+	if (lessonStep === 'proposals') assertProposalsStudentMove(table, action, ctx);
 	if (role === 'asker') return;
 	if (role === 'member') {
 		if (action.action === 'nextSpeaker' && table.speakerUid && speakerTimeOver(table, now)) return;

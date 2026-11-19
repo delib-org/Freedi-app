@@ -8,6 +8,7 @@ import {
 } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { postProposal } from '../fn_classPostProposal';
+import { postWithPen } from './penSeed';
 import type { PostProposalDeps } from '../fn_classPostProposal';
 import { editProposal } from '../fn_classEditProposal';
 import { postReply } from '../fn_classPostReply';
@@ -47,7 +48,7 @@ function seedLesson(ballot = false, limit?: 'one' | 'unlimited'): FakeFirestore 
 	});
 	member(fake, TEACHER, 'Ms Teacher');
 	member(fake, STUDENT, 'Dana', { tableId: `${MAIN}--2` });
-	member(fake, MATE, 'Noa');
+	member(fake, MATE, 'Noa', { tableId: `${MAIN}--3` });
 	fake.seed('statements/ch', {
 		statementId: 'ch',
 		parentId: MAIN,
@@ -77,8 +78,8 @@ function flags(fake: FakeFirestore): Record<string, unknown>[] {
 describe('classPostProposal', () => {
 	it('writes the proposal like the phone did, with the table marker', async () => {
 		const fake = seedLesson();
-		const res = await postProposal(
-			fake.asFirestore(),
+		const res = await postWithPen(
+			fake,
 			STUDENT,
 			{ mainId: MAIN, proposalId: 'p1', text: '  Plant trees  ' },
 			deps(),
@@ -99,8 +100,8 @@ describe('classPostProposal', () => {
 
 	it('refuses hurtful words: nothing is published, the teacher is flagged', async () => {
 		const fake = seedLesson();
-		const res = await postProposal(
-			fake.asFirestore(),
+		const res = await postWithPen(
+			fake,
 			STUDENT,
 			{ mainId: MAIN, proposalId: 'p1', text: 'you idiots' },
 			deps(true),
@@ -121,8 +122,8 @@ describe('classPostProposal', () => {
 
 	it('passes the text when the detector is down (it fails open)', async () => {
 		const fake = seedLesson();
-		const res = await postProposal(
-			fake.asFirestore(),
+		const res = await postWithPen(
+			fake,
 			STUDENT,
 			{ mainId: MAIN, proposalId: 'p1', text: 'Plant trees' },
 			failing(),
@@ -133,8 +134,8 @@ describe('classPostProposal', () => {
 
 	it('does not check the teacher', async () => {
 		const fake = seedLesson();
-		const res = await postProposal(
-			fake.asFirestore(),
+		const res = await postWithPen(
+			fake,
 			TEACHER,
 			{ mainId: MAIN, proposalId: 'pt', text: 'A teacher idea' },
 			deps(true),
@@ -146,28 +147,28 @@ describe('classPostProposal', () => {
 	it('is safe to repeat with the same id, and refuses a second different proposal', async () => {
 		const fake = seedLesson();
 		const request = { mainId: MAIN, proposalId: 'p1', text: 'Plant trees' };
-		await postProposal(fake.asFirestore(), STUDENT, request, deps());
-		await expect(postProposal(fake.asFirestore(), STUDENT, request, deps())).resolves.toEqual({
+		await postWithPen(fake, STUDENT, request, deps());
+		await expect(postWithPen(fake, STUDENT, request, deps())).resolves.toEqual({
 			ok: true,
 			proposalId: 'p1',
 		});
 		await expect(
-			postProposal(fake.asFirestore(), STUDENT, { ...request, proposalId: 'p2' }, deps()),
+			postWithPen(fake, STUDENT, { ...request, proposalId: 'p2' }, deps()),
 		).rejects.toMatchObject({ reason: 'already-proposed' });
 	});
 
 	it('refuses a stranger, an empty text, a long text and an open vote', async () => {
 		const fake = seedLesson();
 		const base = { mainId: MAIN, proposalId: 'p1', text: 'ok' };
-		await expect(postProposal(fake.asFirestore(), 'nobody', base, deps())).rejects.toMatchObject({
+		await expect(postWithPen(fake, 'nobody', base, deps())).rejects.toMatchObject({
 			code: 'permission-denied',
 		});
 		await expect(
-			postProposal(fake.asFirestore(), STUDENT, { ...base, text: '   ' }, deps()),
+			postWithPen(fake, STUDENT, { ...base, text: '   ' }, deps()),
 		).rejects.toMatchObject({ code: 'invalid-argument' });
 		await expect(
-			postProposal(
-				fake.asFirestore(),
+			postWithPen(
+				fake,
 				STUDENT,
 				{ ...base, text: 'x'.repeat(CLASS_PROPOSAL_MAX_LENGTH + 1) },
 				deps(),
@@ -181,7 +182,7 @@ describe('classPostProposal', () => {
 
 describe('the proposal limit (statementSettings.proposalLimit)', () => {
 	const send = (fake: FakeFirestore, uid: string, proposalId: string, d = deps()) =>
-		postProposal(fake.asFirestore(), uid, { mainId: MAIN, proposalId, text: 'An idea' }, d);
+		postWithPen(fake, uid, { mainId: MAIN, proposalId, text: 'An idea' }, d);
 	const setLimit = (fake: FakeFirestore, limit: 'one' | 'unlimited'): void =>
 		fake.seed(`statements/${MAIN}`, {
 			...fake.read(`statements/${MAIN}`),
@@ -294,8 +295,8 @@ describe('the proposal limit (statementSettings.proposalLimit)', () => {
 describe('classEditProposal', () => {
 	async function withProposal(): Promise<FakeFirestore> {
 		const fake = seedLesson();
-		await postProposal(
-			fake.asFirestore(),
+		await postWithPen(
+			fake,
 			STUDENT,
 			{ mainId: MAIN, proposalId: 'p1', text: 'Plant trees' },
 			deps(),
@@ -379,8 +380,8 @@ describe('language flags: only the last three texts are kept', () => {
 		const fake = seedLesson();
 		const attempts = ['one', 'two', 'three', 'four', 'five'];
 		for (const [i, text] of attempts.entries()) {
-			await postProposal(
-				fake.asFirestore(),
+			await postWithPen(
+				fake,
 				STUDENT,
 				{ mainId: MAIN, proposalId: `p${i}`, text },
 				{ detect: async () => true, now: () => NOW + i },
@@ -395,8 +396,8 @@ describe('language flags: only the last three texts are kept', () => {
 	it("keeps another student's flags apart", async () => {
 		const fake = seedLesson();
 		for (const uid of [STUDENT, MATE]) {
-			await postProposal(
-				fake.asFirestore(),
+			await postWithPen(
+				fake,
 				uid,
 				{ mainId: MAIN, proposalId: `p-${uid}`, text: 'bad' },
 				{ detect: async () => true, now: () => NOW },

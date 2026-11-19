@@ -137,3 +137,74 @@ describe('classTableStep claimPen race', () => {
 		expect(res.step).toBe('rate');
 	});
 });
+
+describe('a student with no table at Proposals', () => {
+	it('is refused when the subscription has no table', async () => {
+		const fake = seed({ writerUid: 'a' });
+		fake.seed(`statementsSubscribe/c--${MAIN}`, {
+			userId: 'c',
+			statementId: MAIN,
+			role: 'member',
+			user: { uid: 'c', displayName: 'c', isAnonymous: true },
+		});
+		await expect(send(fake, 'c', 'p1')).rejects.toMatchObject({ reason: 'no-pen' });
+		expect(fake.read('statements/p1')).toBeUndefined();
+	});
+
+	it('is refused when the table document does not exist', async () => {
+		const fake = seed({ writerUid: 'a' });
+		fake.seed(`statementsSubscribe/c--${MAIN}`, {
+			userId: 'c',
+			statementId: MAIN,
+			role: 'member',
+			tableId: `${MAIN}--9`,
+			user: { uid: 'c', displayName: 'c', isAnonymous: true },
+		});
+		await expect(send(fake, 'c', 'p1')).rejects.toMatchObject({ reason: 'no-pen' });
+	});
+});
+
+describe('the pen when writing is closed', () => {
+	function freeze(fake: FakeFirestore): void {
+		fake.seed('statements/ch', {
+			statementId: 'ch',
+			parentId: MAIN,
+			statementType: 'question',
+			statementSettings: { classRole: 'challenge', ballot: { candidateIds: ['x'], frozenAt: 1 } },
+		});
+	}
+	const claim = (fake: FakeFirestore, uid: string) =>
+		tableStep(fake.asFirestore(), uid, { tableId: TABLE, action: 'claimPen' }, () => NOW);
+
+	it('refuses claimPen once the ballot is frozen', async () => {
+		const fake = seed();
+		freeze(fake);
+		await expect(claim(fake, 'a')).rejects.toMatchObject({ reason: 'vote-running' });
+		expect((fake.read(`classTables/${TABLE}`) as ClassTable).writerUid).toBeUndefined();
+	});
+
+	it('refuses claimPen when the lesson has no challenge question', async () => {
+		const fake = seed();
+		fake.seed('statements/ch', {
+			statementId: 'ch',
+			parentId: 'elsewhere',
+			statementType: 'question',
+		});
+		await expect(claim(fake, 'a')).rejects.toMatchObject({ reason: 'not-writing' });
+	});
+
+	it('lets a holder pass after a freeze that arrived while they held the pen', async () => {
+		const fake = seed({ writerUid: 'a' });
+		freeze(fake);
+		const res = await tableStep(
+			fake.asFirestore(),
+			'a',
+			{ tableId: TABLE, action: 'passWriting' },
+			() => NOW,
+		);
+		expect(res.step).toBe('write');
+		const table = fake.read(`classTables/${TABLE}`) as ClassTable;
+		expect(table.writerUid).toBeUndefined();
+		expect(table.writtenUids).toEqual(['a']);
+	});
+});

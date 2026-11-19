@@ -111,16 +111,30 @@ async function resolveAuthor(
 	};
 }
 
-/** The table whose pen this send needs: a student's own, at the Proposals step. A teacher's entry needs none. */
+/**
+ * The table whose pen this send needs: a student's own, at the Proposals step. A teacher's
+ * entry needs none. A lesson always deals its students to tables when it starts (there is no
+ * "everyone together" mode), so a student with no table is refused as `no-pen`: the phone shows
+ * "wait for the teacher" instead of a box.
+ */
 function penTableOf(
 	firestore: Firestore,
 	main: Statement,
 	teacher: boolean,
 	sub: StatementSubscription | undefined,
 ): DocumentReference | undefined {
-	if (teacher || lessonStepOf(main) !== 'proposals' || !sub?.tableId) return undefined;
+	if (teacher || lessonStepOf(main) !== 'proposals') return undefined;
+	if (!sub?.tableId) throw noPen();
 
 	return tableRef(firestore, sub.tableId);
+}
+
+function noPen(): ClassroomError {
+	return new ClassroomError(
+		'failed-precondition',
+		'Take the pen before sending a proposal',
+		'no-pen',
+	);
 }
 
 export async function postProposal(
@@ -158,7 +172,8 @@ export async function postProposal(
 	// Checked after the retry answer above (a retry comes after the send freed the pen) and before the language check.
 	if (penTableRef) {
 		const penTable = await penTableRef.get();
-		if (penTable.exists) assertHoldsPen(penTable.data() as ClassTable, actorUid);
+		if (!penTable.exists) throw noPen();
+		assertHoldsPen(penTable.data() as ClassTable, actorUid);
 	}
 
 	const now = (deps.now ?? Date.now)();
@@ -199,6 +214,7 @@ export async function postProposal(
 			if (fresh.some((p) => p.statementId === proposalId)) return;
 			assertMayAddProposal(limit, fresh.length);
 			const penTable = tableSnap?.exists ? (tableSnap.data() as ClassTable) : undefined;
+			if (penTableRef && !penTable) throw noPen();
 			if (penTable) assertHoldsPen(penTable, actorUid);
 			tx.create(ref, { ...built, createdAt: now, lastUpdate: now, classTable: author.marker });
 			// The send frees the pen and counts the writer; the last one moves the table to rate.

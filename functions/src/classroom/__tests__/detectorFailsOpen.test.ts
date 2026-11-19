@@ -1,6 +1,6 @@
 import { CLASS_LANGUAGE_FLAGS_COLLECTION } from '@freedi/shared-types';
 import { containsBadLanguage } from '../../fn_profanityChecker';
-import { postProposal } from '../fn_classPostProposal';
+import { postWithPen } from './penSeed';
 import { FakeFirestore } from './fakeFirestore';
 
 /**
@@ -39,6 +39,7 @@ describe('the language check when the detector is down', () => {
 			userId: 's',
 			statementId: 'm',
 			role: 'member',
+			tableId: 'm--1',
 			user: { uid: 's', displayName: 'S', isAnonymous: true },
 		});
 		fake.seed('statements/ch', {
@@ -47,8 +48,8 @@ describe('the language check when the detector is down', () => {
 			statementType: 'question',
 			statementSettings: { classRole: 'challenge' },
 		});
-		const res = await postProposal(
-			fake.asFirestore(),
+		const res = await postWithPen(
+			fake,
 			's',
 			{ mainId: 'm', proposalId: 'p', text: 'A fine idea' },
 			{ detect: containsBadLanguage },

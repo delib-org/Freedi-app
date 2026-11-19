@@ -1,4 +1,10 @@
-import { everyoneWrote, wroteAlready } from '@freedi/shared-types';
+import {
+	everyoneSpoke,
+	everyoneWrote,
+	proposalsMaxTurns,
+	proposalsTurnOf,
+	wroteAlready,
+} from '@freedi/shared-types';
 import type { ClassTable, ClassTableAction } from '@freedi/shared-types';
 import { ClassroomError } from './classroomErrors';
 import type { TransitionContext } from './tableGuards';
@@ -13,7 +19,10 @@ import type { TransitionContext } from './tableGuards';
  * guards' types only, so tableGuards.ts can import it back.
  */
 
-type PenCtx = Pick<TransitionContext, 'actorUid' | 'isAdmin' | 'lessonStep' | 'unlimitedProposals'>;
+type PenCtx = Pick<
+	TransitionContext,
+	'actorUid' | 'isAdmin' | 'lessonStep' | 'unlimitedProposals' | 'writeBlocked'
+>;
 
 /** A copy of the table with no pen state: a table that enters write (or leaves it) starts clean. */
 export function withoutPen(table: ClassTable): ClassTable {
@@ -57,11 +66,42 @@ export function assertMayClaimPen(table: ClassTable, ctx: PenCtx): void {
 		throw new ClassroomError('permission-denied', 'You are not seated at this table');
 	}
 	assertProposalsWriting(table, ctx);
+	// The same conditions classPostProposal enforces: nobody may take a pen they could not use.
+	if (ctx.writeBlocked === 'vote-running') {
+		throw new ClassroomError('failed-precondition', 'The vote has opened', 'vote-running');
+	}
+	if (ctx.writeBlocked === 'no-challenge') {
+		throw new ClassroomError('failed-precondition', 'The lesson has no challenge', 'not-writing');
+	}
 	if (table.writerUid) {
 		throw new ClassroomError('failed-precondition', 'Someone else holds the pen', 'pen-taken');
 	}
 	if (wroteAlready(table, ctx.actorUid) && !ctx.unlimitedProposals) {
 		throw new ClassroomError('failed-precondition', 'You already wrote', 'already-written');
+	}
+}
+
+/**
+ * At Proposals the students never move the table by themselves between write and rate (it
+ * moves when everyone wrote, or the teacher moves it), and a tablemate moves it to write only
+ * once every round is spoken. A teacher is not checked here.
+ */
+export function assertProposalsStudentMove(
+	table: ClassTable,
+	action: ClassTableAction,
+	ctx: Pick<TransitionContext, 'now' | 'proposalsTurns'>,
+): void {
+	if (action.action === 'toRate') {
+		throw new ClassroomError('permission-denied', 'The table moves to rating by itself');
+	}
+	if (action.action !== 'toWrite') return;
+	const turnsLeft =
+		proposalsTurnOf(table) <
+		proposalsMaxTurns(table, {
+			statementSettings: { proposalsTurns: ctx.proposalsTurns },
+		});
+	if (turnsLeft || !everyoneSpoke(table, ctx.now)) {
+		throw new ClassroomError('failed-precondition', 'Not everyone has spoken', 'talk-not-over');
 	}
 }
 

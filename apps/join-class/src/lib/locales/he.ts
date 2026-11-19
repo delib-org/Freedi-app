@@ -603,6 +603,7 @@ const he: Record<string, string> = {
 	'console.proposals_spoken': 'כולם דיברו',
 	'console.writing_now': '{{name}} כותב/ת · שלחו {{sent}} מתוך {{total}}',
 	'console.writing_nobody': 'אף אחד לא כותב · שלחו {{sent}} מתוך {{total}}',
+	'proposals.write.closed': 'ההצעות סגורות עכשיו, אי אפשר לכתוב',
 };
 
 export default he;
