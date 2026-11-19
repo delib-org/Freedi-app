@@ -67,6 +67,8 @@ export function step(
 		uid: ctx.uid,
 		isAdmin: false,
 		now: serverNow(),
+		table,
+		main: ctx.main,
 	});
 	ctx.run(
 		async () => {

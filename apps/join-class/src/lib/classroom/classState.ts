@@ -74,7 +74,10 @@ export function trackTableChange<R>(
 	change: TableChange | null,
 	call: () => Promise<R>,
 ): Promise<R> {
-	return change ? tableOverlay.track(change, call) : call();
+	// What the server shows now: a snapshot that merely repeats it cannot confirm the change.
+	const baseline = server.tables.length > 0 ? server.tables : server.table ? [server.table] : [];
+
+	return change ? tableOverlay.track(change, call, baseline) : call();
 }
 
 function setServerTables(tables: ClassTable[]): void {

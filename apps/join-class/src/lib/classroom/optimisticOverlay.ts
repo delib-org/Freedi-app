@@ -27,6 +27,8 @@ export interface OptimisticChange<T> {
 interface Pending<T> {
 	id: number;
 	change: OptimisticChange<T>;
+	/** The server data already satisfied the change when it was made: a snapshot cannot confirm it (it may be stale). */
+	alreadyTrue: boolean;
 	timer: ReturnType<typeof setTimeout> | null;
 }
 
@@ -64,6 +66,8 @@ export class OptimisticOverlay<T> {
 	/** A server snapshot arrived: forget every change it already shows. Does not call `onChange`. */
 	reconcile(base: T): void {
 		for (const entry of [...this.pending]) {
+			// Confirmed only by news: what was already true before the change proves nothing.
+			if (entry.alreadyTrue) continue;
 			let confirmed = false;
 			try {
 				confirmed = entry.change.isConfirmedBy(base);
@@ -76,8 +80,8 @@ export class OptimisticOverlay<T> {
 	}
 
 	/** Show `change` now, run `call`, and settle the change by how the call goes. */
-	async track<R>(change: OptimisticChange<T>, call: () => Promise<R>): Promise<R> {
-		const id = this.add(change);
+	async track<R>(change: OptimisticChange<T>, call: () => Promise<R>, baseline?: T): Promise<R> {
+		const id = this.add(change, baseline);
 		try {
 			const result = await call();
 			this.callSucceeded(id);
@@ -95,14 +99,28 @@ export class OptimisticOverlay<T> {
 		this.pending = [];
 	}
 
-	private add(change: OptimisticChange<T>): number {
+	private add(change: OptimisticChange<T>, baseline: T | undefined): number {
 		const id = this.nextId++;
-		const entry: Pending<T> = { id, change, timer: null };
+		const entry: Pending<T> = {
+			id,
+			change,
+			alreadyTrue: this.holds(change, baseline),
+			timer: null,
+		};
 		entry.timer = setTimeout(() => this.drop(id), OPTIMISTIC_CALL_TIMEOUT_MS);
 		this.pending.push(entry);
 		this.onChange();
 
 		return id;
+	}
+
+	private holds(change: OptimisticChange<T>, baseline: T | undefined): boolean {
+		if (baseline === undefined) return false;
+		try {
+			return change.isConfirmedBy(baseline);
+		} catch {
+			return false;
+		}
 	}
 
 	private callSucceeded(id: number): void {

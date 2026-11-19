@@ -1,5 +1,10 @@
-import { proposalsTurnOf } from '@freedi/shared-types';
-import type { ClassTable, ClassTableAction, TableStep } from '@freedi/shared-types';
+import { proposalsDone, proposalsTurnOf } from '@freedi/shared-types';
+import type {
+	ClassTable,
+	ClassTableAction,
+	LessonSettingsHolder,
+	TableStep,
+} from '@freedi/shared-types';
 import type { OptimisticChange } from './optimisticOverlay';
 
 /**
@@ -16,6 +21,9 @@ export type TableChange = OptimisticChange<ClassTable[]>;
 
 /** Who is pressing, and when (server clock). */
 export interface Actor {
+	/** What the screen holds now: a student's `toWrite` is guessed only when the table is really done talking. */
+	table?: ClassTable;
+	main?: LessonSettingsHolder | null;
 	uid: string;
 	isAdmin: boolean;
 	now: number;
@@ -55,7 +63,8 @@ function onTable(
 		isConfirmedBy: (tables) => {
 			const table = tables.find((candidate) => candidate.tableId === tableId);
 
-			return table === undefined || isShown(table);
+			// Absent from this snapshot is not done: only a table that shows the change confirms it.
+			return table !== undefined && isShown(table);
 		},
 	};
 }
@@ -72,6 +81,15 @@ export function predictTableAction(
 	const { uid, isAdmin, now } = actor;
 	switch (action.action) {
 		case 'toWrite':
+			// The server lets a student do this only once the table is at talk, every member spoke and no
+			// round is left (proposalsDone, the same rule that shows the button); otherwise it refuses.
+			if (
+				!isAdmin &&
+				!(actor.table && actor.table.step === 'talk' && proposalsDone(actor.table, actor.main, now))
+			) {
+				return null;
+			}
+
 			return onTable(
 				tableId,
 				(table) => {

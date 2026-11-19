@@ -138,6 +138,8 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 				uid,
 				isAdmin: false,
 				now: serverNow(),
+				table,
+				main,
 			});
 			run(
 				() => trackTableChange(change, () => classTableStep({ tableId: table.tableId, ...action })),

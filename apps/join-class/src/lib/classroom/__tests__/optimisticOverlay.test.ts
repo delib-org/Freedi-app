@@ -201,4 +201,31 @@ describe('OptimisticOverlay', () => {
 		expect(onChange).not.toHaveBeenCalled();
 		expect(overlay.view(0)).toBe(0);
 	});
+	it('a snapshot that repeats what was already true does not confirm the change', () => {
+		// "to 3" while the server data already shows 3: a stale snapshot must not drop it.
+		void overlay.track(plus(3), () => deferred<void>().promise, 3);
+		overlay.reconcile(3);
+		expect(overlay.size).toBe(1);
+	});
+
+	it('two sequential changes: a stale snapshot between them confirms neither early', () => {
+		// Start at 0: first +1 ("to 1"), then a -1 that brings it back, before any snapshot.
+		const up: OptimisticChange<number> = { apply: () => 1, isConfirmedBy: (n) => n === 1 };
+		const back: OptimisticChange<number> = { apply: () => 0, isConfirmedBy: (n) => n === 0 };
+		void overlay.track(up, () => deferred<void>().promise, 0);
+		void overlay.track(back, () => deferred<void>().promise, 0);
+		// The stale snapshot (still 0) satisfies "back" but it was already true: only "up" is unconfirmed.
+		overlay.reconcile(0);
+		expect(overlay.size).toBe(2);
+		expect(overlay.view(0)).toBe(0);
+		// The server catches up with "up": it is dropped; "back" stays until its own call settles.
+		overlay.reconcile(1);
+		expect(overlay.size).toBe(1);
+	});
+
+	it('a change that was not true before is still confirmed by news', () => {
+		void overlay.track(plus(3), () => deferred<void>().promise, 0);
+		overlay.reconcile(3);
+		expect(overlay.size).toBe(0);
+	});
 });

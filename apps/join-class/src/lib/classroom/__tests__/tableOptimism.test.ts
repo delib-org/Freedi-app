@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ClassTable } from '@freedi/shared-types';
 import { proposalsTurnOf } from '@freedi/shared-types';
+import type { Actor } from '../tableOptimism';
 import { predictAllTablesTo, predictMoveStudent, predictTableAction } from '../tableOptimism';
 
 const NOW = 1_000_000;
@@ -127,20 +128,59 @@ describe('predictTableAction', () => {
 		}
 	});
 
-	it('toWrite moves the table to write, records the last speaker and clears the floor and pen', () => {
-		const t = table(1, { step: 'talk', speakerUid: 'a', speakerEndsAt: 9, writerUid: 'z' });
-		const change = predictTableAction('m--1', { action: 'toWrite' }, student);
-		const next = change?.apply([t])[0];
-		expect(next?.step).toBe('write');
-		expect(next?.spokenUids).toEqual(['a']);
-		expect(next?.speakerUid).toBeUndefined();
-		expect(next?.writerUid).toBeUndefined();
-	});
+	describe('toWrite', () => {
+		const main = { statementSettings: { proposalsTurns: 2 } };
+		const asStudent = (t: ClassTable): Actor => ({
+			...student,
+			table: t,
+			main,
+		});
+		const done = table(1, {
+			step: 'talk',
+			memberUids: ['u1', 'u2'],
+			spokenUids: ['u1', 'u2'],
+			proposalsTurn: 2,
+			writerUid: 'z',
+		});
 
-	it('toWrite on a table already writing keeps the pen', () => {
-		const t = table(1, { step: 'write', writerUid: 'z' });
-		const next = predictTableAction('m--1', { action: 'toWrite' }, student)?.apply([t])[0];
-		expect(next?.writerUid).toBe('z');
+		it('a teacher moves the table to write, records the last speaker and clears the floor and pen', () => {
+			const t = table(1, { step: 'talk', speakerUid: 'a', speakerEndsAt: 9, writerUid: 'z' });
+			const next = predictTableAction('m--1', { action: 'toWrite' }, teacher)?.apply([t])[0];
+			expect(next?.step).toBe('write');
+			expect(next?.spokenUids).toEqual(['a']);
+			expect(next?.speakerUid).toBeUndefined();
+			expect(next?.writerUid).toBeUndefined();
+		});
+
+		it('a teacher on a table already writing keeps the pen', () => {
+			const t = table(1, { step: 'write', writerUid: 'z' });
+			const next = predictTableAction('m--1', { action: 'toWrite' }, teacher)?.apply([t])[0];
+			expect(next?.writerUid).toBe('z');
+		});
+
+		it('a student is guessed once every member spoke and no round is left', () => {
+			const change = predictTableAction('m--1', { action: 'toWrite' }, asStudent(done));
+			expect(change?.apply([done])[0].step).toBe('write');
+		});
+
+		it('a student gets no guess while someone still holds the floor', () => {
+			const speaking = { ...done, spokenUids: ['u1'], speakerUid: 'u2', speakerEndsAt: NOW + 5000 };
+			expect(predictTableAction('m--1', { action: 'toWrite' }, asStudent(speaking))).toBeNull();
+		});
+
+		it('a student gets no guess while rounds remain', () => {
+			const early = { ...done, proposalsTurn: 1 };
+			expect(predictTableAction('m--1', { action: 'toWrite' }, asStudent(early))).toBeNull();
+		});
+
+		it('a student gets no guess when the screen did not say what the table looks like', () => {
+			expect(predictTableAction('m--1', { action: 'toWrite' }, student)).toBeNull();
+		});
+
+		it('a student gets no guess when the table is not at talk', () => {
+			const rating = { ...done, step: 'rate' as const };
+			expect(predictTableAction('m--1', { action: 'toWrite' }, asStudent(rating))).toBeNull();
+		});
 	});
 
 	it('only a teacher is shown the table moving to rate or talk', () => {
@@ -218,5 +258,13 @@ describe('predictTableAction', () => {
 		const t = table(1, { writingMode: 'each' });
 		const change = predictTableAction('m--1', { action: 'setWritingMode', mode: 'table' }, teacher);
 		expect(change?.apply([t])[0].writingMode).toBe('table');
+	});
+});
+
+describe('a snapshot that does not hold the table', () => {
+	it('does not confirm a change for that table', () => {
+		const change = predictTableAction('m--1', { action: 'toRate' }, teacher);
+		expect(change?.isConfirmedBy([table(2, { step: 'rate' })])).toBe(false);
+		expect(change?.isConfirmedBy([table(1, { step: 'rate' })])).toBe(true);
 	});
 });
