@@ -190,13 +190,15 @@ The primary never skips work silently: if she reaches Vote's "next" without a vo
 ## 8. Findability
 Tables: numbered, in order; "ללא שולחן" always on top when not empty. Class list before tables: by join order (unchanged). "מה כתבו": grouped by question and table (unchanged).
 
-## 9. Open questions for Tal
-1. Pause: keep "השהיית השיעור" always visible in the top bar (yes), or put it in "עוד" too (no)?
-2. Later steps in the step list: not tappable, so forward is only the big button, one step at a time (yes / no)?
-3. The big button does the step's own work first (Vote: open → close → next): yes / no?
-4. One name for the challenge question: "השאלה לפתרון" (as in the plan) or "השאלה להצעות" (as in the console)?
-5. The goal: "השער" (as on the projector) or "רף"?
-6. The long "drag a name" hint: show it once per teacher (yes), or always (no)?
+## 9. Decisions (Tal, 2026-11-19)
+1. Pause: "השהיית השיעור" stays always visible in the top bar.
+2. Later steps in the step list are NOT tappable: forward is only the big button, one step at a time. Going back stays possible, with the existing confirm.
+3. The big button does the step's own work first (Vote: "פתיחת ההצבעה" → "סגירת ההצבעה" → "פתיחת השלב הבא: סיכום").
+4. One name for the question: "השאלה לפתרון" everywhere.
+5. One name for the goal: "השער" everywhere (not רף, not יעד).
+6. The long "drag a name" hint shows once per teacher, then never again.
+
+Screen design: `docs/ia/screens/join-class-teacher-console.md`.
 
 ## 10. Handoff to UX
 Fixed here: the four regions and their order, one primary per state (§5), the two "more" menus and what goes in each, the labels in §3, staying on the console after ending, later steps not tappable.
