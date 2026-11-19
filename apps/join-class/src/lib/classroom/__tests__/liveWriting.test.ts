@@ -184,8 +184,11 @@ describe('closesWatchOn', () => {
 		expect(closesWatchOn('sent')).toBe(true);
 	});
 
-	it('keeps it open while live or when the writer only stopped', () => {
+	it('closes it when the broadcast stopped without a proposal (cancel, turn over, left, stale)', () => {
+		expect(closesWatchOn('stopped')).toBe(true);
+	});
+
+	it('keeps it open only while the writer is live', () => {
 		expect(closesWatchOn('live')).toBe(false);
-		expect(closesWatchOn('stopped')).toBe(false);
 	});
 });
