@@ -352,6 +352,7 @@ const es: Record<string, string> = {
 	'console.side_a': 'Lado A',
 	'console.side_b': 'Lado B',
 	'console.side_none': 'Aún sin lado',
+	'console.side_chose': 'Eligió un lado',
 	'console.sides_count': '{{chose}} de {{total}} eligieron un lado',
 	'console.no_device': 'Sin dispositivo',
 	'console.table_n': 'Mesa {{n}}',

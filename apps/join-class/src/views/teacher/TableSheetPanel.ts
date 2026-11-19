@@ -58,9 +58,13 @@ function memberRow(
 	const answer = mode === 'tableTalk' ? answerMark(table, uid, now) : '';
 
 	return m('li.table-sheet__member', { key: uid }, [
-		m('span.table-sheet__member-mark', { 'aria-hidden': 'true' }, chose ? '●' : '○'),
+		m('span.table-sheet__member-mark', { 'aria-hidden': 'true' }, chose ? '✓' : '○'),
 		ask ? m('span.table-sheet__member-turn', { 'aria-hidden': 'true' }, ask) : null,
 		m('span.table-sheet__member-name', name),
+		m(
+			`span.table-sheet__member-side.table-sheet__member-side--${chose ? 'chose' : 'none'}`,
+			t(chose ? 'console.side_chose' : 'console.side_none'),
+		),
 		answer ? m('span.table-sheet__member-turn', { 'aria-hidden': 'true' }, answer) : null,
 		turnButtons(table, uid, name, mode, now),
 		m(

@@ -353,6 +353,7 @@ const de: Record<string, string> = {
 	'console.side_a': 'Seite A',
 	'console.side_b': 'Seite B',
 	'console.side_none': 'Noch keine Seite',
+	'console.side_chose': 'Seite gewählt',
 	'console.sides_count': '{{chose}} von {{total}} haben eine Seite gewählt',
 	'console.no_device': 'Ohne Gerät',
 	'console.table_n': 'Tisch {{n}}',

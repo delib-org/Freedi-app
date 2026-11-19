@@ -354,6 +354,7 @@ const en: Record<string, string> = {
 	'console.side_a': 'Side A',
 	'console.side_b': 'Side B',
 	'console.side_none': 'No side yet',
+	'console.side_chose': 'Chose a side',
 	'console.sides_count': '{{chose}} of {{total}} chose a side',
 	'console.no_device': 'No device',
 	'console.table_n': 'Table {{n}}',

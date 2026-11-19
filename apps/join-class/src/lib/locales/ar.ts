@@ -351,6 +351,7 @@ const ar: Record<string, string> = {
 	'console.side_a': 'الجانب أ',
 	'console.side_b': 'الجانب ب',
 	'console.side_none': 'لم يختاروا جانبًا بعد',
+	'console.side_chose': 'اختار جانبًا',
 	'console.sides_count': '{{chose}} من {{total}} اختاروا جانبًا',
 	'console.no_device': 'بلا جهاز',
 	'console.table_n': 'طاولة {{n}}',

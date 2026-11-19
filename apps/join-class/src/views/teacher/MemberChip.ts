@@ -112,6 +112,8 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 					type: 'button',
 					class: [
 						noDevice ? 'member-chip--no-device' : '',
+						attrs.chosen === true ? 'member-chip--chose' : '',
+						noSide ? 'member-chip--no-side' : '',
 						active ? 'member-chip--active' : '',
 						attrs.askMark === '?' ? 'member-chip--asking' : '',
 						attrs.askMark === '–' ? 'member-chip--passed-ask' : '',
@@ -134,7 +136,7 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 					},
 				},
 				[
-					m('span.member-chip__mark', { 'aria-hidden': 'true' }, attrs.chosen ? '●' : '○'),
+					m('span.member-chip__mark', { 'aria-hidden': 'true' }, attrs.chosen ? '✓' : '○'),
 					attrs.askMark
 						? m(
 								'span.member-chip__turn.member-chip__turn--ask',
@@ -153,6 +155,9 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 					noDevice ? m('span.member-chip__tag', t('console.no_device')) : null,
 					noSide
 						? m('span.member-chip__tag.member-chip__tag--no-side', t('console.side_none'))
+						: null,
+					attrs.chosen === true
+						? m('span.member-chip__tag.member-chip__tag--chose', t('console.side_chose'))
 						: null,
 				],
 			),

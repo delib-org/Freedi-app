@@ -351,6 +351,7 @@ const nl: Record<string, string> = {
 	'console.side_a': 'Kant A',
 	'console.side_b': 'Kant B',
 	'console.side_none': 'Nog geen kant',
+	'console.side_chose': 'Kant gekozen',
 	'console.sides_count': '{{chose}} van {{total}} hebben een kant gekozen',
 	'console.no_device': 'Zonder apparaat',
 	'console.table_n': 'Tafel {{n}}',

@@ -39,6 +39,18 @@
     cursor: default;
   }
 
+  // Picked a side (never which): a solid teal outline, a check and the words. Not colour alone.
+  &--chose {
+    border-color: var(--teal-500);
+    background: var(--teal-50);
+  }
+
+  // Not yet: a dashed outline, an empty circle and the words "No side yet".
+  &--no-side {
+    border: 1.5px dashed var(--ink-soft);
+    background: transparent;
+  }
+
   &--active {
     border-color: var(--terra-500);
     opacity: 0.6;
@@ -69,6 +81,14 @@
   background: var(--teal-50);
 }
 
+.member-chip__mark {
+  font-weight: var(--font-weight-bold);
+}
+
+.member-chip--chose .member-chip__mark {
+  color: var(--teal-600);
+}
+
 .member-chip__tag {
   font-size: var(--font-size-xs);
   color: var(--ink-muted);
@@ -76,6 +96,11 @@
   // A student who has not chosen a side yet: the words stand out, the chip is not dimmed.
   &--no-side {
     color: var(--ink);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &--chose {
+    color: var(--teal-700);
     font-weight: var(--font-weight-bold);
   }
 }

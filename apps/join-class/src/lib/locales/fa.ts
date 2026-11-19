@@ -343,6 +343,7 @@ const fa: Record<string, string> = {
 	'console.side_a': 'سمت الف',
 	'console.side_b': 'سمت ب',
 	'console.side_none': 'هنوز سمتی انتخاب نکرده‌اند',
+	'console.side_chose': 'سمتی انتخاب کرد',
 	'console.sides_count': '{{chose}} از {{total}} نفر سمتی انتخاب کردند',
 	'console.no_device': 'بدون دستگاه',
 	'console.table_n': 'میز {{n}}',

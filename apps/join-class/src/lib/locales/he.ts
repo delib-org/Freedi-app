@@ -351,6 +351,7 @@ const he: Record<string, string> = {
 	'console.side_a': 'צד א׳',
 	'console.side_b': 'צד ב׳',
 	'console.side_none': 'עוד לא בחרו צד',
+	'console.side_chose': 'בחרו צד',
 	'console.sides_count': '{{chose}} מתוך {{total}} בחרו צד',
 	'console.no_device': 'בלי מכשיר',
 	'console.table_n': 'שולחן {{n}}',

@@ -81,6 +81,24 @@
   border-block-end: 1px solid var(--paper-line);
 }
 
+.table-sheet__member-mark {
+  font-weight: var(--font-weight-bold);
+}
+
+// Picked a side or not (never which): a glyph and words, so colour is not the only cue.
+.table-sheet__member-side {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+
+  &--chose {
+    color: var(--teal-700);
+  }
+
+  &--none {
+    color: var(--ink);
+  }
+}
+
 .table-sheet__member-name {
   flex: 1;
   font-weight: var(--font-weight-bold);
