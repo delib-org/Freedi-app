@@ -73,13 +73,13 @@ describe('liveWritingParts: the watcher when the writer ends', () => {
 		expect(result.overlay).toBeNull();
 	});
 
-	it('keeps the watch open when the writer only stopped', () => {
+	it('closes the watch when the writer only stopped (cancelled, turn over, left, stale)', () => {
 		const self = stateWatching();
 		const result = run(self, []);
 
-		expect(self.watch).not.toBeNull();
-		expect(self.sentToast).toBeNull();
-		expect(result.overlay).not.toBeNull();
+		expect(self.watch).toBeNull();
+		expect(result.overlay).toBeNull();
+		expect(self.sentToast).not.toBeNull();
 	});
 
 	it('keeps the watch open while the writer is still live', () => {

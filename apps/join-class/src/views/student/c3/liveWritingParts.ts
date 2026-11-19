@@ -133,8 +133,10 @@ export function liveWritingParts(input: LiveWritingInput): LiveWritingParts {
 					feed.options.filter((o) => o.parentId === challengeId),
 				);
 		if (closesWatchOn(state)) {
-			// The writer sent: every watcher goes back to their own screen.
-			const text = t('answer.watch_sent', { name: watch.name });
+			// The broadcast ended (sent or stopped): every watcher goes back to their own screen.
+			const text = t(state === 'sent' ? 'answer.watch_sent' : 'answer.watch_stopped', {
+				name: watch.name,
+			});
 			self.liveMessage = text;
 			self.sentToast = { text, until: now + SENT_TOAST_MS };
 			self.watch = null;

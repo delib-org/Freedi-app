@@ -91,12 +91,13 @@ export function resolveEnd(
 export const SENT_TOAST_MS = 3500;
 
 /**
- * The watch view closes by itself the moment the watched writer has sent: the
- * watcher goes back to their own screen. A writer who only stopped (unticked,
- * left the box) keeps the view open, so the text stays readable.
+ * The watch view closes by itself the moment the watched writer's broadcast ends,
+ * for any reason (sent, cancelled, turn moved on, left, draft went stale): the
+ * watcher goes back to where they were, with the new proposal in the feed if one
+ * was sent. Only a live broadcast keeps the view open.
  */
 export function closesWatchOn(state: 'live' | 'sent' | 'stopped'): boolean {
-	return state === 'sent';
+	return state !== 'live';
 }
 
 /** The picker: the live writers plus the one being watched, in seating order; shown from two on. */
