@@ -83,22 +83,9 @@ $c3-count-size: clamp(6rem, 30vw, 8rem); // 96-128px, readable from 60cm
   flex-direction: column;
   gap: var(--space-md);
 
-  &__question {
-    margin: 0;
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-bold, 700);
-  }
-
   &__note {
     margin: 0;
     color: var(--ink-muted);
-  }
-
-  &__broadcast {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    min-height: var(--touch-target);
   }
 
   &__live {
@@ -119,6 +106,12 @@ $c3-count-size: clamp(6rem, 30vw, 8rem); // 96-128px, readable from 60cm
     border-block-start: 1px solid var(--paper-line);
   }
 
+  &__pass {
+    width: 100%;
+    min-height: var(--touch-target, 48px);
+    margin-block-start: var(--space-xs);
+  }
+
   &__send {
     width: 100%;
     min-height: var(--touch-target, 48px);
@@ -126,36 +119,6 @@ $c3-count-size: clamp(6rem, 30vw, 8rem); // 96-128px, readable from 60cm
 
     &:disabled {
       opacity: 0.55;
-    }
-  }
-}
-
-.mode {
-  display: flex;
-  border: 1.5px solid var(--ink);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-
-  &__option {
-    flex: 1;
-    min-height: var(--touch-target);
-    padding: 0 var(--space-sm);
-    border: 0;
-    background: transparent;
-    color: var(--ink);
-    font: inherit;
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-bold, 700);
-    cursor: pointer;
-
-    &:disabled {
-      cursor: default;
-      opacity: 0.6;
-    }
-
-    &--on {
-      background: var(--ink);
-      color: var(--paper);
     }
   }
 }
@@ -212,3 +175,44 @@ $c3-count-size: clamp(6rem, 30vw, 8rem); // 96-128px, readable from 60cm
   }
 }
 
+
+// ---- the pen (Proposals write): one writer per table -------------------------------
+
+.pen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+
+  &__status {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold, 700);
+  }
+
+  &__closed {
+    margin: 0;
+    color: var(--ink-muted);
+  }
+
+  &__claim,
+  &__pass {
+    width: 100%;
+    min-height: var(--touch-target, 48px);
+  }
+
+  &__claim {
+    font-weight: var(--font-weight-bold, 700);
+  }
+}
+
+// "Waiting for Noa and Avi": the one line that says what the table does next.
+.proposals-next {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--font-size-base);
+
+  .frame--down & {
+    color: inherit;
+    opacity: 0.85;
+  }
+}

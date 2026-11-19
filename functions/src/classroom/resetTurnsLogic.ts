@@ -38,5 +38,7 @@ export function turnResetPatch(now: number): Record<string, unknown> {
 		speakerEndsAt: FieldValue.delete(),
 		speakerMs: FieldValue.delete(),
 		passedSpeakingUids: FieldValue.delete(),
+		writerUid: FieldValue.delete(),
+		writtenUids: FieldValue.delete(),
 	};
 }

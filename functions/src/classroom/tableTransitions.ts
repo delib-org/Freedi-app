@@ -23,6 +23,7 @@ import {
 } from './tableGuards';
 import type { ActorRole, TransitionContext } from './tableGuards';
 import { moveOn } from './tableMoveOn';
+import { claimPen, passWriting, releasePen, withoutPen } from './tablePen';
 
 export { ALLOWED_FROM, actorRole };
 export type { ActorRole, TransitionContext };
@@ -379,7 +380,7 @@ function applyAction(
 				throw new ClassroomError('failed-precondition', 'Choose a question first', 'no-question');
 			}
 			const talk: ClassTable = {
-				...withoutPassedSpeaking(withoutSpeaker(base)),
+				...withoutPassedSpeaking(withoutSpeaker(withoutPen(base))),
 				step: 'talk',
 				spokenUids: [],
 			};
@@ -418,7 +419,10 @@ function applyAction(
 					? [...table.spokenUids, table.speakerUid]
 					: table.spokenUids;
 
-			return { ...withoutSpeaker(base), step: 'write', spokenUids: spoken };
+			const writing: ClassTable = { ...withoutSpeaker(base), step: 'write', spokenUids: spoken };
+
+			// A repeated tap on a table that already writes keeps the pen as it is.
+			return table.step === 'write' ? writing : withoutPen(writing);
 		}
 		case 'setWritingMode':
 			if (table.writingLocked) {
@@ -430,7 +434,7 @@ function applyAction(
 
 			return { ...base, writingMode: action.mode };
 		case 'toRate':
-			return { ...withoutSpeaker(base), step: 'rate' };
+			return withoutPen({ ...withoutSpeaker(base), step: 'rate' });
 		case 'nextTurn':
 			return nextTurn(table, base);
 		case 'claimTurn':
@@ -445,6 +449,12 @@ function applyAction(
 			return passSpeaking(table, base, action, ctx);
 		case 'moveOn':
 			return moveOn(base, ctx, action);
+		case 'claimPen':
+			return claimPen(base, ctx.actorUid);
+		case 'passWriting':
+			return passWriting(base, action, ctx);
+		case 'releasePen':
+			return releasePen(base);
 		case 'nextProposalsTurn':
 			// A tap that names an earlier turn arrived after the table moved on: nothing to do.
 			if (action.fromTurn !== undefined && action.fromTurn !== proposalsTurnOf(table)) return table;

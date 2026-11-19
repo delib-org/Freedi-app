@@ -35,6 +35,11 @@ export type ClassroomErrorReason =
 	| 'already-moved'
 	/** A running, paused or open lesson cannot be removed from the teacher's lists. */
 	| 'lesson-running'
+	/** Proposals pen: someone else took it first / the table is not writing / not the pen holder / already sent. */
+	| 'pen-taken'
+	| 'not-writing'
+	| 'no-pen'
+	| 'already-written'
 	/** The lesson's tables come from its registration (classCopySeating), not from a deal. */
 	| 'registration-connected'
 	| ClassRegistrationErrorReason;

@@ -27,6 +27,8 @@ import { consoleState, isBusy } from './consoleState';
 import { openActFor } from './actFor/actForState';
 import { MemberChip } from './MemberChip';
 import { ProposalsSpeakerRow } from './ProposalsSpeakerRow';
+import { ProposalsWriteRow } from './ProposalsWriteRow';
+import { proposalsWriterOf } from '@/lib/classroom/proposalsWriter';
 import { proposalsSpeakerOf } from '@/lib/classroom/proposalsSpeaker';
 import { TableBridgeLines } from './TableBridgeLines';
 import { dropAttrs } from './dragController';
@@ -192,10 +194,20 @@ function timerRows(attrs: TableCardAttrs): m.Children {
 	];
 }
 
-/** Proposals talk: who holds the floor (name, glyph, time left) or "Nobody is speaking". Else the timer rows. */
+/**
+ * Proposals talk: who holds the floor (name, glyph, time left) or "Nobody is speaking".
+ * Proposals write: who holds the pen and how many sent. Else the timer rows.
+ */
 function speakerOrTimerRows(attrs: TableCardAttrs): m.Children {
-	const speaker =
-		tableModeOf(attrs) === 'proposals' ? proposalsSpeakerOf(attrs.table, serverNow()) : null;
+	const proposals = tableModeOf(attrs) === 'proposals';
+	const writer = proposals ? proposalsWriterOf(attrs.table) : null;
+	if (writer) {
+		return m(ProposalsWriteRow, {
+			writer,
+			name: writer.uid ? nameOf(writer.uid, attrs.students, attrs.table) : '',
+		});
+	}
+	const speaker = proposals ? proposalsSpeakerOf(attrs.table, serverNow()) : null;
 	if (!speaker) return timerRows(attrs);
 	const name = speaker.kind === 'speaking' ? nameOf(speaker.uid, attrs.students, attrs.table) : '';
 
@@ -331,7 +343,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 					: m(
 							'p.table-card__now',
 							tableIsDone(table, mode, serverNow(), noneLeftNow(table), propDone)
-								? t('console.all_done')
+								? t(mode === 'proposals' ? 'console.proposals_spoken' : 'console.all_done')
 								: t(tableStepKey(table, plenum)),
 						),
 				attrs.tableTalk && attrs.questionText && table.questionId

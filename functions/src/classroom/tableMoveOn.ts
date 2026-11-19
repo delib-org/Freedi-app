@@ -3,6 +3,7 @@ import type { ClassTable, ClassTableAction, LessonStepKey } from '@freedi/shared
 import { ClassroomError } from './classroomErrors';
 import { answeredUids, isTableTalk, listOf } from './tableGuards';
 import type { TransitionContext } from './tableGuards';
+import { withoutPen } from './tablePen';
 
 /**
  * "Move on" (Trello 1c8jfvA6, GdrAEIF9): the students move their own table on
@@ -65,7 +66,7 @@ function skipToWrite(table: ClassTable): ClassTable {
 		table.speakerUid && !table.spokenUids.includes(table.speakerUid)
 			? [...table.spokenUids, table.speakerUid]
 			: table.spokenUids;
-	const next: ClassTable = { ...table, step: 'write', spokenUids: spoken };
+	const next: ClassTable = withoutPen({ ...table, step: 'write', spokenUids: spoken });
 	delete next.speakerUid;
 	delete next.speakerEndsAt;
 	delete next.speakerMs;

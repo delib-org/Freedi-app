@@ -106,7 +106,18 @@ function turnRunning(table: ClassTable, now: number): boolean {
 	);
 }
 
-/** The turn buttons of one member row at Table talk (empty at Proposals and the plenum). */
+/** Proposals, at write: the pen holder gets "pass for {name}", which frees a stuck pen (their phone died, they left). */
+export function penButton(table: ClassTable, uid: string, name: string): m.Children {
+	if (table.step !== 'write' || table.writerUid !== uid) return null;
+
+	return plain(table, {
+		label: t('turn.pass_for', { name }),
+		testId: 'sheet-pass-pen',
+		action: { action: 'passWriting', uid },
+	});
+}
+
+/** The turn buttons of one member row: Table talk's, and at Proposals the pen holder's (none in the plenum). */
 export function turnButtons(
 	table: ClassTable,
 	uid: string,
@@ -114,6 +125,7 @@ export function turnButtons(
 	mode: TableMode,
 	now: number,
 ): m.Children {
+	if (mode === 'proposals') return penButton(table, uid, name);
 	if (mode !== 'tableTalk') return null;
 	if (turnRunning(table, now)) {
 		if (minuteRunning(table, now) && table.speakerUid === uid) {

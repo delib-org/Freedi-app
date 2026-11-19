@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ClassTable, Statement, SupportBySide } from '@freedi/shared-types';
 import {
-	claimLabelKey,
 	countdownView,
 	idleCountdownText,
 	isOwnItem,
@@ -10,7 +9,6 @@ import {
 	officialSubstep,
 	partitionRateItems,
 	plenumOrder,
-	resolveSubstep,
 	shouldAnnounce,
 	supportBars,
 	supportPercent,
@@ -102,32 +100,12 @@ describe('countdown maths', () => {
 	});
 });
 
-describe('sub-step strip state (Proposals only)', () => {
-	it('defaults to the table step; Proposals has no pick screen', () => {
+describe('sub-step marker (Proposals only, read-only)', () => {
+	it("is the table step, never the phone's own pick; Proposals has no pick screen", () => {
 		expect(officialSubstep(table({ step: 'talk' }))).toBe('talk');
 		expect(officialSubstep(table({ step: 'write' }))).toBe('write');
 		expect(officialSubstep(table({ step: 'pick' }))).toBe('talk');
 		expect(officialSubstep(null)).toBe('talk');
-	});
-
-	it('follows a local pick while the table stays on its step', () => {
-		const t = table({ step: 'talk' });
-		const view = resolveSubstep(t, { step: 'write', officialAtPick: 'talk', turnAtPick: 1 });
-		expect(view).toEqual({ current: 'write', official: 'talk' });
-	});
-
-	it('lapses the local pick when the table moves on or the turn changes', () => {
-		const pick = { step: 'write' as const, officialAtPick: 'talk' as const, turnAtPick: 1 };
-		expect(resolveSubstep(table({ step: 'write' }), pick).current).toBe('write');
-		expect(resolveSubstep(table({ step: 'rate' }), pick).current).toBe('rate');
-		expect(resolveSubstep(table({ step: 'talk', turn: 2 }), pick).current).toBe('talk');
-	});
-
-	it('lands on the table step without a local pick', () => {
-		expect(resolveSubstep(table({ step: 'rate' }), null)).toEqual({
-			current: 'rate',
-			official: 'rate',
-		});
 	});
 
 	it('Table talk has no strip: its sub-steps are Proposals only', () => {
@@ -225,15 +203,5 @@ describe('support bars', () => {
 		expect(bars.map((b) => b.percent)).toEqual([100, 50, 0]);
 		expect(bars[0]).toMatchObject({ n: 4, m: 5 });
 		expect(bars[2]).toMatchObject({ n: 0, m: 3 });
-	});
-});
-
-describe('claimLabelKey', () => {
-	it('keeps I want to answer at Table talk', () => {
-		expect(claimLabelKey('tableTalk')).toBe('turn.answer');
-	});
-
-	it('says I want to propose a solution in Proposals', () => {
-		expect(claimLabelKey('proposals')).toBe('turn.propose');
 	});
 });

@@ -38,8 +38,8 @@ describe('stage title', () => {
 		expect(he['step.tableTalk']).toBe('שאלות חקירה');
 		expect(he['step.proposals']).toBe('הצעות');
 		expect(he['step.allProposals']).toBe('כל ההצעות');
-		// one name per concept (IA 19.3): the class sheet and the step share "כל ההצעות"
-		expect(he['proposal.class_list']).toBe(he['step.allProposals']);
+		// one name per concept: "כל ההצעות" is the lesson step only; the class sheet at Proposals is gone
+		expect(he['proposal.class_list']).toBeUndefined();
 		expect(he['step.vote']).toBe('הצבעה');
 		expect(he['step.summary']).toBe('סיכום');
 	});

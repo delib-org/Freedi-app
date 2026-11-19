@@ -3,7 +3,6 @@ import {
 	CLASS_BATCH_SIZE,
 	mayAddProposal,
 	proposalLimitOf,
-	type ClassTableAction,
 	type Statement,
 } from '@freedi/shared-types';
 import '@/styles/student-c3.scss';
@@ -14,7 +13,6 @@ import { getChallengeQuestion } from '@/lib/lesson';
 import { initLiveDrafts, teardownLiveDrafts } from '@/lib/liveDrafts';
 import { getSubQuestions } from '@/lib/store';
 import { classState } from '@/lib/classroom/classState';
-import { classTableStep } from '@/lib/classroom/api';
 import { currentUid } from '@/lib/classroom/c3Data';
 import { myProposals } from '@/lib/classroom/c3Logic';
 import {
@@ -207,16 +205,6 @@ export const AllProposalsScreen: m.ClassComponent<AllProposalsScreenAttrs> = {
 		}
 		const progress = boardProgress(pool, isRated);
 		const done = isBoardDone(self.board, pool, isRated);
-		const act = (action: ClassTableAction): void => {
-			if (!table) return;
-			classTableStep({ tableId: table.tableId, ...action }).catch((error: unknown) => {
-				console.error(
-					'[C3] table action failed',
-					{ operation: 'allProposals.tableAction', tableId: table.tableId },
-					error,
-				);
-			});
-		};
 
 		return frame([
 			pool.length > 0
@@ -238,16 +226,13 @@ export const AllProposalsScreen: m.ClassComponent<AllProposalsScreenAttrs> = {
 					self.editing && table
 						? m(WritePanel, {
 								main,
-								kind: 'proposals',
 								table,
 								feed,
 								uid,
-								mates: [],
-								question: null,
 								challenge,
 								locked: !canWrite,
+								mode: 'any',
 								busy: false,
-								onAction: act,
 								takeEditRequest: () => {
 									const request = self.editRequest;
 									self.editRequest = null;

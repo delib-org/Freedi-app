@@ -67,14 +67,9 @@ export function idleCountdownText(totalSeconds: number): string {
 	return countdownView(totalSeconds * MS_PER_SECOND, totalSeconds * MS_PER_SECOND).text;
 }
 
-// ---- sub-step strip -----------------------------------------------------------
+// ---- sub-step marker -----------------------------------------------------------
 
 export type FlowKind = 'tableTalk' | 'proposals';
-
-/** The speak button: Table talk answers a question, Proposals offers a solution. */
-export function claimLabelKey(kind: FlowKind): 'turn.answer' | 'turn.propose' {
-	return kind === 'proposals' ? 'turn.propose' : 'turn.answer';
-}
 
 export const TABLE_SUBSTEPS: Record<'proposals', readonly TableStep[]> = {
 	proposals: ['talk', 'write', 'rate'],
@@ -89,33 +84,6 @@ export function officialSubstep(table: ClassTable | null): TableStep {
 	const step = table?.step ?? 'talk';
 
 	return TABLE_SUBSTEPS.proposals.includes(step) ? step : TABLE_SUBSTEPS.proposals[0];
-}
-
-export interface SubstepOverride {
-	step: TableStep;
-	officialAtPick: TableStep;
-	turnAtPick: number;
-}
-
-export interface SubstepView {
-	/** The screen the student is looking at. */
-	current: TableStep;
-	/** The table's step: where the phone lands, and the teacher's last call (Proposals: free sub-steps). */
-	official: TableStep;
-}
-
-/** `override` is the student's own pick; it lapses when the table moves on. */
-export function resolveSubstep(
-	table: ClassTable | null,
-	override: SubstepOverride | null,
-): SubstepView {
-	const official = officialSubstep(table);
-	const turn = table?.turn ?? 0;
-	const live =
-		override !== null && override.officialAtPick === official && override.turnAtPick === turn;
-	const current = live && override ? override.step : official;
-
-	return { current, official };
 }
 
 // ---- mates ------------------------------------------------------------

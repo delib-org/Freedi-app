@@ -9,7 +9,6 @@ import { getFetchedQuestionTexts, requestQuestionText } from '@/lib/classroom/qu
 import { Countdown, msLeft } from './Countdown';
 import { lessonSpeakMs, tableSpeakMs } from '@/lib/classroom/speakTime';
 import { isRaceRefusal, maxTurns, refusalReason } from '@/lib/classroom/turnMoment';
-import { claimLabelKey } from '@/lib/classroom/c3Logic';
 import { questionCapOf } from '@/lib/classroom/ownQuestions';
 import { allowOwnQuestionsOf, noQuestionsLeft } from '@freedi/shared-types';
 import { passedAnswer, tableTalkState, type TableTalkState } from '@/lib/classroom/tableTalkState';
@@ -211,7 +210,7 @@ function answerActions(ctx: FlowCtx): m.Children {
 
 	return m(TurnActions, {
 		primary: {
-			label: t(self.busy ? 'turn.saving' : claimLabelKey(ctx.kind)),
+			label: t(self.busy ? 'turn.saving' : 'turn.answer'),
 			testId: 'table-answer',
 			disabled: self.busy,
 			onclick: () =>
@@ -456,10 +455,5 @@ export function tableTalkParts(ctx: FlowCtx): FlowParts {
 			? m('.tt__footer', { key: `${state}:${table.turn}` }, screen.action)
 			: null,
 		down: screen.down,
-		askerLine: null,
-		askerMark: false,
-		barExtra: null,
-		overlay: null,
-		showStrip: false,
 	};
 }

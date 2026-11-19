@@ -1139,6 +1139,8 @@ export {
   notAskedUids,
   speakerTimeOver,
   everyoneSpoke,
+  everyoneWrote,
+  wroteAlready,
   tableDone,
   floorOpen,
   othersAnswered,

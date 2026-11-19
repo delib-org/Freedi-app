@@ -106,7 +106,7 @@ Rule behind the table: a screen has a button only when its tap works right now. 
 | `SubStepStrip.ts` | Changes: read-only marker, no buttons |
 | `WritePanel.ts` | Changes: pen states W1–W4; broadcast checkbox goes; its dead Table-talk branches go (its own TODO) |
 | `WriteBox.ts` | Kept; its read-only mode shows the pen holder's text |
-| `liveWritingParts.ts`, `WatchView.ts` | **Go.** The live text becomes W3/W4's body. One polite live region ("נועה כותב/ת") stays in `TableFlow.ts` |
+| `liveWritingParts.ts`, `WatchView.ts` | **Deleted** (built 2026-11-19). The live text is W3/W4's body (`PenScreen.ts`, fed by `penTextOf` in `liveWriting.ts`). One polite live region stays in `TableFlow.ts` |
 | `MoveOn.ts` | Kept, shown in T4 only |
 | Class sheet (`Sheet` + `RatedList` overlay) | **Goes** from Proposals. `RatedList` stays as the Rate body |
 | `proposalsTurn.ts` | Grows the write kinds. `showsWriteButton` goes |
@@ -120,13 +120,13 @@ Data this needs (for the builder, not a design choice): `ClassTable.writerUid` a
 
 The order is fixed: Talk › Write › Rate, then the teacher's next lesson step. There is no back path inside the step, and none is needed, because the table moves forward together. The Rate list keeps today's order and count line; it is the only long list.
 
-## 9. Open questions for Tal
+## 9. Decisions (Tal, 2026-11-19)
 
-1. **One pen per table** (A, this spec), or everyone writes at once with no live text at all (B)?
-2. **Talk → Write:** one tablemate's tap on "לעבור לכתיבה" (A, this spec), automatic when the last round ends (B), or only the teacher (C)?
-3. **Write → Rate** automatically when everyone has sent or passed: yes/no? (No = only the teacher's "לדרג".)
-4. Students can no longer jump between talk, write and rate on their own phone. This reverses the free sub-steps of 2026-10-25. Keep the strip as a read-only marker (A) or remove it (B)?
-5. **Time limit on the pen:** none (A, this spec) or the lesson's speaking time (B)?
+1. One pen per table: only one student writes at a time; tablemates read the writer's live text as their screen (no pop-up, no picker, no broadcast checkbox). Nobody writes during Talk.
+2. Talk to Write: any one tablemate taps "לעבור לכתיבה" and the whole table moves together. The teacher can also move them.
+3. Write to Rate: automatic, once every tablemate with a phone has sent or passed.
+4. Students can no longer jump between Talk, Write and Rate on their own phone. The Talk, Write, Rate strip stays as a read-only marker of where the table is.
+5. No time limit on the pen.
 
 ## 10. Handoff to UX
 

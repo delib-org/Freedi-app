@@ -5,13 +5,29 @@ import {
 	classTableId,
 	decideBallot,
 	everyoneSpoke,
+	everyoneWrote,
 	floorOpen,
 	notAskedUids,
 	othersAnswered,
 	speakerTimeOver,
 	supportBySide,
 	tableDone,
+	wroteAlready,
 } from '../index';
+
+describe('everyoneWrote / wroteAlready', () => {
+	it('is true once every tablemate with a phone sent or passed', () => {
+		expect(everyoneWrote({ memberUids: ['a', 'b'], writtenUids: ['b', 'a'] })).toBe(true);
+		expect(everyoneWrote({ memberUids: ['a', 'b'], writtenUids: ['a'] })).toBe(false);
+	});
+
+	it('reads a missing writtenUids as nobody and an empty table as not done', () => {
+		expect(everyoneWrote({ memberUids: ['a'] })).toBe(false);
+		expect(everyoneWrote({ memberUids: [], writtenUids: [] })).toBe(false);
+		expect(wroteAlready({}, 'a')).toBe(false);
+		expect(wroteAlready({ writtenUids: ['a'] }, 'a')).toBe(true);
+	});
+});
 
 describe('notAskedUids', () => {
 	it('lists tablemates in seating order who have not asked and are not the asker', () => {

@@ -1,5 +1,5 @@
 import m from 'mithril';
-import type { ClassTableAction, Statement, TableStep } from '@freedi/shared-types';
+import type { ClassTableAction, Statement } from '@freedi/shared-types';
 import '@/styles/student-c3.scss';
 import { StudentFrame } from '@/components/StudentFrame';
 import { t } from '@/lib/i18n';
@@ -9,13 +9,12 @@ import { getSubQuestions } from '@/lib/store';
 import { classState } from '@/lib/classroom/classState';
 import { classTableStep } from '@/lib/classroom/api';
 import { currentUid } from '@/lib/classroom/c3Data';
-import { resolveSubstep, type FlowKind } from '@/lib/classroom/c3Logic';
+import { officialSubstep, type FlowKind } from '@/lib/classroom/c3Logic';
 import { refusalReason } from '@/lib/classroom/turnMoment';
 import { serverNow } from '@/lib/classroom/serverClock';
 import { clearImproveHandler } from '@/lib/classroom/replyUi';
 import { ErrorLine } from './ErrorLine';
 import { FlowError, FlowState, type FlowCtx, type FlowParts } from './flowTypes';
-import { liveWritingParts } from './liveWritingParts';
 import { proposalsParts } from './proposalsParts';
 import { SubStepStrip } from './SubStepStrip';
 import { tableTalkParts } from './tableTalkParts';
@@ -45,10 +44,10 @@ function stateOf(vnode: m.Vnode<TableFlowAttrs>): FlowState {
 /**
  * One table's whole student experience at Table talk and at Proposals. The table
  * doc (listener started by StudentStage) decides the screen. Table talk (UX 16
- * rev 3) is one calm screen per state, built by tableTalkParts. Proposals keeps
- * its step strip: each phone moves between talk, write and rate freely (IA 17.13),
- * and the table step only says where phones land. Every callable shows an inline
- * error with a retry; a lost race just shows what the table is doing.
+ * rev 3) is one calm screen per state, built by tableTalkParts. Proposals goes
+ * Talk, Write, Rate with the whole table: the phone always shows the table's step
+ * (a read-only marker on top), built by proposalsParts. Every callable shows an
+ * inline error with a retry; a lost race just shows what the table is doing.
  */
 export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 	oninit(vnode) {
@@ -60,7 +59,6 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 		clearImproveHandler(self);
 		self.feed.stop();
 		if (self.redrawTimer) clearTimeout(self.redrawTimer);
-		if (self.lineTimer) clearTimeout(self.lineTimer);
 		teardownLiveDrafts();
 	},
 
@@ -102,13 +100,8 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 			seated.length > 0 ? seated : table.memberUids.map((id) => ({ uid: id, name: someone }));
 		const now = serverNow();
 		const tableTalk = kind === 'tableTalk';
-		// Table talk has one screen per state: no sub-steps. Proposals: the phone's own sub-step.
-		const view = tableTalk
-			? { current: table.step, official: table.step }
-			: resolveSubstep(table, self.override);
-		const setLocal = (next: TableStep): void => {
-			self.override = { step: next, officialAtPick: view.official, turnAtPick: table.turn };
-		};
+		// One screen per state at Table talk; at Proposals the phone follows the table's step.
+		const step = tableTalk ? table.step : officialSubstep(table);
 
 		const run = (op: () => Promise<unknown>): void => {
 			if (self.busy) return;
@@ -146,73 +139,42 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 			mates,
 			self,
 			feed,
-			step: view.current,
-			official: view.official,
+			step,
 			questions,
 			challenge,
 			now,
 			someone,
-			goto: setLocal,
 			run,
 			act,
 		};
 		const parts: FlowParts = tableTalk ? tableTalkParts(ctx) : proposalsParts(ctx);
 
 		const { body, action, instruction } = parts;
-		if (tableTalk) {
-			// no watch view here: a hidden one would reopen (and push history) on the way back to Proposals
-			self.watch = null;
+		if (tableTalk) return tableTalkFrame(self, parts, instruction, action);
 
-			return tableTalkFrame(self, parts, instruction, action);
-		}
-		const live = liveWritingParts({
-			self,
-			table,
-			uid,
-			mates,
-			someone,
-			feed,
-			challengeId: challenge?.statementId ?? null,
-			plenum: challenge?.statementSettings?.roundPhase === 'improve',
-		});
-
-		return [
-			m(
-				StudentFrame,
-				{
-					headerLine: parts.headerLine,
-					askerMark: parts.askerMark ? '?' : undefined,
-					instruction,
-					ask: parts.ask,
-					action,
-					down: parts.down,
-				},
-				[
-					parts.askerLine !== null || parts.barExtra
-						? m('.flow__bar', [
-								parts.askerLine !== null
-									? m(
-											'p.flow__asker',
-											{ 'data-testid': table.askerUid === uid ? 'asker-mark' : undefined },
-											parts.askerLine,
-										)
-									: m('span'),
-								parts.barExtra,
-							])
-						: null,
-					live.status,
-					parts.showStrip ? m(SubStepStrip, { view, onSelect: setLocal }) : null,
-					live.line,
-					m(ErrorLine, {
-						message: self.error,
-						onRetry: self.retry ? () => void self.retry?.() : undefined,
-					}),
-					body,
-				],
-			),
-			parts.overlay,
-			live.overlay,
-		];
+		return m(
+			StudentFrame,
+			{
+				headerLine: parts.headerLine,
+				instruction,
+				ask: parts.ask,
+				action,
+				down: parts.down,
+			},
+			[
+				m(
+					'p.visually-hidden',
+					{ key: 'live', 'aria-live': 'polite', 'data-testid': 'state-status' },
+					parts.status ?? '',
+				),
+				parts.strip ? m(SubStepStrip, { current: parts.strip }) : null,
+				m(ErrorLine, {
+					message: self.error,
+					onRetry: self.retry ? () => void self.retry?.() : undefined,
+				}),
+				body,
+			],
+		);
 	},
 };
 

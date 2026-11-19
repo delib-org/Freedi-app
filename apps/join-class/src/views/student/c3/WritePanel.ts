@@ -1,23 +1,22 @@
 import m from 'mithril';
 import { proposalLimitOf } from '@freedi/shared-types';
-import type { ClassTable, ClassTableAction, Statement, WritingMode } from '@freedi/shared-types';
+import type { ClassTable, Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
+import { captureException } from '@/lib/sentry';
 import {
-	getLiveDrafts,
 	isBroadcasting,
 	startBroadcast,
 	stopBroadcast,
 	updateBroadcastText,
 } from '@/lib/liveDrafts';
-import { createClassOption, updateClassOption } from '@/lib/classroom/c3Data';
 import {
 	changeProposal,
 	newProposalId,
 	sendProposal,
 	type ProposalResult,
 } from '@/lib/classroom/proposals';
-import { clearDraft, readDraft, writeDraft, type DraftKind } from '@/lib/classroom/c3Draft';
-import { myProposals, type FlowKind, type Mate } from '@/lib/classroom/c3Logic';
+import { clearDraft, readDraft, writeDraft } from '@/lib/classroom/c3Draft';
+import { myProposals } from '@/lib/classroom/c3Logic';
 import {
 	otherOwnProposals,
 	proposalDraftScope,
@@ -28,38 +27,42 @@ import { refusalReason } from '@/lib/classroom/turnMoment';
 import type { FlowFeed } from './FlowFeed';
 import { ErrorLine } from './ErrorLine';
 import { ownProposalCards } from './ownProposalCards';
-import { ModeSwitch, WriteBox, type WriteState } from './WriteBox';
+import { WriteBox, type WriteState } from './WriteBox';
 import { ReplyEntry } from '../replies/ReplyEntry';
 import { PushAsk } from '../replies/PushAsk';
 
+/**
+ * 'pen': the student holds the table's one pen and writes a NEW proposal; the table
+ * reads the text as it is typed (W2). 'edit': the box only changes a proposal that
+ * was already sent (my own card after sending, or "improve" from the replies); it
+ * needs no pen and shows nothing to the table. 'any': the box follows the lesson's
+ * limit, a new proposal or an edit, with no pen (the later All proposals step).
+ */
+export type WritePanelMode = 'pen' | 'edit' | 'any';
+
 export interface WritePanelAttrs {
 	main: Statement;
-	kind: FlowKind;
 	table: ClassTable;
 	feed: FlowFeed;
 	uid: string;
-	mates: Mate[];
-	/** The table's picked question (answers go under it); null when none yet. */
-	question: Statement | null;
 	/** The challenge question (proposals go under it); null when the lesson has none. */
 	challenge: Statement | null;
 	/** The ballot is frozen: proposals can no longer change. */
 	locked: boolean;
+	mode: WritePanelMode;
 	busy: boolean;
-	onAction: (action: ClassTableAction) => void;
 	/** One proposal the screen wants in the box ("Edit" on a pinned card, "improve" from the replies). */
 	takeEditRequest?: () => string | null;
+	/** Pen: "I want to pass" (a quiet button under Send). */
+	onPass?: () => void;
+	/** Pen: the holder left the screen (hidden or closed): give the pen back. */
+	onRelease?: () => void;
 }
-
-type Edits = Record<DraftKind, string | undefined>;
-type States = Record<DraftKind, WriteState>;
 
 class PanelState {
 	scope = '';
-	edits: Edits = { answer: undefined, proposal: undefined };
-	states: States = { answer: 'idle', proposal: 'idle' };
-	broadcast = true;
-	lastTyped: DraftKind = 'answer';
+	edit: string | undefined = undefined;
+	state: WriteState = 'idle';
 	sending = false;
 	error: string | null = null;
 	/** The id of the proposal being sent; kept for a retry so it is never written twice. */
@@ -70,22 +73,13 @@ class PanelState {
 	proposalScope = '';
 	/** The server said the author already holds their proposal, ahead of this phone's listener. */
 	limitRefused = false;
-}
-
-function answerScope(table: ClassTable): string {
-	return `${table.tableId}_${table.turn}`;
-}
-
-function sentAnswerOf(a: WritePanelAttrs): Statement | undefined {
-	const { feed, table, uid } = a;
-	if (!table.questionId) return undefined;
-
-	return feed.options.find(
-		(o) =>
-			o.parentId === table.questionId &&
-			(o.creatorId === uid ||
-				(table.writingMode === 'table' && o.classTable?.tableId === table.tableId)),
-	);
+	/** The pen's live text was started for this pen (a restored draft is shown to the table too). */
+	liveStarted = false;
+	/** Pen: the latest `onRelease`, called when the page is hidden or closed. */
+	release: (() => void) | null = null;
+	onLeave: (() => void) | null = null;
+	/** The page was hidden during a send: give the pen back if that send fails and the page is still hidden. */
+	releaseAfterSend = false;
 }
 
 function ownProposalsOf(a: WritePanelAttrs): Statement[] {
@@ -98,32 +92,54 @@ function ownProposalsOf(a: WritePanelAttrs): Statement[] {
 	);
 }
 
+/** The pen holder left the screen (the phone locked, another app, the tab closed): the pen goes back to the table. */
+function leave(self: PanelState): void {
+	// A send in flight frees the pen itself when it lands; letting go now could make it refused.
+	if (self.sending) {
+		self.releaseAfterSend = true;
+
+		return;
+	}
+	if (isBroadcasting()) void stopBroadcast();
+	self.release?.();
+}
+
 /**
- * The write screen (UX §2.6.3 + §11): an answer box, a "proposal for a
- * solution (optional)" box at Table talk (proposal box alone at Proposals), the
- * writing-mode switch for the asker, the broadcast checkbox and "Send". A send
- * that fails keeps the draft (localStorage) and shows an inline retry.
- *
- * TODO(UX 16, table turn v2): Proposals is the only caller now (nobody writes at
- * Table talk), so every `kind === 'tableTalk'` branch below, the answer box and
- * the writing-mode switch are dead. Remove them with their `answer.*` keys and
- * the `question` prop in a focused follow-up.
+ * The write box of Proposals (UX §2.6.3). In 'pen' mode (W2) it writes one new
+ * proposal while the table reads it; "Send" and the quiet "I want to pass" are its
+ * only controls. In 'edit' mode it changes a proposal that was already sent. A
+ * send that fails keeps the draft (localStorage) and shows an inline retry.
  */
 export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 	oninit(vnode) {
-		(vnode.state as { self?: PanelState }).self = new PanelState();
+		const self = new PanelState();
+		(vnode.state as { self?: PanelState }).self = self;
+		if (vnode.attrs.mode !== 'pen') return;
+		// A phone that goes to the background or closes gives the pen back; this is best effort (see the Trello notes).
+		self.onLeave = () => {
+			if (document.visibilityState === 'hidden') leave(self);
+		};
+		document.addEventListener('visibilitychange', self.onLeave);
+		window.addEventListener('pagehide', self.onLeave);
 	},
 
-	onremove() {
+	onremove(vnode) {
+		const self = (vnode.state as { self?: PanelState }).self as PanelState;
+		if (self.onLeave) {
+			document.removeEventListener('visibilitychange', self.onLeave);
+			window.removeEventListener('pagehide', self.onLeave);
+		}
 		if (isBroadcasting()) void stopBroadcast();
 	},
 
 	view(vnode) {
 		const self = (vnode.state as { self?: PanelState }).self as PanelState;
 		const a = vnode.attrs;
-		const { table, uid } = a;
+		const pen = a.mode === 'pen';
+		const { uid } = a;
 		const mainId = a.main.statementId;
-		const requested = a.takeEditRequest?.();
+		self.release = a.onRelease ?? null;
+		const requested = pen ? null : a.takeEditRequest?.();
 		if (requested) self.editId = requested;
 		const limit = proposalLimitOf(a.main);
 		const mine = ownProposalsOf(a);
@@ -133,181 +149,135 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 			: undefined;
 		if (landed) {
 			self.proposalId = null;
-			if ((self.edits.proposal ?? '').trim() === landed.statement) {
-				self.edits.proposal = undefined;
+			if ((self.edit ?? '').trim() === landed.statement) {
+				self.edit = undefined;
 				clearDraft(mainId, 'proposal');
-				self.states.proposal = 'idle';
+				self.state = 'idle';
 			}
 		}
 		const newDraft =
-			self.proposalScope === mainId ? (self.edits.proposal ?? '') : readDraft(mainId, 'proposal');
-		const target = writeTargetOf({
-			limit,
-			mine,
-			editId: self.editId,
-			hasNewDraft: newDraft.trim() !== '',
-		});
+			self.proposalScope === mainId ? (self.edit ?? '') : readDraft(mainId, 'proposal');
+		// The pen writes a new proposal; the edit box changes one that was sent.
+		const target = pen
+			? ({ kind: 'new' } as const)
+			: writeTargetOf({
+					limit,
+					mine,
+					editId: self.editId,
+					hasNewDraft: newDraft.trim() !== '',
+				});
 		const proposalScope = proposalDraftScope(mainId, target);
-		const scope = `${answerScope(table)}|${proposalScope}`;
-		if (scope !== self.scope) {
-			self.scope = scope;
+		if (proposalScope !== self.scope) {
+			self.scope = proposalScope;
 			self.proposalScope = proposalScope;
-			const answerDraft = readDraft(answerScope(table), 'answer');
-			const proposalDraft = readDraft(proposalScope, 'proposal');
-			self.edits = { answer: answerDraft || undefined, proposal: proposalDraft || undefined };
-			self.states = { answer: 'idle', proposal: 'idle' };
+			self.edit = readDraft(proposalScope, 'proposal') || undefined;
+			self.state = 'idle';
 		}
 		const limitReached =
 			limit === 'one' &&
 			(target.kind === 'blocked' || (self.limitRefused && target.kind === 'new'));
-		const isAsker = table.askerUid === uid;
-		const tableMode = table.writingMode === 'table';
-		const showAnswer = a.kind === 'tableTalk' && !!table.questionId;
-		const answerEditable = showAnswer && (!tableMode || isAsker);
-		const showProposal = !!a.challenge;
-		const sentAnswer = sentAnswerOf(a);
+		const showBox = !!a.challenge && (a.mode !== 'edit' || target.kind === 'edit');
 		const sentProposal = target.kind === 'edit' ? target.proposal : null;
 
-		const valueOf = (kind: DraftKind): string => {
-			const edited = self.edits[kind];
-			if (edited !== undefined) return edited;
-			if (kind === 'answer') {
-				if (!answerEditable) {
-					const mirror = getLiveDrafts({ excludeSelf: true }).find(
-						(d) => d.userId === table.askerUid,
-					);
-
-					return sentAnswer?.statement ?? mirror?.text ?? '';
-				}
-
-				return sentAnswer?.statement ?? '';
+		const valueOf = (): string => self.edit ?? sentProposal?.statement ?? '';
+		const stateOf = (): WriteState => {
+			if (self.state === 'sending' || self.state === 'failed' || self.state === 'refused') {
+				return self.state;
 			}
 
-			return sentProposal?.statement ?? '';
-		};
-		const stateOf = (kind: DraftKind): WriteState => {
-			if (
-				self.states[kind] === 'sending' ||
-				self.states[kind] === 'failed' ||
-				self.states[kind] === 'refused'
-			)
-				return self.states[kind];
-			const sent = kind === 'answer' ? sentAnswer : sentProposal;
-			const edited = self.edits[kind];
-
-			return sent && (edited === undefined || edited.trim() === sent.statement) ? 'sent' : 'idle';
+			return sentProposal &&
+				(self.edit === undefined || self.edit.trim() === sentProposal.statement)
+				? 'sent'
+				: 'idle';
 		};
 
-		const forceBroadcast = tableMode && isAsker && showAnswer;
-		const wantBroadcast = self.broadcast || forceBroadcast;
-		const onInput = (kind: DraftKind, text: string): void => {
-			self.edits[kind] = text;
-			self.states[kind] = 'idle';
-			self.lastTyped = kind;
+		// The pen's text goes to the table as it is typed (W3 on their phones); a restored draft goes too.
+		if (pen && !self.liveStarted && valueOf().trim() !== '') {
+			self.liveStarted = true;
+			if (!isBroadcasting()) void startBroadcast(valueOf());
+		}
+		const onInput = (text: string): void => {
+			self.edit = text;
+			self.state = 'idle';
 			// Changed words are a new send: the server answers "sent" for a known id without writing.
-			if (kind === 'proposal') self.proposalId = null;
-			const scopeId = kind === 'answer' ? answerScope(table) : proposalScope;
-			writeDraft(scopeId, kind, text);
-			if (!wantBroadcast) return;
+			self.proposalId = null;
+			writeDraft(proposalScope, 'proposal', text);
+			if (!pen) return;
+			self.liveStarted = true;
 			if (isBroadcasting()) updateBroadcastText(text);
 			else void startBroadcast(text);
 		};
 
-		const dirty = (kind: DraftKind): boolean => {
-			const text = (self.edits[kind] ?? '').trim();
+		const dirty = (): boolean => (self.edit ?? '').trim().length > 0 && stateOf() !== 'sent';
+		const sendable = showBox && !a.locked && dirty() && !limitReached;
+		const canSend = !self.sending && sendable;
 
-			return text.length > 0 && stateOf(kind) !== 'sent';
-		};
-		const proposalSendable = showProposal && !a.locked && dirty('proposal') && !limitReached;
-		const canSend = !self.sending && ((answerEditable && dirty('answer')) || proposalSendable);
-
-		const sendOne = async (kind: DraftKind): Promise<void> => {
-			const text = (self.edits[kind] ?? '').trim();
-			self.states[kind] = 'sending';
+		const sendOne = async (): Promise<void> => {
+			const text = (self.edit ?? '').trim();
+			self.state = 'sending';
 			m.redraw();
 			try {
-				if (kind === 'answer') {
-					const coAuthors = tableMode
-						? (a.mates.length > 0 ? a.mates.map((x) => x.uid) : table.memberUids).filter(
-								(x) => x !== uid,
-							)
-						: [];
-					if (sentAnswer && sentAnswer.creatorId === uid)
-						await updateClassOption(sentAnswer.statementId, text);
-					else if (table.questionId) {
-						await createClassOption({
-							main: a.main,
-							parentId: table.questionId,
-							text,
-							marker: { tableId: table.tableId, shared: tableMode, coAuthors },
-						});
-					}
-					clearDraft(answerScope(table), 'answer');
-				} else if (a.challenge) {
-					// The server checks the words first (IA 24.3): refused text is not published.
-					let result: ProposalResult;
-					if (sentProposal) {
-						result = await changeProposal(mainId, sentProposal.statementId, text);
-					} else {
-						self.proposalId ??= newProposalId();
-						result = await sendProposal(mainId, self.proposalId, text);
-					}
-					if (!result.ok) {
-						// Not sent: the text stays in the box and the student writes it again.
-						self.states[kind] = 'refused';
-						self.proposalId = null;
-
-						return;
-					}
-					self.proposalId = null;
-					clearDraft(proposalScope, 'proposal');
+				// The server checks the words first (IA 24.3): refused text is not published.
+				let result: ProposalResult;
+				if (sentProposal) {
+					result = await changeProposal(mainId, sentProposal.statementId, text);
+				} else {
+					self.proposalId ??= newProposalId();
+					result = await sendProposal(mainId, self.proposalId, text);
 				}
-				self.edits[kind] = undefined;
-				self.states[kind] = 'sent';
-			} catch (error) {
-				if (kind === 'proposal' && refusalReason(error) === 'already-proposed') {
-					// The limit, not a failure: nothing to retry, and the text stays in the box.
-					self.limitRefused = true;
+				if (!result.ok) {
+					// Not sent: the text stays in the box and the student writes it again.
+					self.state = 'refused';
 					self.proposalId = null;
-					self.states[kind] = 'idle';
 
 					return;
 				}
-				self.states[kind] = 'failed';
+				self.proposalId = null;
+				clearDraft(proposalScope, 'proposal');
+				self.edit = undefined;
+				self.state = 'sent';
+			} catch (error) {
+				if (refusalReason(error) === 'already-proposed') {
+					// The limit, not a failure: nothing to retry, and the text stays in the box.
+					self.limitRefused = true;
+					self.proposalId = null;
+					self.state = 'idle';
+
+					return;
+				}
+				self.state = 'failed';
 				throw error;
 			}
 		};
 		const send = (): void => {
 			self.sending = true;
 			self.error = null;
-			const kinds: DraftKind[] = [];
-			if (answerEditable && dirty('answer')) kinds.push('answer');
-			if (proposalSendable) kinds.push('proposal');
 			(async () => {
-				for (const kind of kinds) await sendOne(kind);
+				await sendOne();
 				if (isBroadcasting()) await stopBroadcast();
 			})()
-				.catch(() => {
+				.catch((error: unknown) => {
+					captureException(error, {
+						operation: 'writePanel.send',
+						tableId: a.table.tableId,
+						mainId,
+					});
 					self.error = t('answer.send_failed');
+					if (self.releaseAfterSend && document.visibilityState === 'hidden') leave(self);
 				})
 				.finally(() => {
 					self.sending = false;
+					self.releaseAfterSend = false;
 					m.redraw();
 				});
 		};
 
-		const asker = a.mates.find((x) => x.uid === table.askerUid);
-		const answerLabel = answerEditable
-			? t(tableMode ? 'answer.our' : 'answer.mine')
-			: t('answer.writing_for_table', { name: asker?.name ?? t('turn.someone') });
-		const proposalLabel = t(a.kind === 'tableTalk' ? 'proposal.optional' : 'proposal.mine');
-		const busySend =
-			self.sending || stateOf('answer') === 'sending' || stateOf('proposal') === 'sending';
+		const busySend = self.sending || stateOf() === 'sending';
 		const ownCards = showsOwnProposalList(limit, mine, target)
 			? ownProposalCards({
 					proposals: otherOwnProposals(mine, target),
 					uid,
-					canEdit: !a.locked,
+					canEdit: !a.locked && !pen,
 					onEdit: (id) => {
 						self.editId = id;
 						self.limitRefused = false;
@@ -316,41 +286,19 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 			: null;
 
 		return m('.write-panel', [
-			a.kind === 'tableTalk' && table.questionId && a.question
-				? m('p.write-panel__question', { dir: 'auto' }, a.question.statement)
-				: null,
-			showAnswer && isAsker
-				? m(ModeSwitch, {
-						mode: table.writingMode,
-						disabled: table.writingLocked || a.busy,
-						onChange: (mode: WritingMode) => a.onAction({ action: 'setWritingMode', mode }),
-					})
-				: null,
-			a.kind === 'tableTalk' && !table.questionId
-				? m('p.write-panel__note', t('answer.no_question'))
-				: null,
-			showAnswer
+			showBox
 				? m(WriteBox, {
-						label: answerLabel,
-						value: valueOf('answer'),
-						onInput: (text: string) => onInput('answer', text),
-						readOnly: !answerEditable,
-						state: stateOf('answer'),
-						placeholder: t('answer.placeholder'),
-						testId: 'answer-box',
-					})
-				: null,
-			showProposal
-				? m(WriteBox, {
-						label: proposalLabel,
-						value: valueOf('proposal'),
-						onInput: (text: string) => onInput('proposal', text),
+						label: t('proposal.mine'),
+						value: valueOf(),
+						onInput,
 						readOnly: a.locked,
-						state: stateOf('proposal'),
+						state: stateOf(),
 						placeholder: t('proposal.placeholder'),
 						testId: 'proposal-box',
 					})
-				: m('p.write-panel__note', t('proposal.none')),
+				: null,
+			!a.challenge ? m('p.write-panel__note', t('proposal.none')) : null,
+			pen ? m('p.write-panel__live', t('proposals.write.mine_line')) : null,
 			limitReached
 				? m(
 						'p.write-panel__note.write-panel__note--limit',
@@ -358,7 +306,7 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 						t('proposal.limit_reached'),
 					)
 				: null,
-			self.editId && sentProposal && (limit === 'unlimited' || mine.length > 1)
+			!pen && self.editId && sentProposal && (limit === 'unlimited' || mine.length > 1)
 				? m(
 						'button.btn.btn--secondary.btn--small',
 						{
@@ -372,42 +320,43 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 					)
 				: null,
 			sentProposal?.hide ? m('p.write-panel__note', t('proposal.hidden_mine')) : null,
-			sentProposal && a.kind === 'proposals' && !sentProposal.hide
-				? [m(ReplyEntry, { proposal: sentProposal, uid: a.uid }), m(PushAsk, { mainId })]
+			sentProposal && !sentProposal.hide
+				? [m(ReplyEntry, { proposal: sentProposal, uid }), m(PushAsk, { mainId })]
 				: null,
 			ownCards,
-			!sentProposal && mine.length > 0 && a.kind === 'proposals' ? m(PushAsk, { mainId }) : null,
-			m('label.write-panel__broadcast', [
-				m('input', {
-					type: 'checkbox',
-					checked: wantBroadcast,
-					disabled: forceBroadcast ? true : undefined,
-					onchange: (event: Event) => {
-						self.broadcast = (event.target as HTMLInputElement).checked;
-						if (self.broadcast) void startBroadcast(valueOf(self.lastTyped));
-						else void stopBroadcast();
-					},
-				}),
-				m('span', t('answer.broadcast')),
-			]),
-			wantBroadcast ? m('p.write-panel__live', t('answer.broadcast_on')) : null,
+			!sentProposal && mine.length > 0 ? m(PushAsk, { mainId }) : null,
 			m(ErrorLine, { message: self.error, onRetry: canSend ? send : undefined }),
-			answerEditable || (showProposal && !a.locked)
-				? m(
-						'.write-panel__footer',
-						m(
-							'button.btn.btn--primary.write-panel__send',
-							{
-								type: 'button',
-								'data-testid': showAnswer ? 'answer-send' : 'proposal-send',
-								disabled: !canSend || undefined,
-								onclick: send,
-							},
-							busySend
-								? t(a.kind === 'tableTalk' ? 'answer.sending' : 'text.checking')
-								: t(a.kind === 'tableTalk' ? 'answer.send' : 'proposal.send_mine'),
-						),
-					)
+			showBox || (pen && a.onPass)
+				? m('.write-panel__footer', [
+						showBox && !a.locked
+							? m(
+									'button.btn.btn--primary.write-panel__send',
+									{
+										type: 'button',
+										'data-testid': 'proposal-send',
+										disabled: !canSend || undefined,
+										onclick: send,
+									},
+									busySend ? t('text.checking') : t('proposal.send_mine'),
+								)
+							: null,
+						// The holder can always give the pen back, even when the box is locked (a freeze while writing).
+						pen && a.onPass
+							? m(
+									'button.btn.btn--text.write-panel__pass',
+									{
+										type: 'button',
+										'data-testid': 'pen-pass',
+										disabled: a.busy || self.sending,
+										onclick: () => {
+											if (isBroadcasting()) void stopBroadcast();
+											a.onPass?.();
+										},
+									},
+									t('proposals.pass'),
+								)
+							: null,
+					])
 				: null,
 		]);
 	},

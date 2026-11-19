@@ -1,19 +1,21 @@
 import m from 'mithril';
 import type { ClassTable } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
-import { serverNow } from '@/lib/classroom/serverClock';
 import { getMainStatement } from '@/lib/store';
 import { lessonSpeakMs, tableSpeakMs } from '@/lib/classroom/speakTime';
-import { proposalsTalkState } from '@/lib/classroom/proposalsTurn';
+import type { TalkScreenState } from '@/lib/classroom/proposalsScreen';
 import { Countdown } from './Countdown';
+import { nextLineView } from './ProposalsNext';
 
 export interface TalkScreenAttrs {
 	table: ClassTable;
-	uid: string;
+	screen: TalkScreenState;
 	/** The name shown for the tablemate who holds the floor. */
 	speakerName: string;
+	/** The "what is next" line, already in words; null = nothing to say. */
+	nextText: string | null;
 	busy: boolean;
-	/** "I want to answer": take a fresh minute. */
+	/** "I want to speak": take a fresh minute. */
 	onClaim: () => void;
 	/** "I'm done": end my own minute early. */
 	onFinish: () => void;
@@ -21,69 +23,69 @@ export interface TalkScreenAttrs {
 	onPass: () => void;
 }
 
-/** "סיימנו, לכתוב": every phone at Proposals talk has it; it only switches this phone's sub-step. */
-export function talkFinishAction(busy: boolean, onGo: () => void): m.Children {
-	return m(
-		'button.btn.btn--primary',
-		{
-			type: 'button',
-			'data-testid': 'table-to-write',
-			disabled: busy,
-			onclick: onGo,
-		},
-		t('turn.finish_talk'),
-	);
+/** The state line of the screen, in words (also read out by the live region). */
+export function talkStatusText(screen: TalkScreenState, speakerName: string): string {
+	switch (screen.kind) {
+		case 'done':
+			return t('proposals.talk.all_spoke');
+		case 'spoke':
+			return t('proposals.talk.spoke');
+		case 'mine':
+			return t('turn.answer_mine');
+		case 'speaking':
+			return t('proposals.talk.speaking', { name: speakerName });
+		default:
+			return screen.roundOver
+				? t('proposals.talk.next_round', {
+						prev: screen.turn - 1,
+						turn: screen.turn,
+						max: screen.max,
+					})
+				: t('proposals.talk.who_first');
+	}
 }
 
 /**
  * The content of the Proposals talk screen (screens down), drawn inside the
- * inverted StudentFrame (the question sits above, in the frame's big heading):
- * the same speaker mechanics as Table talk (IA 17.14), one turn each (IA 25.6).
- * First match wins: done ("everyone has spoken, wait for the teacher", calm),
- * someone speaking / my time, I already spoke this turn, or I may speak (an idle
- * clock of the lesson's speaking time, "I want to answer", "I want to pass").
- * Table talk has its own screens (tableTalkParts.ts).
+ * inverted StudentFrame (IA join-class-proposals-flow §4, T1-T6). One state line,
+ * the one control that works now, and the "what is next" line. T4 and T6 carry
+ * their one control in the pinned footer (proposalsParts.ts); here: a state with
+ * a clock (T1, T2, T3), or only words (T4, T6).
  */
 export const TalkScreen: m.ClassComponent<TalkScreenAttrs> = {
 	view(vnode) {
-		const { table, uid, speakerName, busy, onClaim, onFinish, onPass } = vnode.attrs;
+		const { table, screen, speakerName, nextText, busy, onClaim, onFinish, onPass } = vnode.attrs;
 		const main = getMainStatement();
-		const state = proposalsTalkState(table, uid, main, serverNow());
-		if (state.kind === 'done') {
+		const status = talkStatusText(screen, speakerName);
+		if (screen.kind === 'done') {
 			return m('.talk', [
-				m(
-					'p.tt__status.tt__status--done',
-					{ 'data-testid': 'proposals-done' },
-					t('turn.proposals_done'),
-				),
+				m('p.tt__status.tt__status--done', { 'data-testid': 'proposals-done' }, status),
 			]);
 		}
-		if (state.kind === 'spoke') {
-			return m('.talk', [m('p.tt__status', { 'data-testid': 'answered' }, t('turn.answered_me'))]);
+		if (screen.kind === 'spoke') {
+			return m('.talk', [
+				m('p.tt__status', { 'data-testid': 'answered' }, status),
+				nextLineView(nextText),
+			]);
 		}
-		const speaking = state.kind === 'mine' || state.kind === 'speaking';
+		const speaking = screen.kind === 'mine' || screen.kind === 'speaking';
 
 		return m('.talk', [
 			m('.tt__clock', [
-				speaking
-					? m(
-							'p.tt__status',
-							{ 'data-testid': 'speaking' },
-							state.kind === 'mine'
-								? t('turn.answer_mine')
-								: t('turn.answering', { name: speakerName }),
-						)
-					: null,
+				m('p.tt__status', { 'data-testid': speaking ? 'speaking' : 'who-first' }, status),
 				m(Countdown, {
 					endsAt: speaking ? table.speakerEndsAt : undefined,
 					totalMs: speaking ? tableSpeakMs(table, main) : lessonSpeakMs(main),
 					quietEnd: true,
 				}),
-				state.kind === 'mine'
+				screen.kind === 'mine'
 					? speakerButton('table-finish', t('turn.finish'), busy, onFinish)
 					: null,
-				speaking ? null : speakerButton('table-speak', t('turn.answer'), busy, onClaim),
-				speaking ? null : passButton(busy, onPass),
+				screen.kind === 'may'
+					? speakerButton('table-speak', t('proposals.talk.claim'), busy, onClaim)
+					: null,
+				screen.kind === 'may' ? passButton(busy, onPass) : null,
+				nextLineView(nextText),
 			]),
 		]);
 	},
@@ -93,7 +95,7 @@ function passButton(busy: boolean, onclick: () => void): m.Children {
 	return m(
 		'button.btn.btn--text.tt__pass',
 		{ type: 'button', 'data-testid': 'table-pass-answer', disabled: busy, onclick },
-		t('turn.pass_answer'),
+		t('proposals.pass'),
 	);
 }
 

@@ -4,6 +4,7 @@ import {
 	Collections,
 	WritingModeSchema,
 	allowOwnQuestionsOf,
+	proposalLimitOf,
 	proposalsTurnsOf,
 	speakSecondsOf,
 	functionConfig,
@@ -20,6 +21,7 @@ import { db } from '../db';
 import {
 	isSubQuestionOf,
 	isWorkspaceAdmin,
+	loadChallenge,
 	requireId,
 	requireUid,
 	tableRef,
@@ -75,9 +77,15 @@ export function parseAction(req: ClassTableStepRequest): ClassTableAction {
 			return typeof req.uid === 'string' && req.uid !== ''
 				? { action: 'passSpeaking', uid: req.uid }
 				: { action: 'passSpeaking' };
+		case 'passWriting':
+			return typeof req.uid === 'string' && req.uid !== ''
+				? { action: 'passWriting', uid: req.uid }
+				: { action: 'passWriting' };
 		case 'toTalk':
 		case 'toWrite':
 		case 'toRate':
+		case 'claimPen':
+		case 'releasePen':
 		case 'claimSpeaker':
 		case 'finishSpeaking':
 			return { action: req.action };
@@ -135,6 +143,19 @@ export async function tableStep(
 		}
 	}
 
+	// Writing is only possible with a challenge question and a ballot that has not opened (the
+	// conditions classPostProposal enforces): nobody takes a pen they could not use.
+	let writeBlocked: 'vote-running' | 'no-challenge' | undefined;
+	if (action.action === 'claimPen') {
+		try {
+			const challenge = await loadChallenge(firestore, mainId);
+			if (challenge.statementSettings?.ballot !== undefined) writeBlocked = 'vote-running';
+		} catch (error) {
+			if (!(error instanceof ClassroomError)) throw error;
+			writeBlocked = 'no-challenge';
+		}
+	}
+
 	const mainRef = firestore.collection(Collections.statements).doc(mainId);
 
 	return firestore.runTransaction(async (tx) => {
@@ -152,6 +173,8 @@ export async function tableStep(
 			allowOwnQuestions: allowOwnQuestionsOf(main),
 			speakMs: speakSecondsOf(main) * MS_PER_SECOND,
 			proposalsTurns: proposalsTurnsOf(main),
+			unlimitedProposals: proposalLimitOf(main) === 'unlimited',
+			writeBlocked,
 		});
 		tx.set(ref, next);
 
