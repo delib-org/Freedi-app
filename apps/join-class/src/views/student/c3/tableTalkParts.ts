@@ -3,6 +3,9 @@ import type { ClassTableAction } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { getGuidingQuestions } from '@/lib/lesson';
 import { classTableStep } from '@/lib/classroom/api';
+import { trackTableChange } from '@/lib/classroom/classState';
+import { serverNow } from '@/lib/classroom/serverClock';
+import { predictTableAction } from '@/lib/classroom/tableOptimism';
 import { createTableQuestion } from '@/lib/classroom/c3Data';
 import { questionTextFrom } from '@/lib/classroom/questionLookup';
 import { getFetchedQuestionTexts, requestQuestionText } from '@/lib/classroom/questionText';
@@ -59,14 +62,23 @@ export function step(
 	onRace?: (reason: string | null) => void,
 ): void {
 	const { table } = ctx;
-	ctx.run(async () => {
-		try {
-			await classTableStep({ tableId: table.tableId, ...action });
-		} catch (error) {
-			if (!isRaceRefusal(error)) throw error;
-			onRace?.(refusalReason(error));
-		}
+	// A deterministic action shows its result at once; a race (claimSpeaker, claimPen) waits for the server.
+	const change = predictTableAction(table.tableId, action, {
+		uid: ctx.uid,
+		isAdmin: false,
+		now: serverNow(),
 	});
+	ctx.run(
+		async () => {
+			try {
+				await trackTableChange(change, () => classTableStep({ tableId: table.tableId, ...action }));
+			} catch (error) {
+				if (!isRaceRefusal(error)) throw error;
+				onRace?.(refusalReason(error));
+			}
+		},
+		change ? { optimistic: { key: action.action } } : undefined,
+	);
 }
 
 function noteWasFirst(ctx: FlowCtx, kind: 'turn' | 'floor'): void {

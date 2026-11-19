@@ -6,7 +6,10 @@ import { FlowFeed } from './FlowFeed';
 /** The state one TableFlow keeps across redraws (no store: it dies with the screen). */
 export class FlowState {
 	feed = new FlowFeed();
+	/** A call whose winner the server decides is out: the screen waits for its answer. */
 	busy = false;
+	/** Optimistic actions in flight, by action: a second tap on the same one is ignored. */
+	pending = new Set<string>();
 	error: string | null = null;
 	retry: (() => Promise<void>) | null = null;
 	/** Table talk: the question chosen on this phone (nothing is written until "I want to start"). */
@@ -57,6 +60,10 @@ export interface FlowParts {
 	strip?: TableStep;
 }
 
+export interface RunOptions {
+	optimistic?: { key: string };
+}
+
 /** Everything a flow's parts function reads, built once per redraw by TableFlow. */
 export interface FlowCtx {
 	main: Statement;
@@ -73,7 +80,11 @@ export interface FlowCtx {
 	/** Server clock, epoch ms, at this redraw. */
 	now: number;
 	someone: string;
-	run: (op: () => Promise<unknown>) => void;
+	/**
+	 * Run one call with the inline error + retry. `optimistic` (the screen already shows the
+	 * result, keyed by `key`) leaves the screen live; without it the screen is `busy` until the answer.
+	 */
+	run: (op: () => Promise<unknown>, options?: RunOptions) => void;
 	act: (action: ClassTableAction) => void;
 }
 

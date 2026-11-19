@@ -28,7 +28,14 @@ import { db, doc, updateDoc } from '@/lib/firebase';
 import { getLessonStep, getLessonSteps, setLessonStep } from '@/lib/lesson';
 import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
 import { clearsTableClocksOnEnter, splitsTablesOnEnter } from '@/lib/classroom/consoleHelpers';
-import { classState } from '@/lib/classroom/classState';
+import { classState, trackTableChange } from '@/lib/classroom/classState';
+import {
+	predictAllTablesTo,
+	predictMoveStudent,
+	predictTableAction,
+} from '@/lib/classroom/tableOptimism';
+import { serverNow } from '@/lib/classroom/serverClock';
+import { getUserState } from '@/lib/user';
 import {
 	getMainStatement,
 	getSubQuestions,
@@ -123,7 +130,9 @@ export async function goToStep(mainId: string, index: number): Promise<boolean> 
 		if (!clearsTableClocksOnEnter(from, index, getLessonSteps())) return;
 		// The step has moved; a failure here only leaves the old clock on the tables, so it must not undo the move.
 		try {
-			await classAllTablesTo({ mainId, step: 'talk' });
+			await trackTableChange(predictAllTablesTo('talk'), () =>
+				classAllTablesTo({ mainId, step: 'talk' }),
+			);
 		} catch (error) {
 			console.error(
 				'[Console] clearing the table clocks failed',
@@ -175,7 +184,7 @@ export function assignTables(mainId: string, replace: boolean): Promise<boolean>
 
 export function allTablesTo(mainId: string, step: TableStep): Promise<boolean> {
 	return guardedAct(`all:${step}`, t('console.all_tables_rate'), () =>
-		classAllTablesTo({ mainId, step }),
+		trackTableChange(predictAllTablesTo(step), () => classAllTablesTo({ mainId, step })),
 	);
 }
 
@@ -190,7 +199,9 @@ export function allTablesNewTurn(mainId: string): Promise<boolean> {
 	);
 
 	return guardedAct('all:newTurn', t('console.another_turn_all'), () =>
-		classAllTablesTo({ mainId, step: 'talk', newTurn: true, fromTurns }),
+		trackTableChange(predictAllTablesTo('talk', { newTurn: true, fromTurns }), () =>
+			classAllTablesTo({ mainId, step: 'talk', newTurn: true, fromTurns }),
+		),
 	);
 }
 
@@ -277,7 +288,10 @@ export function moveStudent(mainId: string, uid: string, toTable: DropTarget): P
 	if (consoleState.ended) return Promise.resolve(false);
 
 	return act(`move:${uid}`, t('console.move'), async () => {
-		await classMoveStudent({ mainId, uid, toTable });
+		// The chip moves at once; a refusal puts it back (the failure line comes from `act`).
+		await trackTableChange(predictMoveStudent(uid, toTable), () =>
+			classMoveStudent({ mainId, uid, toTable }),
+		);
 		consoleState.announce = t('console.moved', { table: toTable ?? t('console.unplaced_name') });
 	});
 }
@@ -320,8 +334,12 @@ export function addNoDevice(
 }
 
 export function tableAction(tableId: string, action: ClassTableAction): Promise<boolean> {
+	const actor = { uid: getUserState().user?.uid ?? '', isAdmin: true, now: serverNow() };
+
 	return guardedAct(`table:${tableId}:${action.action}`, t('console.table_action'), () =>
-		classTableStep({ tableId, ...action }),
+		trackTableChange(predictTableAction(tableId, action, actor), () =>
+			classTableStep({ tableId, ...action }),
+		),
 	);
 }
 
