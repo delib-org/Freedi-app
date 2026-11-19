@@ -1,14 +1,14 @@
 import type { ConsoleIconName } from './ConsoleIcon';
 
 /**
- * The vote bar's state machine as pure data: which status chip is shown and
- * which ballot buttons exist. Only the next sensible action is primary.
+ * The vote bar's state machine as pure data: which status chip is shown and whether the
+ * vote can be paused or resumed.
  */
 
 export type VotePhase = 'notOpen' | 'open' | 'paused' | 'closed';
 
-/** The data-action keys the e2e scripts and the console handlers already use. */
-export type VoteActionKey = 'freeze' | 'pauseVote' | 'close';
+/** The data-action key the e2e scripts and the console handlers already use. */
+export type VoteActionKey = 'pauseVote';
 
 export interface VoteBarAction {
 	key: VoteActionKey;
@@ -19,8 +19,11 @@ export interface VoteBarAction {
 export interface VoteBarState {
 	phase: VotePhase;
 	chip: { labelKey: string; icon: ConsoleIconName };
-	primary: VoteBarAction | null;
-	secondary: VoteBarAction | null;
+	/**
+	 * The vote's own pause / resume. Opening and closing the vote are the console's primary
+	 * button (lib/classroom/nextAction.ts), never a button here.
+	 */
+	pause: VoteBarAction | null;
 }
 
 export interface BallotFlags {
@@ -29,10 +32,8 @@ export interface BallotFlags {
 	ballotClosed: boolean;
 }
 
-const OPEN: VoteBarAction = { key: 'freeze', labelKey: 'console.open_vote', icon: 'play' };
 const PAUSE: VoteBarAction = { key: 'pauseVote', labelKey: 'console.pause_vote', icon: 'pause' };
 const RESUME: VoteBarAction = { key: 'pauseVote', labelKey: 'console.resume_vote', icon: 'play' };
-const CLOSE: VoteBarAction = { key: 'close', labelKey: 'console.close_vote', icon: 'stop' };
 
 export function phaseOf(flags: BallotFlags): VotePhase {
 	if (flags.ballotClosed) return 'closed';
@@ -48,29 +49,17 @@ export function voteBarState(flags: BallotFlags): VoteBarState {
 			return {
 				phase,
 				chip: { labelKey: 'console.vote_status_not_open', icon: 'ballot' },
-				primary: OPEN,
-				secondary: null,
+				pause: null,
 			};
 		case 'open':
-			return {
-				phase,
-				chip: { labelKey: 'console.vote_status_open', icon: 'play' },
-				primary: CLOSE,
-				secondary: PAUSE,
-			};
+			return { phase, chip: { labelKey: 'console.vote_status_open', icon: 'play' }, pause: PAUSE };
 		case 'paused':
 			return {
 				phase,
 				chip: { labelKey: 'console.vote_status_paused', icon: 'pause' },
-				primary: RESUME,
-				secondary: CLOSE,
+				pause: RESUME,
 			};
 		case 'closed':
-			return {
-				phase,
-				chip: { labelKey: 'console.vote_status_closed', icon: 'lock' },
-				primary: null,
-				secondary: null,
-			};
+			return { phase, chip: { labelKey: 'console.vote_status_closed', icon: 'lock' }, pause: null };
 	}
 }

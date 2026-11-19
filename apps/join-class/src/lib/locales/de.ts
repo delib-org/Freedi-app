@@ -280,7 +280,6 @@ const de: Record<string, string> = {
 	'console.act_step': 'Zum Schritt',
 	'console.split': 'In Tische aufteilen',
 	'console.resplit': 'Neu aufteilen',
-	'console.resplit_confirm': 'Die Klasse neu aufteilen? Die aktuelle Sitzordnung geht verloren.',
 	'console.all_tables_rate': 'Alle Tische: bewerten',
 	'console.plenum': 'Alle zusammen',
 	'console.plenum_on': 'Alle zusammen · aktiv',

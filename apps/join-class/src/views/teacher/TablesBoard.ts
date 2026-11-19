@@ -27,6 +27,8 @@ export interface TablesBoardAttrs {
 	tableTalk: boolean;
 	/** Vote or summary: the cards show members only. */
 	done?: boolean;
+	/** Dividing into tables / Choosing a side: the cards show names only. */
+	namesOnly?: boolean;
 	/** The lesson's sub-questions: a card at Table talk shows the question being answered. */
 	questions?: readonly Statement[];
 	/** After the Side step the board counts who chose a side (never which side). */
@@ -150,6 +152,7 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 									plenum: attrs.plenum,
 									tableTalk: attrs.tableTalk,
 									done: attrs.done,
+									namesOnly: attrs.namesOnly,
 									questionText: attrs.questions?.find((q) => q.statementId === table.questionId)
 										?.statement,
 									mainId: attrs.mainId,

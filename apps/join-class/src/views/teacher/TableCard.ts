@@ -46,6 +46,11 @@ export interface TableCardAttrs {
 	tableTalk: boolean;
 	/** The class is past the tables' work (vote, summary): members only, no step line, timer or action. */
 	done?: boolean;
+	/**
+	 * Dividing into tables and Choosing a side: the card shows names only (no turn, no "now" line,
+	 * no timer, no quick buttons): at these steps the tables do nothing yet (design 5).
+	 */
+	namesOnly?: boolean;
 	/** Table talk: the question this table is answering, one line. */
 	questionText?: string;
 	mainId: string;
@@ -291,8 +296,8 @@ export const TableCard: m.Component<TableCardAttrs> = {
 		const { table, students, plenum, mainId } = attrs;
 		const mode = tableModeOf(attrs);
 		const propDone = proposalsDoneNow(table, mode);
-		const floor =
-			mode === 'proposals' && !attrs.done ? proposalsSpeakerOf(table, serverNow()) : null;
+		const bare = attrs.done === true || attrs.namesOnly === true;
+		const floor = mode === 'proposals' && !bare ? proposalsSpeakerOf(table, serverNow()) : null;
 		const speakingUid = floor?.kind === 'speaking' ? floor.uid : null;
 		const drag = consoleState.drag;
 		const dragging = drag.mode === 'pointer' || drag.mode === 'keyboard';
@@ -327,7 +332,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 						t('console.table_n', { n: table.n }),
 					),
 					attrs.tableTalk ? m('span.table-card__turn', turnLine(table)) : null,
-					mode === 'proposals' && !attrs.done
+					mode === 'proposals' && !bare
 						? m(
 								'span.table-card__turn',
 								{ 'data-testid': 'table-proposals-turn' },
@@ -338,7 +343,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 				attrs.ratedLine // >>> allProposals
 					? m('p.table-card__now', { 'data-testid': 'table-rated' }, attrs.ratedLine)
 					: null,
-				attrs.done
+				bare
 					? null
 					: m(
 							'p.table-card__now',
@@ -349,7 +354,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 				attrs.tableTalk && attrs.questionText && table.questionId
 					? m('p.table-card__question', { dir: 'auto' }, attrs.questionText)
 					: null,
-				attrs.done ? null : speakerOrTimerRows(attrs),
+				bare ? null : speakerOrTimerRows(attrs),
 				attrs.tableTalk && table.askerUid
 					? m(
 							'p.table-card__asker',
@@ -399,7 +404,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 								`+ ${t('console.no_device')}`,
 							),
 				(() => {
-					const quicks = attrs.done
+					const quicks = bare
 						? []
 						: [quickActionFor(table, mode, serverNow()), anotherTurnFor(table, mode, propDone)];
 					const shown = quicks.filter((quick): quick is QuickAction => quick !== null);

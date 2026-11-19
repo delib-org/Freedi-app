@@ -5,7 +5,14 @@ import { getChallengeQuestion } from '@/lib/lessonCore';
 import { getSubQuestions } from '@/lib/store';
 import { icon } from './ConsoleIcon';
 import { askConfirm } from './ConfirmDialog';
-import { closeBallot, goToStep, resetTurns, resetVote, setVoteDisplay } from './consoleActions';
+import {
+	assignTables,
+	closeBallot,
+	goToStep,
+	resetTurns,
+	resetVote,
+	setVoteDisplay,
+} from './consoleActions';
 
 /**
  * The three questions the console asks before it does something it cannot
@@ -13,7 +20,7 @@ import { closeBallot, goToStep, resetTurns, resetVote, setVoteDisplay } from './
  * only a guard against a mis-tap; the two resets say "cannot be undone".
  */
 
-/** Pressing an EARLIER step: confirm, then move. Forward stays one tap. */
+/** Pressing an EARLIER step in the step list: confirm, then move. Forward is only the big button. */
 export function confirmGoBack(mainId: string, index: number, stepName: string): void {
 	askConfirm({
 		title: t('console.back_title', { name: stepName }),
@@ -32,6 +39,17 @@ export function confirmResetTurns(mainId: string, n?: number): void {
 		yesLabel: t('console.reset_yes'),
 		destructive: true,
 		run: () => void resetTurns(mainId, n),
+	});
+}
+
+/** "Divide again": the current seating is lost, so it asks in the console's own dialog. */
+export function confirmResplit(mainId: string): void {
+	askConfirm({
+		title: t('console.resplit_title'),
+		body: t('console.resplit_body'),
+		yesLabel: t('console.resplit'),
+		destructive: true,
+		run: () => void assignTables(mainId, true),
 	});
 }
 
@@ -80,22 +98,31 @@ export function resultsAside(): m.Children {
 }
 
 /**
- * Moving on from the Vote while the ballot is still open or paused (IA 20.2):
- * the decision is only written when the ballot closes, so closing comes first
- * and the step move follows only if it worked.
+ * "Close the vote" while some students have not voted (design 2.2): closing writes the
+ * decision and nobody can vote after it, so the primary asks first, naming how many are
+ * left. Cancel has the focus. Moving on to the summary is a separate, later press.
  */
-export function confirmCloseAndGo(mainId: string, index: number): void {
+export function confirmCloseVote(mainId: string, notVoted: number): void {
 	askConfirm({
-		title: t('console.close_and_go_title'),
+		title: t('console.close_vote_title', { n: notVoted }),
 		body: t('console.close_and_go_body'),
-		yesLabel: t('console.close_and_go_yes'),
+		yesLabel: t('console.close_vote_yes'),
 		destructive: false,
-		aside: resultsAside,
-		run: () => {
-			void closeBallot(mainId).then((closed) => {
-				if (closed) void goToStep(mainId, index);
-			});
-		},
+		run: () => void closeBallot(mainId),
+	});
+}
+
+/**
+ * "Go to the summary without a vote": the only way past a vote that never opened, from the
+ * Vote step's menu. The big button never skips work silently (IA 5).
+ */
+export function confirmSkipVote(mainId: string, summaryIndex: number): void {
+	askConfirm({
+		title: t('console.vote_skip_title'),
+		body: t('console.vote_skip_body'),
+		yesLabel: t('console.vote_skip_yes'),
+		destructive: false,
+		run: () => void goToStep(mainId, summaryIndex),
 	});
 }
 // >>> voteSummary END

@@ -33,9 +33,7 @@ const vote: Record<string, string> = {
 	'summary.by_side_explain':
 		'Hoeveel elke kant de beslissing steunt, volgens de kant die je aan het begin van de les koos',
 	'summary.winner': 'Het gekozen voorstel',
-	'console.close_and_go_title': 'De stemming is nog open. Sluiten en naar de samenvatting?',
 	'console.close_and_go_body': 'Na het sluiten kan niemand zijn stem nog wijzigen.',
-	'console.close_and_go_yes': 'Sluiten en verder',
 	'console.all_voted': 'Iedereen heeft gestemd',
 	'console.vote_order': 'Volgorde van de voorstellen',
 	'console.vote_order_consensus': 'Op beoordeling',

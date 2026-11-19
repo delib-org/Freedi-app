@@ -277,7 +277,6 @@ const he: Record<string, string> = {
 	'console.act_step': 'מעבר לשלב',
 	'console.split': 'חלוקה לשולחנות',
 	'console.resplit': 'חלוקה מחדש',
-	'console.resplit_confirm': 'לחלק מחדש את הכיתה? הישיבה הנוכחית תתבטל.',
 	'console.all_tables_rate': 'כל השולחנות: מדרגים',
 	'console.plenum': 'כולם ביחד',
 	'console.plenum_on': 'כולם ביחד · פעיל',

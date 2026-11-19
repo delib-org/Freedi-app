@@ -33,9 +33,7 @@ const vote: Record<string, string> = {
 	'summary.by_side_explain':
 		'How much each side supports the decision, by the side you picked at the start of the lesson',
 	'summary.winner': 'The chosen proposal',
-	'console.close_and_go_title': 'The vote is still open. Close it and go to the summary?',
 	'console.close_and_go_body': 'After closing, votes can no longer be changed.',
-	'console.close_and_go_yes': 'Close and go',
 	'console.all_voted': 'Everyone has voted',
 	'console.vote_order': 'Order of the proposals',
 	'console.vote_order_consensus': 'By the ratings',

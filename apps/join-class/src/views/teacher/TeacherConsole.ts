@@ -5,6 +5,7 @@ import '@/styles/console-board.scss';
 import '@/styles/console-chips.scss';
 import '@/styles/console-panels.scss';
 import '@/styles/console-sheet.scss';
+import '@/styles/console-next.scss';
 import '@/styles/console-mobile.scss';
 import '@/styles/game-console.scss';
 import { t } from '@/lib/i18n';
@@ -14,8 +15,8 @@ import {
 	getGuidingQuestions,
 	getLessonStep,
 	getLessonSteps,
-	stepLabel,
 } from '@/lib/lesson';
+import { consoleStepLabel } from '@/lib/classroom/consoleStepLabel';
 import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
 import { classRegistrationOf, proposalLimitOf } from '@freedi/shared-types';
 import type { ClassVoteOrder, Statement } from '@freedi/shared-types';
@@ -57,9 +58,6 @@ import {
 	allTablesTo,
 	assignTables,
 	changeLessonStatus,
-	closeBallot,
-	freezeBallot,
-	goToStep,
 	pauseBallot,
 	pickProjectorVideo,
 	setVoteDisplay,
@@ -78,10 +76,10 @@ import { lessonNameOf } from '@/lib/lessonLinks';
 import { LessonBanner } from './LessonBanner';
 import { ConfirmDialog } from './ConfirmDialog';
 import {
-	confirmCloseAndGo,
 	confirmGoBack,
 	confirmResetTurns,
 	confirmResetVote,
+	confirmResplit,
 } from './consoleConfirms';
 import { NotYourLesson } from './NotYourLesson';
 import { GatePanel } from './GatePanel';
@@ -90,7 +88,8 @@ import { voteScopeOf } from './voteScopeState';
 import { ActForEntry } from './actFor/ActForEntry';
 import { ActForSheet } from './actFor/ActForSheet';
 import { actForMode, syncActFor } from './actFor/actForState';
-import { StepRail } from './StepRail';
+import { StepLine } from './StepLine';
+import { ActionBand } from './ActionBand';
 import { SwitchBand } from './SwitchBand';
 import { introVideosOf, projectorVideoOf } from '@/lib/classroom/introVideos';
 import { TableSheetPanel } from './TableSheetPanel';
@@ -195,6 +194,7 @@ function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
 			plenum,
 			tableTalk: stepKey === 'tableTalk',
 			done: tablesAreDone(stepKey),
+			namesOnly: stepKey === 'side' || stepKey === 'tables',
 			questions,
 			showSides: sidesShownAt(getLessonSteps(), stepIndex),
 			connected: classRegistrationOf(main) !== undefined,
@@ -310,27 +310,34 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 					: null,
 			m(LessonBanner, {
 				status,
-				onResume: () => void changeLessonStatus(mid, 'resume'),
 				onEnd: openEndChoice,
 				onReopen: () => void changeLessonStatus(mid, 'reopen'),
 			}),
-			m(StepRail, {
+			m(StepLine, {
 				keys: steps,
 				currentIndex: step.index,
 				elapsedMs: clockEnd - session.startedAt,
 				held,
 				heldKey: status === 'ended' ? 'console.ended_banner' : 'lesson.paused.title',
-				onGo: (index: number) => {
-					// Going back keeps all work but asks first; forward is one tap.
-					if (index < step.index) confirmGoBack(mid, index, stepLabel(steps[index]));
-					// >>> voteSummary BEGIN
-					// An open or paused vote has no decision yet: ask, close it, then move on.
-					else if (step.key === 'vote' && isBallotFrozen(challenge) && !isBallotClosed(challenge))
-						confirmCloseAndGo(mid, index);
-					// >>> voteSummary END
-					else void goToStep(mid, index);
-				},
-				onEnd: openEndChoice,
+				// Going back keeps all work but asks first. Forward is only the big button.
+				onBack: (index: number) => confirmGoBack(mid, index, consoleStepLabel(steps[index])),
+			}),
+			m(ActionBand, {
+				mid,
+				status,
+				stepKey: step.key,
+				stepIndex: step.index,
+				steps,
+				challenge,
+				ballotFrozen: isBallotFrozen(challenge),
+				ballotClosed: isBallotClosed(challenge),
+				votedCount: voteCountsOn(challenge).voted,
+				presentCount: voteCountsOn(challenge).present,
+				proposalCount: challengeProposals.filter((proposal) => !proposal.hide).length,
+				tableCount: classState.tables.length,
+				studentCount: rosterStudents(classState.roster).length,
+				copyOffer,
+				resultsShown: liveResultsOn(challenge),
 			}),
 			m(SwitchBand, {
 				held,
@@ -374,7 +381,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 						replace: true,
 					}),
 				copySeating:
-					registration && copyOffer.kind !== 'ordinary'
+					registration && (copyOffer.kind === 'again' || copyOffer.kind === 'not-ready')
 						? m(CopySeating, {
 								mid,
 								registrationId: registration.tableAssignmentId,
@@ -386,17 +393,15 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 							})
 						: undefined,
 				onSplit: (replace: boolean) => {
-					if (replace && !window.confirm(t('console.resplit_confirm'))) return;
-					void assignTables(mid, replace);
+					if (replace) confirmResplit(mid);
+					else void assignTables(mid, replace);
 				},
 				onAllToRate: () => void allTablesTo(mid, 'rate'),
 				onAnotherTurnAll: () => void allTablesNewTurn(mid),
 				onPlenum: () => {
 					if (challenge) void startPlenum(challenge.statementId);
 				},
-				onFreeze: () => void freezeBallot(mid),
 				onPauseVote: (paused: boolean) => void pauseBallot(mid, paused),
-				onCloseVote: () => void closeBallot(mid),
 				onResetTurns: () => confirmResetTurns(mid),
 				onResetVote: () => confirmResetVote(mid),
 				allRatedLine: atAllProposals ? allRatedBandLine(challenge) : undefined, // >>> allProposals

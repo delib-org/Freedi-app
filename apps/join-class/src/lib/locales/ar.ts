@@ -277,7 +277,6 @@ const ar: Record<string, string> = {
 	'console.act_step': 'الانتقال إلى مرحلة',
 	'console.split': 'التقسيم إلى طاولات',
 	'console.resplit': 'تقسيم من جديد',
-	'console.resplit_confirm': 'هل تريدون تقسيم الصف من جديد؟ سيتم إلغاء الجلوس الحالي.',
 	'console.all_tables_rate': 'كل الطاولات: تقييم',
 	'console.plenum': 'الجميع معًا',
 	'console.plenum_on': 'الجميع معًا · مفعّل',

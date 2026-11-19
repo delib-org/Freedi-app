@@ -20,59 +20,6 @@
   font-weight: 800;
 }
 
-// ---- the step rail as a path: done = teal + check, current = a big terra
-// circle with a soft halo, upcoming = outlined --------------------------------------
-#{$game} .step-rail {
-  border-block-end: 2px solid var(--card-line);
-}
-
-#{$game} .step-rail__item:not(:last-child)::after {
-  inset-block-start: 17px;
-  inset-inline: calc(50% + 26px) calc(-50% + 26px);
-  border-block-start-width: 3px;
-}
-
-#{$game} .step-rail__dot {
-  inline-size: 36px;
-  block-size: 36px;
-  border-width: 3px;
-  font-weight: 800;
-  @include no-motion;
-}
-
-#{$game} .step-rail__step--done .step-rail__dot {
-  @include edge(var(--edge-teal-strong), var(--edge-size-sm));
-}
-
-#{$game} .step-rail__step--current .step-rail__dot {
-  inline-size: 50px;
-  block-size: 50px;
-  margin-block: -7px;
-  font-size: var(--font-size-xl);
-  box-shadow:
-    0 4px 0 var(--edge-terra),
-    0 0 0 5px var(--terra-50);
-}
-
-#{$game} .step-rail__step--current {
-  color: var(--terra-600);
-  font-weight: 800;
-}
-
-#{$game} .step-rail__name {
-  margin-block-start: 2px;
-  font-weight: 700;
-}
-
-#{$game} .step-rail__next {
-  min-height: 60px;
-  font-size: var(--font-size-lg);
-}
-
-#{$game} .step-rail__status {
-  font-weight: 700;
-}
-
 // ---- the switch band: a segmented tab with a raised "on" ---------------------------
 #{$game} .switch-band {
   border-block-end-width: 2px;

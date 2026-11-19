@@ -277,7 +277,6 @@ const nl: Record<string, string> = {
 	'console.act_step': 'Naar stap',
 	'console.split': 'Verdelen over tafels',
 	'console.resplit': 'Opnieuw verdelen',
-	'console.resplit_confirm': 'De klas opnieuw verdelen? De huidige indeling vervalt.',
 	'console.all_tables_rate': 'Alle tafels: beoordelen',
 	'console.plenum': 'Allemaal samen',
 	'console.plenum_on': 'Allemaal samen · aan',

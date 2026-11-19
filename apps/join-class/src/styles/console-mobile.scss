@@ -10,23 +10,6 @@ $console-tablet: 1023px;
 $console-phone: 767px;
 $tap: 44px;
 
-// ---- tablet and down: the rail stacks (steps above, forward control below) ----
-@media (max-width: $console-tablet) {
-  .step-rail {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-sm);
-  }
-
-  .step-rail__side {
-    flex: none;
-  }
-
-  .step-rail__next {
-    inline-size: 100%;
-  }
-}
-
 // ---- phone -------------------------------------------------------------------
 @media (max-width: $console-phone) {
   // top bar: back link + title on the first rows, controls wrap, all >= 44 px
@@ -86,33 +69,6 @@ $tap: 44px;
 
   .console__settings-slider {
     block-size: $tap;
-  }
-
-  // step strip: scrolls inside itself, 72 px per step, current one centred by StepRail.ts
-  .step-rail {
-    padding-inline: var(--space-sm);
-  }
-
-  .step-rail__list {
-    flex: none;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity;
-    padding-block: var(--space-xs);
-  }
-
-  .step-rail__item {
-    flex: 0 0 72px;
-    scroll-snap-align: center;
-  }
-
-  .step-rail__step {
-    min-inline-size: 72px;
-    min-block-size: $tap + var(--space-lg);
-  }
-
-  .step-rail__next {
-    min-block-size: 56px;
   }
 
   // band 2: actions share the width, segment control spans it

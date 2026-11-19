@@ -12,8 +12,8 @@ import { voteBarState } from './voteBarState';
 import type { VoteActionKey, VoteBarAction } from './voteBarState';
 
 /**
- * The Vote step's control bar: a status chip with the voted count, the ballot
- * buttons (only the next sensible action is primary), the order of the
+ * The Vote step's control bar: a status chip with the voted count, the vote's pause
+ * (opening and closing it are the console's primary button), the order of the
  * proposals, who sees the results, and the reset at the end edge. (Trello e3EMqQP2, IA 22.)
  */
 
@@ -37,36 +37,26 @@ export interface VoteBarAttrs {
 	onResultsShown: (shown: boolean) => void;
 	/** All proposals / only those above the goal (Trello OaZEhcB7). */
 	scope?: VoteScopeAttrs;
-	onFreeze: () => void;
 	onPauseVote: (paused: boolean) => void;
-	onCloseVote: () => void;
 	onResetVote: () => void;
 }
 
 const TEST_IDS: Record<VoteActionKey, string> = {
-	freeze: 'console-freeze-vote',
 	pauseVote: 'console-pause-vote',
-	close: 'console-close-vote',
 };
 
 const RESET_HINT_ID = 'vote-reset-hint';
 
-function ballotButton(attrs: VoteBarAttrs, spec: VoteBarAction, primary: boolean): m.Vnode {
-	const onclick = (): void => {
-		if (spec.key === 'freeze') attrs.onFreeze();
-		else if (spec.key === 'close') attrs.onCloseVote();
-		else attrs.onPauseVote(!attrs.ballotPaused);
-	};
-
+function pauseButton(attrs: VoteBarAttrs, spec: VoteBarAction): m.Vnode {
 	return m(
-		`button.btn.${primary ? 'btn--primary' : 'btn--secondary'}.vote-bar__action`,
+		'button.btn.btn--secondary.vote-bar__action',
 		{
 			key: spec.key,
 			type: 'button',
 			'data-action': spec.key,
 			'data-testid': TEST_IDS[spec.key],
 			disabled: attrs.held || isBusy(spec.key),
-			onclick,
+			onclick: () => attrs.onPauseVote(!attrs.ballotPaused),
 		},
 		[icon(spec.icon), m('span.vote-bar__action-text', t(spec.labelKey))],
 	);
@@ -106,15 +96,8 @@ export const VoteBar: m.Component<VoteBarAttrs> = {
 				m(ResultsChip, { shown: attrs.resultsShown }),
 				progress(attrs),
 			]),
-			state.primary
-				? m(
-						'div.vote-bar__group.vote-bar__group--controls',
-						// Keyed buttons: Mithril refuses a null hole beside them, so the list holds only real buttons.
-						[
-							ballotButton(attrs, state.primary, true),
-							...(state.secondary ? [ballotButton(attrs, state.secondary, false)] : []),
-						],
-					)
+			state.pause
+				? m('div.vote-bar__group.vote-bar__group--controls', pauseButton(attrs, state.pause))
 				: null,
 			m(VoteOrderSwitch, {
 				value: attrs.voteOrder,

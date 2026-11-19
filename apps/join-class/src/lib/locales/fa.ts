@@ -269,7 +269,6 @@ const fa: Record<string, string> = {
 	'console.act_step': 'رفتن به مرحله',
 	'console.split': 'تقسیم به میزها',
 	'console.resplit': 'تقسیم دوباره',
-	'console.resplit_confirm': 'کلاس دوباره تقسیم شود؟ چیدمان فعلی لغو می‌شود.',
 	'console.all_tables_rate': 'همه میزها: امتیازدهی',
 	'console.plenum': 'همه با هم',
 	'console.plenum_on': 'همه با هم · فعال',

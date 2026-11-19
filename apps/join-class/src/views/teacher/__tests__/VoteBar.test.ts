@@ -22,9 +22,7 @@ const attrsFor = (frozen: boolean, paused: boolean, closed: boolean): VoteBarAtt
 	onVoteOrder: noop,
 	resultsShown: false,
 	onResultsShown: noop,
-	onFreeze: noop,
 	onPauseVote: noop,
-	onCloseVote: noop,
 	onResetVote: noop,
 });
 
@@ -37,10 +35,10 @@ const draw = (attrs: VoteBarAttrs): m.Vnode => {
 
 describe('VoteBar view', () => {
 	it.each([
-		['not open (one ballot button)', attrsFor(false, false, false)],
+		['not open ', attrsFor(false, false, false)],
 		['open', attrsFor(true, false, false)],
 		['paused', attrsFor(true, true, false)],
-		['closed (no ballot button)', attrsFor(true, false, true)],
+		['closed ', attrsFor(true, false, true)],
 	])('draws without a Mithril error: %s', (_label, attrs) => {
 		expect(() => draw(attrs)).not.toThrow();
 	});

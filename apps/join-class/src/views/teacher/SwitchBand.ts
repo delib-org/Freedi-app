@@ -54,7 +54,6 @@ export interface SwitchBandAttrs {
 	/** Proposals (IA 25.6): the next turn at every table. */
 	onAnotherTurnAll: () => void;
 	onPlenum: () => void;
-	onFreeze: () => void;
 	/** The order of the proposals on every phone and the projector (Vote step). */
 	voteOrder: ClassVoteOrder;
 	onVoteOrder: (order: ClassVoteOrder) => void;
@@ -67,7 +66,6 @@ export interface SwitchBandAttrs {
 	/** All proposals / only those above the goal (Vote step). */
 	voteScope?: VoteScopeAttrs;
 	onPauseVote: (paused: boolean) => void;
-	onCloseVote: () => void;
 	onResetTurns: () => void;
 	onResetVote: () => void;
 	onProject: (id: string | null) => void;
@@ -84,9 +82,7 @@ const TEST_IDS: Record<string, string> = {
 	'all:rate': 'console-all-rate',
 	'all:newTurn': 'console-all-new-turn',
 	plenum: 'console-plenum',
-	freeze: 'console-freeze-vote',
 	pauseVote: 'console-pause-vote',
-	close: 'console-close-vote',
 	'reset:turns:all': 'console-reset-turns',
 	'reset:vote': 'console-reset-vote',
 };
@@ -140,13 +136,13 @@ function stepActions(attrs: SwitchBandAttrs): m.Children {
 			}),
 		);
 	}
+	// Dividing the class is the primary button (nextAction.ts); here only the second thoughts remain.
 	if (stepKey === 'tables') {
 		actions.push(
-			attrs.copySeating
-				? attrs.copySeating
-				: attrs.hasTables
+			attrs.copySeating ??
+				(attrs.hasTables
 					? action(t('console.resplit'), 'assign', () => attrs.onSplit(true))
-					: action(t('console.split'), 'assign', () => attrs.onSplit(false)),
+					: null),
 		);
 	}
 	if (stepKey === 'tableTalk' && attrs.hasTables) {
@@ -207,9 +203,7 @@ function stepActions(attrs: SwitchBandAttrs): m.Children {
 				resultsShown: attrs.resultsShown,
 				onResultsShown: attrs.onResultsShown,
 				scope: attrs.voteScope,
-				onFreeze: attrs.onFreeze,
 				onPauseVote: attrs.onPauseVote,
-				onCloseVote: attrs.onCloseVote,
 				onResetVote: attrs.onResetVote,
 			}),
 		);

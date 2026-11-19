@@ -33,9 +33,7 @@ const vote: Record<string, string> = {
 	'summary.by_side_explain':
 		'هر طرف تا چه اندازه از تصمیم حمایت می‌کند، بر اساس طرفی که در ابتدای درس انتخاب کردید',
 	'summary.winner': 'پیشنهاد انتخاب‌شده',
-	'console.close_and_go_title': 'رأی‌گیری هنوز باز است. بسته شود و به خلاصه برویم؟',
 	'console.close_and_go_body': 'بعد از بستن، رأی‌ها دیگر قابل تغییر نیستند.',
-	'console.close_and_go_yes': 'ببند و برو',
 	'console.all_voted': 'همه رأی دادند',
 	'console.vote_order': 'ترتیب پیشنهادها',
 	'console.vote_order_consensus': 'بر اساس امتیازها',

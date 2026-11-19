@@ -280,7 +280,6 @@ const en: Record<string, string> = {
 	'console.act_step': 'Go to step',
 	'console.split': 'Divide into tables',
 	'console.resplit': 'Split again',
-	'console.resplit_confirm': 'Split the class again? The current seating will be replaced.',
 	'console.all_tables_rate': 'All tables: rate',
 	'console.plenum': 'Everyone together',
 	'console.plenum_on': 'Everyone together · on',

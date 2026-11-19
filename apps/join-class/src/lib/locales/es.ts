@@ -278,7 +278,6 @@ const es: Record<string, string> = {
 	'console.act_step': 'Ir al paso',
 	'console.split': 'Dividir en mesas',
 	'console.resplit': 'Dividir de nuevo',
-	'console.resplit_confirm': '¿Dividir de nuevo la clase? Se perderá la distribución actual.',
 	'console.all_tables_rate': 'Todas las mesas: valorar',
 	'console.plenum': 'Todos juntos',
 	'console.plenum_on': 'Todos juntos · activo',

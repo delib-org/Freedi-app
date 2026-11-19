@@ -33,9 +33,7 @@ const vote: Record<string, string> = {
 	'summary.by_side_explain':
 		'Cuánto apoya cada lado la decisión, según el lado que elegisteis al empezar la clase',
 	'summary.winner': 'La propuesta elegida',
-	'console.close_and_go_title': 'La votación sigue abierta. ¿Cerrarla e ir al resumen?',
 	'console.close_and_go_body': 'Después de cerrar, ya no se pueden cambiar los votos.',
-	'console.close_and_go_yes': 'Cerrar e ir',
 	'console.all_voted': 'Todos han votado',
 	'console.vote_order': 'Orden de las propuestas',
 	'console.vote_order_consensus': 'Por las valoraciones',

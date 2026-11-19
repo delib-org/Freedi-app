@@ -142,9 +142,7 @@ describe('the Vote bar carries the control', () => {
 				onVoteOrder: noop,
 				resultsShown: false,
 				onResultsShown: noop,
-				onFreeze: noop,
 				onPauseVote: noop,
-				onCloseVote: noop,
 				onResetVote: noop,
 			},
 		});
