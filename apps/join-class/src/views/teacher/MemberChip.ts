@@ -28,6 +28,8 @@ export interface MemberChipAttrs {
 	askMark?: AskMark;
 	/** Table talk, after the name: ✓ answered, ● answering now, – passed this question. */
 	answerMark?: AnswerMark;
+	/** Proposals talk: this member holds the floor now (a glyph, the word and a heavier outline). */
+	speaking?: boolean;
 	/** A no-device chip: opens the act-for sheet on this student. */
 	onOpen?: () => void;
 }
@@ -92,13 +94,15 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 			'–': 'console.mark_passed_answer',
 			'': '',
 		};
+		const speakingWord = attrs.speaking ? `, ${t('console.speaking_now', { name })}` : '';
 		const turnWord = [
 			attrs.askMark ? askWord[attrs.askMark] : '',
 			attrs.answerMark ? answerWord[attrs.answerMark] : '',
 		]
 			.filter(Boolean)
 			.map((key) => `, ${t(key, { name })}`)
-			.join('');
+			.join('')
+			.concat(speakingWord);
 		const noSide = attrs.chosen === false;
 		const spoken = noSide ? `${name}, ${t('console.side_none')}` : name;
 		const label = (noDevice ? `${name}, ${t('console.no_device')}` : spoken) + turnWord;
@@ -112,10 +116,13 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 					type: 'button',
 					class: [
 						noDevice ? 'member-chip--no-device' : '',
+						attrs.chosen === true ? 'member-chip--chose' : '',
+						noSide ? 'member-chip--no-side' : '',
 						active ? 'member-chip--active' : '',
 						attrs.askMark === '?' ? 'member-chip--asking' : '',
 						attrs.askMark === '–' ? 'member-chip--passed-ask' : '',
 						attrs.answerMark === '●' ? 'member-chip--answering' : '',
+						attrs.speaking ? 'member-chip--speaking' : '',
 					].join(' '),
 					title: label,
 					'aria-label': label,
@@ -134,12 +141,19 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 					},
 				},
 				[
-					m('span.member-chip__mark', { 'aria-hidden': 'true' }, attrs.chosen ? '●' : '○'),
+					m('span.member-chip__mark', { 'aria-hidden': 'true' }, attrs.chosen ? '✓' : '○'),
 					attrs.askMark
 						? m(
 								'span.member-chip__turn.member-chip__turn--ask',
 								{ 'aria-hidden': 'true' },
 								attrs.askMark,
+							)
+						: null,
+					attrs.speaking
+						? m(
+								'span.member-chip__turn.member-chip__turn--speaking',
+								{ 'aria-hidden': 'true' },
+								'\u{1F399}',
 							)
 						: null,
 					m('span.member-chip__name', name),
@@ -150,9 +164,15 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 								attrs.answerMark,
 							)
 						: null,
+					attrs.speaking
+						? m('span.member-chip__tag.member-chip__tag--speaking', t('console.speaking_tag'))
+						: null,
 					noDevice ? m('span.member-chip__tag', t('console.no_device')) : null,
 					noSide
 						? m('span.member-chip__tag.member-chip__tag--no-side', t('console.side_none'))
+						: null,
+					attrs.chosen === true
+						? m('span.member-chip__tag.member-chip__tag--chose', t('console.side_chose'))
 						: null,
 				],
 			),

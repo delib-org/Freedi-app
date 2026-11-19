@@ -89,6 +89,19 @@ describe('no teacher surface reveals the side of a named student', () => {
 		expect(chipButtonAttrs(true).title).toBe('Dana');
 	});
 
+	it('a chip that chose is marked by a check and words, a chip that did not by a circle and words', () => {
+		const chose = JSON.stringify(chipTree(true));
+		const none = JSON.stringify(chipTree(false));
+
+		expect(chose).toContain('member-chip--chose');
+		expect(chose).toContain('console.side_chose');
+		expect(chose).toContain('\u2713');
+		expect(chose).not.toContain('console.side_none');
+		expect(none).toContain('member-chip--no-side');
+		expect(none).toContain('console.side_none');
+		expect(none).not.toContain('console.side_chose');
+	});
+
 	it('a student with no side says so, and the label names no side', () => {
 		expect(chipButtonAttrs(false)['aria-label']).toBe('Dana, console.side_none');
 	});
