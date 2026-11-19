@@ -1,5 +1,5 @@
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
-import type { Firestore } from 'firebase-admin/firestore';
+import type { DocumentReference, Firestore } from 'firebase-admin/firestore';
 import {
 	CLASS_PROPOSAL_MAX_LENGTH,
 	Collections,
@@ -11,6 +11,7 @@ import {
 import type {
 	ClassPostProposalRequest,
 	ClassPostProposalResponse,
+	ClassTable,
 	ClassTableMarker,
 	Creator,
 	Statement,
@@ -18,11 +19,19 @@ import type {
 } from '@freedi/shared-types';
 import { db } from '../db';
 import { containsBadLanguage } from '../fn_profanityChecker';
-import { loadChallenge, loadMain, loadTables, requireId, requireUid } from './classroomAccess';
+import {
+	loadChallenge,
+	loadMain,
+	loadTables,
+	requireId,
+	requireUid,
+	tableRef,
+} from './classroomAccess';
 import { creatorOf, loadMembership } from './classroomMembers';
 import { ClassroomError, toHttpsError } from './classroomErrors';
 import { writeLanguageFlag } from './languageFlags';
-import { assertLessonNotEnded, assertLessonRunning } from './lessonStatusGuard';
+import { assertLessonNotEnded, assertLessonRunning, lessonStepOf } from './lessonStatusGuard';
+import { afterProposalSent, assertHoldsPen } from './tablePen';
 import { noDeviceCreator, requireNoDeviceMember } from './noDeviceMembers';
 import {
 	assertBallotNotFrozen,
@@ -102,6 +111,18 @@ async function resolveAuthor(
 	};
 }
 
+/** The table whose pen this send needs: a student's own, at the Proposals step. A teacher's entry needs none. */
+function penTableOf(
+	firestore: Firestore,
+	main: Statement,
+	teacher: boolean,
+	sub: StatementSubscription | undefined,
+): DocumentReference | undefined {
+	if (teacher || lessonStepOf(main) !== 'proposals' || !sub?.tableId) return undefined;
+
+	return tableRef(firestore, sub.tableId);
+}
+
 export async function postProposal(
 	firestore: Firestore,
 	actorUid: string,
@@ -116,6 +137,7 @@ export async function postProposal(
 	if (teacher) assertLessonNotEnded(main);
 	else assertLessonRunning(main);
 	const author = await resolveAuthor(firestore, actorUid, req, mainId, main, teacher, sub);
+	const penTableRef = penTableOf(firestore, main, teacher, sub);
 
 	const challenge = await loadChallenge(firestore, mainId);
 	assertBallotNotFrozen(challenge);
@@ -132,6 +154,12 @@ export async function postProposal(
 	// A retry after a dropped answer is the same write, whichever of the author's proposals it is.
 	if (held.some((p) => p.statementId === proposalId)) return { ok: true, proposalId };
 	assertMayAddProposal(limit, held.length);
+	// At Proposals a student writes only while holding the table's pen (the phone takes it first).
+	// Checked after the retry answer above (a retry comes after the send freed the pen) and before the language check.
+	if (penTableRef) {
+		const penTable = await penTableRef.get();
+		if (penTable.exists) assertHoldsPen(penTable.data() as ClassTable, actorUid);
+	}
 
 	const now = (deps.now ?? Date.now)();
 	if (!teacher && (await deps.detect(text))) {
@@ -167,9 +195,14 @@ export async function postProposal(
 				challenge.statementId,
 				author.id,
 			);
+			const tableSnap = penTableRef ? await tx.get(penTableRef) : undefined;
 			if (fresh.some((p) => p.statementId === proposalId)) return;
 			assertMayAddProposal(limit, fresh.length);
+			const penTable = tableSnap?.exists ? (tableSnap.data() as ClassTable) : undefined;
+			if (penTable) assertHoldsPen(penTable, actorUid);
 			tx.create(ref, { ...built, createdAt: now, lastUpdate: now, classTable: author.marker });
+			// The send frees the pen and counts the writer; the last one moves the table to rate.
+			if (penTableRef && penTable) tx.set(penTableRef, afterProposalSent(penTable, actorUid, now));
 		});
 	} catch (error) {
 		if ((error as { code?: number }).code !== ALREADY_EXISTS) throw error;

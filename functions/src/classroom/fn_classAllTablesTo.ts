@@ -90,6 +90,11 @@ export async function allTablesTo(
 			speakerEndsAt: FieldValue.delete(),
 			speakerMs: FieldValue.delete(),
 		};
+		// A table that enters a step starts the pen afresh; a repeated tap on the step it is at keeps it.
+		if ((d.data() as ClassTable).step !== step) {
+			patch.writerUid = FieldValue.delete();
+			patch.writtenUids = FieldValue.delete();
+		}
 		if (step === 'talk') {
 			const fresh = freshTalkPatch(d.data() as ClassTable, newTurn, fromTurns);
 			if (!fresh) return;

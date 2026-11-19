@@ -9,6 +9,7 @@ import {
 import type { ClassTable, ClassTableAction, LessonStepKey, TableStep } from '@freedi/shared-types';
 import { ClassroomError } from './classroomErrors';
 import { assertMayMoveOn } from './tableMoveOn';
+import { assertMayClaimPen, assertMayPassWriting } from './tablePen';
 
 /**
  * Who may run which table action, from which step (IA 16 rev 3). Pure guards
@@ -33,6 +34,8 @@ export interface TransitionContext {
 	speakMs?: number;
 	/** Turns at Proposals (`proposalsTurnsOf(main)`); absent = one. */
 	proposalsTurns?: number;
+	/** The lesson lets an author send more than one proposal (`proposalLimitOf(main) === 'unlimited'`). */
+	unlimitedProposals?: boolean;
 }
 
 /** The lesson settings the guards and transitions read, as a `LessonSettingsHolder`. */
@@ -63,6 +66,9 @@ export const ALLOWED_FROM: Record<ClassTableAction['action'], readonly TableStep
 	nextProposalsTurn: ['talk'],
 	// Proposals may still sit at pick (nobody asked); the guard checks the rest (tableMoveOn.ts).
 	moveOn: ['pick', 'talk'],
+	// Proposals pen: only while the table writes.
+	claimPen: ['write'],
+	passWriting: ['write'],
 };
 
 /**
@@ -341,6 +347,14 @@ export function assertMayAct(
 			return;
 		case 'moveOn':
 			assertMayMoveOn(table, actorUid, ctx);
+
+			return;
+		case 'claimPen':
+			assertMayClaimPen(table, ctx);
+
+			return;
+		case 'passWriting':
+			assertMayPassWriting(table, action, ctx);
 
 			return;
 		default:

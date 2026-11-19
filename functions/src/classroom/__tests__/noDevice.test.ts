@@ -206,6 +206,15 @@ describe('classPostProposal with forStudentId', () => {
 
 	it('a student cannot spoof one by naming the id as their own proposal id', async () => {
 		const fake = seed();
+		fake.seed(
+			`${CLASS_TABLES_COLLECTION}/${MAIN}--1`,
+			table(MAIN, 1, {
+				memberUids: [STUDENT],
+				noDeviceMembers: [{ id: ND, name: SECRET_NAME }],
+				step: 'write',
+				writerUid: STUDENT,
+			}),
+		);
 		await propose(fake, TEACHER, ND, 'shared-id');
 		await expect(propose(fake, STUDENT, undefined, 'shared-id')).rejects.toMatchObject({
 			reason: 'proposal-id-taken',

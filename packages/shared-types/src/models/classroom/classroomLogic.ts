@@ -145,6 +145,19 @@ export function proposalsTurnOver(table: SpokenFields, now: number): boolean {
 	return everyoneSpoke(table, now);
 }
 
+/** Proposals, at write: this tablemate sent a proposal or passed. */
+export function wroteAlready(table: Pick<ClassTable, 'writtenUids'>, uid: string): boolean {
+	return (table.writtenUids ?? []).includes(uid);
+}
+
+/**
+ * Proposals, at write: every tablemate with a phone sent or passed, so the table moves to rate.
+ * People without a phone never gate (they are not in `memberUids`).
+ */
+export function everyoneWrote(table: Pick<ClassTable, 'memberUids' | 'writtenUids'>): boolean {
+	return table.memberUids.length > 0 && table.memberUids.every((uid) => wroteAlready(table, uid));
+}
+
 /** Proposals: the turn is over and no turn is left. The table waits for the teacher. */
 export function proposalsDone(
 	table: SpokenFields & Pick<ClassTable, 'proposalsTurn'>,

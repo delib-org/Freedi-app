@@ -1,5 +1,6 @@
 import type { ClassTable, LessonStepKey } from '@freedi/shared-types';
 import { moveOnIfReached } from './tableMoveOn';
+import { movedToRateIfAllWrote, withoutWriterMember } from './tablePen';
 
 /**
  * Pure membership edits behind `classMoveStudent`. The callable keeps the
@@ -14,7 +15,7 @@ import { moveOnIfReached } from './tableMoveOn';
  * E8). A speaker who leaves loses the floor. The leaver stays in `askedUids`
  * and `passedAskingUids` (per table doc): rejoining this table cannot give them
  * a second turn, while a table they move to starts them as not yet asked. They
- * leave this turn's `spokenUids` / `passedSpeakingUids`. Every derivation
+ * leave this turn's `spokenUids` / `passedSpeakingUids`. A leaver who held the pen frees it. Every derivation
  * reads these lists through the current `memberUids`.
  *
  * `held` (the lesson is paused): the room is stopped, so a smaller table must not
@@ -29,7 +30,7 @@ export function removeMember(
 ): ClassTable {
 	if (!table.memberUids.includes(uid)) return table;
 	const next: ClassTable = {
-		...table,
+		...withoutWriterMember(table, uid),
 		memberUids: table.memberUids.filter((m) => m !== uid),
 		spokenUids: table.spokenUids.filter((m) => m !== uid),
 		updatedAt: now,
@@ -51,8 +52,12 @@ export function removeMember(
 	}
 	if (table.moveOnUids) next.moveOnUids = table.moveOnUids.filter((m) => m !== uid);
 
+	if (held) return next;
 	// A smaller table needs fewer "move on" presses: it may be enough now, and nobody would tap again.
-	return held ? next : moveOnIfReached(next, lessonStep, now);
+	const moved = moveOnIfReached(next, lessonStep, now);
+
+	// The one left to write may have been the leaver: the rest wrote, so the table moves to rate.
+	return lessonStep === 'proposals' ? movedToRateIfAllWrote(moved) : moved;
 }
 
 /** Seat `uid` at a table (last in seating order). They are not yet asked and never become the asker by sitting down. */

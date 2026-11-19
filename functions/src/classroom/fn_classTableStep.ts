@@ -4,6 +4,7 @@ import {
 	Collections,
 	WritingModeSchema,
 	allowOwnQuestionsOf,
+	proposalLimitOf,
 	proposalsTurnsOf,
 	speakSecondsOf,
 	functionConfig,
@@ -75,9 +76,14 @@ export function parseAction(req: ClassTableStepRequest): ClassTableAction {
 			return typeof req.uid === 'string' && req.uid !== ''
 				? { action: 'passSpeaking', uid: req.uid }
 				: { action: 'passSpeaking' };
+		case 'passWriting':
+			return typeof req.uid === 'string' && req.uid !== ''
+				? { action: 'passWriting', uid: req.uid }
+				: { action: 'passWriting' };
 		case 'toTalk':
 		case 'toWrite':
 		case 'toRate':
+		case 'claimPen':
 		case 'claimSpeaker':
 		case 'finishSpeaking':
 			return { action: req.action };
@@ -152,6 +158,7 @@ export async function tableStep(
 			allowOwnQuestions: allowOwnQuestionsOf(main),
 			speakMs: speakSecondsOf(main) * MS_PER_SECOND,
 			proposalsTurns: proposalsTurnsOf(main),
+			unlimitedProposals: proposalLimitOf(main) === 'unlimited',
 		});
 		tx.set(ref, next);
 

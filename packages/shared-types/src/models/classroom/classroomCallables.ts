@@ -98,6 +98,17 @@ export type ClassTableAction =
 	 */
 	| { action: 'passSpeaking'; uid?: string }
 	/**
+	 * Proposals, at write: "I want to write". Takes the table's one pen when it is free; the first
+	 * tap wins, a tap that loses the race is refused as `pen-taken` (not an error for the phone).
+	 */
+	| { action: 'claimPen' }
+	/**
+	 * Proposals, at write: pass writing (a member for themselves, or an admin naming `uid`, which
+	 * also frees a stuck pen). Counts as written; when every tablemate with a phone wrote or passed,
+	 * the table moves to rate.
+	 */
+	| { action: 'passWriting'; uid?: string }
+	/**
 	 * "Move on" (a seated tablemate): a toggle of the caller's press. When enough tablemates
 	 * pressed (2; all of a table of fewer than 3) the table moves on: Table talk marks everyone
 	 * who has not answered as passed (the table is choosing again); Proposals talk moves the
