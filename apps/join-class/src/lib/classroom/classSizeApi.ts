@@ -12,7 +12,12 @@ import {
 	writeBatch,
 } from '../firebase';
 import { captureException } from '../sentry';
-import { RECALCULATE_TIMEOUT_MS, classSizePatch, parseClassSize } from './classSize';
+import {
+	RECALCULATE_CONCURRENCY,
+	RECALCULATE_TIMEOUT_MS,
+	classSizePatch,
+	parseClassSize,
+} from './classSize';
 
 /**
  * Writing the class size (N): on the lesson and on each of its questions, in
@@ -101,24 +106,32 @@ export async function questionsWithRatings(questionIds: readonly string[]): Prom
 	return rated;
 }
 
-/** Rescore each question once. A refusal is collected, not thrown, so the rest still run. */
+/** Rescore each question once, a few at a time. A refusal is collected, not thrown, so the rest still run. */
 export async function recalculateQuestions(questionIds: readonly string[]): Promise<string[]> {
 	const recalculate = httpsCallable<{ statementId: string }, { success: boolean }>(
 		functions,
 		'recalculateIndices',
 		{ timeout: RECALCULATE_TIMEOUT_MS },
 	);
-	const failed: string[] = [];
-	for (const statementId of questionIds) {
-		try {
-			await recalculate({ statementId });
-		} catch (error) {
-			failed.push(statementId);
-			captureException(error, { operation: 'classSize.recalculate', statementId });
+	const refused = new Set<string>();
+	let next = 0;
+	// A few workers take the next question until none is left; one that fails never stops the others.
+	const worker = async (): Promise<void> => {
+		while (next < questionIds.length) {
+			const statementId = questionIds[next++];
+			try {
+				await recalculate({ statementId });
+			} catch (error) {
+				refused.add(statementId);
+				captureException(error, { operation: 'classSize.recalculate', statementId });
+			}
 		}
-	}
+	};
+	const workers = Math.min(RECALCULATE_CONCURRENCY, questionIds.length);
+	await Promise.all(Array.from({ length: workers }, worker));
 
-	return failed;
+	// Reported in the order the questions were given, as before.
+	return questionIds.filter((statementId) => refused.has(statementId));
 }
 
 /**

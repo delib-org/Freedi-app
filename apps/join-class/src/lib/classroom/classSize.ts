@@ -17,6 +17,12 @@ export const DEFAULT_CLASS_SIZE = 40;
  */
 export const RECALCULATE_TIMEOUT_MS = 310_000;
 
+/**
+ * How many questions are rescored at once. A lesson has a handful, each rescore is
+ * heavy on the server, so a small cap: faster than one by one, never a flood.
+ */
+export const RECALCULATE_CONCURRENCY = 3;
+
 /** A positive whole number, or undefined when the input does not name one. */
 function positiveWhole(raw: unknown): number | undefined {
 	const value = typeof raw === 'string' ? parseInt(raw, 10) : raw;

@@ -32,6 +32,7 @@ import {
 	writeClassSize,
 	writeClassSizeOnNewLesson,
 } from '../classSizeApi';
+import { RECALCULATE_CONCURRENCY } from '../classSize';
 
 /** getDocs answers by the queried parent: options of a question, or the lesson's questions. */
 function answerWith(byParent: Record<string, unknown[]>): void {
@@ -171,5 +172,44 @@ describe('saveClassSize (the console settings save path)', () => {
 		expect(failure).toBeInstanceOf(ClassSizeRecalcError);
 		expect((failure as ClassSizeRecalcError).failedQuestionIds).toEqual(['q1']);
 		expect(mockCallable).toHaveBeenCalledTimes(2);
+	});
+
+	it('rescores several questions at once, never more than the cap', async () => {
+		const ids = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7'];
+		answerWith(Object.fromEntries(ids.map((id) => [id, [rated]])));
+		let running = 0;
+		let peak = 0;
+		mockCallable.mockImplementation(async () => {
+			running += 1;
+			peak = Math.max(peak, running);
+			await new Promise((resolve) => setTimeout(resolve, 5));
+			running -= 1;
+
+			return { data: { success: true } };
+		});
+
+		await saveClassSize('m1', ids, '30');
+
+		expect(mockCallable).toHaveBeenCalledTimes(ids.length);
+		expect(peak).toBeGreaterThan(1);
+		expect(peak).toBeLessThanOrEqual(RECALCULATE_CONCURRENCY);
+	});
+
+	it('reports every refused question in the order given, even when they finish out of order', async () => {
+		const ids = ['q1', 'q2', 'q3', 'q4'];
+		answerWith(Object.fromEntries(ids.map((id) => [id, [rated]])));
+		const delays: Record<string, number> = { q1: 20, q2: 1, q3: 10, q4: 1 };
+		mockCallable.mockImplementation(async ({ statementId }: { statementId: string }) => {
+			await new Promise((resolve) => setTimeout(resolve, delays[statementId]));
+			if (statementId === 'q1' || statementId === 'q4') throw new Error('refused');
+
+			return { data: { success: true } };
+		});
+
+		const failure = await saveClassSize('m1', ids, '30').catch((e: unknown) => e);
+
+		expect(failure).toBeInstanceOf(ClassSizeRecalcError);
+		expect((failure as ClassSizeRecalcError).failedQuestionIds).toEqual(['q1', 'q4']);
+		expect(mockCallable).toHaveBeenCalledTimes(4);
 	});
 });
