@@ -118,10 +118,9 @@ describe('no teacher surface reveals the side of a named student', () => {
 		expect(chips[0]).toMatchObject({ chosen: true });
 	});
 
-	it('the board shows the count of who chose and has no control to reveal sides', () => {
+	it('the board has no control to reveal sides (the count of who chose lives in the status line)', () => {
 		const ids = testIds(boardTree('a'));
 
-		expect(ids).toContain('console-sides-count');
 		expect(ids).not.toContain('console-sides-toggle');
 		expect(JSON.stringify(boardTree('a'))).not.toContain('sides_show');
 	});

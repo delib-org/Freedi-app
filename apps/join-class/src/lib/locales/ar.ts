@@ -296,7 +296,6 @@ const ar: Record<string, string> = {
 	'console.rail_label': 'مراحل الدرس',
 	'console.rail_step': 'المرحلة {{n}}: {{name}}، {{state}}',
 	'console.state_done': 'انتهت',
-	'console.state_current': 'الحالية',
 	'console.state_upcoming': 'لاحقًا',
 	'console.step_of': 'المرحلة {{n}} من {{total}}',
 	'console.next': 'فتح المرحلة التالية: {{name}}',

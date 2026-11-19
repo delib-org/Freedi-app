@@ -44,7 +44,8 @@ const TESTID: Partial<Record<NextActionKind, string>> = {
 	copySeating: 'copy-seating',
 };
 
-function labelOf(attrs: NextActionAttrs): string {
+/** The words on the button right now (the busy words while its write runs). */
+export function nextActionLabel(attrs: NextActionAttrs): string {
 	const { spec } = attrs;
 	if (spec.busyKey && isBusy(spec.busyKey) && spec.busyLabelKey) return t(spec.busyLabelKey);
 	if (spec.kind === 'goNext' && spec.nextStepKey) {
@@ -151,7 +152,7 @@ export const NextAction: m.Component<NextActionAttrs> = {
 						run(attrs);
 					},
 				},
-				labelOf(attrs),
+				nextActionLabel(attrs),
 			),
 			blockedKey
 				? m('p.next-action__reason', { id: REASON_ID, tabindex: -1 }, t(blockedKey))

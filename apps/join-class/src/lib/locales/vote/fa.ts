@@ -48,7 +48,6 @@ const vote: Record<string, string> = {
 	'console.vote_scope_locked': 'پیش از باز کردن رأی‌گیری تنظیم می‌شود',
 	'console.vote_status_not_open': 'رأی‌گیری هنوز باز نشده',
 	'console.vote_status_open': 'رأی‌گیری باز است',
-	'console.vote_status_paused': 'رأی‌گیری متوقف شده',
 	'console.vote_status_closed': 'رأی‌گیری بسته شد',
 	'console.vote_progress': '{{voted}} از {{present}} رأی دادند',
 	'console.vote_reset_hint': 'ابتدا رأی‌گیری را ببندید یا متوقف کنید',

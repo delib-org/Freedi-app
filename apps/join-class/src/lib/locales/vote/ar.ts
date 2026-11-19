@@ -46,7 +46,6 @@ const vote: Record<string, string> = {
 	'console.vote_scope_locked': 'يُحدَّد قبل فتح التصويت',
 	'console.vote_status_not_open': 'التصويت لم يُفتح بعد',
 	'console.vote_status_open': 'التصويت مفتوح',
-	'console.vote_status_paused': 'التصويت متوقف مؤقتًا',
 	'console.vote_status_closed': 'التصويت مغلق',
 	'console.vote_progress': 'صوّت {{voted}} من {{present}}',
 	'console.vote_reset_hint': 'أغلقوا التصويت أو أوقفوه مؤقتًا أولًا',

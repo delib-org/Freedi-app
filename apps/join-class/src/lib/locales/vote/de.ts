@@ -49,7 +49,6 @@ const vote: Record<string, string> = {
 	'console.vote_scope_locked': 'Vor dem Öffnen der Abstimmung festlegen',
 	'console.vote_status_not_open': 'Noch nicht geöffnet',
 	'console.vote_status_open': 'Abstimmung offen',
-	'console.vote_status_paused': 'Abstimmung pausiert',
 	'console.vote_status_closed': 'Abstimmung geschlossen',
 	'console.vote_progress': '{{voted}} von {{present}} haben abgestimmt',
 	'console.vote_reset_hint': 'Zuerst die Abstimmung schließen oder pausieren',

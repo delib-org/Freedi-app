@@ -3,7 +3,11 @@ import type { LessonStatus, LessonStepKey, Statement } from '@freedi/shared-type
 import { t } from '@/lib/i18n';
 import { nextActionFor } from '@/lib/classroom/nextAction';
 import type { CopyOffer } from '@/lib/classroom/registrationLogic';
-import { NextAction } from './NextAction';
+import type { ClassStatusInput } from '@/lib/classroom/classStatus';
+import { consoleStepLabel } from '@/lib/classroom/consoleStepLabel';
+import { ClassStatusLine } from './ClassStatusLine';
+import { NextAction, nextActionLabel } from './NextAction';
+import { StepMore } from './StepMore';
 import { icon } from './ConsoleIcon';
 import { changeLessonStatus } from './consoleActions';
 import { isBusy } from './consoleState';
@@ -31,6 +35,14 @@ export interface ActionBandAttrs {
 	studentCount: number;
 	copyOffer: CopyOffer;
 	resultsShown: boolean;
+	/** The status line's numbers, read from the live console. */
+	statusInput: ClassStatusInput;
+	/** The "no device (x/y)" entry, drawn inside the status line at Proposals. */
+	statusEntry?: m.Children;
+	main: Statement | null;
+	plenum: boolean;
+	connected: boolean;
+	registrationId?: string;
 }
 
 /** The dock's pause: icon only, with a real name. Hidden on a laptop, where the top bar keeps the labelled one. */
@@ -72,14 +84,39 @@ export const ActionBand: m.Component<ActionBandAttrs> = {
 			resultsShown: attrs.resultsShown,
 		});
 
+		const next = {
+			mid: attrs.mid,
+			spec,
+			challengeId: attrs.challenge?.statementId ?? null,
+			copyBlockedKey: copyOffer.kind === 'not-ready' ? copyOffer.reasonKey : undefined,
+		};
+
 		return m('section.action-band', { 'aria-label': t('console.next_action_label') }, [
-			m(NextAction, {
-				mid: attrs.mid,
-				spec,
-				challengeId: attrs.challenge?.statementId ?? null,
-				copyBlockedKey: copyOffer.kind === 'not-ready' ? copyOffer.reasonKey : undefined,
+			m(ClassStatusLine, {
+				input: attrs.statusInput,
+				words: {
+					stepName: consoleStepLabel(attrs.stepKey),
+					primaryLabel: nextActionLabel(next),
+				},
+				entry: attrs.statusEntry,
 			}),
-			dockPause(attrs),
+			m('div.action-band__controls', [
+				m(NextAction, next),
+				m(StepMore, {
+					mid: attrs.mid,
+					status: attrs.status,
+					stepKey: attrs.stepKey,
+					steps: attrs.steps,
+					challenge: attrs.challenge,
+					main: attrs.main,
+					hasTables: attrs.tableCount > 0,
+					plenum: attrs.plenum,
+					connected: attrs.connected,
+					registrationId: attrs.registrationId,
+					copyOffer,
+				}),
+				dockPause(attrs),
+			]),
 		]);
 	},
 };

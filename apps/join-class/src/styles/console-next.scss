@@ -238,11 +238,18 @@ $dock-clearance: 128px;
   inset-block-start: 0;
   z-index: var(--z-sticky, 5);
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-sm);
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
   padding: var(--space-sm) var(--space-md);
   background: var(--paper);
   border-block-end: 1px solid var(--paper-line);
+}
+
+.action-band__controls {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: flex-start;
+  gap: var(--space-sm);
 }
 
 .action-band__pause {
@@ -324,12 +331,17 @@ $dock-clearance: 128px;
     position: fixed;
     inset-block: auto 0;
     inset-inline: 0;
+    flex-direction: column;
     align-items: stretch;
     padding-block-end: max(var(--space-sm), env(safe-area-inset-bottom));
     background: var(--bg-card);
     border-block-start: 1px solid var(--border-medium);
     border-block-end: 0;
     box-shadow: var(--shadow-up);
+  }
+
+  .action-band__controls {
+    align-items: stretch;
   }
 
   .action-band__pause {

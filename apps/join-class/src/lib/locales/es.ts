@@ -297,7 +297,6 @@ const es: Record<string, string> = {
 	'console.rail_label': 'Pasos de la clase',
 	'console.rail_step': 'Paso {{n}}: {{name}}, {{state}}',
 	'console.state_done': 'terminado',
-	'console.state_current': 'actual',
 	'console.state_upcoming': 'más adelante',
 	'console.step_of': 'Paso {{n}} de {{total}}',
 	'console.next': 'Abrir el siguiente paso: {{name}}',

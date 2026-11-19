@@ -288,7 +288,6 @@ const fa: Record<string, string> = {
 	'console.rail_label': 'مراحل درس',
 	'console.rail_step': 'مرحله {{n}}: {{name}}، {{state}}',
 	'console.state_done': 'تمام شده',
-	'console.state_current': 'فعلی',
 	'console.state_upcoming': 'بعداً',
 	'console.step_of': 'مرحله {{n}} از {{total}}',
 	'console.next': 'باز کردن مرحله بعد: {{name}}',

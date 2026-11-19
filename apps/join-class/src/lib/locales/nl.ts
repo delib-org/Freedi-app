@@ -296,7 +296,6 @@ const nl: Record<string, string> = {
 	'console.rail_label': 'Stappen van de les',
 	'console.rail_step': 'Stap {{n}}: {{name}}, {{state}}',
 	'console.state_done': 'klaar',
-	'console.state_current': 'huidig',
 	'console.state_upcoming': 'later',
 	'console.step_of': 'Stap {{n}} van {{total}}',
 	'console.next': 'Volgende stap openen: {{name}}',

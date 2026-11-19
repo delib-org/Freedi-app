@@ -48,7 +48,6 @@ const vote: Record<string, string> = {
 	'console.vote_scope_locked': 'Instellen voordat de stemming opent',
 	'console.vote_status_not_open': 'Nog niet open',
 	'console.vote_status_open': 'Stemmen is open',
-	'console.vote_status_paused': 'Stemmen is gepauzeerd',
 	'console.vote_status_closed': 'Stemmen is gesloten',
 	'console.vote_progress': '{{voted}} van {{present}} hebben gestemd',
 	'console.vote_reset_hint': 'Sluit of pauzeer eerst de stemronde',

@@ -299,7 +299,6 @@ const de: Record<string, string> = {
 	'console.rail_label': 'Schritte der Stunde',
 	'console.rail_step': 'Schritt {{n}}: {{name}}, {{state}}',
 	'console.state_done': 'erledigt',
-	'console.state_current': 'aktuell',
 	'console.state_upcoming': 'später',
 	'console.step_of': 'Schritt {{n}} von {{total}}',
 	'console.next': 'Nächsten Schritt öffnen: {{name}}',

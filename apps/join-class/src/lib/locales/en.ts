@@ -299,7 +299,6 @@ const en: Record<string, string> = {
 	'console.rail_label': 'Lesson steps',
 	'console.rail_step': 'Step {{n}}: {{name}}, {{state}}',
 	'console.state_done': 'done',
-	'console.state_current': 'current',
 	'console.state_upcoming': 'later',
 	'console.step_of': 'Step {{n}} of {{total}}',
 	'console.next': 'Open the next step: {{name}}',

@@ -88,28 +88,16 @@ describe('CopySeating (the Tables step of a connected lesson)', () => {
 		expect(draw(m(CopySeating, { ...props, offer: { kind: 'ordinary' } })).text).toEqual([]);
 	});
 
-	it('offers the copy button when the seating is published', () => {
-		expect(textOf(m(CopySeating, { ...props, offer: { kind: 'copy' } }))).toContain(
-			'console.copy_seating',
-		);
-	});
-
-	it('offers "update from the registration" after a copy', () => {
-		expect(textOf(m(CopySeating, { ...props, offer: { kind: 'again' } }))).toContain(
-			'console.copy_seating.again',
-		);
-	});
-
-	it('says what is missing and links to the registration when not published', () => {
-		const shown = textOf(
-			m(CopySeating, {
-				...props,
-				offer: { kind: 'not-ready', reasonKey: 'console.copy_seating.not_ready.ranked' },
-			}),
-		);
-		expect(shown).toContain('console.copy_seating.not_ready.ranked');
-		expect(shown).toContain('console.register_ahead.manage');
-		expect(shown).not.toContain('console.copy_seating.again');
+	it('has no buttons: the copy, the update and the link live in the primary and the step menu', () => {
+		for (const offer of [
+			{ kind: 'copy' },
+			{ kind: 'again' },
+			{ kind: 'not-ready', reasonKey: 'console.copy_seating.not_ready.ranked' },
+		] as const) {
+			const shown = textOf(m(CopySeating, { ...props, offer }));
+			expect(shown).not.toContain('console.copy_seating.again');
+			expect(shown).not.toContain('console.register_ahead.manage');
+		}
 	});
 
 	it('shows "N without a table" only when someone has none', () => {

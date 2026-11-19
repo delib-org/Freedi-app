@@ -26,6 +26,25 @@ const consoleUi: Record<string, string> = {
 	'console.steps_forward_note':
 		'Zum nächsten Schritt geht es nur mit dem großen Knopf, Schritt für Schritt.',
 	'console.next_action_label': 'Die nächste Aktion',
+	'console.more': 'Mehr',
+	'console.more_label': 'Mehr für die Stunde',
+	'console.step_more': 'Mehr für diesen Schritt',
+	'console.ready': 'Weiter geht es',
+	'console.ready_live': 'Die Klasse ist bereit. Du kannst „{{label}}“ drücken',
+	'console.moved_to': 'Jetzt im Schritt: {{name}}',
+	'console.status.joined': '{{n}} von {{total}} sind beigetreten',
+	'console.status.joined_open': '{{n}} sind beigetreten',
+	'console.status.on_projector': 'Auf dem Beamer: {{what}}',
+	'console.status.no_tables': 'Noch nicht in Tische aufgeteilt',
+	'console.status.seated': 'Alle sitzen · {{t}} Tische',
+	'console.status.tables_done': '{{n}} von {{m}} Tischen sind fertig',
+	'console.status.tables_rating': '{{n}} von {{m}} Tischen bewerten oder sind fertig',
+	'console.status.vote_paused': 'Abstimmung pausiert · {{voted}} von {{present}} haben abgestimmt',
+	'console.status.stuck_one': 'Tisch {{t}} hängt fest',
+	'console.status.stuck_many': '{{n}} Tische hängen fest',
+	'console.status.show': 'Anzeigen',
+	'console.drag_hint_close': 'Verstanden',
+	'console.student_screen_back': 'Zurück zu den Tischen',
 };
 
 export default consoleUi;

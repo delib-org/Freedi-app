@@ -46,7 +46,6 @@ const vote: Record<string, string> = {
 	'console.vote_scope_locked': 'נקבע לפני פתיחת ההצבעה',
 	'console.vote_status_not_open': 'ההצבעה עוד לא נפתחה',
 	'console.vote_status_open': 'ההצבעה פתוחה',
-	'console.vote_status_paused': 'ההצבעה בהפסקה',
 	'console.vote_status_closed': 'ההצבעה נסגרה',
 	'console.vote_progress': '{{voted}} מתוך {{present}} הצביעו',
 	'console.vote_reset_hint': 'יש לסגור או להשהות קודם',

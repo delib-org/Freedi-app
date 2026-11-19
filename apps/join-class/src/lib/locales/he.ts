@@ -296,7 +296,6 @@ const he: Record<string, string> = {
 	'console.rail_label': 'שלבי השיעור',
 	'console.rail_step': 'שלב {{n}}: {{name}}, {{state}}',
 	'console.state_done': 'הסתיים',
-	'console.state_current': 'נוכחי',
 	'console.state_upcoming': 'בהמשך',
 	'console.step_of': 'שלב {{n}} מתוך {{total}}',
 	'console.next': 'פתיחת השלב הבא: {{name}}',

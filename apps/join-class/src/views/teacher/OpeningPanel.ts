@@ -19,6 +19,8 @@ import type { Statement } from '@freedi/shared-types';
 
 export interface OpeningPanelAttrs {
 	main: Statement;
+	/** "On the projector: [the text] [video 1]...": the step's own choice, drawn under the title. */
+	projector?: m.Children;
 }
 
 interface PanelState {
@@ -114,6 +116,7 @@ export const OpeningPanel: m.Component<OpeningPanelAttrs> = {
 							`${t('console.intro.edit')} ↗`,
 						),
 			]),
+			vnode.attrs.projector ?? null,
 			none
 				? empty(mid)
 				: [

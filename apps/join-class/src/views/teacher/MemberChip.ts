@@ -4,6 +4,7 @@ import type { DropTarget } from '@/lib/classroom/dragReducer';
 import type { AnswerMark, AskMark } from '@/lib/classroom/tableTurnConsole';
 import { moveStudent, requestNewName } from './consoleActions';
 import { blurChip, keyChip, pressChip, targetName } from './dragController';
+import { noteStudentMoved } from './moveHook';
 import { consoleState } from './consoleState';
 
 /**
@@ -55,6 +56,7 @@ function studentMenu(attrs: MemberChipAttrs, uid: string): m.Vnode {
 
 					return;
 				}
+				noteStudentMoved();
 				void moveStudent(consoleState.mainId, uid, raw === 'none' ? null : Number(raw));
 			},
 			onblur: () => {

@@ -20,10 +20,7 @@ vi.mock('../consoleActions', () => ({
 }));
 vi.mock('../ConfirmDialog', () => ({ askConfirm: vi.fn() }));
 
-const { ResultsAudienceSwitch, ResultsChip, VOTE_RESULTS_AUDIENCE } = await import(
-	'../ResultsAudienceSwitch'
-);
-const { VoteBar } = await import('../VoteBar');
+const { ResultsAudienceSwitch, VOTE_RESULTS_AUDIENCE } = await import('../ResultsAudienceSwitch');
 const { resultsAside } = await import('../consoleConfirms');
 const { setVoteDisplay } = await import('../consoleActions');
 
@@ -105,52 +102,6 @@ describe('ResultsAudienceSwitch', () => {
 		me.onchange?.();
 
 		expect(onChange.mock.calls).toEqual([[true], [false]]);
-	});
-});
-
-describe('ResultsChip', () => {
-	it('closed: lock text, polite live region', () => {
-		const component = ResultsChip as unknown as {
-			view: (vnode: { attrs: { shown: boolean } }) => m.Vnode;
-		};
-		const closed = component.view({ attrs: { shown: false } });
-		const open = component.view({ attrs: { shown: true } });
-
-		expect((closed.attrs as { 'aria-live': string })['aria-live']).toBe('polite');
-		expect(textOf(closed)).toContain('console.results_chip_closed');
-		expect(textOf(open)).toContain('console.results_chip_shown');
-	});
-});
-
-describe('the Vote bar carries the control', () => {
-	it('draws the chip and the audience switch next to the order switch', () => {
-		const component = VoteBar as unknown as {
-			view: (vnode: { attrs: unknown }) => m.Vnode;
-		};
-		const bar = component.view({
-			attrs: {
-				held: true,
-				ended: false,
-				ballotFrozen: true,
-				ballotPaused: false,
-				ballotClosed: false,
-				votedCount: 0,
-				presentCount: 0,
-				allVoted: false,
-				hasChallenge: true,
-				voteOrder: 'consensus',
-				onVoteOrder: noop,
-				resultsShown: false,
-				onResultsShown: noop,
-				onPauseVote: noop,
-				onResetVote: noop,
-			},
-		});
-		const text = textOf(bar);
-
-		expect(text).toContain('console.results_chip_closed');
-		expect(text).toContain('console.results_audience');
-		expect(text).toContain('console.vote_order');
 	});
 });
 
