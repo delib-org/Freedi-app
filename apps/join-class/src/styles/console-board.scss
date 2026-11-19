@@ -316,6 +316,34 @@
   font-size: var(--font-size-sm);
 }
 
+// Proposals talk: the floor of one table. Speaking = a filled band with a glyph, words and the time.
+.speaker-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+
+  &--speaking {
+    color: var(--teal-700);
+    background: var(--teal-50);
+    border: 1.5px solid var(--teal-600);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &--nobody {
+    color: var(--ink);
+    border: 1.5px dashed var(--ink-soft);
+  }
+
+  &__text {
+    flex: 1;
+  }
+}
+
 .table-card__now {
   font-weight: var(--font-weight-bold);
 }

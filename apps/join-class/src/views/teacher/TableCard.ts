@@ -26,6 +26,8 @@ import { addNoDevice, tableAction } from './consoleActions';
 import { consoleState, isBusy } from './consoleState';
 import { openActFor } from './actFor/actForState';
 import { MemberChip } from './MemberChip';
+import { ProposalsSpeakerRow } from './ProposalsSpeakerRow';
+import { proposalsSpeakerOf } from '@/lib/classroom/proposalsSpeaker';
 import { TableBridgeLines } from './TableBridgeLines';
 import { dropAttrs } from './dragController';
 
@@ -190,6 +192,16 @@ function timerRows(attrs: TableCardAttrs): m.Children {
 	];
 }
 
+/** Proposals talk: who holds the floor (name, glyph, time left) or "Nobody is speaking". Else the timer rows. */
+function speakerOrTimerRows(attrs: TableCardAttrs): m.Children {
+	const speaker =
+		tableModeOf(attrs) === 'proposals' ? proposalsSpeakerOf(attrs.table, serverNow()) : null;
+	if (!speaker) return timerRows(attrs);
+	const name = speaker.kind === 'speaking' ? nameOf(speaker.uid, attrs.students, attrs.table) : '';
+
+	return m(ProposalsSpeakerRow, { speaker, name });
+}
+
 export function noDeviceForm(
 	mainId: string,
 	n: number,
@@ -267,6 +279,9 @@ export const TableCard: m.Component<TableCardAttrs> = {
 		const { table, students, plenum, mainId } = attrs;
 		const mode = tableModeOf(attrs);
 		const propDone = proposalsDoneNow(table, mode);
+		const floor =
+			mode === 'proposals' && !attrs.done ? proposalsSpeakerOf(table, serverNow()) : null;
+		const speakingUid = floor?.kind === 'speaking' ? floor.uid : null;
 		const drag = consoleState.drag;
 		const dragging = drag.mode === 'pointer' || drag.mode === 'keyboard';
 		const isSource = dragging && drag.from === table.n;
@@ -322,7 +337,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 				attrs.tableTalk && attrs.questionText && table.questionId
 					? m('p.table-card__question', { dir: 'auto' }, attrs.questionText)
 					: null,
-				attrs.done ? null : timerRows(attrs),
+				attrs.done ? null : speakerOrTimerRows(attrs),
 				attrs.tableTalk && table.askerUid
 					? m(
 							'p.table-card__asker',
@@ -335,6 +350,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 							key: uid,
 							uid,
 							name: nameOf(uid, students),
+							speaking: speakingUid === uid,
 							chosen: attrs.showSides ? (students.get(uid)?.camp ?? null) !== null : undefined,
 							from: table.n,
 							tableNumbers: attrs.tableNumbers,
@@ -346,6 +362,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 						m(MemberChip, {
 							key: `nd:${nd.id}`,
 							name: nd.name,
+							speaking: speakingUid === nd.id,
 							noDevice: true,
 							onOpen: () => openActFor(nd.id),
 							from: table.n,

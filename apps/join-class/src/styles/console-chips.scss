@@ -147,3 +147,16 @@
     outline-offset: 2px;
   }
 }
+
+// Proposals talk: whoever holds the floor. A microphone glyph, the word "Speaking" and a heavy outline.
+.member-chip--speaking {
+  border-color: var(--teal-600);
+  background: var(--teal-100);
+  outline: 2px solid var(--teal-600);
+  outline-offset: -2px;
+}
+
+.member-chip__tag--speaking {
+  color: var(--teal-700);
+  font-weight: var(--font-weight-bold);
+}

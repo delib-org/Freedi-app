@@ -28,6 +28,8 @@ export interface MemberChipAttrs {
 	askMark?: AskMark;
 	/** Table talk, after the name: ✓ answered, ● answering now, – passed this question. */
 	answerMark?: AnswerMark;
+	/** Proposals talk: this member holds the floor now (a glyph, the word and a heavier outline). */
+	speaking?: boolean;
 	/** A no-device chip: opens the act-for sheet on this student. */
 	onOpen?: () => void;
 }
@@ -92,13 +94,15 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 			'–': 'console.mark_passed_answer',
 			'': '',
 		};
+		const speakingWord = attrs.speaking ? `, ${t('console.speaking_now', { name })}` : '';
 		const turnWord = [
 			attrs.askMark ? askWord[attrs.askMark] : '',
 			attrs.answerMark ? answerWord[attrs.answerMark] : '',
 		]
 			.filter(Boolean)
 			.map((key) => `, ${t(key, { name })}`)
-			.join('');
+			.join('')
+			.concat(speakingWord);
 		const noSide = attrs.chosen === false;
 		const spoken = noSide ? `${name}, ${t('console.side_none')}` : name;
 		const label = (noDevice ? `${name}, ${t('console.no_device')}` : spoken) + turnWord;
@@ -118,6 +122,7 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 						attrs.askMark === '?' ? 'member-chip--asking' : '',
 						attrs.askMark === '–' ? 'member-chip--passed-ask' : '',
 						attrs.answerMark === '●' ? 'member-chip--answering' : '',
+						attrs.speaking ? 'member-chip--speaking' : '',
 					].join(' '),
 					title: label,
 					'aria-label': label,
@@ -144,6 +149,13 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 								attrs.askMark,
 							)
 						: null,
+					attrs.speaking
+						? m(
+								'span.member-chip__turn.member-chip__turn--speaking',
+								{ 'aria-hidden': 'true' },
+								'\u{1F399}',
+							)
+						: null,
 					m('span.member-chip__name', name),
 					attrs.answerMark
 						? m(
@@ -151,6 +163,9 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 								{ 'aria-hidden': 'true' },
 								attrs.answerMark,
 							)
+						: null,
+					attrs.speaking
+						? m('span.member-chip__tag.member-chip__tag--speaking', t('console.speaking_tag'))
 						: null,
 					noDevice ? m('span.member-chip__tag', t('console.no_device')) : null,
 					noSide
