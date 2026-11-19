@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { ClassPlan } from '@freedi/shared-types';
+import type { ClassGame, ClassPlan } from '@freedi/shared-types';
 import type { PlanRow } from '@/lib/planTree';
 import {
 	IDLE_PICKER,
@@ -8,6 +8,7 @@ import {
 	countsKnown,
 	createReadGuard,
 	listablePlans,
+	pickerGames,
 	needsFilter,
 	openPicker,
 	pickGame,
@@ -189,5 +190,27 @@ describe('stepBack', () => {
 
 	it('idle stays idle', () => {
 		expect(stepBack(IDLE_PICKER).step).toEqual(IDLE_PICKER);
+	});
+});
+
+describe('pickerGames', () => {
+	const game = (gameId: string, removedAt?: number): ClassGame => ({
+		gameId,
+		planId: 'p',
+		ownerUid: 'u',
+		title: `game ${gameId}`,
+		order: 0,
+		snapshot: { questions: [], paragraphs: [], introVideos: [], settings: {} },
+		createdAt: 1,
+		lastUpdate: 1,
+		...(removedAt === undefined ? {} : { removedAt }),
+	});
+
+	it('leaves out a removed game, so it is neither shown nor startable', () => {
+		expect(pickerGames([game('a', 5), game('b')])).toEqual([{ gameId: 'b', title: 'game b' }]);
+	});
+
+	it('leaves a plan whose only game was removed with nothing to pick', () => {
+		expect(pickerGames([game('a', 5)])).toEqual([]);
 	});
 });
