@@ -66,7 +66,6 @@ const es: Record<string, string> = {
 	'a11y.high_contrast': 'Alto contraste',
 	'a11y.light_contrast': 'Contraste normal',
 	'a11y.language': 'Idioma',
-	'a11y.language.locked': 'Lo decidió el docente',
 	// Delegates
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
@@ -527,7 +526,7 @@ const es: Record<string, string> = {
 	'proposal.hidden_mine': 'El docente ocultó esta propuesta de la lista de la clase',
 	'vote.choice_removed': 'La propuesta que eligieron fue retirada. Elijan otra vez',
 	'plan.details.language': 'Idioma de la clase',
-	'plan.details.language.device': 'El idioma de cada estudiante',
+	'plan.details.language.device': 'Sin bloquear: cada estudiante elige (empieza en hebreo)',
 	// Lesson introduction (IA 14, UX 14.J)
 	'plan.intro.title': 'Introducción',
 	'plan.intro.help':

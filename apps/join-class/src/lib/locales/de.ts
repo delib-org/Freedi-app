@@ -68,7 +68,6 @@ const de: Record<string, string> = {
 	'a11y.high_contrast': 'Hoher Kontrast',
 	'a11y.light_contrast': 'Normaler Kontrast',
 	'a11y.language': 'Sprache',
-	'a11y.language.locked': 'Von der Lehrkraft festgelegt',
 	// Delegates
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
@@ -529,7 +528,7 @@ const de: Record<string, string> = {
 	'proposal.hidden_mine': 'Die Lehrkraft hat diesen Vorschlag aus der Klassenliste ausgeblendet',
 	'vote.choice_removed': 'Der Vorschlag, den ihr gewählt habt, wurde entfernt. Wählt noch einmal',
 	'plan.details.language': 'Sprache der Stunde',
-	'plan.details.language.device': 'Sprache der einzelnen Lernenden',
+	'plan.details.language.device': 'Nicht gesperrt: Alle wählen selbst (Start auf Hebräisch)',
 	// Lesson introduction (IA 14, UX 14.J)
 	'plan.intro.title': 'Einführung',
 	'plan.intro.help':

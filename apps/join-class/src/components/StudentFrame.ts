@@ -1,9 +1,10 @@
 import m from 'mithril';
 import { studentStageProgress, studentStageTitle } from '@/lib/studentStage';
 import type { StageProgress } from '@/lib/studentStage';
-import { t } from '@/lib/i18n';
+import { isLanguageForced, t } from '@/lib/i18n';
 import '@/styles/student-frame.scss';
 import { CollapsibleAsk } from './CollapsibleAsk';
+import { LanguageButton } from './LanguageButton';
 import { ReplyNotice } from '@/views/student/replies/ReplyNotice';
 
 /**
@@ -60,6 +61,15 @@ function stepProgress(progress: StageProgress): m.Vnode {
 	]);
 }
 
+function headerClass(stacked: boolean, withLanguage: boolean): string {
+	return [
+		stacked ? 'frame__header--stacked' : '',
+		withLanguage ? 'frame__header--with-language' : '',
+	]
+		.filter(Boolean)
+		.join(' ');
+}
+
 export const StudentFrame: m.Component<StudentFrameAttrs> = {
 	view({ attrs, children }) {
 		const { headerLine, askerMark, instruction, questionHeading, ask, action, down } = attrs;
@@ -67,14 +77,21 @@ export const StudentFrame: m.Component<StudentFrameAttrs> = {
 		// the status line is dropped when it only repeats the stage name
 		const showLine = Boolean(headerLine) && headerLine !== stageName;
 		const progress = down ? null : studentStageProgress();
+		// The language button: every student screen but the face-down one, and not while the teacher's lock hides it.
+		const showLanguage = !down && !isLanguageForced();
 
 		return m('section.frame', { class: down ? 'frame--down' : '' }, [
-			m('header.frame__header', { class: stageName && showLine ? 'frame__header--stacked' : '' }, [
-				askerMark ? m('span.frame__mark', { 'aria-hidden': 'true' }, askerMark) : null,
-				stageName ? m('h2.frame__stage', stageName) : null,
-				showLine ? m('span.frame__line', headerLine) : null,
-				progress ? stepProgress(progress) : null,
-			]),
+			m(
+				'header.frame__header',
+				{ class: headerClass(Boolean(stageName && showLine), showLanguage) },
+				[
+					askerMark ? m('span.frame__mark', { 'aria-hidden': 'true' }, askerMark) : null,
+					stageName ? m('h2.frame__stage', stageName) : null,
+					showLine ? m('span.frame__line', headerLine) : null,
+					progress ? stepProgress(progress) : null,
+					showLanguage ? m('.frame__language', m(LanguageButton)) : null,
+				],
+			),
 			// The author's lasting "someone replied" line (IA 23.1); never on the face-down talk screen.
 			down ? null : m(ReplyNotice),
 			m('main.frame__content', [

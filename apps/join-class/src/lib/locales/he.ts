@@ -69,7 +69,6 @@ const he: Record<string, string> = {
 	'a11y.high_contrast': 'ניגודיות גבוהה',
 	'a11y.light_contrast': 'ניגודיות רגילה',
 	'a11y.language': 'שפה',
-	'a11y.language.locked': 'נקבע על־ידי המורה',
 	// Delegates
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
@@ -521,7 +520,7 @@ const he: Record<string, string> = {
 	'proposal.hidden_mine': 'המורה הסתירו את ההצעה מהרשימה של הכיתה',
 	'vote.choice_removed': 'ההצעה שבחרתם הוסרה. בחרו שוב',
 	'plan.details.language': 'שפת השיעור',
-	'plan.details.language.device': 'לפי השפה של כל תלמיד',
+	'plan.details.language.device': 'לא נעולה: כל תלמיד בוחר (מתחילים בעברית)',
 	// Lesson introduction (IA 14, UX 14.J)
 	'plan.intro.title': 'הקדמה',
 	'plan.intro.help': 'מוצגת בשלב הפתיחה: גדול על המקרן ובטלפונים של התלמידים.',

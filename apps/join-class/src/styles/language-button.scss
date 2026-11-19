@@ -1,0 +1,61 @@
+// =============================================================================
+// Language button — the student's own language switch (student frame header).
+// Tokens only, BEM, logical properties (RTL-safe). A native <select> inside the
+// pill, so the OS picker opens and the whole 48px pill is the tap target.
+// =============================================================================
+
+.language-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: var(--touch-target, 48px);
+  min-width: var(--touch-target, 48px);
+  padding-inline: var(--space-sm);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--paper-line);
+  border-radius: 999px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold, 600);
+  cursor: pointer;
+
+  &:focus-within {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  &__globe {
+    flex: none;
+    width: 20px;
+    height: 20px;
+  }
+
+  &__select {
+    appearance: none;
+    min-height: var(--touch-target, 48px);
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    font: inherit;
+    cursor: pointer;
+
+    &:focus {
+      outline: none; // the pill shows the focus ring (:focus-within)
+    }
+  }
+}
+
+// In the student frame's header the button sits at the end of the row and the
+// header leaves it room, so a long stage name never runs under it.
+.frame__header--with-language {
+  position: relative;
+  padding-inline-end: calc(var(--touch-target, 48px) * 2 + var(--space-md));
+}
+
+.frame__language {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: var(--space-sm);
+  transform: translateY(-50%);
+}

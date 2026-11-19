@@ -46,6 +46,14 @@ function isSupported(lang: string | null | undefined): lang is LangCode {
 
 const FALLBACK_LANG = 'en';
 
+/** The language of a visitor who has chosen nothing. The phone's own language
+ *  is deliberately not consulted: a class is Hebrew-first, and students on
+ *  English-set phones were landing in English. They switch with the language
+ *  button; the teacher can lock one language for the whole lesson. */
+const DEFAULT_LANG: LangCode = 'he';
+
+const LANG_STORAGE_KEY = 'freedi_joinclass_lang';
+
 const localeRequests = new Map<string, Promise<void>>();
 
 /** Fetch a locale's dictionary, once. Resolves (rather than rejects) on a
@@ -149,36 +157,51 @@ export function isLanguageForced(): boolean {
 export function releaseForcedLanguage(): void {
 	if (!forcedByAdmin) return;
 	forcedByAdmin = false;
+	restoreOwnLanguage();
 	notifyLangChange();
+}
+
+/** After a lock is lifted: back to the student's own choice (or Hebrew). */
+function restoreOwnLanguage(): void {
+	const own = detectLanguage().lang;
+	if (own === currentLang) return;
+	pendingStatementLang = own;
+	void loadLocale(own).then(() => {
+		pendingStatementLang = null;
+		applyLang(own);
+		m.redraw();
+	});
 }
 
 /** Language detection.
  *
+ *  Precedence: ?lang= param, then the student's own saved choice, then Hebrew.
+ *  The teacher's lock is applied on top of this once the lesson loads
+ *  (`applyStatementLanguage`). The device language plays no part.
+ *
  *  NOTE: the inline boot script in `index.html` reimplements this same
- *  precedence (?lang= → localStorage → navigator.language → he) so it can
- *  preload the right locale chunk before this module has even parsed. If the
- *  order changes here, change it there too. A mismatch is not fatal — it just
- *  wastes a preload and costs the round trip this avoids. */
-function detectLanguage(): { lang: LangCode; explicit: boolean } {
+ *  precedence (see vite-plugin-locale-preload.ts) so it can preload the right
+ *  locale chunk before this module has even parsed. If the order changes here,
+ *  change it there too. A mismatch is not fatal — it just wastes a preload and
+ *  costs the round trip this avoids. */
+export function detectLanguage(): { lang: LangCode; explicit: boolean } {
 	const params = new URLSearchParams(window.location.search);
 	const urlLang = params.get('lang');
 	if (isSupported(urlLang)) {
 		return { lang: urlLang, explicit: true };
 	}
 
-	const stored = localStorage.getItem('freedi_joinclass_lang');
+	let stored: string | null = null;
+	try {
+		stored = localStorage.getItem(LANG_STORAGE_KEY);
+	} catch {
+		/* storage blocked: behave as if nothing was saved */
+	}
 	if (isSupported(stored)) {
 		return { lang: stored, explicit: true };
 	}
 
-	const browserLang = navigator.language.split('-')[0];
-	if (isSupported(browserLang) && browserLang !== 'en') {
-		return { lang: browserLang, explicit: false };
-	}
-
-	// WizCol Class is a Hebrew-first classroom app: an unset (or English-only)
-	// browser gets Hebrew RTL. English stays one explicit tap (or ?lang=en) away.
-	return { lang: 'he', explicit: false };
+	return { lang: DEFAULT_LANG, explicit: false };
 }
 
 /** Direction + `lang` attribute only. Split out of `applyLang` so boot can flip
@@ -238,7 +261,11 @@ export function setLang(lang: LangCode): void {
 	if (!isSupported(lang)) return;
 	if (forcedByAdmin) return; // Force flag wins; ignore participant attempts.
 	userExplicitLang = true;
-	localStorage.setItem('freedi_joinclass_lang', lang);
+	try {
+		localStorage.setItem(LANG_STORAGE_KEY, lang);
+	} catch {
+		/* storage blocked: the choice holds for this visit only */
+	}
 
 	// The dictionary may not be here yet (first switch to this language). Hold
 	// the swap until it is, so the UI changes language in one step rather than
@@ -260,7 +287,7 @@ export function setLang(lang: LangCode): void {
  * Returns true if the active language changed.
  *
  * Also tracks the force-state into a module-level flag so the participant-facing
- * widget can disable its picker and show a lock chip. The flag is only touched
+ * language button can hide itself while the teacher's lock is on. The flag is only touched
  * when the caller actually carries a language opinion — calls with no
  * `defaultLanguage` are treated as "no opinion" and leave the prior force
  * state intact. This matters because the join app sync's both the main
@@ -279,6 +306,15 @@ export function applyStatementLanguage(defaultLanguage?: string, forceLanguage?:
 	const wasForced = forcedByAdmin;
 	const nowForced = forceLanguage === true;
 	forcedByAdmin = nowForced;
+
+	// The lock was just lifted: the student's own language returns.
+	if (wasForced && !nowForced) {
+		restoreOwnLanguage();
+		notifyLangChange();
+		m.redraw();
+
+		return true;
+	}
 
 	// `pendingStatementLang` covers the gap between asking for a locale and its
 	// chunk arriving. Without it, the Firestore snapshot handlers that call this

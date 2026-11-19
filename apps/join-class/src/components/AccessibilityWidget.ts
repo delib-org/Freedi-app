@@ -65,9 +65,9 @@ export class AccessibilityWidget {
 
 	// Language row references — refreshed on every lang/force change so the
 	// select tracks programmatic changes (admin pushed a defaultLanguage) and
-	// the lock chip appears/disappears as forceLanguage flips.
+	// the row hides/returns as the teacher's lock flips.
 	private langSelect: HTMLSelectElement | null = null;
-	private langLockChip: HTMLSpanElement | null = null;
+	private langRow: HTMLDivElement | null = null;
 	private langRowLabel: HTMLSpanElement | null = null;
 	private unsubscribeLang: (() => void) | null = null;
 
@@ -203,8 +203,7 @@ export class AccessibilityWidget {
 		// OS-level keyboard, RTL handling, and (on mobile) the OS's own picker —
 		// by far the most familiar pattern for "pick from a list of 7". Native
 		// language names (with dir="auto" on each option) sidestep the political
-		// baggage of flags. The whole row is disabled with a lock chip when the
-		// facilitator has set forceLanguage.
+		// baggage of flags. The whole row is hidden while the teacher's lock is on.
 		const languageRow = document.createElement('div');
 		languageRow.className = 'a11y-widget__row a11y-widget__row--language';
 		languageRow.setAttribute('role', 'group');
@@ -235,16 +234,9 @@ export class AccessibilityWidget {
 		});
 		this.langSelect = langSelect;
 
-		const lockChip = document.createElement('span');
-		lockChip.className = 'a11y-widget__lang-lock';
-		lockChip.setAttribute('role', 'note');
-		lockChip.textContent = t('a11y.language.locked');
-		lockChip.hidden = true;
-		this.langLockChip = lockChip;
-
 		languageRow.appendChild(langLabel);
 		languageRow.appendChild(langSelect);
-		languageRow.appendChild(lockChip);
+		this.langRow = languageRow;
 
 		panel.appendChild(fontRow);
 		panel.appendChild(contrastRow);
@@ -295,7 +287,7 @@ export class AccessibilityWidget {
 			this.triggerBtn.classList.remove('a11y-widget__trigger--active');
 		}
 
-		// Language row sync — value, disabled state, lock chip, label texts.
+		// Language row sync — value, visibility, label texts.
 		// We refresh translated strings here too so a language change made in the
 		// widget itself flips its own labels without needing a separate code path.
 		const forced = isLanguageForced();
@@ -304,16 +296,13 @@ export class AccessibilityWidget {
 			if (this.langSelect.value !== activeLang) {
 				this.langSelect.value = activeLang;
 			}
-			this.langSelect.disabled = forced;
 			this.langSelect.setAttribute('aria-label', t('a11y.language'));
 		}
 		if (this.langRowLabel) {
 			this.langRowLabel.textContent = t('a11y.language');
 		}
-		if (this.langLockChip) {
-			this.langLockChip.textContent = t('a11y.language.locked');
-			this.langLockChip.hidden = !forced;
-		}
+		// A teacher's lock removes the choice altogether rather than greying it out.
+		if (this.langRow) this.langRow.hidden = forced;
 		// Trigger button aria-label may include "language" — refresh on each
 		// language change so screen readers announce the localized version.
 		this.triggerBtn.setAttribute('aria-label', t('a11y.trigger'));
