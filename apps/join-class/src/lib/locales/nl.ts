@@ -65,7 +65,6 @@ const nl: Record<string, string> = {
 	'a11y.high_contrast': 'Hoog contrast',
 	'a11y.light_contrast': 'Normaal contrast',
 	'a11y.language': 'Taal',
-	'a11y.language.locked': 'Bepaald door de leraar',
 	// Delegates
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
@@ -524,7 +523,8 @@ const nl: Record<string, string> = {
 	'proposal.hidden_mine': 'De docent heeft dit voorstel uit de klaslijst verborgen',
 	'vote.choice_removed': 'Het voorstel dat je koos is verwijderd. Kies opnieuw',
 	'plan.details.language': 'Taal van de les',
-	'plan.details.language.device': 'Taal van elke leerling',
+	'plan.details.language.device':
+		'Niet vergrendeld: elke leerling kiest zelf (start in het Hebreeuws)',
 	// Lesson introduction (IA 14, UX 14.J)
 	'plan.intro.title': 'Introductie',
 	'plan.intro.help':

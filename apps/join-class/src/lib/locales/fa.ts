@@ -59,7 +59,6 @@ const fa: Record<string, string> = {
 	'a11y.high_contrast': 'تضاد بالا',
 	'a11y.light_contrast': 'تضاد معمولی',
 	'a11y.language': 'زبان',
-	'a11y.language.locked': 'توسط معلم تعیین شده',
 	// Delegates
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
@@ -516,7 +515,7 @@ const fa: Record<string, string> = {
 	'proposal.hidden_mine': 'معلم این پیشنهاد را از فهرست کلاس پنهان کرد',
 	'vote.choice_removed': 'پیشنهادی که انتخاب کرده بودید حذف شد. دوباره انتخاب کنید',
 	'plan.details.language': 'زبان درس',
-	'plan.details.language.device': 'به زبان هر دانش‌آموز',
+	'plan.details.language.device': 'قفل نشده: هر دانش‌آموز خودش انتخاب می‌کند (شروع با عبری)',
 	// Lesson introduction (IA 14, UX 14.J)
 	'plan.intro.title': 'مقدمه',
 	'plan.intro.help': 'در مرحلهٔ آغاز نمایش داده می‌شود: بزرگ روی پرده و روی گوشی‌های دانش‌آموزان.',

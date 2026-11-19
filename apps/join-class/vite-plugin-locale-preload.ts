@@ -58,11 +58,10 @@ function bootScript(chunks: Record<string, string>): string {
 	return `(function(){try{
 var C=${JSON.stringify(chunks)};
 var R=${JSON.stringify(RTL)};
-var l=null,x=false;
-try{l=new URLSearchParams(location.search).get('lang');x=!!l}catch(e){}
-if(!C[l]&&l!=='en'){try{l=localStorage.getItem('freedi_joinclass_lang');x=!!l}catch(e){l=null}}
-if(!C[l]&&l!=='en'){l=(navigator.language||'he').split('-')[0]}
-if(!C[l]||(l==='en'&&!x)){l='he'}
+var l=null;
+try{l=new URLSearchParams(location.search).get('lang')}catch(e){}
+if(!C[l]&&l!=='en'){try{l=localStorage.getItem('freedi_joinclass_lang')}catch(e){l=null}}
+if(!C[l]&&l!=='en'){l='he'}
 var d=document.documentElement;
 d.lang=l;
 d.dir=R.indexOf(l)>-1?'rtl':'ltr';

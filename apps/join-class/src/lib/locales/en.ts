@@ -69,7 +69,6 @@ const en: Record<string, string> = {
 	'a11y.high_contrast': 'High contrast',
 	'a11y.light_contrast': 'Light contrast',
 	'a11y.language': 'Language',
-	'a11y.language.locked': 'Set by the teacher',
 	// Delegates — per-question solution-editing delegation
 	// /invite accept page
 	// Compact time tokens used by formatRemaining
@@ -526,7 +525,7 @@ const en: Record<string, string> = {
 	'proposal.hidden_mine': 'The teacher hid this proposal from the class list',
 	'vote.choice_removed': 'The proposal you chose was removed. Choose again',
 	'plan.details.language': 'Lesson language',
-	'plan.details.language.device': "Each student's own language",
+	'plan.details.language.device': 'Not locked: each student chooses (Hebrew to start)',
 	// Lesson introduction (IA 14, UX 14.J)
 	'plan.intro.title': 'Introduction',
 	'plan.intro.help': "Shown at the Opening step: big on the projector and on the students' phones.",
