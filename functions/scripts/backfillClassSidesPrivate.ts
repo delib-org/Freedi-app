@@ -21,6 +21,10 @@
  *   --legacy-writes=open    old tabs may keep writing the fields (before deploying rules)
  *   --legacy-writes=close   delete the flag: the fields are refused (then run the backfill once more)
  *
+ * The backfill refuses --execute while the window is open (old tabs would write
+ * the fields straight back); pass --even-if-open to run it anyway. A dry run
+ * prints the window state.
+ *
  * USAGE (from functions/):
  *   GCLOUD_PROJECT=<proj> npx tsx scripts/backfillClassSidesPrivate.ts
  *   GCLOUD_PROJECT=<proj> npx tsx scripts/backfillClassSidesPrivate.ts --execute
@@ -151,6 +155,13 @@ export async function backfillClassSidesPrivate(
 	return report;
 }
 
+/** Is the rules' rollout window open (classFlags/legacySideWrites has open: true)? */
+export async function legacyWindowOpen(db: Firestore): Promise<boolean> {
+	const snap = await db.collection(CLASS_FLAGS_COLLECTION).doc(CLASS_FLAG_LEGACY_SIDE_WRITES).get();
+
+	return snap.exists && (snap.data() as { open?: unknown } | undefined)?.open === true;
+}
+
 /** Opens or closes the rules' rollout window. Writes only when `execute` is true. */
 export async function setLegacySideWrites(
 	db: Firestore,
@@ -171,7 +182,7 @@ async function main(): Promise<void> {
 	const project = process.env.GCLOUD_PROJECT;
 	if (!project) {
 		console.error(
-			'Usage: GCLOUD_PROJECT=<proj> npx tsx scripts/backfillClassSidesPrivate.ts [--legacy-writes=open|close] [--execute]',
+			'Usage: GCLOUD_PROJECT=<proj> npx tsx scripts/backfillClassSidesPrivate.ts [--legacy-writes=open|close] [--execute] [--even-if-open]',
 		);
 		process.exit(1);
 	}
@@ -193,9 +204,18 @@ async function main(): Promise<void> {
 
 		return;
 	}
+	const windowOpen = await legacyWindowOpen(getFirestore());
+	console.info(`# legacySideWrites window: ${windowOpen ? 'OPEN' : 'closed'}`);
+	if (execute && windowOpen && !process.argv.includes('--even-if-open')) {
+		console.error(
+			'Refusing --execute: the legacy-writes window is open, so tabs from before the change can write the fields straight back. Close it first (--legacy-writes=close --execute), or pass --even-if-open.',
+		);
+		process.exit(1);
+	}
 	const report = await backfillClassSidesPrivate(getFirestore(), execute);
 	console.info(
-		`# backfillClassSidesPrivate - project=${project} ${mode}\n` + JSON.stringify(report, null, 2),
+		`# backfillClassSidesPrivate - project=${project} ${mode}\n` +
+			JSON.stringify({ ...report, legacyWindowOpen: windowOpen }, null, 2),
 	);
 }
 

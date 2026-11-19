@@ -12,6 +12,7 @@ import { db, doc, collection, query, where, getDocFromServer } from '../firebase
 import type { Unsubscribe } from '../firebase';
 import { CLASS_LISTENER_KINDS, resilientOnSnapshot } from '../resilientListeners';
 import { getUserState } from '../user';
+import { captureException } from '../sentry';
 import { toRosterSubscription } from './rosterPrivacy';
 import type { RosterSubscription } from './rosterPrivacy';
 
@@ -116,7 +117,10 @@ export function listenMySide(
 ): Unsubscribe {
 	const uid = getUserState().user?.uid;
 	if (!uid) {
-		console.error('[Classroom] listenMySide: no signed-in user');
+		captureException(new Error('no signed-in user'), {
+			operation: 'classroom.listenMySide',
+			mainId,
+		});
 
 		return () => undefined;
 	}
