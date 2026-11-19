@@ -1101,6 +1101,21 @@ export type {
   ClassRegistration,
 } from './models/classroom/classroomModel';
 export {
+  CLASS_SIDES_COLLECTION,
+  CLASS_SIDE_PRIVATE_FIELDS,
+  CLASS_FLAGS_COLLECTION,
+  CLASS_FLAG_LEGACY_SIDE_WRITES,
+  ClassSideSchema,
+  classSideId,
+  mergeClassSide,
+} from './models/classroom/classSideModel';
+export type {
+  ClassSide,
+  ClassSideValues,
+  ClassSupportBySideRequest,
+  ClassSupportBySideResponse,
+} from './models/classroom/classSideModel';
+export {
   classRegistrationOf,
   isRegistrationConnectable,
   seatsPerTableOf,

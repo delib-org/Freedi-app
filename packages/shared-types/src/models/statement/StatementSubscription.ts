@@ -76,7 +76,8 @@ export const StatementSubscriptionSchema = object({
 	// queried without joining through /statements.
 	organizationId: optional(string()),
 
-	// join-class: side / camp / decisionSupport (student-written), tableId (server-written)
+	// join-class: sidePickedAt (student-written), tableId (server-written); side / camp /
+	// decisionSupport are LEGACY here, the side lives on classSides (owner-only)
 	...ClassSubscriptionFieldsSchema,
 });
  
