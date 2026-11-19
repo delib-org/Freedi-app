@@ -106,7 +106,7 @@ Rule behind the table: a screen has a button only when its tap works right now. 
 | `SubStepStrip.ts` | Changes: read-only marker, no buttons |
 | `WritePanel.ts` | Changes: pen states W1–W4; broadcast checkbox goes; its dead Table-talk branches go (its own TODO) |
 | `WriteBox.ts` | Kept; its read-only mode shows the pen holder's text |
-| `liveWritingParts.ts`, `WatchView.ts` | **Go.** The live text becomes W3/W4's body. One polite live region ("נועה כותב/ת") stays in `TableFlow.ts` |
+| `liveWritingParts.ts`, `WatchView.ts` | **Deleted** (built 2026-11-19). The live text is W3/W4's body (`PenScreen.ts`, fed by `penTextOf` in `liveWriting.ts`). One polite live region stays in `TableFlow.ts` |
 | `MoveOn.ts` | Kept, shown in T4 only |
 | Class sheet (`Sheet` + `RatedList` overlay) | **Goes** from Proposals. `RatedList` stays as the Rate body |
 | `proposalsTurn.ts` | Grows the write kinds. `showsWriteButton` goes |
