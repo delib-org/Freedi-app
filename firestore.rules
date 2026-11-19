@@ -858,6 +858,50 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // join-class: a student's side, classSides/{uid}--{mainId} (Trello
+    // btMVQMM5). PRIVATE: only the student reads or writes it; the teacher,
+    // other students and admins never do (the functions read it with the Admin
+    // SDK: table mixing, support by side). Same validation as the old
+    // subscription fields, the same lesson gate (paused / ended = no writes),
+    // and the student must already hold the subscription of the same id.
+    // A get of a missing doc is answered only to its owner (listener before
+    // the first pick), so nobody else can even probe it.
+    match /classSides/{sideId} {
+      function classSideValuesOk(d) {
+        return d.keys().hasOnly(['userId', 'mainId', 'side', 'camp', 'decisionSupport', 'lastUpdate']) &&
+               d.userId == request.auth.uid &&
+               d.mainId is string &&
+               sideId == request.auth.uid + '--' + d.mainId &&
+               d.lastUpdate is number &&
+               (!('side' in d) || (d.side is number && d.side >= 0 && d.side <= 100)) &&
+               (!('camp' in d) || d.camp in ['a', 'center', 'b']) &&
+               (!('decisionSupport' in d) ||
+                 (d.decisionSupport is number && d.decisionSupport >= -1 && d.decisionSupport <= 1));
+      }
+
+      allow get: if request.auth != null &&
+                    (resource == null
+                      ? sideId.split('--')[0] == request.auth.uid
+                      : resource.data.userId == request.auth.uid);
+      allow list: if false;
+      allow create: if request.auth != null &&
+                       classSideValuesOk(request.resource.data) &&
+                       exists(/databases/$(database)/documents/statementsSubscribe/$(sideId)) &&
+                       classLessonWritable(request.resource.data.mainId);
+      allow update: if request.auth != null &&
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.mainId == resource.data.mainId &&
+                       classSideValuesOk(request.resource.data) &&
+                       classLessonWritable(resource.data.mainId);
+      allow delete: if false;
+    }
+
+    // Rollout switches read only by these rules (classFlags/legacySideWrites,
+    // see sideFieldsUpdateOk). Admin SDK only.
+    match /classFlags/{flagId} {
+      allow read, write: if false;
+    }
+
     // === Tables (table assignment) ===
     // Every write goes through the tables* callables (Admin SDK): clients write
     // nothing. Reads are scoped so nobody, the host included, reads another
@@ -1802,10 +1846,13 @@ service cloud.firestore {
                (isTargetAdmin() || isTargetStatementCreator());
       }
 
-      // join-class fields on a workspace subscription. The student writes
-      // side (0..100), camp ('a'|'center'|'b') and decisionSupport (-1..+1)
-      // on their own doc; tableId is server-written only (classAssignTables /
-      // classMoveStudent), so no non-admin client may set, change or clear it.
+      // join-class fields on a workspace subscription. side (0..100), camp
+      // ('a'|'center'|'b') and decisionSupport (-1..+1) are LEGACY here: they
+      // moved to the owner-only classSides (Trello btMVQMM5), and only an app
+      // version from before that still writes them, only while the rollout flag
+      // is open (sideFieldsCreateOk / sideFieldsUpdateOk). tableId is
+      // server-written only (classAssignTables / classMoveStudent), so no
+      // non-admin client may set, change or clear it.
       // Each check is a no-op for a doc that does not carry the field, so the
       // main app's own subscription writes are untouched.
       // proposalRepliesReadAt (IA 22): the student's own read mark on the
@@ -1833,6 +1880,44 @@ service cloud.firestore {
                !changed.hasAny(['tableId']) &&
                (!changed.hasAny(['side', 'camp', 'decisionSupport']) ||
                 classLessonWritable(resource.data.statementId));
+      }
+
+      // THE SIDE IS PRIVATE (Trello btMVQMM5). Any signed-in user can read a
+      // subscription, and the teacher may learn THAT a student chose a side,
+      // never WHICH. So the side lives on classSides/{uid}--{mainId} (owner
+      // only), and the subscription carries just sidePickedAt.
+      //  - sidePickedAt: only the owner sets it, never removes it, and only in a
+      //    write that leaves a camp on their classSides doc (getAfter: the same
+      //    batch, or a doc that already has one). The admin branch cannot set it
+      //    on a student's doc either.
+      //  - side / camp / decisionSupport: nobody adds or changes them, the admin
+      //    branch included, unless classFlags/legacySideWrites says open: true
+      //    (the rollout window for tabs opened before the change, set and
+      //    cleared by functions/scripts/backfillClassSidesPrivate.ts). Absent = closed.
+      function legacySideWritesOpen() {
+        let flagPath = /databases/$(database)/documents/classFlags/legacySideWrites;
+        return exists(flagPath) && get(flagPath).data.get('open', false) == true;
+      }
+
+      function sidePickedOk() {
+        let sidePath = /databases/$(database)/documents/classSides/$(statementSubId);
+        return request.resource.data.get('sidePickedAt', null) is number &&
+               existsAfter(sidePath) &&
+               getAfter(sidePath).data.get('camp', null) != null;
+      }
+
+      function sideFieldsCreateOk() {
+        let d = request.resource.data;
+        return !('sidePickedAt' in d) &&
+               (!('side' in d || 'camp' in d || 'decisionSupport' in d) || legacySideWritesOpen());
+      }
+
+      function sideFieldsUpdateOk() {
+        let changed = request.resource.data.diff(resource.data).affectedKeys();
+        return !changed.hasAny(['side', 'camp', 'decisionSupport', 'sidePickedAt']) ||
+               (isSubscriber() &&
+                (!changed.hasAny(['side', 'camp', 'decisionSupport']) || legacySideWritesOpen()) &&
+                (!changed.hasAny(['sidePickedAt']) || sidePickedOk()));
       }
 
       // IDENTITY OF A SUBSCRIPTION. Every admin check (statements isAdmin(),
@@ -1932,6 +2017,7 @@ service cloud.firestore {
                      request.resource.data.userId == request.auth.uid &&
                      createIdentityOk() &&
                      tokensCreateOk() &&
+                     sideFieldsCreateOk() &&
                      homeSubscriptionWriteOk() &&
                      (isAdminOrCreator() ||
                       (isSelfGrantableRole() &&
@@ -1949,6 +2035,7 @@ service cloud.firestore {
                      !isTryingToBanProtectedUser() &&
                      updateIdentityOk() &&
                      tokensUpdateOk() &&
+                     sideFieldsUpdateOk() &&
                      homeSubscriptionUpdateOk() &&
                      (isAdminOrCreator() ||
                       (isSubscriber() &&

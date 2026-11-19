@@ -11,6 +11,7 @@ import {
 	setDoc,
 	updateDoc,
 	where,
+	writeBatch,
 } from 'firebase/firestore';
 import { makeEnv, seed } from './helpers.mjs';
 
@@ -283,9 +284,17 @@ describe('join-class lesson plans and homes', () => {
 			await assertFails(
 				setDoc(doc(db, 'statementsSubscribe', `${STUDENT}--${HOME}`), sub(STUDENT, HOME, 'member')),
 			);
-			await assertSucceeds(
-				updateDoc(doc(db, 'statementsSubscribe', `${STUDENT}--${LESSON}`), { side: 70, camp: 'b' }),
-			);
+			// The side goes to the private classSides doc, the subscription gets only the flag.
+			const batch = writeBatch(db);
+			batch.set(doc(db, 'classSides', `${STUDENT}--${LESSON}`), {
+				userId: STUDENT,
+				mainId: LESSON,
+				side: 70,
+				camp: 'b',
+				lastUpdate: T0,
+			});
+			batch.update(doc(db, 'statementsSubscribe', `${STUDENT}--${LESSON}`), { sidePickedAt: T0 });
+			await assertSucceeds(batch.commit());
 		});
 
 		it('writes a table-talk answer under a guiding question, as today', async () => {
