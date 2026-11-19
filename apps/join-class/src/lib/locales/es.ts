@@ -10,6 +10,7 @@ import look from './look/es';
 import challenge from './challenge/es';
 import actFor from './actFor/es';
 import bridge from './bridge/es';
+import consoleUi from './consoleUi/es';
 
 const es: Record<string, string> = {
 	...vote,
@@ -19,6 +20,7 @@ const es: Record<string, string> = {
 	...challenge,
 	...actFor,
 	...bridge,
+	...consoleUi,
 	'step.waiting': 'Esperando al docente',
 	'step.opening': 'Apertura',
 	'step.side': 'Elegir postura',
@@ -82,9 +84,9 @@ const es: Record<string, string> = {
 	'plan.details.claim_a': 'Qué dice el primer lado',
 	'plan.details.claim_b': 'Qué dice el segundo lado',
 	'plan.details.claim.placeholder': 'Opcional. Una frase que aparece bajo el nombre',
-	'console.gate.label': 'Umbral de acuerdo para la pregunta principal',
-	'console.gate.value': 'Umbral: {{value}}',
-	'console.gate.help': 'Una propuesta pasa cuando su acuerdo llega a este número.',
+	'console.gate.label': 'La meta: cuánto acuerdo hace falta para pasar',
+	'console.gate.value': 'Meta: {{value}}%',
+	'console.gate.help': 'Una propuesta supera la meta cuando su acuerdo llega a este porcentaje.',
 	'plan.tables.title': 'Preguntas para las mesas',
 	'plan.tables.help': 'Cada mesa elige una. Añadan de 3 a 8.',
 	'plan.own_questions': 'Los estudiantes pueden añadir su propia pregunta',
@@ -247,7 +249,7 @@ const es: Record<string, string> = {
 	'proposals.heading': 'Proponed una solución a la pregunta «{{question}}»',
 	'proposal.mine': 'Mi propuesta',
 	'proposal.placeholder': 'Escribid una propuesta',
-	'proposal.none': 'Aún no hay pregunta para propuestas',
+	'proposal.none': 'Aún no hay pregunta a resolver',
 	'proposal.send': 'Enviar',
 	'proposal.none_yet': 'Aún no hay propuestas',
 	'proposal.plenum_line': 'Las mejores propuestas están en el proyector',
@@ -276,7 +278,6 @@ const es: Record<string, string> = {
 	'console.act_step': 'Ir al paso',
 	'console.split': 'Dividir en mesas',
 	'console.resplit': 'Dividir de nuevo',
-	'console.resplit_confirm': '¿Dividir de nuevo la clase? Se perderá la distribución actual.',
 	'console.all_tables_rate': 'Todas las mesas: valorar',
 	'console.plenum': 'Todos juntos',
 	'console.plenum_on': 'Todos juntos · activo',
@@ -296,8 +297,7 @@ const es: Record<string, string> = {
 	'console.rail_label': 'Pasos de la clase',
 	'console.rail_step': 'Paso {{n}}: {{name}}, {{state}}',
 	'console.state_done': 'terminado',
-	'console.state_current': 'actual',
-	'console.state_upcoming': 'siguiente',
+	'console.state_upcoming': 'más adelante',
 	'console.step_of': 'Paso {{n}} de {{total}}',
 	'console.next': 'Abrir el siguiente paso: {{name}}',
 	'console.end': 'Terminar la clase',
@@ -366,7 +366,7 @@ const es: Record<string, string> = {
 	'console.move_cancelled': 'Movimiento cancelado',
 	'console.over_target': '{{target}}',
 	'console.gate_title': 'Propuestas frente al umbral',
-	'console.gate_at': 'Umbral en {{gate}}',
+	'console.gate_at': 'Meta: {{gate}}%',
 	'console.gate_empty': 'Aún no hay propuestas',
 	'console.gate_passed': 'Superó el umbral',
 	'console.gate_gap': 'Faltan {{gap}}',

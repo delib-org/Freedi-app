@@ -18,7 +18,7 @@ const actFor: Record<string, string> = {
 	'console.act_for_next': 'بعدی: {{name}}',
 	'console.act_for_limit': 'به نام {{name}} قبلاً پیشنهادی هست. می‌شود آن را ویرایش کرد',
 	'console.act_for_closed': 'رأی‌گیری باز شده است: دیگر نمی‌شود پیشنهادها را تغییر داد',
-	'console.act_for_held': 'درس متوقف است: الان چیزی را نمی‌شود تغییر داد',
+	'console.act_for_held': 'درس در تنفس است: الان چیزی را نمی‌شود تغییر داد',
 	'console.act_for_vote_not_open': 'رأی‌گیری هنوز باز نشده است',
 	'console.act_for_empty': 'هنوز کسی بدون دستگاه اینجا نیست. می‌توانید اضافه کنید',
 	'console.act_for_pick': 'نامی را از فهرست انتخاب کنید',

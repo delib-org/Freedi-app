@@ -19,7 +19,7 @@ const actFor: Record<string, string> = {
 	'console.act_for_limit':
 		'Im Namen von {{name}} gibt es schon einen Vorschlag. Er kann bearbeitet werden',
 	'console.act_for_closed': 'Die Abstimmung läuft: Vorschläge können nicht mehr geändert werden',
-	'console.act_for_held': 'Die Stunde ist angehalten: Jetzt lässt sich nichts ändern',
+	'console.act_for_held': 'Die Stunde ist pausiert: Jetzt lässt sich nichts ändern',
 	'console.act_for_vote_not_open': 'Die Abstimmung ist noch nicht geöffnet',
 	'console.act_for_empty': 'Noch niemand ohne Gerät. Hier hinzufügen',
 	'console.act_for_pick': 'Wähle einen Namen aus der Liste',

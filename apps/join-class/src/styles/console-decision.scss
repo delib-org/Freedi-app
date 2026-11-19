@@ -1,0 +1,117 @@
+// =============================================================================
+// Teacher console: "The decision" card (design 7.1). Tokens only, BEM, logical properties.
+// The bars use --bar (a percent) set by the view; colour is never the only cue: every row
+// also carries its percent in words.
+// =============================================================================
+
+.decision-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-block-end: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--card-line, var(--border-light));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.decision-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-xs) var(--space-md);
+}
+
+.decision-panel__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.decision-panel__audience,
+.decision-panel__note,
+.decision-panel__turnout {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--font-size-sm);
+}
+
+.decision-panel__winner {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  overflow-wrap: anywhere;
+}
+
+.decision-panel__score {
+  margin: 0;
+  color: var(--teal-ink);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.decision-panel__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.decision-panel__row {
+  display: grid;
+  grid-template-columns: minmax(80px, 1fr) 3.5em minmax(0, 2fr);
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.decision-panel__track {
+  display: block;
+  block-size: 10px;
+  background: var(--paper-deep);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.decision-panel__fill {
+  display: block;
+  inline-size: var(--bar, 0%);
+  block-size: 100%;
+  background: var(--teal-600);
+  border-radius: var(--radius-full);
+}
+
+.decision-panel__percent {
+  color: var(--teal-ink);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.decision-panel__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.decision-panel__row--winner .decision-panel__text {
+  font-weight: var(--font-weight-bold);
+}
+
+@media (max-width: 767px) {
+  .decision-panel {
+    padding: var(--space-md);
+  }
+}
+
+@media (forced-colors: active) {
+  .decision-panel__track {
+    border: 1px solid CanvasText;
+  }
+
+  .decision-panel__fill {
+    background: Highlight;
+  }
+}

@@ -18,7 +18,7 @@ const actFor: Record<string, string> = {
 	'console.act_for_next': 'Volgende: {{name}}',
 	'console.act_for_limit': 'Er is al een voorstel namens {{name}}. Dat kan worden bewerkt',
 	'console.act_for_closed': 'De stemming is geopend: voorstellen kunnen niet meer veranderen',
-	'console.act_for_held': 'De les staat stil: er kan nu niets veranderen',
+	'console.act_for_held': 'De les is gepauzeerd: er kan nu niets veranderen',
 	'console.act_for_vote_not_open': 'De stemming is nog niet geopend',
 	'console.act_for_empty': 'Nog niemand zonder apparaat. Je kunt iemand toevoegen',
 	'console.act_for_pick': 'Kies een naam uit de lijst',

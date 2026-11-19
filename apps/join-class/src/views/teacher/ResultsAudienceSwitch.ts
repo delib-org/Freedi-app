@@ -115,17 +115,3 @@ export const SupportAudienceSwitch: m.Component<SupportAudienceSwitchAttrs> = {
 		});
 	},
 };
-
-/** The chip beside the vote-status chip: lock + "hidden" or eye + "shown" (text and icon, not colour alone). */
-export const ResultsChip: m.Component<{ shown: boolean }> = {
-	view({ attrs }) {
-		return m(
-			`span.vote-status.vote-status--results-${attrs.shown ? 'shown' : 'closed'}`,
-			{ role: 'status', 'aria-live': 'polite', 'data-testid': 'results-chip' },
-			[
-				icon(attrs.shown ? 'eye' : 'lock'),
-				m('span', t(attrs.shown ? 'console.results_chip_shown' : 'console.results_chip_closed')),
-			],
-		);
-	},
-};

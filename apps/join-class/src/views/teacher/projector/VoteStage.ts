@@ -16,6 +16,7 @@ import {
 	voteResults,
 } from '@/lib/classroom/voteResults';
 import { presentCount, summaryOf } from '@/lib/classroom/voteSummary';
+import { decisionVisibleToClass } from '@/lib/classroom/decision';
 import { noDeviceTotal } from '@/lib/classroom/actFor';
 import type { SummaryRow, VoteSummary } from '@/lib/classroom/voteSummary';
 import { playFlip, recordPositions } from '@/lib/flipReorder';
@@ -245,7 +246,7 @@ export function summaryStage(): m.Vnode {
 		resultsShown: liveResultsOn(challenge),
 	});
 	// Closed results: no decision card at all (not even an empty one), it would be the winner.
-	const decided = (summary.kind === 'none' || summary.kind === 'closed') && !summary.resultsHidden;
+	const decided = decisionVisibleToClass(summary);
 
 	return m('section.projector-step.projector-step--summary', [
 		summary.kind === 'none' ? m('p.projector-results__note', t('summary.no_vote')) : null,

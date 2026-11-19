@@ -76,6 +76,25 @@ export function allRatedBandLine(challenge: Statement | null): string {
 	return t('console.all_rated_line', { n: line.n, m: line.m, k: minRatingsPerProposal(options) });
 }
 
+/** The same numbers as plain data, for the status line: complete when every student rated everything. */
+export function allRatedState(challenge: Statement | null): {
+	n: number;
+	m: number;
+	k: number;
+	complete: boolean;
+} {
+	const options = proposalsOf(challenge);
+	const uids = rosterStudents(classState.roster).map((s) => s.uid);
+	const line = ratedAllLine(uids, options, challenge?.statementId ?? null, current);
+
+	return {
+		n: line.n,
+		m: line.m,
+		k: minRatingsPerProposal(options),
+		complete: line.m > 0 && line.n >= line.m,
+	};
+}
+
 /** A table card's "n/m rated everything". */
 export function tableRatedText(table: ClassTable, challenge: Statement | null): string {
 	const line = tableRatedLine(

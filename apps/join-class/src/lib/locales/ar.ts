@@ -10,6 +10,7 @@ import look from './look/ar';
 import challenge from './challenge/ar';
 import actFor from './actFor/ar';
 import bridge from './bridge/ar';
+import consoleUi from './consoleUi/ar';
 
 const ar: Record<string, string> = {
 	...vote,
@@ -19,6 +20,7 @@ const ar: Record<string, string> = {
 	...challenge,
 	...actFor,
 	...bridge,
+	...consoleUi,
 	'step.waiting': 'في انتظار المعلم',
 	'step.opening': 'البداية',
 	'step.side': 'اختيار الجانب',
@@ -85,9 +87,9 @@ const ar: Record<string, string> = {
 	'plan.details.claim_a': 'ماذا يقول الجانب الأول',
 	'plan.details.claim_b': 'ماذا يقول الجانب الثاني',
 	'plan.details.claim.placeholder': 'اختياري. جملة واحدة تظهر تحت الاسم',
-	'console.gate.label': 'عتبة الموافقة للسؤال الرئيسي',
-	'console.gate.value': 'العتبة: {{value}}',
-	'console.gate.help': 'يجتاز الاقتراح العتبة عندما تصل الموافقة عليه إلى هذا الرقم.',
+	'console.gate.label': 'الهدف: كم من الموافقة يلزم للنجاح',
+	'console.gate.value': 'الهدف: {{value}}%',
+	'console.gate.help': 'يجتاز الاقتراح الهدف عندما تصل الموافقة عليه إلى هذه النسبة.',
 	'plan.tables.title': 'أسئلة الطاولات',
 	'plan.tables.help': 'كل طاولة تختار سؤالًا واحدًا. أضيفوا من 3 إلى 8.',
 	'plan.own_questions': 'يمكن للطلاب إضافة سؤال خاص بهم',
@@ -246,7 +248,7 @@ const ar: Record<string, string> = {
 	'proposals.heading': 'اقترحوا حلاً للسؤال «{{question}}»',
 	'proposal.mine': 'اقتراحي',
 	'proposal.placeholder': 'اكتبوا اقتراحاً',
-	'proposal.none': 'لا يوجد سؤال للاقتراحات بعد',
+	'proposal.none': 'لا يوجد سؤال للحل بعد',
 	'proposal.send': 'إرسال',
 	'proposal.none_yet': 'لا توجد اقتراحات بعد',
 	'proposal.plenum_line': 'أبرز الاقتراحات على جهاز العرض',
@@ -275,7 +277,6 @@ const ar: Record<string, string> = {
 	'console.act_step': 'الانتقال إلى مرحلة',
 	'console.split': 'التقسيم إلى طاولات',
 	'console.resplit': 'تقسيم من جديد',
-	'console.resplit_confirm': 'هل تريدون تقسيم الصف من جديد؟ سيتم إلغاء الجلوس الحالي.',
 	'console.all_tables_rate': 'كل الطاولات: تقييم',
 	'console.plenum': 'الجميع معًا',
 	'console.plenum_on': 'الجميع معًا · مفعّل',
@@ -295,8 +296,7 @@ const ar: Record<string, string> = {
 	'console.rail_label': 'مراحل الدرس',
 	'console.rail_step': 'المرحلة {{n}}: {{name}}، {{state}}',
 	'console.state_done': 'انتهت',
-	'console.state_current': 'الحالية',
-	'console.state_upcoming': 'التالية',
+	'console.state_upcoming': 'لاحقًا',
 	'console.step_of': 'المرحلة {{n}} من {{total}}',
 	'console.next': 'فتح المرحلة التالية: {{name}}',
 	'console.end': 'إنهاء الدرس',
@@ -364,7 +364,7 @@ const ar: Record<string, string> = {
 	'console.move_cancelled': 'أُلغي النقل',
 	'console.over_target': '{{target}}',
 	'console.gate_title': 'الاقتراحات مقابل العتبة',
-	'console.gate_at': 'العتبة عند {{gate}}',
+	'console.gate_at': 'الهدف: {{gate}}%',
 	'console.gate_empty': 'لا توجد اقتراحات بعد',
 	'console.gate_passed': 'تجاوز العتبة',
 	'console.gate_gap': 'ينقصه {{gap}}',

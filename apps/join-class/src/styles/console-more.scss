@@ -1,0 +1,260 @@
+// =============================================================================
+// Teacher console: the two closed panels ("More" for the lesson, "More for this step"), the
+// status line with its "ready" mark, the joining card and the one-time drag hint.
+// Design: docs/ia/screens/join-class-teacher-console.md sections 4-6. Tokens only, BEM,
+// logical properties. A popover on a laptop, a bottom sheet on a phone.
+// =============================================================================
+
+$console-phone: 767px;
+$tap: 44px;
+
+// ---- disclosure: a button and the panel it opens -----------------------------------
+.disclosure {
+  position: relative;
+}
+
+.disclosure__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-block-size: $tap;
+}
+
+.disclosure__caret {
+  color: var(--ink-muted);
+}
+
+.disclosure__panel {
+  position: absolute;
+  inset-block-start: calc(100% + var(--space-xs));
+  inset-inline-start: 0;
+  z-index: var(--z-dropdown, 10);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  inline-size: min(360px, calc(100vw - 2 * var(--space-md)));
+  max-block-size: 70dvh;
+  overflow-y: auto;
+  padding: var(--space-md);
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+
+  &[hidden] {
+    display: none;
+  }
+
+  .disclosure--end > & {
+    inset-inline: auto 0;
+  }
+
+  // things that were popovers of their own: now plain sections of this panel
+  .projector-menu__panel {
+    position: static;
+    inline-size: auto;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .console__settings-panel {
+    position: static;
+    inline-size: auto;
+    padding: var(--space-sm) 0 0;
+    border: 0;
+    box-shadow: none;
+  }
+}
+
+.more-panel__item {
+  inline-size: 100%;
+  min-block-size: 48px;
+  justify-content: flex-start;
+  text-align: start;
+}
+
+.more-panel__row {
+  display: flex;
+  flex-direction: column;
+}
+
+.more-panel__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.more-panel__heading {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.more-panel__note {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--font-size-sm);
+}
+
+// red items: always last, after a divider
+.more-panel__danger {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-block-start: var(--space-xs);
+  padding-block-start: var(--space-sm);
+  border-block-start: 1px solid var(--border-light);
+
+  .btn--danger-outline:hover:not(:disabled) {
+    background: var(--danger-50);
+  }
+}
+
+// ---- the status line ---------------------------------------------------------------
+.class-status {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-md);
+  min-inline-size: 0;
+}
+
+.class-status__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-sm);
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--font-size-base);
+  font-variant-numeric: tabular-nums;
+}
+
+.class-status__attention {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding-inline: var(--space-sm);
+  color: var(--warning);
+  background: var(--warning-50);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-bold);
+}
+
+// a ready class is said in words and a check mark, never in colour alone
+.class-status__ready {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  color: var(--teal-ink);
+  background: var(--teal-50);
+  border: 1.5px solid var(--teal-600);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-bold);
+  animation: class-ready-in var(--dur-base) var(--ease-out);
+}
+
+@keyframes class-ready-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .class-status__ready {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .class-status__ready,
+  .more-panel__danger .btn--danger-outline {
+    border-color: CanvasText;
+  }
+}
+
+// ---- the board: the joining card, the one-time hint, the way back from the students' screen
+.joining-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-lg);
+  margin-block-end: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--card-line, var(--border-light));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.joining-card__code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0;
+}
+
+.joining-card__label {
+  color: var(--ink-muted);
+}
+
+.joining-card__value {
+  font-size: var(--font-size-3xl);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.joining-card__qr {
+  max-inline-size: 200px;
+}
+
+.tables-board__hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--paper-soft);
+  border-radius: var(--radius-md);
+}
+
+.tables-board__hint-text {
+  flex: 1 1 16rem;
+  margin: 0;
+}
+
+.console__student-back {
+  display: inline-block;
+  margin-block-end: var(--space-sm);
+}
+
+// ---- phone: both panels are bottom sheets ------------------------------------------
+@media (max-width: $console-phone) {
+  .disclosure__panel {
+    position: fixed;
+    inset-block: auto 0;
+    inset-inline: 0;
+    z-index: var(--z-modal, 9000);
+    inline-size: auto;
+    max-block-size: 85dvh;
+    border-block-end: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: var(--shadow-lg);
+    padding-block-end: max(var(--space-md), env(safe-area-inset-bottom));
+
+    .disclosure--end > & {
+      inset-inline: 0;
+    }
+  }
+}

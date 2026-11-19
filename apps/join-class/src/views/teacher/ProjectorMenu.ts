@@ -2,10 +2,10 @@ import m from 'mithril';
 import { t } from '@/lib/i18n';
 import { enterFullscreen } from '@/lib/fullscreen';
 import { openProjectorWindow, projectorPath } from '@/lib/classroom/projectorScreen';
-import { bindOutsideClose, closePopover, popoverKeydown, unbindOutsideClose } from './barPopover';
+import { captureException } from '@/lib/sentry';
 
 /**
- * The console bar's "Projector" menu (UX 15.A): two actions, each with its
+ * The "Projector" items of the lesson's "More" panel (UX 15.A): two actions, each with its
  * help line, so a teacher can tell which one is theirs. "Projector in a new
  * window" is for two screens, "Show on this screen" for one mirrored computer.
  */
@@ -18,14 +18,11 @@ let blocked = false;
 
 interface MenuAttrs {
 	mid: string;
+	/** Called when an item did its work and the panel around it should close. */
+	onDone: () => void;
 }
 
-function detailsOf(event: Event): HTMLDetailsElement | null {
-	return (event.currentTarget as HTMLElement).closest('details');
-}
-
-function openInWindow(mid: string, event: Event): void {
-	const details = detailsOf(event);
+function openInWindow(mid: string, onDone: () => void): void {
 	let opened = false;
 	try {
 		opened = openProjectorWindow(mid, {
@@ -33,17 +30,16 @@ function openInWindow(mid: string, event: Event): void {
 			origin: window.location.origin,
 		});
 	} catch (err) {
-		console.error('[ProjectorMenu] opening the projector window failed:', err);
+		captureException(err, { operation: 'ProjectorMenu.openInWindow', mainId: mid });
 	}
 	blocked = !opened;
-	if (opened && details) closePopover(details, true);
+	if (opened) onDone();
 }
 
-function showHere(mid: string, event: Event): void {
-	const details = detailsOf(event);
+function showHere(mid: string, onDone: () => void): void {
 	// the click is a user gesture in this document, so ask for full screen first
 	void enterFullscreen();
-	if (details) closePopover(details, false);
+	onDone();
 	m.route.set(projectorPath(mid, 'here'), {}, { state: { fromConsole: true } });
 }
 
@@ -67,7 +63,7 @@ function item(
 	kind: 'window' | 'here',
 	label: string,
 	helpId: string,
-	onclick: (event: Event) => void,
+	onclick: () => void,
 ): m.Vnode {
 	return m(
 		'button.btn.btn--secondary.projector-menu__item',
@@ -81,39 +77,20 @@ function item(
 	);
 }
 
-export const ProjectorMenu: m.Component<MenuAttrs> = {
-	oncreate: bindOutsideClose,
+export const ProjectorItems: m.Component<MenuAttrs> = {
+	view({ attrs }) {
+		const { mid, onDone } = attrs;
 
-	onremove: unbindOutsideClose,
-
-	view(vnode) {
-		const { mid } = vnode.attrs;
-
-		return m(
-			'details.projector-menu',
-			{
-				onkeydown: popoverKeydown,
-				ontoggle: (event: Event) => {
-					if (!(event.target as HTMLDetailsElement).open) blocked = false;
-				},
-			},
-			[
-				m('summary.btn.btn--tertiary.btn--small.projector-menu__toggle', [
-					m('span', t('teacher.screen.title')),
-					m('span.projector-menu__chevron', { 'aria-hidden': 'true' }),
-				]),
-				m('.projector-menu__panel', [
-					item('window', t('teacher.screen.open_window'), HELP_WINDOW_ID, (e) =>
-						openInWindow(mid, e),
-					),
-					m('p.projector-menu__help', { id: HELP_WINDOW_ID }, t('teacher.screen.open_window_help')),
-					blocked
-						? m('p.projector-menu__blocked', { role: 'alert' }, t('teacher.screen.blocked'))
-						: null,
-					item('here', t('teacher.screen.show_here'), HELP_HERE_ID, (e) => showHere(mid, e)),
-					m('p.projector-menu__help', { id: HELP_HERE_ID }, t('teacher.screen.show_here_help')),
-				]),
-			],
-		);
+		return m('.projector-menu__panel', [
+			item('window', t('teacher.screen.open_window'), HELP_WINDOW_ID, () =>
+				openInWindow(mid, onDone),
+			),
+			m('p.projector-menu__help', { id: HELP_WINDOW_ID }, t('teacher.screen.open_window_help')),
+			blocked
+				? m('p.projector-menu__blocked', { role: 'alert' }, t('teacher.screen.blocked'))
+				: null,
+			item('here', t('teacher.screen.show_here'), HELP_HERE_ID, () => showHere(mid, onDone)),
+			m('p.projector-menu__help', { id: HELP_HERE_ID }, t('teacher.screen.show_here_help')),
+		]);
 	},
 };

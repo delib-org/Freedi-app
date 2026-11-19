@@ -2,6 +2,7 @@ import m from 'mithril';
 import { t } from '@/lib/i18n';
 import type { GateRow } from '@/lib/classroom/consoleHelpers';
 import { FlipList } from '@/components/FlipList';
+import { gatePercent } from '@/lib/classroom/gatePercent';
 
 /**
  * "הצעות מול השער" (UX section 11): one row per proposal. Text (ellipsis), a
@@ -22,10 +23,7 @@ export const GatePanel: m.Component<GatePanelAttrs> = {
 		return m('section.gate-panel', { 'aria-labelledby': 'gate-panel-title' }, [
 			m('h3.gate-panel__title#gate-panel-title', [
 				t('console.gate_title'),
-				m(
-					'span.gate-panel__gate',
-					` · ${t('console.gate_at', { gate: attrs.gate.toFixed(SCORE_DECIMALS) })}`,
-				),
+				m('span.gate-panel__gate', ` · ${t('console.gate_at', { gate: gatePercent(attrs.gate) })}`),
 			]),
 			attrs.rows.length === 0
 				? m('p.gate-panel__empty', t('console.gate_empty'))

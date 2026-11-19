@@ -1,49 +1,37 @@
 import m from 'mithril';
-import type { LessonStatus } from '@freedi/shared-types';
+import type { LessonStatus, LessonStepKey } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
-import { ConsoleSettings } from './ConsoleSettings';
-import { ProjectorMenu } from './ProjectorMenu';
+import { LessonMore } from './LessonMore';
 import { TeacherBackBar } from './TeacherBackBar';
 import { changeLessonStatus } from './consoleActions';
 import { planBack } from './consoleBack';
 import { consoleState, dismissFailure, isBusy } from './consoleState';
-import { openEndChoice } from './EndChoice';
 
 /**
- * The console's top band and its failure line (split out of TeacherConsole.ts):
- * back bar, title and code, the QR / projector / settings controls, and the
- * pause / end group.
+ * The console's top band and its failure line (split out of TeacherConsole.ts): back bar,
+ * title, the class code the teacher reads aloud, "Pause the lesson" (always visible) and
+ * "More", which holds everything else about the lesson (design 6.1).
  */
 
-/** "Pause the lesson" and "End the lesson" (UX 13.E): the status group at the bar's end. */
-function statusGroup(mid: string, status: LessonStatus | null): m.Children {
+/** "Pause the lesson": the one lesson control that stays out of the menu (Tal, 2026-11-19). */
+function pauseButton(mid: string, status: LessonStatus | null): m.Children {
 	if (status !== 'live' && status !== 'open') return null;
 	const pausing = isBusy('status:pause');
 
-	return m('div.console__status', [
-		m(
-			'button.btn.btn--secondary.btn--small.console__pause',
-			{
-				type: 'button',
-				'data-testid': 'console-pause',
-				disabled: pausing,
-				'aria-busy': pausing ? 'true' : undefined,
-				onclick: () => void changeLessonStatus(mid, 'pause'),
-			},
-			[
-				m('span.status-mark.status-mark--paused', { 'aria-hidden': 'true' }),
-				m('span', pausing ? t('console.busy_pausing') : t('console.pause')),
-			],
-		),
-		// An open lesson keeps its "End the lesson" in the banner below.
-		status === 'live'
-			? m(
-					'button.btn.btn--tertiary.btn--small.console__end',
-					{ type: 'button', 'data-testid': 'console-end', onclick: openEndChoice },
-					t('console.end'),
-				)
-			: null,
-	]);
+	return m(
+		'button.btn.btn--secondary.btn--small.console__pause',
+		{
+			type: 'button',
+			'data-testid': 'console-pause',
+			disabled: pausing,
+			'aria-busy': pausing ? 'true' : undefined,
+			onclick: () => void changeLessonStatus(mid, 'pause'),
+		},
+		[
+			m('span.status-mark.status-mark--paused', { 'aria-hidden': 'true' }),
+			m('span', pausing ? t('console.busy_pausing') : t('console.pause')),
+		],
+	);
 }
 
 export function backBar(mid: string): m.Children {
@@ -52,12 +40,18 @@ export function backBar(mid: string): m.Children {
 	return m(TeacherBackBar, { href: back.href, label: back.label });
 }
 
+export interface HeaderMore {
+	stepKey: LessonStepKey;
+	connected: boolean;
+	qr: { shown: boolean; toggle: () => void };
+}
+
 export function header(
 	mid: string,
 	lessonName: string | undefined,
 	code: string | undefined,
 	status: LessonStatus | null,
-	qr: { shown: boolean; toggle: () => void },
+	more?: HeaderMore,
 ): m.Vnode {
 	return m('header.console__bar', [
 		m('h1.console__title', lessonName ?? t('teacher.console.title')),
@@ -67,19 +61,16 @@ export function header(
 					m('strong.console__code-value', { dir: 'ltr' }, code),
 				])
 			: null,
-		m(
-			'button.btn.btn--tertiary.console__qr-btn',
-			{
-				type: 'button',
-				'aria-expanded': qr.shown ? 'true' : 'false',
-				onclick: qr.toggle,
-			},
-			t('console.qr'),
-		),
-		m(ProjectorMenu, { mid }),
-		m(m.route.Link, { class: 'console__link', href: `/t/${mid}/plan` }, t('teacher.row.plan')),
-		m(ConsoleSettings),
-		statusGroup(mid, status),
+		pauseButton(mid, status),
+		more && status
+			? m(LessonMore, {
+					mid,
+					status,
+					stepKey: more.stepKey,
+					connected: more.connected,
+					qr: more.qr,
+				})
+			: null,
 	]);
 }
 

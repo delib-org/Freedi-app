@@ -51,6 +51,9 @@
   --warning: #b25d10;         // ~5.1:1 on paper ✓ AA
   --danger: #9a2a1e;          // ~7:1 on paper ✓ AAA
   --success: var(--teal-600);
+  // Tints behind a warning / a danger item (text stays --warning / --danger, >= 4.5:1 on them).
+  --warning-50: #fbefdc;
+  --danger-50: #f8e5e1;
 
   // ---- SEMANTIC ALIASES (legacy-compatible with existing BEM) ----
   --color-primary: var(--terra-500);
@@ -174,6 +177,12 @@
   --shadow-lg: 0 20px 48px rgba(28, 25, 23, 0.14), 0 4px 12px rgba(28, 25, 23, 0.08);
   --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.5);
   --shadow-stamp: 3px 3px 0 var(--ink);   // risograph-style offset for activation
+  --shadow-up: 0 -2px 8px rgba(28, 25, 23, 0.1);   // an edge pinned to the bottom of the screen
+
+  // ---- LAYERS (page < sticky < dropdown < modal) ----
+  --z-sticky: 5;
+  --z-dropdown: 10;
+  --z-modal: 9000;
 
   // ---- MOTION ----
   --dur-quick: 140ms;
@@ -312,6 +321,8 @@
     // Lifted danger — the light-scheme #9a2a1e sinks to ~1.8:1 against the
     // near-black surfaces. ~5.5:1 on paper, ~4.8:1 on inputs ✓ AA.
     --danger: #e57666;
+    --warning-50: rgba(217, 119, 6, 0.18);
+    --danger-50: rgba(229, 118, 102, 0.18);
 
     // Tint backgrounds (the *-50 / *-100 shades) — replace with translucent
     // overlays that automatically inherit whatever surface they sit on.
@@ -362,6 +373,7 @@
     --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.5);
     --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.55);
     --shadow-stamp: 3px 3px 0 var(--ink-faint);
+    --shadow-up: 0 -2px 8px rgba(0, 0, 0, 0.5);
 
     --focus-ring-color: var(--terra-500);
 
@@ -706,6 +718,9 @@
   --shadow-md: 0 0 0 2px #000;
   --shadow-lg: 0 0 0 2px #000;
   --shadow-stamp: 3px 3px 0 #000;
+  --shadow-up: 0 0 0 2px #000;
+  --warning-50: #ffffff;
+  --danger-50: #ffffff;
 
   // Game layer: no edges in high contrast; borders carry the shape in black.
   --edge-size: 0px;

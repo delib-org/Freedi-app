@@ -18,7 +18,7 @@ const actFor: Record<string, string> = {
 	'console.act_for_next': 'Siguiente: {{name}}',
 	'console.act_for_limit': 'Ya hay una propuesta en nombre de {{name}}. Se puede editar',
 	'console.act_for_closed': 'La votación está abierta: las propuestas ya no pueden cambiar',
-	'console.act_for_held': 'La clase está detenida: ahora no se puede cambiar nada',
+	'console.act_for_held': 'La clase está en pausa: ahora no se puede cambiar nada',
 	'console.act_for_vote_not_open': 'La votación aún no está abierta',
 	'console.act_for_empty': 'Aún no hay nadie sin dispositivo. Puedes añadir a alguien',
 	'console.act_for_pick': 'Elige un nombre de la lista',

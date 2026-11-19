@@ -4,6 +4,7 @@ import { IDLE, arrowDelta, dragReducer } from '@/lib/classroom/dragReducer';
 import type { DragAction, DropTarget } from '@/lib/classroom/dragReducer';
 import { moveStudent } from './consoleActions';
 import { consoleState } from './consoleState';
+import { noteStudentMoved } from './moveHook';
 
 /**
  * The thin view shell around the pure drag reducer: pointer events for the
@@ -31,6 +32,7 @@ function dispatch(action: DragAction): void {
 	if (state.mode === 'idle') consoleState.ghost = null;
 	if (effect) {
 		consoleState.focusUid = effect.uid;
+		noteStudentMoved();
 		void moveStudent(consoleState.mainId, effect.uid, effect.toTable);
 	}
 	m.redraw();

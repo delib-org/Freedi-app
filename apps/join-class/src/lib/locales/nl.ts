@@ -10,6 +10,7 @@ import look from './look/nl';
 import challenge from './challenge/nl';
 import actFor from './actFor/nl';
 import bridge from './bridge/nl';
+import consoleUi from './consoleUi/nl';
 
 const nl: Record<string, string> = {
 	...vote,
@@ -19,6 +20,7 @@ const nl: Record<string, string> = {
 	...challenge,
 	...actFor,
 	...bridge,
+	...consoleUi,
 	'step.waiting': 'Wachten op de docent',
 	'step.opening': 'Opening',
 	'step.side': 'Kies een kant',
@@ -81,9 +83,9 @@ const nl: Record<string, string> = {
 	'plan.details.claim_a': 'Wat de eerste kant zegt',
 	'plan.details.claim_b': 'Wat de tweede kant zegt',
 	'plan.details.claim.placeholder': 'Optioneel. Eén zin, onder de naam getoond',
-	'console.gate.label': 'Instemmingsdrempel voor de hoofdvraag',
-	'console.gate.value': 'Drempel: {{value}}',
-	'console.gate.help': 'Een voorstel haalt de drempel als de instemming dit getal bereikt.',
+	'console.gate.label': 'Het doel: hoeveel instemming nodig is om te slagen',
+	'console.gate.value': 'Doel: {{value}}%',
+	'console.gate.help': 'Een voorstel haalt het doel als de instemming dit percentage bereikt.',
 	'plan.tables.title': 'Vragen voor de tafels',
 	'plan.tables.help': 'Elke tafel kiest er één. Voeg 3 tot 8 toe.',
 	'plan.own_questions': 'Leerlingen mogen een eigen vraag toevoegen',
@@ -246,7 +248,7 @@ const nl: Record<string, string> = {
 	'proposals.heading': 'Stel een oplossing voor bij de vraag „{{question}}”',
 	'proposal.mine': 'Mijn voorstel',
 	'proposal.placeholder': 'Schrijf een voorstel',
-	'proposal.none': 'Er is nog geen vraag voor voorstellen',
+	'proposal.none': 'Er is nog geen vraag om op te lossen',
 	'proposal.send': 'Versturen',
 	'proposal.none_yet': 'Nog geen voorstellen',
 	'proposal.plenum_line': 'De beste voorstellen staan op de beamer',
@@ -275,7 +277,6 @@ const nl: Record<string, string> = {
 	'console.act_step': 'Naar stap',
 	'console.split': 'Verdelen over tafels',
 	'console.resplit': 'Opnieuw verdelen',
-	'console.resplit_confirm': 'De klas opnieuw verdelen? De huidige indeling vervalt.',
 	'console.all_tables_rate': 'Alle tafels: beoordelen',
 	'console.plenum': 'Allemaal samen',
 	'console.plenum_on': 'Allemaal samen · aan',
@@ -295,8 +296,7 @@ const nl: Record<string, string> = {
 	'console.rail_label': 'Stappen van de les',
 	'console.rail_step': 'Stap {{n}}: {{name}}, {{state}}',
 	'console.state_done': 'klaar',
-	'console.state_current': 'huidig',
-	'console.state_upcoming': 'volgende',
+	'console.state_upcoming': 'later',
 	'console.step_of': 'Stap {{n}} van {{total}}',
 	'console.next': 'Volgende stap openen: {{name}}',
 	'console.end': 'Les afsluiten',
@@ -365,7 +365,7 @@ const nl: Record<string, string> = {
 	'console.move_cancelled': 'Verplaatsen geannuleerd',
 	'console.over_target': '{{target}}',
 	'console.gate_title': 'Voorstellen tegenover de poort',
-	'console.gate_at': 'Poort bij {{gate}}',
+	'console.gate_at': 'Doel: {{gate}}%',
 	'console.gate_empty': 'Nog geen voorstellen',
 	'console.gate_passed': 'Poort gehaald',
 	'console.gate_gap': 'nog {{gap}}',

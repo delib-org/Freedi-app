@@ -10,6 +10,7 @@ import look from './look/de';
 import challenge from './challenge/de';
 import actFor from './actFor/de';
 import bridge from './bridge/de';
+import consoleUi from './consoleUi/de';
 
 const de: Record<string, string> = {
 	...vote,
@@ -19,6 +20,7 @@ const de: Record<string, string> = {
 	...challenge,
 	...actFor,
 	...bridge,
+	...consoleUi,
 	'step.waiting': 'Warten auf die Lehrkraft',
 	'step.opening': 'Einstieg',
 	'step.side': 'Seite wählen',
@@ -84,9 +86,10 @@ const de: Record<string, string> = {
 	'plan.details.claim_a': 'Was die erste Seite sagt',
 	'plan.details.claim_b': 'Was die zweite Seite sagt',
 	'plan.details.claim.placeholder': 'Optional. Ein Satz, der unter dem Namen steht',
-	'console.gate.label': 'Zustimmungsschwelle für die Hauptfrage',
-	'console.gate.value': 'Schwelle: {{value}}',
-	'console.gate.help': 'Ein Vorschlag besteht, wenn seine Zustimmung diese Zahl erreicht.',
+	'console.gate.label': 'Das Ziel: wie viel Zustimmung zum Bestehen nötig ist',
+	'console.gate.value': 'Ziel: {{value}}%',
+	'console.gate.help':
+		'Ein Vorschlag erreicht das Ziel, wenn seine Zustimmung diesen Prozentsatz erreicht.',
 	'plan.tables.title': 'Fragen für die Tische',
 	'plan.tables.help': 'Jeder Tisch wählt eine. Fügt 3 bis 8 hinzu.',
 	'plan.own_questions': 'Schüler dürfen eine eigene Frage hinzufügen',
@@ -248,7 +251,7 @@ const de: Record<string, string> = {
 	'proposals.heading': 'Schlagt eine Lösung für die Frage „{{question}}“ vor',
 	'proposal.mine': 'Mein Vorschlag',
 	'proposal.placeholder': 'Schreibt einen Vorschlag',
-	'proposal.none': 'Es gibt noch keine Frage für Vorschläge',
+	'proposal.none': 'Es gibt noch keine Frage zur Lösung',
 	'proposal.send': 'Senden',
 	'proposal.none_yet': 'Noch keine Vorschläge',
 	'proposal.plenum_line': 'Die besten Vorschläge sind am Beamer',
@@ -277,7 +280,6 @@ const de: Record<string, string> = {
 	'console.act_step': 'Zum Schritt',
 	'console.split': 'In Tische aufteilen',
 	'console.resplit': 'Neu aufteilen',
-	'console.resplit_confirm': 'Die Klasse neu aufteilen? Die aktuelle Sitzordnung geht verloren.',
 	'console.all_tables_rate': 'Alle Tische: bewerten',
 	'console.plenum': 'Alle zusammen',
 	'console.plenum_on': 'Alle zusammen · aktiv',
@@ -297,8 +299,7 @@ const de: Record<string, string> = {
 	'console.rail_label': 'Schritte der Stunde',
 	'console.rail_step': 'Schritt {{n}}: {{name}}, {{state}}',
 	'console.state_done': 'erledigt',
-	'console.state_current': 'aktuell',
-	'console.state_upcoming': 'nächster',
+	'console.state_upcoming': 'später',
 	'console.step_of': 'Schritt {{n}} von {{total}}',
 	'console.next': 'Nächsten Schritt öffnen: {{name}}',
 	'console.end': 'Stunde beenden',
@@ -368,7 +369,7 @@ const de: Record<string, string> = {
 	'console.move_cancelled': 'Verschieben abgebrochen',
 	'console.over_target': '{{target}}',
 	'console.gate_title': 'Vorschläge gegen das Tor',
-	'console.gate_at': 'Tor bei {{gate}}',
+	'console.gate_at': 'Ziel: {{gate}}%',
 	'console.gate_empty': 'Noch keine Vorschläge',
 	'console.gate_passed': 'Tor erreicht',
 	'console.gate_gap': 'noch {{gap}}',

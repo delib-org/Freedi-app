@@ -15,6 +15,7 @@ import { getMainStatement } from '@/lib/store';
 import { noDeviceButtons, stepButtons, turnButtons } from './tableSheetTurn';
 import { targetName } from './dragController';
 import { confirmResetTurns } from './consoleConfirms';
+import { noteStudentMoved } from './moveHook';
 import { actForRowLabel, openActFor } from './actFor/actForState';
 
 /**
@@ -75,7 +76,9 @@ function memberRow(
 					const el = e.target as HTMLSelectElement;
 					const raw = el.value;
 					el.value = '';
-					if (raw !== '') void moveStudent(consoleState.mainId, uid, Number(raw));
+					if (raw === '') return;
+					noteStudentMoved();
+					void moveStudent(consoleState.mainId, uid, Number(raw));
 				},
 			},
 			[

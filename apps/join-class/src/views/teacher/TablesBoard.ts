@@ -3,13 +3,13 @@ import '@/styles/console-opening.scss';
 import type { ClassTable, Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { unplacedStudents } from '@/lib/classroom/consoleHelpers';
-import { sideCount } from '@/lib/classroom/sideCount';
 import type { RosterStudent } from '@/lib/classroom/consoleHelpers';
 import { moveStudent } from './consoleActions';
 import { consoleState } from './consoleState';
 import { dropAttrs } from './dragController';
 import { MemberChip } from './MemberChip';
 import { TableCard } from './TableCard';
+import { noteStudentMoved } from './moveHook';
 
 /**
  * The tables board (UX section 5). Before the class is seated: one roster card
@@ -27,12 +27,19 @@ export interface TablesBoardAttrs {
 	tableTalk: boolean;
 	/** Vote or summary: the cards show members only. */
 	done?: boolean;
+	/** Dividing into tables / Choosing a side: the cards show names only. */
+	namesOnly?: boolean;
 	/** The lesson's sub-questions: a card at Table talk shows the question being answered. */
 	questions?: readonly Statement[];
 	/** After the Side step the board counts who chose a side (never which side). */
 	showSides: boolean;
 	/** The lesson uses a registration: its tables show topic, reserved names and the lone-person flag. */
 	connected?: boolean;
+	/** The long "drag a name" hint was seen already by this teacher: it does not show again. */
+	dragHintSeen?: boolean;
+	onDragHintDone?: () => void;
+	/** Students are joining: the code and QR card that opens the board, above the roster. */
+	joining?: m.Children;
 	/** The Opening panel (UX 15.L): while the class is unseated it takes the main column and the roster the side one. */
 	opening?: m.Children;
 	// >>> allProposals BEGIN
@@ -41,15 +48,22 @@ export interface TablesBoardAttrs {
 	// >>> allProposals END
 }
 
-/** "18 of 24 chose a side": visible from the Side step. The teacher sees that a student chose, never which side. */
-function sidesCountLine(students: readonly RosterStudent[]): m.Vnode {
-	const { chose, total } = sideCount(students);
+/** The long hint, once per teacher: it retires on "Got it" or the first move of a student. */
+function dragHint(attrs: TablesBoardAttrs): m.Children {
+	if (attrs.tables.length === 0 || consoleState.ended || attrs.dragHintSeen === true) return null;
 
-	return m(
-		'p.tables-board__sides-count',
-		{ 'data-testid': 'console-sides-count', role: 'status' },
-		t('console.sides_count', { chose, total }),
-	);
+	return m('div.tables-board__hint', { 'data-testid': 'console-drag-hint' }, [
+		m('p.tables-board__hint-text', t('console.drag_hint')),
+		m(
+			'button.btn.btn--tertiary.btn--small',
+			{
+				type: 'button',
+				'data-testid': 'console-drag-hint-close',
+				onclick: () => attrs.onDragHintDone?.(),
+			},
+			t('console.drag_hint_close'),
+		),
+	]);
 }
 
 function rosterCard(attrs: TablesBoardAttrs): m.Vnode {
@@ -102,7 +116,9 @@ function unplacedStrip(
 							const el = e.target as HTMLSelectElement;
 							const n = Number(el.value);
 							el.value = '';
-							if (Number.isFinite(n) && n > 0) void moveStudent(mainId, s.uid, n);
+							if (!Number.isFinite(n) || n <= 0) return;
+							noteStudentMoved();
+							void moveStudent(mainId, s.uid, n);
 						},
 					},
 					[
@@ -128,14 +144,11 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 					? ` ${t('console.unplaced_live', { count: unplaced.length })}`
 					: '',
 			]),
-			attrs.tables.length > 0 && !consoleState.ended
-				? m('p.tables-board__hint', { 'data-testid': 'console-drag-hint' }, t('console.drag_hint'))
-				: null,
-			attrs.showSides && attrs.students.length > 0 ? sidesCountLine(attrs.students) : null,
+			dragHint(attrs),
 			attrs.tables.length === 0
 				? attrs.opening
 					? m('div.console-opening', [attrs.opening, rosterCard(attrs)])
-					: rosterCard(attrs)
+					: [attrs.joining ?? null, rosterCard(attrs)]
 				: [
 						unplaced.length > 0
 							? unplacedStrip(unplaced, tableNumbers, attrs.mainId, attrs.showSides)
@@ -150,6 +163,7 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 									plenum: attrs.plenum,
 									tableTalk: attrs.tableTalk,
 									done: attrs.done,
+									namesOnly: attrs.namesOnly,
 									questionText: attrs.questions?.find((q) => q.statementId === table.questionId)
 										?.statement,
 									mainId: attrs.mainId,
