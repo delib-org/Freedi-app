@@ -45,6 +45,15 @@ function seed(fake: FakeFirestore, stepIndex: number, status?: string): void {
 		statementId: MAIN,
 		role: 'member',
 	});
+	// s2's support is on the private side doc; s1's is a legacy subscription field.
+	fake.seed(`classSides/s2--${MAIN}`, {
+		userId: 's2',
+		mainId: MAIN,
+		side: 80,
+		camp: 'b',
+		decisionSupport: -1,
+		lastUpdate: 1,
+	});
 }
 
 function seedTable(fake: FakeFirestore, n: number): void {
@@ -180,6 +189,8 @@ describe('classResetVote', () => {
 		expect(ch.statementSettings).not.toHaveProperty('ballot');
 		expect(fake.read(`statementsSubscribe/s1--${MAIN}`)).not.toHaveProperty('decisionSupport');
 		expect(fake.read(`statementsSubscribe/s2--${MAIN}`)).toMatchObject({ role: 'member' });
+		expect(fake.read(`classSides/s2--${MAIN}`)).not.toHaveProperty('decisionSupport');
+		expect(fake.read(`classSides/s2--${MAIN}`)).toMatchObject({ side: 80, camp: 'b' });
 	});
 
 	it('allows a reset of an open ballot when the lesson left the Vote step', async () => {

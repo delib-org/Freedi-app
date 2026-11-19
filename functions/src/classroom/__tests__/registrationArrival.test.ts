@@ -387,10 +387,20 @@ describe('classRegistrationSupport (support by side from the registration, IA 2.
 			['p3', 'Noa Bar', 0.5],
 		] as const) {
 			await arriveByName(db, uid, { mainId: MAIN, fullName: name }, NOW);
-			fake.seed(`statementsSubscribe/${uid}--${MAIN}`, {
-				...subOf(fake, uid),
-				decisionSupport: support,
-			});
+			if (uid === 'p3') {
+				// The support is private now (classSides); p1 and p2 are legacy subscriptions.
+				fake.seed(`classSides/${uid}--${MAIN}`, {
+					userId: uid,
+					mainId: MAIN,
+					decisionSupport: support,
+					lastUpdate: NOW,
+				});
+			} else {
+				fake.seed(`statementsSubscribe/${uid}--${MAIN}`, {
+					...subOf(fake, uid),
+					decisionSupport: support,
+				});
+			}
 		}
 		const result = await registrationSupport(db, TEACHER, { mainId: MAIN });
 

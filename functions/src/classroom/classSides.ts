@@ -1,0 +1,35 @@
+import type { DocumentReference, DocumentSnapshot, Firestore } from 'firebase-admin/firestore';
+import { CLASS_SIDES_COLLECTION, classSideId, mergeClassSide } from '@freedi/shared-types';
+import type { ClassSide, ClassSideValues, StatementSubscription } from '@freedi/shared-types';
+
+/**
+ * The students' private sides (Trello btMVQMM5): `classSides/{uid}--{mainId}`,
+ * readable only by the student and by this Admin SDK code. Until the backfill
+ * has run, an app version from before the change may still hold the values on
+ * the subscription; the private doc wins field by field (mergeClassSide).
+ */
+
+export function classSideRef(firestore: Firestore, mainId: string, uid: string): DocumentReference {
+	return firestore.collection(CLASS_SIDES_COLLECTION).doc(classSideId(mainId, uid));
+}
+
+/** Reads several refs at once: `firestore.getAll` or a transaction's `getAll`. */
+export type GetAll = (...refs: DocumentReference[]) => Promise<DocumentSnapshot[]>;
+
+/** The side values of each subscriber, by uid: private doc over the legacy subscription fields. */
+export async function sidesOf(
+	firestore: Firestore,
+	mainId: string,
+	subs: readonly StatementSubscription[],
+	getAll: GetAll = (...refs) => firestore.getAll(...refs),
+): Promise<Map<string, ClassSideValues>> {
+	const refs = subs.map((sub) => classSideRef(firestore, mainId, sub.userId));
+	const snaps = refs.length > 0 ? await getAll(...refs) : [];
+
+	return new Map(
+		subs.map((sub, i) => [
+			sub.userId,
+			mergeClassSide(snaps[i]?.data() as ClassSide | undefined, sub),
+		]),
+	);
+}

@@ -38,11 +38,13 @@ import {
 	newTable,
 } from './assignTables';
 import { countNoDevice } from './noDeviceMembers';
+import { sidesOf } from './classSides';
 
 /**
  * `classAssignTables` (admin): seat the class. Students = the workspace's
  * `role: member` subscriptions (admins / creators are not seated). Each table
- * mixes the sides (round-robin by camp, see assignTables.ts), at most the
+ * mixes the sides (round-robin by camp, see assignTables.ts; the sides are read
+ * from the private classSides docs), at most the
  * lesson's seats per table (3..20), never one alone. A lesson connected to a
  * registration is refused: its tables come from classCopySeating.
  *
@@ -119,10 +121,12 @@ export async function assignTables(
 		}
 
 		const subs = subsSnap.docs.map((d) => d.data() as StatementSubscription);
+		// The sides are private (classSides): read here, used only to mix the tables.
+		const sides = await sidesOf(firestore, mainId, subs, (...refs) => tx.getAll(...refs));
 		const students: SeatableStudent[] = subs.map((s) => ({
 			uid: s.userId,
-			camp: s.camp,
-			side: s.side,
+			camp: sides.get(s.userId)?.camp,
+			side: sides.get(s.userId)?.side,
 		}));
 		const dealt = assignStudents(students, size, rng);
 		const oldTables = oldTablesSnap.docs.map((d) => d.data() as ClassTable);

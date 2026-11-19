@@ -2,16 +2,16 @@ import { onCall, CallableRequest } from 'firebase-functions/v2/https';
 import type { Firestore } from 'firebase-admin/firestore';
 import {
 	Collections,
-	DEFAULT_GATE,
 	campOf,
 	functionConfig,
+	mergeClassSide,
 	supportBySide,
 	tableAssignmentParticipantId,
 } from '@freedi/shared-types';
 import type {
+	ClassSide,
 	ClassRegistrationSupportRequest,
 	ClassRegistrationSupportResponse,
-	Statement,
 	StatementSubscription,
 	SupportSubscription,
 	TableAssignmentParticipant,
@@ -25,29 +25,11 @@ import {
 	subscriptionRef,
 } from '../classroomAccess';
 import { ClassroomError, toHttpsError } from '../classroomErrors';
+import { classSideRef } from '../classSides';
+import { gateOf, supportShownToAll } from '../supportAccess';
 import { loadMembership } from '../classroomMembers';
 import { loadConnectedLesson, registrationSeatsQuery } from './registrationAccess';
 import type { RegistrationSeatDoc } from './registrationAccess';
-
-function finiteNumber(value: unknown): number | undefined {
-	return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
-}
-
-/** The gate the Summary compares support with: the challenge's, else the lesson's, else DEFAULT_GATE. */
-function gateOf(challenge: Statement, main: Statement): number {
-	return (
-		finiteNumber(challenge.votingSettings?.threshold) ??
-		finiteNumber(main.votingSettings?.threshold) ??
-		DEFAULT_GATE
-	);
-}
-
-/** A student sees support by side only when the teacher shows it to everyone. */
-function supportShownToAll(challenge: Statement): boolean {
-	const display = challenge.statementSettings?.voteDisplay;
-
-	return display?.liveResults === true && display?.supportShown === true;
-}
 
 /**
  * `classRegistrationSupport` (the teacher; a student when support by side is
@@ -85,16 +67,22 @@ export async function registrationSupport(
 			.doc(tableAssignmentParticipantId(session.tableAssignmentId, doc.registrationUid)),
 	);
 	const subRefs = ledger.map((doc) => subscriptionRef(firestore, mainId, doc.classUid));
-	const [participants, subs] = await Promise.all([
+	const sideRefs = ledger.map((doc) => classSideRef(firestore, mainId, doc.classUid));
+	const [participants, subs, sides] = await Promise.all([
 		participantRefs.length > 0 ? firestore.getAll(...participantRefs) : Promise.resolve([]),
 		subRefs.length > 0 ? firestore.getAll(...subRefs) : Promise.resolve([]),
+		sideRefs.length > 0 ? firestore.getAll(...sideRefs) : Promise.resolve([]),
 	]);
 	const rated: SupportSubscription[] = ledger.flatMap((_, i) => {
 		const position = (participants[i].data() as TableAssignmentParticipant | undefined)?.position;
 		if (position === undefined) return [];
-		const sub = subs[i].data() as StatementSubscription | undefined;
+		// The support is private (classSides); a legacy subscription fills in until the backfill.
+		const { decisionSupport } = mergeClassSide(
+			sides[i].data() as ClassSide | undefined,
+			subs[i].data() as StatementSubscription | undefined,
+		);
 
-		return [{ camp: campOf(position), decisionSupport: sub?.decisionSupport }];
+		return [{ camp: campOf(position), decisionSupport }];
 	});
 
 	return {

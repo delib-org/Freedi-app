@@ -19,6 +19,7 @@ export { classFreezeBallot, classCloseBallot, classPauseBallot } from './fn_clas
 export { classResetTurns } from './fn_classResetTurns';
 export { classEnterTableTalk } from './fn_classEnterTableTalk';
 export { classResetVote } from './fn_classResetVote';
+export { classSupportBySide } from './fn_classSupportBySide';
 export { classSetItemHidden } from './fn_classSetItemHidden';
 export { classPostReply } from './fn_classPostReply';
 export { classPostProposal } from './fn_classPostProposal';
