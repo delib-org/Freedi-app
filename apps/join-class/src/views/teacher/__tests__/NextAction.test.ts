@@ -17,11 +17,14 @@ vi.mock('../consoleBack', () => ({ planBack: () => ({ href: '/t/plans/p1', label
 vi.mock('../registrationActions', () => ({ copySeating: vi.fn() }));
 vi.mock('@/lib/sentry', () => ({ captureException: vi.fn() }));
 
-vi.stubGlobal('document', { getElementById: () => null });
+const focusReason = vi.fn();
+vi.stubGlobal('document', {
+	getElementById: (id: string) => (id === 'next-action-reason' ? { focus: focusReason } : null),
+});
 
 import { NextAction } from '../NextAction';
 import type { NextActionAttrs } from '../NextAction';
-import { goToStep, freezeBallot, closeBallot } from '../consoleActions';
+import { assignTables, goToStep, freezeBallot, closeBallot } from '../consoleActions';
 import { confirmCloseVote } from '../consoleConfirms';
 
 type View = (vnode: { attrs: NextActionAttrs }) => m.Vnode;
@@ -95,6 +98,17 @@ describe('NextAction', () => {
 		expect(attrs['aria-describedby']).toBe('next-action-reason');
 		const reason = children(vnode)[1];
 		expect((reason.attrs as Record<string, unknown>).id).toBe('next-action-reason');
+	});
+
+	it('a tap on a blocked button moves focus to its reason and runs nothing', () => {
+		const vnode = draw({
+			kind: 'split',
+			labelKey: 'console.split',
+			blockedKey: 'console.blocked.no_students',
+		});
+		(button(vnode).attrs as { onclick: () => void }).onclick();
+		expect(focusReason).toHaveBeenCalledTimes(1);
+		expect(assignTables).not.toHaveBeenCalled();
 	});
 
 	it('a blocked press does not run the action', () => {

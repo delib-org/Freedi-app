@@ -251,21 +251,29 @@ function dangerView(danger: StepMoreDanger, attrs: StepMoreAttrs, close: () => v
 		]);
 	}
 	const isResplit = danger === 'resplit';
+	// Dividing again goes through the held guard: paused, it would do nothing and say nothing.
+	const heldBlock = isResplit && attrs.status === 'paused';
 
-	return m(
-		'button.btn.btn--danger-outline.more-panel__item',
-		{
-			type: 'button',
-			disabled: ended || isBusy(isResplit ? 'assign' : 'reset:turns:all'),
-			'data-testid': isResplit ? 'console-resplit' : 'console-reset-turns',
-			onclick: () => {
-				close();
-				if (isResplit) confirmResplit(attrs.mid);
-				else confirmResetTurns(attrs.mid);
+	return m('div.more-panel__danger-item', [
+		m(
+			'button.btn.btn--danger-outline.more-panel__item',
+			{
+				type: 'button',
+				'aria-disabled': heldBlock ? 'true' : undefined,
+				'aria-describedby': heldBlock ? 'resplit-held-hint' : undefined,
+				disabled: ended || isBusy(isResplit ? 'assign' : 'reset:turns:all'),
+				'data-testid': isResplit ? 'console-resplit' : 'console-reset-turns',
+				onclick: () => {
+					if (heldBlock) return;
+					close();
+					if (isResplit) confirmResplit(attrs.mid);
+					else confirmResetTurns(attrs.mid);
+				},
 			},
-		},
-		t(isResplit ? 'console.resplit' : 'console.reset_turns_all'),
-	);
+			t(isResplit ? 'console.resplit' : 'console.reset_turns_all'),
+		),
+		heldBlock ? m('p.more-panel__note#resplit-held-hint', t('console.act_for_held')) : null,
+	]);
 }
 
 export const StepMore: m.Component<StepMoreAttrs> = {

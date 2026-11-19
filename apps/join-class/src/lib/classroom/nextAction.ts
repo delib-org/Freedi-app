@@ -38,6 +38,8 @@ export interface NextActionInput {
 	studentCount: number;
 	/** A connected lesson whose tables have not been brought from the registration yet. */
 	copyPending: boolean;
+	/** The lesson uses a registration: its tables come from there (a split is refused). */
+	connected?: boolean;
 	/** The class sees the vote's results. */
 	resultsShown: boolean;
 }
@@ -49,6 +51,8 @@ export interface NextActionSpec {
 	/** `goNext`: the step it opens. */
 	nextIndex?: number;
 	nextStepKey?: LessonStepKey;
+	/** `copySeating`: bring the tables again (they were copied once and are gone). */
+	replace?: boolean;
 	/** The `isBusy` key of the write behind the button. */
 	busyKey?: string;
 	/** i18n key of the label while that write runs. */
@@ -89,6 +93,16 @@ function tablesAction(input: NextActionInput): NextActionSpec {
 		return {
 			kind: 'copySeating',
 			labelKey: 'console.copy_seating',
+			busyKey: 'registration:copy',
+			busyLabelKey: 'console.busy_copying',
+		};
+	}
+	// Connected and the copy left no tables: bring them again, never a split (the server refuses it).
+	if (input.tableCount === 0 && input.connected === true) {
+		return {
+			kind: 'copySeating',
+			labelKey: 'console.copy_seating',
+			replace: true,
 			busyKey: 'registration:copy',
 			busyLabelKey: 'console.busy_copying',
 		};

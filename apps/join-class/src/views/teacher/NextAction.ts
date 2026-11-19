@@ -81,7 +81,7 @@ function run(attrs: NextActionAttrs): void {
 				if (spec.nextIndex !== undefined) void goToStep(mid, spec.nextIndex);
 				break;
 			case 'copySeating':
-				void copySeating(mid, false);
+				void copySeating(mid, spec.replace === true);
 				break;
 			case 'split':
 				void assignTables(mid, false);

@@ -10,6 +10,7 @@ vi.mock('../consoleState', () => ({ isBusy: (): boolean => false }));
 
 const store = vi.hoisted(() => ({ challenge: null as Statement | null }));
 vi.mock('@/lib/lessonCore', () => ({ getChallengeQuestion: () => store.challenge }));
+vi.mock('@/lib/lesson', () => ({ getLessonStep: () => ({ index: 5 }) }));
 vi.mock('@/lib/store', () => ({ getSubQuestions: () => [] }));
 vi.mock('../consoleActions', () => ({
 	closeBallot: vi.fn(),

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { LessonStepKey } from '@freedi/shared-types';
 import { announcementFor, classStatusFor } from '../classStatus';
@@ -240,5 +241,29 @@ describe('announcementFor: only transitions, never every change', () => {
 		expect(
 			announcementFor(snap({ stuckTables: [4] }), snap({ stuckTables: [] }), WORDS),
 		).toBeNull();
+	});
+});
+
+describe('the status input carries counts only', () => {
+	it('has no per-student side or camp, only numbers, flags and the table numbers', () => {
+		const input = at('side');
+		for (const [key, value] of Object.entries(input)) {
+			expect(key).not.toMatch(/camp|uid|student(?!s)/i);
+			const ok =
+				typeof value === 'number' ||
+				typeof value === 'boolean' ||
+				typeof value === 'string' ||
+				value === null ||
+				(Array.isArray(value) && value.every((item) => typeof item === 'number'));
+			expect(ok || key === 'allRated', key).toBe(true);
+		}
+	});
+
+	it('the code that fills it never reads the side of a student', () => {
+		const source = readFileSync(
+			new URL('../../../views/teacher/classStatusData.ts', import.meta.url),
+			'utf8',
+		);
+		expect(source).not.toMatch(/\.camp\b/);
 	});
 });

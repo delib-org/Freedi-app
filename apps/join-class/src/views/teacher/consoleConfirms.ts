@@ -3,6 +3,7 @@ import { t } from '@/lib/i18n';
 import { liveResultsOn } from '@/lib/classroom/voteResults';
 import { getChallengeQuestion } from '@/lib/lessonCore';
 import { getSubQuestions } from '@/lib/store';
+import { getLessonStep } from '@/lib/lesson';
 import { icon } from './ConsoleIcon';
 import { askConfirm } from './ConfirmDialog';
 import {
@@ -22,6 +23,8 @@ import {
 
 /** Pressing an EARLIER step in the step list: confirm, then move. Forward is only the big button. */
 export function confirmGoBack(mainId: string, index: number, stepName: string): void {
+	// A stale call can never move the lesson forward (or stay put).
+	if (index >= getLessonStep().index) return;
 	askConfirm({
 		title: t('console.back_title', { name: stepName }),
 		body: t('console.back_keep'),

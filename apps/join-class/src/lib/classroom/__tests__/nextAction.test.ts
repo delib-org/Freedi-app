@@ -198,3 +198,23 @@ describe('helpers', () => {
 		expect(canGoBackTo(5, 4)).toBe(false);
 	});
 });
+
+describe('the action band always has a primary button', () => {
+	const STATUSES = ['live', 'paused', 'open', 'ended'] as const;
+	const cases = STEPS.flatMap((key) => STATUSES.map((status) => [key, status] as const));
+
+	it.each(cases)('%s / %s', (key, status) => {
+		for (const hasChallenge of [true, false]) {
+			const spec = nextActionFor(at(key, { status, hasChallenge }));
+			expect(spec.kind).toBeTruthy();
+			expect(spec.labelKey).toMatch(/^[a-z]+\./);
+		}
+	});
+
+	it('a connected lesson with no tables after a copy brings them again, never splits', () => {
+		const spec = nextActionFor(at('tables', { tableCount: 0, connected: true }));
+		expect(spec.kind).toBe('copySeating');
+		expect(spec.replace).toBe(true);
+		expect(nextActionFor(at('tables', { tableCount: 0 })).kind).toBe('split');
+	});
+});

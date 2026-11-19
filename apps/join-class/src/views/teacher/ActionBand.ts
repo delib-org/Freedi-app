@@ -80,6 +80,7 @@ export const ActionBand: m.Component<ActionBandAttrs> = {
 			proposalCount: attrs.proposalCount,
 			tableCount: attrs.tableCount,
 			studentCount: attrs.studentCount,
+			connected: attrs.connected,
 			copyPending: copyOffer.kind === 'copy' || copyOffer.kind === 'not-ready',
 			resultsShown: attrs.resultsShown,
 		});
