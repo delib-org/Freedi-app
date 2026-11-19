@@ -42,6 +42,7 @@ const consoleUi: Record<string, string> = {
 	'console.status.show': 'عرض',
 	'console.drag_hint_close': 'فهمت',
 	'console.student_screen_back': 'العودة إلى الطاولات',
+	'console.decision': 'القرار',
 };
 
 export default consoleUi;

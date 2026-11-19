@@ -43,6 +43,7 @@ const consoleUi: Record<string, string> = {
 	'console.status.show': 'Tonen',
 	'console.drag_hint_close': 'Begrepen',
 	'console.student_screen_back': 'Terug naar de tafels',
+	'console.decision': 'De beslissing',
 };
 
 export default consoleUi;

@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { classRegistrationOf } from '@freedi/shared-types';
-import type { Statement } from '@freedi/shared-types';
+import type { LessonStatus, LessonStepKey, Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { getMainStatement, getSubQuestions } from '@/lib/store';
 import {
@@ -11,12 +11,22 @@ import {
 } from '@/lib/lesson';
 import { classState } from '@/lib/classroom/classState';
 import { gateOf } from '@/lib/classroom/classSettings';
-import { gateRows, isPlenum, rosterStudents, tablesAreDone } from '@/lib/classroom/consoleHelpers';
+import { decisionOf, showsDecision } from '@/lib/classroom/decision';
+import {
+	gateRows,
+	isBallotClosed,
+	isPlenum,
+	rosterStudents,
+	tablesAreDone,
+} from '@/lib/classroom/consoleHelpers';
 import { introVideosOf, projectorVideoOf } from '@/lib/classroom/introVideos';
 import { sidesShownAt } from '@/lib/classroom/registrationLogic';
-import { supportVisibleToClass } from '@/lib/classroom/voteResults';
+import { liveResultsOn, supportVisibleToClass } from '@/lib/classroom/voteResults';
 import { groupWrittenTexts } from '@/lib/classroom/textsHelpers';
 import { pickProjectorVideo } from './consoleActions';
+import { voteCountsOn } from './classStatusData';
+import { DecisionPanel } from './DecisionPanel';
+import { readBallot } from './projector/projectorLogic';
 import { consoleState } from './consoleState';
 import type { ConsoleView } from './consoleState';
 import { dragHintSeen, markDragHintDone } from './dragHintState';
@@ -56,7 +66,31 @@ function studentScreen(mid: string): m.Children {
 	];
 }
 
-export function board(mid: string, view: ConsoleView, stepIndex: number): m.Children {
+function decisionCard(
+	status: LessonStatus,
+	stepKey: LessonStepKey,
+	challenge: Statement | null,
+	proposals: readonly Statement[],
+): m.Children {
+	if (!showsDecision({ stepKey, status, ballotClosed: isBallotClosed(challenge) })) return null;
+
+	return m(DecisionPanel, {
+		decision: decisionOf({
+			ballot: readBallot(challenge),
+			selections: challenge?.selections as Record<string, number> | undefined,
+			proposals,
+			present: voteCountsOn(challenge).present,
+			resultsShown: liveResultsOn(challenge),
+		}),
+	});
+}
+
+export function board(
+	mid: string,
+	view: ConsoleView,
+	stepIndex: number,
+	status: LessonStatus,
+): m.Children {
 	const students = rosterStudents(classState.roster);
 	const questions = getSubQuestions();
 	const challenge = getChallengeQuestion(questions);
@@ -86,6 +120,7 @@ export function board(mid: string, view: ConsoleView, stepIndex: number): m.Chil
 			(stepKey === 'tableTalk' && proposals.length > 0));
 
 	return [
+		decisionCard(status, stepKey, challenge, proposals),
 		m(TablesBoard, {
 			mainId: mid,
 			tables: classState.tables,

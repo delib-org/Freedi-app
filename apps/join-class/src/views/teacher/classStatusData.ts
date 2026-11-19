@@ -61,7 +61,8 @@ function isStuck(table: ClassTable, stepKey: LessonStepKey, now: number): boolea
 	return elapsedSinceChange(table, now) >= STUCK_AFTER_MS;
 }
 
-function votes(challenge: Statement | null): { voted: number; present: number } {
+/** Votes cast on the running ballot, and the students in the room (with and without a device). */
+export function voteCountsOn(challenge: Statement | null): { voted: number; present: number } {
 	const ids = challenge?.statementSettings?.ballot?.candidateIds ?? [];
 	const voted = Object.values(voteResults(ids, challenge?.selections)).reduce(
 		(sum, result) => sum + result.count,
@@ -85,7 +86,7 @@ export function liveStatusInput(args: LiveStatusArgs): ClassStatusInput {
 			? 'tableTalk'
 			: 'proposals';
 	const { chose, total } = sideCount(students);
-	const { voted, present } = votes(args.challenge);
+	const { voted, present } = voteCountsOn(args.challenge);
 	const doneAt = (table: ClassTable): boolean =>
 		tableIsDone(table, mode, now, noneLeftNow(table), proposalsDoneNow(table, mode));
 	const ratingOrDone = (table: ClassTable): boolean => table.step === 'rate' || doneAt(table);

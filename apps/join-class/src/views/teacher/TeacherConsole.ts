@@ -19,7 +19,6 @@ import {
 } from '@/lib/lesson';
 import { isLessonStanding, lessonStatusOfMain } from '@/lib/lessonCore';
 import { classRegistrationOf, proposalLimitOf } from '@freedi/shared-types';
-import type { Statement } from '@freedi/shared-types';
 import { classState } from '@/lib/classroom/classState';
 import {
 	isBallotClosed,
@@ -27,8 +26,7 @@ import {
 	isPlenum,
 	rosterStudents,
 } from '@/lib/classroom/consoleHelpers';
-import { liveResultsOn, voteResults } from '@/lib/classroom/voteResults';
-import { noDeviceTotal } from '@/lib/classroom/actFor';
+import { liveResultsOn } from '@/lib/classroom/voteResults';
 import { flagState } from '@/lib/classroom/languageFlags';
 import { unseenFlagCount } from '@/lib/classroom/flagLogic';
 import { syncRegistrationWatch, watchedRegistration } from '@/lib/classroom/registrationData';
@@ -56,7 +54,7 @@ import { actForMode, syncActFor } from './actFor/actForState';
 import { StepLine } from './StepLine';
 import { ActionBand } from './ActionBand';
 import { SwitchBand } from './SwitchBand';
-import { liveStatusInput } from './classStatusData';
+import { liveStatusInput, voteCountsOn } from './classStatusData';
 import { markDragHintDone } from './dragHintState';
 import { setStudentMovedHook } from './moveHook';
 import { board } from './consoleBoard';
@@ -93,20 +91,6 @@ const qr = {
 		showQr = !showQr;
 	},
 };
-
-/** Votes cast on the running ballot, and the students in the room. */
-function voteCountsOn(challenge: Statement | null): { voted: number; present: number } {
-	const ids = challenge?.statementSettings?.ballot?.candidateIds ?? [];
-	const voted = Object.values(voteResults(ids, challenge?.selections)).reduce(
-		(sum, result) => sum + result.count,
-		0,
-	);
-
-	return {
-		voted,
-		present: rosterStudents(classState.roster).length + noDeviceTotal(classState.tables),
-	};
-}
 
 function currentView(): ConsoleView {
 	return consoleViewOf(m.route.param('view'));
@@ -288,7 +272,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 						),
 					})
 				: null,
-			m('main.console__board', board(mid, view, step.index)),
+			m('main.console__board', board(mid, view, step.index, status)),
 			consoleState.ghost
 				? m(
 						'div.chip-ghost',

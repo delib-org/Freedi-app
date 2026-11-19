@@ -2,7 +2,7 @@ import m from 'mithril';
 import type { LessonStatus } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { classSetLessonStatus } from '@/lib/classroom/api';
-import { planBack } from './consoleBack';
+import { captureException } from '@/lib/sentry';
 import { resultsAside } from './consoleConfirms';
 
 /**
@@ -10,7 +10,8 @@ import { resultsAside } from './consoleConfirms';
  * trapped, Escape cancels and focus goes back to the control that opened it.
  * "End" is the default and has focus; the other way out is "Keep open for
  * students" (not offered when the lesson is already open). After either, the
- * teacher goes to the lesson's plan screen, where the row shows the new status.
+ * teacher STAYS on the console: it says the lesson has ended, shows the decision, and its
+ * primary button ("Back to the plan") takes the focus.
  */
 
 type Choice = 'end' | 'keepOpen';
@@ -32,6 +33,11 @@ function closeEndChoice(): void {
 	m.redraw();
 }
 
+/** The dialog closes and the console redraws; the primary button is where the teacher goes next. */
+function focusPrimary(): void {
+	window.setTimeout(() => document.querySelector<HTMLElement>('.next-action__button')?.focus(), 0);
+}
+
 async function choose(mainId: string, choice: Choice): Promise<void> {
 	if (pending) return;
 	pending = choice;
@@ -40,9 +46,9 @@ async function choose(mainId: string, choice: Choice): Promise<void> {
 	try {
 		await classSetLessonStatus({ mainId, action: choice });
 		isOpen = false;
-		m.route.set(planBack().href);
+		focusPrimary();
 	} catch (err) {
-		console.error('[EndChoice] changing the lesson status failed:', err);
+		captureException(err, { operation: 'EndChoice.choose', mainId, choice });
 		failed = choice;
 	} finally {
 		pending = null;

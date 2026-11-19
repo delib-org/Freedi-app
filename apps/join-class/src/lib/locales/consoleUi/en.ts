@@ -42,6 +42,7 @@ const consoleUi: Record<string, string> = {
 	'console.status.show': 'Show',
 	'console.drag_hint_close': 'Got it',
 	'console.student_screen_back': 'Back to the tables',
+	'console.decision': 'The decision',
 };
 
 export default consoleUi;
