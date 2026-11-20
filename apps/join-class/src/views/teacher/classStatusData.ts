@@ -10,7 +10,7 @@ import {
 	rosterStudents,
 	unplacedStudents,
 } from '@/lib/classroom/consoleHelpers';
-import type { ClassStatusInput } from '@/lib/classroom/classStatus';
+import { tableIsRating, type ClassStatusInput } from '@/lib/classroom/classStatus';
 import { introVideoLabel, introVideosOf, projectorVideoOf } from '@/lib/classroom/introVideos';
 import { noneLeftNow } from '@/lib/classroom/ownQuestions';
 import { sideCount } from '@/lib/classroom/sideCount';
@@ -89,7 +89,6 @@ export function liveStatusInput(args: LiveStatusArgs): ClassStatusInput {
 	const { voted, present } = voteCountsOn(args.challenge);
 	const doneAt = (table: ClassTable): boolean =>
 		tableIsDone(table, mode, now, noneLeftNow(table), proposalsDoneNow(table, mode));
-	const ratingOrDone = (table: ClassTable): boolean => table.step === 'rate' || doneAt(table);
 
 	return {
 		status: args.status,
@@ -102,7 +101,7 @@ export function liveStatusInput(args: LiveStatusArgs): ClassStatusInput {
 		tableCount: tables.length,
 		unseated: tables.length > 0 ? unplacedStudents(students, tables).length : 0,
 		tablesDone: tables.filter(doneAt).length,
-		tablesRating: tables.filter(ratingOrDone).length,
+		tablesRating: tables.filter(tableIsRating).length,
 		allRated: args.allRated,
 		ballotFrozen: isBallotFrozen(args.challenge),
 		ballotPaused: isBallotPaused(args.challenge),

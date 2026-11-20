@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { LessonStepKey } from '@freedi/shared-types';
-import { announcementFor, classStatusFor } from '../classStatus';
+import { announcementFor, classStatusFor, tableIsRating } from '../classStatus';
 import type { ClassStatusInput, StatusSnapshot } from '../classStatus';
 
 function at(stepKey: LessonStepKey, patch: Partial<ClassStatusInput> = {}): ClassStatusInput {
@@ -265,5 +265,29 @@ describe('the status input carries counts only', () => {
 			'utf8',
 		);
 		expect(source).not.toMatch(/\.camp\b/);
+	});
+});
+
+describe('Proposals: a table is ready only when it is really rating', () => {
+	it('the talk is done (everyone spoke) is not rating', () => {
+		expect(tableIsRating({ step: 'talk' })).toBe(false);
+	});
+
+	it('writing is not rating', () => {
+		expect(tableIsRating({ step: 'write' })).toBe(false);
+	});
+
+	it('rating is rating, and a table that finished rating is still at the rate step', () => {
+		expect(tableIsRating({ step: 'rate' })).toBe(true);
+	});
+
+	it('two tables that all spoke but none rates: not ready', () => {
+		const status = classStatusFor(at('proposals', { tableCount: 2, tablesRating: 0 }));
+
+		expect(status.ready).toBe(false);
+	});
+
+	it('every table at rate: ready', () => {
+		expect(classStatusFor(at('proposals', { tableCount: 2, tablesRating: 2 })).ready).toBe(true);
 	});
 });

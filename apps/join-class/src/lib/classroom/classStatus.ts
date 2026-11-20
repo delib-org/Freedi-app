@@ -1,4 +1,4 @@
-import type { LessonStatus, LessonStepKey } from '@freedi/shared-types';
+import type { ClassTable, LessonStatus, LessonStepKey } from '@freedi/shared-types';
 
 /**
  * "What the class is doing", as pure data (design 4): the ONE line the teacher reads at each
@@ -6,6 +6,15 @@ import type { LessonStatus, LessonStepKey } from '@freedi/shared-types';
  * so the rules are testable and the view only draws. Stuck tables ride along as an attention
  * item (never colour alone: the view adds the clock glyph and words).
  */
+
+/**
+ * Proposals: a table counts toward "ready to move on" only when it is really at the rating
+ * part. Everyone having spoken, or the pen being taken, is the table still working: it has
+ * nothing to rate yet, so moving the class on would cut the writing short.
+ */
+export function tableIsRating(table: Pick<ClassTable, 'step'>): boolean {
+	return table.step === 'rate';
+}
 
 export interface ClassStatusInput {
 	status: LessonStatus;
@@ -22,7 +31,7 @@ export interface ClassStatusInput {
 	/** Students on the roster seated at no table. */
 	unseated: number;
 	tablesDone: number;
-	/** Tables at rating or finished (Proposals). */
+	/** Tables really at the rating part of Proposals (see `tableIsRating`). */
 	tablesRating: number;
 	/** All proposals: the rated-everything line; `complete` when every student and every proposal is covered. */
 	allRated: { n: number; m: number; k: number; complete: boolean } | null;
