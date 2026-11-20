@@ -126,6 +126,12 @@ describe('the action band, mounted at every step and status', () => {
 		});
 	}
 
+	it('opens the step panel toward the start: the toggle is the last control of the band', () => {
+		const mounted = mountSmoke(() => m(ActionBand, band('live', 5)));
+		expect(mounted.root.querySelector('.disclosure--end #step-more')).not.toBeNull();
+		mounted.unmount();
+	});
+
 	it('keeps one primary button element across label changes', () => {
 		const mounted = mountSmoke(() => m(ActionBand, band('live', 5)));
 		const before = mounted.root.querySelector('.next-action__button');
