@@ -280,6 +280,11 @@ $dock-clearance: 128px;
   }
 }
 
+// Working: it still looks like the primary, and a press does nothing until the write is done.
+.next-action__button--busy {
+  cursor: progress;
+}
+
 .next-action__reason {
   margin: 0;
   color: var(--ink-muted);

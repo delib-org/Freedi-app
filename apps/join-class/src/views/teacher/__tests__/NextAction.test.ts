@@ -59,7 +59,7 @@ describe('NextAction', () => {
 		const vnode = draw(GO_NEXT);
 		expect(children(vnode)).toHaveLength(1);
 		const attrs = button(vnode).attrs as Record<string, unknown>;
-		expect(attrs.disabled).toBe(false);
+		expect(attrs.disabled).toBeUndefined();
 		expect(attrs['aria-disabled']).toBeUndefined();
 		expect(attrs['data-testid']).toBe('console-forward');
 	});
@@ -94,7 +94,7 @@ describe('NextAction', () => {
 		});
 		const attrs = button(vnode).attrs as Record<string, unknown>;
 		expect(attrs['aria-disabled']).toBe('true');
-		expect(attrs.disabled).toBe(false);
+		expect(attrs.disabled).toBeUndefined();
 		expect(attrs['aria-describedby']).toBe('next-action-reason');
 		const reason = children(vnode)[1];
 		expect((reason.attrs as Record<string, unknown>).id).toBe('next-action-reason');
@@ -121,10 +121,14 @@ describe('NextAction', () => {
 		expect(freezeBallot).not.toHaveBeenCalled();
 	});
 
-	it('shows the busy words and disables while its write runs', () => {
+	it('shows the busy words and ignores presses while its write runs, without losing focus', () => {
 		const vnode = draw({ ...GO_NEXT, busyKey: 'busy-key' });
 		const attrs = button(vnode).attrs as Record<string, unknown>;
-		expect(attrs.disabled).toBe(true);
+		// `disabled` would drop the keyboard focus to the body; aria-disabled keeps it.
+		expect(attrs.disabled).toBeUndefined();
+		expect(attrs['aria-disabled']).toBe('true');
+		(attrs.onclick as () => void)();
+		expect(goToStep).not.toHaveBeenCalled();
 		expect(attrs['aria-busy']).toBe('true');
 		expect((button(vnode).children as m.Vnode[])[0].children).toBe('console.busy_opening');
 	});

@@ -138,12 +138,18 @@ export const NextAction: m.Component<NextActionAttrs> = {
 					type: 'button',
 					'data-testid': TESTID[spec.kind] ?? 'console-next-action',
 					'data-action-kind': spec.kind,
-					disabled: busy,
+					// Never `disabled` while busy: a disabled button drops the keyboard focus to the
+					// body. aria-disabled keeps it, and the press is ignored (the double-tap guard).
 					'aria-busy': busy ? 'true' : undefined,
-					'aria-disabled': blockedKey ? 'true' : undefined,
+					'aria-disabled': busy || blockedKey ? 'true' : undefined,
 					'aria-describedby': blockedKey ? REASON_ID : undefined,
-					class: blockedKey ? 'next-action__button--blocked' : '',
+					class: blockedKey
+						? 'next-action__button--blocked'
+						: busy
+							? 'next-action__button--busy'
+							: '',
 					onclick: () => {
+						if (busy) return;
 						if (blockedKey) {
 							document.getElementById(REASON_ID)?.focus();
 

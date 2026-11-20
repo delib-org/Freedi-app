@@ -16,6 +16,7 @@ import { ClassStatusLine } from '../ClassStatusLine';
 import { ActForEntry } from '../actFor/ActForEntry';
 import { DecisionPanel } from '../DecisionPanel';
 import { openDisclosure } from '../Disclosure';
+import { consoleState } from '../consoleState';
 import { LESSON_MORE_ID, LessonMore } from '../LessonMore';
 import { NextAction } from '../NextAction';
 import { STEP_MORE_ID, StepMore } from '../StepMore';
@@ -138,6 +139,41 @@ describe('the action band, mounted at every step and status', () => {
 		const before = mounted.root.querySelector('.next-action__button');
 		mounted.update(() => m(ActionBand, band('live', 6)));
 		expect(mounted.root.querySelector('.next-action__button')).toBe(before);
+		mounted.unmount();
+	});
+});
+
+describe('the primary button while its write runs', () => {
+	it('keeps the keyboard focus on the same element through the busy label', () => {
+		const spec = nextActionFor({
+			status: 'live',
+			stepKey: 'proposals',
+			stepIndex: 5,
+			steps: STEPS,
+			hasChallenge: true,
+			ballotFrozen: false,
+			ballotClosed: false,
+			votedCount: 0,
+			presentCount: 6,
+			proposalCount: 3,
+			tableCount: 2,
+			studentCount: 6,
+			connected: false,
+			copyPending: false,
+			resultsShown: false,
+		});
+		const mounted = mountSmoke(() => m(NextAction, { mid: 'm', spec, challengeId: 'q1' }));
+		const button = mounted.root.querySelector<HTMLElement>('.next-action__button') as HTMLElement;
+		button.focus();
+		expect(document.activeElement).toBe(button);
+		if (spec.busyKey) consoleState.busy.add(spec.busyKey);
+		mounted.redraw();
+		expect(document.activeElement).toBe(button);
+		expect(button.getAttribute('aria-disabled')).toBe('true');
+		expect(button.hasAttribute('disabled')).toBe(false);
+		consoleState.busy.clear();
+		mounted.redraw();
+		expect(document.activeElement).toBe(button);
 		mounted.unmount();
 	});
 });
