@@ -258,3 +258,20 @@ describe('classSupportBySide locks the sides for good (decision C)', () => {
 		expect(fake.read(`classSideLocks/${MAIN}`)).toBeUndefined();
 	});
 });
+
+describe('a support without a side (decision support saved, no camp)', () => {
+	it('is counted in no camp and does not break the totals', async () => {
+		const fake = new FakeFirestore();
+		seedLesson(fake, [
+			{ uid: 'a1', side: 10, camp: 'a', support: 1 },
+			{ uid: 'a2', side: 10, camp: 'a', support: 1 },
+			{ uid: 'a3', side: 10, camp: 'a', support: 1 },
+			{ uid: 'lone', support: -1 },
+		]);
+		expect(fake.read(`classSides/lone--${MAIN}`)).not.toHaveProperty('camp');
+		const res = await lessonSupportBySide(fake.asFirestore(), TEACHER, { mainId: MAIN });
+		expect(res.support.a).toEqual({ hidden: false, mean: 1, n: 3, m: 3 });
+		expect(res.support.center).toEqual({ hidden: true, n: 0, m: 0 });
+		expect(res.support.b).toEqual({ hidden: true, n: 0, m: 0 });
+	});
+});

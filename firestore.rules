@@ -1937,12 +1937,12 @@ service cloud.firestore {
                 classLessonWritable(d.statementId));
       }
 
-      function classUpdateOk() {
-        let changed = request.resource.data.diff(resource.data).affectedKeys();
+      function classUpdateOk(changed) {
         return classFieldValuesOk() &&
                !changed.hasAny(['tableId']) &&
-               (!changed.hasAny(['side', 'camp', 'decisionSupport']) ||
-                classLessonWritable(resource.data.statementId));
+               (changed.hasAny(['side', 'camp', 'decisionSupport'])
+                 ? classLessonWritable(resource.data.statementId)
+                 : true);
       }
 
       // THE SIDE IS PRIVATE (Trello btMVQMM5). Any signed-in user can read a
@@ -1973,17 +1973,22 @@ service cloud.firestore {
       function sideFieldsCreateOk() {
         let d = request.resource.data;
         return !('sidePickedAt' in d) &&
-               (!('side' in d || 'camp' in d || 'decisionSupport' in d) || legacySideWritesOpen()) &&
-               (!('side' in d || 'camp' in d) || !classSidesFrozen(d.statementId));
+               (d.keys().hasAny(['side', 'camp', 'decisionSupport'])
+                 ? (legacySideWritesOpen() &&
+                    (d.keys().hasAny(['side', 'camp']) ? !classSidesFrozen(d.statementId) : true))
+                 : true);
       }
 
-      function sideFieldsUpdateOk() {
-        let changed = request.resource.data.diff(resource.data).affectedKeys();
-        return !changed.hasAny(['side', 'camp', 'decisionSupport', 'sidePickedAt']) ||
-               (isSubscriber() &&
-                (!changed.hasAny(['side', 'camp', 'decisionSupport']) || legacySideWritesOpen()) &&
-                (!changed.hasAny(['side', 'camp']) || !classSidesFrozen(resource.data.statementId)) &&
-                (!changed.hasAny(['sidePickedAt']) || sidePickedOk()));
+      function sideFieldsUpdateOk(changed) {
+        return changed.hasAny(['side', 'camp', 'decisionSupport', 'sidePickedAt'])
+          ? sideFieldsChangeOk(changed)
+          : true;
+      }
+      function sideFieldsChangeOk(changed) {
+        return isSubscriber() &&
+               (changed.hasAny(['side', 'camp', 'decisionSupport']) ? legacySideWritesOpen() : true) &&
+               (changed.hasAny(['side', 'camp']) ? !classSidesFrozen(resource.data.statementId) : true) &&
+               (changed.hasAny(['sidePickedAt']) ? sidePickedOk() : true);
       }
 
       // IDENTITY OF A SUBSCRIPTION. Every admin check (statements isAdmin(),
@@ -2013,7 +2018,20 @@ service cloud.firestore {
       // them only together with the other, i.e. only the exact values its id
       // names. user.uid may stay as it is (server copies store the statement's
       // creator there) or become userId.
-      function updateIdentityOk() {
+      // When none of statementId / userId / user changes, the four checks below
+      // reduce to the third one (the doc must already be {userId}--{statementId}):
+      // the same answer for fewer evaluated expressions.
+      function updateIdentityOk(changed) {
+        return changed.hasAny(['statementId', 'userId', 'user'])
+          ? updateIdentityFullOk()
+          : idOfDocOk(request.resource.data.get('userId', null), request.resource.data.get('statementId', null));
+      }
+      function idOfDocOk(afterUser, afterStatement) {
+        return !(afterUser is string && afterStatement is string) ||
+               statementSubId == afterUser + '--' + afterStatement;
+      }
+
+      function updateIdentityFullOk() {
         let before = resource.data;
         let after = request.resource.data;
         let beforeStatement = before.get('statementId', null);
@@ -2038,12 +2056,13 @@ service cloud.firestore {
       // rest of the doc (role, approval). The owner is userId; a legacy doc
       // without one belongs to the uid its id names. A doc with no tokens field
       // works too: adding the field counts as changing it.
-      function tokensUpdateOk() {
+      function tokensUpdateOk(changed) {
         let before = resource.data.get('tokens', []);
         let after = request.resource.data.get('tokens', []);
-        return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['tokens']) ||
-               (resource.data.get('userId', statementSubId.split('--')[0]) == request.auth.uid &&
-                before is list && after is list && after.hasOnly(before));
+        return changed.hasAny(['tokens'])
+          ? (resource.data.get('userId', statementSubId.split('--')[0]) == request.auth.uid &&
+             before is list && after is list && after.hasOnly(before))
+          : true;
       }
 
       // Old cached app versions send this device's token inside the very write
@@ -2068,6 +2087,47 @@ service cloud.firestore {
         return request.resource.data.role in ['member', 'waiting', 'unsubscribed'];
       }
 
+      // EXPRESSION BUDGET (Trello btMVQMM5). Rules evaluate at most 1000
+      // expressions per request. Measured on the emulator: a REFUSED write is
+      // evaluated a second time in a pass where function calls error, and an
+      // error does not short-circuit && / || (error && false is false, so every
+      // operand is evaluated): that pass walks the whole tree. A ternary on a
+      // condition that cannot error (changed.hasAny, d.keys().hasAny) skips the
+      // branch it does not take in both passes, so the side / tokens / class /
+      // identity logic below sits behind such ternaries. Keep `!A || B` where A
+      // itself can error on a legacy doc (no statementId / role): there
+      // `error || true` is true but `error ? .. : ..` is an error.
+      // tests/rules/join-class-side-privacy.test.mjs fails if a refused write
+      // runs out of budget again.
+      //
+      // getAccess() walks up to three statement docs; the old chains
+      // isPublic() || isOpenToAll() || ... walked them once per alternative.
+      // These take the access ONCE, as an argument. Same answers as the chains.
+      function selfJoinAccessOk(access) {
+        return access in ['public', 'openToAll', 'openForRegistered'] ||
+               (access == 'moderated' && isWaitingRole());
+      }
+      function selfRoleMoveOk(access) {
+        return (access == 'moderated' && isWaitingRole()) ||
+               (access in ['public', 'openToAll', 'openForRegistered'] && isMemberRole());
+      }
+
+      // The whole update rule over ONE diff of the doc (it used to be computed
+      // three times: tokens, class fields, side fields). Who may write comes
+      // first, so a refused write by someone else stops after two lookups; the
+      // order of && / || operands does not change the answer in rules.
+      function subscriptionUpdateOk(changed) {
+        return ((isSubscriber() &&
+                 classUpdateOk(changed) &&
+                 (isRoleUnchanged() || (!isBanned() && selfRoleMoveOk(getAccess())))) ||
+                isAdminOrCreator()) &&
+               sideFieldsUpdateOk(changed) &&
+               !isTryingToBanProtectedUser() &&
+               updateIdentityOk(changed) &&
+               tokensUpdateOk(changed) &&
+               homeSubscriptionUpdateOk();
+      }
+
       allow read: if request.auth.uid != null;
 
       // For create
@@ -2085,33 +2145,17 @@ service cloud.firestore {
                      tokensCreateOk() &&
                      sideFieldsCreateOk() &&
                      homeSubscriptionWriteOk() &&
-                     (isAdminOrCreator() ||
-                      (isSelfGrantableRole() &&
+                     ((isSelfGrantableRole() &&
                        classCreateOk() &&
-                       (isPublic() ||
-                        isOpenToAll() ||
-                        isOpenForRegistered() ||
-                        (isModerated() && isWaitingRole()))));
+                       selfJoinAccessOk(getAccess())) ||
+                      isAdminOrCreator());
 
       // For update
       // The subscriber branch is already an allow-list: a person may keep their
       // role or move to 'waiting' / 'member'. Only an admin or the real creator
       // can set anything else.
       allow update: if request.auth.uid != null &&
-                     !isTryingToBanProtectedUser() &&
-                     updateIdentityOk() &&
-                     tokensUpdateOk() &&
-                     sideFieldsUpdateOk() &&
-                     homeSubscriptionUpdateOk() &&
-                     (isAdminOrCreator() ||
-                      (isSubscriber() &&
-                        classUpdateOk() &&
-                        (isRoleUnchanged() ||
-                          (!isBanned() &&
-                            ((isModerated() && isWaitingRole()) ||
-                             ((isPublic() || isOpenToAll() || isOpenForRegistered()) && isMemberRole())))
-                        )
-                      ));
+                     subscriptionUpdateOk(request.resource.data.diff(resource.data).affectedKeys());
       
       // For delete
       allow delete: if request.auth.uid != null &&

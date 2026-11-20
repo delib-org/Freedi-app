@@ -38,6 +38,15 @@ describe('join-class side privacy rules', () => {
 
 	const as = (uid) => env.authenticatedContext(uid).firestore();
 
+	// A refused write must be refused by the rules' logic, not by running out of
+	// the 1000-expression budget (a legitimate write near that edge would be
+	// refused too, with no way for the user to recover).
+	const BUDGET_MESSAGE = 'maximum of 1000 expressions';
+	const assertCleanDeny = async (promise) => {
+		const error = await assertFails(promise);
+		assert.equal(String(error?.message ?? '').includes(BUDGET_MESSAGE), false, String(error?.message));
+	};
+
 	const setFlag = (open) =>
 		seed(env, async (db) => {
 			const ref = doc(db, 'classFlags', 'legacySideWrites');
@@ -360,6 +369,30 @@ describe('join-class side privacy rules', () => {
 			await setStep('side');
 			await assertSucceeds(pick(S1, 20, 'a'));
 			await assertSucceeds(updateDoc(doc(as(S2), 'classSides', SIDE2), { side: 10, camp: 'a', lastUpdate: T0 + 9 }));
+		});
+	});
+
+	describe('refused subscription writes stay within the expression budget', () => {
+		it('the teacher or a classmate setting another student\'s sidePickedAt', async () => {
+			await assertCleanDeny(updateDoc(doc(as(TEACHER), 'statementsSubscribe', SIDE1), { sidePickedAt: T0 }));
+			await assertCleanDeny(updateDoc(doc(as(S2), 'statementsSubscribe', SIDE1), { sidePickedAt: T0 }));
+		});
+
+		it('an old-style side write with the window closed', async () => {
+			await seed(env, (db) => setDoc(doc(db, 'statementsSubscribe', SIDE1), sub(S1, 'member', { side: 20, camp: 'a' })));
+			await assertCleanDeny(updateDoc(doc(as(S1), 'statementsSubscribe', SIDE1), { side: 30, camp: 'a', lastUpdate: T0 + 5 }));
+		});
+
+		it('a student writing another student\'s subscription, or promoting themselves', async () => {
+			await assertCleanDeny(updateDoc(doc(as(S2), 'statementsSubscribe', SIDE1), { lastUpdate: T0 + 9 }));
+			await assertCleanDeny(updateDoc(doc(as(S1), 'statementsSubscribe', SIDE1), { role: 'admin' }));
+		});
+
+		it('a flag without a camp, and refused creates', async () => {
+			await assertCleanDeny(updateDoc(doc(as(S1), 'statementsSubscribe', SIDE1), { sidePickedAt: T0 }));
+			const fresh = 'u-fresh3';
+			await assertCleanDeny(setDoc(doc(as(fresh), 'statementsSubscribe', `${fresh}--${MAIN}`), sub(fresh, 'admin')));
+			await assertCleanDeny(setDoc(doc(as(fresh), 'statementsSubscribe', `${fresh}--${MAIN}`), sub(fresh, 'member', { side: 20 })));
 		});
 	});
 
