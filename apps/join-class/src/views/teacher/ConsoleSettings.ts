@@ -24,10 +24,13 @@ let settingsOpen = false;
 /** Open the settings (the step menu's "seats at a table" item lands here) and focus the first field of the tables group. */
 export function requestSettingsOpen(): void {
 	settingsOpen = true;
-	m.redraw();
-	window.setTimeout(() => {
-		document.querySelector<HTMLElement>('.console__settings .table-settings select')?.focus();
-	}, 0);
+	// Draw now (the panel may have just been opened): the field exists only once drawn.
+	m.redraw.sync();
+	document
+		.querySelector<HTMLElement>(
+			'.console__settings .table-settings :is(input, select):not(:disabled)',
+		)
+		?.focus();
 }
 
 export const ConsoleSettings: m.Component = {

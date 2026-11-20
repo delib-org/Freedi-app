@@ -24,7 +24,7 @@ import {
 } from './consoleConfirms';
 import { consoleState, isBusy } from './consoleState';
 import { requestSettingsOpen } from './ConsoleSettings';
-import { Disclosure, openDisclosure } from './Disclosure';
+import { Disclosure, closeDisclosure, openDisclosure } from './Disclosure';
 import { LESSON_MORE_ID } from './LessonMore';
 import { copySeating } from './registrationActions';
 import {
@@ -98,11 +98,16 @@ function itemView(item: StepMoreItem, attrs: StepMoreAttrs, close: () => void): 
 			return actionButton(
 				`${t('console.table_size')}…`,
 				() => {
-					openDisclosure(LESSON_MORE_ID);
-					close();
-					requestSettingsOpen();
+					// Close this panel without handing focus back to its toggle: the settings take it.
+					closeDisclosure(STEP_MORE_ID);
+					// Open "More" only after this click has bubbled: its outside-click rule would
+					// otherwise close it again, since this button is outside it.
+					window.setTimeout(() => {
+						openDisclosure(LESSON_MORE_ID);
+						requestSettingsOpen();
+					}, 0);
 				},
-				{ testId: 'console-seats' },
+				{ disabled: held, testId: 'console-seats' },
 			);
 		case 'updateFromRegistration':
 			return actionButton(

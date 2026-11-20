@@ -5,6 +5,10 @@ import { LESSON_STEPS } from '@freedi/shared-types';
 import type { ClassTable, LessonStatus, LessonStepKey, Statement } from '@freedi/shared-types';
 
 vi.mock('@/lib/firebase', () => ({}));
+vi.mock('@/lib/store', async (importOriginal) => ({
+	...(await importOriginal<typeof import('@/lib/store')>()),
+	getMainStatement: () => ({ statementId: 'm', statement: 'Lesson', statementSettings: {} }),
+}));
 
 import type { ClassStatusInput } from '@/lib/classroom/classStatus';
 import type { RosterStudent } from '@/lib/classroom/consoleHelpers';
@@ -174,6 +178,49 @@ describe('the primary button while its write runs', () => {
 		consoleState.busy.clear();
 		mounted.redraw();
 		expect(document.activeElement).toBe(button);
+		mounted.unmount();
+	});
+});
+
+describe('"Seats at a table…" in the step menu', () => {
+	const tablesIndex = STEPS.indexOf('tables');
+
+	function open(status: LessonStatus) {
+		openDisclosure(STEP_MORE_ID);
+		const mounted = mountSmoke(() =>
+			m('div', [
+				m(ActionBand, band(status, tablesIndex)),
+				m(LessonMore, {
+					mid: 'm',
+					status,
+					stepKey: 'tables',
+					connected: false,
+					qr: { shown: false, toggle: vi.fn() },
+				}),
+			]),
+		);
+
+		return mounted;
+	}
+
+	it('opens "More" with the settings expanded and focuses the first field of the tables group', async () => {
+		const mounted = open('live');
+		const seats = mounted.root.querySelector<HTMLElement>('[data-testid="console-seats"]');
+		expect(seats).not.toBeNull();
+		seats?.click();
+		await new Promise((resolve) => setTimeout(resolve, 5));
+		const details = mounted.root.querySelector<HTMLDetailsElement>('details.console__settings');
+		expect(mounted.root.querySelector('#lesson-more:not([hidden])')).not.toBeNull();
+		expect(details?.open).toBe(true);
+		expect(document.activeElement?.closest('.table-settings')).not.toBeNull();
+		expect(mounted.root.querySelector('#step-more')?.hasAttribute('hidden')).toBe(true);
+		mounted.unmount();
+	});
+
+	it('is disabled while the lesson is paused, like the other items', () => {
+		const mounted = open('paused');
+		const seats = mounted.root.querySelector<HTMLButtonElement>('[data-testid="console-seats"]');
+		expect(seats?.disabled).toBe(true);
 		mounted.unmount();
 	});
 });
