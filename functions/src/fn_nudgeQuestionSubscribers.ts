@@ -22,6 +22,7 @@ import {
 } from '@freedi/shared-types';
 import { db } from './db';
 import { assertStatementAdmin } from './progress/assertStatementAdmin';
+import { patchProgressDoc } from './progress/questionProgressWriter';
 import { getEmailTransporter } from './utils/emailTransporter';
 import { createStatementUpdateEmail } from './email-templates';
 import { logError } from './utils/errorHandling';
@@ -273,10 +274,8 @@ export async function sendQuestionNudge(input: SendQuestionNudgeInput): Promise<
 		email = await sendEmails(statement, targets, message);
 	}
 
-	await db
-		.collection(Collections.questionProgress)
-		.doc(statementId)
-		.set({ statementId, lastNudgeAt: now, lastUpdate: now }, { merge: true });
+	// Never creates a partial progress doc: see patchProgressDoc.
+	await patchProgressDoc(statement, { lastNudgeAt: now }, now);
 
 	logger.info('[nudge] sent facilitator nudge', {
 		statementId,

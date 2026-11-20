@@ -1,4 +1,11 @@
-import { Collections, NotificationTriggerType, Role, StatementType } from '@freedi/shared-types';
+import { safeParse } from 'valibot';
+import {
+	Collections,
+	NotificationTriggerType,
+	QuestionProgressSchema,
+	Role,
+	StatementType,
+} from '@freedi/shared-types';
 import { createFakeDb, FakeDb } from '../progress/__tests__/fakeDb';
 
 let fake: FakeDb = createFakeDb();
@@ -126,6 +133,38 @@ describe('nudgeQuestionSubscribersForAdmin', () => {
 			read: false,
 		});
 		expect(typeof fake.read(Collections.questionProgress, Q)?.lastNudgeAt).toBe('number');
+	});
+
+	it('seeds a schema-valid progress doc when the question has none (FREEDI-APP-3Q)', async () => {
+		seedSub('u1');
+
+		await nudgeQuestionSubscribersForAdmin(ADMIN, 'Admin', request() as never);
+
+		const doc = fake.read(Collections.questionProgress, Q);
+		expect(doc).toMatchObject({ statementId: Q, topParentId: Q });
+		expect(typeof doc?.lastNudgeAt).toBe('number');
+		expect(safeParse(QuestionProgressSchema, doc).success).toBe(true);
+	});
+
+	it('only patches an existing progress doc, keeping its counters', async () => {
+		seedSub('u1');
+		fake.seed(Collections.questionProgress, Q, {
+			statementId: Q,
+			topParentId: Q,
+			entered: 4,
+			suggested: 1,
+			evaluated: 2,
+			options: 3,
+			evaluations: 9,
+			lastActivity: 5,
+			lastUpdate: 5,
+		});
+
+		await nudgeQuestionSubscribersForAdmin(ADMIN, 'Admin', request() as never);
+
+		const doc = fake.read(Collections.questionProgress, Q);
+		expect(doc).toMatchObject({ entered: 4, evaluations: 9, lastActivity: 5 });
+		expect(safeParse(QuestionProgressSchema, doc).success).toBe(true);
 	});
 
 	it('leaves out waiting people and anyone banned higher up the tree', async () => {

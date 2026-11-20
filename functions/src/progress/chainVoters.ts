@@ -151,7 +151,11 @@ export async function refreshChainVoters(questionId: string): Promise<number | u
 
 		// Kept here only, never copied onto the question document: nothing reads
 		// the copy, and a write there on every first rating reaches everyone present.
-		await progressRef.set({ chainEvaluated: count, chainKey: fingerprint }, { merge: true });
+		// `update`, and only for an existing doc: a merge-set would create a doc
+		// holding just these two fields, which fails QuestionProgressSchema.
+		if (progressSnaps[0]?.exists) {
+			await progressRef.update({ chainEvaluated: count, chainKey: fingerprint });
+		}
 
 		return count;
 	} catch (error) {

@@ -1,4 +1,5 @@
-import { Collections, StatementType } from '@freedi/shared-types';
+import { safeParse } from 'valibot';
+import { Collections, QuestionProgressSchema, StatementType } from '@freedi/shared-types';
 import { createFakeDb, FakeDb } from './fakeDb';
 
 let fake: FakeDb = createFakeDb();
@@ -98,7 +99,7 @@ describe('recordParticipation', () => {
 		});
 	});
 
-	it('bumps lastActivity on the top parent without creating counters there', async () => {
+	it('bumps lastActivity on the top parent and leaves its counters at zero', async () => {
 		await recordParticipation({
 			statementId: Q,
 			topParentId: TOP,
@@ -111,6 +112,11 @@ describe('recordParticipation', () => {
 			statementId: TOP,
 			topParentId: TOP,
 			organizationId: 'org-1',
+			entered: 0,
+			suggested: 0,
+			evaluated: 0,
+			options: 0,
+			evaluations: 0,
 			lastActivity: 5,
 			lastUpdate: 5,
 		});
@@ -144,6 +150,25 @@ describe('touchActivity', () => {
 		expect(fake.read(Collections.questionProgress, Q)).toMatchObject({ lastActivity: 42 });
 		expect(fake.read(Collections.questionProgress, TOP)).toMatchObject({ lastActivity: 42 });
 	});
+
+	it('never leaves a partial doc on either statement (FREEDI-APP-3Q)', async () => {
+		await touchActivity({ statementId: Q, topParentId: TOP, now: 42 });
+		expect(
+			safeParse(QuestionProgressSchema, fake.read(Collections.questionProgress, Q)).success,
+		).toBe(true);
+		expect(
+			safeParse(QuestionProgressSchema, fake.read(Collections.questionProgress, TOP)).success,
+		).toBe(true);
+	});
+});
+
+describe('recordParticipation top parent', () => {
+	it('creates the top parent doc schema-complete', async () => {
+		await recordParticipation({ statementId: Q, userId: UID, kind: 'entered', now: 7 });
+		expect(
+			safeParse(QuestionProgressSchema, fake.read(Collections.questionProgress, TOP)).success,
+		).toBe(true);
+	});
 });
 
 describe('recordSuggestionProgress', () => {
@@ -165,13 +190,13 @@ describe('recordSuggestionProgress', () => {
 	it('only bumps activity for derived options', async () => {
 		await recordSuggestionProgress({ ...base, isCluster: true } as never);
 		const progress = fake.read(Collections.questionProgress, Q);
-		expect(progress?.suggested).toBeUndefined();
+		expect(progress?.suggested).toBe(0);
 		expect(progress?.lastActivity).toBe(77);
 	});
 
 	it('only bumps activity for non-option children', async () => {
 		await recordSuggestionProgress({ ...base, statementType: StatementType.comment } as never);
-		expect(fake.read(Collections.questionProgress, Q)?.suggested).toBeUndefined();
+		expect(fake.read(Collections.questionProgress, Q)?.suggested).toBe(0);
 		expect(fake.read(Collections.questionProgress, TOP)?.lastActivity).toBe(77);
 	});
 });
