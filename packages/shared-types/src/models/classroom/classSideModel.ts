@@ -1,7 +1,7 @@
 import { InferOutput, number, object, optional, string } from 'valibot';
 import { CampSchema, DecisionSupportSchema, SideValueSchema } from './classroomModel';
 import type { Camp } from './classroomModel';
-import type { SupportBySide } from './classroomLogic';
+import type { ShownSupportBySide } from './classSupportShown';
 
 /**
  * join-class: a student's side, kept private (Trello btMVQMM5).
@@ -61,6 +61,34 @@ export function sidesLocked(
 }
 
 /**
+ * Product decision C: once the totals have been reachable, the sides are frozen
+ * FOR GOOD, even if the teacher moves the lesson back to the Side step.
+ * `classSideLocks/{mainId}` exists from then on. It is created by the server
+ * the first time `classSupportBySide` is about to answer (before the answer
+ * leaves), and by the teacher's own client in the move to Vote / Summary. No
+ * client can change or delete it, so the teacher cannot reopen the sides.
+ * Readable by any signed-in user: it says only "locked since".
+ */
+export const CLASS_SIDE_LOCKS_COLLECTION = 'classSideLocks';
+
+export interface ClassSideLock {
+	mainId: string;
+	/** When the sides were frozen (ms). */
+	lockedAt: number;
+}
+
+/**
+ * No side may be picked or changed: the lesson stands at Vote / Summary now, or
+ * it was locked before. (Totals use `sidesLocked` alone: the CURRENT step.)
+ */
+export function sidesFrozen(
+	plan: { steps?: readonly string[]; stepIndex?: number } | null | undefined,
+	lock: Pick<ClassSideLock, 'lockedAt'> | null | undefined,
+): boolean {
+	return sidesLocked(plan) || typeof lock?.lockedAt === 'number';
+}
+
+/**
  * Rollout switch, read only by firestore.rules and written only by the
  * backfill script (Admin SDK): while `classFlags/legacySideWrites` has
  * `open: true`, an app version from before this change may still write
@@ -97,5 +125,5 @@ export interface ClassSupportBySideRequest {
 	mainId: string;
 }
 export interface ClassSupportBySideResponse {
-	support: SupportBySide;
+	support: ShownSupportBySide;
 }

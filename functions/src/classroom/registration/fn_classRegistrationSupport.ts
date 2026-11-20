@@ -5,6 +5,7 @@ import {
 	campOf,
 	functionConfig,
 	mergeClassSide,
+	shownSupport,
 	supportBySide,
 	tableAssignmentParticipantId,
 } from '@freedi/shared-types';
@@ -88,7 +89,7 @@ export async function registrationSupport(
 	return {
 		poleA: question.poleA,
 		poleB: question.poleB,
-		support: supportBySide(rated, gateOf(challenge, main)),
+		support: shownSupport(supportBySide(rated, gateOf(challenge, main))),
 	};
 }
 

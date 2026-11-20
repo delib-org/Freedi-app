@@ -1,6 +1,6 @@
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
 import type { Firestore } from 'firebase-admin/firestore';
-import { Collections, functionConfig, supportBySide } from '@freedi/shared-types';
+import { Collections, functionConfig, shownSupport, supportBySide } from '@freedi/shared-types';
 import type {
 	ClassSupportBySideRequest,
 	ClassSupportBySideResponse,
@@ -19,7 +19,7 @@ import {
 } from './classroomAccess';
 import { ClassroomError, toHttpsError } from './classroomErrors';
 import { loadMembership } from './classroomMembers';
-import { sidesOf } from './classSides';
+import { lockSides, sidesOf } from './classSides';
 import { gateOf, supportShownToAll, supportStepOpen } from './supportAccess';
 
 /**
@@ -27,8 +27,9 @@ import { gateOf, supportShownToAll, supportStepOpen } from './supportAccess';
  * everyone), only at the Vote and Summary steps: the lesson's own "support by
  * side" (Trello btMVQMM5). The sides and the support are private
  * (classSides/{uid}--{mainId}); they are read here and only the totals per camp
- * go out, the same SupportBySide the phones, the projector and the teacher's
- * panel used to compute from the roster.
+ * go out, with the mean of any camp rated by fewer than CLASS_SIDE_MIN_SHOWN
+ * students removed (shownSupport). The first answer also locks the sides for
+ * good (classSideLocks/{mainId}).
  */
 
 /** A student of the lesson: not its creator, not an admin. */
@@ -57,6 +58,11 @@ export async function lessonSupportBySide(
 		);
 	}
 
+	// Decision C: from the first answer on, the sides are frozen for good. The lock
+	// is written BEFORE any total leaves, so no total exists that a later side
+	// change could be compared with.
+	await lockSides(firestore, mainId);
+
 	const subsSnap = await firestore
 		.collection(Collections.statementsSubscribe)
 		.where('statementId', '==', mainId)
@@ -71,7 +77,7 @@ export async function lessonSupportBySide(
 		return { camp, decisionSupport };
 	});
 
-	return { support: supportBySide(rated, gateOf(challenge, main)) };
+	return { support: shownSupport(supportBySide(rated, gateOf(challenge, main))) };
 }
 
 export const classSupportBySide = onCall(

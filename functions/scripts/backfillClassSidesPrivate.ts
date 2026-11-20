@@ -13,6 +13,9 @@
  *   - the subscription gets `sidePickedAt` (its lastUpdate, else now) when the
  *     student had a camp and has no flag yet, and the three fields are deleted;
  *   - both writes go in one batch, so a doc is never half moved.
+ * Then (decision C) it locks the sides, classSideLocks/{mainId}, of every lesson
+ * that stands at Vote / Summary or has ended; other lessons lock by themselves
+ * on their next move to Vote / Summary or their first totals.
  * Subscription writes carry no `lastUpdate`: a cleanup is not user activity.
  * Running it again finds nothing left to move. Output never names a student.
  * The counts are what was written, or on a dry run what would be.
@@ -42,11 +45,18 @@ import {
 	CLASS_FLAGS_COLLECTION,
 	CLASS_FLAG_LEGACY_SIDE_WRITES,
 	CLASS_SIDES_COLLECTION,
+	CLASS_SIDE_LOCKS_COLLECTION,
 	CLASS_SIDE_PRIVATE_FIELDS,
 	Collections,
 } from '@freedi/shared-types';
 import type { ClassSide } from '@freedi/shared-types';
-import { planSideMove, type LegacySubscription, type SideMovePlan } from './classSideMovePlan';
+import {
+	planSideMove,
+	shouldLockLesson,
+	type LegacySubscription,
+	type LessonPlanLike,
+	type SideMovePlan,
+} from './classSideMovePlan';
 
 /** Subscriptions read per page (each needs two writes, a batch holds 500). */
 export const SIDE_PAGE_SIZE = 200;
@@ -59,6 +69,9 @@ export interface SideBackfillReport {
 	invalidValuesDropped: number;
 	flagsSet: number;
 	subscriptionsStripped: number;
+	lessonsScanned: number;
+	lessonsLocked: number;
+	lessonsAlreadyLocked: number;
 }
 
 /** Visits every subscription that still holds `field`, one page at a time. */
@@ -132,6 +145,53 @@ async function movePage(
 	if (report.execute && writes > 0) await batch.commit();
 }
 
+const STEP_INDEX_FIELD = 'statementSettings.lessonPlan.stepIndex';
+
+/**
+ * Decision C: lock the sides of every lesson that stands at Vote / Summary or
+ * has ended (shouldLockLesson). An existing lock keeps its time.
+ */
+async function lockReachedLessons(
+	db: Firestore,
+	report: SideBackfillReport,
+	now: number,
+): Promise<void> {
+	let lastDoc: QueryDocumentSnapshot | undefined;
+	for (;;) {
+		const page = db
+			.collection(Collections.statements)
+			.where(STEP_INDEX_FIELD, '>=', 0)
+			.orderBy(STEP_INDEX_FIELD)
+			.limit(SIDE_PAGE_SIZE);
+		const snapshot = await (lastDoc ? page.startAfter(lastDoc) : page).get();
+		if (snapshot.docs.length === 0) return;
+		const lessons = snapshot.docs.filter((d) => {
+			const settings = (d.data() as { statementSettings?: { lessonPlan?: LessonPlanLike } })
+				.statementSettings;
+
+			return shouldLockLesson(settings?.lessonPlan);
+		});
+		report.lessonsScanned += snapshot.docs.length;
+		const lockRefs = lessons.map((d) => db.collection(CLASS_SIDE_LOCKS_COLLECTION).doc(d.id));
+		const locks = lockRefs.length > 0 ? await db.getAll(...lockRefs) : [];
+		const batch = db.batch();
+		let writes = 0;
+		lessons.forEach((d, i) => {
+			if (locks[i]?.exists) {
+				report.lessonsAlreadyLocked += 1;
+
+				return;
+			}
+			batch.set(lockRefs[i], { mainId: d.id, lockedAt: now });
+			report.lessonsLocked += 1;
+			writes += 1;
+		});
+		if (report.execute && writes > 0) await batch.commit();
+		if (snapshot.docs.length < SIDE_PAGE_SIZE) return;
+		lastDoc = snapshot.docs[snapshot.docs.length - 1];
+	}
+}
+
 /** Moves every legacy side. Writes only when `execute` is true. */
 export async function backfillClassSidesPrivate(
 	db: Firestore,
@@ -146,11 +206,15 @@ export async function backfillClassSidesPrivate(
 		invalidValuesDropped: 0,
 		flagsSet: 0,
 		subscriptionsStripped: 0,
+		lessonsScanned: 0,
+		lessonsLocked: 0,
+		lessonsAlreadyLocked: 0,
 	};
 	const seen = new Set<string>();
 	for (const field of CLASS_SIDE_PRIVATE_FIELDS) {
 		await forEachPageWith(db, field, (docs) => movePage(db, docs, seen, report, now));
 	}
+	await lockReachedLessons(db, report, now);
 
 	return report;
 }

@@ -301,6 +301,68 @@ describe('join-class side privacy rules', () => {
 		});
 	});
 
+	describe('frozen for good once the lesson is locked (decision C)', () => {
+		const LOCK = 'classSideLocks';
+		const lock = () => seed(env, (db) => setDoc(doc(db, LOCK, MAIN), { mainId: MAIN, lockedAt: T0 }));
+
+		it('after the lock, a pick, a change and the flag are refused at Side, Tables and Proposals', async () => {
+			await lock();
+			for (const step of ['side', 'tables', 'proposals']) {
+				await setStep(step);
+				await assertFails(pick(S1, 20, 'a'));
+				await assertFails(pick(S1, 20, 'a', false));
+				await assertFails(updateDoc(doc(as(S2), 'classSides', SIDE2), { side: 10, camp: 'a', lastUpdate: T0 + 9 }));
+				await assertFails(updateDoc(doc(as(S2), 'statementsSubscribe', SIDE2), { sidePickedAt: T0 }));
+			}
+		});
+
+		it('an old tab cannot change a side through the subscription after the lock either', async () => {
+			await lock();
+			await setFlag(true);
+			await setStep('side');
+			await assertFails(updateDoc(doc(as(S1), 'statementsSubscribe', SIDE1), { side: 20, camp: 'a', lastUpdate: T0 + 9 }));
+			await setFlag(undefined);
+		});
+
+		it('decisionSupport stays writable at Summary after the lock', async () => {
+			await lock();
+			await setStep('summary');
+			await assertSucceeds(updateDoc(doc(as(S2), 'classSides', SIDE2), { decisionSupport: 0.5, lastUpdate: T0 + 9 }));
+		});
+
+		it('the teacher cannot clear or change the lock', async () => {
+			await lock();
+			await assertFails(deleteDoc(doc(as(TEACHER), LOCK, MAIN)));
+			await assertFails(updateDoc(doc(as(TEACHER), LOCK, MAIN), { lockedAt: T0 + 1 }));
+			await assertFails(setDoc(doc(as(TEACHER), LOCK, MAIN), { mainId: MAIN, lockedAt: T0 + 1 }));
+		});
+
+		it('the teacher may create it only at Vote / Summary; a student never', async () => {
+			for (const step of ['side', 'tables', 'proposals']) {
+				await setStep(step);
+				await assertFails(setDoc(doc(as(TEACHER), LOCK, MAIN), { mainId: MAIN, lockedAt: T0 }));
+			}
+			await setStep('vote');
+			await assertFails(setDoc(doc(as(S1), LOCK, MAIN), { mainId: MAIN, lockedAt: T0 }));
+			await assertFails(setDoc(doc(as(TEACHER), LOCK, MAIN), { mainId: MAIN, lockedAt: T0, extra: 1 }));
+			await assertFails(setDoc(doc(as(TEACHER), LOCK, 'other-lesson'), { mainId: MAIN, lockedAt: T0 }));
+			await assertSucceeds(setDoc(doc(as(TEACHER), LOCK, MAIN), { mainId: MAIN, lockedAt: T0 }));
+		});
+
+		it('anyone signed in may read the lock, nobody lists locks', async () => {
+			await lock();
+			await assertSucceeds(getDoc(doc(as(S1), LOCK, MAIN)));
+			await assertFails(getDocs(collection(as(TEACHER), LOCK)));
+			await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), LOCK, MAIN)));
+		});
+
+		it('a lesson that never got the lock behaves as before at Side', async () => {
+			await setStep('side');
+			await assertSucceeds(pick(S1, 20, 'a'));
+			await assertSucceeds(updateDoc(doc(as(S2), 'classSides', SIDE2), { side: 10, camp: 'a', lastUpdate: T0 + 9 }));
+		});
+	});
+
 	describe('classSides: a side once set stays', () => {
 		it('the owner cannot remove camp or side (the flag would outlive its camp)', async () => {
 			await assertFails(updateDoc(doc(as(S2), 'classSides', SIDE2), { camp: deleteField(), lastUpdate: T0 + 9 }));

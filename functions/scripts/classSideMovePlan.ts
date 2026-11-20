@@ -1,4 +1,4 @@
-import { SIDE_MAX, SIDE_MIN, SUPPORT_MAX, SUPPORT_MIN } from '@freedi/shared-types';
+import { SIDE_MAX, SIDE_MIN, SUPPORT_MAX, SUPPORT_MIN, sidesLocked } from '@freedi/shared-types';
 import type { Camp, ClassSide, ClassSideValues } from '@freedi/shared-types';
 
 /**
@@ -99,4 +99,22 @@ export function planSideMove(
 		hasCamp && typeof sub.sidePickedAt !== 'number' ? (toMillis(sub.lastUpdate) ?? now) : null;
 
 	return { privateWrite, sidePickedAt, dropped };
+}
+
+/** The parts of a lesson plan the lock decision reads. */
+export interface LessonPlanLike {
+	steps?: readonly string[];
+	stepIndex?: number;
+	status?: string;
+}
+
+/**
+ * Decision C for lessons from before the lock existed: lock the sides of a
+ * lesson that stands at Vote / Summary now, or that has ended. Any other lesson
+ * is left alone: it locks the first time it reaches Vote / Summary, or the first
+ * time its totals are asked for. (A lesson moved back from Vote to an earlier
+ * step before the deploy cannot be told apart, so it is not locked.)
+ */
+export function shouldLockLesson(plan: LessonPlanLike | null | undefined): boolean {
+	return sidesLocked(plan) || plan?.status === 'ended';
 }

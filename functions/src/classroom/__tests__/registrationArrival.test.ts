@@ -406,9 +406,12 @@ describe('classRegistrationSupport (support by side from the registration, IA 2.
 
 		expect(result.poleA).toBe('Keep');
 		expect(result.poleB).toBe('Change');
-		expect(result.support.a).toEqual({ mean: 1, n: 1, m: 1 });
-		expect(result.support.b).toEqual({ mean: -1, n: 1, m: 1 });
-		expect(result.support.center).toEqual({ mean: 0.5, n: 1, m: 1 });
+		// One rater per camp: below CLASS_SIDE_MIN_SHOWN, so no mean leaves the server.
+		expect(result.support.a).toEqual({ hidden: true, n: 1, m: 1 });
+		expect(result.support.b).toEqual({ hidden: true, n: 1, m: 1 });
+		expect(result.support.center).toEqual({ hidden: true, n: 1, m: 1 });
+		expect(result.support.verdict).toBe('insufficient');
+		expect(JSON.stringify(result.support)).not.toContain('mean');
 		expect(JSON.stringify(result)).not.toMatch(/position|p1|r1/);
 		// Nothing about the position was written onto a member.
 		expect(subOf(fake, 'p1').camp).toBeUndefined();

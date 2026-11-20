@@ -1,6 +1,16 @@
 import type { DocumentReference, DocumentSnapshot, Firestore } from 'firebase-admin/firestore';
-import { CLASS_SIDES_COLLECTION, classSideId, mergeClassSide } from '@freedi/shared-types';
-import type { ClassSide, ClassSideValues, StatementSubscription } from '@freedi/shared-types';
+import {
+	CLASS_SIDES_COLLECTION,
+	CLASS_SIDE_LOCKS_COLLECTION,
+	classSideId,
+	mergeClassSide,
+} from '@freedi/shared-types';
+import type {
+	ClassSide,
+	ClassSideLock,
+	ClassSideValues,
+	StatementSubscription,
+} from '@freedi/shared-types';
 
 /**
  * The students' private sides (Trello btMVQMM5): `classSides/{uid}--{mainId}`,
@@ -32,4 +42,20 @@ export async function sidesOf(
 			mergeClassSide(snaps[i]?.data() as ClassSide | undefined, sub),
 		]),
 	);
+}
+
+/**
+ * Freeze the lesson's sides for good (decision C): creates classSideLocks/{mainId}
+ * once; an existing lock keeps its first time. No client can change or delete it.
+ */
+export async function lockSides(
+	firestore: Firestore,
+	mainId: string,
+	now: number = Date.now(),
+): Promise<void> {
+	const ref = firestore.collection(CLASS_SIDE_LOCKS_COLLECTION).doc(mainId);
+	const snap = await ref.get();
+	if (snap.exists) return;
+	const lock: ClassSideLock = { mainId, lockedAt: now };
+	await ref.set(lock);
 }

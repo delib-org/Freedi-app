@@ -26,9 +26,9 @@ service cloud.firestore {
     // CLASS_SIDE_LOCKED_STEPS in shared-types). Those are the steps where the
     // per-camp totals are shown, so a first pick or a change there would show
     // as one "chose" mark next to one camp's count moving, i.e. which side that
-    // student picked. Null-safe: a lesson without a usable plan is not frozen.
+    // student picked. Null-safe: a lesson without a usable plan is not there.
     // Same get() of the main statement as classLessonWritable.
-    function classSidesFrozen(mainId) {
+    function classAtTotalsStep(mainId) {
       let path = /databases/$(database)/documents/statements/$(mainId);
       let settings = exists(path) ? get(path).data.get('statementSettings', null) : null;
       let plan = settings is map ? settings.get('lessonPlan', null) : null;
@@ -36,6 +36,15 @@ service cloud.firestore {
       let i = plan is map ? plan.get('stepIndex', null) : null;
       return steps is list && i is int && i >= 0 && i < steps.size() &&
              steps[i] in ['vote', 'summary'];
+    }
+
+    // ...and FOR GOOD once classSideLocks/{mainId} exists (decision C): the
+    // teacher moving the lesson back to Side does not reopen them. The lock is
+    // written by classSupportBySide before its first total leaves, and by the
+    // teacher's client right after the move to Vote / Summary.
+    function classSidesFrozen(mainId) {
+      return classAtTotalsStep(mainId) ||
+             exists(/databases/$(database)/documents/classSideLocks/$(mainId));
     }
 
     // WizCol Studio — consultant organizations. Membership lives in
@@ -923,6 +932,31 @@ service cloud.firestore {
                        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['side', 'camp']) ||
                         !classSidesFrozen(resource.data.mainId));
       allow delete: if false;
+    }
+
+    // join-class: classSideLocks/{mainId} (decision C) = the lesson's sides are
+    // frozen for good. Anyone signed in may read it (it says only "locked").
+    // Only an admin of the lesson may create it, and only while the lesson
+    // stands at Vote / Summary (so it cannot be planted early); nobody changes
+    // or deletes it, so the teacher cannot reopen the sides. The server
+    // (classSupportBySide) creates it too, before its first answer.
+    match /classSideLocks/{lockMainId} {
+      function isLessonAdmin() {
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + lockMainId);
+        let mainPath = /databases/$(database)/documents/statements/$(lockMainId);
+        return (exists(subPath) && get(subPath).data.get('role', '') in ['admin', 'statement-creator']) ||
+               (exists(mainPath) && get(mainPath).data.get('creatorId', '') == request.auth.uid);
+      }
+
+      allow get: if request.auth != null;
+      allow list: if false;
+      allow create: if request.auth != null &&
+                       request.resource.data.keys().hasOnly(['mainId', 'lockedAt']) &&
+                       request.resource.data.mainId == lockMainId &&
+                       request.resource.data.lockedAt is number &&
+                       isLessonAdmin() &&
+                       classAtTotalsStep(lockMainId);
+      allow update, delete: if false;
     }
 
     // Rollout switches read only by these rules (classFlags/legacySideWrites,

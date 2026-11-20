@@ -139,10 +139,12 @@ describe('classSupportBySide', () => {
 		const fake = new FakeFirestore();
 		seedLesson(fake, room);
 		const res = await lessonSupportBySide(fake.asFirestore(), TEACHER, { mainId: MAIN });
-		expect(res.support.a).toEqual({ mean: 1, n: 1, m: 2 });
-		expect(res.support.b).toEqual({ mean: -1, n: 1, m: 1 });
-		expect(res.support.center).toEqual({ mean: 0.5, n: 1, m: 1 });
-		expect(JSON.stringify(res)).not.toMatch(/a1|a2|b1|c1|side/);
+		// Every camp here was rated by fewer than 3: no mean leaves the server.
+		expect(res.support.a).toEqual({ hidden: true, n: 1, m: 2 });
+		expect(res.support.b).toEqual({ hidden: true, n: 1, m: 1 });
+		expect(res.support.center).toEqual({ hidden: true, n: 1, m: 1 });
+		expect(res.support.verdict).toBe('insufficient');
+		expect(JSON.stringify(res)).not.toMatch(/a1|a2|b1|c1|side|mean/);
 	});
 
 	it('refuses a student until support by side is shown to everyone, then answers', async () => {
@@ -188,5 +190,71 @@ describe('supportStepOpen', () => {
 		expect(at(SIDE_STEP)).toBe(false);
 		expect(at(STEPS.indexOf('tables'))).toBe(false);
 		expect(supportStepOpen({} as Statement)).toBe(false);
+	});
+});
+
+describe('classSupportBySide hides small camps (decision B)', () => {
+	function campOf(
+		tag: string,
+		size: number,
+		camp: 'a' | 'center' | 'b',
+		support: number,
+	): Student[] {
+		return Array.from({ length: size }, (_, i) => ({
+			uid: `${tag}${i}`,
+			side: camp === 'a' ? 10 : camp === 'b' ? 90 : 50,
+			camp,
+			support,
+		}));
+	}
+
+	it.each([0, 1, 2, 3])('a camp rated by %i student(s)', async (size) => {
+		const fake = new FakeFirestore();
+		seedLesson(fake, [...campOf('a', size, 'a', 1), ...campOf('b', 4, 'b', 0.8)]);
+		const res = await lessonSupportBySide(fake.asFirestore(), TEACHER, { mainId: MAIN });
+		if (size < 3) {
+			expect(res.support.a).toEqual({ hidden: true, n: size, m: size });
+			expect(res.support.verdict).toBe('insufficient');
+		} else {
+			expect(res.support.a).toEqual({ hidden: false, mean: 1, n: 3, m: 3 });
+		}
+		expect(res.support.b).toEqual({ hidden: false, mean: 0.8, n: 4, m: 4 });
+	});
+
+	it('the hidden mean cannot be recovered by subtraction: no overall total is sent', async () => {
+		const fake = new FakeFirestore();
+		seedLesson(fake, [
+			...campOf('a', 4, 'a', 1),
+			...campOf('c', 1, 'center', -1),
+			...campOf('b', 4, 'b', 1),
+		]);
+		const res = await lessonSupportBySide(fake.asFirestore(), TEACHER, { mainId: MAIN });
+		expect(res.support.center).toEqual({ hidden: true, n: 1, m: 1 });
+		expect(Object.keys(res.support).sort()).toEqual(['a', 'b', 'center', 'verdict']);
+		expect(Object.keys(res)).toEqual(['support']);
+		expect(JSON.stringify(res)).not.toContain('-1');
+	});
+});
+
+describe('classSupportBySide locks the sides for good (decision C)', () => {
+	it('writes classSideLocks/{mainId} before answering, and keeps the first time', async () => {
+		const fake = new FakeFirestore();
+		seedLesson(fake, [{ uid: 'a1', side: 10, camp: 'a' }]);
+		expect(fake.read(`classSideLocks/${MAIN}`)).toBeUndefined();
+		await lessonSupportBySide(fake.asFirestore(), TEACHER, { mainId: MAIN });
+		const first = fake.read(`classSideLocks/${MAIN}`);
+		expect(first).toMatchObject({ mainId: MAIN, lockedAt: expect.any(Number) });
+		await lessonSupportBySide(fake.asFirestore(), TEACHER, { mainId: MAIN });
+		expect(fake.read(`classSideLocks/${MAIN}`)).toEqual(first);
+	});
+
+	it('does not lock when it refuses (the Side step)', async () => {
+		const fake = new FakeFirestore();
+		seedLesson(fake, [{ uid: 'a1', side: 10, camp: 'a' }], SIDE_STEP);
+		await expectCode(
+			lessonSupportBySide(fake.asFirestore(), TEACHER, { mainId: MAIN }),
+			'failed-precondition',
+		);
+		expect(fake.read(`classSideLocks/${MAIN}`)).toBeUndefined();
 	});
 });

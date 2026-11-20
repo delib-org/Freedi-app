@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { planSideMove } from '../classSideMovePlan';
+import { planSideMove, shouldLockLesson } from '../classSideMovePlan';
 
 const NOW = 1_800_000_000_000;
 const ID = 'u1--main1';
@@ -100,5 +100,17 @@ describe('planSideMove', () => {
 			NOW,
 		);
 		expect(plan?.sidePickedAt).toBe(42);
+	});
+});
+
+describe('shouldLockLesson', () => {
+	const steps = ['waiting', 'side', 'tables', 'vote', 'summary'];
+	it('locks a lesson at Vote / Summary or ended, nothing else', () => {
+		expect(shouldLockLesson({ steps, stepIndex: 3 })).toBe(true);
+		expect(shouldLockLesson({ steps, stepIndex: 4 })).toBe(true);
+		expect(shouldLockLesson({ steps, stepIndex: 1, status: 'ended' })).toBe(true);
+		expect(shouldLockLesson({ steps, stepIndex: 1 })).toBe(false);
+		expect(shouldLockLesson({ steps, stepIndex: 2, status: 'paused' })).toBe(false);
+		expect(shouldLockLesson(undefined)).toBe(false);
 	});
 });

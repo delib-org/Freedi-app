@@ -1,4 +1,4 @@
-import type { SupportBySide } from './classroomLogic';
+import type { ShownSupportBySide } from './classSupportShown';
 import type { TablesSetStatusResponse } from '../tableAssignment/tableAssignmentCallables';
 
 /**
@@ -174,5 +174,5 @@ export interface ClassRegistrationSupportRequest {
 export interface ClassRegistrationSupportResponse {
 	poleA: string;
 	poleB: string;
-	support: SupportBySide;
+	support: ShownSupportBySide;
 }
