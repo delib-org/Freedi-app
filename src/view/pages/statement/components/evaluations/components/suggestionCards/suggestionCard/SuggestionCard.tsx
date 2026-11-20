@@ -15,7 +15,7 @@ import EyeIcon from '@/assets/icons/eye.svg?react';
 import EyeCrossIcon from '@/assets/icons/eyeCross.svg?react';
 import CheckIcon from '@/assets/icons/checkIcon.svg?react';
 import {
-	updateStatementMainImage,
+	removeStatementMainImage,
 	toggleStatementHide,
 } from '@/controllers/db/statements/setStatements';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
@@ -381,7 +381,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 					displayMode="thumb"
 					onRemove={async () => {
 						setImage('');
-						await updateStatementMainImage(statement, '');
+						await removeStatementMainImage(statement);
 					}}
 					isAdmin={isAdmin}
 					fileInputRef={fileInputRef}

@@ -1,4 +1,4 @@
-import { getDoc, updateDoc, runTransaction } from 'firebase/firestore';
+import { getDoc, updateDoc, runTransaction, deleteField } from 'firebase/firestore';
 import { FireStore } from '../config';
 import {
 	Statement,
@@ -260,6 +260,8 @@ export async function updateIsQuestion(statement: Statement) {
 
 export async function updateStatementMainImage(statement: Statement, imageURL: string | undefined) {
 	try {
+		// An empty URL is a programmer error here: removing an image goes through
+		// removeStatementMainImage, which really deletes the field.
 		if (!imageURL) throw new Error('Image URL is undefined');
 		const statementRef = createStatementRef(statement.statementId);
 
@@ -269,6 +271,31 @@ export async function updateStatementMainImage(statement: Statement, imageURL: s
 		});
 	} catch (error) {
 		logError(error, { operation: 'statements.updateStatementFields.updateStatementMainImage' });
+	}
+}
+
+/**
+ * Remove a statement's main image. Deletes the main URL and everything derived
+ * from it (the thumbnail, its width info and the alt text). `displayMode` and
+ * `more` are left alone.
+ */
+export async function removeStatementMainImage(statement: Statement): Promise<void> {
+	try {
+		const statementRef = createStatementRef(statement.statementId);
+
+		await updateDoc(statementRef, {
+			'imagesURL.main': deleteField(),
+			'imagesURL.thumb': deleteField(),
+			'imagesURL.thumbOf': deleteField(),
+			'imagesURL.thumbWidth': deleteField(),
+			'imagesURL.mainWidth': deleteField(),
+			'imagesURL.alt': deleteField(),
+		});
+	} catch (error) {
+		logError(error, {
+			operation: 'statements.updateStatementFields.removeStatementMainImage',
+			statementId: statement.statementId,
+		});
 	}
 }
 
