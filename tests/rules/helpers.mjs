@@ -18,7 +18,8 @@ export const FIRESTORE_PORT = Number(process.env.FIRESTORE_EMULATOR_PORT ?? 8081
  */
 export const PROJECT_ID = 'freedi-rules-test';
 
-const RULES_PATH = new URL('../../firestore.rules', import.meta.url);
+// RULES_FILE runs a suite against another rules file (e.g. the live one, to compare).
+const RULES_PATH = process.env.RULES_FILE ?? new URL('../../firestore.rules', import.meta.url);
 
 /**
  * Always starts from an empty database.
