@@ -28,6 +28,7 @@ export {
 	setStatementIsOption,
 	updateIsQuestion,
 	updateStatementMainImage,
+	removeStatementMainImage,
 	updateStatementImageDisplayMode,
 	setStatementGroupToDB,
 } from './updateStatementFields';
