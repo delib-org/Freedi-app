@@ -12,29 +12,52 @@ $tap: 44px;
 
 // ---- phone -------------------------------------------------------------------
 @media (max-width: $console-phone) {
-  // top bar: back link + title on the first rows, controls wrap, all >= 44 px
+  // top bar, two rows (design 1.2): the lesson name and "More", then pause and the code
   .console__bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'title more'
+      'pause code';
+    align-items: center;
     gap: var(--space-xs) var(--space-sm);
     padding-inline: var(--space-sm);
 
-    > .console__link,
     > .btn,
-    > .projector-menu,
-    > .console__settings,
-    > .console__status {
+    > .disclosure,
+    > .console__code {
       min-block-size: $tap;
     }
 
-    > .console__link {
-      display: inline-flex;
+    > .console__title {
+      grid-area: title;
+    }
+
+    > .disclosure {
+      grid-area: more;
+      justify-self: end;
+    }
+
+    > .console__pause {
+      grid-area: pause;
+      justify-self: start;
+    }
+
+    > .console__code {
+      grid-area: code;
+      justify-self: end;
       align-items: center;
     }
   }
 
+  // the name wraps to two lines, then an ellipsis
   .console__title {
-    flex: 1 0 100%;
-    order: -1;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .console__status {

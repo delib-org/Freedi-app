@@ -11,6 +11,7 @@ import { StepMore } from './StepMore';
 import { icon } from './ConsoleIcon';
 import { changeLessonStatus } from './consoleActions';
 import { isBusy } from './consoleState';
+import { watchDockHeight } from './dockHeight';
 
 /**
  * The action band (design 1): where the teacher presses. On a laptop it is pinned under the
@@ -64,7 +65,19 @@ function dockPause(attrs: ActionBandAttrs): m.Children {
 	);
 }
 
+interface BandState {
+	stopWatching?: () => void;
+}
+
 export const ActionBand: m.Component<ActionBandAttrs> = {
+	oncreate(vnode) {
+		(vnode.state as BandState).stopWatching = watchDockHeight(vnode.dom as HTMLElement);
+	},
+
+	onremove(vnode) {
+		(vnode.state as BandState).stopWatching?.();
+	},
+
 	view({ attrs }) {
 		const { copyOffer } = attrs;
 		const spec = nextActionFor({

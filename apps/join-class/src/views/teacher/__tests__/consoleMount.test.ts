@@ -13,6 +13,7 @@ import { mountSmoke, smoke } from '@/views/__tests__/mountSmoke';
 import { findMixedKeys } from '@/views/__tests__/keyedLint';
 import { ActionBand, type ActionBandAttrs } from '../ActionBand';
 import { ClassStatusLine } from '../ClassStatusLine';
+import { ActForEntry } from '../actFor/ActForEntry';
 import { DecisionPanel } from '../DecisionPanel';
 import { openDisclosure } from '../Disclosure';
 import { LESSON_MORE_ID, LessonMore } from '../LessonMore';
@@ -256,6 +257,23 @@ describe('the pieces on their own', () => {
 				() => m(DecisionPanel, { decision: { ...decided, tie: true, sharedWithClass: true } }),
 			],
 		);
+	});
+});
+
+describe('the no-device entry', () => {
+	it('is not drawn when nobody at the tables is without a device', () => {
+		const mounted = mountSmoke(() => m(ActForEntry, { tables: [table()], proposals: [] }));
+		expect(mounted.root.querySelector('[data-testid="console-act-for"]')).toBeNull();
+		mounted.unmount();
+	});
+
+	it('is drawn, with its count, when someone is', () => {
+		const withGuest = table({ noDeviceMembers: [{ id: 'nd-1', name: 'Dan' }] });
+		const mounted = mountSmoke(() => m(ActForEntry, { tables: [withGuest], proposals: [] }));
+		expect(mounted.root.querySelector('[data-testid="console-act-for"]')?.textContent).toContain(
+			'(0/1)',
+		);
+		mounted.unmount();
 	});
 });
 
