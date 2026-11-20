@@ -617,6 +617,8 @@ const en: Record<string, string> = {
 	'console.writing_nobody': 'Nobody is writing · {{sent}} of {{total}} sent',
 	'proposals.write.closed': 'Proposals are closed now, so nobody can write',
 	'console.ratings_one': '1 rating',
+	'summary.too_few': 'Too few students to show',
+	'side.locked': 'Sides were locked after the vote',
 };
 
 export default en;

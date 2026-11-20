@@ -22,6 +22,7 @@ import { getCustomDisplayName, getMainStatement } from '../store';
 import { getUserState } from '../user';
 import { resolveSubscriptionName } from './subscriptionName';
 import { captureException } from '../sentry';
+import { isSideLocked } from './sideLock';
 
 /**
  * What a student device writes in the classroom (all on its own docs).
@@ -135,6 +136,8 @@ export async function setMySide(mainId: string, side: number): Promise<void> {
 		// Sides are frozen at Vote and Summary (the rules refuse it): a move still
 		// in the debounce when the teacher jumps there is dropped, not failed.
 		if (sidesLocked(getMainStatement()?.statementSettings?.lessonPlan)) return;
+		// ...and for good once the lesson was locked (decision C).
+		if (await isSideLocked(mainId)) return;
 		const sub = await ensureMemberSubscription(mainId);
 		const value = clamp(Math.round(side), SIDE_MIN, SIDE_MAX);
 		const now = Date.now();

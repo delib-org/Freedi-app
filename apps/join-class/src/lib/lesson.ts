@@ -30,6 +30,7 @@ import {
 import { markOpenedInClass, waitForCreatorSubscription } from './joinSubscriptions';
 import { getUserState } from './user';
 import { classEnterTableTalk, classStartLesson } from './classroom/api';
+import { lockSidesAfterMove } from './classroom/sideLock';
 import { captureException } from '@/lib/sentry';
 import {
 	CLASS_CODES_COLLECTION,
@@ -120,6 +121,7 @@ export async function setLessonStep(mainId: string, index: number): Promise<void
 	});
 	await setPowerFollowMe(mainId, stepFollowMePath(mainId, steps[index]));
 	if (steps[index] === 'tableTalk' && previousKey !== 'tableTalk') await resetTablesForTalk(mainId);
+	await lockSidesAfterMove(mainId, steps[index]);
 }
 
 /**

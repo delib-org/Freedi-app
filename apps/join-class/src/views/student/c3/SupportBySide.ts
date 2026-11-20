@@ -1,5 +1,5 @@
 import m from 'mithril';
-import type { SupportBySide as SupportResult } from '@freedi/shared-types';
+import type { ShownSupportBySide as SupportResult } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
 import { supportBars, supportPercent } from '@/lib/classroom/c3Logic';
 import type { SideNames } from '@/lib/classroom/classSettings';
@@ -16,6 +16,8 @@ export interface SupportBySideAttrs {
  * Three bars of mean support for the decision (close to Jonathan / in the
  * middle / close to Noa), each with "n of m rated", a gate tick, and one
  * verdict line: teal when the sides came closer, terracotta when not yet.
+ * A camp rated by too few students has no bar (the server sent no mean): the
+ * row says "too few to show" in its place, at the same height.
  */
 export const SupportBySide: m.Component<SupportBySideAttrs> = {
 	view({ attrs }) {
@@ -32,24 +34,26 @@ export const SupportBySide: m.Component<SupportBySideAttrs> = {
 				bars.map((bar) =>
 					m('li.support__row', { key: bar.camp }, [
 						m('p.support__label', labelOf(bar.camp)),
-						m(
-							'div.support__track',
-							{
-								role: 'img',
-								'aria-label': t('summary.bar_label', {
-									side: labelOf(bar.camp),
-									n: bar.n,
-									m: bar.m,
-								}),
-							},
-							[
-								m('span.support__fill', {
-									class: `support__fill--${bar.camp}`,
-									style: `--pct: ${bar.percent}%`,
-								}),
-								m('span.support__gate', { style: `--pct: ${gatePct}%`, 'aria-hidden': 'true' }),
-							],
-						),
+						bar.hidden
+							? m('p.support__too-few', { 'data-testid': 'support-too-few' }, t('summary.too_few'))
+							: m(
+									'div.support__track',
+									{
+										role: 'img',
+										'aria-label': t('summary.bar_label', {
+											side: labelOf(bar.camp),
+											n: bar.n,
+											m: bar.m,
+										}),
+									},
+									[
+										m('span.support__fill', {
+											class: `support__fill--${bar.camp}`,
+											style: `--pct: ${bar.percent}%`,
+										}),
+										m('span.support__gate', { style: `--pct: ${gatePct}%`, 'aria-hidden': 'true' }),
+									],
+								),
 						m('p.support__count', t('summary.n_of_m', { n: bar.n, m: bar.m })),
 					]),
 				),

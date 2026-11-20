@@ -7,13 +7,14 @@ import {
 	classSideId,
 	getStatementSubscriptionId,
 } from '@freedi/shared-types';
-import type { ClassSide } from '@freedi/shared-types';
+import type { ClassSide, ClassSideLock } from '@freedi/shared-types';
 import { db, doc, collection, query, where, getDocFromServer } from '../firebase';
 import type { Unsubscribe } from '../firebase';
 import { CLASS_LISTENER_KINDS, resilientOnSnapshot } from '../resilientListeners';
 import { getUserState } from '../user';
 import { captureException } from '../sentry';
 import { toRosterSubscription } from './rosterPrivacy';
+import { sideLockRef } from './sideLock';
 import type { RosterSubscription } from './rosterPrivacy';
 
 /**
@@ -149,6 +150,20 @@ export function listenRoster(
 		CLASS_LISTENER_KINDS.roster,
 		query(collection(db, Collections.statementsSubscribe), where('statementId', '==', mainId)),
 		(snap) => onData(snap.docs.map((d) => toRosterSubscription(d.data() as StatementSubscription))),
+		(err) => onError?.(err),
+	);
+}
+
+/** The lesson's side lock (decision C): `null` while the sides may still change. */
+export function listenSideLock(
+	mainId: string,
+	onData: (lock: ClassSideLock | null) => void,
+	onError?: (error: Error) => void,
+): Unsubscribe {
+	return resilientOnSnapshot(
+		CLASS_LISTENER_KINDS.sideLock,
+		sideLockRef(mainId),
+		(snap) => onData(snap.exists() ? (snap.data() as ClassSideLock) : null),
 		(err) => onError?.(err),
 	);
 }

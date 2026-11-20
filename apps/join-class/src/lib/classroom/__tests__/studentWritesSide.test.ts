@@ -14,6 +14,7 @@ const fb = vi.hoisted(() => ({
 	setDoc: vi.fn(() => Promise.resolve()),
 	getDoc: vi.fn(),
 	main: null as Statement | null,
+	locked: false,
 }));
 
 vi.mock('../../firebase', () => ({
@@ -30,6 +31,7 @@ vi.mock('../../store', () => ({
 }));
 vi.mock('../../user', () => ({ getUserState: () => ({ user: { uid: 'u1', isAnonymous: true } }) }));
 vi.mock('../../sentry', () => ({ captureException: vi.fn() }));
+vi.mock('../sideLock', () => ({ isSideLocked: () => Promise.resolve(fb.locked) }));
 
 import { setMyDecisionSupport, setMySide } from '../studentWrites';
 
@@ -74,6 +76,15 @@ describe('setMySide', () => {
 		subscription({ sidePickedAt: 5 });
 		await setMySide('m', 80);
 		expect(fb.batchUpdate).not.toHaveBeenCalled();
+	});
+
+	it('writes nothing at the Side step once the lesson was locked (decision C)', async () => {
+		fb.main = lessonAt('side');
+		fb.locked = true;
+		await setMySide('m', 80);
+		fb.locked = false;
+		expect(fb.batchSet).not.toHaveBeenCalled();
+		expect(fb.commit).not.toHaveBeenCalled();
 	});
 
 	it('writes nothing at Vote or Summary', async () => {

@@ -607,6 +607,8 @@ const he: Record<string, string> = {
 	'console.writing_nobody': 'אף אחד לא כותב · שלחו {{sent}} מתוך {{total}}',
 	'proposals.write.closed': 'ההצעות סגורות עכשיו, אי אפשר לכתוב',
 	'console.ratings_one': 'דירוג אחד',
+	'summary.too_few': 'מעט מדי תלמידים כדי להציג',
+	'side.locked': 'הצדדים ננעלו אחרי ההצבעה',
 };
 
 export default he;

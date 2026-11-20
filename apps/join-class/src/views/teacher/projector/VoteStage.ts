@@ -1,5 +1,5 @@
 import m from 'mithril';
-import { supportBySide } from '@freedi/shared-types';
+import { shownSupport, supportBySide } from '@freedi/shared-types';
 import { supportForScreen } from '@/lib/classroom/registrationSupport';
 import { t } from '@/lib/i18n';
 import { classState } from '@/lib/classroom/classState';
@@ -202,7 +202,7 @@ function supportBlock(): m.Vnode {
 	const support =
 		registered.kind === 'ready'
 			? registered.result
-			: supportBySide([], gateOf(challenge, projectorData.main));
+			: shownSupport(supportBySide([], gateOf(challenge, projectorData.main)));
 	const rows = [
 		{ key: 'a', label: names.a, camp: support.a },
 		{ key: 'center', label: t('projector.center'), camp: support.center },
@@ -217,11 +217,13 @@ function supportBlock(): m.Vnode {
 			rows.map((row) =>
 				m(`li.projector-support__row.projector-support__row--${row.key}`, { key: row.key }, [
 					m('span.projector-support__label', row.label),
-					m(
-						'span.projector-support__track',
-						{ style: barStyle(row.camp.n === 0 ? 0 : supportPercent(row.camp.mean)) },
-						[m('span.projector-support__fill')],
-					),
+					row.camp.hidden
+						? m('span.projector-support__too-few', t('summary.too_few'))
+						: m(
+								'span.projector-support__track',
+								{ style: barStyle(row.camp.n === 0 ? 0 : supportPercent(row.camp.mean)) },
+								[m('span.projector-support__fill')],
+							),
 					m('span.projector-support__n', t('projector.rated', { n: row.camp.n, m: row.camp.m })),
 				]),
 			),

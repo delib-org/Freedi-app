@@ -1,5 +1,5 @@
 import m from 'mithril';
-import type { SupportBySide } from '@freedi/shared-types';
+import type { ShownSupportBySide } from '@freedi/shared-types';
 import type { LessonSettingsHolder } from '@freedi/shared-types';
 import { classRegistrationSupport, classSupportBySide } from './api';
 import { registrationAskedPosition } from './registrationLogic';
@@ -23,7 +23,7 @@ import type { SideNames } from './classSettings';
 export type SupportSource = 'registration' | 'own';
 
 export interface SupportData {
-	support: SupportBySide;
+	support: ShownSupportBySide;
 	/** The registration's poles; null = the lesson's own side names. */
 	names: SideNames | null;
 }
@@ -62,7 +62,7 @@ export function resetRegistrationSupport(): void {
 export type SupportView =
 	| { kind: 'loading' }
 	| { kind: 'failed' }
-	| { kind: 'ready'; result: SupportBySide; names: SideNames | null };
+	| { kind: 'ready'; result: ShownSupportBySide; names: SideNames | null };
 
 export function sourceOf(main: LessonSettingsHolder | null | undefined): SupportSource {
 	return registrationAskedPosition(main) ? 'registration' : 'own';

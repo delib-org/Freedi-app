@@ -296,6 +296,14 @@
   text-align: center;
 }
 
+// the sides were locked after the vote: a calm line where the button was
+.side-step__locked {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
 // the saved state is a filled teal line, not a faded button
 .frame__action .btn--agree:disabled {
   opacity: 1;

@@ -620,6 +620,8 @@ const nl: Record<string, string> = {
 	'console.writing_nobody': 'Niemand schrijft · {{sent}} van {{total}} verzonden',
 	'proposals.write.closed': 'De voorstellen zijn nu gesloten, schrijven kan niet',
 	'console.ratings_one': '1 beoordeling',
+	'summary.too_few': 'Te weinig leerlingen om te tonen',
+	'side.locked': 'De kanten zijn na de stemming vastgezet',
 };
 
 export default nl;

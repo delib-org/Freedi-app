@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { SupportBySide } from '@freedi/shared-types';
+import type { ShownSupportBySide } from '@freedi/shared-types';
 
 vi.mock('../api', () => ({ classRegistrationSupport: vi.fn(), classSupportBySide: vi.fn() }));
 vi.mock('../../sentry', () => ({ captureException: vi.fn() }));
@@ -12,11 +12,11 @@ import {
 	type RegistrationSupportState,
 } from '../registrationSupport';
 
-const SUPPORT: SupportBySide = {
-	a: { mean: 0.5, n: 3, m: 4 },
-	center: { mean: 0, n: 0, m: 0 },
-	b: { mean: 0.2, n: 2, m: 2 },
-	verdict: 'closer',
+const SUPPORT: ShownSupportBySide = {
+	a: { hidden: false, mean: 0.5, n: 3, m: 4 },
+	center: { hidden: true, n: 0, m: 0 },
+	b: { hidden: true, n: 2, m: 2 },
+	verdict: 'insufficient',
 };
 
 function state(overrides: Partial<RegistrationSupportState> = {}): RegistrationSupportState {

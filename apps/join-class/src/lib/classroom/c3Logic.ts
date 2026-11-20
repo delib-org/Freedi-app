@@ -3,7 +3,7 @@ import {
 	SUPPORT_MIN,
 	type ClassTable,
 	type Statement,
-	type SupportBySide,
+	type ShownSupportBySide,
 	type TableStep,
 } from '@freedi/shared-types';
 
@@ -161,10 +161,11 @@ export type BarCamp = 'a' | 'center' | 'b';
 
 export interface SupportBar {
 	camp: BarCamp;
-	mean: number;
+	/** Fewer than CLASS_SIDE_MIN_SHOWN rated: the server sent no mean, the screen says "too few". */
+	hidden: boolean;
 	n: number;
 	m: number;
-	/** 0..100 width of the filled part of the bar. */
+	/** 0..100 width of the filled part of the bar (0 when hidden). */
 	percent: number;
 }
 
@@ -177,11 +178,18 @@ export function supportPercent(mean: number): number {
 	return Math.round(((clamped - SUPPORT_MIN) / (SUPPORT_MAX - SUPPORT_MIN)) * 100);
 }
 
-export function supportBars(result: SupportBySide): SupportBar[] {
+export function supportBars(result: ShownSupportBySide): SupportBar[] {
 	return BAR_ORDER.map((camp) => {
-		const { mean, n, m } = result[camp];
+		const shown = result[camp];
+		if (shown.hidden) return { camp, hidden: true, n: shown.n, m: shown.m, percent: 0 };
 
-		return { camp, mean, n, m, percent: n > 0 ? supportPercent(mean) : 0 };
+		return {
+			camp,
+			hidden: false,
+			n: shown.n,
+			m: shown.m,
+			percent: shown.n > 0 ? supportPercent(shown.mean) : 0,
+		};
 	});
 }
 

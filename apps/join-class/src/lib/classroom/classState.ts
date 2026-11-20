@@ -1,5 +1,10 @@
 import m from 'mithril';
-import type { ClassSide, ClassTable, StatementSubscription } from '@freedi/shared-types';
+import type {
+	ClassSide,
+	ClassSideLock,
+	ClassTable,
+	StatementSubscription,
+} from '@freedi/shared-types';
 import type { Unsubscribe } from '../firebase';
 import { ensureMemberSubscription } from './studentWrites';
 import { initServerClock } from './serverClock';
@@ -10,6 +15,7 @@ import type { NoticeSnapshot } from './noticeLogic';
 import {
 	listenMySide,
 	listenMySubscription,
+	listenSideLock,
 	listenRoster,
 	listenTable,
 	listenTables,
@@ -44,6 +50,8 @@ export interface ClassState {
 	mySubscriptionLoaded: boolean;
 	/** The signed-in student's own private side doc (null until they pick or rate). */
 	mySide: ClassSide | null;
+	/** The lesson's side lock (decision C): set = sides frozen for good. Student only. */
+	sideLock: ClassSideLock | null;
 	/** Every subscription of the workspace (teacher / projector), without any side. */
 	roster: RosterSubscription[];
 }
@@ -55,6 +63,7 @@ export const classState: ClassState = {
 	mySubscription: null,
 	mySubscriptionLoaded: false,
 	mySide: null,
+	sideLock: null,
 	roster: [],
 };
 
@@ -115,6 +124,7 @@ export function resetClassState(mainId: string | null = null): void {
 	classState.mySubscription = null;
 	classState.mySubscriptionLoaded = false;
 	classState.mySide = null;
+	classState.sideLock = null;
 	classState.roster = [];
 }
 
@@ -233,6 +243,14 @@ export function watchClass(
 				mainId,
 				(side) => {
 					classState.mySide = side;
+					m.redraw();
+				},
+				onError,
+			),
+			listenSideLock(
+				mainId,
+				(lock) => {
+					classState.sideLock = lock;
 					m.redraw();
 				},
 				onError,
