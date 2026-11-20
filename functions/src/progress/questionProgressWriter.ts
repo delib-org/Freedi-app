@@ -16,6 +16,7 @@ import { logger } from 'firebase-functions/v1';
 import {
 	Collections,
 	QuestionParticipation,
+	QuestionProgress,
 	Statement,
 	StatementType,
 	getQuestionParticipationId,
@@ -110,6 +111,22 @@ async function resolveContext(input: RecordParticipationInput): Promise<Progress
 	return { topParentId, organizationId };
 }
 
+/**
+ * Zero-increments for every required counter. Merged into any write that may
+ * be the one that creates a progress doc, so a doc is never born without the
+ * counters QuestionProgressSchema requires (Sentry FREEDI-APP-3Q). On an
+ * existing doc `increment(0)` changes nothing.
+ */
+function zeroCounters(): Record<ParticipationKind | ProgressEventCounter, FieldValue> {
+	return {
+		entered: FieldValue.increment(0),
+		suggested: FieldValue.increment(0),
+		evaluated: FieldValue.increment(0),
+		options: FieldValue.increment(0),
+		evaluations: FieldValue.increment(0),
+	};
+}
+
 function baseProgressFields(statementId: string, ctx: ProgressContext, now: number) {
 	return {
 		statementId,
@@ -181,13 +198,7 @@ export async function recordParticipation(input: RecordParticipationInput): Prom
 			return true;
 		});
 
-		const counters: Record<ParticipationKind | ProgressEventCounter, FieldValue> = {
-			entered: FieldValue.increment(0),
-			suggested: FieldValue.increment(0),
-			evaluated: FieldValue.increment(0),
-			options: FieldValue.increment(0),
-			evaluations: FieldValue.increment(0),
-		};
+		const counters = zeroCounters();
 		if (firstTime) counters[kind] = FieldValue.increment(1);
 		if (eventCounter) counters[eventCounter] = FieldValue.increment(1);
 
@@ -200,7 +211,7 @@ export async function recordParticipation(input: RecordParticipationInput): Prom
 		if (isRealTopParent(statementId, ctx.topParentId)) {
 			batch.set(
 				db.collection(Collections.questionProgress).doc(ctx.topParentId),
-				baseProgressFields(ctx.topParentId, ctx, now),
+				{ ...baseProgressFields(ctx.topParentId, ctx, now), ...zeroCounters() },
 				{ merge: true },
 			);
 		}
@@ -279,12 +290,38 @@ export async function recordMemberCount(input: RecordMemberCountInput): Promise<
 	await progressRef.set(
 		{
 			...baseProgressFields(statementId, ctx, now),
-			entered: FieldValue.increment(0),
-			suggested: FieldValue.increment(0),
-			evaluated: FieldValue.increment(0),
-			options: FieldValue.increment(0),
-			evaluations: FieldValue.increment(0),
+			...zeroCounters(),
 			members,
+		},
+		{ merge: true },
+	);
+}
+
+/**
+ * Patches fields onto a statement's progress doc without ever leaving a
+ * partial one: an existing doc gets only `fields` and `lastUpdate`; a missing
+ * doc is created with the full zeroed shape (topParentId from the statement)
+ * plus `fields`. Throws so the caller can log with its own context.
+ */
+export async function patchProgressDoc(
+	statement: Statement,
+	fields: Partial<QuestionProgress>,
+	now: number = Date.now(),
+): Promise<void> {
+	const progressRef = db.collection(Collections.questionProgress).doc(statement.statementId);
+
+	if ((await progressRef.get()).exists) {
+		await progressRef.update({ ...fields, lastUpdate: now });
+
+		return;
+	}
+
+	const ctx = await ensureProgressDoc(statement);
+	await progressRef.set(
+		{
+			...baseProgressFields(statement.statementId, ctx, now),
+			...zeroCounters(),
+			...fields,
 		},
 		{ merge: true },
 	);
@@ -312,13 +349,13 @@ export async function touchActivity(input: TouchActivityInput): Promise<void> {
 		const batch = db.batch();
 		batch.set(
 			db.collection(Collections.questionProgress).doc(statementId),
-			baseProgressFields(statementId, ctx, now),
+			{ ...baseProgressFields(statementId, ctx, now), ...zeroCounters() },
 			{ merge: true },
 		);
 		if (isRealTopParent(statementId, ctx.topParentId)) {
 			batch.set(
 				db.collection(Collections.questionProgress).doc(ctx.topParentId),
-				baseProgressFields(ctx.topParentId, ctx, now),
+				{ ...baseProgressFields(ctx.topParentId, ctx, now), ...zeroCounters() },
 				{ merge: true },
 			);
 		}

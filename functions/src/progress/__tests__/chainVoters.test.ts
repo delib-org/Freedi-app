@@ -62,6 +62,14 @@ describe('refreshChainVoters', () => {
 		expect(chainCount(TOP)).toBe(2);
 	});
 
+	it('does not create a progress doc when there is none (FREEDI-APP-3Q)', async () => {
+		seedVoter(TOP, 'ada');
+
+		await refreshChainVoters(TOP);
+
+		expect(fake.read(Collections.questionProgress, TOP)).toBeUndefined();
+	});
+
 	it('keeps the count off the question document, which reaches everyone present', async () => {
 		seedProgress(TOP, 2);
 		seedVoter(TOP, 'ada');
