@@ -1,4 +1,6 @@
 // Teacher console partial: switch band, failure banner, board, table card. See console.scss for the shared tokens.
+@use 'chevron' as *;
+
 
 // ---- band 2: switch ---------------------------------------------------------
 .switch-band {
@@ -363,8 +365,7 @@
     cursor: default;
 
     &:not(:last-child)::after {
-      content: '›' / '';
-      margin-inline-start: var(--space-xs);
+      @include step-chevron;
     }
 
     &--current {

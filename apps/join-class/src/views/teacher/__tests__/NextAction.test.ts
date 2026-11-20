@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import m from 'mithril';
 import type { NextActionSpec } from '@/lib/classroom/nextAction';
 
-vi.mock('../consoleState', () => ({ isBusy: (key: string): boolean => key === 'busy-key' }));
+const busyKeys = vi.hoisted(() => new Set<string>(['busy-key']));
+vi.mock('../consoleState', () => ({ isBusy: (key: string): boolean => busyKeys.has(key) }));
 vi.mock('../consoleActions', () => ({
 	assignTables: vi.fn(),
 	changeLessonStatus: vi.fn(),
@@ -131,6 +132,17 @@ describe('NextAction', () => {
 		expect(goToStep).not.toHaveBeenCalled();
 		expect(attrs['aria-busy']).toBe('true');
 		expect((button(vnode).children as m.Vnode[])[0].children).toBe('console.busy_opening');
+	});
+
+	it('a pause or resume in flight holds the primary: a press does nothing', () => {
+		for (const key of ['status:pause', 'status:resume']) {
+			busyKeys.add(key);
+			const attrs = button(draw(GO_NEXT)).attrs as Record<string, unknown>;
+			expect(attrs['aria-disabled']).toBe('true');
+			(attrs.onclick as () => void)();
+			expect(goToStep).not.toHaveBeenCalled();
+			busyKeys.delete(key);
+		}
 	});
 
 	it('a connected lesson that is not published yet blocks "bring the tables" with the registration reason', () => {

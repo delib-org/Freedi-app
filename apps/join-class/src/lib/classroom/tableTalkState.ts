@@ -53,6 +53,22 @@ export function tableTalkState(
 	return 'A';
 }
 
+/**
+ * What the teacher's card says the table is doing at Table talk, from the SAME decision the
+ * students' screens use (`tableTalkState`), so card and phones cannot disagree: a table that is
+ * choosing a question (or carries leftovers of a later step) is "choosing", else "talking".
+ * Seen with no student in mind, so the answer is about the table.
+ */
+export function tableTalkNowKey(
+	table: ClassTable,
+	now: number,
+	noneLeft = false,
+): 'console.now_pick' | 'console.now_talk' {
+	const state = tableTalkState(table, '', now, noneLeft);
+
+	return state === 'P1' || state === 'P2' ? 'console.now_pick' : 'console.now_talk';
+}
+
 /** Did I pass this question (not answered it)? */
 export function passedAnswer(table: ClassTable, uid: string): boolean {
 	return (table.passedSpeakingUids ?? []).includes(uid);

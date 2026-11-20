@@ -158,12 +158,6 @@ describe('table timer line', () => {
 		expect(tableStepKey(table({ step: 'rate' }), false)).toBe('console.now_rate');
 		expect(tableStepKey(table({ step: 'rate' }), true)).toBe('console.now_plenum');
 	});
-
-	it('at Table talk a table left at write or rate from an earlier visit is not "rating"', () => {
-		expect(tableStepKey(table({ step: 'rate' }), false, true)).toBe('console.now_talk');
-		expect(tableStepKey(table({ step: 'write' }), false, true)).toBe('console.now_talk');
-		expect(tableStepKey(table({ step: 'pick' }), false, true)).toBe('console.now_pick');
-	});
 });
 
 describe('clearsTableClocksOnEnter', () => {

@@ -44,7 +44,7 @@ export interface ClassStatusInput {
 	/** Tables really at the rating part of Proposals (see `tableIsRating`). */
 	tablesRating: number;
 	/** All proposals: the rated-everything line; `complete` when every student and every proposal is covered. */
-	allRated: { n: number; m: number; k: number; complete: boolean } | null;
+	allRated: { n: number; m: number; k: number; proposals: number; complete: boolean } | null;
 	ballotFrozen: boolean;
 	ballotPaused: boolean;
 	ballotClosed: boolean;
@@ -185,6 +185,8 @@ export function classStatusFor(input: ClassStatusInput): ClassStatus {
 		case 'allProposals': {
 			const rated = input.allRated;
 			if (!rated) return line('console.status.no_tables', {}, false);
+			// Nothing to rate yet: zero counts ("at least 0 ratings") would only be noise.
+			if (rated.proposals === 0) return line('proposal.none_yet', {}, false);
 
 			return line(
 				rated.k === 1 ? 'console.all_rated_line_one' : 'console.all_rated_line',

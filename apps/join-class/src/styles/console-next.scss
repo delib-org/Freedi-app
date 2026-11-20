@@ -365,18 +365,26 @@ $dock-clearance: 128px;
   }
 
   .next-action {
-    flex: 2 1 0;
-    min-inline-size: 0;
-  }
-
-  .action-band__controls > .disclosure {
     flex: 1 1 0;
     min-inline-size: 0;
   }
 
+  // The step menu is narrow on a phone (its short word), so the primary keeps about two thirds.
+  .action-band__controls > .disclosure {
+    flex: none;
+  }
+
+  .action-band__controls .disclosure__label {
+    display: none;
+  }
+
+  .action-band__controls .disclosure__label-short {
+    display: inline;
+  }
+
   .action-band__controls > .disclosure > .disclosure__toggle {
-    inline-size: 100%;
     block-size: 100%;
+    min-inline-size: $tap;
     min-block-size: $primary-height-phone;
     justify-content: center;
     padding-inline: var(--space-xs);

@@ -289,6 +289,8 @@ export const StepMore: m.Component<StepMoreAttrs> = {
 		return m(Disclosure, {
 			id: STEP_MORE_ID,
 			label: t('console.step_more'),
+			ariaLabel: t('console.step_more'),
+			shortLabel: t('console.more'),
 			// The toggle is the last control of the action band: the panel opens toward the start.
 			align: 'end',
 			testId: 'console-step-more',

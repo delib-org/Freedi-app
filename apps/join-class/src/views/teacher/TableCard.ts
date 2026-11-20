@@ -22,6 +22,7 @@ import {
 	type QuickAction,
 	type TableMode,
 } from '@/lib/classroom/tableTurnConsole';
+import { tableTalkNowKey } from '@/lib/classroom/tableTalkState';
 import { addNoDevice, tableAction } from './consoleActions';
 import { consoleState, isBusy } from './consoleState';
 import { openActFor } from './actFor/actForState';
@@ -322,7 +323,13 @@ function nowRow(
 
 	return m(
 		'p.table-card__now',
-		done ? t('console.all_done') : t(tableStepKey(table, plenum, mode === 'tableTalk')),
+		done
+			? t('console.all_done')
+			: t(
+					mode === 'tableTalk'
+						? tableTalkNowKey(table, serverNow(), noneLeftNow(table))
+						: tableStepKey(table, plenum),
+				),
 	);
 }
 

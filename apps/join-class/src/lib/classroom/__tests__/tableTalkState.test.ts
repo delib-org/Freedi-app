@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ClassTable } from '@freedi/shared-types';
-import { hasAnswered, passedAnswer, tableTalkState } from '../tableTalkState';
+import { hasAnswered, passedAnswer, tableTalkNowKey, tableTalkState } from '../tableTalkState';
 
 const NOW = 1_800_000_000_000;
 
@@ -150,5 +150,30 @@ describe('tableTalkState with no question left (own questions off)', () => {
 
 	it('keeps the talk running while the last question is being answered', () => {
 		expect(tableTalkState(talking(), 'dan', NOW, true)).not.toBe('D');
+	});
+});
+
+describe('the teacher card agrees with the students at Table talk', () => {
+	it('a table carrying leftovers of Proposals (rate, old spoken and turn) is choosing a question, as the phones show', () => {
+		const leftover = table({
+			step: 'rate',
+			spokenUids: ['dan', 'tal', 'noa'],
+			proposalsTurn: 3,
+		});
+
+		expect(tableTalkState(leftover, 'dan', NOW)).toBe('P1');
+		expect(tableTalkNowKey(leftover, NOW)).toBe('console.now_pick');
+	});
+
+	it('a table in the middle of a question is talking', () => {
+		const running = table({
+			step: 'talk',
+			askerUid: 'tal',
+			questionId: 'q1',
+			speakerUid: 'dan',
+			speakerEndsAt: NOW + 30_000,
+		});
+
+		expect(tableTalkNowKey(running, NOW)).toBe('console.now_talk');
 	});
 });

@@ -5,6 +5,8 @@
 // Screens down = `.frame--down` (student-frame.scss): everything below inherits
 // its colours with `currentColor` so the one inverted screen needs no overrides.
 // =============================================================================
+@use 'chevron' as *;
+
 
 body.c3-lock {
   overflow: hidden;
@@ -64,8 +66,7 @@ body.c3-lock {
     user-select: none;
 
     &:not(:last-child)::after {
-      content: '›' / '';
-      margin-inline-start: var(--space-xs);
+      @include step-chevron;
       color: var(--ink-muted);
     }
 

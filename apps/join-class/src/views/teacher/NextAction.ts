@@ -129,7 +129,11 @@ export const NextAction: m.Component<NextActionAttrs> = {
 	view({ attrs }) {
 		const { spec } = attrs;
 		const blockedKey = blockedKeyOf(attrs);
-		const busy = spec.busyKey !== undefined && isBusy(spec.busyKey);
+		// A pause or resume in flight also holds the button: a step opened meanwhile would race it.
+		const busy =
+			(spec.busyKey !== undefined && isBusy(spec.busyKey)) ||
+			isBusy('status:pause') ||
+			isBusy('status:resume');
 
 		return m('div.next-action', [
 			m(

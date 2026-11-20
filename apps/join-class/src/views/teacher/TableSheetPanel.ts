@@ -15,6 +15,8 @@ import { getMainStatement } from '@/lib/store';
 import { noDeviceButtons, stepButtons, turnButtons } from './tableSheetTurn';
 import { targetName } from './dragController';
 import { confirmResetTurns } from './consoleConfirms';
+import { tableTalkNowKey } from '@/lib/classroom/tableTalkState';
+import { noneLeftNow } from '@/lib/classroom/ownQuestions';
 import { noteStudentMoved } from './moveHook';
 import { actForRowLabel, openActFor } from './actFor/actForState';
 
@@ -117,7 +119,14 @@ function currentLine(attrs: TableSheetPanelAttrs, table: ClassTable): m.Children
 
 	return [
 		m('p.table-sheet__now', [
-			m('strong', t(tableStepKey(table, attrs.plenum, attrs.tableTalk))),
+			m(
+				'strong',
+				t(
+					attrs.tableTalk
+						? tableTalkNowKey(table, serverNow(), noneLeftNow(table))
+						: tableStepKey(table, attrs.plenum),
+				),
+			),
 			attrs.tableTalk ? ` · ${turnLine(table)}` : null,
 			tableModeOf(attrs) === 'proposals' ? ` · ${proposalsTurnLine(table)}` : null,
 		]),

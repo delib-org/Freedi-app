@@ -1,0 +1,18 @@
+// A small chevron drawn with borders, pointing from the earlier part to the later one:
+// right in LTR, left in RTL. A text glyph ("›") is mirrored by the bidi algorithm in some
+// contexts and not in others, so it cannot be trusted. Decorative: it has no text.
+@mixin step-chevron($gap: var(--space-xs)) {
+  content: '';
+  display: inline-block;
+  inline-size: 0.4em;
+  block-size: 0.4em;
+  margin-inline-start: $gap;
+  border-block-start: 2px solid currentColor;
+  border-inline-end: 2px solid currentColor;
+  vertical-align: middle;
+  transform: rotate(45deg);
+
+  [dir='rtl'] & {
+    transform: rotate(-135deg);
+  }
+}

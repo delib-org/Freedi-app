@@ -87,6 +87,7 @@ export function allRatedState(challenge: Statement | null): {
 	n: number;
 	m: number;
 	k: number;
+	proposals: number;
 	complete: boolean;
 } {
 	const options = proposalsOf(challenge);
@@ -97,6 +98,7 @@ export function allRatedState(challenge: Statement | null): {
 		n: line.n,
 		m: line.m,
 		k: minRatingsPerProposal(options),
+		proposals: options.length,
 		complete: line.m > 0 && line.n >= line.m,
 	};
 }

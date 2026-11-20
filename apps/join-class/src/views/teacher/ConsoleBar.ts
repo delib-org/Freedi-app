@@ -16,7 +16,7 @@ import { consoleState, dismissFailure, isBusy } from './consoleState';
 /** "Pause the lesson": the one lesson control that stays out of the menu (Tal, 2026-11-19). */
 function pauseButton(mid: string, status: LessonStatus | null): m.Children {
 	if (status !== 'live' && status !== 'open') return null;
-	const pausing = isBusy('status:pause');
+	const pausing = isBusy('status:pause') || isBusy('status:resume');
 
 	return m(
 		'button.btn.btn--secondary.btn--small.console__pause',

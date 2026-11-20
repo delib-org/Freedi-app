@@ -14,7 +14,7 @@
  */
 
 import { a11yStore } from '../lib/accessibility';
-import { firstClearTop } from '../lib/a11yPlacement';
+import { clampTop, firstClearTop, readSavedTop, saveTop } from '../lib/a11yPlacement';
 import {
 	t,
 	getLang,
@@ -65,6 +65,14 @@ const LIGHT_CONTRAST_SVG = `
   <circle cx="12" cy="12" r="10"/>
 </svg>`;
 
+function safeStorage(): Storage | null {
+	try {
+		return window.localStorage;
+	} catch {
+		return null;
+	}
+}
+
 // --------------------------------------------------------------------------
 // Widget class
 // --------------------------------------------------------------------------
@@ -99,7 +107,12 @@ export class AccessibilityWidget {
 	private positionTop: number;
 
 	constructor() {
-		this.positionTop = Math.max(80, window.innerHeight * 0.3);
+		const saved = readSavedTop(safeStorage());
+		this.positionTop =
+			saved === null
+				? Math.max(80, window.innerHeight * 0.3)
+				: clampTop(saved, window.innerHeight, PLACEMENT_TOP_MIN_PX, PLACEMENT_BOTTOM_GAP_PX);
+		// It may still step aside (not saved) when it would cover something pressable.
 
 		this.root = this.buildRoot();
 		this.triggerBtn = this.buildTriggerButton();
@@ -426,6 +439,8 @@ export class AccessibilityWidget {
 				if (!this.dragMoved) {
 					// It was a tap, not a drag — toggle the panel
 					this.togglePanel();
+				} else {
+					saveTop(safeStorage(), this.positionTop);
 				}
 
 				this.isDragging = false;

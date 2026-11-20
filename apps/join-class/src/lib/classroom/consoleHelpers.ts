@@ -216,11 +216,8 @@ export function timerLine(table: ClassTable, remaining: number | null, totalMs: 
 }
 
 /** i18n key of the table's "now" line. */
-export function tableStepKey(table: ClassTable, plenum: boolean, tableTalk = false): string {
+export function tableStepKey(table: ClassTable, plenum: boolean): string {
 	if (plenum) return 'console.now_plenum';
-	// Table talk has no writing or rating: a table still at "rate" from an earlier visit is
-	// simply waiting here, so the card must not say the class is rating.
-	if (tableTalk && (table.step === 'write' || table.step === 'rate')) return 'console.now_talk';
 
 	return `console.now_${table.step}`;
 }
