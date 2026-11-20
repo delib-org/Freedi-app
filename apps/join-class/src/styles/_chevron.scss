@@ -13,6 +13,8 @@
   transform: rotate(45deg);
 
   [dir='rtl'] & {
-    transform: rotate(-135deg);
+    // In RTL the logical borders are top + left, so the corner already faces up-left:
+    // a quarter turn the other way points it left (-135deg pointed it down).
+    transform: rotate(-45deg);
   }
 }
