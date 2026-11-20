@@ -179,7 +179,9 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 			[
 				m(
 					'p.visually-hidden',
-					{ key: 'live', 'aria-live': 'polite', 'data-testid': 'state-status' },
+					// No key here: the siblings below are unkeyed, and Mithril throws
+					// on a fragment that mixes keyed and unkeyed vnodes (blank screen).
+					{ 'aria-live': 'polite', 'data-testid': 'state-status' },
 					parts.status ?? '',
 				),
 				parts.strip ? m(SubStepStrip, { current: parts.strip }) : null,
