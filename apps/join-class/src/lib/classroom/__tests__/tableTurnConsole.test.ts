@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ClassTable } from '@freedi/shared-types';
 import {
 	anotherTurnFor,
+	elapsedSinceChange,
 	askedPassedCounts,
 	answerMark,
 	askMark,
@@ -146,6 +147,20 @@ describe('statusLine (the card second row)', () => {
 	it('says nothing outside Table talk', () => {
 		expect(statusLine(table(), 'proposals', NOW)).toBeNull();
 		expect(statusLine(table(), 'plenum', NOW)).toBeNull();
+	});
+});
+
+describe('a table left over from an earlier visit (back, then forward)', () => {
+	it('is not stuck from the old time: the clock counts from entering the step', () => {
+		const old = table({ step: 'rate', updatedAt: NOW - 9 * 60_000 });
+		expect(elapsedSinceChange(old, NOW)).toBe(9 * 60_000);
+		expect(elapsedSinceChange(old, NOW, NOW - 10_000)).toBe(10_000);
+		expect(statusLine(old, 'tableTalk', NOW, false, NOW - 10_000)?.elapsedMs).toBe(10_000);
+	});
+
+	it('keeps the table own clock when it changed after the step was entered', () => {
+		const fresh = table({ updatedAt: NOW - 5_000 });
+		expect(elapsedSinceChange(fresh, NOW, NOW - 60_000)).toBe(5_000);
 	});
 });
 

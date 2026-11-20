@@ -48,6 +48,8 @@ export interface ConsoleState {
 	held: boolean;
 	/** The lesson has ended: the only state in which students can no longer be moved (paused still allows it). */
 	ended: boolean;
+	/** Server-clock ms at which this console moved the lesson into its current step; 0 = not seen. */
+	stepEnteredAt: number;
 }
 
 export const consoleState: ConsoleState = {
@@ -64,6 +66,7 @@ export const consoleState: ConsoleState = {
 	options: new Map<string, Statement[]>(),
 	held: false,
 	ended: false,
+	stepEnteredAt: 0,
 };
 
 export function resetConsoleState(mainId: string): void {
@@ -80,6 +83,8 @@ export function resetConsoleState(mainId: string): void {
 	consoleState.options = new Map<string, Statement[]>();
 	consoleState.held = false;
 	consoleState.ended = false;
+	// A console opened on a lesson already running: nothing counts as stuck from before it opened.
+	consoleState.stepEnteredAt = Date.now();
 }
 
 export function isBusy(key: string): boolean {

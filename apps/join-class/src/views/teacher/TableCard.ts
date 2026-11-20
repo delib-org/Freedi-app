@@ -151,7 +151,13 @@ export function quickLabel(quick: QuickAction): string {
 
 function waitRows(attrs: TableCardAttrs): m.Children {
 	const { table, students } = attrs;
-	const line = statusLine(table, tableModeOf(attrs), serverNow(), noneLeftNow(table));
+	const line = statusLine(
+		table,
+		tableModeOf(attrs),
+		serverNow(),
+		noneLeftNow(table),
+		consoleState.stepEnteredAt,
+	);
 	if (!line) return null;
 	const names = (line.nameUids ?? []).map((uid) => nameOf(uid, students));
 	const params: Record<string, string | number> = { ...(line.params ?? {}) };
@@ -314,7 +320,10 @@ function nowRow(
 	}
 	const done = tableIsDone(table, mode, serverNow(), noneLeftNow(table), propDone);
 
-	return m('p.table-card__now', done ? t('console.all_done') : t(tableStepKey(table, plenum)));
+	return m(
+		'p.table-card__now',
+		done ? t('console.all_done') : t(tableStepKey(table, plenum, mode === 'tableTalk')),
+	);
 }
 
 export const TableCard: m.Component<TableCardAttrs> = {

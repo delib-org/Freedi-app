@@ -117,7 +117,7 @@ function currentLine(attrs: TableSheetPanelAttrs, table: ClassTable): m.Children
 
 	return [
 		m('p.table-sheet__now', [
-			m('strong', t(tableStepKey(table, attrs.plenum))),
+			m('strong', t(tableStepKey(table, attrs.plenum, attrs.tableTalk))),
 			attrs.tableTalk ? ` · ${turnLine(table)}` : null,
 			tableModeOf(attrs) === 'proposals' ? ` · ${proposalsTurnLine(table)}` : null,
 		]),

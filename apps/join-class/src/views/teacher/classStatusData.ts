@@ -25,6 +25,7 @@ import {
 import { liveResultsOn, voteResults } from '@/lib/classroom/voteResults';
 import { noDeviceTotal } from '@/lib/classroom/actFor';
 import { getMainStatement } from '@/lib/store';
+import { consoleState } from './consoleState';
 import { proposalsDoneNow } from './TableCard';
 
 /**
@@ -51,14 +52,20 @@ function projectorWords(main: Statement | null): string {
 /** A table "at rest" for the stuck rule: nobody has changed anything for too long. */
 function isStuck(table: ClassTable, stepKey: LessonStepKey, now: number): boolean {
 	if (stepKey === 'tableTalk') {
-		const line = statusLine(table, 'tableTalk', now, noneLeftNow(table));
+		const line = statusLine(
+			table,
+			'tableTalk',
+			now,
+			noneLeftNow(table),
+			consoleState.stepEnteredAt,
+		);
 
 		return line?.elapsedMs !== undefined && line.elapsedMs >= STUCK_AFTER_MS;
 	}
 	if (stepKey !== 'proposals' || table.step !== 'talk') return false;
 	if (proposalsDoneNow(table, 'proposals') || minuteRunning(table, now)) return false;
 
-	return elapsedSinceChange(table, now) >= STUCK_AFTER_MS;
+	return elapsedSinceChange(table, now, consoleState.stepEnteredAt) >= STUCK_AFTER_MS;
 }
 
 /** Votes cast on the running ballot, and the students in the room (with and without a device). */
