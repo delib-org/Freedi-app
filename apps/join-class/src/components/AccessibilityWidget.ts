@@ -85,6 +85,7 @@ export class AccessibilityWidget {
 	private isOpen = false;
 	private placementTimer: ReturnType<typeof setTimeout> | null = null;
 	private placementObserver: MutationObserver | null = null;
+	private onResizePlacement: (() => void) | null = null;
 	private autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
 	// Drag state
@@ -513,7 +514,8 @@ export class AccessibilityWidget {
 
 	private watchPlacement(): void {
 		this.schedulePlacement();
-		window.addEventListener('resize', () => this.schedulePlacement());
+		this.onResizePlacement = () => this.schedulePlacement();
+		window.addEventListener('resize', this.onResizePlacement);
 		if (typeof MutationObserver === 'undefined') return;
 		this.placementObserver = new MutationObserver(() => this.schedulePlacement());
 		this.placementObserver.observe(document.body, { childList: true, subtree: true });
@@ -525,6 +527,7 @@ export class AccessibilityWidget {
 	destroy(): void {
 		this.clearAutoClose();
 		this.placementObserver?.disconnect();
+		if (this.onResizePlacement) window.removeEventListener('resize', this.onResizePlacement);
 		if (this.placementTimer !== null) clearTimeout(this.placementTimer);
 		this.unsubscribeLang?.();
 		this.unsubscribeLang = null;

@@ -16,6 +16,16 @@ export function tableIsRating(table: Pick<ClassTable, 'step'>): boolean {
 	return table.step === 'rate';
 }
 
+/**
+ * A table nobody sits at (its members all left, or it was never filled) can never reach rating
+ * on its own, so it must not hold "ready to move on" back forever: it is not counted.
+ */
+export function isOccupiedTable(
+	table: Pick<ClassTable, 'memberUids' | 'noDeviceMembers'>,
+): boolean {
+	return table.memberUids.length > 0 || table.noDeviceMembers.length > 0;
+}
+
 export interface ClassStatusInput {
 	status: LessonStatus;
 	stepKey: LessonStepKey;

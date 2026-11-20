@@ -85,6 +85,8 @@ class PanelState {
 	 * pen holder leaving the screen now must not ask for it back ("You do not hold the pen").
 	 */
 	penReturned = false;
+	/** "I want to pass" was tapped; a failed pass leaves the pen ours, so it is not returned yet. */
+	passAsked = false;
 }
 
 function ownProposalsOf(a: WritePanelAttrs): Statement[] {
@@ -145,6 +147,7 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 		const { uid } = a;
 		const mainId = a.main.statementId;
 		self.release = a.onRelease ?? null;
+		if (self.passAsked && a.table.writerUid !== uid) self.penReturned = true;
 		const requested = pen ? null : a.takeEditRequest?.();
 		if (requested) self.editId = requested;
 		const limit = proposalLimitOf(a.main);
@@ -357,7 +360,8 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 										disabled: a.busy || self.sending,
 										onclick: () => {
 											if (isBroadcasting()) void stopBroadcast();
-											self.penReturned = true;
+											// Returned only once the table shows the pen is no longer ours (see view).
+											self.passAsked = true;
 											a.onPass?.();
 										},
 									},

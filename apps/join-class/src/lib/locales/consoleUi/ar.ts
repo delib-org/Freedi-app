@@ -35,7 +35,7 @@ const consoleUi: Record<string, string> = {
 	'console.status.no_tables': 'لم نقسّم إلى طاولات بعد',
 	'console.status.seated': 'الجميع جالسون · {{t}} طاولات',
 	'console.status.tables_done': '{{n}} من {{m}} طاولات انتهت',
-	'console.status.tables_rating': '{{n}} من {{m}} طاولات تقيّم أو انتهت',
+	'console.status.tables_rating': '{{n}} من {{m}} طاولات تقيّم',
 	'console.status.vote_paused': 'التصويت متوقف · صوّت {{voted}} من {{present}}',
 	'console.status.stuck_one': 'الطاولة {{t}} عالقة',
 	'console.status.stuck_many': '{{n}} طاولات عالقة',
@@ -45,7 +45,7 @@ const consoleUi: Record<string, string> = {
 	'console.decision': 'القرار',
 	'console.status.seated_one': 'الجميع جالسون · طاولة واحدة',
 	'console.status.tables_done_one': '{{n}} من طاولة واحدة انتهت',
-	'console.status.tables_rating_one': '{{n}} من طاولة واحدة تقيّم أو انتهت',
+	'console.status.tables_rating_one': '{{n}} من طاولة واحدة تقيّم',
 };
 
 export default consoleUi;

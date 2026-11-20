@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { LessonStepKey } from '@freedi/shared-types';
-import { announcementFor, classStatusFor, tableIsRating } from '../classStatus';
+import { announcementFor, classStatusFor, isOccupiedTable, tableIsRating } from '../classStatus';
 import type { ClassStatusInput, StatusSnapshot } from '../classStatus';
 
 function at(stepKey: LessonStepKey, patch: Partial<ClassStatusInput> = {}): ClassStatusInput {
@@ -288,6 +288,20 @@ describe('Proposals: a table is ready only when it is really rating', () => {
 	});
 
 	it('every table at rate: ready', () => {
+		expect(classStatusFor(at('proposals', { tableCount: 2, tablesRating: 2 })).ready).toBe(true);
+	});
+});
+
+describe('empty tables do not hold the class back', () => {
+	it('a table with nobody at it is not occupied; a table with only a no-device student is', () => {
+		expect(isOccupiedTable({ memberUids: [], noDeviceMembers: [] })).toBe(false);
+		expect(isOccupiedTable({ memberUids: ['a'], noDeviceMembers: [] })).toBe(true);
+		expect(
+			isOccupiedTable({ memberUids: [], noDeviceMembers: [{ id: 'nd-1', name: 'Dan' }] }),
+		).toBe(true);
+	});
+
+	it('with the empty table left out of the total, the rest rating means ready', () => {
 		expect(classStatusFor(at('proposals', { tableCount: 2, tablesRating: 2 })).ready).toBe(true);
 	});
 });

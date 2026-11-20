@@ -86,6 +86,43 @@ describe('the pen holder leaving the screen', () => {
 		mounted.unmount();
 	});
 
+	it('still gives the pen back when a pass failed (the table still shows the pen as theirs)', () => {
+		const onRelease = vi.fn();
+		const mounted = mountPen(onRelease);
+		mounted.root.querySelector<HTMLButtonElement>('[data-testid="pen-pass"]')?.click();
+		mounted.redraw();
+		hide();
+
+		expect(onRelease).toHaveBeenCalledTimes(1);
+		mounted.unmount();
+	});
+
+	it('does not ask for the pen back once a pass went through (the table moved the pen away)', () => {
+		const onRelease = vi.fn();
+		let current: ClassTable = table;
+		const mounted = mountSmoke(() =>
+			m(WritePanel, {
+				main,
+				table: current,
+				feed: new FlowFeed(),
+				uid: 'me',
+				challenge,
+				locked: false,
+				mode: 'pen',
+				busy: false,
+				onPass: vi.fn(),
+				onRelease,
+			}),
+		);
+		mounted.root.querySelector<HTMLButtonElement>('[data-testid="pen-pass"]')?.click();
+		current = { ...table, writerUid: undefined };
+		mounted.redraw();
+		hide();
+
+		expect(onRelease).not.toHaveBeenCalled();
+		mounted.unmount();
+	});
+
 	it('does not ask for the pen back after the proposal was sent (the server already freed it)', async () => {
 		const onRelease = vi.fn();
 		const mounted = mountPen(onRelease);

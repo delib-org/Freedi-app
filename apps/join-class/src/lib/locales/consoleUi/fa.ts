@@ -35,7 +35,7 @@ const consoleUi: Record<string, string> = {
 	'console.status.no_tables': 'هنوز به میزها تقسیم نشده',
 	'console.status.seated': 'همه نشسته‌اند · {{t}} میز',
 	'console.status.tables_done': '{{n}} از {{m}} میز تمام کرده‌اند',
-	'console.status.tables_rating': '{{n}} از {{m}} میز در حال امتیازدهی‌اند یا تمام کرده‌اند',
+	'console.status.tables_rating': '{{n}} از {{m}} میز در حال امتیازدهی‌اند',
 	'console.status.vote_paused': 'رأی‌گیری متوقف است · {{voted}} از {{present}} رأی داده‌اند',
 	'console.status.stuck_one': 'میز {{t}} گیر کرده',
 	'console.status.stuck_many': '{{n}} میز گیر کرده‌اند',
@@ -45,7 +45,7 @@ const consoleUi: Record<string, string> = {
 	'console.decision': 'تصمیم',
 	'console.status.seated_one': 'همه نشسته‌اند · 1 میز',
 	'console.status.tables_done_one': '{{n}} از 1 میز تمام کرده است',
-	'console.status.tables_rating_one': '{{n}} از 1 میز در حال امتیازدهی است یا تمام کرده است',
+	'console.status.tables_rating_one': '{{n}} از 1 میز در حال امتیازدهی است',
 };
 
 export default consoleUi;

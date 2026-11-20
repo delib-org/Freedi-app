@@ -10,7 +10,7 @@ import {
 	rosterStudents,
 	unplacedStudents,
 } from '@/lib/classroom/consoleHelpers';
-import { tableIsRating, type ClassStatusInput } from '@/lib/classroom/classStatus';
+import { isOccupiedTable, tableIsRating, type ClassStatusInput } from '@/lib/classroom/classStatus';
 import { introVideoLabel, introVideosOf, projectorVideoOf } from '@/lib/classroom/introVideos';
 import { noneLeftNow } from '@/lib/classroom/ownQuestions';
 import { sideCount } from '@/lib/classroom/sideCount';
@@ -94,6 +94,8 @@ export function liveStatusInput(args: LiveStatusArgs): ClassStatusInput {
 			: 'proposals';
 	const { chose, total } = sideCount(students);
 	const { voted, present } = voteCountsOn(args.challenge);
+	// Empty tables do not count toward "all tables are ready".
+	const occupied = tables.filter(isOccupiedTable);
 	const doneAt = (table: ClassTable): boolean =>
 		tableIsDone(table, mode, now, noneLeftNow(table), proposalsDoneNow(table, mode));
 
@@ -105,10 +107,10 @@ export function liveStatusInput(args: LiveStatusArgs): ClassStatusInput {
 		projectorWhat: projectorWords(main),
 		chose,
 		sideTotal: total,
-		tableCount: tables.length,
+		tableCount: occupied.length > 0 ? occupied.length : tables.length,
 		unseated: tables.length > 0 ? unplacedStudents(students, tables).length : 0,
-		tablesDone: tables.filter(doneAt).length,
-		tablesRating: tables.filter(tableIsRating).length,
+		tablesDone: occupied.filter(doneAt).length,
+		tablesRating: occupied.filter(tableIsRating).length,
 		allRated: args.allRated,
 		ballotFrozen: isBallotFrozen(args.challenge),
 		ballotPaused: isBallotPaused(args.challenge),

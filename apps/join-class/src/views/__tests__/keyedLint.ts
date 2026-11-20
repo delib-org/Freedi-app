@@ -31,9 +31,12 @@ function expand(node: VnodeLike): unknown {
 
 export function findMixedKeys(root: m.Children, path = 'root', out: string[] = []): string[] {
 	if (Array.isArray(root)) {
-		const vnodes: VnodeLike[] = (root as unknown[]).filter(isVnode);
-		const keyed = vnodes.filter((v) => v.key !== undefined && v.key !== null).length;
-		if (keyed > 0 && keyed < vnodes.length) out.push(`${path}: ${keyed} keyed of ${vnodes.length}`);
+		// Mithril's normalizeChildren: every entry counts, and null, booleans, strings, numbers and
+		// nested arrays are all UNKEYED. Only a vnode with a key counts as keyed.
+		const keyed = (root as unknown[]).filter(
+			(v) => isVnode(v) && v.key !== undefined && v.key !== null,
+		).length;
+		if (keyed > 0 && keyed < root.length) out.push(`${path}: ${keyed} keyed of ${root.length}`);
 		root.forEach((child, i) => findMixedKeys(child as m.Children, `${path}[${i}]`, out));
 
 		return out;

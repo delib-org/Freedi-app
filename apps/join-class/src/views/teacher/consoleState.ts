@@ -2,6 +2,7 @@ import m from 'mithril';
 import type { Statement } from '@freedi/shared-types';
 import { IDLE } from '@/lib/classroom/dragReducer';
 import type { DragState } from '@/lib/classroom/dragReducer';
+import { serverNow } from '@/lib/classroom/serverClock';
 import { listenOptions } from '@/lib/classroom/optionsListener';
 import type { Unsubscribe } from '@/lib/firebase';
 
@@ -84,7 +85,7 @@ export function resetConsoleState(mainId: string): void {
 	consoleState.held = false;
 	consoleState.ended = false;
 	// A console opened on a lesson already running: nothing counts as stuck from before it opened.
-	consoleState.stepEnteredAt = Date.now();
+	consoleState.stepEnteredAt = serverNow();
 }
 
 export function isBusy(key: string): boolean {
