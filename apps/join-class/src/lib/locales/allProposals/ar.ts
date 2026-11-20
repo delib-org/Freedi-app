@@ -17,6 +17,9 @@ const allProposals: Record<string, string> = {
 	'console.table_rated_all': '{{n}}/{{m}} قيّموا كل شيء',
 	'projector.allProposals': 'كل الاقتراحات · {{n}} اقتراحات',
 	'projector.allProposals_min': 'لكل اقتراح {{k}} تقييمات على الأقل',
+	'console.all_rated_line_one':
+		'{{n}} من {{m}} طلاب قيّموا كل شيء · لكل اقتراح تقييم واحد على الأقل',
+	'projector.allProposals_min_one': 'لكل اقتراح تقييم واحد على الأقل',
 };
 
 export default allProposals;

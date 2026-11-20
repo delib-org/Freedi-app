@@ -17,6 +17,9 @@ const allProposals: Record<string, string> = {
 	'console.table_rated_all': '{{n}}/{{m}} hebben alles beoordeeld',
 	'projector.allProposals': 'Alle voorstellen · {{n}} voorstellen',
 	'projector.allProposals_min': 'Elk voorstel heeft minstens {{k}} beoordelingen',
+	'console.all_rated_line_one':
+		'{{n}} van {{m}} leerlingen hebben alles beoordeeld · elk voorstel heeft minstens 1 beoordeling',
+	'projector.allProposals_min_one': 'Elk voorstel heeft minstens 1 beoordeling',
 };
 
 export default allProposals;

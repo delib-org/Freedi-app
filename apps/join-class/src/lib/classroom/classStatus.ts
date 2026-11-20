@@ -120,7 +120,11 @@ function tablesLine(input: ClassStatusInput): ClassStatus {
 		});
 	}
 
-	return line('console.status.seated', { t: input.tableCount }, true);
+	return line(
+		input.tableCount === 1 ? 'console.status.seated_one' : 'console.status.seated',
+		{ t: input.tableCount },
+		true,
+	);
 }
 
 function voteLine(input: ClassStatusInput): ClassStatus {
@@ -154,14 +158,16 @@ export function classStatusFor(input: ClassStatusInput): ClassStatus {
 			return tablesLine(input);
 		case 'tableTalk':
 			return line(
-				'console.status.tables_done',
+				input.tableCount === 1 ? 'console.status.tables_done_one' : 'console.status.tables_done',
 				{ n: input.tablesDone, m: input.tableCount },
 				input.tableCount > 0 && input.tablesDone >= input.tableCount,
 				{ stuck },
 			);
 		case 'proposals':
 			return line(
-				'console.status.tables_rating',
+				input.tableCount === 1
+					? 'console.status.tables_rating_one'
+					: 'console.status.tables_rating',
 				{ n: input.tablesRating, m: input.tableCount },
 				input.tableCount > 0 && input.tablesRating >= input.tableCount,
 				{ stuck },
@@ -170,7 +176,11 @@ export function classStatusFor(input: ClassStatusInput): ClassStatus {
 			const rated = input.allRated;
 			if (!rated) return line('console.status.no_tables', {}, false);
 
-			return line('console.all_rated_line', { n: rated.n, m: rated.m, k: rated.k }, rated.complete);
+			return line(
+				rated.k === 1 ? 'console.all_rated_line_one' : 'console.all_rated_line',
+				{ n: rated.n, m: rated.m, k: rated.k },
+				rated.complete,
+			);
 		}
 		case 'vote':
 			return voteLine(input);

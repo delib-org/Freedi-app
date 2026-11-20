@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { proposalLimitOf, proposalsTurnOf } from '@freedi/shared-types';
 import { getLang, t } from '@/lib/i18n';
+import { isolate } from '@/lib/bidi';
 import { getLiveDrafts } from '@/lib/liveDrafts';
 import { classTableStep } from '@/lib/classroom/api';
 import { listableItems, myProposals, officialSubstep } from '@/lib/classroom/c3Logic';
@@ -240,7 +241,7 @@ export function proposalsParts(ctx: FlowCtx): FlowParts {
 		action,
 		down: talking,
 		ask: challenge?.statement
-			? t('proposals.heading', { question: challenge.statement })
+			? t('proposals.heading', { question: isolate(challenge.statement) })
 			: undefined,
 		strip: officialSubstep(table),
 	};

@@ -614,6 +614,7 @@ const en: Record<string, string> = {
 	'console.writing_now': '{{name}} is writing · {{sent}} of {{total}} sent',
 	'console.writing_nobody': 'Nobody is writing · {{sent}} of {{total}} sent',
 	'proposals.write.closed': 'Proposals are closed now, so nobody can write',
+	'console.ratings_one': '1 rating',
 };
 
 export default en;

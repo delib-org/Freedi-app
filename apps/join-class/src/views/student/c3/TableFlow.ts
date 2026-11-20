@@ -11,7 +11,8 @@ import { predictTableAction } from '@/lib/classroom/tableOptimism';
 import { classTableStep } from '@/lib/classroom/api';
 import { currentUid } from '@/lib/classroom/c3Data';
 import { officialSubstep, type FlowKind } from '@/lib/classroom/c3Logic';
-import { refusalReason } from '@/lib/classroom/turnMoment';
+import { isRaceRefusal, refusalReason } from '@/lib/classroom/turnMoment';
+import { captureException } from '@/lib/sentry';
 import { serverNow } from '@/lib/classroom/serverClock';
 import { clearImproveHandler } from '@/lib/classroom/replyUi';
 import { ErrorLine } from './ErrorLine';
@@ -119,11 +120,13 @@ export const TableFlow: m.ClassComponent<TableFlowAttrs> = {
 					await op();
 					self.retry = null;
 				} catch (error) {
-					console.error(
-						'[TableFlow] classTableStep failed',
-						{ tableId: table.tableId, uid },
-						error,
-					);
+					if (!isRaceRefusal(error)) {
+						captureException(error, {
+							operation: 'tableFlow.run',
+							tableId: table.tableId,
+							uid,
+						});
+					}
 					self.error = failureText(error);
 				} finally {
 					if (key === undefined) self.busy = false;

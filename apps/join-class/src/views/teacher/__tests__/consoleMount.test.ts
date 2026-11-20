@@ -19,6 +19,7 @@ import { ActionBand, type ActionBandAttrs } from '../ActionBand';
 import { ClassStatusLine } from '../ClassStatusLine';
 import { ActForEntry } from '../actFor/ActForEntry';
 import { DecisionPanel } from '../DecisionPanel';
+import { EndChoice, openEndChoice } from '../EndChoice';
 import { openDisclosure } from '../Disclosure';
 import { consoleState } from '../consoleState';
 import { LESSON_MORE_ID, LessonMore } from '../LessonMore';
@@ -340,6 +341,20 @@ describe('the pieces on their own', () => {
 				() => m(DecisionPanel, { decision: { ...decided, tie: true, sharedWithClass: true } }),
 			],
 		);
+	});
+});
+
+describe('the end-the-lesson dialog', () => {
+	it('puts the initial focus on Cancel, not on End', () => {
+		const dialog = HTMLDialogElement.prototype as { showModal?: () => void };
+		dialog.showModal = () => undefined;
+		openEndChoice();
+		const mounted = mountSmoke(() => m(EndChoice, { mainId: 'm', status: 'live' }));
+		expect(mounted.root.querySelector('.end-choice__cancel')?.hasAttribute('autofocus')).toBe(true);
+		expect(mounted.root.querySelector('[data-choice="end"]')?.hasAttribute('autofocus')).toBe(
+			false,
+		);
+		mounted.unmount();
 	});
 });
 

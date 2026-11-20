@@ -1,6 +1,7 @@
 import m from 'mithril';
 import type { LessonStepKey } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
+import { isolate } from '@/lib/bidi';
 import { classState } from '@/lib/classroom/classState';
 import { gateOf, sideClaimsOf, sideNamesOf, sideQuestionOf } from '@/lib/classroom/classSettings';
 import { projectorData } from '@/lib/classroom/projectorData';
@@ -163,7 +164,7 @@ function proposals(): m.Vnode {
 			? m(
 					'h2.projector-ask',
 					{ dir: 'auto', 'data-testid': 'projector-ask' },
-					t('proposals.heading', { question: challenge.statement }),
+					t('proposals.heading', { question: isolate(challenge.statement) }),
 				)
 			: null,
 		m(

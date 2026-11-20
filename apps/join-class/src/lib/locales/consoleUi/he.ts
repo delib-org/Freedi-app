@@ -16,7 +16,7 @@ const consoleUi: Record<string, string> = {
 	'console.vote_skip_body': 'בסיכום תוצג ההצעה שהכי הסכימו עליה.',
 	'console.vote_skip_yes': 'לעבור לסיכום',
 	'console.resplit_title': 'לחלק מחדש את הכיתה?',
-	'console.resplit_body': 'הישיבה הנוכחית תימחק, ואי אפשר להחזיר אותה.',
+	'console.resplit_body': 'הישיבה הנוכחית תתבטל. אי אפשר לבטל.',
 	'console.all_steps': 'כל השלבים',
 	'console.step_now': 'עכשיו',
 	'console.step_back_hint': 'לחזור לשלב הזה',
@@ -43,6 +43,9 @@ const consoleUi: Record<string, string> = {
 	'console.drag_hint_close': 'הבנתי',
 	'console.student_screen_back': 'חזרה לשולחנות',
 	'console.decision': 'ההחלטה',
+	'console.status.seated_one': 'כולם יושבים · שולחן אחד',
+	'console.status.tables_done_one': '{{n}} מתוך שולחן אחד סיים',
+	'console.status.tables_rating_one': '{{n}} מתוך שולחן אחד מדרג או סיים',
 };
 
 export default consoleUi;

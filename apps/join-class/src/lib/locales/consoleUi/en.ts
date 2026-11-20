@@ -43,6 +43,9 @@ const consoleUi: Record<string, string> = {
 	'console.drag_hint_close': 'Got it',
 	'console.student_screen_back': 'Back to the tables',
 	'console.decision': 'The decision',
+	'console.status.seated_one': 'Everyone is seated · 1 table',
+	'console.status.tables_done_one': '{{n}} of 1 table is done',
+	'console.status.tables_rating_one': '{{n}} of 1 table is rating or done',
 };
 
 export default consoleUi;

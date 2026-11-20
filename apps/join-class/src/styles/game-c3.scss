@@ -156,9 +156,7 @@
 }
 
 // ---- small controls ---------------------------------------------------------------
-#{$game} .substeps__pill {
-  min-height: 40px;
-  border-width: 2px;
+#{$game} .substeps__pill--on {
   font-weight: 800;
 }
 

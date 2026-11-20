@@ -31,7 +31,12 @@ function card(text: WrittenText, noDeviceNames: readonly string[]): m.Vnode {
 						t('console.entered_by_teacher'),
 					)
 				: null,
-			m('span', t('console.ratings_n', { count: text.ratings })),
+			m(
+				'span',
+				text.ratings === 1
+					? t('console.ratings_one')
+					: t('console.ratings_n', { count: text.ratings }),
+			),
 			text.hidden ? m('span.written-card__flag.chip-hidden', t('console.hidden_flag')) : null,
 		]),
 		m('div.written-card__actions', [

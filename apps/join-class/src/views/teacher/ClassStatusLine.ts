@@ -30,7 +30,9 @@ interface LineState {
 	previous: StatusSnapshot | null;
 	pending: Announcement | null;
 	timer: number | null;
-	spoken: string;
+	/** What the region says now, kept as a key (not text): it is translated at every draw. */
+	spoken: Announcement | null;
+	/** The words of the last announcement, to never say the same thing twice in a row. */
 	lastSpoken: string;
 }
 
@@ -48,10 +50,10 @@ function speak(state: LineState): void {
 	state.timer = null;
 	state.pending = null;
 	if (!next) return;
-	const text = t(next.key, next.params);
-	if (text === state.lastSpoken) return;
-	state.lastSpoken = text;
-	state.spoken = text;
+	const said = `${next.key}|${JSON.stringify(next.params)}`;
+	if (said === state.lastSpoken) return;
+	state.lastSpoken = said;
+	state.spoken = next;
 	m.redraw();
 }
 
@@ -113,6 +115,19 @@ function readyMark(status: ClassStatus): m.Children {
 	]);
 }
 
+/**
+ * The sentence of the hidden live region, in the language of NOW and naming the labels of NOW:
+ * after a language switch it is translated again, and "ready" names the primary button as it
+ * reads at this draw (it has already changed by the time the pause is over, e.g. Close vote).
+ */
+function spokenText(heard: Announcement | null, words: ClassStatusLineAttrs['words']): string {
+	if (!heard) return '';
+	if (heard.key === 'console.ready_live') return t(heard.key, { label: words.primaryLabel });
+	if (heard.key === 'console.moved_to') return t(heard.key, { name: words.stepName });
+
+	return t(heard.key, heard.params);
+}
+
 export const ClassStatusLine: m.Component<ClassStatusLineAttrs> = {
 	oninit(vnode) {
 		const state = vnode.state as unknown as LineState;
@@ -120,7 +135,7 @@ export const ClassStatusLine: m.Component<ClassStatusLineAttrs> = {
 			previous: null,
 			pending: null,
 			timer: null,
-			spoken: '',
+			spoken: null,
 			lastSpoken: '',
 		});
 	},
@@ -145,7 +160,11 @@ export const ClassStatusLine: m.Component<ClassStatusLineAttrs> = {
 						entry ?? null,
 					]),
 			readyMark(status),
-			m('p.visually-hidden', { role: 'status', 'aria-live': 'polite' }, state.spoken),
+			m(
+				'p.visually-hidden',
+				{ role: 'status', 'aria-live': 'polite' },
+				spokenText(state.spoken, words),
+			),
 		]);
 	},
 };

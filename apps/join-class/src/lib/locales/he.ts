@@ -604,6 +604,7 @@ const he: Record<string, string> = {
 	'console.writing_now': '{{name}} כותב/ת · שלחו {{sent}} מתוך {{total}}',
 	'console.writing_nobody': 'אף אחד לא כותב · שלחו {{sent}} מתוך {{total}}',
 	'proposals.write.closed': 'ההצעות סגורות עכשיו, אי אפשר לכתוב',
+	'console.ratings_one': 'דירוג אחד',
 };
 
 export default he;

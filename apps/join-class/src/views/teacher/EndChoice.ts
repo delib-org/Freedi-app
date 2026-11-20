@@ -8,7 +8,7 @@ import { resultsAside } from './consoleConfirms';
 /**
  * "End the lesson?" (IA 13.6, UX 13.E): one native <dialog>, so focus is
  * trapped, Escape cancels and focus goes back to the control that opened it.
- * "End" is the default and has focus; the other way out is "Keep open for
+ * "Cancel" has the focus, as in every other confirm (ending is not the default); the other way out is "Keep open for
  * students" (not offered when the lesson is already open). After either, the
  * teacher STAYS on the console: it says the lesson has ended, shows the decision, and its
  * primary button ("Back to the plan") takes the focus.
@@ -94,7 +94,7 @@ function contents(attrs: EndChoiceAttrs): m.Children {
 			: null,
 		// Closed results mean no student rates the decision: say so, with the way to open them.
 		m('div.end-choice__aside', resultsAside()),
-		optionButton(mainId, 'end', 'console.end_now', 'btn--primary', { autofocus: true }),
+		optionButton(mainId, 'end', 'console.end_now', 'btn--primary'),
 		offerKeepOpen
 			? [
 					optionButton(mainId, 'keepOpen', 'console.keep_open', 'btn--secondary', {
@@ -105,7 +105,7 @@ function contents(attrs: EndChoiceAttrs): m.Children {
 			: null,
 		m(
 			'button.btn.btn--tertiary.end-choice__cancel',
-			{ type: 'button', disabled: pending !== null, onclick: closeEndChoice },
+			{ type: 'button', autofocus: true, disabled: pending !== null, onclick: closeEndChoice },
 			t('common.cancel'),
 		),
 	];

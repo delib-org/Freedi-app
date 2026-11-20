@@ -43,6 +43,9 @@ const consoleUi: Record<string, string> = {
 	'console.drag_hint_close': 'متوجه شدم',
 	'console.student_screen_back': 'بازگشت به میزها',
 	'console.decision': 'تصمیم',
+	'console.status.seated_one': 'همه نشسته‌اند · 1 میز',
+	'console.status.tables_done_one': '{{n}} از 1 میز تمام کرده است',
+	'console.status.tables_rating_one': '{{n}} از 1 میز در حال امتیازدهی است یا تمام کرده است',
 };
 
 export default consoleUi;

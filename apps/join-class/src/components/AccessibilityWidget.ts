@@ -14,6 +14,7 @@
  */
 
 import { a11yStore } from '../lib/accessibility';
+import { firstClearTop } from '../lib/a11yPlacement';
 import {
 	t,
 	getLang,
@@ -24,6 +25,16 @@ import {
 } from '../lib/i18n';
 
 const AUTO_CLOSE_MS = 10_000;
+
+/** Keeping the tab off pressable content: how far apart the spots tried are, and the pause after a change. */
+const PLACEMENT_STEP_PX = 48;
+const PLACEMENT_TOP_MIN_PX = 8;
+const PLACEMENT_BOTTOM_GAP_PX = 100;
+const PLACEMENT_DEBOUNCE_MS = 300;
+/** Heights inside the 44 px tab that are probed for something pressable beneath it. */
+const PLACEMENT_PROBES_PX = [4, 22, 40];
+const PRESSABLE =
+	'a[href], button, input, select, textarea, summary, label, [role="button"], [role="tab"], [role="radio"], [role="switch"], [tabindex]:not([tabindex="-1"])';
 
 // --------------------------------------------------------------------------
 // SVG icons (inlined to avoid any asset pipeline dependency)
@@ -72,6 +83,8 @@ export class AccessibilityWidget {
 	private unsubscribeLang: (() => void) | null = null;
 
 	private isOpen = false;
+	private placementTimer: ReturnType<typeof setTimeout> | null = null;
+	private placementObserver: MutationObserver | null = null;
 	private autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
 	// Drag state
@@ -106,6 +119,7 @@ export class AccessibilityWidget {
 		// so the select value, lock chip, and translated labels stay accurate.
 		this.unsubscribeLang = onLangChange(() => this.updateUI());
 		this.updateUI();
+		this.watchPlacement();
 	}
 
 	// --------------------------------------------------------------------------
@@ -463,10 +477,55 @@ export class AccessibilityWidget {
 	}
 
 	// --------------------------------------------------------------------------
+	// Stay off pressable content (the tab is 44 px: it must not cover a radio or a tab)
+	// --------------------------------------------------------------------------
+	private isBlockedAt(top: number): boolean {
+		const rect = this.triggerBtn.getBoundingClientRect();
+		const x = rect.left + rect.width / 2;
+
+		return PLACEMENT_PROBES_PX.some((offset) =>
+			document
+				.elementsFromPoint(x, top + offset)
+				.some((el) => !this.root.contains(el) && el.closest(PRESSABLE) !== null),
+		);
+	}
+
+	private placeClear(): void {
+		// A tab the user dragged, or an open panel, is not moved under their hand.
+		if (this.dragMoved || this.isOpen || typeof document.elementsFromPoint !== 'function') return;
+		const max = window.innerHeight - PLACEMENT_BOTTOM_GAP_PX;
+		const top = firstClearTop(
+			this.positionTop,
+			PLACEMENT_STEP_PX,
+			PLACEMENT_TOP_MIN_PX,
+			max,
+			(candidate) => this.isBlockedAt(candidate),
+		);
+		if (top === null || top === this.positionTop) return;
+		this.positionTop = top;
+		this.root.style.top = `${top}px`;
+	}
+
+	private schedulePlacement(): void {
+		if (this.placementTimer !== null) clearTimeout(this.placementTimer);
+		this.placementTimer = setTimeout(() => this.placeClear(), PLACEMENT_DEBOUNCE_MS);
+	}
+
+	private watchPlacement(): void {
+		this.schedulePlacement();
+		window.addEventListener('resize', () => this.schedulePlacement());
+		if (typeof MutationObserver === 'undefined') return;
+		this.placementObserver = new MutationObserver(() => this.schedulePlacement());
+		this.placementObserver.observe(document.body, { childList: true, subtree: true });
+	}
+
+	// --------------------------------------------------------------------------
 	// Public teardown (optional — useful for tests or SPA unmount)
 	// --------------------------------------------------------------------------
 	destroy(): void {
 		this.clearAutoClose();
+		this.placementObserver?.disconnect();
+		if (this.placementTimer !== null) clearTimeout(this.placementTimer);
 		this.unsubscribeLang?.();
 		this.unsubscribeLang = null;
 		this.root.remove();

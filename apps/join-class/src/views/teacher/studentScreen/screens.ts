@@ -4,6 +4,7 @@ import type { Statement } from '@freedi/shared-types';
 import { StudentFrame } from '@/components/StudentFrame';
 import { SideSlider } from '@/components/SideSlider';
 import { t } from '@/lib/i18n';
+import { isolate } from '@/lib/bidi';
 import { getChallengeQuestion, getGuidingQuestions, stepLabel } from '@/lib/lesson';
 import { getSubQuestions } from '@/lib/store';
 import { gateOf, sideClaimsOf, sideNamesOf, sideQuestionOf } from '@/lib/classroom/classSettings';
@@ -180,7 +181,7 @@ export function proposalsSample(): m.Children {
 			headerLine: t('turn.table_n', { n: SAMPLE_TABLE_N }),
 			instruction: t('proposals.write.mine_line'),
 			ask: challenge?.statement
-				? t('proposals.heading', { question: challenge.statement })
+				? t('proposals.heading', { question: isolate(challenge.statement) })
 				: undefined,
 			action: disabledButton(t('proposal.send')),
 		},

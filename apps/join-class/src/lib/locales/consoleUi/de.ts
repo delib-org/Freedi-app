@@ -46,6 +46,9 @@ const consoleUi: Record<string, string> = {
 	'console.drag_hint_close': 'Verstanden',
 	'console.student_screen_back': 'Zurück zu den Tischen',
 	'console.decision': 'Die Entscheidung',
+	'console.status.seated_one': 'Alle sitzen · 1 Tisch',
+	'console.status.tables_done_one': '{{n}} von 1 Tisch ist fertig',
+	'console.status.tables_rating_one': '{{n}} von 1 Tisch bewertet oder ist fertig',
 };
 
 export default consoleUi;

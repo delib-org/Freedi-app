@@ -604,6 +604,7 @@ const fa: Record<string, string> = {
 	'console.writing_now': '{{name}} می‌نویسد · {{sent}} از {{total}} فرستادند',
 	'console.writing_nobody': 'کسی نمی‌نویسد · {{sent}} از {{total}} فرستادند',
 	'proposals.write.closed': 'پیشنهادها اکنون بسته است و نوشتن ممکن نیست',
+	'console.ratings_one': '1 امتیاز',
 };
 
 export default fa;

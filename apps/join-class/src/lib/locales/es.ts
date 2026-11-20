@@ -618,6 +618,7 @@ const es: Record<string, string> = {
 	'console.writing_now': '{{name}} escribe · {{sent}} de {{total}} enviaron',
 	'console.writing_nobody': 'Nadie escribe · {{sent}} de {{total}} enviaron',
 	'proposals.write.closed': 'Las propuestas están cerradas ahora, nadie puede escribir',
+	'console.ratings_one': '1 valoración',
 };
 
 export default es;

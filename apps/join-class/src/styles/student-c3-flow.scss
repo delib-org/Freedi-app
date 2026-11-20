@@ -45,44 +45,53 @@ body.c3-lock {
 
   &__list {
     display: flex;
-    gap: var(--space-xs);
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0 var(--space-xs);
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
-  // Read only: a marker of where the table is, never a control (no pointer, no hover).
+  // Read only: a marker of where the table is, never a control. Plain words with a "›" between
+  // them (no border, no fill, no pointer), the current part bold and underlined.
   &__pill {
-    display: flex;
-    flex: 1;
-    align-items: center;
-    justify-content: center;
-    min-height: 36px;
-    padding: 0 var(--space-xs);
-    border: 1.5px solid var(--border-medium);
-    border-radius: var(--radius-full);
-    color: inherit;
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-bold, 700);
+    color: var(--ink-muted);
+    font-size: var(--font-size-base);
     text-align: center;
     cursor: default;
     user-select: none;
 
+    &:not(:last-child)::after {
+      content: '›' / '';
+      margin-inline-start: var(--space-xs);
+      color: var(--ink-muted);
+    }
+
     &--on {
-      border-color: var(--ink);
-      background: var(--ink);
-      color: var(--paper);
+      color: var(--ink);
+      font-weight: var(--font-weight-bold, 700);
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 4px;
 
       .frame--down & {
-        border-color: var(--paper);
-        background: var(--paper);
-        color: var(--ink);
+        color: var(--paper);
       }
 
       @media (forced-colors: active) {
-        background: Highlight;
-        color: HighlightText;
+        color: Highlight;
       }
+    }
+
+    .frame--down & {
+      color: var(--paper);
+      opacity: 0.8;
+    }
+
+    .frame--down &--on {
+      opacity: 1;
     }
   }
 }

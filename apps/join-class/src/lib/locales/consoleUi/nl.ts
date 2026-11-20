@@ -44,6 +44,9 @@ const consoleUi: Record<string, string> = {
 	'console.drag_hint_close': 'Begrepen',
 	'console.student_screen_back': 'Terug naar de tafels',
 	'console.decision': 'De beslissing',
+	'console.status.seated_one': 'Iedereen zit · 1 tafel',
+	'console.status.tables_done_one': '{{n}} van 1 tafel is klaar',
+	'console.status.tables_rating_one': '{{n}} van 1 tafel beoordeelt of is klaar',
 };
 
 export default consoleUi;

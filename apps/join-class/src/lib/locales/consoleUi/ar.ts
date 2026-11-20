@@ -43,6 +43,9 @@ const consoleUi: Record<string, string> = {
 	'console.drag_hint_close': 'فهمت',
 	'console.student_screen_back': 'العودة إلى الطاولات',
 	'console.decision': 'القرار',
+	'console.status.seated_one': 'الجميع جالسون · طاولة واحدة',
+	'console.status.tables_done_one': '{{n}} من طاولة واحدة انتهت',
+	'console.status.tables_rating_one': '{{n}} من طاولة واحدة تقيّم أو انتهت',
 };
 
 export default consoleUi;

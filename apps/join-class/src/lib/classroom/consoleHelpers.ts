@@ -84,14 +84,16 @@ export function forwardControl(currentIndex: number, stepCount: number): Forward
 		: { kind: 'end' };
 }
 
-/** "hh:mm:ss" lesson clock text. */
+/** Lesson clock text: "12:28" under an hour, "1:02:28" from an hour on. */
 export function formatClock(elapsedMs: number): string {
 	const total = Math.max(0, Math.floor(elapsedMs / MS_PER_SECOND));
 	const hours = Math.floor(total / SECONDS_PER_HOUR);
 	const minutes = Math.floor((total % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
 	const seconds = total % SECONDS_PER_MINUTE;
 
-	return [hours, minutes, seconds].map((n) => String(n).padStart(2, '0')).join(':');
+	const mmss = [minutes, seconds].map((n) => String(n).padStart(2, '0')).join(':');
+
+	return hours > 0 ? `${hours}:${mmss}` : mmss;
 }
 
 /** "0:42" for the speaker timer. */
