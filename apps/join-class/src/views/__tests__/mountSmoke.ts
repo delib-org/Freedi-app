@@ -18,8 +18,30 @@ export interface Mounted {
 	unmount: () => void;
 }
 
+const REUSED_ATTRS = 'reuse attrs';
+
+/**
+ * Mithril only warns when one attrs object is passed to the same element on every redraw
+ * ("Don't reuse attrs object"), and a real console logged it 8782 times in one session.
+ * While a view is mounted that warning is an error, so a module-level attrs constant fails here.
+ */
+function failOnReusedAttrs(): () => void {
+	const original = console.warn;
+	console.warn = (...args: unknown[]): void => {
+		if (typeof args[0] === 'string' && args[0].includes(REUSED_ATTRS)) {
+			throw new Error(`Mithril: ${args[0]}`);
+		}
+		original(...args);
+	};
+
+	return () => {
+		console.warn = original;
+	};
+}
+
 /** Mounts `view`, draws it once, and returns controls for redraws. Throws on any render error. */
 export function mountSmoke(view: () => m.Children): Mounted {
+	const restoreWarn = failOnReusedAttrs();
 	const root = document.createElement('div');
 	document.body.appendChild(root);
 	let current = view;
@@ -36,6 +58,7 @@ export function mountSmoke(view: () => m.Children): Mounted {
 		unmount: () => {
 			m.mount(root, null);
 			root.remove();
+			restoreWarn();
 		},
 	};
 }
