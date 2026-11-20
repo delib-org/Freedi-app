@@ -58,7 +58,7 @@ function boardHint(state: { held: boolean; ended: boolean }): m.Vnode | undefine
 		attrs: {
 			mainId: 'x',
 			tables: [table],
-			students: [{ uid: 'u1', name: 'Dana', camp: null, tableId: 'x--1' }],
+			students: [{ uid: 'u1', name: 'Dana', chosen: false, tableId: 'x--1' }],
 			plenum: false,
 			tableTalk: false,
 			showSides: false,

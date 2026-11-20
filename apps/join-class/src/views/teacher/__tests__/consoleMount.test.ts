@@ -95,8 +95,8 @@ function band(status: LessonStatus, stepIndex: number): ActionBandAttrs {
 }
 
 const students = new Map<string, RosterStudent>([
-	['a', { uid: 'a', name: 'Noa', camp: null, tableId: 'm--1' }],
-	['b', { uid: 'b', name: 'Avi', camp: null, tableId: 'm--1' }],
+	['a', { uid: 'a', name: 'Noa', chosen: false, tableId: 'm--1' }],
+	['b', { uid: 'b', name: 'Avi', chosen: false, tableId: 'm--1' }],
 ]);
 
 function table(overrides: Partial<ClassTable> = {}): ClassTable {
@@ -500,7 +500,7 @@ describe('the tables, mounted', () => {
 					showSides: false,
 					...extra,
 				});
-		const unplaced = [{ uid: 'c', name: 'Dan', camp: null, tableId: null }];
+		const unplaced = [{ uid: 'c', name: 'Dan', chosen: false, tableId: null }];
 
 		smoke(board([]), [
 			board([table(), table({ tableId: 'm--2', n: 2 })]),
