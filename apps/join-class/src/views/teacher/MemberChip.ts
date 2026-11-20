@@ -143,7 +143,10 @@ export const MemberChip: m.Component<MemberChipAttrs> = {
 					},
 				},
 				[
-					m('span.member-chip__mark', { 'aria-hidden': 'true' }, attrs.chosen ? '✓' : '○'),
+					// Only where a side was asked (Side, Tables): elsewhere a "○" would read as "no side yet".
+					attrs.chosen === undefined
+						? null
+						: m('span.member-chip__mark', { 'aria-hidden': 'true' }, attrs.chosen ? '✓' : '○'),
 					attrs.askMark
 						? m(
 								'span.member-chip__turn.member-chip__turn--ask',

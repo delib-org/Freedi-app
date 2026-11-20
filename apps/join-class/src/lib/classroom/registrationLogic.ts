@@ -150,13 +150,16 @@ export function withoutTableCount(
 }
 
 /**
- * The Side step marks the roster from the step on. A lesson whose registration
- * asked a position has no Side step at all, so nothing is marked there.
+ * "Chose a side" marks belong to the Side step and the Tables step that follows it, where the
+ * question was just asked: not before (no side question yet), not from Investigation on (the
+ * answer no longer matters to the table). A lesson whose registration asked a position has no
+ * Side step at all, so nothing is marked there.
  */
 export function sidesShownAt(steps: readonly LessonStepKey[], stepIndex: number): boolean {
-	const sideIndex = steps.indexOf('side');
+	if (!steps.includes('side')) return false;
+	const key = steps[stepIndex];
 
-	return sideIndex >= 0 && stepIndex >= sideIndex;
+	return key === 'side' || key === 'tables';
 }
 
 /** The registration asked a position: the lesson skips "בחירת צד" and the Summary reads the poles. */

@@ -121,7 +121,10 @@ function currentLine(attrs: TableSheetPanelAttrs, table: ClassTable): m.Children
 			attrs.tableTalk ? ` · ${turnLine(table)}` : null,
 			tableModeOf(attrs) === 'proposals' ? ` · ${proposalsTurnLine(table)}` : null,
 		]),
-		m('p.table-sheet__question', question ? question.statement : t('console.no_question_yet')),
+		// At Proposals the question is the lesson's, not a pick: "no question yet" would be wrong.
+		tableModeOf(attrs) === 'proposals'
+			? null
+			: m('p.table-sheet__question', question ? question.statement : t('console.no_question_yet')),
 		timer.kind === 'running'
 			? m(
 					'p.table-sheet__timer',

@@ -360,6 +360,66 @@ describe('the no-device entry', () => {
 	});
 });
 
+describe('the table card at Proposals, mounted', () => {
+	const card = (overrides: Partial<ClassTable>) => () =>
+		m(TableCard, {
+			table: table(overrides),
+			students,
+			mainId: 'm',
+			tableNumbers: [1, 2],
+			plenum: false,
+			tableTalk: false,
+		});
+
+	function draw(overrides: Partial<ClassTable>): HTMLElement {
+		const mounted = mountSmoke(card(overrides));
+		const copy = document.createElement('div');
+		copy.innerHTML = mounted.root.innerHTML;
+		mounted.unmount();
+
+		return copy;
+	}
+
+	it('shows the read-only marker with the current part, and no "Now:" line, at each part', () => {
+		for (const step of ['talk', 'write', 'rate'] as const) {
+			const root = mountSmoke(card({ step })).root;
+			const marker = root.querySelector('[data-testid="table-step-marker"]');
+			expect(marker?.querySelectorAll('li')).toHaveLength(3);
+			expect(marker?.querySelector('[aria-current="step"]')).not.toBeNull();
+			expect(marker?.querySelectorAll('button')).toHaveLength(0);
+			expect(root.querySelector('.table-card__now')).toBeNull();
+		}
+	});
+
+	it('has no stray dash line at rating', () => {
+		expect(draw({ step: 'rate' }).querySelector('.table-card__timer')).toBeNull();
+	});
+
+	it('says "Nobody is speaking" while the floor is free, but not once everyone spoke', () => {
+		expect(draw({ step: 'talk' }).querySelector('.speaker-row--nobody')).not.toBeNull();
+		const spoken = draw({ step: 'talk', spokenUids: ['a', 'b'], proposalsTurn: 1 });
+		expect(spoken.querySelector('.speaker-row--nobody')).toBeNull();
+	});
+
+	it('draws no side marks when the board says not to, and does when it says to', () => {
+		expect(draw({ step: 'talk' }).querySelector('.member-chip__mark')).toBeNull();
+		const withSides = mountSmoke(() =>
+			m(TableCard, {
+				table: table(),
+				students,
+				mainId: 'm',
+				tableNumbers: [1],
+				plenum: false,
+				tableTalk: false,
+				namesOnly: true,
+				showSides: true,
+			}),
+		);
+		expect(withSides.root.querySelectorAll('.member-chip__mark').length).toBeGreaterThan(0);
+		withSides.unmount();
+	});
+});
+
 describe('the tables, mounted', () => {
 	const modes = [
 		{ plenum: false, tableTalk: true },
