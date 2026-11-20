@@ -17,6 +17,9 @@ const allProposals: Record<string, string> = {
 	'console.table_rated_all': '{{n}}/{{m}} به همه امتیاز دادند',
 	'projector.allProposals': 'همهٔ پیشنهادها · {{n}} پیشنهاد',
 	'projector.allProposals_min': 'هر پیشنهاد دست‌کم {{k}} امتیاز دارد',
+	'console.all_rated_line_one':
+		'{{n}} از {{m}} دانش‌آموز به همه امتیاز دادند · هر پیشنهاد دست‌کم 1 امتیاز دارد',
+	'projector.allProposals_min_one': 'هر پیشنهاد دست‌کم 1 امتیاز دارد',
 };
 
 export default allProposals;

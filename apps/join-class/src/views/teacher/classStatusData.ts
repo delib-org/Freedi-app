@@ -10,7 +10,7 @@ import {
 	rosterStudents,
 	unplacedStudents,
 } from '@/lib/classroom/consoleHelpers';
-import type { ClassStatusInput } from '@/lib/classroom/classStatus';
+import { isOccupiedTable, tableIsRating, type ClassStatusInput } from '@/lib/classroom/classStatus';
 import { introVideoLabel, introVideosOf, projectorVideoOf } from '@/lib/classroom/introVideos';
 import { noneLeftNow } from '@/lib/classroom/ownQuestions';
 import { sideCount } from '@/lib/classroom/sideCount';
@@ -25,6 +25,7 @@ import {
 import { liveResultsOn, voteResults } from '@/lib/classroom/voteResults';
 import { noDeviceTotal } from '@/lib/classroom/actFor';
 import { getMainStatement } from '@/lib/store';
+import { consoleState } from './consoleState';
 import { proposalsDoneNow } from './TableCard';
 
 /**
@@ -51,14 +52,20 @@ function projectorWords(main: Statement | null): string {
 /** A table "at rest" for the stuck rule: nobody has changed anything for too long. */
 function isStuck(table: ClassTable, stepKey: LessonStepKey, now: number): boolean {
 	if (stepKey === 'tableTalk') {
-		const line = statusLine(table, 'tableTalk', now, noneLeftNow(table));
+		const line = statusLine(
+			table,
+			'tableTalk',
+			now,
+			noneLeftNow(table),
+			consoleState.stepEnteredAt,
+		);
 
 		return line?.elapsedMs !== undefined && line.elapsedMs >= STUCK_AFTER_MS;
 	}
 	if (stepKey !== 'proposals' || table.step !== 'talk') return false;
 	if (proposalsDoneNow(table, 'proposals') || minuteRunning(table, now)) return false;
 
-	return elapsedSinceChange(table, now) >= STUCK_AFTER_MS;
+	return elapsedSinceChange(table, now, consoleState.stepEnteredAt) >= STUCK_AFTER_MS;
 }
 
 /** Votes cast on the running ballot, and the students in the room (with and without a device). */
@@ -87,9 +94,10 @@ export function liveStatusInput(args: LiveStatusArgs): ClassStatusInput {
 			: 'proposals';
 	const { chose, total } = sideCount(students);
 	const { voted, present } = voteCountsOn(args.challenge);
+	// Empty tables do not count toward "all tables are ready".
+	const occupied = tables.filter(isOccupiedTable);
 	const doneAt = (table: ClassTable): boolean =>
 		tableIsDone(table, mode, now, noneLeftNow(table), proposalsDoneNow(table, mode));
-	const ratingOrDone = (table: ClassTable): boolean => table.step === 'rate' || doneAt(table);
 
 	return {
 		status: args.status,
@@ -99,10 +107,10 @@ export function liveStatusInput(args: LiveStatusArgs): ClassStatusInput {
 		projectorWhat: projectorWords(main),
 		chose,
 		sideTotal: total,
-		tableCount: tables.length,
+		tableCount: occupied.length > 0 ? occupied.length : tables.length,
 		unseated: tables.length > 0 ? unplacedStudents(students, tables).length : 0,
-		tablesDone: tables.filter(doneAt).length,
-		tablesRating: tables.filter(ratingOrDone).length,
+		tablesDone: occupied.filter(doneAt).length,
+		tablesRating: occupied.filter(tableIsRating).length,
 		allRated: args.allRated,
 		ballotFrozen: isBallotFrozen(args.challenge),
 		ballotPaused: isBallotPaused(args.challenge),

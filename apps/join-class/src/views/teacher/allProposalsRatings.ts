@@ -73,7 +73,13 @@ export function allRatedBandLine(challenge: Statement | null): string {
 	const uids = rosterStudents(classState.roster).map((s) => s.uid);
 	const line = ratedAllLine(uids, options, challenge?.statementId ?? null, current);
 
-	return t('console.all_rated_line', { n: line.n, m: line.m, k: minRatingsPerProposal(options) });
+	const k = minRatingsPerProposal(options);
+
+	return t(k === 1 ? 'console.all_rated_line_one' : 'console.all_rated_line', {
+		n: line.n,
+		m: line.m,
+		k,
+	});
 }
 
 /** The same numbers as plain data, for the status line: complete when every student rated everything. */
@@ -81,6 +87,7 @@ export function allRatedState(challenge: Statement | null): {
 	n: number;
 	m: number;
 	k: number;
+	proposals: number;
 	complete: boolean;
 } {
 	const options = proposalsOf(challenge);
@@ -91,6 +98,7 @@ export function allRatedState(challenge: Statement | null): {
 		n: line.n,
 		m: line.m,
 		k: minRatingsPerProposal(options),
+		proposals: options.length,
 		complete: line.m > 0 && line.n >= line.m,
 	};
 }

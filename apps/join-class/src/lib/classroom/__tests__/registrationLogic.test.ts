@@ -162,8 +162,12 @@ describe('the board of a connected lesson', () => {
 	it('marks sides only from a Side step that exists', () => {
 		const withSide = ['waiting', 'opening', 'side', 'tables', 'tableTalk'] as const;
 		const withoutSide = ['waiting', 'opening', 'tables', 'tableTalk'] as const;
+		expect(sidesShownAt(withSide, 0)).toBe(false);
 		expect(sidesShownAt(withSide, 1)).toBe(false);
+		expect(sidesShownAt(withSide, 2)).toBe(true);
 		expect(sidesShownAt(withSide, 3)).toBe(true);
+		// from Investigation on the marks are gone
+		expect(sidesShownAt(withSide, 4)).toBe(false);
 		// the old fixed index 2 would have marked the Tables step of a lesson with no Side step
 		expect(sidesShownAt(withoutSide, 2)).toBe(false);
 		expect(sidesShownAt(withoutSide, 3)).toBe(false);

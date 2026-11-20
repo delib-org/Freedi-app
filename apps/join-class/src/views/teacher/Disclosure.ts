@@ -14,6 +14,8 @@ export interface DisclosureAttrs {
 	label: string;
 	/** A longer name for assistive technology, when the visible words are short ("More"). */
 	ariaLabel?: string;
+	/** A shorter word for the button on a phone; the full label stays its accessible name. */
+	shortLabel?: string;
 	testId?: string;
 	/** The panel's own accessible name. */
 	panelLabel: string;
@@ -96,7 +98,13 @@ export const Disclosure: m.Component<DisclosureAttrs> = {
 						'data-testid': attrs.testId,
 						onclick: () => toggle(attrs.id),
 					},
-					[m('span', attrs.label), m('span.disclosure__caret', { 'aria-hidden': 'true' }, '▾')],
+					[
+						m('span.disclosure__label', attrs.label),
+						attrs.shortLabel
+							? m('span.disclosure__label-short', { 'aria-hidden': 'true' }, attrs.shortLabel)
+							: null,
+						m('span.disclosure__caret', { 'aria-hidden': 'true' }, '▾'),
+					],
 				),
 				m(
 					'div.disclosure__panel',

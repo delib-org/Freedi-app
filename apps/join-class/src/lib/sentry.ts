@@ -236,7 +236,12 @@ export function setSentryUser(uid: string | null): void {
 }
 
 export function captureException(error: unknown, context?: Record<string, unknown>): void {
-	if (!resolveDsn()) return;
+	if (!resolveDsn()) {
+		// No DSN (local dev): the failure must still show somewhere a developer looks.
+		if (import.meta.env.DEV) console.error('[captureException]', context ?? {}, error);
+
+		return;
+	}
 
 	if (!sdk) {
 		buffer(error, context);

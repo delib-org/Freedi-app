@@ -17,6 +17,9 @@ const allProposals: Record<string, string> = {
 	'console.table_rated_all': '{{n}}/{{m}} haben alles bewertet',
 	'projector.allProposals': 'Alle Vorschläge · {{n}} Vorschläge',
 	'projector.allProposals_min': 'Jeder Vorschlag hat mindestens {{k}} Bewertungen',
+	'console.all_rated_line_one':
+		'{{n}} von {{m}} Schülern haben alles bewertet · jeder Vorschlag hat mindestens 1 Bewertung',
+	'projector.allProposals_min_one': 'Jeder Vorschlag hat mindestens 1 Bewertung',
 };
 
 export default allProposals;

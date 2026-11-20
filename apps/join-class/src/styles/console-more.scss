@@ -20,6 +20,10 @@ $tap: 44px;
   min-block-size: $tap;
 }
 
+.disclosure__label-short {
+  display: none;
+}
+
 .disclosure__caret {
   color: var(--ink-muted);
 }

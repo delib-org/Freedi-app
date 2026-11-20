@@ -1,4 +1,6 @@
 // Teacher console partial: switch band, failure banner, board, table card. See console.scss for the shared tokens.
+@use 'chevron' as *;
+
 
 // ---- band 2: switch ---------------------------------------------------------
 .switch-band {
@@ -346,6 +348,31 @@
 
 .table-card__now {
   font-weight: var(--font-weight-bold);
+}
+
+// Proposals: "Talking › Writing › Rating", read-only, the current part bold. Not a button.
+.table-step-marker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ink-soft);
+  font-size: var(--font-size-sm);
+
+  &__part {
+    cursor: default;
+
+    &:not(:last-child)::after {
+      @include step-chevron;
+    }
+
+    &--current {
+      color: var(--ink);
+      font-weight: var(--font-weight-bold);
+    }
+  }
 }
 
 .table-card__timer {

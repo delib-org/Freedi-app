@@ -22,6 +22,8 @@ export const ActForEntry: m.Component<ActForEntryAttrs> = {
 		const students = actForStudents(attrs.tables);
 		const isDone = (id: string): boolean =>
 			isStudentDone(actForMode(), id, attrs.proposals, slotOf(mainId, id).votedId);
+		// Nobody without a device: nothing to open, so nothing to show ("(0/0)" is only noise).
+		if (students.length === 0) return null;
 		const done = students.filter((student) => isDone(student.id)).length;
 
 		return m(

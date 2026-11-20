@@ -80,6 +80,13 @@ class PanelState {
 	onLeave: (() => void) | null = null;
 	/** The page was hidden during a send: give the pen back if that send fails and the page is still hidden. */
 	releaseAfterSend = false;
+	/**
+	 * The proposal was sent, or the pen was passed: the server gives the pen back by itself, so the
+	 * pen holder leaving the screen now must not ask for it back ("You do not hold the pen").
+	 */
+	penReturned = false;
+	/** "I want to pass" was tapped; a failed pass leaves the pen ours, so it is not returned yet. */
+	passAsked = false;
 }
 
 function ownProposalsOf(a: WritePanelAttrs): Statement[] {
@@ -94,6 +101,7 @@ function ownProposalsOf(a: WritePanelAttrs): Statement[] {
 
 /** The pen holder left the screen (the phone locked, another app, the tab closed): the pen goes back to the table. */
 function leave(self: PanelState): void {
+	if (self.penReturned) return;
 	// A send in flight frees the pen itself when it lands; letting go now could make it refused.
 	if (self.sending) {
 		self.releaseAfterSend = true;
@@ -139,6 +147,7 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 		const { uid } = a;
 		const mainId = a.main.statementId;
 		self.release = a.onRelease ?? null;
+		if (self.passAsked && a.table.writerUid !== uid) self.penReturned = true;
 		const requested = pen ? null : a.takeEditRequest?.();
 		if (requested) self.editId = requested;
 		const limit = proposalLimitOf(a.main);
@@ -236,6 +245,7 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 				clearDraft(proposalScope, 'proposal');
 				self.edit = undefined;
 				self.state = 'sent';
+				if (pen) self.penReturned = true;
 			} catch (error) {
 				if (refusalReason(error) === 'already-proposed') {
 					// The limit, not a failure: nothing to retry, and the text stays in the box.
@@ -350,6 +360,8 @@ export const WritePanel: m.ClassComponent<WritePanelAttrs> = {
 										disabled: a.busy || self.sending,
 										onclick: () => {
 											if (isBroadcasting()) void stopBroadcast();
+											// Returned only once the table shows the pen is no longer ours (see view).
+											self.passAsked = true;
 											a.onPass?.();
 										},
 									},

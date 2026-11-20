@@ -36,7 +36,7 @@ const consoleUi: Record<string, string> = {
 	'console.status.no_tables': 'Nog niet over tafels verdeeld',
 	'console.status.seated': 'Iedereen zit · {{t}} tafels',
 	'console.status.tables_done': '{{n}} van {{m}} tafels zijn klaar',
-	'console.status.tables_rating': '{{n}} van {{m}} tafels beoordelen of zijn klaar',
+	'console.status.tables_rating': '{{n}} van {{m}} tafels beoordelen',
 	'console.status.vote_paused': 'Stemmen gepauzeerd · {{voted}} van {{present}} hebben gestemd',
 	'console.status.stuck_one': 'Tafel {{t}} zit vast',
 	'console.status.stuck_many': '{{n}} tafels zitten vast',
@@ -44,6 +44,9 @@ const consoleUi: Record<string, string> = {
 	'console.drag_hint_close': 'Begrepen',
 	'console.student_screen_back': 'Terug naar de tafels',
 	'console.decision': 'De beslissing',
+	'console.status.seated_one': 'Iedereen zit · 1 tafel',
+	'console.status.tables_done_one': '{{n}} van 1 tafel is klaar',
+	'console.status.tables_rating_one': '{{n}} van 1 tafel beoordeelt',
 };
 
 export default consoleUi;

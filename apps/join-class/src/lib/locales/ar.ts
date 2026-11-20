@@ -605,6 +605,7 @@ const ar: Record<string, string> = {
 	'console.writing_now': '{{name}} يكتب · أرسل {{sent}} من {{total}}',
 	'console.writing_nobody': 'لا أحد يكتب · أرسل {{sent}} من {{total}}',
 	'proposals.write.closed': 'الاقتراحات مغلقة الآن، لا يمكن الكتابة',
+	'console.ratings_one': 'تقييم واحد',
 };
 
 export default ar;

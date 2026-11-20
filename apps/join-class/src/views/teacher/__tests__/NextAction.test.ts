@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import m from 'mithril';
 import type { NextActionSpec } from '@/lib/classroom/nextAction';
 
-vi.mock('../consoleState', () => ({ isBusy: (key: string): boolean => key === 'busy-key' }));
+const busyKeys = vi.hoisted(() => new Set<string>(['busy-key']));
+vi.mock('../consoleState', () => ({ isBusy: (key: string): boolean => busyKeys.has(key) }));
 vi.mock('../consoleActions', () => ({
 	assignTables: vi.fn(),
 	changeLessonStatus: vi.fn(),
@@ -59,7 +60,7 @@ describe('NextAction', () => {
 		const vnode = draw(GO_NEXT);
 		expect(children(vnode)).toHaveLength(1);
 		const attrs = button(vnode).attrs as Record<string, unknown>;
-		expect(attrs.disabled).toBe(false);
+		expect(attrs.disabled).toBeUndefined();
 		expect(attrs['aria-disabled']).toBeUndefined();
 		expect(attrs['data-testid']).toBe('console-forward');
 	});
@@ -94,7 +95,7 @@ describe('NextAction', () => {
 		});
 		const attrs = button(vnode).attrs as Record<string, unknown>;
 		expect(attrs['aria-disabled']).toBe('true');
-		expect(attrs.disabled).toBe(false);
+		expect(attrs.disabled).toBeUndefined();
 		expect(attrs['aria-describedby']).toBe('next-action-reason');
 		const reason = children(vnode)[1];
 		expect((reason.attrs as Record<string, unknown>).id).toBe('next-action-reason');
@@ -121,12 +122,27 @@ describe('NextAction', () => {
 		expect(freezeBallot).not.toHaveBeenCalled();
 	});
 
-	it('shows the busy words and disables while its write runs', () => {
+	it('shows the busy words and ignores presses while its write runs, without losing focus', () => {
 		const vnode = draw({ ...GO_NEXT, busyKey: 'busy-key' });
 		const attrs = button(vnode).attrs as Record<string, unknown>;
-		expect(attrs.disabled).toBe(true);
+		// `disabled` would drop the keyboard focus to the body; aria-disabled keeps it.
+		expect(attrs.disabled).toBeUndefined();
+		expect(attrs['aria-disabled']).toBe('true');
+		(attrs.onclick as () => void)();
+		expect(goToStep).not.toHaveBeenCalled();
 		expect(attrs['aria-busy']).toBe('true');
 		expect((button(vnode).children as m.Vnode[])[0].children).toBe('console.busy_opening');
+	});
+
+	it('a pause or resume in flight holds the primary: a press does nothing', () => {
+		for (const key of ['status:pause', 'status:resume']) {
+			busyKeys.add(key);
+			const attrs = button(draw(GO_NEXT)).attrs as Record<string, unknown>;
+			expect(attrs['aria-disabled']).toBe('true');
+			(attrs.onclick as () => void)();
+			expect(goToStep).not.toHaveBeenCalled();
+			busyKeys.delete(key);
+		}
 	});
 
 	it('a connected lesson that is not published yet blocks "bring the tables" with the registration reason', () => {

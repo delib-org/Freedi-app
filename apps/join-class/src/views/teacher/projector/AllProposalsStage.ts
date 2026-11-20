@@ -40,7 +40,9 @@ export function allProposalsStage(): m.Vnode {
 		options.length > 0
 			? m(
 					'p.projector-all-min',
-					t('projector.allProposals_min', { k: minRatingsPerProposal(options) }),
+					minRatingsPerProposal(options) === 1
+						? t('projector.allProposals_min_one')
+						: t('projector.allProposals_min', { k: minRatingsPerProposal(options) }),
 				)
 			: m('p.projector-empty', t('proposal.none_yet')),
 		m(

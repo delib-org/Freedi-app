@@ -1,4 +1,4 @@
-import type { LessonStatus, LessonStepKey } from '@freedi/shared-types';
+import type { ClassTable, LessonStatus, LessonStepKey } from '@freedi/shared-types';
 
 /**
  * "What the class is doing", as pure data (design 4): the ONE line the teacher reads at each
@@ -6,6 +6,25 @@ import type { LessonStatus, LessonStepKey } from '@freedi/shared-types';
  * so the rules are testable and the view only draws. Stuck tables ride along as an attention
  * item (never colour alone: the view adds the clock glyph and words).
  */
+
+/**
+ * Proposals: a table counts toward "ready to move on" only when it is really at the rating
+ * part. Everyone having spoken, or the pen being taken, is the table still working: it has
+ * nothing to rate yet, so moving the class on would cut the writing short.
+ */
+export function tableIsRating(table: Pick<ClassTable, 'step'>): boolean {
+	return table.step === 'rate';
+}
+
+/**
+ * A table nobody sits at (its members all left, or it was never filled) can never reach rating
+ * on its own, so it must not hold "ready to move on" back forever: it is not counted.
+ */
+export function isOccupiedTable(
+	table: Pick<ClassTable, 'memberUids' | 'noDeviceMembers'>,
+): boolean {
+	return table.memberUids.length > 0 || table.noDeviceMembers.length > 0;
+}
 
 export interface ClassStatusInput {
 	status: LessonStatus;
@@ -22,10 +41,10 @@ export interface ClassStatusInput {
 	/** Students on the roster seated at no table. */
 	unseated: number;
 	tablesDone: number;
-	/** Tables at rating or finished (Proposals). */
+	/** Tables really at the rating part of Proposals (see `tableIsRating`). */
 	tablesRating: number;
 	/** All proposals: the rated-everything line; `complete` when every student and every proposal is covered. */
-	allRated: { n: number; m: number; k: number; complete: boolean } | null;
+	allRated: { n: number; m: number; k: number; proposals: number; complete: boolean } | null;
 	ballotFrozen: boolean;
 	ballotPaused: boolean;
 	ballotClosed: boolean;
@@ -111,7 +130,11 @@ function tablesLine(input: ClassStatusInput): ClassStatus {
 		});
 	}
 
-	return line('console.status.seated', { t: input.tableCount }, true);
+	return line(
+		input.tableCount === 1 ? 'console.status.seated_one' : 'console.status.seated',
+		{ t: input.tableCount },
+		true,
+	);
 }
 
 function voteLine(input: ClassStatusInput): ClassStatus {
@@ -145,14 +168,16 @@ export function classStatusFor(input: ClassStatusInput): ClassStatus {
 			return tablesLine(input);
 		case 'tableTalk':
 			return line(
-				'console.status.tables_done',
+				input.tableCount === 1 ? 'console.status.tables_done_one' : 'console.status.tables_done',
 				{ n: input.tablesDone, m: input.tableCount },
 				input.tableCount > 0 && input.tablesDone >= input.tableCount,
 				{ stuck },
 			);
 		case 'proposals':
 			return line(
-				'console.status.tables_rating',
+				input.tableCount === 1
+					? 'console.status.tables_rating_one'
+					: 'console.status.tables_rating',
 				{ n: input.tablesRating, m: input.tableCount },
 				input.tableCount > 0 && input.tablesRating >= input.tableCount,
 				{ stuck },
@@ -160,8 +185,14 @@ export function classStatusFor(input: ClassStatusInput): ClassStatus {
 		case 'allProposals': {
 			const rated = input.allRated;
 			if (!rated) return line('console.status.no_tables', {}, false);
+			// Nothing to rate yet: zero counts ("at least 0 ratings") would only be noise.
+			if (rated.proposals === 0) return line('proposal.none_yet', {}, false);
 
-			return line('console.all_rated_line', { n: rated.n, m: rated.m, k: rated.k }, rated.complete);
+			return line(
+				rated.k === 1 ? 'console.all_rated_line_one' : 'console.all_rated_line',
+				{ n: rated.n, m: rated.m, k: rated.k },
+				rated.complete,
+			);
 		}
 		case 'vote':
 			return voteLine(input);

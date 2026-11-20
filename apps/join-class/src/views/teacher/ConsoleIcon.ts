@@ -76,6 +76,7 @@ export function icon(name: ConsoleIconName): m.Vnode {
 			'aria-hidden': 'true',
 			focusable: 'false',
 		},
-		SHAPES[name].map((shape) => m(shape.tag, shape.attrs)),
+		// A fresh attrs object per draw: Mithril warns (once per element per redraw) when one is reused.
+		SHAPES[name].map((shape) => m(shape.tag, { ...shape.attrs })),
 	);
 }

@@ -1022,8 +1022,9 @@ $facilitator-panel-width: 300px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3.25rem;
-  height: 3.25rem;
+  // A full 44 px target at rest (the old idle state was scaled to ~29 px visible).
+  width: 2.75rem;
+  height: 2.75rem;
   padding: 0;
   background: var(--terra-600);
   color: var(--text-inverse);
@@ -1041,24 +1042,18 @@ $facilitator-panel-width: 300px;
   touch-action: none;  // Required so pointermove fires before browser panning
   user-select: none;
   -webkit-user-select: none;
-  // Idle: scaled down + translucent so the trigger doesn't visually block
-  // content underneath. Anchored at the inline-start edge (LTR: left,
-  // RTL: right) so the button collapses INTO the screen edge, not toward
-  // the centre. Visible size at scale(0.55) is ~28px — meets WCAG 2.5.8 min.
-  opacity: 0.55;
-  transform: scale(0.55);
-  transform-origin: 0% 50%;
+  // Idle: translucent, at its full 44 px size so the target is real. The widget script
+  // moves it along the edge to a spot with nothing pressable under it.
+  opacity: 0.8;
   transition:
     transform var(--dur-base) var(--ease-out),
     opacity var(--dur-base) var(--ease-out),
     background var(--dur-quick) var(--ease-out),
     box-shadow var(--dur-quick) var(--ease-out);
 
-  // RTL: trigger sits at right edge; flip the shadow clip so the inner
-  // (right) side is masked, and pin the scale origin to the right edge.
+  // RTL: trigger sits at right edge; flip the shadow clip so the inner (right) side is masked.
   [dir='rtl'] & {
     clip-path: inset(-8px 1px -8px -8px);
-    transform-origin: 100% 50%;
   }
 
   &:hover,
@@ -1067,7 +1062,6 @@ $facilitator-panel-width: 300px;
     outline: none;
     box-shadow: var(--shadow-lg);
     opacity: 1;
-    transform: scale(1);
   }
 
   &:focus-visible {
@@ -1089,11 +1083,10 @@ $facilitator-panel-width: 300px;
   }
 }
 
-// Trigger expanded states — open or mid-drag — restore full size + opacity.
+// Trigger expanded states — open or mid-drag — restore full opacity.
 .a11y-widget--open .a11y-widget__trigger,
 .a11y-widget--dragging .a11y-widget__trigger {
   opacity: 1;
-  transform: scale(1);
 }
 
 // Panel — slides in alongside the trigger when open

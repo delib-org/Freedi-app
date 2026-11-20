@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { LessonStepKey } from '@freedi/shared-types';
-import { announcementFor, classStatusFor } from '../classStatus';
+import { announcementFor, classStatusFor, isOccupiedTable, tableIsRating } from '../classStatus';
 import type { ClassStatusInput, StatusSnapshot } from '../classStatus';
 
 function at(stepKey: LessonStepKey, patch: Partial<ClassStatusInput> = {}): ClassStatusInput {
@@ -17,7 +17,7 @@ function at(stepKey: LessonStepKey, patch: Partial<ClassStatusInput> = {}): Clas
 		unseated: 0,
 		tablesDone: 5,
 		tablesRating: 4,
-		allRated: { n: 10, m: 26, k: 3, complete: false },
+		allRated: { n: 10, m: 26, k: 3, proposals: 8, complete: false },
 		ballotFrozen: false,
 		ballotPaused: false,
 		ballotClosed: false,
@@ -140,7 +140,7 @@ describe('classStatusFor: All proposals', () => {
 		expect(open.params).toEqual({ n: 10, m: 26, k: 3 });
 		expect(open.ready).toBe(false);
 		const done = classStatusFor(
-			at('allProposals', { allRated: { n: 26, m: 26, k: 5, complete: true } }),
+			at('allProposals', { allRated: { n: 26, m: 26, k: 5, proposals: 8, complete: true } }),
 		);
 		expect(done.ready).toBe(true);
 	});
@@ -265,5 +265,62 @@ describe('the status input carries counts only', () => {
 			'utf8',
 		);
 		expect(source).not.toMatch(/\.camp\b/);
+	});
+});
+
+describe('Proposals: a table is ready only when it is really rating', () => {
+	it('the talk is done (everyone spoke) is not rating', () => {
+		expect(tableIsRating({ step: 'talk' })).toBe(false);
+	});
+
+	it('writing is not rating', () => {
+		expect(tableIsRating({ step: 'write' })).toBe(false);
+	});
+
+	it('rating is rating, and a table that finished rating is still at the rate step', () => {
+		expect(tableIsRating({ step: 'rate' })).toBe(true);
+	});
+
+	it('two tables that all spoke but none rates: not ready', () => {
+		const status = classStatusFor(at('proposals', { tableCount: 2, tablesRating: 0 }));
+
+		expect(status.ready).toBe(false);
+	});
+
+	it('every table at rate: ready', () => {
+		expect(classStatusFor(at('proposals', { tableCount: 2, tablesRating: 2 })).ready).toBe(true);
+	});
+});
+
+describe('empty tables do not hold the class back', () => {
+	it('a table with nobody at it is not occupied; a table with only a no-device student is', () => {
+		expect(isOccupiedTable({ memberUids: [], noDeviceMembers: [] })).toBe(false);
+		expect(isOccupiedTable({ memberUids: ['a'], noDeviceMembers: [] })).toBe(true);
+		expect(
+			isOccupiedTable({ memberUids: [], noDeviceMembers: [{ id: 'nd-1', name: 'Dan' }] }),
+		).toBe(true);
+	});
+
+	it('with the empty table left out of the total, the rest rating means ready', () => {
+		expect(classStatusFor(at('proposals', { tableCount: 2, tablesRating: 2 })).ready).toBe(true);
+	});
+});
+
+describe('All proposals with nothing to rate', () => {
+	it('says there are no proposals yet, not "at least 0 ratings"', () => {
+		const status = classStatusFor(
+			at('allProposals', { allRated: { n: 0, m: 1, k: 0, proposals: 0, complete: false } }),
+		);
+
+		expect(status.textKey).toBe('proposal.none_yet');
+		expect(status.ready).toBe(false);
+	});
+
+	it('uses the singular form for one rating', () => {
+		const status = classStatusFor(
+			at('allProposals', { allRated: { n: 1, m: 4, k: 1, proposals: 3, complete: false } }),
+		);
+
+		expect(status.textKey).toBe('console.all_rated_line_one');
 	});
 });

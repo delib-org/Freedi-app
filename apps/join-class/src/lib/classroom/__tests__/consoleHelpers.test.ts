@@ -76,8 +76,12 @@ describe('rail state', () => {
 	});
 
 	it('formats the lesson clock and the speaker time', () => {
-		expect(formatClock(12 * 60_000 + 40_000)).toBe('00:12:40');
-		expect(formatClock(-5)).toBe('00:00:00');
+		expect(formatClock(12 * 60_000 + 40_000)).toBe('12:40');
+		expect(formatClock(-5)).toBe('00:00');
+		expect(formatClock(5_000)).toBe('00:05');
+		expect(formatClock(59 * 60_000 + 59_000)).toBe('59:59');
+		expect(formatClock(3_600_000)).toBe('1:00:00');
+		expect(formatClock(3_600_000 + 62 * 60_000 + 28_000)).toBe('2:02:28');
 		expect(formatSpeakerTime(42_000)).toBe('0:42');
 		expect(formatSpeakerTime(60_000)).toBe('1:00');
 	});

@@ -35,7 +35,7 @@ const consoleUi: Record<string, string> = {
 	'console.status.no_tables': 'Not divided into tables yet',
 	'console.status.seated': 'Everyone is seated · {{t}} tables',
 	'console.status.tables_done': '{{n}} of {{m}} tables are done',
-	'console.status.tables_rating': '{{n}} of {{m}} tables are rating or done',
+	'console.status.tables_rating': '{{n}} of {{m}} tables are rating',
 	'console.status.vote_paused': 'The vote is paused · {{voted}} of {{present}} voted',
 	'console.status.stuck_one': 'Table {{t}} is stuck',
 	'console.status.stuck_many': '{{n}} tables are stuck',
@@ -43,6 +43,9 @@ const consoleUi: Record<string, string> = {
 	'console.drag_hint_close': 'Got it',
 	'console.student_screen_back': 'Back to the tables',
 	'console.decision': 'The decision',
+	'console.status.seated_one': 'Everyone is seated · 1 table',
+	'console.status.tables_done_one': '{{n}} of 1 table is done',
+	'console.status.tables_rating_one': '{{n}} of 1 table is rating',
 };
 
 export default consoleUi;

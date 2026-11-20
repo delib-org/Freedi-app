@@ -22,6 +22,7 @@ import {
 	type QuickAction,
 	type TableMode,
 } from '@/lib/classroom/tableTurnConsole';
+import { tableTalkNowKey } from '@/lib/classroom/tableTalkState';
 import { addNoDevice, tableAction } from './consoleActions';
 import { consoleState, isBusy } from './consoleState';
 import { openActFor } from './actFor/actForState';
@@ -31,6 +32,7 @@ import { ProposalsWriteRow } from './ProposalsWriteRow';
 import { proposalsWriterOf } from '@/lib/classroom/proposalsWriter';
 import { proposalsSpeakerOf } from '@/lib/classroom/proposalsSpeaker';
 import { TableBridgeLines } from './TableBridgeLines';
+import { TableStepMarker } from './TableStepMarker';
 import { dropAttrs } from './dragController';
 
 /**
@@ -150,7 +152,13 @@ export function quickLabel(quick: QuickAction): string {
 
 function waitRows(attrs: TableCardAttrs): m.Children {
 	const { table, students } = attrs;
-	const line = statusLine(table, tableModeOf(attrs), serverNow(), noneLeftNow(table));
+	const line = statusLine(
+		table,
+		tableModeOf(attrs),
+		serverNow(),
+		noneLeftNow(table),
+		consoleState.stepEnteredAt,
+	);
 	if (!line) return null;
 	const names = (line.nameUids ?? []).map((uid) => nameOf(uid, students));
 	const params: Record<string, string | number> = { ...(line.params ?? {}) };
@@ -205,15 +213,19 @@ function timerRows(attrs: TableCardAttrs): m.Children {
  */
 function speakerOrTimerRows(attrs: TableCardAttrs): m.Children {
 	const proposals = tableModeOf(attrs) === 'proposals';
-	const writer = proposals ? proposalsWriterOf(attrs.table) : null;
+	if (!proposals) return timerRows(attrs);
+	const writer = proposalsWriterOf(attrs.table);
 	if (writer) {
 		return m(ProposalsWriteRow, {
 			writer,
 			name: writer.uid ? nameOf(writer.uid, attrs.students, attrs.table) : '',
 		});
 	}
-	const speaker = proposals ? proposalsSpeakerOf(attrs.table, serverNow()) : null;
-	if (!speaker) return timerRows(attrs);
+	// Rating has no row (the marker says it), and once everyone has spoken "Nobody is speaking"
+	// would only contradict the "Everyone spoke" line.
+	if (attrs.table.step !== 'talk' || proposalsDoneNow(attrs.table, 'proposals')) return null;
+	const speaker = proposalsSpeakerOf(attrs.table, serverNow());
+	if (!speaker) return null;
 	const name = speaker.kind === 'speaking' ? nameOf(speaker.uid, attrs.students, attrs.table) : '';
 
 	return m(ProposalsSpeakerRow, { speaker, name });
@@ -291,6 +303,36 @@ export function noDeviceForm(
 	);
 }
 
+/**
+ * What the table is doing. At Proposals the read-only marker (Talking › Writing › Rating) says
+ * it, plus "Everyone spoke" once the talk is over; elsewhere the "Now: …" / "All done" line.
+ */
+function nowRow(
+	table: ClassTable,
+	mode: TableMode,
+	plenum: boolean,
+	propDone: boolean,
+): m.Children {
+	if (mode === 'proposals') {
+		return [
+			m(TableStepMarker, { current: table.step }),
+			propDone ? m('p.table-card__now', t('console.proposals_spoken')) : null,
+		];
+	}
+	const done = tableIsDone(table, mode, serverNow(), noneLeftNow(table), propDone);
+
+	return m(
+		'p.table-card__now',
+		done
+			? t('console.all_done')
+			: t(
+					mode === 'tableTalk'
+						? tableTalkNowKey(table, serverNow(), noneLeftNow(table))
+						: tableStepKey(table, plenum),
+				),
+	);
+}
+
 export const TableCard: m.Component<TableCardAttrs> = {
 	view({ attrs }) {
 		const { table, students, plenum, mainId } = attrs;
@@ -343,14 +385,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 				attrs.ratedLine // >>> allProposals
 					? m('p.table-card__now', { 'data-testid': 'table-rated' }, attrs.ratedLine)
 					: null,
-				bare
-					? null
-					: m(
-							'p.table-card__now',
-							tableIsDone(table, mode, serverNow(), noneLeftNow(table), propDone)
-								? t(mode === 'proposals' ? 'console.proposals_spoken' : 'console.all_done')
-								: t(tableStepKey(table, plenum)),
-						),
+				bare ? null : nowRow(table, mode, plenum, propDone),
 				attrs.tableTalk && attrs.questionText && table.questionId
 					? m('p.table-card__question', { dir: 'auto' }, attrs.questionText)
 					: null,

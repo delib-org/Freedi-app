@@ -10,6 +10,7 @@ $console-phone: 767px;
 $tap: 44px;
 $primary-height: 48px;
 $primary-height-phone: 56px;
+// Until the dock has been measured (ActionBand sets --console-dock-height), a safe guess.
 $dock-clearance: 128px;
 
 // ---- the step line ---------------------------------------------------------
@@ -279,6 +280,11 @@ $dock-clearance: 128px;
   }
 }
 
+// Working: it still looks like the primary, and a press does nothing until the write is done.
+.next-action__button--busy {
+  cursor: progress;
+}
+
 .next-action__reason {
   margin: 0;
   color: var(--ink-muted);
@@ -333,15 +339,19 @@ $dock-clearance: 128px;
     inset-inline: 0;
     flex-direction: column;
     align-items: stretch;
-    padding-block-end: max(var(--space-sm), env(safe-area-inset-bottom));
+    gap: var(--space-xs);
+    padding-block: var(--space-xs);
+    padding-block-end: max(var(--space-xs), env(safe-area-inset-bottom));
     background: var(--bg-card);
     border-block-start: 1px solid var(--border-medium);
     border-block-end: 0;
     box-shadow: var(--shadow-up);
   }
 
+  // the primary takes two thirds, the step menu one third, the pause is an icon
   .action-band__controls {
     align-items: stretch;
+    gap: var(--space-xs);
   }
 
   .action-band__pause {
@@ -349,18 +359,73 @@ $dock-clearance: 128px;
     flex: none;
     align-items: center;
     justify-content: center;
-    inline-size: $primary-height-phone;
+    inline-size: $tap;
     min-block-size: $primary-height-phone;
     padding: 0;
   }
 
-  .next-action__button {
-    min-block-size: $primary-height-phone;
+  .next-action {
+    flex: 1 1 0;
+    min-inline-size: 0;
   }
 
-  // the last card is never hidden behind the dock
+  // The step menu is narrow on a phone (its short word), so the primary keeps about two thirds.
+  .action-band__controls > .disclosure {
+    flex: none;
+  }
+
+  .action-band__controls .disclosure__label {
+    display: none;
+  }
+
+  .action-band__controls .disclosure__label-short {
+    display: inline;
+  }
+
+  .action-band__controls > .disclosure > .disclosure__toggle {
+    block-size: 100%;
+    min-inline-size: $tap;
+    min-block-size: $primary-height-phone;
+    justify-content: center;
+    padding-inline: var(--space-xs);
+    text-align: center;
+  }
+
+  // the label may wrap, to two lines at most
+  .next-action__button {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    min-block-size: $primary-height-phone;
+    padding-block: var(--space-xs);
+    line-height: 1.25;
+    text-align: center;
+  }
+
+  // the status line is one line and a small mark, not a stack
+  .action-band .class-status {
+    flex-wrap: nowrap;
+    gap: var(--space-xs) var(--space-sm);
+    padding-inline: var(--space-xs);
+  }
+
+  .action-band .class-status__line {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    font-size: var(--font-size-sm);
+  }
+
+  .action-band .class-status__ready {
+    flex: none;
+    padding-block: 0;
+    font-size: var(--font-size-sm);
+  }
+
+  // the last card is never hidden behind the dock: its real, measured height (ActionBand)
   .console {
-    padding-block-end: $dock-clearance;
+    padding-block-end: calc(var(--console-dock-height, #{$dock-clearance}) + var(--space-sm));
   }
 
   // typing a "no device" name: the keyboard needs the room

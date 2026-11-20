@@ -127,6 +127,7 @@ export async function goToStep(mainId: string, index: number): Promise<boolean> 
 			!isConnectedLesson(getMainStatement()) &&
 			splitsTablesOnEnter(from, index, getLessonSteps(), classState.tables.length > 0);
 		await setLessonStep(mainId, index);
+		consoleState.stepEnteredAt = serverNow();
 		if (!clearsTableClocksOnEnter(from, index, getLessonSteps())) return;
 		// The step has moved; a failure here only leaves the old clock on the tables, so it must not undo the move.
 		try {
@@ -292,7 +293,9 @@ export function moveStudent(mainId: string, uid: string, toTable: DropTarget): P
 		await trackTableChange(predictMoveStudent(uid, toTable), () =>
 			classMoveStudent({ mainId, uid, toTable }),
 		);
-		consoleState.announce = t('console.moved', { table: toTable ?? t('console.unplaced_name') });
+		consoleState.announce = t('console.moved', {
+			table: toTable === null ? t('console.unplaced_name') : t('console.table_n', { n: toTable }),
+		});
 	});
 }
 

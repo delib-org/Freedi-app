@@ -617,6 +617,7 @@ const nl: Record<string, string> = {
 	'console.writing_now': '{{name}} schrijft · {{sent}} van {{total}} verzonden',
 	'console.writing_nobody': 'Niemand schrijft · {{sent}} van {{total}} verzonden',
 	'proposals.write.closed': 'De voorstellen zijn nu gesloten, schrijven kan niet',
+	'console.ratings_one': '1 beoordeling',
 };
 
 export default nl;

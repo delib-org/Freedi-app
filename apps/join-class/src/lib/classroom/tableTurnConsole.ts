@@ -101,9 +101,13 @@ export function askedPassedCounts(table: ClassTable): { a: number; p: number } {
 	};
 }
 
-/** Milliseconds since the table last changed: its doc, or the end of the last minute. */
-export function elapsedSinceChange(table: ClassTable, now: number): number {
-	return Math.max(0, now - Math.max(table.updatedAt, table.speakerEndsAt ?? 0));
+/**
+ * Milliseconds since the table last changed: its doc, or the end of the last minute, but never
+ * counted from before the lesson entered this step (`stepEnteredAt`, 0 when unknown): after a
+ * move back and forward the table doc still carries the time of its earlier visit.
+ */
+export function elapsedSinceChange(table: ClassTable, now: number, stepEnteredAt = 0): number {
+	return Math.max(0, now - Math.max(table.updatedAt, table.speakerEndsAt ?? 0, stepEnteredAt));
 }
 
 /** Device members who have not answered or passed this question yet, in seating order. */
@@ -121,6 +125,7 @@ export function statusLine(
 	mode: TableMode,
 	now: number,
 	noneLeft = false,
+	stepEnteredAt = 0,
 ): StatusLine | null {
 	if (mode !== 'tableTalk') return null;
 	if (tableDone(table, now, noneLeft)) {
@@ -129,7 +134,7 @@ export function statusLine(
 		return { key: 'console.asked_passed', params: { a, p } };
 	}
 	if (minuteRunning(table, now)) return null;
-	const elapsedMs = elapsedSinceChange(table, now);
+	const elapsedMs = elapsedSinceChange(table, now, stepEnteredAt);
 	if (choosing(table, now, noneLeft) || table.step === 'write' || table.step === 'rate') {
 		return { key: 'console.waiting_start', elapsedMs };
 	}

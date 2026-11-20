@@ -55,6 +55,8 @@ import type {
 	ClassTableStepResponse,
 } from '@freedi/shared-types';
 import { functions, httpsCallable } from '../firebase';
+import { captureException } from '../sentry';
+import { isRaceRefusal } from './turnMoment';
 
 /**
  * Typed wrappers around the classroom callables (region me-west1 — the shared
@@ -71,7 +73,8 @@ export async function call<Req, Res>(name: string, payload: Req): Promise<Res> {
 
 		return result.data;
 	} catch (error) {
-		console.error(`[Classroom] ${name} failed:`, error);
+		// "Someone was first" is an expected race the screen already shows, not a failure.
+		if (!isRaceRefusal(error)) captureException(error, { operation: `classroom.${name}` });
 		throw error;
 	}
 }

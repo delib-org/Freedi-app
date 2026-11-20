@@ -38,7 +38,7 @@ const consoleUi: Record<string, string> = {
 	'console.status.no_tables': 'Noch nicht in Tische aufgeteilt',
 	'console.status.seated': 'Alle sitzen · {{t}} Tische',
 	'console.status.tables_done': '{{n}} von {{m}} Tischen sind fertig',
-	'console.status.tables_rating': '{{n}} von {{m}} Tischen bewerten oder sind fertig',
+	'console.status.tables_rating': '{{n}} von {{m}} Tischen bewerten',
 	'console.status.vote_paused': 'Abstimmung pausiert · {{voted}} von {{present}} haben abgestimmt',
 	'console.status.stuck_one': 'Tisch {{t}} hängt fest',
 	'console.status.stuck_many': '{{n}} Tische hängen fest',
@@ -46,6 +46,9 @@ const consoleUi: Record<string, string> = {
 	'console.drag_hint_close': 'Verstanden',
 	'console.student_screen_back': 'Zurück zu den Tischen',
 	'console.decision': 'Die Entscheidung',
+	'console.status.seated_one': 'Alle sitzen · 1 Tisch',
+	'console.status.tables_done_one': '{{n}} von 1 Tisch ist fertig',
+	'console.status.tables_rating_one': '{{n}} von 1 Tisch bewertet',
 };
 
 export default consoleUi;

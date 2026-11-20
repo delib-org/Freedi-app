@@ -16,7 +16,7 @@ const consoleUi: Record<string, string> = {
 	'console.vote_skip_body': 'בסיכום תוצג ההצעה שהכי הסכימו עליה.',
 	'console.vote_skip_yes': 'לעבור לסיכום',
 	'console.resplit_title': 'לחלק מחדש את הכיתה?',
-	'console.resplit_body': 'הישיבה הנוכחית תימחק, ואי אפשר להחזיר אותה.',
+	'console.resplit_body': 'הישיבה הנוכחית תימחק. אי אפשר להחזיר אותה.',
 	'console.all_steps': 'כל השלבים',
 	'console.step_now': 'עכשיו',
 	'console.step_back_hint': 'לחזור לשלב הזה',
@@ -35,7 +35,7 @@ const consoleUi: Record<string, string> = {
 	'console.status.no_tables': 'עוד לא חילקנו לשולחנות',
 	'console.status.seated': 'כולם יושבים · {{t}} שולחנות',
 	'console.status.tables_done': '{{n}} מתוך {{m}} שולחנות סיימו',
-	'console.status.tables_rating': '{{n}} מתוך {{m}} שולחנות מדרגים או סיימו',
+	'console.status.tables_rating': '{{n}} מתוך {{m}} שולחנות מדרגים',
 	'console.status.vote_paused': 'ההצבעה בהפסקה · {{voted}} מתוך {{present}} הצביעו',
 	'console.status.stuck_one': 'שולחן {{t}} תקוע',
 	'console.status.stuck_many': '{{n}} שולחנות תקועים',
@@ -43,6 +43,9 @@ const consoleUi: Record<string, string> = {
 	'console.drag_hint_close': 'הבנתי',
 	'console.student_screen_back': 'חזרה לשולחנות',
 	'console.decision': 'ההחלטה',
+	'console.status.seated_one': 'כולם יושבים · שולחן אחד',
+	'console.status.tables_done_one': '{{n}} מתוך שולחן אחד סיים',
+	'console.status.tables_rating_one': '{{n}} מתוך שולחן אחד מדרג',
 };
 
 export default consoleUi;
