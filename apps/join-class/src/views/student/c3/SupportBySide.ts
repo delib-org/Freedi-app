@@ -16,8 +16,10 @@ export interface SupportBySideAttrs {
  * Three bars of mean support for the decision (close to Jonathan / in the
  * middle / close to Noa), each with "n of m rated", a gate tick, and one
  * verdict line: teal when the sides came closer, terracotta when not yet.
- * A camp rated by too few students has no bar (the server sent no mean): the
- * row says "too few to show" in its place, at the same height.
+ * A camp with too few members or raters has no bar and no numbers (the server
+ * sent neither its mean nor its size): the row says "too few to show" in its
+ * place, at the same height. "n of m rated" appears only when the server sent
+ * counts (every camp 3+ strong).
  */
 export const SupportBySide: m.Component<SupportBySideAttrs> = {
 	view({ attrs }) {
@@ -40,11 +42,13 @@ export const SupportBySide: m.Component<SupportBySideAttrs> = {
 									'div.support__track',
 									{
 										role: 'img',
-										'aria-label': t('summary.bar_label', {
-											side: labelOf(bar.camp),
-											n: bar.n,
-											m: bar.m,
-										}),
+										'aria-label': bar.counts
+											? t('summary.bar_label', {
+													side: labelOf(bar.camp),
+													n: bar.counts.n,
+													m: bar.counts.m,
+												})
+											: labelOf(bar.camp),
 									},
 									[
 										m('span.support__fill', {
@@ -54,7 +58,9 @@ export const SupportBySide: m.Component<SupportBySideAttrs> = {
 										m('span.support__gate', { style: `--pct: ${gatePct}%`, 'aria-hidden': 'true' }),
 									],
 								),
-						m('p.support__count', t('summary.n_of_m', { n: bar.n, m: bar.m })),
+						!bar.hidden && bar.counts
+							? m('p.support__count', t('summary.n_of_m', { n: bar.counts.n, m: bar.counts.m }))
+							: null,
 					]),
 				),
 			),

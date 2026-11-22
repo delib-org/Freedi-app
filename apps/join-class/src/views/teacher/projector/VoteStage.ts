@@ -221,10 +221,16 @@ function supportBlock(): m.Vnode {
 						? m('span.projector-support__too-few', t('summary.too_few'))
 						: m(
 								'span.projector-support__track',
-								{ style: barStyle(row.camp.n === 0 ? 0 : supportPercent(row.camp.mean)) },
+								{ style: barStyle(supportPercent(row.camp.mean)) },
 								[m('span.projector-support__fill')],
 							),
-					m('span.projector-support__n', t('projector.rated', { n: row.camp.n, m: row.camp.m })),
+					// no numbers for a hidden camp, nor when the server sent no counts (an empty cell keeps the grid)
+					m(
+						'span.projector-support__n',
+						!row.camp.hidden && row.camp.counts
+							? t('projector.rated', { n: row.camp.counts.n, m: row.camp.counts.m })
+							: '',
+					),
 				]),
 			),
 		),

@@ -140,9 +140,9 @@ describe('classSupportBySide', () => {
 		seedLesson(fake, room);
 		const res = await lessonSupportBySide(fake.asFirestore(), TEACHER, { mainId: MAIN });
 		// Every camp here was rated by fewer than 3: no mean leaves the server.
-		expect(res.support.a).toEqual({ hidden: true, n: 1, m: 2 });
-		expect(res.support.b).toEqual({ hidden: true, n: 1, m: 1 });
-		expect(res.support.center).toEqual({ hidden: true, n: 1, m: 1 });
+		expect(res.support.a).toEqual({ hidden: true });
+		expect(res.support.b).toEqual({ hidden: true });
+		expect(res.support.center).toEqual({ hidden: true });
 		expect(res.support.verdict).toBe('insufficient');
 		expect(JSON.stringify(res)).not.toMatch(/a1|a2|b1|c1|side|mean/);
 	});
@@ -208,17 +208,36 @@ describe('classSupportBySide hides small camps (decision B)', () => {
 		}));
 	}
 
-	it.each([0, 1, 2, 3])('a camp rated by %i student(s)', async (size) => {
+	it.each([0, 1, 2, 3])('a camp of %i student(s), all rating', async (size) => {
 		const fake = new FakeFirestore();
-		seedLesson(fake, [...campOf('a', size, 'a', 1), ...campOf('b', 4, 'b', 0.8)]);
+		seedLesson(fake, [
+			...campOf('a', size, 'a', 1),
+			...campOf('c', 3, 'center', 0),
+			...campOf('b', 4, 'b', 0.8),
+		]);
 		const res = await lessonSupportBySide(fake.asFirestore(), TEACHER, { mainId: MAIN });
 		if (size < 3) {
-			expect(res.support.a).toEqual({ hidden: true, n: size, m: size });
+			// No mean and no size for a; and no count anywhere, so a's size cannot be derived.
+			expect(res.support.a).toEqual({ hidden: true });
 			expect(res.support.verdict).toBe('insufficient');
+			expect(res.support.b).toEqual({ hidden: false, mean: 0.8, counts: null });
 		} else {
-			expect(res.support.a).toEqual({ hidden: false, mean: 1, n: 3, m: 3 });
+			expect(res.support.a).toEqual({ hidden: false, mean: 1, counts: { n: 3, m: 3 } });
+			expect(res.support.b).toEqual({ hidden: false, mean: 0.8, counts: { n: 4, m: 4 } });
 		}
-		expect(res.support.b).toEqual({ hidden: false, mean: 0.8, n: 4, m: 4 });
+	});
+
+	it('a camp of 5 that only 2 rated: no mean; the others keep their counts', async () => {
+		const fake = new FakeFirestore();
+		seedLesson(fake, [
+			...campOf('a', 2, 'a', 1),
+			...campOf('x', 3, 'a', 1).map((s) => ({ ...s, support: undefined })),
+			...campOf('c', 3, 'center', 0),
+			...campOf('b', 4, 'b', 0.8),
+		]);
+		const res = await lessonSupportBySide(fake.asFirestore(), TEACHER, { mainId: MAIN });
+		expect(res.support.a).toEqual({ hidden: true });
+		expect(res.support.center).toEqual({ hidden: false, mean: 0, counts: { n: 3, m: 3 } });
 	});
 
 	it('the hidden mean cannot be recovered by subtraction: no overall total is sent', async () => {
@@ -229,10 +248,13 @@ describe('classSupportBySide hides small camps (decision B)', () => {
 			...campOf('b', 4, 'b', 1),
 		]);
 		const res = await lessonSupportBySide(fake.asFirestore(), TEACHER, { mainId: MAIN });
-		expect(res.support.center).toEqual({ hidden: true, n: 1, m: 1 });
+		expect(res.support.center).toEqual({ hidden: true });
 		expect(Object.keys(res.support).sort()).toEqual(['a', 'b', 'center', 'verdict']);
 		expect(Object.keys(res)).toEqual(['support']);
-		expect(JSON.stringify(res)).not.toContain('-1');
+		expect(Object.keys(res.support.a).sort()).toEqual(['counts', 'hidden', 'mean']);
+		// a camp of one: the 4 + 4 + 1 that chose must not be recoverable, so no count is sent
+		expect(res.support.a).toEqual({ hidden: false, mean: 1, counts: null });
+		expect(JSON.stringify(res)).not.toMatch(/"n"|"m"|-1/);
 	});
 });
 
@@ -270,8 +292,8 @@ describe('a support without a side (decision support saved, no camp)', () => {
 		]);
 		expect(fake.read(`classSides/lone--${MAIN}`)).not.toHaveProperty('camp');
 		const res = await lessonSupportBySide(fake.asFirestore(), TEACHER, { mainId: MAIN });
-		expect(res.support.a).toEqual({ hidden: false, mean: 1, n: 3, m: 3 });
-		expect(res.support.center).toEqual({ hidden: true, n: 0, m: 0 });
-		expect(res.support.b).toEqual({ hidden: true, n: 0, m: 0 });
+		expect(res.support.a).toEqual({ hidden: false, mean: 1, counts: null });
+		expect(res.support.center).toEqual({ hidden: true });
+		expect(res.support.b).toEqual({ hidden: true });
 	});
 });

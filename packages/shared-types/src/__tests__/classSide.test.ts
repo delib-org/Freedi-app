@@ -79,35 +79,67 @@ describe('sidesFrozen', () => {
 	});
 });
 
-describe('shownSupport (small camps hidden)', () => {
-	const camp = (n: number, mean = 0.5) => ({ mean, n, m: n + 1 });
-	const full = (a: number, center: number, b: number, verdict: SupportBySide['verdict'] = 'closer'): SupportBySide => ({
-		a: camp(a, 0.9),
-		center: camp(center, -0.2),
-		b: camp(b, 0.7),
+describe('shownSupport (small sides hidden: no mean, no size)', () => {
+	const camp = (m: number, n: number, mean: number) => ({ mean, n, m });
+	const full = (
+		a: [number, number],
+		center: [number, number],
+		b: [number, number],
+		verdict: SupportBySide['verdict'] = 'closer',
+	): SupportBySide => ({
+		a: camp(a[0], a[1], 0.9),
+		center: camp(center[0], center[1], -0.2),
+		b: camp(b[0], b[1], 0.7),
 		verdict,
 	});
 
-	it('hides the mean of camps rated by 0, 1 or 2 students and keeps it from 3', () => {
-		const out = shownSupport(full(0, 1, 2));
-		for (const c of [out.a, out.center, out.b]) {
-			expect(c.hidden).toBe(true);
-			expect(c).not.toHaveProperty('mean');
+	it('hides every camp with 0, 1 or 2 members, whatever its raters, and sends only { hidden: true }', () => {
+		for (const m of [0, 1, 2]) {
+			for (let n = 0; n <= m; n++) {
+				expect(shownSupport(full([m, n], [5, 5], [5, 5])).a).toEqual({ hidden: true });
+			}
 		}
-		expect(out.a).toEqual({ hidden: true, n: 0, m: 1 });
-		expect(shownSupport(full(3, 3, 3)).a).toEqual({ hidden: false, mean: 0.9, n: 3, m: 4 });
 		expect(CLASS_SIDE_MIN_SHOWN).toBe(3);
 	});
 
-	it('never lets the verdict reveal a hidden pole camp', () => {
-		expect(shownSupport(full(2, 5, 5, 'closer')).verdict).toBe('insufficient');
-		expect(shownSupport(full(5, 5, 1, 'apart')).verdict).toBe('insufficient');
-		expect(shownSupport(full(5, 1, 5, 'closer')).verdict).toBe('closer');
+	it('hides a camp of 3+ members that fewer than 3 rated; shows the mean from 3 raters', () => {
+		for (const n of [0, 1, 2]) expect(shownSupport(full([5, n], [5, 5], [5, 5])).a).toEqual({ hidden: true });
+		expect(shownSupport(full([3, 3], [4, 3], [5, 5])).a).toEqual({
+			hidden: false,
+			mean: 0.9,
+			counts: { n: 3, m: 3 },
+		});
 	});
 
-	it('sends nothing the hidden mean could be subtracted from (no overall mean)', () => {
-		const out = shownSupport(full(5, 1, 5));
-		expect(Object.keys(out).sort()).toEqual(['a', 'b', 'center', 'verdict']);
-		expect(JSON.stringify(out)).not.toContain('-0.2');
+	it('sends counts only when every camp has 3+ members, and then only for shown camps', () => {
+		const all = shownSupport(full([4, 3], [3, 1], [5, 5]));
+		expect(all.a).toEqual({ hidden: false, mean: 0.9, counts: { n: 3, m: 4 } });
+		expect(all.center).toEqual({ hidden: true });
+		const small = shownSupport(full([4, 3], [1, 1], [5, 5]));
+		expect(small.a).toEqual({ hidden: false, mean: 0.9, counts: null });
+		expect(small.b).toEqual({ hidden: false, mean: 0.7, counts: null });
+	});
+
+	it('the subtraction case: with one camp under 3, the answer holds no count at all', () => {
+		// The teacher knows how many chose a side (here 4 + small + 5). If any count
+		// left the server, that total minus the others would give the small camp's size.
+		for (const small of [0, 1, 2]) {
+			const out = shownSupport(full([4, 3], [small, small], [5, 5]));
+			const numbers = JSON.stringify(out).match(/-?\d+(\.\d+)?/g) ?? [];
+			expect(numbers.sort()).toEqual(['0.7', '0.9']);
+			expect(JSON.stringify(out)).not.toMatch(/"n"|"m"|"counts":\{/);
+		}
+	});
+
+	it('never lets the verdict reveal a hidden pole camp, and sends no overall mean', () => {
+		expect(shownSupport(full([2, 2], [5, 5], [5, 5], 'closer')).verdict).toBe('insufficient');
+		expect(shownSupport(full([5, 5], [5, 5], [5, 1], 'apart')).verdict).toBe('insufficient');
+		expect(shownSupport(full([5, 5], [1, 1], [5, 5], 'closer')).verdict).toBe('closer');
+		expect(Object.keys(shownSupport(full([5, 5], [1, 1], [5, 5]))).sort()).toEqual([
+			'a',
+			'b',
+			'center',
+			'verdict',
+		]);
 	});
 });

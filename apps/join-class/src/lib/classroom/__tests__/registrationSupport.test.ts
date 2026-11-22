@@ -13,9 +13,9 @@ import {
 } from '../registrationSupport';
 
 const SUPPORT: ShownSupportBySide = {
-	a: { hidden: false, mean: 0.5, n: 3, m: 4 },
-	center: { hidden: true, n: 0, m: 0 },
-	b: { hidden: true, n: 2, m: 2 },
+	a: { hidden: false, mean: 0.5, counts: null },
+	center: { hidden: true },
+	b: { hidden: true },
 	verdict: 'insufficient',
 };
 

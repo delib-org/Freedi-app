@@ -1114,7 +1114,7 @@ export {
   sidesFrozen,
 } from './models/classroom/classSideModel';
 export { CLASS_SIDE_MIN_SHOWN, shownSupport } from './models/classroom/classSupportShown';
-export type { ShownCampSupport, ShownSupportBySide } from './models/classroom/classSupportShown';
+export type { CampCounts, ShownCampSupport, ShownSupportBySide } from './models/classroom/classSupportShown';
 export type {
   ClassSide,
   ClassSideLock,

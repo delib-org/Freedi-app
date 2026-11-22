@@ -74,12 +74,17 @@ const CHALLENGE = {
 	},
 } as unknown as Statement;
 
-const shownCamp = (n: number): ShownCampSupport => ({ hidden: false, mean: 0.5, n, m: n });
-const hiddenCamp = (n: number): ShownCampSupport => ({ hidden: true, n, m: n });
+// The server sends counts only when no camp is hidden for size (rule in classSupportShown.ts).
+const shownCamp = (n: number, withCounts: boolean): ShownCampSupport => ({
+	hidden: false,
+	mean: 0.5,
+	counts: withCounts ? { n, m: n } : null,
+});
+const hiddenCamp = (): ShownCampSupport => ({ hidden: true });
 
 function supportWith(hiddenCount: number): ShownSupportBySide {
 	const camps = ['a', 'center', 'b'].map((_, i) =>
-		i < hiddenCount ? hiddenCamp(i) : shownCamp(4),
+		i < hiddenCount ? hiddenCamp() : shownCamp(4, hiddenCount === 0),
 	);
 
 	return {
@@ -153,6 +158,8 @@ describe('support by side with hidden camps, mounted', () => {
 		]);
 		expect(countIn(html, 'support__too-few')).toBe(hiddenCount);
 		expect(countIn(html, 'class="support__track"')).toBe(3 - hiddenCount);
+		// numbers only when no camp is hidden; never in a hidden row
+		expect(countIn(html, 'support__count')).toBe(hiddenCount === 0 ? 3 : 0);
 		lint(view());
 	});
 
@@ -197,6 +204,7 @@ describe('support by side with hidden camps, mounted', () => {
 		]);
 		expect(countIn(html, 'projector-support__too-few')).toBe(hiddenCount);
 		expect(countIn(html, 'class="projector-support__track"')).toBe(3 - hiddenCount);
+		expect(countIn(html, 'projector.rated')).toBe(hiddenCount === 0 ? 3 : 0);
 		lint(summaryStage());
 	});
 });

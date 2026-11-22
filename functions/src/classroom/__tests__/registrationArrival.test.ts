@@ -407,9 +407,10 @@ describe('classRegistrationSupport (support by side from the registration, IA 2.
 		expect(result.poleA).toBe('Keep');
 		expect(result.poleB).toBe('Change');
 		// One rater per camp: below CLASS_SIDE_MIN_SHOWN, so no mean leaves the server.
-		expect(result.support.a).toEqual({ hidden: true, n: 1, m: 1 });
-		expect(result.support.b).toEqual({ hidden: true, n: 1, m: 1 });
-		expect(result.support.center).toEqual({ hidden: true, n: 1, m: 1 });
+		// One person per camp: below CLASS_SIDE_MIN_SHOWN, so neither a mean nor a size leaves.
+		expect(result.support.a).toEqual({ hidden: true });
+		expect(result.support.b).toEqual({ hidden: true });
+		expect(result.support.center).toEqual({ hidden: true });
 		expect(result.support.verdict).toBe('insufficient');
 		expect(JSON.stringify(result.support)).not.toContain('mean');
 		expect(JSON.stringify(result)).not.toMatch(/position|p1|r1/);

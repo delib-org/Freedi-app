@@ -183,9 +183,9 @@ describe('rate list', () => {
 
 describe('support bars', () => {
 	const result: ShownSupportBySide = {
-		a: { hidden: false, mean: 1, n: 4, m: 5 },
-		center: { hidden: true, n: 2, m: 2 },
-		b: { hidden: false, mean: -1, n: 3, m: 3 },
+		a: { hidden: false, mean: 1, counts: { n: 4, m: 5 } },
+		center: { hidden: true },
+		b: { hidden: false, mean: -1, counts: null },
 		verdict: 'apart',
 	};
 
@@ -197,12 +197,11 @@ describe('support bars', () => {
 		expect(supportPercent(7)).toBe(100);
 	});
 
-	it('returns the three bars in order with their counts; a hidden camp has no width', () => {
+	it('returns the three bars in order; a hidden camp carries nothing, counts only when sent', () => {
 		const bars = supportBars(result);
 		expect(bars.map((b) => b.camp)).toEqual(['a', 'center', 'b']);
-		expect(bars.map((b) => b.percent)).toEqual([100, 0, 0]);
-		expect(bars.map((b) => b.hidden)).toEqual([false, true, false]);
-		expect(bars[0]).toMatchObject({ n: 4, m: 5 });
-		expect(bars[1]).toMatchObject({ n: 2, m: 2 });
+		expect(bars[0]).toEqual({ camp: 'a', hidden: false, percent: 100, counts: { n: 4, m: 5 } });
+		expect(bars[1]).toEqual({ camp: 'center', hidden: true });
+		expect(bars[2]).toEqual({ camp: 'b', hidden: false, percent: 0, counts: null });
 	});
 });
