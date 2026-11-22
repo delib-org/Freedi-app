@@ -96,6 +96,8 @@ function supportWith(hiddenCount: number): ShownSupportBySide {
 }
 
 const HIDDEN_COUNTS = [0, 1, 2, 3];
+/** One "too few" line per hidden camp, or a single line when every camp is hidden. */
+const tooFewLines = (hiddenCount: number): number => (hiddenCount === 3 ? 1 : hiddenCount);
 
 function countIn(html: string, needle: string): number {
 	return html.split(needle).length - 1;
@@ -156,7 +158,8 @@ describe('support by side with hidden camps, mounted', () => {
 				names: { a: 'A', b: 'B' },
 			}),
 		]);
-		expect(countIn(html, 'support__too-few')).toBe(hiddenCount);
+		// all three hidden: one line for the panel instead of three rows
+		expect(countIn(html, 'support__too-few')).toBe(tooFewLines(hiddenCount));
 		expect(countIn(html, 'class="support__track"')).toBe(3 - hiddenCount);
 		// numbers only when no camp is hidden; never in a hidden row
 		expect(countIn(html, 'support__count')).toBe(hiddenCount === 0 ? 3 : 0);
@@ -173,7 +176,7 @@ describe('support by side with hidden camps, mounted', () => {
 				return view();
 			},
 		]);
-		expect(countIn(html, 'support__too-few')).toBe(hiddenCount);
+		expect(countIn(html, 'support__too-few')).toBe(tooFewLines(hiddenCount));
 		lint(view());
 	});
 
@@ -188,7 +191,7 @@ describe('support by side with hidden camps, mounted', () => {
 				return view();
 			},
 		]);
-		expect(countIn(html, 'support__too-few')).toBe(hiddenCount);
+		expect(countIn(html, 'support__too-few')).toBe(tooFewLines(hiddenCount));
 		lint(view());
 	});
 
@@ -202,7 +205,7 @@ describe('support by side with hidden camps, mounted', () => {
 				return summaryStage();
 			},
 		]);
-		expect(countIn(html, 'projector-support__too-few')).toBe(hiddenCount);
+		expect(countIn(html, 'projector-support__too-few')).toBe(tooFewLines(hiddenCount));
 		expect(countIn(html, 'class="projector-support__track"')).toBe(3 - hiddenCount);
 		expect(countIn(html, 'projector.rated')).toBe(hiddenCount === 0 ? 3 : 0);
 		lint(summaryStage());

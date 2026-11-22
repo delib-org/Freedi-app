@@ -292,8 +292,76 @@ describe('a support without a side (decision support saved, no camp)', () => {
 		]);
 		expect(fake.read(`classSides/lone--${MAIN}`)).not.toHaveProperty('camp');
 		const res = await lessonSupportBySide(fake.asFirestore(), TEACHER, { mainId: MAIN });
-		expect(res.support.a).toEqual({ hidden: false, mean: 1, counts: null });
-		expect(res.support.center).toEqual({ hidden: true });
-		expect(res.support.b).toEqual({ hidden: true });
+		// a is the only camp that passes, so every camp is hidden (and the lone rating counts nowhere)
+		expect(res.support).toEqual({
+			a: { hidden: true },
+			center: { hidden: true },
+			b: { hidden: true },
+			verdict: 'insufficient',
+		});
+	});
+});
+
+describe('classSupportBySide needs two shown camps (one shown camp would place the choosers)', () => {
+	function campOf(tag: string, size: number, camp: 'a' | 'center' | 'b', support = 1): Student[] {
+		return Array.from({ length: size }, (_, i) => ({
+			uid: `${tag}${i}`,
+			side: camp === 'a' ? 10 : camp === 'b' ? 90 : 50,
+			camp,
+			support,
+		}));
+	}
+	const ALL_HIDDEN = {
+		support: {
+			a: { hidden: true },
+			center: { hidden: true },
+			b: { hidden: true },
+			verdict: 'insufficient',
+		},
+	};
+	const answer = async (students: Student[]) => {
+		const fake = new FakeFirestore();
+		seedLesson(fake, students);
+
+		return lessonSupportBySide(fake.asFirestore(), TEACHER, { mainId: MAIN });
+	};
+
+	it('3 students, all in b: the body is all hidden', async () => {
+		expect(await answer(campOf('b', 3, 'b'))).toEqual(ALL_HIDDEN);
+	});
+
+	it('5 in b and 1 in a: the body is all hidden', async () => {
+		expect(await answer([...campOf('b', 5, 'b'), ...campOf('a', 1, 'a')])).toEqual(ALL_HIDDEN);
+	});
+
+	it('3 in a and 3 in b, nobody in the middle: a and b without counts', async () => {
+		expect(await answer([...campOf('a', 3, 'a', 1), ...campOf('b', 3, 'b', 0.5)])).toEqual({
+			support: {
+				a: { hidden: false, mean: 1, counts: null },
+				center: { hidden: true },
+				b: { hidden: false, mean: 0.5, counts: null },
+				verdict: 'apart',
+			},
+		});
+	});
+
+	it('3 / 3 / 3: all shown with counts', async () => {
+		const res = await answer([
+			...campOf('a', 3, 'a'),
+			...campOf('c', 3, 'center'),
+			...campOf('b', 3, 'b'),
+		]);
+		for (const camp of [res.support.a, res.support.center, res.support.b]) {
+			expect(camp).toEqual({ hidden: false, mean: 1, counts: { n: 3, m: 3 } });
+		}
+	});
+
+	it('two eligible camps, one rated by only 2: the body is all hidden', async () => {
+		const res = await answer([
+			...campOf('a', 3, 'a'),
+			...campOf('x', 2, 'b'),
+			...campOf('y', 3, 'b').map((st) => ({ ...st, support: undefined })),
+		]);
+		expect(res).toEqual(ALL_HIDDEN);
 	});
 });

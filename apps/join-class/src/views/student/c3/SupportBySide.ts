@@ -28,6 +28,17 @@ export const SupportBySide: m.Component<SupportBySideAttrs> = {
 			camp === 'center' ? t('summary.side_center') : t('summary.near_side', { name: names[camp] });
 		const bars = supportBars(result);
 		const gatePct = supportPercent(gate);
+		// Every camp hidden (fewer than two big enough): one line for the panel, not three.
+		if (bars.every((bar) => bar.hidden)) {
+			return m('section.support', { 'aria-label': t('summary.by_side') }, [
+				m('p.support__explain', t('summary.by_side_explain')),
+				m(
+					'p.support__too-few',
+					{ 'data-testid': 'support-too-few', role: 'status' },
+					t('summary.too_few'),
+				),
+			]);
+		}
 
 		return m('section.support', { 'aria-label': t('summary.by_side') }, [
 			m('p.support__explain', t('summary.by_side_explain')),

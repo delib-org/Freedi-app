@@ -1,5 +1,4 @@
 import m from 'mithril';
-import { shownSupport, supportBySide } from '@freedi/shared-types';
 import { supportForScreen } from '@/lib/classroom/registrationSupport';
 import { t } from '@/lib/i18n';
 import { classState } from '@/lib/classroom/classState';
@@ -194,20 +193,30 @@ export function resultsBlock(summary: VoteSummary): m.Children {
 }
 
 function supportBlock(): m.Vnode {
-	const challenge = projectorData.challenge;
 	// Totals from the server: the sides are private (Trello btMVQMM5).
 	const registered = supportForScreen(projectorData.main, projectorData.main?.statementId ?? '');
 	const names =
 		(registered.kind === 'ready' && registered.names) || sideNamesOf(projectorData.main);
-	const support =
-		registered.kind === 'ready'
-			? registered.result
-			: shownSupport(supportBySide([], gateOf(challenge, projectorData.main)));
+	// Until the server answers, only the explanation (no "too few" line that is not true yet).
+	if (registered.kind !== 'ready') {
+		return m('section.projector-support-block', [
+			m('p.projector-support__explain', t('summary.by_side_explain')),
+		]);
+	}
+	const support = registered.result;
 	const rows = [
 		{ key: 'a', label: names.a, camp: support.a },
 		{ key: 'center', label: t('projector.center'), camp: support.center },
 		{ key: 'b', label: names.b, camp: support.b },
 	];
+
+	// Every camp hidden (fewer than two big enough): one line, not three identical rows.
+	if (rows.every((row) => row.camp.hidden)) {
+		return m('section.projector-support-block', [
+			m('p.projector-support__explain', t('summary.by_side_explain')),
+			m('p.projector-support__too-few', t('summary.too_few')),
+		]);
+	}
 
 	return m('section.projector-support-block', [
 		m('p.projector-support__explain', t('summary.by_side_explain')),

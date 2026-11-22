@@ -34,7 +34,6 @@ describe('support by side with small camps hidden', () => {
 	it.each([
 		['one', { a: shown(1, 4), center: hidden(), b: shown(0.5, 3) }, 1],
 		['two', { a: hidden(), center: hidden(), b: shown(0.5, 3) }, 2],
-		['all three', { a: hidden(), center: hidden(), b: hidden() }, 3],
 	] as const)(
 		'%s hidden: that many "too few" lines and the rest as bars',
 		(_label, camps, hiddenCount) => {
@@ -48,6 +47,14 @@ describe('support by side with small camps hidden', () => {
 			expect(drawn.text.some((x) => x.startsWith('summary.n_of_m'))).toBe(false);
 		},
 	);
+
+	it('all three hidden: ONE "too few" line for the panel, no rows, no numbers, no verdict', () => {
+		const drawn = render({ a: hidden(), center: hidden(), b: hidden(), verdict: 'insufficient' });
+		expect(countOf(drawn.text, 'summary.too_few')).toBe(1);
+		expect(countOf(drawn.classes, 'support__row')).toBe(0);
+		expect(countOf(drawn.classes, 'support__track')).toBe(0);
+		expect(countOf(drawn.classes, 'support__verdict')).toBe(0);
+	});
 
 	it('no camp hidden: three bars with their counts, no "too few"', () => {
 		const drawn = render({

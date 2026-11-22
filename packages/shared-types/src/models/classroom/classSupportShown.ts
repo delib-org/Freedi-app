@@ -1,5 +1,5 @@
 import type { Camp } from './classroomModel';
-import type { SupportBySide, SupportVerdict } from './classroomLogic';
+import type { CampSupport, SupportBySide, SupportVerdict } from './classroomLogic';
 
 /**
  * join-class: "support by side" as it leaves the server (Trello btMVQMM5,
@@ -13,7 +13,10 @@ import type { SupportBySide, SupportVerdict } from './classroomLogic';
  *  2. Counts (n and m) go out only when EVERY camp has at least
  *     CLASS_SIDE_MIN_SHOWN members, and then only for the camps whose mean is
  *     shown. If any camp has 0, 1 or 2 members, no camp carries any count.
- *  3. The verdict is 'insufficient' whenever side a or side b is hidden.
+ *  3. Unless at least TWO camps pass rule 1, EVERY camp is hidden. One shown
+ *     camp has 3+ members, so next to the "X of Y chose a side" count it would
+ *     say where most of the named choosers are (with X = 3, all of them).
+ *  4. The verdict is 'insufficient' whenever side a or side b is hidden.
  *
  * WHY NO SIZE UNDER 3 CAN BE DERIVED. The teacher knows how many students chose
  * a side ("X of Y chose a side"). If two camps sent their m, the third camp's
@@ -24,6 +27,12 @@ import type { SupportBySide, SupportVerdict } from './classroomLogic';
  * An empty camp (m = 0) is treated like 1 or 2: hidden, so "nobody chose this"
  * looks the same as "one or two chose this". There is no overall mean or total
  * in the answer, so a hidden mean cannot be recovered by subtraction either.
+ *
+ * WHAT IS LEFT TO INFER. With two camps shown and one hidden, every chooser may
+ * be in either shown camp; nobody is pinned to a side. The weakest remaining
+ * inference is about the hidden camp: it may hold no one, so when X is small
+ * (X = 6 with two shown camps) it must be empty, i.e. "no student chose the
+ * hidden side", without saying which of the two shown sides any student chose.
  */
 
 /** A camp's mean (and the counts) need at least this many members and raters. */
@@ -50,11 +59,24 @@ export interface ShownSupportBySide {
 const CAMPS: readonly Camp[] = ['a', 'center', 'b'];
 
 /** The totals as they may leave the server (see THE RULE above). */
+/** Fewer shown camps than this and every camp is hidden (one shown camp would say where most choosers are). */
+export const CLASS_SIDE_MIN_SHOWN_CAMPS = 2;
+
+const HIDDEN: ShownCampSupport = { hidden: true };
+
+/** A camp big enough, and rated by enough, to show its mean (rule 1). */
+function passes(camp: CampSupport): boolean {
+	return camp.m >= CLASS_SIDE_MIN_SHOWN && camp.n >= CLASS_SIDE_MIN_SHOWN;
+}
+
 export function shownSupport(full: SupportBySide): ShownSupportBySide {
+	if (CAMPS.filter((camp) => passes(full[camp])).length < CLASS_SIDE_MIN_SHOWN_CAMPS) {
+		return { a: { ...HIDDEN }, center: { ...HIDDEN }, b: { ...HIDDEN }, verdict: 'insufficient' };
+	}
 	const countsAllowed = CAMPS.every((camp) => full[camp].m >= CLASS_SIDE_MIN_SHOWN);
 	const shownOf = (camp: Camp): ShownCampSupport => {
 		const { mean, n, m } = full[camp];
-		if (m < CLASS_SIDE_MIN_SHOWN || n < CLASS_SIDE_MIN_SHOWN) return { hidden: true };
+		if (!passes(full[camp])) return { ...HIDDEN };
 
 		return { hidden: false, mean, counts: countsAllowed ? { n, m } : null };
 	};

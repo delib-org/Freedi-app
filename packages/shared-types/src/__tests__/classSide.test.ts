@@ -7,6 +7,7 @@ import {
 	sidesFrozen,
 	shownSupport,
 	CLASS_SIDE_MIN_SHOWN,
+	CLASS_SIDE_MIN_SHOWN_CAMPS,
 } from '../index';
 import type { SupportBySide } from '../index';
 
@@ -92,26 +93,55 @@ describe('shownSupport (small sides hidden: no mean, no size)', () => {
 		b: camp(b[0], b[1], 0.7),
 		verdict,
 	});
+	const ALL_HIDDEN = {
+		a: { hidden: true },
+		center: { hidden: true },
+		b: { hidden: true },
+		verdict: 'insufficient',
+	};
 
-	it('hides every camp with 0, 1 or 2 members, whatever its raters, and sends only { hidden: true }', () => {
+	it('3 students, all in b: everything hidden', () => {
+		expect(shownSupport(full([0, 0], [0, 0], [3, 3]))).toEqual(ALL_HIDDEN);
+	});
+
+	it('5 in b and 1 in a: everything hidden (one shown camp would place most choosers)', () => {
+		expect(shownSupport(full([1, 1], [0, 0], [5, 5]))).toEqual(ALL_HIDDEN);
+		expect(shownSupport(full([2, 2], [1, 1], [17, 17]))).toEqual(ALL_HIDDEN);
+	});
+
+	it('3 in a, 3 in b, nobody in the middle: a and b shown without counts, the middle hidden', () => {
+		expect(shownSupport(full([3, 3], [0, 0], [3, 3]))).toEqual({
+			a: { hidden: false, mean: 0.9, counts: null },
+			center: { hidden: true },
+			b: { hidden: false, mean: 0.7, counts: null },
+			verdict: 'closer',
+		});
+	});
+
+	it('3 / 3 / 3: all shown, with counts', () => {
+		expect(shownSupport(full([3, 3], [3, 3], [3, 3]))).toEqual({
+			a: { hidden: false, mean: 0.9, counts: { n: 3, m: 3 } },
+			center: { hidden: false, mean: -0.2, counts: { n: 3, m: 3 } },
+			b: { hidden: false, mean: 0.7, counts: { n: 3, m: 3 } },
+			verdict: 'closer',
+		});
+		expect(CLASS_SIDE_MIN_SHOWN).toBe(3);
+		expect(CLASS_SIDE_MIN_SHOWN_CAMPS).toBe(2);
+	});
+
+	it('two otherwise eligible camps but one rated by fewer than 3: only one passes, so everything hidden', () => {
+		for (const n of [0, 1, 2]) expect(shownSupport(full([5, n], [0, 0], [5, 5]))).toEqual(ALL_HIDDEN);
+	});
+
+	it('hides every camp with 0, 1 or 2 members, whatever its raters, as { hidden: true } only', () => {
 		for (const m of [0, 1, 2]) {
 			for (let n = 0; n <= m; n++) {
 				expect(shownSupport(full([m, n], [5, 5], [5, 5])).a).toEqual({ hidden: true });
 			}
 		}
-		expect(CLASS_SIDE_MIN_SHOWN).toBe(3);
 	});
 
-	it('hides a camp of 3+ members that fewer than 3 rated; shows the mean from 3 raters', () => {
-		for (const n of [0, 1, 2]) expect(shownSupport(full([5, n], [5, 5], [5, 5])).a).toEqual({ hidden: true });
-		expect(shownSupport(full([3, 3], [4, 3], [5, 5])).a).toEqual({
-			hidden: false,
-			mean: 0.9,
-			counts: { n: 3, m: 3 },
-		});
-	});
-
-	it('sends counts only when every camp has 3+ members, and then only for shown camps', () => {
+	it('counts only when every camp has 3+ members, and only for shown camps', () => {
 		const all = shownSupport(full([4, 3], [3, 1], [5, 5]));
 		expect(all.a).toEqual({ hidden: false, mean: 0.9, counts: { n: 3, m: 4 } });
 		expect(all.center).toEqual({ hidden: true });
@@ -121,13 +151,29 @@ describe('shownSupport (small sides hidden: no mean, no size)', () => {
 	});
 
 	it('the subtraction case: with one camp under 3, the answer holds no count at all', () => {
-		// The teacher knows how many chose a side (here 4 + small + 5). If any count
-		// left the server, that total minus the others would give the small camp's size.
+		// The teacher knows how many chose a side; with any count out, the total minus
+		// the others would give the small camp's size.
 		for (const small of [0, 1, 2]) {
 			const out = shownSupport(full([4, 3], [small, small], [5, 5]));
 			const numbers = JSON.stringify(out).match(/-?\d+(\.\d+)?/g) ?? [];
 			expect(numbers.sort()).toEqual(['0.7', '0.9']);
 			expect(JSON.stringify(out)).not.toMatch(/"n"|"m"|"counts":\{/);
+		}
+	});
+
+	it('across every small class, a shown answer always has two shown camps, and never a size under 3', () => {
+		for (let a = 0; a <= 6; a++) {
+			for (let c = 0; c <= 6; c++) {
+				for (let b = 0; b <= 6; b++) {
+					const out = shownSupport(full([a, a], [c, c], [b, b]));
+					const shown = [out.a, out.center, out.b].filter((x) => !x.hidden);
+					expect(shown.length === 0 || shown.length >= 2).toBe(true);
+					for (const x of [out.a, out.center, out.b]) {
+						if (!x.hidden && x.counts) expect(x.counts.m).toBeGreaterThanOrEqual(3);
+					}
+					if ([a, c, b].some((m) => m < 3)) expect(JSON.stringify(out)).not.toMatch(/"counts":\{/);
+				}
+			}
 		}
 	});
 
