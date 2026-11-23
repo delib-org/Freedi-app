@@ -74,18 +74,19 @@ const de: Record<string, string> = {
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
 	'plan.title': 'Fragen planen',
+	'plan.sides.help':
+		'In diesem Schritt markiert jede Person, welcher Seite sie zuneigt. So können wir an jedem Tisch Lernende beider Seiten zusammensetzen und gemischte Tische bilden.',
+	'plan.sides.title': 'Der Schritt mit den Seiten',
 	'plan.back': 'Die Stunde',
 	'plan.loading': 'Plan wird geladen',
 	'plan.challenge.title': 'Die Frage zur Lösung',
 	'plan.challenge.help': 'Eine Frage, an der die ganze Klasse gemeinsam arbeitet.',
 	'plan.challenge.placeholder': 'Schreibt die Frage zur Lösung',
 	'plan.details.title': 'Details zur Stunde',
-	'plan.details.side_a': 'Name der ersten Seite',
-	'plan.details.side_b': 'Name der zweiten Seite',
 	'plan.details.side_question': 'Die Frage, die die Lernenden auf dem Schieberegler beantworten',
 	'plan.details.claim_a': 'Was die erste Seite sagt',
 	'plan.details.claim_b': 'Was die zweite Seite sagt',
-	'plan.details.claim.placeholder': 'Optional. Ein Satz, der unter dem Namen steht',
+	'plan.details.claim.placeholder': 'Optional. Ein Satz, der diese Seite beschreibt',
 	'console.gate.label': 'Das Ziel: wie viel Zustimmung zum Bestehen nötig ist',
 	'console.gate.value': 'Ziel: {{value}}%',
 	'console.gate.help':
@@ -176,8 +177,6 @@ const de: Record<string, string> = {
 	'opening.waiting_count': '{{n}} in der Klasse',
 	'side.title': 'Welcher Seite stehst du näher?',
 	'side.aria': 'Welcher Seite stehst du näher? {{a}} auf der einen, {{b}} auf der anderen Seite',
-	'side.name_a': 'Jonathan',
-	'side.name_b': 'Noa',
 	'side.near_a': 'Nah bei {{name}}',
 	'side.middle': 'In der Mitte',
 	'side.near_b': 'Nah bei {{name}}',

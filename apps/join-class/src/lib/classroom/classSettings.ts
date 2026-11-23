@@ -5,12 +5,11 @@ import { t } from '@/lib/i18n';
  * One reader per lesson setting, so the console, projector, student screens and
  * the engine's callable all mean the same field:
  *   - gate          -> votingSettings.threshold (challenge question, else the main statement)
- *   - side names    -> statementSettings.sideNames {a, b}, else the i18n defaults
+ *   - side names    -> always "Side A" / "Side B" (saved character names are ignored)
  *   - side question -> statementSettings.sideQuestion, else the i18n default
  *   - side claims   -> statementSettings.sideClaims {a, b}, empty = no claim line
  */
 
-export const SIDE_NAME_MAX_LENGTH = 24;
 export const SIDE_QUESTION_MAX_LENGTH = 140;
 export const SIDE_CLAIM_MAX_LENGTH = 120;
 
@@ -38,18 +37,10 @@ function cleanText(value: string | undefined, max: number): string | null {
 	return text ? text.slice(0, max) : null;
 }
 
-function cleanName(value: string | undefined): string | null {
-	return cleanText(value, SIDE_NAME_MAX_LENGTH);
-}
-
-/** Character names of the two sides: the lesson's own, else the translated defaults. */
-export function sideNamesOf(main: Statement | null | undefined): SideNames {
-	const own = main?.statementSettings?.sideNames;
-
-	return {
-		a: cleanName(own?.a) ?? t('side.name_a'),
-		b: cleanName(own?.b) ?? t('side.name_b'),
-	};
+/** The two sides are only ever "Side A" and "Side B". Lessons saved with character
+ *  names keep them in their data (statementSettings.sideNames) but nothing reads them. */
+export function sideNamesOf(_main?: Statement | null): SideNames {
+	return { a: t('console.side_a'), b: t('console.side_b') };
 }
 
 /** The question on the side slider: the lesson's own, else the translated default. */
