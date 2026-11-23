@@ -148,6 +148,17 @@ describe('join-class engine rules', () => {
 			await assertSucceeds(getDocs(query(collection(as(TEACHER), 'classTables'), where('mainId', '==', MAIN))));
 		});
 
+		it('accepts every admin role the server counts, the legacy \'creator\' included (Trello sN881XCU)', async () => {
+			for (const role of ['statement-creator', 'creator']) {
+				const uid = `u-${role}`;
+				await seed(env, (db) => setDoc(doc(db, 'statementsSubscribe', `${uid}--${MAIN}`), sub(uid, role)));
+				await assertSucceeds(getDoc(doc(as(uid), 'classTables', T2)));
+				await assertSucceeds(getDocs(query(collection(as(uid), 'classTables'), where('mainId', '==', MAIN))));
+			}
+			await seed(env, (db) => setDoc(doc(db, 'statementsSubscribe', `u-waiting--${MAIN}`), sub('u-waiting', 'waiting')));
+			await assertFails(getDoc(doc(as('u-waiting'), 'classTables', T2)));
+		});
+
 		it('denies a student listing every table of the lesson', async () => {
 			await assertFails(getDocs(query(collection(as(S1), 'classTables'), where('mainId', '==', MAIN))));
 		});

@@ -864,10 +864,12 @@ service cloud.firestore {
     // get of their subscription). The teacher's list query filters on
     // mainId == X, which is what lets the rule resolve resource.data.mainId.
     match /classTables/{tableId} {
+      // Every admin role the server counts (ADMIN_ROLES in classroomAccess.ts),
+      // the literal legacy 'creator' included (Trello sN881XCU).
       function isClassTableAdmin(mainId) {
         let subPath = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(mainId)));
         return exists(subPath) &&
-               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+               get(subPath).data.get('role', '') in ['admin', 'statement-creator', 'creator'];
       }
 
       function mayReadClassTable() {
@@ -944,7 +946,7 @@ service cloud.firestore {
       function isLessonAdmin() {
         let subPath = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + lockMainId);
         let mainPath = /databases/$(database)/documents/statements/$(lockMainId);
-        return (exists(subPath) && get(subPath).data.get('role', '') in ['admin', 'statement-creator']) ||
+        return (exists(subPath) && get(subPath).data.get('role', '') in ['admin', 'statement-creator', 'creator']) ||
                (exists(mainPath) && get(mainPath).data.get('creatorId', '') == request.auth.uid);
       }
 
