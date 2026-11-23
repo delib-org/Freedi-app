@@ -165,17 +165,19 @@ export function watchClass(
 		console.error('[Classroom] listener error:', error);
 	};
 
-	// A student who is moved loses the right to read the old table a moment before their own
-	// subscription says so: that denial is the move arriving, not a fault (the subscription
-	// listener starts the new table's listener right after).
-	const onTableError = (error: Error): void => {
-		if (isPermissionDenied(error)) {
-			console.info('[Classroom] table closed to me (moved); waiting for the new table');
+	// A student who is moved loses the right to read the old table; that denial is only expected
+	// once their subscription no longer names that table. A denial on the CURRENT table is a real
+	// fault and takes the normal error path.
+	const onTableError =
+		(failedTableId: string) =>
+		(error: Error): void => {
+			if (isPermissionDenied(error) && failedTableId !== watchedTableId) {
+				console.info('[Classroom] old table closed to me (moved); on the new table now');
 
-			return;
-		}
-		onError(error);
-	};
+				return;
+			}
+			onError(error);
+		};
 
 	if (role === 'teacher') {
 		stops.push(
@@ -218,7 +220,7 @@ export function watchClass(
 									setServerTable(table);
 									m.redraw();
 								},
-								onTableError,
+								onTableError(tableId),
 							);
 						}
 					}

@@ -51,18 +51,28 @@ describe('a student moved to another table', () => {
 
 	afterEach(() => vi.restoreAllMocks());
 
-	it('does not log the old table refusing them as a listener error', () => {
+	const denied = (): Error =>
+		Object.assign(new Error('Missing or insufficient permissions'), { code: 'permission-denied' });
+
+	it('stays silent when the old table refuses them after the move landed', () => {
 		const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 		vi.spyOn(console, 'info').mockImplementation(() => undefined);
 		const stop = watchClass('m', 'student');
 		captured.sub?.(inTable('m--1'));
-		const denied = Object.assign(new Error('Missing or insufficient permissions'), {
-			code: 'permission-denied',
-		});
-		captured.tableErrors[0](denied);
+		captured.sub?.(inTable('m--2'));
+		captured.tableErrors[0](denied());
 		expect(errors).not.toHaveBeenCalled();
-		captured.tableErrors[0](new Error('boom'));
+		stop();
+	});
+
+	it('still reports permission-denied on the CURRENT table, and other errors', () => {
+		const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+		const stop = watchClass('m', 'student');
+		captured.sub?.(inTable('m--1'));
+		captured.tableErrors[0](denied());
 		expect(errors).toHaveBeenCalledTimes(1);
+		captured.tableErrors[0](new Error('boom'));
+		expect(errors).toHaveBeenCalledTimes(2);
 		stop();
 	});
 
