@@ -188,6 +188,18 @@ export interface ClassCloseBallotResponse {
 }
 
 /**
+ * `classEnterTableTalk` (admin). Called right after the lesson moves to Table talk:
+ * every table starts the step clean (step 'talk', no pen, no speaker). `proposalsTurn`
+ * and `spokenUids` are left alone. `reset` counts the tables.
+ */
+export interface ClassEnterTableTalkRequest {
+	mainId: string;
+}
+export interface ClassEnterTableTalkResponse {
+	reset: number;
+}
+
+/**
  * `classResetTurns` (admin, IA 18.4). Table talk only. No `n` = every table of the
  * lesson. Gives the turns back (asker, asked, passed, used questions, speaker);
  * members, answers and ratings stay.

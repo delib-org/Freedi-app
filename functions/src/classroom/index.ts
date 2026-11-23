@@ -17,6 +17,7 @@ export { classTableStep } from './fn_classTableStep';
 export { classAllTablesTo } from './fn_classAllTablesTo';
 export { classFreezeBallot, classCloseBallot, classPauseBallot } from './fn_classBallot';
 export { classResetTurns } from './fn_classResetTurns';
+export { classEnterTableTalk } from './fn_classEnterTableTalk';
 export { classResetVote } from './fn_classResetVote';
 export { classSetItemHidden } from './fn_classSetItemHidden';
 export { classPostReply } from './fn_classPostReply';
