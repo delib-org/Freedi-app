@@ -1,0 +1,211 @@
+// =============================================================================
+// Night — choosing a side (Student-2-Side.dc.html): the two sides as panels,
+// the word pill, then the slider. Loaded with the c2 views.
+//
+// Side marks are the same on every screen and the shape carries the side:
+// A = a cyan orb (circle), B = a gold rounded square, the middle = a violet
+// diamond. `data-camp` on the slider (SideSlider.ts) says which one the thumb
+// is, so the thumb wears the mark of where it stands.
+// =============================================================================
+
+@use 'mixins' as *;
+
+#{$night} .side-slider {
+  --thumb: 52px;
+  --track-h: 18px;
+  gap: 18px;
+  padding-block-start: 0;
+}
+
+// ---- the two sides ---------------------------------------------------------------------
+#{$night} .side-slider__ends {
+  order: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 14px;
+  margin-block-end: 0;
+}
+
+#{$night} .side-slider__character {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: start;
+  align-items: center;
+  gap: 12px 10px;
+  max-inline-size: none;
+  padding: 14px 14px 18px;
+  font-size: 21px;
+  font-weight: 700;
+  text-align: start;
+  @include night-panel;
+  border-radius: 26px;
+}
+
+#{$night} .side-slider__character--b {
+  @include night-panel(
+    var(--night-primary-mid),
+    var(--night-primary-ring),
+    var(--night-primary-glow)
+  );
+  border-radius: 26px;
+}
+
+// The slider itself is always left-to-right (side A on the left); the words in
+// a panel still follow the page.
+#{$night}[dir='rtl'] .side-slider__character {
+  direction: rtl;
+}
+
+#{$night} .side-slider__face {
+  inline-size: 44px;
+  block-size: 44px;
+  color: var(--night-orb-ink);
+  font-size: 21px;
+  font-weight: 700;
+}
+
+#{$night} .side-slider__character--a .side-slider__face {
+  border-radius: 50%;
+  @include orb(var(--night-side-a), var(--night-orb-cyan-glow), var(--night-orb-cyan-shade));
+}
+
+#{$night} .side-slider__character--b .side-slider__face {
+  border-radius: 13px;
+  @include orb(var(--night-side-b), var(--night-orb-orange-glow), var(--night-orb-gold-shade));
+}
+
+#{$night} .side-slider__name {
+  overflow-wrap: anywhere;
+}
+
+#{$night} .side-slider__claim {
+  grid-column: 1 / -1;
+  color: var(--night-on-sky);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+// ---- the word: where the thumb stands -----------------------------------------------------
+#{$night} .side-slider__word {
+  order: 1;
+  align-self: center;
+  min-block-size: 38px;
+  padding-inline: 18px;
+  font-size: 18px;
+  @include night-pill;
+  font-weight: 700;
+}
+
+// ---- the slider -----------------------------------------------------------------------------
+#{$night} .side-slider__field {
+  order: 2;
+  margin-block: 4px;
+}
+
+#{$night} .side-slider__track {
+  border-radius: var(--night-radius-pill);
+  background: var(--night-slider-track);
+  box-shadow: var(--night-track-lip);
+}
+
+// Each half carries one white dot: the "close to this side" stop.
+#{$night} .side-slider__half {
+  background: radial-gradient(circle, var(--night-on-sky) 0 7.5px, transparent 8px) center / 16px
+    16px no-repeat;
+}
+
+// The ends of the track: side A's orb, side B's square.
+#{$night} .side-slider__track::before,
+#{$night} .side-slider__track::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 50%;
+  inline-size: 30px;
+  block-size: 30px;
+  margin-block-start: -15px;
+}
+
+#{$night} .side-slider__track::before {
+  inset-inline-start: -15px;
+  border-radius: 50%;
+  @include orb(var(--night-side-a), var(--night-orb-cyan-glow), var(--night-orb-cyan-shade), 10px);
+}
+
+#{$night} .side-slider__track::after {
+  inset-inline-end: -15px;
+  border-radius: 9px;
+  @include orb(var(--night-side-b), var(--night-orb-orange-glow), var(--night-orb-gold-shade), 10px);
+}
+
+// The middle: the violet diamond.
+#{$night} .side-slider__tick {
+  inline-size: 22px;
+  block-size: 22px;
+  border-radius: 5px;
+  background: var(--night-side-middle);
+  box-shadow: 0 0 10px var(--night-orb-violet-glow);
+  transform: rotate(45deg);
+}
+
+// The thumb: a ringed orb with two grip bars, on its own lip.
+@mixin slider-thumb($fill, $lip) {
+  border: 4px solid var(--night-on-sky);
+  border-radius: 50%;
+  background:
+    linear-gradient(var(--night-orb-ink), var(--night-orb-ink)) calc(50% - 4px) 50% / 3px 11px
+      no-repeat,
+    linear-gradient(var(--night-orb-ink), var(--night-orb-ink)) calc(50% + 4px) 50% / 3px 11px
+      no-repeat,
+    $fill;
+  box-shadow:
+    0 0 18px var(--night-thumb-glow),
+    0 5px 0 $lip,
+    var(--night-drop-sm);
+}
+
+#{$night} .side-slider__input::-webkit-slider-thumb {
+  @include slider-thumb(var(--night-side-middle), var(--night-card-lip));
+}
+
+#{$night} .side-slider__input::-moz-range-thumb {
+  @include slider-thumb(var(--night-side-middle), var(--night-card-lip));
+}
+
+#{$night} .side-slider[data-camp='a'] .side-slider__input::-webkit-slider-thumb {
+  @include slider-thumb(var(--night-side-a), var(--night-cyan-lip));
+}
+
+#{$night} .side-slider[data-camp='a'] .side-slider__input::-moz-range-thumb {
+  @include slider-thumb(var(--night-side-a), var(--night-cyan-lip));
+}
+
+#{$night} .side-slider[data-camp='b'] .side-slider__input::-webkit-slider-thumb {
+  @include slider-thumb(var(--night-side-b), var(--night-primary-lip));
+}
+
+#{$night} .side-slider[data-camp='b'] .side-slider__input::-moz-range-thumb {
+  @include slider-thumb(var(--night-side-b), var(--night-primary-lip));
+}
+
+#{$night} .side-slider__input:focus-visible::-webkit-slider-thumb {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 3px;
+}
+
+#{$night} .side-slider__input:focus-visible::-moz-range-thumb {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 3px;
+}
+
+// ---- the footer lines -------------------------------------------------------------------------
+#{$night} .side-step__locked {
+  color: var(--night-on-sky);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+#{$night} .side-step__error {
+  font-weight: 600;
+}

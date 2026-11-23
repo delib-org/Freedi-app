@@ -1,0 +1,176 @@
+// =============================================================================
+// Night — the header of the phone shell: the stage name with the language
+// button, then ONE striped steps bar with "step n of total" beside it, then the
+// table line. In the entry CSS.
+// =============================================================================
+
+@use 'mixins' as *;
+
+// ---- header: stage name + language, steps bar + "step n of total", table line --
+#{$night} .frame__header,
+#{$night} .frame__header--stacked {
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px 10px;
+  min-height: 0;
+  padding: 18px 20px 0;
+  border: 0;
+  background: transparent;
+  color: var(--night-on-sky);
+}
+
+#{$night} .frame__header--with-language {
+  padding-inline-end: 20px;
+}
+
+#{$night} .frame__mark {
+  order: 0;
+  color: var(--night-on-sky);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+// Nearly a full row, so the bar under it always starts a new one; the language
+// button (48 px + the gap) is what fits beside it.
+#{$night} .frame__stage,
+#{$night} .frame__header--stacked .frame__stage {
+  order: 1;
+  flex: 1 1 calc(100% - 68px);
+  min-inline-size: 0;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  @include on-sky;
+}
+
+#{$night} .frame__language {
+  order: 2;
+  position: static;
+  flex: none;
+  margin-inline-start: auto;
+  transform: none;
+}
+
+// The steps bar is ONE striped bar filled to n / total. The stripes are the
+// track's own background, so they run unbroken under the done and current
+// segments (which are clear); the segments still to come cover them, and the
+// current one closes the fill with a round cap.
+#{$night} .frame__meter {
+  order: 3;
+  flex: 1 1 50%;
+  gap: 0;
+  box-sizing: border-box;
+  block-size: 24px;
+  padding: 3px;
+  border-radius: var(--night-radius-pill);
+  background:
+    repeating-linear-gradient(
+        -45deg,
+        var(--night-stripe-a) 0 7px,
+        var(--night-stripe-b) 7px 14px
+      )
+      content-box,
+    var(--night-track);
+  box-shadow: var(--night-track-inset), var(--night-track-lip);
+}
+
+#{$night} .frame__meter-segment {
+  position: relative;
+  flex: 1;
+  block-size: 100%;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: inset 0 2px 0 var(--night-gloss);
+}
+
+#{$night} .frame__meter-segment:first-child {
+  border-start-start-radius: var(--night-radius-pill);
+  border-end-start-radius: var(--night-radius-pill);
+}
+
+#{$night} .frame__meter-segment:last-child {
+  border-start-end-radius: var(--night-radius-pill);
+  border-end-end-radius: var(--night-radius-pill);
+}
+
+#{$night} .frame__meter-segment--upcoming {
+  background: var(--night-track);
+  box-shadow: none;
+}
+
+#{$night} .frame__meter-segment--current::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  inline-size: 9px;
+  background: radial-gradient(circle at 0 50%, transparent 0 8.5px, var(--night-track) 9px);
+}
+
+#{$night}[dir='rtl'] .frame__meter-segment--current::after {
+  background: radial-gradient(circle at 100% 50%, transparent 0 8.5px, var(--night-track) 9px);
+}
+
+#{$night} .frame__step-of {
+  order: 4;
+  flex: none;
+  min-block-size: 0;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--night-on-sky);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+#{$night} .frame__line,
+#{$night} .frame--down .frame__line {
+  order: 5;
+  flex: 1 1 100%;
+  color: var(--night-on-sky);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+// ---- the language button: a cyan jelly square with the globe -------------------
+// The native select still covers the whole button, so a tap opens the phone's
+// own picker; its text is not drawn.
+#{$night} .language-button {
+  position: relative;
+  box-sizing: border-box;
+  justify-content: center;
+  gap: 0;
+  inline-size: 48px;
+  min-inline-size: 48px;
+  block-size: 48px;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  color: var(--night-cyan-ink);
+  @include jelly(
+    var(--night-cyan),
+    var(--night-cyan-lip),
+    var(--night-lip-sm),
+    var(--night-cyan-shade),
+    var(--night-drop-sm)
+  );
+}
+
+#{$night} .language-button__globe {
+  inline-size: 24px;
+  block-size: 24px;
+  stroke-width: 2.2;
+}
+
+#{$night} .language-button__select {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  min-height: 0;
+  opacity: 0;
+  font-size: 16px;
+}

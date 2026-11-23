@@ -1,0 +1,156 @@
+// =============================================================================
+// Night — the controls every student screen shares: jelly buttons and the two
+// notice lines (the one-time toast, "someone replied"). In the entry CSS.
+//
+// A button is a jelly: a glossy fill on a solid lip. Pressed, it sinks onto the
+// lip (transform only). Primary = orange, secondary = white, agree = green.
+// =============================================================================
+
+@use 'mixins' as *;
+
+// ---- buttons ---------------------------------------------------------------------
+#{$night} .btn {
+  border: 0;
+  border-radius: var(--night-radius-button);
+  font-weight: 700;
+  letter-spacing: 0;
+  text-decoration: none;
+  @include calm-motion;
+}
+
+#{$night} .btn--primary,
+#{$night} .btn--primary:hover:not(:disabled) {
+  color: var(--night-primary-ink);
+  @include jelly(
+    var(--night-primary),
+    var(--night-primary-lip),
+    var(--night-lip),
+    var(--night-primary-shade)
+  );
+}
+
+#{$night} .btn--secondary,
+#{$night} .btn--secondary:hover:not(:disabled) {
+  color: var(--night-secondary-ink);
+  @include jelly(
+    var(--night-secondary),
+    var(--night-secondary-lip),
+    var(--night-lip),
+    var(--night-card-shade),
+    var(--night-drop),
+    var(--night-card-top)
+  );
+}
+
+#{$night} .btn--agree,
+#{$night} .btn--agree:hover:not(:disabled) {
+  color: var(--night-orb-ink);
+  @include jelly(var(--night-green), var(--night-green-lip));
+}
+
+#{$night} .btn--small {
+  min-height: 48px;
+  border-radius: 16px;
+}
+
+#{$night} .btn--small.btn--primary,
+#{$night} .btn--small.btn--primary:hover:not(:disabled) {
+  @include jelly(
+    var(--night-primary),
+    var(--night-primary-lip),
+    var(--night-lip-sm),
+    null,
+    var(--night-drop-sm)
+  );
+}
+
+#{$night} .btn--small.btn--secondary,
+#{$night} .btn--small.btn--secondary:hover:not(:disabled) {
+  @include jelly(
+    var(--night-secondary),
+    var(--night-secondary-lip),
+    var(--night-lip-sm),
+    null,
+    var(--night-drop-sm),
+    var(--night-card-top)
+  );
+}
+
+// The press: the jelly sinks onto its lip.
+#{$night} .btn--primary:active:not(:disabled),
+#{$night} .btn--secondary:active:not(:disabled),
+#{$night} .btn--agree:active:not(:disabled) {
+  @include jelly-press;
+}
+
+#{$night} .btn--small.btn--primary:active:not(:disabled),
+#{$night} .btn--small.btn--secondary:active:not(:disabled) {
+  @include jelly-press(var(--night-lip-sm));
+}
+
+// A quiet text action: the ink of what it sits on (white on the sky, the card's
+// ink on a card), underlined so it reads as a control without a colour cue.
+#{$night} .btn--text,
+#{$night} .btn--tertiary,
+#{$night} .btn--tertiary:hover:not(:disabled) {
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+// ---- the one-time line at the top of the phone -------------------------------------
+#{$night} .student-notice {
+  padding: 12px 16px;
+  font-weight: 600;
+  @include night-card(var(--night-radius-input), var(--night-lip-sm), var(--night-drop-sm));
+}
+
+#{$night} .student-notice__action {
+  border: 0;
+  border-radius: 14px;
+  color: var(--night-primary-ink);
+  @include jelly(
+    var(--night-primary-pill),
+    var(--night-primary-lip),
+    var(--night-lip-xs),
+    null,
+    null
+  );
+}
+
+// ---- "someone replied to you", under the header -------------------------------------
+#{$night} .reply-notice {
+  margin: 14px 20px 0;
+  padding: 8px 16px;
+  font-weight: 600;
+  @include night-card(var(--night-radius-input), var(--night-lip-sm), var(--night-drop-sm));
+}
+
+#{$night} .reply-notice__dot {
+  inline-size: 12px;
+  block-size: 12px;
+  @include orb(var(--night-orb-green), var(--night-orb-green-glow), var(--night-orb-green-shade), 6px);
+}
+
+// ---- prefers-contrast: more — every control shows an edge ----------------------------
+@include more-contrast {
+  #{$night} .btn--primary,
+  #{$night} .btn--secondary,
+  #{$night} .btn--agree,
+  #{$night} .language-button,
+  #{$night} .student-notice,
+  #{$night} .reply-notice {
+    border: 2px solid var(--night-orb-ink);
+  }
+
+  #{$night} .btn--text,
+  #{$night} .btn--tertiary {
+    border: 2px solid currentColor;
+    text-decoration: none;
+  }
+}

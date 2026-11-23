@@ -1,0 +1,123 @@
+// =============================================================================
+// Night — writing a proposal: the pen, the write box on a white card, the send
+// button, "sent". Loaded with the c3 views.
+// =============================================================================
+
+@use 'mixins' as *;
+
+// ---- the pen: who writes ----------------------------------------------------------
+#{$night} .pen {
+  gap: 16px;
+}
+
+#{$night} .pen__status {
+  font-size: 28px;
+  line-height: 1.15;
+  @include on-sky(var(--night-text-shadow-strong));
+}
+
+#{$night} .pen__closed {
+  color: var(--night-on-sky);
+  font-size: 18px;
+}
+
+#{$night} .pen__claim,
+#{$night} .write-panel__send {
+  min-height: 64px;
+  font-size: 24px;
+}
+
+// ---- the write box: a white card ------------------------------------------------------
+#{$night} .write-panel {
+  gap: 18px;
+}
+
+#{$night} .write {
+  padding: 16px 16px 18px;
+  @include night-card;
+}
+
+#{$night} .write__label {
+  gap: 10px;
+}
+
+#{$night} .write__eyebrow {
+  color: var(--night-card-ink);
+  font-size: 19px;
+  font-weight: 700;
+}
+
+#{$night} .write__area {
+  min-height: 120px;
+  padding: 12px 16px;
+  font-size: 19px;
+  @include night-input;
+}
+
+// A tablemate's text as it is typed: read only, on the card's lilac.
+#{$night} .write__area[readonly] {
+  background: var(--night-card-bottom);
+}
+
+#{$night} .write__count {
+  font-size: 14px;
+}
+
+// "Sent": the green pill with the gold star.
+#{$night} .write__sent {
+  margin-block-start: 10px;
+  padding-inline: 4px 14px;
+  background: var(--night-green);
+  box-shadow:
+    inset 0 2px 0 var(--night-gloss),
+    0 var(--night-lip-xs) 0 var(--night-green-lip);
+  color: var(--night-orb-ink);
+  font-weight: 700;
+}
+
+#{$night} .write__sent::before {
+  @include star-coin(28px);
+  box-shadow: inset 0 -2px 0 var(--night-orb-gold-shade);
+}
+
+#{$night} .write__refused {
+  font-weight: 600;
+}
+
+// Lines on the sky under the box.
+#{$night} .write-panel__note,
+#{$night} .write-panel__live {
+  color: var(--night-on-sky);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+// The send button follows the box: on the sky there is no band to pin it on
+// (the text under a pinned, see-through bar would show through it).
+#{$night} .write-panel__footer {
+  position: static;
+  margin-block-end: 0;
+  padding-block: 0;
+  border: 0;
+  background: transparent;
+}
+
+#{$night} .write-panel__pass {
+  margin-block-start: 12px;
+  color: var(--night-on-sky);
+}
+
+// ---- my own proposals, the push question -------------------------------------------------
+#{$night} .own-proposals {
+  gap: 4px;
+}
+
+#{$night} .push-ask {
+  margin-block-start: 0;
+  padding: 12px 14px 16px;
+  @include night-card(var(--night-radius-input), var(--night-lip-sm), var(--night-drop-sm));
+}
+
+#{$night} .push-ask__blocked {
+  color: var(--night-on-sky);
+}

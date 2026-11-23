@@ -1,0 +1,235 @@
+// =============================================================================
+// Night — rating proposals (Student-4-Rate.dc.html): each proposal on a white
+// card with five glossy orb faces under it. Also "all proposals" and the
+// replies entry on a card. Loaded with the c3 views.
+//
+// The faces are drawn here, not in the view: each button keeps its label,
+// order and behaviour (RateFaces.ts, Evaluation.ts). Its inline background
+// names the face (`var(--emoji-sad)` ...), which is what these rules match;
+// the orb covers that colour and the old image is not shown.
+// =============================================================================
+
+@use 'mixins' as *;
+@use 'glyphs';
+
+// ---- a proposal card ------------------------------------------------------------------
+#{$night} .text-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-block-end: 20px;
+  padding: 14px 14px 18px;
+  @include night-card(var(--night-radius-button), 5px, var(--night-drop-card-sm));
+}
+
+// My own proposal: the same card, edged in green.
+#{$night} .text-card--mine {
+  border: 3px solid var(--night-card-good-ink);
+}
+
+#{$night} .text-card__eyebrow {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+#{$night} .text-card__body {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+#{$night} .text-card__faces,
+#{$night} .text-card__replies {
+  margin-block-start: 0;
+}
+
+// ---- the five faces ---------------------------------------------------------------------
+#{$night} .rate-faces .evaluation {
+  gap: 6px;
+  min-block-size: 60px;
+  margin: 0;
+  padding: 0 4px;
+}
+
+#{$night} .evaluation__thumb {
+  flex: none;
+  box-sizing: border-box;
+  inline-size: 48px;
+  min-inline-size: 48px;
+  max-inline-size: 48px;
+  block-size: 48px;
+  min-block-size: 48px;
+  border: 0;
+  @include calm-motion;
+}
+
+#{$night} .evaluation__thumb-img {
+  visibility: hidden;
+}
+
+#{$night} .evaluation__thumb::before {
+  content: '';
+  position: absolute;
+  inset: 9px;
+}
+
+@mixin face-orb($name, $glyph) {
+  #{$night} .evaluation__thumb[style*='--emoji-#{$name}'] {
+    @content;
+  }
+
+  #{$night} .evaluation__thumb[style*='--emoji-#{$name}']::before {
+    @include glyph($glyph);
+  }
+}
+
+@include face-orb('sad', glyphs.$face-sad) {
+  --orb-glow: var(--night-orb-red-glow);
+  --orb-shade: var(--night-orb-red-shade);
+  background-image: var(--night-orb-red);
+}
+
+@include face-orb('thinking', glyphs.$face-half-sad) {
+  --orb-glow: var(--night-orb-orange-glow);
+  --orb-shade: var(--night-orb-orange-shade);
+  background-image: var(--night-orb-orange);
+}
+
+@include face-orb('neutral', glyphs.$face-neutral) {
+  --orb-glow: var(--night-orb-neutral-glow);
+  --orb-shade: var(--night-orb-neutral-shade);
+  background-image: var(--night-orb-neutral);
+}
+
+@include face-orb('happy', glyphs.$face-half-happy) {
+  --orb-glow: var(--night-orb-cyan-glow);
+  --orb-shade: var(--night-orb-cyan-shade);
+  background-image: var(--night-orb-cyan);
+}
+
+@include face-orb('smiley', glyphs.$face-happy) {
+  --orb-glow: var(--night-orb-green-glow);
+  --orb-shade: var(--night-orb-green-shade);
+  background-image: var(--night-orb-green);
+}
+
+#{$night} .evaluation__thumb,
+#{$night} .evaluation__thumb:active {
+  box-shadow:
+    0 0 8px var(--orb-glow),
+    inset 0 -3px 0 var(--orb-shade);
+}
+
+// Every face stays vivid after a choice; the chosen one is larger, in a double
+// ring (white, then ink) with a stronger halo. Shape and size say it, not hue.
+#{$night} .evaluation--has-selection .evaluation__thumb:not(.evaluation__thumb--active) {
+  filter: none;
+  opacity: 1;
+  transform: none;
+}
+
+#{$night} .evaluation__thumb--active,
+#{$night} .evaluation__thumb--active:active {
+  transform: scale(1.14);
+  box-shadow:
+    0 0 0 3px var(--night-card-top),
+    0 0 0 6px var(--night-card-ink),
+    0 0 16px 6px var(--orb-glow),
+    inset 0 -3px 0 var(--orb-shade);
+}
+
+#{$night} .evaluation__thumb-check {
+  display: none;
+}
+
+#{$night} .rate-faces__scale {
+  padding-inline: 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+// ---- lists of proposals to rate ------------------------------------------------------------
+#{$night} .rated-list__empty,
+#{$night} .flow__plenum,
+#{$night} .all-proposals__seen-all {
+  color: var(--night-on-sky);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+#{$night} .rated-list__toggle {
+  color: var(--night-on-sky);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+#{$night} .all-proposals__progress {
+  margin-block-end: 14px;
+  color: var(--night-on-sky);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+#{$night} .all-proposals__divider {
+  color: var(--night-on-sky);
+  font-size: 15px;
+}
+
+#{$night} .all-proposals__write {
+  color: var(--night-on-sky);
+}
+
+#{$night} .all-proposals__more {
+  min-height: 56px;
+}
+
+#{$night} .all-proposals__skeleton-card {
+  border-radius: var(--night-radius-button);
+  background: var(--night-panel-gloss);
+}
+
+// "You rated every proposal": the green jelly with the gold star.
+#{$night} .all-proposals__done {
+  border: 0;
+  border-radius: var(--night-radius-button);
+  color: var(--night-orb-ink);
+  font-size: 19px;
+  font-weight: 700;
+  @include jelly(var(--night-green), var(--night-green-lip), var(--night-lip), null);
+}
+
+#{$night} .all-proposals__done::before {
+  @include star-coin(44px);
+}
+
+// ---- the replies entry: a quiet pill in the ink of what it sits on ---------------------------
+#{$night} .reply-entry {
+  min-height: 48px;
+  padding-inline: 14px;
+  border: 2px solid var(--ink-muted);
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+#{$night} .reply-entry--new {
+  color: var(--ink);
+}
+
+#{$night} .reply-entry__new {
+  background: var(--night-green);
+  color: var(--night-orb-ink);
+}
+
+// ---- prefers-contrast: more — a face and a card show their edge -------------------------------
+@include more-contrast {
+  #{$night} .evaluation__thumb {
+    border: 2px solid var(--night-orb-ink);
+  }
+
+  #{$night} .text-card {
+    border: 2px solid var(--night-card-ink);
+  }
+}

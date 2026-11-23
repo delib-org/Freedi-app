@@ -67,6 +67,9 @@
   --night-ridge: #2a3bb5;
   --night-crystal: #3fd8ff;
   --night-crystal-light: #a5f0ff;
+  // The crystal peaks above the action zone, in the four colours above (an
+  // image cannot read a custom property, so they are repeated in the data URI).
+  --night-ridge-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 52' preserveAspectRatio='none'%3E%3Cpath d='M0 52V30l38-22 30 26 34-30 40 34 36-24 44 30 40-36 46 34 38-20 44 26v32z' fill='%232a3bb5'/%3E%3Cpath d='M0 52V40l60-12 54 14 70-18 80 20 62-14 64 12v10z' fill='%231a1670'/%3E%3Cpath d='M300 30l12-18 12 8-6 16z' fill='%233fd8ff'/%3E%3Cpath d='M300 30l12-18 4 14z' fill='%23a5f0ff'/%3E%3Cpath d='M62 34l8-14 10 6-4 12z' fill='%233fd8ff'/%3E%3Cpath d='M62 34l8-14 3 11z' fill='%23a5f0ff'/%3E%3C/svg%3E");
 
   // ---- text on the sky: white only ----
   --night-on-sky: #ffffff;
@@ -78,6 +81,10 @@
   --night-card-bottom: #e6e3ff;
   --night-card: linear-gradient(180deg, var(--night-card-top), var(--night-card-bottom));
   --night-card-lip: #6f66d9;
+  --night-card-shade: rgba(120, 110, 220, 0.35); // the darker band inside a card's foot
+  --night-drop-card: 0 16px 28px rgba(10, 5, 50, 0.4);
+  --night-drop-card-sm: 0 12px 20px rgba(10, 5, 50, 0.35);
+  --night-input-inset: inset 0 3px 4px rgba(30, 21, 96, 0.14);
   --night-card-ink: #1e1560;        // 12.6:1 on the card's lilac foot ✓ AAA
   --night-card-ink-soft: #4b4580;   // 6.8:1 on the lilac foot ✓
   --night-card-line: #9c92e8;       // a divider inside a card (decorative, 2.7:1)
@@ -121,6 +128,8 @@
   --night-primary-lip: #b84a00;
   --night-primary-shade: rgba(196, 82, 0, 0.55);
   --night-primary-ink: #4a1a00;     // 8.3:1 on the mid orange, 6.2:1 on the deep ✓
+  --night-primary-glow: rgba(255, 182, 39, 0.45); // side B's panel: its frame's halo
+  --night-primary-ring: rgba(255, 182, 39, 0.18);
 
   // ---- secondary: white jelly ----
   --night-secondary: var(--night-card);
@@ -189,6 +198,9 @@
   --night-orb-gold-glow: rgba(255, 197, 51, 0.85);
   --night-orb-gold-shade: rgba(160, 70, 0, 0.5);
   --night-orb-gold-ink: #7a3300;
+  // The winner's star, drawn in --night-orb-gold-ink on the gold coin.
+  --night-star-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 2.2l2.3 4.9 5.3.7-3.9 3.7 1 5.3-4.7-2.6-4.7 2.6 1-5.3-3.9-3.7 5.3-.7z' fill='%237a3300' stroke='%237a3300' stroke-width='1.2' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --night-thumb-glow: rgba(95, 224, 255, 0.95); // the slider's thumb
   --night-orb-ink: #1a0b4b;         // faces and letters on every orb
 
   // ---- side marks: the shape carries the side, not the hue alone ----
@@ -356,6 +368,11 @@
     --warning: var(--night-primary-light);
     --night-card-ink-soft: var(--night-card-ink);
     --night-card-line: var(--night-input-border);
+    // White on the sky's foot is 5.3:1; the lower stop is 8:1, so the sky ends there.
+    --night-sky-bottom: var(--night-sky-lower);
+    // Ink on a jelly's deep foot is under 7:1; the fill stops at its mid stop.
+    --night-primary-deep: var(--night-primary-mid);
+    --night-cyan-deep: var(--night-cyan-mid);
     --focus-ring-width: 4px;
     --focus-ring-offset: 4px;
   }

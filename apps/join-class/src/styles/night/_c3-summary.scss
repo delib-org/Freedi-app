@@ -1,0 +1,211 @@
+// =============================================================================
+// Night — the summary (Student-6-Summary.dc.html): the vote's results on white
+// cards and support by side, three striped bars each led by its side mark.
+// The decision panel is in _decision.scss. Loaded with the c3 views.
+// =============================================================================
+
+@use 'mixins' as *;
+
+#{$night} .summary__no-vote,
+#{$night} .summary__support-later {
+  color: var(--night-on-sky);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+#{$night} .summary__ask,
+#{$night} .vote-result__title {
+  margin-block: 4px 12px;
+  font-size: 20px;
+  line-height: 1.2;
+  @include on-sky;
+}
+
+// ---- the vote's result ------------------------------------------------------------------
+#{$night} .vote-result {
+  margin-block-end: 22px;
+}
+
+#{$night} .vote-result__rows {
+  gap: 16px;
+}
+
+#{$night} .vote-result__row,
+#{$night} .vote-result__row--winner {
+  gap: 8px;
+  padding: 14px 16px 18px;
+  @include night-card(var(--night-radius-button), 5px, var(--night-drop-card-sm));
+}
+
+#{$night} .vote-result__tag {
+  min-block-size: 26px;
+  padding-inline: 12px;
+  font-size: 14px;
+  @include night-pill;
+}
+
+#{$night} .vote-result__text {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+#{$night} .vote-result__bar {
+  overflow: visible;
+  @include night-well(16px);
+}
+
+#{$night} .vote-result__fill {
+  border-radius: var(--night-radius-pill);
+  @include striped-fill(var(--night-stripe-a), var(--night-stripe-b), 6px);
+}
+
+#{$night} .vote-result__count {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+#{$night} .vote-result__turnout,
+#{$night} .vote-result__tie,
+#{$night} .vote-result__wait {
+  margin-block-start: 14px;
+  color: var(--night-on-sky);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+// ---- support by side: one white card ---------------------------------------------------------
+#{$night} .support {
+  margin-block-start: 22px;
+  padding: 14px 16px 20px;
+  @include night-card(var(--night-radius-button), 5px, var(--night-drop-card-sm));
+}
+
+#{$night} .support__explain {
+  margin-block-end: 14px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+#{$night} .support__bars {
+  gap: 14px;
+}
+
+// A row: the side's mark, then the label with "n of m rated" beside it and the
+// bar under both.
+#{$night} .support__row {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 12px;
+}
+
+#{$night} .support__row::before {
+  content: '';
+  grid-area: 1 / 1 / span 2 / auto;
+  justify-self: center;
+  inline-size: 30px;
+  block-size: 30px;
+}
+
+// The marks, in the fixed order of the bars: side A, the middle, side B.
+#{$night} .support__row:nth-child(1)::before {
+  border-radius: 50%;
+  background: var(--night-side-a);
+  box-shadow: inset 0 -3px 0 var(--night-orb-cyan-shade);
+}
+
+#{$night} .support__row:nth-child(2)::before {
+  inline-size: 21px;
+  block-size: 21px;
+  border-radius: 5px;
+  background: var(--night-side-middle);
+  box-shadow: inset 0 -2px 0 var(--night-orb-violet-shade);
+  transform: rotate(45deg);
+}
+
+#{$night} .support__row:nth-child(3)::before {
+  border-radius: 9px;
+  background: var(--night-side-b);
+  box-shadow: inset 0 -3px 0 var(--night-orb-gold-shade);
+}
+
+#{$night} .support__label {
+  grid-area: 1 / 2;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+#{$night} .support__count {
+  grid-area: 1 / 3;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+#{$night} .support__track,
+#{$night} .support__too-few {
+  grid-area: 2 / 2 / auto / span 2;
+}
+
+#{$night} .support__track {
+  overflow: hidden;
+  @include night-well(16px);
+}
+
+#{$night} .support__fill {
+  inset-block: 3px;
+  inset-inline-start: 3px;
+  inline-size: calc(var(--pct, 0%) - 6px);
+  border-radius: var(--night-radius-pill);
+  @include striped-fill(var(--night-stripe-violet-a), var(--night-stripe-violet-b), 6px);
+}
+
+#{$night} .support__fill--a {
+  @include striped-fill(var(--night-cyan-light), var(--night-cyan-mid), 6px);
+}
+
+#{$night} .support__fill--b {
+  @include striped-fill(var(--night-stripe-a), var(--night-stripe-b), 6px);
+}
+
+// The gate both sides must reach: a white tick on the dark track.
+#{$night} .support__gate {
+  background: var(--night-on-sky);
+}
+
+// The verdict: a pill. Green when both sides support, orange when not yet.
+#{$night} .support__verdict {
+  margin-block-start: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+#{$night} .support__verdict--closer,
+#{$night} .support__verdict--apart {
+  display: flex;
+  justify-content: center;
+  inline-size: fit-content;
+  min-block-size: 38px;
+  margin-inline: auto;
+  padding: 4px 16px;
+  border-radius: var(--night-radius-pill);
+}
+
+#{$night} .support__verdict--closer {
+  background: var(--night-green);
+  box-shadow:
+    inset 0 2px 0 var(--night-gloss),
+    0 var(--night-lip-xs) 0 var(--night-green-lip);
+  color: var(--night-orb-ink);
+}
+
+#{$night} .support__verdict--apart {
+  background: var(--night-primary-pill);
+  box-shadow:
+    inset 0 2px 0 var(--night-gloss),
+    0 var(--night-lip-xs) 0 var(--night-primary-lip);
+  color: var(--night-primary-ink);
+}

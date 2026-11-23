@@ -1,0 +1,273 @@
+// =============================================================================
+// Night — arriving: "waiting for the teacher" with the class counter and the
+// classmate orbs, the name form, the name gate's questions, "seat moved" and
+// the opening (Student-1-Join.dc.html). Loaded with the c2 views.
+// =============================================================================
+
+@use 'mixins' as *;
+@use 'glyphs';
+
+// ---- waiting -----------------------------------------------------------------------
+#{$night} .waiting {
+  gap: 14px;
+  color: var(--night-on-sky);
+}
+
+#{$night} .waiting__title {
+  font-size: 28px;
+  line-height: 1.15;
+  @include on-sky(var(--night-text-shadow-strong));
+}
+
+// "12 in the class": the blue counter with the gold coin at its end.
+#{$night} .waiting__count {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  block-size: 40px;
+  padding-inline: 16px 6px;
+  border-radius: var(--night-radius-pill);
+  background: var(--night-counter);
+  box-shadow:
+    inset 0 2px 0 var(--night-gloss-soft),
+    0 var(--night-lip-sm) 0 var(--night-counter-lip),
+    var(--night-drop-sm);
+  color: var(--night-on-sky);
+  font-size: 19px;
+  font-weight: 700;
+}
+
+#{$night} .waiting__count::after {
+  content: '';
+  flex: none;
+  inline-size: 30px;
+  block-size: 30px;
+  border-radius: 50%;
+  background: var(--night-orb-gold);
+  box-shadow: inset 0 -2px 0 var(--night-orb-gold-shade);
+}
+
+#{$night} .waiting__count::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 11px;
+  inset-inline-end: 12px;
+  inline-size: 18px;
+  block-size: 18px;
+  @include glyph(glyphs.$person, var(--night-orb-gold-ink));
+}
+
+// The classmate orbs: decoration only. The element carries `hidden`, so the
+// solid look, high contrast and the teacher's sample never draw it; this rule
+// is what shows it.
+#{$night} .classmates {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-inline-size: 330px;
+}
+
+#{$night} .classmates__orb,
+#{$night} .classmates__slot {
+  position: relative;
+  box-sizing: border-box;
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: 50%;
+}
+
+#{$night} .classmates__orb::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  @include glyph(glyphs.$face-smile);
+}
+
+#{$night} .classmates__orb:nth-child(3n + 2)::after {
+  @include glyph(glyphs.$face-open);
+}
+
+#{$night} .classmates__orb:nth-child(7n + 3)::after {
+  @include glyph(glyphs.$face-wink);
+}
+
+#{$night} .classmates__orb--magenta {
+  @include orb(
+    var(--night-orb-magenta),
+    var(--night-orb-magenta-glow),
+    var(--night-orb-magenta-shade)
+  );
+}
+
+#{$night} .classmates__orb--cyan {
+  @include orb(var(--night-orb-cyan), var(--night-orb-cyan-glow), var(--night-orb-cyan-shade));
+}
+
+#{$night} .classmates__orb--orange {
+  @include orb(
+    var(--night-orb-orange),
+    var(--night-orb-orange-glow),
+    var(--night-orb-orange-shade)
+  );
+}
+
+#{$night} .classmates__orb--green {
+  @include orb(var(--night-orb-green), var(--night-orb-green-glow), var(--night-orb-green-shade));
+}
+
+#{$night} .classmates__orb--violet {
+  @include orb(
+    var(--night-orb-violet),
+    var(--night-orb-violet-glow),
+    var(--night-orb-violet-shade)
+  );
+}
+
+// The open seat: a dashed ring with a question mark.
+#{$night} .classmates__slot {
+  display: grid;
+  place-items: center;
+  border: 2.5px dashed var(--night-on-sky);
+  box-shadow: 0 0 12px var(--night-gloss-soft);
+  color: var(--night-on-sky);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+#{$night} .classmates__slot::before {
+  content: '?';
+}
+
+// ---- the name form: a white card -----------------------------------------------------
+#{$night} .name-entry {
+  gap: 10px;
+  padding: 16px 16px 20px;
+  @include night-card;
+}
+
+#{$night} .name-entry__row {
+  flex-direction: column;
+  gap: 14px;
+}
+
+#{$night} .name-entry__input {
+  flex: none;
+  block-size: 56px;
+  padding-inline: 16px;
+  font-size: 20px;
+  @include night-input;
+}
+
+#{$night} .name-entry__save {
+  min-block-size: 60px;
+  font-size: 22px;
+}
+
+#{$night} .name-entry__hint {
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+#{$night} .name-entry__error {
+  font-weight: 600;
+}
+
+// ---- the name gate's questions, "seat moved" -------------------------------------------
+#{$night} .name-gate__question,
+#{$night} .seat-moved__title {
+  font-size: 26px;
+  line-height: 1.2;
+  @include on-sky(var(--night-text-shadow-strong));
+}
+
+#{$night} .name-gate__actions {
+  gap: 16px;
+}
+
+#{$night} .name-gate__action,
+#{$night} .name-gate__actions > .btn,
+#{$night} .seat-moved__action {
+  min-block-size: 60px;
+  font-size: 20px;
+}
+
+// An error line that sits on the sky (not in the form's card): white, on a
+// small card of its own, so it is never a pale tint on the sky.
+#{$night} .name-gate > .name-entry__error {
+  padding: 10px 14px 14px;
+  @include night-card(var(--night-radius-input), var(--night-lip-sm), var(--night-drop-sm));
+  color: var(--night-card-bad-ink);
+}
+
+#{$night} .seat-moved__body {
+  color: var(--night-on-sky);
+  font-size: 18px;
+}
+
+// ---- opening: the lesson's question in the glowing panel -------------------------------
+#{$night} .opening {
+  gap: 22px;
+}
+
+#{$night} .opening__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px 20px 22px;
+  @include night-panel;
+}
+
+// The sparkle in the panel's corner.
+#{$night} .opening__card::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 14px;
+  inset-inline-end: 18px;
+  inline-size: 34px;
+  block-size: 34px;
+  @include glyph(glyphs.$sparkle, var(--night-primary-light));
+}
+
+#{$night} .opening__eyebrow {
+  margin: 0;
+  font-size: 15px;
+  @include night-pill;
+}
+
+#{$night} .opening__question {
+  font-size: clamp(2rem, 11.8vw, 2.875rem);
+  font-weight: 700;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+  @include on-sky(var(--night-text-shadow-strong));
+}
+
+// The teacher's introduction text: a reading surface.
+#{$night} .opening > .intro-text {
+  margin-block-start: 0;
+  padding: 16px 18px 20px;
+  @include night-card;
+}
+
+#{$night} .intro-videos__title {
+  color: var(--night-on-sky);
+  font-size: 16px;
+}
+
+#{$night} .intro-videos__list {
+  @include night-card(var(--night-radius-button));
+}
+
+#{$night} .intro-video-row__live {
+  background: var(--night-card-ink);
+  color: var(--night-card-top);
+}
+
+#{$night} .intro-video-row__player {
+  background: var(--night-card-bottom);
+}

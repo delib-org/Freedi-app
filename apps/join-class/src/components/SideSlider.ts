@@ -1,5 +1,5 @@
 import m from 'mithril';
-import { SIDE_MAX, SIDE_MIN } from '@freedi/shared-types';
+import { SIDE_MAX, SIDE_MIN, campOf } from '@freedi/shared-types';
 import { isRTL, t } from '@/lib/i18n';
 import { sideWordKey } from '@/views/student/c2/c2Helpers';
 
@@ -36,7 +36,8 @@ export const SideSlider: m.Component<SideSliderAttrs> = {
 			name: sideWordKey(value) === 'side.near_a' ? nameA : nameB,
 		});
 
-		return m('.side-slider', { dir: 'ltr' }, [
+		// `data-camp`: where the thumb stands, so a look can draw the thumb as that side's mark.
+		return m('.side-slider', { dir: 'ltr', 'data-camp': campOf(value) }, [
 			m('.side-slider__ends', [character('a', nameA, claimA), character('b', nameB, claimB)]),
 			m('.side-slider__field', [
 				m('.side-slider__track', { 'aria-hidden': 'true' }, [

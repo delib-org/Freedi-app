@@ -1,0 +1,38 @@
+// =============================================================================
+// Night — the drawn glyphs: orb faces, the person on the counter's coin, the
+// sparkle. Each is an SVG used as a mask (`glyph` in _mixins.scss), so the SVG
+// carries a shape only and the colour stays a token.
+// =============================================================================
+
+$-open: "%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E";
+$-close: '%3C/svg%3E';
+$-line: "fill='none' stroke='black' stroke-width='2' stroke-linecap='round'";
+$-eye-start: "%3Ccircle cx='8.5' cy='10.5' r='1.7'/%3E";
+$-eye-end: "%3Ccircle cx='15.5' cy='10.5' r='1.7'/%3E";
+$-eyes: $-eye-start + $-eye-end;
+
+@function _svg($body) {
+  @return url("data:image/svg+xml,#{$-open}#{$body}#{$-close}");
+}
+
+@function _mouth($d) {
+  @return "%3Cpath d='#{$d}' #{$-line}/%3E";
+}
+
+// The five rating faces, from "did not like" to "liked" (Student-4-Rate).
+$face-sad: _svg($-eyes + _mouth('M8 17q4-4 8 0'));
+$face-half-sad: _svg($-eyes + _mouth('M8.5 16.5q3.5-2 7 0'));
+$face-neutral: _svg($-eyes + _mouth('M8.5 16h7'));
+$face-half-happy: _svg($-eyes + _mouth('M8.5 15.5q3.5 2 7 0'));
+$face-happy: _svg($-eyes + _mouth('M7.5 14.5q4.5 5 9 0'));
+
+// The classmates' faces (Student-1-Join): a smile, an open mouth, a wink.
+$face-smile: _svg($-eyes + _mouth('M8 15q4 3.5 8 0'));
+$face-open: _svg($-eyes + "%3Cellipse cx='12' cy='16' rx='2.2' ry='2.5'/%3E");
+$face-wink: _svg(_mouth('M7 10.5h3') + $-eye-end + _mouth('M8 15q4 3.5 8 0'));
+
+$person: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Ccircle cx='9' cy='6.5' r='2.8'/%3E%3Cpath d='M3.5 15c0-3 2.4-5 5.5-5s5.5 2 5.5 5z'/%3E%3C/svg%3E");
+
+$sparkle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2c1.2 7.500 4.500 10.800 14 14-9.500 3.200-12.800 6.500-14 14-1.200-7.500-4.500-10.800-14-14 9.500-3.200 12.800-6.500 14-14z'/%3E%3C/svg%3E");
+
+$check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M4.5 10.5l3.500 3.500 7.500-8' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");

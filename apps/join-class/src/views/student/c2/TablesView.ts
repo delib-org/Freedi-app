@@ -3,6 +3,7 @@ import { SIDE_MAX, SIDE_MIN, isTableAlone, reservedSeatsOf } from '@freedi/share
 import type { Camp, ClassTable } from '@freedi/shared-types';
 import type { SideNames } from '@/lib/classroom/classSettings';
 import '@/styles/student-c2.scss';
+import '@/styles/night/c2.scss';
 import { StudentFrame } from '@/components/StudentFrame';
 import { classState } from '@/lib/classroom/classState';
 import { getUserState } from '@/lib/user';

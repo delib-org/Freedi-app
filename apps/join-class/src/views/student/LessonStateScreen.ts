@@ -1,5 +1,6 @@
 import m from 'mithril';
 import '@/styles/student-state.scss';
+import '@/styles/night/state.scss';
 import { Collections } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { StudentFrame } from '@/components/StudentFrame';

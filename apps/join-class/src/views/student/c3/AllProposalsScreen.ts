@@ -7,6 +7,7 @@ import {
 } from '@freedi/shared-types';
 import '@/styles/student-c3.scss';
 import '@/styles/student-c3-all-proposals.scss';
+import '@/styles/night/c3.scss';
 import { StudentFrame } from '@/components/StudentFrame';
 import { t } from '@/lib/i18n';
 import { getChallengeQuestion } from '@/lib/lesson';
