@@ -1,0 +1,193 @@
+// =============================================================================
+// Night at room scale — the vote: the gate with its doors, the proposals that
+// got through, and the tally as jelly cards with thick striped bars
+// (Projector-2-Vote.dc.html). With the results closed to the class the cards
+// carry the names only, as today.
+// =============================================================================
+
+@use 'room' as *;
+
+// One column; the status pill shares the headline's row, at its end.
+#{$wall} .projector-step--vote {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: rs(22);
+}
+
+#{$wall} .projector-step--vote .projector-instruction {
+  grid-area: 1 / 1;
+  font-size: headline(72);
+}
+
+// Held or over: a white status pill.
+#{$wall} .projector-vote-status {
+  grid-area: 1 / 1;
+  justify-self: end;
+  padding: rs(6) rs(36) rs(10);
+  @include room-card(var(--night-radius-pill), var(--night-lip-sm), var(--night-drop-sm));
+  color: var(--night-card-ink);
+  font-size: rs(44);
+  font-weight: 700;
+}
+
+// ---- the gate ---------------------------------------------------------------------
+#{$wall} .gate-stage {
+  gap: rs(16);
+}
+
+#{$wall} .gate-stage__frame {
+  width: rs(170);
+  filter: drop-shadow(0 var(--night-lip-sm) 0 var(--night-card-lip));
+}
+
+#{$wall} .gate-stage__lintel {
+  height: rs(18);
+  border-radius: rs(12) rs(12) 0 0;
+  background: var(--night-card-top);
+}
+
+#{$wall} .gate-stage__opening {
+  height: rs(86);
+  border-inline: rs(14) solid var(--night-card-top);
+  background: var(--night-panel-bottom);
+}
+
+#{$wall} .gate-stage__light {
+  background: var(--night-cyan);
+}
+
+#{$wall} .gate-stage__door {
+  background: var(--night-primary);
+  box-shadow: inset 0 0 0 rs(4) var(--night-primary-lip);
+}
+
+#{$wall} .gate-stage__sill {
+  height: rs(10);
+  background: var(--night-card-top);
+}
+
+#{$wall} .gate-stage__sill--lit {
+  background: var(--night-primary-mid);
+}
+
+// White on the sky, open or closed: the doors and the words say which.
+#{$wall} .gate-stage__status,
+#{$wall} .gate-stage--open .gate-stage__status {
+  font-size: rs(52);
+  font-weight: 700;
+  @include on-sky(var(--night-text-shadow-strong));
+}
+
+// One row, whatever the count: a long proposal is cut, not wrapped.
+#{$wall} .gate-stage__chips {
+  flex-wrap: nowrap;
+  gap: rs(24);
+  padding-block-end: var(--night-lip-sm);
+}
+
+#{$wall} .gate-stage__chip {
+  flex: 0 1 auto;
+  flex-direction: row;
+  align-items: center;
+  gap: rs(20);
+  max-width: none;
+  padding: rs(10) rs(30) rs(14);
+  @include room-card(var(--night-radius-button), var(--night-lip-sm), var(--night-drop-sm));
+}
+
+// Through the gate: the orange card.
+#{$wall} .gate-stage__chip--through {
+  @include room-chosen(var(--night-radius-button), var(--night-lip-sm), var(--night-drop-sm));
+}
+
+#{$wall} .gate-stage__chip--more {
+  flex: none;
+  border: rs(5) dashed var(--night-on-sky);
+  background: transparent;
+  box-shadow: none;
+  color: var(--night-on-sky);
+}
+
+#{$wall} .gate-stage__chip-text {
+  font-size: rs(38);
+  font-weight: 600;
+}
+
+#{$wall} .gate-stage__chip-note {
+  flex: none;
+  color: var(--night-card-ink-soft);
+  font-size: rs(32);
+  font-weight: 600;
+}
+
+#{$wall} .gate-stage__chip--through .gate-stage__chip-note {
+  color: var(--night-primary-ink);
+}
+
+// ---- the tally: one jelly card per proposal ------------------------------------------
+#{$wall} .projector-tally {
+  gap: rs(22);
+  padding-block-end: var(--night-lip);
+}
+
+#{$wall} .projector-tally__row {
+  gap: rs(36);
+  padding: rs(12) rs(44) rs(20);
+  @include room-card(var(--night-radius-button));
+}
+
+#{$wall} .projector-tally__row--names {
+  padding-block: rs(14) rs(22);
+}
+
+#{$wall} .projector-tally__text {
+  color: var(--night-card-ink);
+  font-size: rs(44);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+#{$wall} .projector-tally__track {
+  display: flex;
+  @include room-well(rs(40));
+}
+
+#{$wall} .projector-tally__fill {
+  block-size: auto;
+  @include room-fill(var(--night-cyan-light), var(--night-cyan-mid));
+}
+
+#{$wall} .projector-tally__count {
+  min-width: 2.2ch;
+  color: var(--night-card-ink);
+  font-size: rs(72);
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+}
+
+// Four proposals or more: slimmer cards and no drawn gate (its words and the
+// chips stay), so the ballot stays on the wall.
+#{$wall} .projector-tally__row:first-child:nth-last-child(n + 4),
+#{$wall} .projector-tally__row:first-child:nth-last-child(n + 4) ~ .projector-tally__row {
+  padding-block: rs(6) rs(12);
+  box-shadow:
+    inset 0 rs(-8) 0 var(--night-card-shade),
+    0 var(--night-lip-sm) 0 var(--night-card-lip),
+    var(--night-drop-sm);
+}
+
+#{$wall} .projector-tally__row:first-child:nth-last-child(n + 4) .projector-tally__text,
+#{$wall} .projector-tally__row:first-child:nth-last-child(n + 4) ~ .projector-tally__row .projector-tally__text {
+  font-size: rs(38);
+}
+
+#{$wall} .projector-tally__row:first-child:nth-last-child(n + 4) .projector-tally__count,
+#{$wall} .projector-tally__row:first-child:nth-last-child(n + 4) ~ .projector-tally__row .projector-tally__count {
+  font-size: rs(56);
+}
+
+#{$wall} .projector-step--vote:has(.projector-tally__row:nth-child(4)) .gate-stage__frame {
+  display: none;
+}

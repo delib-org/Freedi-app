@@ -1,0 +1,19 @@
+// Night at room scale — the projector's look (docs/design/join-class-redesign-port.md,
+// section 7.4). This folder is owned by the PROJECTOR lane.
+//
+// Imported by the lazy TeacherProjector view next to the projector's own
+// stylesheets, so a student's first load and the teacher's console never
+// download it. Every rule sits under $night-projector (../_look-scope.scss): the
+// solid look, high contrast and the other surfaces never match one. The tokens
+// are the night look's (../night/_tokens.scss lists this scope too and holds the
+// room-scale overrides); one partial per step.
+@use 'shell';
+@use 'join';
+@use 'opening';
+@use 'side';
+@use 'tables';
+@use 'proposals';
+@use 'vote';
+@use 'summary';
+@use 'support';
+@use 'controls';

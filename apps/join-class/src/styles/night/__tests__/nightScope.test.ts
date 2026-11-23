@@ -4,10 +4,11 @@ import { compile } from 'sass';
 import { describe, expect, it } from 'vitest';
 
 /**
- * The night look may never leak: the solid look, high contrast, the teacher
- * surface and the projector render the old stylesheets untouched (redesign port
- * spec, section 2). So every rule the night stylesheets emit starts with the
- * night scope, and only the token file holds a raw colour.
+ * The night look may never leak: the solid look, high contrast and the teacher
+ * surface render the old stylesheets untouched (redesign port spec, section 2).
+ * So every rule the night stylesheets emit starts with the night scope, and only
+ * the token file holds a raw colour. The projector wears the same look at room
+ * scale (section 7.4) from its own folder, checked the same way below.
  */
 
 const NIGHT_DIR = new URL('../', import.meta.url);
@@ -23,8 +24,29 @@ const SCOPES = [SCOPE, PROJECTOR_SCOPE];
 const ENTRIES = ['index.scss', 'c2.scss', 'c3.scss', 'state.scss'];
 const TOKEN_FILE = '_tokens.scss';
 
-function compiled(entry: string): string {
-	return compile(fileURLToPath(new URL(entry, NIGHT_DIR))).css.replace(/\/\*[\s\S]*?\*\//g, '');
+/**
+ * The projector's own stylesheets (styles/night-projector/**, one lazy entry):
+ * every rule there sits under the projector scope alone, and the video mode
+ * (black letterbox) is never matched.
+ */
+const PROJECTOR_DIR = new URL('../../night-projector/', import.meta.url);
+const PROJECTOR_ENTRY = 'index.scss';
+const WALL = `${PROJECTOR_SCOPE} .projector:not(.projector--video)`;
+const WALL_RTL = `${PROJECTOR_SCOPE}[dir=rtl] .projector:not(.projector--video)`;
+
+function compiled(entry: string, dir: URL = NIGHT_DIR): string {
+	return compile(fileURLToPath(new URL(entry, dir))).css.replace(/\/\*[\s\S]*?\*\//g, '');
+}
+
+/** Stylesheets of a folder that hold a raw colour (hex, a hex inside a data URI, rgb / hsl). */
+function partialsWithRawColour(dir: URL, names: readonly string[]): string[] {
+	return names.filter((name) => {
+		const source = readFileSync(new URL(name, dir), 'utf8')
+			.replace(/\/\/.*$/gm, '')
+			.replace(/#\{/g, '');
+
+		return /#[0-9a-f]{3,8}\b|%23[0-9a-f]{3,8}\b|\b(rgb|hsl)a?\(/i.test(source);
+	});
 }
 
 /** The selectors of every style rule, at any depth of @media / @supports. */
@@ -109,15 +131,76 @@ describe('night colours live in the token file', () => {
 	);
 
 	it('no partial but the tokens holds a raw colour', () => {
-		const offenders = partials.filter((name) => {
-			const source = readFileSync(new URL(name, NIGHT_DIR), 'utf8')
-				.replace(/\/\/.*$/gm, '')
-				.replace(/#\{/g, '');
+		expect(partials.length).toBeGreaterThan(0);
+		expect(partialsWithRawColour(NIGHT_DIR, partials)).toEqual([]);
+	});
+});
 
-			return /#[0-9a-f]{3,8}\b|%23[0-9a-f]{3,8}\b|\b(rgb|hsl)a?\(/i.test(source);
-		});
+describe('the night projector look stays inside its scope', () => {
+	const css = compiled(PROJECTOR_ENTRY, PROJECTOR_DIR);
+	const selectors = selectorsOf(css).map(normalized);
+
+	it('every rule sits under the projector scope, on the wall and never in video mode', () => {
+		const leaked = selectors.filter(
+			(selector) => !selector.startsWith(WALL) && !selector.startsWith(WALL_RTL),
+		);
+
+		expect(selectors.length).toBeGreaterThan(0);
+		expect(leaked).toEqual([]);
+	});
+
+	it('no rule reaches the student or the teacher surface', () => {
+		expect(css).not.toMatch(/data-surface=["']?(student|teacher)/);
+	});
+
+	it('adds no keyframes and no font face', () => {
+		expect(css).not.toMatch(/@(keyframes|font-face)\b/);
+	});
+
+	it('no partial holds a raw colour: the colours are the night tokens', () => {
+		const partials = readdirSync(PROJECTOR_DIR).filter((name) => name.endsWith('.scss'));
 
 		expect(partials.length).toBeGreaterThan(0);
-		expect(offenders).toEqual([]);
+		expect(partialsWithRawColour(PROJECTOR_DIR, partials)).toEqual([]);
+	});
+
+	it('moves by transform and opacity only', () => {
+		const moved = [...css.matchAll(/transition(?:-property)?:([^;}]+)/g)].flatMap((match) =>
+			match[1].split(',').map((part) => part.trim().split(/\s+/)[0]),
+		);
+
+		expect(
+			moved.filter((property) => !['transform', 'opacity', 'none'].includes(property)),
+		).toEqual([]);
+	});
+});
+
+describe("the room-scale tokens are the projector's alone", () => {
+	const css = compiled(TOKEN_FILE);
+
+	/** The declarations of every rule whose selector list is exactly `selectors`. */
+	function blocksOf(selectors: readonly string[]): string[] {
+		const wanted = selectors.join(',');
+		const blocks: string[] = [];
+		for (const match of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+			const list = splitSelectors(match[1].replace(/@media[^{]*$/, '')).map(normalized);
+			if (list.join(',') === wanted) blocks.push(match[2]);
+		}
+
+		return blocks;
+	}
+
+	it("the look's tokens are one block shared by both scopes, not a copy", () => {
+		const shared = blocksOf([SCOPE, PROJECTOR_SCOPE]);
+
+		expect(shared.some((block) => block.includes('--night-sky:'))).toBe(true);
+		expect(blocksOf([SCOPE]).some((block) => block.includes('--night-'))).toBe(false);
+	});
+
+	it('the room scale is declared for the projector scope only', () => {
+		const room = blocksOf([PROJECTOR_SCOPE]);
+
+		expect(room.some((block) => block.includes('--night-room:'))).toBe(true);
+		expect(blocksOf([SCOPE, PROJECTOR_SCOPE]).join('')).not.toContain('--night-room');
 	});
 });

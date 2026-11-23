@@ -18,6 +18,11 @@
 //
 // Raw colours are allowed in this file only.
 //
+// The projector (spec section 7.4) wears the same look at room scale: the block
+// below lists both scopes, so it has every token here, and the room-scale block
+// after it overrides the depth for $night-projector alone. Nothing in that block
+// reaches the student surface.
+//
 // Two things the remap cannot do, for the student lane to know:
 //   - On the open sky, text is --night-on-sky (white) and nothing else: no tint
 //     reaches 4.5:1 on the lower sky. Today's page shells (.frame, .door,
@@ -28,7 +33,8 @@
 
 @use '../look-scope' as *;
 
-#{$night} {
+#{$night},
+#{$night-projector} {
   color-scheme: dark;
 
   // ===========================================================================
@@ -352,11 +358,76 @@
   --sun-soft: rgba(255, 182, 39, 0.18);
 }
 
+// ---- room scale: the projector only --------------------------------------------
+// Read from the back row, about 8 m away in a lit room
+// (docs/design/class-redesign/Projector-*.dc.html). --night-room is one pixel of
+// those 1920 x 1080 mockups, so a step keeps its proportions on any projector;
+// the depth doubles: lips 12, the panel's frame 6, cards rounded 48, wider glows
+// and longer drops.
+#{$night-projector} {
+  --night-room: min(100vh / 1080, 100vw / 1920);
+
+  --night-lip: calc(12 * var(--night-room));
+  --night-lip-sm: calc(8 * var(--night-room));
+  --night-lip-xs: calc(6 * var(--night-room));
+  --night-frame: calc(6 * var(--night-room));
+  --night-ring: calc(8 * var(--night-room));
+  --night-halo: calc(60 * var(--night-room));
+  --night-orb-halo: calc(24 * var(--night-room));
+  --night-radius-input: calc(28 * var(--night-room));
+  --night-radius-button: calc(36 * var(--night-room));
+  --night-radius-card: calc(48 * var(--night-room));
+  --edge-size-lg: var(--night-lip);
+
+  --night-drop: 0 calc(28 * var(--night-room)) calc(48 * var(--night-room)) rgba(10, 5, 50, 0.45);
+  --night-drop-sm: 0 calc(20 * var(--night-room)) calc(32 * var(--night-room)) rgba(10, 5, 50, 0.4);
+  --night-text-shadow: 0 calc(5 * var(--night-room)) 0 rgba(10, 5, 50, 0.5);
+  --night-text-shadow-strong: 0 calc(7 * var(--night-room)) 0 rgba(10, 5, 50, 0.5);
+  --night-well-inset: inset 0 calc(4 * var(--night-room)) calc(6 * var(--night-room)) rgba(10, 5, 50, 0.6);
+
+  // A result bar: the well on a white card, the chosen card's well and fill.
+  --night-well: var(--night-panel-bottom);
+  --night-well-gold: var(--night-orb-gold-ink);
+  --night-well-gold-inset: inset 0 calc(5 * var(--night-room)) calc(8 * var(--night-room)) rgba(40, 10, 0, 0.6);
+  --night-stripe-gold-a: #ffffff;
+  --night-stripe-gold-b: #fff3a6;
+
+  // Bigger stars, spread for a wide wall.
+  --night-star-size: calc(3 * var(--night-room));
+  --night-star-size-soft: calc(2 * var(--night-room));
+  --night-star-edge: calc(4.5 * var(--night-room));
+  --night-star-edge-soft: calc(3.5 * var(--night-room));
+  --night-stars:
+    radial-gradient(circle at 4% 7%, var(--night-star) 0 var(--night-star-size), transparent var(--night-star-edge)),
+    radial-gradient(circle at 13% 21%, var(--night-star-soft) 0 var(--night-star-size-soft), transparent var(--night-star-edge-soft)),
+    radial-gradient(circle at 22% 5%, var(--night-star) 0 var(--night-star-size-soft), transparent var(--night-star-edge-soft)),
+    radial-gradient(circle at 31% 16%, var(--night-star) 0 var(--night-star-size), transparent var(--night-star-edge)),
+    radial-gradient(circle at 42% 4%, var(--night-star-soft) 0 var(--night-star-size-soft), transparent var(--night-star-edge-soft)),
+    radial-gradient(circle at 51% 12%, var(--night-star) 0 var(--night-star-size-soft), transparent var(--night-star-edge-soft)),
+    radial-gradient(circle at 60% 3%, var(--night-star) 0 var(--night-star-size), transparent var(--night-star-edge)),
+    radial-gradient(circle at 69% 9%, var(--night-star-soft) 0 var(--night-star-size-soft), transparent var(--night-star-edge-soft)),
+    radial-gradient(circle at 96% 5%, var(--night-star) 0 var(--night-star-size), transparent var(--night-star-edge)),
+    radial-gradient(circle at 98% 34%, var(--night-star-soft) 0 var(--night-star-size-soft), transparent var(--night-star-edge-soft)),
+    radial-gradient(circle at 2% 44%, var(--night-star) 0 var(--night-star-size-soft), transparent var(--night-star-edge-soft)),
+    radial-gradient(circle at 47% 49%, var(--night-star) 0 var(--night-star-size), transparent var(--night-star-edge)),
+    radial-gradient(circle at 71% 52%, var(--night-star-soft) 0 var(--night-star-size-soft), transparent var(--night-star-edge-soft)),
+    radial-gradient(circle at 3% 71%, var(--night-star) 0 var(--night-star-size), transparent var(--night-star-edge)),
+    radial-gradient(circle at 97% 66%, var(--night-star) 0 var(--night-star-size-soft), transparent var(--night-star-edge-soft)),
+    radial-gradient(circle at 55% 84%, var(--night-star-soft) 0 var(--night-star-size-soft), transparent var(--night-star-edge-soft));
+
+  // The winner's star at room scale: white on the gold coin, outlined in the coin's ink.
+  --night-star-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 2.2l2.3 4.9 5.3.7-3.9 3.7 1 5.3-4.7-2.6-4.7 2.6 1-5.3-3.9-3.7 5.3-.7z' fill='%23ffffff' stroke='%237a3300' stroke-width='1.4' stroke-linejoin='round'/%3E%3C/svg%3E");
+
+  // The ridge along the foot of the wall, with its three crystals.
+  --night-ridge-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 150' preserveAspectRatio='none'%3E%3Cpath d='M0 150V90l120-60 100 70 130-90 150 100 140-70 160 90 150-110 170 100 140-60 160 80 150-90 150 80 100-50 100 40v30z' fill='%232a3bb5'/%3E%3Cpath d='M0 150v-40l220-36 200 40 260-50 300 56 240-40 260 44 240-36 200 30v32z' fill='%231a1670'/%3E%3Cpath d='M300 92l34-56 36 26-18 50z' fill='%233fd8ff'/%3E%3Cpath d='M300 92l34-56 12 44z' fill='%23a5f0ff'/%3E%3Cpath d='M980 104l22-38 24 16-12 36z' fill='%233fd8ff'/%3E%3Cpath d='M980 104l22-38 8 30z' fill='%23a5f0ff'/%3E%3Cpath d='M1500 96l40-64 40 30-20 54z' fill='%233fd8ff'/%3E%3Cpath d='M1500 96l40-64 14 50z' fill='%23a5f0ff'/%3E%3C/svg%3E");
+}
+
 // `prefers-contrast: more`: the look stays, text goes to 7:1 and controls show
 // their edge. The deep step leaves the ramp (inputs and tracks sit on the card
 // step, told apart by their border), which lifts every accent above 7:1.
 @include more-contrast {
-  #{$night} {
+  #{$night},
+  #{$night-projector} {
     --paper-deep: var(--night-panel-bottom);
     --border-medium: var(--night-track);
     --border-card: var(--border-medium);
@@ -381,13 +452,15 @@
 // ---- page ground: the fixed sky ----------------------------------------------
 // The base rule keeps `background-attachment: fixed`; --bg-page (the ground
 // zone's indigo) stays as the colour under the gradient.
-#{$night} body {
+#{$night} body,
+#{$night-projector} body {
   background-image: var(--night-stars), var(--night-sky);
 }
 
 // Forced colours drop decorative backgrounds, as the base rule does.
 @media (forced-colors: active) {
-  #{$night} body {
+  #{$night} body,
+  #{$night-projector} body {
     background-image: none;
   }
 }

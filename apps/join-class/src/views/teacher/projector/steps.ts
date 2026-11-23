@@ -6,6 +6,8 @@ import { classState } from '@/lib/classroom/classState';
 import { gateOf, sideClaimsOf, sideNamesOf, sideQuestionOf } from '@/lib/classroom/classSettings';
 import { projectorData } from '@/lib/classroom/projectorData';
 import { getFetchedQuestionTexts, requestQuestionText } from '@/lib/classroom/questionText';
+import { ClassmateOrbs } from '@/views/student/c2/classmateOrbs';
+import { CodeTiles } from './CodeTiles';
 import { ProjectorQr, QR_WAITING_SIZE } from './ProjectorBand';
 import { openingStage } from './OpeningStage';
 import { FlipList } from '@/components/FlipList';
@@ -53,8 +55,12 @@ function waiting(ctx: StepContext): m.Vnode {
 
 	return m('section.projector-step.projector-step--waiting', [
 		ctx.code ? m('p.projector-code', { dir: 'ltr' }, ctx.code) : null,
+		// the same code as digit tiles: decoration, shown by the night look only
+		ctx.code ? m(CodeTiles, { code: ctx.code }) : null,
 		ctx.joinUrl ? m(ProjectorQr, { url: ctx.joinUrl, size: QR_WAITING_SIZE }) : null,
 		m('p.projector-count', { 'aria-live': 'polite' }, t('projector.inClass', { n: count })),
+		// one orb per student who joined: the count above, drawn. Night look only.
+		m(ClassmateOrbs, { count }),
 	]);
 }
 

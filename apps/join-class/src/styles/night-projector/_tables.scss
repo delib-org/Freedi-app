@@ -1,0 +1,93 @@
+// =============================================================================
+// Night at room scale — the tables (who sits where) and table talk (how many
+// tables are at each part): white jelly cards on the sky. A table's number is
+// the cyan badge, as on the phone.
+// =============================================================================
+
+@use 'room' as *;
+
+// ---- tables ---------------------------------------------------------------------
+#{$wall} .projector-grid {
+  gap: rs(36) rs(28);
+}
+
+#{$wall} .projector-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: rs(10);
+  padding: rs(22) rs(26) rs(30);
+  text-align: start;
+  @include room-card(var(--night-radius-button));
+}
+
+#{$wall} .projector-tile__title {
+  margin: 0 0 rs(6);
+  padding: rs(6) rs(22) rs(8);
+  border-radius: var(--night-radius-pill);
+  @include room-jelly(var(--night-cyan), var(--night-cyan-lip), var(--night-lip-xs), null, null);
+  color: var(--night-cyan-ink);
+  font-size: rs(44);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+#{$wall} .projector-tile__names {
+  font-size: rs(36);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+#{$wall} .projector-tile__topic,
+#{$wall} .projector-tile__reserved {
+  margin: 0;
+  color: var(--night-card-ink-soft);
+  font-size: rs(32);
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+// Up to 20 at one table: tighter, so the tile stays on the wall.
+#{$wall} .projector-tile--many .projector-tile__title {
+  font-size: rs(36);
+}
+
+#{$wall} .projector-tile--many .projector-tile__names,
+#{$wall} .projector-tile--many .projector-tile__topic,
+#{$wall} .projector-tile--many .projector-tile__reserved {
+  font-size: rs(32);
+  line-height: 1.15;
+}
+
+// ---- table talk ------------------------------------------------------------------
+#{$wall} .projector-step--table-talk {
+  gap: rs(56);
+}
+
+#{$wall} .projector-count-tiles {
+  justify-content: center;
+  gap: rs(36);
+}
+
+#{$wall} .projector-count-tile {
+  gap: rs(8);
+  padding: rs(36) rs(24) rs(44);
+  @include room-card;
+}
+
+// Every table is rating: one tile, not a wall-wide slab.
+#{$wall} .projector-count-tile:only-child {
+  flex: 0 1 rs(640);
+}
+
+#{$wall} .projector-count-tile__value {
+  color: var(--night-card-ink);
+  font-size: rs(168);
+  font-weight: 700;
+}
+
+#{$wall} .projector-count-tile__label {
+  color: var(--night-card-ink-soft);
+  font-size: rs(44);
+  font-weight: 600;
+}

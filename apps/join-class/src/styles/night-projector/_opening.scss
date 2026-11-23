@@ -1,0 +1,100 @@
+// =============================================================================
+// Night at room scale — the opening: the lesson's question in the glowing
+// cyan-framed panel (as on Projector-1-Join.dc.html), the teacher's
+// introduction on a white reading card. The video mode is not touched: its
+// letterbox stays black (_room.scss, $wall).
+// =============================================================================
+
+@use 'room' as *;
+@use '../night/glyphs';
+
+#{$wall} .projector-step--opening {
+  align-items: stretch;
+  gap: rs(28);
+  text-align: start;
+}
+
+// "The lesson's question": the pill sits on the panel's frame, like a tab.
+#{$wall} .projector-step--opening > .projector-eyebrow {
+  align-self: flex-start;
+}
+
+#{$wall} .projector-step--opening > .projector-eyebrow:last-of-type {
+  position: relative;
+  z-index: 1;
+  margin-block-end: rs(-62);
+  margin-inline-start: rs(48);
+}
+
+#{$wall} .projector-question {
+  position: relative;
+  max-width: none;
+  padding-block: rs(50) rs(34);
+  padding-inline: rs(48) rs(170);
+  font-size: max(#{headline(88)}, #{$question-floor});
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+  @include room-panel;
+  text-shadow: var(--night-text-shadow-strong);
+}
+
+// The sparkle at the panel's end.
+#{$wall} .projector-question::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: rs(48);
+  inline-size: rs(76);
+  block-size: rs(76);
+  margin-block-start: rs(-30);
+  @include glyph(glyphs.$sparkle, var(--night-primary-light));
+}
+
+// The introduction: a reading surface. The view steps the size 48 -> 40 -> 32
+// until the wall fits (OpeningStage.ts); the steps keep their proportions and
+// stop at the reading floor.
+#{$wall} .intro-text--projector {
+  --intro-size: max(#{rs(48)}, #{$read-floor});
+  max-inline-size: none;
+  padding: rs(28) rs(48) rs(36);
+  font-weight: 500;
+  @include room-card;
+}
+
+#{$wall} .intro-text--projector[data-fit='40'] {
+  --intro-size: max(#{rs(40)}, #{$read-floor});
+}
+
+#{$wall} .intro-text--projector[data-fit='32'] {
+  --intro-size: max(#{rs(32)}, #{$read-floor});
+}
+
+// ---- a short wall --------------------------------------------------------------
+// On the smallest real projectors (720 to 800 px tall) the floors above hold
+// the words larger than the scaled wall around them. The step gives them its
+// margins, so the longest introduction (600 characters) still fits with the
+// question at 72 px and the text at 32 px, without scrolling.
+@media (max-height: 800px) {
+  #{$wall} .projector__stage[data-step='opening'] {
+    padding: rs(28) rs(60) rs(100);
+  }
+
+  #{$wall} .projector-step--opening {
+    gap: rs(20);
+  }
+
+  #{$wall} .projector-question {
+    padding-block: rs(40) rs(22);
+    padding-inline: rs(40);
+    line-height: 1.05;
+  }
+
+  #{$wall} .projector-question::after {
+    display: none;
+  }
+
+  #{$wall} .intro-text--projector {
+    padding: rs(16) rs(36) rs(24);
+  }
+}

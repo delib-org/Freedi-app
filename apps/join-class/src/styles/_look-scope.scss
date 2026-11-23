@@ -5,11 +5,14 @@
 // A look is a surface plus the game look. The surface is `data-surface` on
 // <html>, set per route by lib/surface.ts; the solid look (`data-look="solid"`,
 // lib/lessonLook.ts) and the user's high-contrast mode (`data-high-contrast`)
-// switch both looks off, so those two and the projector surface render the old
-// stylesheets untouched.
+// switch every look off, so those two render the old stylesheets untouched.
 //
-//   night     the student surface   src/styles/night/**     (student lane)
-//   mulberry  the teacher surface   src/styles/mulberry/**  (teacher lane)
+//   night            the student surface    src/styles/night/**            (student lane)
+//   mulberry         the teacher surface    src/styles/mulberry/**         (teacher lane)
+//   night-projector  the projector surface  src/styles/night-projector/**  (projector lane)
+//
+// The projector wears the night look at room scale: it shares the night token
+// block (night/_tokens.scss lists both scopes) and overrides the depth there.
 //
 // Every rule of a look sits under its prefix. The prefix is four classes of
 // specificity, two more than $game (_game-scope.scss), so a look's rule wins
@@ -28,6 +31,7 @@
 
 $night: ':root:not([data-look="solid"]):not([data-high-contrast])[data-surface="student"]';
 $mulberry: ':root:not([data-look="solid"]):not([data-high-contrast])[data-surface="teacher"]';
+$night-projector: ':root:not([data-look="solid"]):not([data-high-contrast])[data-surface="projector"]';
 
 /// A glossy "jelly" surface: the fill, a highlight along its top, a solid lip
 /// under it and a soft drop shadow below the lip.

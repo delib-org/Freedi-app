@@ -1,0 +1,255 @@
+// =============================================================================
+// Night at room scale — the summary (Projector-2-Vote.dc.html): the title with
+// the turnout in the blue counter, the chosen proposal on the orange card with
+// the gold star, the other proposals on white jelly cards with thick striped
+// bars. Support by side is in _support.scss.
+// =============================================================================
+
+@use 'room' as *;
+@use '../night/glyphs';
+
+// The results fill the wall; with support by side they share it, side by side.
+#{$wall} .projector-step--summary {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  align-items: start;
+  gap: rs(30) rs(48);
+  text-align: start;
+}
+
+#{$wall} .projector-step--summary > * {
+  grid-column: 1 / -1;
+}
+
+#{$wall} .projector-step--summary > .projector-results:not(:last-child) {
+  grid-column: 1;
+}
+
+#{$wall} .projector-step--summary > .projector-support-block {
+  grid-column: 2;
+}
+
+#{$wall} .projector-results__note,
+#{$wall} .projector-results__turnout {
+  font-size: rs(38);
+  font-weight: 500;
+  @include on-sky;
+}
+
+// ---- the decision: the orange card with the gold star ----------------------------------
+#{$wall} .projector-decision {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  justify-items: start;
+  gap: rs(14) rs(40);
+  box-sizing: border-box;
+  padding: rs(30) rs(44) rs(40);
+  text-align: start;
+  @include room-chosen;
+}
+
+#{$wall} .projector-decision::before {
+  grid-row: 1 / span 3;
+  @include room-star(rs(132));
+}
+
+// The chosen row below already is this card (same proposal, same words): the
+// wall keeps one focal point. Where the decision stands alone (no vote, the
+// ended screen) it is drawn.
+#{$wall} .projector-step--summary:has(.projector-results__row--winner) > .projector-decision {
+  display: none;
+}
+
+#{$wall} .projector-decision .projector-eyebrow,
+#{$wall} .projector-results__row--winner .projector-results__tag {
+  min-block-size: rs(58);
+  padding-inline: rs(26);
+  background: var(--night-primary-ink);
+  box-shadow: none;
+  color: var(--night-on-sky);
+  font-size: rs(34);
+}
+
+#{$wall} .projector-decision__text {
+  margin: 0;
+  font-size: rs(64);
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+#{$wall} .projector-decision .projector-results__note {
+  color: var(--night-primary-ink);
+  text-shadow: none;
+}
+
+// ---- the vote's result ---------------------------------------------------------------------
+#{$wall} .projector-results {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: rs(20) rs(40);
+}
+
+#{$wall} .projector-results > * {
+  grid-column: 1 / -1;
+}
+
+#{$wall} .projector-results__title {
+  grid-area: 1 / 1;
+  font-size: headline(104);
+  font-weight: 700;
+  line-height: 1.05;
+  @include on-sky(var(--night-text-shadow-strong));
+}
+
+// "24 of 26 voted": the blue counter, beside the title.
+#{$wall} .projector-results > .projector-results__turnout {
+  grid-area: 1 / 2;
+  @include room-counter(glyphs.$check);
+}
+
+#{$wall} .projector-results__rows {
+  gap: rs(24);
+  padding-block-end: var(--night-lip);
+}
+
+#{$wall} .projector-results__row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'text count'
+    'track count';
+  gap: rs(12) rs(40);
+  padding: rs(22) rs(44) rs(30);
+  @include room-card;
+  font-weight: 600;
+}
+
+#{$wall} .projector-results__text {
+  grid-area: text;
+  font-size: rs(46);
+  line-height: 1.2;
+}
+
+#{$wall} .projector-results__tag {
+  grid-area: tag;
+  justify-self: start;
+  @include room-pill;
+}
+
+#{$wall} .projector-results__track {
+  grid-area: track;
+  display: flex;
+  @include room-well(rs(38));
+}
+
+#{$wall} .projector-results__fill {
+  block-size: auto;
+  @include room-fill(var(--night-cyan-light), var(--night-cyan-mid));
+}
+
+#{$wall} .projector-results__count {
+  grid-area: count;
+  min-inline-size: rs(300);
+  font-size: rs(56);
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+}
+
+// A row with a tag (the leading proposal while the vote is open): the tag over the text.
+#{$wall} .projector-results__row:has(> .projector-results__tag) {
+  grid-template-areas:
+    'tag count'
+    'text count'
+    'track count';
+}
+
+// The chosen proposal: the one focal point.
+#{$wall} .projector-results__row--winner {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'star tag count'
+    'star text count'
+    'star track count';
+  padding: rs(28) rs(44) rs(36);
+  @include room-chosen;
+  font-weight: 700;
+}
+
+#{$wall} .projector-results__row--winner:has(> .projector-results__tag) {
+  grid-template-areas:
+    'star tag count'
+    'star text count'
+    'star track count';
+}
+
+#{$wall} .projector-results__row--winner::before {
+  grid-area: star;
+  @include room-star(rs(132));
+}
+
+#{$wall} .projector-results__row--winner .projector-results__text {
+  font-size: rs(56);
+}
+
+#{$wall} .projector-results__row--winner .projector-results__track {
+  @include room-well(rs(48), var(--night-well-gold), var(--night-well-gold-inset));
+}
+
+#{$wall} .projector-results__row--winner .projector-results__fill {
+  @include room-fill(var(--night-stripe-gold-a), var(--night-stripe-gold-b), rs(14));
+}
+
+#{$wall} .projector-results__row--winner .projector-results__count {
+  font-size: rs(72);
+}
+
+// Four proposals or more: the others take one line each. So does the first
+// when it carries a name only (the results are closed to the class).
+#{$wall} .projector-results__row:first-child:nth-last-child(n + 4):not(:has(> :nth-child(2))),
+#{$wall} .projector-results__row:first-child:nth-last-child(n + 4) ~ .projector-results__row:not(.projector-results__row--winner) {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr) auto;
+  grid-template-areas: 'text track count';
+  gap: rs(28);
+  padding: rs(6) rs(36) rs(14);
+  border-radius: var(--night-radius-button);
+}
+
+#{$wall} .projector-results__row:first-child:nth-last-child(n + 4) ~ .projector-results__row:not(.projector-results__row--winner) {
+  margin-block-start: rs(-8);
+}
+
+#{$wall} .projector-results__row:first-child:nth-last-child(n + 4):not(:has(> :nth-child(2))) .projector-results__text,
+#{$wall} .projector-results__row:first-child:nth-last-child(n + 4) ~ .projector-results__row .projector-results__text {
+  font-size: rs(38);
+  line-height: 1.15;
+}
+
+#{$wall} .projector-results__row:first-child:nth-last-child(n + 4) ~ .projector-results__row .projector-results__count {
+  min-inline-size: 0;
+  font-size: rs(40);
+}
+
+// ---- beside support by side: the same cards in a narrower column ------------------------
+#{$wall} .projector-results:not(:last-child) .projector-results__title {
+  font-size: headline(72);
+}
+
+#{$wall} .projector-results:not(:last-child) .projector-results__count {
+  min-inline-size: 0;
+  font-size: rs(44);
+}
+
+#{$wall} .projector-results:not(:last-child) .projector-results__row--winner::before {
+  inline-size: rs(104);
+  block-size: rs(104);
+}
+
+#{$wall} .projector-results:not(:last-child) .projector-results__row--winner .projector-results__text {
+  font-size: rs(48);
+}
+
+#{$wall} .projector-results:not(:last-child) .projector-results__row--winner .projector-results__count {
+  font-size: rs(56);
+}
