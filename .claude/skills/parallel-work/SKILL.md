@@ -107,8 +107,8 @@ the branch name is the lane's theme and each task is its own commit.
 
 Per lane: dispatch the lane's first agent with `isolation: "worktree"` (the Agent tool
 creates the worktree under `.claude/worktrees/agent-*`). The brief is the implementer
-template in `references/agent-brief.md` with the blanks filled. It tells the agent to run
-`scripts/prep-worktree.sh` first: a bare worktree has no env files, no `.firebaserc`, no
+template in `references/agent-brief.md` with the blanks filled. It tells the agent to branch from `dev` (`git checkout -b <branch> dev`;
+Agent worktrees start from `main`) and to run `scripts/prep-worktree.sh` first: a bare worktree has no env files, no `.firebaserc`, no
 `node_modules` and no built shared packages, and `typecheck` fails on files it never
 touched without them. For an L lane the first agent is the IA agent (no worktree needed;
 it only writes `docs/ia/<app>-<feature>.md` content into its report).
