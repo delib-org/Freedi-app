@@ -20,6 +20,10 @@ const allProposals: Record<string, string> = {
 	'console.all_rated_line_one':
 		'{{n}} of {{m}} students rated everything · every proposal has at least 1 rating',
 	'projector.allProposals_min_one': 'Every proposal has at least 1 rating',
+	'console.all_rated_line_solo':
+		'{{n}} of 1 student rated everything · every proposal has at least {{k}} ratings',
+	'console.all_rated_line_solo_one':
+		'{{n}} of 1 student rated everything · every proposal has at least 1 rating',
 };
 
 export default allProposals;

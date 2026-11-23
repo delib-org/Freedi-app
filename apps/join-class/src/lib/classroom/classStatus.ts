@@ -212,7 +212,7 @@ export function classStatusFor(input: ClassStatusInput): ClassStatus {
 			if (rated.proposals === 0) return line('proposal.none_yet', {}, false);
 
 			return line(
-				rated.k === 1 ? 'console.all_rated_line_one' : 'console.all_rated_line',
+				allRatedLineKey(rated.k, rated.m),
 				{ n: rated.n, m: rated.m, k: rated.k },
 				rated.complete,
 			);
@@ -274,4 +274,11 @@ export function announcementFor(
 	}
 
 	return null;
+}
+
+/** "n of m students rated everything": the wording that fits one student and one rating ("1 students" is wrong). */
+export function allRatedLineKey(k: number, m: number): string {
+	const base = m === 1 ? 'console.all_rated_line_solo' : 'console.all_rated_line';
+
+	return k === 1 ? `${base}_one` : base;
 }

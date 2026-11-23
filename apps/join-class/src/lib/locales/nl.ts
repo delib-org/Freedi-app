@@ -282,6 +282,8 @@ const nl: Record<string, string> = {
 	'console.plenum_on': 'Allemaal samen · aan',
 	'console.move': 'Naar een andere tafel',
 	'console.moved': 'Verplaatst naar {{table}}',
+	'console.moved_out': 'Van de tafels af gehaald',
+	'console.table_empty': 'Nog geen leerlingen aan deze tafel',
 	'opening.name_prompt_rename': 'Je leraar vraagt om een nieuwe naam. Schrijf hem hier',
 	'console.rename': 'Om een nieuwe naam vragen',
 	'console.rename_asked': '{{name}} om een nieuwe naam gevraagd',

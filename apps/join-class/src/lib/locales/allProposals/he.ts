@@ -18,6 +18,8 @@ const allProposals: Record<string, string> = {
 	'projector.allProposals_min': 'לכל הצעה לפחות {{k}} דירוגים',
 	'console.all_rated_line_one': '{{n}} מתוך {{m}} תלמידים דירגו הכול · לכל הצעה לפחות דירוג אחד',
 	'projector.allProposals_min_one': 'לכל הצעה לפחות דירוג אחד',
+	'console.all_rated_line_solo': '{{n}} מתוך תלמיד אחד דירג הכול · לכל הצעה לפחות {{k}} דירוגים',
+	'console.all_rated_line_solo_one': '{{n}} מתוך תלמיד אחד דירג הכול · לכל הצעה לפחות דירוג אחד',
 };
 
 export default allProposals;

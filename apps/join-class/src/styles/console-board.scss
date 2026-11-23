@@ -311,6 +311,12 @@
   color: var(--ink-muted);
 }
 
+.table-card__empty {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--ink-soft);
+}
+
 .table-card__now,
 .table-card__timer,
 .table-card__asker {

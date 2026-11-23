@@ -20,6 +20,10 @@ const allProposals: Record<string, string> = {
 	'console.all_rated_line_one':
 		'{{n}} از {{m}} دانش‌آموز به همه امتیاز دادند · هر پیشنهاد دست‌کم 1 امتیاز دارد',
 	'projector.allProposals_min_one': 'هر پیشنهاد دست‌کم 1 امتیاز دارد',
+	'console.all_rated_line_solo':
+		'{{n}} از ۱ دانش‌آموز به همه امتیاز داد · هر پیشنهاد دست‌کم {{k}} امتیاز دارد',
+	'console.all_rated_line_solo_one':
+		'{{n}} از ۱ دانش‌آموز به همه امتیاز داد · هر پیشنهاد دست‌کم 1 امتیاز دارد',
 };
 
 export default allProposals;

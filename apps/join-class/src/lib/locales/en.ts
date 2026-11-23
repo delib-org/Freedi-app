@@ -285,6 +285,8 @@ const en: Record<string, string> = {
 	'console.plenum_on': 'Everyone together · on',
 	'console.move': 'Move to another table',
 	'console.moved': 'Moved to {{table}}',
+	'console.moved_out': 'Moved out of the tables',
+	'console.table_empty': 'No students at this table yet',
 	'opening.name_prompt_rename': 'Your teacher asked for a new name. Write it here',
 	'console.rename': 'Ask for a new name',
 	'console.rename_asked': 'Asked {{name}} for a new name',

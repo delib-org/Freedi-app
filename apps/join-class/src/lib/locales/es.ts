@@ -283,6 +283,8 @@ const es: Record<string, string> = {
 	'console.plenum_on': 'Todos juntos · activo',
 	'console.move': 'Pasar a otra mesa',
 	'console.moved': 'Movido a {{table}}',
+	'console.moved_out': 'Movido fuera de las mesas',
+	'console.table_empty': 'Aún no hay estudiantes en esta mesa',
 	'opening.name_prompt_rename': 'Tu profesor pidió un nombre nuevo. Escríbelo aquí',
 	'console.rename': 'Pedir un nombre nuevo',
 	'console.rename_asked': 'Se pidió un nombre nuevo a {{name}}',

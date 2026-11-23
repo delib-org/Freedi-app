@@ -1,6 +1,6 @@
 import m from 'mithril';
 import type { LessonStepKey } from '@freedi/shared-types';
-import { t } from '@/lib/i18n';
+import { isRTL, t } from '@/lib/i18n';
 import { consoleStepLabel } from '@/lib/classroom/consoleStepLabel';
 import { formatClock, railSteps } from '@/lib/classroom/consoleHelpers';
 import { StepList, closeStepList, stepListOpen, toggleStepList } from './StepList';
@@ -61,9 +61,11 @@ export const StepLine: m.Component<StepLineAttrs> = {
 					},
 				},
 				[
-					m('span.step-line__label', [
-						text,
-						attrs.held && attrs.heldKey ? null : [': ', m('strong.step-line__name', name)],
+					// Its own direction (the language's) and the name isolated: the colon stays beside "9",
+					// not on the far side of the name ("Step 6 of 9 :Proposals").
+					m('span.step-line__label', { dir: isRTL() ? 'rtl' : 'ltr' }, [
+						attrs.held && attrs.heldKey ? text : `${text}: `,
+						attrs.held && attrs.heldKey ? null : m('bdi.step-line__name', name),
 					]),
 					m('span.step-line__all', t('console.all_steps')),
 					m('span.step-line__caret', { 'aria-hidden': 'true' }, '▾'),

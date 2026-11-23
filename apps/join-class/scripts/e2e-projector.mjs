@@ -106,7 +106,7 @@ async function openConsole(seedOut) {
 		await authMod.signInWithCustomToken(auth, token);
 	}, seedOut.teacher.customToken);
 	await page.goto(`${BASE}/t/${seedOut.mainId}`, { waitUntil: 'domcontentloaded' });
-	await page.waitForSelector('.step-rail__next', { timeout: TIMEOUT });
+	await page.waitForSelector('.next-action__button', { timeout: TIMEOUT });
 
 	return { context, page };
 }
@@ -176,7 +176,7 @@ try {
 	await waitControls(page, 'on', 2000);
 	await backBtn.click();
 	check('"חזרה לשיעור" returns to the console', await waitUrl(page, consoleUrl));
-	await page.waitForSelector('.step-rail__next', { timeout: TIMEOUT });
+	await page.waitForSelector('.next-action__button', { timeout: TIMEOUT });
 
 	// back by Esc
 	await openMenu(page);
@@ -184,7 +184,7 @@ try {
 	await page.waitForSelector('.projector-controls', { timeout: TIMEOUT });
 	await page.keyboard.press('Escape');
 	check('Esc returns to the console', await waitUrl(page, consoleUrl));
-	await page.waitForSelector('.step-rail__next', { timeout: TIMEOUT });
+	await page.waitForSelector('.next-action__button', { timeout: TIMEOUT });
 
 	// back by the browser
 	await openMenu(page);
@@ -192,7 +192,7 @@ try {
 	await page.waitForSelector('.projector-controls', { timeout: TIMEOUT });
 	await page.goBack();
 	check('browser back returns to the console', await waitUrl(page, consoleUrl));
-	await page.waitForSelector('.step-rail__next', { timeout: TIMEOUT });
+	await page.waitForSelector('.next-action__button', { timeout: TIMEOUT });
 
 	// ---- video, one screen -------------------------------------------------
 	await page.locator('[data-testid="projector-pick-1"]').click();
@@ -209,7 +209,7 @@ try {
 	check('video mode: the page does not scroll', await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight));
 	await page.keyboard.press('Escape');
 	await waitUrl(page, consoleUrl);
-	await page.waitForSelector('.step-rail__next', { timeout: TIMEOUT });
+	await page.waitForSelector('.next-action__button', { timeout: TIMEOUT });
 	await page.locator('[data-testid="projector-pick-text"]').click();
 
 	// ---- blocked pop-up ----------------------------------------------------
@@ -268,7 +268,7 @@ try {
 	const closed = new Promise((resolve) => popup.once('close', () => resolve(true)));
 	await popup.locator('[data-pc="close"]').click();
 	check('two screens: "סגירת המקרן" closes the window', await Promise.race([closed, sleep(5000).then(() => false)]));
-	check('two screens: the console is still on the lesson', page.url() === consoleUrl && (await page.locator('.step-rail__next').isVisible()));
+	check('two screens: the console is still on the lesson', page.url() === consoleUrl && (await page.locator('.next-action__button').isVisible()));
 
 	// ---- busy label while pausing -----------------------------------------
 	await page.route('**/classSetLessonStatus*', async (route) => {

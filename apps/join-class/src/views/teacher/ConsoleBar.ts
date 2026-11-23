@@ -16,14 +16,16 @@ import { consoleState, dismissFailure, isBusy } from './consoleState';
 /** "Pause the lesson": the one lesson control that stays out of the menu (Tal, 2026-11-19). */
 function pauseButton(mid: string, status: LessonStatus | null): m.Children {
 	if (status !== 'live' && status !== 'open') return null;
-	const pausing = isBusy('status:pause') || isBusy('status:resume');
+	const pausing = isBusy('status:pause');
+	// A resume in flight holds the button too, but it keeps its own words ("Pausing…" would be false).
+	const held = pausing || isBusy('status:resume');
 
 	return m(
 		'button.btn.btn--secondary.btn--small.console__pause',
 		{
 			type: 'button',
 			'data-testid': 'console-pause',
-			disabled: pausing,
+			disabled: held,
 			'aria-busy': pausing ? 'true' : undefined,
 			onclick: () => void changeLessonStatus(mid, 'pause'),
 		},

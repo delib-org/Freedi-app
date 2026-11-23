@@ -65,6 +65,25 @@ const LIGHT_CONTRAST_SVG = `
   <circle cx="12" cy="12" r="10"/>
 </svg>`;
 
+/** True when a line of the element's own text is drawn at this point (not just its empty padding). */
+function hasTextAt(el: Element, x: number, y: number): boolean {
+	try {
+		for (const node of Array.from(el.childNodes)) {
+			if (node.nodeType !== Node.TEXT_NODE || !node.textContent?.trim()) continue;
+			const range = document.createRange();
+			range.selectNodeContents(node);
+			const hit = Array.from(range.getClientRects()).some(
+				(r) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom,
+			);
+			if (hit) return true;
+		}
+	} catch {
+		// no layout (a test DOM): nothing can be said to be under the tab
+	}
+
+	return false;
+}
+
 function safeStorage(): Storage | null {
 	try {
 		return window.localStorage;
@@ -315,6 +334,8 @@ export class AccessibilityWidget {
 			this.triggerBtn.classList.remove('a11y-widget__trigger--active');
 		}
 
+		this.refreshLabels();
+
 		// Language row sync — value, visibility, label texts.
 		// We refresh translated strings here too so a language change made in the
 		// widget itself flips its own labels without needing a separate code path.
@@ -335,6 +356,27 @@ export class AccessibilityWidget {
 		// language change so screen readers announce the localized version.
 		this.triggerBtn.setAttribute('aria-label', t('a11y.trigger'));
 		this.panel.setAttribute('aria-label', t('a11y.panel_label'));
+	}
+
+	/** The panel is built once; its words follow the language (it was left English in a Hebrew UI). */
+	private refreshLabels(): void {
+		const setText = (selector: string, text: string): void => {
+			const el = this.panel.querySelector<HTMLElement>(selector);
+			if (el) el.textContent = text;
+		};
+		const setLabel = (selector: string, text: string): void => {
+			this.panel.querySelector<HTMLElement>(selector)?.setAttribute('aria-label', text);
+		};
+		setText('.a11y-widget__contrast-btn--high span', t('a11y.high_contrast'));
+		setText('.a11y-widget__contrast-btn--light span', t('a11y.light_contrast'));
+		setLabel('.a11y-widget__row--font', t('a11y.font_size'));
+		setLabel('.a11y-widget__row--contrast', t('a11y.contrast'));
+		setLabel('.a11y-widget__row--language', t('a11y.language'));
+		const [decrease, increase] = Array.from(
+			this.panel.querySelectorAll<HTMLElement>('.a11y-widget__icon-btn'),
+		);
+		decrease?.setAttribute('aria-label', t('a11y.decrease_font'));
+		increase?.setAttribute('aria-label', t('a11y.increase_font'));
 	}
 
 	// --------------------------------------------------------------------------
@@ -502,7 +544,11 @@ export class AccessibilityWidget {
 		return PLACEMENT_PROBES_PX.some((offset) =>
 			document
 				.elementsFromPoint(x, top + offset)
-				.some((el) => !this.root.contains(el) && el.closest(PRESSABLE) !== null),
+				.some(
+					(el) =>
+						!this.root.contains(el) &&
+						(el.closest(PRESSABLE) !== null || hasTextAt(el, x, top + offset)),
+				),
 		);
 	}
 
@@ -529,7 +575,17 @@ export class AccessibilityWidget {
 
 	private watchPlacement(): void {
 		this.schedulePlacement();
-		this.onResizePlacement = () => this.schedulePlacement();
+		this.onResizePlacement = () => {
+			// A smaller window must not leave the tab below the fold: clamp now, then look for a clear spot.
+			this.positionTop = clampTop(
+				this.positionTop,
+				window.innerHeight,
+				PLACEMENT_TOP_MIN_PX,
+				PLACEMENT_BOTTOM_GAP_PX,
+			);
+			this.root.style.top = `${this.positionTop}px`;
+			this.schedulePlacement();
+		};
 		window.addEventListener('resize', this.onResizePlacement);
 		if (typeof MutationObserver === 'undefined') return;
 		this.placementObserver = new MutationObserver(() => this.schedulePlacement());

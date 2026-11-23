@@ -1,7 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { LessonStepKey } from '@freedi/shared-types';
-import { announcementFor, classStatusFor, isOccupiedTable, tableIsRating } from '../classStatus';
+import {
+	allRatedLineKey,
+	announcementFor,
+	classStatusFor,
+	isOccupiedTable,
+	tableIsRating,
+} from '../classStatus';
 import type { ClassStatusInput, StatusSnapshot } from '../classStatus';
 
 function at(stepKey: LessonStepKey, patch: Partial<ClassStatusInput> = {}): ClassStatusInput {
@@ -348,5 +354,14 @@ describe('All proposals with nothing to rate', () => {
 		);
 
 		expect(status.textKey).toBe('console.all_rated_line_one');
+	});
+});
+
+describe('allRatedLineKey', () => {
+	it('picks the wording for one student and for one rating', () => {
+		expect(allRatedLineKey(3, 26)).toBe('console.all_rated_line');
+		expect(allRatedLineKey(1, 26)).toBe('console.all_rated_line_one');
+		expect(allRatedLineKey(3, 1)).toBe('console.all_rated_line_solo');
+		expect(allRatedLineKey(1, 1)).toBe('console.all_rated_line_solo_one');
 	});
 });
