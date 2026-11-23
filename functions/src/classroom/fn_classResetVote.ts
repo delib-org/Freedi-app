@@ -84,16 +84,13 @@ export async function resetVote(
 	await commitInBatches(firestore, await supportWrites(firestore, mainId));
 
 	const now = Date.now();
-	await firestore
-		.collection(Collections.statements)
-		.doc(challenge.statementId)
-		.update({
-			selections: FieldValue.delete(),
-			topVotedOption: FieldValue.delete(),
-			// No ballot = the vote is not opened (Trello VFeJLdnh): the teacher opens it again or skips it.
-			'statementSettings.ballot': FieldValue.delete(),
-			lastUpdate: now,
-		});
+	await firestore.collection(Collections.statements).doc(challenge.statementId).update({
+		selections: FieldValue.delete(),
+		topVotedOption: FieldValue.delete(),
+		// No ballot = the vote is not opened (Trello VFeJLdnh): the teacher opens it again or skips it.
+		'statementSettings.ballot': FieldValue.delete(),
+		lastUpdate: now,
+	});
 
 	return { votesDeleted: votes.length };
 }
