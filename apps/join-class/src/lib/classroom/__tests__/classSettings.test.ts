@@ -3,7 +3,6 @@ import { DEFAULT_GATE } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import {
 	SIDE_CLAIM_MAX_LENGTH,
-	SIDE_NAME_MAX_LENGTH,
 	SIDE_QUESTION_MAX_LENGTH,
 	gateOf,
 	sideClaimsOf,
@@ -36,11 +35,10 @@ describe('gateOf', () => {
 });
 
 describe('sideNamesOf', () => {
-	it('uses the lesson names, trimmed and capped', () => {
-		const long = 'x'.repeat(SIDE_NAME_MAX_LENGTH + 5);
-		const names = sideNamesOf(stmt({ statementSettings: { sideNames: { a: '  Dan ', b: long } } }));
-		expect(names.a).toBe('Dan');
-		expect(names.b).toHaveLength(SIDE_NAME_MAX_LENGTH);
+	it('ignores character names saved in older lessons', () => {
+		const names = sideNamesOf(stmt({ statementSettings: { sideNames: { a: 'Dan', b: 'Noa' } } }));
+		expect(names.a).not.toBe('Dan');
+		expect(names.b).not.toBe('Noa');
 	});
 
 	it('falls back to the translated defaults', () => {

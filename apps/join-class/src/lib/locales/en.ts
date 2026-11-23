@@ -78,23 +78,30 @@ const en: Record<string, string> = {
 	// Compact time tokens used by formatRemaining
 	// Teacher screens: plan the questions, teacher home, console
 	'plan.title': 'Plan the questions',
+	'plan.details.help':
+		'General settings for the lesson: language, the sides step, and speaking and proposal limits.',
+	'plan.help':
+		'Prepare the lesson in the order it runs: details, the question to solve, the introduction and the table questions.',
+	'plan.sides.help':
+		'In this step each student marks which side they lean toward. That lets us seat students from both sides at every table, so the tables are mixed.',
+	'plan.sides.title': 'The sides step',
 	'plan.back': 'The lesson',
 	'plan.loading': 'Loading the plan',
 	'plan.challenge.title': 'The question to solve',
-	'plan.challenge.help': 'One question the whole class works on together.',
+	'plan.challenge.help':
+		'The main question of the lesson. The whole class suggests solutions to it and votes on them.',
 	'plan.challenge.placeholder': 'Write the question to solve',
 	'plan.details.title': 'Lesson details',
-	'plan.details.side_a': 'Name of the first side',
-	'plan.details.side_b': 'Name of the second side',
 	'plan.details.side_question': 'The question students answer on the slider',
 	'plan.details.claim_a': 'What the first side says',
 	'plan.details.claim_b': 'What the second side says',
-	'plan.details.claim.placeholder': 'Optional. One sentence, shown under the name',
+	'plan.details.claim.placeholder': 'Optional. One sentence describing this side',
 	'console.gate.label': 'The goal: how much agreement passes',
 	'console.gate.value': 'The goal: {{value}}%',
 	'console.gate.help': 'A proposal passes the goal when its agreement reaches this percent.',
 	'plan.tables.title': 'Questions for the tables',
-	'plan.tables.help': 'Each table picks one. Add 3 to 8.',
+	'plan.tables.help':
+		'Each table picks one question and digs into it. Add 3 to 8 questions to choose from.',
 	'plan.own_questions': 'Students may add their own question',
 	'plan.own_questions_help': 'When off, tables pick only from your questions',
 	'plan.own_questions_none':
@@ -178,8 +185,6 @@ const en: Record<string, string> = {
 	'opening.waiting_count': '{{n}} in the class',
 	'side.title': 'Which side are you closer to?',
 	'side.aria': 'Which side are you closer to? {{a}} on one side, {{b}} on the other',
-	'side.name_a': 'Jonathan',
-	'side.name_b': 'Noa',
 	'side.near_a': 'Close to {{name}}',
 	'side.middle': 'In the middle',
 	'side.near_b': 'Close to {{name}}',
@@ -504,7 +509,8 @@ const en: Record<string, string> = {
 	'plan.details.language.device': 'Not locked: each student chooses (Hebrew to start)',
 	// Lesson introduction (IA 14, UX 14.J)
 	'plan.intro.title': 'Introduction',
-	'plan.intro.help': "Shown at the Opening step: big on the projector and on the students' phones.",
+	'plan.intro.help':
+		"Brings students into the topic before you start. Shown at the Opening step, big on the projector and on students' phones.",
 	'plan.intro.text.label': 'Text',
 	'plan.intro.text.placeholder': 'A few sentences about the dilemma and what lies ahead',
 	'plan.intro.text.count': '{{n}} of {{max}}',

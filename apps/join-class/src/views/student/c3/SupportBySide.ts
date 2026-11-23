@@ -8,7 +8,7 @@ export interface SupportBySideAttrs {
 	result: SupportResult;
 	/** The gate (-1..+1 mean support) both sides must reach. */
 	gate: number;
-	/** Character names of the two sides (statementSettings.sideNames or the defaults). */
+	/** Labels of the two sides ("Side A" / "Side B"). */
 	names: SideNames;
 }
 

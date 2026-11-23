@@ -67,23 +67,28 @@ const fa: Record<string, string> = {
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
 	'plan.title': 'برنامه‌ریزی پرسش‌ها',
+	'plan.details.help': 'تنظیمات کلی درس: زبان، مرحلهٔ سمت‌ها و محدودیت زمان صحبت و پیشنهادها.',
+	'plan.help': 'درس را به ترتیب مراحلش آماده کنید: جزئیات، پرسش برای حل، مقدمه و پرسش‌های میزها.',
+	'plan.sides.help':
+		'در این مرحله هر دانش‌آموز مشخص می‌کند به کدام سمت نزدیک‌تر است. به این ترتیب می‌توانیم سر هر میز دانش‌آموزانی از هر دو سمت بنشانیم و میزها متنوع شوند.',
+	'plan.sides.title': 'مرحلهٔ سمت‌ها',
 	'plan.back': 'درس',
 	'plan.loading': 'در حال بارگذاری برنامه',
 	'plan.challenge.title': 'پرسشِ مورد حل',
-	'plan.challenge.help': 'یک پرسش که کل کلاس با هم روی آن کار می‌کنند.',
+	'plan.challenge.help':
+		'پرسش اصلی درس. کل کلاس برایش راه‌حل پیشنهاد می‌دهد و به آن‌ها رأی می‌دهد.',
 	'plan.challenge.placeholder': 'پرسشِ مورد حل را بنویسید',
 	'plan.details.title': 'جزئیات درس',
-	'plan.details.side_a': 'نام شخصیت در سمت اول',
-	'plan.details.side_b': 'نام شخصیت در سمت دوم',
 	'plan.details.side_question': 'پرسشی که دانش‌آموزان روی نوار لغزنده به آن پاسخ می‌دهند',
 	'plan.details.claim_a': 'سمت اول چه می‌گوید',
 	'plan.details.claim_b': 'سمت دوم چه می‌گوید',
-	'plan.details.claim.placeholder': 'اختیاری. یک جمله که زیر نام نمایش داده می‌شود',
+	'plan.details.claim.placeholder': 'اختیاری. یک جمله که این سمت را توصیف می‌کند',
 	'console.gate.label': 'هدف: چقدر موافقت برای گذشتن لازم است',
 	'console.gate.value': 'هدف: {{value}}%',
 	'console.gate.help': 'پیشنهاد وقتی از هدف می‌گذرد که موافقت با آن به این درصد برسد.',
 	'plan.tables.title': 'پرسش‌های میزها',
-	'plan.tables.help': 'هر میز یک پرسش انتخاب می‌کند. بین ۳ تا ۸ پرسش اضافه کنید.',
+	'plan.tables.help':
+		'هر میز یک پرسش را انتخاب می‌کند و در آن عمیق می‌شود. بین ۳ تا ۸ پرسش برای انتخاب اضافه کنید.',
 	'plan.own_questions': 'دانش‌آموزان می‌توانند پرسش خودشان را اضافه کنند',
 	'plan.own_questions_help': 'وقتی خاموش است، میزها فقط از پرسش‌های شما انتخاب می‌کنند',
 	'plan.own_questions_none':
@@ -167,8 +172,6 @@ const fa: Record<string, string> = {
 	'opening.waiting_count': '{{n}} نفر در کلاس',
 	'side.title': 'به کدام طرف نزدیک‌ترید؟',
 	'side.aria': 'به کدام طرف نزدیک‌ترید؟ {{a}} در یک طرف، {{b}} در طرف دیگر',
-	'side.name_a': 'یوناتان',
-	'side.name_b': 'نوآ',
 	'side.near_a': 'نزدیک به {{name}}',
 	'side.middle': 'وسط',
 	'side.near_b': 'نزدیک به {{name}}',
@@ -494,7 +497,8 @@ const fa: Record<string, string> = {
 	'plan.details.language.device': 'قفل نشده: هر دانش‌آموز خودش انتخاب می‌کند (شروع با عبری)',
 	// Lesson introduction (IA 14, UX 14.J)
 	'plan.intro.title': 'مقدمه',
-	'plan.intro.help': 'در مرحلهٔ آغاز نمایش داده می‌شود: بزرگ روی پرده و روی گوشی‌های دانش‌آموزان.',
+	'plan.intro.help':
+		'پیش از شروع، دانش‌آموزان را با موضوع آشنا می‌کند. در مرحلهٔ آغاز نمایش داده می‌شود، بزرگ روی پروژکتور و روی تلفن‌ها.',
 	'plan.intro.text.label': 'متن',
 	'plan.intro.text.placeholder': 'چند جمله دربارهٔ دوراهی و آنچه پیش روی کلاس است',
 	'plan.intro.text.count': '{{n}} از {{max}}',

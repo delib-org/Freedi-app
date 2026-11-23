@@ -77,23 +77,27 @@ const ar: Record<string, string> = {
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
 	'plan.title': 'تخطيط الأسئلة',
+	'plan.details.help': 'إعدادات عامة للدرس: اللغة، مرحلة الجانبين، وحدود وقت الحديث والاقتراحات.',
+	'plan.help':
+		'جهّزوا الدرس بحسب ترتيب مراحله: التفاصيل، السؤال المطلوب حلّه، المقدمة وأسئلة الطاولات.',
+	'plan.sides.help':
+		'في هذه المرحلة يحدد كل طالب إلى أي جانب يميل. بهذا نوزّع على كل طاولة طلابًا من الجانبين فتكون الطاولات متنوعة.',
+	'plan.sides.title': 'مرحلة الجانبين',
 	'plan.back': 'الدرس',
 	'plan.loading': 'جارٍ تحميل الخطة',
 	'plan.challenge.title': 'السؤال المطلوب حلّه',
-	'plan.challenge.help': 'سؤال واحد يعمل عليه الصف كله معًا.',
+	'plan.challenge.help': 'السؤال الرئيسي في الدرس. يقترح الصف كله حلولًا له ويصوّت عليها.',
 	'plan.challenge.placeholder': 'اكتبوا السؤال المطلوب حلّه',
 	'plan.details.title': 'تفاصيل الدرس',
-	'plan.details.side_a': 'اسم الشخصية في الجانب الأول',
-	'plan.details.side_b': 'اسم الشخصية في الجانب الثاني',
 	'plan.details.side_question': 'السؤال الذي يجيب عنه الطلاب على المؤشر',
 	'plan.details.claim_a': 'ماذا يقول الجانب الأول',
 	'plan.details.claim_b': 'ماذا يقول الجانب الثاني',
-	'plan.details.claim.placeholder': 'اختياري. جملة واحدة تظهر تحت الاسم',
+	'plan.details.claim.placeholder': 'اختياري. جملة واحدة تصف هذا الجانب',
 	'console.gate.label': 'الهدف: كم من الموافقة يلزم للنجاح',
 	'console.gate.value': 'الهدف: {{value}}%',
 	'console.gate.help': 'يجتاز الاقتراح الهدف عندما تصل الموافقة عليه إلى هذه النسبة.',
 	'plan.tables.title': 'أسئلة الطاولات',
-	'plan.tables.help': 'كل طاولة تختار سؤالًا واحدًا. أضيفوا من 3 إلى 8.',
+	'plan.tables.help': 'تختار كل طاولة سؤالًا واحدًا وتتعمق فيه. أضيفوا من 3 إلى 8 أسئلة للاختيار.',
 	'plan.own_questions': 'يمكن للطلاب إضافة سؤال خاص بهم',
 	'plan.own_questions_help': 'عند إيقاف الخيار، تختار الطاولات من أسئلتكم فقط',
 	'plan.own_questions_none':
@@ -175,8 +179,6 @@ const ar: Record<string, string> = {
 	'opening.waiting_count': '{{n}} في الصف',
 	'side.title': 'إلى أي جانب أنتم أقرب؟',
 	'side.aria': 'إلى أي جانب أنتم أقرب؟ {{a}} في جانب و{{b}} في الجانب الآخر',
-	'side.name_a': 'يونتان',
-	'side.name_b': 'نوعا',
 	'side.near_a': 'قريب من {{name}}',
 	'side.middle': 'في المنتصف',
 	'side.near_b': 'قريب من {{name}}',
@@ -499,7 +501,8 @@ const ar: Record<string, string> = {
 	'plan.details.language.device': 'غير مقفلة: كل طالب يختار (البداية بالعبرية)',
 	// Lesson introduction (IA 14, UX 14.J)
 	'plan.intro.title': 'مقدمة',
-	'plan.intro.help': 'تُعرض في خطوة الافتتاح: كبيرة على جهاز العرض وعلى هواتف الطلاب.',
+	'plan.intro.help':
+		'تُدخل الطلاب في الموضوع قبل البدء. تُعرض في مرحلة الافتتاح، كبيرة على جهاز العرض وعلى هواتف الطلاب.',
 	'plan.intro.text.label': 'النص',
 	'plan.intro.text.placeholder': 'بضع جمل عن المعضلة وعمّا ينتظر الصف',
 	'plan.intro.text.count': '{{n}} من {{max}}',

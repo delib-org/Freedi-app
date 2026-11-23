@@ -4,6 +4,7 @@ import { t } from '@/lib/i18n';
 import { INTRO_VIDEOS_MAX } from '@/lib/classroom/introVideos';
 import { fieldValue, getFieldError, getMainId } from './planController';
 import { IntroEditor } from './IntroEditor';
+import { sectionHead } from './planSectionHead';
 import {
 	VIDEO_TITLE_MAX,
 	VIDEO_URL_MAX,
@@ -273,8 +274,7 @@ export const PlanIntro: m.Component = {
 				oncreate: (vnode: m.VnodeDOM) => focusIntroSection(vnode.dom as HTMLElement),
 			},
 			[
-				m('h2.plan__section-title', { id: 'plan-intro-title' }, t('plan.intro.title')),
-				m('p.plan__help', t('plan.intro.help')),
+				sectionHead('plan-intro-title', t('plan.intro.title'), t('plan.intro.help')),
 				m(IntroEditor),
 				videos(),
 			],

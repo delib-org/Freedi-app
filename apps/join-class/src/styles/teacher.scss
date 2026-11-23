@@ -543,7 +543,13 @@
   min-block-size: var(--touch-target);
 }
 
-// ---- the side step's dilemma: question, then each side's name + claim ---------
+// ---- the side step's dilemma: question, then what each side says ---------------
+.plan-details__sides-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+}
+
 .plan-details__sides {
   display: flex;
   flex-direction: column;

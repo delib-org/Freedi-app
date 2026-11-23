@@ -74,23 +74,30 @@ const es: Record<string, string> = {
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
 	'plan.title': 'Planificar las preguntas',
+	'plan.details.help':
+		'Ajustes generales de la clase: idioma, el paso de los lados y los límites de tiempo de palabra y de propuestas.',
+	'plan.help':
+		'Prepare la clase en el orden en que se desarrolla: detalles, la pregunta a resolver, la introducción y las preguntas de las mesas.',
+	'plan.sides.help':
+		'En este paso cada alumno marca a qué lado se inclina. Así podemos sentar en cada mesa a alumnos de ambos lados y formar mesas mixtas.',
+	'plan.sides.title': 'El paso de los lados',
 	'plan.back': 'La clase',
 	'plan.loading': 'Cargando el plan',
 	'plan.challenge.title': 'La pregunta a resolver',
-	'plan.challenge.help': 'Una pregunta en la que trabaja toda la clase junta.',
+	'plan.challenge.help':
+		'La pregunta principal de la clase. Todo el grupo propone soluciones y vota por ellas.',
 	'plan.challenge.placeholder': 'Escriban la pregunta a resolver',
 	'plan.details.title': 'Detalles de la clase',
-	'plan.details.side_a': 'Nombre del primer lado',
-	'plan.details.side_b': 'Nombre del segundo lado',
 	'plan.details.side_question': 'La pregunta que el alumnado responde en el control deslizante',
 	'plan.details.claim_a': 'Qué dice el primer lado',
 	'plan.details.claim_b': 'Qué dice el segundo lado',
-	'plan.details.claim.placeholder': 'Opcional. Una frase que aparece bajo el nombre',
+	'plan.details.claim.placeholder': 'Opcional. Una frase que describe este lado',
 	'console.gate.label': 'La meta: cuánto acuerdo hace falta para pasar',
 	'console.gate.value': 'Meta: {{value}}%',
 	'console.gate.help': 'Una propuesta supera la meta cuando su acuerdo llega a este porcentaje.',
 	'plan.tables.title': 'Preguntas para las mesas',
-	'plan.tables.help': 'Cada mesa elige una. Añadan de 3 a 8.',
+	'plan.tables.help':
+		'Cada mesa elige una pregunta y profundiza en ella. Añada de 3 a 8 preguntas para elegir.',
 	'plan.own_questions': 'Los estudiantes pueden añadir su propia pregunta',
 	'plan.own_questions_help': 'Si está desactivado, las mesas eligen solo entre vuestras preguntas',
 	'plan.own_questions_none':
@@ -176,8 +183,6 @@ const es: Record<string, string> = {
 	'opening.waiting_count': '{{n}} en la clase',
 	'side.title': '¿A qué lado estás más cerca?',
 	'side.aria': '¿A qué lado estás más cerca? {{a}} en un lado, {{b}} en el otro',
-	'side.name_a': 'Jonathan',
-	'side.name_b': 'Noa',
 	'side.near_a': 'Cerca de {{name}}',
 	'side.middle': 'En el medio',
 	'side.near_b': 'Cerca de {{name}}',
@@ -506,7 +511,7 @@ const es: Record<string, string> = {
 	// Lesson introduction (IA 14, UX 14.J)
 	'plan.intro.title': 'Introducción',
 	'plan.intro.help':
-		'Se muestra en el paso de apertura: grande en el proyector y en los teléfonos del alumnado.',
+		'Introduce al alumnado en el tema antes de empezar. Se muestra en el paso de apertura, grande en el proyector y en los móviles.',
 	'plan.intro.text.label': 'Texto',
 	'plan.intro.text.placeholder': 'Unas frases sobre el dilema y lo que espera a la clase',
 	'plan.intro.text.count': '{{n}} de {{max}}',

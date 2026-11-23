@@ -77,23 +77,27 @@ const he: Record<string, string> = {
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
 	'plan.title': 'תכנון השאלות',
+	'plan.details.help': 'הגדרות כלליות של השיעור: שפה, שלב הצדדים וזמני הדיבור וההצעות.',
+	'plan.help': 'כאן מכינים את השיעור לפי סדר השלבים: פרטים, השאלה לפתרון, הקדמה ושאלות לשולחנות.',
+	'plan.sides.help':
+		'בשלב הזה כל תלמיד מסמן לאיזה צד הוא קרוב. כך אפשר לשבץ לכל שולחן תלמידים משני הצדדים ולקבל שולחנות מגוונים.',
+	'plan.sides.title': 'שלב הצדדים',
 	'plan.back': 'השיעור',
 	'plan.loading': 'טוענים את התכנון',
 	'plan.challenge.title': 'השאלה לפתרון',
-	'plan.challenge.help': 'שאלה אחת שכל הכיתה עובדת עליה ביחד.',
+	'plan.challenge.help':
+		'השאלה שכל הכיתה עובדת עליה בשיעור. התלמידים מציעים לה פתרונות ומצביעים עליהם.',
 	'plan.challenge.placeholder': 'כתבו את השאלה לפתרון',
 	'plan.details.title': 'פרטי השיעור',
-	'plan.details.side_a': 'שם הדמות בצד הראשון',
-	'plan.details.side_b': 'שם הדמות בצד השני',
 	'plan.details.side_question': 'השאלה שהתלמידים עונים עליה בסרגל',
 	'plan.details.claim_a': 'מה אומר הצד הראשון',
 	'plan.details.claim_b': 'מה אומר הצד השני',
-	'plan.details.claim.placeholder': 'לא חובה. משפט אחד שיופיע מתחת לשם',
+	'plan.details.claim.placeholder': 'לא חובה. משפט אחד שמתאר את הצד',
 	'console.gate.label': 'השער: כמה הסכמה צריך כדי לעבור',
 	'console.gate.value': 'השער: {{value}}%',
 	'console.gate.help': 'הצעה עוברת את השער כשההסכמה אליה מגיעה לאחוז הזה.',
 	'plan.tables.title': 'השאלות לשולחנות',
-	'plan.tables.help': 'כל שולחן בוחר שאלה אחת. הוסיפו בין 3 ל-8.',
+	'plan.tables.help': 'כל שולחן בוחר שאלה אחת ומעמיק בה. הוסיפו בין 3 ל-8 שאלות לבחירה.',
 	'plan.own_questions': 'התלמידים יכולים להוסיף שאלה משלהם',
 	'plan.own_questions_help': 'כשהאפשרות כבויה, השולחנות בוחרים רק מהשאלות שלכם',
 	'plan.own_questions_none':
@@ -175,8 +179,6 @@ const he: Record<string, string> = {
 	'opening.waiting_count': '{{n}} בכיתה',
 	'side.title': 'לאיזה צד אתם קרובים?',
 	'side.aria': 'לאיזה צד אתם קרובים? {{a}} בצד אחד, {{b}} בצד השני',
-	'side.name_a': 'יונתן',
-	'side.name_b': 'נועה',
 	'side.near_a': 'קרוב ל{{name}}',
 	'side.middle': 'באמצע',
 	'side.near_b': 'קרוב ל{{name}}',
@@ -499,7 +501,8 @@ const he: Record<string, string> = {
 	'plan.details.language.device': 'לא נעולה: כל תלמיד בוחר (מתחילים בעברית)',
 	// Lesson introduction (IA 14, UX 14.J)
 	'plan.intro.title': 'הקדמה',
-	'plan.intro.help': 'מוצגת בשלב הפתיחה: גדול על המקרן ובטלפונים של התלמידים.',
+	'plan.intro.help':
+		'מכניסה את התלמידים לנושא לפני שמתחילים. מוצגת בשלב הפתיחה, גדולה על המקרן ובטלפונים.',
 	'plan.intro.text.label': 'טקסט',
 	'plan.intro.text.placeholder': 'כמה משפטים על הדילמה ועל מה שמחכה לכיתה',
 	'plan.intro.text.count': '{{n}} מתוך {{max}}',
