@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מורה: דף הפתיחה של Class</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+body{margin:0}
+a{color:#7B2D6E}a:hover{color:#4F1B45}
+</style>
+</helmet>
+<main dir="rtl" lang="he" style="min-height: 100vh; box-sizing: border-box; background: #FAF7FB; color: #2A1F3D; font-family: 'Assistant', 'Arial Hebrew', Arial, sans-serif; display: flex; flex-direction: column">
+  <div style="box-sizing: border-box; width: 100%; max-width: 1240px; margin: 0 auto; padding: 40px 48px 32px; flex-grow: 1; display: flex; flex-direction: column; gap: 40px">
+
+    <header style="display: flex; align-items: center; gap: 14px">
+      <img src="/_blob/f17f3617a93d107231a2fc277be1d25d" alt="WizCol" style="width: 56px; height: 56px">
+    </header>
+
+    <div style="flex-grow: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 56px 72px">
+
+      <!-- Start side: what Class is for, and the two doors -->
+      <section style="flex: 1.25 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 28px">
+        <div style="display: flex; flex-direction: column; gap: 20px">
+          <h1 style="margin: 0; font-family: 'Fredoka', 'Rubik', 'Arial Hebrew', Arial, sans-serif; font-weight: 700; font-size: 64px; line-height: 1.1; text-wrap: balance">דיון כיתתי שמסתיים בהסכמה</h1>
+          <p style="margin: 0; max-width: 560px; font-size: 21px; line-height: 1.6; color: #2A1F3D; text-wrap: pretty">מציגים לכיתה דילמה. התלמידים בוחרים צד, יושבים בשולחנות מעורבים וכותבים יחד הצעות שרוב הכיתה מסכימה להן.</p>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px">
+          <a href="#start" style="box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 60px; padding: 0 36px; border-radius: 14px; background: #7B2D6E; color: #FFFFFF; font-size: 20px; font-weight: 700; text-decoration: none; box-shadow: 0 1px 2px rgba(42, 31, 61, 0.12), 0 8px 20px rgba(123, 45, 110, 0.24)">התחלת שיעור<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M12 4.500L6.500 10l5.500 5.500" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
+
+        <form style="margin: 0; max-width: 520px; padding-top: 24px; border-top: 1px solid #E7DEEA; display: flex; flex-direction: column; gap: 10px">
+          <label for="door-code" style="font-size: 16px; font-weight: 600; color: #6B6079">תלמידים: הקלידו את קוד הכיתה</label>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+            <input id="door-code" type="text" inputmode="numeric" autocomplete="one-time-code" dir="ltr" placeholder="······" style="box-sizing: border-box; width: 208px; height: 48px; padding: 0 16px; border: 1.5px solid #9B8AA3; border-radius: 12px; background: #FFFFFF; color: #2A1F3D; font-family: inherit; font-size: 24px; font-weight: 700; letter-spacing: 0.3em; text-align: center">
+            <button type="submit" style="height: 48px; padding: 0 24px; border: 1.5px solid #9B8AA3; border-radius: 12px; background: #FFFFFF; color: #2A1F3D; font-family: inherit; font-size: 17px; font-weight: 600">כניסה</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- End side: how a lesson goes -->
+      <section aria-labelledby="front-how-title" style="flex: 1 1 380px; min-width: 0; box-sizing: border-box; padding: 20px; border-radius: 28px; background: #F4EAF2">
+        <div style="box-sizing: border-box; padding: 32px 32px 12px; border-radius: 18px; background: #FFFFFF; border: 1px solid #E7DEEA; box-shadow: 0 1px 2px rgba(42, 31, 61, 0.05), 0 8px 24px rgba(42, 31, 61, 0.06); display: flex; flex-direction: column">
+          <h2 id="front-how-title" style="margin: 0 0 8px; font-size: 14px; font-weight: 700; letter-spacing: 0.04em; color: #7B2D6E">איך נראה שיעור</h2>
+          <ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+            <li style="display: flex; align-items: flex-start; gap: 20px; padding: 20px 0; border-bottom: 1px solid #E7DEEA">
+              <span aria-hidden="true" style="flex: none; width: 40px; font-family: 'Fredoka', 'Rubik', 'Arial Hebrew', Arial, sans-serif; font-weight: 700; font-size: 48px; line-height: 0.95; color: #7B2D6E">1</span>
+              <span style="display: flex; flex-direction: column; gap: 4px"><span style="font-family: 'Fredoka', 'Rubik', 'Arial Hebrew', Arial, sans-serif; font-weight: 700; font-size: 24px; line-height: 1.2">מתכננים</span><span style="font-size: 17px; line-height: 1.5; color: #6B6079">כותבים דילמה עם שני צדדים ושאלות לדיון.</span></span>
+            </li>
+            <li style="display: flex; align-items: flex-start; gap: 20px; padding: 20px 0; border-bottom: 1px solid #E7DEEA">
+              <span aria-hidden="true" style="flex: none; width: 40px; font-family: 'Fredoka', 'Rubik', 'Arial Hebrew', Arial, sans-serif; font-weight: 700; font-size: 48px; line-height: 0.95; color: #7B2D6E">2</span>
+              <span style="display: flex; flex-direction: column; gap: 4px"><span style="font-family: 'Fredoka', 'Rubik', 'Arial Hebrew', Arial, sans-serif; font-weight: 700; font-size: 24px; line-height: 1.2">התלמידים נכנסים</span><span style="font-size: 17px; line-height: 1.5; color: #6B6079">עם קוד או QR, בוחרים צד ויושבים בשולחנות מעורבים.</span></span>
+            </li>
+            <li style="display: flex; align-items: flex-start; gap: 20px; padding: 20px 0">
+              <span aria-hidden="true" style="flex: none; width: 40px; font-family: 'Fredoka', 'Rubik', 'Arial Hebrew', Arial, sans-serif; font-weight: 700; font-size: 48px; line-height: 0.95; color: #7B2D6E">3</span>
+              <span style="display: flex; flex-direction: column; gap: 4px"><span style="font-family: 'Fredoka', 'Rubik', 'Arial Hebrew', Arial, sans-serif; font-weight: 700; font-size: 24px; line-height: 1.2">הכיתה מסכימה</span><span style="font-size: 17px; line-height: 1.5; color: #6B6079">השולחנות כותבים הצעות ומשפרים אותן יחד, ואז כל הכיתה מצביעה.</span></span>
+            </li>
+          </ol>
+        </div>
+      </section>
+    </div>
+
+    <footer style="padding-top: 20px; border-top: 1px solid #E7DEEA; display: flex; align-items: center; gap: 10px; font-size: 14px; color: #6B6079">
+      <img src="/_blob/f17f3617a93d107231a2fc277be1d25d" alt="" style="width: 22px; height: 22px">
+      <span>החלטות חכמות על ידי WizCol</span>
+    </footer>
+  </div>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
