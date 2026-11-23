@@ -5,8 +5,24 @@
 // Imported by the lazy teacher route modules (TeacherHome, PlanOverview,
 // PlanScreen, TeacherConsole and with it TableSheet, RegistrationPage), after
 // their own stylesheets, so a student never downloads it. The projector route
-// does not import it: that surface keeps today's look. Every rule sits under $mulberry (../_look-scope.scss).
+// does not import it: that surface keeps today's look. Every rule sits under
+// $mulberry (../_look-scope.scss).
 //
-// The tokens are not @use'd here: they arrive with entry.scss in the entry CSS,
-// which is always loaded first, and a second @use would emit the block twice.
-// The teacher screens' partials are added below.
+// The tokens and the buttons are not @use'd here: they arrive with entry.scss
+// in the entry CSS, which is always loaded first, and a second @use would emit
+// them twice. One partial per screen or per part of the console.
+@use 'base';
+@use 'home';
+@use 'home-create';
+@use 'plans';
+@use 'registration';
+@use 'console-bar';
+@use 'console-steps';
+@use 'console-band';
+@use 'console-board';
+@use 'console-table-card';
+@use 'console-chips';
+@use 'console-panels';
+@use 'console-written';
+@use 'console-overlays';
+@use 'console-sheet';

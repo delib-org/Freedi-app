@@ -316,13 +316,15 @@ function nowRow(
 	if (mode === 'proposals') {
 		return [
 			m(TableStepMarker, { current: table.step }),
-			propDone ? m('p.table-card__now', t('console.proposals_spoken')) : null,
+			propDone ? m('p.table-card__now.table-card__now--done', t('console.proposals_spoken')) : null,
 		];
 	}
 	const done = tableIsDone(table, mode, serverNow(), noneLeftNow(table), propDone);
 
+	// The modifier lets a finished table wear the "ready" mark; the words already say it.
 	return m(
 		'p.table-card__now',
+		{ class: done ? 'table-card__now--done' : '' },
 		done
 			? t('console.all_done')
 			: t(

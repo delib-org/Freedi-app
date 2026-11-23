@@ -1,0 +1,138 @@
+// =============================================================================
+// Mulberry: "what they wrote" on the console. The questions, the answers and
+// proposals as cards, the replies under them, and the language flags.
+// =============================================================================
+
+@use '../look-scope' as *;
+@use 'mixins' as *;
+
+#{$mulberry} .written__question-head {
+  margin: 24px 0 12px;
+}
+
+#{$mulberry} .written__question:first-child .written__question-head {
+  margin-block-start: 0;
+}
+
+#{$mulberry} .written__question-title {
+  @include display(1.5rem, 700, 1.25);
+}
+
+#{$mulberry} .written__group-title {
+  margin: 16px 0 8px;
+  background: var(--mul-ground);
+  @include section-label;
+}
+
+#{$mulberry} .written__list {
+  gap: 10px;
+}
+
+#{$mulberry} :is(.written-card, .proposal-block) {
+  border: 1px solid var(--mul-line);
+  border-radius: var(--mul-radius-control);
+  background: var(--mul-surface);
+  box-shadow: var(--mul-shadow-xs);
+}
+
+#{$mulberry} .written-card {
+  padding: 14px 18px;
+}
+
+#{$mulberry} :is(.written-card--hidden, .proposal-block--hidden) {
+  border-style: dashed;
+  box-shadow: none;
+}
+
+#{$mulberry} .written-card__text,
+#{$mulberry} .proposal-block__text {
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  color: var(--mul-ink);
+}
+
+#{$mulberry} :is(.written-card__meta, .written-card__flag, .proposal-block__eyebrow) {
+  color: var(--mul-ink-soft);
+  font-size: 0.875rem;
+}
+
+#{$mulberry} .proposal-block__eyebrow {
+  @include section-label;
+}
+
+#{$mulberry} .proposal-block__children {
+  border-inline-start: 2px solid var(--mul-line);
+}
+
+#{$mulberry} .chip-hidden {
+  border: 1px solid var(--mul-border-soft);
+  border-radius: var(--mul-radius-pill);
+  background: var(--mul-well);
+  color: var(--mul-ink-mid);
+}
+
+#{$mulberry} .hide-control,
+#{$mulberry} .written-card__rate-for {
+  font-size: 0.9375rem;
+}
+
+// ---- replies ------------------------------------------------------------------------
+#{$mulberry} .teacher-replies {
+  border-block-start: 1px solid var(--mul-line);
+}
+
+#{$mulberry} .teacher-replies__area {
+  @include field;
+  padding-block: 10px;
+  border-radius: var(--mul-radius-control);
+}
+
+#{$mulberry} .teacher-reply {
+  padding: 8px 12px;
+  border-radius: var(--mul-radius-control);
+  background: var(--mul-blush);
+}
+
+#{$mulberry} .teacher-reply__tag {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .teacher-replies__failed {
+  color: var(--mul-danger-ink);
+}
+
+// ---- language flags: look here ----------------------------------------------------------
+#{$mulberry} .flags {
+  border: 1.5px solid var(--mul-attention-line);
+  border-radius: var(--mul-radius-control);
+  background: var(--mul-attention-surface);
+}
+
+#{$mulberry} .flags__mark {
+  background: var(--mul-attention-solid);
+  color: var(--mul-on-attention);
+}
+
+#{$mulberry} .flags__chevron {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .flag-row {
+  border: 1px solid var(--mul-line);
+  border-radius: var(--mul-radius-control);
+  background: var(--mul-surface);
+}
+
+#{$mulberry} .flag-row__what {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .flag-row__text {
+  border-inline-start: 3px solid var(--mul-attention-solid);
+}
+
+@include more-contrast {
+  #{$mulberry} :is(.written-card, .proposal-block, .flag-row) {
+    border-color: var(--mul-border-control);
+  }
+}

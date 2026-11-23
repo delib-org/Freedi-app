@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterLessons, foldForSearch, statusChipOf } from '../homeHelpers';
+import { filterLessons, foldForSearch, gameChipsOf, statusChipOf } from '../homeHelpers';
 
 describe('statusChipOf', () => {
 	it('a live lesson on step 0 has not started', () => {
@@ -42,5 +42,47 @@ describe('filterLessons', () => {
 
 	it('returns nothing when no name matches', () => {
 		expect(filterLessons(lessons, 'zzz')).toEqual([]);
+	});
+});
+
+describe('gameChipsOf', () => {
+	const game = (gameId: string, title: string, order: number, removedAt?: number) => ({
+		gameId,
+		title,
+		order,
+		...(removedAt === undefined ? {} : { removedAt }),
+	});
+
+	it('lists the games in the plan order, whatever order they were read in', () => {
+		const chips = gameChipsOf([game('b', 'Second', 1), game('a', 'First', 0)]);
+
+		expect(chips).toEqual([
+			{ id: 'a', title: 'First' },
+			{ id: 'b', title: 'Second' },
+		]);
+	});
+
+	it('leaves out a removed game, as the count on the card does', () => {
+		expect(gameChipsOf([game('a', 'Kept', 0), game('b', 'Removed', 1, 1700000000000)])).toEqual([
+			{ id: 'a', title: 'Kept' },
+		]);
+	});
+
+	it('leaves out a game with no name and trims the others', () => {
+		expect(gameChipsOf([game('a', '   ', 0), game('b', '  Named  ', 1)])).toEqual([
+			{ id: 'b', title: 'Named' },
+		]);
+	});
+
+	it('is empty while the games have not been read yet', () => {
+		expect(gameChipsOf(undefined)).toEqual([]);
+		expect(gameChipsOf([])).toEqual([]);
+	});
+
+	it('does not reorder the list it was given', () => {
+		const games = [game('b', 'Second', 1), game('a', 'First', 0)];
+		gameChipsOf(games);
+
+		expect(games.map((g) => g.gameId)).toEqual(['b', 'a']);
 	});
 });

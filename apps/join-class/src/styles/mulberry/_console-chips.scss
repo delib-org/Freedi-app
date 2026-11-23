@@ -1,0 +1,107 @@
+// =============================================================================
+// Mulberry: a student as a chip. A white pill with a soft outline; the one who
+// speaks or answers now is on blush with a mulberry edge. A chip never shows
+// which side a student chose (Tal, 2026-11-05): only that they chose, with a
+// check and the words.
+// =============================================================================
+
+@use '../look-scope' as *;
+@use 'mixins' as *;
+
+#{$mulberry} .member-chip {
+  gap: 6px;
+  min-block-size: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--mul-border-soft);
+  background: var(--mul-surface);
+  color: var(--mul-ink);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  outline: 0;
+}
+
+// Chose a side: a sage check and the words. Not yet: a dashed outline and the words.
+#{$mulberry} .member-chip--chose {
+  border-color: var(--mul-ready-line);
+  background: var(--mul-ready-bg);
+}
+
+#{$mulberry} .member-chip--chose .member-chip__mark,
+#{$mulberry} .member-chip__tag--chose {
+  color: var(--mul-ready-ink);
+}
+
+#{$mulberry} .member-chip--no-side,
+#{$mulberry} .member-chip--no-device {
+  border: 1.5px dashed var(--mul-border-control);
+  background: transparent;
+}
+
+#{$mulberry} .member-chip--passed-ask {
+  border-style: dashed;
+}
+
+// The one who asks now: a mulberry edge. The one who answers or holds the floor:
+// the edge and the blush fill. Each also has its glyph and its spoken label.
+#{$mulberry} .member-chip--asking {
+  border: 1.5px solid var(--mul-primary);
+  outline: 0;
+}
+
+#{$mulberry} :is(.member-chip--answering, .member-chip--speaking) {
+  border: 1.5px solid var(--mul-primary);
+  background: var(--mul-blush);
+  font-weight: 700;
+  outline: 0;
+}
+
+#{$mulberry} .member-chip__turn {
+  color: var(--mul-primary-text);
+}
+
+#{$mulberry} .member-chip__tag {
+  color: var(--mul-ink-soft);
+  font-size: 0.8125rem;
+}
+
+#{$mulberry} .member-chip__tag--no-side {
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .member-chip__tag--speaking {
+  color: var(--mul-primary-text);
+}
+
+// Being dragged, and picked up with the keyboard.
+#{$mulberry} .member-chip--active {
+  border-color: var(--mul-primary);
+}
+
+#{$mulberry} .member-chip[aria-pressed='true'] {
+  background: var(--mul-blush);
+}
+
+#{$mulberry} .member-chip__menu {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .chip-ghost {
+  border: 1.5px solid var(--mul-primary);
+  background: var(--mul-surface);
+  color: var(--mul-ink);
+  font-weight: 700;
+  box-shadow: var(--mul-shadow-raised);
+}
+
+@media (max-width: 767px) {
+  // console-mobile.scss makes the chip 40px tall on a phone.
+  #{$mulberry} .member-chip {
+    min-block-size: 40px;
+  }
+}
+
+@include more-contrast {
+  #{$mulberry} .member-chip {
+    border-color: var(--mul-border-control);
+  }
+}

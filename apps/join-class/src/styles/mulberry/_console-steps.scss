@@ -1,0 +1,180 @@
+// =============================================================================
+// Mulberry: "where we are" on the console. The step line (step n of 9, the
+// clock, the dots) and the "all steps" list it opens. Done = a filled mulberry
+// mark with a check, now = a ring on blush, later = an empty outline.
+// =============================================================================
+
+@use '../look-scope' as *;
+@use 'mixins' as *;
+
+#{$mulberry} .step-line {
+  background: var(--mul-surface);
+  border-block-end: 1px solid var(--mul-line);
+}
+
+#{$mulberry} .step-line__toggle {
+  border-radius: var(--mul-radius-control);
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .step-line__toggle:hover {
+  background: var(--mul-blush);
+}
+
+#{$mulberry} .step-line__label {
+  color: var(--mul-ink-soft);
+  font-weight: 600;
+}
+
+#{$mulberry} .step-line__name {
+  color: var(--mul-ink);
+  font-weight: 700;
+}
+
+#{$mulberry} .step-line--held .step-line__label {
+  color: var(--mul-attention-ink);
+  font-weight: 700;
+}
+
+#{$mulberry} .step-line__all {
+  color: var(--mul-primary-text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+#{$mulberry} .step-line__caret,
+#{$mulberry} .step-line__clock {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .step-line__clock {
+  font-weight: 600;
+}
+
+// The dots: the same three marks as the list, small.
+#{$mulberry} .step-line__dots {
+  gap: 6px;
+}
+
+#{$mulberry} .step-line__dot {
+  inline-size: 12px;
+  block-size: 12px;
+  border: 1.5px solid var(--mul-border-control);
+  background: transparent;
+}
+
+#{$mulberry} .step-line__dot--done {
+  border-color: var(--mul-primary);
+  background: var(--mul-primary);
+}
+
+#{$mulberry} .step-line__dot--current {
+  border: 3.5px solid var(--mul-primary);
+  background: var(--mul-surface);
+}
+
+// ---- "all steps" ---------------------------------------------------------------------
+#{$mulberry} .step-list {
+  padding: 12px;
+  @include overlay-surface;
+}
+
+#{$mulberry} .step-list__list {
+  gap: 4px;
+}
+
+#{$mulberry} :is(.step-list__item, .step-list__row) {
+  gap: 12px;
+  min-block-size: 44px;
+  padding-inline: 10px;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+}
+
+#{$mulberry} .step-list__item {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .step-list__item--done {
+  padding: 0;
+}
+
+#{$mulberry} .step-list__item--current {
+  background: var(--mul-blush);
+  color: var(--mul-ink);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+#{$mulberry} .step-list__row {
+  color: var(--mul-ink-mid);
+}
+
+#{$mulberry} .step-list__row:hover:not(:disabled) {
+  background: var(--mul-blush);
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .step-list__dot {
+  inline-size: 22px;
+  block-size: 22px;
+  border: 1.5px solid var(--mul-border-control);
+  background: transparent;
+  // later: an empty outline, the number is in the row's order already
+  font-size: 0;
+}
+
+#{$mulberry} .step-list__item--done .step-list__dot {
+  border-color: var(--mul-primary);
+  background: var(--mul-primary);
+  color: var(--mul-on-primary);
+  font-size: 0.75rem;
+}
+
+#{$mulberry} .step-list__item--current .step-list__dot {
+  border: 6px solid var(--mul-primary);
+  background: var(--mul-surface);
+}
+
+#{$mulberry} .step-list__tag {
+  color: var(--mul-ink-soft);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+#{$mulberry} .step-list__item--current .step-list__tag,
+#{$mulberry} .step-list__tag--back {
+  color: var(--mul-primary-text);
+  font-weight: 700;
+}
+
+#{$mulberry} .step-list__note {
+  margin: 8px 10px 0;
+  padding-block: 12px 4px;
+  border-block-start: 1px solid var(--mul-line);
+  color: var(--mul-ink-soft);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+@include laptop {
+  #{$mulberry} .step-line {
+    gap: 4px 16px;
+    padding-block: 8px;
+    padding-inline: 12px 20px;
+    border: 1px solid var(--mul-line);
+    border-radius: var(--mul-radius-card);
+  }
+
+  #{$mulberry} .step-list {
+    inset-inline-start: 0;
+    margin-block-start: 8px;
+  }
+}
+
+@include more-contrast {
+  #{$mulberry} .step-line__dot,
+  #{$mulberry} .step-list__dot {
+    border-color: var(--mul-ink);
+  }
+}

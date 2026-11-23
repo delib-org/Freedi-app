@@ -1,0 +1,89 @@
+// =============================================================================
+// Mulberry: registration ahead of the lesson (/t/:mid/registration). The list of
+// the teacher's registrations and the one that is connected.
+// =============================================================================
+
+@use '../look-scope' as *;
+@use 'mixins' as *;
+
+#{$mulberry} .registration {
+  gap: 24px;
+  background: var(--mul-ground);
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .registration__title {
+  @include display(clamp(2rem, 3.2vw, 2.5rem), 700, 1.1);
+}
+
+#{$mulberry} .registration__lead {
+  margin-block-start: 10px;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .registration__effects {
+  border: 1px solid var(--mul-line);
+  border-radius: var(--mul-radius-card);
+  background: var(--mul-blush);
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .registration__search {
+  @include field;
+}
+
+#{$mulberry} .registration__new {
+  color: var(--mul-primary-text);
+  font-weight: 700;
+}
+
+#{$mulberry} :is(.registration-row, .registration-card, .registration__empty, .registration__failure) {
+  padding: 20px 24px;
+  @include hairline-card;
+}
+
+#{$mulberry} .registration__failure {
+  border-color: var(--mul-danger-ink);
+  color: var(--mul-danger-ink);
+}
+
+#{$mulberry} .registration-row__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+#{$mulberry} .registration-card__title {
+  @include display(1.625rem);
+}
+
+#{$mulberry} :is(.registration-row__status, .registration-card__status, .registration-card__note) {
+  font-size: 0.9375rem;
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .registration-card__arrived {
+  @include display(1.375rem);
+}
+
+#{$mulberry} .registration-card__gone {
+  color: var(--mul-danger-ink);
+}
+
+@include laptop {
+  #{$mulberry} .registration__bar,
+  #{$mulberry} .registration__body {
+    max-inline-size: 46rem;
+  }
+
+  #{$mulberry} .registration__bar {
+    padding-block-start: 28px;
+  }
+}
+
+@include more-contrast {
+  #{$mulberry} :is(.registration-row, .registration-card) {
+    border-color: var(--mul-border-control);
+  }
+}

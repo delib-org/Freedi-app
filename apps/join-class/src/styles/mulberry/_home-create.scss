@@ -1,0 +1,82 @@
+// =============================================================================
+// Mulberry: the create flows of the teacher home and the plan screen. The name
+// form of a new lesson plan or game, "a lesson with a class" (pick a plan, a
+// game, a class) and the inline class form. One white card, one step at a time.
+// =============================================================================
+
+@use '../look-scope' as *;
+@use 'mixins' as *;
+
+#{$mulberry} .teacher-home__form {
+  gap: 12px;
+  padding: 24px;
+  @include hairline-card;
+}
+
+#{$mulberry} .teacher-home__label,
+#{$mulberry} .teacher-home__lead,
+#{$mulberry} .class-form__lead {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .teacher-home__form-actions,
+#{$mulberry} .lesson-picker__actions,
+#{$mulberry} .class-form__actions {
+  align-items: center;
+  gap: 12px;
+}
+
+#{$mulberry} .teacher-home__choices {
+  gap: 12px;
+}
+
+// The picker's options: full-width rows that read as choices.
+#{$mulberry} .lesson-picker__list {
+  gap: 8px;
+}
+
+#{$mulberry} .lesson-picker__option {
+  font-size: 1.0625rem;
+}
+
+#{$mulberry} .lesson-picker__option:hover:not(:disabled) {
+  border-color: var(--mul-primary);
+}
+
+// The class of the lesson: a quiet inset inside the card.
+#{$mulberry} .class-form {
+  gap: 12px;
+  margin-block-end: 0;
+  padding: 16px 20px;
+  border: 1px solid var(--mul-line);
+  border-radius: var(--mul-radius-control);
+  background: var(--mul-ground);
+}
+
+#{$mulberry} .class-form__choice input {
+  inline-size: 20px;
+  block-size: 20px;
+  accent-color: var(--mul-primary);
+}
+
+#{$mulberry} .class-form__help {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .class-form__error {
+  color: var(--mul-danger-ink);
+}
+
+#{$mulberry} .teacher-home__pick-lead:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+@include more-contrast {
+  #{$mulberry} .teacher-home__form,
+  #{$mulberry} .class-form {
+    border-color: var(--mul-border-control);
+  }
+}

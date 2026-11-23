@@ -1,0 +1,274 @@
+// =============================================================================
+// Mulberry: the teacher home (/t). Mockup: Teacher-2-Home.dc.html.
+// "Open now" is a list of wide cards, the lesson plans are a grid of cards, the
+// removed lists stay plain rows.
+// =============================================================================
+
+@use '../look-scope' as *;
+@use 'mixins' as *;
+
+// ---- top bar ---------------------------------------------------------------------
+#{$mulberry} .teacher-home__header {
+  gap: 12px 20px;
+  padding-block: 0 20px;
+  border-block-end: 1px solid var(--mul-line);
+}
+
+#{$mulberry} .teacher-home__logo {
+  inline-size: 40px;
+  block-size: 40px;
+  margin-inline-end: auto;
+}
+
+#{$mulberry} .teacher-home__account {
+  flex: 0 1 auto;
+  font-size: 0.9375rem;
+  color: var(--mul-ink-soft);
+}
+
+// ---- title and sections --------------------------------------------------------------
+#{$mulberry} .teacher-home__body {
+  gap: 36px;
+  padding-block: 36px 48px;
+}
+
+#{$mulberry} .teacher-home__title {
+  @include display(clamp(2.25rem, 3.6vw, 3rem), 700, 1.1);
+}
+
+#{$mulberry} :is(.teacher-home__how, .teacher-home__empty, .teacher-home__help, .teacher-home__hint) {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .teacher-home__title + .teacher-home__how {
+  margin-block-start: -26px;
+}
+
+#{$mulberry} :is(.teacher-home__open-now, .teacher-home__plans) {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#{$mulberry} .teacher-home__section-head {
+  gap: 12px 24px;
+}
+
+#{$mulberry} .teacher-home__section-title,
+#{$mulberry} .teacher-home__section-head > .teacher-home__section-title {
+  margin: 0;
+  @include section-label;
+}
+
+// The two ways to start. "A lesson with a class" is the page's main action.
+#{$mulberry} :is(.teacher-home__new, .teacher-home__new-lesson) {
+  min-block-size: var(--mul-control-height);
+  padding-inline: 22px;
+  font-size: 1.0625rem;
+}
+
+#{$mulberry} .teacher-home__new,
+#{$mulberry} .teacher-home__new:hover:not(:disabled) {
+  background: var(--mul-surface);
+  border-color: var(--mul-border-control);
+  color: var(--mul-ink);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+#{$mulberry} .teacher-home__new:hover:not(:disabled) {
+  background: var(--mul-blush);
+}
+
+#{$mulberry} .teacher-home__new-lesson,
+#{$mulberry} .teacher-home__new-lesson:hover:not(:disabled) {
+  background: var(--mul-primary);
+  border-color: var(--mul-primary);
+  color: var(--mul-on-primary);
+  font-weight: 700;
+  box-shadow: var(--mul-shadow-primary);
+}
+
+#{$mulberry} .teacher-home__new-lesson:hover:not(:disabled) {
+  background: var(--mul-primary-hover);
+  border-color: var(--mul-primary-hover);
+}
+
+// ---- rows: a plain hairline row by default -----------------------------------------------
+#{$mulberry} .teacher-home__list {
+  gap: 12px;
+}
+
+#{$mulberry} .teacher-home__row {
+  gap: 10px 20px;
+  padding: 14px 20px;
+  border: 1px solid var(--mul-line);
+  border-radius: var(--mul-radius-control);
+  background: var(--mul-surface);
+}
+
+#{$mulberry} .teacher-home__row-title {
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+#{$mulberry} .teacher-home__row-actions {
+  align-items: center;
+  gap: 8px;
+}
+
+#{$mulberry} .teacher-home__counts,
+#{$mulberry} .teacher-home__removed-context {
+  font-size: 0.9375rem;
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .teacher-home__error {
+  color: var(--mul-danger-ink);
+}
+
+// ---- open now: wide cards ---------------------------------------------------------------------
+#{$mulberry} .teacher-home__open-now > .teacher-home__list {
+  gap: 14px;
+}
+
+#{$mulberry} .teacher-home__open-now .teacher-home__row {
+  gap: 12px 24px;
+  padding: 22px 24px;
+  @include hairline-card;
+}
+
+#{$mulberry} .teacher-home__open-now .teacher-home__row-title {
+  flex: 0 1 auto;
+  @include display(1.625rem);
+}
+
+#{$mulberry} .teacher-home__open-now .teacher-home__row-actions {
+  margin-inline-start: auto;
+}
+
+#{$mulberry} .teacher-home__open-now .teacher-home__row-actions > .btn--primary {
+  min-block-size: var(--mul-control-height);
+  padding-inline: 26px;
+  font-size: 1.0625rem;
+
+  &::after {
+    @include chevron-shape(8px);
+  }
+}
+
+#{$mulberry}[dir='rtl'] .teacher-home__open-now .teacher-home__row-actions > .btn--primary::after {
+  transform: rotate(-45deg);
+}
+
+// ---- lesson plans: a grid of cards ---------------------------------------------------------------
+#{$mulberry} .teacher-home__plans > .teacher-home__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  gap: 20px;
+}
+
+#{$mulberry} .teacher-home__plans .teacher-home__row {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 6px;
+  min-block-size: 148px;
+  padding: 24px;
+  @include hairline-card;
+}
+
+#{$mulberry} .teacher-home__plans .teacher-home__row-title {
+  flex: none;
+  @include display(1.75rem);
+}
+
+#{$mulberry} .teacher-home__plans .teacher-home__row-link:hover {
+  color: var(--mul-primary-text);
+  text-decoration: none;
+}
+
+// The whole card opens the plan: the title's link is stretched over it.
+#{$mulberry} .teacher-home__plans .teacher-home__row {
+  position: relative;
+}
+
+#{$mulberry} .teacher-home__plans .teacher-home__row-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--mul-radius-card);
+}
+
+#{$mulberry} .teacher-home__plans .teacher-home__row:hover {
+  box-shadow: var(--mul-shadow-raised);
+}
+
+#{$mulberry} .teacher-home__plans .teacher-home__row-link:focus-visible {
+  outline: none;
+}
+
+#{$mulberry} .teacher-home__plans .teacher-home__row-link:focus-visible::after {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+// The plan's games, as chips.
+#{$mulberry} .teacher-home__games {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+#{$mulberry} .teacher-home__game {
+  @include pill(var(--mul-primary-text), var(--mul-blush));
+  max-inline-size: 100%;
+  padding-inline: 12px;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+// ---- removed ---------------------------------------------------------------------------------------
+#{$mulberry} .teacher-home__removed {
+  margin-block-start: 0;
+  padding-block-start: 12px;
+  border-block-start: 1px solid var(--mul-line);
+}
+
+#{$mulberry} .teacher-home__removed-summary {
+  color: var(--mul-ink-soft);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+#{$mulberry} .teacher-home__removed-group-title {
+  margin: 20px 0 8px;
+  @include section-label;
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .teacher-home__removed .teacher-home__filter {
+  max-inline-size: 320px;
+  margin-block-start: 8px;
+}
+
+#{$mulberry} .teacher-home__plans > .teacher-home__filter {
+  max-inline-size: 320px;
+}
+
+@include more-contrast {
+  #{$mulberry} .teacher-home__row,
+  #{$mulberry} .teacher-home__game {
+    border: 1px solid var(--mul-border-control);
+  }
+}
