@@ -1,19 +1,16 @@
 import m from 'mithril';
-import { noDeviceCountOf, type Statement } from '@freedi/shared-types';
+import { noDeviceCountOf, studentCountOf, type Statement } from '@freedi/shared-types';
 import '@/styles/student-c3.scss';
 import { StudentFrame } from '@/components/StudentFrame';
 import { t } from '@/lib/i18n';
 import { getChallengeQuestion } from '@/lib/lesson';
 import { getSubQuestions } from '@/lib/store';
 import { classState } from '@/lib/classroom/classState';
-import { listenRoster } from '@/lib/classroom/listeners';
-import type { RosterSubscription } from '@/lib/classroom/rosterPrivacy';
 import { currentUid } from '@/lib/classroom/c3Data';
 import { setMyDecisionSupport } from '@/lib/classroom/studentWrites';
 import { gateOf, sideNamesOf } from '@/lib/classroom/classSettings';
-import { presentCount, summaryOf } from '@/lib/classroom/voteSummary';
+import { summaryOf } from '@/lib/classroom/voteSummary';
 import { liveResultsOn, supportVisibleToClass } from '@/lib/classroom/voteResults';
-import type { Unsubscribe } from '@/lib/firebase';
 import { DecisionCard } from './DecisionCard';
 import { ErrorLine } from './ErrorLine';
 import { FlowFeed } from './FlowFeed';
@@ -28,8 +25,6 @@ export interface SummaryScreenAttrs {
 
 class SummaryState {
 	feed = new FlowFeed();
-	roster: RosterSubscription[] = [];
-	rosterStop: Unsubscribe | null = null;
 	pending: number | undefined;
 	error: string | null = null;
 }
@@ -43,22 +38,11 @@ class SummaryState {
  */
 export const SummaryScreen: m.ClassComponent<SummaryScreenAttrs> = {
 	oninit(vnode) {
-		const self = new SummaryState();
-		(vnode.state as { self?: SummaryState }).self = self;
-		self.rosterStop = listenRoster(
-			vnode.attrs.main.statementId,
-			(subs) => {
-				self.roster = subs;
-				m.redraw();
-			},
-			(error) => console.error('[C3] roster listener error:', error),
-		);
+		(vnode.state as { self?: SummaryState }).self = new SummaryState();
 	},
 
 	onremove(vnode) {
-		const self = (vnode.state as { self?: SummaryState }).self;
-		self?.feed.stop();
-		self?.rosterStop?.();
+		(vnode.state as { self?: SummaryState }).self?.feed.stop();
 	},
 
 	view(vnode) {
@@ -66,11 +50,13 @@ export const SummaryScreen: m.ClassComponent<SummaryScreenAttrs> = {
 		const { main } = vnode.attrs;
 		const challenge = getChallengeQuestion(getSubQuestions());
 		self.feed.sync(main, main.statementId, null, [], false);
+		// The class size from the server: a phone may not read the class's subscriptions (Trello sN881XCU).
+		const students = studentCountOf(main);
 		const summary = summaryOf({
 			ballot: challenge?.statementSettings?.ballot ?? null,
 			selections: challenge?.selections,
 			proposals: self.feed.options,
-			present: presentCount(self.roster, main.creatorId) + noDeviceCountOf(main),
+			present: (students ?? 0) + noDeviceCountOf(main),
 			resultsShown: liveResultsOn(challenge),
 		});
 		const mine = self.pending ?? classState.mySide?.decisionSupport;
@@ -103,7 +89,12 @@ export const SummaryScreen: m.ClassComponent<SummaryScreenAttrs> = {
 						note: summary.kind === 'none' ? note : null,
 					})
 				: null,
-			m(VoteResults, { summary, proposals: self.feed.options, uid: currentUid() }),
+			m(VoteResults, {
+				summary,
+				proposals: self.feed.options,
+				uid: currentUid(),
+				turnoutShown: students !== null,
+			}),
 			summary.showSupport
 				? [
 						m('h2.summary__ask', { id: 'summary-ask' }, t('summary.how_much')),

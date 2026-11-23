@@ -1,16 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { ClassTable, Statement, StatementSubscription } from '@freedi/shared-types';
+import type { ClassTable, Statement } from '@freedi/shared-types';
 import type { RosterSubscription } from '@/lib/classroom/rosterPrivacy';
-import {
-	campMark,
-	challengeOf,
-	rosterCount,
-	sideWordKey,
-	tableChips,
-	tableNumberOf,
-} from '../c2Helpers';
+import { campMark, challengeOf, sideWordKey, tableChips, tableNumberOf } from '../c2Helpers';
 
-const sub = (role: string): StatementSubscription => ({ role }) as unknown as StatementSubscription;
 const stmt = (settings: Record<string, unknown>): Statement =>
 	({ statementSettings: settings }) as unknown as Statement;
 
@@ -30,13 +22,6 @@ describe('campMark', () => {
 	it('gives each camp its own shape', () => {
 		const marks = new Set([campMark('a'), campMark('center'), campMark('b'), campMark(undefined)]);
 		expect(marks.size).toBe(4);
-	});
-});
-
-describe('rosterCount', () => {
-	it('does not count the teacher', () => {
-		expect(rosterCount([sub('admin'), sub('member'), sub('member')])).toBe(2);
-		expect(rosterCount([])).toBe(0);
 	});
 });
 

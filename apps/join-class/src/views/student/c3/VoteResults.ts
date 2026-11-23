@@ -9,6 +9,8 @@ export interface VoteResultsAttrs {
 	/** The proposals behind the rows: each row gets its replies entry (IA 22). */
 	proposals?: readonly Statement[];
 	uid?: string | null;
+	/** "n of m voted"; off while m is not known (a phone counts the class from the server). Default on. */
+	turnoutShown?: boolean;
 }
 
 function votesLine(row: SummaryRow): string {
@@ -64,7 +66,12 @@ export const VoteResults: m.Component<VoteResultsAttrs> = {
 				'ol.vote-result__rows',
 				summary.rows.map((row) => rowView(row, attrs)),
 			),
-			m('p.vote-result__turnout', t('summary.turnout', { n: summary.voted, m: summary.present })),
+			attrs.turnoutShown === false
+				? null
+				: m(
+						'p.vote-result__turnout',
+						t('summary.turnout', { n: summary.voted, m: summary.present }),
+					),
 			summary.resultsHidden
 				? m(
 						'p.vote-result__wait',

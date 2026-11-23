@@ -1947,8 +1947,9 @@ service cloud.firestore {
                  : true);
       }
 
-      // THE SIDE IS PRIVATE (Trello btMVQMM5). Any signed-in user can read a
-      // subscription, and the teacher may learn THAT a student chose a side,
+      // THE SIDE IS PRIVATE (Trello btMVQMM5). The teacher reads every
+      // subscription of the lesson and tablemates read each other's (see
+      // READING A SUBSCRIPTION), and the teacher may learn THAT a student chose a side,
       // never WHICH. So the side lives on classSides/{uid}--{mainId} (owner
       // only), and the subscription carries just sidePickedAt.
       //  - sidePickedAt: only the owner sets it, never removes it, and only in a
@@ -2130,7 +2131,64 @@ service cloud.firestore {
                homeSubscriptionUpdateOk();
       }
 
-      allow read: if request.auth.uid != null;
+      // READING A SUBSCRIPTION (Trello sN881XCU). A subscription carries its
+      // owner's name, role, and in a join-class lesson their table (tableId)
+      // and renameRequested. Any signed-in user used to read any of them; for
+      // every app but Class that stays so. A CLASS LESSON's subscriptions
+      // (statementSettings.lessonPlan, not a home) are read only by:
+      //  - the owner (their own doc, or a query on userId == them);
+      //  - the lesson's teacher: its creator, an admin of the lesson, or an
+      //    admin of its top (a class home's teachers);
+      //  - a student, the subscriptions at THEIR OWN table (a query on
+      //    statementId == X and tableId == their tableId): the names on the
+      //    table chips. The class size comes from studentCount on the lesson;
+      //  - while classFlags/legacySideWrites is open (the btMVQMM5 rollout
+      //    window), anyone holding a subscription to the lesson, for the tabs
+      //    opened before the change that still list the whole lesson;
+      //  - system admins.
+      // Server code (Admin SDK) is not affected. A get of a missing doc is
+      // answered (as before): it says only that the id is not there.
+      // A query that names neither userId nor statementId (admin dashboards)
+      // is a system admin's only.
+      // One get (the statement) for a read of another person's subscription;
+      // the owner's own reads cost nothing; the lookups after the first only
+      // when a Class lesson's reader is not its creator.
+      function isClassLessonData(data) {
+        return data != null &&
+               data.get('statementSettings', null) is map &&
+               data.statementSettings.get('lessonPlan', null) != null &&
+               data.statementSettings.get('classHome', null) == null;
+      }
+
+      function adminSubscriptionOf(statementId) {
+        let path = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(statementId)));
+        return exists(path) && get(path).data.get('role', '') in ['admin', 'statement-creator', 'creator'];
+      }
+
+      function classLessonReadOk(statementId, lesson) {
+        let minePath = /databases/$(database)/documents/statementsSubscribe/$(string(request.auth.uid) + '--' + cleanPath(string(statementId)));
+        let mine = exists(minePath) ? get(minePath).data : null;
+        let role = mine == null ? '' : mine.get('role', '');
+        let myTable = mine == null ? null : mine.get('tableId', null);
+        let topId = lesson.get('topParentId', statementId);
+        return lesson.get('creatorId', '') == request.auth.uid ||
+               role in ['admin', 'statement-creator', 'creator'] ||
+               (myTable is string && resource.data.tableId == myTable) ||
+               (mine != null && role != 'banned' && legacySideWritesOpen()) ||
+               (topId is string && topId != statementId && adminSubscriptionOf(topId));
+      }
+
+      function subscriptionReadOk() {
+        let statementId = resource.data.statementId;
+        let lesson = statementDataOf(statementId);
+        return !isClassLessonData(lesson) || classLessonReadOk(statementId, lesson);
+      }
+
+      allow read: if request.auth != null &&
+                     (resource == null ||
+                      resource.data.userId == request.auth.uid ||
+                      subscriptionReadOk() ||
+                      isSystemAdminUser());
 
       // For create
       // A user may only create their OWN subscription (userId == uid). Elevated

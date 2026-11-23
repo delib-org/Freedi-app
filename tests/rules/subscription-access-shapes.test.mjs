@@ -1,6 +1,6 @@
 import { after, before, beforeEach, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { deleteDoc, deleteField, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, deleteDoc, deleteField, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
 import { makeEnv, seed } from './helpers.mjs';
 
 /**
@@ -218,6 +218,24 @@ describe('statementsSubscribe: access, legacy docs and app shapes', () => {
 			await assertSucceeds(updateDoc(r, { joinOrder: 2, lastUpdate: T0 + 5 }));
 			await assertSucceeds(updateDoc(r, { openedInJoin: deleteField(), joinOrder: deleteField(), lastUpdate: T0 + 6 }));
 			await assertSucceeds(updateDoc(r, { isDocument: true, lastUpdate: T0 + 7 }));
+		});
+	});
+
+	describe('(e) reads of every app\'s shape outside a Class lesson: unchanged (Trello sN881XCU)', () => {
+		for (const shape of ['main', 'classStudent', 'sign', 'studio']) {
+			it(`${shape}: any signed-in user gets the doc and lists the statement's subscriptions`, async () => {
+				await put(`${S1}--open`, SHAPES[shape](S1, 'open', shape === 'studio' ? 'creator' : 'member'));
+				await assertSucceeds(getDoc(ref(S2, `${S1}--open`)));
+				await assertSucceeds(getDocs(query(collection(as(S2), 'statementsSubscribe'), where('statementId', '==', 'open'))));
+				await assertSucceeds(getDocs(query(collection(as(S1), 'statementsSubscribe'), where('userId', '==', S1))));
+				await assertFails(getDoc(ref(null, `${S1}--open`)));
+			});
+		}
+
+		it('a class home and a statement inside one', async () => {
+			for (const sid of ['home', 'homeLesson', 'inHome']) {
+				await assertSucceeds(getDocs(query(collection(as(S2), 'statementsSubscribe'), where('statementId', '==', sid))));
+			}
 		});
 	});
 

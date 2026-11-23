@@ -36,8 +36,19 @@ export const STATEMENTS = {
 	homeLesson: { top: 'home', parents: ['home'], access: 'openToAll' },
 };
 
+/**
+ * Statements only the READ cases use (Trello sN881XCU): Class lessons, one at
+ * the top and one under a class home, and a sub-question of a lesson. Kept
+ * out of STATEMENTS so the write cases stay as they were.
+ */
+export const READ_STATEMENTS = {
+	classLesson: { access: 'openToAll', lesson: true },
+	homeClassLesson: { top: 'home', parents: ['home'], access: 'openToAll', lesson: true },
+	lessonQuestion: { top: 'classLesson', parents: ['classLesson'] },
+};
+
 export function statementDoc(id) {
-	const def = STATEMENTS[id];
+	const def = STATEMENTS[id] ?? READ_STATEMENTS[id];
 	return {
 		statementId: id,
 		statement: `statement ${id}`,
@@ -49,6 +60,7 @@ export function statementDoc(id) {
 		creator: { uid: OWNER, displayName: 'Owner', photoURL: null, isAnonymous: false },
 		...(def.access ? { membership: { access: def.access } } : {}),
 		...(def.home ? { statementSettings: { classHome: { kind: 'teacher' } } } : {}),
+		...(def.lesson ? { statementSettings: { lessonPlan: { steps: ['waiting', 'tables'], stepIndex: 1 } } } : {}),
 		createdAt: T0,
 		lastUpdate: T0,
 	};
@@ -269,6 +281,94 @@ export function buildCases() {
 				});
 			}
 		}
+	}
+
+	return cases;
+}
+
+// ---- reads (Trello sN881XCU) -------------------------------------------------
+
+export const S3 = 'u-s3'; // a member at another table
+export const SYSADMIN = 'u-sysadmin'; // usersV2 systemAdmin: true
+
+const READ_SIDS = [...Object.keys(STATEMENTS), ...Object.keys(READ_STATEMENTS)];
+const isLessonSid = (sid) => Boolean(READ_STATEMENTS[sid]?.lesson);
+const tableOf = (sid, n) => `${sid}--${n}`;
+
+/**
+ * The documents the read cases look at, seeded after the write cases (which
+ * overwrite S1's docs): on every statement S1 and S2 at table 1, S3 at table 2
+ * (tableId only on a lesson, as in Class), the admin, and no doc of NEWU.
+ */
+export function readFixture() {
+	const docs = [];
+	for (const sid of READ_SIDS) {
+		const at = (uid, n) => ({ ...SHAPES.main(uid, sid, 'member'), ...(isLessonSid(sid) ? { tableId: tableOf(sid, n) } : {}) });
+		docs.push({ id: `${S1}--${sid}`, data: at(S1, 1) });
+		docs.push({ id: `${S2}--${sid}`, data: at(S2, 1) });
+		docs.push({ id: `${S3}--${sid}`, data: at(S3, 2) });
+		docs.push({ id: `${ADMIN}--${sid}`, data: SHAPES.main(ADMIN, sid, 'admin') });
+		docs.push({ id: `${NEWU}--${sid}`, data: null });
+	}
+	docs.push({ id: `${S1}--legacy`, data: SHAPES.legacyNoStatementId(S1, 'open', 'member') });
+
+	return docs;
+}
+
+const READERS = { owner: S1, tablemate: S2, otherTable: S3, stranger: NEWU, admin: ADMIN, creator: OWNER, sysadmin: SYSADMIN, signedOut: null };
+
+/**
+ * Read cases: every statement x reader x the read shapes the apps send.
+ * `privacy: true` = expected to differ: any read of a Class lesson's
+ * subscriptions, the unfiltered dashboard query, and another person's legacy
+ * doc without statementId (the rule needs it to tell a lesson). Everything
+ * else must come out the same.
+ */
+export function buildReadCases() {
+	const cases = [];
+	for (const sid of READ_SIDS) {
+		const expected = isLessonSid(sid);
+		const shapes = {
+			getOwnersDoc: { kind: 'get', id: `${S1}--${sid}` },
+			getMissing: { kind: 'get', id: `${NEWU}--${sid}` },
+			listStatement: { kind: 'list', filters: [['statementId', '==', sid]] },
+			listTable1: { kind: 'list', filters: [['statementId', '==', sid], ['tableId', '==', tableOf(sid, 1)]] },
+			countStatement: { kind: 'count', filters: [['statementId', '==', sid]] },
+			membersPage: { kind: 'list', filters: [['statementId', '==', sid], ['statementType', 'in', ['question', 'group']]] },
+			roleOnStatement: { kind: 'list', filters: [['statementId', '==', sid], ['role', '==', 'admin']] },
+		};
+		for (const [reader, uid] of Object.entries(READERS)) {
+			for (const [shapeName, op] of Object.entries(shapes)) {
+				cases.push({ name: `read ${sid} by ${reader}: ${shapeName}`, statementId: sid, actor: uid, op, privacy: expected });
+			}
+			cases.push({
+				name: `read own subscriptions by ${reader} (userId ==, topParentId ==) on ${sid}`,
+				statementId: sid,
+				actor: uid,
+				op: { kind: 'list', filters: [['userId', '==', uid ?? 'nobody'], ['topParentId', '==', sid]] },
+				privacy: false,
+			});
+		}
+	}
+	for (const [reader, uid] of Object.entries(READERS)) {
+		cases.push({
+			name: `read every subscription by role (no statementId) by ${reader}`,
+			actor: uid,
+			op: { kind: 'count', filters: [['role', '==', 'admin']] },
+			privacy: true,
+		});
+		cases.push({
+			name: `read own subscriptions by ${reader} (userId ==)`,
+			actor: uid,
+			op: { kind: 'list', filters: [['userId', '==', uid ?? 'nobody']] },
+			privacy: false,
+		});
+		cases.push({
+			name: `read S1's legacy doc without statementId by ${reader}`,
+			actor: uid,
+			op: { kind: 'get', id: `${S1}--legacy` },
+			privacy: uid !== S1,
+		});
 	}
 
 	return cases;

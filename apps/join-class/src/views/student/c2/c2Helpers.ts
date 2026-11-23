@@ -1,4 +1,4 @@
-import { CAMP_A_BELOW, CAMP_B_ABOVE, Role, SIDE_MAX, SIDE_MIN } from '@freedi/shared-types';
+import { CAMP_A_BELOW, CAMP_B_ABOVE, SIDE_MAX, SIDE_MIN } from '@freedi/shared-types';
 import type { Camp, ClassTable, Statement } from '@freedi/shared-types';
 import type { RosterSubscription } from '@/lib/classroom/rosterPrivacy';
 
@@ -27,11 +27,6 @@ const NO_CAMP_MARK = '○';
 /** Shape of a side (colour is never the only cue): A circle, centre diamond, B square. */
 export function campMark(camp: Camp | undefined): string {
 	return camp ? CAMP_MARKS[camp] : NO_CAMP_MARK;
-}
-
-/** Students joined so far: the roster minus the teacher (admin role). */
-export function rosterCount(roster: readonly RosterSubscription[]): number {
-	return roster.filter((sub) => sub.role !== Role.admin).length;
 }
 
 /** The challenge question the lesson is about, or null. */

@@ -10,8 +10,8 @@ import { sideNamesOf } from '@/lib/classroom/classSettings';
 import { t } from '@/lib/i18n';
 import { gateMemory, hasDeferredPick } from '@/lib/classroom/arrivalActions';
 import { isConnectedLesson, isSeatingCopied } from '@/lib/classroom/registrationLogic';
-import { watchRoster } from '../c2/rosterWatch';
-import type { RosterWatch } from '../c2/rosterWatch';
+import { watchTableRoster } from '../c2/rosterWatch';
+import type { TableRosterWatch } from '../c2/rosterWatch';
 import { SIDE_CENTER, sideWordKey, tableChips, tableNumberOf } from '../c2/c2Helpers';
 import type { TableChip } from '../c2/c2Helpers';
 import type { StepAttrs } from '../steps/stepSlot';
@@ -23,7 +23,8 @@ import type { StepAttrs } from '../steps/stepSlot';
  */
 
 interface TablesState {
-	roster?: RosterWatch;
+	/** The student's own table only: a phone may not read the rest of the lesson. */
+	roster?: TableRosterWatch;
 }
 
 const CAMP_REPRESENTATIVE: Record<Camp, number> = { a: SIDE_MIN, center: SIDE_CENTER, b: SIDE_MAX };
@@ -85,7 +86,7 @@ function reserved(table: ClassTable | null): m.Children {
 
 export const TablesView: m.Component<StepAttrs> = {
 	oninit(vnode) {
-		(vnode.state as unknown as TablesState).roster = watchRoster(vnode.attrs.main.statementId);
+		(vnode.state as unknown as TablesState).roster = watchTableRoster(vnode.attrs.main.statementId);
 	},
 
 	onremove(vnode) {
@@ -95,6 +96,7 @@ export const TablesView: m.Component<StepAttrs> = {
 	view(vnode) {
 		const state = vnode.state as unknown as TablesState;
 		const tableId = classState.mySubscription?.tableId;
+		state.roster?.sync(tableId);
 		const header = t('table.header');
 		const connected = isConnectedLesson(vnode.attrs.main);
 		if (!tableId) {

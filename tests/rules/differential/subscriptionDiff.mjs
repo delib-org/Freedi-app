@@ -11,10 +11,37 @@
 // FIRESTORE_EMULATOR_PORT picks the port (default 8081, as in firebase.json).
 // Exit code 1 when a case that writes no privacy field (side / camp /
 // decisionSupport / sidePickedAt) is allowed by one file and refused by the other.
+// Reads too (Trello sN881XCU): every read shape the apps send, by every kind of
+// reader; only the reads of a Class lesson's subscriptions (and the two other
+// shapes buildReadCases marks) may differ.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
-import { deleteDoc, deleteField, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { ADMIN, DELETE, S2, STATEMENTS, SHAPES, buildCases, statementDoc } from './subscriptionCases.mjs';
+import {
+	collection,
+	deleteDoc,
+	deleteField,
+	doc,
+	getCountFromServer,
+	getDoc,
+	getDocs,
+	query,
+	setDoc,
+	updateDoc,
+	where,
+} from 'firebase/firestore';
+import {
+	ADMIN,
+	DELETE,
+	READ_STATEMENTS,
+	S2,
+	STATEMENTS,
+	SHAPES,
+	SYSADMIN,
+	buildCases,
+	buildReadCases,
+	readFixture,
+	statementDoc,
+} from './subscriptionCases.mjs';
 
 const [baseFile, headFile, outFile] = process.argv.slice(2);
 if (!baseFile || !headFile) {
@@ -32,14 +59,44 @@ async function envFor(label, rulesFile) {
 	await env.clearFirestore();
 	await env.withSecurityRulesDisabled(async (ctx) => {
 		const db = ctx.firestore();
-		for (const sid of Object.keys(STATEMENTS)) {
+		for (const sid of [...Object.keys(STATEMENTS), ...Object.keys(READ_STATEMENTS)]) {
 			await setDoc(doc(db, 'statements', sid), statementDoc(sid));
 			await setDoc(doc(db, 'statementsSubscribe', `${ADMIN}--${sid}`), SHAPES.main(ADMIN, sid, 'admin'));
 			await setDoc(doc(db, 'statementsSubscribe', `${S2}--${sid}`), SHAPES.main(S2, sid, 'member'));
 		}
+		await setDoc(doc(db, 'usersV2', SYSADMIN), { uid: SYSADMIN, systemAdmin: true });
 	});
 
 	return env;
+}
+
+async function seedReads(env) {
+	await env.withSecurityRulesDisabled(async (ctx) => {
+		const db = ctx.firestore();
+		for (const { id, data } of readFixture()) {
+			const ref = doc(db, 'statementsSubscribe', id);
+			if (data) await setDoc(ref, data);
+			else await deleteDoc(ref);
+		}
+	});
+}
+
+async function runRead(env, c) {
+	const db = dbOf(env, c.actor);
+	try {
+		if (c.op.kind === 'get') {
+			await getDoc(doc(db, 'statementsSubscribe', c.op.id));
+		} else {
+			const q = query(collection(db, 'statementsSubscribe'), ...c.op.filters.map(([f, o, v]) => where(f, o, v)));
+			await (c.op.kind === 'count' ? getCountFromServer(q) : getDocs(q));
+		}
+
+		return 'allow';
+	} catch (error) {
+		const message = String(error?.message ?? error);
+
+		return message.includes(BUDGET) ? 'deny(budget)' : 'deny';
+	}
 }
 
 // One client per (env, actor): a new context per case keeps every app alive until cleanup.
@@ -84,6 +141,13 @@ const rows = [];
 for (const c of cases) {
 	const a = await runCase(base, c);
 	const b = await runCase(head, c);
+	rows.push({ name: c.name, privacy: c.privacy, base: a, head: b });
+}
+await seedReads(base);
+await seedReads(head);
+for (const c of buildReadCases()) {
+	const a = await runRead(base, c);
+	const b = await runRead(head, c);
 	rows.push({ name: c.name, privacy: c.privacy, base: a, head: b });
 }
 await base.cleanup();

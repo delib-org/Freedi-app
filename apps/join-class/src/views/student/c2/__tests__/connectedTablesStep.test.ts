@@ -23,7 +23,9 @@ vi.mock('@/lib/classroom/classState', () => ({
 	},
 }));
 vi.mock('@/lib/user', () => ({ getUserState: () => ({ user: { uid: 'me' } }) }));
-vi.mock('../rosterWatch', () => ({ watchRoster: () => ({ subs: [], stop: vi.fn() }) }));
+vi.mock('../rosterWatch', () => ({
+	watchTableRoster: () => ({ subs: [], ready: false, sync: vi.fn(), stop: vi.fn() }),
+}));
 vi.mock('@/lib/classroom/arrivalActions', () => ({
 	gateMemory: { reenter: false },
 	hasDeferredPick: () => state.deferred,
