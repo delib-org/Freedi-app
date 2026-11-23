@@ -74,13 +74,18 @@ const de: Record<string, string> = {
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
 	'plan.title': 'Fragen planen',
+	'plan.details.help':
+		'Allgemeine Einstellungen der Stunde: Sprache, der Schritt mit den Seiten sowie Sprech- und Vorschlagslimits.',
+	'plan.help':
+		'Bereiten Sie die Stunde in der Reihenfolge ihres Ablaufs vor: Details, die zu lösende Frage, die Einführung und die Tischfragen.',
 	'plan.sides.help':
 		'In diesem Schritt markiert jede Person, welcher Seite sie zuneigt. So können wir an jedem Tisch Lernende beider Seiten zusammensetzen und gemischte Tische bilden.',
 	'plan.sides.title': 'Der Schritt mit den Seiten',
 	'plan.back': 'Die Stunde',
 	'plan.loading': 'Plan wird geladen',
 	'plan.challenge.title': 'Die Frage zur Lösung',
-	'plan.challenge.help': 'Eine Frage, an der die ganze Klasse gemeinsam arbeitet.',
+	'plan.challenge.help':
+		'Die Hauptfrage der Stunde. Die ganze Klasse schlägt Lösungen vor und stimmt darüber ab.',
 	'plan.challenge.placeholder': 'Schreibt die Frage zur Lösung',
 	'plan.details.title': 'Details zur Stunde',
 	'plan.details.side_question': 'Die Frage, die die Lernenden auf dem Schieberegler beantworten',
@@ -92,7 +97,8 @@ const de: Record<string, string> = {
 	'console.gate.help':
 		'Ein Vorschlag erreicht das Ziel, wenn seine Zustimmung diesen Prozentsatz erreicht.',
 	'plan.tables.title': 'Fragen für die Tische',
-	'plan.tables.help': 'Jeder Tisch wählt eine. Fügt 3 bis 8 hinzu.',
+	'plan.tables.help':
+		'Jeder Tisch wählt eine Frage und vertieft sie. Fügen Sie 3 bis 8 Fragen zur Auswahl hinzu.',
 	'plan.own_questions': 'Schüler dürfen eine eigene Frage hinzufügen',
 	'plan.own_questions_help': 'Wenn aus, wählen die Tische nur aus euren Fragen',
 	'plan.own_questions_none':
@@ -506,7 +512,7 @@ const de: Record<string, string> = {
 	// Lesson introduction (IA 14, UX 14.J)
 	'plan.intro.title': 'Einführung',
 	'plan.intro.help':
-		'Wird im Schritt Eröffnung gezeigt: groß am Beamer und auf den Handys der Lernenden.',
+		'Führt die Lernenden vor dem Start ins Thema ein. Wird im Eröffnungsschritt gezeigt, groß auf dem Projektor und auf den Handys.',
 	'plan.intro.text.label': 'Text',
 	'plan.intro.text.placeholder': 'Ein paar Sätze zum Dilemma und zu dem, was auf die Klasse wartet',
 	'plan.intro.text.count': '{{n}} von {{max}}',

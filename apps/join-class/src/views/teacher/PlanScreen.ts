@@ -49,6 +49,7 @@ import { MAX_HINT_LENGTH, MAX_QUESTION_LENGTH, hintOf } from './planHelpers';
 import { LANGUAGE_KEY, commitLanguage, savedLessonLanguage } from './planDetails';
 import { renderSides } from './PlanSides';
 import { PlanIntro } from './PlanIntro';
+import { sectionHead } from './planSectionHead';
 import { PlanChallengeWarning, focusChallengeFromRoute } from './PlanChallengeWarning';
 import { enterAddsNext, field, fieldError } from './planFields';
 import {
@@ -240,8 +241,7 @@ function renderChallenge(challenge: Statement | undefined): m.Vnode {
 			oncreate: focusChallengeFromRoute,
 		},
 		[
-			m('h2.plan__section-title', { id: 'plan-challenge-title' }, label),
-			m('p.plan__help', t('plan.challenge.help')),
+			sectionHead('plan-challenge-title', label, t('plan.challenge.help')),
 			m('.plan-card.plan-card--challenge', [m('.plan-card__main', [input, fieldError(errorKey)])]),
 		],
 	);
@@ -272,7 +272,7 @@ function languageField(): m.Vnode {
 
 function renderDetails(): m.Vnode {
 	return m('section.plan__details', { 'aria-labelledby': 'plan-details-title' }, [
-		m('h2.plan__section-title', { id: 'plan-details-title' }, t('plan.details.title')),
+		sectionHead('plan-details-title', t('plan.details.title'), t('plan.details.help')),
 		m('.plan-card.plan-details', [
 			m('.plan-card__main', [
 				// First: it changes every student screen and the projector.
@@ -325,8 +325,7 @@ function renderTables(guiding: Statement[]): m.Vnode {
 	const total = guiding.length + extra.length;
 
 	return m('section.plan__tables', { 'aria-labelledby': 'plan-tables-title' }, [
-		m('h2.plan__section-title', { id: 'plan-tables-title' }, t('plan.tables.title')),
-		m('p.plan__help', t('plan.tables.help')),
+		sectionHead('plan-tables-title', t('plan.tables.title'), t('plan.tables.help')),
 		total === 0 ? m('p.plan__empty', t('plan.empty')) : null,
 		m('ul.plan__list', reorder.listAttrs(), [
 			...guiding.map((q, i) => renderGuidingCard(q, i, ids)),
@@ -510,6 +509,7 @@ export const PlanScreen: m.Component = {
 			m('header.plan__header', [
 				m('h1.plan__title', t('plan.title')),
 				ready && getTitle() ? m('p.plan__lesson', getTitle()) : null,
+				m('p.plan__help', t('plan.help')),
 			]),
 			m('main.plan__body', [
 				game && ready && typeof getGame()?.removedAt === 'number'

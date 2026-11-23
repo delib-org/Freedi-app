@@ -71,13 +71,18 @@ const nl: Record<string, string> = {
 	// /invite
 	// Teacher screens: plan the questions, teacher home, console
 	'plan.title': 'De vragen plannen',
+	'plan.details.help':
+		'Algemene instellingen van de les: taal, de stap met de kanten en de limieten voor spreektijd en voorstellen.',
+	'plan.help':
+		'Bereid de les voor in de volgorde waarin ze verloopt: details, de op te lossen vraag, de inleiding en de tafelvragen.',
 	'plan.sides.help':
 		'In deze stap geeft elke leerling aan naar welke kant hij of zij neigt. Zo kunnen we aan elke tafel leerlingen van beide kanten plaatsen en ontstaan gemengde tafels.',
 	'plan.sides.title': 'De stap met de kanten',
 	'plan.back': 'De les',
 	'plan.loading': 'Plan wordt geladen',
 	'plan.challenge.title': 'De vraag om op te lossen',
-	'plan.challenge.help': 'Eén vraag waar de hele klas samen aan werkt.',
+	'plan.challenge.help':
+		'De hoofdvraag van de les. De hele klas bedenkt er oplossingen voor en stemt erover.',
 	'plan.challenge.placeholder': 'Schrijf de vraag om op te lossen',
 	'plan.details.title': 'Details van de les',
 	'plan.details.side_question': 'De vraag die leerlingen op de schuifbalk beantwoorden',
@@ -88,7 +93,8 @@ const nl: Record<string, string> = {
 	'console.gate.value': 'Doel: {{value}}%',
 	'console.gate.help': 'Een voorstel haalt het doel als de instemming dit percentage bereikt.',
 	'plan.tables.title': 'Vragen voor de tafels',
-	'plan.tables.help': 'Elke tafel kiest er één. Voeg 3 tot 8 toe.',
+	'plan.tables.help':
+		'Elke tafel kiest één vraag en verdiept zich erin. Voeg 3 tot 8 vragen toe om uit te kiezen.',
 	'plan.own_questions': 'Leerlingen mogen een eigen vraag toevoegen',
 	'plan.own_questions_help': 'Als dit uit staat, kiezen de tafels alleen uit jullie vragen',
 	'plan.own_questions_none':
@@ -501,7 +507,7 @@ const nl: Record<string, string> = {
 	// Lesson introduction (IA 14, UX 14.J)
 	'plan.intro.title': 'Introductie',
 	'plan.intro.help':
-		'Wordt getoond bij de stap Opening: groot op de beamer en op de telefoons van de leerlingen.',
+		'Brengt de leerlingen in het onderwerp voordat jullie beginnen. Getoond bij de openingsstap, groot op de beamer en op de telefoons.',
 	'plan.intro.text.label': 'Tekst',
 	'plan.intro.text.placeholder': 'Een paar zinnen over het dilemma en wat de klas te wachten staat',
 	'plan.intro.text.count': '{{n}} van {{max}}',
