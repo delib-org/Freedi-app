@@ -166,6 +166,62 @@ describe('syncQuestionCounterCopies', () => {
 		});
 	});
 
+	describe("a Class lesson's student count (Trello sN881XCU)", () => {
+		const lessonPlan = { steps: ['waiting'], stepIndex: 0 };
+		const exact = {
+			numberOfMembers: 97,
+			totalEvaluators: 97,
+			evaluation: { asParentTotalEvaluators: 97 },
+		};
+		const seedStudents = (n: number): void => {
+			for (let i = 0; i < n; i += 1) {
+				fake.seed(Collections.statementsSubscribe, `m${i}--${Q}`, {
+					statementId: Q,
+					statementType: StatementType.question,
+					role: 'member',
+				});
+			}
+		};
+		const studentCount = (): unknown =>
+			(question()?.statementSettings as { studentCount?: unknown } | undefined)?.studentCount;
+
+		it('heals a count a failed or out-of-order recount left behind', async () => {
+			seedQuestion({ ...exact, statementSettings: { lessonPlan, studentCount: 90 } });
+			seedProgress();
+			seedPeople(97, 97);
+			seedStudents(97);
+			fake.seed(Collections.statementsSubscribe, `teacher--${Q}`, {
+				statementId: Q,
+				role: 'admin',
+			});
+
+			await expect(syncQuestionCounterCopies(NOW)).resolves.toEqual({ checked: 1, updated: 1 });
+
+			expect(studentCount()).toBe(97);
+			expect(question()?.statementSettings).toMatchObject({ lessonPlan });
+		});
+
+		it('does not write a lesson whose count is right', async () => {
+			seedQuestion({ ...exact, statementSettings: { lessonPlan, studentCount: 97 } });
+			seedProgress();
+			seedPeople(97, 97);
+			seedStudents(97);
+
+			await expect(syncQuestionCounterCopies(NOW)).resolves.toEqual({ checked: 1, updated: 0 });
+			expect(question()?.lastUpdate).toBe(1);
+		});
+
+		it('gives a plain question no student count', async () => {
+			seedQuestion();
+			seedProgress();
+			seedPeople(97, 97);
+
+			await syncQuestionCounterCopies(NOW);
+
+			expect(question()?.statementSettings).toBeUndefined();
+		});
+	});
+
 	it('skips a progress doc whose statement is gone', async () => {
 		seedProgress();
 

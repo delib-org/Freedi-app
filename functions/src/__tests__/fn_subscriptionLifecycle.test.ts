@@ -18,11 +18,6 @@ jest.mock('firebase-functions', () => ({
 	logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 jest.mock('../utils/errorHandling', () => ({ logError: jest.fn() }));
-const mockUpdateClassStudentCount = jest.fn((..._args: unknown[]) => Promise.resolve(0));
-jest.mock('../classroom/classStudentCount', () => ({
-	...jest.requireActual('../classroom/classStudentCount'),
-	updateClassStudentCount: (...args: unknown[]) => mockUpdateClassStudentCount(...args),
-}));
 jest.mock('../fn_adminStats', () => ({
 	onSubscriptionCreatedStats: jest.fn(() => Promise.resolve()),
 	onStatementDeletedStats: jest.fn(() => Promise.resolve()),
@@ -445,44 +440,74 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 	});
 
 	describe('a Class lesson counts its students (Trello sN881XCU)', () => {
-		const classCopy = {
-			statement: {
-				statementId: DISCUSSION,
-				statementSettings: { lessonPlan: { steps: ['waiting'], stepIndex: 0 } },
-			},
-		};
+		// The fake's update() is a shallow merge, so the dotted path is a literal key here.
+		const studentCount = (): unknown =>
+			mockDb.read(Collections.statements, DISCUSSION)?.['statementSettings.studentCount'];
+		const lessonUpdates = (): number => mockDb.writesTo(Collections.statements, 'update');
 
 		beforeEach(() => {
-			mockUpdateClassStudentCount.mockClear();
+			mockDb.seed(Collections.statements, DISCUSSION, {
+				statementId: DISCUSSION,
+				parentId: 'top',
+				topParentId: DISCUSSION,
+				statementType: StatementType.question,
+				statementSettings: { lessonPlan: { steps: ['waiting'], stepIndex: 0 } },
+			});
 		});
 
-		it('recounts on a join and a leave of a lesson subscription', async () => {
-			const id = `alice--${DISCUSSION}`;
-			const doc = subscriptionDoc('alice', Role.member, classCopy);
-			mockDb.seed(Collections.statementsSubscribe, id, doc);
-			await onSubscriptionCreated(snapshotEvent(id, doc));
-			await onSubscriptionDeleted(snapshotEvent(id, doc));
+		it('counts on the lesson itself, even when the copy carried no lesson plan', async () => {
+			await joinAs('owner', Role.admin);
+			await joinAs('alice', Role.member);
+			await joinAs('bob', Role.banned);
 
-			expect(mockUpdateClassStudentCount).toHaveBeenCalledTimes(2);
-			expect(mockUpdateClassStudentCount).toHaveBeenLastCalledWith(mockDb, DISCUSSION);
+			expect(studentCount()).toBe(2);
+		});
+
+		it('writes the lesson once per join: the member count and the student count together', async () => {
+			mockDb.resetCounters();
+			await joinAs('owner', Role.admin);
+			await joinAs('alice', Role.member);
+			await joinAs('bob', Role.member);
+
+			expect(lessonUpdates()).toBe(3);
+			expect(memberCount()).toBe(3);
+			expect(studentCount()).toBe(2);
+		});
+
+		it('recounts on a leave', async () => {
+			await joinAs('alice', Role.member);
+			const bob = await joinAs('bob', Role.member);
+			await leave(bob);
+
+			expect(studentCount()).toBe(1);
 		});
 
 		it('recounts when a role crosses the teacher line, not on other updates', async () => {
-			const id = `bob--${DISCUSSION}`;
-			const member = subscriptionDoc('bob', Role.member, classCopy);
-			mockDb.seed(Collections.statementsSubscribe, id, member);
-			await onSubscriptionUpdated(changeEvent(id, member, { ...member, lastUpdate: T0 + 1 }));
-			expect(mockUpdateClassStudentCount).not.toHaveBeenCalled();
+			const bob = await joinAs('bob', Role.member, {
+				statement: { statementId: DISCUSSION, statementSettings: { lessonPlan: { stepIndex: 0 } } },
+			});
+			expect(studentCount()).toBe(1);
 
-			const admin = { ...member, role: Role.admin };
-			await onSubscriptionUpdated(changeEvent(id, member, admin));
-			expect(mockUpdateClassStudentCount).toHaveBeenCalledWith(mockDb, DISCUSSION);
+			const before = mockDb.read(Collections.statementsSubscribe, bob) as SubscriptionDoc;
+			mockDb.resetCounters();
+			await onSubscriptionUpdated(changeEvent(bob, before, { ...before, lastUpdate: T0 + 1 }));
+			expect(mockDb.reads).toBe(0);
+
+			await changeRole(bob, Role.admin);
+			expect(studentCount()).toBe(0);
 		});
 
-		it("never recounts for another app's subscription (no lesson copy, no read)", async () => {
+		it("adds nothing to another app's statement", async () => {
+			mockDb.seed(Collections.statements, DISCUSSION, {
+				statementId: DISCUSSION,
+				parentId: 'top',
+				topParentId: DISCUSSION,
+				statementType: StatementType.group,
+			});
 			await joinAs('carol', Role.member);
 
-			expect(mockUpdateClassStudentCount).not.toHaveBeenCalled();
+			expect(studentCount()).toBeUndefined();
+			expect(memberCount()).toBe(1);
 		});
 	});
 });

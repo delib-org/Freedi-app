@@ -22,9 +22,10 @@ import {
 } from './progress/questionProgressWriter';
 import {
 	changesStudentCount,
-	isClassLessonSubscription,
+	classStudentCountPatch,
 	updateClassStudentCount,
 } from './classroom/classStudentCount';
+import type { StudentCountPatch } from './classroom/classStudentCount';
 
 /**
  * Membership lifecycle triggers on `statementsSubscribe/{subscriptionId}`.
@@ -46,6 +47,27 @@ type ChangeEvent = FirestoreEvent<
 >;
 
 /**
+ * A failed student recount must not cost the lesson its member count: it is
+ * logged and left to the next join or leave, or the scheduled pass.
+ */
+async function lessonStudentCountPatch(
+	firestore: Firestore,
+	statementId: string,
+	statement: Statement | undefined,
+): Promise<StudentCountPatch> {
+	try {
+		return await classStudentCountPatch(firestore, statementId, statement);
+	} catch (error) {
+		logError(error, {
+			operation: 'subscriptionLifecycle.updateMemberCount.studentCount',
+			statementId,
+		});
+
+		return {};
+	}
+}
+
+/**
  * Recounts members with a count() aggregation (1 read per 1000 index entries)
  * instead of downloading every subscription doc. Same filter as before:
  * every role counts, Sign-document subscriptions do not.
@@ -56,6 +78,11 @@ type ChangeEvent = FirestoreEvent<
  * people reads. Two recounts racing can land in the wrong order; the scheduled
  * pass in progress/syncQuestionCounterCopies.ts recounts and heals that, because
  * guarding it here would mean a transaction on a document every join shares.
+ *
+ * A Class lesson also keeps its exact student count on the document (Trello
+ * sN881XCU: phones cannot count the roster). It rides the same update, so a
+ * join costs the lesson one write, not two; whether the statement is a lesson
+ * is read from the document fetched here, so no other app pays a query for it.
  */
 export async function updateMemberCount(
 	firestore: Firestore,
@@ -71,7 +98,9 @@ export async function updateMemberCount(
 	if (!statementSnap.exists) return memberCount;
 
 	const statement = statementSnap.data() as Statement | undefined;
+	const studentCount = await lessonStudentCountPatch(firestore, statementId, statement);
 
+	let memberCopyDue = true;
 	if (keepsCountOnProgress(statement)) {
 		await recordMemberCount({
 			statementId,
@@ -79,14 +108,19 @@ export async function updateMemberCount(
 			topParentId: statement.topParentId,
 			organizationId: statement.organizationId,
 		});
-		if (!isCounterCopyDue(memberCount, statement.numberOfMembers)) return memberCount;
+		memberCopyDue = isCounterCopyDue(memberCount, statement.numberOfMembers);
 	}
+	if (!memberCopyDue && Object.keys(studentCount).length === 0) return memberCount;
 
 	await statementRef.update({
-		numberOfMembers: memberCount,
+		...(memberCopyDue ? { numberOfMembers: memberCount } : {}),
+		...studentCount,
 		lastUpdate: Date.now(),
 	});
-	logger.info(`Updated numberOfMembers for statement ${statementId}: ${memberCount}`);
+	logger.info(`Updated member counts for statement ${statementId}`, {
+		numberOfMembers: memberCopyDue ? memberCount : undefined,
+		...studentCount,
+	});
 
 	return memberCount;
 }
@@ -103,9 +137,6 @@ async function onMembershipChanged(
 	const results = await Promise.allSettled([
 		updateMemberCount(firestore, statementId),
 		reconcileUserFeedEntry(firestore, { subscriptionId, userId, statementId }),
-		...(isClassLessonSubscription(subscription)
-			? [updateClassStudentCount(firestore, statementId)]
-			: []),
 	]);
 	results.forEach((result) => {
 		if (result.status === 'rejected') {
