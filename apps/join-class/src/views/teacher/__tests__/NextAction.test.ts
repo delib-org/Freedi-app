@@ -17,10 +17,12 @@ vi.mock('../EndChoice', () => ({ openEndChoice: vi.fn() }));
 vi.mock('../consoleBack', () => ({ planBack: () => ({ href: '/t/plans/p1', label: 'Plan' }) }));
 vi.mock('../registrationActions', () => ({ copySeating: vi.fn() }));
 vi.mock('@/lib/sentry', () => ({ captureException: vi.fn() }));
+vi.mock('../ChallengeDialog', () => ({ openChallengeDialog: vi.fn() }));
 
 const focusReason = vi.fn();
 vi.stubGlobal('document', {
 	getElementById: (id: string) => (id === 'next-action-reason' ? { focus: focusReason } : null),
+	querySelector: () => null,
 });
 
 import { NextAction, nextActionLabel } from '../NextAction';
@@ -28,6 +30,7 @@ import { t } from '@/lib/i18n';
 import type { NextActionAttrs } from '../NextAction';
 import { assignTables, goToStep, freezeBallot, closeBallot } from '../consoleActions';
 import { confirmCloseVote } from '../consoleConfirms';
+import { openChallengeDialog } from '../ChallengeDialog';
 
 type View = (vnode: { attrs: NextActionAttrs }) => m.Vnode;
 
@@ -56,6 +59,13 @@ const GO_NEXT: NextActionSpec = {
 
 describe('NextAction', () => {
 	beforeEach(() => vi.clearAllMocks());
+
+	it('"choose the question to solve" opens the question dialog when no prompt is on the board', () => {
+		const spec: NextActionSpec = { kind: 'pickQuestion', labelKey: 'console.challenge.pick_label' };
+		const attrs = button(draw(spec)).attrs as { onclick: () => void };
+		attrs.onclick();
+		expect(openChallengeDialog).toHaveBeenCalledTimes(1);
+	});
 
 	it('draws one primary button and no reason when the step can move on', () => {
 		const vnode = draw(GO_NEXT);

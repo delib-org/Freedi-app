@@ -144,6 +144,13 @@ interface QRShareAttrs {
 	/** Used in the Web Share API title and as the heading shown above the QR
 	 *  in the fullscreen presenter overlay. Falls back to a generic label. */
 	title?: string;
+	/** The line beside the QR. Defaults to the student-facing `qrShare.label`; the teacher's
+	 *  join card passes its own ("scan, or type this code at this address"). */
+	label?: string;
+	/** Drawn under the label, above the buttons (the join card puts the big code here). */
+	afterLabel?: m.Children;
+	/** One more button, first in the row (the join card's "Show on the projector"). */
+	extraAction?: m.Children;
 }
 
 // `m.trust(svg)` requires re-running on every URL change. Each render computes
@@ -193,8 +200,10 @@ export const QRShare: m.Component<QRShareAttrs> = {
 				compactSvg ? m.trust(compactSvg) : null,
 			),
 			m('.qr-share__body', [
-				m('p.qr-share__label', { id: 'qr-share-label' }, t('qrShare.label')),
+				m('p.qr-share__label', { id: 'qr-share-label' }, vnode.attrs.label ?? t('qrShare.label')),
+				vnode.attrs.afterLabel ?? null,
 				m('.qr-share__actions', [
+					vnode.attrs.extraAction ?? null,
 					canShare
 						? m(
 								'button.btn.btn--primary.btn--small.qr-share__action',

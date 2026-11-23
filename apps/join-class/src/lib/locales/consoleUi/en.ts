@@ -46,6 +46,15 @@ const consoleUi: Record<string, string> = {
 	'console.status.seated_one': 'Everyone is seated · 1 table',
 	'console.status.tables_done_one': '{{n}} of 1 table is done',
 	'console.status.tables_rating_one': '{{n}} of 1 table is rating',
+	'console.join.title': 'Join the lesson',
+	'console.join.how': 'Scan the code, or go to {{address}} and type:',
+	'console.join.projector': 'Show on the projector',
+	'console.status.need_question':
+		'{{n}} of {{total}} have joined · to start, the lesson needs a question to solve',
+	'console.status.need_question_open':
+		'{{n}} have joined · to start, the lesson needs a question to solve',
+	'console.question_line': 'Question to solve:',
+	'console.question_change': 'Change',
 };
 
 export default consoleUi;

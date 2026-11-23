@@ -19,6 +19,8 @@ export interface ChallengeNeededAttrs {
 	started: boolean;
 	/** The lesson's questions that could become the Proposals question. */
 	candidates: readonly Statement[];
+	/** Drawn inside the question dialog (step 1): the dialog has the title; no warning frame or mark. */
+	dialog?: boolean;
 }
 
 interface PromptState {
@@ -116,18 +118,26 @@ export const ChallengeNeeded: m.Component<ChallengeNeededAttrs> = {
 		const { attrs } = vnode;
 		const state = vnode.state as unknown as PromptState;
 
+		const inDialog = attrs.dialog === true;
+
 		return m(
-			'section.challenge-warning.challenge-warning--console',
-			{
-				role: 'status',
-				'aria-labelledby': 'challenge-needed-title',
-				'data-testid': 'challenge-needed',
-			},
+			inDialog
+				? 'div.challenge-warning.challenge-warning--dialog'
+				: 'section.challenge-warning.challenge-warning--console',
+			inDialog
+				? { 'data-testid': 'challenge-needed' }
+				: {
+						role: 'status',
+						'aria-labelledby': 'challenge-needed-title',
+						'data-testid': 'challenge-needed',
+					},
 			[
-				m('h2.challenge-warning__title', { id: 'challenge-needed-title' }, [
-					m('span.challenge-warning__mark', { 'aria-hidden': 'true' }, '!'),
-					m('span', t('console.challenge.missing_title')),
-				]),
+				inDialog
+					? null
+					: m('h2.challenge-warning__title', { id: 'challenge-needed-title' }, [
+							m('span.challenge-warning__mark', { 'aria-hidden': 'true' }, '!'),
+							m('span', t('console.challenge.missing_title')),
+						]),
 				m(
 					'p.challenge-warning__text',
 					t(attrs.started ? 'console.challenge.missing_live' : 'console.challenge.missing_start'),

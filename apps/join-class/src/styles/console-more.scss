@@ -197,38 +197,59 @@ $tap: 44px;
 // ---- the board: the joining card, the one-time hint, the way back from the students' screen
 .joining-card {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-lg);
+  flex-direction: column;
+  gap: var(--space-sm);
   margin-block-end: var(--space-md);
   padding: var(--space-lg);
   background: var(--bg-card);
   border: 1px solid var(--card-line, var(--border-light));
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
+
+  // the QR share card inside it is the card: no second frame around it
+  .qr-share {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
 }
 
-.joining-card__code {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-xs);
+.joining-card__title {
   margin: 0;
+  font-size: var(--font-size-xl);
+  text-align: center;
 }
 
-.joining-card__label {
-  color: var(--ink-muted);
-}
-
+// the class code, the biggest thing on the board: readable from the back of the room
 .joining-card__value {
   font-size: var(--font-size-3xl);
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
+  line-height: var(--line-height-snug);
 }
 
-.joining-card__qr {
-  max-inline-size: 200px;
+// ---- "Question to solve: ... [Change]": one quiet line under the join card
+.question-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-sm);
+  margin: 0 0 var(--space-md);
+  color: var(--ink-muted);
+}
+
+.question-line__text {
+  color: var(--ink);
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.question-line__change {
+  margin-inline-start: auto;
+  color: var(--ink);
+  font-size: var(--font-size-sm);
 }
 
 .tables-board__hint {

@@ -118,6 +118,7 @@ export function liveStatusInput(args: LiveStatusArgs): ClassStatusInput {
 		voted,
 		present,
 		resultsShown: liveResultsOn(args.challenge),
+		needsQuestion: args.stepKey === 'waiting' && args.challenge === null,
 		stuckTables: tables
 			.filter((table) => isStuck(table, args.stepKey, now))
 			.map((table) => table.n),

@@ -16,6 +16,7 @@ import { confirmCloseVote } from './consoleConfirms';
 import { openEndChoice } from './EndChoice';
 import { planBack } from './consoleBack';
 import { copySeating } from './registrationActions';
+import { openChallengeDialog } from './ChallengeDialog';
 
 /**
  * The console's ONE primary button (design 2.1): its label and work come from
@@ -64,10 +65,17 @@ function blockedKeyOf(attrs: NextActionAttrs): string | undefined {
 	return attrs.spec.blockedKey;
 }
 
-/** "Choose the question to solve": the prompt is on the board; bring it into view. */
+/**
+ * "Choose the question to solve": at step 1 it opens the question dialog; at later steps the
+ * prompt is on the board, so bring it into view.
+ */
 function showQuestionPrompt(): void {
 	const prompt = document.querySelector<HTMLElement>('.challenge-warning--console');
-	if (!prompt) return;
+	if (!prompt) {
+		openChallengeDialog();
+
+		return;
+	}
 	prompt.scrollIntoView({ block: 'center' });
 	prompt.querySelector<HTMLElement>('select, button, textarea, input')?.focus();
 }

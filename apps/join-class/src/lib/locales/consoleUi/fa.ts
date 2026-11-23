@@ -46,6 +46,14 @@ const consoleUi: Record<string, string> = {
 	'console.status.seated_one': 'همه نشسته‌اند · 1 میز',
 	'console.status.tables_done_one': '{{n}} از 1 میز تمام کرده است',
 	'console.status.tables_rating_one': '{{n}} از 1 میز در حال امتیازدهی است',
+	'console.join.title': 'پیوستن به درس',
+	'console.join.how': 'کد را اسکن کنید، یا به {{address}} بروید و بنویسید:',
+	'console.join.projector': 'نمایش روی ویدئو پروژکتور',
+	'console.status.need_question':
+		'{{n}} از {{total}} وارد شده‌اند · برای شروع یک پرسش برای حل لازم است',
+	'console.status.need_question_open': '{{n}} وارد شده‌اند · برای شروع یک پرسش برای حل لازم است',
+	'console.question_line': 'پرسش برای حل:',
+	'console.question_change': 'تغییر',
 };
 
 export default consoleUi;

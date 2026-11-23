@@ -47,6 +47,13 @@
     margin: var(--space-sm) var(--space-md) 0;
   }
 
+  // inside the question dialog the dialog is the frame
+  &--dialog {
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
   &__row {
     display: flex;
     flex-wrap: wrap;
@@ -82,4 +89,41 @@
 
 .plan__challenge--missing .plan-card--challenge {
   border-color: var(--warning);
+}
+
+// "Choose the question to solve" at step 1 (Trello Rkrtmmx8): a native <dialog>.
+.question-dialog {
+  inline-size: min(520px, calc(100% - 32px));
+  margin: auto;
+  padding: var(--space-lg);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-lg);
+
+  &::backdrop {
+    background: var(--bg-overlay);
+  }
+
+  &[open] {
+    display: grid;
+    row-gap: var(--space-sm);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__close {
+    min-block-size: var(--touch-target);
+  }
 }

@@ -16,6 +16,7 @@ const challenge: Record<string, string> = {
 	'console.challenge.or_write': 'یا پرسشی تازه بنویسید',
 	'console.challenge.write_label': 'نوشتن پرسش برای حل',
 	'console.challenge.add': 'افزودن و استفاده',
+	'console.challenge.dialog_close': 'بستن',
 };
 
 export default challenge;

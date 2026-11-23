@@ -32,6 +32,7 @@ import type { ConsoleView } from './consoleState';
 import { dragHintSeen, markDragHintDone } from './dragHintState';
 import { GatePanel } from './GatePanel';
 import { JoiningCard } from './JoiningCard';
+import { QuestionLine } from './QuestionLine';
 import { LazyStudentScreen } from './studentScreen/LazyStudentScreen';
 import { OpeningPanel } from './OpeningPanel';
 import { ProjectorPick } from './ProjectorPick';
@@ -136,11 +137,16 @@ export function board(
 			onDragHintDone: markDragHintDone,
 			joining:
 				stepKey === 'waiting' && main
-					? m(JoiningCard, {
-							code: readClassCode(main),
-							url: studentJoinUrl(window.location.origin, mid),
-							title: main.statement,
-						})
+					? [
+							m(JoiningCard, {
+								mid,
+								code: readClassCode(main),
+								url: studentJoinUrl(window.location.origin, mid),
+								title: main.statement,
+								address: window.location.host,
+							}),
+							challenge ? m(QuestionLine, { mid, question: challenge.statement }) : null,
+						]
 					: undefined,
 			opening:
 				stepKey === 'opening' && main
