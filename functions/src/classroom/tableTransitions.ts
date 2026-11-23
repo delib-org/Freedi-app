@@ -379,6 +379,18 @@ function applyAction(
 			if (role !== 'admin' && !table.questionId) {
 				throw new ClassroomError('failed-precondition', 'Choose a question first', 'no-question');
 			}
+			// Table talk: "students pick first". A table with no question goes to (or stays on) the
+			// pick; the talk starts only when a student claims a turn with a question.
+			if (!table.questionId && isTableTalk(table, ctx.lessonStep)) {
+				return table.step === 'pick'
+					? base
+					: {
+							...withoutTurnFields(base),
+							step: 'pick',
+							askerUid: null,
+							writingMode: 'each',
+						};
+			}
 			const talk: ClassTable = {
 				...withoutPassedSpeaking(withoutSpeaker(withoutPen(base))),
 				step: 'talk',

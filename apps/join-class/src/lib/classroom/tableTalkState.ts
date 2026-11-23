@@ -23,6 +23,11 @@ function isLegacyTail(table: ClassTable): boolean {
 	return table.step === 'write' || table.step === 'rate';
 }
 
+/** A table at talk with no question (a teacher's jump before v3 fixed it): nobody picked yet, so it is still the pick. */
+function talkWithoutQuestion(table: ClassTable): boolean {
+	return table.step === 'talk' && !table.questionId;
+}
+
 /** Has this uid asked or passed asking (this lesson, this table)? */
 export function doneAsking(table: ClassTable, uid: string): boolean {
 	return (table.askedUids ?? []).includes(uid) || (table.passedAskingUids ?? []).includes(uid);
@@ -44,7 +49,7 @@ export function tableTalkState(
 	noneLeft = false,
 ): TableTalkState {
 	if (tableDone(table, now, noneLeft)) return 'D';
-	if (isLegacyTail(table) || choosing(table, now, noneLeft))
+	if (isLegacyTail(table) || talkWithoutQuestion(table) || choosing(table, now, noneLeft))
 		return doneAsking(table, uid) ? 'P2' : 'P1';
 	if (!speakerTimeOver(table, now)) return table.speakerUid === uid ? 'S' : 'L';
 	if (hasAnswered(table, uid, now)) return 'H';

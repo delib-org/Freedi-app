@@ -195,6 +195,17 @@ describe('predictTableAction', () => {
 		expect(talk?.[0].spokenUids).toEqual([]);
 	});
 
+	it('at Table talk a teacher jump to talk with no question is shown as the pick (t1)', () => {
+		const atTalk = { ...teacher, lessonStep: 'tableTalk' as const };
+		const change = predictTableAction('m--1', { action: 'toTalk' }, atTalk);
+		const next = change?.apply([table(1, { step: 'rate', spokenUids: ['a'] })])[0];
+		expect(next?.step).toBe('pick');
+		expect(next?.spokenUids).toEqual([]);
+		expect(change?.isConfirmedBy([next as ClassTable])).toBe(true);
+		const withQuestion = change?.apply([table(1, { step: 'rate', questionId: 'q1' })])[0];
+		expect(withQuestion?.step).toBe('talk');
+	});
+
 	it('leaves other tables alone', () => {
 		const others = [table(1), table(2)];
 		const next = predictTableAction('m--1', { action: 'toRate' }, teacher)?.apply(others);

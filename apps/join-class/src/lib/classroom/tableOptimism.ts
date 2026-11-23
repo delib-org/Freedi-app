@@ -3,6 +3,7 @@ import type {
 	ClassTable,
 	ClassTableAction,
 	LessonSettingsHolder,
+	LessonStepKey,
 	TableStep,
 } from '@freedi/shared-types';
 import type { OptimisticChange } from './optimisticOverlay';
@@ -24,6 +25,8 @@ export interface Actor {
 	/** What the screen holds now: a student's `toWrite` is guessed only when the table is really done talking. */
 	table?: ClassTable;
 	main?: LessonSettingsHolder | null;
+	/** The lesson's current step: at Table talk a teacher's jump to talk with no question lands on pick. */
+	lessonStep?: LessonStepKey;
 	uid: string;
 	isAdmin: boolean;
 	now: number;
@@ -39,6 +42,20 @@ function without<K extends keyof ClassTable>(table: ClassTable, keys: K[]): Clas
 const withoutSpeaker = (table: ClassTable): ClassTable =>
 	without(table, ['speakerUid', 'speakerEndsAt', 'speakerMs']);
 const withoutPen = (table: ClassTable): ClassTable => without(table, ['writerUid', 'writtenUids']);
+
+/** What the server does with a Table talk jump to talk that names no question: the table waits at the pick. */
+function toPick(table: ClassTable): ClassTable {
+	if (table.step === 'pick') return table;
+
+	return {
+		...without(withoutSpeaker(withoutPen(table)), ['passedSpeakingUids', 'questionId']),
+		step: 'pick',
+		askerUid: null,
+		spokenUids: [],
+		writingLocked: false,
+		writingMode: 'each',
+	};
+}
 
 function withSpoken(table: ClassTable): string[] {
 	return table.speakerUid && !table.spokenUids.includes(table.speakerUid)
@@ -116,12 +133,18 @@ export function predictTableAction(
 			return isAdmin
 				? onTable(
 						tableId,
-						(table) => ({
-							...without(withoutSpeaker(withoutPen(table)), ['passedSpeakingUids']),
-							step: 'talk',
-							spokenUids: [],
-						}),
-						(table) => table.step === 'talk',
+						(table) =>
+							actor.lessonStep === 'tableTalk' && !table.questionId
+								? toPick(table)
+								: {
+										...without(withoutSpeaker(withoutPen(table)), ['passedSpeakingUids']),
+										step: 'talk',
+										spokenUids: [],
+									},
+						(table) =>
+							actor.lessonStep === 'tableTalk' && !table.questionId
+								? table.step === 'pick'
+								: table.step === 'talk',
 					)
 				: null;
 		case 'setWritingMode':
