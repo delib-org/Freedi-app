@@ -50,6 +50,8 @@ const vote: Record<string, string> = {
 	'console.vote_status_open': 'رأی‌گیری باز است',
 	'console.vote_status_closed': 'رأی‌گیری بسته شد',
 	'console.vote_progress': '{{voted}} از {{present}} رأی دادند',
+	'console.status.vote_unseated_one': '۱ بدون میز',
+	'console.status.vote_unseated_many': '{{count}} بدون میز',
 	'console.vote_reset_hint': 'ابتدا رأی‌گیری را ببندید یا متوقف کنید',
 	'console.results_audience': 'چه کسی نتایج را می‌بیند',
 	'console.results_audience_me': 'فقط من',

@@ -96,4 +96,20 @@ describe('ClassStatusLine', () => {
 		expect(text).toContain('console.unplaced_live');
 		expect(text).toContain('console.status.show');
 	});
+
+	it('at the vote, students without a table are noted beside the count and still counted', () => {
+		const open = {
+			stepKey: 'vote' as const,
+			ballotFrozen: true,
+			voted: 6,
+			present: 7,
+			unseated: 1,
+		};
+		const text = textOf(draw(open));
+		expect(text).toContain('console.vote_progress');
+		expect(text).toContain('console.status.vote_unseated_one');
+		expect(text).not.toContain('console.status.show');
+		expect(textOf(draw({ ...open, unseated: 3 }))).toContain('console.status.vote_unseated_many');
+		expect(textOf(draw({ ...open, unseated: 0 }))).not.toContain('vote_unseated');
+	});
 });

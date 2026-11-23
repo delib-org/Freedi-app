@@ -50,6 +50,8 @@ const vote: Record<string, string> = {
 	'console.vote_status_open': 'Stemmen is open',
 	'console.vote_status_closed': 'Stemmen is gesloten',
 	'console.vote_progress': '{{voted}} van {{present}} hebben gestemd',
+	'console.status.vote_unseated_one': '1 zonder tafel',
+	'console.status.vote_unseated_many': '{{count}} zonder tafel',
 	'console.vote_reset_hint': 'Sluit of pauzeer eerst de stemronde',
 	'console.results_audience': 'Wie ziet de uitslag',
 	'console.results_audience_me': 'Alleen ik',

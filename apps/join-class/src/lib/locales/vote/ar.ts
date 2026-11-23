@@ -48,6 +48,8 @@ const vote: Record<string, string> = {
 	'console.vote_status_open': 'التصويت مفتوح',
 	'console.vote_status_closed': 'التصويت مغلق',
 	'console.vote_progress': 'صوّت {{voted}} من {{present}}',
+	'console.status.vote_unseated_one': '1 بلا طاولة',
+	'console.status.vote_unseated_many': '{{count}} بلا طاولة',
 	'console.vote_reset_hint': 'أغلقوا التصويت أو أوقفوه مؤقتًا أولًا',
 	'console.results_audience': 'من يرى النتائج',
 	'console.results_audience_me': 'أنا فقط',
