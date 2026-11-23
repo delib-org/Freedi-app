@@ -1181,6 +1181,7 @@ export {
   proposalLimitOf,
   mayAddProposal,
   noDeviceCountOf,
+  studentCountOf,
   proposalsTurnOf,
   proposalsMaxTurns,
   proposalsTurnOver,

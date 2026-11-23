@@ -18,6 +18,11 @@ jest.mock('firebase-functions', () => ({
 	logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 jest.mock('../utils/errorHandling', () => ({ logError: jest.fn() }));
+const mockUpdateClassStudentCount = jest.fn((..._args: unknown[]) => Promise.resolve(0));
+jest.mock('../classroom/classStudentCount', () => ({
+	...jest.requireActual('../classroom/classStudentCount'),
+	updateClassStudentCount: (...args: unknown[]) => mockUpdateClassStudentCount(...args),
+}));
 jest.mock('../fn_adminStats', () => ({
 	onSubscriptionCreatedStats: jest.fn(() => Promise.resolve()),
 	onStatementDeletedStats: jest.fn(() => Promise.resolve()),
@@ -436,6 +441,48 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 			await onSubscriptionUpdated(changeEvent(id, doc, doc));
 
 			expect(subscription('erin')).toMatchObject(off);
+		});
+	});
+
+	describe('a Class lesson counts its students (Trello sN881XCU)', () => {
+		const classCopy = {
+			statement: {
+				statementId: DISCUSSION,
+				statementSettings: { lessonPlan: { steps: ['waiting'], stepIndex: 0 } },
+			},
+		};
+
+		beforeEach(() => {
+			mockUpdateClassStudentCount.mockClear();
+		});
+
+		it('recounts on a join and a leave of a lesson subscription', async () => {
+			const id = `alice--${DISCUSSION}`;
+			const doc = subscriptionDoc('alice', Role.member, classCopy);
+			mockDb.seed(Collections.statementsSubscribe, id, doc);
+			await onSubscriptionCreated(snapshotEvent(id, doc));
+			await onSubscriptionDeleted(snapshotEvent(id, doc));
+
+			expect(mockUpdateClassStudentCount).toHaveBeenCalledTimes(2);
+			expect(mockUpdateClassStudentCount).toHaveBeenLastCalledWith(mockDb, DISCUSSION);
+		});
+
+		it('recounts when a role crosses the teacher line, not on other updates', async () => {
+			const id = `bob--${DISCUSSION}`;
+			const member = subscriptionDoc('bob', Role.member, classCopy);
+			mockDb.seed(Collections.statementsSubscribe, id, member);
+			await onSubscriptionUpdated(changeEvent(id, member, { ...member, lastUpdate: T0 + 1 }));
+			expect(mockUpdateClassStudentCount).not.toHaveBeenCalled();
+
+			const admin = { ...member, role: Role.admin };
+			await onSubscriptionUpdated(changeEvent(id, member, admin));
+			expect(mockUpdateClassStudentCount).toHaveBeenCalledWith(mockDb, DISCUSSION);
+		});
+
+		it("never recounts for another app's subscription (no lesson copy, no read)", async () => {
+			await joinAs('carol', Role.member);
+
+			expect(mockUpdateClassStudentCount).not.toHaveBeenCalled();
 		});
 	});
 });

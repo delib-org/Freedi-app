@@ -30,6 +30,7 @@ export interface LessonSettingsHolder {
 		| 'proposalsTurns'
 		| 'proposalLimit'
 		| 'noDeviceCount'
+		| 'studentCount'
 		| 'lessonLook'
 		| 'tableSize'
 		| 'classRegistration'
@@ -100,6 +101,18 @@ export function noDeviceCountOf(main: LessonSettingsHolder | null | undefined): 
 	const count = main?.statementSettings?.noDeviceCount;
 
 	return typeof count === 'number' && count > 0 ? count : 0;
+}
+
+/**
+ * Students (with a device) who joined the lesson, as the server counts them;
+ * null while the server has not counted this lesson yet. For phones, which
+ * may read only their own table's subscriptions (Trello sN881XCU); the
+ * teacher's screens count from the roster.
+ */
+export function studentCountOf(main: LessonSettingsHolder | null | undefined): number | null {
+	const count = main?.statementSettings?.studentCount;
+
+	return typeof count === 'number' && Number.isInteger(count) && count >= 0 ? count : null;
 }
 
 /** The table's current turn at Proposals, 1-based; absent = the first. */

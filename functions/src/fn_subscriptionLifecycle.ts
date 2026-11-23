@@ -20,6 +20,11 @@ import {
 	keepsCountOnProgress,
 	recordMemberCount,
 } from './progress/questionProgressWriter';
+import {
+	changesStudentCount,
+	isClassLessonSubscription,
+	updateClassStudentCount,
+} from './classroom/classStudentCount';
 
 /**
  * Membership lifecycle triggers on `statementsSubscribe/{subscriptionId}`.
@@ -98,6 +103,9 @@ async function onMembershipChanged(
 	const results = await Promise.allSettled([
 		updateMemberCount(firestore, statementId),
 		reconcileUserFeedEntry(firestore, { subscriptionId, userId, statementId }),
+		...(isClassLessonSubscription(subscription)
+			? [updateClassStudentCount(firestore, statementId)]
+			: []),
 	]);
 	results.forEach((result) => {
 		if (result.status === 'rejected') {
@@ -149,6 +157,15 @@ export async function onSubscriptionUpdated(event: ChangeEvent): Promise<void> {
 		before as StatementSubscription,
 		after as StatementSubscription,
 	);
+	if (after.statementId && changesStudentCount(before, after)) {
+		await updateClassStudentCount(db, after.statementId).catch((error: unknown) => {
+			logError(error, {
+				operation: 'subscriptionLifecycle.onSubscriptionUpdated.studentCount',
+				userId: after.userId,
+				statementId: after.statementId,
+			});
+		});
+	}
 	if (!feedRelevantChange(before, after)) return;
 
 	try {
