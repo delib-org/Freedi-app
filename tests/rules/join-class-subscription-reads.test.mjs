@@ -37,11 +37,14 @@ describe('join-class: reading a lesson\'s subscriptions (Trello sN881XCU)', () =
 	const S3 = 'u-s3'; // table 2
 	const S4 = 'u-s4'; // joined, no table yet
 	const BANNED = 'u-banned';
+	const BANNED_SEATED = 'u-banned-seated'; // banned, still holds a tableId
+	const OLD_TEACHER = 'u-old-teacher'; // creator.uid only, no creatorId
 	const STRANGER = 'u-stranger';
 
 	const LESSON = 'lesson1';
 	const HOME = 'jcClass_c1';
 	const HOME_LESSON = 'lesson2';
+	const OLD_LESSON = 'lesson3'; // a lesson doc with creator.uid and no creatorId
 	const QUESTION = 'q1'; // another app's question
 	const SUB_QUESTION = 'lesson1-challenge';
 	const T1 = `${LESSON}--1`;
@@ -69,6 +72,13 @@ describe('join-class: reading a lesson\'s subscriptions (Trello sN881XCU)', () =
 			parents: [HOME],
 			statementSettings: plan,
 		}),
+		[OLD_LESSON]: (() => {
+			const { creatorId: _none, ...rest } = statement(OLD_LESSON, {
+				statementSettings: plan,
+				creator: { uid: OLD_TEACHER, displayName: 'Old teacher' },
+			});
+			return rest;
+		})(),
 		[QUESTION]: statement(QUESTION),
 		[SUB_QUESTION]: statement(SUB_QUESTION, { topParentId: LESSON, parentId: LESSON, parents: [LESSON] }),
 	};
@@ -111,6 +121,8 @@ describe('join-class: reading a lesson\'s subscriptions (Trello sN881XCU)', () =
 				sub(S3, LESSON, 'member', { tableId: T2 }),
 				sub(S4, LESSON, 'member'),
 				sub(BANNED, LESSON, 'banned'),
+				sub(BANNED_SEATED, LESSON, 'banned', { tableId: T1 }),
+				sub(S1, OLD_LESSON, 'member', { tableId: `${OLD_LESSON}--1` }),
 				sub(COTEACHER, HOME, 'admin'),
 				sub(S1, HOME_LESSON, 'member', { tableId: `${HOME_LESSON}--1` }),
 				sub(S1, QUESTION, 'member'),
@@ -178,6 +190,14 @@ describe('join-class: reading a lesson\'s subscriptions (Trello sN881XCU)', () =
 			await assertFails(roster(BANNED));
 		});
 
+		it('a banned student who still holds a tableId loses the table', async () => {
+			await assertSucceeds(getDoc(docOf(BANNED_SEATED, `${BANNED_SEATED}--${LESSON}`)));
+			await assertFails(table(BANNED_SEATED, T1));
+			await assertFails(getDoc(docOf(BANNED_SEATED, `${S1}--${LESSON}`)));
+			// the others at the table still read theirs
+			await assertSucceeds(table(S1, T1));
+		});
+
 		it('another lesson\'s table does not open this one', async () => {
 			await assertFails(table(S1, `${HOME_LESSON}--1`));
 			await assertSucceeds(table(S1, `${HOME_LESSON}--1`, HOME_LESSON));
@@ -192,6 +212,13 @@ describe('join-class: reading a lesson\'s subscriptions (Trello sN881XCU)', () =
 				await assertSucceeds(table(uid, T2));
 				await assertSucceeds(getCountFromServer(query(subsOf(uid), where('statementId', '==', LESSON))));
 			}
+		});
+
+		it('a lesson whose creator is named only by creator.uid (as the server\'s isCreatorOf)', async () => {
+			await assertSucceeds(roster(OLD_TEACHER, OLD_LESSON));
+			await assertSucceeds(getDoc(docOf(OLD_TEACHER, `${S1}--${OLD_LESSON}`)));
+			await assertFails(roster(OLD_TEACHER, LESSON));
+			await assertFails(roster(STRANGER, OLD_LESSON));
 		});
 
 		it('the creator reads it even without a subscription of their own', async () => {

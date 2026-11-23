@@ -2137,11 +2137,13 @@ service cloud.firestore {
       // every app but Class that stays so. A CLASS LESSON's subscriptions
       // (statementSettings.lessonPlan, not a home) are read only by:
       //  - the owner (their own doc, or a query on userId == them);
-      //  - the lesson's teacher: its creator, an admin of the lesson, or an
-      //    admin of its top (a class home's teachers);
-      //  - a student, the subscriptions at THEIR OWN table (a query on
-      //    statementId == X and tableId == their tableId): the names on the
-      //    table chips. The class size comes from studentCount on the lesson;
+      //  - the lesson's teacher: its creator (creatorId or creator.uid, as the
+      //    server's isCreatorOf), an admin of the lesson, or an admin of its
+      //    top (a class home's teachers);
+      //  - a student who is not banned, the subscriptions at THEIR OWN table
+      //    (a query on statementId == X and tableId == their tableId): the
+      //    names on the table chips. A banned student keeps a tableId but loses
+      //    the table. The class size comes from studentCount on the lesson;
       //  - while classFlags/legacySideWrites is open (the btMVQMM5 rollout
       //    window), anyone holding a subscription to the lesson, for the tabs
       //    opened before the change that still list the whole lesson;
@@ -2171,9 +2173,11 @@ service cloud.firestore {
         let role = mine == null ? '' : mine.get('role', '');
         let myTable = mine == null ? null : mine.get('tableId', null);
         let topId = lesson.get('topParentId', statementId);
+        let creator = lesson.get('creator', null);
         return lesson.get('creatorId', '') == request.auth.uid ||
+               (creator is map && creator.get('uid', '') == request.auth.uid) ||
                role in ['admin', 'statement-creator', 'creator'] ||
-               (myTable is string && resource.data.tableId == myTable) ||
+               (myTable is string && role != 'banned' && resource.data.tableId == myTable) ||
                (mine != null && role != 'banned' && legacySideWritesOpen()) ||
                (topId is string && topId != statementId && adminSubscriptionOf(topId));
       }
