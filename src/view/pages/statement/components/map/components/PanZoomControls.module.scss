@@ -1,3 +1,5 @@
+@use '../../../../../style/mixins' as *;
+
 // Floating map controls. Always use the physical bottom-left corner, including
 // in RTL layouts, so their location is predictable across every map.
 
@@ -20,6 +22,12 @@
 .fixed {
 	position: fixed;
 	z-index: 100;
+
+	// On a phone the map-type tabs row sits at the bottom of the page: lift the column above it
+	// (--map-tabs-height is set by the map workspace; without one the column stays at the edge).
+	@include mobile {
+		bottom: calc(1rem + var(--map-tabs-height, 0px));
+	}
 }
 
 .button {

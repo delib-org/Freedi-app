@@ -1,5 +1,9 @@
 // Full-screen map chrome: back · title/question · share, canvas, bottom switcher.
 
+// The switcher's own height (pill + its padding + the bottom-nav and notch clearance). The map's
+// fixed zoom column (PanZoomControls) reads it to sit above the tabs row instead of on it.
+$switcher-pill-height: 40px;
+
 .workspace {
 	display: flex;
 	flex-direction: column;
@@ -8,6 +12,10 @@
 	box-sizing: border-box;
 	background: var(--bg-page);
 	color: var(--text-body);
+	--map-tabs-height: calc(
+		#{$switcher-pill-height} + 24px + var(--bottom-nav-clearance, 0px) +
+			env(safe-area-inset-bottom, 0px)
+	);
 
 	&__bar {
 		display: flex;
@@ -133,7 +141,7 @@
 	}
 
 	&__pill {
-		min-height: 40px;
+		min-height: $switcher-pill-height;
 		padding-inline: 14px;
 		font-weight: 600;
 
