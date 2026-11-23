@@ -86,7 +86,7 @@ const es: Record<string, string> = {
 	'plan.challenge.title': 'La pregunta a resolver',
 	'plan.challenge.help':
 		'La pregunta principal de la clase. Todo el grupo propone soluciones y vota por ellas.',
-	'plan.challenge.placeholder': 'Escriban la pregunta a resolver',
+	'plan.challenge.placeholder': '¿Qué pregunta tienen que resolver los estudiantes?',
 	'plan.details.title': 'Detalles de la clase',
 	'plan.details.side_question': 'La pregunta que el alumnado responde en el control deslizante',
 	'plan.details.claim_a': 'Qué dice el primer lado',

@@ -13,6 +13,7 @@ const challenge: Record<string, string> = {
 	'console.challenge.missing_live':
 		"Students at Proposals see no question to solve. Pick one of the lesson's questions or write a new one.",
 	'console.challenge.pick_label': 'Choose the question to solve',
+	'console.challenge.start_game': 'Start the game',
 	'console.challenge.use': 'Use this question',
 	'console.challenge.or_write': 'Or write a new question',
 	'console.challenge.write_label': 'Write the question to solve',

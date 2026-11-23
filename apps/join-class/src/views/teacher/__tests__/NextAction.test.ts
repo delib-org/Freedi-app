@@ -61,7 +61,7 @@ describe('NextAction', () => {
 	beforeEach(() => vi.clearAllMocks());
 
 	it('"choose the question to solve" opens the question dialog when no prompt is on the board', () => {
-		const spec: NextActionSpec = { kind: 'pickQuestion', labelKey: 'console.challenge.pick_label' };
+		const spec: NextActionSpec = { kind: 'pickQuestion', labelKey: 'console.challenge.start_game' };
 		const attrs = button(draw(spec)).attrs as { onclick: () => void };
 		attrs.onclick();
 		expect(openChallengeDialog).toHaveBeenCalledTimes(1);

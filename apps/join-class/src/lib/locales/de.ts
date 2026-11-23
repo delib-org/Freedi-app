@@ -88,7 +88,7 @@ const de: Record<string, string> = {
 	'plan.challenge.title': 'Die Frage zur Lösung',
 	'plan.challenge.help':
 		'Die Hauptfrage der Stunde. Die ganze Klasse schlägt Lösungen vor und stimmt darüber ab.',
-	'plan.challenge.placeholder': 'Schreibt die Frage zur Lösung',
+	'plan.challenge.placeholder': 'Welche Frage sollen die Schüler lösen?',
 	'plan.details.title': 'Details zur Stunde',
 	'plan.details.side_question': 'Die Frage, die die Lernenden auf dem Schieberegler beantworten',
 	'plan.details.claim_a': 'Was die erste Seite sagt',

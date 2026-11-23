@@ -24,6 +24,7 @@ export const JoiningCard: m.Component<JoiningCardAttrs> = {
 		return m('section.joining-card', { 'aria-labelledby': 'joining-card-title' }, [
 			m('h2.joining-card__title#joining-card-title', t('console.join.title')),
 			m(QRShare, {
+				quietActions: true,
 				url: attrs.url,
 				title: attrs.title,
 				label: t('console.join.how', { address: attrs.address }),
@@ -39,7 +40,7 @@ export const JoiningCard: m.Component<JoiningCardAttrs> = {
 						)
 					: null,
 				extraAction: m(
-					'button.btn.btn--primary.btn--small.qr-share__action',
+					'button.btn.btn--secondary.btn--small.qr-share__action',
 					{
 						type: 'button',
 						'data-testid': 'joining-projector',

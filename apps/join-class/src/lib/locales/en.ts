@@ -90,7 +90,7 @@ const en: Record<string, string> = {
 	'plan.challenge.title': 'The question to solve',
 	'plan.challenge.help':
 		'The main question of the lesson. The whole class suggests solutions to it and votes on them.',
-	'plan.challenge.placeholder': 'Write the question to solve',
+	'plan.challenge.placeholder': 'What question do the students need to solve?',
 	'plan.details.title': 'Lesson details',
 	'plan.details.side_question': 'The question students answer on the slider',
 	'plan.details.claim_a': 'What the first side says',

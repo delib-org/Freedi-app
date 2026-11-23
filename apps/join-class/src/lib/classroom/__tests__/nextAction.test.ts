@@ -77,7 +77,7 @@ describe('nextActionFor: no question to solve', () => {
 	it.each(STEPS)('%s: the button is "choose the question to solve"', (key) => {
 		const spec = nextActionFor(at(key, { hasChallenge: false }));
 		expect(spec.kind).toBe('pickQuestion');
-		expect(spec.labelKey).toBe('console.challenge.pick_label');
+		expect(spec.labelKey).toBe('console.challenge.start_game');
 	});
 });
 

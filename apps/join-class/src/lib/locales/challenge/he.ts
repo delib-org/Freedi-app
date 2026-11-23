@@ -12,6 +12,7 @@ const challenge: Record<string, string> = {
 	'console.challenge.missing_live':
 		'התלמידים בשלב ההצעות לא רואים שאלה לפתרון. בחרו אחת משאלות השיעור או כתבו שאלה חדשה.',
 	'console.challenge.pick_label': 'בחירת השאלה לפתרון',
+	'console.challenge.start_game': 'התחלת המשחק',
 	'console.challenge.use': 'להשתמש בשאלה הזאת',
 	'console.challenge.or_write': 'או לכתוב שאלה חדשה',
 	'console.challenge.write_label': 'כתיבת השאלה לפתרון',
