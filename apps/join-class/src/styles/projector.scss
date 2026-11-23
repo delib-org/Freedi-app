@@ -328,6 +328,49 @@ $projector-band-height: 64px;
   &__label { color: var(--ink-muted); }
 }
 
+// The question each table is on (Table talk): big enough to read from the back of the room.
+.projector-table-questions {
+  width: 100%;
+
+  &__heading {
+    margin: 0 0 var(--space-md);
+    color: var(--ink-muted);
+    font-size: 40px;
+    font-weight: var(--font-weight-bold, 700);
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    border: 2px solid var(--paper-line);
+    border-radius: var(--radius-lg);
+    background: var(--paper-soft);
+    font-size: 44px;
+    line-height: 1.2;
+  }
+
+  &__table {
+    flex: none;
+    font-weight: var(--font-weight-bold, 700);
+  }
+
+  &__text {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
 // ---- proposals (gate bars) ----------------------------------------------------
 
 .projector-gate-bars {

@@ -417,13 +417,19 @@
   color: var(--ink-muted);
 }
 
-// Table talk: the question being answered, one line.
+// Table talk: the question this table is on, labelled, up to two lines.
 .table-card__question {
+  display: -webkit-box;
   margin: 0;
   overflow: hidden;
   font-size: var(--font-size-sm);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+
+  &-label {
+    color: var(--ink-muted);
+    font-weight: var(--font-weight-bold, 700);
+  }
 }
 
 // "Waiting for ..." with the time since the table last changed; a stuck table gets a clock glyph and a warning colour.

@@ -389,7 +389,14 @@ export const TableCard: m.Component<TableCardAttrs> = {
 					: null,
 				bare ? null : nowRow(table, mode, plenum, propDone),
 				attrs.tableTalk && attrs.questionText && table.questionId
-					? m('p.table-card__question', { dir: 'auto' }, attrs.questionText)
+					? m(
+							'p.table-card__question',
+							{ dir: 'auto', 'data-testid': 'table-card-question', title: attrs.questionText },
+							[
+								m('span.table-card__question-label', `${t('console.table_question')}: `),
+								attrs.questionText,
+							],
+						)
 					: null,
 				bare ? null : speakerOrTimerRows(attrs),
 				empty && attrs.done !== true

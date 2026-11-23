@@ -10,6 +10,19 @@ import { dropAttrs } from './dragController';
 import { MemberChip } from './MemberChip';
 import { TableCard } from './TableCard';
 import { noteStudentMoved } from './moveHook';
+import { questionTextFrom } from '@/lib/classroom/questionLookup';
+import { getFetchedQuestionTexts, requestQuestionText } from '@/lib/classroom/questionText';
+
+/** The question a table is on: the live list first, else read once by id (an own question of a student). */
+function questionTextOf(
+	questions: readonly Pick<Statement, 'statementId' | 'statement'>[],
+	questionId: string | undefined,
+): string | undefined {
+	const text = questionTextFrom(questions, getFetchedQuestionTexts(), questionId);
+	if (text === null && questionId) requestQuestionText(questionId);
+
+	return text || undefined;
+}
 
 /**
  * The tables board (UX section 5). Before the class is seated: one roster card
@@ -164,8 +177,7 @@ export const TablesBoard: m.Component<TablesBoardAttrs> = {
 									tableTalk: attrs.tableTalk,
 									done: attrs.done,
 									namesOnly: attrs.namesOnly,
-									questionText: attrs.questions?.find((q) => q.statementId === table.questionId)
-										?.statement,
+									questionText: questionTextOf(attrs.questions ?? [], table.questionId),
 									mainId: attrs.mainId,
 									tableNumbers,
 									showSides: attrs.showSides,
