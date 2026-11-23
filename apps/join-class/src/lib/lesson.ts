@@ -113,11 +113,13 @@ export async function setLessonStep(mainId: string, index: number): Promise<void
 	if (isLessonStanding(status)) {
 		throw new Error(`The lesson is ${status}: steps do not move`);
 	}
+	// Read before the write: a re-click on the step the lesson is already at must not reset the tables.
+	const previousKey = getLessonStep().key;
 	await setMainStatementSetting(mainId, {
 		statementSettings: { lessonPlan: planStepMove(index, status, Date.now(), steps) },
 	});
 	await setPowerFollowMe(mainId, stepFollowMePath(mainId, steps[index]));
-	if (steps[index] === 'tableTalk') await resetTablesForTalk(mainId);
+	if (steps[index] === 'tableTalk' && previousKey !== 'tableTalk') await resetTablesForTalk(mainId);
 }
 
 /**

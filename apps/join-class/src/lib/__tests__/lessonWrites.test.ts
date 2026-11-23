@@ -48,6 +48,18 @@ import {
 	CLASS_CODE_MAX_ATTEMPTS,
 } from '../lesson';
 
+const PLAN_STEPS = [
+	'waiting',
+	'opening',
+	'side',
+	'tables',
+	'tableTalk',
+	'proposals',
+	'allProposals',
+	'vote',
+	'summary',
+];
+
 function mainWith(status?: string): unknown {
 	return { statementSettings: { lessonPlan: { steps: [], stepIndex: 0, status } } };
 }
@@ -106,6 +118,21 @@ describe('setLessonStep', () => {
 		mockEnterTableTalk.mockClear();
 		await setLessonStep('m1', 5);
 		expect(mockEnterTableTalk).not.toHaveBeenCalled();
+	});
+
+	it('does not reset the tables when the lesson is already at Table talk (same-step re-click)', async () => {
+		mockEnterTableTalk.mockReset();
+		mockGetMain.mockReturnValue({
+			statementSettings: { lessonPlan: { steps: PLAN_STEPS, stepIndex: 4 } },
+		});
+		await setLessonStep('m1', 4);
+		expect(mockSetMainSetting).toHaveBeenCalled();
+		expect(mockEnterTableTalk).not.toHaveBeenCalled();
+		mockGetMain.mockReturnValue({
+			statementSettings: { lessonPlan: { steps: PLAN_STEPS, stepIndex: 5 } },
+		});
+		await setLessonStep('m1', 4);
+		expect(mockEnterTableTalk).toHaveBeenCalledTimes(1);
 	});
 
 	it('does not fail the step move when the table reset fails', async () => {
