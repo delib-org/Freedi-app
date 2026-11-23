@@ -1,4 +1,4 @@
-import { resolveStatementImageBucket, UNCONFIGURED_BUCKET } from '../statementImageBucket';
+import { resolveStatementImageBucket, TEST_PLACEHOLDER_BUCKET } from '../statementImageBucket';
 
 describe('resolveStatementImageBucket', () => {
 	it('returns the configured storage bucket', () => {
@@ -7,13 +7,27 @@ describe('resolveStatementImageBucket', () => {
 		).toBe('my-app.appspot.com');
 	});
 
-	it('falls back when no config exists', () => {
-		expect(resolveStatementImageBucket(undefined)).toBe(UNCONFIGURED_BUCKET);
+	it('falls back to a placeholder under tests when no config exists', () => {
+		expect(resolveStatementImageBucket(undefined, true)).toBe(TEST_PLACEHOLDER_BUCKET);
 	});
 
-	it('falls back on malformed or bucket-less config', () => {
-		expect(resolveStatementImageBucket('not json')).toBe(UNCONFIGURED_BUCKET);
-		expect(resolveStatementImageBucket('{}')).toBe(UNCONFIGURED_BUCKET);
+	it('falls back under tests on malformed or bucket-less config', () => {
+		expect(resolveStatementImageBucket('not json', true)).toBe(TEST_PLACEHOLDER_BUCKET);
+		expect(resolveStatementImageBucket('{}', true)).toBe(TEST_PLACEHOLDER_BUCKET);
+	});
+});
+
+describe('outside tests', () => {
+	it('throws a clear error when the bucket is missing', () => {
+		expect(() => resolveStatementImageBucket(undefined, false)).toThrow('Missing storage bucket');
+		expect(() => resolveStatementImageBucket('{}', false)).toThrow('Missing storage bucket');
+		expect(() => resolveStatementImageBucket('not json', false)).toThrow('Missing storage bucket');
+	});
+
+	it('still returns a configured bucket', () => {
+		expect(resolveStatementImageBucket('{"storageBucket":"b.appspot.com"}', false)).toBe(
+			'b.appspot.com',
+		);
 	});
 });
 
