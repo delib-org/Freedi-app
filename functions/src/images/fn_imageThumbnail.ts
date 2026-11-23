@@ -2,6 +2,7 @@ import { onObjectFinalized } from 'firebase-functions/v2/storage';
 import { logError } from '../utils/errorHandling';
 import { makeThumbnail } from './makeThumbnail';
 import { parseThumbSource } from './thumbnailPaths';
+import { resolveStatementImageBucket } from './statementImageBucket';
 
 const ATTACH_RETRIES = 4;
 const ATTACH_RETRY_DELAY_MS = 3000;
@@ -12,7 +13,13 @@ const ATTACH_RETRY_DELAY_MS = 3000;
  * (me-central1): Storage events cannot cross regions.
  */
 export const onStatementImageUploaded = onObjectFinalized(
-	{ region: 'me-central1', memory: '512MiB', timeoutSeconds: 120, maxInstances: 10 },
+	{
+		bucket: resolveStatementImageBucket(),
+		region: 'me-central1',
+		memory: '512MiB',
+		timeoutSeconds: 120,
+		maxInstances: 10,
+	},
 	async (event) => {
 		const objectName = event.data.name;
 		const source = parseThumbSource(objectName);
