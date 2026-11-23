@@ -148,6 +148,6 @@ any shared file (`global.scss`, `index.ts`, `_tokens.scss`, `_fonts.scss`, `_com
 ## 8. Done means
 
 `npm run check-all`, `npm test` and `npm run perf:gate` pass in `apps/join-class`; the screens
-match the mockups at 375–390 px (student) and 1280–1440 px (teacher); solid look and projector
-are unchanged; commits are on `feat/class-redesign` in this worktree. No push, no deploy, no
+match the mockups at 375–390 px (student) and 1280–1440 px (teacher) and 1920×1080 (projector); the solid look and high contrast
+are unchanged on every surface; commits are on `feat/class-redesign` in this worktree. No push, no deploy, no
 `git stash`.

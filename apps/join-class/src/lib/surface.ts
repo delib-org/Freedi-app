@@ -2,7 +2,7 @@
  * The surface a screen belongs to, on `<html data-surface="…">` (redesign port
  * spec, sections 1-2). The two new looks hang on it: `night` styles the student
  * surface and `mulberry` the teacher surface (see styles/_look-scope.scss). The
- * projector has no new look, so it keeps today's CSS. A surface is a property
+ * projector wears night at room scale (styles/night-projector). A surface is a property
  * of the route, not of the lesson: the lesson's look is `lib/lessonLook.ts`.
  */
 

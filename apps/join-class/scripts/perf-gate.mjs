@@ -34,8 +34,8 @@ const DEFAULT_LOCALE = process.env.PERF_GATE_LOCALE ?? 'he';
  * Two since the redesign (docs/design/join-class-redesign-port.md, section 4):
  * Assistant and Fredoka. The student surface (night) draws all its text in
  * Fredoka, so a student only ever needs that one; the teacher surface
- * (mulberry) uses both, Fredoka for titles. The solid look, high contrast and
- * the projector stay on Assistant alone. Declaring a family costs the entry
+ * (mulberry) uses both, Fredoka for titles, and the projector (night at room
+ * scale) uses Fredoka. The solid look and high contrast stay on Assistant alone. Declaring a family costs the entry
  * only its @font-face rules: a file is fetched when text first uses it.
  * (index.html still preloads Assistant on every route, because the look is not
  * known before the lesson loads, so today a night student fetches it without
