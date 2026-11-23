@@ -7,7 +7,13 @@ import { getMainStatement, getSubQuestions } from '../store';
 import { getChallengeQuestion, lessonStepOf } from '../lessonCore';
 import { startStudentNotices } from './studentNotices';
 import type { NoticeSnapshot } from './noticeLogic';
-import { listenMySubscription, listenRoster, listenTable, listenTables } from './listeners';
+import {
+	listenMySubscription,
+	listenRoster,
+	listenTable,
+	listenTables,
+	readMySubscriptionFromServer,
+} from './listeners';
 import { OptimisticOverlay } from './optimisticOverlay';
 import type { TableChange } from './tableOptimism';
 import { captureException } from '../sentry';
@@ -134,6 +140,9 @@ export function isPermissionDenied(error: unknown): boolean {
 	);
 }
 
+/** How long a table denial waits for the student's subscription to show they were moved. */
+export const MOVE_CONFIRM_WAIT_MS = 4_000;
+
 export type ClassWatchRole = 'student' | 'teacher';
 
 export interface ClassWatchOptions {
@@ -165,19 +174,29 @@ export function watchClass(
 		console.error('[Classroom] listener error:', error);
 	};
 
-	// A student who is moved loses the right to read the old table; that denial is only expected
-	// once their subscription no longer names that table. A denial on the CURRENT table is a real
-	// fault and takes the normal error path.
-	const onTableError =
-		(failedTableId: string) =>
-		(error: Error): void => {
-			if (isPermissionDenied(error) && failedTableId !== watchedTableId) {
-				console.info('[Classroom] old table closed to me (moved); on the new table now');
+	// A student who is moved loses the right to read the old table, often before their own
+	// subscription (with the new tableId) reaches the server or this phone. So a permission-denied
+	// on a table is confirmed first: the server's copy of the subscription, then the next
+	// subscription snapshot within MOVE_CONFIRM_WAIT_MS. If the subscription no longer names that
+	// table the denial is expected and the stream just stops. Otherwise it is a real fault and
+	// takes the normal error path (log, onError, retries).
+	const moveWaiters: Array<() => void> = [];
 
-				return;
-			}
-			onError(error);
-		};
+	const confirmMoved = (failedTableId: string) => async (): Promise<boolean> => {
+		const moved = (): boolean => stopped || watchedTableId !== failedTableId;
+		if (moved()) return true;
+		const sub = await readMySubscriptionFromServer(mainId);
+		if (sub?.tableId !== failedTableId || moved()) return true;
+		await new Promise<void>((resolve) => {
+			const timer = setTimeout(resolve, MOVE_CONFIRM_WAIT_MS);
+			moveWaiters.push(() => {
+				clearTimeout(timer);
+				resolve();
+			});
+		});
+
+		return moved();
+	};
 
 	if (role === 'teacher') {
 		stops.push(
@@ -210,6 +229,7 @@ export function watchClass(
 					const tableId = sub?.tableId;
 					if (tableId !== watchedTableId) {
 						watchedTableId = tableId;
+						for (const wake of moveWaiters.splice(0)) wake();
 						tableStop?.();
 						tableStop = null;
 						setServerTable(null);
@@ -220,7 +240,8 @@ export function watchClass(
 									setServerTable(table);
 									m.redraw();
 								},
-								onTableError(tableId),
+								onError,
+								confirmMoved(tableId),
 							);
 						}
 					}
