@@ -474,6 +474,10 @@ export const StatementSettingsSchema = object({
 	proposalLimit: optional(string()),
 	// join-class: students without a device in the whole lesson. Server-written (classAddNoDevice, classAssignTables): phones cannot read other tables. Main statement only.
 	noDeviceCount: optional(number()),
+	// join-class: students (member subscriptions) who joined the lesson. Server-written on every
+	// join and leave (fn_subscriptionLifecycle): a phone may read only its own table's
+	// subscriptions (Trello sN881XCU), so it counts the class from here. Main statement only.
+	studentCount: optional(number()),
 	// join-class: this main statement is a LESSON (a played game): one game of a lesson plan
 	// played with one class. Written only by the server (classStartLesson / the migration).
 	// `classId` null = no class (the lesson sits under the teacher home). Strings only, no

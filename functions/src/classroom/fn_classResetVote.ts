@@ -1,12 +1,17 @@
 import { onCall, CallableRequest } from 'firebase-functions/v2/https';
 import { FieldValue } from 'firebase-admin/firestore';
-import type { Firestore } from 'firebase-admin/firestore';
-import { Collections, StatementType, functionConfig } from '@freedi/shared-types';
+import type { Firestore, QueryDocumentSnapshot } from 'firebase-admin/firestore';
+import {
+	CLASS_SIDES_COLLECTION,
+	Collections,
+	StatementType,
+	functionConfig,
+} from '@freedi/shared-types';
 import type {
 	ClassResetVoteRequest,
 	ClassResetVoteResponse,
+	ClassSide,
 	Statement,
-	StatementSubscription,
 } from '@freedi/shared-types';
 import { db } from '../db';
 import { assertWorkspaceAdmin, loadChallenge, requireId, requireUid } from './classroomAccess';
@@ -21,7 +26,7 @@ import { assertVoteResettable } from './resetVoteLogic';
  * proposals. Deleting a vote doc never subtracts from the tally (fn_vote skips
  * a deleted vote), so the tally is cleared here, last, once the votes are gone.
  *
- * Order: 1) votes, 2) isVoted on options, 3) decisionSupport on subscriptions,
+ * Order: 1) votes, 2) isVoted on options, 3) decisionSupport on the side docs,
  * 4) the challenge question (selections, topVotedOption, the ballot itself: the vote goes
  * back to "not opened"). A failed
  * run can be repeated: every step is a plain delete or clear.
@@ -51,19 +56,20 @@ async function isVotedWrites(firestore: Firestore, challengeId: string): Promise
 		.map((d) => ({ kind: 'update' as const, ref: d.ref, data: { isVoted: false } }));
 }
 
+/** decisionSupport is cleared on the private side docs and on any legacy subscription still holding one. */
 async function supportWrites(firestore: Firestore, mainId: string): Promise<BatchedWrite[]> {
-	const snap = await firestore
-		.collection(Collections.statementsSubscribe)
-		.where('statementId', '==', mainId)
-		.get();
+	const [sidesSnap, subsSnap] = await Promise.all([
+		firestore.collection(CLASS_SIDES_COLLECTION).where('mainId', '==', mainId).get(),
+		firestore.collection(Collections.statementsSubscribe).where('statementId', '==', mainId).get(),
+	]);
+	const hasSupport = (d: QueryDocumentSnapshot): boolean =>
+		typeof (d.data() as Pick<ClassSide, 'decisionSupport'>).decisionSupport === 'number';
 
-	return snap.docs
-		.filter((d) => typeof (d.data() as StatementSubscription).decisionSupport === 'number')
-		.map((d) => ({
-			kind: 'update' as const,
-			ref: d.ref,
-			data: { decisionSupport: FieldValue.delete() },
-		}));
+	return [...sidesSnap.docs, ...subsSnap.docs].filter(hasSupport).map((d) => ({
+		kind: 'update' as const,
+		ref: d.ref,
+		data: { decisionSupport: FieldValue.delete() },
+	}));
 }
 
 export async function resetVote(

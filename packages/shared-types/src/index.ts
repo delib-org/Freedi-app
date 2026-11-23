@@ -1101,6 +1101,32 @@ export type {
   ClassRegistration,
 } from './models/classroom/classroomModel';
 export {
+  CLASS_SIDES_COLLECTION,
+  CLASS_SIDE_PRIVATE_FIELDS,
+  CLASS_FLAGS_COLLECTION,
+  CLASS_FLAG_LEGACY_SIDE_WRITES,
+  CLASS_SIDE_LOCKED_STEPS,
+  CLASS_SIDE_LOCKS_COLLECTION,
+  ClassSideSchema,
+  classSideId,
+  mergeClassSide,
+  sidesLocked,
+  sidesFrozen,
+} from './models/classroom/classSideModel';
+export {
+  CLASS_SIDE_MIN_SHOWN,
+  CLASS_SIDE_MIN_SHOWN_CAMPS,
+  shownSupport,
+} from './models/classroom/classSupportShown';
+export type { CampCounts, ShownCampSupport, ShownSupportBySide } from './models/classroom/classSupportShown';
+export type {
+  ClassSide,
+  ClassSideLock,
+  ClassSideValues,
+  ClassSupportBySideRequest,
+  ClassSupportBySideResponse,
+} from './models/classroom/classSideModel';
+export {
   classRegistrationOf,
   isRegistrationConnectable,
   seatsPerTableOf,
@@ -1155,6 +1181,7 @@ export {
   proposalLimitOf,
   mayAddProposal,
   noDeviceCountOf,
+  studentCountOf,
   proposalsTurnOf,
   proposalsMaxTurns,
   proposalsTurnOver,

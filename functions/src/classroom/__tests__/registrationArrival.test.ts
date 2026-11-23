@@ -387,18 +387,32 @@ describe('classRegistrationSupport (support by side from the registration, IA 2.
 			['p3', 'Noa Bar', 0.5],
 		] as const) {
 			await arriveByName(db, uid, { mainId: MAIN, fullName: name }, NOW);
-			fake.seed(`statementsSubscribe/${uid}--${MAIN}`, {
-				...subOf(fake, uid),
-				decisionSupport: support,
-			});
+			if (uid === 'p3') {
+				// The support is private now (classSides); p1 and p2 are legacy subscriptions.
+				fake.seed(`classSides/${uid}--${MAIN}`, {
+					userId: uid,
+					mainId: MAIN,
+					decisionSupport: support,
+					lastUpdate: NOW,
+				});
+			} else {
+				fake.seed(`statementsSubscribe/${uid}--${MAIN}`, {
+					...subOf(fake, uid),
+					decisionSupport: support,
+				});
+			}
 		}
 		const result = await registrationSupport(db, TEACHER, { mainId: MAIN });
 
 		expect(result.poleA).toBe('Keep');
 		expect(result.poleB).toBe('Change');
-		expect(result.support.a).toEqual({ mean: 1, n: 1, m: 1 });
-		expect(result.support.b).toEqual({ mean: -1, n: 1, m: 1 });
-		expect(result.support.center).toEqual({ mean: 0.5, n: 1, m: 1 });
+		// One rater per camp: below CLASS_SIDE_MIN_SHOWN, so no mean leaves the server.
+		// One person per camp: below CLASS_SIDE_MIN_SHOWN, so neither a mean nor a size leaves.
+		expect(result.support.a).toEqual({ hidden: true });
+		expect(result.support.b).toEqual({ hidden: true });
+		expect(result.support.center).toEqual({ hidden: true });
+		expect(result.support.verdict).toBe('insufficient');
+		expect(JSON.stringify(result.support)).not.toContain('mean');
 		expect(JSON.stringify(result)).not.toMatch(/position|p1|r1/);
 		// Nothing about the position was written onto a member.
 		expect(subOf(fake, 'p1').camp).toBeUndefined();

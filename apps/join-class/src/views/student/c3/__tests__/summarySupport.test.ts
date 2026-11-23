@@ -7,6 +7,22 @@ const current = vi.hoisted(() => ({ challenge: null as Statement | null }));
 
 vi.mock('@/lib/i18n', () => ({ t: (key: string) => key }));
 vi.mock('@/lib/classroom/api', () => ({ classRegistrationSupport: vi.fn() }));
+// The totals come from the server (the sides are private): asked only when allowed, ready at once here.
+vi.mock('@/lib/classroom/registrationSupport', () => ({
+	supportForScreen: (_main: unknown, _mainId: string, allowed = true) =>
+		allowed
+			? {
+					kind: 'ready',
+					names: null,
+					result: {
+						a: { mean: 0, n: 0, m: 0 },
+						center: { mean: 0, n: 0, m: 0 },
+						b: { mean: 0, n: 0, m: 0 },
+						verdict: 'insufficient',
+					},
+				}
+			: { kind: 'loading' },
+}));
 vi.mock('@/styles/student-c3.scss', () => ({}));
 vi.mock('@/components/StudentFrame', () => ({
 	StudentFrame: { view: (vnode: { children: m.Children }) => vnode.children },
@@ -22,7 +38,9 @@ vi.mock('../RateFaces', () => ({ RateFaces: { view: () => m('p.faces', 'faces') 
 vi.mock('../VoteResults', () => ({ VoteResults: { view: () => null } }));
 vi.mock('../DecisionCard', () => ({ DecisionCard: { view: () => null } }));
 vi.mock('../SupportBySide', () => ({ SupportBySide: { view: () => m('p.bars', 'bars') } }));
-vi.mock('@/lib/classroom/classState', () => ({ classState: { mySubscription: null } }));
+vi.mock('@/lib/classroom/classState', () => ({
+	classState: { mySubscription: null, mySide: null },
+}));
 vi.mock('@/lib/classroom/listeners', () => ({ listenRoster: () => () => undefined }));
 vi.mock('@/lib/classroom/c3Data', () => ({ currentUid: () => 'u1' }));
 vi.mock('@/lib/classroom/studentWrites', () => ({

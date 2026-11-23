@@ -607,6 +607,8 @@ const fa: Record<string, string> = {
 	'console.writing_nobody': 'کسی نمی‌نویسد · {{sent}} از {{total}} فرستادند',
 	'proposals.write.closed': 'پیشنهادها اکنون بسته است و نوشتن ممکن نیست',
 	'console.ratings_one': '1 امتیاز',
+	'summary.too_few': 'تعداد دانش‌آموزان برای نمایش کم است',
+	'side.locked': 'جانب‌ها پس از رأی‌گیری قفل شدند',
 };
 
 export default fa;

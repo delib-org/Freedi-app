@@ -1,4 +1,5 @@
 import {
+	CLASS_SIDES_COLLECTION,
 	Collections,
 	NO_VOTE,
 	Role,
@@ -10,21 +11,31 @@ import {
 	StatementSubscription,
 	Vote,
 	campOf,
+	classSideId,
+	sidesLocked,
 	getStatementSubscriptionId,
 	getVoteId,
 } from '@freedi/shared-types';
-import { db, doc, getDoc, setDoc, updateDoc } from '../firebase';
+import type { ClassSide } from '@freedi/shared-types';
+import { db, doc, getDoc, setDoc, updateDoc, writeBatch } from '../firebase';
 import { getCustomDisplayName, getMainStatement } from '../store';
 import { getUserState } from '../user';
 import { resolveSubscriptionName } from './subscriptionName';
+import { captureException } from '../sentry';
+import { isSideLocked } from './sideLock';
 
 /**
  * What a student device writes in the classroom (all on its own docs).
  *
- * Subscription doc: `statementsSubscribe/{uid}--{mainId}` (own doc; the rules'
- * update branch lets the subscriber update it while the workspace is public /
- * openToAll / openForRegistered). Fields: side (0..100), camp ('a'|'center'|'b'),
- * decisionSupport (-1..+1). `tableId` is server-written, never here.
+ * Side doc: `classSides/{uid}--{mainId}` (own doc, owner-only read and write,
+ * Trello btMVQMM5): side (0..100), camp ('a'|'center'|'b'), decisionSupport
+ * (-1..+1). The teacher may learn THAT a student chose, never WHICH, so the side
+ * never goes on the subscription (any signed-in user can read that).
+ *
+ * Subscription doc: `statementsSubscribe/{uid}--{mainId}` (own doc). The first
+ * pick also sets `sidePickedAt` there, in the same batch as the side doc (the
+ * rules accept the flag only when that batch leaves a camp on the side doc).
+ * `tableId` is server-written, never here.
  *
  * Vote doc (same as the main app's setVoteToDB): `votes/{uid}--{challengeId}`
  *   { voteId, statementId: <optionId> | 'none', parentId: <challengeId>,
@@ -55,14 +66,14 @@ function clamp(value: number, min: number, max: number): number {
 
 /**
  * Make sure the student has a member subscription on the workspace (so the
- * roster and the engine can see them and the class fields have a doc to live
- * on). No-op when it exists. Needs the main statement in the store (MainHub /
+ * roster and the engine can see them, and the side doc's rule finds it).
+ * Returns it (as stored, or as just created). Needs the main statement in the store (MainHub /
  * StudentStage load it first); pass it when you already hold it.
  */
 export async function ensureMemberSubscription(
 	mainId: string,
 	main: Statement | undefined = getMainStatement() ?? undefined,
-): Promise<void> {
+): Promise<StatementSubscription> {
 	try {
 		const user = getUserState().user;
 		const uid = requireUid('ensureMemberSubscription');
@@ -71,13 +82,14 @@ export async function ensureMemberSubscription(
 		const name = resolveSubscriptionName(user, getCustomDisplayName());
 		const existing = await getDoc(ref);
 		if (existing.exists()) {
+			const current = existing.data() as StatementSubscription;
 			// A sub made before the name was known (or by another app) shows as "someone" at the table.
-			const stored = (existing.data() as StatementSubscription).user?.displayName?.trim();
+			const stored = current.user?.displayName?.trim();
 			if (name && !stored) {
 				await updateDoc(ref, { 'user.displayName': name, lastUpdate: Date.now() });
 			}
 
-			return;
+			return current;
 		}
 		if (!main || main.statementId !== mainId) {
 			throw new Error('main statement not loaded');
@@ -102,40 +114,71 @@ export async function ensureMemberSubscription(
 			createdAt: now,
 		};
 		await setDoc(ref, sub, { merge: true });
+
+		return sub;
 	} catch (error) {
 		console.error('[Classroom] ensureMemberSubscription failed:', error);
 		throw error;
 	}
 }
 
-/** Write the slider value (clamped to 0..100) and its camp. */
+function sideRef(mainId: string, uid: string) {
+	return doc(db, CLASS_SIDES_COLLECTION, classSideId(mainId, uid));
+}
+
+/**
+ * Write the slider value (clamped to 0..100) and its camp on the private side
+ * doc; on the first pick, flag the subscription in the same batch.
+ */
 export async function setMySide(mainId: string, side: number): Promise<void> {
 	try {
 		const uid = requireUid('setMySide');
-		await ensureMemberSubscription(mainId);
+		// Sides are frozen at Vote and Summary (the rules refuse it): a move still
+		// in the debounce when the teacher jumps there is dropped, not failed.
+		if (sidesLocked(getMainStatement()?.statementSettings?.lessonPlan)) return;
+		// ...and for good once the lesson was locked (decision C).
+		if (await isSideLocked(mainId)) return;
+		const sub = await ensureMemberSubscription(mainId);
 		const value = clamp(Math.round(side), SIDE_MIN, SIDE_MAX);
-		await updateDoc(doc(db, Collections.statementsSubscribe, subscriptionId(mainId, uid)), {
+		const now = Date.now();
+		const mine: ClassSide = {
+			userId: uid,
+			mainId,
 			side: value,
 			camp: campOf(value),
-			lastUpdate: Date.now(),
-		});
+			lastUpdate: now,
+		};
+		const batch = writeBatch(db);
+		batch.set(sideRef(mainId, uid), mine, { merge: true });
+		if (typeof sub.sidePickedAt !== 'number') {
+			batch.update(doc(db, Collections.statementsSubscribe, subscriptionId(mainId, uid)), {
+				sidePickedAt: now,
+			});
+		}
+		await batch.commit();
 	} catch (error) {
-		console.error('[Classroom] setMySide failed:', error);
+		captureException(error, { operation: 'classroom.setMySide', mainId });
 		throw error;
 	}
 }
 
-/** Write the support for the decision, -1..+1 (clamped). */
+/** Write the support for the decision, -1..+1 (clamped), on the private side doc. */
 export async function setMyDecisionSupport(mainId: string, value: number): Promise<void> {
 	try {
 		const uid = requireUid('setMyDecisionSupport');
 		await ensureMemberSubscription(mainId);
-		await updateDoc(doc(db, Collections.statementsSubscribe, subscriptionId(mainId, uid)), {
-			decisionSupport: clamp(value, SUPPORT_MIN, SUPPORT_MAX),
-			lastUpdate: Date.now(),
-		});
+		await setDoc(
+			sideRef(mainId, uid),
+			{
+				userId: uid,
+				mainId,
+				decisionSupport: clamp(value, SUPPORT_MIN, SUPPORT_MAX),
+				lastUpdate: Date.now(),
+			},
+			{ merge: true },
+		);
 	} catch (error) {
-		console.error('[Classroom] setMyDecisionSupport failed:', error);
+		captureException(error, { operation: 'classroom.setMyDecisionSupport', mainId });
 		throw error;
 	}
 }

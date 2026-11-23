@@ -2,6 +2,7 @@ import m from 'mithril';
 import '@/styles/student-c2.scss';
 import { StudentFrame } from '@/components/StudentFrame';
 import { SideSlider } from '@/components/SideSlider';
+import { sidesFrozen } from '@freedi/shared-types';
 import { classState } from '@/lib/classroom/classState';
 import { setMySide } from '@/lib/classroom/studentWrites';
 import { sideClaimsOf, sideNamesOf, sideQuestionOf } from '@/lib/classroom/classSettings';
@@ -81,7 +82,7 @@ function actionButton(state: SideState, mainId: string): m.Vnode {
 export const SideView: m.Component<StepAttrs> = {
 	oninit(vnode) {
 		const state = vnode.state as unknown as SideState;
-		const saved = classState.mySubscription?.side;
+		const saved = classState.mySide?.side;
 		state.touched = typeof saved === 'number';
 		state.value = state.touched ? (saved as number) : SIDE_CENTER;
 		state.status = state.touched ? 'saved' : 'idle';
@@ -93,6 +94,7 @@ export const SideView: m.Component<StepAttrs> = {
 		const state = vnode.state as unknown as SideState;
 		clearTimeout(state.timer);
 		// the teacher may advance within the debounce: do not lose the last move
+		// (setMySide drops it when the sides are frozen by then)
 		if (state.pending) {
 			state.pending = false;
 			setMySide(vnode.attrs.main.statementId, state.value).catch((error: unknown) => {
@@ -107,32 +109,43 @@ export const SideView: m.Component<StepAttrs> = {
 		const names = sideNamesOf(vnode.attrs.main);
 		const claims = sideClaimsOf(vnode.attrs.main);
 		// a refreshed phone: the saved side arrives after the first render
-		const saved = classState.mySubscription?.side;
+		const saved = classState.mySide?.side;
 		if (!state.touched && typeof saved === 'number') {
 			state.touched = true;
 			state.value = saved;
 			state.status = 'saved';
 		}
 
+		// Decision C: after the vote the side is shown, not editable (no write is tried).
+		const frozen = sidesFrozen(vnode.attrs.main.statementSettings?.lessonPlan, classState.sideLock);
+
 		return m(
 			StudentFrame,
 			{
 				headerLine: stepLabel('side'),
 				instruction: sideQuestionOf(vnode.attrs.main),
-				action: [
-					state.status === 'failed'
-						? m('p.side-step__error', { role: 'alert' }, t('side.failed'))
-						: null,
-					actionButton(state, mainId),
-				],
+				action: frozen
+					? m(
+							'p.side-step__locked',
+							{ role: 'status', 'data-testid': 'side-locked' },
+							t('side.locked'),
+						)
+					: [
+							state.status === 'failed'
+								? m('p.side-step__error', { role: 'alert' }, t('side.failed'))
+								: null,
+							actionButton(state, mainId),
+						],
 			},
 			m(SideSlider, {
+				disabled: frozen,
 				value: state.value,
 				nameA: names.a,
 				nameB: names.b,
 				claimA: claims.a,
 				claimB: claims.b,
 				onInput: (value: number) => {
+					if (frozen) return;
 					state.value = value;
 					state.touched = true;
 					state.status = 'idle';

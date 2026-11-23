@@ -29,6 +29,28 @@ firebase emulators:start --project demo-freedi-rules-storage --only firestore,st
 STORAGE_EMULATOR_PORT=9199 npm run test:rules
 ```
 
+## Differential check of the statementsSubscribe block
+
+`differential/subscriptionDiff.mjs` runs one case table (`differential/subscriptionCases.mjs`:
+about 12,000 creates, updates and deletes over every access kind, legacy doc shapes, the
+shapes each app writes, and every actor) against TWO rule files and lists every case whose
+allow / deny differs. Use it before changing the subscription block, which serves every app:
+
+```bash
+git show dev:firestore.rules > /tmp/base.rules
+firebase emulators:exec --only firestore \
+  "node tests/rules/differential/subscriptionDiff.mjs /tmp/base.rules firestore.rules /tmp/diff.json"
+```
+
+Cases that write a join-class privacy field (side / camp / decisionSupport / sidePickedAt) are
+expected to differ and are reported apart; the exit code is 1 when any other case differs.
+It runs the READS too (every read shape the apps send, by owner, tablemate, other table,
+stranger, admin, creator, system admin, signed out): only reads of a Class lesson's
+subscriptions, the unfiltered dashboard query and another person's legacy doc without
+`statementId` are expected to differ (Trello sN881XCU, `join-class-subscription-reads.test.mjs`).
+`RULES_FILE=/tmp/base.rules node --test subscription-access-shapes.test.mjs` runs that suite
+against another rules file the same way.
+
 ## Why its own `package.json`
 
 `@firebase/rules-unit-testing@5` peers on `firebase@^12` while the apps are on

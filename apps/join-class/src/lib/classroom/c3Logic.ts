@@ -3,7 +3,8 @@ import {
 	SUPPORT_MIN,
 	type ClassTable,
 	type Statement,
-	type SupportBySide,
+	type CampCounts,
+	type ShownSupportBySide,
 	type TableStep,
 } from '@freedi/shared-types';
 
@@ -159,14 +160,14 @@ export function myProposals(proposals: readonly Statement[], uid: string): State
 
 export type BarCamp = 'a' | 'center' | 'b';
 
-export interface SupportBar {
-	camp: BarCamp;
-	mean: number;
-	n: number;
-	m: number;
-	/** 0..100 width of the filled part of the bar. */
-	percent: number;
-}
+/**
+ * One bar. A hidden camp (too few members or raters) came from the server with
+ * nothing in it: no mean, no size, so the bar has no numbers to show either.
+ * A shown camp has counts only when the server sent them (every camp 3+ strong).
+ */
+export type SupportBar =
+	| { camp: BarCamp; hidden: true }
+	| { camp: BarCamp; hidden: false; percent: number; counts: CampCounts | null };
 
 /** Order of the bars: the two sides and the middle between them. */
 export const BAR_ORDER: readonly BarCamp[] = ['a', 'center', 'b'];
@@ -177,11 +178,12 @@ export function supportPercent(mean: number): number {
 	return Math.round(((clamped - SUPPORT_MIN) / (SUPPORT_MAX - SUPPORT_MIN)) * 100);
 }
 
-export function supportBars(result: SupportBySide): SupportBar[] {
-	return BAR_ORDER.map((camp) => {
-		const { mean, n, m } = result[camp];
+export function supportBars(result: ShownSupportBySide): SupportBar[] {
+	return BAR_ORDER.map((camp): SupportBar => {
+		const shown = result[camp];
+		if (shown.hidden) return { camp, hidden: true };
 
-		return { camp, mean, n, m, percent: n > 0 ? supportPercent(mean) : 0 };
+		return { camp, hidden: false, percent: supportPercent(shown.mean), counts: shown.counts };
 	});
 }
 

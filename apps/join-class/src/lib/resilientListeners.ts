@@ -263,6 +263,8 @@ export const CLASS_LISTENER_KINDS = {
 	table: 'classTable',
 	tables: 'classTables',
 	mySubscription: 'classMySubscription',
+	mySide: 'classMySide',
+	sideLock: 'classSideLock',
 	roster: 'classRoster',
 	registration: 'classRegistration',
 	registrationCounter: 'classRegistrationCounter',

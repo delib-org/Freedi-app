@@ -17,6 +17,8 @@ import { resilientOnSnapshot } from '../resilientListeners';
 import { getCreator } from '../store';
 import { getUserState } from '../user';
 import type { Mate } from './c3Logic';
+import { toRosterSubscription } from './rosterPrivacy';
+import type { RosterSubscription } from './rosterPrivacy';
 
 /**
  * Firestore access of the student table screens (lane C3). Listeners go
@@ -66,11 +68,16 @@ export function listenClassOptions(
 	);
 }
 
-/** The people seated at one table (display names from their subscriptions). */
+/**
+ * The people seated at one table (display names from their subscriptions).
+ * The only subscriptions of the lesson a student may list (Trello sN881XCU):
+ * the rules let a phone read those at its OWN table, so `tableId` must be the
+ * student's current one. No side reaches the views (toRosterSubscription).
+ */
 export function listenMates(
 	mainId: string,
 	tableId: string,
-	onData: (subs: StatementSubscription[]) => void,
+	onData: (subs: RosterSubscription[]) => void,
 	onError?: (error: Error) => void,
 ): Unsubscribe {
 	return resilientOnSnapshot(
@@ -80,12 +87,12 @@ export function listenMates(
 			where('statementId', '==', mainId),
 			where('tableId', '==', tableId),
 		),
-		(snap) => onData(snap.docs.map((d) => d.data() as StatementSubscription)),
+		(snap) => onData(snap.docs.map((d) => toRosterSubscription(d.data() as StatementSubscription))),
 		(err) => onError?.(err),
 	);
 }
 
-export function matesOf(subs: readonly StatementSubscription[], fallbackName: string): Mate[] {
+export function matesOf(subs: readonly RosterSubscription[], fallbackName: string): Mate[] {
 	return subs
 		.map((sub) => ({
 			uid: sub.userId,

@@ -6,7 +6,10 @@
  * that goes quiet at 97 raters would show 95 for good. This scheduled pass
  * closes that gap at most once per run per question. It also recounts members,
  * which heals the case where two join or leave triggers recounted at once and
- * the older number landed last.
+ * the older number landed last. A Class lesson is a question whose progress doc
+ * moves on every join, so the same pass recounts its students
+ * (`statementSettings.studentCount`, Trello sN881XCU): that heals a recount
+ * that failed or landed out of order, within one run of the last join.
  *
  * Progress docs also exist for answers (the parent of a chat reply), and on an
  * answer `totalEvaluators` is its own rater count, not a copy of anything, so
@@ -26,6 +29,7 @@ import { db } from '../db';
 import { logError } from '../utils/errorHandling';
 import { buildCounterPatch } from '../evaluation/evaluatorParticipationCore';
 import { countMembers, keepsCountOnProgress } from './questionProgressWriter';
+import { classStudentCountPatch } from '../classroom/classStudentCount';
 
 /** Two run intervals, so one failed run does not lose a question. */
 export const RECENT_ACTIVITY_WINDOW_MS = 20 * 60 * 1000;
@@ -85,6 +89,7 @@ async function syncOne(
 	const patch = {
 		...(await exactMembersPatch(progressDoc, statement)),
 		...(await exactEvaluatorsPatch(progressDoc, statement)),
+		...(await classStudentCountPatch(db, progressDoc.id, statement)),
 	};
 	if (Object.keys(patch).length === 0) return false;
 

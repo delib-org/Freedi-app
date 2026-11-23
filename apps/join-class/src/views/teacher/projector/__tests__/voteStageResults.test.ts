@@ -3,8 +3,24 @@ import type { Statement } from '@freedi/shared-types';
 import { draw, textOf } from '../../../__tests__/vnodeText';
 
 vi.mock('@/lib/i18n', () => ({ t: (key: string) => key }));
-vi.mock('@/lib/classroom/api', () => ({ classRegistrationSupport: vi.fn() }));
+vi.mock('@/lib/classroom/api', () => ({
+	classRegistrationSupport: vi.fn(),
+	classSupportBySide: vi.fn(() => new Promise(() => undefined)),
+}));
 vi.mock('@/lib/classroom/classState', () => ({ classState: { roster: [], tables: [] } }));
+// The server's totals, as they arrive: three camps big enough to show, with counts.
+vi.mock('@/lib/classroom/registrationSupport', () => ({
+	supportForScreen: () => ({
+		kind: 'ready',
+		names: null,
+		result: {
+			a: { hidden: false, mean: 0.5, counts: { n: 3, m: 3 } },
+			center: { hidden: false, mean: 0, counts: { n: 3, m: 4 } },
+			b: { hidden: false, mean: 0.8, counts: { n: 4, m: 4 } },
+			verdict: 'closer',
+		},
+	}),
+}));
 
 interface Fake {
 	main: Statement | null;

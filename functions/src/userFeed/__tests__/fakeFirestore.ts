@@ -9,7 +9,7 @@
  */
 
 type Data = Record<string, unknown>;
-type FilterOp = '==' | '!=' | 'in';
+type FilterOp = '==' | '!=' | 'in' | 'not-in';
 
 interface Filter {
 	field: string;
@@ -156,6 +156,9 @@ export class FakeQuery {
 				const value = getField(data, filter.field);
 				if (filter.op === '==') return value === filter.value;
 				if (filter.op === 'in') return (filter.value as unknown[]).includes(value);
+				if (filter.op === 'not-in') {
+					return value !== undefined && !(filter.value as unknown[]).includes(value);
+				}
 
 				return value !== undefined && value !== filter.value;
 			}),

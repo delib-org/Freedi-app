@@ -55,7 +55,7 @@ function memberRow(
 	mode: TableMode,
 ): m.Vnode {
 	const name = student?.name ?? uid.slice(0, 4);
-	const chose = (student?.camp ?? null) !== null;
+	const chose = student?.chosen === true;
 	const now = serverNow();
 	const ask = mode === 'tableTalk' ? askMark(table, uid, now) : '';
 	const answer = mode === 'tableTalk' ? answerMark(table, uid, now) : '';

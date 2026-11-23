@@ -438,4 +438,84 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 			expect(subscription('erin')).toMatchObject(off);
 		});
 	});
+
+	describe('a Class lesson counts its students (Trello sN881XCU)', () => {
+		// The fake's update() is a shallow merge, so the dotted path is a literal key here.
+		const studentCount = (): unknown =>
+			mockDb.read(Collections.statements, DISCUSSION)?.['statementSettings.studentCount'];
+		const lessonUpdates = (): number => mockDb.writesTo(Collections.statements, 'update');
+
+		beforeEach(() => {
+			mockDb.seed(Collections.statements, DISCUSSION, {
+				statementId: DISCUSSION,
+				parentId: 'top',
+				topParentId: DISCUSSION,
+				statementType: StatementType.question,
+				statementSettings: { lessonPlan: { steps: ['waiting'], stepIndex: 0 } },
+			});
+		});
+
+		it('counts on the lesson itself, even when the copy carried no lesson plan', async () => {
+			await joinAs('owner', Role.admin);
+			await joinAs('alice', Role.member);
+			await joinAs('bob', Role.banned);
+
+			expect(studentCount()).toBe(2);
+		});
+
+		it('counts a subscription with no role as a student, as the old phone count did', async () => {
+			const id = `old--${DISCUSSION}`;
+			const { role, ...doc } = subscriptionDoc('old', Role.member);
+			expect(role).toBe(Role.member);
+			mockDb.seed(Collections.statementsSubscribe, id, doc);
+			await onSubscriptionCreated(snapshotEvent(id, doc));
+
+			expect(studentCount()).toBe(1);
+		});
+
+		it('writes the lesson once per join: the member count and the student count together', async () => {
+			mockDb.resetCounters();
+			await joinAs('owner', Role.admin);
+			await joinAs('alice', Role.member);
+			await joinAs('bob', Role.member);
+
+			expect(lessonUpdates()).toBe(3);
+			expect(memberCount()).toBe(3);
+			expect(studentCount()).toBe(2);
+		});
+
+		it('recounts on a leave', async () => {
+			await joinAs('alice', Role.member);
+			const bob = await joinAs('bob', Role.member);
+			await leave(bob);
+
+			expect(studentCount()).toBe(1);
+		});
+
+		it('recounts when a role crosses the teacher line, not on other updates', async () => {
+			const bob = await joinAs('bob', Role.member);
+			expect(studentCount()).toBe(1);
+
+			const before = mockDb.read(Collections.statementsSubscribe, bob) as SubscriptionDoc;
+			mockDb.resetCounters();
+			await onSubscriptionUpdated(changeEvent(bob, before, { ...before, lastUpdate: T0 + 1 }));
+			expect(mockDb.reads).toBe(0);
+
+			await changeRole(bob, Role.admin);
+			expect(studentCount()).toBe(0);
+		});
+
+		it("adds nothing to another app's statement", async () => {
+			mockDb.seed(Collections.statements, DISCUSSION, {
+				statementId: DISCUSSION,
+				parentId: 'top',
+				topParentId: DISCUSSION,
+				statementType: StatementType.group,
+			});
+			await joinAs('carol', Role.member);
+
+			expect(studentCount()).toBeUndefined();
+			expect(memberCount()).toBe(1);
+		});
+	});
 });

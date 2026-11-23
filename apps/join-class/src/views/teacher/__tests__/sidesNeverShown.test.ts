@@ -12,6 +12,10 @@ vi.mock('../dragController', () => ({
 	targetName: vi.fn(() => ''),
 }));
 
+import { Role } from '@freedi/shared-types';
+import type { StatementSubscription } from '@freedi/shared-types';
+import { rosterStudents } from '@/lib/classroom/consoleHelpers';
+import { toRosterSubscription } from '@/lib/classroom/rosterPrivacy';
 import { MemberChip } from '../MemberChip';
 import { TablesBoard } from '../TablesBoard';
 import { resetConsoleState } from '../consoleState';
@@ -24,6 +28,7 @@ import { resetConsoleState } from '../consoleState';
 
 type Camp = 'a' | 'b' | 'center';
 const CAMPS: readonly Camp[] = ['a', 'b', 'center'];
+const SIDE_OF: Record<Camp, number> = { a: 10, b: 90, center: 50 };
 
 function flatten(node: m.Children, out: m.Vnode[] = []): m.Vnode[] {
 	if (Array.isArray(node)) node.forEach((c) => flatten(c, out));
@@ -55,7 +60,16 @@ function boardTree(camp: Camp | null): m.Vnode {
 		attrs: {
 			mainId: 'x',
 			tables: [],
-			students: [{ uid: 'u1', name: 'Dana', camp, tableId: null }],
+			// Through the data layer, as the console gets it: a legacy subscription that still holds a side.
+			students: rosterStudents([
+				toRosterSubscription({
+					userId: 'u1',
+					role: Role.member,
+					user: { displayName: 'Dana' },
+					lastUpdate: 1,
+					...(camp ? { camp, side: SIDE_OF[camp] } : {}),
+				} as StatementSubscription),
+			]),
 			plenum: false,
 			tableTalk: false,
 			showSides: true,

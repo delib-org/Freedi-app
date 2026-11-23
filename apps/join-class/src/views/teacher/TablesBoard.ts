@@ -81,7 +81,7 @@ function rosterCard(attrs: TablesBoardAttrs): m.Vnode {
 							key: s.uid,
 							uid: s.uid,
 							name: s.name,
-							chosen: attrs.showSides ? s.camp !== null : undefined,
+							chosen: attrs.showSides ? s.chosen : undefined,
 							from: null,
 							tableNumbers: [],
 						}),
@@ -103,7 +103,7 @@ function unplacedStrip(
 				m(MemberChip, {
 					uid: s.uid,
 					name: s.name,
-					chosen: showSides ? s.camp !== null : undefined,
+					chosen: showSides ? s.chosen : undefined,
 					from: null,
 					tableNumbers,
 				}),

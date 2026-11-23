@@ -3,7 +3,7 @@ import { sideCount } from '../sideCount';
 
 describe('sideCount', () => {
 	it('counts students who chose a side, centre included', () => {
-		const students = [{ camp: 'a' as const }, { camp: 'center' as const }, { camp: null }];
+		const students = [{ chosen: true }, { chosen: true }, { chosen: false }];
 		expect(sideCount(students)).toEqual({ chose: 2, total: 3 });
 	});
 

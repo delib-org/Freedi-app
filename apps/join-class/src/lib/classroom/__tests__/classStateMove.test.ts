@@ -30,6 +30,9 @@ vi.mock('../listeners', () => ({
 
 		return stop;
 	},
+	// The student's private side doc and the lesson's side lock (Trello btMVQMM5).
+	listenMySide: () => () => undefined,
+	listenSideLock: () => () => undefined,
 	listenMySubscription: (_mainId: string, onData: SubHandler) => {
 		captured.sub = onData;
 

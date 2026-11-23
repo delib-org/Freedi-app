@@ -18,8 +18,8 @@ function flag(id: string, uid: string, over: Partial<ClassLanguageFlag> = {}): C
 }
 
 const students: RosterStudent[] = [
-	{ uid: 'dana', name: 'Dana', camp: null, tableId: 'main--2' },
-	{ uid: 'noa', name: 'Noa', camp: null, tableId: null },
+	{ uid: 'dana', name: 'Dana', chosen: false, tableId: 'main--2' },
+	{ uid: 'noa', name: 'Noa', chosen: false, tableId: null },
 ];
 const tables = [{ tableId: 'main--2', n: 2 }] as unknown as ClassTable[];
 

@@ -1,25 +1,34 @@
 import {
+	CLASS_SIDES_COLLECTION,
 	CLASS_TABLES_COLLECTION,
 	ClassTable,
 	Collections,
 	StatementSubscription,
+	classSideId,
 	getStatementSubscriptionId,
 } from '@freedi/shared-types';
+import type { ClassSide, ClassSideLock } from '@freedi/shared-types';
 import { db, doc, collection, query, where, getDocFromServer } from '../firebase';
 import type { Unsubscribe } from '../firebase';
 import { CLASS_LISTENER_KINDS, resilientOnSnapshot } from '../resilientListeners';
 import { getUserState } from '../user';
+import { captureException } from '../sentry';
+import { toRosterSubscription } from './rosterPrivacy';
+import { sideLockRef } from './sideLock';
+import type { RosterSubscription } from './rosterPrivacy';
 
 /**
  * Classroom listeners, all through `resilientOnSnapshot` (wake resync + backoff).
  * Each returns the unsubscribe. Prefer `watchClass` in classState.ts, which wires
  * these into the shared store; use these directly only for something bespoke.
  *
- * Rules (current firestore.rules): a `statementsSubscribe` list by
- * `statementId == X` is open to people in X (a member, a host), a host of its
- * top and system admins, so `listenRoster` works for the teacher and for the
- * students who joined the lesson. `classTables` has NO rule yet — lane C1 adds
- * `allow read: if request.auth != null` (or member/admin scoped).
+ * Rules (current firestore.rules): `classSides` is owner-only (get, never list).
+ * A lesson's `statementsSubscribe` docs (Trello sN881XCU) are read by their
+ * owner, the lesson's teacher (creator or admin, or an admin of its top) and
+ * system admins, so `listenRoster` is the teacher's alone; a student lists
+ * only the subscriptions at their own table (c3Data `listenMates`) and counts
+ * the class from `statementSettings.studentCount`. `classTables`: a student
+ * reads their own table, the teacher all of them.
  */
 
 /** One table doc. `null` when it does not exist (yet). */
@@ -56,7 +65,7 @@ export function listenTables(
 	);
 }
 
-/** The signed-in user's own workspace subscription (side, camp, decisionSupport, tableId). */
+/** The signed-in user's own workspace subscription (tableId, sidePickedAt, ...). */
 export function listenMySubscription(
 	mainId: string,
 	onData: (sub: StatementSubscription | null) => void,
@@ -100,18 +109,62 @@ export async function readMySubscriptionFromServer(
 }
 
 /**
+ * The signed-in student's own private side doc (side, camp, decisionSupport):
+ * `classSides/{uid}--{mainId}`, which only they can read. `null` until they pick.
+ */
+export function listenMySide(
+	mainId: string,
+	onData: (side: ClassSide | null) => void,
+	onError?: (error: Error) => void,
+): Unsubscribe {
+	const uid = getUserState().user?.uid;
+	if (!uid) {
+		captureException(new Error('no signed-in user'), {
+			operation: 'classroom.listenMySide',
+			mainId,
+		});
+
+		return () => undefined;
+	}
+
+	return resilientOnSnapshot(
+		CLASS_LISTENER_KINDS.mySide,
+		doc(db, CLASS_SIDES_COLLECTION, classSideId(mainId, uid)),
+		(snap) => onData(snap.exists() ? (snap.data() as ClassSide) : null),
+		(err) => onError?.(err),
+	);
+}
+
+/**
  * Every subscription of the workspace (the roster: joined students with their
- * side / camp / decisionSupport / tableId). Teacher / projector use.
+ * name, tableId and whether they chose a side). Teacher and projector only: a
+ * student may not list it (Trello sN881XCU). No side ever reaches the views: a subscription written
+ * by an app version from before the change may still carry one, and
+ * toRosterSubscription drops it here (keeping only "chose").
  */
 export function listenRoster(
 	mainId: string,
-	onData: (subs: StatementSubscription[]) => void,
+	onData: (subs: RosterSubscription[]) => void,
 	onError?: (error: Error) => void,
 ): Unsubscribe {
 	return resilientOnSnapshot(
 		CLASS_LISTENER_KINDS.roster,
 		query(collection(db, Collections.statementsSubscribe), where('statementId', '==', mainId)),
-		(snap) => onData(snap.docs.map((d) => d.data() as StatementSubscription)),
+		(snap) => onData(snap.docs.map((d) => toRosterSubscription(d.data() as StatementSubscription))),
+		(err) => onError?.(err),
+	);
+}
+
+/** The lesson's side lock (decision C): `null` while the sides may still change. */
+export function listenSideLock(
+	mainId: string,
+	onData: (lock: ClassSideLock | null) => void,
+	onError?: (error: Error) => void,
+): Unsubscribe {
+	return resilientOnSnapshot(
+		CLASS_LISTENER_KINDS.sideLock,
+		sideLockRef(mainId),
+		(snap) => onData(snap.exists() ? (snap.data() as ClassSideLock) : null),
 		(err) => onError?.(err),
 	);
 }

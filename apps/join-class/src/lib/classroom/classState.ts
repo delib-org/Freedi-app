@@ -1,5 +1,10 @@
 import m from 'mithril';
-import type { ClassTable, StatementSubscription } from '@freedi/shared-types';
+import type {
+	ClassSide,
+	ClassSideLock,
+	ClassTable,
+	StatementSubscription,
+} from '@freedi/shared-types';
 import type { Unsubscribe } from '../firebase';
 import { ensureMemberSubscription } from './studentWrites';
 import { initServerClock } from './serverClock';
@@ -8,12 +13,15 @@ import { getChallengeQuestion, lessonStepOf } from '../lessonCore';
 import { startStudentNotices } from './studentNotices';
 import type { NoticeSnapshot } from './noticeLogic';
 import {
+	listenMySide,
 	listenMySubscription,
+	listenSideLock,
 	listenRoster,
 	listenTable,
 	listenTables,
 	readMySubscriptionFromServer,
 } from './listeners';
+import type { RosterSubscription } from './rosterPrivacy';
 import { OptimisticOverlay } from './optimisticOverlay';
 import type { TableChange } from './tableOptimism';
 import { captureException } from '../sentry';
@@ -23,9 +31,11 @@ import { captureException } from '../sentry';
  * module state + `m.redraw()` when a listener delivers). Views never hold their
  * own copies; they call `watchClass` in oninit and the returned stop in onremove.
  *
- *   student: mySubscription (side / camp / decisionSupport / tableId) and the
- *            student's own `table` (re-targeted when `tableId` changes)
- *   teacher: `tables` (all, sorted by n) and `roster` (all subscriptions)
+ *   student: mySubscription (tableId, sidePickedAt), mySide (their own private
+ *            side / camp / decisionSupport) and the student's own `table`
+ *            (re-targeted when `tableId` changes)
+ *   teacher: `tables` (all, sorted by n) and `roster` (all subscriptions, never
+ *            anyone's side: see rosterPrivacy.ts)
  */
 
 export interface ClassState {
@@ -38,8 +48,12 @@ export interface ClassState {
 	mySubscription: StatementSubscription | null;
 	/** The listener on `mySubscription` has answered once (null then means "no such doc"). */
 	mySubscriptionLoaded: boolean;
-	/** Every subscription of the workspace (teacher / projector). */
-	roster: StatementSubscription[];
+	/** The signed-in student's own private side doc (null until they pick or rate). */
+	mySide: ClassSide | null;
+	/** The lesson's side lock (decision C): set = sides frozen for good. Student only. */
+	sideLock: ClassSideLock | null;
+	/** Every subscription of the workspace (teacher / projector), without any side. */
+	roster: RosterSubscription[];
 }
 
 export const classState: ClassState = {
@@ -48,6 +62,8 @@ export const classState: ClassState = {
 	tables: [],
 	mySubscription: null,
 	mySubscriptionLoaded: false,
+	mySide: null,
+	sideLock: null,
 	roster: [],
 };
 
@@ -107,6 +123,8 @@ export function resetClassState(mainId: string | null = null): void {
 	classState.tables = [];
 	classState.mySubscription = null;
 	classState.mySubscriptionLoaded = false;
+	classState.mySide = null;
+	classState.sideLock = null;
 	classState.roster = [];
 }
 
@@ -155,7 +173,7 @@ export interface ClassWatchOptions {
 
 /**
  * Start the listeners for a role and return one stop function.
- * student: ensures the member subscription exists, then my subscription + my table.
+ * student: ensures the member subscription exists, then my subscription, my side + my table.
  * teacher: all tables + the roster.
  */
 export function watchClass(
@@ -221,6 +239,22 @@ export function watchClass(
 		if (options.autoJoin !== false) void ensureMemberSubscription(mainId).catch(() => undefined);
 		stops.push(
 			startStudentNotices(readNoticeSnapshot),
+			listenMySide(
+				mainId,
+				(side) => {
+					classState.mySide = side;
+					m.redraw();
+				},
+				onError,
+			),
+			listenSideLock(
+				mainId,
+				(lock) => {
+					classState.sideLock = lock;
+					m.redraw();
+				},
+				onError,
+			),
 			listenMySubscription(
 				mainId,
 				(sub) => {

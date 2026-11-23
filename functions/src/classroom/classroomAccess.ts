@@ -18,7 +18,7 @@ import { ClassroomError } from './classroomErrors';
  * (`mainId`), the same test the rules' isAdmin() applies to subscriptions.
  */
 
-const ADMIN_ROLES: ReadonlySet<string> = new Set([Role.admin, Role.creator, 'creator']);
+export const ADMIN_ROLES: ReadonlySet<string> = new Set([Role.admin, Role.creator, 'creator']);
 const MAX_ID_LENGTH = 200;
 
 export function requireUid<T>(request: CallableRequest<T>): string {

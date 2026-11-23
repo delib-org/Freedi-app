@@ -214,6 +214,7 @@ export function createFakeDb(): FakeDb {
 					if (op === '>') return Number(actual) > Number(v);
 					if (op === '!=') return actual !== undefined && actual !== v;
 					if (op === 'in') return (v as unknown[]).includes(actual);
+					if (op === 'not-in') return actual !== undefined && !(v as unknown[]).includes(actual);
 
 					return actual === v;
 				}),

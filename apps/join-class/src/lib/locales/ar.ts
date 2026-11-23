@@ -608,6 +608,8 @@ const ar: Record<string, string> = {
 	'console.writing_nobody': 'لا أحد يكتب · أرسل {{sent}} من {{total}}',
 	'proposals.write.closed': 'الاقتراحات مغلقة الآن، لا يمكن الكتابة',
 	'console.ratings_one': 'تقييم واحد',
+	'summary.too_few': 'عدد الطلاب قليل جدًا للعرض',
+	'side.locked': 'أُغلقت الجوانب بعد التصويت',
 };
 
 export default ar;

@@ -621,6 +621,8 @@ const es: Record<string, string> = {
 	'console.writing_nobody': 'Nadie escribe · {{sent}} de {{total}} enviaron',
 	'proposals.write.closed': 'Las propuestas están cerradas ahora, nadie puede escribir',
 	'console.ratings_one': '1 valoración',
+	'summary.too_few': 'Muy pocos estudiantes para mostrarlo',
+	'side.locked': 'Las posturas se cerraron tras la votación',
 };
 
 export default es;

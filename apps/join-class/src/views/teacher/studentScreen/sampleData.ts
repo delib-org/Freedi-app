@@ -1,4 +1,5 @@
-import type { Camp, Statement, SupportBySide } from '@freedi/shared-types';
+import { shownSupport } from '@freedi/shared-types';
+import type { Camp, ShownSupportBySide, Statement, SupportBySide } from '@freedi/shared-types';
 import type { VoteResult } from '@/lib/classroom/voteResults';
 import { t } from '@/lib/i18n';
 
@@ -83,6 +84,6 @@ export function sampleResults(proposals: readonly Statement[]): Record<string, V
 	return Object.fromEntries(proposals.map((p, index) => [p.statementId, SAMPLE_SHARES[index]]));
 }
 
-export function sampleSupport(): SupportBySide {
-	return SAMPLE_SUPPORT;
+export function sampleSupport(): ShownSupportBySide {
+	return shownSupport(SAMPLE_SUPPORT);
 }

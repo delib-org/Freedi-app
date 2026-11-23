@@ -1,6 +1,6 @@
 import { after, before, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { arrayRemove, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { arrayRemove, deleteDoc, doc, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { makeEnv, seed } from './helpers.mjs';
 
 /**
@@ -226,7 +226,19 @@ describe('statementsSubscribe identity', () => {
 				),
 			);
 			await assertSucceeds(updateDoc(ref, { 'user.displayName': 'Dana B', lastUpdate: T0 + 1 }));
-			await assertSucceeds(updateDoc(ref, { side: 40, camp: 'a', lastUpdate: T0 + 2 }));
+			// The side is private now (classSides); the subscription gets only the flag, in the same batch.
+			const db = ref.firestore;
+			const batch = writeBatch(db);
+			batch.set(doc(db, 'classSides', `${S1}--${LESSON}`), {
+				userId: S1,
+				mainId: LESSON,
+				side: 40,
+				camp: 'a',
+				lastUpdate: T0 + 2,
+			});
+			batch.update(ref, { sidePickedAt: T0 + 2 });
+			await assertSucceeds(batch.commit());
+			await assertFails(updateDoc(ref, { side: 40, camp: 'a', lastUpdate: T0 + 2 }));
 			await assertSucceeds(updateDoc(ref, { proposalRepliesReadAt: T0 + 3 }));
 		});
 

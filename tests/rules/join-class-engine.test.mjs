@@ -18,8 +18,8 @@ import { makeEnv, seed } from './helpers.mjs';
  * join-class classroom engine (lane C1):
  *  - classTables/{mainId}--{n}: read by a student seated at that table or an
  *    admin of the workspace; no client writes at all (callables only).
- *  - statementsSubscribe: a student writes side / camp / decisionSupport on
- *    their own doc within range; tableId is server-only; ensureMemberSubscription's
+ *  - statementsSubscribe: side / camp / decisionSupport are refused there now
+ *    (they live on classSides, see join-class-side-privacy.test.mjs); tableId is server-only; ensureMemberSubscription's
  *    role:member create still works and cannot carry tableId or an admin role.
  *  - votes on a question with statementSettings.ballot: only while not paused or closed,
  *    only for a candidate or 'none'. Questions without a ballot are unchanged.
@@ -148,6 +148,17 @@ describe('join-class engine rules', () => {
 			await assertSucceeds(getDocs(query(collection(as(TEACHER), 'classTables'), where('mainId', '==', MAIN))));
 		});
 
+		it('accepts every admin role the server counts, the legacy \'creator\' included (Trello sN881XCU)', async () => {
+			for (const role of ['statement-creator', 'creator']) {
+				const uid = `u-${role}`;
+				await seed(env, (db) => setDoc(doc(db, 'statementsSubscribe', `${uid}--${MAIN}`), sub(uid, role)));
+				await assertSucceeds(getDoc(doc(as(uid), 'classTables', T2)));
+				await assertSucceeds(getDocs(query(collection(as(uid), 'classTables'), where('mainId', '==', MAIN))));
+			}
+			await seed(env, (db) => setDoc(doc(db, 'statementsSubscribe', `u-waiting--${MAIN}`), sub('u-waiting', 'waiting')));
+			await assertFails(getDoc(doc(as('u-waiting'), 'classTables', T2)));
+		});
+
 		it('denies a student listing every table of the lesson', async () => {
 			await assertFails(getDocs(query(collection(as(S1), 'classTables'), where('mainId', '==', MAIN))));
 		});
@@ -165,10 +176,10 @@ describe('join-class engine rules', () => {
 	});
 
 	describe('statementsSubscribe class fields', () => {
-		it('lets a student write side, camp and decisionSupport on their own doc', async () => {
+		it('refuses side, camp and decisionSupport on the subscription, even the student\'s own (they are private now)', async () => {
 			const ref = doc(as(S1), 'statementsSubscribe', `${S1}--${MAIN}`);
-			await assertSucceeds(updateDoc(ref, { side: 75, camp: 'b', lastUpdate: T0 + 1 }));
-			await assertSucceeds(updateDoc(ref, { decisionSupport: -0.5, lastUpdate: T0 + 2 }));
+			await assertFails(updateDoc(ref, { side: 75, camp: 'b', lastUpdate: T0 + 1 }));
+			await assertFails(updateDoc(ref, { decisionSupport: -0.5, lastUpdate: T0 + 2 }));
 		});
 
 		it('denies out-of-range or ill-typed class values', async () => {
@@ -307,6 +318,8 @@ describe('join-class engine rules', () => {
 				const ref = doc(as(S1), 'statementsSubscribe', `${S1}--${MAIN}`);
 				await assertFails(updateDoc(ref, { side: 80, camp: 'b', lastUpdate: T0 + 10 }));
 				await assertFails(updateDoc(ref, { decisionSupport: 0.5, lastUpdate: T0 + 11 }));
+				const sideRef = doc(as(S1), 'classSides', `${S1}--${MAIN}`);
+				await assertFails(setDoc(sideRef, { userId: S1, mainId: MAIN, side: 80, camp: 'b', lastUpdate: T0 + 10 }));
 				await assertFails(setDoc(doc(as(S1), 'votes', `${S1}--${CH}`), vote(S1, CH, 'p1')));
 				await assertFails(setDoc(doc(as(S1), 'votes', `${S1}--${CH}`), vote(S1, CH, 'none')));
 			}
@@ -325,17 +338,20 @@ describe('join-class engine rules', () => {
 			await assertSucceeds(updateDoc(ref, { getInAppNotification: true, lastUpdate: T0 + 12 }));
 		});
 
-		it('lets the teacher keep writing while paused or ended', async () => {
+		it('lets the teacher keep writing while paused or ended, but never a student\'s side', async () => {
 			await setStatus('ended');
 			const ref = doc(as(TEACHER), 'statementsSubscribe', `${S1}--${MAIN}`);
-			await assertSucceeds(updateDoc(ref, { side: 30, lastUpdate: T0 + 13 }));
+			await assertSucceeds(updateDoc(ref, { getInAppNotification: false, lastUpdate: T0 + 13 }));
+			await assertFails(updateDoc(ref, { side: 30, lastUpdate: T0 + 13 }));
 		});
 
 		it('treats live, open and a missing status as writable', async () => {
 			for (const status of ['live', 'open', undefined]) {
 				await setStatus(status);
-				const ref = doc(as(S1), 'statementsSubscribe', `${S1}--${MAIN}`);
-				await assertSucceeds(updateDoc(ref, { side: 55, lastUpdate: T0 + 14 }));
+				const ref = doc(as(S1), 'classSides', `${S1}--${MAIN}`);
+				await assertSucceeds(
+					setDoc(ref, { userId: S1, mainId: MAIN, side: 55, camp: 'center', lastUpdate: T0 + 14 }),
+				);
 				await assertSucceeds(setDoc(doc(as(S1), 'votes', `${S1}--${CH}`), vote(S1, CH, 'p2')));
 			}
 		});

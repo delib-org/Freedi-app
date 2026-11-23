@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ClassTable, Statement, SupportBySide } from '@freedi/shared-types';
+import type { ClassTable, Statement, ShownSupportBySide } from '@freedi/shared-types';
 import {
 	countdownView,
 	idleCountdownText,
@@ -182,11 +182,11 @@ describe('rate list', () => {
 });
 
 describe('support bars', () => {
-	const result: SupportBySide = {
-		a: { mean: 1, n: 4, m: 5 },
-		center: { mean: 0, n: 2, m: 2 },
-		b: { mean: -1, n: 0, m: 3 },
-		verdict: 'insufficient',
+	const result: ShownSupportBySide = {
+		a: { hidden: false, mean: 1, counts: { n: 4, m: 5 } },
+		center: { hidden: true },
+		b: { hidden: false, mean: -1, counts: null },
+		verdict: 'apart',
 	};
 
 	it('maps -1..+1 onto 0..100 percent', () => {
@@ -197,11 +197,11 @@ describe('support bars', () => {
 		expect(supportPercent(7)).toBe(100);
 	});
 
-	it('returns the three bars in order with their counts; an empty bar stays empty', () => {
+	it('returns the three bars in order; a hidden camp carries nothing, counts only when sent', () => {
 		const bars = supportBars(result);
 		expect(bars.map((b) => b.camp)).toEqual(['a', 'center', 'b']);
-		expect(bars.map((b) => b.percent)).toEqual([100, 50, 0]);
-		expect(bars[0]).toMatchObject({ n: 4, m: 5 });
-		expect(bars[2]).toMatchObject({ n: 0, m: 3 });
+		expect(bars[0]).toEqual({ camp: 'a', hidden: false, percent: 100, counts: { n: 4, m: 5 } });
+		expect(bars[1]).toEqual({ camp: 'center', hidden: true });
+		expect(bars[2]).toEqual({ camp: 'b', hidden: false, percent: 0, counts: null });
 	});
 });

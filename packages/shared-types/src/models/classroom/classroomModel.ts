@@ -199,11 +199,26 @@ export const DecisionSupportSchema = pipe(number(), minValue(SUPPORT_MIN), maxVa
 /**
  * Class fields on the student's workspace subscription
  * (`statementsSubscribe/{uid}--{mainId}`), spread into StatementSubscriptionSchema.
- * Student-writable (own doc): side, camp, decisionSupport. Server-written: tableId.
+ * Any signed-in user can read a subscription, so nothing private lives here:
+ * the side itself is on `classSides/{uid}--{mainId}` (classSideModel.ts).
+ * Student-writable (own doc): sidePickedAt. Server-written: tableId.
  */
 export const ClassSubscriptionFieldsSchema = {
+	/**
+	 * When the student first picked a side (ms). Says THAT they chose, never
+	 * WHICH: the teacher's "chose a side" mark. The rules accept it only from the
+	 * owner, in the write that leaves a camp on their private side doc.
+	 */
+	sidePickedAt: optional(number()),
+	/**
+	 * LEGACY, moved to `classSides` (Trello btMVQMM5). Still parsed so old docs
+	 * pass a strict parse; never written by this version; stripped by
+	 * functions/scripts/backfillClassSidesPrivate.ts. Do not read them on a client.
+	 */
 	side: optional(SideValueSchema),
+	/** LEGACY, see `side`. */
 	camp: optional(CampSchema),
+	/** LEGACY, see `side`. */
 	decisionSupport: optional(DecisionSupportSchema),
 	tableId: optional(string()),
 	/** IA 22: when the student last opened the replies on their own proposal (ms). Student-written. */

@@ -17,6 +17,8 @@ export interface SideSliderAttrs {
 	claimA?: string | null;
 	claimB?: string | null;
 	onInput: (value: number) => void;
+	/** Read-only: the sides are locked (the thumb shows the saved side). */
+	disabled?: boolean;
 }
 
 function character(side: 'a' | 'b', name: string, claim: string | null | undefined): m.Vnode {
@@ -29,7 +31,7 @@ function character(side: 'a' | 'b', name: string, claim: string | null | undefin
 
 export const SideSlider: m.Component<SideSliderAttrs> = {
 	view({ attrs }) {
-		const { value, nameA, nameB, claimA, claimB, onInput } = attrs;
+		const { value, nameA, nameB, claimA, claimB, onInput, disabled } = attrs;
 		const word = t(sideWordKey(value), {
 			name: sideWordKey(value) === 'side.near_a' ? nameA : nameB,
 		});
@@ -51,6 +53,7 @@ export const SideSlider: m.Component<SideSliderAttrs> = {
 					value,
 					'aria-label': t('side.aria', { a: nameA, b: nameB }),
 					'aria-valuetext': word,
+					disabled: disabled === true,
 					oninput: (e: Event) => onInput(Number((e.target as HTMLInputElement).value)),
 				}),
 			]),

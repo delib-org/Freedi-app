@@ -1,15 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { ClassTable, Statement, StatementSubscription } from '@freedi/shared-types';
-import {
-	campMark,
-	challengeOf,
-	rosterCount,
-	sideWordKey,
-	tableChips,
-	tableNumberOf,
-} from '../c2Helpers';
+import type { ClassTable, Statement } from '@freedi/shared-types';
+import type { RosterSubscription } from '@/lib/classroom/rosterPrivacy';
+import { campMark, challengeOf, sideWordKey, tableChips, tableNumberOf } from '../c2Helpers';
 
-const sub = (role: string): StatementSubscription => ({ role }) as unknown as StatementSubscription;
 const stmt = (settings: Record<string, unknown>): Statement =>
 	({ statementSettings: settings }) as unknown as Statement;
 
@@ -29,13 +22,6 @@ describe('campMark', () => {
 	it('gives each camp its own shape', () => {
 		const marks = new Set([campMark('a'), campMark('center'), campMark('b'), campMark(undefined)]);
 		expect(marks.size).toBe(4);
-	});
-});
-
-describe('rosterCount', () => {
-	it('does not count the teacher', () => {
-		expect(rosterCount([sub('admin'), sub('member'), sub('member')])).toBe(2);
-		expect(rosterCount([])).toBe(0);
 	});
 });
 
@@ -64,8 +50,13 @@ describe('tableChips', () => {
 	const roster = [
 		{ userId: 'u1', camp: 'a', user: { displayName: 'Dana' } },
 		{ userId: 'u2', camp: 'b', user: { displayName: 'Omer' } },
-	] as unknown as StatementSubscription[];
-	const options = { myUid: 'u2', labelOf: (n: string) => n, fallbackName: '?' };
+	] as unknown as RosterSubscription[];
+	const options = {
+		myUid: 'u2',
+		myCamp: 'b' as const,
+		labelOf: (n: string) => n,
+		fallbackName: '?',
+	};
 
 	it('puts me first, then tablemates, then no-device members', () => {
 		const chips = tableChips(table, roster, options);
@@ -73,6 +64,13 @@ describe('tableChips', () => {
 		expect(chips[0].isMe).toBe(true);
 		expect(chips[0].mark).toBe(campMark('b'));
 		expect(chips[2].mark).toBe(campMark(undefined));
+	});
+
+	it("shows only my own side: a tablemate's side is private, even if a legacy doc still has one", () => {
+		const chips = tableChips(table, roster, options);
+		expect(chips[1].camp).toBeUndefined();
+		expect(chips[1].mark).toBe(campMark(undefined));
+		expect(tableChips(table, roster, { ...options, myCamp: undefined })[0].camp).toBeUndefined();
 	});
 	it('falls back to a placeholder name and handles no table', () => {
 		expect(tableChips(table, [], options)[0].name).toBe('?');
