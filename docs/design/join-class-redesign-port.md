@@ -16,7 +16,7 @@ build them into the app. This file is the contract for that port.
 |---|---|---|
 | student | `/c/:code`, `/seat/:seatCode`, `/m/:mid` | **night** (dark starry sky, glossy "jelly" controls, Fredoka) |
 | teacher | `/`, `/login`, `/t`, `/t/plans/**`, `/t/:mid`, `/t/:mid/plan`, `/t/:mid/registration`, `/t/:mid/table/:n` | **mulberry** (porcelain ground, white cards, hairlines, mulberry primary, Fredoka headings, Assistant body) |
-| projector | `/t/:mid/screen`, and the "show here" full-screen mode opened from the console | **unchanged**: today's look, pixel for pixel. It has not been redesigned yet. |
+| projector | `/t/:mid/screen` (also what "show here" opens) | **night at room scale** (added 2026-11-23, lane 4): the student look, sized for the back row. Mockups: `Projector-1-Join.dc.html`, `Projector-2-Vote.dc.html`. Until lane 4 lands it keeps today's look. |
 
 - The **solid** look (`<html data-look="solid">`, see `src/lib/lessonLook.ts`) keeps rendering the
   old CSS untouched on every surface. It is the escape hatch.
@@ -129,6 +129,17 @@ Anything else the mockups show that the app does not have: skip it and list it i
    `components/Evaluation.ts`, `components/SideSlider.ts`, student parts of `MainHub.ts`).
 3. **Teacher** (`styles/mulberry/**`, `views/teacher/**` except `views/teacher/projector/**`,
    `views/FrontDoor.ts`, the login view).
+
+4. **Projector** (after lane 2, alone): `styles/night-projector/**`, `views/teacher/projector/**`,
+   `views/teacher/TeacherProjector.ts`. Scope
+   `$night-projector: ':root:not([data-look="solid"]):not([data-high-contrast])[data-surface="projector"]'`.
+   It reuses the night tokens (the token block is extended to this scope) and scales the depth
+   for the room: lips 12px, panel frames 6px, card radius 48px, headline at least 6vh, nothing
+   small. Only two states were drawn (the join gate and the vote results); the other steps
+   (opening, side, tables, table talk, proposals against the gate, summary) extend the same
+   language. The video letterbox stays black and a QR stays black on white. The teacher never
+   sees which side a student chose, and neither does the room beyond what the projector shows
+   today: no new data on any screen.
 
 Lanes 2 and 3 run at the same time in the same worktree and must not touch each other's files or
 any shared file (`global.scss`, `index.ts`, `_tokens.scss`, `_fonts.scss`, `_components.scss`,
