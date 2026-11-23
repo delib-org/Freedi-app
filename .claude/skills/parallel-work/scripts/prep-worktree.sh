@@ -2,7 +2,7 @@
 # Make an agent's fresh git worktree runnable: env files, .firebaserc, node_modules,
 # built shared packages. Mirrors the "GIT WORKTREE SETUP" section of CLAUDE.md.
 #
-# Usage:  prep-worktree.sh <worktree-path> [--apps=agora,mc,sign,studio,join,odyssey,admin,flow,chat,functions]
+# Usage:  prep-worktree.sh <worktree-path> [--apps=agora,mc,sign,studio,join,join-class,odyssey,admin,flow,chat,functions]
 #
 # Safe to re-run: skips what is already there. Missing optional env files only warn.
 
@@ -33,7 +33,7 @@ echo "==> Env files + .firebaserc"
 for f in .firebaserc env/.env.dev env/.env.prod env/.env.test env/.env.local \
          env/.env.development.local functions/.env \
          apps/mass-consensus/.env.local apps/mass-consensus/.env apps/mass-consensus/.env.staging apps/mass-consensus/.env.vercel \
-         apps/sign/.env.local apps/agora/.env.development.local apps/studio/.env.local apps/join/.env.local \
+         apps/sign/.env.local apps/agora/.env.development.local apps/studio/.env.local apps/join/.env.local apps/join-class/.env.local apps/join-class/.env.development.local \
          apps/odyssey/.env.local apps/admin/.env.local; do
   copy_if "$f"
 done
@@ -64,7 +64,7 @@ if [[ -n "$APPS" ]]; then
       functions) install_app functions ;;
       mc|mass-consensus) install_app apps/mass-consensus ;;
       main|root) ;;  # root already installed
-      agora|sign|studio|join|odyssey|admin|flow|chat) install_app "apps/$app" ;;
+      agora|sign|studio|join|join-class|odyssey|admin|flow|chat) install_app "apps/$app" ;;
       *) echo "    (skip) unknown app '$app'" ;;
     esac
   done

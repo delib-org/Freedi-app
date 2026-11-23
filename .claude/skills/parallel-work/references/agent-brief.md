@@ -33,7 +33,7 @@ Source: <"Tal's message" | absolute path to the plan/spec file + the section to 
 ## Scope
 Apps touched: <agora | mass-consensus (MC) | functions | studio | main app | ...>
 Likely files (from triage, verify before editing): <paths>
-Branch: feat/<slug>   (create it from dev in your worktree: `git checkout -b feat/<slug>`)
+Branch: feat/<slug>   (create it FROM dev: `git checkout -b feat/<slug> dev`; Agent-tool worktrees start from main, not dev, so never branch from HEAD)
 Out of scope: <what NOT to touch>
 
 ## First: make the worktree runnable
