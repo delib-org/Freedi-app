@@ -206,3 +206,9 @@
     border: 1px solid currentColor;
   }
 }
+
+// The "Question:" label in front of the table's question.
+#{$mulberry} .table-card__question-label {
+  color: var(--mul-ink-soft);
+  font-weight: 700;
+}

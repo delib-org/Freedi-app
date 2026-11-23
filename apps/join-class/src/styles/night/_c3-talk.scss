@@ -203,3 +203,17 @@
   animation: none;
   opacity: 0.7;
 }
+
+// ---- the question on the table (QuestionCard.ts) ---------------------------------------
+// A white glossy reading card on the sky, the question in the card ink.
+#{$night} .question-card {
+  padding: 20px 18px 24px;
+  @include night-card(var(--night-radius-button));
+}
+
+#{$night} .question-card__text {
+  color: var(--night-card-ink);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.25;
+}

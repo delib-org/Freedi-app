@@ -91,3 +91,27 @@
   font-size: rs(44);
   font-weight: 600;
 }
+
+// ---- the question each table is on (table talk) -----------------------------------------
+#{$wall} .projector-table-questions__heading {
+  margin: 0 0 rs(24);
+  color: var(--night-on-sky);
+  font-size: rs(48);
+  font-weight: 700;
+  text-shadow: var(--night-text-shadow);
+}
+
+#{$wall} .projector-table-questions__list {
+  gap: rs(20);
+}
+
+#{$wall} .projector-table-questions__row {
+  gap: rs(24);
+  padding: rs(20) rs(32) rs(26);
+  font-size: rs(44);
+  @include room-card(var(--night-radius-button));
+}
+
+#{$wall} .projector-table-questions__table {
+  color: var(--night-card-primary-ink);
+}

@@ -6,6 +6,11 @@ import type { Statement } from '@freedi/shared-types';
 vi.mock('@/lib/i18n', () => ({
 	t: (key: string, vars?: Record<string, unknown>) => (vars ? `${key}:${String(vars.n)}` : key),
 }));
+// Dev's per-table question section reads texts through firebase; this step never does.
+vi.mock('@/lib/classroom/questionText', () => ({
+	getFetchedQuestionTexts: () => new Map<string, string>(),
+	requestQuestionText: vi.fn(),
+}));
 vi.mock('@/lib/classroom/api', () => ({
 	classRegistrationSupport: vi.fn(),
 	classSupportBySide: vi.fn(() => new Promise(() => undefined)),
