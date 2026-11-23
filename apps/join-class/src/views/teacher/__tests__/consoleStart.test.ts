@@ -185,4 +185,19 @@ describe('ChallengeDialog', () => {
 		expect(mounted.root.querySelector('#question-dialog-title')).toBeNull();
 		mounted.unmount();
 	});
+
+	it('does not re-open when the console is left and entered again', () => {
+		const view = (): m.Children =>
+			m(ChallengeDialog, { mainId: 'm1', candidates, hasChallenge: false });
+		const first = mountSmoke(view);
+		openChallengeDialog();
+		first.redraw();
+		expect(first.root.querySelector('#question-dialog-title')).not.toBeNull();
+		first.unmount();
+
+		const second = mountSmoke(view);
+		expect(second.root.querySelector('#question-dialog-title')).toBeNull();
+		expect(second.root.querySelector('dialog')?.hasAttribute('open')).toBe(false);
+		second.unmount();
+	});
 });

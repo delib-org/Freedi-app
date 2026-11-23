@@ -41,6 +41,10 @@ export const ChallengeDialog: m.Component<ChallengeDialogAttrs> = {
 	oncreate(vnode) {
 		sync(vnode.dom as HTMLDialogElement, open && !vnode.attrs.hasChallenge);
 	},
+	onremove() {
+		// leaving the console (e.g. to the plan) must not re-open the dialog on return
+		open = false;
+	},
 	onupdate(vnode) {
 		if (vnode.attrs.hasChallenge) open = false;
 		sync(vnode.dom as HTMLDialogElement, open);
