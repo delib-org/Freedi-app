@@ -1,0 +1,376 @@
+// =============================================================================
+// Night — the student surface's tokens (redesign port spec, section 3).
+// A starry sky, glossy "jelly" controls, Fredoka. The same in light and dark OS
+// mode: $night out-specifies the dark-scheme, playful-theme and
+// `prefers-contrast: more` blocks of _tokens.scss, and this block restates every
+// token those blocks set, so none of their values leaks in. The ratios in the
+// comments were computed from the compiled CSS (WCAG 2.1 relative luminance).
+//
+// Two parts:
+//   1. --night-*  the look's own tokens, with the mockup's values
+//      (docs/design/class-redesign/Student-*.dc.html). Rules in night/** use
+//      these.
+//   2. the existing token names, remapped, so a component nobody restyled still
+//      draws in the look: light text on deep-indigo surfaces, like the dark
+//      scheme. Every text/surface pair below is >= 4.5:1 on the three surfaces
+//      (--paper, --paper-soft, --paper-deep); a comment "a / b" gives the ratio
+//      on --paper and on --paper-deep.
+//
+// Raw colours are allowed in this file only.
+//
+// Two things the remap cannot do, for the student lane to know:
+//   - On the open sky, text is --night-on-sky (white) and nothing else: no tint
+//     reaches 4.5:1 on the lower sky. Today's page shells (.frame, .door,
+//     .main-hub) paint --paper over the sky, so nothing sits on it yet.
+//   - A light reading card inside the dark page needs the ink tokens flipped
+//     for everything in it: `@include night-on-card` (_look-scope.scss).
+// =============================================================================
+
+@use '../look-scope' as *;
+
+#{$night} {
+  color-scheme: dark;
+
+  // ===========================================================================
+  // 1. The look's tokens
+  // ===========================================================================
+
+  // ---- sky: the page ground, fixed ----
+  --night-sky-top: #170a45;
+  --night-sky-upper: #25197f;
+  --night-sky-lower: #2f3fc4;
+  --night-sky-bottom: #3a62e0;
+  --night-star: #ffffff;
+  --night-star-soft: #bfd4ff;
+  --night-sky: linear-gradient(
+    180deg,
+    var(--night-sky-top) 0%,
+    var(--night-sky-upper) 40%,
+    var(--night-sky-lower) 75%,
+    var(--night-sky-bottom) 100%
+  );
+  --night-stars:
+    radial-gradient(circle at 9% 6%, var(--night-star) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 31% 13%, var(--night-star-soft) 0 1px, transparent 2px),
+    radial-gradient(circle at 58% 4%, var(--night-star) 0 1px, transparent 2px),
+    radial-gradient(circle at 83% 17%, var(--night-star) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 94% 33%, var(--night-star-soft) 0 1px, transparent 2px),
+    radial-gradient(circle at 5% 36%, var(--night-star) 0 1px, transparent 2px),
+    radial-gradient(circle at 47% 41%, var(--night-star-soft) 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 52%, var(--night-star) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 16% 58%, var(--night-star) 0 1px, transparent 2px),
+    radial-gradient(circle at 90% 68%, var(--night-star-soft) 0 1px, transparent 2px),
+    radial-gradient(circle at 38% 74%, var(--night-star) 0 1px, transparent 2px);
+
+  // ---- ground zone: the bottom action zone ----
+  --night-ground: #1a1670;
+  --night-ridge: #2a3bb5;
+  --night-crystal: #3fd8ff;
+  --night-crystal-light: #a5f0ff;
+
+  // ---- text on the sky: white only ----
+  --night-on-sky: #ffffff;
+  --night-text-shadow: 0 2px 0 rgba(10, 5, 50, 0.45);
+  --night-text-shadow-strong: 0 3px 0 rgba(10, 5, 50, 0.5);
+
+  // ---- card: the reading surfaces ----
+  --night-card-top: #ffffff;
+  --night-card-bottom: #e6e3ff;
+  --night-card: linear-gradient(180deg, var(--night-card-top), var(--night-card-bottom));
+  --night-card-lip: #6f66d9;
+  --night-card-ink: #1e1560;        // 12.6:1 on the card's lilac foot ✓ AAA
+  --night-card-ink-soft: #4b4580;   // 6.8:1 on the lilac foot ✓
+  --night-card-line: #9c92e8;       // a divider inside a card (decorative, 2.7:1)
+  --night-input-border: #7a70f0;    // 3.9:1 on white ✓ non-text
+  --night-placeholder: #5a548f;     // 6.8:1 on white ✓
+  --night-radio-border: #5b4fe0;
+  // Coloured text on a card (derived: the mockups colour text on the sky only).
+  --night-card-primary-ink: #9e3f00;  // 5.3:1 on the lilac foot ✓
+  --night-card-good-ink: #176b1e;     // 5.3:1 ✓
+  --night-card-bad-ink: #a81c40;      // 5.8:1 ✓
+
+  // ---- panel: the lesson's question ----
+  --night-panel-top: #3d2bb0;
+  --night-panel-bottom: #24167a;
+  --night-panel: linear-gradient(180deg, var(--night-panel-top), var(--night-panel-bottom));
+  --night-panel-frame: #5fe0ff;
+  --night-panel-glow: rgba(95, 224, 255, 0.45);
+  --night-panel-ring: rgba(95, 224, 255, 0.18);
+  --night-panel-gloss: rgba(255, 255, 255, 0.18);
+
+  // ---- jelly: shared depth ----
+  --night-gloss: rgba(255, 255, 255, 0.65);
+  --night-gloss-soft: rgba(255, 255, 255, 0.45);
+  --night-lip: 6px;
+  --night-lip-sm: 4px;
+  --night-lip-xs: 3px;
+  --night-drop: 0 14px 24px rgba(10, 5, 50, 0.45);
+  --night-drop-sm: 0 10px 16px rgba(10, 5, 50, 0.4);
+
+  // ---- primary: orange jelly (main action, active pill, chosen card) ----
+  --night-primary-light: #ffe066;
+  --night-primary-mid: #ffb627;
+  --night-primary-deep: #ff8a1f;
+  --night-primary: linear-gradient(
+    180deg,
+    var(--night-primary-light),
+    var(--night-primary-mid) 55%,
+    var(--night-primary-deep)
+  );
+  --night-primary-pill: linear-gradient(180deg, var(--night-primary-light), var(--night-primary-mid));
+  --night-primary-lip: #b84a00;
+  --night-primary-shade: rgba(196, 82, 0, 0.55);
+  --night-primary-ink: #4a1a00;     // 8.3:1 on the mid orange, 6.2:1 on the deep ✓
+
+  // ---- secondary: white jelly ----
+  --night-secondary: var(--night-card);
+  --night-secondary-lip: var(--night-card-lip);
+  --night-secondary-ink: var(--night-card-ink);
+
+  // ---- cyan jelly: language button, table badge ----
+  --night-cyan-light: #8cebff;
+  --night-cyan-mid: #2fb8ff;
+  --night-cyan-deep: #1c86f2;
+  --night-cyan: linear-gradient(
+    180deg,
+    var(--night-cyan-light),
+    var(--night-cyan-mid) 60%,
+    var(--night-cyan-deep)
+  );
+  --night-cyan-lip: #0e4fb0;
+  --night-cyan-shade: rgba(14, 79, 176, 0.5);
+  --night-cyan-ink: #0b2a7a;         // 5.8:1 on the mid cyan ✓
+
+  // ---- green jelly: a done / agreed pill ----
+  --night-green: linear-gradient(180deg, #c9ff9a, #5ed12f 60%, #35a82a);
+  --night-green-lip: #1f7a22;
+
+  // ---- blue counter: "N in the class" ----
+  --night-counter: linear-gradient(180deg, #3b8cff, #1e4fd6);
+  --night-counter-lip: #122f94;
+
+  // ---- progress: the lesson steps bar, result bars ----
+  --night-track: #dde6ff;
+  --night-track-inset: inset 0 3px 5px rgba(20, 10, 80, 0.45);
+  --night-track-lip: 0 3px 0 rgba(10, 5, 50, 0.35);
+  --night-stripe-a: #ffd23f;
+  --night-stripe-b: #ff9a1f;
+  --night-well: #2b2180;            // a track on a dark panel
+  --night-well-inset: inset 0 2px 4px rgba(10, 5, 50, 0.6);
+  --night-stripe-violet-a: #d9c8ff;
+  --night-stripe-violet-b: #a47bff;
+  --night-slider-track: linear-gradient(180deg, #b9c6f2, #dde6ff 45%);
+
+  // ---- orbs: classmates, rating faces, side marks ----
+  --night-orb-magenta: radial-gradient(circle at 35% 28%, #ffb9f5 0%, #e22bd0 48%, #8b12a8 100%);
+  --night-orb-magenta-glow: rgba(226, 43, 208, 0.75);
+  --night-orb-magenta-shade: rgba(60, 0, 80, 0.35);
+  --night-orb-cyan: radial-gradient(circle at 35% 28%, #d4faff 0%, #2fc8ff 48%, #1267d6 100%);
+  --night-orb-cyan-glow: rgba(47, 200, 255, 0.75);
+  --night-orb-cyan-shade: rgba(0, 40, 120, 0.35);
+  --night-orb-orange: radial-gradient(circle at 35% 28%, #fff1a8 0%, #ffa51f 48%, #d9580a 100%);
+  --night-orb-orange-glow: rgba(255, 165, 31, 0.75);
+  --night-orb-orange-shade: rgba(120, 40, 0, 0.35);
+  --night-orb-green: radial-gradient(circle at 35% 28%, #e0ffb8 0%, #5ed12f 48%, #1f8f2e 100%);
+  --night-orb-green-glow: rgba(94, 209, 47, 0.75);
+  --night-orb-green-shade: rgba(0, 70, 20, 0.35);
+  --night-orb-violet: radial-gradient(circle at 35% 28%, #e4d6ff 0%, #9a6bff 48%, #4b22c9 100%);
+  --night-orb-violet-glow: rgba(154, 107, 255, 0.8);
+  --night-orb-violet-shade: rgba(30, 0, 110, 0.35);
+  // The two ends of the rating scale that are not in the classmate set.
+  --night-orb-red: radial-gradient(circle at 35% 28%, #ffc2cf 0%, #ff5e7a 48%, #c2244a 100%);
+  --night-orb-red-glow: rgba(255, 94, 122, 0.75);
+  --night-orb-red-shade: rgba(110, 0, 30, 0.35);
+  --night-orb-neutral: radial-gradient(circle at 35% 28%, #ffffff 0%, #d9d4ff 48%, #9c92e8 100%);
+  --night-orb-neutral-glow: rgba(156, 146, 232, 0.7);
+  --night-orb-neutral-shade: rgba(50, 40, 140, 0.35);
+  // The gold coin: the counter's person mark, side B, the winner's star.
+  --night-orb-gold: radial-gradient(circle at 35% 30%, #fff3a6 0%, #ffc533 50%, #f08a0c 100%);
+  --night-orb-gold-glow: rgba(255, 197, 51, 0.85);
+  --night-orb-gold-shade: rgba(160, 70, 0, 0.5);
+  --night-orb-gold-ink: #7a3300;
+  --night-orb-ink: #1a0b4b;         // faces and letters on every orb
+
+  // ---- side marks: the shape carries the side, not the hue alone ----
+  --night-side-a: var(--night-orb-cyan);        // circle
+  --night-side-b: var(--night-orb-gold);        // rounded square
+  --night-side-middle: var(--night-orb-violet); // diamond
+
+  // ---- shape ----
+  --night-radius-input: 18px;
+  --night-radius-button: 24px;
+  --night-radius-card: 28px;
+  --night-radius-pill: 999px;
+
+  // ---- type: Fredoka for everything (no Assistant text on this surface) ----
+  --night-font:
+    'Fredoka', ui-rounded, 'Arial Hebrew', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  // ===========================================================================
+  // 2. The existing tokens, remapped
+  // ===========================================================================
+
+  // ---- surface: three deep-indigo steps ----
+  --paper: var(--night-ground);           // page shell, the pinned action zone
+  --paper-soft: var(--night-panel-bottom); // card resting
+  --paper-deep: var(--night-panel-top);   // input / hovered card / track
+  --paper-line: var(--night-card-lip);    // hairline: 3.1:1 on a card; 4.6:1 as text on white
+  --paper-elevated: #4a38c4;
+
+  // ---- ink: white. On the inverted screens (background: --ink) the text is
+  // --paper, which is 15:1 on white. ----
+  --ink: var(--night-on-sky);        // 15.1:1 on --paper, 9.7:1 on --paper-deep ✓ AAA
+  --ink-muted: var(--night-on-sky);
+  --ink-soft: var(--night-on-sky);
+  --ink-faint: var(--night-track);   // 12.1:1 on --paper
+
+  // ---- primary (terra) -> orange jelly. Fills carry --text-inverse. ----
+  --terra-50: rgba(255, 182, 39, 0.16);
+  --terra-100: rgba(255, 182, 39, 0.28);
+  --terra-300: var(--night-primary-lip);    // read on white (the inverted screens): 5.2:1 ✓
+  --terra-500: #ffc533;                     // 9.5:1 / 6.1:1 ✓
+  --terra-600: var(--night-primary-mid);    // 8.6:1 / 5.5:1 ✓
+  --terra-700: var(--night-primary-light);  // hover fill, strong text: 11.6:1 / 7.4:1 ✓
+
+  // ---- agree (teal) -> green ----
+  --teal-50: rgba(94, 209, 47, 0.16);
+  --teal-100: rgba(94, 209, 47, 0.28);
+  --teal-500: #7de052;      // 9.1:1 / 5.8:1 ✓
+  --teal-600: #5ed12f;      // 7.6:1 / 4.9:1 ✓
+  --teal-700: #e0ffb8;      // 13.8:1 / 8.8:1 ✓ AAA
+
+  // ---- organizer (indigo) -> cyan ----
+  --indigo-50: rgba(47, 184, 255, 0.16);
+  --indigo-100: rgba(47, 184, 255, 0.28);
+  --indigo-300: var(--night-cyan-mid);
+  --indigo-500: var(--night-cyan-light);  // 11.1:1 / 7.1:1 ✓
+  --indigo-600: #5ccbff;                  // 8.2:1 / 5.3:1 ✓
+  --indigo-700: #d4faff;                  // 13.5:1 / 8.7:1 ✓
+
+  // ---- feedback ----
+  --warning: var(--night-stripe-a);  // 10.4:1 / 6.7:1 ✓
+  --danger: #ffc2cf;                 // the red orb's light: 10:1 / 6.4:1 ✓
+  --success: var(--teal-600);
+  --warning-50: rgba(255, 210, 63, 0.18);
+  --danger-50: rgba(255, 94, 122, 0.2);
+
+  // ---- semantic aliases (restated: `prefers-contrast: more` pins some) ----
+  --color-primary: var(--terra-500);
+  --color-primary-light: var(--terra-300);
+  --color-primary-dark: var(--terra-700);
+  --color-accent-2: var(--teal-500);
+  --color-agree-medium: var(--teal-500);
+  --color-agree-strong: var(--teal-700);
+  --color-organizer: var(--indigo-500);
+  --color-organizer-strong: var(--indigo-700);
+
+  // ---- backgrounds ----
+  --bg-page: var(--paper);
+  --bg-card: var(--paper-soft);
+  --bg-card-hover: var(--paper-deep);
+  --bg-subtle: var(--paper-soft);
+  --bg-overlay: rgba(10, 5, 50, 0.72);
+  --bg-chat-mine: rgba(255, 182, 39, 0.2);
+  --bg-chat-other: var(--paper-soft);
+  --bg-input: var(--paper-deep);
+  --surface-card: var(--bg-card);
+  --surface-input: var(--bg-input);
+
+  // ---- text ----
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-muted);
+  --text-muted: var(--ink-soft);
+  --text-inverse: var(--night-orb-ink); // on every fill above: 8.9:1 or more ✓ AAA
+
+  // ---- borders ----
+  --border-light: var(--paper-line);
+  --border-medium: #9f97ff;          // a control's edge: 6:1 on --paper, 3.8:1 on --paper-deep ✓
+  --border-strong: var(--ink);
+  --border-card: var(--paper-line);  // no elevation on a dark page: a card needs its line
+
+  // ---- shape: 18 inputs, 24 buttons, 28 cards ----
+  --radius-xs: 6px;
+  --radius-sm: 12px;
+  --radius-md: var(--night-radius-input);
+  --radius-lg: var(--night-radius-button);
+  --radius-xl: var(--night-radius-card);
+
+  // ---- shadows ----
+  --shadow-xs: 0 2px 0 rgba(10, 5, 50, 0.35);
+  --shadow-sm: 0 6px 12px rgba(10, 5, 50, 0.35);
+  --shadow-md: var(--night-drop-sm);
+  --shadow-lg: var(--night-drop);
+  --shadow-inset: inset 0 3px 0 var(--night-panel-gloss);
+  --shadow-stamp: 3px 3px 0 var(--night-card-lip);
+  --shadow-up: 0 -6px 16px rgba(10, 5, 50, 0.4);
+
+  // ---- focus: 3:1 or more on every night surface and on the sky ----
+  --focus-ring-color: var(--night-primary-light);
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 3px;
+
+  // ---- type ----
+  --font-display: var(--night-font);
+  --font-body: var(--night-font);
+  --font-family: var(--night-font);
+  // Fredoka stops at 700; the game layer asks for 700 / 800.
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --tracking-tight: 0;
+
+  // ---- game layer: the pressed-key edges become jelly lips ----
+  --edge-size: var(--night-lip);
+  --edge-size-sm: var(--night-lip-xs);
+  --edge-size-lg: 10px;
+  --edge-terra: var(--night-primary-lip);
+  --edge-teal: #1f8f2e;
+  --edge-teal-strong: var(--night-green-lip);
+  --edge-indigo: var(--night-cyan-lip);
+  --edge-side-a: var(--night-primary-lip);
+  --edge-ink: var(--night-card-lip);       // under a white piece
+  --edge-face: rgba(10, 5, 50, 0.5);
+  --card-line: var(--night-card-lip);
+  --edge-control: var(--border-medium);    // a control's border + lip
+  --edge-deep: var(--night-card-lip);
+  --teal-ink: var(--teal-700);
+  // Win stamps draw --ink (white) on --sun, so the sun is the deep orange here.
+  --sun: var(--night-primary-lip);         // white on it 5.2:1 ✓
+  --sun-edge: var(--night-primary-deep);
+  --sun-soft: rgba(255, 182, 39, 0.18);
+}
+
+// `prefers-contrast: more`: the look stays, text goes to 7:1 and controls show
+// their edge. The deep step leaves the ramp (inputs and tracks sit on the card
+// step, told apart by their border), which lifts every accent above 7:1.
+@include more-contrast {
+  #{$night} {
+    --paper-deep: var(--night-panel-bottom);
+    --border-medium: var(--night-track);
+    --border-card: var(--border-medium);
+    --card-line: var(--border-medium);
+    --edge-control: var(--border-medium);
+    --edge-deep: var(--border-medium);
+    --indigo-600: var(--night-cyan-light);
+    --terra-600: var(--night-primary-light);
+    --warning: var(--night-primary-light);
+    --night-card-ink-soft: var(--night-card-ink);
+    --night-card-line: var(--night-input-border);
+    --focus-ring-width: 4px;
+    --focus-ring-offset: 4px;
+  }
+}
+
+// ---- page ground: the fixed sky ----------------------------------------------
+// The base rule keeps `background-attachment: fixed`; --bg-page (the ground
+// zone's indigo) stays as the colour under the gradient.
+#{$night} body {
+  background-image: var(--night-stars), var(--night-sky);
+}
+
+// Forced colours drop decorative backgrounds, as the base rule does.
+@media (forced-colors: active) {
+  #{$night} body {
+    background-image: none;
+  }
+}

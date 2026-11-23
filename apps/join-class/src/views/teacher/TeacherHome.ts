@@ -1,5 +1,6 @@
 import m from 'mithril';
 import '@/styles/teacher.scss';
+import '@/styles/mulberry/index.scss';
 import { getRandomUID } from '@freedi/shared-types';
 import { getUserState, signOut } from '@/lib/user';
 import { getLang, t } from '@/lib/i18n';

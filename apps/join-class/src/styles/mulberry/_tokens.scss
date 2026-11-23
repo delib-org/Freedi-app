@@ -1,0 +1,345 @@
+// =============================================================================
+// Mulberry — the teacher surface's tokens (redesign port spec, section 3).
+// A porcelain ground, white cards, hairlines, a mulberry primary; Fredoka for
+// titles and Assistant for the rest.
+//
+// Two parts, as in night/_tokens.scss:
+//   1. --mul-*  the look's own tokens, with the mockup's values
+//      (docs/design/class-redesign/Teacher-*.dc.html). Rules in mulberry/** use
+//      these.
+//   2. the existing token names, remapped onto --mul-*, so a component nobody
+//      restyled still draws in the look. The remap restates every token the
+//      dark-scheme, playful-theme and `prefers-contrast: more` blocks of
+//      _tokens.scss set, so none of their values leaks in.
+//
+// Because part 2 only points at --mul-*, the dark scheme below changes the
+// look by redefining part 1 alone.
+//
+// Raw colours are allowed in this file only. The ratios in the comments were
+// computed from the compiled CSS (WCAG 2.1 relative luminance).
+// =============================================================================
+
+@use '../look-scope' as *;
+
+#{$mulberry} {
+  // ===========================================================================
+  // 1. The look's tokens
+  // ===========================================================================
+
+  // ---- surfaces ----
+  --mul-ground: #faf7fb;          // porcelain: the page
+  --mul-surface: #ffffff;         // cards, inputs
+  --mul-blush: #f4eaf2;           // a quiet fill: the code pill, chips
+  --mul-well: #efe7f1;            // a recessed fill: segmented-control tracks
+  --mul-line: #e7deea;            // hairline: card borders, dividers
+  --mul-border-soft: #cdbfd3;     // a chip's outline
+  --mul-border-control: #9b8aa3;  // a control's edge: 3.2:1 on the surface ✓ non-text
+  --mul-border-control-tint: #8f7d98; // the same edge on the blush or the well: 3.1:1 there ✓
+
+  // ---- ink ----
+  --mul-ink: #2a1f3d;             // 14.5:1 on the ground ✓ AAA
+  --mul-ink-mid: #5e5369;         // 6.8:1 on the ground, 6.1:1 on the blush ✓
+  --mul-ink-soft: #6b6079;        // 5.5:1 on the ground, 5.0:1 on the blush ✓
+  --mul-ink-faint: #9b8aa3;       // 3.2:1: large or non-essential labels only
+
+  // ---- primary: mulberry ----
+  --mul-primary: #7b2d6e;         // white on it 8.6:1 ✓ AAA
+  --mul-primary-hover: #652459;
+  --mul-primary-pressed: #4f1b45;
+  --mul-on-primary: #ffffff;
+  --mul-primary-text: #7b2d6e;    // the quiet button and links: 8.1:1 on the ground ✓ AAA
+  --mul-primary-tint: #e9d3e4;
+  --mul-primary-line: #c795bd;
+
+  // ---- ready: sage ----
+  --mul-ready-ink: #2f6b55;       // 5.4:1 on its tint; white on it 6.3:1 ✓
+  --mul-ready-bg: #e4f0ea;
+  --mul-ready-line: #cbe3d8;
+  --mul-ready-strong: #24543f;    // white on it 8.7:1 ✓ AAA
+
+  // ---- attention: apricot ----
+  --mul-attention-ink: #8a4a12;   // 5.9:1 on its tint ✓
+  --mul-attention-bg: #fdebd8;
+  --mul-attention-solid: #f2a65a; // a filled mark
+  --mul-on-attention: #2a1f3d;    // text on that mark, in both schemes: 7.6:1 ✓
+  --mul-stamp: #f2a65a;           // a win stamp's fill: --ink is drawn on it
+  --mul-attention-line: #d9853b;  // the edge of a card that needs the teacher
+  --mul-attention-surface: #fffbf6;
+
+  // ---- danger ----
+  --mul-danger-ink: #a12b3a;      // 6.2:1 on its tint; white on it 7.2:1 ✓
+  --mul-danger-bg: #fbe9ec;
+
+  // ---- side marks: the shape carries the side, not the hue alone ----
+  --mul-side-a: #3d3bf3;          // circle
+  --mul-on-side-a: #ffffff;       // the letter on it: 6.7:1 ✓
+  --mul-side-a-tint: #ecebfe;
+  --mul-side-a-line: #9f9ef9;
+  --mul-side-a-strong: #2826a6;
+  --mul-side-b: #ffb020;          // rounded square
+  --mul-on-side-b: #2a1f3d;       // the letter on it, in both schemes: 8.4:1 ✓
+  --mul-side-middle: var(--mul-ink); // the outline of the diamond
+
+  // ---- depth ----
+  --mul-scrim: rgba(42, 31, 61, 0.56);
+  --mul-shadow-xs: 0 1px 2px rgba(42, 31, 61, 0.05);
+  --mul-shadow: 0 1px 2px rgba(42, 31, 61, 0.05), 0 8px 24px rgba(42, 31, 61, 0.06);
+  --mul-shadow-raised: 0 2px 4px rgba(42, 31, 61, 0.06), 0 12px 32px rgba(42, 31, 61, 0.1);
+  --mul-shadow-overlay: 0 4px 12px rgba(42, 31, 61, 0.08), 0 24px 56px rgba(42, 31, 61, 0.16);
+  --mul-shadow-up: 0 -2px 8px rgba(42, 31, 61, 0.08);
+  --mul-shadow-primary: 0 1px 2px rgba(42, 31, 61, 0.12), 0 8px 20px rgba(123, 45, 110, 0.24);
+  --mul-shadow-attention: 0 1px 2px rgba(42, 31, 61, 0.05), 0 8px 24px rgba(138, 74, 18, 0.1);
+
+  // ---- shape and size ----
+  --mul-radius-control: 12px;
+  --mul-radius-card: 18px;
+  --mul-radius-pill: 999px;
+  --mul-control-height: 48px;
+
+  // ---- type: Fredoka 600/700 for page titles, card titles and the lesson's
+  // question; --font-body (Assistant) for the rest ----
+  --mul-font-display:
+    'Fredoka', 'Assistant', ui-rounded, 'Arial Hebrew', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  // ===========================================================================
+  // 2. The existing tokens, remapped
+  // ===========================================================================
+
+  // ---- surface ----
+  --paper: var(--mul-ground);
+  --paper-soft: var(--mul-blush);
+  --paper-deep: var(--mul-well);
+  --paper-line: var(--mul-line);
+  --paper-elevated: var(--mul-surface);
+
+  // ---- ink ----
+  --ink: var(--mul-ink);
+  --ink-muted: var(--mul-ink-mid);
+  --ink-soft: var(--mul-ink-soft);
+  --ink-faint: var(--mul-ink-faint);
+
+  // ---- primary (terra) -> mulberry ----
+  --terra-50: var(--mul-blush);
+  --terra-100: var(--mul-primary-tint);
+  --terra-300: var(--mul-primary-line);
+  --terra-500: var(--mul-primary-text);
+  --terra-600: var(--mul-primary);
+  --terra-700: var(--mul-primary-hover);
+
+  // ---- agree (teal) -> sage ----
+  --teal-50: var(--mul-ready-bg);
+  --teal-100: var(--mul-ready-line);
+  --teal-500: var(--mul-ready-ink);
+  --teal-600: var(--mul-ready-ink);
+  --teal-700: var(--mul-ready-strong);
+
+  // ---- organizer (indigo) -> the side-A blue ----
+  --indigo-50: var(--mul-side-a-tint);
+  --indigo-100: var(--mul-side-a-line);
+  --indigo-300: var(--mul-side-a-line);
+  --indigo-500: var(--mul-side-a);
+  --indigo-600: var(--mul-side-a);
+  --indigo-700: var(--mul-side-a-strong);
+
+  // ---- feedback ----
+  --warning: var(--mul-attention-ink);
+  --danger: var(--mul-danger-ink);
+  --success: var(--teal-600);
+  --warning-50: var(--mul-attention-bg);
+  --danger-50: var(--mul-danger-bg);
+
+  // ---- semantic aliases (restated: `prefers-contrast: more` pins some) ----
+  --color-primary: var(--terra-500);
+  --color-primary-light: var(--terra-300);
+  --color-primary-dark: var(--terra-700);
+  --color-accent-2: var(--teal-500);
+  --color-agree-medium: var(--teal-500);
+  --color-agree-strong: var(--teal-700);
+  --color-organizer: var(--indigo-500);
+  --color-organizer-strong: var(--indigo-700);
+
+  // ---- backgrounds ----
+  --bg-page: var(--paper);
+  --bg-card: var(--mul-surface);
+  --bg-card-hover: var(--paper-soft);
+  --bg-subtle: var(--paper-soft);
+  --bg-overlay: var(--mul-scrim);
+  --bg-chat-mine: var(--terra-50);
+  --bg-chat-other: var(--mul-surface);
+  --bg-input: var(--mul-surface);
+  --surface-card: var(--bg-card);
+  --surface-input: var(--bg-input);
+
+  // ---- text ----
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-muted);
+  --text-muted: var(--ink-soft);
+  --text-inverse: var(--mul-on-primary);
+
+  // ---- borders ----
+  --border-light: var(--paper-line);
+  --border-medium: var(--mul-border-control-tint); // an unrestyled control may sit on the blush
+  --border-strong: var(--ink);
+  --border-card: var(--mul-line);   // a card is a white surface with one hairline
+
+  // ---- shape: 12 controls, 18 cards ----
+  --radius-md: var(--mul-radius-control);
+  --radius-lg: var(--mul-radius-card);
+  --radius-xl: 24px;
+
+  // ---- shadows: soft, plum-tinted ----
+  --shadow-xs: var(--mul-shadow-xs);
+  --shadow-sm: var(--mul-shadow);
+  --shadow-md: var(--mul-shadow-raised);
+  --shadow-lg: var(--mul-shadow-overlay);
+  --shadow-stamp: 3px 3px 0 var(--ink);
+  --shadow-up: var(--mul-shadow-up);
+
+  // ---- focus ----
+  --focus-ring-color: var(--mul-primary-text);
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 3px;
+
+  // ---- type ----
+  --font-display: var(--mul-font-display);
+  // Fredoka stops at 700 and the mockups draw Assistant at 600 / 700; the game
+  // layer asks for 700 / 800.
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  // ---- game layer: no pressed-key edges here; borders and soft shadows carry
+  // the shape (the teacher lane adds the shadows) ----
+  --edge-size: 0px;
+  --edge-size-sm: 0px;
+  --edge-size-lg: 0px;
+  --edge-terra: var(--mul-primary-pressed);
+  --edge-teal: var(--teal-600);
+  --edge-teal-strong: var(--teal-700);
+  --edge-indigo: var(--indigo-700);
+  --edge-side-a: var(--terra-700);
+  --edge-ink: var(--ink-muted);
+  --edge-face: rgba(42, 31, 61, 0.2);
+  --card-line: var(--mul-line);
+  --edge-control: var(--mul-border-control-tint);
+  --edge-deep: var(--mul-border-soft);
+  --teal-ink: var(--teal-700);
+  --sun: var(--mul-stamp);
+  --sun-edge: var(--mul-attention-line);
+  --sun-soft: var(--mul-attention-bg);
+}
+
+// =============================================================================
+// Dark scheme — DERIVED, NOT DESIGNED. The mockups are light only; this keeps
+// OS dark mode working with the same hues on a deep aubergine ground, at AA.
+// Unreviewed by design.
+//
+// The accents turn light and the text on a fill turns dark (--mul-on-primary).
+// The existing CSS uses one token both as text on a surface and as a fill
+// under --text-inverse; on a dark ground only a light accent with dark text on
+// it keeps both uses at 4.5:1.
+// =============================================================================
+@media (prefers-color-scheme: dark) {
+  #{$mulberry} {
+    --mul-ground: #17111f;
+    --mul-surface: #221a2e;
+    --mul-blush: #2e2240;
+    --mul-well: #2a2038;
+    --mul-line: #3b2f4c;
+    --mul-border-soft: #54466a;
+    --mul-border-control: #8e7f9b;  // 4.5:1 on the surface ✓ non-text
+    --mul-border-control-tint: #8e7f9b;
+
+    --mul-ink: #f3ecf7;             // 14.5:1 on the surface ✓ AAA
+    --mul-ink-mid: #d0c5db;         // 8.9:1 on the blush ✓ AAA
+    --mul-ink-soft: #b8abc6;        // 7.7:1 on the surface, 6.8:1 on the blush ✓
+    --mul-ink-faint: #8e7f9b;
+
+    --mul-primary: #d48ac6;         // 6.6:1 on the surface; --mul-on-primary on it 7.2:1 ✓
+    --mul-primary-hover: #e3a2d6;
+    --mul-primary-pressed: #c274b3;
+    --mul-on-primary: #1f0f24;
+    --mul-primary-text: #e3a2d6;    // 8.3:1 on the surface ✓ AAA
+    --mul-primary-tint: #432a47;
+    --mul-primary-line: #7a4a75;
+
+    --mul-ready-ink: #9adbc0;       // 7.8:1 on its tint ✓
+    --mul-ready-bg: #1c3a30;
+    --mul-ready-line: #2c5646;
+    --mul-ready-strong: #b9e8d4;
+
+    --mul-attention-ink: #f5c08a;   // 8.3:1 on its tint ✓
+    --mul-attention-bg: #3d2a17;
+    --mul-attention-line: #c97a34;
+    --mul-attention-surface: #2b2119;
+    --mul-stamp: #8a4a12;           // --ink on it 5.9:1 ✓
+
+    --mul-danger-ink: #f3a0ab;      // 7.4:1 on its tint ✓
+    --mul-danger-bg: #3f1d24;
+
+    --mul-side-a: #8a88ff;          // 5.6:1 on the surface ✓
+    --mul-on-side-a: #1f0f24;       // 6.1:1 ✓
+    --mul-side-a-tint: #25234f;
+    --mul-side-a-line: #4a48a8;
+    --mul-side-a-strong: #a9a8ff;
+
+    --mul-scrim: rgba(0, 0, 0, 0.72);
+    --mul-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --mul-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --mul-shadow-raised: 0 2px 4px rgba(0, 0, 0, 0.45), 0 12px 32px rgba(0, 0, 0, 0.45);
+    --mul-shadow-overlay: 0 4px 12px rgba(0, 0, 0, 0.5), 0 24px 56px rgba(0, 0, 0, 0.55);
+    --mul-shadow-up: 0 -2px 8px rgba(0, 0, 0, 0.5);
+    --mul-shadow-primary: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 20px rgba(212, 138, 198, 0.22);
+    --mul-shadow-attention: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(201, 122, 52, 0.18);
+
+    --edge-face: rgba(0, 0, 0, 0.55);
+  }
+}
+
+// `prefers-contrast: more`: the look stays, text goes to 7:1 and every control
+// and card shows its edge.
+@media (prefers-contrast: more) and (prefers-color-scheme: light) {
+  #{$mulberry} {
+    --mul-ink-mid: #4d425e;         // 8.8:1 on the ground, 7.9:1 on the blush ✓
+    --mul-ink-soft: #4d425e;
+    --mul-ink-faint: #6b6079;
+    --mul-line: #9b8aa3;
+    --mul-border-soft: #6b6079;
+    --mul-border-control: #5e5369;
+    --mul-border-control-tint: #5e5369;
+    --mul-side-a: #2826a6;          // 9:1 or more on every surface ✓
+    --mul-ready-ink: #1f4d3c;       // 8.2:1 on its tint ✓
+    --mul-attention-ink: #6b380c;   // 8.2:1 ✓
+    --mul-danger-ink: #7e1f2b;      // 8.5:1 ✓
+  }
+}
+
+@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+  #{$mulberry} {
+    --mul-ink-mid: #e2d9ea;
+    --mul-ink-soft: #d0c5db;        // 8.9:1 on the blush ✓
+    --mul-ink-faint: #b8abc6;
+    --mul-line: #8e7f9b;
+    --mul-border-soft: #b8abc6;
+    --mul-border-control: #d0c5db;
+    --mul-border-control-tint: #d0c5db;
+    --mul-primary: #e3a2d6;
+    --mul-primary-hover: #efbbe4;
+    --mul-side-a: #b5b4ff;
+    --mul-side-a-strong: #c6c5ff;
+  }
+}
+
+@include more-contrast {
+  #{$mulberry} {
+    --focus-ring-width: 4px;
+    --focus-ring-offset: 4px;
+  }
+}
+
+// ---- page ground: porcelain, no paper grain ------------------------------------
+// --bg-page is the ground; this switches off the two radial gradients the base
+// body rule draws over it.
+#{$mulberry} body {
+  background-image: none;
+}

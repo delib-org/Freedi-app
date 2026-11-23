@@ -5,12 +5,19 @@ import { initSentry, setSentryUser } from '@/lib/sentry';
 import { afterLoad } from '@/lib/deferWork';
 import { initAuth, waitForAuthReady, isGoogleSignedIn, getUserState } from '@/lib/user';
 import { initI18n } from '@/lib/i18n';
+import { applySurfaceOf } from '@/lib/surface';
+import { withSurface } from '@/lib/surfaceRoutes';
 import { mountAccessibilityWidget } from '@/components/AccessibilityWidget';
 import { MainHub } from '@/views/MainHub';
 import { Login } from '@/views/Login';
 import { ClassCode } from '@/views/ClassCode';
 import { FrontDoor } from '@/views/FrontDoor';
 import { SeatExchange } from '@/views/seat/SeatExchange';
+
+// The surface of the URL being opened, before anything renders: the page ground
+// and the look's font are then already right under the boot splash. Every later
+// route change is handled by `withSurface` below.
+applySurfaceOf(document.documentElement, window.location.pathname);
 
 initSentry();
 // Kicked off before the i18n await below so the auth handshake and the locale
@@ -93,7 +100,7 @@ i18nReady.then(() => {
 
 	if (!root) return;
 
-	m.route(root, '/', {
+	const routes: m.RouteDefs = {
 		'/c/:code': ClassCode,
 		// The personal link from Tables' "My table": exchanged for the seat, then replaced by /m/:mid.
 		'/seat/:seatCode': SeatExchange,
@@ -125,5 +132,8 @@ i18nReady.then(() => {
 		'/t/:mid/screen': teacherRoute(() =>
 			import('@/views/teacher/TeacherProjector').then((mod) => mod.TeacherProjector),
 		),
-	});
+	};
+
+	// Each route draws on its surface (`<html data-surface>`, lib/surface.ts).
+	m.route(root, '/', withSurface(routes, document.documentElement));
 });

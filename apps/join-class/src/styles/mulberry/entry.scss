@@ -1,0 +1,9 @@
+// Mulberry — the teacher surface's look, the part that ships in the entry CSS
+// (docs/design/join-class-redesign-port.md). This folder is owned by the
+// TEACHER lane (spec section 7.3).
+//
+// In the entry through global.scss, because the front door (/) and /login are
+// in the entry bundle: the tokens and the page ground, plus whatever those two
+// screens need. Keep it small, every student downloads it. Everything else of
+// the look goes in index.scss, which loads with the lazy teacher routes.
+@use 'tokens';

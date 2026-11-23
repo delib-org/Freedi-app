@@ -1,0 +1,125 @@
+// =============================================================================
+// The two looks of the redesign (docs/design/join-class-redesign-port.md):
+// their scope prefixes and the helpers the night/ and mulberry/ partials share.
+//
+// A look is a surface plus the game look. The surface is `data-surface` on
+// <html>, set per route by lib/surface.ts; the solid look (`data-look="solid"`,
+// lib/lessonLook.ts) and the user's high-contrast mode (`data-high-contrast`)
+// switch both looks off, so those two and the projector surface render the old
+// stylesheets untouched.
+//
+//   night     the student surface   src/styles/night/**     (student lane)
+//   mulberry  the teacher surface   src/styles/mulberry/**  (teacher lane)
+//
+// Every rule of a look sits under its prefix. The prefix is four classes of
+// specificity, two more than $game (_game-scope.scss), so a look's rule wins
+// over the base and the game layer whatever order the lazy stylesheets load in,
+// and its tokens win over the dark-scheme, playful-theme and
+// `prefers-contrast: more` token blocks of _tokens.scss.
+//
+// Colours live in night/_tokens.scss and mulberry/_tokens.scss only. The mixins
+// here take them as arguments (`var(--night-…)`), never as literals.
+//
+//   @use '../look-scope' as *;
+//   #{$night} .btn--primary { @include jelly(var(--night-primary), var(--night-primary-lip)); }
+// =============================================================================
+
+@use 'sass:list';
+
+$night: ':root:not([data-look="solid"]):not([data-high-contrast])[data-surface="student"]';
+$mulberry: ':root:not([data-look="solid"]):not([data-high-contrast])[data-surface="teacher"]';
+
+/// A glossy "jelly" surface: the fill, a highlight along its top, a solid lip
+/// under it and a soft drop shadow below the lip.
+/// $shade is the darker band inside the bottom edge (the big buttons have one);
+/// pass `null` for $drop on small pieces that sit flat (pills, badges).
+@mixin jelly(
+  $fill,
+  $lip,
+  $lip-size: var(--night-lip),
+  $shade: null,
+  $drop: var(--night-drop),
+  $gloss: var(--night-gloss)
+) {
+  $layers: (inset 0 3px 0 $gloss,);
+  @if $shade {
+    $layers: list.append($layers, inset 0 -5px 0 $shade, comma);
+  }
+  $layers: list.append($layers, 0 $lip-size 0 $lip, comma);
+  @if $drop {
+    $layers: list.append($layers, $drop, comma);
+  }
+
+  background: $fill;
+  box-shadow: $layers;
+}
+
+/// The press of a jelly control: it sinks onto its lip. Pair with `jelly`,
+/// with the same $lip-size. Transform only, so it is cheap; `no-motion` in
+/// _game-scope.scss turns the transition off under reduced motion.
+@mixin jelly-press($lip-size: var(--night-lip), $gloss: var(--night-gloss)) {
+  transform: translateY($lip-size);
+  box-shadow: inset 0 3px 0 $gloss;
+}
+
+/// A halo: a faint ring hugging the element and a blurred glow around it.
+/// The question panel uses both; an orb passes `null` for $ring.
+@mixin glow($color, $ring: null, $blur: 28px, $ring-size: 4px) {
+  $layers: (0 0 $blur $color,);
+  @if $ring {
+    $layers: list.join((0 0 0 $ring-size $ring,), $layers, comma);
+  }
+
+  box-shadow: $layers;
+}
+
+/// Diagonal candy stripes, for a progress fill. Static: nothing moves.
+@mixin striped-fill($a, $b, $band: 7px) {
+  background: repeating-linear-gradient(-45deg, $a 0 $band, $b $band ($band * 2));
+}
+
+/// Inside a light reading card (--night-card) the page's light-on-dark tokens
+/// flip to the card's dark-on-light values, for the card and everything in it.
+/// The aliases are restated because a custom property that was resolved on
+/// <html> is inherited as its value, not as its `var()`.
+@mixin night-on-card {
+  --ink: var(--night-card-ink);
+  --ink-muted: var(--night-card-ink-soft);
+  --ink-soft: var(--night-card-ink-soft);
+  --ink-faint: var(--night-placeholder);
+  --text-primary: var(--night-card-ink);
+  --text-secondary: var(--night-card-ink-soft);
+  --text-muted: var(--night-card-ink-soft);
+  --paper-line: var(--night-card-line);
+  --border-light: var(--night-card-line);
+  --border-medium: var(--night-input-border);
+  --border-strong: var(--night-card-ink);
+  --bg-input: var(--night-card-top);
+  --surface-input: var(--night-card-top);
+  --terra-500: var(--night-card-primary-ink);
+  --terra-700: var(--night-card-primary-ink);
+  --teal-500: var(--night-card-good-ink);
+  --teal-700: var(--night-card-good-ink);
+  --teal-ink: var(--night-card-good-ink);
+  --danger: var(--night-card-bad-ink);
+  --warning: var(--night-card-primary-ink);
+  --focus-ring-color: var(--night-input-border);
+  color: var(--night-card-ink);
+}
+
+/// A hairline card of the mulberry look: white surface, one line, soft shadow.
+@mixin hairline-card($shadow: var(--mul-shadow)) {
+  background: var(--mul-surface);
+  border: 1px solid var(--mul-line);
+  border-radius: var(--mul-radius-card);
+  box-shadow: $shadow;
+}
+
+/// `prefers-contrast: more` keeps a look on (the manual high-contrast mode is
+/// what switches it off), so a look states what it changes there: text at 7:1
+/// and a visible border on every control.
+@mixin more-contrast {
+  @media (prefers-contrast: more) {
+    @content;
+  }
+}

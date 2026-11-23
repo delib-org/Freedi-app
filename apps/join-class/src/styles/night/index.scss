@@ -1,0 +1,6 @@
+// Night — the student surface's look (docs/design/join-class-redesign-port.md).
+// This folder is owned by the STUDENT lane (spec section 7.2).
+//
+// In the student entry CSS, through global.scss. Every rule sits under $night
+// (../_look-scope.scss); the screens' own partials are added below the tokens.
+@use 'tokens';
