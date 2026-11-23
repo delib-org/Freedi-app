@@ -5,7 +5,7 @@ import {
 	StatementSubscription,
 	getStatementSubscriptionId,
 } from '@freedi/shared-types';
-import { db, doc, collection, query, where } from '../firebase';
+import { db, doc, collection, query, where, getDocFromServer } from '../firebase';
 import type { Unsubscribe } from '../firebase';
 import { CLASS_LISTENER_KINDS, resilientOnSnapshot } from '../resilientListeners';
 import { getUserState } from '../user';
@@ -27,12 +27,14 @@ export function listenTable(
 	tableId: string,
 	onData: (table: ClassTable | null) => void,
 	onError?: (error: Error) => void,
+	confirmDenied?: () => Promise<boolean>,
 ): Unsubscribe {
 	return resilientOnSnapshot(
 		CLASS_LISTENER_KINDS.table,
 		doc(db, CLASS_TABLES_COLLECTION, tableId),
 		(snap) => onData(snap.exists() ? (snap.data() as ClassTable) : null),
 		(err) => onError?.(err),
+		confirmDenied ? { confirmDenied: () => confirmDenied() } : undefined,
 	);
 }
 
@@ -76,6 +78,25 @@ export function listenMySubscription(
 		(snap) => onData(snap.exists() ? (snap.data() as StatementSubscription) : null),
 		(err) => onError?.(err),
 	);
+}
+
+/**
+ * The signed-in user's workspace subscription, read once from the server (not the cache).
+ * Rejects when it cannot be read.
+ */
+export async function readMySubscriptionFromServer(
+	mainId: string,
+): Promise<StatementSubscription | null> {
+	const uid = getUserState().user?.uid;
+	if (!uid) return null;
+	const subId = getStatementSubscriptionId(mainId, { uid } as Parameters<
+		typeof getStatementSubscriptionId
+	>[1]);
+	const snap = await getDocFromServer(
+		doc(db, Collections.statementsSubscribe, subId ?? `${uid}--${mainId}`),
+	);
+
+	return snap.exists() ? (snap.data() as StatementSubscription) : null;
 }
 
 /**

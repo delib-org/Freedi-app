@@ -135,4 +135,74 @@ describe('resilientOnSnapshot', () => {
 		forceResyncAllListeners();
 		expect(listeners).toHaveLength(1);
 	});
+
+	describe('confirmDenied', () => {
+		const denied = { code: 'permission-denied' };
+
+		it('stops quietly, with no error log, callback or retry, when the denial is expected', async () => {
+			const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+			const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+			const onError = vi.fn();
+			const before = _registrySize();
+			const unsub = resilientOnSnapshot('test', fakeQuery, () => undefined, onError, {
+				confirmDenied: () => Promise.resolve(true),
+			});
+			active.push(unsub);
+
+			lastListener().onError(denied);
+			await vi.advanceTimersByTimeAsync(60_000);
+
+			expect(errors).not.toHaveBeenCalled();
+			expect(info).toHaveBeenCalled();
+			expect(onError).not.toHaveBeenCalled();
+			expect(listeners).toHaveLength(1);
+			expect(_registrySize()).toBe(before);
+			errors.mockRestore();
+			info.mockRestore();
+		});
+
+		it('takes the normal error path when the denial is not expected', async () => {
+			const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+			const onError = vi.fn();
+			const unsub = resilientOnSnapshot('test', fakeQuery, () => undefined, onError, {
+				confirmDenied: () => Promise.resolve(false),
+			});
+			active.push(unsub);
+
+			lastListener().onError(denied);
+			await vi.advanceTimersByTimeAsync(1_000);
+
+			expect(onError).toHaveBeenCalledTimes(1);
+			expect(errors).toHaveBeenCalledTimes(1);
+			expect(listeners).toHaveLength(2);
+			errors.mockRestore();
+		});
+
+		it('takes the normal error path when the check itself fails', async () => {
+			const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+			const unsub = resilientOnSnapshot('test', fakeQuery, () => undefined, undefined, {
+				confirmDenied: () => Promise.reject(new Error('offline')),
+			});
+			active.push(unsub);
+
+			lastListener().onError(denied);
+			await vi.advanceTimersByTimeAsync(1_000);
+
+			expect(errors).toHaveBeenCalledTimes(1);
+			expect(listeners).toHaveLength(2);
+			errors.mockRestore();
+		});
+
+		it('does not ask about other error codes', () => {
+			vi.spyOn(console, 'error').mockImplementation(() => undefined);
+			const confirmDenied = vi.fn(() => Promise.resolve(true));
+			const unsub = resilientOnSnapshot('test', fakeQuery, () => undefined, undefined, {
+				confirmDenied,
+			});
+			active.push(unsub);
+
+			lastListener().onError({ code: 'unavailable' });
+			expect(confirmDenied).not.toHaveBeenCalled();
+		});
+	});
 });

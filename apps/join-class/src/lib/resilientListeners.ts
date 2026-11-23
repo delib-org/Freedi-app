@@ -58,6 +58,8 @@ interface ListenerEntry {
 	target: AnyTarget;
 	onNext: AnyNext;
 	onError?: (err: FirestoreError) => void;
+	/** Asks the caller whether a permission-denied is expected (see ResilientOptions). */
+	confirmDenied?: (err: FirestoreError) => Promise<boolean>;
 	/** Live unsubscribe for the current inner listener, null while backing off. */
 	inner: Unsubscribe | null;
 	retryCount: number;
@@ -95,9 +97,44 @@ function startInner(entry: ListenerEntry): void {
 	);
 }
 
+function retireListener(entry: ListenerEntry): void {
+	entry.active = false;
+	registry.delete(entry);
+	if (entry.retryTimer !== null) {
+		clearTimeout(entry.retryTimer);
+		entry.retryTimer = null;
+	}
+	if (entry.inner) {
+		entry.inner();
+		entry.inner = null;
+	}
+}
+
 function handleStreamError(entry: ListenerEntry, err: FirestoreError): void {
 	// The stream is dead after an error — drop the stale unsubscribe.
 	entry.inner = null;
+
+	if (err.code === 'permission-denied' && entry.confirmDenied && entry.active) {
+		entry
+			.confirmDenied(err)
+			.catch(() => false)
+			.then((expected) => {
+				if (!entry.active) return;
+				if (expected) {
+					console.info(`[resilientListeners] "${entry.name}" closed to me as expected — stopped`);
+					retireListener(entry);
+
+					return;
+				}
+				reportAndRetry(entry, err);
+			});
+
+		return;
+	}
+	reportAndRetry(entry, err);
+}
+
+function reportAndRetry(entry: ListenerEntry, err: FirestoreError): void {
 	entry.onError?.(err);
 
 	if (!entry.active) return;
@@ -169,17 +206,29 @@ function installWakeHooks(): void {
 	});
 }
 
+export interface ResilientOptions {
+	/**
+	 * Asked once when the stream fails with permission-denied. Resolve true when the denial is
+	 * expected (e.g. the student was moved off this table): the listener is then stopped quietly,
+	 * with an info line only: no error callback, no retry. Resolve false (or reject) to take the
+	 * normal path: onError, error log, backoff retries.
+	 */
+	confirmDenied?: (err: FirestoreError) => Promise<boolean>;
+}
+
 export function resilientOnSnapshot(
 	name: string,
 	target: DocumentReference<DocumentData>,
 	onNext: (snap: DocumentSnapshot<DocumentData>) => void,
 	onError?: (err: FirestoreError) => void,
+	options?: ResilientOptions,
 ): Unsubscribe;
 export function resilientOnSnapshot(
 	name: string,
 	target: Query<DocumentData>,
 	onNext: (snap: QuerySnapshot<DocumentData>) => void,
 	onError?: (err: FirestoreError) => void,
+	options?: ResilientOptions,
 ): Unsubscribe;
 export function resilientOnSnapshot(
 	name: string,
@@ -188,6 +237,7 @@ export function resilientOnSnapshot(
 		| ((snap: DocumentSnapshot<DocumentData>) => void)
 		| ((snap: QuerySnapshot<DocumentData>) => void),
 	onError?: (err: FirestoreError) => void,
+	options?: ResilientOptions,
 ): Unsubscribe {
 	installWakeHooks();
 
@@ -196,6 +246,7 @@ export function resilientOnSnapshot(
 		target,
 		onNext: onNext as AnyNext,
 		onError,
+		confirmDenied: options?.confirmDenied,
 		inner: null,
 		retryCount: 0,
 		retryTimer: null,
@@ -204,18 +255,7 @@ export function resilientOnSnapshot(
 	registry.add(entry);
 	startInner(entry);
 
-	return () => {
-		entry.active = false;
-		registry.delete(entry);
-		if (entry.retryTimer !== null) {
-			clearTimeout(entry.retryTimer);
-			entry.retryTimer = null;
-		}
-		if (entry.inner) {
-			entry.inner();
-			entry.inner = null;
-		}
-	};
+	return () => retireListener(entry);
 }
 
 /** Listener names of the classroom (lib/classroom/listeners.ts); they appear in the logs. */
