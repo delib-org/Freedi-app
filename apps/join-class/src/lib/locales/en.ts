@@ -488,7 +488,7 @@ const en: Record<string, string> = {
 	'console.reset_vote': 'Reset the vote',
 	'console.reset_vote_title': 'Reset the vote?',
 	'console.reset_vote_body':
-		'All votes are deleted and the decision is cancelled. The class votes again on the same proposals. This cannot be undone.',
+		'All votes are deleted and the decision is cancelled. The vote goes back to not opened: open it again, or move on to the summary without a vote. This cannot be undone.',
 	'console.reset_yes': 'Reset',
 	'console.hide_vote_closed': 'This proposal is on a closed vote. Reset the vote first',
 	'lesson.back_line': "We're back at: {{name}}",

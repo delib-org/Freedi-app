@@ -485,7 +485,7 @@ const nl: Record<string, string> = {
 	'console.reset_vote': 'Stemming resetten',
 	'console.reset_vote_title': 'Stemming resetten?',
 	'console.reset_vote_body':
-		'Alle stemmen worden verwijderd en het besluit vervalt. De klas stemt opnieuw over dezelfde voorstellen. Dit kan niet ongedaan worden gemaakt.',
+		'Alle stemmen worden verwijderd en het besluit vervalt. De stemming staat weer op niet geopend: je kunt hem opnieuw openen of zonder stemming naar de samenvatting gaan. Dit kan niet ongedaan worden gemaakt.',
 	'console.reset_yes': 'Resetten',
 	'console.hide_vote_closed':
 		'Dit voorstel staat in een gesloten stemming. Reset eerst de stemming',

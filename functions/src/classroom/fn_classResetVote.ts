@@ -14,7 +14,7 @@ import { toHttpsError } from './classroomErrors';
 import { assertLessonNotEnded } from './lessonStatusGuard';
 import { commitInBatches } from './batchedWrites';
 import type { BatchedWrite } from './batchedWrites';
-import { assertVoteResettable, ballotAfterReset } from './resetVoteLogic';
+import { assertVoteResettable } from './resetVoteLogic';
 
 /**
  * `classResetVote` (admin, IA 18.4): the class votes again on the same
@@ -22,7 +22,8 @@ import { assertVoteResettable, ballotAfterReset } from './resetVoteLogic';
  * a deleted vote), so the tally is cleared here, last, once the votes are gone.
  *
  * Order: 1) votes, 2) isVoted on options, 3) decisionSupport on subscriptions,
- * 4) the challenge question (selections, topVotedOption, ballot close). A failed
+ * 4) the challenge question (selections, topVotedOption, the ballot itself: the vote goes
+ * back to "not opened"). A failed
  * run can be repeated: every step is a plain delete or clear.
  */
 
@@ -89,7 +90,8 @@ export async function resetVote(
 		.update({
 			selections: FieldValue.delete(),
 			topVotedOption: FieldValue.delete(),
-			'statementSettings.ballot': ballotAfterReset(ballot),
+			// No ballot = the vote is not opened (Trello VFeJLdnh): the teacher opens it again or skips it.
+			'statementSettings.ballot': FieldValue.delete(),
 			lastUpdate: now,
 		});
 

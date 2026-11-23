@@ -1,7 +1,7 @@
 import { resetTurns } from '../fn_classResetTurns';
 import { resetVote } from '../fn_classResetVote';
 import { setItemHidden } from '../fn_classSetItemHidden';
-import { ballotAfterReset, isVoteRunning } from '../resetVoteLogic';
+import { isVoteRunning } from '../resetVoteLogic';
 import { selectTablesToReset } from '../resetTurnsLogic';
 import { chunk } from '../batchedWrites';
 import { ClassroomError } from '../classroomErrors';
@@ -166,7 +166,7 @@ describe('classResetVote', () => {
 		expect(fake.list('votes')).toHaveLength(3);
 	});
 
-	it('clears votes, tally, decision and decisionSupport; keeps candidates', async () => {
+	it('clears votes, tally, decision and decisionSupport; the vote goes back to not opened', async () => {
 		const fake = new FakeFirestore();
 		seedVote(fake, 7, { candidateIds: ['p1', 'p2'], frozenAt: 10, closedAt: 20, decisionId: 'p1' });
 		const res = await resetVote(fake.asFirestore(), TEACHER, { mainId: MAIN });
@@ -176,11 +176,8 @@ describe('classResetVote', () => {
 		const ch = fake.read('statements/ch') ?? {};
 		expect(ch).not.toHaveProperty('selections');
 		expect(ch).not.toHaveProperty('topVotedOption');
-		expect(ch.statementSettings).toMatchObject({
-			ballot: { candidateIds: ['p1', 'p2'], frozenAt: 10 },
-		});
-		expect((ch.statementSettings as { ballot: object }).ballot).not.toHaveProperty('closedAt');
-		expect((ch.statementSettings as { ballot: object }).ballot).not.toHaveProperty('decisionId');
+		expect(ch.statementSettings).toMatchObject({ classRole: 'challenge' });
+		expect(ch.statementSettings).not.toHaveProperty('ballot');
 		expect(fake.read(`statementsSubscribe/s1--${MAIN}`)).not.toHaveProperty('decisionSupport');
 		expect(fake.read(`statementsSubscribe/s2--${MAIN}`)).toMatchObject({ role: 'member' });
 	});
@@ -199,8 +196,7 @@ describe('classResetVote', () => {
 		await expect(resetVote(fake.asFirestore(), TEACHER, { mainId: MAIN })).resolves.toEqual({
 			votesDeleted: 2,
 		});
-		const ballot = (fake.read('statements/ch')?.statementSettings as { ballot: object }).ballot;
-		expect(ballot).not.toHaveProperty('pausedAt');
+		expect(fake.read('statements/ch')?.statementSettings).not.toHaveProperty('ballot');
 	});
 
 	it('still refuses a running (open, unpaused) ballot on the Vote step', async () => {
@@ -210,16 +206,7 @@ describe('classResetVote', () => {
 	});
 
 	it('pure helpers', () => {
-		expect(
-			ballotAfterReset({ candidateIds: ['a'], frozenAt: 1, closedAt: 2, decisionId: 'a' }),
-		).toEqual({
-			candidateIds: ['a'],
-			frozenAt: 1,
-		});
 		expect(isVoteRunning(undefined, null)).toBe(false);
-		expect(ballotAfterReset({ candidateIds: ['a'], frozenAt: 1, pausedAt: 3 })).not.toHaveProperty(
-			'pausedAt',
-		);
 	});
 });
 
