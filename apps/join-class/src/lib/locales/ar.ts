@@ -87,7 +87,7 @@ const ar: Record<string, string> = {
 	'plan.loading': 'جارٍ تحميل الخطة',
 	'plan.challenge.title': 'السؤال المطلوب حلّه',
 	'plan.challenge.help': 'السؤال الرئيسي في الدرس. يقترح الصف كله حلولًا له ويصوّت عليها.',
-	'plan.challenge.placeholder': 'اكتبوا السؤال المطلوب حلّه',
+	'plan.challenge.placeholder': 'ما السؤال الذي يحتاج الطلاب إلى حلّه؟',
 	'plan.details.title': 'تفاصيل الدرس',
 	'plan.details.side_question': 'السؤال الذي يجيب عنه الطلاب على المؤشر',
 	'plan.details.claim_a': 'ماذا يقول الجانب الأول',

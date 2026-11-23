@@ -87,7 +87,7 @@ const he: Record<string, string> = {
 	'plan.challenge.title': 'השאלה לפתרון',
 	'plan.challenge.help':
 		'השאלה שכל הכיתה עובדת עליה בשיעור. התלמידים מציעים לה פתרונות ומצביעים עליהם.',
-	'plan.challenge.placeholder': 'כתבו את השאלה לפתרון',
+	'plan.challenge.placeholder': 'מה השאלה שהתלמידים צריכים לפתור?',
 	'plan.details.title': 'פרטי השיעור',
 	'plan.details.side_question': 'השאלה שהתלמידים עונים עליה בסרגל',
 	'plan.details.claim_a': 'מה אומר הצד הראשון',

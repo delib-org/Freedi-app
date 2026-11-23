@@ -85,7 +85,7 @@ const nl: Record<string, string> = {
 	'plan.challenge.title': 'De vraag om op te lossen',
 	'plan.challenge.help':
 		'De hoofdvraag van de les. De hele klas bedenkt er oplossingen voor en stemt erover.',
-	'plan.challenge.placeholder': 'Schrijf de vraag om op te lossen',
+	'plan.challenge.placeholder': 'Welke vraag moeten de leerlingen oplossen?',
 	'plan.details.title': 'Details van de les',
 	'plan.details.side_question': 'De vraag die leerlingen op de schuifbalk beantwoorden',
 	'plan.details.claim_a': 'Wat de eerste kant zegt',

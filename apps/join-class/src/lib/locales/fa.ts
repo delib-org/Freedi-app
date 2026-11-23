@@ -77,7 +77,7 @@ const fa: Record<string, string> = {
 	'plan.challenge.title': 'پرسشِ مورد حل',
 	'plan.challenge.help':
 		'پرسش اصلی درس. کل کلاس برایش راه‌حل پیشنهاد می‌دهد و به آن‌ها رأی می‌دهد.',
-	'plan.challenge.placeholder': 'پرسشِ مورد حل را بنویسید',
+	'plan.challenge.placeholder': 'دانش‌آموزان باید کدام پرسش را حل کنند؟',
 	'plan.details.title': 'جزئیات درس',
 	'plan.details.side_question': 'پرسشی که دانش‌آموزان روی نوار لغزنده به آن پاسخ می‌دهند',
 	'plan.details.claim_a': 'سمت اول چه می‌گوید',
