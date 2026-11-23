@@ -14,6 +14,7 @@ const challenge: Record<string, string> = {
 	'console.challenge.missing_live':
 		'Die Schüler im Vorschlagsschritt sehen keine Frage zur Lösung. Wähle eine der Fragen der Stunde oder schreibe eine neue.',
 	'console.challenge.pick_label': 'Frage zur Lösung wählen',
+	'console.challenge.start_game': 'Spiel starten',
 	'console.challenge.use': 'Diese Frage verwenden',
 	'console.challenge.or_write': 'Oder eine neue Frage schreiben',
 	'console.challenge.write_label': 'Frage zur Lösung schreiben',

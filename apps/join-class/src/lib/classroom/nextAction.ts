@@ -169,7 +169,7 @@ export function nextActionFor(input: NextActionInput): NextActionSpec {
 		return { kind: 'backToPlan', labelKey: 'teacher.back.to' };
 	}
 	if (!input.hasChallenge) {
-		return { kind: 'pickQuestion', labelKey: 'console.challenge.pick_label' };
+		return { kind: 'pickQuestion', labelKey: 'console.challenge.start_game' };
 	}
 	switch (input.stepKey) {
 		case 'tables':

@@ -151,6 +151,8 @@ interface QRShareAttrs {
 	afterLabel?: m.Children;
 	/** One more button, first in the row (the join card's "Show on the projector"). */
 	extraAction?: m.Children;
+	/** Calm the row: Share becomes secondary and Copy link tertiary, leaving the screen's one primary button alone. */
+	quietActions?: boolean;
 }
 
 // `m.trust(svg)` requires re-running on every URL change. Each render computes
@@ -206,7 +208,7 @@ export const QRShare: m.Component<QRShareAttrs> = {
 					vnode.attrs.extraAction ?? null,
 					canShare
 						? m(
-								'button.btn.btn--primary.btn--small.qr-share__action',
+								`button.btn.btn--${vnode.attrs.quietActions ? 'secondary' : 'primary'}.btn--small.qr-share__action`,
 								{
 									type: 'button',
 									onclick: () => void shareLink(url, title),
@@ -215,7 +217,7 @@ export const QRShare: m.Component<QRShareAttrs> = {
 							)
 						: null,
 					m(
-						'button.btn.btn--secondary.btn--small.qr-share__action',
+						`button.btn.btn--${vnode.attrs.quietActions ? 'tertiary' : 'secondary'}.btn--small.qr-share__action`,
 						{
 							type: 'button',
 							onclick: () => void copyLink(url),

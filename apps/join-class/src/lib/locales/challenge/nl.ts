@@ -13,6 +13,7 @@ const challenge: Record<string, string> = {
 	'console.challenge.missing_live':
 		'Leerlingen in de voorstelstap zien geen vraag om op te lossen. Kies een van de vragen van de les of schrijf een nieuwe.',
 	'console.challenge.pick_label': 'Kies de vraag om op te lossen',
+	'console.challenge.start_game': 'Start het spel',
 	'console.challenge.use': 'Gebruik deze vraag',
 	'console.challenge.or_write': 'Of schrijf een nieuwe vraag',
 	'console.challenge.write_label': 'Schrijf de vraag om op te lossen',
