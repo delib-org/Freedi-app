@@ -148,6 +148,14 @@ $tap: 44px;
   font-weight: var(--font-weight-bold);
 }
 
+// why "everyone voted" is not reached: students counted at the vote who sit at no table
+.class-status__note {
+  padding-inline: var(--space-sm);
+  color: var(--ink-muted);
+  border: 1px solid currentcolor;
+  border-radius: var(--radius-full);
+}
+
 // a ready class is said in words and a check mark, never in colour alone
 .class-status__ready {
   display: inline-flex;

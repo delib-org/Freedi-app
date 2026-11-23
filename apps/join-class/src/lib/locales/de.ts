@@ -491,7 +491,7 @@ const de: Record<string, string> = {
 	'console.reset_vote': 'Abstimmung zurücksetzen',
 	'console.reset_vote_title': 'Abstimmung zurücksetzen?',
 	'console.reset_vote_body':
-		'Alle Stimmen werden gelöscht und die Entscheidung wird aufgehoben. Die Klasse stimmt erneut über dieselben Vorschläge ab. Das lässt sich nicht rückgängig machen.',
+		'Alle Stimmen werden gelöscht und die Entscheidung wird aufgehoben. Die Abstimmung ist wieder nicht eröffnet: Du kannst sie erneut öffnen oder ohne Abstimmung zur Zusammenfassung wechseln. Das lässt sich nicht rückgängig machen.',
 	'console.reset_yes': 'Zurücksetzen',
 	'console.hide_vote_closed':
 		'Dieser Vorschlag steht in einer beendeten Abstimmung. Setzt zuerst die Abstimmung zurück',

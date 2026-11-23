@@ -48,6 +48,8 @@ const vote: Record<string, string> = {
 	'console.vote_status_open': 'ההצבעה פתוחה',
 	'console.vote_status_closed': 'ההצבעה נסגרה',
 	'console.vote_progress': '{{voted}} מתוך {{present}} הצביעו',
+	'console.status.vote_unseated_one': '1 בלי שולחן',
+	'console.status.vote_unseated_many': '{{count}} בלי שולחן',
 	'console.vote_reset_hint': 'יש לסגור או להשהות קודם',
 	'console.results_audience': 'מי רואה את התוצאות',
 	'console.results_audience_me': 'רק אני',

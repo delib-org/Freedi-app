@@ -488,7 +488,7 @@ const es: Record<string, string> = {
 	'console.reset_vote': 'Reiniciar la votación',
 	'console.reset_vote_title': '¿Reiniciar la votación?',
 	'console.reset_vote_body':
-		'Se borran todos los votos y se cancela la decisión. La clase vota de nuevo las mismas propuestas. No se puede deshacer.',
+		'Se borran todos los votos y se cancela la decisión. La votación vuelve a «sin abrir»: puedes abrirla otra vez o pasar al resumen sin votación. No se puede deshacer.',
 	'console.reset_yes': 'Reiniciar',
 	'console.hide_vote_closed':
 		'Esta propuesta está en una votación cerrada. Reinicien primero la votación',

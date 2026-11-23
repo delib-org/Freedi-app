@@ -37,8 +37,3 @@ export function assertVoteResettable(
 		);
 	}
 }
-
-/** The ballot after a reset: same candidates, same freeze, no close and no decision. */
-export function ballotAfterReset(ballot: ClassBallot): ClassBallot {
-	return { candidateIds: [...ballot.candidateIds], frozenAt: ballot.frozenAt };
-}

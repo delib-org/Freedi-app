@@ -41,6 +41,8 @@ import type {
 	ClassMoveStudentResponse,
 	ClassRequestRenameRequest,
 	ClassRequestRenameResponse,
+	ClassEnterTableTalkRequest,
+	ClassEnterTableTalkResponse,
 	ClassResetTurnsRequest,
 	ClassResetTurnsResponse,
 	ClassResetVoteRequest,
@@ -154,6 +156,13 @@ export function classSnapshotGame(
 	req: ClassSnapshotGameRequest,
 ): Promise<ClassSnapshotGameResponse> {
 	return call('classSnapshotGame', req);
+}
+
+/** Admin, right after the move to Table talk: every table starts the step clean. */
+export function classEnterTableTalk(
+	req: ClassEnterTableTalkRequest,
+): Promise<ClassEnterTableTalkResponse> {
+	return call('classEnterTableTalk', req);
 }
 
 /** Admin, at Table talk: give the turns back to every table, or to table `n` (IA 18.4). */

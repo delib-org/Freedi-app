@@ -72,6 +72,16 @@ export interface ClassStatus {
 	/** Dividing into tables: students still seated nowhere ("Show" jumps to the strip). */
 	unseated: number;
 	stuck: StuckItem | null;
+	/**
+	 * A side note beside the line: at the vote, the students counted as voters who sit at no
+	 * table ("1 without a table"), so the teacher sees why "everyone voted" is not reached.
+	 */
+	note: StatusNote | null;
+}
+
+export interface StatusNote {
+	textKey: 'console.status.vote_unseated_one' | 'console.status.vote_unseated_many';
+	params: Record<string, number>;
 }
 
 const NOT_SHOWN: ClassStatus = {
@@ -81,6 +91,7 @@ const NOT_SHOWN: ClassStatus = {
 	ready: false,
 	unseated: 0,
 	stuck: null,
+	note: null,
 };
 
 function stuckItemOf(tables: readonly number[]): StuckItem | null {
@@ -107,7 +118,7 @@ function line(
 	ready: boolean,
 	extra: Partial<ClassStatus> = {},
 ): ClassStatus {
-	return { hidden: false, textKey, params, ready, unseated: 0, stuck: null, ...extra };
+	return { hidden: false, textKey, params, ready, unseated: 0, stuck: null, note: null, ...extra };
 }
 
 function waitingLine(input: ClassStatusInput): ClassStatus {
@@ -137,16 +148,28 @@ function tablesLine(input: ClassStatusInput): ClassStatus {
 	);
 }
 
+/** Students counted at the vote who sit at no table (they stay in the total: Trello wZsOSq74). */
+export function voteUnseatedNote(unseated: number): StatusNote | null {
+	if (unseated <= 0) return null;
+
+	return {
+		textKey:
+			unseated === 1 ? 'console.status.vote_unseated_one' : 'console.status.vote_unseated_many',
+		params: { count: unseated },
+	};
+}
+
 function voteLine(input: ClassStatusInput): ClassStatus {
 	const counts = { voted: input.voted, present: input.present };
 	if (input.ballotClosed) return line('console.vote_status_closed', {}, true);
 	if (!input.ballotFrozen) return line('console.vote_status_not_open', {}, false);
 	const everyone = input.present > 0 && input.voted >= input.present;
-	if (input.ballotPaused) return line('console.status.vote_paused', counts, everyone);
+	const note = { note: voteUnseatedNote(input.unseated) };
+	if (input.ballotPaused) return line('console.status.vote_paused', counts, everyone, note);
 	if (everyone) return line('console.all_voted', {}, true);
-	if (input.present === 0) return line('console.vote_status_open', {}, false);
+	if (input.present === 0) return line('console.vote_status_open', {}, false, note);
 
-	return line('console.vote_progress', counts, false);
+	return line('console.vote_progress', counts, false, note);
 }
 
 /** The status line of the console's current step. */

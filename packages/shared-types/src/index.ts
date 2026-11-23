@@ -1248,6 +1248,8 @@ export type {
   ClassCloseBallotResponse,
   ClassPauseBallotRequest,
   ClassPauseBallotResponse,
+  ClassEnterTableTalkRequest,
+  ClassEnterTableTalkResponse,
   ClassResetTurnsRequest,
   ClassResetTurnsResponse,
   ClassResetVoteRequest,

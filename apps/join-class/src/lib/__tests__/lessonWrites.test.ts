@@ -7,6 +7,8 @@ const mockRunTransaction = vi.fn();
 const mockGetDocs = vi.fn();
 const mockBatchSet = vi.fn();
 const mockBatchCommit = vi.fn();
+const mockEnterTableTalk = vi.fn();
+const mockCapture = vi.fn();
 
 vi.mock('../firebase', () => ({
 	db: {},
@@ -18,6 +20,15 @@ vi.mock('../firebase', () => ({
 	where: vi.fn(),
 	writeBatch: () => ({ set: mockBatchSet, commit: mockBatchCommit }),
 	runTransaction: (...args: unknown[]) => mockRunTransaction(...args),
+}));
+
+vi.mock('../classroom/api', () => ({
+	classStartLesson: vi.fn(),
+	classEnterTableTalk: (...args: unknown[]) => mockEnterTableTalk(...args),
+}));
+
+vi.mock('@/lib/sentry', () => ({
+	captureException: (...args: unknown[]) => mockCapture(...args),
 }));
 
 vi.mock('../i18n', () => ({ t: (key: string) => key }));
@@ -36,6 +47,18 @@ import {
 	stepLabel,
 	CLASS_CODE_MAX_ATTEMPTS,
 } from '../lesson';
+
+const PLAN_STEPS = [
+	'waiting',
+	'opening',
+	'side',
+	'tables',
+	'tableTalk',
+	'proposals',
+	'allProposals',
+	'vote',
+	'summary',
+];
 
 function mainWith(status?: string): unknown {
 	return { statementSettings: { lessonPlan: { steps: [], stepIndex: 0, status } } };
@@ -85,6 +108,42 @@ describe('setLessonStep', () => {
 			statementSettings: { lessonPlan: expect.objectContaining({ stepIndex: 3 }) },
 		});
 		expect(mockSetFollowMe).toHaveBeenCalledWith('m1', '/statement/m1?step=tables');
+	});
+
+	it('asks the server to reset the table docs when the lesson enters Table talk', async () => {
+		mockEnterTableTalk.mockReset();
+		mockEnterTableTalk.mockResolvedValue({ reset: 3 });
+		await setLessonStep('m1', 4);
+		expect(mockEnterTableTalk).toHaveBeenCalledWith({ mainId: 'm1' });
+		mockEnterTableTalk.mockClear();
+		await setLessonStep('m1', 5);
+		expect(mockEnterTableTalk).not.toHaveBeenCalled();
+	});
+
+	it('does not reset the tables when the lesson is already at Table talk (same-step re-click)', async () => {
+		mockEnterTableTalk.mockReset();
+		mockGetMain.mockReturnValue({
+			statementSettings: { lessonPlan: { steps: PLAN_STEPS, stepIndex: 4 } },
+		});
+		await setLessonStep('m1', 4);
+		expect(mockSetMainSetting).toHaveBeenCalled();
+		expect(mockEnterTableTalk).not.toHaveBeenCalled();
+		mockGetMain.mockReturnValue({
+			statementSettings: { lessonPlan: { steps: PLAN_STEPS, stepIndex: 5 } },
+		});
+		await setLessonStep('m1', 4);
+		expect(mockEnterTableTalk).toHaveBeenCalledTimes(1);
+	});
+
+	it('does not fail the step move when the table reset fails', async () => {
+		mockEnterTableTalk.mockReset();
+		mockCapture.mockReset();
+		mockEnterTableTalk.mockRejectedValue(new Error('offline'));
+		await expect(setLessonStep('m1', 4)).resolves.toBeUndefined();
+		expect(mockCapture).toHaveBeenCalledWith(
+			expect.any(Error),
+			expect.objectContaining({ operation: 'lesson.resetTablesForTalk' }),
+		);
 	});
 
 	it('allows jumping backward', async () => {

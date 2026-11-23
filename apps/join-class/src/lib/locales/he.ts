@@ -483,7 +483,7 @@ const he: Record<string, string> = {
 	'console.reset_vote': 'איפוס ההצבעה',
 	'console.reset_vote_title': 'לאפס את ההצבעה?',
 	'console.reset_vote_body':
-		'כל הקולות יימחקו וההחלטה תבוטל. מצביעים מחדש על אותן הצעות. אי אפשר לבטל.',
+		'כל הקולות יימחקו וההחלטה תבוטל. ההצבעה חוזרת למצב שלא נפתחה: אפשר לפתוח אותה שוב או לעבור לסיכום בלי הצבעה. אי אפשר לבטל.',
 	'console.reset_yes': 'איפוס',
 	'console.hide_vote_closed': 'ההצעה בהצבעה שנסגרה. אפסו את ההצבעה קודם',
 	'lesson.back_line': 'חזרנו לשלב: {{name}}',

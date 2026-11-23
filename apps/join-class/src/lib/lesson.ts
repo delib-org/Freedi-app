@@ -29,7 +29,8 @@ import {
 } from './store';
 import { markOpenedInClass, waitForCreatorSubscription } from './joinSubscriptions';
 import { getUserState } from './user';
-import { classStartLesson } from './classroom/api';
+import { classEnterTableTalk, classStartLesson } from './classroom/api';
+import { captureException } from '@/lib/sentry';
 import {
 	CLASS_CODES_COLLECTION,
 	LessonStep,
@@ -112,10 +113,26 @@ export async function setLessonStep(mainId: string, index: number): Promise<void
 	if (isLessonStanding(status)) {
 		throw new Error(`The lesson is ${status}: steps do not move`);
 	}
+	// Read before the write: a re-click on the step the lesson is already at must not reset the tables.
+	const previousKey = getLessonStep().key;
 	await setMainStatementSetting(mainId, {
 		statementSettings: { lessonPlan: planStepMove(index, status, Date.now(), steps) },
 	});
 	await setPowerFollowMe(mainId, stepFollowMePath(mainId, steps[index]));
+	if (steps[index] === 'tableTalk' && previousKey !== 'tableTalk') await resetTablesForTalk(mainId);
+}
+
+/**
+ * Entering Table talk (also by going back): the server gives every table doc a
+ * clean start. The step itself is already written, so a failure here only leaves
+ * the old leftovers on the table docs (the screens hide them); it never blocks the teacher.
+ */
+async function resetTablesForTalk(mainId: string): Promise<void> {
+	try {
+		await classEnterTableTalk({ mainId });
+	} catch (err) {
+		captureException(err, { operation: 'lesson.resetTablesForTalk', mainId });
+	}
 }
 
 /** Set one sub-question's role. Prefer `setChallengeQuestion` for the challenge. */

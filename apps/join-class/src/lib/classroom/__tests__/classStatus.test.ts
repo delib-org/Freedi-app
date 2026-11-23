@@ -175,6 +175,32 @@ describe('classStatusFor: Vote', () => {
 		expect(status.params).toEqual({ voted: 23, present: 26 });
 	});
 
+	it('notes the students who sit at no table, and still counts them', () => {
+		const one = classStatusFor(
+			at('vote', { ballotFrozen: true, voted: 6, present: 7, unseated: 1 }),
+		);
+		expect(one.textKey).toBe('console.vote_progress');
+		expect(one.ready).toBe(false);
+		expect(one.note).toEqual({ textKey: 'console.status.vote_unseated_one', params: { count: 1 } });
+		const many = classStatusFor(at('vote', { ballotFrozen: true, unseated: 4 }));
+		expect(many.note).toEqual({
+			textKey: 'console.status.vote_unseated_many',
+			params: { count: 4 },
+		});
+		const paused = classStatusFor(
+			at('vote', { ballotFrozen: true, ballotPaused: true, unseated: 2 }),
+		);
+		expect(paused.note?.params).toEqual({ count: 2 });
+	});
+
+	it('has no note when everyone sits at a table, before opening or after closing', () => {
+		expect(classStatusFor(at('vote', { ballotFrozen: true })).note).toBeNull();
+		expect(classStatusFor(at('vote', { unseated: 2 })).note).toBeNull();
+		expect(
+			classStatusFor(at('vote', { ballotFrozen: true, ballotClosed: true, unseated: 2 })).note,
+		).toBeNull();
+	});
+
 	it('closed is always ready', () => {
 		const status = classStatusFor(at('vote', { ballotFrozen: true, ballotClosed: true }));
 		expect(status.textKey).toBe('console.vote_status_closed');

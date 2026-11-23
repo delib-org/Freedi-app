@@ -50,6 +50,8 @@ const vote: Record<string, string> = {
 	'console.vote_status_open': 'Voting is open',
 	'console.vote_status_closed': 'Voting is closed',
 	'console.vote_progress': '{{voted}} of {{present}} voted',
+	'console.status.vote_unseated_one': '1 without a table',
+	'console.status.vote_unseated_many': '{{count}} without a table',
 	'console.vote_reset_hint': 'Close or pause the vote first',
 	'console.results_audience': 'Who sees the results',
 	'console.results_audience_me': 'Only me',

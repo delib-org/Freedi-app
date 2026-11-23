@@ -156,6 +156,13 @@ export const ClassStatusLine: m.Component<ClassStatusLineAttrs> = {
 				? null
 				: m('p.class-status__line', { 'data-testid': 'class-status' }, [
 						m('span.class-status__text', t(status.textKey, status.params)),
+						status.note
+							? m(
+									'span.class-status__note',
+									{ 'data-testid': 'status-note' },
+									t(status.note.textKey, status.note.params),
+								)
+							: null,
 						attention(status),
 						entry ?? null,
 					]),
