@@ -46,6 +46,13 @@ const consoleUi: Record<string, string> = {
 	'console.status.seated_one': 'الجميع جالسون · طاولة واحدة',
 	'console.status.tables_done_one': '{{n}} من طاولة واحدة انتهت',
 	'console.status.tables_rating_one': '{{n}} من طاولة واحدة تقيّم',
+	'console.join.title': 'الانضمام إلى الدرس',
+	'console.join.how': 'امسحوا الرمز، أو ادخلوا إلى {{address}} واكتبوا:',
+	'console.join.projector': 'العرض على جهاز العرض',
+	'console.status.need_question': 'انضم {{n}} من {{total}} · للبدء يلزم سؤال للحل',
+	'console.status.need_question_open': 'انضم {{n}} · للبدء يلزم سؤال للحل',
+	'console.question_line': 'السؤال المطلوب حله:',
+	'console.question_change': 'تغيير',
 };
 
 export default consoleUi;

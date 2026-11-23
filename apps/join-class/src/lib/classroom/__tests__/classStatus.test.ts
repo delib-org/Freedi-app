@@ -54,6 +54,21 @@ describe('classStatusFor: Students are joining', () => {
 	it('nobody yet is not ready, even with a class size of zero', () => {
 		expect(classStatusFor(at('waiting', { joined: 0, classSize: 0 })).ready).toBe(false);
 	});
+
+	it('without a question to solve the line says so, and the class is never ready', () => {
+		const status = classStatusFor(at('waiting', { joined: 26, needsQuestion: true }));
+		expect(status.textKey).toBe('console.status.need_question');
+		expect(status.params).toEqual({ n: 26, total: 26 });
+		expect(status.ready).toBe(false);
+		const open = classStatusFor(at('waiting', { classSize: null, joined: 3, needsQuestion: true }));
+		expect(open.textKey).toBe('console.status.need_question_open');
+		expect(open.params).toEqual({ n: 3 });
+	});
+
+	it('with its question the line is the plain count again', () => {
+		const status = classStatusFor(at('waiting', { needsQuestion: false }));
+		expect(status.textKey).toBe('console.status.joined');
+	});
 });
 
 describe('classStatusFor: Opening, Side', () => {

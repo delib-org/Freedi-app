@@ -14,8 +14,14 @@ import { consoleState, dismissFailure, isBusy } from './consoleState';
  */
 
 /** "Pause the lesson": the one lesson control that stays out of the menu (Tal, 2026-11-19). */
-function pauseButton(mid: string, status: LessonStatus | null): m.Children {
+function pauseButton(
+	mid: string,
+	status: LessonStatus | null,
+	stepKey?: LessonStepKey,
+): m.Children {
 	if (status !== 'live' && status !== 'open') return null;
+	// Step 1 (waiting): nothing is running yet, so there is nothing to pause (Trello Rkrtmmx8).
+	if (stepKey === 'waiting') return null;
 	const pausing = isBusy('status:pause');
 	// A resume in flight holds the button too, but it keeps its own words ("Pausing…" would be false).
 	const held = pausing || isBusy('status:resume');
@@ -63,7 +69,7 @@ export function header(
 					m('strong.console__code-value', { dir: 'ltr' }, code),
 				])
 			: null,
-		pauseButton(mid, status),
+		pauseButton(mid, status, more?.stepKey),
 		more && status
 			? m(LessonMore, {
 					mid,

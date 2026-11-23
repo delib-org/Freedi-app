@@ -49,6 +49,14 @@ const consoleUi: Record<string, string> = {
 	'console.status.seated_one': 'Alle sitzen · 1 Tisch',
 	'console.status.tables_done_one': '{{n}} von 1 Tisch ist fertig',
 	'console.status.tables_rating_one': '{{n}} von 1 Tisch bewertet',
+	'console.join.title': 'Der Stunde beitreten',
+	'console.join.how': 'Code scannen oder {{address}} öffnen und eingeben:',
+	'console.join.projector': 'Auf dem Beamer zeigen',
+	'console.status.need_question':
+		'{{n}} von {{total}} sind dabei · zum Start fehlt eine Frage zum Lösen',
+	'console.status.need_question_open': '{{n}} sind dabei · zum Start fehlt eine Frage zum Lösen',
+	'console.question_line': 'Frage zum Lösen:',
+	'console.question_change': 'Ändern',
 };
 
 export default consoleUi;

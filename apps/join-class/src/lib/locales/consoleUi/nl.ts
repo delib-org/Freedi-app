@@ -47,6 +47,15 @@ const consoleUi: Record<string, string> = {
 	'console.status.seated_one': 'Iedereen zit · 1 tafel',
 	'console.status.tables_done_one': '{{n}} van 1 tafel is klaar',
 	'console.status.tables_rating_one': '{{n}} van 1 tafel beoordeelt',
+	'console.join.title': 'Meedoen met de les',
+	'console.join.how': 'Scan de code, of ga naar {{address}} en typ:',
+	'console.join.projector': 'Tonen op de beamer',
+	'console.status.need_question':
+		'{{n}} van {{total}} zijn binnen · om te starten is een vraag om op te lossen nodig',
+	'console.status.need_question_open':
+		'{{n}} zijn binnen · om te starten is een vraag om op te lossen nodig',
+	'console.question_line': 'Vraag om op te lossen:',
+	'console.question_change': 'Wijzigen',
 };
 
 export default consoleUi;

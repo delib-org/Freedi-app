@@ -60,6 +60,7 @@ import { setStudentMovedHook } from './moveHook';
 import { board } from './consoleBoard';
 import { TableSheetPanel } from './TableSheetPanel';
 import { ChallengeNeeded } from './ChallengeNeeded';
+import { ChallengeDialog } from './ChallengeDialog';
 import { CopySeating } from './CopySeating';
 import { RegistrationStrip } from './RegistrationStrip';
 // >>> allProposals BEGIN
@@ -126,7 +127,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 		const mid = m.route.param('mid') ?? session.mainId;
 		const main = getMainStatement();
 		const ready = session.status === 'ready' && main !== null;
-		const view = currentView();
+		const routeView = currentView();
 
 		if (session.status === 'denied') return m(NotYourLesson);
 
@@ -147,6 +148,9 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 		}
 
 		const step = getLessonStep();
+		// Step 1 has no "what they wrote" yet and no tabs to leave it by.
+		const atWaiting = step.key === 'waiting';
+		const view: ConsoleView = atWaiting && routeView === 'texts' ? 'tables' : routeView;
 		const status = lessonStatusOfMain(main);
 		const held = isLessonStanding(status);
 		Object.assign(consoleState, { held, ended: status === 'ended' });
@@ -209,6 +213,7 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				keys: steps,
 				currentIndex: step.index,
 				elapsedMs: clockEnd - session.startedAt,
+				showClock: !atWaiting,
 				held,
 				heldKey: status === 'ended' ? 'console.ended_banner' : 'lesson.paused.title',
 				// Going back keeps all work but asks first. Forward is only the big button.
@@ -245,20 +250,26 @@ export const TeacherConsole: m.Component<TeacherConsoleAttrs> = {
 				connected: registration !== undefined,
 				registrationId: registration?.tableAssignmentId,
 			}),
-			m(SwitchBand, {
-				view,
-				flagCount: unseenFlagCount(flagState.flags),
-				onView: (next: ConsoleView) =>
-					m.route.set(m.route.get().split('?')[0], next === 'tables' ? {} : { view: next }, {
-						replace: true,
+			atWaiting
+				? null
+				: m(SwitchBand, {
+						view,
+						flagCount: unseenFlagCount(flagState.flags),
+						onView: (next: ConsoleView) =>
+							m.route.set(m.route.get().split('?')[0], next === 'tables' ? {} : { view: next }, {
+								replace: true,
+							}),
 					}),
-			}),
 			failureBanner(),
-			challenge === null && !held
-				? m(ChallengeNeeded, {
+			// Step 1 asks for the question in a dialog (the big button opens it); later steps keep the box.
+			challenge === null && !held && !atWaiting
+				? m(ChallengeNeeded, { mainId: mid, started: true, candidates: guiding })
+				: null,
+			atWaiting
+				? m(ChallengeDialog, {
 						mainId: mid,
-						started: step.key !== 'waiting',
 						candidates: guiding,
+						hasChallenge: challenge !== null,
 					})
 				: null,
 			registration && copyOffer.kind !== 'ordinary'

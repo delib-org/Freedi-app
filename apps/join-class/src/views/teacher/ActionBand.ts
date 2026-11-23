@@ -49,6 +49,7 @@ export interface ActionBandAttrs {
 /** The dock's pause: icon only, with a real name. Hidden on a laptop, where the top bar keeps the labelled one. */
 function dockPause(attrs: ActionBandAttrs): m.Children {
 	if (attrs.status !== 'live' && attrs.status !== 'open') return null;
+	if (attrs.stepKey === 'waiting') return null; // nothing is running at step 1
 	const pausing = isBusy('status:pause') || isBusy('status:resume');
 
 	return m(

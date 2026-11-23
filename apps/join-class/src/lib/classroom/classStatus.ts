@@ -53,6 +53,8 @@ export interface ClassStatusInput {
 	resultsShown: boolean;
 	/** Numbers of the tables that have waited longer than the stuck rule allows. */
 	stuckTables: readonly number[];
+	/** Step 1 only: the lesson has no question to solve yet, so it cannot start. */
+	needsQuestion?: boolean;
 }
 
 export interface StuckItem {
@@ -122,6 +124,12 @@ function line(
 }
 
 function waitingLine(input: ClassStatusInput): ClassStatus {
+	// No question to solve yet: the class cannot start, and the line says so (never "ready").
+	if (input.needsQuestion === true) {
+		return input.classSize === null
+			? line('console.status.need_question_open', { n: input.joined }, false)
+			: line('console.status.need_question', { n: input.joined, total: input.classSize }, false);
+	}
 	if (input.classSize === null) {
 		return line('console.status.joined_open', { n: input.joined }, false);
 	}

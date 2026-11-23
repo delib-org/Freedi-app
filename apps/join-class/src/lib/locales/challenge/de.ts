@@ -18,6 +18,7 @@ const challenge: Record<string, string> = {
 	'console.challenge.or_write': 'Oder eine neue Frage schreiben',
 	'console.challenge.write_label': 'Frage zur Lösung schreiben',
 	'console.challenge.add': 'Hinzufügen und verwenden',
+	'console.challenge.dialog_close': 'Schließen',
 };
 
 export default challenge;

@@ -15,6 +15,8 @@ export interface StepLineAttrs {
 	keys: readonly LessonStepKey[];
 	currentIndex: number;
 	elapsedMs: number;
+	/** False at step 1 (waiting), before the lesson has really started: no clock yet. Default true. */
+	showClock?: boolean;
 	/** Paused or ended: the list opens read-only. */
 	held?: boolean;
 	/** i18n key of the words that replace "step n of 9" while held. */
@@ -71,7 +73,9 @@ export const StepLine: m.Component<StepLineAttrs> = {
 					m('span.step-line__caret', { 'aria-hidden': 'true' }, '▾'),
 				],
 			),
-			m('span.step-line__clock', { dir: 'ltr' }, formatClock(attrs.elapsedMs)),
+			attrs.showClock === false
+				? null
+				: m('span.step-line__clock', { dir: 'ltr' }, formatClock(attrs.elapsedMs)),
 			dots(attrs),
 			m(StepList, {
 				keys: attrs.keys,

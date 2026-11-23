@@ -36,7 +36,8 @@ function openInWindow(mid: string, onDone: () => void): void {
 	if (opened) onDone();
 }
 
-function showHere(mid: string, onDone: () => void): void {
+/** "Show on this screen": full screen on this device, Esc returns. The join card calls it too. */
+export function showHere(mid: string, onDone: () => void): void {
 	// the click is a user gesture in this document, so ask for full screen first
 	void enterFullscreen();
 	onDone();

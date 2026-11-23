@@ -46,6 +46,13 @@ const consoleUi: Record<string, string> = {
 	'console.status.seated_one': 'כולם יושבים · שולחן אחד',
 	'console.status.tables_done_one': '{{n}} מתוך שולחן אחד סיים',
 	'console.status.tables_rating_one': '{{n}} מתוך שולחן אחד מדרג',
+	'console.join.title': 'מצטרפים לשיעור',
+	'console.join.how': 'סורקים את הקוד, או נכנסים אל {{address}} ומקלידים:',
+	'console.join.projector': 'הצגה על המקרן',
+	'console.status.need_question': '{{n}} נכנסו מתוך {{total}} · כדי להתחיל צריך שאלה לפתרון',
+	'console.status.need_question_open': '{{n}} נכנסו · כדי להתחיל צריך שאלה לפתרון',
+	'console.question_line': 'השאלה לפתרון:',
+	'console.question_change': 'שינוי',
 };
 
 export default consoleUi;
