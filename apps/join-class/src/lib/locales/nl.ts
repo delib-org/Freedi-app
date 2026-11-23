@@ -11,6 +11,7 @@ import challenge from './challenge/nl';
 import actFor from './actFor/nl';
 import bridge from './bridge/nl';
 import consoleUi from './consoleUi/nl';
+import frontDoor from './frontDoor/nl';
 
 const nl: Record<string, string> = {
 	...vote,
@@ -21,6 +22,7 @@ const nl: Record<string, string> = {
 	...actFor,
 	...bridge,
 	...consoleUi,
+	...frontDoor,
 	'step.waiting': 'Wachten op de docent',
 	'step.opening': 'Opening',
 	'step.side': 'Kies een kant',

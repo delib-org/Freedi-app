@@ -67,11 +67,13 @@ try {
 		const { context, page } = await newPage(SMALL_PHONE, 'door');
 		await page.goto(BASE, { waitUntil: 'domcontentloaded' });
 		await page.waitForSelector('.door__code', { timeout: TIMEOUT });
-		check('the front door leads with the code box', (await page.locator('h1.door__title').innerText()) === 'הקלידו את הקוד');
-		check('the code box has focus on arrival', await page.evaluate(() => document.activeElement?.classList.contains('door__code')));
-		const teacherBox = await page.locator('.door__alt a').boundingBox();
-		check('"אני מורה" is in view without scrolling at 360 x 640', !!teacherBox && teacherBox.y + teacherBox.height <= SMALL_PHONE.height, JSON.stringify(teacherBox));
-		check('"אני מורה" leads to the teacher door', (await page.locator('.door__alt a').getAttribute('href')) === '/t');
+		check('the front door leads with what Class is for', (await page.locator('h1.front-door__title').innerText()) === 'דיון כיתתי שמסתיים בהסכמה');
+		check('the code box does not take focus on a plain arrival', await page.evaluate(() => !document.activeElement?.classList.contains('door__code')));
+		const startBox = await page.locator('a.front-door__start').boundingBox();
+		const codeBox = await page.locator('.door__enter').boundingBox();
+		check('"התחלת שיעור" comes first and leads to the teacher door', !!startBox && !!codeBox && startBox.y < codeBox.y && (await page.locator('a.front-door__start').getAttribute('href')) === '/t');
+		check('the code box is in view without scrolling at 360 x 640', !!codeBox && codeBox.y + codeBox.height <= SMALL_PHONE.height, JSON.stringify(codeBox));
+		check('the three steps of a lesson are listed', (await page.locator('.front-door__step').count()) === 3);
 
 		// digits only, never more than six, no navigation before the sixth
 		await page.locator('.door__code').pressSequentially('48a2 9');

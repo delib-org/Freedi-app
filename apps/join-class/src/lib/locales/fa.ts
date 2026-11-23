@@ -11,6 +11,7 @@ import challenge from './challenge/fa';
 import actFor from './actFor/fa';
 import bridge from './bridge/fa';
 import consoleUi from './consoleUi/fa';
+import frontDoor from './frontDoor/fa';
 
 const fa: Record<string, string> = {
 	...vote,
@@ -21,6 +22,7 @@ const fa: Record<string, string> = {
 	...actFor,
 	...bridge,
 	...consoleUi,
+	...frontDoor,
 	'step.waiting': 'در انتظار معلم',
 	'step.opening': 'شروع',
 	'step.side': 'انتخاب جانب',

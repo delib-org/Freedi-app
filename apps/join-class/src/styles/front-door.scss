@@ -1,0 +1,156 @@
+// -----------------------------------------------------------------------------
+// Front door (/) — what Class is for, said to a teacher in one screen. Sits on
+// top of the shared `.door` column (see _components.scss): one sentence, one
+// big action, the students' code box as the smaller second action, and three
+// steps. Tokens only, no images beyond the logo, nothing that moves.
+// -----------------------------------------------------------------------------
+.front-door {
+  grid-template-columns: min(440px, 100%);
+  row-gap: var(--space-lg);
+  padding-block: min(8vh, var(--space-3xl)) var(--space-2xl);
+}
+
+// The one logo on the page, a step larger than on the other doors.
+.door__logo.front-door__logo {
+  block-size: var(--space-3xl);
+}
+
+.front-door__hero {
+  display: grid;
+  row-gap: var(--space-sm);
+}
+
+.front-door__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
+  color: var(--ink);
+}
+
+.front-door__lead {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-snug);
+  color: var(--ink-muted);
+}
+
+.front-door__start {
+  inline-size: 100%;
+  min-block-size: 56px;
+  font-size: var(--font-size-lg);
+  text-decoration: none;
+}
+
+// The students' door: a quiet card, clearly second to the button above it.
+.front-door__join {
+  display: grid;
+  row-gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--paper-soft);
+  border-radius: var(--radius-md);
+}
+
+.front-door__join-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--ink-muted);
+}
+
+.front-door__join-row {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+// Doubled class: these two shrink the shared .door__code / .door__enter.
+.door__code.front-door__code {
+  flex: 1;
+  min-inline-size: 0;
+  // Stretches to the button's height, whatever look the button wears.
+  block-size: auto;
+  min-block-size: var(--touch-target);
+  padding: 0 var(--space-sm);
+  font-size: var(--font-size-xl);
+}
+
+.door__enter.front-door__enter {
+  flex: none;
+  inline-size: auto;
+  min-block-size: var(--touch-target);
+}
+
+.front-door__how {
+  display: grid;
+  row-gap: var(--space-md);
+  padding-block-start: var(--space-lg);
+  border-block-start: 1px solid var(--paper-line);
+}
+
+.front-door__how-title {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  color: var(--ink-soft);
+}
+
+.front-door__steps {
+  display: grid;
+  row-gap: var(--space-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: front-step;
+}
+
+.front-door__step {
+  display: grid;
+  grid-template-columns: var(--space-xl) 1fr;
+  column-gap: var(--space-md);
+  align-items: start;
+  counter-increment: front-step;
+
+  // The number: decoration for the eye; the <ol> already says the order.
+  &::before {
+    content: counter(front-step);
+    grid-row: span 2;
+    display: grid;
+    place-items: center;
+    inline-size: var(--space-xl);
+    block-size: var(--space-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+  }
+}
+
+.front-door__step-title {
+  font-weight: var(--font-weight-semibold);
+  color: var(--ink);
+}
+
+.front-door__step-text {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+  color: var(--ink-muted);
+}
+
+// Short phones: both actions stay in view without scrolling.
+@media (max-height: 700px) {
+  .front-door {
+    row-gap: var(--space-md);
+    padding-block-start: var(--space-md);
+  }
+
+  .door__logo.front-door__logo {
+    block-size: var(--space-2xl);
+  }
+
+  .front-door__lead {
+    font-size: var(--font-size-base);
+  }
+}
