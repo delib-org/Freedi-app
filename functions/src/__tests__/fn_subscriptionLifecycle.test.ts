@@ -463,6 +463,16 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 			expect(studentCount()).toBe(2);
 		});
 
+		it('counts a subscription with no role as a student, as the old phone count did', async () => {
+			const id = `old--${DISCUSSION}`;
+			const { role, ...doc } = subscriptionDoc('old', Role.member);
+			expect(role).toBe(Role.member);
+			mockDb.seed(Collections.statementsSubscribe, id, doc);
+			await onSubscriptionCreated(snapshotEvent(id, doc));
+
+			expect(studentCount()).toBe(1);
+		});
+
 		it('writes the lesson once per join: the member count and the student count together', async () => {
 			mockDb.resetCounters();
 			await joinAs('owner', Role.admin);
@@ -483,9 +493,7 @@ describe('subscription lifecycle (member count + userFeed)', () => {
 		});
 
 		it('recounts when a role crosses the teacher line, not on other updates', async () => {
-			const bob = await joinAs('bob', Role.member, {
-				statement: { statementId: DISCUSSION, statementSettings: { lessonPlan: { stepIndex: 0 } } },
-			});
+			const bob = await joinAs('bob', Role.member);
 			expect(studentCount()).toBe(1);
 
 			const before = mockDb.read(Collections.statementsSubscribe, bob) as SubscriptionDoc;

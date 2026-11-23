@@ -9,7 +9,8 @@ import { ADMIN_ROLES } from './classroomAccess';
  * A student's phone may read only its own table's subscriptions, so it can no
  * longer count the class from the roster (the waiting screen's "N joined",
  * the turnout under the vote). The server counts instead: every subscription
- * of the lesson that is not a teacher's, banned included.
+ * of the lesson that is not a teacher's, banned included, and one with no
+ * role at all (the old phone count, `role !== admin`, kept those too).
  *
  * Always a from-scratch recount, never an increment, so a retried or late
  * trigger cannot drift the number; whichever recount lands last is at most
@@ -24,28 +25,36 @@ import { ADMIN_ROLES } from './classroomAccess';
  * - the scheduled repair, and the one-off scripts/backfillClassStudentCount.ts.
  */
 
-type SubscriptionRole = Partial<Pick<StatementSubscription, 'role' | 'statement'>>;
+type SubscriptionRole = Partial<Pick<StatementSubscription, 'role'>>;
 
 /** The patch key; a dotted path, so `update()` keeps the other settings. */
 export const STUDENT_COUNT_FIELD = 'statementSettings.studentCount';
 
 export type StudentCountPatch = { [STUDENT_COUNT_FIELD]?: number };
 
-/** A teacher (admin / creator, current or legacy spelling); any other role is counted. */
+/** A teacher (admin / creator, current or legacy spelling); anyone else is counted. */
 function isTeacherRole(role: unknown): boolean {
 	return typeof role === 'string' && ADMIN_ROLES.has(role);
 }
 
-/** Students of a lesson: its subscriptions that are not a teacher's (one count() aggregation). */
+/**
+ * Students of a lesson: all its subscriptions minus the teachers'. Two count()
+ * aggregations (one read each per 1000 entries) rather than `role not-in`,
+ * which would skip a subscription that has no `role` field.
+ */
 export async function countClassStudents(firestore: Firestore, mainId: string): Promise<number> {
-	const students = await firestore
+	const ofLesson = firestore
 		.collection(Collections.statementsSubscribe)
-		.where('statementId', '==', mainId)
-		.where('role', 'not-in', [...ADMIN_ROLES])
-		.count()
-		.get();
+		.where('statementId', '==', mainId);
+	const [all, teachers] = await Promise.all([
+		ofLesson.count().get(),
+		ofLesson
+			.where('role', 'in', [...ADMIN_ROLES])
+			.count()
+			.get(),
+	]);
 
-	return students.data().count;
+	return Math.max(0, all.data().count - teachers.data().count);
 }
 
 /**
@@ -64,9 +73,9 @@ export async function classStudentCountPatch(
 	return studentCountOf(statement) === count ? {} : { [STUDENT_COUNT_FIELD]: count };
 }
 
-/** A role change that moves someone into or out of the count (judged on the subscription's lesson copy). */
+/** A role change that moves someone into or out of the count. */
 export function changesStudentCount(before: SubscriptionRole, after: SubscriptionRole): boolean {
-	return isTeacherRole(before.role) !== isTeacherRole(after.role) && isClassLesson(after.statement);
+	return isTeacherRole(before.role) !== isTeacherRole(after.role);
 }
 
 /**

@@ -211,6 +211,16 @@ describe('syncQuestionCounterCopies', () => {
 			expect(question()?.lastUpdate).toBe(1);
 		});
 
+		it('counts a subscription with no role as a student', async () => {
+			seedQuestion({ ...exact, statementSettings: { lessonPlan, studentCount: 0 } });
+			seedProgress();
+			seedPeople(97, 97);
+
+			await syncQuestionCounterCopies(NOW);
+
+			expect(studentCount()).toBe(97);
+		});
+
 		it('gives a plain question no student count', async () => {
 			seedQuestion();
 			seedProgress();

@@ -46,7 +46,7 @@ beforeEach(() => {
 });
 
 describe('countClassStudents', () => {
-	it('counts everyone who is not a teacher, banned included', async () => {
+	it('counts everyone who is not a teacher: banned and role-less included', async () => {
 		seedSubs([
 			{ userId: 't', role: Role.admin },
 			{ userId: 'c', role: Role.creator },
@@ -54,19 +54,17 @@ describe('countClassStudents', () => {
 			{ userId: 'a', role: Role.member },
 			{ userId: 'b', role: Role.member },
 			{ userId: 'x', role: Role.banned },
+			{ userId: 'old' },
 			{ userId: 'other', role: Role.member, statementId: 'elsewhere' },
 		]);
 
-		await expect(countClassStudents(db(), LESSON)).resolves.toBe(3);
+		await expect(countClassStudents(db(), LESSON)).resolves.toBe(4);
 	});
 });
 
 describe('classStudentCountPatch', () => {
 	it('returns the count when it moved and nothing when it is right', async () => {
-		seedSubs([
-			{ userId: 'a', role: Role.member },
-			{ userId: 'b', role: Role.member },
-		]);
+		seedSubs([{ userId: 'a', role: Role.member }, { userId: 'b' }]);
 
 		await expect(
 			classStudentCountPatch(db(), LESSON, lessonDoc() as unknown as Statement),
@@ -139,11 +137,12 @@ describe('updateClassStudentCount', () => {
 
 describe('changesStudentCount', () => {
 	it('a role change across the teacher line recounts; other changes do not', () => {
-		const at = (role: string): Data => ({ statement: lessonDoc(), role });
+		const at = (role?: string): Data => (role === undefined ? {} : { role });
 		expect(changesStudentCount(at(Role.member), at(Role.admin))).toBe(true);
 		expect(changesStudentCount(at(Role.admin), at(Role.member))).toBe(true);
+		expect(changesStudentCount(at(), at(Role.admin))).toBe(true);
 		expect(changesStudentCount(at(Role.member), at(Role.banned))).toBe(false);
+		expect(changesStudentCount(at(), at(Role.member))).toBe(false);
 		expect(changesStudentCount(at(Role.admin), at(Role.creator))).toBe(false);
-		expect(changesStudentCount({ role: Role.member }, { role: Role.admin })).toBe(false);
 	});
 });
