@@ -1,0 +1,152 @@
+// =============================================================================
+// Mulberry: the console's board. The view switch, the tables grid, the roster
+// card and the "no table yet" strip. The table card is in _console-table-card.
+// Mockup: Teacher-3-Console.dc.html, "the board".
+// =============================================================================
+
+@use '../look-scope' as *;
+@use 'mixins' as *;
+
+// ---- the view switch: a segmented control on a recessed track -------------------
+#{$mulberry} .switch-band {
+  background: transparent;
+  border-block-end: 0;
+}
+
+#{$mulberry} .switch-band__segment {
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--mul-well);
+}
+
+#{$mulberry} .switch-band__segment-btn {
+  min-block-size: 44px;
+  padding-inline: 18px;
+  border-radius: 10px;
+  color: var(--mul-ink-mid);
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+#{$mulberry} .switch-band__segment-btn--on {
+  background: var(--mul-surface);
+  color: var(--mul-ink);
+  font-weight: 700;
+  box-shadow: var(--mul-shadow-xs);
+}
+
+#{$mulberry} .switch-band__badge {
+  background: var(--mul-attention-solid);
+  color: var(--mul-on-attention);
+}
+
+#{$mulberry} .switch-band__line {
+  color: var(--mul-ink-soft);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+#{$mulberry} .switch-band__note {
+  color: var(--mul-ready-ink);
+}
+
+#{$mulberry} .switch-band__action--on {
+  background: var(--mul-primary);
+  border-color: var(--mul-primary);
+  color: var(--mul-on-primary);
+}
+
+// ---- the board ----------------------------------------------------------------------
+#{$mulberry} .tables-board__grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
+  gap: 16px;
+}
+
+#{$mulberry} .tables-board__hint {
+  margin-block-end: 16px;
+  padding: 10px 16px;
+  border: 1px solid var(--mul-line);
+  border-radius: var(--mul-radius-control);
+  background: var(--mul-blush);
+  color: var(--mul-ink-mid);
+  font-size: 0.9375rem;
+}
+
+#{$mulberry} .tables-board__live {
+  color: var(--mul-ink-soft);
+}
+
+// Students with no table yet: look here.
+#{$mulberry} .unplaced {
+  margin-block-end: 16px;
+  padding: 10px 16px;
+  border: 1.5px solid var(--mul-attention-line);
+  border-radius: var(--mul-radius-control);
+  background: var(--mul-attention-surface);
+}
+
+#{$mulberry} .unplaced__label {
+  color: var(--mul-attention-ink);
+}
+
+#{$mulberry} :is(.unplaced__select, .member-chip__select, .table-sheet__select) {
+  border: 1.5px solid var(--mul-border-control);
+  border-radius: var(--mul-radius-control);
+  background: var(--mul-surface);
+  color: var(--mul-ink);
+}
+
+// ---- cards: the table, the roster, the gate --------------------------------------------
+#{$mulberry} :is(.table-card, .roster-card, .gate-panel) {
+  @include hairline-card;
+}
+
+#{$mulberry} .roster-card,
+#{$mulberry} .gate-panel {
+  padding: 20px 24px;
+}
+
+#{$mulberry} :is(.roster-card__title, .gate-panel__title) {
+  margin-block-end: 12px;
+  @include display(1.375rem);
+}
+
+#{$mulberry} .roster-card__count {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} :is(.roster-card__empty, .gate-panel__empty, .written__empty, .table-card__empty) {
+  color: var(--mul-ink-soft);
+  font-size: 0.9375rem;
+}
+
+#{$mulberry} .roster-card__chips {
+  gap: 8px;
+}
+
+// On the dark ground the surface is darker than the track, so "on" is the blush
+// with an edge (the heavier weight and aria-pressed say it in both schemes).
+@media (prefers-color-scheme: dark) {
+  #{$mulberry} .switch-band__segment-btn--on {
+    background: var(--mul-blush);
+    box-shadow: inset 0 0 0 1px var(--mul-border-soft);
+  }
+}
+
+@include laptop {
+  #{$mulberry} .switch-band {
+    min-block-size: 0;
+    padding: 0;
+  }
+}
+
+@include more-contrast {
+  #{$mulberry} :is(.table-card, .roster-card, .gate-panel) {
+    border-color: var(--mul-border-control);
+  }
+}

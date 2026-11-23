@@ -1,0 +1,285 @@
+// =============================================================================
+// Mulberry: the lesson-plan screens. The plan overview (/t/plans/:planId: its
+// games and their lessons) and "plan the questions" (/t/plans/:planId/games/…
+// and /t/:mid/plan). The same cards, fields and marks as the home.
+// =============================================================================
+
+@use '../look-scope' as *;
+@use 'mixins' as *;
+
+// ---- plan overview ---------------------------------------------------------------
+#{$mulberry} .plan-overview__head {
+  gap: 8px 16px;
+  margin-block-end: 0;
+}
+
+#{$mulberry} .plan-overview__title {
+  @include display(clamp(2rem, 3.2vw, 2.5rem), 700, 1.1);
+}
+
+#{$mulberry} .plan-overview__filter {
+  margin-block-end: 0;
+}
+
+#{$mulberry} .plan-overview__filter > select {
+  @include field;
+  inline-size: auto;
+  min-inline-size: min(280px, 100%);
+  font-weight: 600;
+}
+
+#{$mulberry} .plan-overview__game {
+  gap: 14px;
+  margin-block-end: 0;
+  padding: 24px;
+  @include hairline-card;
+}
+
+#{$mulberry} .plan-overview__game-title {
+  @include display(1.75rem);
+}
+
+#{$mulberry} .plan-overview__game-actions {
+  align-items: center;
+  gap: 8px;
+}
+
+#{$mulberry} .plan-overview__lesson {
+  background: var(--mul-ground);
+}
+
+// ---- plan the questions: the page -----------------------------------------------------
+#{$mulberry} .plan__header {
+  padding-block: 28px 0;
+}
+
+#{$mulberry} .plan__title {
+  @include display(clamp(2rem, 3.2vw, 2.5rem), 700, 1.1);
+}
+
+#{$mulberry} .plan__lesson {
+  margin-block-start: 8px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--mul-ink-mid);
+}
+
+#{$mulberry} .plan__body {
+  gap: 32px;
+  padding-block-start: 24px;
+}
+
+#{$mulberry} .plan__section-title {
+  @include display(1.5rem, 600);
+}
+
+#{$mulberry} :is(.plan__help, .plan__empty) {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .plan__list {
+  gap: 12px;
+}
+
+// ---- cards ------------------------------------------------------------------------------
+#{$mulberry} .plan-card {
+  padding: 18px 20px;
+  @include hairline-card(var(--mul-shadow-xs));
+}
+
+#{$mulberry} .plan-card:focus-within,
+#{$mulberry} .plan-card--drop-target {
+  border-color: var(--mul-primary);
+}
+
+// The question to solve: the one card with a mulberry edge all round.
+#{$mulberry} .plan-card--challenge {
+  border: 1.5px solid var(--mul-primary-line);
+}
+
+#{$mulberry} .plan__challenge--missing .plan-card--challenge {
+  border-color: var(--mul-attention-line);
+}
+
+#{$mulberry} :is(.plan-card__text, .plan-card__hint):not(select) {
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--mul-ink);
+}
+
+#{$mulberry} :is(.plan-card__text, .plan-card__hint):not(select):hover:not(:disabled) {
+  border-color: var(--mul-border-soft);
+}
+
+#{$mulberry} :is(.plan-card__text, .plan-card__hint):not(select):focus-visible {
+  border-color: var(--mul-primary);
+  background: var(--mul-surface);
+}
+
+#{$mulberry} :is(.plan-card__text, .plan-card__hint)[aria-invalid='true'] {
+  border-color: var(--mul-danger-ink);
+}
+
+#{$mulberry} :is(.plan-card__text, .plan-card__hint)::placeholder {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .plan-card__text--challenge {
+  @include display(1.375rem, 700, 1.3);
+}
+
+#{$mulberry} .plan-card__hint {
+  color: var(--mul-ink-mid);
+}
+
+#{$mulberry} .plan-card__handle {
+  border-radius: 8px;
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .plan-card__handle:hover {
+  background: var(--mul-blush);
+}
+
+#{$mulberry} .plan-card__delete,
+#{$mulberry} .plan-card__delete:hover:not(:disabled) {
+  color: var(--mul-danger-ink);
+  font-weight: 600;
+}
+
+#{$mulberry} :is(.plan-card__error, .plan__bar-error, .plan__load-error) {
+  color: var(--mul-danger-ink);
+}
+
+// "+ question", "+ video": a dashed slot.
+#{$mulberry} .plan__add {
+  border: 1.5px dashed var(--mul-border-control);
+  border-radius: var(--mul-radius-control);
+  color: var(--mul-primary-text);
+  font-weight: 700;
+}
+
+#{$mulberry} .plan__add:hover {
+  border-color: var(--mul-primary);
+  background: var(--mul-blush);
+}
+
+// ---- lesson details ---------------------------------------------------------------------------
+#{$mulberry} :is(.plan-details__language, .plan-details__sides) {
+  border-block-end: 1px solid var(--mul-line);
+}
+
+#{$mulberry} .plan-details__label {
+  color: var(--mul-ink-mid);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+#{$mulberry} .plan-details__sides-title {
+  @include section-label;
+}
+
+// The two sides: one hairline box each, marked by a shape (A a circle, B a
+// rounded square), never by the edge colour alone.
+#{$mulberry} .plan-details__side,
+#{$mulberry} .plan-details__side--b {
+  padding: 12px 14px;
+  border: 1px solid var(--mul-line);
+  border-radius: var(--mul-radius-control);
+}
+
+#{$mulberry} .plan-details__legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .plan-details__legend::before {
+  content: '';
+  flex: none;
+  inline-size: 12px;
+  block-size: 12px;
+  border-radius: 50%;
+  background: var(--mul-side-a);
+}
+
+#{$mulberry} .plan-details__side--b .plan-details__legend::before {
+  border-radius: 3px;
+  background: var(--mul-side-b);
+}
+
+// ---- the introduction: text and videos --------------------------------------------------------------
+#{$mulberry} .intro-editor__label,
+#{$mulberry} .plan-videos__title {
+  @include section-label;
+}
+
+#{$mulberry} .intro-editor__tool {
+  border: 1.5px solid var(--mul-border-control);
+  border-radius: var(--mul-radius-control);
+  background: var(--mul-surface);
+  color: var(--mul-ink);
+  font-weight: 600;
+}
+
+#{$mulberry} .intro-editor__tool:hover:not(:disabled) {
+  border-color: var(--mul-primary);
+  background: var(--mul-blush);
+}
+
+#{$mulberry} .intro-editor__input {
+  padding: 12px 14px;
+  border: 1.5px solid var(--mul-border-control);
+  border-radius: var(--mul-radius-control);
+  background: var(--mul-surface);
+}
+
+#{$mulberry} .intro-editor__input:focus-visible {
+  border-color: var(--mul-primary);
+}
+
+#{$mulberry} .intro-editor__count {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .intro-editor__count--over {
+  color: var(--mul-danger-ink);
+}
+
+#{$mulberry} .intro-editor__preview {
+  border: 1px dashed var(--mul-border-soft);
+  border-radius: var(--mul-radius-control);
+  background: var(--mul-blush);
+}
+
+#{$mulberry} .intro-video__n {
+  color: var(--mul-primary-text);
+  font-family: var(--mul-font-display);
+}
+
+// ---- the bar at the bottom: save, and "a lesson with a class" ------------------------------------------
+#{$mulberry} .plan__bar {
+  background: var(--mul-surface);
+  border-block-start: 1px solid var(--mul-line);
+  box-shadow: var(--mul-shadow-up);
+}
+
+#{$mulberry} .plan__bar-inner {
+  gap: 12px;
+}
+
+@include laptop {
+  #{$mulberry} .plan__bar {
+    padding: 12px 48px;
+  }
+}
+
+@include more-contrast {
+  #{$mulberry} :is(.plan-card, .plan-overview__game, .plan-details__side) {
+    border-color: var(--mul-border-control);
+  }
+}

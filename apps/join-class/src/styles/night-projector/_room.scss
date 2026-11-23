@@ -1,0 +1,222 @@
+// =============================================================================
+// Night at room scale — what every projector partial draws with (projector
+// lane, spec section 7.4). The night tokens, the jelly / glow / stripes helpers
+// and the glyph mixin come from ../night/_mixins.scss and are forwarded, so a
+// partial needs one line: `@use 'room' as *;`.
+//
+// Two things are particular to the wall:
+//   - $wall is the prefix of every rule: the projector scope, and never the
+//     video mode, whose black letterbox stays exactly as it is.
+//   - Sizes are the 1920 x 1080 mockups' pixels (Projector-*.dc.html) through
+//     `rs()`, which scales them with the screen (--night-room, night/_tokens).
+//
+// Colours are tokens: nothing in this folder holds a literal.
+// =============================================================================
+
+@forward '../night/mixins';
+@use 'sass:list';
+@use '../night/mixins' as *;
+
+$wall: '#{$night-projector} .projector:not(.projector--video)';
+
+/// A length of the mockups, scaled to the wall.
+@function rs($px) {
+  @return calc(#{$px} * var(--night-room));
+}
+
+/// A headline's size: the mockups' pixels, and never under 6vh (a 4:3 wall is
+/// scaled by its width, so the height rule is stated).
+@function headline($px) {
+  @return max(#{rs($px)}, 6vh);
+}
+
+/// The projector's own floors (UX section 6), in real pixels on any projector:
+/// text that is read from the wall never goes under 32 px, and the lesson's
+/// question never under 72 px. On a 1920 x 1080 wall the mockups' sizes are
+/// larger than both; a 1280 x 720 projector is where the floors hold the text.
+$read-floor: 32px;
+$question-floor: 72px;
+
+/// A jelly surface at room depth: a thicker gloss, the shade band inside the
+/// foot, the 12 px lip and the long drop.
+@mixin room-jelly(
+  $fill,
+  $lip,
+  $lip-size: var(--night-lip),
+  $shade: null,
+  $drop: var(--night-drop),
+  $gloss: var(--night-gloss)
+) {
+  $layers: (inset 0 rs(6) 0 $gloss,);
+  @if $shade {
+    $layers: list.append($layers, inset 0 rs(-10) 0 $shade, comma);
+  }
+  $layers: list.append($layers, 0 $lip-size 0 $lip, comma);
+  @if $drop {
+    $layers: list.append($layers, $drop, comma);
+  }
+
+  background: $fill;
+  box-shadow: $layers;
+}
+
+/// A white reading card. Flips the ink tokens for everything inside it.
+@mixin room-card(
+  $radius: var(--night-radius-card),
+  $lip: var(--night-lip),
+  $drop: var(--night-drop)
+) {
+  @include night-on-card;
+  @include room-jelly(
+    var(--night-card),
+    var(--night-card-lip),
+    $lip,
+    var(--night-card-shade),
+    $drop,
+    var(--night-card-top)
+  );
+  border: 0;
+  border-radius: $radius;
+  text-shadow: none;
+}
+
+/// The orange card: the chosen proposal, the one that got through.
+@mixin room-chosen($radius: var(--night-radius-card), $lip: var(--night-lip), $drop: var(--night-drop)) {
+  @include room-jelly(
+    var(--night-primary),
+    var(--night-primary-lip),
+    $lip,
+    var(--night-primary-shade),
+    $drop
+  );
+  border: 0;
+  border-radius: $radius;
+  color: var(--night-primary-ink);
+  text-shadow: none;
+}
+
+/// The glowing panel: the lesson's question, a side.
+@mixin room-panel(
+  $frame: var(--night-panel-frame),
+  $ring: var(--night-panel-ring),
+  $halo: var(--night-panel-glow)
+) {
+  border: var(--night-frame) solid $frame;
+  border-radius: var(--night-radius-card);
+  background: var(--night-panel);
+  box-shadow:
+    0 0 0 var(--night-ring) $ring,
+    0 0 var(--night-halo) $halo,
+    inset 0 rs(6) 0 var(--night-panel-gloss);
+  color: var(--night-on-sky);
+}
+
+/// A label pill. Orange by default (an eyebrow, a tag).
+@mixin room-pill(
+  $fill: var(--night-primary-pill),
+  $lip: var(--night-primary-lip),
+  $ink: var(--night-primary-ink)
+) {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: rs(64);
+  margin: 0;
+  padding-inline: rs(28);
+  border: 0;
+  border-radius: var(--night-radius-pill);
+  @include room-jelly($fill, $lip, var(--night-lip-xs), null, null);
+  color: $ink;
+  font-size: rs(36);
+  font-weight: 600;
+  line-height: 1.1;
+  text-shadow: none;
+  white-space: nowrap;
+}
+
+/// The blue counter capsule ("12 in the class"), with a gold coin at its end.
+/// The coin is ::after; its glyph is ::before, laid over it.
+@mixin room-counter($glyph) {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: rs(18);
+  box-sizing: border-box;
+  block-size: rs(84);
+  margin: 0;
+  padding-inline: rs(34) rs(12);
+  border-radius: var(--night-radius-pill);
+  background: var(--night-counter);
+  box-shadow:
+    inset 0 rs(4) 0 var(--night-gloss-soft),
+    0 var(--night-lip-sm) 0 var(--night-counter-lip),
+    var(--night-drop-sm);
+  color: var(--night-on-sky);
+  font-size: rs(42);
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: none;
+  white-space: nowrap;
+
+  &::after {
+    content: '';
+    flex: none;
+    inline-size: rs(62);
+    block-size: rs(62);
+    border-radius: 50%;
+    background: var(--night-orb-gold);
+    box-shadow: inset 0 rs(-4) 0 var(--night-orb-gold-shade);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block-start: rs(23);
+    inset-inline-end: rs(24);
+    inline-size: rs(38);
+    block-size: rs(38);
+    @include glyph($glyph, var(--night-orb-gold-ink));
+  }
+}
+
+/// The dark well of a result bar.
+@mixin room-well($height: rs(38), $fill: var(--night-well), $inset: var(--night-well-inset)) {
+  box-sizing: border-box;
+  block-size: $height;
+  padding: rs(5);
+  border-radius: var(--night-radius-pill);
+  background: $fill;
+  box-shadow: $inset;
+  overflow: hidden;
+}
+
+/// A thick striped fill inside a well.
+@mixin room-fill($a, $b, $band: rs(12)) {
+  border-radius: var(--night-radius-pill);
+  background: repeating-linear-gradient(-45deg, $a 0 $band, $b $band calc(2 * #{$band}));
+  box-shadow: inset 0 rs(3) 0 var(--night-gloss);
+}
+
+/// A glossy orb at room scale.
+@mixin room-orb($fill, $halo, $shade) {
+  background: $fill;
+  box-shadow:
+    0 0 var(--night-orb-halo) $halo,
+    inset 0 rs(-6) 0 $shade;
+}
+
+/// The gold coin with the winner's star.
+@mixin room-star($size) {
+  content: '';
+  flex: none;
+  box-sizing: border-box;
+  inline-size: $size;
+  block-size: $size;
+  border: var(--night-frame) solid var(--night-on-sky);
+  border-radius: 50%;
+  background:
+    var(--night-star-image) center / 58% no-repeat,
+    var(--night-orb-gold);
+  box-shadow:
+    inset 0 rs(-6) 0 var(--night-orb-gold-shade),
+    0 var(--night-lip-sm) 0 var(--night-primary-lip);
+}

@@ -1,5 +1,6 @@
 import m from 'mithril';
 import '@/styles/teacher.scss';
+import '@/styles/mulberry/index.scss';
 import { getRandomUID } from '@freedi/shared-types';
 import type { ClassGame, ClassPlan } from '@freedi/shared-types';
 import { getUserState } from '@/lib/user';

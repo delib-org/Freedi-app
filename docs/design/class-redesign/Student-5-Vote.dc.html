@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>תלמיד: הצבעה, ההצבעה נקלטה</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Rubik:wght@400;500;700&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<main dir="rtl" lang="he" style="width: 390px; height: 844px; box-sizing: border-box; color: #FFFFFF; font-family: 'Fredoka', 'Rubik', 'Arial Hebrew', Arial, sans-serif; display: flex; flex-direction: column; background: radial-gradient(circle at 9% 6%, #FFFFFF 0 1.5px, transparent 2.5px), radial-gradient(circle at 31% 13%, #BFD4FF 0 1px, transparent 2px), radial-gradient(circle at 58% 4%, #FFFFFF 0 1px, transparent 2px), radial-gradient(circle at 83% 17%, #FFFFFF 0 1.5px, transparent 2.5px), radial-gradient(circle at 94% 33%, #BFD4FF 0 1px, transparent 2px), radial-gradient(circle at 5% 36%, #FFFFFF 0 1px, transparent 2px), radial-gradient(circle at 47% 41%, #BFD4FF 0 1px, transparent 2px), radial-gradient(circle at 72% 52%, #FFFFFF 0 1.5px, transparent 2.5px), radial-gradient(circle at 16% 58%, #FFFFFF 0 1px, transparent 2px), radial-gradient(circle at 90% 68%, #BFD4FF 0 1px, transparent 2px), radial-gradient(circle at 38% 74%, #FFFFFF 0 1px, transparent 2px), linear-gradient(180deg, #170A45 0%, #25197F 40%, #2F3FC4 75%, #3A62E0 100%)">
+
+  <!-- HUD: stage name, language, lesson progress, table line -->
+  <header style="padding: 18px 20px 0; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <img src="/_blob/f17f3617a93d107231a2fc277be1d25d" alt="WizCol" style="width: 36px; height: 36px">
+      <h1 style="margin: 0; flex-grow: 1; font-size: 24px; font-weight: 700; line-height: 1.2; text-shadow: 0 2px 0 rgba(10, 5, 50, 0.45)">הצבעה</h1>
+      <button type="button" aria-label="שפה" style="box-sizing: border-box; width: 46px; height: 46px; padding: 0; border: 0; border-radius: 16px; background: linear-gradient(180deg, #8CEBFF 0%, #2FB8FF 60%, #1C86F2 100%); box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.7), inset 0 -4px 0 rgba(14, 79, 176, 0.5), 0 4px 0 #0E4FB0, 0 10px 16px rgba(10, 5, 50, 0.4); display: inline-flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="8" fill="none" stroke="#0B2A7A" stroke-width="2.2"/><path d="M3 11h16M11 3c2.6 2.2 3.8 4.9 3.8 8s-1.2 5.8-3.8 8c-2.6-2.2-3.8-4.9-3.8-8S8.400 5.200 11 3z" fill="none" stroke="#0B2A7A" stroke-width="2.2" stroke-linejoin="round"/></svg></button>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px">
+      <div aria-hidden="true" style="box-sizing: border-box; flex-grow: 1; height: 24px; padding: 3px; border-radius: 999px; background: #DDE6FF; box-shadow: inset 0 3px 5px rgba(20, 10, 80, 0.45), 0 3px 0 rgba(10, 5, 50, 0.35); display: flex">
+        <span style="width: 86%; border-radius: 999px; background: repeating-linear-gradient(-45deg, #FFD23F 0 7px, #FF9A1F 7px 14px); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.6)"></span>
+      </div>
+      <span style="font-size: 16px; font-weight: 600">שלב 6 מתוך 7</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px">
+      <span style="box-sizing: border-box; width: 36px; height: 36px; flex-shrink: 0; border-radius: 12px; background: linear-gradient(180deg, #8CEBFF 0%, #2FB8FF 60%, #1C86F2 100%); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.7), inset 0 -3px 0 rgba(14, 79, 176, 0.5), 0 3px 0 #0E4FB0; color: #1A0B4B; display: inline-flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 700">3</span>
+      <span style="flex-grow: 1; font-size: 17px; font-weight: 600">שולחן 3</span>
+    </div>
+  </header>
+
+  <!-- Content: one choice, then the confirmation -->
+  <div style="flex-grow: 1; padding: 22px 20px 0; display: flex; flex-direction: column; gap: 18px">
+    <h2 id="vote-title" style="margin: 0; font-size: 28px; font-weight: 700; line-height: 1.15; text-shadow: 0 3px 0 rgba(10, 5, 50, 0.5)">בחרו הצעה אחת</h2>
+
+    <div role="radiogroup" aria-labelledby="vote-title" style="display: flex; flex-direction: column; gap: 16px">
+      <label for="vote-1" style="box-sizing: border-box; min-height: 84px; padding: 16px 18px; border-radius: 24px; background: linear-gradient(180deg, #FFE066 0%, #FFB627 55%, #FF8A1F 100%); box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.65), inset 0 -5px 0 rgba(196, 82, 0, 0.55), 0 6px 0 #B84A00, 0 14px 24px rgba(10, 5, 50, 0.45); color: #4A1A00; display: flex; align-items: center; gap: 14px">
+        <span style="display: inline-grid; flex-shrink: 0">
+          <input id="vote-1" type="radio" name="vote" checked style="grid-area: 1 / 1; appearance: none; -webkit-appearance: none; box-sizing: border-box; width: 34px; height: 34px; margin: 0; border: 3px solid #4A1A00; border-radius: 50%; background: #4A1A00">
+          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="grid-area: 1 / 1; place-self: center; pointer-events: none"><path d="M4.500 10.500l3.500 3.500 7.500-8" fill="none" stroke="#FFE066" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span style="font-size: 20px; font-weight: 700; line-height: 1.3">מחליטים ביחד, אחרי שכולם מדברים.</span>
+      </label>
+
+      <label for="vote-2" style="box-sizing: border-box; min-height: 84px; padding: 16px 18px; border-radius: 24px; background: linear-gradient(180deg, #FFFFFF 0%, #E6E3FF 100%); box-shadow: inset 0 3px 0 #FFFFFF, inset 0 -5px 0 rgba(120, 110, 220, 0.35), 0 5px 0 #6F66D9, 0 12px 20px rgba(10, 5, 50, 0.35); color: #1E1560; display: flex; align-items: center; gap: 14px">
+        <input id="vote-2" type="radio" name="vote" style="appearance: none; -webkit-appearance: none; box-sizing: border-box; flex-shrink: 0; width: 34px; height: 34px; margin: 0; border: 3px solid #5B4FE0; border-radius: 50%; background: #FFFFFF; box-shadow: inset 0 3px 4px rgba(30, 21, 96, 0.18)">
+        <span style="font-size: 20px; font-weight: 600; line-height: 1.3">מנסים שבוע אחד ובודקים.</span>
+      </label>
+
+      <label for="vote-3" style="box-sizing: border-box; min-height: 84px; padding: 16px 18px; border-radius: 24px; background: linear-gradient(180deg, #FFFFFF 0%, #E6E3FF 100%); box-shadow: inset 0 3px 0 #FFFFFF, inset 0 -5px 0 rgba(120, 110, 220, 0.35), 0 5px 0 #6F66D9, 0 12px 20px rgba(10, 5, 50, 0.35); color: #1E1560; display: flex; align-items: center; gap: 14px">
+        <input id="vote-3" type="radio" name="vote" style="appearance: none; -webkit-appearance: none; box-sizing: border-box; flex-shrink: 0; width: 34px; height: 34px; margin: 0; border: 3px solid #5B4FE0; border-radius: 50%; background: #FFFFFF; box-shadow: inset 0 3px 4px rgba(30, 21, 96, 0.18)">
+        <span style="font-size: 20px; font-weight: 600; line-height: 1.3">שואלים מישהו מחוץ לכיתה.</span>
+      </label>
+    </div>
+
+    <div role="status" style="padding-top: 6px; display: flex; align-items: center; justify-content: center; gap: 12px">
+      <span aria-hidden="true" style="box-sizing: border-box; width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFF3A6 0%, #FFC533 50%, #F08A0C 100%); box-shadow: inset 0 -3px 0 rgba(160, 70, 0, 0.5), 0 0 16px rgba(255, 197, 51, 0.85); display: inline-flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 20 20"><path d="M10 2.2l2.3 4.9 5.3.7-3.9 3.7 1 5.3-4.7-2.6-4.7 2.6 1-5.3-3.9-3.7 5.3-.7z" fill="#7A3300" stroke="#7A3300" stroke-width="1.2" stroke-linejoin="round"/></svg></span>
+      <span style="font-size: 23px; font-weight: 700; line-height: 1.2; text-shadow: 0 2px 0 rgba(10, 5, 50, 0.45)">ההצבעה נקלטה</span>
+    </div>
+  </div>
+
+  <!-- Ground: crystal peaks, then the quiet line -->
+  <svg width="390" height="52" viewBox="0 0 390 52" preserveAspectRatio="none" aria-hidden="true" style="display: block; margin-top: 10px">
+    <path d="M0 52V30l38-22 30 26 34-30 40 34 36-24 44 30 40-36 46 34 38-20 44 26v32z" fill="#2A3BB5"/>
+    <path d="M0 52V40l60-12 54 14 70-18 80 20 62-14 64 12v10z" fill="#1A1670"/>
+    <path d="M300 30l12-18 12 8-6 16z" fill="#3FD8FF"/>
+    <path d="M300 30l12-18 4 14z" fill="#A5F0FF"/>
+    <path d="M62 34l8-14 10 6-4 12z" fill="#3FD8FF"/>
+    <path d="M62 34l8-14 3 11z" fill="#A5F0FF"/>
+  </svg>
+  <div style="padding: 10px 20px 30px; background: #1A1670; display: flex; align-items: center; justify-content: center">
+    <p style="margin: 0; font-size: 16px; font-weight: 500; line-height: 1.4">התוצאות יוצגו בהמשך</p>
+  </div>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

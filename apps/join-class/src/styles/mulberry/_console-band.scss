@@ -1,0 +1,170 @@
+// =============================================================================
+// Mulberry: the action band of the console. What the class is doing (one line,
+// the "ready" mark, what needs the teacher) and the ONE primary button.
+// Mockup: Teacher-3-Console.dc.html, "the next action".
+//
+// On a phone the band is the bottom dock of console-next.scss; it only takes
+// the look's colours there.
+// =============================================================================
+
+@use '../look-scope' as *;
+@use 'mixins' as *;
+
+// The back bar sticks to the top of the page; the band sticks under it.
+$back-bar-height: 56px;
+
+#{$mulberry} .action-band {
+  background: var(--mul-surface);
+  border-color: var(--mul-line);
+}
+
+// ---- the status line ---------------------------------------------------------------
+#{$mulberry} .class-status__line {
+  color: var(--mul-ink);
+  font-weight: 700;
+}
+
+// Look here: apricot, with a diamond before the words.
+#{$mulberry} .class-status__attention {
+  @include pill(var(--mul-attention-ink), var(--mul-attention-bg), 32px);
+  padding-inline: 14px 4px;
+}
+
+#{$mulberry} .class-status__glyph {
+  @include diamond-mark;
+  font-size: 0;
+}
+
+#{$mulberry} .class-status__show,
+#{$mulberry} .class-status__show:hover:not(:disabled) {
+  min-block-size: 36px;
+  padding-inline: 8px;
+  color: var(--mul-primary-text);
+}
+
+#{$mulberry} .class-status__line > .class-status__show {
+  min-block-size: 44px;
+}
+
+#{$mulberry} .class-status__note {
+  @include pill(var(--mul-ink-mid), var(--mul-well), 32px);
+}
+
+// Ready: sage, with a check before the words.
+#{$mulberry} .class-status__ready {
+  @include pill(var(--mul-ready-ink), var(--mul-ready-bg), 32px);
+}
+
+// ---- the one primary button ---------------------------------------------------------
+#{$mulberry} .next-action__button {
+  box-shadow: var(--mul-shadow-primary);
+}
+
+#{$mulberry} .next-action__button--blocked,
+#{$mulberry} .next-action__button--blocked:hover:not(:disabled) {
+  background: var(--mul-well);
+  border: 1.5px solid var(--mul-border-control-tint);
+  color: var(--mul-ink-mid);
+  box-shadow: none;
+}
+
+#{$mulberry} .next-action__reason {
+  color: var(--mul-ink-soft);
+  font-size: 0.9375rem;
+}
+
+// ---- laptop: a white card, the status at the start, the button at the end -------------
+@include laptop {
+  #{$mulberry} .action-band {
+    inset-block-start: $back-bar-height + 8px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 24px;
+    padding: 20px 24px;
+    @include hairline-card;
+  }
+
+  // The band's name, from the label the region already carries.
+  #{$mulberry} .action-band::before {
+    content: attr(aria-label);
+    grid-column: 1;
+    @include section-label;
+  }
+
+  #{$mulberry} .action-band > .class-status {
+    grid-column: 1;
+    gap: 8px 14px;
+  }
+
+  #{$mulberry} .action-band__controls {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #{$mulberry} .class-status__line {
+    gap: 8px 14px;
+    font-size: 1.375rem;
+    line-height: 1.2;
+  }
+
+  #{$mulberry} .class-status__attention,
+  #{$mulberry} .class-status__note,
+  #{$mulberry} .class-status__ready {
+    font-size: 0.9375rem;
+  }
+
+  #{$mulberry} .next-action {
+    flex: 0 1 auto;
+    max-inline-size: 460px;
+  }
+
+  #{$mulberry} .next-action__button {
+    min-block-size: 60px;
+    padding-inline: 32px;
+    border-radius: 14px;
+    font-size: 1.25rem;
+  }
+
+  #{$mulberry} .next-action__button[data-action-kind='goNext']:not(.next-action__button--blocked)::after {
+    @include chevron-shape;
+  }
+
+  #{$mulberry}[dir='rtl'] .next-action__button[data-action-kind='goNext']::after {
+    transform: rotate(-45deg);
+  }
+
+  #{$mulberry} .next-action__reason {
+    max-inline-size: 460px;
+  }
+
+  #{$mulberry} .action-band__controls > .disclosure > .disclosure__toggle {
+    min-block-size: var(--mul-control-height);
+  }
+}
+
+// ---- phone: the dock --------------------------------------------------------------------
+@media (max-width: 767px) {
+  #{$mulberry} .action-band {
+    border-block-start: 1px solid var(--mul-line);
+    box-shadow: var(--mul-shadow-up);
+  }
+
+  #{$mulberry} .class-status__attention {
+    padding-inline: 10px 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #{$mulberry} .class-status__ready {
+    animation: none;
+  }
+}
+
+@include more-contrast {
+  #{$mulberry} :is(.class-status__attention, .class-status__note, .class-status__ready) {
+    border: 1px solid currentColor;
+  }
+}

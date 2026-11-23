@@ -1,5 +1,6 @@
 import m from 'mithril';
 import '@/styles/student-c2.scss';
+import '@/styles/night/c2.scss';
 import { StudentFrame } from '@/components/StudentFrame';
 import { t } from '@/lib/i18n';
 import { gateMemory } from '@/lib/classroom/arrivalActions';

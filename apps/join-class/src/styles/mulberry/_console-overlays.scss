@@ -1,0 +1,266 @@
+// =============================================================================
+// Mulberry: what opens over the console. The two "more" panels, the settings
+// inside them, and the dialogs (end the lesson, confirm, choose the question).
+// White, a hairline, the overlay shadow; no ink frames.
+// =============================================================================
+
+@use '../look-scope' as *;
+@use 'mixins' as *;
+
+// ---- "more": the toggle and its panel --------------------------------------------
+#{$mulberry} .disclosure__caret {
+  color: currentColor;
+}
+
+#{$mulberry} :is(.disclosure__panel, .console__settings-panel, .projector-menu__panel) {
+  @include overlay-surface;
+}
+
+#{$mulberry} .disclosure__panel {
+  gap: 10px;
+  padding: 16px;
+}
+
+// Sections that were popovers of their own are plain parts of the panel.
+#{$mulberry} .disclosure__panel :is(.projector-menu__panel, .console__settings-panel) {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#{$mulberry} .more-panel__heading {
+  @include section-label;
+}
+
+#{$mulberry} .more-panel__note,
+#{$mulberry} .projector-menu__help,
+#{$mulberry} .console__settings-help,
+#{$mulberry} .console__settings-scope {
+  color: var(--mul-ink-soft);
+}
+
+// The panel's rows: secondary buttons, start-aligned.
+#{$mulberry} .more-panel__item {
+  font-size: 1rem;
+}
+
+#{$mulberry} .more-panel__danger {
+  border-block-start: 1px solid var(--mul-line);
+}
+
+#{$mulberry} .btn--danger-outline,
+#{$mulberry} .btn--danger-outline:hover:not(:disabled) {
+  border: 1.5px solid var(--mul-danger-ink);
+  background: var(--mul-surface);
+  color: var(--mul-danger-ink);
+}
+
+#{$mulberry} .btn--danger-outline:hover:not(:disabled) {
+  background: var(--mul-danger-bg);
+}
+
+#{$mulberry} .projector-menu__blocked {
+  border-inline-start: 3px solid var(--mul-attention-solid);
+  border-radius: 8px;
+  background: var(--mul-attention-bg);
+  color: var(--mul-ink);
+}
+
+// ---- settings in the panel ----------------------------------------------------------
+#{$mulberry} .console__settings-slider {
+  accent-color: var(--mul-primary);
+}
+
+#{$mulberry} :is(.console__class-size-input, .table-settings__select) {
+  @include field;
+}
+
+#{$mulberry} :is(.table-settings__switch, .table-settings__radio) {
+  accent-color: var(--mul-primary);
+}
+
+#{$mulberry} .table-settings__legend {
+  @include section-label;
+}
+
+#{$mulberry} .table-settings__help {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .table-settings__warning {
+  border-inline-start: 3px solid var(--mul-attention-solid);
+  border-radius: 8px;
+  background: var(--mul-attention-bg);
+  color: var(--mul-ink);
+}
+
+// ---- dialogs -------------------------------------------------------------------------
+#{$mulberry} :is(.end-choice, .confirm-dialog, .question-dialog) {
+  padding: 28px;
+  @include overlay-surface;
+}
+
+#{$mulberry} :is(.end-choice, .confirm-dialog, .question-dialog)::backdrop {
+  background: var(--mul-scrim);
+}
+
+#{$mulberry} :is(.end-choice, .confirm-dialog, .question-dialog)[open] {
+  row-gap: 12px;
+}
+
+#{$mulberry} :is(.end-choice__title, .confirm-dialog__title, .question-dialog__title) {
+  @include display(1.625rem);
+}
+
+#{$mulberry} :is(.end-choice__help, .confirm-dialog__body) {
+  color: var(--mul-ink-soft);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+#{$mulberry} .end-choice__error {
+  color: var(--mul-danger-ink);
+}
+
+#{$mulberry} .confirm-dialog__actions {
+  gap: 12px;
+  margin-block-start: 8px;
+}
+
+#{$mulberry} .results-aside {
+  color: var(--mul-ink-mid);
+}
+
+#{$mulberry} .results-aside__show {
+  color: var(--mul-primary-text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+// ---- "choose the question to solve" ------------------------------------------------------
+#{$mulberry} .challenge-warning {
+  gap: 10px;
+  padding: 20px 24px;
+  border: 1.5px solid var(--mul-attention-line);
+  border-radius: var(--mul-radius-card);
+  background: var(--mul-attention-surface);
+  box-shadow: var(--mul-shadow-attention);
+}
+
+#{$mulberry} .challenge-warning--dialog {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#{$mulberry} .challenge-warning__title {
+  @include display(1.375rem);
+}
+
+#{$mulberry} .challenge-warning__mark {
+  background: var(--mul-attention-solid);
+  color: var(--mul-on-attention);
+  font-family: var(--font-body);
+  font-size: 1rem;
+}
+
+#{$mulberry} :is(.challenge-warning__text, .challenge-warning__or) {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} :is(.challenge-warning__select, .challenge-warning__input) {
+  @include field;
+}
+
+#{$mulberry} .challenge-warning__plan-link {
+  color: var(--mul-primary-text);
+  font-weight: 700;
+}
+
+@include laptop {
+  #{$mulberry} .challenge-warning--console {
+    margin-block-end: 0;
+  }
+}
+
+// ---- the vote controls (the step's "more" panel) --------------------------------------------
+#{$mulberry} .vote-order__label {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .vote-order__group {
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--mul-well);
+}
+
+#{$mulberry} .vote-order__text {
+  border-block-end: 0;
+  border-radius: 10px;
+  color: var(--mul-ink-mid);
+  font-weight: 600;
+}
+
+#{$mulberry} .vote-order__input:checked + .vote-order__text {
+  background: var(--mul-surface);
+  color: var(--mul-ink);
+  font-weight: 700;
+  box-shadow: var(--mul-shadow-xs);
+}
+
+@media (prefers-color-scheme: dark) {
+  #{$mulberry} .vote-order__input:checked + .vote-order__text {
+    background: var(--mul-blush);
+    box-shadow: inset 0 0 0 1px var(--mul-border-soft);
+  }
+}
+
+#{$mulberry} .vote-order__input:focus-visible + .vote-order__text {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 1px;
+}
+
+#{$mulberry} :is(.vote-scope__count, .results-audience__hint, .vote-bar__progress) {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .vote-scope__warn {
+  color: var(--mul-attention-ink);
+}
+
+#{$mulberry} .vote-bar__progress--done {
+  color: var(--mul-ready-ink);
+}
+
+#{$mulberry} .vote-status {
+  @include pill(var(--mul-ink-mid), var(--mul-well), 32px);
+  box-shadow: none;
+}
+
+#{$mulberry} :is(.vote-status--open, .vote-status--results-shown) {
+  background: var(--mul-ready-bg);
+  color: var(--mul-ready-ink);
+}
+
+#{$mulberry} .vote-status--paused {
+  background: var(--mul-attention-bg);
+  color: var(--mul-attention-ink);
+}
+
+#{$mulberry} .vote-status--closed {
+  background: var(--mul-blush);
+  color: var(--mul-primary-text);
+}
+
+@include more-contrast {
+  #{$mulberry} :is(.disclosure__panel, .end-choice, .confirm-dialog, .question-dialog) {
+    border-color: var(--mul-border-control);
+  }
+
+  #{$mulberry} .vote-status {
+    border: 1px solid currentColor;
+  }
+}

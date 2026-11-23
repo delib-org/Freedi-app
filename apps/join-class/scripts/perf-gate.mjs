@@ -4,7 +4,7 @@
 // Asserts, on dist/:
 //   1. the student entry (index JS + every module the HTML preloads + entry CSS
 //      + the default-locale chunk) stays within BUDGET_GZIP_BYTES gzipped;
-//   2. only one font family is declared in the built CSS;
+//   2. at most two font families (Assistant, Fredoka) are declared in the built CSS;
 //   3. no `autoplay` attribute anywhere in src/ or dist/ (HTML/JS/CSS/TS).
 // Exits 1 with a readable message on any violation.
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
@@ -30,7 +30,19 @@ export const TARGET_GZIP_BYTES = 300 * BYTES_PER_KB;
 export const BUDGET_GZIP_BYTES = 276200;
 /** Locale whose chunk counts as "the default locale chunk" (Hebrew first). */
 const DEFAULT_LOCALE = process.env.PERF_GATE_LOCALE ?? 'he';
-const ALLOWED_FONT_FAMILIES = 1;
+/**
+ * Two since the redesign (docs/design/join-class-redesign-port.md, section 4):
+ * Assistant and Fredoka. The student surface (night) draws all its text in
+ * Fredoka, so a student only ever needs that one; the teacher surface
+ * (mulberry) uses both, Fredoka for titles, and the projector (night at room
+ * scale) uses Fredoka. The solid look and high contrast stay on Assistant alone. Declaring a family costs the entry
+ * only its @font-face rules: a file is fetched when text first uses it.
+ * (index.html still preloads Assistant on every route, because the look is not
+ * known before the lesson loads, so today a night student fetches it without
+ * drawing it.) This is not a licence for a third family, and the gzip budget
+ * above did not move.
+ */
+const ALLOWED_FONT_FAMILIES = 2;
 
 const failures = [];
 
@@ -89,7 +101,7 @@ if (totalGzip > BUDGET_GZIP_BYTES) {
 	);
 }
 
-// ---- 2. one font family -------------------------------------------------------
+// ---- 2. font families ---------------------------------------------------------
 const families = new Set();
 for (const file of walk(join(DIST, 'assets')).filter((f) => f.endsWith('.css'))) {
 	const css = readFileSync(file, 'utf8');
@@ -100,7 +112,7 @@ for (const file of walk(join(DIST, 'assets')).filter((f) => f.endsWith('.css')))
 }
 console.info(`[perf-gate] font families in dist: ${[...families].join(', ') || '(none)'}`);
 if (families.size > ALLOWED_FONT_FAMILIES) {
-	failures.push(`more than ${ALLOWED_FONT_FAMILIES} font family in dist: ${[...families].join(', ')}`);
+	failures.push(`more than ${ALLOWED_FONT_FAMILIES} font families in dist: ${[...families].join(', ')}`);
 }
 
 // ---- 3. no autoplay -----------------------------------------------------------

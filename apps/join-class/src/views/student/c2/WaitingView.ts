@@ -1,9 +1,11 @@
 import m from 'mithril';
 import { studentCountOf } from '@freedi/shared-types';
 import '@/styles/student-c2.scss';
+import '@/styles/night/c2.scss';
 import { StudentFrame } from '@/components/StudentFrame';
 import { t } from '@/lib/i18n';
 import { stepLabel } from '@/lib/lesson';
+import { ClassmateOrbs } from './classmateOrbs';
 import type { StepAttrs } from '../steps/stepSlot';
 
 /**
@@ -50,6 +52,8 @@ export const WaitingView: m.Component<StepAttrs> = {
 				count > 0
 					? m('p.waiting__count', { role: 'status' }, t('opening.waiting_count', { n: count }))
 					: null,
+				// Decoration of the night look only (hidden everywhere else).
+				count > 0 ? m(ClassmateOrbs, { count }) : null,
 			]),
 		]);
 	},

@@ -1,0 +1,223 @@
+// =============================================================================
+// Night — choosing one (Student-5-Vote.dc.html): a question to ask or a
+// proposal to vote for is a white jelly card with a radio ring; the chosen one
+// turns orange with a check. Also the "your vote counted" stamp and the live
+// results on a card. Loaded with the c3 views.
+// =============================================================================
+
+@use 'mixins' as *;
+
+// ---- radio cards -----------------------------------------------------------------------
+#{$night} .pick {
+  gap: 12px;
+}
+
+#{$night} .pick__list,
+#{$night} .vote-list {
+  gap: 18px;
+}
+
+#{$night} .pick__item,
+#{$night} .pick__own,
+#{$night} .vote-list__item {
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px 18px;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.3;
+  @include night-card(var(--night-radius-button), 5px, var(--night-drop-card-sm));
+  @include calm-motion;
+}
+
+#{$night} .vote-list__item {
+  min-height: 84px;
+}
+
+#{$night} .pick__item:active:not(:disabled),
+#{$night} button.vote-list__item:active {
+  @include jelly-press(5px, var(--night-card-top));
+}
+
+// Chosen: the orange jelly. Its quiet lines take the orange's ink.
+#{$night} .pick__item--on,
+#{$night} .pick__own.pick__item--on,
+#{$night} .vote-list__item--on {
+  --ink: var(--night-primary-ink);
+  --ink-muted: var(--night-primary-ink);
+  --ink-soft: var(--night-primary-ink);
+  border: 0;
+  color: var(--night-primary-ink);
+  font-weight: 700;
+  @include jelly(
+    var(--night-primary),
+    var(--night-primary-lip),
+    var(--night-lip),
+    var(--night-primary-shade)
+  );
+}
+
+// Already asked: a flat lilac card, not tappable.
+#{$night} .pick__item--used {
+  background: var(--night-card-bottom);
+  box-shadow: none;
+  color: var(--night-card-ink-soft);
+  font-weight: 500;
+}
+
+// "+ our own question": the dashed card.
+#{$night} .pick__own {
+  align-items: stretch;
+  border: 2.5px dashed var(--night-input-border);
+}
+
+#{$night} .pick__input {
+  min-height: 52px;
+  font-size: 18px;
+  @include night-input;
+}
+
+#{$night} .pick__eyebrow,
+#{$night} .pick__hint,
+#{$night} .pick__used {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+#{$night} .pick__text {
+  font-size: inherit;
+}
+
+#{$night} .pick__title,
+#{$night} .pick__all-used,
+#{$night} .pick__empty,
+#{$night} .pick__used-list {
+  color: var(--night-on-sky);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+// ---- the radio: a ring, a filled disc with a check when chosen -------------------------------
+#{$night} .pick__radio,
+#{$night} .pick__item .pick__radio,
+#{$night} .vote-list__mark {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  box-sizing: border-box;
+  inline-size: 34px;
+  block-size: 34px;
+  border: 3px solid var(--night-radio-border);
+  border-radius: 50%;
+  background: var(--night-card-top);
+  box-shadow: var(--night-input-inset);
+}
+
+// The "+" of the own-question row keeps its glyph.
+#{$night} .pick__own-head .pick__radio {
+  color: var(--night-radio-border);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+#{$night} .pick__item--on .pick__radio,
+#{$night} .vote-list__item--on .vote-list__mark {
+  border-color: var(--night-primary-ink);
+  background: var(--night-primary-ink);
+  box-shadow: none;
+  color: transparent;
+  font-size: 0;
+}
+
+#{$night} .pick__item--on .pick__radio::after,
+#{$night} .vote-list__item--on .vote-list__mark::after {
+  content: '✓';
+  color: var(--night-primary-light);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+// ---- live results on a card --------------------------------------------------------------------
+#{$night} .vote-list__track,
+#{$night} .vote-list__item--on .vote-list__track {
+  @include night-well(16px);
+}
+
+#{$night} .vote-list__fill,
+#{$night} .vote-list__item--on .vote-list__fill {
+  border-radius: var(--night-radius-pill);
+  transition: none;
+  @include striped-fill(var(--night-stripe-a), var(--night-stripe-b), 6px);
+}
+
+#{$night} .vote-list__count,
+#{$night} .vote-list__item--on .vote-list__count {
+  color: var(--ink-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+// The decided proposal: the white card with the orange "chosen" pill.
+#{$night} .vote-list__item--winner {
+  background: var(--night-card);
+  color: var(--night-card-ink);
+}
+
+#{$night} .vote-list__winner {
+  min-block-size: 26px;
+  padding-inline: 12px;
+  font-size: 14px;
+  @include night-pill;
+}
+
+#{$night} .vote-list__row {
+  gap: 12px;
+}
+
+// ---- lines around the ballot ----------------------------------------------------------------------
+#{$night} .vote__empty,
+#{$night} .vote__results-later {
+  margin-block-end: 14px;
+  color: var(--night-on-sky);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+#{$night} .vote__status {
+  color: var(--night-on-sky);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+// "Your vote counted": the gold star and the words, on the ground.
+#{$night} .vote__status--counted {
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.2;
+  @include on-sky;
+}
+
+#{$night} .vote__status--counted::before {
+  @include star-coin(44px);
+}
+
+// ---- prefers-contrast: more — a choice shows its edge ---------------------------------------------
+@include more-contrast {
+  #{$night} .pick__item,
+  #{$night} .vote-list__item {
+    border: 2px solid var(--night-card-ink);
+  }
+
+  #{$night} .pick__item--on,
+  #{$night} .vote-list__item--on {
+    border: 3px solid var(--night-primary-ink);
+  }
+}

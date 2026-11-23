@@ -8,6 +8,7 @@ import '@/styles/projector-results.scss';
 import '@/styles/projector-video.scss';
 import '@/styles/projector-controls.scss';
 import '@/styles/game-projector.scss';
+import '@/styles/night-projector/index.scss';
 import { t } from '@/lib/i18n';
 import { ensureUser } from '@/lib/user';
 import { loadMainStatement, getMainStatement, setFollowLessonLanguage } from '@/lib/store';

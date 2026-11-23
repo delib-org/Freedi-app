@@ -1,0 +1,249 @@
+// =============================================================================
+// Mulberry: the panels the console's board shows around the tables. The joining
+// card (code and QR), the question line, the opening panel, the decision, the
+// gate, the support panel and the frame of the students' screen sample.
+// =============================================================================
+
+@use '../look-scope' as *;
+@use 'mixins' as *;
+
+// ---- students are joining: the code and the QR --------------------------------------
+#{$mulberry} .joining-card {
+  gap: 16px;
+  margin-block-end: 16px;
+  padding: 28px 32px;
+  @include hairline-card;
+}
+
+#{$mulberry} .joining-card__title {
+  @include display(1.75rem);
+  text-align: start;
+}
+
+#{$mulberry} .joining-card .qr-share {
+  gap: 24px;
+  align-items: center;
+}
+
+#{$mulberry} .qr-share__canvas {
+  border: 1px solid var(--mul-line);
+  border-radius: var(--mul-radius-control);
+}
+
+#{$mulberry} .qr-share__label {
+  color: var(--mul-ink-soft);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+// The class code: read from the back of the room.
+#{$mulberry} .joining-card__value {
+  align-self: flex-start;
+  padding: 4px 24px;
+  border-radius: var(--mul-radius-card);
+  background: var(--mul-blush);
+  color: var(--mul-ink);
+  @include display(clamp(2.75rem, 5vw, 4rem), 700, 1.2);
+  letter-spacing: 0.1em;
+}
+
+#{$mulberry} .qr-share {
+  border: 1px solid var(--mul-line);
+  border-radius: var(--mul-radius-card);
+  background: var(--mul-surface);
+  box-shadow: none;
+}
+
+// Inside the joining card or the QR band the share card has no frame of its own.
+#{$mulberry} :is(.joining-card, .console__qr) .qr-share {
+  margin: 0;
+  border: 0;
+}
+
+// ---- "the question to solve: … [change]" -------------------------------------------------
+#{$mulberry} .question-line {
+  gap: 4px 12px;
+  margin-block-end: 16px;
+  color: var(--mul-ink-soft);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+#{$mulberry} .question-line__text {
+  color: var(--mul-ink);
+  @include display(1.5rem, 700, 1.25);
+}
+
+#{$mulberry} .question-line__change {
+  margin-inline-start: 0;
+  color: var(--mul-primary-text);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+#{$mulberry} .question-line__change:hover {
+  text-decoration: underline;
+}
+
+// ---- the opening: what is on the projector -------------------------------------------------
+#{$mulberry} .console-opening {
+  gap: 16px;
+}
+
+#{$mulberry} .opening-panel {
+  padding: 24px;
+  @include hairline-card;
+}
+
+#{$mulberry} .opening-panel__title {
+  @include display(1.375rem);
+}
+
+#{$mulberry} :is(.opening-panel__edit, .opening-panel__add) {
+  color: var(--mul-primary-text);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+#{$mulberry} :is(.opening-panel__edit, .opening-panel__add):hover {
+  text-decoration: underline;
+}
+
+#{$mulberry} .opening-panel__empty {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .projector-pick__label {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .projector-pick__item {
+  border: 1.5px solid var(--mul-border-control);
+  border-radius: var(--mul-radius-control);
+  background: var(--mul-surface);
+  color: var(--mul-ink);
+  font-weight: 600;
+}
+
+#{$mulberry} .projector-pick__item--on {
+  border-color: var(--mul-primary);
+  background: var(--mul-primary);
+  color: var(--mul-on-primary);
+  font-weight: 700;
+}
+
+#{$mulberry} .projector-pick__item--busy[aria-busy='true'] {
+  outline-color: var(--mul-primary);
+}
+
+// ---- the decision ------------------------------------------------------------------------------
+#{$mulberry} .decision-panel {
+  gap: 10px;
+  margin-block-end: 16px;
+  padding: 24px;
+  @include hairline-card;
+}
+
+#{$mulberry} .decision-panel__title {
+  @include section-label;
+}
+
+#{$mulberry} .decision-panel__winner {
+  @include display(1.625rem, 700, 1.25);
+}
+
+#{$mulberry} :is(.decision-panel__audience, .decision-panel__note, .decision-panel__turnout) {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} :is(.decision-panel__score, .decision-panel__percent) {
+  color: var(--mul-ready-ink);
+}
+
+#{$mulberry} .decision-panel__track {
+  background: var(--mul-well);
+}
+
+#{$mulberry} .decision-panel__fill {
+  background: var(--mul-ready-ink);
+}
+
+// ---- the gate: each proposal against the threshold ------------------------------------------------
+#{$mulberry} .gate-panel {
+  margin-block-start: 20px;
+}
+
+#{$mulberry} .gate-panel__track {
+  block-size: 12px;
+  background: var(--mul-well);
+}
+
+// Not through the gate yet: a neutral fill (4.9:1 on the track); through it: sage.
+#{$mulberry} .gate-panel__fill {
+  background: var(--mul-ink-soft);
+}
+
+#{$mulberry} .gate-panel__row--passed .gate-panel__fill {
+  background: var(--mul-ready-ink);
+}
+
+#{$mulberry} .gate-panel__line {
+  inset-block: -4px;
+  inline-size: 3px;
+  background: var(--mul-ink);
+}
+
+#{$mulberry} .gate-panel__score {
+  font-weight: 700;
+}
+
+#{$mulberry} .gate-panel__note {
+  color: var(--mul-ink-soft);
+  font-weight: 600;
+}
+
+#{$mulberry} .gate-panel__row--passed .gate-panel__note {
+  color: var(--mul-ready-ink);
+  font-weight: 700;
+}
+
+// ---- support by side ---------------------------------------------------------------------------------
+#{$mulberry} .support-panel {
+  margin-block-start: 20px;
+  padding: 20px 24px;
+  @include hairline-card;
+}
+
+#{$mulberry} .support-panel__title {
+  @include display(1.375rem);
+}
+
+#{$mulberry} .support-panel__note {
+  color: var(--mul-ink-soft);
+}
+
+// ---- the students' screen: only its frame is the console's -----------------------------------------------
+#{$mulberry} .student-screen__phone {
+  border: 6px solid var(--mul-ink);
+  border-radius: 32px;
+  box-shadow: var(--mul-shadow-raised);
+}
+
+#{$mulberry} .student-screen__note {
+  color: var(--mul-ink-soft);
+  font-size: 0.9375rem;
+}
+
+#{$mulberry} .console__student-back {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+}
+
+@include more-contrast {
+  #{$mulberry} :is(.joining-card, .opening-panel, .decision-panel, .support-panel) {
+    border-color: var(--mul-border-control);
+  }
+}

@@ -1,0 +1,100 @@
+// =============================================================================
+// Night at room scale — choosing a side: the question on the sky, the two sides
+// as glowing panels with their marks, "in the middle" between them.
+//
+// Side marks are the same on every screen and the shape carries the side:
+// A = a cyan orb (circle), B = a gold rounded square, the middle = a violet
+// diamond. Nothing here says where anyone stands: the wall shows the two sides
+// and their claims, as it does today.
+// =============================================================================
+
+@use 'room' as *;
+
+#{$wall} .projector-step--side {
+  gap: rs(48);
+}
+
+#{$wall} .projector-characters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: rs(48);
+}
+
+#{$wall} .projector-character {
+  justify-content: center;
+  gap: rs(20);
+  padding: rs(36) rs(44) rs(44);
+  @include room-panel;
+}
+
+#{$wall} .projector-character--b {
+  @include room-panel(
+    var(--night-primary-mid),
+    var(--night-primary-ring),
+    var(--night-primary-glow)
+  );
+}
+
+// The row is always left-to-right (side A on the left, like the phone's
+// slider); the words in a panel still follow the page.
+#{$night-projector}[dir='rtl'] .projector:not(.projector--video) .projector-character {
+  direction: rtl;
+}
+
+#{$wall} .projector-character__circle {
+  inline-size: rs(150);
+  block-size: rs(150);
+  color: var(--night-orb-ink);
+  font-size: rs(84);
+  line-height: 1;
+}
+
+#{$wall} .projector-character--a .projector-character__circle {
+  border-radius: 50%;
+  @include room-orb(var(--night-side-a), var(--night-orb-cyan-glow), var(--night-orb-cyan-shade));
+}
+
+#{$wall} .projector-character--b .projector-character__circle {
+  border-radius: rs(44);
+  @include room-orb(var(--night-side-b), var(--night-orb-orange-glow), var(--night-orb-gold-shade));
+}
+
+#{$wall} .projector-character__name {
+  font-size: rs(64);
+  line-height: 1.1;
+  @include on-sky(var(--night-text-shadow-strong));
+}
+
+#{$wall} .projector-character__claim {
+  max-width: 24ch;
+  color: var(--night-on-sky);
+  font-size: rs(44);
+  font-weight: 500;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+// "In the middle": the violet diamond over its word.
+#{$wall} .projector-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: center;
+  gap: rs(28);
+  font-size: rs(40);
+  font-weight: 600;
+  @include on-sky;
+}
+
+#{$wall} .projector-center::before {
+  content: '';
+  inline-size: rs(64);
+  block-size: rs(64);
+  border-radius: rs(16);
+  background: var(--night-side-middle);
+  box-shadow:
+    0 0 var(--night-orb-halo) var(--night-orb-violet-glow),
+    inset 0 rs(-6) 0 var(--night-orb-violet-shade);
+  transform: rotate(45deg);
+}

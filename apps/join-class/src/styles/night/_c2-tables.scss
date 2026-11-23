@@ -1,0 +1,120 @@
+// =============================================================================
+// Night — my table: the table's number as a cyan badge, who sits there on a
+// white card. Loaded with the c2 views.
+// =============================================================================
+
+@use 'mixins' as *;
+
+#{$night} .table-step {
+  gap: 22px;
+}
+
+// The table badge: the cyan jelly, as in the header of the later steps.
+#{$night} .table-step__number {
+  align-self: center;
+  padding: 12px 28px 14px;
+  border-radius: var(--night-radius-button);
+  color: var(--night-orb-ink);
+  font-size: 44px;
+  font-weight: 700;
+  @include jelly(
+    var(--night-cyan),
+    var(--night-cyan-lip),
+    var(--night-lip),
+    var(--night-cyan-shade)
+  );
+}
+
+#{$night} .table-step__topic {
+  font-size: 20px;
+  @include on-sky;
+}
+
+#{$night} .table-step__empty {
+  font-size: 26px;
+  line-height: 1.2;
+  @include on-sky(var(--night-text-shadow-strong));
+}
+
+#{$night} .table-step__note {
+  padding: 12px 16px 16px;
+  font-weight: 600;
+  @include night-card(var(--night-radius-input), var(--night-lip-sm), var(--night-drop-sm));
+}
+
+#{$night} .table-step__card {
+  padding: 14px 16px 20px;
+  @include night-card;
+}
+
+#{$night} .table-step__members-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+#{$night} .table-step__pick {
+  min-block-size: 60px;
+  font-size: 20px;
+}
+
+// ---- the people at the table ------------------------------------------------------
+#{$night} .table-chip {
+  min-block-size: 40px;
+  border: 2px solid var(--night-card-line);
+  background: var(--night-card-top);
+  color: var(--night-card-ink);
+  font-weight: 600;
+}
+
+// Me: the orange pill.
+#{$night} .table-chip--me {
+  border: 0;
+  color: var(--night-primary-ink);
+  font-weight: 700;
+  @include jelly(
+    var(--night-primary-pill),
+    var(--night-primary-lip),
+    var(--night-lip-xs),
+    null,
+    null
+  );
+}
+
+#{$night} .table-chip--reserved {
+  border-style: dashed;
+  background: transparent;
+  color: var(--night-card-ink-soft);
+}
+
+// The side mark of a chip is the shape itself; the letter-like glyph is not drawn.
+#{$night} .table-chip__mark {
+  flex: none;
+  inline-size: 18px;
+  block-size: 18px;
+  font-size: 0;
+}
+
+#{$night} .table-chip--none .table-chip__mark {
+  display: none;
+}
+
+#{$night} .table-chip--a .table-chip__mark {
+  border-radius: 50%;
+  background: var(--night-side-a);
+  box-shadow: inset 0 -2px 0 var(--night-orb-cyan-shade);
+}
+
+#{$night} .table-chip--b .table-chip__mark {
+  border-radius: 5px;
+  background: var(--night-side-b);
+  box-shadow: inset 0 -2px 0 var(--night-orb-gold-shade);
+}
+
+#{$night} .table-chip--center .table-chip__mark {
+  inline-size: 14px;
+  block-size: 14px;
+  margin-inline: 2px;
+  border-radius: 3px;
+  background: var(--night-side-middle);
+  transform: rotate(45deg);
+}

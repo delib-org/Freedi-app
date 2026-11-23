@@ -4,6 +4,12 @@
 // Last: the game look's overlay (scoped, see _game-scope.scss).
 @use 'game';
 @use 'game-student';
+// After it: the redesign's two looks (scoped, see _look-scope.scss). Night is
+// the student surface's. Of mulberry, the teacher surface's, only the part the
+// front door and /login need is here; the rest loads with the lazy teacher
+// routes (mulberry/index.scss).
+@use 'night';
+@use 'mulberry/entry';
 
 *,
 *::before,

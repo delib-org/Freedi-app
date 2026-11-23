@@ -1,6 +1,7 @@
 import m from 'mithril';
 import type { Statement } from '@freedi/shared-types';
 import '@/styles/student-c3.scss';
+import '@/styles/night/c3.scss';
 import { StudentFrame } from '@/components/StudentFrame';
 import { t } from '@/lib/i18n';
 import { getChallengeQuestion } from '@/lib/lesson';

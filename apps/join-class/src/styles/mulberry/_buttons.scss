@@ -1,0 +1,117 @@
+// =============================================================================
+// Mulberry buttons: 48px tall, 12px corners. Primary is mulberry, secondary is
+// white with a 1.5px control edge, quiet is mulberry text. In the entry CSS,
+// because the front page and /login draw them.
+// =============================================================================
+
+@use '../look-scope' as *;
+
+// No size here: the base button is already 48px tall (--touch-target) and many
+// components set their own height with a plain class, which this prefix would
+// outrank (the phone dock's 56px button, for one).
+#{$mulberry} .btn {
+  border-width: 1.5px;
+  border-radius: var(--mul-radius-control);
+  font-family: var(--font-body);
+  font-size: 1.0625rem; // 17px
+  font-weight: 600;
+  letter-spacing: 0;
+  text-decoration: none;
+  box-shadow: none;
+}
+
+#{$mulberry} .btn--primary,
+#{$mulberry} .btn--primary:hover:not(:disabled) {
+  background: var(--mul-primary);
+  border-color: var(--mul-primary);
+  color: var(--mul-on-primary);
+  font-weight: 700;
+  box-shadow: var(--mul-shadow-xs);
+}
+
+#{$mulberry} .btn--primary:hover:not(:disabled) {
+  background: var(--mul-primary-hover);
+  border-color: var(--mul-primary-hover);
+}
+
+#{$mulberry} .btn--primary:active:not(:disabled) {
+  background: var(--mul-primary-pressed);
+  border-color: var(--mul-primary-pressed);
+}
+
+#{$mulberry} .btn--secondary,
+#{$mulberry} .btn--secondary:hover:not(:disabled) {
+  background: var(--mul-surface);
+  border-color: var(--mul-border-control);
+  color: var(--mul-ink);
+  box-shadow: none;
+}
+
+#{$mulberry} .btn--secondary:hover:not(:disabled) {
+  background: var(--mul-blush);
+}
+
+// Quiet: mulberry text on nothing.
+#{$mulberry} .btn--tertiary,
+#{$mulberry} .btn--tertiary:hover:not(:disabled) {
+  background: transparent;
+  border-color: transparent;
+  color: var(--mul-primary-text);
+  font-weight: 700;
+}
+
+#{$mulberry} .btn--tertiary:hover:not(:disabled),
+#{$mulberry} .btn--tertiary:focus-visible {
+  background: var(--mul-blush);
+}
+
+#{$mulberry} .btn--text {
+  color: var(--mul-ink-soft);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+#{$mulberry} .btn--agree,
+#{$mulberry} .btn--agree:hover:not(:disabled) {
+  background: var(--mul-ready-ink);
+  border-color: var(--mul-ready-ink);
+  color: var(--mul-on-primary);
+  font-weight: 700;
+  box-shadow: var(--mul-shadow-xs);
+}
+
+#{$mulberry} .btn--danger,
+#{$mulberry} .btn--danger:hover:not(:disabled) {
+  background: var(--mul-danger-ink);
+  border-color: var(--mul-danger-ink);
+  color: var(--mul-on-primary);
+  font-weight: 700;
+  box-shadow: var(--mul-shadow-xs);
+}
+
+#{$mulberry} .btn--small {
+  border-radius: var(--mul-radius-control);
+  font-size: 1rem;
+}
+
+// The press is a 1px sink, no edge to land on.
+#{$mulberry} :is(.btn--primary, .btn--agree, .btn--secondary, .btn--danger):active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+#{$mulberry} .btn:disabled {
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #{$mulberry} .btn:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+@include more-contrast {
+  #{$mulberry} .btn--tertiary,
+  #{$mulberry} .btn--text {
+    border-color: var(--mul-border-control);
+  }
+}

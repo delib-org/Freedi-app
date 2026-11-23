@@ -1,0 +1,168 @@
+// =============================================================================
+// Mulberry: the side sheets of the console. One table's sheet
+// (/t/:mid/table/:n) and the "act for a student with no device" sheet.
+// =============================================================================
+
+@use '../look-scope' as *;
+@use 'mixins' as *;
+
+#{$mulberry} .table-sheet__scrim {
+  background: var(--mul-scrim);
+}
+
+#{$mulberry} .table-sheet {
+  gap: 12px;
+  background: var(--mul-surface);
+  color: var(--mul-ink);
+  box-shadow: var(--mul-shadow-overlay);
+}
+
+#{$mulberry} .table-sheet > .back-bar {
+  background: var(--mul-surface);
+}
+
+#{$mulberry} :is(.table-sheet__title, .act-for__title) {
+  @include display(1.75rem);
+}
+
+#{$mulberry} .table-sheet__now {
+  @include pill(var(--mul-primary-text), var(--mul-blush), 28px);
+  align-self: flex-start;
+  font-size: 0.875rem;
+}
+
+#{$mulberry} .table-sheet__question {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--mul-ink);
+}
+
+#{$mulberry} :is(.table-sheet__timer, .table-sheet__asker, .table-sheet__missing) {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .table-sheet__timer--over {
+  color: var(--mul-attention-ink);
+  font-weight: 700;
+}
+
+#{$mulberry} :is(.table-sheet__section, .act-for__table-title, .act-for__action-title) {
+  margin-block: 12px 4px;
+  @include section-label;
+}
+
+#{$mulberry} .table-sheet__member {
+  gap: 4px 10px;
+  padding-block: 8px;
+  border-block-end: 1px solid var(--mul-line);
+}
+
+#{$mulberry} .table-sheet__member-name {
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+#{$mulberry} .table-sheet__member-mark,
+#{$mulberry} .table-sheet__member-turn {
+  color: var(--mul-primary-text);
+}
+
+#{$mulberry} .table-sheet__member-side {
+  font-size: 0.8125rem;
+}
+
+#{$mulberry} .table-sheet__member-side--chose {
+  color: var(--mul-ready-ink);
+}
+
+#{$mulberry} .table-sheet__turn,
+#{$mulberry} .table-sheet__remove,
+#{$mulberry} .table-sheet__act-for {
+  font-size: 0.9375rem;
+}
+
+#{$mulberry} .table-sheet__remove,
+#{$mulberry} .table-sheet__remove:hover:not(:disabled) {
+  color: var(--mul-ink-soft);
+  font-weight: 600;
+}
+
+#{$mulberry} .table-sheet__confirm {
+  color: var(--mul-ink-mid);
+}
+
+// ---- acting for a student with no device ----------------------------------------------
+#{$mulberry} .act-for__where {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} :is(.act-for__area, .act-for__input, .act-for__select) {
+  @include field;
+}
+
+#{$mulberry} .act-for__area {
+  padding-block: 10px;
+}
+
+#{$mulberry} .act-for__note {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .act-for__status--done {
+  color: var(--mul-ready-ink);
+  font-weight: 700;
+}
+
+#{$mulberry} .act-for__error {
+  color: var(--mul-danger-ink);
+}
+
+#{$mulberry} :is(.act-for__add, .act-for__roster) {
+  border-block-start: 1px solid var(--mul-line);
+}
+
+#{$mulberry} .act-for__own-item {
+  border-block-end: 1px solid var(--mul-line);
+}
+
+#{$mulberry} .act-for__person-btn {
+  border-radius: var(--mul-radius-control);
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .act-for__person-btn:hover {
+  background: var(--mul-blush);
+}
+
+#{$mulberry} .act-for__person-btn--on {
+  border-color: var(--mul-primary);
+  background: var(--mul-blush);
+  font-weight: 700;
+}
+
+#{$mulberry} .act-for__mark {
+  color: var(--mul-ready-ink);
+}
+
+@include laptop {
+  #{$mulberry} .table-sheet {
+    padding-inline: 24px;
+    padding-block-end: 24px;
+  }
+
+  // The sheet's own bar spans it edge to edge, over the wider padding.
+  #{$mulberry} .table-sheet > .back-bar {
+    margin-inline: -24px;
+    inline-size: calc(100% + 48px);
+    padding-inline: 16px;
+  }
+}
+
+@include more-contrast {
+  #{$mulberry} .table-sheet {
+    border-inline-start: 1px solid var(--mul-border-control);
+  }
+}

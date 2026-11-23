@@ -1,0 +1,219 @@
+// =============================================================================
+// Night — talking at the table (Student-3-Talk.dc.html): the state line, the
+// one control, and the footer buttons of the states that act. The timer ring
+// is in _c3-clock.scss. Loaded with the c3 views.
+// =============================================================================
+
+@use 'mixins' as *;
+
+// ---- state lines ---------------------------------------------------------------------
+#{$night} .tt {
+  gap: 16px;
+}
+
+#{$night} .tt__clock,
+#{$night} .talk {
+  gap: 14px;
+}
+
+// A talk turn fills the content, so "I'm done" sits at its foot, above the ridge.
+#{$night} .tt,
+#{$night} .tt > .tt__clock {
+  flex: 1 0 auto;
+}
+
+#{$night} .tt > .tt__clock > .tt__finish:last-child {
+  margin-block-start: auto;
+}
+
+#{$night} .talk > .tt__clock {
+  align-self: stretch;
+}
+
+// Where the browser can tell (`:has`), that button stands in the ground zone
+// like every pinned action: the ridge and the ground are drawn behind the foot
+// of the content, in place of the frame's own ridge. Elsewhere it sits just
+// above the ridge.
+@supports selector(:has(*)) {
+  #{$night} .frame:has(.tt > .tt__clock > .tt__finish:last-child)::after {
+    display: none;
+  }
+
+  #{$night} .frame__content:has(.tt > .tt__clock > .tt__finish:last-child) {
+    padding-block-end: calc(30px + env(safe-area-inset-bottom, 0px));
+    background:
+      var(--night-ridge-image) left 0 bottom calc(104px + env(safe-area-inset-bottom, 0px)) / 100%
+        52px no-repeat,
+      linear-gradient(var(--night-ground), var(--night-ground)) left 0 bottom 0 / 100%
+        calc(105px + env(safe-area-inset-bottom, 0px)) no-repeat;
+  }
+
+  // The clock keeps clear of the ridge when the screen is short.
+  #{$night} .tt > .tt__clock:has(> .tt__finish:last-child) > .count {
+    margin-block-end: 58px;
+  }
+}
+
+#{$night} .tt__status {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.15;
+  @include on-sky(var(--night-text-shadow-strong));
+}
+
+#{$night} .tt__status--done {
+  opacity: 1;
+}
+
+// White only on the sky: these were a pale tint.
+#{$night} .tt__note,
+#{$night} .tt__quiet,
+#{$night} .move-on__count,
+#{$night} .proposals-next,
+#{$night} .frame:not(.frame--down) .tt__note,
+#{$night} .frame:not(.frame--down) .tt__quiet,
+#{$night} .frame:not(.frame--down) .move-on__count {
+  color: var(--night-on-sky);
+  font-weight: 500;
+  opacity: 1;
+}
+
+#{$night} .tt__note,
+#{$night} .proposals-next {
+  font-size: 17px;
+}
+
+#{$night} .tt__quiet,
+#{$night} .move-on__count {
+  font-size: 15px;
+}
+
+#{$night} .tt__pass,
+#{$night} .move-on__button,
+#{$night} .frame:not(.frame--down) .tt__pass,
+#{$night} .frame:not(.frame--down) .move-on__button {
+  color: var(--night-on-sky);
+}
+
+// ---- the one control under the clock: the orange jelly -------------------------------------
+#{$night} .btn.tt__finish,
+#{$night} .btn.tt__finish:hover:not(:disabled) {
+  align-self: stretch;
+  min-height: 64px;
+  color: var(--night-primary-ink);
+  font-size: 24px;
+  @include jelly(
+    var(--night-primary),
+    var(--night-primary-lip),
+    var(--night-lip),
+    var(--night-primary-shade)
+  );
+}
+
+#{$night} .btn.tt__finish:active:not(:disabled) {
+  @include jelly-press;
+}
+
+// ---- footer: one primary and one real secondary under it -------------------------------------
+#{$night} .turn-actions {
+  gap: 16px;
+}
+
+#{$night} .frame__action .turn-actions__secondary,
+#{$night} .frame--down .turn-actions__secondary,
+#{$night} .frame--down .turn-actions__secondary:hover:not(:disabled) {
+  min-height: 56px;
+  color: var(--night-secondary-ink);
+  font-size: 20px;
+  @include jelly(
+    var(--night-secondary),
+    var(--night-secondary-lip),
+    var(--night-lip),
+    var(--night-card-shade),
+    var(--night-drop),
+    var(--night-card-top)
+  );
+}
+
+#{$night} .frame--down .turn-actions__secondary:active:not(:disabled) {
+  @include jelly-press;
+}
+
+#{$night} .turn-actions__hint,
+#{$night} .turn-actions__ask {
+  color: var(--night-on-sky);
+  font-size: 16px;
+}
+
+// ---- Talk · Write · Rate: the current part is the orange pill -----------------------------------
+#{$night} .substeps {
+  margin-block-end: 18px;
+}
+
+#{$night} .substeps__list {
+  justify-content: flex-start;
+  gap: 6px 4px;
+}
+
+#{$night} .substeps__pill,
+#{$night} .frame--down .substeps__pill {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 32px;
+  color: var(--night-on-sky);
+  font-size: 16px;
+  font-weight: 600;
+  opacity: 1;
+}
+
+// The parts are told apart by the pill and the gap; the chevrons are not drawn.
+#{$night} .substeps__pill:not(:last-child)::after {
+  display: none;
+}
+
+#{$night} .substeps__pill:not(.substeps__pill--on) {
+  padding-inline: 6px;
+}
+
+#{$night} .substeps__pill--on,
+#{$night} .frame--down .substeps__pill--on {
+  padding-inline: 14px;
+  border-radius: var(--night-radius-pill);
+  background: var(--night-primary-pill);
+  box-shadow:
+    inset 0 2px 0 var(--night-gloss),
+    0 var(--night-lip-xs) 0 var(--night-primary-lip);
+  color: var(--night-primary-ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+// ---- an action that failed: a small card, with its retry ------------------------------------------
+#{$night} .c3-error {
+  margin-block: 0 18px;
+  padding: 12px 14px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  @include night-card(var(--night-radius-input), var(--night-lip-sm), var(--night-drop-sm));
+  color: var(--night-card-bad-ink);
+}
+
+// ---- a claim the server is deciding: dimmed, nothing loops ----------------------------------------
+#{$night} .btn[aria-busy='true'] {
+  animation: none;
+  opacity: 0.7;
+}
+
+// ---- the question on the table (QuestionCard.ts) ---------------------------------------
+// A white glossy reading card on the sky, the question in the card ink.
+#{$night} .question-card {
+  padding: 20px 18px 24px;
+  @include night-card(var(--night-radius-button));
+}
+
+#{$night} .question-card__text {
+  color: var(--night-card-ink);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.25;
+}

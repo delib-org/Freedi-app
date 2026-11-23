@@ -1,0 +1,137 @@
+// =============================================================================
+// Night — the pieces every screen partial draws with (student lane). The scope
+// ($night) and the jelly / glow / stripes helpers come from ../_look-scope.scss
+// and are forwarded, so a partial needs one line: `@use 'mixins' as *;`.
+// Colours are tokens (night/_tokens.scss): nothing here holds a literal.
+// =============================================================================
+
+@forward '../look-scope';
+@use '../look-scope' as *;
+
+/// Text that sits on the open sky: white, with the soft drop under it.
+@mixin on-sky($shadow: var(--night-text-shadow)) {
+  color: var(--night-on-sky);
+  text-shadow: $shadow;
+}
+
+/// A reading surface: the white glossy card. Flips the ink tokens for
+/// everything inside it (`night-on-card`).
+@mixin night-card(
+  $radius: var(--night-radius-card),
+  $lip: var(--night-lip),
+  $drop: var(--night-drop-card)
+) {
+  @include night-on-card;
+  @include jelly(
+    var(--night-card),
+    var(--night-card-lip),
+    $lip,
+    var(--night-card-shade),
+    $drop,
+    var(--night-card-top)
+  );
+  border: 0;
+  border-radius: $radius;
+  text-shadow: none;
+}
+
+/// The lesson's question: the indigo panel in a glowing frame.
+@mixin night-panel(
+  $frame: var(--night-panel-frame),
+  $ring: var(--night-panel-ring),
+  $halo: var(--night-panel-glow)
+) {
+  border: 3px solid $frame;
+  border-radius: var(--night-radius-card);
+  background: var(--night-panel);
+  box-shadow:
+    0 0 0 4px $ring,
+    0 0 28px $halo,
+    inset 0 3px 0 var(--night-panel-gloss);
+  color: var(--night-on-sky);
+}
+
+/// A small label pill. Orange by default (the active part, an eyebrow).
+@mixin night-pill(
+  $fill: var(--night-primary-pill),
+  $lip: var(--night-primary-lip),
+  $ink: var(--night-primary-ink)
+) {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 30px;
+  padding-inline: 14px;
+  border: 0;
+  border-radius: var(--night-radius-pill);
+  @include jelly($fill, $lip, var(--night-lip-xs), null, null);
+  color: $ink;
+  font-weight: 600;
+  text-shadow: none;
+}
+
+/// A text field on a card.
+@mixin night-input {
+  border: 2.5px solid var(--night-input-border);
+  border-radius: var(--night-radius-input);
+  background: var(--night-card-top);
+  box-shadow: var(--night-input-inset);
+  color: var(--night-card-ink);
+  font-weight: 500;
+
+  &::placeholder {
+    color: var(--night-placeholder);
+    opacity: 1;
+  }
+}
+
+/// The dark track of a result bar on a card, and its striped fill.
+@mixin night-well($height: 16px) {
+  box-sizing: border-box;
+  block-size: $height;
+  padding: 3px;
+  border-radius: var(--night-radius-pill);
+  background: var(--night-well);
+  box-shadow: var(--night-well-inset);
+}
+
+/// A glossy orb: classmates, rating faces, side marks.
+@mixin orb($fill, $halo, $shade, $blur: 12px) {
+  background: $fill;
+  box-shadow:
+    0 0 $blur $halo,
+    inset 0 -3px 0 $shade;
+}
+
+/// The gold coin with the winner's star: the one "done" stamp of the look.
+@mixin star-coin($size: 44px) {
+  content: '';
+  flex: none;
+  inline-size: $size;
+  block-size: $size;
+  border-radius: 50%;
+  background:
+    var(--night-star-image) center / 60% no-repeat,
+    var(--night-orb-gold);
+  box-shadow:
+    inset 0 -3px 0 var(--night-orb-gold-shade),
+    0 0 16px var(--night-orb-gold-glow);
+}
+
+/// A one-colour glyph drawn from an SVG mask (the colour is the background).
+@mixin glyph($image, $ink: var(--night-orb-ink)) {
+  background: $ink;
+  -webkit-mask: $image center / contain no-repeat;
+  mask: $image center / contain no-repeat;
+}
+
+/// Motion of the look: transform and opacity only, off under reduced motion.
+@mixin calm-motion {
+  transition:
+    transform var(--dur-quick) var(--ease-out),
+    opacity var(--dur-quick) var(--ease-out);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    animation: none;
+  }
+}

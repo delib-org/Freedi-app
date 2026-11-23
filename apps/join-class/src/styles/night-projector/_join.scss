@@ -1,0 +1,182 @@
+// =============================================================================
+// Night at room scale — the join gate (Projector-1-Join.dc.html): the class code
+// as six white jelly tiles, the QR on its white tile in a glowing frame, the
+// blue "N in the class" counter and the classmate orbs.
+//
+// The tiles and the orbs are decoration (`hidden` + `aria-hidden` in the view,
+// projector/CodeTiles.ts and student/c2/classmateOrbs.ts): only this stylesheet
+// shows them, so the solid look and high contrast keep the plain code alone.
+// =============================================================================
+
+@use 'room' as *;
+@use '../night/glyphs';
+
+// Code and QR side by side (the one focal point), the class under them.
+#{$wall} .projector-step--waiting {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: rs(64) rs(36);
+  text-align: start;
+}
+
+// ---- the code -----------------------------------------------------------------
+// On the gate the tiles draw it; the plain code stays for a screen reader.
+#{$wall} .projector-step--waiting .projector-code {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+#{$wall} .code-tiles {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  padding-block-end: var(--night-lip);
+  font-size: rs(200);
+  direction: ltr;
+}
+
+#{$wall} .projector-step--waiting .code-tiles {
+  grid-area: 1 / 1 / auto / span 2;
+  justify-self: start;
+}
+
+#{$wall} .code-tiles__group {
+  display: flex;
+  gap: 0.09em;
+}
+
+#{$wall} .code-tiles__digit {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  inline-size: 0.88em;
+  block-size: 1.32em;
+  @include room-card(0.22em);
+  color: var(--night-card-ink);
+  font-weight: 700;
+  line-height: 1;
+}
+
+// Paused: the code is a reminder under the words, not the headline. One white
+// plate (the paused screen has no tiles).
+#{$wall} .projector-step--state .projector-code {
+  padding-block: rs(18) rs(26);
+  padding-inline: rs(56) rs(40); // the code is always left-to-right; its spacing trails
+  @include room-card;
+  color: var(--night-card-ink);
+  font-size: rs(160);
+  letter-spacing: 0.12em;
+}
+
+// ---- the QR: black on a pure white tile, in the panel's glowing frame -----------
+#{$wall} .projector-qr--waiting {
+  grid-area: 1 / 3;
+  box-sizing: border-box;
+  inline-size: rs(424);
+  block-size: rs(424);
+  padding: rs(36);
+  border: var(--night-frame) solid var(--night-panel-frame);
+  border-radius: var(--night-radius-card);
+  box-shadow:
+    0 0 0 var(--night-ring) var(--night-panel-ring),
+    0 0 var(--night-halo) var(--night-panel-glow),
+    0 var(--night-lip) 0 var(--night-card-lip);
+}
+
+// ---- who is here -------------------------------------------------------------------
+#{$wall} .projector-count {
+  grid-area: 2 / 1;
+  justify-self: start;
+  @include room-counter(glyphs.$person);
+}
+
+#{$wall} .classmates {
+  grid-area: 2 / 2 / auto / span 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: rs(16);
+}
+
+#{$wall} .classmates__orb,
+#{$wall} .classmates__slot {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+  inline-size: rs(72);
+  block-size: rs(72);
+  border-radius: 50%;
+}
+
+#{$wall} .classmates__orb::after {
+  content: '';
+  position: absolute;
+  inset: rs(14);
+  @include glyph(glyphs.$face-smile);
+}
+
+#{$wall} .classmates__orb:nth-child(3n + 2)::after {
+  @include glyph(glyphs.$face-open);
+}
+
+#{$wall} .classmates__orb:nth-child(7n + 3)::after {
+  @include glyph(glyphs.$face-wink);
+}
+
+#{$wall} .classmates__orb--magenta {
+  @include room-orb(
+    var(--night-orb-magenta),
+    var(--night-orb-magenta-glow),
+    var(--night-orb-magenta-shade)
+  );
+}
+
+#{$wall} .classmates__orb--cyan {
+  @include room-orb(var(--night-orb-cyan), var(--night-orb-cyan-glow), var(--night-orb-cyan-shade));
+}
+
+#{$wall} .classmates__orb--orange {
+  @include room-orb(
+    var(--night-orb-orange),
+    var(--night-orb-orange-glow),
+    var(--night-orb-orange-shade)
+  );
+}
+
+#{$wall} .classmates__orb--green {
+  @include room-orb(
+    var(--night-orb-green),
+    var(--night-orb-green-glow),
+    var(--night-orb-green-shade)
+  );
+}
+
+#{$wall} .classmates__orb--violet {
+  @include room-orb(
+    var(--night-orb-violet),
+    var(--night-orb-violet-glow),
+    var(--night-orb-violet-shade)
+  );
+}
+
+// The open seat: a dashed ring with a question mark.
+#{$wall} .classmates__slot {
+  display: grid;
+  place-items: center;
+  border: rs(5) dashed var(--night-on-sky);
+  box-shadow: 0 0 var(--night-orb-halo) var(--night-gloss-soft);
+  color: var(--night-on-sky);
+  font-size: rs(38);
+  font-weight: 700;
+  line-height: 1;
+}
+
+#{$wall} .classmates__slot::before {
+  content: '?';
+}

@@ -1,5 +1,6 @@
 import m from 'mithril';
 import '@/styles/teacher.scss';
+import '@/styles/mulberry/index.scss';
 import type { Statement } from '@freedi/shared-types';
 import { getAvailableLanguages, t } from '@/lib/i18n';
 import { setFollowLessonLanguage } from '@/lib/store';

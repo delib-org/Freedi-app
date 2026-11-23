@@ -1,0 +1,11 @@
+// Night — lesson part 2 (table talk, proposals, all proposals, vote, summary,
+// replies). Imported by the c3 views next to student-c3.scss, so it loads with
+// them and after the game layer's game-c3.scss.
+@use 'c3-talk';
+@use 'c3-clock';
+@use 'c3-write';
+@use 'c3-rate';
+@use 'c3-vote';
+@use 'c3-summary';
+@use 'c3-sheet';
+@use 'decision';

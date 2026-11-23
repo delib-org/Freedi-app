@@ -1,0 +1,133 @@
+// =============================================================================
+// Night at room scale — support by side, on the summary: one white card, three
+// striped bars each led by its side mark, the verdict as a pill.
+//
+// It shows what the wall shows today: three totals from the server. The marks
+// name the sides (A = cyan circle, the middle = violet diamond, B = gold rounded
+// square); no student is placed on one.
+// =============================================================================
+
+@use 'room' as *;
+
+#{$wall} .projector-support-block {
+  box-sizing: border-box;
+  gap: rs(22);
+  padding: rs(26) rs(40) rs(38);
+  @include room-card;
+}
+
+#{$wall} .projector-support__explain {
+  color: var(--night-card-ink-soft);
+  font-size: rs(32);
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+#{$wall} .projector-support {
+  gap: rs(20);
+}
+
+// A row: the side's mark, the label with "n of m rated" beside it, the bar under both.
+#{$wall} .projector-support__row {
+  grid-template-columns: rs(56) minmax(0, 1fr) auto;
+  gap: rs(8) rs(22);
+}
+
+#{$wall} .projector-support__row::before {
+  content: '';
+  grid-area: 1 / 1 / span 2 / auto;
+  justify-self: center;
+  inline-size: rs(52);
+  block-size: rs(52);
+}
+
+#{$wall} .projector-support__row--a::before {
+  border-radius: 50%;
+  background: var(--night-side-a);
+  box-shadow: inset 0 rs(-5) 0 var(--night-orb-cyan-shade);
+}
+
+#{$wall} .projector-support__row--center::before {
+  inline-size: rs(36);
+  block-size: rs(36);
+  border-radius: rs(9);
+  background: var(--night-side-middle);
+  box-shadow: inset 0 rs(-4) 0 var(--night-orb-violet-shade);
+  transform: rotate(45deg);
+}
+
+#{$wall} .projector-support__row--b::before {
+  border-radius: rs(15);
+  background: var(--night-side-b);
+  box-shadow: inset 0 rs(-5) 0 var(--night-orb-gold-shade);
+}
+
+#{$wall} .projector-support__label {
+  grid-area: 1 / 2;
+  font-size: rs(38);
+  font-weight: 600;
+}
+
+#{$wall} .projector-support__n {
+  grid-area: 1 / 3;
+  color: var(--night-card-ink-soft);
+  font-size: rs(32);
+  font-weight: 500;
+}
+
+#{$wall} .projector-support__track,
+#{$wall} .projector-support__row > .projector-support__too-few {
+  grid-area: 2 / 2 / auto / span 2;
+}
+
+#{$wall} .projector-support__track {
+  display: flex;
+  @include room-well(rs(38));
+}
+
+#{$wall} .projector-support__fill {
+  block-size: auto;
+  @include room-fill(var(--night-stripe-violet-a), var(--night-stripe-violet-b));
+}
+
+#{$wall} .projector-support__row--a .projector-support__fill {
+  @include room-fill(var(--night-cyan-light), var(--night-cyan-mid));
+}
+
+#{$wall} .projector-support__row--b .projector-support__fill {
+  @include room-fill(var(--night-stripe-a), var(--night-stripe-b));
+}
+
+#{$wall} .projector-support__too-few {
+  min-block-size: rs(38);
+  color: var(--night-card-ink-soft);
+  font-size: rs(32);
+}
+
+// The verdict: a pill. Green when both sides support, orange when not yet.
+#{$wall} .projector-verdict {
+  align-self: center;
+  color: var(--night-card-ink-soft);
+  font-size: rs(40);
+  font-weight: 600;
+  text-align: center;
+}
+
+#{$wall} .projector-verdict--closer,
+#{$wall} .projector-verdict--apart {
+  @include room-pill;
+  box-sizing: border-box;
+  justify-content: center;
+  max-inline-size: 100%;
+  min-block-size: rs(68);
+  padding: rs(8) rs(34) rs(12);
+  border-radius: var(--night-radius-button);
+  font-size: rs(40);
+  white-space: normal;
+  text-wrap: balance;
+}
+
+#{$wall} .projector-verdict--closer {
+  @include room-jelly(var(--night-green), var(--night-green-lip), var(--night-lip-xs), null, null);
+  color: var(--night-orb-ink);
+}

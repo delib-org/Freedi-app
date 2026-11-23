@@ -1,0 +1,14 @@
+// Night — the student surface's look (docs/design/join-class-redesign-port.md).
+// This folder is owned by the STUDENT lane (spec section 7.2).
+//
+// In the student entry CSS, through global.scss. Every rule sits under $night
+// (../_look-scope.scss). Here: the tokens, the phone shell with its header and
+// the shared controls. The lazily loaded screens bring their own night partial, imported
+// next to their stylesheet so the two arrive together:
+//   c2.scss     waiting, name, opening, side, my table   (views/student/c2/*)
+//   c3.scss     table talk, proposals, vote, summary, replies (views/student/c3/*)
+//   state.scss  paused / ended                            (LessonStateScreen)
+@use 'tokens';
+@use 'shell';
+@use 'header';
+@use 'controls';

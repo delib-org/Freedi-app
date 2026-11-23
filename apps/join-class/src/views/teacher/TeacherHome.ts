@@ -1,5 +1,6 @@
 import m from 'mithril';
 import '@/styles/teacher.scss';
+import '@/styles/mulberry/index.scss';
 import { getRandomUID } from '@freedi/shared-types';
 import { getUserState, signOut } from '@/lib/user';
 import { getLang, t } from '@/lib/i18n';
@@ -17,7 +18,7 @@ import { watchLibrary, type TeacherLibrary } from '@/lib/teacherLibrary';
 import { buildRemoved } from '@/lib/removedItems';
 import { renderRemoveAnnouncer, resetRemoveState } from './RemoveControl';
 import { renderRemovedSection, resetRemovedSection } from './RemovedSection';
-import { filterLessons } from './homeHelpers';
+import { filterLessons, gameChipsOf } from './homeHelpers';
 import {
 	renderChip,
 	renderLessonActions,
@@ -142,6 +143,17 @@ function removedGames(): Map<string, readonly ClassGame[]> {
 	return byPlan;
 }
 
+/** The plan's games as chips, from the list the count was read from (nothing more is fetched). */
+function renderGameChips(planId: string): m.Children {
+	const chips = gameChipsOf(gameCounts.get(planId)?.games);
+	if (chips.length === 0) return null;
+
+	return m(
+		'ul.teacher-home__games',
+		chips.map((chip) => m('li.teacher-home__game', { key: chip.id, dir: 'auto' }, chip.title)),
+	);
+}
+
 function renderPlanRow(row: PlanRow): m.Vnode {
 	const games = gameCounts.get(row.planId)?.count ?? 0;
 
@@ -160,6 +172,7 @@ function renderPlanRow(row: PlanRow): m.Vnode {
 			),
 		),
 		m('p.teacher-home__counts', t('classPlan.counts', { games, lessons: row.lessons.length })),
+		renderGameChips(row.planId),
 	]);
 }
 

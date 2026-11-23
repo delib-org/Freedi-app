@@ -1,0 +1,264 @@
+// =============================================================================
+// Mulberry: the front page (/), teacher sign-in (/login) and the other `.door`
+// screens of the teacher surface. In the entry CSS (the two routes are in the
+// entry bundle), so this stays small. Mockup: Teacher-1-Front.dc.html.
+// =============================================================================
+
+@use '../look-scope' as *;
+@use 'mixins' as *;
+
+$front-wide: 960px;
+
+// ---- every door: the ground, Fredoka title, mulberry controls ------------------
+#{$mulberry} .door {
+  background: var(--mul-ground);
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .door__title {
+  @include display(2.5rem, 700, 1.1);
+}
+
+#{$mulberry} .door__line {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .door__code {
+  @include field;
+  font-weight: 700;
+}
+
+#{$mulberry} .door__code[aria-invalid='true'] {
+  border: 2px solid var(--mul-danger-ink);
+}
+
+#{$mulberry} .door__error-body {
+  color: var(--mul-ink-soft);
+}
+
+// Sign-in: the page's one action, so it is the mulberry primary.
+#{$mulberry} .door__google {
+  min-block-size: 60px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--mul-primary);
+  color: var(--mul-on-primary);
+  font-size: 1.25rem;
+  font-weight: 700;
+  box-shadow: var(--mul-shadow-primary);
+}
+
+#{$mulberry} .door__google:hover:not(:disabled) {
+  background: var(--mul-primary-hover);
+}
+
+#{$mulberry} .door__google-mark {
+  inline-size: 28px;
+  block-size: 28px;
+  background: var(--mul-surface);
+  color: var(--mul-primary-text);
+  font-family: var(--mul-font-display);
+}
+
+#{$mulberry} .door__alt {
+  padding-block-start: 24px;
+  border-block-start: 1px solid var(--mul-line);
+  color: var(--mul-ink-soft);
+  font-size: 1rem;
+}
+
+#{$mulberry} .door__account {
+  color: var(--mul-ink-soft);
+}
+
+// ---- the front page -------------------------------------------------------------
+#{$mulberry} .front-door {
+  // The frame behind the "how a lesson goes" card is drawn under the card.
+  isolation: isolate;
+}
+
+#{$mulberry} .door__logo.front-door__logo {
+  block-size: 56px;
+}
+
+#{$mulberry} .front-door__title {
+  @include display(clamp(2.25rem, 4.6vw, 4rem), 700, 1.1);
+  text-wrap: balance;
+}
+
+#{$mulberry} .front-door__lead {
+  max-inline-size: 560px;
+  font-size: clamp(1.125rem, 1.5vw, 1.3125rem);
+  line-height: 1.6;
+  color: var(--mul-ink);
+  text-wrap: pretty;
+}
+
+// The page's one big action.
+#{$mulberry} .front-door__start {
+  min-block-size: 60px;
+  padding-inline: 36px;
+  border-radius: 14px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  box-shadow: var(--mul-shadow-primary);
+
+  &::after {
+    @include chevron-shape;
+  }
+}
+
+#{$mulberry}[dir='rtl'] .front-door__start::after {
+  transform: rotate(-45deg);
+}
+
+// The students' door: a quiet second action under a hairline.
+#{$mulberry} .front-door__join {
+  row-gap: 10px;
+  padding: 24px 0 0;
+  background: transparent;
+  border-block-start: 1px solid var(--mul-line);
+  border-radius: 0;
+}
+
+#{$mulberry} .front-door__join-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .front-door__join-row {
+  gap: 12px;
+}
+
+#{$mulberry} .door__code.front-door__code {
+  block-size: var(--mul-control-height);
+  padding: 0 16px;
+  font-size: 1.5rem;
+  letter-spacing: 0.3em;
+}
+
+#{$mulberry} .door__enter.front-door__enter {
+  min-block-size: var(--mul-control-height);
+  padding-inline: 24px;
+  font-size: 1.0625rem;
+}
+
+// "How a lesson goes": a white card on a blush frame.
+#{$mulberry} .front-door__how {
+  position: relative;
+  row-gap: 0;
+  margin: 20px;
+  padding: 32px 32px 12px;
+  @include hairline-card;
+
+  &::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: -21px;
+    border-radius: 28px;
+    background: var(--mul-blush);
+  }
+}
+
+#{$mulberry} .front-door__how-title {
+  margin-block-end: 8px;
+  @include section-label;
+}
+
+#{$mulberry} .front-door__steps {
+  row-gap: 0;
+}
+
+#{$mulberry} .front-door__step {
+  grid-template-columns: 40px 1fr;
+  column-gap: 20px;
+  row-gap: 4px;
+  padding-block: 20px;
+
+  &:not(:last-child) {
+    border-block-end: 1px solid var(--mul-line);
+  }
+
+  // The number: a large mulberry numeral, no ring.
+  &::before {
+    display: block;
+    inline-size: 40px;
+    block-size: auto;
+    border: 0;
+    border-radius: 0;
+    color: var(--mul-primary-text);
+    @include display(3rem, 700, 0.95);
+  }
+}
+
+#{$mulberry} .front-door__step-title {
+  @include display(1.5rem);
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .front-door__step-text {
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  color: var(--mul-ink-soft);
+}
+
+// Laptop: what Class is for and the two doors at the start side, how a lesson
+// goes at the end side, both centred in the page's height.
+@media (min-width: $front-wide) {
+  #{$mulberry} .front-door {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto auto auto minmax(0, 1fr);
+    grid-template-areas:
+      'header header'
+      '.      how'
+      'hero   how'
+      'start  how'
+      'join   how'
+      '.      how';
+    column-gap: 72px;
+    row-gap: 28px;
+    justify-content: stretch;
+    padding-block: 40px 32px;
+    padding-inline: max(48px, calc((100% - 1240px) / 2 + 48px));
+  }
+
+  #{$mulberry} .front-door > .door__header {
+    grid-area: header;
+  }
+
+  #{$mulberry} .front-door__hero {
+    grid-area: hero;
+    row-gap: 20px;
+  }
+
+  #{$mulberry} .front-door__start {
+    grid-area: start;
+    justify-self: start;
+    inline-size: auto;
+  }
+
+  #{$mulberry} .front-door__join {
+    grid-area: join;
+    max-inline-size: 520px;
+  }
+
+  #{$mulberry} .door__code.front-door__code {
+    flex: none;
+    inline-size: 208px;
+  }
+
+  #{$mulberry} .front-door__how {
+    grid-area: how;
+    align-self: center;
+  }
+}
+
+@include more-contrast {
+  #{$mulberry} .front-door__how {
+    border-color: var(--mul-border-control);
+  }
+}

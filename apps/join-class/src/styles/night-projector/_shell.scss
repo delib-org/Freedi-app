@@ -1,0 +1,178 @@
+// =============================================================================
+// Night at room scale — the wall itself: the open sky, the stage, the ground
+// with its crystal ridge (the bottom band: step name, code and QR), and the
+// text roles every step shares.
+// =============================================================================
+
+@use 'room' as *;
+
+// ---- the wall: the fixed sky shows through (night/_tokens.scss paints it) ------
+#{$wall} {
+  background: transparent;
+  color: var(--night-on-sky);
+  font-size: rs(36);
+  font-weight: 500;
+}
+
+// The stage ends above the ridge. Its content sits over the ridge's peaks if a
+// crowded step ever reaches them.
+#{$wall} .projector__stage,
+#{$wall} .projector__stage[data-step='opening'] {
+  position: relative;
+  z-index: 1;
+  padding: rs(44) rs(96) rs(128);
+}
+
+#{$wall} .projector__status {
+  font-size: rs(64);
+  font-weight: 600;
+  @include on-sky(var(--night-text-shadow-strong));
+}
+
+#{$wall} .projector-step {
+  gap: rs(30);
+}
+
+// ---- text roles ------------------------------------------------------------------
+// The headline of a step: never under 6vh.
+#{$wall} .projector-instruction {
+  font-size: headline(96);
+  font-weight: 700;
+  line-height: 1.05;
+  text-wrap: balance;
+  @include on-sky(var(--night-text-shadow-strong));
+}
+
+#{$wall} .projector-ask {
+  font-size: rs(56);
+  font-weight: 600;
+  line-height: 1.15;
+  text-wrap: balance;
+  @include on-sky;
+}
+
+#{$wall} .projector-eyebrow {
+  @include room-pill;
+}
+
+#{$wall} .projector-empty,
+#{$wall} .projector-vote-note,
+#{$wall} .projector-all-min,
+#{$wall} .projector-loose {
+  font-size: rs(40);
+  font-weight: 500;
+  @include on-sky;
+}
+
+// ---- the ground: the band under every step -------------------------------------
+#{$wall} .projector-band {
+  position: relative;
+  gap: rs(40);
+  min-height: rs(96);
+  padding: rs(8) rs(96);
+  border: 0;
+  background: var(--night-ground);
+  color: var(--night-on-sky);
+}
+
+// The crystal ridge stands on the band. Decoration: it takes no pointer.
+#{$wall} .projector-band::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: calc(100% - 1px);
+  block-size: rs(104);
+  background: var(--night-ridge-image) center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+#{$wall} .projector-band__step {
+  font-size: rs(36);
+  font-weight: 600;
+}
+
+#{$wall} .projector-band__join {
+  gap: rs(20);
+}
+
+#{$wall} .projector-band__label {
+  color: var(--night-on-sky);
+  font-size: rs(32);
+  font-weight: 500;
+}
+
+// The code on the band: one small white plate.
+#{$wall} .projector-band__code {
+  display: inline-flex;
+  align-items: center;
+  block-size: rs(60);
+  padding-inline: rs(22) rs(18);
+  border-radius: rs(18);
+  @include room-jelly(
+    var(--night-card),
+    var(--night-card-lip),
+    var(--night-lip-xs),
+    null,
+    null,
+    var(--night-card-top)
+  );
+  color: var(--night-card-ink);
+  font-size: rs(44);
+  font-weight: 700;
+  line-height: 1;
+}
+
+// A QR stays black on white, inside its quiet zone.
+#{$wall} .projector-band .projector-qr:not(.projector-qr--waiting) {
+  inline-size: rs(72);
+  block-size: rs(72);
+  border: rs(6) solid var(--qr-quiet);
+  border-radius: rs(14);
+}
+
+// The join gate already shows the code and the QR at full size: the band keeps
+// the step name only. (Paused keeps them: its stage has no QR.)
+#{$wall} .projector__stage[data-step='waiting']:not([data-status]) ~ .projector-band .projector-band__join {
+  display: none;
+}
+
+// ---- paused / ended: calm words, the status mark on a dark disc ---------------------
+#{$wall} .projector-mark {
+  display: grid;
+  place-items: center;
+  inline-size: rs(168);
+  block-size: rs(168);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 25%,
+    var(--night-panel-top) 0%,
+    var(--night-panel-bottom) 60%,
+    var(--night-sky-top) 100%
+  );
+  box-shadow:
+    inset 0 rs(6) 0 var(--night-panel-gloss),
+    0 var(--night-lip) 0 var(--night-sky-top),
+    var(--night-drop);
+  font-size: rs(72);
+}
+
+#{$wall} .projector-mark .status-mark {
+  font-size: rs(84);
+}
+
+#{$wall} .projector-step--paused .status-mark--paused::before,
+#{$wall} .projector-step--paused .status-mark--paused::after {
+  background: var(--night-on-sky);
+}
+
+#{$wall} .projector-step--state .projector-empty {
+  font-size: rs(48);
+}
+
+// `prefers-contrast: more`: the counters' white text needs a darker capsule.
+@include more-contrast {
+  #{$wall} .projector-count,
+  #{$wall} .projector-results__turnout {
+    background: var(--night-counter-lip);
+  }
+}

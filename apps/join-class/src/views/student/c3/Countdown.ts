@@ -82,7 +82,10 @@ export const Countdown: m.ClassComponent<CountdownAttrs> = {
 			.filter(Boolean)
 			.join(' ');
 
-		return m('div', { class: classes }, [
+		// `--count-fraction` (0..1 left): a look may draw the time as a ring instead of the bar.
+		const fraction = started ? view.fraction : 1;
+
+		return m('div', { class: classes, style: `--count-fraction: ${fraction}` }, [
 			over
 				? m('p.count__over', { 'data-testid': 'time-over' }, t('turn.time_over'))
 				: m(
@@ -98,7 +101,7 @@ export const Countdown: m.ClassComponent<CountdownAttrs> = {
 						started ? view.text || '0:00' : idleCountdownText(Math.round(totalMs / MS_PER_SECOND)),
 					),
 			m('span.count__bar', { 'aria-hidden': 'true' }, [
-				m('span.count__fill', { style: `transform: scaleX(${started ? view.fraction : 1})` }),
+				m('span.count__fill', { style: `transform: scaleX(${fraction})` }),
 			]),
 			m('p.visually-hidden', { 'aria-live': 'polite' }, over ? t('turn.time_over') : ''),
 		]);

@@ -1,5 +1,6 @@
 import m from 'mithril';
 import '@/styles/student-c2.scss';
+import '@/styles/night/c2.scss';
 import type { ClassNameAnswer, ClassNameChoice } from '@freedi/shared-types';
 import { StudentFrame } from '@/components/StudentFrame';
 import { t } from '@/lib/i18n';

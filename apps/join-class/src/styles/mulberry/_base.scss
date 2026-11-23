@@ -1,0 +1,185 @@
+// =============================================================================
+// Mulberry: what every teacher screen shares. The page frames sit on the
+// porcelain ground; fields, the status chip, the back bar and the footer take
+// the look once, here.
+// =============================================================================
+
+@use '../look-scope' as *;
+@use 'mixins' as *;
+
+// ---- page frames: the ground, never the blush ------------------------------------
+#{$mulberry} :is(.teacher-home, .plan, .console) {
+  background: var(--mul-ground);
+  color: var(--mul-ink);
+}
+
+#{$mulberry} :is(.teacher-home, .plan) {
+  --teacher-width: 1104px;
+}
+
+@include laptop {
+  #{$mulberry} :is(.teacher-home, .plan) {
+    padding: 24px 48px 0;
+  }
+}
+
+// ---- fields ------------------------------------------------------------------------
+#{$mulberry} :is(.teacher-home__input, .teacher-home__filter, .plan-details__select) {
+  @include field;
+}
+
+#{$mulberry} .teacher-home__input[aria-invalid='true'] {
+  border-color: var(--mul-danger-ink);
+}
+
+#{$mulberry} :is(.teacher-home__input, .teacher-home__filter)::placeholder {
+  color: var(--mul-ink-soft);
+}
+
+// ---- the status chip of a lesson: words, a shape and a tint -------------------------
+#{$mulberry} .status-chip {
+  @include pill(var(--mul-ink-mid), var(--mul-well));
+  flex: none;
+  margin: 0;
+}
+
+// now: blush
+#{$mulberry} .status-chip--live {
+  background: var(--mul-blush);
+  color: var(--mul-primary-text);
+}
+
+// look here: apricot
+#{$mulberry} .status-chip--paused {
+  background: var(--mul-attention-bg);
+  color: var(--mul-attention-ink);
+}
+
+// ready: sage
+#{$mulberry} .status-chip--open {
+  background: var(--mul-ready-bg);
+  color: var(--mul-ready-ink);
+}
+
+#{$mulberry} .status-chip .status-mark {
+  font-size: 12px;
+}
+
+#{$mulberry} .status-chip .status-mark--live {
+  background: currentColor;
+}
+
+#{$mulberry} .status-chip .status-mark--paused::before,
+#{$mulberry} .status-chip .status-mark--paused::after {
+  background: currentColor;
+}
+
+#{$mulberry} .status-chip .status-mark--open,
+#{$mulberry} .status-chip .status-mark--not-started {
+  border-color: currentColor;
+}
+
+#{$mulberry} .status-chip .status-mark--open::after {
+  background: currentColor;
+}
+
+#{$mulberry} .status-chip .status-mark--ended::after {
+  border-color: currentColor;
+}
+
+// ---- the back bar: a white band, a quiet home chip, a mulberry way back -------------
+#{$mulberry} .back-bar {
+  min-block-size: 56px;
+  background: var(--mul-surface);
+  border-block-end: 1px solid var(--mul-line);
+}
+
+#{$mulberry} .back-bar__home,
+#{$mulberry} .back-bar__home:active {
+  min-block-size: 44px;
+  min-inline-size: 44px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--mul-radius-control);
+  color: var(--mul-primary-text);
+  box-shadow: none;
+  transform: none;
+}
+
+#{$mulberry} .back-bar__home:hover,
+#{$mulberry} .back-bar__home:active {
+  background: var(--mul-blush);
+}
+
+#{$mulberry} .back-bar__link {
+  color: var(--mul-primary-text);
+  font-weight: 700;
+}
+
+@include laptop {
+  #{$mulberry} .back-bar {
+    padding-inline: 24px;
+  }
+
+  #{$mulberry} :is(.plan, .teacher-home) > .back-bar {
+    margin-inline: -48px;
+    margin-block-start: -24px;
+    inline-size: calc(100% + 96px);
+    padding-inline: 40px;
+  }
+}
+
+// ---- the footer -----------------------------------------------------------------------
+#{$mulberry} .wizcol-footer {
+  border-block-start-color: var(--mul-line);
+}
+
+#{$mulberry} .wizcol-footer__brand,
+#{$mulberry} .wizcol-footer__share-label {
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .wizcol-footer__brand:hover {
+  background: var(--mul-blush);
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .wizcol-footer__share-button {
+  border-color: var(--mul-border-soft);
+  background: var(--mul-surface);
+  color: var(--mul-ink-mid);
+}
+
+#{$mulberry} .wizcol-footer__share-button:hover {
+  border-color: var(--mul-primary);
+  background: var(--mul-primary);
+  color: var(--mul-on-primary);
+}
+
+// ---- remove, restore -------------------------------------------------------------------
+#{$mulberry} .remove-control__remove,
+#{$mulberry} .remove-control__remove:hover:not(:disabled) {
+  color: var(--mul-ink-soft);
+  font-weight: 600;
+}
+
+#{$mulberry} .remove-control__done,
+#{$mulberry} .remove-control__strip {
+  border: 1px solid var(--mul-line);
+  border-radius: var(--mul-radius-control);
+  background: var(--mul-blush);
+  color: var(--mul-ink-mid);
+}
+
+// ---- loading -----------------------------------------------------------------------------
+#{$mulberry} :is(.plan__skeleton-block, .teacher-home__skeleton) {
+  background: linear-gradient(90deg, var(--mul-well) 0%, var(--mul-blush) 50%, var(--mul-well) 100%);
+  background-size: 200% 100%;
+  border-radius: var(--mul-radius-card);
+}
+
+@include more-contrast {
+  #{$mulberry} .status-chip {
+    border: 1px solid currentColor;
+  }
+}

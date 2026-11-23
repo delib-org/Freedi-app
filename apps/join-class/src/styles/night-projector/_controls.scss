@@ -1,0 +1,85 @@
+// =============================================================================
+// Night at room scale — the teacher's own control on the wall (full screen, the
+// way back) and the first-open hint. Jelly pills on the ground: white, and
+// orange for the one that is on. They move by transform and opacity only.
+// =============================================================================
+
+@use 'room' as *;
+
+#{$wall} .projector-controls {
+  inset-block-end: rs(16);
+  inset-inline-start: rs(96);
+  gap: rs(20);
+}
+
+#{$wall} .projector-controls__btn {
+  min-block-size: max(48px, #{rs(60)});
+  min-inline-size: max(120px, #{rs(170)});
+  padding: 0 rs(32) rs(4);
+  border: 0;
+  @include room-jelly(
+    var(--night-card),
+    var(--night-card-lip),
+    var(--night-lip-xs),
+    null,
+    null,
+    var(--night-card-top)
+  );
+  color: var(--night-card-ink);
+  font-size: max(20px, #{rs(30)});
+  font-weight: 600;
+  @include calm-motion;
+}
+
+#{$wall} .projector-controls__btn--on {
+  @include room-jelly(
+    var(--night-primary-pill),
+    var(--night-primary-lip),
+    var(--night-lip-xs),
+    null,
+    null
+  );
+  color: var(--night-primary-ink);
+}
+
+#{$wall} .projector-controls__btn:active {
+  transform: translateY(var(--night-lip-xs));
+}
+
+#{$wall} .projector-controls__btn:focus-visible {
+  outline: max(3px, #{rs(5)}) solid var(--night-on-sky);
+  outline-offset: max(3px, #{rs(5)});
+}
+
+// ---- the first-open hint: a white card pointing at the buttons ----------------------
+#{$wall} .projector-hint {
+  inset-block-end: rs(124);
+  inset-inline-start: rs(96);
+  max-inline-size: min(22em, calc(100vw - #{rs(192)}));
+  padding: rs(22) rs(32) rs(30);
+  @include room-card(var(--night-radius-button), var(--night-lip-sm), var(--night-drop-sm));
+  color: var(--night-card-ink);
+  font-size: max(20px, #{rs(34)});
+  font-weight: 600;
+}
+
+#{$wall} .projector-hint::after {
+  inset-block-start: calc(100% + var(--night-lip-sm) - 1px);
+  inset-inline-start: rs(48);
+  border-inline-width: rs(16);
+  border-block-start: rs(16) solid var(--night-card-lip);
+}
+
+#{$wall} .projector-hint__glyph {
+  inline-size: rs(84);
+  block-size: rs(42);
+  stroke-width: 2.5;
+}
+
+// `prefers-contrast: more`: every control shows its edge.
+@include more-contrast {
+  #{$wall} .projector-controls__btn,
+  #{$wall} .goal-pitch__sound {
+    border: max(2px, #{rs(4)}) solid var(--night-card-ink);
+  }
+}

@@ -1,0 +1,59 @@
+// =============================================================================
+// Night — "the decision": the chosen proposal in the glowing panel, with the
+// gold star (Student-6-Summary.dc.html). On the summary and on the ended
+// screen, so both night/c3.scss and night/state.scss carry it; it states its
+// own box so the ended screen draws it without the c3 stylesheet.
+// =============================================================================
+
+@use 'mixins' as *;
+
+#{$night} .decision {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-block-end: 18px;
+  padding: 14px 18px 16px;
+  @include night-panel;
+}
+
+// The winner's star, in the panel's corner.
+#{$night} .decision::after {
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-end: 16px;
+  @include star-coin(36px);
+}
+
+#{$night} .decision--waiting {
+  border-style: dashed;
+  box-shadow: none;
+}
+
+#{$night} .decision--waiting::after {
+  display: none;
+}
+
+#{$night} .decision__eyebrow {
+  margin: 0;
+  font-size: 15px;
+  @include night-pill;
+}
+
+#{$night} .decision__text {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-wrap: balance;
+  @include on-sky(var(--night-text-shadow-strong));
+}
+
+#{$night} .decision__note,
+#{$night} .decision__waiting {
+  margin: 0;
+  color: var(--night-on-sky);
+  font-size: 16px;
+  font-weight: 500;
+}

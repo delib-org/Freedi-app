@@ -2,6 +2,7 @@ import m from 'mithril';
 import { CLASS_REPLY_MAX_LENGTH, type Statement } from '@freedi/shared-types';
 import '@/styles/student-c3.scss';
 import '@/styles/student-replies.scss';
+import '@/styles/night/c3.scss';
 import { t } from '@/lib/i18n';
 import type { Unsubscribe } from '@/lib/firebase';
 import { firstUnreadId, newReplyIds, replyRole, visibleReplies } from '@/lib/classroom/replyLogic';

@@ -9,6 +9,7 @@ import '@/styles/console-next.scss';
 import '@/styles/console-more.scss';
 import '@/styles/console-mobile.scss';
 import '@/styles/game-console.scss';
+import '@/styles/mulberry/index.scss';
 import { t } from '@/lib/i18n';
 import { getMainStatement, getSubQuestions, setFollowLessonLanguage } from '@/lib/store';
 import {

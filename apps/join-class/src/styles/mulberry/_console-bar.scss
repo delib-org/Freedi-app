@@ -1,0 +1,213 @@
+// =============================================================================
+// Mulberry: the lesson console's frame (/t/:mid). The top bar (title, code,
+// pause, more), the banners under it, and the laptop column the bands sit in.
+// Mockup: Teacher-3-Console.dc.html.
+//
+// The phone keeps the layout of console-mobile.scss (two-row bar, the action
+// band as a bottom dock): everything about size and place is under `laptop`.
+// =============================================================================
+
+@use '../look-scope' as *;
+@use 'mixins' as *;
+
+$console-column: 1336px;
+$console-gutter: 32px;
+
+#{$mulberry} .console {
+  --rail-done: var(--mul-primary);
+  --rail-current: var(--mul-primary);
+  --rail-upcoming: var(--mul-border-control);
+}
+
+// Keyboard focus: the look's ring, not the old indigo.
+#{$mulberry} .console :is(button, select, input, a, textarea):focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+// ---- top bar: white, one hairline under it ------------------------------------
+#{$mulberry} .console__bar,
+#{$mulberry} .back-bar + .console__bar {
+  background: var(--mul-surface);
+  border-block-end: 1px solid var(--mul-line);
+}
+
+#{$mulberry} .console__title {
+  @include display(1.375rem);
+}
+
+// The code the teacher reads aloud: a blush block, digits that line up.
+#{$mulberry} .console__code {
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  border-radius: var(--mul-radius-control);
+  background: var(--mul-blush);
+}
+
+#{$mulberry} .console__code-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--mul-ink-soft);
+}
+
+#{$mulberry} .console__code-value {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .console__pause .status-mark--paused::before,
+#{$mulberry} .console__pause .status-mark--paused::after {
+  background: currentColor;
+}
+
+#{$mulberry} .console__link {
+  color: var(--mul-primary-text);
+  font-weight: 700;
+}
+
+#{$mulberry} .console__qr {
+  background: var(--mul-surface);
+  border: 1px solid var(--mul-line);
+}
+
+// ---- the lesson's status banner (paused, ended, open to students) -------------------
+#{$mulberry} .lesson-banner {
+  border: 1px solid var(--mul-line);
+  background: var(--mul-surface);
+}
+
+#{$mulberry} .lesson-banner__text {
+  @include display(1.25rem);
+}
+
+#{$mulberry} .lesson-banner--paused {
+  border-color: var(--mul-attention-line);
+  background: var(--mul-attention-surface);
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .lesson-banner--paused .status-mark--paused::before,
+#{$mulberry} .lesson-banner--paused .status-mark--paused::after {
+  background: var(--mul-attention-ink);
+}
+
+#{$mulberry} .lesson-banner--ended {
+  background: var(--mul-well);
+}
+
+#{$mulberry} .lesson-banner--open {
+  border-color: var(--mul-ready-line);
+  background: var(--mul-ready-bg);
+}
+
+// ---- a failed action ----------------------------------------------------------------------
+#{$mulberry} .console__failure {
+  border: 1px solid var(--mul-danger-ink);
+  background: var(--mul-danger-bg);
+  color: var(--mul-danger-ink);
+}
+
+// ---- registration strips -------------------------------------------------------------------
+#{$mulberry} :is(.console__registration, .console__register-ahead) {
+  background: var(--mul-blush);
+  border-block-end: 1px solid var(--mul-line);
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .console__register-ahead__line {
+  color: var(--mul-ink-mid);
+}
+
+#{$mulberry} .copy-seating__result,
+#{$mulberry} .copy-seating__reason {
+  color: var(--mul-ink-soft);
+}
+
+// ---- laptop: the bands are cards in one centred column ---------------------------------------
+@include laptop {
+  #{$mulberry} .back-bar + .console__bar {
+    gap: 10px 16px;
+    padding: 4px $console-gutter 14px;
+  }
+
+  #{$mulberry} .console__title {
+    font-size: 1.625rem;
+    white-space: normal;
+  }
+
+  #{$mulberry} .console__code {
+    min-block-size: var(--mul-control-height);
+  }
+
+  #{$mulberry} .console__bar > .btn,
+  #{$mulberry} .console__bar > .disclosure > .disclosure__toggle {
+    min-block-size: var(--mul-control-height);
+  }
+
+  #{$mulberry} .console__pause {
+    gap: 8px;
+  }
+
+  #{$mulberry} .console > :is(
+      .step-line,
+      .action-band,
+      .switch-band,
+      .console__failure,
+      .lesson-banner,
+      .console__qr,
+      .console__board,
+      .console__registration,
+      .console__register-ahead,
+      .challenge-warning--console,
+      .copy-seating
+    ) {
+    inline-size: min(100% - #{$console-gutter * 2}, #{$console-column});
+    margin-inline: auto;
+    margin-block-start: 16px;
+  }
+
+  #{$mulberry} .console > .console__bar + * {
+    margin-block-start: 24px;
+  }
+
+  #{$mulberry} .console > :is(
+      .console__failure,
+      .lesson-banner,
+      .console__qr,
+      .console__registration,
+      .console__register-ahead
+    ) {
+    border: 1px solid var(--mul-line);
+    border-radius: var(--mul-radius-card);
+  }
+
+  #{$mulberry} .lesson-banner,
+  #{$mulberry} .console__failure {
+    padding: 14px 24px;
+  }
+
+  #{$mulberry} .lesson-banner--paused {
+    border-color: var(--mul-attention-line);
+  }
+
+  #{$mulberry} .lesson-banner--open {
+    border-color: var(--mul-ready-line);
+  }
+
+  #{$mulberry} .console__failure {
+    border-color: var(--mul-danger-ink);
+  }
+
+  #{$mulberry} .console__board {
+    padding: 4px 0 32px;
+  }
+}
+
+@include more-contrast {
+  #{$mulberry} .console__code {
+    border: 1px solid var(--mul-border-control);
+  }
+}

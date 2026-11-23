@@ -1,6 +1,7 @@
 import m from 'mithril';
 import '@/styles/teacher.scss';
 import '@/styles/registration.scss';
+import '@/styles/mulberry/index.scss';
 import { classRegistrationOf } from '@freedi/shared-types';
 import type { TableAssignment } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';

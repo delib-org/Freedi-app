@@ -1,0 +1,214 @@
+// =============================================================================
+// Mulberry: one table of the console's board. The table's name in Fredoka, what
+// it does now as a mark (blush = now, sage with a check = done, apricot = it
+// waits for the teacher), the timer, the members and the quiet actions.
+// Mockup: Teacher-3-Console.dc.html, "the board". The card's frame is in
+// _console-board.scss, the member chips in _console-chips.scss.
+// =============================================================================
+
+@use '../look-scope' as *;
+@use 'mixins' as *;
+
+#{$mulberry} .table-card {
+  gap: 10px;
+  padding: 18px 20px;
+}
+
+// A table that waits for the teacher: an apricot edge and a warm surface.
+#{$mulberry} .table-card:has(.table-card__wait--stuck) {
+  border: 1.5px solid var(--mul-attention-line);
+  background: var(--mul-attention-surface);
+  box-shadow: var(--mul-shadow-attention);
+}
+
+// Dragging a student: every table that can take them, and the one under the pointer.
+#{$mulberry} .table-card--target {
+  border: 2px dashed var(--mul-primary);
+}
+
+#{$mulberry} .table-card--target .table-card__title {
+  color: var(--mul-primary-text);
+}
+
+#{$mulberry} .table-card--over {
+  background: var(--mul-blush);
+}
+
+// The head: the table's name in Fredoka, the turn under it.
+#{$mulberry} .table-card__head {
+  flex-wrap: wrap;
+  gap: 0 10px;
+  font-weight: 700;
+}
+
+#{$mulberry} .table-card__title {
+  @include display(1.5rem);
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .table-card__title:hover {
+  color: var(--mul-primary-text);
+  text-decoration: none;
+}
+
+#{$mulberry} .table-card__turn {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 400;
+  color: var(--mul-ink-soft);
+}
+
+// What the table is doing: "now" on blush, "all done" on sage with a check.
+#{$mulberry} .table-card__now {
+  @include pill(var(--mul-primary-text), var(--mul-blush), 28px);
+  align-self: flex-start;
+  padding-inline: 12px;
+  font-size: 0.875rem;
+}
+
+#{$mulberry} .table-card__now--done {
+  background: var(--mul-ready-bg);
+  color: var(--mul-ready-ink);
+
+  &::before {
+    @include check-mark;
+  }
+}
+
+#{$mulberry} :is(.table-card__question, .table-card__timer, .table-card__asker, .table-card__wait) {
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+#{$mulberry} .table-card__question {
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .table-card__timer {
+  color: var(--mul-ink);
+  font-weight: 700;
+}
+
+#{$mulberry} :is(.table-card__asker, .table-card__wait, .table-card__timer--none) {
+  color: var(--mul-ink-soft);
+  font-weight: 400;
+}
+
+#{$mulberry} .table-card__timer--over {
+  color: var(--mul-attention-ink);
+  font-weight: 700;
+}
+
+// A table that has waited too long: apricot, with the clock glyph already in its words.
+#{$mulberry} .table-card__wait--stuck {
+  align-self: flex-start;
+  padding: 4px 12px;
+  border-radius: var(--mul-radius-control);
+  background: var(--mul-attention-bg);
+  color: var(--mul-attention-ink);
+  font-weight: 700;
+}
+
+#{$mulberry} .table-card__bar {
+  block-size: 6px;
+  background: var(--mul-well);
+}
+
+#{$mulberry} .table-card__bar-fill {
+  background: var(--mul-primary);
+}
+
+#{$mulberry} .table-card__members {
+  gap: 8px;
+}
+
+// "+ no device": quieter than the table's own actions.
+#{$mulberry} .table-card__nd-open,
+#{$mulberry} .table-card__nd-open:hover:not(:disabled) {
+  padding-inline: 8px;
+  color: var(--mul-ink-soft);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+#{$mulberry} .table-card__quick {
+  min-block-size: 44px;
+  padding-inline: 8px;
+  font-size: 0.9375rem;
+}
+
+#{$mulberry} .table-card__nd-input {
+  @include field;
+}
+
+// Proposals: who holds the floor or the pen, and the read-only step marker.
+#{$mulberry} .speaker-row {
+  border-radius: var(--mul-radius-control);
+  font-size: 0.9375rem;
+}
+
+#{$mulberry} .speaker-row--speaking {
+  border: 1.5px solid var(--mul-primary);
+  background: var(--mul-blush);
+  color: var(--mul-ink);
+}
+
+#{$mulberry} .speaker-row--nobody {
+  border: 1.5px dashed var(--mul-border-control);
+  color: var(--mul-ink-mid);
+}
+
+#{$mulberry} .table-step-marker {
+  color: var(--mul-ink-soft);
+  font-size: 0.9375rem;
+}
+
+#{$mulberry} .table-step-marker__part--current {
+  color: var(--mul-primary-text);
+  font-weight: 700;
+}
+
+#{$mulberry} .table-bridge__alone {
+  border-color: var(--mul-attention-line);
+  background: var(--mul-attention-bg);
+  color: var(--mul-attention-ink);
+}
+
+#{$mulberry} .table-bridge__reserved-name {
+  border-color: var(--mul-border-control);
+  color: var(--mul-ink-mid);
+}
+
+@include laptop {
+  #{$mulberry} .table-card {
+    position: relative;
+    min-block-size: 132px;
+  }
+
+  // The turn sits under the table's name, and the "now" mark at the card's top
+  // end corner, beside the name. A card is at least 340px wide here, so the
+  // name and the mark share the line; a long mark wraps inside itself.
+  #{$mulberry} .table-card__turn {
+    flex-basis: 100%;
+  }
+
+  #{$mulberry} .table-card__head + .table-card__now:not([data-testid='table-rated']) {
+    position: absolute;
+    inset-block-start: 18px;
+    inset-inline-end: 20px;
+    max-inline-size: calc(100% - 170px);
+    border-radius: 14px;
+  }
+}
+
+@include more-contrast {
+  #{$mulberry} .table-card__now {
+    border: 1px solid currentColor;
+  }
+}
+
+// The "Question:" label in front of the table's question.
+#{$mulberry} .table-card__question-label {
+  color: var(--mul-ink-soft);
+  font-weight: 700;
+}
