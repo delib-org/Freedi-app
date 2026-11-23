@@ -282,6 +282,8 @@ const he: Record<string, string> = {
 	'console.plenum_on': 'כולם ביחד · פעיל',
 	'console.move': 'העברה לשולחן אחר',
 	'console.moved': 'הועבר ל{{table}}',
+	'console.moved_out': 'הועבר אל מחוץ לשולחנות',
+	'console.table_empty': 'עוד אין כאן תלמידים',
 	'opening.name_prompt_rename': 'ביקשו מכם שם חדש. כתבו אותו כאן',
 	'console.rename': 'בקשת שם חדש',
 	'console.rename_asked': 'ביקשנו מ{{name}} שם חדש',

@@ -295,7 +295,8 @@ try {
 	await page.click('.plan__console');
 	await page.waitForURL((u) => u.pathname === `/t/${mid}`, { timeout: TIMEOUT });
 	await page.waitForSelector('.console [data-step-key][aria-current="step"]', { timeout: TIMEOUT });
-	await page.click('.console__qr-btn');
+	await page.click('[data-testid=console-more]');
+	await page.click('[data-testid=console-qr]');
 	await page.waitForSelector('.console__qr svg, .console__qr canvas, .console__qr img', { timeout: TIMEOUT });
 	check('console opens on the step rail and shows the QR', true);
 	await page.goto(`${BASE}/t`, { waitUntil: 'domcontentloaded' });

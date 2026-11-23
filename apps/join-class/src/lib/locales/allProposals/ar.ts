@@ -20,6 +20,10 @@ const allProposals: Record<string, string> = {
 	'console.all_rated_line_one':
 		'{{n}} من {{m}} طلاب قيّموا كل شيء · لكل اقتراح تقييم واحد على الأقل',
 	'projector.allProposals_min_one': 'لكل اقتراح تقييم واحد على الأقل',
+	'console.all_rated_line_solo':
+		'{{n}} من طالب واحد قيّم كل شيء · لكل اقتراح {{k}} تقييمات على الأقل',
+	'console.all_rated_line_solo_one':
+		'{{n}} من طالب واحد قيّم كل شيء · لكل اقتراح تقييم واحد على الأقل',
 };
 
 export default allProposals;

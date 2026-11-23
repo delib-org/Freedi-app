@@ -85,7 +85,7 @@ async function openConsole(seedOut, { width, height }, locale) {
 		await authMod.signInWithCustomToken(auth, token);
 	}, seedOut.teacher.customToken);
 	await page.goto(`${BASE}/t/${seedOut.mainId}`, { waitUntil: 'domcontentloaded' });
-	await page.waitForSelector('.step-rail__next', { timeout: TIMEOUT });
+	await page.waitForSelector('.next-action__button', { timeout: TIMEOUT });
 
 	return { context, page };
 }

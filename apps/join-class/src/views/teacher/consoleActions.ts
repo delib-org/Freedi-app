@@ -293,9 +293,10 @@ export function moveStudent(mainId: string, uid: string, toTable: DropTarget): P
 		await trackTableChange(predictMoveStudent(uid, toTable), () =>
 			classMoveStudent({ mainId, uid, toTable }),
 		);
-		consoleState.announce = t('console.moved', {
-			table: toTable === null ? t('console.unplaced_name') : t('console.table_n', { n: toTable }),
-		});
+		consoleState.announce =
+			toTable === null
+				? t('console.moved_out')
+				: t('console.moved', { table: t('console.table_n', { n: toTable }) });
 	});
 }
 

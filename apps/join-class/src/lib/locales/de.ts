@@ -285,6 +285,8 @@ const de: Record<string, string> = {
 	'console.plenum_on': 'Alle zusammen · aktiv',
 	'console.move': 'An einen anderen Tisch',
 	'console.moved': 'Verschoben zu {{table}}',
+	'console.moved_out': 'Aus den Tischen herausgenommen',
+	'console.table_empty': 'Noch keine Schüler an diesem Tisch',
 	'opening.name_prompt_rename': 'Deine Lehrkraft möchte einen neuen Namen. Schreibe ihn hier',
 	'console.rename': 'Um einen neuen Namen bitten',
 	'console.rename_asked': '{{name}} um einen neuen Namen gebeten',

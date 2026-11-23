@@ -124,6 +124,16 @@ function readNoticeSnapshot(): NoticeSnapshot | null {
 	};
 }
 
+/** Firestore's refusal to read: `code` is "permission-denied". */
+export function isPermissionDenied(error: unknown): boolean {
+	return (
+		typeof error === 'object' &&
+		error !== null &&
+		'code' in error &&
+		(error as { code?: unknown }).code === 'permission-denied'
+	);
+}
+
 export type ClassWatchRole = 'student' | 'teacher';
 
 export interface ClassWatchOptions {
@@ -153,6 +163,18 @@ export function watchClass(
 
 	const onError = (error: Error): void => {
 		console.error('[Classroom] listener error:', error);
+	};
+
+	// A student who is moved loses the right to read the old table a moment before their own
+	// subscription says so: that denial is the move arriving, not a fault (the subscription
+	// listener starts the new table's listener right after).
+	const onTableError = (error: Error): void => {
+		if (isPermissionDenied(error)) {
+			console.info('[Classroom] table closed to me (moved); waiting for the new table');
+
+			return;
+		}
+		onError(error);
 	};
 
 	if (role === 'teacher') {
@@ -196,7 +218,7 @@ export function watchClass(
 									setServerTable(table);
 									m.redraw();
 								},
-								onError,
+								onTableError,
 							);
 						}
 					}

@@ -338,7 +338,9 @@ export const TableCard: m.Component<TableCardAttrs> = {
 		const { table, students, plenum, mainId } = attrs;
 		const mode = tableModeOf(attrs);
 		const propDone = proposalsDoneNow(table, mode);
-		const bare = attrs.done === true || attrs.namesOnly === true;
+		// Nobody sits here: no marker, no "nobody is speaking", no step button; just that it is empty.
+		const empty = table.memberUids.length === 0 && table.noDeviceMembers.length === 0;
+		const bare = attrs.done === true || attrs.namesOnly === true || empty;
 		const floor = mode === 'proposals' && !bare ? proposalsSpeakerOf(table, serverNow()) : null;
 		const speakingUid = floor?.kind === 'speaking' ? floor.uid : null;
 		const drag = consoleState.drag;
@@ -373,7 +375,7 @@ export const TableCard: m.Component<TableCardAttrs> = {
 						},
 						t('console.table_n', { n: table.n }),
 					),
-					attrs.tableTalk ? m('span.table-card__turn', turnLine(table)) : null,
+					attrs.tableTalk && !empty ? m('span.table-card__turn', turnLine(table)) : null,
 					mode === 'proposals' && !bare
 						? m(
 								'span.table-card__turn',
@@ -390,6 +392,9 @@ export const TableCard: m.Component<TableCardAttrs> = {
 					? m('p.table-card__question', { dir: 'auto' }, attrs.questionText)
 					: null,
 				bare ? null : speakerOrTimerRows(attrs),
+				empty && attrs.done !== true
+					? m('p.table-card__empty', { 'data-testid': 'table-empty' }, t('console.table_empty'))
+					: null,
 				attrs.tableTalk && table.askerUid
 					? m(
 							'p.table-card__asker',

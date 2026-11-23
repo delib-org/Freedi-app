@@ -47,6 +47,8 @@ const TESTID: Partial<Record<NextActionKind, string>> = {
 /** The words on the button right now (the busy words while its write runs). */
 export function nextActionLabel(attrs: NextActionAttrs): string {
 	const { spec } = attrs;
+	// The status flips before the write settles: the button must not show its old words meanwhile.
+	if (isBusy('status:resume')) return t('console.busy_resuming');
 	if (spec.busyKey && isBusy(spec.busyKey) && spec.busyLabelKey) return t(spec.busyLabelKey);
 	if (spec.kind === 'goNext' && spec.nextStepKey) {
 		return t(spec.labelKey, { name: consoleStepLabel(spec.nextStepKey) });

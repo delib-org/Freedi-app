@@ -23,7 +23,8 @@ vi.stubGlobal('document', {
 	getElementById: (id: string) => (id === 'next-action-reason' ? { focus: focusReason } : null),
 });
 
-import { NextAction } from '../NextAction';
+import { NextAction, nextActionLabel } from '../NextAction';
+import { t } from '@/lib/i18n';
 import type { NextActionAttrs } from '../NextAction';
 import { assignTables, goToStep, freezeBallot, closeBallot } from '../consoleActions';
 import { confirmCloseVote } from '../consoleConfirms';
@@ -63,6 +64,20 @@ describe('NextAction', () => {
 		expect(attrs.disabled).toBeUndefined();
 		expect(attrs['aria-disabled']).toBeUndefined();
 		expect(attrs['data-testid']).toBe('console-forward');
+	});
+
+	it('says "Resuming" while a resume is in flight, whatever step the lesson already shows', () => {
+		busyKeys.add('status:resume');
+		try {
+			expect(nextActionLabel({ mid: 'mid1', spec: GO_NEXT, challengeId: 'q1' })).toBe(
+				t('console.busy_resuming'),
+			);
+		} finally {
+			busyKeys.delete('status:resume');
+		}
+		expect(nextActionLabel({ mid: 'mid1', spec: GO_NEXT, challengeId: 'q1' })).not.toBe(
+			t('console.busy_resuming'),
+		);
 	});
 
 	it('runs the work of the step it names', () => {

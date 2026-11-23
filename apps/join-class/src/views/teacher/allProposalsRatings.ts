@@ -6,6 +6,7 @@ import type { Unsubscribe } from '@/lib/firebase';
 import { t } from '@/lib/i18n';
 import { resilientOnSnapshot } from '@/lib/resilientListeners';
 import { classState } from '@/lib/classroom/classState';
+import { allRatedLineKey } from '@/lib/classroom/classStatus';
 import { rosterStudents } from '@/lib/classroom/consoleHelpers';
 import {
 	minRatingsPerProposal,
@@ -75,7 +76,7 @@ export function allRatedBandLine(challenge: Statement | null): string {
 
 	const k = minRatingsPerProposal(options);
 
-	return t(k === 1 ? 'console.all_rated_line_one' : 'console.all_rated_line', {
+	return t(allRatedLineKey(k, line.m), {
 		n: line.n,
 		m: line.m,
 		k,

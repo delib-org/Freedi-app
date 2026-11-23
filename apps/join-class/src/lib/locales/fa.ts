@@ -274,6 +274,8 @@ const fa: Record<string, string> = {
 	'console.plenum_on': 'همه با هم · فعال',
 	'console.move': 'انتقال به میز دیگر',
 	'console.moved': 'به {{table}} منتقل شد',
+	'console.moved_out': 'از میزها خارج شد',
+	'console.table_empty': 'هنوز دانش‌آموزی سر این میز نیست',
 	'opening.name_prompt_rename': 'معلم از شما نام جدیدی خواسته است. آن را اینجا بنویسید',
 	'console.rename': 'درخواست نام جدید',
 	'console.rename_asked': 'از {{name}} نام جدید خواسته شد',

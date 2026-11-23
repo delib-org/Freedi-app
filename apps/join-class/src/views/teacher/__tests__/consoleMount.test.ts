@@ -406,6 +406,18 @@ describe('the table card at Proposals, mounted', () => {
 		}
 	});
 
+	it('an empty table shows only that it is empty: no marker, no speaker row, no step button', () => {
+		for (const step of ['talk', 'write', 'rate'] as const) {
+			const root = draw({ step, memberUids: [], noDeviceMembers: [] });
+			expect(root.querySelector('[data-testid="table-empty"]')).not.toBeNull();
+			expect(root.querySelector('[data-testid="table-step-marker"]')).toBeNull();
+			expect(root.querySelector('.speaker-row')).toBeNull();
+			expect(root.querySelector('.table-card__quick')).toBeNull();
+			expect(root.querySelector('[data-testid="table-proposals-turn"]')).toBeNull();
+		}
+		expect(draw({ step: 'talk' }).querySelector('[data-testid="table-empty"]')).toBeNull();
+	});
+
 	it('has no stray dash line at rating', () => {
 		expect(draw({ step: 'rate' }).querySelector('.table-card__timer')).toBeNull();
 	});

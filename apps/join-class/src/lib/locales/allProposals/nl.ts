@@ -20,6 +20,10 @@ const allProposals: Record<string, string> = {
 	'console.all_rated_line_one':
 		'{{n}} van {{m}} leerlingen hebben alles beoordeeld · elk voorstel heeft minstens 1 beoordeling',
 	'projector.allProposals_min_one': 'Elk voorstel heeft minstens 1 beoordeling',
+	'console.all_rated_line_solo':
+		'{{n}} van 1 leerling heeft alles beoordeeld · elk voorstel heeft minstens {{k}} beoordelingen',
+	'console.all_rated_line_solo_one':
+		'{{n}} van 1 leerling heeft alles beoordeeld · elk voorstel heeft minstens 1 beoordeling',
 };
 
 export default allProposals;
