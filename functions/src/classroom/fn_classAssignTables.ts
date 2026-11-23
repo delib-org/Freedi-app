@@ -120,7 +120,11 @@ export async function assignTables(
 			);
 		}
 
-		const subs = subsSnap.docs.map((d) => d.data() as StatementSubscription);
+		// A subscription with no userId cannot be seated, and an undefined uid in a table's
+		// memberUids makes Firestore refuse the whole write (the teacher saw a bare 500).
+		const subs = subsSnap.docs
+			.map((d) => d.data() as StatementSubscription)
+			.filter((s) => typeof s.userId === 'string' && s.userId.length > 0);
 		// The sides are private (classSides): read here, used only to mix the tables.
 		const sides = await sidesOf(firestore, mainId, subs, (...refs) => tx.getAll(...refs));
 		const students: SeatableStudent[] = subs.map((s) => ({
