@@ -5,6 +5,7 @@ import { isolate } from '@/lib/bidi';
 import { classState } from '@/lib/classroom/classState';
 import { gateOf, sideClaimsOf, sideNamesOf, sideQuestionOf } from '@/lib/classroom/classSettings';
 import { projectorData } from '@/lib/classroom/projectorData';
+import { getFetchedQuestionTexts, requestQuestionText } from '@/lib/classroom/questionText';
 import { ProjectorQr, QR_WAITING_SIZE } from './ProjectorBand';
 import { openingStage } from './OpeningStage';
 import { FlipList } from '@/components/FlipList';
@@ -22,6 +23,7 @@ import {
 	readRoundPhase,
 	studentsOf,
 	supportPercent,
+	tableQuestionRows,
 	PROJECTOR_MANY_NAMES,
 	tableTiles,
 	topProposals,
@@ -148,6 +150,31 @@ function tableTalk(): m.Vnode {
 			}),
 		),
 		m('ul.projector-count-tiles', tiles),
+		tableQuestions(),
+	]);
+}
+
+/** Table talk: the question each table is on, so the class sees what every table discusses. */
+function tableQuestions(): m.Vnode | null {
+	const rows = tableQuestionRows(
+		classState.tables,
+		projectorData.questions,
+		getFetchedQuestionTexts(),
+	);
+	if (rows.length === 0) return null;
+	for (const row of rows) if (row.text === null) requestQuestionText(row.questionId);
+
+	return m('section.projector-table-questions', { 'data-testid': 'projector-table-questions' }, [
+		m('h2.projector-table-questions__heading', t('projector.questions_heading')),
+		m(
+			'ul.projector-table-questions__list',
+			rows.map((row) =>
+				m('li.projector-table-questions__row', { key: row.n }, [
+					m('strong.projector-table-questions__table', t('projector.table', { n: row.n })),
+					m('span.projector-table-questions__text', { dir: 'auto' }, row.text ?? ''),
+				]),
+			),
+		),
 	]);
 }
 

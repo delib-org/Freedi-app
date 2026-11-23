@@ -177,3 +177,16 @@ describe('the teacher card agrees with the students at Table talk', () => {
 		expect(tableTalkNowKey(running, NOW)).toBe('console.now_talk');
 	});
 });
+
+describe('tableTalkState: a table at talk with no question (t1)', () => {
+	it('is the pick screen, never "who answers"', () => {
+		const stuck = talking({ questionId: undefined, askedUids: [] });
+		expect(tableTalkState(stuck, 'dan', NOW)).toBe('P1');
+		expect(tableTalkNowKey(stuck, NOW)).toBe('console.now_pick');
+	});
+
+	it('a student who already asked waits (P2)', () => {
+		const stuck = talking({ questionId: undefined, askedUids: ['dan'] });
+		expect(tableTalkState(stuck, 'dan', NOW)).toBe('P2');
+	});
+});

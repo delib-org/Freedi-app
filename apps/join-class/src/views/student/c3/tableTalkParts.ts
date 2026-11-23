@@ -19,6 +19,7 @@ import { FlowError, type FlowCtx, type FlowParts } from './flowTypes';
 import { QuestionPick, type PickQuestion } from './QuestionPick';
 import { TurnActions } from './TurnActions';
 import { MoveOn } from './MoveOn';
+import { QuestionCard } from './QuestionCard';
 import { moveOnView } from '@/lib/classroom/moveOn';
 import { ErrorLine } from './ErrorLine';
 
@@ -304,13 +305,14 @@ interface Screen {
 	questionHeading?: boolean;
 }
 
-function talkScreen(ctx: FlowCtx, state: TableTalkState, question: string): Screen {
+function talkScreen(ctx: FlowCtx, state: TableTalkState): Screen {
 	const { table, uid } = ctx;
 	const first = wasFirstLine(ctx);
 	const firstNote = first ? m('p.tt__quiet', { 'data-testid': 'was-first' }, first) : null;
+	// The heading names the card ("The question on the table"); the card carries the text.
 	const base = {
-		heading: question,
-		questionHeading: true,
+		heading: t('turn.question_label'),
+		questionHeading: false,
 		down: true,
 		action: null as m.Children,
 	};
@@ -448,7 +450,8 @@ export function tableTalkParts(ctx: FlowCtx): FlowParts {
 	} else if (state === 'P1' || state === 'P2') {
 		screen = pickScreen(ctx, state, teacherUsedUp, teacher.length === 0, allowOwnQuestionsOf(main));
 	} else {
-		screen = talkScreen(ctx, state, question);
+		screen = talkScreen(ctx, state);
+		screen = { ...screen, body: [m(QuestionCard, { text: question }), screen.body] };
 	}
 
 	return {

@@ -338,7 +338,12 @@ export function addNoDevice(
 }
 
 export function tableAction(tableId: string, action: ClassTableAction): Promise<boolean> {
-	const actor = { uid: getUserState().user?.uid ?? '', isAdmin: true, now: serverNow() };
+	const actor = {
+		uid: getUserState().user?.uid ?? '',
+		isAdmin: true,
+		now: serverNow(),
+		lessonStep: getLessonStep().key,
+	};
 
 	return guardedAct(`table:${tableId}:${action.action}`, t('console.table_action'), () =>
 		trackTableChange(predictTableAction(tableId, action, actor), () =>

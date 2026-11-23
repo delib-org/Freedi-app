@@ -1,0 +1,24 @@
+// The question under discussion, centred on every Table talk state (QuestionCard.ts).
+// The screens are face-down (ink frame): a light card with an edge, tokens only.
+
+.question-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  margin-block: var(--space-md);
+  padding: var(--space-lg) var(--space-md);
+  border: 3px solid var(--terra-600);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  color: var(--ink);
+  text-align: center;
+
+  &__text {
+    margin: 0;
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold, 700);
+    line-height: var(--line-height-tight, 1.25);
+    overflow-wrap: anywhere;
+  }
+}

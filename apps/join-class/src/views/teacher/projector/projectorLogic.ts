@@ -7,6 +7,7 @@ import {
 	type Statement,
 	type StatementSubscription,
 } from '@freedi/shared-types';
+import { questionTextFrom } from '@/lib/classroom/questionLookup';
 
 /**
  * Pure helpers of the projector (UX section 6): counts, tally bars, gate bars,
@@ -215,4 +216,32 @@ export function topProposals(options: readonly Statement[]): Statement[] {
 /** Proposals of the challenge question: visible options only. */
 export function visibleProposals(options: readonly Statement[]): Statement[] {
 	return options.filter((o) => o.hide !== true);
+}
+
+// ---- the question each table is on -------------------------------------------
+
+export interface TableQuestionRow {
+	n: number;
+	questionId: string;
+	/** The question text; null while it is not loaded yet. */
+	text: string | null;
+}
+
+/**
+ * Table talk: one row per table that has picked a question and is past the pick
+ * (talk, write, rate), in table order. A table still choosing has no question to show.
+ */
+export function tableQuestionRows(
+	tables: readonly ClassTable[],
+	questions: readonly Pick<Statement, 'statementId' | 'statement'>[],
+	fetched: ReadonlyMap<string, string>,
+): TableQuestionRow[] {
+	return [...tables]
+		.filter((table) => table.step !== 'pick' && !!table.questionId)
+		.sort((a, b) => a.n - b.n)
+		.map((table) => {
+			const questionId = table.questionId as string;
+
+			return { n: table.n, questionId, text: questionTextFrom(questions, fetched, questionId) };
+		});
 }

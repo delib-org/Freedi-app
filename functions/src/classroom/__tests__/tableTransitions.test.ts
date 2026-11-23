@@ -195,6 +195,37 @@ describe('applyTableAction — preconditions', () => {
 		expect(applyTableAction(table({ step: 'pick' }), { action: 'nextTurn' }, admin).turn).toBe(2);
 	});
 
+	it('table talk: a teacher toTalk with no question lands on pick, never on a talk without a question (t1)', () => {
+		const atTalk: TransitionContext = { ...admin, lessonStep: 'tableTalk' };
+		const stuck = applyTableAction(table({ step: 'talk' }), { action: 'toTalk' }, atTalk);
+		expect(stuck.step).toBe('pick');
+		expect(stuck.questionId).toBeUndefined();
+		const fromRate = applyTableAction(table({ step: 'rate' }), { action: 'toTalk' }, atTalk);
+		expect(fromRate.step).toBe('pick');
+		const already = applyTableAction(table({ step: 'pick' }), { action: 'toTalk' }, atTalk);
+		expect(already.step).toBe('pick');
+	});
+
+	it('table talk: a teacher toTalk with a question still moves to talk', () => {
+		const atTalk: TransitionContext = { ...admin, lessonStep: 'tableTalk' };
+		const next = applyTableAction(
+			table({ step: 'write', questionId: 'q1' }),
+			{ action: 'toTalk' },
+			atTalk,
+		);
+		expect(next.step).toBe('talk');
+		expect(next.questionId).toBe('q1');
+	});
+
+	it('proposals: a teacher toTalk needs no question', () => {
+		const next = applyTableAction(
+			table({ step: 'rate' }),
+			{ action: 'toTalk' },
+			{ ...admin, lessonStep: 'proposals' },
+		);
+		expect(next.step).toBe('talk');
+	});
+
 	it('keeps step-bound preconditions for admins too', () => {
 		expectRefusal(
 			() => applyTableAction(table({ step: 'pick' }), { action: 'nextSpeaker', uid: 'b' }, admin),
